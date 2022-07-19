@@ -9,7 +9,10 @@ const defaultConfig = {
   // Google analytics key e.g. G-XXXX
   analytics: '',
   // content source directory for markdown files
-  content: process.env.FLOWERSHOW_CONTENT || 'content',
+  // DO NOT CHANGE THIS VALUE
+  // if you have your notes in another (external) directory,
+  // /content dir should be a symlink to that directory
+  content: 'content',
   // Theme
   navLinks: [
     { href: '/about', name: 'About' },
