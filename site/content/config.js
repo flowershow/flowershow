@@ -1,4 +1,4 @@
-const userConfig = {
+const config = {
   title: 'Flowershow',
   navLinks: [
     { href: '/docs', name: 'Designs and plans for Flowershow' },
@@ -10,4 +10,4 @@ const userConfig = {
   ],
 }
 
-export default userConfig
+export default config

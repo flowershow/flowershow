@@ -31,7 +31,7 @@ const defaultConfig = {
 //  }
 }
 
-import userConfig from '../content/userConfig.js'
+import userConfig from '../content/config.js'
 
 const siteConfig = Object.assign({}, defaultConfig, userConfig)
 
