@@ -17,7 +17,7 @@ const baseURL = `http://localhost:${PORT}`;
  * @see https://playwright.dev/docs/test-configuration
  */
 module.exports = defineConfig({
-  testDir: './tests',
+  testDir: './__tests__/e2e',
   /* Maximum time one test can run for. */
   timeout: 30 * 1000,
   expect: {
