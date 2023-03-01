@@ -7,7 +7,8 @@
     "build": "next build",
     "postbuild": "cross-env NODE_OPTIONS='--experimental-json-modules --experimental-modules' node ./scripts/search.mjs",
     "start": "next start",
-    "export": "npm run build && next export"
+    "export": "npm run build && next export",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@docsearch/react": "^3.2.0",
