@@ -10,7 +10,8 @@
     "next-env.d.ts",
     "**/*.tsx",
     "**/*.ts",
-    ".contentlayer/generated"
+    ".contentlayer/generated",
+    "lib"
   ],
   "exclude": ["node_modules"]
 }
