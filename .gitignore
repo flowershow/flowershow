@@ -1,11 +1,14 @@
 node_modules
+
 # flowershow
 .flowershow
 .contentlayer
 .next
-
 # content
 .obsidian
+search.json
+
+# tests
 /test-results/
 /playwright-report/
 /playwright/.cache/
