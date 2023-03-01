@@ -1,15 +1,21 @@
-import { render, screen } from '@testing-library/react'
-import Home from '../pages/index'
+// import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
-describe('Home', () => {
-  it('renders a heading', () => {
-    render(<Home />)
+import parse from "../../lib/markdown.js";
 
-    const heading = screen.getByRole('heading', {
-      name: /welcome to next\.js!/i,
-    })
+const md = `
+---
+title: Test title
+date: 01/03/2023
+---
+# Test heading
+`
 
-    expect(heading).toBeInTheDocument()
+describe('Markdown lib', () => {
+  it('parses frontmatter', () => {
+    const parsed = parse(md);
+    console.log({parsed});
+
+    // expect(heading).toBeInTheDocument()
   })
 })
