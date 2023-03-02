@@ -1,8 +1,16 @@
 node_modules
+.DS_Store
+
 # flowershow
 .flowershow
 .contentlayer
 .next
+search.json
 
 # content
 .obsidian
+
+# tests
+/test-results/
+/playwright-report/
+/playwright/.cache/
