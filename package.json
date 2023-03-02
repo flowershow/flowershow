@@ -29,6 +29,8 @@
     "hastscript": "^7.0.2",
     "kbar": "^0.1.0-beta.37",
     "react-vega": "^7.4.4",
+    "vega": "^5.20.2",
+    "vega-lite": "^5.1.0",
     "mdx-mermaid": "^2.0.0-rc1",
     "mermaid": "^9.1.4",
     "next": "^13.0.4",
