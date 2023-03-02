@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 
-import parse from '../../lib/markdown.js'
+import parse from '../../lib/markdown'
 
 import DRD from '../../components/drd/DRD'
 

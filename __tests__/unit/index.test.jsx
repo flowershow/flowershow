@@ -1,7 +1,7 @@
 // import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 
-import parse from "../../lib/markdown.js";
+import parse from "../../lib/markdown.mjs";
 
 const md = `
 ---
