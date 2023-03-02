@@ -1,21 +1,26 @@
-// import { render, screen } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
+import { MDXRemote } from 'next-mdx-remote'
 
 import parse from "../../lib/markdown.mjs";
 
-const md = `
----
+const md = `---
 title: Test title
-date: 01/03/2023
 ---
 # Test heading
 `
 
 describe('Markdown lib', () => {
-  it('parses frontmatter', () => {
-    const parsed = parse(md);
-    console.log({parsed});
+  it('parses frontmatter', async () => {
+    const { frontMatter } = await parse(md);
+    expect(frontMatter.title).toBe("Test title");
 
-    // expect(heading).toBeInTheDocument()
+    // TODO testing components (will throw an error atm)
+    // render(<MDXRemote {...mdxSource}/>)
+    // const heading = screen.getByRole('heading', {
+    //   name: /Test heading/,
+    // })
+    // expect(heading).toBeInTheDocument();
+
   })
 })

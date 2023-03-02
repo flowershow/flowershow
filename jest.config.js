@@ -14,7 +14,7 @@ const customJestConfig = {
 // see: https://github.com/vercel/next.js/issues/35634#issuecomment-1115250297
 async function jestConfig() {
   const nextJestConfig = await createJestConfig(customJestConfig)()
-  // transforms disabled to support for ESM
+  // transforms disabled to support ESM
   // see: https://jestjs.io/docs/ecmascript-modules
   nextJestConfig.transform = {};
   nextJestConfig.extensionsToTreatAsEsm = ['.jsx'];
