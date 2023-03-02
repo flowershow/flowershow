@@ -5,9 +5,10 @@ node_modules
 .flowershow
 .contentlayer
 .next
+search.json
+
 # content
 .obsidian
-search.json
 
 # tests
 /test-results/
