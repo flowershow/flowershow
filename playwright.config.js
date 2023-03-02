@@ -50,7 +50,7 @@ module.exports = defineConfig({
   webServer: {
     command: `npm run build && npm run start -- -p ${PORT}`,
     port: PORT,
-    timeout: 60 * 1000,
+    timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI,
   },
   /* Configure projects for major browsers */
