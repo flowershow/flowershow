@@ -1,3 +1,6 @@
+/**
+ * @jest-environment node
+ */
 import { render, screen } from '@testing-library/react'
 import '@testing-library/jest-dom'
 import { MDXRemote } from 'next-mdx-remote'
