@@ -16,7 +16,7 @@ export const getStaticProps = async ({ params }) => {
   const mdxPath = path.join('content', 'drd', 'demo.mdx')
   const source = fs.readFileSync(mdxPath)
 
-  const { mdxSource, frontMatter } = await parse(source)
+  const { mdxSource, frontMatter } = await parse(source, 'demo.mdx')
 
   return {
     props: {

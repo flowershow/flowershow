@@ -11,6 +11,9 @@
   },
   "dependencies": {
     "@docsearch/react": "^3.2.0",
+    "@flowershow/remark-callouts": "^1.0.0",
+    "@flowershow/remark-embed": "^1.0.0",
+    "@flowershow/remark-wiki-link": "^1.0.0",
     "@headlessui/react": "^1.6.6",
     "@heroicons/react": "^1.0.4",
     "@silvenon/remark-smartypants": "^1.0.0",
