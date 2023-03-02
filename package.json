@@ -8,7 +8,7 @@
     "postbuild": "cross-env NODE_OPTIONS='--experimental-json-modules --experimental-modules' node ./scripts/search.mjs",
     "start": "next start",
     "export": "npm run build && next export",
-    "test": "jest",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
     "test:e2e": "playwright test"
   },
   "dependencies": {
