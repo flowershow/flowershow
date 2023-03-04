@@ -82,6 +82,7 @@ AG Grid seems to be a robust, feature-rich and customizable (to an extent, but I
 
 ![[Pasted image 20230303170557.png]]
 ![[Pasted image 20230303170636.png]]
+
 - value:
 	- (Ola): 10/10
 		- basic, essential functionality
@@ -93,7 +94,10 @@ AG Grid seems to be a robust, feature-rich and customizable (to an extent, but I
 Expandable column groups.
 
 ![[Pasted image 20230303170907.png]]
-![[Pasted image 20230303170945.png]]- value:
+
+![[Pasted image 20230303170945.png]]
+
+- value:
 	- (Ola): basic functionality
 - cost:
 	- AG Grid: FREE
@@ -206,7 +210,6 @@ Mini charts that are optimised for grid cells that can be used to provide insigh
 ![[Pasted image 20230303224227.png]]
 ![[Pasted image 20230303224248.png]]
 
-
 - value:
 	- (Ola): not a must have but awesome feature, especially for for datasets with time series data; probably a good selling point as well as it enhances the content visually
 - cost:
@@ -295,7 +298,6 @@ Use Cell Rendering to have cells rendering values other than simple strings. F
 - cost:
 	- AG Grid: FREE
 
-
 ### Printing support [4/10]
 
 Remove all scrolling in the grid to make it ready for printing.
@@ -344,7 +346,6 @@ Support for different languages.
 	- (Ola): kinda nice as the author of the article written in a different language could also adjust the table labels
 - cost:
 	- AG Grid: FREE
-	
 
 ### Tree data [2/10]
 
@@ -364,7 +365,7 @@ Users can update data in cells.
 
 ![[Pasted image 20230303164825.png]]
 
-- value: 1/10
+- value:
 	- (Ola) may be nice, if e.g. combined with status bar = changes in cells would update the aggregate numbers, so in some cases (esp. when the articale revolves around e.g. outlier numbers in the datasets) it may be nice for the users to check for themselves how a single change could change the overall dataset stats
 - cost:
 	- AG Grid: FREE
@@ -375,8 +376,7 @@ Users can update data in cells.
 Export to xlsx with extensive customisation to the values exported, layout, value formatting and styling of the exported spreadsheets.
 
 - value:
-	- (Ola): 2/10
-		- cool but rather not important atm; users can always export to csv (free)
+	- (Ola): cool but rather not important atm; users can always export to csv (free)
 - cost:
 	- AG Grid: enterprise subscription
 
@@ -480,8 +480,6 @@ Full Width Rows allow you to have one cell that spans the entire width of the t
 	- (Ola): probably not needed; not sure what's the use case
 - cost:
 	- AG Grid: FREE
-
-
 
 ### [EXTRA] Standalone charts (AG Grid) [?/10]
 
