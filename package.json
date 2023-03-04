@@ -7,7 +7,9 @@
     "build": "next build",
     "postbuild": "cross-env NODE_OPTIONS='--experimental-json-modules --experimental-modules' node ./scripts/search.mjs",
     "start": "next start",
-    "export": "npm run build && next export"
+    "export": "npm run build && next export",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@docsearch/react": "^3.2.0",
@@ -52,9 +54,14 @@
     "typed.js": "^2.0.12"
   },
   "devDependencies": {
+    "@playwright/test": "^1.31.1",
     "@tailwindcss/line-clamp": "^0.4.2",
+    "@testing-library/jest-dom": "^5.16.5",
+    "@testing-library/react": "^14.0.0",
     "autoprefixer": "^10.4.4",
     "cross-env": "^7.0.3",
+    "jest": "^29.4.3",
+    "jest-environment-jsdom": "^29.4.3",
     "postcss": "^8.4.12",
     "tailwindcss": "^3.1.8"
   }
