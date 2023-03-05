@@ -8,6 +8,10 @@ created: 2023-02-17
 
 ![[../Excalidraw/datahub-next-github-v0.1-20220218.svg]]
 
+More complex version with multiple documents, multiple assets
+
+![[../Excalidraw/datahub-next-github-many-files-v0.1-2023-02-27.excalidraw.svg]]
+
 # Workstreams
 
 - Showcase: data and content presentation
