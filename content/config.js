@@ -8,7 +8,7 @@ const config = {
   theme: {
     default: "",
   },
-  contentExclude: ["data-literate-demo.md", "./drd/*"],
+  contentExclude: ["data-literate-demo.md", "./drd/*", "./Excalidraw/*"],
   author: "Datopian",
   authorLogo: "/static/img/datopian-logo.png",
   authorUrl: "https://datopian.com/",
