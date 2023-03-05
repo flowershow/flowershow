@@ -74,6 +74,8 @@ See [[design-publish-ui]]
 
 ### Showcase
 
+See [[design-showcase]]
+
 - [ ] Presentation
   - [ ] Metadata summary/overview
   - [ ] Markdown driven docs for your data (ie, README.md)
@@ -121,7 +123,7 @@ Workflows
   - [ ] Data summary
   - [ ] Custom work flows
 
-### Marketing
+### Comms
 
 - [ ] Landing page
 
