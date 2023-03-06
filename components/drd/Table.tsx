@@ -1,4 +1,3 @@
-import axios from "axios";
 import {
   createColumnHelper,
   flexRender,
@@ -8,15 +7,10 @@ import {
 } from "@tanstack/react-table";
 import React, { useEffect, useMemo, useState } from "react";
 
-const papa = require("papaparse");
+import loadUrlProxied from "../../lib/loadUrlProxied";
+import parseCsv from "../../lib/parseCsv";
 
-/*
-  Simple HTML Table
-  usage: <OutTable data={data} cols={cols} />
-    data:Array<Array<any> >;
-    cols:Array<{name:string, key:number|string}>;
-*/
-export default function Table({ data = [], cols = [], csv = "", url = "" }) {
+const Table = ({ data = [], cols = [], csv = "", url = "" }) => {
   if (csv) {
     const out = parseCsv(csv);
     data = out.rows;
@@ -29,37 +23,23 @@ export default function Table({ data = [], cols = [], csv = "", url = "" }) {
 
   useEffect(() => {
     if (url) {
-      loadUrl(url);
+      //  TODO: check if this is working properly
+      loadUrlProxied(url).then((data) => {
+        console.log(data);
+        const { rows, fields } = parseCsv(data);
+        setData(rows);
+        setCols(fields);
+      });
     }
   }, [url]);
-
-  function loadUrl(path) {
-    // HACK: duplicate of Excel code - maybe refactor
-    // if url is external may have CORS issue so we proxy it ...
-    if (url.startsWith("http")) {
-      const PROXY_URL = window.location.origin + "/api/proxy";
-      url = PROXY_URL + "?url=" + encodeURIComponent(url);
-    }
-    axios.get(url).then((res) => {
-      const { rows, fields } = parseCsv(res.data);
-      setData(rows);
-      setCols(fields);
-    });
-  }
 
   return (
     <>
       <SimpleTable data={ourdata} cols={ourcols} />
     </>
   );
-}
+};
 
-/*
-  Simple HTML Table
-  usage: <OutTable data={data} cols={cols} />
-    data:Array<Array<any> >;
-    cols:Array<{name:string, key:number|string}>;
-*/
 function SimpleTable({ data = [], cols = [] }) {
   const columns = useMemo(() => {
     const columnHelper = createColumnHelper();
@@ -114,15 +94,4 @@ function SimpleTable({ data = [], cols = [] }) {
   );
 }
 
-function parseCsv(csv) {
-  csv = csv.trim();
-  const rawdata = papa.parse(csv, { header: true });
-  const cols = rawdata.meta.fields.map((r, i) => {
-    return { key: r, name: r };
-  });
-
-  return {
-    rows: rawdata.data,
-    fields: cols,
-  };
-}
+export default Table;
