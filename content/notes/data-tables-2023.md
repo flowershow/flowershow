@@ -10,28 +10,45 @@ authors: [Ola Rubaj]
 
 ## TL;DR
 
-There seem to be two major players among data table libraries: AG Grid (component-based) and Tanstack table (headless).
-
 Great overview of AG Grid features just to scroll through and take a look at gifs: https://www.ag-grid.com/javascript-data-grid/grid-features/
 Example features implemented using AG Grid and Tanstack table (comparison of amount code needed): https://blog.ag-grid.com/headless-react-table-vs-ag-grid-react-data-grid/
 Recent comment on Reddit from AG Grid creator re Tanstack vs AG Grid: https://www.reddit.com/r/webdev/comments/zk01tw/ag_grid_vs_tanstack_table/
 
-When to use Tanstack:
-- for simple tables with only basic interactions like searching, sorting and filtering
+**When to use TanStack:**
+- for simple tables which support only basic functionalities like searching, sorting, filtering, pagination
 - for medium-sized tables **supposedly it can't handle really long data sets well (need to confirm why)**
-- for custom designed tables **we don't really need a custom design, the UI provided by AG Grid looks very professional and allows for enough style customizations**
-- for ease of extensibility, i.e. if we want to implement some custom feature **can't think of any feature that's not already covered by AG Grid; yes,some features are in enterprise plan only, but the core already provides a lot of basic functionalities for free**
+- for custom designed tables **we don't really need a custom design**
+- for ease of extensibility, i.e. if we want to implement some custom feature **can't think of any feature that's not already covered by AG Grid though; yes,some features are in enterprise plan only, but the core already provides a lot of basic functionalities for free**
 
-When to use AG Grid:
+**When to use AG Grid:**
 - for enterprise applications
-- when you need powerful data grids (lots of features)
-- the only cost is bundle size
+- when you need powerful data grids (with lots of features)
+- for large datasets
+- for out of the box horizontal and vertical scroll solution
+- when bundle size is not so crucial
 
 > Most Search Engine Websites tend to use TanStack Table.
 > Most big organisations writing Enterprise Apps tend to use AG Grid.
 
 **Recommendation:**
-AG Grid seems to be a robust, feature-rich and customizable (to an extent, but I don't think we need sth fully tailored with some crazy UX or design) solution used for many enterprise solutions (reportedly). The free version includes most of the really valuable features that will just work out of the box and look good. I think even the enterprise version is much cheaper than designing, developing and maintaining costum UI. So, I'd start with the basic plan for now, and once we need really need sth from the enterprise plan, I'd probably just buy it.
+
+Probably go with AG Grid.
+ 
+**Why?**
+- AG Grid is a robust, feature-rich and customizable (probably enough for our needs) solution
+- used for many enterprise solutions (reportedly)
+- I don't think we need a custom, fancy UX/UI that e.g. TanStack would allow for
+- the free version includes most of the really essential features that will just work out of the box and look good and professional
+- I think even the enterprise version is cheaper than designing, developing and maintaining custom UI and functionalities 
+	- This also depends on how many and how complex/fancy features we need (e.g. if there is only one we care about and it's not hard to implement, then probably buying enterprise plan only to support it is not worth it)
+
+**But first:**
+- let's decide on what features do we want to support from the list below (and any others?)
+- decide on how large datasets we want to support
+	- if large, like in e.g. kaggle, probably AG Grid would be better
+- quickly test AG Grid vs TanStack for:
+	- bundle size (when we use AG Grid's scoped packages instead of installing full ag-grid-community and ag-grid-react packages)
+	- performance with large datasets
 
 ## Data table libraries comparison
 
@@ -100,8 +117,7 @@ Expandable column groups.
 - value:
 	- (Ola): basic functionality
 - cost:
-	- AG Grid: FREE
-
+	- AG Grid: free
 
 ### Row pinning [10/10]
 
@@ -133,19 +149,6 @@ Use Column Pinning to pin one or more columns to the left or to the right. Pin
 - cost:
 	- AG Grid: free
 
-### Column filtering: set filtering [9/10]
-
-Like in excel, checkboxes to select values from a set.
-
-![[Pasted image 20230303163649.png]]
-
-- value:
-	- (Ola) 7/10
-		- pretty useful and rather basic functionality; but in free AG plan text filters can be used instead (although the UX is not as good)
-- cost:
-	- AG Grid: enterprise subscription
-
-
 ### CSV Export [9/10]
 
 Use CSV Export to take data out of the grid and into another application for further processing such as Excel.
@@ -154,6 +157,17 @@ Use CSV Export to take data out of the grid and into another application for f
 	- (Ola): very useful, no need to implement it ourselves
 - cost:
 	- AG Grid: FREE
+
+### Column filtering: set filtering [8/10]
+
+Like in excel, checkboxes to select values from a set.
+
+![[Pasted image 20230303163649.png]]
+
+- value:
+	- (Ola) pretty useful and rather essentail functionality; but in free AG plan text filters can be used instead (although the UX is not as good)
+- cost:
+	- AG Grid: enterprise subscription
 
 ### Aggregation (count, max, mix etc.) [8/10]
 
@@ -173,7 +187,6 @@ User can navigate the features of the grid on a touch device with the built-in 
 	- (Ola): rather essential functionality
 - cost:
 	- AG Grid: FREE, works out of the box
-	- Tanstack: 
 
 ### Cell styling [8/10]
 
@@ -185,7 +198,6 @@ Use CSS rules to define Cell Style based on data content, e.g. put a red backg
 	- (Ola): pretty useful; makes it easier for authors to refer to some data in the dataset in the content of the article
 - cost:
 	- AG Grid: FREE
-
 
 ### Rows grouping [8/10]
 
@@ -276,12 +288,12 @@ Resize columns by dragging the edge of the column header, Auto Fill to fill t
 - cost:
 	- AG Grid: FREE
 
-### Column moving (drag n' drop) [5/10]
+### Column ordering (api and drag n' drop) [6/10]
 
 Columns can be reorganized by dragging and dropping.
 
 - value:
-	- (Ola): nice, but if the data is already organized well by the author, it's probably not needed so much
+	- (Ola): probably mostly useful for large datasets
 - cost:
 	- AG Grid: free
 
