@@ -95,70 +95,35 @@ Probably go with AG Grid.
 
 ## Features
 
-### Column filtering: text, date, num comparisons [10/10]
 
-![[Pasted image 20230303170557.png]]
-![[Pasted image 20230303170636.png]]
-
-- value:
-	- (Ola): 10/10
-		- basic, essential functionality
-- cost:
-	- AG Grid: FREE
-
-### Column groups [10/10]
-
-Expandable column groups.
-
-![[Pasted image 20230303170907.png]]
-
-![[Pasted image 20230303170945.png]]
-
-- value:
-	- (Ola): basic functionality
-- cost:
-	- AG Grid: free
-
-### Row pinning [10/10]
-
-Use Pinned Rows to pin one or more rows to the top or the bottom. Pinned rows are always present and not impacted by vertical scroll.
-
-- value:
-	- (Ola): essential functionality
-- cost:
-	- AG Grid: FREE
-
-### Row sorting [10/10]
+### Sorting
 
 Row Sorting will sort the data by given column.
 
 ![[Pasted image 20230304191113.png]]
 
+- TanStack:
+		- example: https://tanstack.com/table/v8/docs/api/features/filters
+	- API: https://tanstack.com/table/v8/docs/api/features/sorting
 - value:
-	- (Ola): essential functionality
+	- (Ola): essential functionality from the user perspective
 - cost:
 	- AG Grid: FREE
 
+### Filtering: text, date, num comparisons
 
-### Column pinning [10/10]
+![[Pasted image 20230303170557.png]]
+![[Pasted image 20230303170636.png]]
 
-Use Column Pinning to pin one or more columns to the left or to the right. Pinned columns are always present and not impacted by horizontal scroll.
-
+- TanStack:
+		- example: https://tanstack.com/table/v8/docs/examples/react/filters
+	- API: https://tanstack.com/table/v8/docs/api/features/filters
 - value:
-	- (Ola): essential functionality
-- cost:
-	- AG Grid: free
-
-### CSV Export [9/10]
-
-Use CSV Export to take data out of the grid and into another application for further processing such as Excel.
-
-- value:
-	- (Ola): very useful, no need to implement it ourselves
+	- (Ola): essential functionality from the user perspective
 - cost:
 	- AG Grid: FREE
-
-### Column filtering: set filtering [8/10]
+ 
+### Filtering: set filtering
 
 Like in excel, checkboxes to select values from a set.
 
@@ -169,26 +134,7 @@ Like in excel, checkboxes to select values from a set.
 - cost:
 	- AG Grid: enterprise subscription
 
-### Aggregation (count, max, mix etc.) [8/10]
-
-![[Pasted image 20230304005625.png]]
-
-- value:
-	- (Ola): 8/10
-		- very useful, aggregation allows for quickly getting rough understanding of the data
-- cost:
-	- AG Grid: enterprise subscription
-
-### Touch support [8/10]
-
-User can navigate the features of the grid on a touch device with the built-in Touch Support.
-
-- value:
-	- (Ola): rather essential functionality
-- cost:
-	- AG Grid: FREE, works out of the box
-
-### Cell styling [8/10]
+### Cell styling
 
 Use CSS rules to define Cell Style based on data content, e.g. put a red background onto cells that have negative values, and green on values greater than 100.
 
@@ -199,7 +145,25 @@ Use CSS rules to define Cell Style based on data content, e.g. put a red backg
 - cost:
 	- AG Grid: FREE
 
-### Rows grouping [8/10]
+### Row and column freezing
+
+Use Pinned Rows to pin one or more rows to the top or the bottom. Pinned rows are always present and not impacted by vertical scroll.
+
+- value:
+	- (Ola): pretty useful for large datasets
+- cost:
+	- AG Grid: FREE
+
+### Aggregation (count, max, mix etc.)
+
+![[Pasted image 20230304005625.png]]
+
+- value:
+	- (Ola): pretty both from the user and from the author perspective, aggregation allows for quickly getting rough understanding of a large dataset
+- cost:
+	- AG Grid: enterprise subscription
+
+### Rows grouping
 
 ![[Pasted image 20230304170809.png]]
 
@@ -208,14 +172,28 @@ Use CSS rules to define Cell Style based on data content, e.g. put a red backg
 - cost:
 	- AG Grid: enterprise subscription
 
-### Show, hide columns [7/10]
+### Column grouping
+
+Expandable column groups.
+
+![[Pasted image 20230303170907.png]]
+
+![[Pasted image 20230303170945.png]]
+
+- value:
+	- (Ola):  pretty useful functionality from the author perspective; as an author I'd want my dataset to be as readable as possible and for some datasets it may be good to be 
+- cost:
+	- AG Grid: free
+
+
+### Show, hide columns
 
 - value:
 	- (Ola): may be useful for datasets with many columns
 - cost:
 	- AG Grid: enterprise subscription
 
-### Sparklines (mini in-cell charts) [7/10]
+### Sparklines (mini in-cell charts)
 
 Mini charts that are optimised for grid cells that can be used to provide insights into data trends at a glance.
 
@@ -227,7 +205,7 @@ Mini charts that are optimised for grid cells that can be used to provide insigh
 - cost:
 	- AG Grid: enterprise plan
 
-### Integrated charts (AG Grid) [7/10]
+### Integrated charts (AG Grid)
 
 **User created charts:**
 
@@ -248,7 +226,7 @@ The application requests the grid to create a chart through the grid's charting 
 - cost:
 	- AG Grid: enterprise plan
 
-### Status bar & range selection [6/10]
+### Status bar & range selection
 
 The Status Bar appears on the bottom of the grid and shows aggregations (sum, min, max etc.) when you select a range of cells using range selection. This is similar to what happens in Excel.
 
@@ -259,7 +237,7 @@ The Status Bar appears on the bottom of the grid and shows aggregations (sum, 
 - cost:
 	- AG Grid: enterprise subscription
 
-### Pivot tables [6/10]
+### Pivot tables
 
 ![[Pasted image 20230304173330.png]]
 
@@ -268,7 +246,7 @@ The Status Bar appears on the bottom of the grid and shows aggregations (sum, 
 - cost:
 	- AG Grid: enterprise subscription
 
-### Floating filters [6/10]
+### Floating filters
 
 Floating Filters are an additional row under the column headers where the user will be able to see and optionally edit the filters associated with each column.
 
@@ -279,7 +257,7 @@ Floating Filters are an additional row under the column headers where the user w
 - cost:
 	- AG Grid: FREE
 
-### Column resizing [6/10]
+### Column resizing
 
 Resize columns by dragging the edge of the column header, Auto Fill to fill the grid width, or Auto Size columns to fit their content.
 
@@ -288,7 +266,7 @@ Resize columns by dragging the edge of the column header, Auto Fill to fill t
 - cost:
 	- AG Grid: FREE
 
-### Column ordering (api and drag n' drop) [6/10]
+### Column ordering (api and drag n' drop)
 
 Columns can be reorganized by dragging and dropping.
 
@@ -297,7 +275,25 @@ Columns can be reorganized by dragging and dropping.
 - cost:
 	- AG Grid: free
 
-### Cell values other than text (cell renderers) [5/10]
+### Touch support
+
+User can navigate the features of the grid on a touch device with the built-in Touch Support.
+
+- value:
+	- (Ola): rather essential functionality
+- cost:
+	- AG Grid: FREE, works out of the box
+
+### CSV Export
+
+Use CSV Export to take data out of the grid and into another application for further processing such as Excel.
+
+- value:
+	- (Ola): very useful, no need to implement it ourselves
+- cost:
+	- AG Grid: FREE
+
+### Cell values other than text (cell renderers)
 
 Use Cell Rendering to have cells rendering values other than simple strings. For example, put country flags beside country names, or push buttons for actions.
 
@@ -310,7 +306,7 @@ Use Cell Rendering to have cells rendering values other than simple strings. F
 - cost:
 	- AG Grid: FREE
 
-### Printing support [4/10]
+### Printing support
 
 Remove all scrolling in the grid to make it ready for printing.
 
@@ -319,7 +315,7 @@ Remove all scrolling in the grid to make it ready for printing.
 - cost:
 	- AG Grid: FREE
 
-### Pagination [4/10]
+### Pagination
 
 ![[Pasted image 20230303171856.png]]
 
@@ -328,7 +324,7 @@ Remove all scrolling in the grid to make it ready for printing.
 - cost:
 	- AG Grid: FREE
 
-### Quick filter [4/10]
+### Quick filter
 
 Quick Filter filters all columns simultaneously with a simple text search, just like how you filter your Gmail.
 
@@ -339,7 +335,7 @@ Quick Filter filters all columns simultaneously with a simple text search, just
 - cost:
 	- AG Grid: FREE
 
-### Animations [3/10]
+### Animations
 
 Rows in the grid will Animate into place after the user sorts or filters.
 
@@ -348,7 +344,7 @@ Rows in the grid will Animate into place after the user sorts or filters.
 - cost:
 	- AG Grid: FREE
 
-### Localisation [2/10]
+### Localisation
 
 Support for different languages.
 
@@ -359,7 +355,7 @@ Support for different languages.
 - cost:
 	- AG Grid: FREE
 
-### Tree data [2/10]
+### Tree data
 
 Use Tree Data to display data that has parent / child relationships where the parent / child relationships are provided as part of the data. For example, a folder can contain zero or more files and other folders.
 
@@ -371,19 +367,19 @@ Use Tree Data to display data that has parent / child relationships where the 
 	- AG Grid: enterprise subscription
 	- Tanstack:
 
-### Editing [2/10]
+### Editing
 
 Users can update data in cells.
 
 ![[Pasted image 20230303164825.png]]
 
 - value:
-	- (Ola) may be nice, if e.g. combined with status bar = changes in cells would update the aggregate numbers, so in some cases (esp. when the articale revolves around e.g. outlier numbers in the datasets) it may be nice for the users to check for themselves how a single change could change the overall dataset stats
+	- (Ola) may be nice, if e.g. combined with status bar = changes in cells would update the aggregate numbers, so in some cases (esp. when the article revolves around e.g. outlier numbers in the datasets) it may be nice for the users to check for themselves how a single change could change the overall dataset stats
 - cost:
 	- AG Grid: FREE
 	- Tanstack: 
 
-### Excel export [2/10]
+### Excel export
 
 Export to xlsx with extensive customisation to the values exported, layout, value formatting and styling of the exported spreadsheets.
 
@@ -392,7 +388,7 @@ Export to xlsx with extensive customisation to the values exported, layout, valu
 - cost:
 	- AG Grid: enterprise subscription
 
-### Custom filters [2/10]
+### Custom filters
 
 Filter components allow you to add your own filter types to AG Grid.
 
@@ -403,7 +399,7 @@ Filter components allow you to add your own filter types to AG Grid.
 - cost:
 	- AG Grid: FREE
 
-### Keyboard navigation [1/10]
+### Keyboard navigation
 
 The grid responds to keyboard interactions from the user as well as emitting events when key presses happen on the grid cells.
 
@@ -413,7 +409,7 @@ The grid responds to keyboard interactions from the user as well as emitting eve
 	- AG Grid: FREE
 
 
-### Copy to clipboard [1/10]
+### Copy to clipboard
 
 - value:
 	- (Ola): 1/10
@@ -421,7 +417,7 @@ The grid responds to keyboard interactions from the user as well as emitting eve
 - cost:
 	- AG Grid: enterprise subscription
 
-### Aligned grids [1/10]
+### Aligned grids
 
 Have one or more grids horizontally Aligned so that any column changes in one grid impact the other grid. This allows two grids with different data to be kept horizontally in sync.
 
@@ -433,16 +429,16 @@ Have one or more grids horizontally Aligned so that any column changes in one 
 	- AG Grid: FREE
 	- Tanstack: 
 
-### Row selection [1/10]
+### Row selection
 
 Row Selection to select rows. Choose between click selection or checkbox selection. Selecting groups will select children. Then, do sth with selected items.
 
 - value:
-	- (Ola): probably not needed for our use case = a dataset showcase in an article
+	- (Ola): probably not needed for our use case, as we don't want to allow any actions on selected rows
 - cost:
 	- AG Grid: FREE
 
-### Row dragging [1/10]
+### Row dragging
 
 Row Dragging allows you to re-arrange rows by dragging them.
 
@@ -451,18 +447,18 @@ Row Dragging allows you to re-arrange rows by dragging them.
 - cost:
 	- AG Grid: FREE
 
-### Overlays [1/10]
+### Overlays
 
 Full control of Overlays to display messages to the user on top of the grid.
 
 ![[Pasted image 20230303213934.png]]
 
 - value:
-	- (Ola): our pages will be rendered server side anyway, so probably we'll not need any messages like loading state
+	- (Ola): not sure
 - cost:
 	- AG Grid: free
 
-### Column spanning [1/10]
+### Column spanning
 
 Column Spanning allows cells to span columns, similar to cell span in Excel
 
@@ -473,7 +469,7 @@ Column Spanning allows cells to span columns, similar to cell span in Excel
 - cost:
 	- AG Grid: FREE
 
-### Custom icons [1/10]
+### Custom icons
 
 All the icons in the grid can be replaced with your own Custom Icons. You can either use CSS or provide your own images.
 
@@ -482,7 +478,7 @@ All the icons in the grid can be replaced with your own Custom Icons. You can e
 - cost:
 	- AG Grid: FREE
 
-### Full width rows [1/10]
+### Full width rows
 
 Full Width Rows allow you to have one cell that spans the entire width of the tables. This allows a card layout to work alongside the normal cells.
 
@@ -493,7 +489,7 @@ Full Width Rows allow you to have one cell that spans the entire width of the t
 - cost:
 	- AG Grid: FREE
 
-### [EXTRA] Standalone charts (AG Grid) [?/10]
+### Standalone charts (AG Grid)
 
 Standalone chart library.
 
