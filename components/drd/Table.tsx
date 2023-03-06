@@ -1,5 +1,6 @@
 import {
   createColumnHelper,
+  FilterFn,
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -10,6 +11,7 @@ import React, { useEffect, useMemo, useState } from "react";
 
 import loadUrlProxied from "../../lib/loadUrlProxied";
 import parseCsv from "../../lib/parseCsv";
+import DebouncedInput from "./DebouncedInput";
 
 const Table = ({
   data: ogData = [],
@@ -46,6 +48,7 @@ const Table = ({
     state: {
       globalFilter,
     },
+    globalFilterFn: globalFilterFn,
     onGlobalFilterChange: setGlobalFilter,
     getFilteredRowModel: getFilteredRowModel(),
   });
@@ -62,6 +65,12 @@ const Table = ({
 
   return (
     <div>
+      <DebouncedInput
+        value={globalFilter ?? ""}
+        onChange={(value) => setGlobalFilter(String(value))}
+        className="p-2 text-sm shadow border border-block"
+        placeholder="Search all columns..."
+      />
       <table>
         <thead>
           {table.getHeaderGroups().map((hg) => (
@@ -88,6 +97,15 @@ const Table = ({
       </table>
     </div>
   );
+};
+
+const globalFilterFn: FilterFn<any> = (row, columnId, filterValue: string) => {
+  const search = filterValue.toLowerCase();
+
+  let value = row.getValue(columnId) as string;
+  if (typeof value === "number") value = String(value);
+
+  return value?.toLowerCase().includes(search);
 };
 
 export default Table;
