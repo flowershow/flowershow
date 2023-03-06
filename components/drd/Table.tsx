@@ -4,8 +4,16 @@ import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+
+import {
+  ChevronDoubleLeftIcon,
+  ChevronDoubleRightIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@heroicons/react/solid";
 
 import React, { useEffect, useMemo, useState } from "react";
 
@@ -51,6 +59,7 @@ const Table = ({
     globalFilterFn: globalFilterFn,
     onGlobalFilterChange: setGlobalFilter,
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   useEffect(() => {
@@ -95,6 +104,51 @@ const Table = ({
           ))}
         </tbody>
       </table>
+      <div className="flex gap-2 items-center justify-center">
+        <button
+          className={`w-6 h-6 ${
+            !table.getCanPreviousPage() ? "opacity-25" : "opacity-100"
+          }`}
+          onClick={() => table.setPageIndex(0)}
+          disabled={!table.getCanPreviousPage()}
+        >
+          <ChevronDoubleLeftIcon />
+        </button>
+        <button
+          className={`w-6 h-6 ${
+            !table.getCanPreviousPage() ? "opacity-25" : "opacity-100"
+          }`}
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+        >
+          <ChevronLeftIcon />
+        </button>
+        <span className="flex items-center gap-1">
+          <div>Page</div>
+          <strong>
+            {table.getState().pagination.pageIndex + 1} of{" "}
+            {table.getPageCount()}
+          </strong>
+        </span>
+        <button
+          className={`w-6 h-6 ${
+            !table.getCanNextPage() ? "opacity-25" : "opacity-100"
+          }`}
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+        >
+          <ChevronRightIcon />
+        </button>
+        <button
+          className={`w-6 h-6 ${
+            !table.getCanNextPage() ? "opacity-25" : "opacity-100"
+          }`}
+          onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+          disabled={!table.getCanNextPage()}
+        >
+          <ChevronDoubleRightIcon />
+        </button>
+      </div>
     </div>
   );
 };
