@@ -5,43 +5,29 @@ import {
   getFilteredRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+
 import React, { useEffect, useMemo, useState } from "react";
 
 import loadUrlProxied from "../../lib/loadUrlProxied";
 import parseCsv from "../../lib/parseCsv";
 
-const Table = ({ data = [], cols = [], csv = "", url = "" }) => {
+const Table = ({
+  data: ogData = [],
+  cols: ogCols = [],
+  csv = "",
+  url = "",
+}) => {
   if (csv) {
     const out = parseCsv(csv);
-    data = out.rows;
-    cols = out.fields;
+    ogData = out.rows;
+    ogCols = out.fields;
   }
 
-  const [ourdata, setData] = React.useState(data);
-  const [ourcols, setCols] = React.useState(cols);
-  const [error, setError] = React.useState("");
+  const [data, setData] = React.useState(ogData);
+  const [cols, setCols] = React.useState(ogCols);
+  const [error, setError] = React.useState(""); //  TODO: add error handling
 
-  useEffect(() => {
-    if (url) {
-      //  TODO: check if this is working properly
-      loadUrlProxied(url).then((data) => {
-        console.log(data);
-        const { rows, fields } = parseCsv(data);
-        setData(rows);
-        setCols(fields);
-      });
-    }
-  }, [url]);
-
-  return (
-    <>
-      <SimpleTable data={ourdata} cols={ourcols} />
-    </>
-  );
-};
-
-function SimpleTable({ data = [], cols = [] }) {
-  const columns = useMemo(() => {
+  const tableCols = useMemo(() => {
     const columnHelper = createColumnHelper();
     return cols.map((c) =>
       columnHelper.accessor(c.key, {
@@ -49,13 +35,13 @@ function SimpleTable({ data = [], cols = [] }) {
         cell: (info) => info.getValue(),
       })
     );
-  }, []);
+  }, [data, cols]);
 
   const [globalFilter, setGlobalFilter] = useState("");
 
   const table = useReactTable({
     data,
-    columns,
+    columns: tableCols,
     getCoreRowModel: getCoreRowModel(),
     state: {
       globalFilter,
@@ -63,6 +49,16 @@ function SimpleTable({ data = [], cols = [] }) {
     onGlobalFilterChange: setGlobalFilter,
     getFilteredRowModel: getFilteredRowModel(),
   });
+
+  useEffect(() => {
+    if (url) {
+      loadUrlProxied(url).then((data) => {
+        const { rows, fields } = parseCsv(data);
+        setData(rows);
+        setCols(fields);
+      });
+    }
+  }, [url]);
 
   return (
     <div>
@@ -92,6 +88,6 @@ function SimpleTable({ data = [], cols = [] }) {
       </table>
     </div>
   );
-}
+};
 
 export default Table;
