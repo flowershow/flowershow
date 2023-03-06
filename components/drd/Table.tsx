@@ -3,9 +3,10 @@ import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 const papa = require("papaparse");
 
@@ -60,7 +61,7 @@ export default function Table({ data = [], cols = [], csv = "", url = "" }) {
     cols:Array<{name:string, key:number|string}>;
 */
 function SimpleTable({ data = [], cols = [] }) {
-  const columns = React.useMemo(() => {
+  const columns = useMemo(() => {
     const columnHelper = createColumnHelper();
     return cols.map((c) =>
       columnHelper.accessor(c.key, {
@@ -68,12 +69,19 @@ function SimpleTable({ data = [], cols = [] }) {
         cell: (info) => info.getValue(),
       })
     );
-  });
+  }, []);
+
+  const [globalFilter, setGlobalFilter] = useState("");
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    state: {
+      globalFilter,
+    },
+    onGlobalFilterChange: setGlobalFilter,
+    getFilteredRowModel: getFilteredRowModel(),
   });
 
   return (
