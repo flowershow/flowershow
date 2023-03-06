@@ -5,10 +5,13 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
 
 import {
+  ArrowDownIcon,
+  ArrowUpIcon,
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
   ChevronLeftIcon,
@@ -60,6 +63,7 @@ const Table = ({
     onGlobalFilterChange: setGlobalFilter,
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
   });
 
   useEffect(() => {
@@ -86,7 +90,26 @@ const Table = ({
             <tr key={hg.id}>
               {hg.headers.map((h) => (
                 <th key={h.id}>
-                  {flexRender(h.column.columnDef.header, h.getContext())}
+                  <div
+                    {...{
+                      className: h.column.getCanSort()
+                        ? "cursor-pointer select-none"
+                        : "",
+                      onClick: h.column.getToggleSortingHandler(),
+                    }}
+                  >
+                    {flexRender(h.column.columnDef.header, h.getContext())}
+                    {{
+                      asc: (
+                        <ArrowUpIcon className="inline-block ml-2 h-4 w-4" />
+                      ),
+                      desc: (
+                        <ArrowDownIcon className="inline-block ml-2 h-4 w-4" />
+                      ),
+                    }[h.column.getIsSorted() as string] ?? (
+                      <div className="inline-block ml-2 h-4 w-4" />
+                    )}
+                  </div>
                 </th>
               ))}
             </tr>
