@@ -4,6 +4,23 @@ created: 2023-02-23
 
 # Markdown Processing Pipeline
 
+## Mermaid version 2023-03-06
+
+
+```mermaid
+graph TD
+
+raw((Raw source))
+raw --> parser
+parser --> ast((Abstract<br/>Syntax Tree))
+ast --> operators
+operators --> ast
+ast --> renderer[Renderer e.g. rehype]
+renderer --> output((Output e.g. html))
+
+```
+
+
 ## Sketch 2023-02-23
 
 ![[../Excalidraw/markdown-processing-pipeline-2023-02-23.excalidraw.svg]]
@@ -52,3 +69,7 @@ https://mdxjs.com/docs/what-is-mdx/
   > Some notable things in a block quote!
 </div>
 ```
+
+## How Markdown Pipeline Complexity Arises 2023-03-06
+
+![[../Excalidraw/markdown-pipeline-complexity-evolution-2023-03-06.excalidraw.svg]]

@@ -37,7 +37,7 @@ Summary
 
 https://github.com/obsidianmd/obsidian-api/blob/bceb489fc25ceba5973119d6e57759d64850f90d/obsidian.d.ts#L2367
 
-### CachedMetata
+### CachedMetadata
 
 https://github.com/obsidianmd/obsidian-api/blob/bceb489fc25ceba5973119d6e57759d64850f90d/obsidian.d.ts#L468
 

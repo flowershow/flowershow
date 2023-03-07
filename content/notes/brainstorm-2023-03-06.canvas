@@ -1,0 +1,17 @@
+{
+	"nodes":[
+		{"id":"5c742c35cf4a19b5","x":-222,"y":-155,"width":250,"height":60,"type":"text","text":"What's the questions?"},
+		{"id":"4a0080e37728f835","x":397,"y":-514,"width":250,"height":60,"type":"text","text":"What terminology do we use?"},
+		{"id":"9bdbdf4b39bc3aaf","x":135,"y":17,"width":250,"height":60,"type":"text","text":"What's the markdown pipeline?"},
+		{"id":"988a065556cfb52b","x":240,"y":-163,"width":250,"height":60,"type":"text","text":"What needs do we have?"},
+		{"id":"d52dd5ef736ae30c","x":647,"y":-213,"width":250,"height":60,"type":"text","text":"Replace content layer"},
+		{"id":"30bd3ca78a984177","x":497,"y":77,"width":400,"height":334,"type":"file","file":"Excalidraw/contentbase-components-2023-03-06.excalidraw.md"},
+		{"id":"4666de102d0ff4b6","x":147,"y":-344,"width":250,"height":93,"type":"text","text":"What is a \"content base\" / knowledge base (vs a database)"}
+	],
+	"edges":[
+		{"id":"7f328a6f82933428","fromNode":"5c742c35cf4a19b5","fromSide":"right","toNode":"4666de102d0ff4b6","toSide":"left"},
+		{"id":"2313093608f22d11","fromNode":"5c742c35cf4a19b5","fromSide":"right","toNode":"9bdbdf4b39bc3aaf","toSide":"left"},
+		{"id":"4616d14e73234aad","fromNode":"5c742c35cf4a19b5","fromSide":"right","toNode":"988a065556cfb52b","toSide":"left"},
+		{"id":"11f2c91345effc76","fromNode":"988a065556cfb52b","fromSide":"right","toNode":"d52dd5ef736ae30c","toSide":"left"}
+	]
+}
