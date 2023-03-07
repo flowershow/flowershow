@@ -1,7 +1,7 @@
 import { MDXRemote } from 'next-mdx-remote'
 import dynamic from 'next/dynamic'
 
-// import { Vega, VegaLite } from 'react-vega'
+import { Vega, VegaLite } from 'react-vega'
 
 // Custom components/renderers to pass to MDX.
 // Since the MDX files aren't loaded by webpack, they have no knowledge of how
@@ -11,9 +11,9 @@ const components = {
   Table: dynamic(() => import('./Table')),
   // Excel: dynamic(() => import('../components/Excel')),
   // TODO: try and make these dynamic ...
-  // Vega: Vega,
-  // VegaLite: VegaLite,
-  // LineChart: dynamic(() => import('../components/LineChart')),
+  Vega: Vega,
+  VegaLite: VegaLite,
+  LineChart: dynamic(() => import('./LineChart')),
 }
 
 export default function DRD({ children, source, frontMatter }) {

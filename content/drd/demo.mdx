@@ -119,3 +119,125 @@ Year,Temp Anomaly
 2020,0.923
 `} />
 
+## Charts
+
+You can create charts using a simple syntax.
+
+### Line Chart
+
+<LineChart data={
+    [
+      ["1850",-0.41765878],
+      ["1851",-0.2333498],
+      ["1852",-0.22939907],
+      ["1853",-0.27035445],
+      ["1854",-0.29163003]
+    ]
+  }
+  />
+
+```
+<LineChart data={
+    [
+      ["1850",-0.41765878],
+      ["1851",-0.2333498],
+      ["1852",-0.22939907],
+      ["1853",-0.27035445],
+      ["1854",-0.29163003]
+    ]
+  }
+  />
+```
+
+NB: we have quoted years as otherwise not interpreted as dates but as integers ...
+
+
+### Vega and Vega Lite
+
+You can using vega or vega-lite. Here's an example using vega-lite:
+
+<VegaLite data={ { "table": [
+      {
+        "y": -0.418,
+        "x": 1850
+      },
+      {
+        "y": 0.923,
+        "x": 2020
+      }
+      ]
+    }
+  } spec={
+    {
+      "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+      "mark": "bar",
+      "data": {
+          "name": "table"
+      },
+      "encoding": {
+          "x": {
+              "field": "x",
+              "type": "ordinal"
+          },
+          "y": {
+              "field": "y",
+              "type": "quantitative"
+          }
+      }
+    }
+  } />
+
+
+```jsx
+<VegaLite data={ { "table": [
+      {
+        "y": -0.418,
+        "x": 1850
+      },
+      {
+        "y": 0.923,
+        "x": 2020
+      }
+      ]
+    }
+  } spec={
+    {
+      "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+      "mark": "bar",
+      "data": {
+          "name": "table"
+      },
+      "encoding": {
+          "x": {
+              "field": "x",
+              "type": "ordinal"
+          },
+          "y": {
+              "field": "y",
+              "type": "quantitative"
+          }
+      }
+    }
+  } />
+
+```
+
+#### Line Chart from URL with Tooltip
+
+https://vega.github.io/vega-lite/examples/interactive_multi_line_pivot_tooltip.html
+
+<VegaLite spec={ 
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "data": {"url": "/demo/HadCRUT.5.0.1.0.analysis.summary_series.global.annual.csv"},
+  "width": 600,
+  "height": 250,
+  "mark": "line",
+  "encoding": {
+    "x": {"field": "Time", "type": "temporal"},
+    "y": {"field": "Anomaly (deg C)", "type": "quantitative"},
+    "tooltip": {"field": "Anomaly (deg C)", "type": "quantitative"}
+  }
+}
+} />
+
