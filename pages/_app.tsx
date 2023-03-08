@@ -2,11 +2,12 @@
 import { DefaultSeo } from "next-seo";
 import { useRouter } from "next/router";
 import Script from "next/script";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { Layout } from "../components/Layout";
 
 import {
+    /* Layout, */
     SearchProvider,
     pageview,
     ThemeProvider,
@@ -20,8 +21,32 @@ import "../styles/global.css";
 import "../styles/prism.css";
 import "../styles/swipermin.css";
 
+// ToC: get the html nodelist for headings
+function collectHeadings(nodes) {
+    const sections = [];
+
+    Array.from(nodes).forEach((node) => {
+        const { id, innerText: title, tagName: level } = node;
+        if (!(id && title)) {
+            return;
+        }
+        if (level === "H3") {
+            const parentSection = sections[sections.length - 1];
+            if (parentSection) parentSection.children.push({ id, title });
+        } else if (level === "H2") {
+            sections.push({ id, title, children: [] });
+        }
+
+        sections.push(...collectHeadings(node.children ?? []));
+    });
+
+    return sections;
+}
+
 
 function MyApp({ Component, pageProps }) {
+    const [tableOfContents, setTableOfContents] = useState([]);
+
     const router = useRouter();
 
     /**
@@ -47,30 +72,30 @@ function MyApp({ Component, pageProps }) {
 
     // TODO maybe use computed fields for showEditLink and showToc to make this even cleaner?
     /* const layoutProps = {
-  *   showToc: pageProps.showToc ?? siteConfig.showToc,
-  *   showEditLink: pageProps.showEditLink ?? siteConfig.showEditLink,
-  *   showSidebar: pageProps.showSidebar ?? siteConfig.showSidebar,
-  *   showComments,
-  *   edit_url: pageProps.edit_url,
-  *   url_path: pageProps.url_path,
-  *   commentsConfig: siteConfig.comments,
-  *   nav: {
-  *     title: siteConfig.navbarTitle?.text || siteConfig.title,
-  *     logo: siteConfig.navbarTitle?.logo,
-  *     links: siteConfig.navLinks,
-  *     search: siteConfig.search,
-  *     social: siteConfig.social,
-  *   },
-  *   author: {
-  *     name: siteConfig.author,
-  *     url: siteConfig.authorUrl,
-  *     logo: siteConfig.authorLogo,
-  *   },
-  *   theme: {
-  *     defaultTheme: siteConfig.theme.default,
-  *     themeToggleIcon: siteConfig.theme.toggleIcon,
-  *   },
-  * }; */
+*     showToc: pageProps.showToc ?? siteConfig.showToc,
+*     showEditLink: pageProps.showEditLink ?? siteConfig.showEditLink,
+*     showSidebar: pageProps.showSidebar ?? siteConfig.showSidebar,
+*     showComments,
+*     edit_url: pageProps.edit_url,
+*     url_path: pageProps.url_path,
+*     commentsConfig: siteConfig.comments,
+*     nav: {
+*         title: siteConfig.navbarTitle?.text || siteConfig.title,
+*         logo: siteConfig.navbarTitle?.logo,
+*         links: siteConfig.navLinks,
+*         search: siteConfig.search,
+*         social: siteConfig.social,
+*     },
+*     author: {
+*         name: siteConfig.author,
+*         url: siteConfig.authorUrl,
+*         logo: siteConfig.authorLogo,
+*     },
+*     theme: {
+*         defaultTheme: siteConfig.theme.default,
+*         themeToggleIcon: siteConfig.theme.toggleIcon,
+*     },
+* }; */
 
     useEffect(() => {
         if (siteConfig.analytics) {
@@ -83,6 +108,13 @@ function MyApp({ Component, pageProps }) {
             };
         }
     }, [router.events]);
+
+
+    useEffect(() => {
+        const headingNodes = document.querySelectorAll("h2,h3");
+        const toc = collectHeadings(headingNodes);
+        setTableOfContents(toc ?? []);
+    }, [router.asPath]); // update table of contents on route change with next/link
 
     return (
         <ThemeProvider
