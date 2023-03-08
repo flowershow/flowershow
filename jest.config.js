@@ -6,8 +6,9 @@ const createJestConfig = nextJest({
 
 /** @type {import('jest').Config} */
 const customJestConfig = {
-  testMatch: ['**/__tests__/unit/*.[jt]s?(x)'],
+  testMatch: ['**/*.test.[jt]s?(x)'],
   testEnvironment: 'jest-environment-jsdom',
+  preset: "ts-jest"
 }
 
 // workaround to override next/jest defaults
