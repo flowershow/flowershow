@@ -9,7 +9,8 @@ export default function All({ pages }) {
       <NextSeo title="All pages" />
       <div className="prose dark:prose-invert p-6 mx-auto">
         <h1>A-Z Index</h1>
-        {Array.from(labels).map((pageTitle) => (
+        {/* TODO types */}
+        {Array.from(labels).map((pageTitle: any) => (
           <div key={pageTitle} className="ml-2 pt-2">
             <h3>{pageTitle}</h3>
             <hr className="m-0 w-full border-black dark:border-gray-700" />
