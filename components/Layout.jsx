@@ -3,6 +3,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 
 import { siteConfig } from "../config/siteConfig";
+
 import { Nav } from "./Nav";
 
 function useTableOfContents(tableOfContents) {
@@ -131,7 +132,7 @@ export function Layout({ children, tableOfContents }) {
             ))}
           </div>
           <p className="flex items-center justify-center">
-            Created by 
+            Created by
             <a
               href={siteConfig.authorUrl}
               target="_blank"
