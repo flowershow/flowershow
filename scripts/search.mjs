@@ -10,6 +10,7 @@ const omit = (obj = {}, keys = []) => {
 };
 
 const coreContent = allDocuments
+  .filter((doc) => !doc.isDraft && doc.url_path)
   .map((doc) =>
     omit(
       {
@@ -19,7 +20,6 @@ const coreContent = allDocuments
       },
       ["body", "_raw", "_id"]
     )
-  )
-  .filter((doc) => !doc.isDraft);
+  );
 
 writeFileSync("public/search.json", JSON.stringify(coreContent));
