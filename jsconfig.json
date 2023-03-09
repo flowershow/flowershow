@@ -11,7 +11,7 @@
     "**/*.tsx",
     "**/*.ts",
     ".contentlayer/generated",
-    "lib"
+    "lib",
   ],
   "exclude": ["node_modules"]
 }
