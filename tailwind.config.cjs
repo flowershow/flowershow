@@ -7,6 +7,8 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx}",
     "./layouts/**/*.{js,ts,jsx,tsx}",
     "./content/**/*.{md,mdx}",
+    "./node_modules/@flowershow/core/dist/*.js",
+    "./node_modules/@flowershow/core/*.js",
   ],
   darkMode: "class",
   theme: {
@@ -14,7 +16,6 @@ module.exports = {
       // support wider width for large screens >1440px eg. in hero
       maxWidth: {
         "8xl": "88rem",
-        "9xl": "1440px",
       },
       fontFamily: {
         sans: ["ui-sans-serif", ...defaultTheme.fontFamily.sans],
@@ -41,6 +42,6 @@ module.exports = {
   /* eslint global-require: off */
   plugins: [
     require("@tailwindcss/typography"),
-    require('@tailwindcss/line-clamp'),
+    require("@tailwindcss/line-clamp"),
   ],
 };

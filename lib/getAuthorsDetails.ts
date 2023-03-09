@@ -1,4 +1,4 @@
-import { siteConfig } from "@/config/siteConfig.js";
+import { siteConfig } from "@/config/siteConfig";
 import { allPeople } from "contentlayer/generated";
 
 export const getAuthorsDetails = (authors) => {

@@ -1,33 +1,43 @@
-/* eslint import/no-unresolved: off */     
-import { defineDocumentType, makeSource } from "contentlayer/source-files";
+/* eslint import/no-unresolved: off */
+import {
+  ComputedFields,
+  defineDocumentType,
+  makeSource,
+  FieldDefs,
+} from "contentlayer/source-files";
 import { h } from "hastscript";
+import { remark } from "remark";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeMathjax from "rehype-mathjax";
 import rehypePrismPlus from "rehype-prism-plus";
 import rehypeSlug from "rehype-slug";
-import callouts from "remark-callouts";
-import codeExtra from "remark-code-extra";
-import remarkEmbed from "remark-embed-plus";
+import mdxMermaid from "mdx-mermaid";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import smartypants from "remark-smartypants";
 import remarkToc from "remark-toc";
-import wikiLinkPlugin from "remark-wiki-link-plus";
+import callouts from "@flowershow/remark-callouts";
+import remarkEmbed from "@flowershow/remark-embed";
+import wikiLinkPlugin from "@flowershow/remark-wiki-link";
+import stripMarkdown, { Options } from "strip-markdown";
 
 import { siteConfig } from "./config/siteConfig";
 
-const sharedFields = {
+const sharedFields: FieldDefs = {
   title: { type: "string" },
   description: { type: "string" },
   image: { type: "string" },
   layout: { type: "string", default: "docs" },
-  editLink: { type: "boolean" },
-  toc: { type: "boolean" },
+  showEditLink: { type: "boolean" },
+  showToc: { type: "boolean" },
+  showSidebar: { type: "boolean" },
+  showComments: { type: "boolean" },
   isDraft: { type: "boolean" },
+  showLinkPreview: { type: "boolean" },
   data: { type: "list", of: { type: "string" }, default: [] },
 };
 
-const computedFields = {
+const computedFields: ComputedFields = {
   url_path: {
     type: "string",
     /* eslint no-underscore-dangle: off */
@@ -37,6 +47,67 @@ const computedFields = {
     type: "string",
     /* eslint no-underscore-dangle: off */
     resolve: (doc) => doc._raw.flattenedPath.replace(/^(.+?\/)*/, ""),
+  },
+  title: {
+    type: "string",
+    /* eslint no-underscore-dangle: off */
+    resolve: async (doc) => {
+      // use frontmatter title if exists
+      if (doc.title) return doc.title;
+      // use h1 heading on first line (if exists)
+      const heading = doc.body.raw.trim().match(/^#\s+(.*)/);
+      if (heading) {
+        const title = heading[1]
+          // replace wikilink with only text value
+          .replace(/\[\[([\S]*?)]]/, "$1");
+
+        const stripTitle = await remark().use(stripMarkdown).process(title);
+        return stripTitle.toString().trim();
+      }
+    },
+  },
+  description: {
+    type: "string",
+    /* eslint no-underscore-dangle: off */
+    resolve: async (doc) => {
+      // use frontmatter description if exists
+      if (doc.description) return doc.description;
+
+      const content = doc.body.raw
+        // remove commented lines
+        .replace(/{\/\*.*\*\/}/g, "")
+        // remove import statements
+        .replace(
+          /^import\s*(?:\{\s*[\w\s,\n]+\s*\})?(\s*(\w+))?\s*from\s*("|')[^"]+("|');?$/gm,
+          ""
+        )
+        // remove youtube links
+        .replace(/^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/gm, "")
+        // replace wikilinks with only text
+        .replace(/([^!])\[\[(\S*?)\]]/g, "$1$2")
+        // remove wikilink images
+        .replace(/!\[[\S]*?]]/g, "");
+
+      // remove markdown formatting
+      const stripped = await remark()
+        .use(stripMarkdown, {
+          remove: ["heading", "blockquote", "list", "image", "html", "code"],
+        } as Options)
+        .process(content);
+
+      if (stripped.value) {
+        const description: string = stripped.value.toString().slice(0, 200);
+        return description + "...";
+      }
+    },
+  },
+  edit_url: {
+    type: "string",
+    resolve: (post) =>
+      siteConfig.editLinkRoot
+        ? /* eslint no-underscore-dangle: off */
+        `${siteConfig.editLinkRoot}/${post._raw.sourceFilePath}`
+        : undefined,
   },
 };
 
@@ -57,9 +128,7 @@ const Blog = defineDocumentType(() => ({
   fields: {
     ...sharedFields,
     layout: { type: "string", default: "blog" },
-    created: {
-      type: "date",
-    },
+    created: { type: "date", required: true },
     authors: {
       type: "list",
       of: { type: "string" },
@@ -108,13 +177,13 @@ export const Person = defineDocumentType(() => ({
 export const Doc = defineDocumentType(() => ({
   name: "Doc",
   filePathPattern: `docs/**/!(index)*.md*`,
-  contentType: "mdx", 
+  contentType: "mdx",
   fields: {
     ...sharedFields,
     layout: { type: "string", default: "docs" },
     date: {
       type: "date",
-    }, 
+    },
     modified: {
       type: "date",
     },
@@ -137,9 +206,9 @@ export const Doc = defineDocumentType(() => ({
       resolve: (doc) => {
         const path = doc._raw.flattenedPath;
         const category = path.match(/^docs\/(.+)\//);
-        
+
         //  Return first captured group
-        if(category && category.length > 0) {
+        if (category && category.length > 0) {
           return category[1];
         }
         return null;
@@ -151,13 +220,13 @@ export const Doc = defineDocumentType(() => ({
 export const Collection = defineDocumentType(() => ({
   name: "Collection",
   filePathPattern: `collections/**/!(index)*.md*`,
-  contentType: "mdx", 
+  contentType: "mdx",
   fields: {
     ...sharedFields,
     layout: { type: "string", default: "collection" },
     date: {
       type: "date",
-    }, 
+    },
     modified: {
       type: "date",
     },
@@ -183,7 +252,7 @@ const contentLayerExcludeDefaults = [
   "tsconfig.json",
 ];
 
-/* eslint import/no-default-export: off */ 
+/* eslint import/no-default-export: off */
 export default makeSource({
   contentDirPath: siteConfig.content,
   contentDirExclude: contentLayerExcludeDefaults.concat([
@@ -194,6 +263,10 @@ export default makeSource({
   contentDirInclude: siteConfig.contentInclude,
   documentTypes: [Collection, Doc, Blog, Person, Page],
   mdx: {
+    esbuildOptions: (opts) => {
+      opts.tsconfig = `${process.env.PWD}/tsconfig.mdx.json`;
+      return opts;
+    },
     cwd: process.cwd(),
     remarkPlugins: [
       remarkEmbed,
@@ -202,52 +275,6 @@ export default makeSource({
       remarkMath,
       callouts,
       [wikiLinkPlugin, { markdownFolder: siteConfig.content }],
-      /** Using the code extra plugin from https://github.com/s0/remark-code-extra
-       *  to create new mermaid pre tags to use with mdx-mermaid.
-       *  rehypePrismPlus plugin modifies the pre tags and due to this mdx-mermaid
-       *  component cannot receive the values in the required format.
-       *  Refer issue https://github.com/flowershow/flowershow/issues/12 for more info.
-       */
-      [
-        codeExtra,
-        {
-          transform: (node) => {
-            if (node.type === "code" && node.lang === "mermaid") {
-              // reset values else rehype-prism-plus throws error
-              // node.type = "";
-              // node.lang = "";
-              return {
-                // create new pre tag element here for mermaid
-                after: [
-                  {
-                    type: "element",
-                    tagName: "pre",
-                    properties: {
-                      className: "code-mermaid",
-                    },
-                    children: [
-                      {
-                        type: "text",
-                        value: node.value,
-                      },
-                    ],
-                  },
-                ],
-                // remove the pre tag element created by rehype-prism-plus
-                // otherwise both will be displayed
-                transform: (n) => {
-                  const preElem = n.data.hChildren.find(
-                    (el) => el.tagName === "pre"
-                  );
-                  const index = n.data.hChildren.indexOf(preElem);
-                  n.data.hChildren.splice(index, 1);
-                },
-              };
-            }
-            return null;
-          },
-        },
-      ],
       [
         remarkToc,
         {
@@ -256,6 +283,7 @@ export default makeSource({
           tight: true,
         },
       ],
+      [mdxMermaid, {}],
     ],
     rehypePlugins: [
       rehypeSlug,
