@@ -1,7 +1,7 @@
 import { Knex } from "knex";
 import * as fs from "fs";
 import * as crypto from "crypto";
-import matter = require("gray-matter");
+import matter from "gray-matter";
 
 export interface MarkdownDBFile {
   _id: string;
