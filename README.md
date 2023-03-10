@@ -12,7 +12,7 @@ Check out the [datahub-next-deploy repo](https://github.com/datopian/datahub-nex
 
 ## Dev
 
-To setup a local dev environemnt:
+To setup a local dev environment:
 
 1. Clone this repo
 2. Install the dependencies with `npm i`
