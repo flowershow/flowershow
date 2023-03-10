@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "prebuild": "node ./scripts/fix-symlinks.mjs",
     "postbuild": "cross-env NODE_OPTIONS='--experimental-json-modules --experimental-modules' node ./scripts/search.mjs",
     "start": "next start",
     "export": "npm run build && next export",
