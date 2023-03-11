@@ -1,5 +1,5 @@
 import knex from "knex";
-import markdowndb, { MarkdownDBMdxFile } from "./markdowndb";
+import markdowndb from "./markdowndb";
 import * as fs from "fs";
 
 /**
@@ -31,7 +31,7 @@ describe("MarkdownDB lib", () => {
 
     const myMdDb = markdowndb.Database(db);
 
-    //  Check if all files were added
+    //  Check if all files were indexed
     const allFiles = walk(pathToFixturesFolder);
     const allFilesCount = allFiles.length;
 
@@ -50,9 +50,20 @@ describe("MarkdownDB lib", () => {
     //  Check if querying by tags is working
     const economyFiles = await myMdDb.query({ tags: ["economy"] });
     expect(economyFiles.map((f) => f._path)).toEqual([
-      `${pathToFixturesFolder}/blog/blog2.mdx`,
       `${pathToFixturesFolder}/blog/blog3.mdx`,
+      `${pathToFixturesFolder}/blog/blog2.mdx`,
     ]);
+
+    //  Check if querying by filetypes is working
+    const pngFiles = await myMdDb.query({ filetypes: ["png"] });
+    expect(
+      pngFiles
+        .map((f) => f.filetype)
+        //  Filter out duplicates
+        .filter((v, i, s) => {
+          return s.indexOf(v) === i;
+        })
+    ).toEqual(["png"]);
   });
 });
 
