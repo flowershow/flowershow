@@ -28,12 +28,6 @@ _I'm Italic!_
 
 ## Code blocks
 
-    <html>
-      <head>
-      </head>
-    </html>
-    
-
 ```
 git status
 git add
