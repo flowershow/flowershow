@@ -1,5 +1,6 @@
 import { MDXRemote } from 'next-mdx-remote'
 import dynamic from 'next/dynamic'
+import { Mermaid } from "@flowershow/core";
 
 import { Vega, VegaLite } from 'react-vega'
 
@@ -9,6 +10,7 @@ import { Vega, VegaLite } from 'react-vega'
 // here.
 const components = {
   Table: dynamic(() => import('./Table')),
+  mermaid: Mermaid,
   // Excel: dynamic(() => import('../components/Excel')),
   // TODO: try and make these dynamic ...
   Vega: Vega,
