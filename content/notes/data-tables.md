@@ -120,47 +120,9 @@ Probably go with AG Grid.
 		- which means longer page down
 
 
-## Data tables' features
+## Data table features
 
-https://docs.google.com/spreadsheets/d/1P7JQOIs1EL26CxGlOYD6Ba2kkjVxRqXjp9z30KsDQdQ/edit#gid=0
-
-| Area      | Feature                                | Ola's vote | Rufus' vote | Rufus' comment |
-| --------- | -------------------------------------- | ---------- | ----------- | -------------- |
-| Filtering | Filtering basic (e.g. by values)       | 10         | 3           |                |
-| Filtering | Filtering by values (faceting)         | 9          | 1           |                |
-| Filtering | Custom filters                         | 2          | ?           |                |
-| Filtering | Quick filter (google style querying)   | 4          | 2           |                |
-|           | Sorting                                | 10         | 3           |                |
-|           | Aggregation (count, max, min etc)      | 8          | 1           |                |
-|           | Cell styling                           | 8          | 0           |                |
-|           | Row and column freezing                | 8          | 1           |                |
-|           | Columns grouping                       | 7          | 1           |                |
-|           | Rows grouping                          | 5          | 1           |                |
-|           | Animations                             | 2          | 0           |                |
-|           | Show/hide columns                      | 3          | 1           |                |
-|           | Sparklines (mini cell charts)          | 6          | 0           |                |
-|           | Status bar & range selection           | 6          | ?           |                |
-|           | Floating filters                       | 6          | ?           |                |
-|           | Column resizing                        | 7          | 2           |                |
-|           | Column ordering (api and drag n' drop) | 4          | 1           |                |
-|           | Pagination                             |            | 3           |                |
-|           | Touch support                          | 4          | 1           |                |
-|           | CSV export                             | 6          | 0           |                |
-|           | Excel export                           | 1          | 0           |                |
-|           | Printing support                       | 4          | 0           |                |
-|           | Integrated charts                      | 6          |             |                |
-|           | Cell values other than text            | 5          |             |                |
-|           | Keyboard navigation                    | 1          |             |                |
-|           | Copy to clipboard                      | 2          | 1           |                |
-|           | Localisation                           |            | ?           |                |
-|           | Tree data                              | 2          | 0           |                |
-|           | Editing                                |            | 1           |                |
-|           | Row selection                          | 1          |             |                |
-|           | Row dragging                           | 1          |             |                |
-|           | Overlays                               | 1          |             |                |
-|           | Column spanning                        | 1          |             |                |
-|           | Custom icons                           | 1          |             |                |
-|           | Full width rows                        | 1          |             |
+A list of the key features you can find in data tables or data grids.
 
 ### Sorting
 
