@@ -18,7 +18,7 @@ const components = {
   LineChart: dynamic(() => import('./LineChart')),
 }
 
-export default function DRD({ children, source, frontMatter }) {
+export default function DRD({ source, frontMatter }) {
   return (
     <div className="prose mx-auto">
       <header>
