@@ -8,7 +8,6 @@ import {
 import { h } from "hastscript";
 import { remark } from "remark";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
-import rehypeMathjax from "rehype-mathjax";
 import rehypePrismPlus from "rehype-prism-plus";
 import rehypeSlug from "rehype-slug";
 import mdxMermaid from "mdx-mermaid";
@@ -18,7 +17,6 @@ import smartypants from "remark-smartypants";
 import remarkToc from "remark-toc";
 import callouts from "@flowershow/remark-callouts";
 import remarkEmbed from "@flowershow/remark-embed";
-import wikiLinkPlugin from "@flowershow/remark-wiki-link";
 import stripMarkdown, { Options } from "strip-markdown";
 
 import { siteConfig } from "./config/siteConfig";
@@ -274,7 +272,6 @@ export default makeSource({
       [smartypants, { quotes: false, dashes: "oldschool" }],
       remarkMath,
       callouts,
-      [wikiLinkPlugin, { markdownFolder: siteConfig.content }],
       [
         remarkToc,
         {
@@ -319,7 +316,6 @@ export default makeSource({
           },
         },
       ],
-      rehypeMathjax,
       [rehypePrismPlus, { ignoreMissing: true }],
     ],
   },
