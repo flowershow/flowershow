@@ -6,6 +6,11 @@ created: 2023-02-17
 
 **Turn Github into a DataHub. Easy, fast, reliable data publishing.**
 
+Taglines
+
+- Publish, organize and find data
+- Wrangle, Preview, Deploy
+
 ![[../Excalidraw/datahub-next-github-v0.1-20220218.svg]]
 
 More complex version with multiple documents, multiple assets
