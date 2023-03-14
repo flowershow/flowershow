@@ -129,4 +129,3 @@ For example, for API routes that rely on native Node.js APIs, they need to run w
 
 [^5]: > Native Node.js APIs are not supported. For example, you can't read or write to the filesystem
 node_modules can be used, as long as they implement ES Modules and do not use native Node.js APIs - https://nextjs.org/docs/api-reference/edge-runtime#unsupported-apis
-
