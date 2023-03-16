@@ -31,7 +31,6 @@
     "knex": "^2.4.2",
     "mdx-mermaid": "2.0.0-rc7",
     "next": "^13.2.1",
-    "next-contentlayer": "^0.3.0",
     "next-mdx-remote": "",
     "next-seo": "^5.15.0",
     "papaparse": "",

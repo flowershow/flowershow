@@ -1,5 +1,3 @@
-import { withContentlayer } from "next-contentlayer";
-
 //  Temporary solution to call indexFolder on start
 import { indexFolder } from "./lib/markdowndb/dist/index.js";
 
@@ -12,7 +10,7 @@ import { indexFolder } from "./lib/markdowndb/dist/index.js";
 const pathToMddb = "markdown.db";
 await indexFolder(pathToMddb);
 
-export default withContentlayer({
+export default {
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -25,4 +23,4 @@ export default withContentlayer({
     };
     return config;
   },
-});
+};

@@ -3,7 +3,6 @@ node_modules
 
 # flowershow
 .flowershow
-.contentlayer
 .next
 search.json
 
