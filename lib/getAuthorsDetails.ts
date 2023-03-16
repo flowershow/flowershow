@@ -1,7 +1,12 @@
 import { siteConfig } from "@/config/siteConfig";
-import { allPeople } from "contentlayer/generated";
+import mdDb from "./mdDb";
 
-export const getAuthorsDetails = (authors) => {
+export const getAuthorsDetails = async (authors) => {
+  let allPeople = await mdDb.query<any>({ folder: "people" });
+
+  //  Temporary, flowershow UI component expects contentlayer obj props
+  allPeople = allPeople.map((p) => ({ ...p, ...p.metadata }));
+
   let blogAuthors = [];
 
   if (authors) {
