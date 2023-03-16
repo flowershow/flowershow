@@ -1,7 +1,7 @@
 /* eslint import/no-default-export: off */
 import { formatDate } from "@/lib/formatDate.js";
 
-export default function DocsLayout({ children, ...frontMatter }) {
+export default function CollectionsLayout({ children, ...frontMatter }) {
     const { title, created, date: docDate, description } = frontMatter;
 
     const date = created || docDate;

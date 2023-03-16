@@ -4,8 +4,12 @@ import parse from "lib/markdown.mjs";
 
 import DRD from "../../components/drd/DRD";
 import mdDb from "@/lib/mdDb";
+import { getAuthorsDetails } from "@/lib/getAuthorsDetails";
 
 export default function DRDPage({ source, frontMatter }) {
+  source = JSON.parse(source);
+  frontMatter = JSON.parse(frontMatter);
+
   return <DRD source={source} frontMatter={frontMatter} />;
 }
 
@@ -18,10 +22,18 @@ export const getStaticProps = async ({ params }) => {
   const source = fs.readFileSync(mdDbFile._path, { encoding: "utf-8" });
   const { mdxSource, frontMatter } = await parse(source, mdDbFile._path);
 
+  // Temporary, so that blogs work properly
+  if (mdDbFile._url_path.startsWith("blog/")) {
+    frontMatter.layout = "blog";
+    frontMatter.authorsDetails = await getAuthorsDetails(
+      mdDbFile.metadata.authors
+    );
+  }
+
   return {
     props: {
-      source: mdxSource,
-      frontMatter: frontMatter,
+      source: JSON.stringify(mdxSource),
+      frontMatter: JSON.stringify(frontMatter),
     },
   };
 };

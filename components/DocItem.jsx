@@ -4,9 +4,11 @@ export function DocItem({ doc }) {
   return (
     <article className="!mt-0">
       <Card className="md:col-span-3">
-        <Card.Title className="text-teal-500" href={`${doc.url_path}`}>{doc.title}</Card.Title>
-        {doc.excerpt && (
-          <Card.Description>{doc.excerpt}</Card.Description>
+        <Card.Title className="text-teal-500" href={`${doc._url_path}`}>
+          {doc.metadata.title}
+        </Card.Title>
+        {doc.metadata.excerpt && (
+          <Card.Description>{doc.metadata.excerpt}</Card.Description>
         )}
       </Card>
     </article>
