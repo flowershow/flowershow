@@ -11,14 +11,14 @@ describe("MarkdownDB lib", () => {
     const dbConfig = {
       client: "sqlite3",
       connection: {
-        filename: ":memory:",
+        filename: "markdown.db",
       },
     };
 
     const db = knex(dbConfig);
 
     //  Index folder
-    await markdowndb.indexFolder(db, pathToFixturesFolder);
+    await markdowndb.indexFolder("markdown.db", pathToFixturesFolder);
 
     //  Ensure there is a "files" table
     expect(await db.schema.hasTable("files")).toBe(true);
@@ -29,7 +29,7 @@ describe("MarkdownDB lib", () => {
     //  Ensure there is a "file_tags" table
     expect(await db.schema.hasTable("file_tags")).toBe(true);
 
-    const myMdDb = markdowndb.Database(db);
+    const myMdDb = markdowndb.Database("markdown.db");
 
     //  Check if all files were indexed
     const allFiles = walk(pathToFixturesFolder);
@@ -40,11 +40,15 @@ describe("MarkdownDB lib", () => {
 
     //  Check if querying by folder is working
     const blogFiles = allFiles.filter((p) =>
-      p.startsWith(`${pathToFixturesFolder}/blog`)
+      p.startsWith(`${pathToFixturesFolder}/blog/`)
     );
     const blogFilesCount = blogFiles.length;
 
-    const indexedBlogFiles = await myMdDb.query({ folder: "blog" });
+    const indexedBlogFiles = await myMdDb.query({
+      folder: "blog",
+      filetypes: ["md", "mdx"],
+    });
+
     expect(indexedBlogFiles.length).toBe(blogFilesCount);
 
     //  Check if querying by tags is working
@@ -64,11 +68,14 @@ describe("MarkdownDB lib", () => {
           return s.indexOf(v) === i;
         })
     ).toEqual(["png"]);
+
+    db.destroy();
+    myMdDb._destroyDb();
   });
 });
 
 const walk = (dir: fs.PathLike) => {
-  let files = [];
+  let files: string[] = [];
   for (let item of fs.readdirSync(dir)) {
     if (!(dir as string).endsWith("/")) {
       dir += "/";

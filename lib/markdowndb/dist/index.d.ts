@@ -6,6 +6,7 @@ declare class MarkdownDB {
     constructor(db: Knex);
     getTags(): Promise<any[]>;
     query<T = DatabaseFile>(query?: DatabaseQuery): Promise<DatabaseFile<T>[]>;
+    _destroyDb(): void;
 }
 export declare const Database: (dbPath: string) => MarkdownDB;
 export {};

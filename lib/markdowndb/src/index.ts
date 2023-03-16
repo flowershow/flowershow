@@ -18,16 +18,16 @@ export const indexFolder = async (
 
   const db = knex(dbConfig);
 
-  //  Temporary, we don't want to handle updates now
-  //  so database is refreshed every time the folder
-  //  is indexed
-  await db.schema.dropTable("file_tags");
-  await db.schema.dropTable("tags");
-  await db.schema.dropTable("files");
-
   await createFilesTable(db);
   await createTagsTable(db);
   await createFileTagsTable(db);
+
+  //  Temporary, we don't want to handle updates now
+  //  so database is refreshed every time the folder
+  //  is indexed
+  await db("file_tags").del();
+  await db("tags").del();
+  await db("files").del();
 
   const pathsToFiles = walkFolder(folderPath);
 
@@ -71,6 +71,8 @@ export const indexFolder = async (
   await db.batchInsert("files", filesToInsert);
   await db.batchInsert("tags", tagsToInsert);
   await db.batchInsert("file_tags", fileTagsToInsert);
+
+  db.destroy();
 };
 
 //  Get files inside a folder, return an array of file paths
@@ -239,6 +241,10 @@ class MarkdownDB {
         return file;
       });
     });
+  }
+
+  _destroyDb() {
+    this.db.destroy();
   }
 }
 
