@@ -20,7 +20,7 @@ export const getStaticProps = async ({ params }) => {
   const mdDbFile = queryResults[0];
 
   const source = fs.readFileSync(mdDbFile._path, { encoding: "utf-8" });
-  const { mdxSource, frontMatter } = await parse(source, mdDbFile._path);
+  const { mdxSource, frontMatter } = await parse(source, "mdx");
 
   // Temporary, so that blogs work properly
   if (mdDbFile._url_path.startsWith("blog/")) {
