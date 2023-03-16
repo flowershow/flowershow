@@ -14,3 +14,6 @@ search.json
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# markdowndb
+*.db
