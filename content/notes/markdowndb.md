@@ -12,16 +12,67 @@ Combine that with web components / JSX and you have a full inline javascript.
 
 More reasons [[notes/markdown-is-eating-the-world]] (aka markdown is cool) 😎
 
+## Job Stories High Level
+
+*i.e. why do i want a markdowndb*
+
+When generating rendered pages I want to get a list of all or some of the markdown files we have so that i can render them and create blog index etc
+
+When generating an individual rendered page i want information about all the pages that reference it so that i can list all the backlinks
+
+When creating a tag page I want to list all pages with that tag so that I can generate that page
+
 ## Job stories
 
-### Parse stuff
+### Index a folder of files
 
-- [ ] parse frontmatter
-  - [ ] dealing with nested frontmatter
-  - [ ] dealing with property types e.g. string, number
-- [ ] parse tags
-  - [ ] from frontmatter
-  - [ ] ...
+I want to create a db index given a folder of markdown and other files
+
+Bonus
+
+- Index multiple folders (with support for configuring e.g. prefixing in some way e.g. i have all my blog files in this separate folder over here)
+
+### Structured data extraction
+
+#### Frontmatter
+
+Extract frontmatter
+
+- deal with nested frontmatter
+- deal with casting types e.g. string, number so that we can query in useful ways e.g. find me all blog posts before date X
+
+#### Tags
+
+Extracts tags in frontmatter with tags attribute and in body like `#abc`
+
+#### Link extraction
+
+I want to extract links so i can compute backlinks or deadlinks etc
+
+- standard markdown links
+- obsidian wiki links
+- embeds of files e.g. `![...]`
+  - wiki link embeds of files
+
+So all of these
+
+```
+[...](...)
+![...](...)
+[[...]]   # wiki link style including with title
+[[...|my title]]   # wiki link style including with title
+![[...]]  # for images and other embeds
+```
+
+#### Tasks
+
+Extracting tasks like:
+
+```md
+- [ ] this is a task
+```
+
+See obsidian data view.
 
 ### Computed fields (or just any operations on incoming records)
 
@@ -29,7 +80,8 @@ cf https://www.contentlayer.dev/docs/reference/source-files/define-document-type
 
 When loading a file i want to create new fields based on some computation so that i can have additional metadata
 
-When loading a file i want to add a type based on the folder i found the file so that i can label blog posts
+- Add a type based on the folder of the file so that i can label blog posts
+- Add `layout` based on the folder so i can change layouts based on folder
 
 ### Validation of data on way in
 
@@ -45,7 +97,7 @@ When accessing a File I want to cast it to a proper typescript type so that i ca
 
 ### BYOT (bring your own types)
 
-When working with markdowndb i want to create my own types ...
+When working with markdowndb i want to create my own types ... so that when i get an object out it is cast to the right typescript type
 
 ### Misc
 
