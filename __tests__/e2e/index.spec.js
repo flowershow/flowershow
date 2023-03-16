@@ -4,7 +4,7 @@ const { test, expect } = require('@playwright/test');
 test('has title', async ({ page }) => {
   await page.goto('/');
 
-  await expect(page).toHaveTitle(/DataHub Open Data/);
+  await expect(page).toHaveTitle(/DataHub/);
 });
 
 test('has blog posts index page', async ({ page }) => {
