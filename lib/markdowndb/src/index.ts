@@ -6,7 +6,8 @@ import { DatabaseFile, DatabaseQuery } from "./types";
 
 export const indexFolder = async (
   dbPath: string,
-  folderPath: string = "content"
+  folderPath: string = "content",
+  ignorePatterns: RegExp[] = []
 ) => {
   const dbConfig = {
     client: "sqlite3",
@@ -49,22 +50,31 @@ export const indexFolder = async (
     }
 
     if (file) {
-      //  There are probably better ways of doing this...
-      if (["md", "mdx"].includes(file.filetype)) {
-        const tags = file.metadata?.tags || [];
-
-        for (let tag of tags) {
-          if (!tagsToInsert.find((item) => item.name === tag)) {
-            tagsToInsert.push({ name: tag });
-          }
-          fileTagsToInsert.push({ tag, file: file._id });
+      let isIgnoredByPattern = false;
+      for (let pattern of ignorePatterns) {
+        if (pattern.test(file._url_path)) {
+          isIgnoredByPattern = true;
         }
-
-        //  Sqlite3 does not support JSON fields
-        file.metadata = JSON.stringify(file.metadata);
       }
 
-      filesToInsert.push(file);
+      if (!isIgnoredByPattern) {
+        //  There are probably better ways of doing this...
+        if (["md", "mdx"].includes(file.filetype)) {
+          const tags = file.metadata?.tags || [];
+
+          for (let tag of tags) {
+            if (!tagsToInsert.find((item) => item.name === tag)) {
+              tagsToInsert.push({ name: tag });
+            }
+            fileTagsToInsert.push({ tag, file: file._id });
+          }
+
+          //  Sqlite3 does not support JSON fields
+          file.metadata = JSON.stringify(file.metadata);
+        }
+
+        filesToInsert.push(file);
+      }
     }
   }
 
@@ -162,10 +172,17 @@ const createDatabaseFile: (path: string, folderPath: string) => DatabaseFile = (
     const segments = pathRelativeToFolder.split("/");
     const filename = segments.at(-1).split(".")[0];
 
+    const pathToFileFolder = segments.slice(0, -1).join("/");
+
     if (filename != "index") {
-      _url_path = `${segments.slice(0, -1).join("/")}/${filename}`;
+      if (pathToFileFolder) {
+        _url_path = `${pathToFileFolder}/${filename}`;
+      } else {
+        //  The file is in the root folder
+        _url_path = filename;
+      }
     } else {
-      _url_path = `${segments.slice(0, -1).join("/")}`;
+      _url_path = pathToFileFolder;
     }
   }
 
@@ -207,7 +224,7 @@ class MarkdownDB {
               folder = query.folder.slice(0, -1);
             }
 
-            builder.whereLike("_url_path", `${folder}%`);
+            builder.whereLike("_url_path", `${folder}\/%`);
           }
 
           const tags = query.tags;

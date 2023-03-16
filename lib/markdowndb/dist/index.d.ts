@@ -1,6 +1,6 @@
 import { Knex } from "knex";
 import { DatabaseFile, DatabaseQuery } from "./types";
-export declare const indexFolder: (dbPath: string, folderPath?: string) => Promise<void>;
+export declare const indexFolder: (dbPath: string, folderPath?: string, ignorePatterns?: RegExp[]) => Promise<void>;
 declare class MarkdownDB {
     db: Knex;
     constructor(db: Knex);

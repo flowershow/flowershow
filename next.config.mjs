@@ -8,7 +8,7 @@ import { indexFolder } from "./lib/markdowndb/dist/index.js";
 
 //  DB file path
 const pathToMddb = "markdown.db";
-await indexFolder(pathToMddb);
+await indexFolder(pathToMddb, "content", [/^Excalidraw\/.*/]);
 
 export default {
   eslint: {
