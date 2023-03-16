@@ -2,7 +2,7 @@ import fs from "fs";
 
 import parse from "lib/markdown.mjs";
 
-import DRD from "../../components/drd/DRD";
+import DRD from "../components/drd/DRD";
 import mdDb from "@/lib/mdDb";
 import { getAuthorsDetails } from "@/lib/getAuthorsDetails";
 
