@@ -1,6 +1,6 @@
+import mdDb from "@/lib/mdDb";
 import { DocsList } from "components/DocsList.jsx";
 import { SimpleLayout } from "@flowershow/core";
-import getDocs from "@/content/getters/docs";
 
 export default function Docs({ docs }) {
   return (
@@ -13,7 +13,10 @@ export default function Docs({ docs }) {
 }
 
 export async function getStaticProps() {
-  const docs = await getDocs();
+  const docs = await mdDb.query({
+    folder: "docs",
+    filetypes: ["md", "mdx"],
+  });
 
   return {
     props: {
