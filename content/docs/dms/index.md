@@ -2,7 +2,7 @@
   <h1>Datopian Tech</h1>
 
   <a href="https://datopian.com/">
-    <img src="https://playbook.datopian.com/img/datopian-dark-logotype.svg" style={{maxWidth: "280px", display: "block", margin: "3rem auto 1.5rem"}} />
+    <img src="/static/img/datopian-logo.png" style={{maxWidth: "280px", display: "block", margin: "3rem auto 1.5rem"}} />
   </a>
 
   <p className="description" style={{fontSize: "1.6rem", lineHeight: 1.3}}>
