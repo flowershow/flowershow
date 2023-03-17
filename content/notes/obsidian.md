@@ -26,7 +26,13 @@ Specifically for us:
 - Obsidian has a well-defined content layer API (which we can learn from)
   - [Perhaps even more relevant] Obsidian dataview plugin has Content Layer API (plus open source implementation): https://github.com/blacksmithgu/obsidian-dataview/blob/master/src/data-index/index.ts
 
-## Obsidian Content Layer API
+## Obsidian Content Layer API and Database
+
+See [[obsidian-database-research]]
+
+#todo refactor this content into there (or summary here)
+
+#todo create obsidian data view page (or integrate into that page) and include https://github.com/blacksmithgu/obsidian-dataview/discussions/1811
 
 Summary
 
