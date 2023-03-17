@@ -71,5 +71,6 @@ const config = {
   },
   tableOfContents: true,
   analytics: "G-R6X92HM43Q",
+  editLinkShow: true,
 };
 export default config;
