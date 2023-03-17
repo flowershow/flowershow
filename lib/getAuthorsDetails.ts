@@ -1,7 +1,13 @@
 import { siteConfig } from "@/config/siteConfig";
-import { allPeople } from "contentlayer/generated";
+import mdDb from "./mdDb";
 
-export const getAuthorsDetails = (authors) => {
+export const getAuthorsDetails = async (authors: string[]) => {
+
+  let allPeople = await mdDb.query<any>({ folder: "people" });
+
+  //  Temporary, flowershow UI component expects contentlayer obj props
+  allPeople = allPeople.map((p) => p.metadata);
+
   let blogAuthors = [];
 
   if (authors) {
@@ -11,11 +17,10 @@ export const getAuthorsDetails = (authors) => {
   }
 
   return blogAuthors.map((author) => {
-    return (
-      allPeople.find(
-        ({ id, slug, name }) =>
-          id === author || slug === author || name === author
-      ) ?? { name: author, avatar: siteConfig.avatarPlaceholder }
+    const person = allPeople.find(
+      ({ id, name }) => id === author || name === author
     );
+
+    return person ?? { name: author, avatar: siteConfig.avatarPlaceholder };
   });
 };

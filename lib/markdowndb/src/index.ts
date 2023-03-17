@@ -1,33 +1,34 @@
-import { Knex } from "knex";
+import knex, { Knex } from "knex";
 import * as fs from "fs";
 import * as crypto from "crypto";
 import matter from "gray-matter";
+import { DatabaseFile, DatabaseQuery } from "./types";
 
-// File entity type
-// Maps to fields on the DB
-export type MarkdownDBDatabaseFile<T = {}> = {
-  _id: string;
-  _path: string;
-  _relative_path: string; //  Relative to the folderPath, makes it easier to query by folder
-  filetype: string;
-  frontmatter: any;
-  type: string;
-} & T;
+export const indexFolder = async (
+  dbPath: string,
+  folderPath: string = "content",
+  ignorePatterns: RegExp[] = []
+) => {
+  const dbConfig = {
+    client: "sqlite3",
+    connection: {
+      filename: dbPath,
+    },
+    useNullAsDefault: true,
+  };
 
-//  Every mdx file will have tags and links
-//  Generic so that we can create custom
-//  types later... Not definite
-//  await MyMdDb.query({ filetype: ["md", "mdx"] })
-export type MDXFile<T = {}> = MarkdownDBDatabaseFile<{
-  tags: string[];
-  links: string[];
-}> &
-  T;
+  const db = knex(dbConfig);
 
-const indexFolder = async (db: Knex, folderPath: string = "content") => {
   await createFilesTable(db);
   await createTagsTable(db);
   await createFileTagsTable(db);
+
+  //  Temporary, we don't want to handle updates now
+  //  so database is refreshed every time the folder
+  //  is indexed
+  await db("file_tags").del();
+  await db("tags").del();
+  await db("files").del();
 
   const pathsToFiles = walkFolder(folderPath);
 
@@ -36,18 +37,43 @@ const indexFolder = async (db: Knex, folderPath: string = "content") => {
   const fileTagsToInsert = [];
 
   for (let pathToFile of pathsToFiles) {
-    const file = createDatabaseFile(pathToFile, folderPath);
-    filesToInsert.push(file);
+    let file;
 
-    //  There are probanly better ways of doing this...
-    if (["md", "mdx"].includes(file.filetype)) {
-      const tags = file.frontmatter?.tags || [];
+    try {
+      file = createDatabaseFile(pathToFile, folderPath);
+    } catch (e) {
+      console.log(
+        `MarkdownDB Error: Failed to parse '${pathToFile}'. Skipping...`
+      );
+      console.log(e);
+      file = null;
+    }
 
-      for (let tag of tags) {
-        if (!tagsToInsert.find((item) => item.name === tag)) {
-          tagsToInsert.push({ name: tag });
+    if (file) {
+      let isIgnoredByPattern = false;
+      for (let pattern of ignorePatterns) {
+        if (pattern.test(file._url_path)) {
+          isIgnoredByPattern = true;
         }
-        fileTagsToInsert.push({ tag, file: file._id });
+      }
+
+      if (!isIgnoredByPattern) {
+        //  There are probably better ways of doing this...
+        if (["md", "mdx"].includes(file.filetype)) {
+          const tags = file.metadata?.tags || [];
+
+          for (let tag of tags) {
+            if (!tagsToInsert.find((item) => item.name === tag)) {
+              tagsToInsert.push({ name: tag });
+            }
+            fileTagsToInsert.push({ tag, file: file._id });
+          }
+
+          //  Sqlite3 does not support JSON fields
+          file.metadata = JSON.stringify(file.metadata);
+        }
+
+        filesToInsert.push(file);
       }
     }
   }
@@ -55,6 +81,8 @@ const indexFolder = async (db: Knex, folderPath: string = "content") => {
   await db.batchInsert("files", filesToInsert);
   await db.batchInsert("tags", tagsToInsert);
   await db.batchInsert("file_tags", fileTagsToInsert);
+
+  db.destroy();
 };
 
 //  Get files inside a folder, return an array of file paths
@@ -83,10 +111,10 @@ const createFilesTable = async (db: Knex) => {
   if (!tableExists) {
     await db.schema.createTable("files", (table) => {
       table.string("_id").primary();
-      table.string("_path").unique().notNullable();
-      table.string("_relative_path").notNullable();
-      table.json("frontmatter");
-      table.enu("filetype", ["md", "mdx", "csv", "png"]).notNullable();
+      table.string("_path").unique().notNullable(); //  Can be used to read a file
+      table.string("_url_path").unique(); //  Can be used to query by folder
+      table.string("metadata");
+      table.string("filetype").notNullable();
       // table.enu("fileclass", ["text", "image", "data"]).notNullable();
       table.string("type"); // type field in frontmatter if it exists
     });
@@ -119,44 +147,54 @@ const createFileTagsTable = async (db: Knex) => {
   }
 };
 
-const createDatabaseFile: (
+const createDatabaseFile: (path: string, folderPath: string) => DatabaseFile = (
   path: string,
-  folderPath: string //  Needed to calculate relatitePath for now
-) => MarkdownDBDatabaseFile = (path: string, folderPath: string) => {
+  folderPath: string
+) => {
   const filetype = path.split(".").at(-1);
-
-  let relativePath = path.slice(folderPath.length + 1);
 
   const encodedPath = Buffer.from(path, "utf-8").toString();
   const id = crypto.createHash("sha1").update(encodedPath).digest("hex");
 
-  const file = {
-    _id: id,
-    _path: path,
-    _relative_path: relativePath,
-    filetype,
-    frontmatter: null,
-    type: null,
-  };
+  let metadata = null;
+  let type = null;
+
+  //  If it's not a md/mdx file, _url_path is just the relative path
+  const pathRelativeToFolder = path.slice(folderPath.length + 1);
+  let _url_path = pathRelativeToFolder;
 
   if (["md", "mdx"].includes(filetype)) {
     const source = fs.readFileSync(path, { encoding: "utf8", flag: "r" });
     const { data } = matter(source);
-    file["frontmatter"] = data || null;
-    file["type"] = data.type || null;
+    metadata = data || null;
+    type = data.type || null;
+
+    const segments = pathRelativeToFolder.split("/");
+    const filename = segments.at(-1).split(".")[0];
+
+    const pathToFileFolder = segments.slice(0, -1).join("/");
+
+    if (filename != "index") {
+      if (pathToFileFolder) {
+        _url_path = `${pathToFileFolder}/${filename}`;
+      } else {
+        //  The file is in the root folder
+        _url_path = filename;
+      }
+    } else {
+      _url_path = pathToFileFolder;
+    }
   }
 
-  return file;
+  return {
+    _id: id,
+    _path: path,
+    _url_path, //  Should exist only for MD/MDX files
+    filetype,
+    metadata,
+    type,
+  };
 };
-
-//  Optional params so that we can build complex dynamic queries
-//  E.g I want all files in the blogs folder with X and Y tags
-interface DatabaseQuery {
-  folder?: string;
-  type?: string; // TODO
-  tags?: string[];
-  filetypes?: string[];
-}
 
 class MarkdownDB {
   db: Knex;
@@ -171,12 +209,12 @@ class MarkdownDB {
       .then((tags) => tags.map((tag) => tag.name));
   }
 
-  async query<T = MarkdownDBDatabaseFile>(
+  async query<T = DatabaseFile>(
     query?: DatabaseQuery
-  ): Promise<MarkdownDBDatabaseFile<T>[]> {
+  ): Promise<DatabaseFile<T>[]> {
     const files = this.db
       .select("files.*", this.db.raw("GROUP_CONCAT(tag) as tags")) //  Very hackish way to return tags without duplicating rows
-      .from<MarkdownDBDatabaseFile>("files")
+      .from<DatabaseFile>("files")
       .leftJoin("file_tags AS ft", "ft.file", "_id")
       .where((builder) => {
         if (query) {
@@ -186,7 +224,7 @@ class MarkdownDB {
               folder = query.folder.slice(0, -1);
             }
 
-            builder.whereLike("_relative_path", `${folder}%`);
+            builder.whereLike("_url_path", `${folder}\/%`);
           }
 
           const tags = query.tags;
@@ -198,6 +236,11 @@ class MarkdownDB {
           if (filetypes) {
             builder.whereIn("filetype", filetypes);
           }
+
+          const urlPath = query.urlPath;
+          if (urlPath != undefined) {
+            builder.where("_url_path", urlPath);
+          }
         }
       })
       .groupBy("_id");
@@ -206,14 +249,9 @@ class MarkdownDB {
       return files.map((file) => {
         if (["mdx", "md"].includes(file.filetype)) {
           file.tags = file.tags?.split(",") || [];
+          file.metadata = JSON.parse(file.metadata);
 
-          //  TODO: probably apply custom types here
-          const source = fs.readFileSync(file._path, {
-            encoding: "utf8",
-            flag: "r",
-          });
-
-          return { ...file, source };
+          return file;
         } else {
           delete file.tags;
         }
@@ -221,14 +259,23 @@ class MarkdownDB {
       });
     });
   }
+
+  _destroyDb() {
+    this.db.destroy();
+  }
 }
 
 //  MarkdownDB Factory
-const Database = (db: Knex): MarkdownDB => {
-  return new MarkdownDB(db);
-};
+export const Database = (dbPath: string): MarkdownDB => {
+  const dbConfig = {
+    client: "sqlite3",
+    connection: {
+      filename: dbPath,
+    },
+    useNullAsDefault: true,
+  };
 
-export default {
-  indexFolder,
-  Database,
+  const db = knex(dbConfig);
+
+  return new MarkdownDB(db);
 };

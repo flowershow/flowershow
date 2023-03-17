@@ -1,5 +1,5 @@
 /* eslint import/no-default-export: off */
-import { allPages } from "contentlayer/generated";
+import mdDb from "@/lib/mdDb";
 import { NextSeo } from "next-seo";
 
 export default function All({ pages }) {
@@ -32,10 +32,12 @@ export default function All({ pages }) {
 }
 
 export async function getStaticProps() {
+  const allPages = await mdDb.query({ filetypes: ["md", "mdx"] });
+
   const pages = allPages
     .map((page) => {
       /* eslint no-underscore-dangle: off */
-      const wikiPath = page._raw.flattenedPath;
+      const wikiPath = page._url_path.split('.')[0];
       const wikiPage = wikiPath
         .split("/")
         .pop()

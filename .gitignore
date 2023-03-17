@@ -3,7 +3,6 @@ node_modules
 
 # flowershow
 .flowershow
-.contentlayer
 .next
 search.json
 
@@ -14,3 +13,6 @@ search.json
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
+# markdowndb
+*.db
