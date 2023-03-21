@@ -6,7 +6,7 @@ const solutions = [
       Boston’s and Montreal’s.`,
     icon: "static/img/next/data-portal-icon.svg",
     buttonText: "Learn more",
-    href: "/open-data",
+    href: "/",
   },
   {
     title: "Data Catalog & Metadata Management",

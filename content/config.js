@@ -20,7 +20,7 @@ const config = {
     { name: "COLLECTIONS", href: "/collections" },
     { name: "DOCS", href: "/docs" },
     { name: "TOOLS", href: "/download" },
-    { name: "OPEN DATA", href: "/open-data" },
+    { name: "TOOLKIT", href: "/toolkit" },
     { name: "CHAT", href: "https://discord.com/invite/KrRzMKU" },
   ],
   footerLinks: [

@@ -1,19 +1,19 @@
-import Hero from "components/enterprise/Hero.jsx";
-import SocialProof from "components/enterprise/SocialProof.jsx";
-import Features from "components/enterprise/Features.jsx";
-import Solutions from "components/enterprise/Solutions.jsx";
+import Hero from "components/opendata/Hero.jsx";
+import Features from "components/opendata/Features.jsx";
+import HowItWorks from "components/opendata/HowItWorks.jsx";
+import MoreFeatures from "components/opendata/MoreFeatures.jsx";
+import Faq from "components/opendata/Faq.jsx";
 import Contact from "components/opendata/Contact.jsx";
-import { NextSeo } from "next-seo";
 
-export default function Enterprise() {
+export default function Home() {
   return (
-    <>
-      <NextSeo />
+    <main>
       <Hero />
-      <SocialProof />
       <Features />
-      <Solutions />
+      <HowItWorks />
+      <MoreFeatures />
+      <Faq />
       <Contact />
-    </>
+    </main>
   );
 }
