@@ -8,7 +8,7 @@ import { NextSeo } from "next-seo";
 export default function Enterprise() {
   return (
     <>
-      <NextSeo title="Home" />
+      <NextSeo />
       <Hero />
       <SocialProof />
       <Features />
