@@ -70,7 +70,7 @@ export default function Solutions() {
                     </p>
                   </div>
                 </div>
-                <div class="px-6 pt-4 pb-2">
+                <div className="px-6 pt-4 pb-2">
                   <a
                     href={el.href}
                     target={el.href.includes("https") ? "_blank" : ""}
