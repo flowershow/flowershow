@@ -1,5 +1,6 @@
 const config = {
-  title: "DataHub - a complete solution for Open Data Platforms, Data Catalogs, Data Lakes and Data Management.",
+  title:
+    "DataHub - a complete solution for Open Data Platforms, Data Catalogs, Data Lakes and Data Management.",
   description:
     "DataHub is an open source, mature, fully-featured and production ready. Trusted by governments, startups, nonprofits and the Fortune 500.",
   navbarTitle: {
@@ -19,8 +20,8 @@ const config = {
     { name: "COLLECTIONS", href: "/collections" },
     { name: "DOCS", href: "/docs" },
     { name: "TOOLS", href: "/download" },
-    { name: "ENTERPRISE", href: "/enterprise" },
-    { name: "CHAT", href: "https://discord.com/invite/KrRzMKU" },    
+    { name: "TOOLKIT", href: "/toolkit" },
+    { name: "CHAT", href: "https://discord.com/invite/KrRzMKU" },
   ],
   footerLinks: [
     {
@@ -50,8 +51,10 @@ const config = {
   nextSeo: {
     openGraph: {
       type: "website",
-      title: "DataHub - a complete solution for Open Data Platforms, Data Catalogs, Data Lakes and Data Management.",
-      description: "DataHub is an open source, mature, fully-featured and production ready. Trusted by governments, startups, nonprofits and the Fortune 500.",
+      title:
+        "DataHub - a complete solution for Open Data Platforms, Data Catalogs, Data Lakes and Data Management.",
+      description:
+        "DataHub is an open source, mature, fully-featured and production ready. Trusted by governments, startups, nonprofits and the Fortune 500.",
       locale: "en_US",
       images: [
         {
