@@ -1,7 +1,7 @@
-import Hero from "components/enterprise/Hero.jsx";
-import SocialProof from "components/enterprise/SocialProof.jsx";
-import Features from "components/enterprise/Features.jsx";
-import Solutions from "components/enterprise/Solutions.jsx";
+import Hero from "components/toolkit/Hero.jsx";
+import SocialProof from "@/components/toolkit/SocialProof.jsx";
+import Features from "@/components/toolkit/Features.jsx";
+import Solutions from "@/components/toolkit/Solutions.jsx";
 import Contact from "components/opendata/Contact.jsx";
 import { NextSeo } from "next-seo";
 

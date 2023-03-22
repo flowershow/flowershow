@@ -23,4 +23,13 @@ export default {
     };
     return config;
   },
+ async redirects() {
+    return [
+      {
+        source: '/enterprise',
+        destination: '/toolkit',
+        permanent: true,
+      },
+    ]
+  },
 };
