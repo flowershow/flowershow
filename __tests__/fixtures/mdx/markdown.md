@@ -134,18 +134,21 @@ function fancyAlert(arg) {
 
 ## Wiki Links
 
-Simple:
+<div id="wiki-link">
 [[example]]
+</div>
 
-With alias:
+<div id="wiki-link-alias">
 [[example|Example with alias]]
+</div>
 
-🚧 To heading:
+<div id="wiki-link-heading">
 [[example#abcd|Example heading]]
+</div>
 
-Nested:
-[[test/test]]
-
+<div id="wiki-link-image">
+![[/Excalidraw/markdown-processing-pipeline-2023-02-23.excalidraw.svg]]
+</div>
 
 ## Expressions
 

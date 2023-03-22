@@ -4,7 +4,7 @@ const { test, expect } = require('@playwright/test');
 
 test.describe.parallel("Basics", () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/_test/markdown');
+    await page.goto('/');
   });
 
   test('has title', async ({ page }) => {
@@ -17,6 +17,8 @@ test.describe.parallel("Basics", () => {
   });
 });
 
+
+
 test.describe.parallel("MDX features", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/_test/markdown');
@@ -27,3 +29,35 @@ test.describe.parallel("MDX features", () => {
   });
 });
 
+
+test.describe.parallel("wiki links", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/_test/markdown');
+  });
+
+  test("parses a wiki link", async ({ page }) => {
+    const link = page.locator("#wiki-link > p > a");
+    await link.click();
+    await expect(page).toHaveURL("/_test/example");
+  });
+
+  test("parses a wiki link with alias", async ({ page }) => {
+    const link = page.locator("#wiki-link-alias > p > a");
+    await expect(link).toContainText("Example with alias");
+    await link.click();
+    await expect(page).toHaveURL("/_test/example");
+  });
+
+  // TODO
+  // test("parses a wiki link with header", async ({ page }) => {
+  //   const link = page.locator("#wiki-link-heading > p > a");
+  //   await link.click();
+  //   await expect(page).toHaveURL("/_test/example#abcd");
+  // });
+
+  // TODO
+  // test("link to image file", async ({ page }) => {
+  //   const link = page.locator("#wiki-link-image > p > img");
+  //   await expect(link).toHaveAttribute("src", "/Excalidraw/markdown-processing-pipeline-2023-02-23.excalidraw.svg");
+  // });
+});
