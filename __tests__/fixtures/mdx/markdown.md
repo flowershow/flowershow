@@ -147,4 +147,20 @@ Nested:
 [[test/test]]
 
 
+## Expressions
+
+{/* export const authors = [
+   {name: 'Jane', email: 'hi@jane.com'},
+   {name: 'John', twitter: '@john2002'}
+ ]
+export const published = new Date('2022-02-01')
+ 
+Written by: {new Intl.ListFormat('en').format(authors.map(d => d.name))}.
+ 
+Published on: {new Intl.DateTimeFormat('en', {dateStyle: 'long'}).format(published)}. */}
+
+<div id="simple-expression">
+Two 🍰 is: {Math.PI * 2}
+</div>
+
 
