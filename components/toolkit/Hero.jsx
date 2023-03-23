@@ -44,20 +44,20 @@ export default function Hero() {
           <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
             <div className="rounded-md shadow">
               <a
-                href="https://datahub.io/docs/dms/ "
+                href="https://calendar.app.google/LT4acVdKn3Cxm2MXA"
                 target="_blank"
                 className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded text-white bg-orange-400 hover:underline md:py-4 md:text-lg md:px-10"
               >
-                Get Started
+                Get a free consultation
               </a>
             </div>
             <div className="mt-3 sm:mt-0 sm:ml-3">
               <a
-                href="https://calendar.app.google/LT4acVdKn3Cxm2MXA"
+                href="https://datahub.io/docs/dms/ "
                 target="_blank"
                 className="w-full flex items-center justify-center px-8 py-3 border border-black text-base font-medium rounded hover:underline md:py-4 md:text-lg md:px-10"
               >
-                Get a free consultation (30m)
+                Get started
               </a>
             </div>
           </div>
@@ -86,7 +86,7 @@ export default function Hero() {
           </p>
         </div>
         <div className="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:col-span-6 lg:flex lg:items-start">
-          <img className="w-full" src="/static/img/next/dms.png" alt="" />
+          <img className="w-full" src="/static/img/next/dms-datopian.png" alt="" />
         </div>
       </div>
     </section>
