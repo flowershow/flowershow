@@ -23,7 +23,7 @@ renderer --> output((Output e.g. html))
 
 ## Sketch 2023-02-23
 
-![[../Excalidraw/markdown-processing-pipeline-2023-02-23.excalidraw.svg]]
+![](/Excalidraw/markdown-processing-pipeline-2023-02-23.excalidraw.svg)
 
 
 ## Aside: re markdown and its extensions
@@ -72,4 +72,4 @@ https://mdxjs.com/docs/what-is-mdx/
 
 ## How Markdown Pipeline Complexity Arises 2023-03-06
 
-![[../Excalidraw/markdown-pipeline-complexity-evolution-2023-03-06.excalidraw.svg]]
+![](/Excalidraw/markdown-pipeline-complexity-evolution-2023-03-06.excalidraw.svg)

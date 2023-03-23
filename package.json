@@ -9,7 +9,7 @@
     "start": "next start",
     "export": "npm run build && next export",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:e2e": "playwright test"
+    "test:e2e": "./scripts/testsetup.sh && playwright test && ./scripts/testteardown.sh"
   },
   "dependencies": {
     "@flowershow/core": "^0.4.2",

@@ -1,16 +1,63 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
 
-test('has title', async ({ page }) => {
-  await page.goto('/');
 
-  await expect(page).toHaveTitle(/DataHub/);
+test.describe.parallel("Basics", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/');
+  });
+
+  test('has title', async ({ page }) => {
+    await expect(page).toHaveTitle(/DataHub/);
+  });
+
+  test('has blog posts index page', async ({ page }) => {
+    await page.getByRole('link', { name: /BLOG/ }).click();
+    await expect(page).toHaveURL("/blog");
+  });
 });
 
-test('has blog posts index page', async ({ page }) => {
-  await page.goto('/');
 
-  await page.getByRole('link', { name: /BLOG/ }).click();
 
-  await expect(page).toHaveURL("/blog");
+test.describe.parallel("MDX features", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/_test/markdown');
+  });
+
+  test("simple expression", async ({ page }) => {
+    await expect(page.locator("#simple-expression > p")).toContainText(/Two 🍰 is: 6.28/);
+  });
+});
+
+
+test.describe.parallel("wiki links", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto('/_test/markdown');
+  });
+
+  test("parses a wiki link", async ({ page }) => {
+    const link = page.locator("#wiki-link > p > a");
+    await link.click();
+    await expect(page).toHaveURL("/_test/example");
+  });
+
+  test("parses a wiki link with alias", async ({ page }) => {
+    const link = page.locator("#wiki-link-alias > p > a");
+    await expect(link).toContainText("Example with alias");
+    await link.click();
+    await expect(page).toHaveURL("/_test/example");
+  });
+
+  // TODO
+  // test("parses a wiki link with header", async ({ page }) => {
+  //   const link = page.locator("#wiki-link-heading > p > a");
+  //   await link.click();
+  //   await expect(page).toHaveURL("/_test/example#abcd");
+  // });
+
+  // TODO
+  // test("link to image file", async ({ page }) => {
+  //   const link = page.locator("#wiki-link-image > p > img");
+  //   await expect(link).toHaveAttribute("src", "/Excalidraw/markdown-processing-pipeline-2023-02-23.excalidraw.svg");
+  // });
 });
