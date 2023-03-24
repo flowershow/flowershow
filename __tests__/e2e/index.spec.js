@@ -56,8 +56,8 @@ test.describe.parallel("wiki links", () => {
   // });
 
   // TODO
-  // test("link to image file", async ({ page }) => {
-  //   const link = page.locator("#wiki-link-image > p > img");
-  //   await expect(link).toHaveAttribute("src", "/Excalidraw/markdown-processing-pipeline-2023-02-23.excalidraw.svg");
-  // });
+  test("link to image file", async ({ page }) => {
+    const link = page.locator("#wiki-link-image > p > img");
+    await expect(link).toHaveAttribute("src", "/Excalidraw/markdown-processing-pipeline-2023-02-23.excalidraw.svg");
+  });
 });

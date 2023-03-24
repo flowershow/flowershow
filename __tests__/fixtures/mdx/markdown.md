@@ -134,20 +134,22 @@ function fancyAlert(arg) {
 
 ## Wiki Links
 
+### Absolute paths:
+
 <div id="wiki-link">
-[[example]]
+[[_test/example]]
 </div>
 
 <div id="wiki-link-alias">
-[[example|Example with alias]]
+[[_test/example|Example with alias]]
 </div>
 
 <div id="wiki-link-heading">
-[[example#abcd|Example heading]]
+[[_test/example#abcd]]
 </div>
 
 <div id="wiki-link-image">
-![[/Excalidraw/markdown-processing-pipeline-2023-02-23.excalidraw.svg]]
+![[Excalidraw/markdown-processing-pipeline-2023-02-23.excalidraw.svg]]
 </div>
 
 ## Expressions
