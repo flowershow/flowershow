@@ -26,7 +26,6 @@ html {
   );
 }
 
-/* hide anchor link with # icon  */
 :is(h2, h3, h4, h5, h6) {
   margin-left: -2rem !important;
   padding-left: 2rem !important;
