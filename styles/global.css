@@ -26,7 +26,7 @@ html {
   );
 }
 
-:is(h2, h3, h4, h5, h6) {
+:is(h2, h3, h4, h5, h6):not(.blogitem-title) {
   margin-left: -2rem !important;
   padding-left: 2rem !important;
   scroll-margin-top: 4.5rem;
@@ -34,12 +34,12 @@ html {
 }
 
 .heading-link {
+  padding: 1px;
   position: absolute;
   left: 0;
   top: 50%;
   transform: translateY(-50%);
   margin: auto 0;
-  padding: 1px;
   border-radius: 5px;
   background: #1e293b;
   opacity: 0;
@@ -52,11 +52,11 @@ html {
   background: #e2e8f0;
 }
 
-:is(h2, h3, h4, h5, h6):hover > .heading-link {
+:is(h2, h3, h4, h5, h6):not(.blogitem-title):hover .heading-link {
   opacity: 100;
 }
 
-.heading-link > svg {
+.heading-link svg {
   transform: scale(0.75);
 }
 

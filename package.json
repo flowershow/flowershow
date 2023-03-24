@@ -12,7 +12,7 @@
     "test:e2e": "./scripts/testsetup.sh && playwright test && ./scripts/testteardown.sh"
   },
   "dependencies": {
-    "@flowershow/core": "^0.4.2",
+    "@flowershow/core": "^0.4.6",
     "@flowershow/remark-callouts": "^1.0.0",
     "@flowershow/remark-embed": "^1.0.0",
     "@flowershow/remark-wiki-link": "^1.0.1",
