@@ -1,5 +1,5 @@
 ---
-created: 2023-03-02
+date: 2023-03-02
 ---
 
 # What's the issue with contentlayer.dev

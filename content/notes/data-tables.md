@@ -1,6 +1,6 @@
 ---
 title: Data Tables
-created: 2022-02-15
+date: 2022-02-15
 ---
 
 # Data Tables

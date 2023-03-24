@@ -1,7 +1,7 @@
 ---
 title: "Open Data Day 2020 and COVID-19 data"
 authors: ["michael.polidori"]
-created: 2020-03-17
+date: 2020-03-17
 tags: ['COVID-19', 'Open Data Day']
 ---
 

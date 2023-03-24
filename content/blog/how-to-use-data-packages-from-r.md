@@ -1,6 +1,6 @@
 ---
 title: How to use Data Packages from R
-created: 2017-11-16
+date: 2017-11-16
 authors: ['mikanebu', 'anuveyatsu']
 ---
 

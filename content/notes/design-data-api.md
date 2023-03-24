@@ -1,5 +1,5 @@
 ---
-created: 2023-02-25
+date: 2023-02-25
 ---
 
 # Data API Design

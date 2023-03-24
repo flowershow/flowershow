@@ -1,6 +1,6 @@
 ---
 title: We have some important updates re Datahub.io!
-created: 2023-02-13
+date: 2023-02-13
 authors: ['Yoana Popova', 'Rufus Pollock']
 ---
 

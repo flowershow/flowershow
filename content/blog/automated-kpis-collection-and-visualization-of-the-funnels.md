@@ -1,6 +1,6 @@
 ---
 title: Automated KPIs collection and visualization of the funnels
-created: 2018-07-10
+date: 2018-07-10
 authors: ['branko-dj']
 ---
 

@@ -1,6 +1,6 @@
 ---
 title: "Comparotron: A simple way to visualize and share comparisons"
-created: 2020-03-08
+date: 2020-03-08
 authors: ['rufuspollock']
 tags: ['Open Data Day', 'Comparotron', 'Labs']
 ---

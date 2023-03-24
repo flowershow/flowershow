@@ -1,6 +1,6 @@
 ---
 title: Introducing private datasets on the DataHub
-created: 2017-12-13
+date: 2017-12-13
 authors: ['anuveyatsu', 'rufuspollock']
 ---
 
