@@ -1,7 +1,6 @@
 import Head from "next/head";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/router";
 
 import { siteConfig } from "../config/siteConfig";
 
@@ -51,7 +50,6 @@ function useTableOfContents(tableOfContents) {
 }
 
 export function Layout({ children, tableOfContents }) {
-  const router = useRouter();
   const { editLink, toc, _raw } = children.props;
   /* if editLink is not set in page frontmatter, link bool value will depend on siteConfig.editLinkShow */
   const editUrl = `${siteConfig.repoRoot}${siteConfig.repoEditPath}${_raw?.sourceFilePath}`;
@@ -71,12 +69,7 @@ export function Layout({ children, tableOfContents }) {
   return (
     <>
       <Head>
-        {router.pathname === "/toolkit" && (
-          <link rel="icon" href="/static/img/next/dms-datopian.png" />
-        )}
-        {router.pathname != "/toolkit" && (
-          <link rel="icon" href="/static/img/opendata/datahub.png" />
-        )}
+        <link rel="icon" href="/static/img/opendata/datahub.png" />
         <meta charSet="utf-8" />
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
