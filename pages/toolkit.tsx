@@ -13,11 +13,11 @@ export default function Enterprise() {
         openGraph={{
           images: [
             {
-              url: "https://datahub.io/static/img/opendata/dms.png",
+              url: "https://datahub.io/static/img/next/dms-datopian.png",
               alt: "DataHub - a complete solution for Open Data Platforms, Data Catalogs, Data Lakes and Data Management.",
               width: 1200,
               height: 627,
-              type: "image/jpg",
+              type: "image/png",
             },
           ],
         }}
