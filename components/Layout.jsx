@@ -69,10 +69,7 @@ export function Layout({ children, tableOfContents }) {
   return (
     <>
       <Head>
-        <link
-          rel="icon"
-          href="/static/img/opendata/datahub.png"
-        />
+        <link rel="icon" href="/static/img/opendata/datahub.png" />
         <meta charSet="utf-8" />
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
