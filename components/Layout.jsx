@@ -72,7 +72,7 @@ export function Layout({ children, tableOfContents }) {
     <>
       <Head>
         {router.pathname === "/toolkit" && (
-          <link rel="icon" href="/static/img/next/dms.png" />
+          <link rel="icon" href="/static/img/next/dms-datopian.png" />
         )}
         {router.pathname != "/toolkit" && (
           <link rel="icon" href="/static/img/opendata/datahub.png" />
