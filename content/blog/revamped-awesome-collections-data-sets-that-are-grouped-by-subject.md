@@ -1,6 +1,6 @@
 ---
 title: 'Revamped awesome collections: data sets that are grouped by subject'
-created: 2018-06-11
+date: 2018-06-11
 authors: ['anuveyatsu']
 ---
 

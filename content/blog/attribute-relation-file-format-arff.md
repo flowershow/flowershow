@@ -1,6 +1,6 @@
 ---
 title: Attribute Relation File Format (ARFF)
-created: 2018-08-23
+date: 2018-08-23
 authors: ['branko-dj']
 ---
 

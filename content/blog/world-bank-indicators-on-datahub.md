@@ -1,6 +1,6 @@
 ---
 title: World Bank Indicators on DataHub
-created: 2018-07-16
+date: 2018-07-16
 authors: ['branko-dj']
 ---
 

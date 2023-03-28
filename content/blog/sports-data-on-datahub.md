@@ -1,6 +1,6 @@
 ---
 title: Sports data on DataHub
-created: 2018-08-31
+date: 2018-08-31
 authors: ['anuveyatsu']
 ---
 

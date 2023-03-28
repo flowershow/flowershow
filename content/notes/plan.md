@@ -1,5 +1,5 @@
 ---
-created: 2023-02-17
+date: 2023-02-17
 ---
 
 # Plan
@@ -11,11 +11,11 @@ Taglines
 - Publish, organize and find data
 - Wrangle, Preview, Deploy
 
-![[../Excalidraw/datahub-next-github-v0.1-20220218.svg]]
+![](/Excalidraw/datahub-next-github-v0.1-20220218.svg)
 
 More complex version with multiple documents, multiple assets
 
-![[../Excalidraw/datahub-next-github-many-files-v0.1-2023-02-27.excalidraw.svg]]
+![](/Excalidraw/datahub-next-github-many-files-v0.1-2023-02-27.excalidraw.svg)
 
 # Workstreams
 

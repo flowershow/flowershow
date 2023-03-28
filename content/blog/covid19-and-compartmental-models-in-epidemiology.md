@@ -1,6 +1,6 @@
 ---
 title: "COVID-19 and Compartmental Models in Epidemiology"
-created: 2020-05-08
+date: 2020-05-08
 authors: ["rufuspollock"]
 tags: ['COVID-19', 'epidemiology', 'models', 'curve-fitting', 'epidemic']
 ---

@@ -1,6 +1,6 @@
 ---
 title: "Excel Files on the DataHub: Automated Previews and Data Extraction"
-created: 2017-10-16
+date: 2017-10-16
 authors: ['anuveyatsu']
 ---
 

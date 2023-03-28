@@ -1,5 +1,5 @@
 ---
-created: 2023-03-06
+date: 2023-03-06
 ---
 
 # ContentBase
@@ -20,4 +20,4 @@ Aside: storage is probably hybrid. text files etc plus assets.
 
 What are the key components of a ContentBase? Same as a database.
 
-![[../Excalidraw/contentbase-components-2023-03-06.excalidraw.svg]]
+![](../Excalidraw/contentbase-components-2023-03-06.excalidraw.svg)

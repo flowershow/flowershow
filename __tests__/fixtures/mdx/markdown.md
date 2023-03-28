@@ -134,17 +134,38 @@ function fancyAlert(arg) {
 
 ## Wiki Links
 
-Simple:
-[[example]]
+### Absolute paths:
 
-With alias:
-[[example|Example with alias]]
+<div id="wiki-link">
+[[_test/example]]
+</div>
 
-🚧 To heading:
-[[example#abcd|Example heading]]
+<div id="wiki-link-alias">
+[[_test/example|Example with alias]]
+</div>
 
-Nested:
-[[test/test]]
+<div id="wiki-link-heading">
+[[_test/example#abcd]]
+</div>
 
+<div id="wiki-link-image">
+![[Excalidraw/markdown-processing-pipeline-2023-02-23.excalidraw.svg]]
+</div>
+
+## Expressions
+
+{/* export const authors = [
+   {name: 'Jane', email: 'hi@jane.com'},
+   {name: 'John', twitter: '@john2002'}
+ ]
+export const published = new Date('2022-02-01')
+ 
+Written by: {new Intl.ListFormat('en').format(authors.map(d => d.name))}.
+ 
+Published on: {new Intl.DateTimeFormat('en', {dateStyle: 'long'}).format(published)}. */}
+
+<div id="simple-expression">
+Two 🍰 is: {Math.PI * 2}
+</div>
 
 

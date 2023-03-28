@@ -1,6 +1,6 @@
 ---
 title: Which country spends the most on pharmaceutical drugs?
-created: 2018-01-23
+date: 2018-01-23
 authors: ['mikanebu']
 ---
 

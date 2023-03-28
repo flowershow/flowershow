@@ -1,6 +1,6 @@
 ---
 title: How to initialize a data package using data tool
-created: 2018-05-14
+date: 2018-05-14
 authors: ['anuveyatsu']
 ---
 

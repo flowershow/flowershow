@@ -2,9 +2,7 @@
 import { formatDate } from "@/lib/formatDate.js";
 
 export default function CollectionsLayout({ children, ...frontMatter }) {
-    const { title, created, date: docDate, description } = frontMatter;
-
-    const date = created || docDate;
+    const { title, date, description } = frontMatter;
 
     return (
         <article className="docs prose text-primary dark:text-primary-dark dark:prose-invert prose-headings:font-headings prose-a:break-words mx-auto p-6">

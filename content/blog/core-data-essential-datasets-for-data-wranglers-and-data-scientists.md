@@ -1,6 +1,6 @@
 ---
 title: "Core Data: Essential Datasets for Data Wranglers and Data Scientists"
-created: 2017-11-03
+date: 2017-11-03
 authors: ['rufuspollock', 'mikanebu', 'anuveyatsu']
 ---
 

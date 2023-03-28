@@ -1,6 +1,6 @@
 ---
 title: Auto-publish your datasets using Travis-CI
-created: 2018-05-23
+date: 2018-05-23
 authors: ['anuveyatsu']
 ---
 

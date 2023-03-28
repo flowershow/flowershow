@@ -1,6 +1,6 @@
 ---
 title: "A Short Case Study Involving Table Schema Frictionless Specs at the European Union"
-created: 2021-06-22
+date: 2021-06-22
 authors: ["sebastien.lavoie"]
 tags: ['table-schema', 'frictionless', 'specifications', 'validator', 'tabular-data']
 ---

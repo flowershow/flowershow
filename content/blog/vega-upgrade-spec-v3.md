@@ -1,6 +1,6 @@
 ---
 title: Vega views upgrade - now using v3
-created: 2017-10-17
+date: 2017-10-17
 authors: ['anuveyatsu']
 ---
 

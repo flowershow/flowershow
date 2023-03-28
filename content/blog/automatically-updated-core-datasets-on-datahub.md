@@ -1,6 +1,6 @@
 ---
 title: Automatically updated core datasets on DataHub
-created: 2018-09-05
+date: 2018-09-05
 modified: 2020-06-24
 authors: ['anuveyatsu']
 ---

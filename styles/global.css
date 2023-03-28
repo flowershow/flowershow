@@ -26,19 +26,14 @@ html {
   );
 }
 
-/* hide anchor link with # icon  */
-.unstyled :is(h1, h2, h3, h4, h5, h6) > a {
-  visibility: hidden;
-}
-
-.docs :is(h1, h2, h3, h4, h5, h6) {
+:is(h2, h3, h4, h5, h6):not(.blogitem-title) {
   margin-left: -2rem !important;
   padding-left: 2rem !important;
   scroll-margin-top: 4.5rem;
   position: relative;
 }
 
-.docs :is(h1, h2, h3, h4, h5, h6) > a {
+.heading-link {
   padding: 1px;
   position: absolute;
   left: 0;
@@ -51,22 +46,22 @@ html {
   transition: opacity 0.2s;
 }
 
-.light .docs :is(h1, h2, h3, h4, h5, h6) > a {
+.light .heading-link {
   /* border: 1px solid #ab2b65; */
   /* background: none; */
   background: #e2e8f0;
 }
 
-.docs :is(h1, h2, h3, h4, h5, h6):hover > a {
+:is(h2, h3, h4, h5, h6):not(.blogitem-title):hover .heading-link {
   opacity: 100;
 }
 
-.docs :is(h1, h2, h3, h4, h5, h6) > a > svg {
+.heading-link svg {
   transform: scale(0.75);
 }
 
 @media screen and (max-width: 640px) {
-  .docs :is(h1, h2, h3, h4, h5, h6) > a {
+  .heading-link {
     visibility: hidden;
   }
 }

@@ -1,5 +1,5 @@
 export const Feature = ({ title, description, image, align = "left" }) => {
-	return (
+  return (
     <div className="relative my-6 sm:my-8 lg:my-24">
       <div className="lg:grid lg:grid-flow-row-dense lg:grid-cols-2 lg:gap-8 lg:items-center justify-items-center">
         <div className={`max-w-lg ${align === "right" && "lg:col-start-2"}`}>
@@ -13,17 +13,25 @@ export const Feature = ({ title, description, image, align = "left" }) => {
             align === "right" && "lg:col-start-1"
           }`}
         >
-          <img className="relative mx-auto" width="400" src={image} alt={title} />
+          <img
+            className="relative mx-auto"
+            width="400"
+            src={image}
+            alt={title}
+          />
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default function Features() {
   return (
     <>
-      <div id="features" className="max-w-7xl mx-auto pt-16 pb-8 px-4 sm:px-6 lg:pt-24 lg:pb-12 lg:px-8 lg:grid lg:gap-x-8 text-center">
+      <div
+        id="features"
+        className="max-w-7xl mx-auto pt-16 pb-8 px-4 sm:px-6 lg:pt-24 lg:pb-12 lg:px-8 lg:grid lg:gap-x-8 text-center"
+      >
         <h2 className="text-base font-semibold text-theme-orange uppercase tracking-wide">
           Everything you need
         </h2>
@@ -31,20 +39,21 @@ export default function Features() {
           Mature, Functional and Polished
         </h3>
         <p className="mt-4 text-2xl text-gray-500">
-          Get a head-start on your data project using a mature, feature-rich, open solution.
+          Get a head-start on your data project using a mature, feature-rich,
+          open solution.
         </p>
       </div>
       <div className="overflow-hidden">
         <div className="relative max-w-xl mx-auto px-4 sm:px-6 lg:px-8 lg:max-w-7xl">
           {features.map((val, i) => (
-						<Feature
-							key={i}
-							align={i % 2 === 0 ? "right" : "left"}
-							title={val.title}
-							description={val.description}
-							image={val.image}
-						/>
-					))}
+            <Feature
+              key={i}
+              align={i % 2 === 0 ? "right" : "left"}
+              title={val.title}
+              description={val.description}
+              image={val.image}
+            />
+          ))}
         </div>
       </div>
     </>
@@ -54,7 +63,7 @@ export default function Features() {
 const features = [
   {
     title: "Works out of the box.\n Fully customizable.\n Pick two.",
-    description: `DataHub Enterprise gives you the best of both worlds: the freedom and flexibility of open source with the quality 
+    description: `DataHub Toolkit gives you the best of both worlds: the freedom and flexibility of open source with the quality 
       and features of an enterprise product. Ready to go “out of the box” with a rich feature-set, fully configured and elegantly themed.`,
     image: "/static/img/next/code-version-control.png",
   },
@@ -67,7 +76,7 @@ const features = [
   },
   {
     title: "More than a data catalog:\n data infrastructure",
-    description: `More than a data catalog: DataHub Enterprise is a framework for building your data management infrastructure 
+    description: `More than a data catalog: DataHub Toolkit is a framework for building your data management infrastructure 
 			including storage integration, rich permissioning, ETL integration, data APIs and more.`,
     image: "static/img/next/git-request.png",
   },

@@ -1,6 +1,6 @@
 ---
 title: Data desktop app - alpha release with drag and drop data publishing support
-created: 2017-12-01
+date: 2017-12-01
 authors: ['anuveyatsu']
 image: '/static/img/docs/app-cli-update.png'
 ---

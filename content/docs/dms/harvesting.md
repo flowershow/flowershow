@@ -323,7 +323,7 @@ id:
 url:
 title:
 description:
-created:
+date:
 harvester_pipeline_id: // type in old CKAN
 config:
 enabled:              // is this harvester enabled at the moment

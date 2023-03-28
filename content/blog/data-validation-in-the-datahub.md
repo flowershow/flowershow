@@ -1,6 +1,6 @@
 ---
 title: Data Validation in the DataHub
-created: 2018-01-24
+date: 2018-01-24
 authors: ['rufuspollock', 'anuveyatsu']
 ---
 
