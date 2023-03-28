@@ -101,7 +101,7 @@ Not so good:
 
 ## CKAN v3
 
-Next Gen harvesting decouples the core "ETL" part of harvesting into a small, self-contained microservice that is runnable on its own and communicates with the rest of CKAN over APIs. This is consistent with the general [next gen microservice approach](/next-gen/).
+Next Gen harvesting decouples the core "ETL" part of harvesting into a small, self-contained microservice that is runnable on its own and communicates with the rest of CKAN over APIs. This is consistent with the general [next gen microservice approach](ckan-v3).
 
 The design allows the Next Gen Harvester to be used with both CKAN Classic and CKAN Next Gen.
 
@@ -343,7 +343,7 @@ CKAN Next Gen is in active development and is being deployed in production.
 
 You can find the code here:
 
-https://gitlab.com/datopian/ckan-ng-harvester-core
+https://github.com/datopian/ckan-ng-harvester-core
 
 ### Run it standalone
 
