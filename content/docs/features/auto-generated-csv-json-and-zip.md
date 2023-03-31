@@ -1,6 +1,6 @@
 ---
 title: Auto generated csv, json and zip
-excerpt: Here we describe what is auto generated for you: ZIP, CSV and JSON versions.
+excerpt: Here we describe what is auto generated for you - ZIP, CSV and JSON versions.
 ---
 
 Here we describe what is auto generated for you: ZIP, CSV and JSON versions.

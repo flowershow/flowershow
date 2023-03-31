@@ -1,5 +1,5 @@
 //  Temporary solution to call indexFolder on start
-import { indexFolder } from "./lib/markdowndb/dist/index.js";
+import { indexFolder } from "@flowershow/markdowndb";
 
 //  Couldn't make this work:
 //  import  indexFolder from "./lib/markdowndb";
@@ -8,7 +8,7 @@ import { indexFolder } from "./lib/markdowndb/dist/index.js";
 
 //  DB file path
 const pathToMddb = "markdown.db";
-await indexFolder(pathToMddb, "content", [/^Excalidraw\/.*/]);
+await indexFolder(pathToMddb, "content", [/^Excalidraw\/.*/, /DS_Store/]);
 
 export default {
   eslint: {

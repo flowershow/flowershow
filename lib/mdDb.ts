@@ -1,5 +1,5 @@
 import getConfig from "next/config";
-import { Database } from "./markdowndb";
+import { Database } from "@flowershow/markdowndb";
 
 const config = getConfig();
 const serverRuntimeConfig = config.serverRuntimeConfig;
