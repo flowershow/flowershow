@@ -15,7 +15,13 @@ export async function getStaticProps() {
   let blogs = await mdDb.query({
     folder: "blog",
     filetypes: ["md", "mdx"],
-  });
+  })
+
+  blogs = blogs.sort(
+    (a, b) =>
+      new Date(b.metadata.date).getTime() -
+      new Date(a.metadata.date).getTime()
+  );
 
   //  Temporary, flowershow/BlogsList expects the contentlayer fields
   blogs = blogs.map((b) => {
