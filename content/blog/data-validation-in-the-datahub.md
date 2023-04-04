@@ -21,9 +21,8 @@ cd my-data-datapackage
 data push
 ```
 
-:::info
+>[!info]
 You can find more about pushing data to the DataHub [here](http://datahub.io/docs/getting-started/publishing-data).
-:::
 
 You may need to customize the schema for your file -- perhaps DataHub has guessed the types wrong.
 

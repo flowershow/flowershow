@@ -12,7 +12,7 @@ https://datahub.io/docs/core-data
 
 This post introduces you to the Core Data, presents a couple of examples and shows you how you can access and use core data easily from your own tools and systems including R, Python, Pandas and more.
 
-[[toc]]
+## Table of Contents
 
 ## Why Core Data
 
@@ -92,11 +92,8 @@ If you just need to get data, you have a direct link usable from any tool or app
 * CSV - https://datahub.io/core/country-list/r/data.csv
 * JSON - https://datahub.io/core/country-list/r/data.json
 
-:::info
-For more read our "Getting Data" tutorial:
-
+> [!info]For more read our "Getting Data" tutorial:
 https://datahub.io/docs/getting-started/getting-data
-:::
 
 
 ### cURL

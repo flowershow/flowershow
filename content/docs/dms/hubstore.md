@@ -1,8 +1,7 @@
 # HubStore
 
-:::warning Work in Progress
+> [!warning]Work in Progress
 This is is early stage and still a work in progress.
-:::
 
 A HubStore maintains a catalog of organizations and their ownership of projects / datasets.
 

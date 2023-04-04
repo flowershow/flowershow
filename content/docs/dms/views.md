@@ -23,9 +23,7 @@ In addition, we may want:
 * **Explorers**: that build on the views and wizards to allow users to do interactive data exploratio via live filtering and viewing.
 * **Dashboards** that combine tables, charts, maps etc (often with widgets that allow users to adjust these e.g. to select a country that updates associated charts).
 
-:::tip
-Often when we say "view" we identify with the particular presentation such as the table or graph. E.g. we say "this table is a view of that data". However, when you stop and think, strictly a view is more than that, for example it includes the title for the table. Formally, for us a view will include the combination of the presentation specification, the data sources that feed, plus any general metadata such as a title and description.
-:::
+>[!tip]Often when we say "view" we identify with the particular presentation such as the table or graph. E.g. we say "this table is a view of that data". However, when you stop and think, strictly a view is more than that, for example it includes the title for the table. Formally, for us a view will include the combination of the presentation specification, the data sources that feed, plus any general metadata such as a title and description.
 
 ## Definitions
 

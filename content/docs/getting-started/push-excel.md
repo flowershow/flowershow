@@ -6,11 +6,9 @@ excerpt: In this tutorial, we will explain how to push Excel data to the DataHub
 
 In this tutorial, we will explain how to push Excel data to the DataHub. When an Excel file is pushed, we can extract data from selected sheets for previewing and downloading in alternative formats. By default, our CLI tool would process only first sheet of the Excel, but publishers can specify any sheets they want.
 
-:::info
-Find out how to install our CLI tool here:
-
+[!info]Find out how to install our CLI tool here:
 http://datahub.io/docs/getting-started/installing-data
-:::
+
 
 ## Get some Excel data
 
@@ -62,9 +60,8 @@ Once your data is online, you will see the following page:
 
 ![](/static/img/docs/showcase-excel-1.png)
 
-:::info
-DataHub may still be processing your data. In this case you will see an appropriate message on the page. Just allow it couple of moments and it will be there!
-:::
+>[!info]DataHub may still be processing your data. In this case you will see an appropriate message on the page. Just allow it couple of moments and it will be there!
+
 
 We have converted the first sheet to CSV. If you take a look at downloads table, there are options to get data in CSV or JSON versions. Also, you still can download your original data:
 

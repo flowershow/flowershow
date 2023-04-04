@@ -34,9 +34,7 @@ CKAN__PLUGINS=stats text_view recline_view example_extension
 # Shut down your instance with crtl+c and then run it again with:
 docker-compose -f docker-compose.dev.yml up
 ```
-::: tip
-CKAN will be started running on the paster development server with the `--reload` option to watch changes in the extension files.
-:::
+> [!tip]CKAN will be started running on the paster development server with the '--reload' option to watch changes in the extension files.
 
 You should see the following output in the console:
 
@@ -52,9 +50,7 @@ Let's edit a template to change the way CKAN is displayed to the user!
 
 1. First you will need write permissions to the extension folder since it was created by the user running docker. Replace `your_username` and execute the following command:
 
-::: tip
-You can find out your current username by typing `echo $USER` in the terminal.
-:::
+> [!tip]You can find out your current username by typing 'echo $USER' in the terminal.
 
 ```
 sudo chown -R <your_username>:<your_username> src/ckanext-example_extension

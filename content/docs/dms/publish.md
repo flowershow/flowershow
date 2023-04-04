@@ -49,9 +49,7 @@ More specifically: As a Data Curator I want to drop a file in and edit the metad
 
 #### Resources
 
-:::tip
-A resource is any data item in a dataset e.g. a file.
-:::
+>[!tip]A resource is any data item in a dataset e.g. a file.
 
 When adding a resource to a dataset I want metadata pre-entered for me (e.g. resource name from file name, encoding, ...) to save time and reduce errors
 
@@ -196,15 +194,14 @@ addres --> save
 addmeta -.-> save
 ```
 
-:::tip Comment: The file driven approach is preferable
-We think the "file driven" approach where the flow starts with a user adding and uploading a file (and then adding metadata) is preferable to an metadata driven approach where you start with a dataset and metatdata and then add files (as is the default today in CKAN).
+>[!tip]Comment: The file driven approach is preferable.
+We think the "file driven" approach where the flow starts with a user adding and uploading a file (and then adding metadata) is preferable to a metadata driven approach where you start with a dataset and metadata and then add files (as is the default today in CKAN).  
 
-Why do we think a file driven approach is better? a) a file is what the user has immediately to hand b) it is concrete whilst "metadata" is abstract c) common tools for storing files e.g. Dropbox or Google Drive start with providing a file - only later, and optionally, do you rename it, move it etc.
+Why do we think a file driven approach is better? a) a file is what the user has immediately to hand b) it is concrete whilst "metadata" is abstract c) common tools for storing files e.g. Dropbox or Google Drive start with providing a file - only later, and optionally, do you rename it, move it etc. 
 
 That said, tools like GitHub or Gitlab require one to create a "project", albeit a minimal one, before being able to push any content. However, GitHub and Gitlab are developer oriented tools that can assume a willingness to tolerate a slightly more cumbersome UX. Furthermore, the default use case is that you have a git repo that you wish to push so the the use case of a non-technical user uploading files is clearly secondary. Finally, in these systems you can create a project just to have an issue tracker or wiki (without having fiile storage). In this case, creating the project first makes sense.
 
 In a DMS, we are often dealing with non-technical or semi-technical users. Thus, providing a simple, intuitive flow is preferable. That said, one may still have a very lightweight project creation flow so that we have a container for the files (just as in, say, Google Drive you already have a folder to put your files in).
-:::
 
 
 ### Dataset Metadata editor
@@ -287,7 +284,7 @@ Advanced:
 
 **Deck**: This deck (Feb 2019) provides an overview of the core flow publishing a single tabular file e.g. CSV and includes a a basic UI mockup illustrating the flow described below.
 
-<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vQD09jo3Mwq-jM32rns_ehyd6GOv7cQ7F9UAK1U_jzO5G4ZgZ8ktG9rwK03-N-0XmQyJx-9kSW7-U4I/embed?start=false&loop=false&delayms=3000" frameborder="0" width="960" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true" />
+<iframe src="https://docs.google.com/presentation/d/e/2PACX-1vQD09jo3Mwq-jM32rns_ehyd6GOv7cQ7F9UAK1U_jzO5G4ZgZ8ktG9rwK03-N-0XmQyJx-9kSW7-U4I/embed?start=false&loop=false&delayms=3000" frameborder="0" width="550" height="569" allowfullscreen="true" mozallowfullscreen="true" webkitallowfullscreen="true" />
 
 #### Overview
 

@@ -29,11 +29,9 @@ chmod +x data-macos
 mv data-macos /usr/local/bin/data
 ```
 
-:::info
-If you have an error message saying `no such file or directory`, you might need to create a directory in your `/usr/local/` by running:
-
+>[!info]If you have an error message saying 'no such file or directory', you might need to create a directory in your '/usr/local/' by running:
 `mkdir /usr/local/bin`
-:::
+
 
 ## Linux
 
@@ -43,11 +41,9 @@ chmod +x data-linux
 mv data-linux /usr/local/bin/data
 ```
 
-:::info
-If you encounter errors related to location of `xdg-open` package, following may help:
-
+>[!info]If you encounter errors related to location of 'xdg-open' package, following may help:
 `cp /usr/bin/xdg-open /usr/local/bin/xdg-open`
-:::
+
 
 ## Windows
 

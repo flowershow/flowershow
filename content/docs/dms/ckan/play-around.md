@@ -15,17 +15,17 @@ CKAN is a tool for making data portals to manage and publish datasets. You can r
 
 https://docs.ckan.org/en/2.9/user-guide.html
 
-::: tip
+>[!tip]
 Install a [JSON formatter plugin for Chrome](https://chrome.google.com/webstore/detail/json-formatter/bcjindcccaagfpapjjmafapmmgkkhgoa?hl=en) or browser of your choice.
 
 If you are familiar with the command line tool `curl`, you can use that.
 
 In this tutorial, we will be using `curl`, but for most of the commands, you can paste a link in your browser. For POST commands, you can use [Postman](https://www.getpostman.com/) or [Google Chrome Plugin](https://chrome.google.com/webstore/detail/postman/fhbjgbiflinjbdggehcddcbncdddomop).
-:::
+
 
 ## First steps
 
-::: tip
+>[!tip]
 By default the portal is accessible on http://localhost:5000. Let's update your `/etc/hosts` to access it on http://ckan:5000:
 
 ```
@@ -34,7 +34,6 @@ vi /etc/hosts      # You can use the editor of your choice
 127.0.0.1 ckan
 ```
 
-:::
 
 At this point, you should be able to access the portal on http://ckan:5000.
 

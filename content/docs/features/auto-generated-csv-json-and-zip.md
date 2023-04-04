@@ -13,9 +13,9 @@ We auto generate compressed `ZIP` versions of datasets so users can download ent
 
 Once downloaded you would get all available versions of the data along with the descriptor (metadata) file called "datapackage.json".
 
-:::info
-All datasets on DataHub are "packaged" as data packages (read more about it - http://datahub.io/docs/data-packages)
-:::
+>[!info]All datasets on DataHub are "packaged" as data packages 
+Read more about it - http://datahub.io/docs/data-packages
+
 
 ## CSV and JSON
 

@@ -11,9 +11,7 @@ This guide is about adding and managing data in CKAN programmatically and it ass
 
 Clients use [Frictionless formats](https://specs.frictionlessdata.io/) by default for describing dataset and resource objects passed to client methods. Internally, we then use the a *CKAN {'<=>'} Frictionless Mapper* (both [in JavaScript]( https://github.com/datopian/frictionless-ckan-mapper-js ) and [in Python](https://github.com/frictionlessdata/frictionless-ckan-mapper)) to convert objects to CKAN formats before calling the API. **Thus, you can use _Frictionless Formats_ by default with the client**.
 
-::::tip
-As CKAN moves to Frictionless to default this will gradually become unnecessary.
-::::
+>[!tip]As CKAN moves to Frictionless to default this will gradually become unnecessary.
 
 ## Quick start
 
@@ -84,9 +82,8 @@ client.push(resource)
 
 ### Adding a resource to an existing Dataset
 
-::::tip NOTE
-Not implemented yet.
-::::
+>[!note]Not implemented yet.
+
 
 ```python
 client.create('my-data')
@@ -95,9 +92,8 @@ client.push_resource(resource)
 
 ### Edit a Dataset's metadata
 
-:::tip NOTE
-Not implemented yet.
-:::
+>[!note]Not implemented yet.
+
 
 ```python
 dataset = client.retrieve('sample-dataset')
@@ -145,11 +141,9 @@ Arguments:
 | `transform_payload`  | `function` | `None`     | Function to mutate the `payload` before making the request (useful to convert to and from CKAN and Frictionless formats). |
 | `transform_response` | `function` | `None`     | function to mutate the response data before returning it (useful to convert to and from CKAN and Frictionless formats). |
 
-::::tip NOTE
-The CKAN API uses the CKAN dataset and resource formats (rather than Frictionless formats).
-
+>[!note]The CKAN API uses the CKAN dataset and resource formats (rather than Frictionless formats).
 In other words, to stick to Frictionless formats, you can pass `frictionless_ckan_mapper.frictionless_to_ckan` as `transform_payload`, and `frictionless_ckan_mapper.ckan_to_frictionless` as `transform_response`.
-::::
+
 
 #### In JavaScript
 
@@ -161,17 +155,13 @@ Arguments:
 | `payload`    | <code>object</code> | (required)         | The payload being sent to CKAN. When a payload is provided to a GET request, it will be converted to URL parameters and each key will be converted to snake case. |
 | `useHttpGet` | <code>object</code> | <code>false</code> | Optional, if `True` will make `GET` request, otherwise `POST`. |
 
-::::tip NOTE
-The JavaScript implementation uses the CKAN dataset and resource formats (rather than Frictionless formats).
-
+>[!note]The JavaScript implementation uses the CKAN dataset and resource formats (rather than Frictionless formats).
 In other words, to stick to Frictionless formats, you need to convert from Frictionless to CKAN before calling `action` , and from CKAN to Frictionless after calling `action`.
-::::
 
 ## Metadata reference
 
-:::tip NOTE
-Your site may have custom metadata that differs from the example set below.
-:::
+>[!info]Your site may have custom metadata that differs from the example set below.
+
 
 ### Profile
 
@@ -371,7 +361,7 @@ $ npm install -g git+https://github.com/datopian/jsv.git
 $ jsv data-resource.json --output py
 ```
 
-:::details Output
+**Output**
 ```python
 dataset_metadata = {
     "profile": "data-resource",  # The profile of this descriptor.
@@ -397,7 +387,7 @@ dataset_metadata = {
     # [example] "hash": "SHA256:5262f12512590031bbcc9a430452bfd75c2791ad6771320bb4b5728bfb78c4d0"
 }
 ```
-::::
+
 
 ### JavaScript
 
@@ -405,7 +395,7 @@ dataset_metadata = {
 $ jsv data-resource.json --output js
 ```
 
-::::details Output
+**Output**
 ```javascript
 const datasetMetadata = {
   // The profile of this descriptor.
@@ -457,7 +447,6 @@ const datasetMetadata = {
   // [example] hash: "SHA256:5262f12512590031bbcc9a430452bfd75c2791ad6771320bb4b5728bfb78c4d0"
 };
 ```
-::::
 
 ### R
 
@@ -465,7 +454,7 @@ const datasetMetadata = {
 $ jsv data-resource.json --output r
 ```
 
-::::details Output
+**Output** 
 ```r
 # The profile of this descriptor.
 profile <- "data-resource"
@@ -505,7 +494,7 @@ hash <- "d25c9c77f588f5dc32059d2da1136c02"
 # [example] hash <- "SHA256:5262f12512590031bbcc9a430452bfd75c2791ad6771320bb4b5728bfb78c4d0"
 
 ```
-::::
+
 
 ## Design Principles
 

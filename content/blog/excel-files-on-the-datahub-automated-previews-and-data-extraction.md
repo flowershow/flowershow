@@ -56,9 +56,9 @@ Once your data is online, you will see the following page:
 
 ![](/static/img/docs/showcase-excel-1.png)
 
-:::info
-DataHub may still be processing your data. In this case you will see an appropriate message on the page. Just allow it couple of moments and it will be there!
-:::
+
+> [!info]DataHub may still be processing your data. In this case you will see an appropriate message on the page. Just allow it couple of moments and it will be there!
+
 
 We have converted the first sheet to CSV. If you take a look at downloads table, there are options to get data in CSV or JSON versions. Also, you still can download your original data:
 

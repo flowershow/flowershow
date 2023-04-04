@@ -8,9 +8,9 @@ This guide walks you through how to put data online using **data** tool and the 
 
 Here we focus on tabular data and especially CSV - a universal basic format for structured data.
 
-:::info
-You can read and learn about CSV in [this post](/docs/data-packages/csv).
-:::
+>[!info]You can read and learn about CSV in:
+[This post.](/docs/data-packages/csv)
+
 
 ## Install the data CLI tool
 
