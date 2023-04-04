@@ -13,6 +13,18 @@ Design of DataHub Next. Design here means analysis and architecture (not visual 
 - Data Project
 - Data API
 
+# Components
+
+MVP components sketch v2023-03-09
+
+![[../Excalidraw/datahub-next-mvp-architecture-2023-03-09.excalidraw.svg]]
+
+## David + Rufus (more expansive)
+
+This is a different take with a focus on naming domains of the application.
+
+![[../Excalidraw/datahub-next-mvp-archictecture-2023-03-14.excalidraw.svg]]
+
 # Domain Model
 
 See [[../docs/dms/dms#Domain Model]] which has a fairly fulsome DMS oriented domain model (structured in graphql format).
