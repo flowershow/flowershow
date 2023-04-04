@@ -18,6 +18,7 @@
     "@flowershow/remark-embed": "^1.0.0",
     "@flowershow/remark-wiki-link": "^1.0.1",
     "@heroicons/react": "^1.0.6",
+    "@lottiefiles/react-lottie-player": "^3.5.3",
     "@silvenon/remark-smartypants": "^2.0.0",
     "@tailwindcss/line-clamp": "^0.4.2",
     "@tailwindcss/typography": "^0.5.9",

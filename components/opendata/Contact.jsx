@@ -12,8 +12,7 @@ export default function Contact() {
             Data Management is complex. We make it easy.{" "}
           </h2>
           <p className="mb-6 text-lg md:text-xl font-heading font-medium text-[#556987] ">
-            Get the answers you need by emailing us today. Join thousands of
-            happy customers.
+            Get the answers you need today. Join thousands of happy customers.
           </p>
           <a
             href="https://calendar.app.google/LT4acVdKn3Cxm2MXA"
