@@ -78,7 +78,7 @@ export function Layout({ children, tableOfContents }) {
         <div className="relative mx-auto">
           <main className="flex-auto">
             {children}
-            {(editLink ?? siteConfig.editLinkShow) && (
+            {/*(editLink ?? siteConfig.editLinkShow) && (
               <div className="mb-10 prose dark:prose-invert p-6 mx-auto">
                 <a
                   className="flex no-underline font-semibold justify-center"
@@ -105,7 +105,7 @@ export function Layout({ children, tableOfContents }) {
                   </span>
                 </a>
               </div>
-            )}
+            )*/}
           </main>
         </div>
         <footer className="font-['Poppins'] bg-background dark:bg-background-dark prose dark:prose-invert max-w-none flex flex-col items-center justify-center w-full h-auto pt-0 pb-20">

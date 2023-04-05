@@ -75,9 +75,9 @@ export default function Features() {
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 text-center md:text-left gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 text-center md:text-left gap-8">
                 <div className="w-full md mb-8">
-                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12">
+                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 ml-1">
                     <Player
                       autoplay
                       loop
@@ -89,7 +89,7 @@ export default function Features() {
                   <p className="font-medium text-[#556987] ">Say goodbye to frustration. Navigate and explore your data with ease.</p>
                 </div>
                 <div className="w-full mb-8">
-                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12">
+                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 ml-[0.15rem]">
                     <Player
                       autoplay
                       loop
@@ -101,7 +101,7 @@ export default function Features() {
                   <p className="font-medium text-[#556987] ">Our drag-and-drop feature makes it easy for anyone to publish open data, regardless of skill level.</p>
                 </div>
                 <div className="w-full mb-8">
-                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12">
+                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 ml-[0.2rem]">
                     <Player
                       autoplay
                       loop
@@ -113,7 +113,7 @@ export default function Features() {
                   <p className="font-medium text-[#556987] ">Empower your users to uncover insights and trends in your open data with our powerful self-service visualization tools.</p>
                 </div>
                 <div className="w-full mb-8 md:mb-0">
-                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12">
+                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 ml-[0.5rem]">
                     <Player
                       autoplay
                       loop
@@ -125,7 +125,7 @@ export default function Features() {
                   <p className="font-medium text-[#556987] ">Make your data come alive with our beautiful charts and quick insights - showcasing your best datasets has never been easier.</p>
                 </div>
                 <div className="w-full mb-8 md:mb-0">
-                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12">
+                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 ml-[0.37rem]">
                     <Player
                       autoplay
                       loop
@@ -137,7 +137,7 @@ export default function Features() {
                   <p className="font-medium text-[#556987] ">Get the best features from CKAN. Perfect for organizations looking for a lightweight and cost-effective solution.</p>
                 </div>
                 <div className="w-full mb-8 md:mb-0">
-                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12">
+                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 ml-[0.3rem]">
                     <Player
                       autoplay
                       loop
