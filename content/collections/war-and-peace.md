@@ -22,9 +22,8 @@ Some of most relevant:
   * CodeBook: http://ucdp.uu.se/downloads/ucdpprio/ucdp-prio-acd-172.pdf
 
 
-:::info
-Note: PRIO dataset https://www.prio.org/Data/Armed-Conflict/Battle-Deaths/ merged into Uppsala Conflict Data Program (UCDP) dataset
-:::
+>[!info]Note: PRIO dataset merged into Uppsala Conflict Data Program (UCDP) dataset.
+https://www.prio.org/Data/Armed-Conflict/Battle-Deaths/
 
 ## Correlates of War
 

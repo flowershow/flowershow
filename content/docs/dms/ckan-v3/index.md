@@ -51,9 +51,7 @@ The main way to address these problems while gaining extra benefits is to move t
 
 Thus, we recommend building the next version of CKAN – CKAN v3 – on a microservices approach.
 
-:::tip
-CKAN v3 is sometimes also referred to as CKAN Next Gen(eration).
-:::
+[!tip]CKAN v3 is sometimes also referred to as CKAN Next Gen(eration).
 
 With microservices, each piece of functionality runs in its own service and process. 
 
@@ -159,9 +157,8 @@ This diagram is based on the file `docker-compose.yml` of [github.com/okfn/docke
  
 A difference from this diagram to the file is that we are not including DataPusher, as it is not a required dependency.
 
-:::tip
-Databases may run as Docker containers, or rely on third-party services such as Amazon Relational Database Service (RDS).
-:::
+>[!tip]Databases may run as Docker containers, or rely on third-party services such as Amazon Relational Database Service (RDS).
+
 
 
 ```mermaid

@@ -41,7 +41,7 @@ Packages including for creating, viewing and validating.
 ## Getting Started
 
 A minimal example Data Package would look like this on disk:
-```
+```etc
 datapackage.json
 # a data file (CSV in this case but could be any type of data)
 data.csv
@@ -79,17 +79,12 @@ minimal example of a `datapackage.json` file:
 
 Here is a much more extensive example of a datapackage JSON file:
 
-:::info
-**Note:** a complete list of potential attributes and their meaning can be found in the
-[full Data Package spec][spec].
-:::
+>[!info] A complete list of potential attributes and their meaning can be found in:
+[Full Data Package spec](https://frictionlessdata.io/specs/data-package/)
 
-[spec]: https://frictionlessdata.io/specs/data-package/
-
-:::info
-**Note:** the Data Package format is **extensible** in that it allows you add
+>[!note]**Note:** The Data Package format is **extensible** in that it allows you add
 your own attributes to the `datapackage.json`
-:::
+
 ```javascript
     {
       "name": "a-unique-human-readable-and-url-usable-identifier",

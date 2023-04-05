@@ -33,6 +33,6 @@ Each time you publish your dataset, a revision process is triggered for it. You 
 
 It becomes useful when you've re-published your dataset several times and you want to get your data in a specific stage.
 
-:::info
-A version is a natural number (integer larger than 0) and you can access the specific version of a dataset by `/v/{number}`.
-:::
+
+>[!info]A version is a natural number (integer larger than 0) and you can access the specific version of a dataset by:
+`/v/{number}`.

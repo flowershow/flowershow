@@ -36,9 +36,9 @@ npm install datahub-client data.js --save
 
 2. Make sure you have configurations file at `~/.config/datahub/config.json`.
 
-:::info
+>[!info]
 If you don't have it, you need to generate using our [CLI tool](https://datahub.io/download). After running `data login` command, credentials can be found at `~/.config/datahub/config.json`.
-:::
+
 
 ### Push code example
 

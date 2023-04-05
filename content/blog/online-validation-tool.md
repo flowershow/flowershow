@@ -16,11 +16,9 @@ The descriptor should be stored online, e.g. on the github.
 
 You should provide the URL to the descriptor (datapackage.json) file and press 'Validate' button.
 
-:::info
-Online validator tool validates only the descriptor file.
-
+>[!info]Online validator tool validates only the descriptor file.
 Here you can read about the [full data validation on the DataHub](https://datahub.io/blog/data-validation-in-the-datahub).
-:::
+
 
 ## How we validate
 

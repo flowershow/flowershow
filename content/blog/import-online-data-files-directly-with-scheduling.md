@@ -14,13 +14,13 @@ We're very excited about this feature as it is the first step in supporting auto
 
 We'll use an example of the "Energy consumption by sector" from the US Energy Information Administration. This data is updated on monthly basis so we want it to be re-imported every 30 days (~1 month):
 
-```
+```etc
 data push https://www.eia.gov/totalenergy/data/browser/csv.php?tbl=T02.01 --schedule="every 30d" --format=csv
 ```
 
-:::info
-By default, when you push datasets to DataHub, they are "unlisted" so only people with the link can see it. If you wish to make your dataset "published", you need to pass `--published` option: `data push URL --published`.
-:::
+
+>[!info]By default, when you push datasets to DataHub, they are "unlisted" so only people with the link can see it. 
+If you wish to make your dataset "published", you need to pass the `--published` option: `data push URL --published`.
 
 Once the process is completed open your browser and check it out! It would generate a URL using your username, which will be copied to clipboard so you can just open a browser and paste it. You should see something similar to this page:
 

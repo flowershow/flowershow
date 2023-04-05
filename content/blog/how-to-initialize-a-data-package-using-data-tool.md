@@ -6,9 +6,10 @@ authors: ['anuveyatsu']
 
 In this article we explain how easy is adding a `datapackage.json` file for your data. You need to have `data` tool installed - [download it](https://datahub.io/download) and follow these [instructions](https://datahub.io/docs/getting-started/installing-data).
 
-:::info
-If you're not familiar with `datapackage.json`, please, read this article - https://datahub.io/docs/data-packages.
-:::
+
+>[!info]If you're not familiar with 'datapackage.json', 
+Please, read this article - https://datahub.io/docs/data-packages.
+
 
 Below is how our project looks like initially:
 
@@ -63,7 +64,7 @@ If you take a look at `datapackage.json`, you'd mention that:
 
 If you need more control, e.g., you want to add only certain files, scan certain directories and add a different license, you can use `init` command in interactive mode:
 
-```
+```etc
 $ data init -i
 ```
 
@@ -71,7 +72,7 @@ $ data init -i
 
 You can now deploy your dataset to DataHub:
 
-```
+```etc
 $ data push
 ```
 

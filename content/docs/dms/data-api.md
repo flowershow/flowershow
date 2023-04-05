@@ -76,9 +76,7 @@ The functionality associated to the Data APIs can be divided in 6 areas:
   * Maybe includes some ETL => this takes us more into data factory
 * **Storage (Structured)**: the underlying structured store for the data (and its layout). For example, Postgres and its table structure.This could be considered a separate component that the Data API uses or as part of the Data API -- in some cases the store and API are completely wrapped together, e.g. ElasticSearch is both a store and a rich Web API.
 
-:::tip
-**Visualization** is not part of the API but the demands of visualization are important in designing the system.
-:::
+>[!tip]Visualization is not part of the API but the demands of visualization are important in designing the system.
 
 ## Job Stories
 
@@ -162,9 +160,7 @@ As a Publisher I want to only allow specific people to access data via the data 
 
 ### UI for Exploring Data
 
-:::warning
-This probably is *not* a Data API epic -- rather it would come under the Data Explorer.
-:::
+>[!warning]This probably is not a Data API epic -- rather it would come under the Data Explorer.
 
 * I want an interface to “sql style” query data
 * I want a filter interface into data
@@ -214,11 +210,11 @@ The CKAN DataStore extension provides an ad-hoc database for storage of structur
 
 See the DataStore extension: https://github.com/ckan/ckan/tree/master/ckanext/datastore
 
-Datastore API: https://docs.ckan.org/en/2.8/maintaining/datastore.html#the-datastore-api
+[Datastore API](https://docs.ckan.org/en/2.8/maintaining/datastore.html#the-datastore-api)
 
-Making Datastore API requests: https://docs.ckan.org/en/2.8/maintaining/datastore.html#making-a-datastore-api-request
+[Making Datastore API requests](https://docs.ckan.org/en/2.8/maintaining/datastore.html#making-a-datastore-api-request)
 
-Example: Create a DataStore table: https://docs.ckan.org/en/2.8/maintaining/datastore.html#ckanext.datastore.logic.action.datastore_create
+[Example: Create a DataStore table](https://docs.ckan.org/en/2.8/maintaining/datastore.html#ckanext.datastore.logic.action.datastore_create)
 
 ```sh
 curl -X POST http://127.0.0.1:5000/api/3/action/datastore_create \

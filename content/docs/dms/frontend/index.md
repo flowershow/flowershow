@@ -2,11 +2,11 @@
 
 The (read) frontend component covers all of the traditional "read" frontend functionality of a data portal: front page, searching datasets, viewing datasets etc.
 
-:::tip 📣 Announcing Portal.js
-Portal.js 🌀 is a javascript framework for building rich data portal frontends fast using a modern frontend approach (JavaScript, React, SSR).
+>[!tip]Announcing Portal.js📣 
+>Portal.js 🌀 is a javascript framework for building rich data portal frontends fast using a modern frontend approach (JavaScript, React, SSR).
+>
+>https://github.com/datopian/portal.js
 
-https://github.com/datopian/portal.js
-:::
 
 ## Features
 
@@ -96,19 +96,17 @@ In more detail:
 
 ## CKAN v3
 
-:::tip 📣 Announcing Portal.js
-Portal.js 🌀 is a javascript framework for building rich data portal frontends fast using a modern frontend approach (JavaScript, React, SSR).
-
-https://github.com/datopian/portal.js
-:::
+>[!tip]Announcing Portal.js📣 
+>Portal.js 🌀 is a javascript framework for building rich data portal frontends fast using a modern frontend approach (JavaScript, React, SSR).
+>
+>https://github.com/datopian/portal.js
 
 Previous (stable) version is `frontend-v2`: https://github.com/datopian/frontend-v2. It is written in NodeJS using ExpressJS. For templating it uses [Nunjucks][].
 
 [Nunjucks]: https://mozilla.github.io/nunjucks/templating.html
 
-:::tip
-Note: it is easy to write your own Next Gen frontend in any language or framework you like -- much like the frontend of a headless CMS site. And obviously you can still reuse the patterns (and even code if you are using JS) from the default approach presented here.
-:::
+>[!note]It is easy to write your own Next Gen frontend in any language or framework you like -- much like the frontend of a headless CMS site. And obviously you can still reuse the patterns (and even code if you are using JS) from the default approach presented here.
+
 
 ## RFC
 

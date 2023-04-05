@@ -119,21 +119,19 @@ And our site will use this metadata while forming the page. The result you can s
 
 If you will add `[[toc]]` in your document - this will be automatically transformed into Table Of Content section, with links to all your Headers.
 
-### Info boxes
+### Directive boxes (Callouts)
 
-You can add info boxes in your text and the message will appear in a box with orange borders:
+You can add info boxes in your text and the message will appear in a colored box:
 
-```
-:::info
-My important message here.
-:::
+```etc
+>[!info]My important message here.
 ```
 
 and this is how it would be rendered:
 
-:::info
-My important message here.
-:::
+> [!info]My important message here.
+
+For more supported callouts please refer to https://flowershow.app/docs/callouts
 
 ### CLI output
 

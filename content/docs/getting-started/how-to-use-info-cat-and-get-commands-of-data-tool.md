@@ -32,18 +32,17 @@ which will print out README of the dataset + summary table about available resou
 
 You can see that it has `global` CSV file, derived CSV and JSON versions of it, a validation report and ZIP version of the dataset.
 
-:::info
-Read more about derived CSV and JSON of a tabular data and ZIP version of the datasets:
+>[!info]Read more about derived CSV and JSON of a tabular data and ZIP version of the datasets:
 https://datahub.io/docs/features/auto-generated-csv-json-and-zip
-:::
+
 
 # Preview tabular data
 
 Let's preview `global` CSV file so we know how data looks like before downloading it. We can do it by using `cat` command:
 
-:::info
-If you wonder how we constructed the above URL, read this docs about "r" links - https://datahub.io/docs/getting-started/getting-data#perma-urls-for-data.
-:::
+>[!info]If you wonder how we constructed the URL, read this docs about "r" links:
+https://datahub.io/docs/getting-started/getting-data#perma-urls-for-data.
+
 
 ```
 data cat https://datahub.io/core/co2-fossil-global/r/global.csv

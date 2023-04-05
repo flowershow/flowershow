@@ -53,9 +53,8 @@ We have defined couple of initial funnels that we think is important. We conside
 
 Below we have written how "views" property would look like in the `datapackage.json` file:
 
-:::info
-In order to define how the graphs should look like we add a "views" property to `datapackage.json` file that will tell DataHub platform to create graphs on our page. By just editing a few lines in "views" property we can easily change the appearance of our graphs on the whim. Things like which stats to create graph for, which time period to display, average and max values etc.
-:::
+>[!info] In order to define how the graphs should look like we add a "views" property to `datapackage.json` file that will tell DataHub platform to create graphs on our page. By just editing a few lines in "views" property we can easily change the appearance of our graphs on the whim. Things like which stats to create graph for, which time period to display, average and max values etc.
+
 
 ```json
 {

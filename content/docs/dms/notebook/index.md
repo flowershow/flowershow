@@ -477,9 +477,7 @@ TODO: take a screenshot to illustrate Gitlab and Github.
 
 4 Stores of a DataHub
 
-:::tip
-Naming is one of the most important things -- and hardest!
-:::
+>[!tip]Naming is one of the most important things -- and hardest!
 
 * MetaStore [service]: API (and store) of the metadata for datasets
 * HubStore [service]: API for registry of datasets (+ potentially organizations and ownership relationships to datasets)

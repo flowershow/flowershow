@@ -49,9 +49,8 @@ A DMS has a variety of features. This section provides an overview and links to 
 
 <img src="https://docs.google.com/drawings/d/e/2PACX-1vRdMzNeIAEkjDRGtBfuocy6zDyRg_qDujSkLrTe69U1qlu_1kfTYN0OL_v4IZKKo0eDXRbCzgzQMlFz/pub?w=622&amp;h=635" />
 
-:::tip
-There are many ways to break down features and this is just one framing. We are thinking about others and if you have thoughts please get in touch.
-:::
+> [!tip] There are many ways to break down features and this is just one framing. We are thinking about others and if you have thoughts please get in touch.
+
 
 - [Discovering and showcasing data (catalog and presenting)](/docs/dms/frontend)
 - [Views on data](/docs/dms/views) including visualizing and previewing data as well [Data Explorers][explorer] and [Dashboards][]
@@ -77,7 +76,7 @@ A DMS has the following key components:
 
 https://coggle.it/diagram/Xiw2ZmYss-ddJVuK/t/data-portal-feature-breakdown
 
-<iframe width='853' height='480' src='https://embed.coggle.it/diagram/Xiw2ZmYss-ddJVuK/b24d6f959c3718688fed2a5883f47d33f9bcff1478a0f3faf9e36961ac0b862f' frameBorder='0' allowFullScreen></iframe>
+<iframe width='540' height='480' src='https://embed.coggle.it/diagram/Xiw2ZmYss-ddJVuK/b24d6f959c3718688fed2a5883f47d33f9bcff1478a0f3faf9e36961ac0b862f' frameBorder='0' allowFullScreen></iframe>
 
 ## Frictionless
 

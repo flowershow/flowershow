@@ -4,9 +4,9 @@ Design of [Views](/docs/dms/views).
 
 ## Concepts and Background
 
-:::tip
+>[!tip]
 This is from https://specs.frictionlessdata.io/views/#concepts-and-background
-:::
+
 
 To generate visualizations you usually want the following 3 types of information:
 
@@ -53,10 +53,8 @@ graph TD
   vega --render--> html
 ```
 
-:::info
-**IMPORTANT**: an important "convention" we adopt for the "compiling-in" of data is that resource data should be inlined into an `_values` attribute. If the data is tabular this attribute should be an array of *arrays* (not objects).
-:::
-
+>[!info]Important
+An important "convention" we adopt for the "compiling-in" of data is that resource data should be inlined into an `_values` attribute. If the data is tabular this attribute should be an array of *arrays* (not objects).
 
 ### Graphs
 
@@ -86,11 +84,10 @@ Notes:
 
 ### Geo support
 
-:::info
-**Note**: support for customizing map is limited to JS atm - there is no real map "spec" in JSON yet beyond the trivial version.
+>[!note]Support for customizing map is limited to JS atm - there is no real map "spec" in JSON yet beyond the trivial version.
 
-**Note**: vega has some geo support but geo here means full geojson style mapping.
-:::
+>[!note]Vega has some geo support but geo here means full geojson style mapping.
+
 
 ```mermaid
 graph LR

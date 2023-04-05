@@ -24,21 +24,19 @@ Once you are ready to publish your data, just select "private" option and then p
 
 ![](/static/img/docs/push-private.png)
 
-:::info
-Learn more about using the "Data" app [here](http://datahub.io/blog/data-desktop-app-alpha-release).
-:::
+
+>[!info]Learn more about using the "Data" app [here](http://datahub.io/blog/data-desktop-app-alpha-release).
 
 ### Publish using the command line tool
 
 Simply pass `--private` flag when you "push" your data so once it is processed and online only you can view it:
 
-```
+```etc
 $ data push myData --private
 ```
 
-:::info
-Learn more about how to publish datasets using the CLI [here](http://datahub.io/docs/getting-started/publishing-data).
-:::
+>[!info]Learn more about how to publish datasets using the CLI:
+http://datahub.io/docs/getting-started/publishing-data
 
 
 ## Making a Private Dataset Public
