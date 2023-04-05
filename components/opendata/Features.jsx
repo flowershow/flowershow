@@ -48,7 +48,7 @@ export default function Features() {
                         <Player
                           autoplay
                           loop
-                          src="/assets/icons/bitcoin.json"
+                          src="/assets/icons/ewallet.json"
                           style={{ height: "80px", width: "80px" }}
                         />
                       </div>
