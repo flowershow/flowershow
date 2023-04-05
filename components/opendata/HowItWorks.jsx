@@ -28,7 +28,7 @@ export default function HowItWorks() {
                       <div className="w-full p-3">
                         <div className="flex flex-wrap -m-4 ">
                           <div className="flex flex-col items-center w-auto p-4">
-                            <div className="inline-flex h-16 w-16  mx-auto items-center justify-center">
+                            <div className="inline-flex h-16 w-16 mx-auto items-center justify-center">
                               <Player
                                 autoplay
                                 loop
@@ -36,7 +36,7 @@ export default function HowItWorks() {
                                 style={{ height: "80px", width: "80px" }}
                               />
                             </div>
-                            <div className="w-px h-24 bg-gray-200"></div>
+                            <div className="w-1 h-20 mt-5 bg-orange-400 rounded-full"></div>
                           </div>
                           <div className="flex-1 p-4">
                             <h3 className="font-heading mb-3 text-3xl font-bold">Sign Up</h3>
@@ -47,7 +47,7 @@ export default function HowItWorks() {
                       <div className="w-full p-3">
                         <div className="flex flex-wrap -m-4">
                           <div className="flex flex-col items-center w-auto p-4">
-                            <div className="inline-flex h-16 w-16  mx-auto items-center justify-center">
+                            <div className="inline-flex h-16 w-16 mx-auto items-center justify-center">
                               <Player
                                 autoplay
                                 loop
@@ -55,7 +55,7 @@ export default function HowItWorks() {
                                 style={{ height: "80px", width: "80px" }}
                               />
                             </div>
-                            <div className="w-px h-24 bg-gray-200"></div>
+                            <div className="w-1 h-20 mt-5 bg-orange-400 rounded-full"></div>
                           </div>
                           <div className="flex-1 p-4">
                             <h3 className="font-heading mb-3 text-3xl font-bold">Choose a theme</h3>
@@ -74,7 +74,7 @@ export default function HowItWorks() {
                                 style={{ height: "80px", width: "80px" }}
                               />
                             </div>
-                            <div className="md:hidden w-px h-24 bg-gray-200"></div>
+                            <div className="hidden w-1 h-16 bg-orange-400"></div>
                           </div>
                           <div className="flex-1 p-4">
                             <h3 className="font-heading mb-3 text-3xl font-bold">Done</h3>
