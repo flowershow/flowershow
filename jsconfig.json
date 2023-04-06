@@ -5,11 +5,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.tsx",
-    "**/*.ts",
-    "lib",
-  ],
+  "include": ["next-env.d.ts", "**/*.tsx", "**/*.ts", "lib"],
   "exclude": ["node_modules"]
 }

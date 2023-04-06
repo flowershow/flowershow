@@ -47,7 +47,7 @@ export function DocsList({ docs }) {
       <div className="md:pl-6">
         {sectionsNames.map((name) => {
           return (
-            <div>
+            <div key={name}>
               <div className="text-center mb-12 mt-24">
                 <h2 className="text-2xl">{sections[name].title}</h2>
                 <p>{sections[name].description}</p>

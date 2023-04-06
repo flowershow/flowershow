@@ -13,10 +13,10 @@ const dbPath = "markdown.db";
 // const dbOptions = config.dbOptions;
 
 const client = new MarkdownDB({
-    client: "sqlite3",
-    connection: {
-        filename: dbPath,
-    },
+  client: "sqlite3",
+  connection: {
+    filename: dbPath,
+  },
 });
 
 const clientPromise = client.init();

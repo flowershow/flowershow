@@ -13,10 +13,10 @@ export default {
   async redirects() {
     return [
       {
-        source: '/enterprise',
-        destination: '/toolkit',
+        source: "/enterprise",
+        destination: "/toolkit",
         permanent: true,
       },
-    ]
+    ];
   },
 };

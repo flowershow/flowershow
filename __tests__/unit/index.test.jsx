@@ -1,9 +1,9 @@
 /**
  * @jest-environment node
  */
-import { render, screen } from '@testing-library/react'
-import '@testing-library/jest-dom'
-import { MDXRemote } from 'next-mdx-remote'
+import { render, screen } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import { MDXRemote } from "next-mdx-remote";
 
 import parse from "../../lib/markdown.mjs";
 
@@ -11,10 +11,10 @@ const md = `---
 title: Test title
 ---
 # Test heading
-`
+`;
 
-describe('Markdown lib', () => {
-  it('parses frontmatter', async () => {
+describe("Markdown lib", () => {
+  it("parses frontmatter", async () => {
     const { frontMatter } = await parse(md);
     expect(frontMatter.title).toBe("Test title");
 
@@ -24,6 +24,5 @@ describe('Markdown lib', () => {
     //   name: /Test heading/,
     // })
     // expect(heading).toBeInTheDocument();
-
-  })
-})
+  });
+});

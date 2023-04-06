@@ -86,7 +86,11 @@ export default function Hero() {
           </p>
         </div>
         <div className="mt-12 relative sm:max-w-lg sm:mx-auto lg:mt-0 lg:col-span-6 lg:flex lg:items-start">
-          <img className="w-full" src="/static/img/next/dms-datopian.png" alt="" />
+          <img
+            className="w-full"
+            src="/static/img/next/dms-datopian.png"
+            alt=""
+          />
         </div>
       </div>
     </section>

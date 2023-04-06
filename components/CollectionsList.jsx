@@ -18,7 +18,10 @@ export function CollectionsList({ collections }) {
         <div className="flex flex-col space-y-16">
           {collections.slice(0, collectionsCount).map((collection) => {
             return (
-              <CollectionItem key={collection.url_path} collection={collection} />
+              <CollectionItem
+                key={collection.url_path}
+                collection={collection}
+              />
             );
           })}
         </div>

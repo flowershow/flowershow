@@ -1,11 +1,15 @@
+import Link from "next/link";
+
 export default function CaseStudies() {
   const caseStudy = {
-    tag: 'CASE STUDY',
-    title: 'An Open Data Platform for Vital Strategies - a global public health organization',
-    eta: '6min read',
-    description: 'We worked with Vital Strategies - an international nonprofit that assists governments by designing easily scalable solutions to address the many challenges found in—and around—public health to building an Open Data Portal with the right tools to help users easily access and visualize public health data.',
-    imgUrl: '/static/img/opengov/case-bg.png'
-  }
+    tag: "CASE STUDY",
+    title:
+      "An Open Data Platform for Vital Strategies - a global public health organization",
+    eta: "6min read",
+    description:
+      "We worked with Vital Strategies - an international nonprofit that assists governments by designing easily scalable solutions to address the many challenges found in—and around—public health to building an Open Data Portal with the right tools to help users easily access and visualize public health data.",
+    imgUrl: "/static/img/opengov/case-bg.png",
+  };
   return (
     <section className="flex justify-center mt-24">
       <div>
@@ -24,25 +28,22 @@ export default function CaseStudies() {
             <div className="leading-relaxed lg:absolute top-40 inset-y-0 right-0 xl:w-[48rem] lg:w-[40rem] bg-white rounded-tl- lg">
               <div className="p-12 flex flex-col justify-between h-full">
                 <div className="flex items-center gap-4 lg:mb-0 mb-8">
-                  <p className="text-[#457EFF]">
-                    {caseStudy.tag}
-                  </p>
+                  <p className="text-[#457EFF]">{caseStudy.tag}</p>
                   <p className="bg-[#EBEEF2] max-h-8 fit text-[#495367] px-3">
                     {caseStudy.eta}
                   </p>
                 </div>
                 <div className="font-['Poppins'] text-[#1A202E] lg:mb-0 mb-8">
-                  <h2 className="text-4xl font-bold mb-8">
-                    {caseStudy.title}
-                  </h2>
-                  <p className="py-3 text-justify">
-                    {caseStudy.description}
-                  </p>
+                  <h2 className="text-4xl font-bold mb-8">{caseStudy.title}</h2>
+                  <p className="py-3 text-justify">{caseStudy.description}</p>
                 </div>
                 <div classname="my-3">
-                  <a href="/collections" className="py-4 px-6 rounded-lg text-white bg-[#22C55E] font-['Poppins'] text-xl font-extrabold hover:bg-green-700 hover:underline">
+                  <Link
+                    href="/collections"
+                    className="py-4 px-6 rounded-lg text-white bg-[#22C55E] font-['Poppins'] text-xl font-extrabold hover:bg-green-700 hover:underline"
+                  >
                     SEE MORE CASE STUDIES
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
@@ -50,5 +51,5 @@ export default function CaseStudies() {
         </article>
       </div>
     </section>
-  )
+  );
 }

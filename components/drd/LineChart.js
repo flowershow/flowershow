@@ -1,33 +1,31 @@
-import { VegaLite } from 'react-vega'
+import { VegaLite } from "react-vega";
 
-export default function LineChart( { data=[] }) {
-  var tmp = data
+export default function LineChart({ data = [] }) {
+  var tmp = data;
   if (Array.isArray(data)) {
-    tmp = data.map((r,i) => {
-      return { x: r[0], y: r[1] }
-    })
+    tmp = data.map((r, i) => {
+      return { x: r[0], y: r[1] };
+    });
   }
-  const vegaData = { "table": tmp }
+  const vegaData = { table: tmp };
   const spec = {
-    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
-    "mark": "line",
-    "data": {
-      "name": "table"
+    $schema: "https://vega.github.io/schema/vega-lite/v5.json",
+    mark: "line",
+    data: {
+      name: "table",
     },
-    "encoding": {
-      "x": {
-        "field": "x",
-        "timeUnit": "year",
-        "type": "temporal"
+    encoding: {
+      x: {
+        field: "x",
+        timeUnit: "year",
+        type: "temporal",
       },
-      "y": {
-        "field": "y",
-       "type": "quantitative"
-      }
-    }
-  }
+      y: {
+        field: "y",
+        type: "quantitative",
+      },
+    },
+  };
 
-  return (
-    <VegaLite data={ vegaData } spec={ spec } />
-  )
+  return <VegaLite data={vegaData} spec={spec} />;
 }
