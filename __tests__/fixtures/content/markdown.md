@@ -137,15 +137,15 @@ function fancyAlert(arg) {
 ### Absolute paths:
 
 <div id="wiki-link">
-[[_test/example]]
+[[example]]
 </div>
 
 <div id="wiki-link-alias">
-[[_test/example|Example with alias]]
+[[example|Example with alias]]
 </div>
 
 <div id="wiki-link-heading">
-[[_test/example#abcd]]
+[[example#abcd]]
 </div>
 
 <div id="wiki-link-image">
@@ -167,5 +167,10 @@ Published on: {new Intl.DateTimeFormat('en', {dateStyle: 'long'}).format(publish
 <div id="simple-expression">
 Two 🍰 is: {Math.PI * 2}
 </div>
+
+<div id="backlinks">
+Here are my backlinks: {JSON.stringify(backlinks)}
+</div>
+
 
 

@@ -31,7 +31,7 @@ export function DocsList({ docs }) {
   const sectionsNames = Object.keys(sections);
   sectionsNames.forEach((name) => {
     sections[name].docs = docs.filter((doc) => {
-      const path = doc._url_path;
+      const path = doc.url_path;
       const category = path.match(/^docs\/(.+)\//);
 
       if (category && category.length > 0) {
@@ -54,7 +54,7 @@ export function DocsList({ docs }) {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
                 {sections[name].docs.map((doc) => {
-                  return <DocItem key={doc._url_path} doc={doc} />;
+                  return <DocItem key={doc.url_path} doc={doc} />;
                 })}
               </div>
             </div>

@@ -1,21 +1,8 @@
-//  Temporary solution to call indexFolder on start
-import { indexFolder } from "@flowershow/markdowndb";
-
-//  Couldn't make this work:
-//  import  indexFolder from "./lib/markdowndb";
-//  But it does for contentlayer, somehow
-//  We should try again after removing contentlayer and renaming this to .js
-
-//  DB file path
-const pathToMddb = "markdown.db";
-await indexFolder(pathToMddb, "content", [/^Excalidraw\/.*/, /DS_Store/]);
+// TODO MarkdownDB plugin?
 
 export default {
   eslint: {
     ignoreDuringBuilds: true,
-  },
-  serverRuntimeConfig: {
-    pathToMddb,
   },
   webpack: (config) => {
     config.infrastructureLogging = {
@@ -23,7 +10,7 @@ export default {
     };
     return config;
   },
- async redirects() {
+  async redirects() {
     return [
       {
         source: '/enterprise',

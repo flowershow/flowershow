@@ -48,7 +48,7 @@ module.exports = defineConfig({
   },
   /* Run your local dev server before starting the tests */
   webServer: {
-    command: `npm run build && npm run start -- -p ${PORT}`,
+    command: `npm run dev -- -p ${PORT}`,
     port: PORT,
     timeout: 120 * 1000,
     reuseExistingServer: !process.env.CI,

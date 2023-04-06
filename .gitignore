@@ -4,6 +4,7 @@ node_modules
 # flowershow
 .flowershow
 .next
+out
 search.json
 
 # content

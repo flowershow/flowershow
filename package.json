@@ -5,15 +5,16 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "prebuild": "node ./scripts/fix-symlinks.mjs",
+    "prebuild": "npm run mddb && node ./scripts/fix-symlinks.mjs",
+    "mddb": "mddb ./content",
     "start": "next start",
     "export": "npm run build && next export",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest",
-    "test:e2e": "./scripts/testsetup.sh && playwright test && ./scripts/testteardown.sh"
+    "test:e2e": "mddb ./__tests__/fixtures/content && playwright test && mddb ./content"
   },
   "dependencies": {
     "@flowershow/core": "^0.4.6",
-    "@flowershow/markdowndb": "^0.0.2",
+    "@flowershow/markdowndb": "^0.1.0",
     "@flowershow/remark-callouts": "^1.0.0",
     "@flowershow/remark-embed": "^1.0.0",
     "@flowershow/remark-wiki-link": "^1.0.1",

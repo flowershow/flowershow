@@ -1,12 +1,13 @@
 import { siteConfig } from "@/config/siteConfig";
-import mdDb from "./mdDb";
+import clientPromise from "@/lib/mddb";
 
 export const getAuthorsDetails = async (authors: string[]) => {
 
-  let allPeople = await mdDb.query<any>({ folder: "people" });
+  const mddb = await clientPromise;
+  const allPeople = await mddb.getFiles({ folder: "people" });
 
   //  Temporary, flowershow UI component expects contentlayer obj props
-  allPeople = allPeople.map((p) => p.metadata);
+  const allPeopleMetadata = allPeople.map((p) => p.metadata);
 
   let blogAuthors = [];
 
@@ -17,7 +18,7 @@ export const getAuthorsDetails = async (authors: string[]) => {
   }
 
   return blogAuthors.map((author) => {
-    const person = allPeople.find(
+    const person = allPeopleMetadata.find(
       ({ id, name }) => id === author || name === author
     );
 

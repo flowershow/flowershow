@@ -3,51 +3,61 @@ import fs from "fs";
 import parse from "lib/markdown.mjs";
 
 import DRD from "../components/drd/DRD";
-import mdDb from "@/lib/mdDb";
+import clientPromise from "@/lib/mddb";
 import { getAuthorsDetails } from "@/lib/getAuthorsDetails";
 
 export default function DRDPage({ source, frontMatter }) {
-  source = JSON.parse(source);
-  frontMatter = JSON.parse(frontMatter);
+    source = JSON.parse(source);
+    frontMatter = JSON.parse(frontMatter);
 
-  return <DRD source={source} frontMatter={frontMatter} />;
+    return <DRD source={source} frontMatter={frontMatter} />;
 }
 
 export const getStaticProps = async ({ params }) => {
-  const urlPath = params.slug ? params.slug.join("/") : "";
+    const urlPath = params.slug ? params.slug.join("/") : "";
 
-  const queryResults = await mdDb.query({ urlPath });
-  const mdDbFile = queryResults[0];
+    const mddb = await clientPromise;
+    const dbFile = await mddb.getFileByUrl(urlPath);
 
-  const source = fs.readFileSync(mdDbFile._path, { encoding: "utf-8" });
-  const { mdxSource, frontMatter } = await parse(source, "mdx");
+    const dbBacklinks = await mddb.getLinks({ fileId: dbFile._id, direction: "backward" });
+    // TODO temporary solution, we will have a method on MddbFile to get these links
+    const dbBacklinkFilesPromises = dbBacklinks.map((link) => mddb.getFileById(link.from));
+    const dbBacklinkFiles = await Promise.all(dbBacklinkFilesPromises);
+    const dbBacklinkUrls = dbBacklinkFiles.map((file) => file.toObject().url_path);
 
-  // Temporary, so that blogs work properly
-  if (mdDbFile._url_path.startsWith("blog/")) {
-    frontMatter.layout = "blog";
-    frontMatter.authorsDetails = await getAuthorsDetails(
-      mdDbFile.metadata.authors
-    );
-  }
+    // TODO we can already get frontmatter from dbFile.metadata
+    // so parse could only return mdxSource
+    const source = fs.readFileSync(dbFile.file_path, { encoding: "utf-8" });
+    const { mdxSource, frontMatter } = await parse(source, "mdx", { backlinks: dbBacklinkUrls });
 
-  return {
-    props: {
-      source: JSON.stringify(mdxSource),
-      frontMatter: JSON.stringify(frontMatter),
-    },
-  };
+
+    // Temporary, so that blogs work properly
+    if (dbFile.url_path.startsWith("blog/")) {
+        frontMatter.layout = "blog";
+        frontMatter.authorsDetails = await getAuthorsDetails(
+            dbFile.metadata.authors
+        );
+    }
+
+    return {
+        props: {
+            source: JSON.stringify(mdxSource),
+            frontMatter: JSON.stringify(frontMatter),
+        },
+    };
 };
 
 export async function getStaticPaths() {
-  const allDocuments = await mdDb.query({ filetypes: ["md", "mdx"] });
+    const mddb = await clientPromise;
+    const allDocuments = await mddb.getFiles({ extensions: ["md", "mdx"] });
 
-  const paths = allDocuments.map((page) => {
-    const parts = page._url_path.split("/");
-    return { params: { slug: parts } };
-  });
+    const paths = allDocuments.map((page) => {
+        const parts = page.url_path.split("/");
+        return { params: { slug: parts } };
+    });
 
-  return {
-    paths,
-    fallback: false,
-  };
+    return {
+        paths,
+        fallback: false,
+    };
 }

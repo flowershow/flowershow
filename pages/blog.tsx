@@ -1,36 +1,37 @@
-import mdDb from "@/lib/mdDb";
+import clientPromise from "@/lib/mddb";
 import { BlogsList, SimpleLayout } from "@flowershow/core";
 
 export default function Blog({ blogs }) {
-  return (
-    <>
-      <SimpleLayout title="Blog posts">
-        <BlogsList blogs={blogs} />
-      </SimpleLayout>
-    </>
-  );
+    return (
+        <>
+            <SimpleLayout title="Blog posts">
+                <BlogsList blogs={blogs} />
+            </SimpleLayout>
+        </>
+    );
 }
 
 export async function getStaticProps() {
-  let blogs = await mdDb.query({
-    folder: "blog",
-    filetypes: ["md", "mdx"],
-  })
+    const mddb = await clientPromise;
+    let blogs = await mddb.getFiles({
+        folder: "blog",
+        extensions: ["md", "mdx"],
+    })
 
-  blogs = blogs.sort(
-    (a, b) =>
-      new Date(b.metadata.date).getTime() -
-      new Date(a.metadata.date).getTime()
-  );
+    const blogsSorted = blogs.sort(
+        (a, b) =>
+            new Date(b.metadata.date).getTime() -
+            new Date(a.metadata.date).getTime()
+    );
 
-  //  Temporary, flowershow/BlogsList expects the contentlayer fields
-  blogs = blogs.map((b) => {
-    return { ...b, ...b.metadata, url_path: b._url_path };
-  });
+    //  Temporary, flowershow/BlogsList expects the contentlayer fields
+    const blogsObjects = blogsSorted.map((b) => {
+        return { ...b, ...b.metadata };
+    });
 
-  return {
-    props: {
-      blogs,
-    },
-  };
+    return {
+        props: {
+            blogs: blogsObjects,
+        },
+    };
 }
