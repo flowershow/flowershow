@@ -94,7 +94,7 @@ export default function HowItWorks() {
                             <h3 className="font-heading mb-3 text-3xl font-bold">
                               Done
                             </h3>
-                            <p className="text-xl">You&aposre all set!</p>
+                            <p className="text-xl">You&apos;re all set!</p>
                           </div>
                         </div>
                       </div>
