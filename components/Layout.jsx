@@ -78,7 +78,7 @@ export function Layout({ children, tableOfContents }) {
         <div className="relative mx-auto">
           <main className="flex-auto">
             {children}
-            {(editLink ?? siteConfig.editLinkShow) && (
+            {/*(editLink ?? siteConfig.editLinkShow) && (
               <div className="mb-10 prose dark:prose-invert p-6 mx-auto">
                 <a
                   className="flex no-underline font-semibold justify-center"
@@ -105,21 +105,21 @@ export function Layout({ children, tableOfContents }) {
                   </span>
                 </a>
               </div>
-            )}
+            )*/}
           </main>
         </div>
-        <footer className="bg-background dark:bg-background-dark prose dark:prose-invert max-w-none flex flex-col items-center justify-center w-full h-auto pt-10 pb-20">
-          <div className="flex w-full flex-wrap justify-center">
+        <footer className="font-['Poppins'] bg-background dark:bg-background-dark prose dark:prose-invert max-w-none flex flex-col items-center justify-center w-full h-auto pt-0 pb-20">
+      <div className="px-14 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 w-full">
             {siteConfig.footerLinks.map((item) => (
-              <div key={item.name} className="flex flex-col content-start">
-                <h3 className="inline-flex items-center mx-4 px-1 pt-1 font-bold">
+              <div key={item.name} className="flex flex-col items-center sm:items-start">
+                <h3 className="inline-flex items-center pt-1 font-bold">
                   {item.name}
                 </h3>
                 {item.subItems.map((subItem) => (
                   <Link
                     key={subItem.href}
                     href={subItem.href}
-                    className="inline-flex items-center mx-4 px-1 pt-1 font-regular hover:text-slate-300 no-underline"
+                    className="inline-flex items-center pt-1 main-text no-underline !text-black text-center sm:text-start"
                     aria-current={subItem.current ? "page" : undefined}
                   >
                     {subItem.name}

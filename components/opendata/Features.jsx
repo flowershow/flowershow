@@ -1,3 +1,5 @@
+import { Player } from '@lottiefiles/react-lottie-player';
+
 export default function Features() {
   return (
     <>
@@ -22,10 +24,12 @@ export default function Features() {
                 <div className="flex flex-wrap -mx-4">
                   <div className="w-full md:w-1/3 px-4 ">
                     <div className="h-full p-8 text-center hover:bg-white rounded-md hover:shadow-xl transition duration-200">
-                      <div className="inline-flex h-16 w-16 mb-7 mx-auto items-center justify-center text-white bg-orange-400 rounded-lg">
-                        <img
-                          src="static/img/opendata/icon-star.png"
-                          className="p-5"
+                      <div className="inline-flex h-16 w-16 mb-7 mx-auto items-center justify-center">
+                        <Player
+                          autoplay
+                          loop
+                          src="/assets/icons/favorite.json"
+                          style={{ height: "80px", width: "80px" }}
                         />
                       </div>
                       <h3 className="mb-3 text-xl md:text-2xl leading-tight font-bold text-[#2A3342]">
@@ -58,10 +62,12 @@ export default function Features() {
                   </div>
                   <div className="w-full md:w-1/3 px-4">
                     <div className="h-full p-8 text-center hover:bg-white rounded-md hover:shadow-xl transition duration-200">
-                      <div className="inline-flex h-16 w-16 mb-7 mx-auto items-center justify-center text-white bg-orange-400 rounded-lg">
-                        <img
-                          src="static/img/opendata/icon-gear.png"
-                          className="p-5"
+                      <div className="inline-flex h-16 w-16 mb-7 mx-auto items-center justify-center">
+                        <Player
+                          autoplay
+                          loop
+                          src="/assets/icons/api.json"
+                          style={{ height: "80px", width: "80px" }}
                         />
                       </div>
                       <h3 className="mb-3 text-xl md:text-2xl leading-tight font-bold text-[#2A3342]">
@@ -76,10 +82,12 @@ export default function Features() {
                   </div>
                   <div className="w-full md:w-1/3 px-4">
                     <div className="h-full p-8 text-center hover:bg-white rounded-md hover:shadow-xl transition duration-200">
-                      <div className="inline-flex h-16 w-16 mb-7 mx-auto items-center justify-center text-white bg-orange-400 rounded-lg">
-                        <img
-                          src="static/img/opendata/icon-profit.png"
-                          className="p-5"
+                      <div className="inline-flex h-16 w-16 mb-7 mx-auto items-center justify-center">
+                        <Player
+                          autoplay
+                          loop
+                          src="/assets/icons/ewallet.json"
+                          style={{ height: "80px", width: "80px" }}
                         />
                       </div>
                       <h3 className="mb-3 text-xl md:text-2xl leading-tight font-bold text-[#2A3342]">
@@ -102,7 +110,7 @@ export default function Features() {
             }}
           >
             <div className="container mx-auto px-4">
-              <div className="flex flex-col md:flex-row gap-2 items-center mb-16 max-w-5xl xl:max-w-7xl text-[#2A3342]">
+              <div className="flex flex-col md:flex-row gap-8 items-center mb-16 max-w-5xl xl:max-w-7xl text-[#2A3342]">
                 <div className="w-full md:w-1/2 mb-16 md:mb-0">
                   <h2 className="mb-6 text-4xl md:text-5xl tracking-tight font-bold">
                     Let your team focus on what really matters - your data
@@ -125,80 +133,78 @@ export default function Features() {
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 text-center md:text-left gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-3 text-center md:text-left gap-8">
                 <div className="w-full md mb-8">
-                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 text-xl text-white bg-orange-400 font-semibold rounded-full">
-                    1
+                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 ml-1">
+                    <Player
+                      autoplay
+                      loop
+                      src="/assets/icons/data-portal.json"
+                      style={{ height: "80px", width: "80px" }}
+                    />
                   </div>
-                  <h3 className="mb-2 text-xl font-bold text-[#2A3342]">
-                    User-friendly Interface
-                  </h3>
-                  <p className="font-medium text-[#556987] ">
-                    Say goodbye to frustration. Navigate and explore your data
-                    with ease.
-                  </p>
+                  <h3 className="mb-2 text-xl font-bold text-[#2A3342]">User-friendly Interface</h3>
+                  <p className="font-medium text-[#556987] ">Say goodbye to frustration. Navigate and explore your data with ease.</p>
                 </div>
                 <div className="w-full mb-8">
-                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 text-xl text-white bg-orange-400 font-semibold rounded-full">
-                    2
+                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 ml-[0.15rem]">
+                    <Player
+                      autoplay
+                      loop
+                      src="/assets/icons/click.json"
+                      style={{ height: "80px", width: "80px" }}
+                    />
                   </div>
-                  <h3 className="mb-2 text-xl font-bold text-[#2A3342]">
-                    Drag-and-drop Feature
-                  </h3>
-                  <p className="font-medium text-[#556987] ">
-                    Our drag-and-drop feature makes it easy for anyone to
-                    publish open data, regardless of skill level.
-                  </p>
+                  <h3 className="mb-2 text-xl font-bold text-[#2A3342]">Drag-and-drop Feature</h3>
+                  <p className="font-medium text-[#556987] ">Our drag-and-drop feature makes it easy for anyone to publish open data, regardless of skill level.</p>
                 </div>
                 <div className="w-full mb-8">
-                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 text-xl text-white bg-orange-400 font-semibold rounded-full">
-                    3
+                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 ml-[0.2rem]">
+                    <Player
+                      autoplay
+                      loop
+                      src="/assets/icons/presentation-2.json"
+                      style={{ height: "80px", width: "80px" }}
+                    />
                   </div>
-                  <h3 className="mb-2 text-xl font-bold text-[#2A3342]">
-                    Advanced Data Visualization
-                  </h3>
-                  <p className="font-medium text-[#556987] ">
-                    Empower your users to uncover insights and trends in your
-                    open data with our powerful self-service visualization
-                    tools.
-                  </p>
+                  <h3 className="mb-2 text-xl font-bold text-[#2A3342]">Advanced Data Visualization</h3>
+                  <p className="font-medium text-[#556987] ">Empower your users to uncover insights and trends in your open data with our powerful self-service visualization tools.</p>
                 </div>
                 <div className="w-full mb-8 md:mb-0">
-                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 text-xl text-white bg-orange-400 font-semibold rounded-full">
-                    4
+                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 ml-[0.5rem]">
+                    <Player
+                      autoplay
+                      loop
+                      src="/assets/icons/line-chart.json"
+                      style={{ height: "80px", width: "80px" }}
+                    />
                   </div>
-                  <h3 className="mb-2 text-xl font-bold text-[#2A3342]">
-                    Quick Insights
-                  </h3>
-                  <p className="font-medium text-[#556987] ">
-                    Make your data come alive with our beautiful charts and
-                    quick insights - showcasing your best datasets has never
-                    been easier.
-                  </p>
+                  <h3 className="mb-2 text-xl font-bold text-[#2A3342]">Quick Insights</h3>
+                  <p className="font-medium text-[#556987] ">Make your data come alive with our beautiful charts and quick insights - showcasing your best datasets has never been easier.</p>
                 </div>
                 <div className="w-full mb-8 md:mb-0">
-                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 text-xl text-white bg-orange-400 font-semibold rounded-full">
-                    5
+                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 ml-[0.37rem]">
+                    <Player
+                      autoplay
+                      loop
+                      src="/assets/icons/layers.json"
+                      style={{ height: "80px", width: "80px" }}
+                    />
                   </div>
-                  <h3 className="mb-2 text-xl font-bold text-[#2A3342]">
-                    CKAN-based
-                  </h3>
-                  <p className="font-medium text-[#556987] ">
-                    Get the best features from CKAN. Perfect for organizations
-                    looking for a lightweight and cost-effective solution.
-                  </p>
+                  <h3 className="mb-2 text-xl font-bold text-[#2A3342]">CKAN-based</h3>
+                  <p className="font-medium text-[#556987] ">Get the best features from CKAN. Perfect for organizations looking for a lightweight and cost-effective solution.</p>
                 </div>
                 <div className="w-full mb-8 md:mb-0">
-                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 text-xl text-white bg-orange-400 font-semibold rounded-full">
-                    6
+                  <div className="inline-flex items-center justify-center mb-4 w-12 h-12 ml-[0.3rem]">
+                    <Player
+                      autoplay
+                      loop
+                      src="/assets/icons/cloud-network.json"
+                      style={{ height: "80px", width: "80px" }}
+                    />
                   </div>
-                  <h3 className="mb-2 text-xl font-bold text-[#2A3342]">
-                    SaaS Experience
-                  </h3>
-                  <p className="font-medium text-[#556987] ">
-                    Get more done, with less hassle without worrying about
-                    maintenance and support. On our cloud or yours. You choose.
-                  </p>
+                  <h3 className="mb-2 text-xl font-bold text-[#2A3342]">SaaS Experience</h3>
+                  <p className="font-medium text-[#556987] ">Get more done, with less hassle without worrying about maintenance and support. On our cloud or yours. You choose.</p>
                 </div>
               </div>
             </div>
