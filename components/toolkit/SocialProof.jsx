@@ -17,7 +17,7 @@ const socialProofs = [
   },
 ];
 
-export default function () {
+export default function SocialProof() {
   return (
     <>
       <div className="mt-24 bg-gray-50">
@@ -27,15 +27,14 @@ export default function () {
           </h2>
           <div className="flow-root mt-8 lg:mt-20">
             <div className="-mt-4 -ml-8 flex flex-wrap justify-between lg:-ml-4">
-							{socialProofs.map(({ name, src }) => (
-								<div key={name} className="mt-4 ml-8 flex flex-grow flex-shrink-0 lg:flex-grow-0 lg:ml-4 grayscale">
-									<img
-										className="h-16 object-contain"
-										src={src}
-										alt={name}
-									/>
-								</div>
-							))}
+              {socialProofs.map(({ name, src }) => (
+                <div
+                  key={name}
+                  className="mt-4 ml-8 flex flex-grow flex-shrink-0 lg:flex-grow-0 lg:ml-4 grayscale"
+                >
+                  <img className="h-16 object-contain" src={src} alt={name} />
+                </div>
+              ))}
             </div>
           </div>
         </div>

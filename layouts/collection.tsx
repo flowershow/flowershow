@@ -2,22 +2,22 @@
 import { formatDate } from "@/lib/formatDate.js";
 
 export default function CollectionsLayout({ children, ...frontMatter }) {
-    const { title, date, description } = frontMatter;
+  const { title, date, description } = frontMatter;
 
-    return (
-        <article className="docs prose text-primary dark:text-primary-dark dark:prose-invert prose-headings:font-headings prose-a:break-words mx-auto p-6">
-            <header>
-                <div className="mb-6">
-                    {date && (
-                        <p className="text-sm text-zinc-400 dark:text-zinc-500">
-                            <time dateTime={date}>{formatDate(date)}</time>
-                        </p>
-                    )}
-                    {title && <h1 className="mb-2">{title}</h1>}
-                    {description && <p className="text-xl mt-0">{description}</p>}
-                </div>
-            </header>
-            <section>{children}</section>
-        </article>
-    );
+  return (
+    <article className="docs prose text-primary dark:text-primary-dark dark:prose-invert prose-headings:font-headings prose-a:break-words mx-auto p-6">
+      <header>
+        <div className="mb-6">
+          {date && (
+            <p className="text-sm text-zinc-400 dark:text-zinc-500">
+              <time dateTime={date}>{formatDate(date)}</time>
+            </p>
+          )}
+          {title && <h1 className="mb-2">{title}</h1>}
+          {description && <p className="text-xl mt-0">{description}</p>}
+        </div>
+      </header>
+      <section>{children}</section>
+    </article>
+  );
 }

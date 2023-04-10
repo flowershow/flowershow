@@ -12,5 +12,5 @@ export default {
   docs: DocsLayout,
   unstyled: UnstyledLayout,
   blog: BlogLayout,
-  collection: CollectionsLayout
+  collection: CollectionsLayout,
 };

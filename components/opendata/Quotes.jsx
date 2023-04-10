@@ -1,5 +1,5 @@
-import { Fragment } from 'react'
-import { Tab } from '@headlessui/react'
+import { Fragment } from "react";
+import { Tab } from "@headlessui/react";
 
 export default function Quotes() {
   return (
@@ -18,7 +18,8 @@ export default function Quotes() {
                 </div>
                 <div className="flex flex-col pt-4 justify-center">
                   <div className="text-[#2A3342] text-lg md:text-3xl pb-4 lg:pb-14 font-semibold">
-                    The best solution for anyone who wants to take open data to the next level.
+                    The best solution for anyone who wants to take open data to
+                    the next level.
                   </div>
                   <div className="mb-4 text-lg lg:text-2xl text-[#333F51] font-semibold">
                     Rufus Pollock
@@ -42,7 +43,8 @@ export default function Quotes() {
                 </div>
                 <div className="flex flex-col pt-4 justify-center">
                   <div className="text-[#2A3342] text-lg md:text-3xl pb-4 lg:pb-14 font-semibold">
-                    The best solution for anyone who wants to take open data to the next level.
+                    The best solution for anyone who wants to take open data to
+                    the next level.
                   </div>
                   <div className="mb-4 text-lg lg:text-2xl text-[#333F51] font-semibold">
                     Rufus Pollock
@@ -66,7 +68,8 @@ export default function Quotes() {
                 </div>
                 <div className="flex flex-col pt-4 justify-center">
                   <div className="text-[#2A3342] text-lg md:text-3xl pb-4 lg:pb-14 font-semibold">
-                    The best solution for anyone who wants to take open data to the next level.
+                    The best solution for anyone who wants to take open data to
+                    the next level.
                   </div>
                   <div className="mb-4 text-lg lg:text-2xl text-[#333F51] font-semibold">
                     Rufus Pollock
@@ -85,10 +88,11 @@ export default function Quotes() {
               /* Use the `selected` state to conditionally style the selected tab. */
               <button
                 className={
-                  selected ? 'bg-[#22C55E] m-1 h-2 w-2 rounded-full' : 'bg-gray-100 m-1 h-2 w-2 rounded-full'
+                  selected
+                    ? "bg-[#22C55E] m-1 h-2 w-2 rounded-full"
+                    : "bg-gray-100 m-1 h-2 w-2 rounded-full"
                 }
-              >
-              </button>
+              ></button>
             )}
           </Tab>
           <Tab as={Fragment}>
@@ -96,10 +100,11 @@ export default function Quotes() {
               /* Use the `selected` state to conditionally style the selected tab. */
               <button
                 className={
-                  selected ? 'bg-[#22C55E] m-1 h-2 w-2 rounded-full' : 'bg-gray-100 m-1 h-2 w-2 rounded-full'
+                  selected
+                    ? "bg-[#22C55E] m-1 h-2 w-2 rounded-full"
+                    : "bg-gray-100 m-1 h-2 w-2 rounded-full"
                 }
-              >
-              </button>
+              ></button>
             )}
           </Tab>
           <Tab as={Fragment}>
@@ -107,14 +112,15 @@ export default function Quotes() {
               /* Use the `selected` state to conditionally style the selected tab. */
               <button
                 className={
-                  selected ? 'bg-[#22C55E] m-1 h-2 w-2 rounded-full' : 'bg-gray-100 m-1 h-2 w-2 rounded-full'
+                  selected
+                    ? "bg-[#22C55E] m-1 h-2 w-2 rounded-full"
+                    : "bg-gray-100 m-1 h-2 w-2 rounded-full"
                 }
-              >
-              </button>
+              ></button>
             )}
           </Tab>
         </Tab.List>
       </Tab.Group>
     </section>
-  )
+  );
 }
