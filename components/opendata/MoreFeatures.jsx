@@ -52,7 +52,7 @@ export default function MoreFeatures() {
                   </h1>
                   <p className="mb-6 text-lg md:text-xl text-[#556987]  font-medium">
                     Whether you prefer to host your data on our cloud or yours,
-                    we&aposve got you covered. Choose the option that works best
+                    we&apos;ve got you covered. Choose the option that works best
                     for you and enjoy the peace of mind that comes with
                     effortless maintenance and support.&nbsp; &nbsp; &nbsp;
                     &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;

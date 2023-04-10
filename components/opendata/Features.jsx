@@ -17,7 +17,7 @@ export default function Features() {
                   The most efficient way of working with open data
                 </h3>
                 <p className="mb-16 xl:mb-24 mx-auto text-lg md:text-xl text-[#556987] font-medium max-w-4xl">
-                  Don&apost let data be a burden, let it be a catalyst for
+                  Don&apos;t let data be a burden, let it be a catalyst for
                   progress with DataHub Open Data. Upgrade to a smarter, more
                   efficient way of working with open data today.&nbsp;
                 </p>
@@ -75,7 +75,7 @@ export default function Features() {
                       </h3>
                       <p className="font-medium text-[#556987]">
                         With just a few clicks, you can set up a
-                        professional-looking data portal that&aposs ready to use
+                        professional-looking data portal that&apos;s ready to use
                         in no time. No coding skills required.
                       </p>
                     </div>

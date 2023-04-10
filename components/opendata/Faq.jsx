@@ -130,7 +130,7 @@ export default function Faq() {
                             <div className="max-w-md ">
                               <p className="mx-auto w-full text-[#556987] text-justify font-medium mb-8 px-4">
                                 Whether you prefer to host your data in the
-                                cloud or on your own servers, we&aposve got you
+                                cloud or on your own servers, we&apos;ve got you
                                 covered. Choose the option that works best for
                                 you.
                               </p>
