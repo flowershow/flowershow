@@ -6,6 +6,8 @@ import { MobileNavigation } from "./MobileNavigation";
 import { NavItem } from "./NavItem";
 import { ThemeSelector } from "./ThemeSelector";
 import { SearchContext, SearchField } from "./search/index.jsx";
+import Banner from "./Banner";
+import { useRouter } from "next/router";
 
 const Search = SearchContext(siteConfig.search?.provider);
 
@@ -66,6 +68,7 @@ function NavbarTitle() {
 export function Nav() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [modifierKey, setModifierKey] = useState();
+  const { pathname } = useRouter();
 
   useEffect(() => {
     setModifierKey(
@@ -85,8 +88,10 @@ export function Nav() {
   }, []);
 
   return (
-    <header
-      className={`
+    <>
+      {pathname === "/" && <Banner />}
+      <header
+        className={`
         sticky top-0 z-50 flex items-center justify-between px-4 py-5 sm:px-6 lg:px-8 max-w-full
         ${
           isScrolled
@@ -94,42 +99,47 @@ export function Nav() {
             : "bg-background dark:bg-background-dark"
         }
       `}
-    >
-      <div className="mr-2 sm:mr-4 flex lg:hidden">
-        <MobileNavigation navigation={siteConfig.navLinks} />
-      </div>
-      <div className="flex flex-none items-center">
-        <NavbarTitle />
-        <div className="hidden lg:flex ml-8 mr-6 sm:mr-8 md:mr-0">
-          {siteConfig.navLinks.map((item) => (
-            <NavItem item={item} key={item.name} />
-          ))}
+      >
+        <div className="mr-2 sm:mr-4 flex lg:hidden">
+          <MobileNavigation navigation={siteConfig.navLinks} />
         </div>
-      </div>
-      <div className="relative flex items-center basis-auto justify-end gap-6 xl:gap-8 md:shrink w-full">
-        {Search && (
-          <Search>
-            {({ query }) => (
-              <SearchField modifierKey={modifierKey} onOpen={query?.toggle} />
-            )}
-          </Search>
-        )}
-        <ThemeSelector />
-        {siteConfig.github && (
-          <Link href={siteConfig.github} className="group" aria-label="GitHub">
-            <GitHubIcon className="h-6 w-6 dark:fill-slate-400 group-hover:fill-slate-500 dark:group-hover:fill-slate-300" />
-          </Link>
-        )}
-        {siteConfig.discord && (
-          <Link
-            href={siteConfig.discord}
-            className="group"
-            aria-label="Discord"
-          >
-            <DiscordIcon className="h-8 w-8 dark:fill-slate-400 group-hover:fill-slate-500 dark:group-hover:fill-slate-300" />
-          </Link>
-        )}
-      </div>
-    </header>
+        <div className="flex flex-none items-center">
+          <NavbarTitle />
+          <div className="hidden lg:flex ml-8 mr-6 sm:mr-8 md:mr-0">
+            {siteConfig.navLinks.map((item) => (
+              <NavItem item={item} key={item.name} />
+            ))}
+          </div>
+        </div>
+        <div className="relative flex items-center basis-auto justify-end gap-6 xl:gap-8 md:shrink w-full">
+          {Search && (
+            <Search>
+              {({ query }) => (
+                <SearchField modifierKey={modifierKey} onOpen={query?.toggle} />
+              )}
+            </Search>
+          )}
+          <ThemeSelector />
+          {siteConfig.github && (
+            <Link
+              href={siteConfig.github}
+              className="group"
+              aria-label="GitHub"
+            >
+              <GitHubIcon className="h-6 w-6 dark:fill-slate-400 group-hover:fill-slate-500 dark:group-hover:fill-slate-300" />
+            </Link>
+          )}
+          {siteConfig.discord && (
+            <Link
+              href={siteConfig.discord}
+              className="group"
+              aria-label="Discord"
+            >
+              <DiscordIcon className="h-8 w-8 dark:fill-slate-400 group-hover:fill-slate-500 dark:group-hover:fill-slate-300" />
+            </Link>
+          )}
+        </div>
+      </header>
+    </>
   );
 }
