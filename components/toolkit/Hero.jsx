@@ -44,7 +44,7 @@ export default function Hero() {
           <div className="mt-5 sm:mt-8 sm:flex sm:justify-center lg:justify-start">
             <div className="rounded-md shadow">
               <a
-                href="https://calendar.app.google/LT4acVdKn3Cxm2MXA"
+                href="https://calendar.app.google/SXtsM5uoWvQuZgbB8"
                 target="_blank"
                 className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded text-white bg-orange-400 hover:underline md:py-4 md:text-lg md:px-10"
               >
