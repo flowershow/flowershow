@@ -1,4 +1,5 @@
 const { fontFamily } = require("tailwindcss/defaultTheme");
+const colors = require("tailwindcss/colors");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -12,6 +13,18 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // TODO can we use just tremor styles below
+        background: {
+          DEFAULT: colors.white,
+          dark: colors.slate[900],
+        },
+        primary: {
+          DEFAULT: colors.gray[700],
+          dark: colors.gray[300],
+        },
+        secondary: {
+          DEFAULT: colors.orange[400],
+        },
         // light mode
         tremor: {
           brand: {
@@ -116,14 +129,8 @@ module.exports = {
       typography: {
         DEFAULT: {
           css: {
-            h1: {
-              fontFamily: "Cal Sans",
-            },
-            h2: {
-              fontFamily: "Cal Sans",
-            },
-            h3: {
-              fontFamily: "Cal Sans",
+            pre: {
+              backgroundColor: "#fafafa",
             },
             "blockquote p:first-of-type::before": { content: "none" },
             "blockquote p:first-of-type::after": { content: "none" },

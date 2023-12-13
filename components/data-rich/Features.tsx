@@ -37,7 +37,7 @@ export function Features() {
                 heading="Features"
                 subheading="Key Advantages of DataHub"
             />
-            <dl className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 text-primary dark:text-primary-dark leading-7 text-gray-300 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:gap-x-16">
+            <dl className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 text-primary dark:text-primary-dark leading-7 text-gray-500 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:gap-x-16">
                 {features.map((feature) => (
                     <div key={feature.name} className="relative pl-9">
                         <dt className="inline font-semibold text-slate-900 dark:text-slate-100">
