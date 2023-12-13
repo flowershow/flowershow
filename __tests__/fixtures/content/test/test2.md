@@ -1,4 +1,0 @@
-# Document Title
-
-[[../markdown]]
-

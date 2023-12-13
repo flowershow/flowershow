@@ -3,14 +3,11 @@ import {
   DocsLayout,
   UnstyledLayout,
   BlogLayout,
-} from "@flowershow/core";
-
-import CollectionsLayout from "./collection";
+} from "@portaljs/core";
 
 export default {
   simple: SimpleLayout,
   docs: DocsLayout,
   unstyled: UnstyledLayout,
   blog: BlogLayout,
-  collection: CollectionsLayout,
 };

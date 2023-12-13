@@ -1,28 +1,16 @@
-import Document, { Html, Head, Main, NextScript } from "next/document";
-import Banner from "components/Banner.jsx";
+import { Html, Head, Main, NextScript } from 'next/document'
 
-class MyDocument extends Document {
-  static async getInitialProps(ctx) {
-    const initialProps = await Document.getInitialProps(ctx);
-    return { ...initialProps };
-  }
-
-  render() {
+export default function Document() {
     return (
-      <Html>
-        <Head>
-          <link
-            href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Source+Code+Pro:wght@600&display=swap"
-            rel="stylesheet"
-          />
-        </Head>
-        <body>
-          <Main />
-          <NextScript />
-        </body>
-      </Html>
-    );
-  }
+        <Html>
+            <Head>
+                {/* KaTeX styles */}
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossOrigin="anonymous" />
+            </Head>
+            <body>
+                <Main />
+                <NextScript />
+            </body>
+        </Html>
+    )
 }
-
-export default MyDocument;

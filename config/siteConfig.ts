@@ -1,8 +1,8 @@
-import { defaultConfig } from "@flowershow/core";
-import userConfig from "../content/config";
+import { defaultConfig } from "@portaljs/core";
+import userConfig from "../content/config.mjs";
 
 // TODO types
-export const siteConfig: any = {
+const siteConfig: any = {
   ...defaultConfig,
   ...userConfig,
   // prevent theme object overrides for
@@ -12,3 +12,5 @@ export const siteConfig: any = {
     ...userConfig?.theme,
   },
 };
+
+export default siteConfig;

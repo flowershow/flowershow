@@ -7,12 +7,21 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx}",
     "./layouts/**/*.{js,ts,jsx,tsx}",
     "./content/**/*.{md,mdx}",
-    "./node_modules/@flowershow/core/dist/*.js",
-    "./node_modules/@flowershow/core/*.js",
+    "./node_modules/@portaljs/core/dist/*.js",
+    "./node_modules/@portaljs/core/*.js",
   ],
   darkMode: "class",
   theme: {
     extend: {
+      typography: {
+        DEFAULT: {
+          css: {
+            pre: {
+              backgroundColor: "#fafafa",
+            },
+          }
+        }
+      },
       // support wider width for large screens >1440px eg. in hero
       maxWidth: {
         "8xl": "88rem",
@@ -29,12 +38,12 @@ module.exports = {
           dark: colors.slate[900],
         },
         primary: {
-          DEFAULT: colors.gray[700],
-          dark: colors.gray[300],
+          DEFAULT: colors.slate[900],
+          dark: colors.slate[100],
         },
         secondary: {
-          DEFAULT: colors.orange[400],
-          dark: "",
+          DEFAULT: colors.indigo[500],
+          dark: colors.indigo[500],
         },
       },
     },
@@ -42,6 +51,5 @@ module.exports = {
   /* eslint global-require: off */
   plugins: [
     require("@tailwindcss/typography"),
-    require("@tailwindcss/line-clamp"),
   ],
 };

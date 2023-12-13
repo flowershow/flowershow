@@ -1,4 +1,13 @@
-@import "@flowershow/remark-callouts/styles.css";
+@import "@portaljs/remark-callouts/styles.css";
+
+/* TEMPORARY HACK TO HIDE THEME SWITCH */
+nav :last-child img {
+  visibility: hidden;
+}
+
+.nav-logo {
+  height: 2.25rem;
+}
 
 /* mathjax */
 .math-inline > mjx-container > svg {
@@ -9,6 +18,7 @@
 /* smooth scrolling in modern browsers */
 html {
   scroll-behavior: smooth !important;
+  scroll-padding-top: 4.5rem;
 }
 
 /* tooltip fade-out clip */
@@ -26,14 +36,28 @@ html {
   );
 }
 
-:is(h2, h3, h4, h5, h6):not(.blogitem-title) {
+/* Heading links with # icons on hover */
+.unstyled .heading-link {
+  visibility: hidden;
+}
+
+#mdx-live-preview .heading-link {
+  visibility: hidden;
+}
+
+#mdxpage iframe {
+  height: 80vh;
+}
+
+/* :not(.unstyled) :is(h2, h3, h4, h5, h6):not(.blogitem-title) { */
+#mdxpage :is(h2, h3, h4, h5, h6) {
   margin-left: -2rem !important;
   padding-left: 2rem !important;
   scroll-margin-top: 4.5rem;
   position: relative;
 }
 
-.heading-link {
+#mdxpage .heading-link {
   padding: 1px;
   position: absolute;
   left: 0;
@@ -46,22 +70,22 @@ html {
   transition: opacity 0.2s;
 }
 
-.light .heading-link {
+#mdx-page .light .heading-link {
   /* border: 1px solid #ab2b65; */
   /* background: none; */
   background: #e2e8f0;
 }
 
-:is(h2, h3, h4, h5, h6):not(.blogitem-title):hover .heading-link {
+#mdxpage :is(h2, h3, h4, h5, h6):hover .heading-link {
   opacity: 100;
 }
 
-.heading-link svg {
+#mdxpage .heading-link svg {
   transform: scale(0.75);
 }
 
 @media screen and (max-width: 640px) {
-  .heading-link {
+  #mdxpage .heading-link {
     visibility: hidden;
   }
 }

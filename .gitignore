@@ -1,20 +1,6 @@
-node_modules
 .DS_Store
-
-# flowershow
-.flowershow
-.next
-out
-search.json
-
-# content
-.obsidian
-
-# tests
-/test-results/
-/playwright-report/
-/playwright/.cache/
-/content/_test
-
-# markdowndb
-*.db
+markdown.db
+node_modules/
+.next/
+out/
+.obsidian/

@@ -1,3 +1,0 @@
-# Hello from Test!
-
-[[../markdown]]

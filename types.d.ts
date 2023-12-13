@@ -1,1 +1,1 @@
-declare module "@flowershow/remark-wiki-link";
+declare module "@portaljs/remark-wiki-link";
