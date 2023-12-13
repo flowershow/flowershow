@@ -38,12 +38,11 @@ module.exports = {
           dark: colors.slate[900],
         },
         primary: {
-          DEFAULT: colors.slate[900],
-          dark: colors.slate[100],
+          DEFAULT: colors.gray[700],
+          dark: colors.gray[300],
         },
         secondary: {
-          DEFAULT: colors.indigo[500],
-          dark: colors.indigo[500],
+          DEFAULT: colors.orange[400],
         },
       },
     },
