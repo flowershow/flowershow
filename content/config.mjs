@@ -1,47 +1,78 @@
 export default {
-  title: "DataRich",
-  description: "Markdown on steroids for data-driven documents",
-  author: "Datopian",
-  logo: "/datopian-logo-black.png",
+  title:
+    "DataHub - a complete solution for Open Data Platforms, Data Catalogs, Data Lakes and Data Management.",
+  description:
+    "DataHub is an open source, mature, fully-featured and production ready. Trusted by governments, startups, nonprofits and the Fortune 500.",
   navbarTitle: {
-    text: "DataRich Documents",
-    version: "Alpha",
+    logo: "/datahub-cube-edited.svg",
+    text: ""
   },
+  theme: {
+    default: "",
+  },
+  author: "Datopian",
+  logo: "/datahub-cube-edited.svg",
+  domain: "https://datopian.com/",
+  tableOfContents: true,
+  analytics: "G-R6X92HM43Q",
+  editLinkShow: true,
   navLinks: [
-    // { href: "/#quick-start", name: "Quickstart" },
-    // { href: "/blog/basic-tutorial", name: "Docs" },
-    // { href: "/#features", name: "Features" },
-    // { href: "/#roadmap", name: "Roadmap" },
-    { href: "/docs/data-rich", name: "About data-rich-documents" }
-    // {
-    //   href: "https://github.com/datopian/markdowndb/discussions",
-    //   name: "Forum",
-    // },
-    // { href: "/_all", name: "All" },
+    // { name: "ABOUT", href: "/docs/about" },
+    { name: "BLOG", href: "/blog" },
+    // { name: "FIND DATA", href: "/search" },
+    // { name: "COLLECTIONS", href: "/collections" },
+    // { name: "DOCS", href: "/docs" },
+    // { name: "TOOLS", href: "/download" },
+    // { name: "TOOLKIT", href: "/toolkit" },
+    // { name: "CHAT", href: "https://discord.com/invite/KrRzMKU" },
+    { name: "DATA-RICH DOCUMENTS", href: "/data-rich" },
   ],
-  social: [
-    { label: "github", href: "https://github.com/datopian/datahub" },
-    { label: "discord", href: "https://discord.gg/EeyfGrGu4U" },
+  footerLinks: [
+    {
+      name: "LINKS",
+      subItems: [
+        { href: "/", name: "Home" },
+        { href: "/docs/terms-of-service", name: "Terms of Service" },
+        { href: "/docs/privacy", name: "Privacy Policy" },
+        { href: "/blog", name: "Blog" },
+        { href: "https://old.datahub.io/", name: "Old DataHub" },
+      ],
+    },
+    {
+      name: "Support",
+      subItems: [
+        { href: "https://discord.com/invite/KrRzMKU", name: "Chat" },
+        { href: "/docs/faq", name: "FAQ" },
+      ],
+    },
+    {
+      name: "Contact",
+      subItems: [
+        { href: "mailto:support@datahub.io", name: "support@datahub.io" },
+      ],
+    },
   ],
   nextSeo: {
-    titleTemplate: "%s | DataRich",
-    description: "Markdown on steroids for data-driven documents",
-    canonical: "https://datarich.dev",
     openGraph: {
-      title: "DataRich",
+      type: "website",
+      title:
+        "DataHub - a complete solution for Open Data Platforms, Data Catalogs, Data Lakes and Data Management.",
+      description:
+        "DataHub is an open source, mature, fully-featured and production ready. Trusted by governments, startups, nonprofits and the Fortune 500.",
+      locale: "en_US",
       images: [
         {
-          url: "https://datarich.dev/og-image.png",
-          alt: "DataRich",
-          width: 1600,
-          height: 900,
+          url: "https://datahub.io/static/img/opendata/product.png",
+          alt: "DataHub - a complete solution for Open Data Platforms, Data Catalogs, Data Lakes and Data Management.",
+          width: 1200,
+          height: 627,
           type: "image/jpg",
         },
       ],
     },
     twitter: {
       handle: "@datopian",
-      site: "https://datarich.dev",
+      site: "https://datopian.com/",
       cardType: "summary_large_image",
     },
   },
