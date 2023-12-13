@@ -1,4 +1,7 @@
 {
-  "installCommand": "npm install",
-  "buildCommand": "npm run export"
+  "functions": {
+    "app/api/trpc/**/*.ts": {
+      "maxDuration": 300
+    }
+  }
 }

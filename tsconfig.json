@@ -1,29 +1,39 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@portaljs/core": ["node_modules/@portaljs/core/src"],
-      "@portaljs/remark-callouts": [
-        "node_modules/@portaljs/remark-callouts/src"
-      ],
-      "@portaljs/remark-embed": ["node_modules/@portaljs/remark-embed/src"],
-      "@/*": ["./*"]
-    },
-    "target": "es2020",
+    "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
+    "checkJs": true,
     "skipLibCheck": true,
-    "strict": false,
+    "strict": true,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
-    "incremental": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve"
+    "jsx": "preserve",
+    "incremental": true,
+    "noUncheckedIndexedAccess": true,
+    "baseUrl": ".",
+    "noImplicitAny": false,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "paths": {
+      "@/*": ["./*"]
+    }
   },
-  "include": ["types.d.ts", "next-env.d.ts", "**/*.tsx", "**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.cjs",
+    "**/*.mjs",
+    ".next/types/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }
