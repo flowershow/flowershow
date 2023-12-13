@@ -1,5 +1,3 @@
-import React from "react";
-
 import { MDXRemote } from "next-mdx-remote";
 import { Mermaid, Pre } from "@portaljs/core";
 import { Vega, VegaLite } from "react-vega";
@@ -14,6 +12,11 @@ import layouts from "../layouts";
 const components = {
     mermaid: Mermaid,
     pre: Pre,
+    table: (props) => (
+        <div className="overflow-x-auto">
+            <table {...props} />
+        </div>
+    ),
     Vega,
     VegaLite,
     FlatUiTable: dynamic(() => import("./home/FlatUiTable").then((mod) => mod.FlatUiTable)),

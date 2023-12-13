@@ -11,6 +11,11 @@ export default function MDX({
 
     const components = {
         pre: Pre,
+        table: (props) => (
+            <div className="overflow-x-auto">
+                <table {...props} />
+            </div>
+        ),
         Vega,
         VegaLite,
         FlatUiTable: dynamic(() => import("./FlatUiTable").then((mod) => mod.FlatUiTable)),
@@ -22,11 +27,6 @@ export default function MDX({
 * Excel: () => <div>Excel is not available in this preview.</div>,
 * BucketViewer: () => <div>BucketViewer is not available in this preview.</div>,
 * Table: () => <div>Table is not available in this preview.</div>, */
-        table: (props) => (
-            <div className="overflow-x-auto">
-                <table {...props} />
-            </div>
-        ),
     };
 
     return (
