@@ -2,7 +2,6 @@ import { Section } from "@/components/data-rich/Section";
 import { Hero } from "@/components/data-rich/Hero";
 import { LivePreview } from "@/components/data-rich/LivePreview";
 import { Features } from "@/components/data-rich/Features";
-/* import { Vision } from "@/components/home/Vision"; */
 /* import { Roadmap } from "@/components/home/Roadmap"; */
 import { CTASection } from "@/components/data-rich/CTASection";
 import { QuickStart } from "@/components/data-rich/QuickStart";
@@ -21,10 +20,6 @@ export default function Home() {
             <Section>
                 <Features />
             </Section>
-
-            {/* <Section className="lg:!max-w-3xl">
-                <Vision />
-            </Section> */}
 
             <Section>
                 <QuickStart />

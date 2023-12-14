@@ -50,7 +50,7 @@ export function Button<
 
     className = clsx(
         baseStyles[variant],
-        variantStyles[variant][color],
+        variantStyles[variant][color] as any,
         className,
     )
 

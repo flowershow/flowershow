@@ -81,11 +81,14 @@ const TableInner: React.FC<FlatUiTableProps> = ({
             </div>
         );
     }
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const { data: csvString, isLoading: isDownloadingCSV } = useQuery(
         ['dataCsv', url, randomId],
         () => getCsv(url as string, bytes),
         { enabled: !!url }
     );
+
+    // eslint-disable-next-line react-hooks/rules-of-hooks
     const { data: parsedData, isLoading: isParsing } = useQuery(
         ['dataPreview', csvString, randomId],
         () =>

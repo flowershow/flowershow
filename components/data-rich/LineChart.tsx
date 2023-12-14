@@ -1,7 +1,7 @@
 import { VegaLite } from "react-vega";
 
 export function LineChart({ data = [] }) {
-    var tmp = data;
+    let tmp: unknown = data;
     if (Array.isArray(data)) {
         tmp = data.map((r, i) => {
             return { x: r[0], y: r[1] };

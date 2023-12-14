@@ -7,6 +7,7 @@ import MDX from "./mdx2";
 
 export function LivePreview() {
     const [code, setCode] = useState(`# Hello, world!
+
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a diam lectus.
 
 > [!hint]

@@ -70,7 +70,7 @@ export function Stories() {
                 <div className="mx-auto max-w-3xl text-center">
                     <h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-100 sm:text-4xl">How MarkdownDB fits your world</h2>
                     <p className="mt-6 text-lg leading-8 text-slate-200">
-                        We're building MarkdownDB to help you create...
+                        We&apos;re building MarkdownDB to help you create...
                     </p>
                 </div>
                 <Tab.Group
