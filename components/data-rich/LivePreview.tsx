@@ -1,11 +1,14 @@
 "use client";
 import { useState, useEffect } from "react";
+import { ErrorBoundary } from 'react-error-boundary';
 import Editor from '@monaco-editor/react';
 
 import MDX from "./mdx2";
 
 
 export function LivePreview() {
+    const [isError, setIsError] = useState(false);
+    const [errorBoundaryKey, setErrorBoundaryKey] = useState(0);
     const [code, setCode] = useState(`# Hello, world!
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a diam lectus.
@@ -89,6 +92,10 @@ function hello() {
             })
                 .then((res) => res.json())
                 .then(({ code, frontmatter }) => {
+                    if (isError) {
+                        setIsError(false);
+                        setErrorBoundaryKey(errorBoundaryKey + 1);
+                    }
                     setSource(code);
                 });
         }
@@ -145,10 +152,24 @@ function hello() {
                 </div>
                 <div className="w-full p-3">
                     <div id="mdx-live-preview" className="h-[75vh] overflow-y-auto">
-                        {source && <MDX source={source} />}
+                        <ErrorBoundary
+                            key={errorBoundaryKey}
+                            FallbackComponent={MyFallbackComponent}
+                            onError={() => setIsError(true)}
+                        >
+                            {source && <MDX source={source} />}
+                        </ErrorBoundary>
                     </div>
                 </div>
             </div>
+        </div>
+    )
+}
+
+function MyFallbackComponent({ error }) {
+    return (
+        <div role="alert">
+            <pre>{error.message}</pre>
         </div>
     )
 }
