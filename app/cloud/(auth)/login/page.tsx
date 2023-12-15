@@ -10,10 +10,10 @@ export default function LoginPage() {
                 width={100}
                 height={100}
                 className="relative mx-auto h-12 w-auto dark:scale-110 dark:rounded-full dark:border dark:border-stone-400"
-                src="/logo.svg"
+                src="/datahub-cube.svg"
             />
             <h1 className="mt-6 text-center font-cal text-3xl dark:text-white">
-                Flowershow Cloud
+                DataHub Cloud
             </h1>
             <p className="mt-2 text-center text-sm text-stone-600 dark:text-stone-400">
                 Turn your markdown into a website in a couple of clicks. <br />

@@ -8,7 +8,7 @@ import { Metadata } from "next";
 import { cn } from "@/lib/utils";
 
 const title =
-    "Flowershow Cloud";
+    "DataHub";
 const description =
     "Turn your markdown into a website in a couple of clicks. Avoid the hassle and complexity of deploying yourself."
 const image = "/thumbnail.png";
