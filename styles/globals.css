@@ -117,6 +117,10 @@ html {
   min-height: 55vh;
 }
 
+#mdx-live-preview .heading-link {
+  display: none;
+}
+
 #mdxpage iframe {
   height: 80vh;
 }

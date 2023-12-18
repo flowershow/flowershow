@@ -1,4 +1,7 @@
 import "@/styles/globals.css";
+import "@/styles/prism.css";
+import "@portaljs/remark-callouts/styles.css";
+
 import { TRPCReactProvider } from "@/trpc/react";
 import { headers } from "next/headers";
 import { cal, inter } from "@/styles/fonts";
@@ -39,6 +42,9 @@ export default function RootLayout({
 }) {
     return (
         <html lang="en" suppressHydrationWarning>
+            <head>
+                <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css" integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn" crossOrigin="anonymous" />
+            </head>
             <body className={cn(cal.variable, inter.variable)}>
                 <TRPCReactProvider headers={headers()}>
                     <Providers>
