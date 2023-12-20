@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Nav } from "@/components/home/nav"
+import { Footer } from "@/components/home/footer"
 import config from "@/const/config"
 
 
@@ -20,6 +21,8 @@ export default function HomeLayout({ children }: { children: ReactNode }) {
                     <div className="mx-auto lg:px-[16rem] pt-8">
                         {children}
                     </div>
+
+                    <Footer links={config.navLinks} author={config.author} />
                 </div>
             </div>
         </>

@@ -1,5 +1,9 @@
 const config = {
-    author: "Datopian",
+    author: {
+        name: "DataHub",
+        url: "https://datahub.io",
+        logo: "/datahub-cube.svg",
+    },
     navbarTitle: {
         logo: "/datahub-cube.svg",
         text: "",
