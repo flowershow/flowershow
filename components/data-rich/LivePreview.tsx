@@ -7,6 +7,7 @@ import MDX from "./mdx2";
 
 
 export function LivePreview() {
+    const [previewIsLoading, setPreviewIsLoading] = useState(true);
     const [isError, setIsError] = useState(false);
     const [errorBoundaryKey, setErrorBoundaryKey] = useState(0);
     const [code, setCode] = useState(`# Hello, world!
@@ -96,6 +97,9 @@ function hello() {
                         setIsError(false);
                         setErrorBoundaryKey(errorBoundaryKey + 1);
                     }
+                    if (previewIsLoading) {
+                        setPreviewIsLoading(false);
+                    }
                     setSource(code);
                 });
         }
@@ -151,14 +155,18 @@ function hello() {
                     <div className="grow border-b border-neutral-100 dark:border-neutral-900"></div>
                 </div>
                 <div className="w-full p-3">
-                    <div id="mdx-live-preview" className="h-[75vh] overflow-y-auto">
-                        <ErrorBoundary
-                            key={errorBoundaryKey}
-                            FallbackComponent={MyFallbackComponent}
-                            onError={() => setIsError(true)}
-                        >
-                            {source && <MDX source={source} />}
-                        </ErrorBoundary>
+                    <div id="mdx-live-preview" className="h-[75vh] flex overflow-y-auto">
+                        {previewIsLoading ? (
+                            <span className="mx-auto my-auto">Loading...</span>
+                        ) : (
+                            <ErrorBoundary
+                                key={errorBoundaryKey}
+                                FallbackComponent={MyFallbackComponent}
+                                onError={() => setIsError(true)}
+                            >
+                                {source && <MDX source={source} />}
+                            </ErrorBoundary>
+                        )}
                     </div>
                 </div>
             </div>
