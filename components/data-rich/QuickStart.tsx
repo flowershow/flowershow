@@ -46,11 +46,11 @@ export function QuickStart() {
                 ))}
             </div>
 
-            <div className="mt-20 flex items-center justify-center gap-x-6">
-                <Button href="/blog/basic-tutorial">
+            {/* <div className="mt-20 flex items-center justify-center gap-x-6">
+                <Button href="https://datarich-demo.datahub.io/posts/story1">
                     <span>Read full tutorial</span>
                 </Button>
-            </div>
+            </div> */}
         </>
     )
 }
@@ -117,7 +117,7 @@ This is my first blog post. I'm so excited to try publishing it with DataHub!
         id: '3',
         title: 'Publish with DataHub',
         description:
-            'Remember to first push your changes to GitHub! Then, go to https://cloud.flowershow.app/, sign up and create a new site.',
+            'Remember to first push your changes to GitHub! Then, go to https://cloud.datarich.io/, sign up and create a new site.',
         imageSrc: "/rendered-example.png",
         imageAlt: "Example of a rendered blog post"
     },

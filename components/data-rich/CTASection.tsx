@@ -22,7 +22,7 @@ export function CTASection() {
                     Check out our tutorial and learn the basics of creating and publishing data-rich documents.
                 </p>
                 <div className="mt-10 flex items-center justify-center gap-x-6">
-                    <Button href="/docs/datarich-story-tutorial">
+                    <Button href="https://datarich-demo.datahub.io/posts/story1">
                         <span>Read tutorial</span>
                     </Button>
                 </div>

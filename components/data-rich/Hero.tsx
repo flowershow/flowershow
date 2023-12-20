@@ -29,7 +29,7 @@ export function Hero() {
                             <span>Quick start</span>
                         </Button>
                         <Button
-                            href="https://datarich-demo.flowershow.app/"
+                            href="https://datarich-demo.datahub.io/"
                             variant="outline"
                             rel="noopener noreferrer"
                             target="_blank"
