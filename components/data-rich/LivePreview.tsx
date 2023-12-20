@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { ErrorBoundary } from 'react-error-boundary';
 import Editor from '@monaco-editor/react';
 
-import MDX from "./mdx2";
+import MDX from "./mdx";
 
 
 export function LivePreview() {
