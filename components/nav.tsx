@@ -20,16 +20,16 @@ import { ReactNode, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 
 const externalLinks = [
-    {
-        name: "Read announcement",
-        href: "#",
-        icon: <Megaphone width={18} />,
-    },
-    {
-        name: "Read the guide",
-        href: "#",
-        icon: <FileCode width={18} />,
-    },
+    /* {
+*     name: "Read announcement",
+*     href: "#",
+*     icon: <Megaphone width={18} />,
+* },
+* {
+*     name: "Read the guide",
+*     href: "#",
+*     icon: <FileCode width={18} />,
+* }, */
 ];
 
 export default function Nav({ children }: { children: ReactNode }) {
