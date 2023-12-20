@@ -5,6 +5,7 @@ import { Features } from "@/components/data-rich/Features";
 /* import { Roadmap } from "@/components/home/Roadmap"; */
 import { CTASection } from "@/components/data-rich/CTASection";
 import { QuickStart } from "@/components/data-rich/QuickStart";
+import { About } from "@/components/data-rich/About";
 
 export default function Home() {
 
@@ -15,6 +16,10 @@ export default function Home() {
 
             <Section className="mt-6 md:mt-8">
                 <LivePreview />
+            </Section>
+
+            <Section>
+                <About />
             </Section>
 
             <Section>

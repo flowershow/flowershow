@@ -35,7 +35,7 @@ export function Features() {
             <Heading
                 id="features"
                 heading="Features"
-                subheading="Key Advantages of DataHub"
+                subheading="Key features"
             />
             <dl className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 text-primary dark:text-primary-dark leading-7 text-gray-500 sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:gap-x-16">
                 {features.map((feature) => (
