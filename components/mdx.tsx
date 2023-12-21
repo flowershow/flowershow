@@ -19,11 +19,23 @@ const components = {
     mermaid: Mermaid,
     pre: Pre,
     ...DataRichComponents as any,
-    Table: (props) => (
+    table: (props) => (
         <div className="overflow-x-auto">
-            <DataRichComponents.Table {...props} />
+            <table {...props} />
         </div>
     ),
+    // remove file extension from links (needed for CommonMark links)
+    a: ({ href, children, ...rest }) => {
+        const _href = href.replace(/\.[^/.]+$/, '');
+        return (
+            <a
+                href={_href}
+                {...rest}
+            >
+                {children}
+            </a>
+        )
+    }
 };
 
 export default function MDX({
