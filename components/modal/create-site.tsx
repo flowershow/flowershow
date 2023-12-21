@@ -32,7 +32,7 @@ export default function CreateSiteModal() {
 *     }));
 * }, [data.name]); */
 
-    const { data: orgsReposMap } = api.user.getGitHubOrgsToReposMap.useQuery();
+    const { data: orgsReposMap, isLoading } = api.user.getGitHubOrgsToReposMap.useQuery();
 
     useEffect(() => {
         if (orgsReposMap) {
@@ -216,22 +216,22 @@ export default function CreateSiteModal() {
                 </div> */}
             </div>
             <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800 md:px-10">
-                <CreateSiteFormButton />
+                <CreateSiteFormButton disabled={isLoading} />
             </div>
         </form>
     );
 }
-function CreateSiteFormButton() {
+function CreateSiteFormButton({ disabled = false }) {
     const { pending } = useFormStatus();
     return (
         <button
             className={cn(
                 "flex h-10 w-full items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none",
-                pending
+                pending || disabled
                     ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
                     : "border-black bg-black text-white hover:bg-white hover:text-black dark:border-stone-700 dark:hover:border-stone-200 dark:hover:bg-black dark:hover:text-white dark:active:bg-stone-800",
             )}
-            disabled={pending}
+            disabled={pending || disabled}
         >
             {pending ? <LoadingDots color="#808080" /> : <p>Create Site</p>}
         </button>
