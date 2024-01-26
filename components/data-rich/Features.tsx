@@ -1,4 +1,4 @@
-import { DocumentTextIcon, RectangleStackIcon } from "@heroicons/react/24/outline"
+import { DocumentTextIcon, LockOpenIcon, ChartBarSquareIcon, PaperAirplaneIcon, ArrowPathIcon } from "@heroicons/react/24/outline"
 import { Heading } from '@/components/common/Heading'
 
 const features = [
@@ -8,26 +8,27 @@ const features = [
         icon: DocumentTextIcon,
     },
     {
-        name: 'Elegnat data visualisations:',
+        name: 'Elegant data visualisations:',
         description: "Enrich your stories with charts, maps, and more.",
-        icon: DocumentTextIcon,
+        icon: ChartBarSquareIcon,
     },
     {
         name: 'Instant publishing:',
         description: "Publish in just a few clicks with DataHub.",
-        icon: DocumentTextIcon,
+        icon: PaperAirplaneIcon,
     },
     {
         name: 'Always up to date:',
         description: "Your site's content is always up to date with the latest changes in the repo.",
-        icon: DocumentTextIcon,
+        icon: ArrowPathIcon,
     },
     {
         name: 'No vendor lock-in:',
         description: "The content and data is always only yours. Check it in to git and deploy with DataHub.",
-        icon: RectangleStackIcon,
+        icon: LockOpenIcon,
     },
 ]
+
 
 export function Features() {
     return (
