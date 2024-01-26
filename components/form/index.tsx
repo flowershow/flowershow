@@ -11,6 +11,8 @@ import DomainConfiguration from "./domain-configuration";
 import Uploader from "./uploader";
 import va from "@vercel/analytics";
 import { env } from "@/env.mjs"
+import { useEffect, useRef } from "react";
+
 
 export default function Form({
     title,
@@ -29,6 +31,7 @@ export default function Form({
         placeholder?: string;
         maxLength?: number;
         pattern?: string;
+        disallowed?: string[];
     };
     handleSubmit: any;
 }) {
@@ -38,6 +41,22 @@ export default function Form({
     return (
         <form
             action={async (data: FormData) => {
+                if (inputAttrs.name === "subdomain") {
+                    if (
+                        inputAttrs.disallowed &&
+                        inputAttrs.disallowed.includes(data.get("subdomain")?.toString() || "")
+                    ) {
+                        toast.error(`Error: This subdomain name is not allowed!`);
+                        return;
+                    }
+                    if (
+                        inputAttrs.pattern &&
+                        !RegExp(inputAttrs.pattern).test(data.get("subdomain")?.toString() || "")
+                    ) {
+                        toast.error(`Error: The name can only contain ASCII letters, digits, and the characters -, and _`);
+                        return;
+                    }
+                }
                 if (
                     inputAttrs.name === "customDomain" &&
                     inputAttrs.defaultValue &&

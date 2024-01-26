@@ -25,6 +25,8 @@ export default async function SiteSettingsDomains({
                     defaultValue: data?.subdomain!,
                     placeholder: "subdomain",
                     maxLength: 32,
+                    pattern: "^[a-zA-Z0-9_-]+$",
+                    disallowed: ["www", "cloud", "mail", "ftp", "admin", "login", "api", "webmail", "blog", "shop", "forum", "store", "cdn", "smtp", "imap", "pop", "test", "dev", "stage", "demo", "staging", "beta", "alpha", "sandbox", "mysql", "postgresql", "redis", "mongodb", "auth", "billing", "dashboard", "support", "help", "chat", "download", "upload", "assets", "static", "media", "images", "videos", "css", "js", "fonts"]
                 }}
                 handleSubmit={updateSite}
             />

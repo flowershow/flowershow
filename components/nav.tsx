@@ -90,12 +90,12 @@ export default function Nav({ children }: { children: ReactNode }) {
 *     ];
 * } */
         return [
-            {
-                name: "Overview",
-                href: "/",
-                isActive: segments.length === 0,
-                icon: <LayoutDashboard width={18} />,
-            },
+            /* {
+*     name: "Overview",
+*     href: "/",
+*     isActive: segments.length === 0,
+*     icon: <LayoutDashboard width={18} />,
+* }, */
             {
                 name: "Sites",
                 href: "/sites",
@@ -132,7 +132,7 @@ export default function Nav({ children }: { children: ReactNode }) {
                     } sm:hidden`}
                 onClick={() => setShowSidebar(!showSidebar)}
             >
-                <Menu width={20} />
+                <Menu width={48} height={32} className="dark:text-white" />
             </button>
             <div
                 className={`transform ${showSidebar ? "w-full translate-x-0" : "-translate-x-full"
