@@ -11,7 +11,6 @@ import DomainConfiguration from "./domain-configuration";
 import Uploader from "./uploader";
 import va from "@vercel/analytics";
 import { env } from "@/env.mjs"
-import { useEffect, useRef } from "react";
 
 
 export default function Form({

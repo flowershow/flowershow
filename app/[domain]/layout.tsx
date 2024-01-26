@@ -84,7 +84,7 @@ export default async function SiteLayout({
 
     return (
         <div className={fontMapper["font-work"]}>
-            <div className="mt-20">{children}</div>
+            <div>{children}</div>
 
             {/* {domain == `demo.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
                 domain == `platformize.co` ? (

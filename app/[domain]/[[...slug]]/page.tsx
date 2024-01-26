@@ -86,10 +86,26 @@ export default async function SitePage({
     const domain = decodeURIComponent(params.domain);
     const slug = decodeURIComponent(params.slug);
 
-    const mdString = await api.site.getPageContent.query({
-        domain,
-        slug: slug !== "undefined" ? slug.split(",").join("/") : ""
-    })
+    let mdString;
+
+    try {
+        mdString = await api.site.getPageContent.query({
+            domain,
+            slug: slug !== "undefined" ? slug.split(",").join("/") : ""
+        })
+    } catch (error) {
+        return (
+            <div className="flex items-center justify-center min-h-screen bg-gray-100">
+                <div className="text-center">
+                    <h1 className="text-6xl font-bold text-gray-800 mb-4">404</h1>
+                    <p className="text-xl text-gray-600 mb-8">Page Not Found</p>
+                    <p className="text-gray-500">
+                        The page you are looking for might not exist or has been moved.
+                    </p>
+                </div>
+            </div>
+        )
+    }
 
     if (!mdString) {
         notFound();
@@ -99,7 +115,7 @@ export default async function SitePage({
 
     const { mdxSource, frontMatter } = await parse(mdString, "mdx", {}, permalinks);
 
-    // TODO temporary solution for fetchign files from github
+    // TODO temporary solution for fetching files from github
     const { gh_repository, gh_branch } = (await api.site.getByDomain.query({ domain }))!
 
     return (

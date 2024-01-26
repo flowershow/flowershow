@@ -8,9 +8,9 @@ import { Mermaid, Pre } from "@portaljs/core";
 * import styles from "./mdx.module.css"; */
 import layouts from "@/components/layouts";
 
-import * as DataRichComponents from "@portaljs/components"
+import * as DataRichComponents from "@portaljs/components";
 import FrictionlessViewFactory from "./frictionless";
-import '@portaljs/components/styles.css'
+import '@portaljs/components/styles.css';
 
 const components = {
     /* a: replaceLinks,
@@ -55,7 +55,7 @@ export default function MDX({
         components.FrictionlessView = FrictionlessViewFactory({
             views: frontMatter.frictionless.views,
             resources: frontMatter.frictionless.resources,
-            // TODO temporary solution for fetchign files from github
+            // TODO temporary solution for fetching files from github
             dataUrlBase: `https://raw.githubusercontent.com/${gh_repository}/${gh_branch}/`,
         });
     }
@@ -80,14 +80,12 @@ export default function MDX({
     return (
         <article
             id="mdxpage"
-            className={`prose dark:prose-invert mx-auto`}
+            className={`prose dark:prose-invert mx-auto mt-20`}
             suppressHydrationWarning={true}
         >
-            {/* @ts-ignore */}
             <Layout>
                 <MDXRemote {...source} components={components} />
             </Layout>
-            {/* <MDXRemote {...source} components={components} /> */}
         </article>
     );
 }

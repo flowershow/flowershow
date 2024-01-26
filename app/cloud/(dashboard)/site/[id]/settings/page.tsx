@@ -2,6 +2,8 @@ import Form from "@/components/form";
 import { updateSite } from "@/lib/actions";
 import DeleteSiteForm from "@/components/form/delete-site-form";
 import { api } from "@/trpc/server";
+import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 
 export default async function SiteSettingsIndex({
     params,
@@ -52,6 +54,13 @@ export default async function SiteSettingsIndex({
                 }}
                 handleSubmit={updateSite}
             /> */}
+
+            <Link href={`https://github.com/${data?.gh_repository}`} target="_blank" rel="noopener noreferrer">
+                <div className="flex flex-row gap-2">
+                    <h2>{data?.gh_repository} </h2>
+                    <ExternalLink />
+                </div>
+            </Link>
 
             <Form
                 title="Branch"

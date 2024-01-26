@@ -3,13 +3,10 @@
 import Link from "next/link";
 import {
     ArrowLeft,
-    Edit3,
     Globe,
-    LayoutDashboard,
-    Megaphone,
     Menu,
     Settings,
-    FileCode,
+    Bot
 } from "lucide-react";
 import {
     useParams,
@@ -21,15 +18,10 @@ import Image from "next/image";
 
 const externalLinks = [
     /* {
-*     name: "Read announcement",
-*     href: "#",
-*     icon: <Megaphone width={18} />,
-* },
-* {
-*     name: "Read the guide",
-*     href: "#",
-*     icon: <FileCode width={18} />,
-* }, */
+*     name: "Join our discord",
+*     href: "https://discord.gg/cPxejPzpwt",
+*     icon: <Bot width={18} />,
+* } */
 ];
 
 export default function Nav({ children }: { children: ReactNode }) {

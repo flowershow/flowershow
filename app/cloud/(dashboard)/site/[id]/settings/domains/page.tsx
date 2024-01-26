@@ -18,7 +18,7 @@ export default async function SiteSettingsDomains({
             <Form
                 title="Subdomain"
                 description="The subdomain for your site."
-                helpText="Please use 32 characters maximum."
+                helpText="The name must consist only of ASCII letters, digits, and the characters '-' and '_'. Please ensure a maximum of 32 characters is used."
                 inputAttrs={{
                     name: "subdomain",
                     type: "text",
