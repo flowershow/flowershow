@@ -67,6 +67,7 @@
     "remark-math": "^6.0.0",
     "remark-smartypants": "^2.0.0",
     "remark-toc": "^9.0.0",
+    "server-only": "^0.0.1",
     "sharp": "^0.32.6",
     "sonner": "^1.2.0",
     "superjson": "^2.2.1",
