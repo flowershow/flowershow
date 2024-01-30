@@ -21,11 +21,11 @@ const components = {
     OpenLayers: () => <div>OpenLayers is not available in this preview.</div>,
     Excel: () => <div>Excel is not available in this preview.</div>,
     BucketViewer: () => <div>BucketViewer is not available in this preview.</div>,
-    table: (props) => (
-        <div className="overflow-x-auto">
-            <table {...props} />
-        </div>
-    ),
+    /* table: (props) => (
+*     <div className="overflow-x-auto">
+*         <table {...props} />
+*     </div>
+* ), */
 };
 
 

@@ -16,14 +16,13 @@ export function CTASection() {
             />
             <div className="relative mx-auto max-w-3xl text-center">
                 <h2 className="mt-2 text-3xl text-primary font-bold tracking-tight sm:text-4xl">
-                    Start creating your data-rich documents today.
+                    Get early dibs on DataHub Cloud!
                 </h2>
                 <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-primary">
-                    Check out our tutorial and learn the basics of creating and publishing data-rich documents.
-                </p>
+                    Hop on our waitlist, and you'll be the first to know when it's ready to roll out. Get early access, special offers, and a chance to shape our product.                </p>
                 <div className="mt-10 flex items-center justify-center gap-x-6">
-                    <Button href="https://datarich-demo.datahub.io/posts/story1">
-                        <span>Read tutorial</span>
+                    <Button href="https://tally.so/r/wad1O2">
+                        <span>Sign up for free for early access</span>
                     </Button>
                 </div>
 

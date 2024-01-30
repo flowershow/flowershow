@@ -24,34 +24,31 @@ Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a diam lectus.
 
 <LineChart
   data={[
-    [
-      '1850',
-      -0.41765878
-    ],
-    [
-      '1851',
-      -0.2333498
-    ],
-    [
-      '1852',
-      -0.22939907
-    ],
-    [
-      '1853',
-      -0.27035445
-    ],
-    [
-      '1854',
-      -0.29163003
-    ]
+    ['1850', -0.41765878],
+    ['1851', -0.2333498],
+    ['1852', -0.22939907],
+    ['1853', -0.27035445],
+    ['1854', -0.29163003],
+    ['1855', -0.37025971],
+    ['1856', -0.34520575],
+    ['1857', -0.28799894],
+    ['1858', -0.21425348],
+    ['1859', -0.26460280],
+    ['1860', -0.32811407],
+    ['1861', -0.25200663],
+    ['1862', -0.21742738],
+    ['1863', -0.22927083],
+    ['1864', -0.16240879]
   ]}
- />
+/>
 
 ## Another subheading
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a diam lectus.
 
 $$\\begin{vmatrix}a & b\\\\ c & d \\end{vmatrix}=ad-bc$$
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec a diam lectus.
 
 \`\`\`js
 function hello() {
@@ -149,7 +146,7 @@ function hello() {
                     </div>
                     <div>
                         <div className="bg-white border-b-0 relative flex h-10 shrink-0 items-center px-4 border-r border-b border-neutral-100 text-xs focus:outline-none">
-                            my-datarich-blog.datahub.app
+                            my-datarich-blog.datahub.io
                         </div>
                     </div>
                     <div className="grow border-b border-neutral-100 dark:border-neutral-900"></div>

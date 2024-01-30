@@ -1,4 +1,3 @@
-import { Button } from '@/components/common/Button';
 import { Heading } from '@/components/common/Heading';
 import { CodeWindow } from '@/components/data-rich/CodeWindow';
 import type { CodeSnippet } from '@/components/data-rich/CodeWindow';
@@ -115,9 +114,9 @@ This is my first blog post. I'm so excited to try publishing it with DataHub!
     },
     {
         id: '3',
-        title: 'Publish with DataHub',
+        title: 'Publish with DataHub Cloud',
         description:
-            'Remember to first push your changes to GitHub! Then, go to https://cloud.datarich.io/, sign up and create a new site.',
+            'Push your changes to GitHub, sign in to your DataHub Cloud and create a new site with your GitHub repository.',
         imageSrc: "/example.png",
         imageAlt: "Example of a rendered blog post"
     },

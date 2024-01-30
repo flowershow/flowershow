@@ -1,4 +1,5 @@
 import { Button } from "@/components/common/Button"
+/* import { CheckCircleIcon } from "@heroicons/react/24/solid" */
 
 
 export function Hero() {
@@ -19,14 +20,14 @@ export function Hero() {
                     </div> */}
                 <div className="text-center">
                     <h1 className="text-4xl font-bold tracking-tight text-gray-900 sm:text-6xl">
-                        Markdown on steroids for data-driven documents.
+                        Build elegant data-driven sites with markdown & deploy in seconds.
                     </h1>
                     <p className="mt-6 text-lg leading-8 text-gray-600">
-                        Mix and match unstructured Markdown content, structured metadata, and data-rich components - charts, tables, maps, and more.
+                        Publish datasets, data stories and data portals using markdown with a few clicks.
                     </p>
                     <div className="mt-10 flex items-center justify-center gap-x-6">
-                        <Button href="#quick-start">
-                            <span>Quick start</span>
+                        <Button href="https://tally.so/r/wad1O2">
+                            <span>Sign up for early access</span>
                         </Button>
                         <Button
                             href="https://datarich-demo.datahub.io/"
