@@ -19,7 +19,7 @@ export function CTASection() {
                     Get early dibs on DataHub Cloud!
                 </h2>
                 <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-primary">
-                    Hop on our waitlist, and you'll be the first to know when it's ready to roll out. Get early access, special offers, and a chance to shape our product.                </p>
+                    Hop on our waitlist, and you&apos;ll be the first to know when it&apos;s ready to roll out. Get early access, special offers, and a chance to shape our product.                </p>
                 <div className="mt-10 flex items-center justify-center gap-x-6">
                     <Button href="https://tally.so/r/wad1O2">
                         <span>Sign up for free for early access</span>
