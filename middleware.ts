@@ -41,18 +41,13 @@ export default async function middleware(req: NextRequest) {
   if (hostname == `cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
     const session = await getToken({ req });
 
-    // Redirect "cloud.mydomain.com" to "cloud.mydomain.com/sites"
-    if (path === "/") {
-      return NextResponse.redirect(new URL("/sites", req.url));
-    }
-
     if (!session && path !== "/login") {
       return NextResponse.redirect(new URL("/login", req.url));
     } else if (session && path == "/login") {
       return NextResponse.redirect(new URL("/", req.url));
     }
     return NextResponse.rewrite(
-      new URL(`/cloud${path === "/" ? "" : path}`, req.url),
+      new URL(`/cloud${path === "/" ? "/sites" : path}`, req.url),
     );
   }
 
