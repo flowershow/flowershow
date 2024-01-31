@@ -1,4 +1,5 @@
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { TRPCError } from "@trpc/server";
 
 
 export const userRouter = createTRPCRouter({
@@ -21,47 +22,17 @@ export const userRouter = createTRPCRouter({
 
   //   return await fetchAuthUserOrgs(accessToken);
   // }),
-  getGitHubRepositories: protectedProcedure.query<GitHubRepository[]>(
-    async ({ ctx }) => {
-      // Query the database to get the user's GitHub access token
-      const user = await ctx.db.user.findUnique({
-        where: { id: ctx.session.user.id },
-        include: { accounts: true },
-      });
-
-      const githubAccount = user?.accounts.find(
-        (account) => account.provider === "github",
-      );
-
-      const accessToken = githubAccount?.access_token;
-
-      if (!accessToken) {
-        throw new Error("GitHub access token not found");
-      }
-
-      return await fetchAuthUserRepositories(accessToken);
-    },
-  ),
+  // getGitHubRepositories: protectedProcedure.query<GitHubRepository[]>(
+  //   async ({ ctx }) => {
+  //     const accessToken = ctx.session.accessToken;
+  //     return await fetchAuthUserRepositories(accessToken);
+  //   },
+  // ),
   // TODO TEMPORARY SOLUTION until we can fetch athenticated user's orgs
   // https://github.com/orgs/community/discussions/74804
   getGitHubOrgsToReposMap: protectedProcedure.query<{ [key: string]: GitHubRepository[] }>(
     async ({ ctx }) => {
-      // Query the database to get the user's GitHub access token
-      const user = await ctx.db.user.findUnique({
-        where: { id: ctx.session.user.id },
-        include: { accounts: true },
-      });
-
-      const githubAccount = user?.accounts.find(
-        (account) => account.provider === "github",
-      );
-
-      const accessToken = githubAccount?.access_token;
-
-      if (!accessToken) {
-        throw new Error("GitHub access token not found");
-      }
-
+      const accessToken = ctx.session.accessToken;
       const repos = await fetchAuthUserRepositories(accessToken);
 
       return repos.reduce((acc, repo) => {
@@ -76,9 +47,6 @@ export const userRouter = createTRPCRouter({
     },
   ),
 });
-
-
-
 
 // async function fetchAuthUserOrgs(accessToken: string) {
 //   const response = await fetch(
@@ -127,10 +95,16 @@ async function fetchAuthUserRepositories(accessToken: string) {
       }
     );
 
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch GitHub repositories: ${response.statusText}`,
-      );
+    if (response.status === 401) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: `Invalid GitHub access token. Signing out...`,
+      });
+    } else if (response.status !== 200) {
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: `Failed to fetch GitHub repositories: ${response.statusText}`,
+      });
     }
 
     repos = (await response.json()) as GitHubAPIRepository[];

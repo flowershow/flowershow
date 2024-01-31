@@ -1,7 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { cn } from "@/lib/utils";
 import LoadingDots from "@/components/icons/loading-dots";
@@ -10,6 +10,7 @@ import va from "@vercel/analytics";
 import { useEffect, useState } from "react";
 import { api } from "@/trpc/react";
 import { GithubIcon } from "lucide-react";
+import { signOut } from "next-auth/react";
 
 
 export default function CreateSiteModal() {
@@ -32,7 +33,20 @@ export default function CreateSiteModal() {
 *     }));
 * }, [data.name]); */
 
-    const { data: orgsReposMap, isLoading } = api.user.getGitHubOrgsToReposMap.useQuery();
+    const { data: orgsReposMap, isLoading, isError, error } = api.user.getGitHubOrgsToReposMap.useQuery(undefined, {
+        retry: 2,
+    });
+
+    useEffect(() => {
+        if (error) {
+            toast.error(error.message);
+            if (error.data?.code === "UNAUTHORIZED") {
+                setTimeout(() => {
+                    signOut();
+                }, 3000);
+            }
+        }
+    }, [error]);
 
     useEffect(() => {
         if (orgsReposMap) {
@@ -48,7 +62,6 @@ export default function CreateSiteModal() {
         }
     }, [orgsReposMap]);
 
-
     const createSiteMutation = api.site.create.useMutation({
         onSuccess: (res) => {
             va.track("Created Site");
@@ -60,6 +73,11 @@ export default function CreateSiteModal() {
         },
         onError: (error) => {
             toast.error(error.message);
+            if (error.data?.code === "UNAUTHORIZED") {
+                setTimeout(() => {
+                    signOut();
+                }, 3000);
+            }
         }
     });
 
@@ -216,7 +234,7 @@ export default function CreateSiteModal() {
                 </div> */}
             </div>
             <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800 md:px-10">
-                <CreateSiteFormButton disabled={isLoading} />
+                <CreateSiteFormButton disabled={isLoading || isError} />
             </div>
         </form>
     );

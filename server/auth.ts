@@ -48,10 +48,52 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
-    jwt: async ({ token, user }) => {
+    signIn: async ({ user, account }) => {
+      if (user && account) {
+        try {
+          const dbUser = await prisma.user.findFirst(
+            {
+              where: {
+                id: user.id,
+              },
+            },
+          );
+          if (dbUser) {
+            await prisma.account.update({
+              where: {
+                provider_providerAccountId: {
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                },
+              },
+              data: {
+                access_token: account.access_token,
+                expires_at: account.expires_at,
+                id_token: account.id_token,
+                refresh_token: account.refresh_token,
+                session_state: account.session_state,
+                scope: account.scope,
+              },
+            });
+          }
+        } catch (err) {
+          if (err instanceof Error) {
+            console.error(err.message);
+          }
+        }
+      }
+      return true;
+    },
+    jwt: async ({ token, user, account }) => {
+      if (account) {
+        token.id = user.id
+        token.accessToken = account.access_token;
+      }
       if (user) {
         token.user = user;
       }
+
+
       return token;
     },
     session: async ({ session, token }) => {
@@ -62,6 +104,9 @@ export const authOptions: NextAuthOptions = {
         // @ts-expect-error
         username: token?.user?.username || token?.user?.gh_username,
       };
+      // @ts-expect-error
+      session.accessToken = token.accessToken;
+
       return session;
     },
   },
@@ -76,6 +121,7 @@ export function getSession() {
       email: string;
       image: string;
     };
+    accessToken: string;
   } | null>;
 }
 
