@@ -1,7 +1,7 @@
 "use client";
 
 import { toast } from "sonner";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { cn } from "@/lib/utils";
 import LoadingDots from "@/components/icons/loading-dots";
@@ -33,34 +33,64 @@ export default function CreateSiteModal() {
 *     }));
 * }, [data.name]); */
 
-    const { data: orgsReposMap, isLoading, isError, error } = api.user.getGitHubOrgsToReposMap.useQuery(undefined, {
+    const { data: scopes, isLoading: isLoadingScopes, isError: isErrorFetchingScopes, error: errorFetchingScopes } = api.user.getGitHubScopes.useQuery(undefined, {
         retry: 2,
     });
 
+    const { data: repos, isLoading: isLoadingRepos, isError: isErrorFetchingRepos, error: errorFetchingRepos } = api.user.getGitHubScopeRepos.useQuery(data.gh_scope, {
+        retry: 2,
+        enabled: !!data.gh_scope,
+    });
+
     useEffect(() => {
-        if (error) {
-            toast.error(error.message);
-            if (error.data?.code === "UNAUTHORIZED") {
+        if (isErrorFetchingScopes) {
+            toast.error(errorFetchingScopes.message);
+            if (errorFetchingScopes.data?.code === "UNAUTHORIZED") {
                 setTimeout(() => {
                     signOut();
                 }, 3000);
             }
         }
-    }, [error]);
+    }, [errorFetchingScopes]);
 
     useEffect(() => {
-        if (orgsReposMap) {
-            const scopes = Object.keys(orgsReposMap);
+        if (isErrorFetchingRepos) {
+            toast.error(errorFetchingRepos.message);
+            if (errorFetchingRepos.data?.code === "UNAUTHORIZED") {
+                setTimeout(() => {
+                    signOut();
+                }, 3000);
+            }
+        }
+    }, [errorFetchingRepos]);
+
+    useEffect(() => {
+        if (scopes) {
             if (scopes.length > 0) {
                 setData(
                     {
                         ...data,
-                        gh_scope: scopes[0] || "",
+                        gh_scope: scopes[0]!.login || "",
                     }
                 );
             }
         }
-    }, [orgsReposMap]);
+    }, [scopes]);
+
+    useEffect(() => {
+        if (repos) {
+            const repositories = repos.map(({ name }) => name);
+            if (repositories.length > 0) {
+                setData(
+                    {
+                        ...data,
+                        gh_repository: repositories[0] || "",
+                    }
+                );
+            }
+        }
+    }, [repos]);
+
 
     const createSiteMutation = api.site.create.useMutation({
         onSuccess: (res) => {
@@ -120,17 +150,17 @@ export default function CreateSiteModal() {
                         value={data.gh_scope}
                         required
                         placeholder="Select a GitHub account"
-                        disabled={!orgsReposMap}
+                        disabled={!scopes}
                         onChange={(e) => setData({ ...data, gh_scope: e.target.value, gh_repository: "" })}
                     >
-                        {!orgsReposMap && (
+                        {!scopes && (
                             <option value="" disabled>
                                 Loading...
                             </option>
                         )}
-                        {orgsReposMap && Object.keys(orgsReposMap).map((scope) => (
-                            <option key={scope} value={scope}>
-                                {scope}
+                        {scopes && scopes.map((scope) => (
+                            <option key={scope.login} value={scope.login}>
+                                {scope.login}
                             </option>
                         ))}
                     </select>
@@ -155,12 +185,12 @@ export default function CreateSiteModal() {
                         disabled={!data.gh_scope}
                         onChange={(e) => setData({ ...data, gh_repository: e.target.value })}
                     >
-                        {!data.gh_repository && (
+                        {(!scopes || !repos) && (
                             <option value="" disabled>
-                                --- Select a repository ---
+                                Loading...
                             </option>
                         )}
-                        {data.gh_scope && orgsReposMap![data.gh_scope]!.map((repo) => (
+                        {data.gh_scope && repos && repos.map((repo) => (
                             <option key={repo.id} value={repo.full_name}>
                                 {repo.name}
                             </option>
@@ -234,7 +264,7 @@ export default function CreateSiteModal() {
                 </div> */}
             </div>
             <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800 md:px-10">
-                <CreateSiteFormButton disabled={isLoading || isError} />
+                <CreateSiteFormButton disabled={isLoadingScopes || isLoadingRepos || isErrorFetchingScopes || isErrorFetchingRepos} />
             </div>
         </form>
     );

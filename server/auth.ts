@@ -11,9 +11,11 @@ export const authOptions: NextAuthOptions = {
     GitHubProvider({
       clientId: env.AUTH_GITHUB_ID as string,
       clientSecret: env.AUTH_GITHUB_SECRET as string,
-      // authorization: {
-      //   params: { scope: "user:read email public_repo:read repo:read org:read " },
-      // },
+      authorization: {
+        params: {
+          scope: 'read:user user:email public_repo read:org',
+        },
+      },
       profile(profile) {
         return {
           id: profile.id.toString(),
