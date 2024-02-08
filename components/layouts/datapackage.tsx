@@ -2,8 +2,9 @@ import FrictionlessViewFactory from "@/components/frictionless";
 import { Table } from "@portaljs/components";
 
 /* eslint import/no-default-export: off */
-export function DataPackageLayout({ children, frictionless, gh_repository, gh_branch, excerpt }) {
+export function DataPackageLayout({ children, frictionless, gh_repository, gh_branch }) {
     const title = frictionless.title;
+    const description = frictionless.description;
     const resources = frictionless.resources;
     const views = frictionless.views;
 
@@ -25,7 +26,7 @@ export function DataPackageLayout({ children, frictionless, gh_repository, gh_br
                 >
                     @{gh_repository}
                 </a>
-                {excerpt && <p className="text-md">{excerpt}</p>}
+                {description && <p className="text-md">{description}</p>}
             </header>
             <section className="mt-10">
                 {views.map((view, i) => {
