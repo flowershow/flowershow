@@ -182,7 +182,7 @@ export default function CreateSiteModal() {
                         value={data.gh_repository}
                         required
                         placeholder="Select a repository"
-                        disabled={!data.gh_scope}
+                        disabled={!data.gh_scope || !repos}
                         onChange={(e) => setData({ ...data, gh_repository: e.target.value })}
                     >
                         {(!scopes || !repos) && (
