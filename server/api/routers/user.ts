@@ -142,6 +142,9 @@ export const userRouter = createTRPCRouter({
         page++;
       } while (hasNextPage);
 
+      // sort alphabetically by name
+      allRepos.sort((a, b) => a.name.localeCompare(b.name));
+
       return allRepos;
     }),
 });
