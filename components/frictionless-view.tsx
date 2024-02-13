@@ -1,41 +1,51 @@
-// FrictionlessView is a factory because we have to
-// set the views and resources lists before using it
-
 import { VegaLite } from "@portaljs/components"
+import type { Resource } from "@/components/layouts/datapackage-types"
 
-export default function FrictionlessViewFactory({
-    views = [],
-    resources = [],
-    dataUrlBase
-}): ({
-    viewId,
+
+type FrictionlessViewReturnType = ({
+    viewId, // view index in the views array
     fullWidth,
 }: {
     viewId: number;
     fullWidth?: boolean;
-}) => JSX.Element {
-    const Frictionless = ({ viewId, fullWidth = false }) => {
-        if (!(viewId in views)) {
+}) => JSX.Element
+
+interface View {
+    resourceName: string;
+    title: string;
+    specType: string;
+    spec: any;
+}
+
+export const FrictionlessViewFactory = ({
+    views,
+    resources,
+    dataUrlBase
+}: {
+    views: View[];
+    resources: Resource[];
+    dataUrlBase: string;
+}): FrictionlessViewReturnType => {
+
+    const FrictionlessView = ({ viewId, fullWidth = false }) => {
+
+        const view = views[viewId];
+        if (!view) {
             console.error(`View ${viewId} not found`);
             return <></>;
         }
-        const view = views[viewId] as any;
 
-        let resource;
-        if (resources.length > 1) {
-            resource = resources.find((r: any) => r.name === view.resourceName);
-        } else {
-            resource = resources[0];
-        }
-
+        const resource = resources.find((r: any) => r.name === view.resourceName) || resources[viewId];
         if (!resource) {
             console.error(`Resource not found for view id ${viewId}`);
             return <></>;
         }
 
         let vegaSpec;
+
         switch (view.specType) {
-            case "simple":
+            case "simple": // TODO why?
+                // TODO why?
                 vegaSpec = convertSimpleToVegaLite(view, resource);
                 break;
             // ... other conversions
@@ -54,8 +64,8 @@ export default function FrictionlessViewFactory({
         );
     };
 
-    Frictionless.displayName = "FrictionlessView";
-    return Frictionless;
+    FrictionlessView.displayName = "FrictionlessView";
+    return FrictionlessView;
 }
 
 function convertSimpleToVegaLite(view, resource) {
@@ -69,7 +79,7 @@ function convertSimpleToVegaLite(view, resource) {
         $schema: "https://vega.github.io/schema/vega-lite/v5.json",
         mark: {
             type: view.spec.type,
-            color: "black",
+            color: "#6366F1",
             strokeWidth: 1,
             tooltip: true,
         },

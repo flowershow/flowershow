@@ -51,6 +51,7 @@
     "next-mdx-remote": "^4.4.1",
     "novel": "^0.1.22",
     "openai-edge": "^1.2.2",
+    "pretty-bytes": "^6.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-error-boundary": "^4.0.11",
