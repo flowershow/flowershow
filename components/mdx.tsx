@@ -36,19 +36,11 @@ export default function MDX({ source, frontMatter, gh_repository, gh_branch }) {
     }
 
     const Layout = ({ children }) => {
-        let LayoutComponent = <>{children}</>;
-
-        if (frontMatter.layout) {
-            const Component = layouts[frontMatter.layout];
-            const authors = (frontMatter.authors || []).map(author => ({
-                name: author, avatar: "/avatarplaceholder.png"
-            }));
-            LayoutComponent = <Component {...frontMatter} authors={authors}>{children}</Component>;
-        } else if (frontMatter.datapackage) {
+        if (frontMatter.datapackage) {
             const Component = layouts["datapackage"];
             // TODO gh_repository and gh_branch passed as a temporary solution to support relative paths
             // in datapackage
-            LayoutComponent = (
+            return (
                 <Component
                     {...frontMatter}
                     datapackage={frontMatter.datapackage}
@@ -60,7 +52,11 @@ export default function MDX({ source, frontMatter, gh_repository, gh_branch }) {
             );
         }
 
-        return LayoutComponent;
+        const Component = layouts[frontMatter.layout || "docs"];
+        const authors = (frontMatter.authors || []).map(author => ({
+            name: author, avatar: "/avatarplaceholder.png"
+        }));
+        return (<Component {...frontMatter} authors={authors}>{children}</Component>);
     };
 
     return (
