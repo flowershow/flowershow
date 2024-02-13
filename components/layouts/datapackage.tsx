@@ -18,7 +18,8 @@ export const DataPackageLayout: React.FC<Props> = ({ children, datapackage, gh_r
     const resourceFiles = resources.filter(isResourceWithPath)
     const resourcesCount = resourceFiles.length;
     const resoucesExtensions = Array.from(new Set(resourceFiles.map((r) => r.format))).join(", ");
-    const resourcesSize = prettyBytes(resourceFiles.reduce((acc, r) => acc + (r.bytes ?? 0), 0));
+    const resourcesSize = resourceFiles.reduce((acc, r) => acc + (r.bytes ?? 0), 0);
+    const resourcesSizeHumanReadable = resourcesSize ? prettyBytes(resourcesSize) : undefined;
 
 
     // TODO this is ackward
@@ -31,7 +32,7 @@ export const DataPackageLayout: React.FC<Props> = ({ children, datapackage, gh_r
     });
 
     return (
-        <article className="prose max-w-4xl mx-auto mt-20 pb-20 px-12 text-primary">
+        <article className="prose max-w-5xl mx-auto mt-20 pb-20 px-12 text-primary">
             <header>
                 {title && <h1>{title}</h1>}
                 {/* <a
@@ -63,7 +64,7 @@ export const DataPackageLayout: React.FC<Props> = ({ children, datapackage, gh_r
                     <thead>
                         <tr>
                             <th>Files</th>
-                            {resourcesSize && <th>Size</th>}
+                            {resourcesSize > 0 ? <th>Size</th> : null}
                             <th>Format</th>
                             {created && <th>Created</th>}
                             {updated && <th>Updated</th>}
@@ -74,7 +75,7 @@ export const DataPackageLayout: React.FC<Props> = ({ children, datapackage, gh_r
                     <tbody>
                         <tr>
                             <td>{resourcesCount}</td>
-                            {resourcesSize && <td>{resourcesSize}</td>}
+                            {resourcesSize > 0 ? <td>{resourcesSize}</td> : null}
                             <td>{resoucesExtensions}</td>
                             {created && <td>{created}</td>}
                             {updated && <td>{updated}</td>}
@@ -172,7 +173,7 @@ export const DataPackageLayout: React.FC<Props> = ({ children, datapackage, gh_r
                 </div>
             </section>
             <hr />
-            <section id="readme">
+            <section id="readme" className="max-w-3xl mx-auto">
                 {children}
             </section>
         </article>
