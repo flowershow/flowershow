@@ -75,7 +75,7 @@ export const DataPackageLayout: React.FC<Props> = ({ children, datapackage, gh_r
                     <tbody>
                         <tr>
                             <td>{resourcesCount}</td>
-                            {resourcesSize > 0 ? <td>{resourcesSize}</td> : null}
+                            {resourcesSize > 0 ? <td>{resourcesSizeHumanReadable}</td> : null}
                             <td>{resoucesExtensions}</td>
                             {created && <td>{created}</td>}
                             {updated && <td>{updated}</td>}
