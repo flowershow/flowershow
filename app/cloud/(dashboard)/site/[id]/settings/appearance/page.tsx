@@ -3,19 +3,19 @@ import Form from "@/components/form";
 import { updateSite } from "@/lib/actions";
 
 export default async function SiteSettingsAppearance({
-    params,
+  params,
 }: {
-    params: { id: string };
+  params: { id: string };
 }) {
-    const data = await prisma.site.findUnique({
-        where: {
-            id: decodeURIComponent(params.id),
-        },
-    });
+  const data = await prisma.site.findUnique({
+    where: {
+      id: decodeURIComponent(params.id),
+    },
+  });
 
-    return (
-        <div className="flex flex-col space-y-6">
-            {/* <Form
+  return (
+    <div className="flex flex-col space-y-6">
+      {/* <Form
                 title="Thumbnail image"
                 description="The thumbnail image for your site. Accepted formats: .png, .jpg, .jpeg"
                 helpText="Max file size 50MB. Recommended size 1200x630."
@@ -61,6 +61,6 @@ export default async function SiteSettingsAppearance({
                 }}
                 handleSubmit={updateSite}
             /> */}
-        </div>
-    );
+    </div>
+  );
 }

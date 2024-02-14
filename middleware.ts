@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { env } from "@/env.mjs"
+import { env } from "@/env.mjs";
 
 export const config = {
   matcher: [
@@ -28,14 +28,14 @@ export default async function middleware(req: NextRequest) {
     hostname.includes("---") &&
     hostname.endsWith(`.${process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`) // TODO what is this
   ) {
-    hostname = `${hostname.split("---")[0]}.${env.NEXT_PUBLIC_ROOT_DOMAIN
-      }`;
+    hostname = `${hostname.split("---")[0]}.${env.NEXT_PUBLIC_ROOT_DOMAIN}`;
   }
 
   const searchParams = req.nextUrl.searchParams.toString();
   // Get the pathname of the request (e.g. /, /about, /blog/first-post)
-  const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""
-    }`;
+  const path = `${url.pathname}${
+    searchParams.length > 0 ? `?${searchParams}` : ""
+  }`;
 
   // rewrites for cloud pages
   if (hostname == `cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
@@ -53,9 +53,10 @@ export default async function middleware(req: NextRequest) {
 
   // TODO temporary rewrite dev subdomain to home page
   if (hostname === `dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
-    return NextResponse.rewrite(new URL(`/home${path === "/" ? "" : path}`, req.url));
+    return NextResponse.rewrite(
+      new URL(`/home${path === "/" ? "" : path}`, req.url),
+    );
   }
-
 
   // // special case for `vercel.pub` domain
   // if (hostname === "vercel.pub") {
@@ -77,6 +78,3 @@ export default async function middleware(req: NextRequest) {
   // rewrite everything else to `/[domain]/[slug] dynamic route
   return NextResponse.rewrite(new URL(`/${hostname}${path}`, req.url));
 }
-
-
-

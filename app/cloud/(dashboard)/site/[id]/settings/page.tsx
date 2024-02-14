@@ -6,18 +6,17 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 
 export default async function SiteSettingsIndex({
-    params,
+  params,
 }: {
-    params: { id: string };
+  params: { id: string };
 }) {
+  const data = await api.site.getById.query({
+    id: decodeURIComponent(params.id),
+  });
 
-    const data = await api.site.getById.query({
-        id: decodeURIComponent(params.id),
-    });
-
-    return (
-        <div className="flex flex-col space-y-6">
-            {/* <Form
+  return (
+    <div className="flex flex-col space-y-6">
+      {/* <Form
                 title="Name"
                 description="The name of your site. This will be used as the meta title on Google as well."
                 helpText="Please use 32 characters maximum."
@@ -31,7 +30,7 @@ export default async function SiteSettingsIndex({
                 handleSubmit={updateSite}
             /> */}
 
-            {/* <Form
+      {/* <Form
                 title="Description"
                 description="The description of your site. This will be used as the meta description on Google as well."
                 helpText="Include SEO-optimized keywords that you want to rank for."
@@ -44,7 +43,7 @@ export default async function SiteSettingsIndex({
                 handleSubmit={updateSite}
             /> */}
 
-            {/* <Form
+      {/* <Form
                 title="Repository"
                 description="Repository used to fetch content for your site."
                 inputAttrs={{
@@ -55,26 +54,30 @@ export default async function SiteSettingsIndex({
                 handleSubmit={updateSite}
             /> */}
 
-            <Link href={`https://github.com/${data?.gh_repository}`} target="_blank" rel="noopener noreferrer">
-                <div className="flex flex-row gap-2">
-                    <h2>{data?.gh_repository} </h2>
-                    <ExternalLink />
-                </div>
-            </Link>
-
-            <Form
-                title="Branch"
-                description="Repository branch used to fetch content for your site."
-                helpText="This is the branch that will be used to fetch content for your site."
-                inputAttrs={{
-                    name: "gh_branch",
-                    type: "text",
-                    defaultValue: data?.gh_branch!,
-                }}
-                handleSubmit={updateSite}
-            />
-
-            <DeleteSiteForm siteName={data?.subdomain!} />
+      <Link
+        href={`https://github.com/${data?.gh_repository}`}
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <div className="flex flex-row gap-2">
+          <h2>{data?.gh_repository} </h2>
+          <ExternalLink />
         </div>
-    );
+      </Link>
+
+      <Form
+        title="Branch"
+        description="Repository branch used to fetch content for your site."
+        helpText="This is the branch that will be used to fetch content for your site."
+        inputAttrs={{
+          name: "gh_branch",
+          type: "text",
+          defaultValue: data?.gh_branch!,
+        }}
+        handleSubmit={updateSite}
+      />
+
+      <DeleteSiteForm siteName={data?.subdomain!} />
+    </div>
+  );
 }

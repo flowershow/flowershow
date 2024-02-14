@@ -2,7 +2,6 @@ import { userRouter } from "@/server/api/routers/user";
 import { siteRouter } from "@/server/api/routers/site";
 import { createTRPCRouter } from "@/server/api/trpc";
 
-
 /**
  * This is the primary router for your server.
  *

@@ -8,35 +8,33 @@ import { QuickStart } from "@/components/data-rich/QuickStart";
 import { About } from "@/components/data-rich/About";
 
 export default function Home() {
+  return (
+    <>
+      <Hero />
 
+      <Section className="mt-6 md:mt-8">
+        <LivePreview />
+      </Section>
 
-    return (
-        <>
-            <Hero />
+      <Section>
+        <About />
+      </Section>
 
-            <Section className="mt-6 md:mt-8">
-                <LivePreview />
-            </Section>
+      <Section>
+        <Features />
+      </Section>
 
-            <Section>
-                <About />
-            </Section>
+      <Section>
+        <QuickStart />
+      </Section>
 
-            <Section>
-                <Features />
-            </Section>
-
-            <Section>
-                <QuickStart />
-            </Section>
-
-            {/* <Section className="!max-w-3xl">
+      {/* <Section className="!max-w-3xl">
                 <Roadmap />
             </Section>
  */}
-            <div className="mt-24 md:mt-36">
-                <CTASection />
-            </div>
-        </>
-    );
+      <div className="mt-24 md:mt-36">
+        <CTASection />
+      </div>
+    </>
+  );
 }

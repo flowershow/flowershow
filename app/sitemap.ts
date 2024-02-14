@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 // import { getPostsForSite } from "@/lib/fetchers";
-import { env } from "@/env.mjs"
+import { env } from "@/env.mjs";
 
 export default async function Sitemap() {
   const headersList = headers();

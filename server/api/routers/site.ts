@@ -5,7 +5,7 @@ import { unstable_cache } from "next/cache";
 import {
   createTRPCRouter,
   protectedProcedure,
-  publicProcedure
+  publicProcedure,
 } from "@/server/api/trpc";
 import { env } from "@/env.mjs";
 import { filePathsToPermalinks } from "@/lib/file-paths-to-permalinks";
@@ -29,7 +29,7 @@ export const siteRouter = createTRPCRouter({
         randomSudomain = randomSlug();
       } while (
         await ctx.db.site.findFirst({
-          where: { subdomain: randomSudomain }
+          where: { subdomain: randomSudomain },
         })
       );
 
@@ -114,14 +114,13 @@ export const siteRouter = createTRPCRouter({
 
       return await unstable_cache(
         async () => {
-
           return ctx.db.site.findFirst({
             where: {
               OR: [
                 { subdomain: subdomain ?? undefined },
-                { customDomain: input.domain }
-              ]
-            }
+                { customDomain: input.domain },
+              ],
+            },
           });
         },
         [`${input.domain}-metadata`],
@@ -145,15 +144,18 @@ export const siteRouter = createTRPCRouter({
             where: {
               OR: [
                 { subdomain: subdomain ?? undefined },
-                { customDomain: input.domain }
-              ]
-            }
+                { customDomain: input.domain },
+              ],
+            },
           });
 
           if (!site) return null;
 
           const { gh_repository, gh_branch } = site;
-          const filePaths = await fetchGitHubProjectFilePaths({ gh_repository, gh_branch });
+          const filePaths = await fetchGitHubProjectFilePaths({
+            gh_repository,
+            gh_branch,
+          });
           // TODO temporary solution for resolving paths to embedded images
           const ghRawUrl = `raw.githubusercontent.com/${gh_repository}/${gh_branch}`;
           const permalinks = filePathsToPermalinks({
@@ -173,7 +175,6 @@ export const siteRouter = createTRPCRouter({
   getPageContent: publicProcedure
     .input(z.object({ domain: z.string().min(1), slug: z.string() }))
     .query(async ({ ctx, input }) => {
-
       const subdomain = input.domain.endsWith(`.${env.NEXT_PUBLIC_ROOT_DOMAIN}`)
         ? input.domain.replace(`.${env.NEXT_PUBLIC_ROOT_DOMAIN}`, "")
         : null;
@@ -185,9 +186,9 @@ export const siteRouter = createTRPCRouter({
         where: {
           OR: [
             { subdomain: subdomain ?? undefined },
-            { customDomain: input.domain }
-          ]
-        }
+            { customDomain: input.domain },
+          ],
+        },
       });
 
       if (!site) return null;
@@ -202,7 +203,7 @@ export const siteRouter = createTRPCRouter({
           content = await fetchGitHubFile({
             gh_repository,
             gh_branch,
-            slug: "index.md"
+            slug: "index.md",
           });
         } catch (error) {
           try {
@@ -210,7 +211,7 @@ export const siteRouter = createTRPCRouter({
             content = await fetchGitHubFile({
               gh_repository,
               gh_branch,
-              slug: "README.md"
+              slug: "README.md",
             });
           } catch (error) {
             throw new Error(
@@ -224,14 +225,14 @@ export const siteRouter = createTRPCRouter({
           content = await fetchGitHubFile({
             gh_repository,
             gh_branch,
-            slug: `${input.slug}.md`
+            slug: `${input.slug}.md`,
           });
         } catch (error) {
           try {
             content = await fetchGitHubFile({
               gh_repository,
               gh_branch,
-              slug: `${input.slug}/index.md`
+              slug: `${input.slug}/index.md`,
             });
           } catch (error) {
             throw new Error(
@@ -256,8 +257,8 @@ async function fetchGitHubProjectFilePaths({
   gh_repository,
   gh_branch,
 }: {
-  gh_repository: string,
-  gh_branch: string,
+  gh_repository: string;
+  gh_branch: string;
 }) {
   let paths: string[] = [];
 
@@ -266,10 +267,10 @@ async function fetchGitHubProjectFilePaths({
       `https://api.github.com/repos/${gh_repository}/git/trees/${gh_branch}?recursive=1`,
       {
         headers: {
-          'X-GitHub-Api-Version': '2022-11-28',
-          'Accept': 'application/vnd.github+json'
+          "X-GitHub-Api-Version": "2022-11-28",
+          Accept: "application/vnd.github+json",
         },
-      }
+      },
     );
 
     if (!response.ok) {
@@ -288,11 +289,8 @@ async function fetchGitHubProjectFilePaths({
     paths = responseJson.tree
       .filter((file) => file.type === "blob") // only include blobs (files) not trees (folders)
       .map((tree) => tree.path);
-
   } catch (error) {
-    throw new Error(
-      `Failed to fetch GitHub project paths: ${error}`,
-    );
+    throw new Error(`Failed to fetch GitHub project paths: ${error}`);
   }
 
   return paths;
@@ -301,11 +299,11 @@ async function fetchGitHubProjectFilePaths({
 async function fetchGitHubFile({
   gh_repository,
   gh_branch,
-  slug
+  slug,
 }: {
-  gh_repository: string,
-  gh_branch: string,
-  slug: string
+  gh_repository: string;
+  gh_branch: string;
+  slug: string;
 }) {
   let content: string | null = null;
 
@@ -314,16 +312,14 @@ async function fetchGitHubFile({
       `https://api.github.com/repos/${gh_repository}/contents/${slug}?ref=${gh_branch}`,
       {
         headers: {
-          'X-GitHub-Api-Version': '2022-11-28',
-          'Accept': 'application/vnd.github+json'
+          "X-GitHub-Api-Version": "2022-11-28",
+          Accept: "application/vnd.github+json",
         },
-      }
+      },
     );
 
     if (!response.ok) {
-      throw new Error(
-        `Failed to fetch GitHub file: ${response.statusText}`,
-      );
+      throw new Error(`Failed to fetch GitHub file: ${response.statusText}`);
     }
 
     const responseJson = (await response.json()) as {
@@ -331,7 +327,6 @@ async function fetchGitHubFile({
     };
 
     content = Buffer.from(responseJson.content, "base64").toString();
-
   } catch (error) {
     throw new Error(
       `Could not read ${gh_repository}/${slug} from GitHub: ${error}`,

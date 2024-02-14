@@ -2,7 +2,7 @@ import { getServerSession, type NextAuthOptions } from "next-auth";
 import GitHubProvider from "next-auth/providers/github";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/server/db";
-import { env } from "@/env.mjs"
+import { env } from "@/env.mjs";
 
 const VERCEL_DEPLOYMENT = !!env.VERCEL_URL;
 
@@ -13,7 +13,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: env.AUTH_GITHUB_SECRET as string,
       authorization: {
         params: {
-          scope: 'read:user user:email public_repo read:org',
+          scope: "read:user user:email public_repo read:org",
         },
       },
       profile(profile) {
@@ -53,13 +53,11 @@ export const authOptions: NextAuthOptions = {
     signIn: async ({ user, account }) => {
       if (user && account) {
         try {
-          const dbUser = await prisma.user.findFirst(
-            {
-              where: {
-                id: user.id,
-              },
+          const dbUser = await prisma.user.findFirst({
+            where: {
+              id: user.id,
             },
-          );
+          });
           if (dbUser) {
             await prisma.account.update({
               where: {
@@ -88,13 +86,12 @@ export const authOptions: NextAuthOptions = {
     },
     jwt: async ({ token, user, account }) => {
       if (account) {
-        token.id = user.id
+        token.id = user.id;
         token.accessToken = account.access_token;
       }
       if (user) {
         token.user = user;
       }
-
 
       return token;
     },

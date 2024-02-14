@@ -1,2 +1,2 @@
-export { MenuIcon } from './menu';
-export { CloseIcon } from './close';
+export { MenuIcon } from "./menu";
+export { CloseIcon } from "./close";
