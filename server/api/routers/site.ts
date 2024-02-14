@@ -9,6 +9,7 @@ import {
 } from "@/server/api/trpc";
 import { env } from "@/env.mjs";
 import { filePathsToPermalinks } from "@/lib/file-paths-to-permalinks";
+import { githubFetch } from "../lib/github";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -147,14 +148,30 @@ export const siteRouter = createTRPCRouter({
                 { customDomain: input.domain },
               ],
             },
+            include: {
+              user: {
+                include: {
+                  accounts: true,
+                },
+              },
+            },
           });
 
           if (!site) return null;
 
           const { gh_repository, gh_branch } = site;
+          const access_token = site.user?.accounts[0]?.access_token; // ? TODO adjust prisma schema to 1:1 relationship between user and account, as we only support GitHub for now
+
+          if (!access_token) {
+            throw new Error(
+              `No access token found for user ${site.user?.id} on site ${site.id}`,
+            );
+          }
+
           const filePaths = await fetchGitHubProjectFilePaths({
             gh_repository,
             gh_branch,
+            access_token,
           });
           // TODO temporary solution for resolving paths to embedded images
           const ghRawUrl = `raw.githubusercontent.com/${gh_repository}/${gh_branch}`;
@@ -189,11 +206,26 @@ export const siteRouter = createTRPCRouter({
             { customDomain: input.domain },
           ],
         },
+        include: {
+          user: {
+            include: {
+              accounts: true,
+            },
+          },
+        },
       });
 
       if (!site) return null;
 
       const { gh_repository, gh_branch } = site;
+      const access_token = site.user?.accounts[0]?.access_token; // TODO ? adjust prisma schema to 1:1 relationship between user and account, as we only support GitHub for now
+
+      if (!access_token) {
+        throw new Error(
+          `No access token found for user ${site.user?.id} on site ${site.id}`,
+        );
+      }
+
       let content: string | null = null;
 
       // if slug is empty, fetch index.md or README.md
@@ -204,6 +236,7 @@ export const siteRouter = createTRPCRouter({
             gh_repository,
             gh_branch,
             slug: "index.md",
+            access_token,
           });
         } catch (error) {
           try {
@@ -212,6 +245,7 @@ export const siteRouter = createTRPCRouter({
               gh_repository,
               gh_branch,
               slug: "README.md",
+              access_token,
             });
           } catch (error) {
             throw new Error(
@@ -226,6 +260,7 @@ export const siteRouter = createTRPCRouter({
             gh_repository,
             gh_branch,
             slug: `${input.slug}.md`,
+            access_token,
           });
         } catch (error) {
           try {
@@ -233,6 +268,7 @@ export const siteRouter = createTRPCRouter({
               gh_repository,
               gh_branch,
               slug: `${input.slug}/index.md`,
+              access_token,
             });
           } catch (error) {
             throw new Error(
@@ -256,21 +292,18 @@ export const siteRouter = createTRPCRouter({
 async function fetchGitHubProjectFilePaths({
   gh_repository,
   gh_branch,
+  access_token,
 }: {
   gh_repository: string;
   gh_branch: string;
+  access_token: string;
 }) {
   let paths: string[] = [];
 
   try {
-    const response = await fetch(
-      `https://api.github.com/repos/${gh_repository}/git/trees/${gh_branch}?recursive=1`,
-      {
-        headers: {
-          "X-GitHub-Api-Version": "2022-11-28",
-          Accept: "application/vnd.github+json",
-        },
-      },
+    const response = await githubFetch(
+      `/repos/${gh_repository}/git/trees/${gh_branch}?recursive=1`,
+      access_token,
     );
 
     if (!response.ok) {
@@ -300,22 +333,19 @@ async function fetchGitHubFile({
   gh_repository,
   gh_branch,
   slug,
+  access_token,
 }: {
   gh_repository: string;
   gh_branch: string;
   slug: string;
+  access_token: string;
 }) {
   let content: string | null = null;
 
   try {
-    const response = await fetch(
-      `https://api.github.com/repos/${gh_repository}/contents/${slug}?ref=${gh_branch}`,
-      {
-        headers: {
-          "X-GitHub-Api-Version": "2022-11-28",
-          Accept: "application/vnd.github+json",
-        },
-      },
+    const response = await githubFetch(
+      `/repos/${gh_repository}/contents/${slug}?ref=${gh_branch}`,
+      access_token,
     );
 
     if (!response.ok) {
