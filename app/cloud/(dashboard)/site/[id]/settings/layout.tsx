@@ -6,54 +6,57 @@ import SiteSettingsNav from "./nav";
 import { env } from "@/env.mjs";
 
 export default async function SiteAnalyticsLayout({
-    params,
-    children,
+  params,
+  children,
 }: {
-    params: { id: string };
-    children: ReactNode;
+  params: { id: string };
+  children: ReactNode;
 }) {
-    const session = await getSession();
-    if (!session) {
-        redirect("/login");
-    }
+  const session = await getSession();
+  if (!session) {
+    redirect("/login");
+  }
 
-    const data = await prisma.site.findUnique({
-        where: {
-            id: decodeURIComponent(params.id),
-        },
-        include: {
-            user: true,
-        },
-    });
+  const data = await prisma.site.findUnique({
+    where: {
+      id: decodeURIComponent(params.id),
+    },
+    include: {
+      user: true,
+    },
+  });
 
-    if (!data || data.userId !== session.user.id) {
-        notFound();
-    }
+  if (!data || data.userId !== session.user.id) {
+    notFound();
+  }
 
-    const url = `${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${data.user!.gh_username}/${data.projectName
-        }`;
+  const url = `${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${data.user!.gh_username}/${
+    data.projectName
+  }`;
 
-    return (
-        <>
-            <div className="flex flex-col items-center space-x-4 space-y-2 sm:flex-row sm:space-y-0">
-                <h1 className="font-cal text-xl font-bold dark:text-white sm:text-3xl">
-                    Settings for {data.projectName}
-                </h1>
-                <a
-                    href={
-                        env.NEXT_PUBLIC_VERCEL_ENV
-                            ? `https://${url}`
-                            : `http://localhost:3000/@${data.user!.gh_username}/${data.projectName}`
-                    }
-                    target="_blank"
-                    rel="noreferrer"
-                    className="truncate rounded-md bg-stone-100 px-2 py-1 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
-                >
-                    {url} ↗
-                </a>
-            </div>
-            <SiteSettingsNav />
-            {children}
-        </>
-    );
+  return (
+    <>
+      <div className="flex flex-col items-center space-x-4 space-y-2 sm:flex-row sm:space-y-0">
+        <h1 className="font-cal text-xl font-bold dark:text-white sm:text-3xl">
+          Settings for {data.projectName}
+        </h1>
+        <a
+          href={
+            env.NEXT_PUBLIC_VERCEL_ENV
+              ? `https://${url}`
+              : `http://localhost:3000/@${data.user!.gh_username}/${
+                  data.projectName
+                }`
+          }
+          target="_blank"
+          rel="noreferrer"
+          className="truncate rounded-md bg-stone-100 px-2 py-1 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
+        >
+          {url} ↗
+        </a>
+      </div>
+      <SiteSettingsNav />
+      {children}
+    </>
+  );
 }

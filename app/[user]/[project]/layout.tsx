@@ -75,10 +75,7 @@ export default async function SiteLayout({
   }
 
   // Optional: Redirect to custom domain if it exists
-  if (
-    data.customDomain &&
-    env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS === "true"
-  ) {
+  if (data.customDomain && env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS === "true") {
     return redirect(`https://${data.customDomain}`);
   }
 

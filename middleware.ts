@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { env } from "@/env.mjs";
 
-
 export const config = {
   matcher: [
     /*
@@ -34,8 +33,9 @@ export default async function middleware(req: NextRequest) {
 
   const searchParams = req.nextUrl.searchParams.toString();
   // Get the pathname of the request (e.g. /, /about, /blog/first-post)
-  const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""
-    }`;
+  const path = `${url.pathname}${
+    searchParams.length > 0 ? `?${searchParams}` : ""
+  }`;
 
   // rewrites for cloud pages
   if (hostname == `cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
@@ -76,7 +76,3 @@ export default async function middleware(req: NextRequest) {
 
   return NextResponse.rewrite(new URL(`/${hostname}${path}`, req.url));
 }
-
-
-
-
