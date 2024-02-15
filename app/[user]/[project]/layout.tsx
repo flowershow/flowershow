@@ -12,11 +12,12 @@ import { api } from "@/trpc/server";
 export async function generateMetadata({
   params,
 }: {
-  params: { domain: string };
+  params: { user: string; project: string };
 }): Promise<Metadata | null> {
-  const domain = decodeURIComponent(params.domain);
-  const data = api.site.getByDomain.query({
-    domain,
+  const project = decodeURIComponent(params.project);
+  const data = api.site.get.query({
+    gh_username: params.user,
+    projectName: project,
   });
 
   if (!data) {
@@ -61,12 +62,12 @@ export default async function SiteLayout({
   params,
   children,
 }: {
-  params: { domain: string };
+  params: { user: string; project: string };
   children: ReactNode;
 }) {
-  const domain = decodeURIComponent(params.domain);
-  const data = await api.site.getByDomain.query({
-    domain,
+  const data = await api.site.get.query({
+    gh_username: params.user,
+    projectName: params.project,
   });
 
   if (!data) {
@@ -75,7 +76,6 @@ export default async function SiteLayout({
 
   // Optional: Redirect to custom domain if it exists
   if (
-    domain.endsWith(`.${env.NEXT_PUBLIC_ROOT_DOMAIN}`) &&
     data.customDomain &&
     env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS === "true"
   ) {

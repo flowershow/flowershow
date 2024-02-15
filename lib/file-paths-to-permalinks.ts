@@ -2,17 +2,23 @@ export const filePathsToPermalinks = ({
   filePaths,
   ignorePatterns = [/\.gitignore/],
   ghRawUrl,
+  siteUrl,
 }: {
   filePaths: string[];
   ignorePatterns?: Array<RegExp>;
   ghRawUrl?: string;
+  siteUrl?: string;
 }) => {
   return filePaths
     .filter((file) => !ignorePatterns.some((pattern) => file.match(pattern)))
-    .map((file) => pathToPermalinkFunc(file, ghRawUrl));
+    .map((file) => pathToPermalinkFunc(file, ghRawUrl, siteUrl));
 };
 
-const pathToPermalinkFunc = (filePath: string, ghRawUrl?: string) => {
+const pathToPermalinkFunc = (
+  filePath: string,
+  ghRawUrl?: string,
+  siteUrl?: string,
+) => {
   let permalink = filePath
     .replace(/\.(mdx|md)/, "")
     .replace(/(\/)?index$/, "") // remove index from the end of the file path
@@ -22,5 +28,5 @@ const pathToPermalinkFunc = (filePath: string, ghRawUrl?: string) => {
     permalink = ghRawUrl ? `https://${ghRawUrl}/${permalink}` : permalink;
     return permalink;
   }
-  return permalink.length > 1 ? `/${permalink}` : "/";
+  return permalink.length > 1 ? `/@${siteUrl}/${permalink}` : `@${siteUrl}/`;
 };

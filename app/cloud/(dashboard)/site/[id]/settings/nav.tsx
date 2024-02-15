@@ -15,7 +15,8 @@ export default function SiteSettingsNav() {
       segment: null,
     },
     {
-      name: "Domains",
+      name: "Other",
+      // TODO: change this to settings/other
       href: `/site/${id}/settings/domains`,
       segment: "domains",
     },

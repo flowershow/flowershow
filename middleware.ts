@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { env } from "@/env.mjs";
 
+
 export const config = {
   matcher: [
     /*
@@ -33,9 +34,8 @@ export default async function middleware(req: NextRequest) {
 
   const searchParams = req.nextUrl.searchParams.toString();
   // Get the pathname of the request (e.g. /, /about, /blog/first-post)
-  const path = `${url.pathname}${
-    searchParams.length > 0 ? `?${searchParams}` : ""
-  }`;
+  const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""
+    }`;
 
   // rewrites for cloud pages
   if (hostname == `cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
@@ -47,34 +47,36 @@ export default async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/", req.url));
     }
     return NextResponse.rewrite(
+      // TODO temporarily direct users directly to /sites instead of dashboard home page
       new URL(`/cloud${path === "/" ? "/sites" : path}`, req.url),
     );
   }
 
-  // TODO temporary rewrite dev subdomain to home page
+  // // rewrite root application to `/home` folder
+  // if (hostname === env.NEXT_PUBLIC_ROOT_DOMAIN) {
+  //   return NextResponse.rewrite(
+  //     new URL(`/home${path === "/" ? "" : path}`, req.url),
+  //   );
+  // }
+
+  // TODO temporary rewrite dev subdomain to `/home` folder
   if (hostname === `dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
     return NextResponse.rewrite(
       new URL(`/home${path === "/" ? "" : path}`, req.url),
     );
   }
 
-  // // special case for `vercel.pub` domain
-  // if (hostname === "vercel.pub") {
-  //   return NextResponse.redirect(
-  //     "https://vercel.com/blog/platforms-starter-kit",
-  //   );
-  // }
+  // if path matches /@{username}/{project}/{restofpath} rewrite to /{username}/{project}/{restofpath}}
+  const match = path.match(/^\/@([^/]+)\/([^/]+)(.*)/);
+  if (match) {
+    return NextResponse.rewrite(
+      new URL(`/${match[1]}/${match[2]}${match[3]}`, req.url),
+    );
+  }
 
-  // // rewrite root application to `/home` folder
-  // if (
-  //   hostname === "localhost:3000" ||
-  //   hostname === env.NEXT_PUBLIC_ROOT_DOMAIN
-  // ) {
-  //   return NextResponse.rewrite(
-  //     new URL(`/home${path === "/" ? "" : path}`, req.url),
-  //   );
-  // }
-
-  // rewrite everything else to `/[domain]/[slug] dynamic route
   return NextResponse.rewrite(new URL(`/${hostname}${path}`, req.url));
 }
+
+
+
+

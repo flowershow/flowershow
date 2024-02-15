@@ -7,7 +7,6 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "@/server/api/trpc";
-import { env } from "@/env.mjs";
 import { filePathsToPermalinks } from "@/lib/file-paths-to-permalinks";
 import { githubFetch } from "../lib/github";
 
@@ -25,18 +24,18 @@ export const siteRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       // generate random name
-      let randomSudomain: string;
+      let randomProjectName: string;
       do {
-        randomSudomain = randomSlug();
+        randomProjectName = randomSlug();
       } while (
         await ctx.db.site.findFirst({
-          where: { subdomain: randomSudomain },
+          where: { subdomain: randomProjectName },
         })
       );
 
       return ctx.db.site.create({
         data: {
-          subdomain: randomSudomain,
+          projectName: randomProjectName,
           gh_repository: input.gh_repository,
           gh_scope: input.gh_scope,
           gh_branch: input.gh_branch,
@@ -106,46 +105,47 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
-  getByDomain: publicProcedure
-    .input(z.object({ domain: z.string().min(1) }))
+  get: publicProcedure
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+      }),
+    )
     .query(async ({ ctx, input }) => {
-      const subdomain = input.domain.endsWith(`.${env.NEXT_PUBLIC_ROOT_DOMAIN}`)
-        ? input.domain.replace(`.${env.NEXT_PUBLIC_ROOT_DOMAIN}`, "")
-        : null;
-
       return await unstable_cache(
         async () => {
           return ctx.db.site.findFirst({
             where: {
-              OR: [
-                { subdomain: subdomain ?? undefined },
-                { customDomain: input.domain },
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
               ],
             },
           });
         },
-        [`${input.domain}-metadata`],
+        [`${input.gh_username}-${input.projectName}-metadata`],
         {
           revalidate: 900, // 15 minutes
-          tags: [`${input.domain}-metadata`],
+          tags: [`${input.gh_username}-${input.projectName}-metadata`],
         },
       )();
     }),
   getSitePermalinks: publicProcedure
-    .input(z.object({ domain: z.string().min(1) }))
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+      }),
+    )
     .query(async ({ ctx, input }) => {
-      const subdomain = input.domain.endsWith(`.${env.NEXT_PUBLIC_ROOT_DOMAIN}`)
-        ? input.domain.replace(`.${env.NEXT_PUBLIC_ROOT_DOMAIN}`, "")
-        : null;
-
       return await unstable_cache(
         async () => {
-          // find site by subdomain or custom domain
           const site = await ctx.db.site.findFirst({
             where: {
-              OR: [
-                { subdomain: subdomain ?? undefined },
-                { customDomain: input.domain },
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
               ],
             },
             include: {
@@ -175,35 +175,40 @@ export const siteRouter = createTRPCRouter({
           });
           // TODO temporary solution for resolving paths to embedded images
           const ghRawUrl = `raw.githubusercontent.com/${gh_repository}/${gh_branch}`;
+          // TODO temporary solution for relative URLs
+          const siteUrl = `${input.gh_username}/${input.projectName}`;
           const permalinks = filePathsToPermalinks({
             filePaths,
             ghRawUrl,
+            siteUrl: siteUrl,
           });
 
           return permalinks;
         },
-        [`${input.domain}-permalinks`],
+        [`${input.gh_username}-${input.projectName}-permalinks`],
         {
           revalidate: 1, // 15 minutes
-          tags: [`${input.domain}-permalinks`],
+          tags: [`${input.gh_username}-${input.projectName}-permalinks`],
         },
       )();
     }),
   getPageContent: publicProcedure
-    .input(z.object({ domain: z.string().min(1), slug: z.string() }))
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+        slug: z.string(),
+      }),
+    )
     .query(async ({ ctx, input }) => {
-      const subdomain = input.domain.endsWith(`.${env.NEXT_PUBLIC_ROOT_DOMAIN}`)
-        ? input.domain.replace(`.${env.NEXT_PUBLIC_ROOT_DOMAIN}`, "")
-        : null;
-
       // return await unstable_cache(
       //   async () => {
       // find site by subdomain or custom domain
       const site = await ctx.db.site.findFirst({
         where: {
-          OR: [
-            { subdomain: subdomain ?? undefined },
-            { customDomain: input.domain },
+          AND: [
+            { projectName: input.projectName },
+            { user: { gh_username: input.gh_username } },
           ],
         },
         include: {

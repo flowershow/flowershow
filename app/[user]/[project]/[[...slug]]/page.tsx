@@ -77,20 +77,18 @@ import parse from "@/lib/markdown";
  *
  *     return allPaths;
  * } */
-
 export default async function SitePage({
   params,
 }: {
-  params: { domain: string; slug: string };
+  params: { user: string; project: string; slug: string };
 }) {
-  const domain = decodeURIComponent(params.domain);
   const slug = decodeURIComponent(params.slug);
-
   let mdString;
 
   try {
     mdString = await api.site.getPageContent.query({
-      domain,
+      gh_username: params.user,
+      projectName: params.project,
       slug: slug !== "undefined" ? slug.split(",").join("/") : "",
     });
   } catch (error) {
@@ -106,12 +104,14 @@ export default async function SitePage({
       </div>
     );
   }
-
   if (!mdString) {
     notFound();
   }
-
-  const permalinks = (await api.site.getSitePermalinks.query({ domain })) ?? [];
+  const permalinks =
+    (await api.site.getSitePermalinks.query({
+      gh_username: params.user,
+      projectName: params.project,
+    })) ?? [];
 
   const { mdxSource, frontMatter } = await parse(
     mdString,
@@ -121,8 +121,9 @@ export default async function SitePage({
   );
 
   // TODO temporary solution for fetching files from github
-  const { gh_repository, gh_branch } = (await api.site.getByDomain.query({
-    domain,
+  const { gh_repository, gh_branch } = (await api.site.get.query({
+    gh_username: params.user,
+    projectName: params.project,
   }))!;
 
   return (
