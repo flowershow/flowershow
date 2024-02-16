@@ -56,7 +56,7 @@ export default function MDX({ source, frontMatter, gh_repository, gh_branch }) {
       );
     }
 
-    const Component = layouts[frontMatter.layout || "docs"];
+    const Component = layouts[frontMatter.layout || "story"];
     const authors = (frontMatter.authors || []).map((author) => ({
       name: author,
       avatar: "/avatarplaceholder.png",
@@ -69,7 +69,7 @@ export default function MDX({ source, frontMatter, gh_repository, gh_branch }) {
   };
 
   return (
-    <article id="mdxpage" suppressHydrationWarning>
+    <article id="mdxpage" className="mt-20 pb-20" suppressHydrationWarning>
       <Layout>
         <MDXRemote {...source} components={components} />
       </Layout>
