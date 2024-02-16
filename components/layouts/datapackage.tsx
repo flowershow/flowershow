@@ -164,6 +164,7 @@ export const DataPackageLayout: React.FC<Props> = ({
                     <a
                       target="_blank"
                       href={`https://github.com/${gh_repository}/blob/${gh_branch}/${r.path}`}
+                      className="hover:text-[#6366F1]"
                     >
                       {r.path}
                     </a>
