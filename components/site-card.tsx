@@ -11,7 +11,7 @@ export default function SiteCard({
   data: Site;
   username: string;
 }) {
-  const url = `${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${data.projectName}`;
+  const url = `dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${data.projectName}`;
 
   return (
     <div className="relative rounded-lg border border-stone-200 pb-10 shadow-md transition-all hover:shadow-xl dark:border-stone-700 dark:hover:border-white">
@@ -50,7 +50,7 @@ export default function SiteCard({
           href={
             env.NEXT_PUBLIC_VERCEL_ENV
               ? `https://${url}`
-              : `http://localhost:3000/@${username}/${data.projectName}`
+              : `http://dev.localhost:3000/@${username}/${data.projectName}`
           }
           target="_blank"
           rel="noreferrer"

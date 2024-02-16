@@ -30,7 +30,7 @@ export default async function SiteAnalyticsLayout({
     notFound();
   }
 
-  const url = `${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${data.user!.gh_username}/${
+  const url = `dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${data.user!.gh_username}/${
     data.projectName
   }`;
 
@@ -44,7 +44,7 @@ export default async function SiteAnalyticsLayout({
           href={
             env.NEXT_PUBLIC_VERCEL_ENV
               ? `https://${url}`
-              : `http://localhost:3000/@${data.user!.gh_username}/${
+              : `http://dev.localhost:3000/@${data.user!.gh_username}/${
                   data.projectName
                 }`
           }

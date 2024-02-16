@@ -61,16 +61,15 @@ export default async function middleware(req: NextRequest) {
 
   // TODO temporary rewrite dev subdomain to `/home` folder
   if (hostname === `dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
+    // if path matches /@{username}/{project}/{restofpath} rewrite to /{username}/{project}/{restofpath}}
+    const match = path.match(/^\/@([^/]+)\/([^/]+)(.*)/);
+    if (match) {
+      return NextResponse.rewrite(
+        new URL(`/${match[1]}/${match[2]}${match[3]}`, req.url),
+      );
+    }
     return NextResponse.rewrite(
       new URL(`/home${path === "/" ? "" : path}`, req.url),
-    );
-  }
-
-  // if path matches /@{username}/{project}/{restofpath} rewrite to /{username}/{project}/{restofpath}}
-  const match = path.match(/^\/@([^/]+)\/([^/]+)(.*)/);
-  if (match) {
-    return NextResponse.rewrite(
-      new URL(`/${match[1]}/${match[2]}${match[3]}`, req.url),
     );
   }
 
