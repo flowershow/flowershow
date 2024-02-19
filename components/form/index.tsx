@@ -31,9 +31,17 @@ export default function Form({
     pattern?: string;
     disallowed?: string[];
   };
-  handleSubmit: any;
+  handleSubmit: ({
+    id,
+    key,
+    value,
+  }: {
+    id: string;
+    key: string;
+    value: string;
+  }) => Promise<void>;
 }) {
-  const { id } = useParams() as { id?: string };
+  const { id } = useParams() as { id: string };
   const router = useRouter();
   const { update } = useSession();
   return (
@@ -69,10 +77,13 @@ export default function Form({
         ) {
           return;
         }
-        handleSubmit(data, id, inputAttrs.name).then(async (res: any) => {
-          if (res.error) {
-            toast.error(res.error);
-          } else {
+        // TODO should be a better way to handle the type of the value
+        handleSubmit({
+          id,
+          key: inputAttrs.name,
+          value: data.get(inputAttrs.name)!.toString(),
+        })
+          .then(async () => {
             va.track(`Updated ${inputAttrs.name}`, id ? { id } : {});
             if (id) {
               router.refresh();
@@ -81,8 +92,10 @@ export default function Form({
               router.refresh();
             }
             toast.success(`Successfully updated ${inputAttrs.name}!`);
-          }
-        });
+          })
+          .catch((error) => {
+            toast.error(`Error: ${error.message}`);
+          });
       }}
       className="isolate rounded-lg border border-stone-200 bg-white dark:border-stone-700 dark:bg-black"
     >

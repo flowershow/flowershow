@@ -1,17 +1,27 @@
-import prisma from "@/server/db";
 import Form from "@/components/form";
-import { updateSite } from "@/lib/actions";
+import { api } from "@/trpc/server";
 
 export default async function SiteSettingsDomains({
   params,
 }: {
   params: { id: string };
 }) {
-  const data = await prisma.site.findUnique({
-    where: {
-      id: decodeURIComponent(params.id),
-    },
+  const data = await api.site.getById.query({
+    id: decodeURIComponent(params.id),
   });
+
+  const updateSite = async ({
+    id,
+    key,
+    value,
+  }: {
+    id: string;
+    key: string;
+    value: string;
+  }) => {
+    "use server";
+    await api.site.update.mutate({ id, key, value });
+  };
 
   return (
     <div className="flex flex-col space-y-6">
@@ -20,7 +30,7 @@ export default async function SiteSettingsDomains({
         description="The name for your site."
         helpText="The name must consist only of ASCII letters, digits, and the characters '-' and '_'. Please ensure a maximum of 32 characters is used."
         inputAttrs={{
-          name: "siteName",
+          name: "projectName",
           type: "text",
           defaultValue: data?.projectName!,
           placeholder: "site name",

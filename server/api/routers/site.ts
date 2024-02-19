@@ -9,6 +9,11 @@ import {
 } from "@/server/api/trpc";
 import { filePathsToPermalinks } from "@/lib/file-paths-to-permalinks";
 import { githubFetch } from "../lib/github";
+import {
+  addDomainToVercel,
+  removeDomainFromVercelProject,
+  validDomainRegex,
+} from "@/lib/domains";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -51,22 +56,130 @@ export const siteRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string().min(1),
-        gh_repository: z.string().min(1),
-        gh_scope: z.string().min(1),
-        gh_branch: z.string().min(1),
-        //...
+        key: z.string().min(1), // TODO better validation
+        value: z.string().min(1),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      return ctx.db.site.update({
-        where: { id: input.id },
-        data: {
-          gh_repository: input.gh_repository,
-          gh_scope: input.gh_scope,
-          gh_branch: input.gh_branch,
-          //...
-        },
+      const { id, key, value } = input;
+      console.log({ id, key, value });
+      let response;
+
+      // Handling custom domain changes
+      if (key === "customDomain") {
+        if (validDomainRegex.test(value)) {
+          // Handle adding/updating custom domain
+          response = await ctx.db.site.update({
+            where: { id },
+            data: { customDomain: value },
+          });
+          await Promise.all([
+            addDomainToVercel(value),
+            // Optional: add www subdomain as well and redirect to apex domain
+            addDomainToVercel(`www.${value} `),
+          ]);
+        } else if (value === "") {
+          // Handle removing custom domain
+          response = await ctx.db.site.update({
+            where: { id },
+            data: { customDomain: null },
+          });
+        }
+        // If the site had a different customDomain before, we need to remove it from Vercel
+        const site = await ctx.db.site.findUnique({ where: { id } });
+        if (site && site.customDomain && site.customDomain !== value) {
+          await removeDomainFromVercelProject(site.customDomain);
+          /* Optional: remove domain from Vercel team
+
+          // first, we need to check if the apex domain is being used by other sites
+          const apexDomain = getApexDomain(`https://${site.customDomain}`);
+          const domainCount = await ctx.db.site.count({
+            where: {
+              OR: [
+                {
+                  customDomain: apexDomain,
+                },
+                {
+                  customDomain: {
+                    endsWith: `.${apexDomain}`,
+                  },
+                },
+              ],
+            },
+          });
+
+          // if the apex domain is being used by other sites
+          // we should only remove it from our Vercel project
+          if (domainCount >= 1) {
+            await removeDomainFromVercelProject(site.customDomain);
+          } else {
+            // this is the only site using this apex domain
+            // so we can remove it entirely from our Vercel team
+            await removeDomainFromVercelTeam(
+              site.customDomain
+            );
+          }
+
+          */
+        }
+      }
+
+      // Handle other keys like 'image' or 'logo' here
+      // Example for 'image' or 'logo':
+      // else if (key === "image" || key === "logo") {
+      //   if (!env.BLOB_READ_WRITE_TOKEN) {
+      //     return {
+      //       error:
+      //         "Missing BLOB_READ_WRITE_TOKEN token. Note: Vercel Blob is currently in beta – please fill out this form for access: https://tally.so/r/nPDMNd",
+      //     };
+      //   }
+
+      //   const file = formData.get(key) as File;
+      //   const filename = `${nanoid()}.${file.type.split("/")[1]}`;
+
+      //   const { url } = await put(filename, file, {
+      //     access: "public",
+      //   });
+
+      //   const blurhash = key === "image" ? await getBlurDataURL(url) : null;
+
+      //   response = await prisma.site.update({
+      //     where: {
+      //       id: site.id,
+      //     },
+      //     data: {
+      //       [key]: url,
+      //       ...(blurhash && { imageBlurhash: blurhash }),
+      //     },
+      //   });
+      // }
+
+      // If the key is not one of the special cases handled above, we update it directly
+      // This assumes data contains other fields to update directly without special processing
+
+      response = await ctx.db.site.update({
+        where: { id },
+        data: { [key]: value },
       });
+
+      // if (error.code === "P2002") {
+      //   return {
+      //     error: `This ${key} is already taken`,
+      //   };
+      // }
+
+      // console.log(
+      //   "Updated site data! Revalidating tags: ",
+      //   `${site.subdomain}.${env.NEXT_PUBLIC_ROOT_DOMAIN}-metadata`,
+      //   `${site.customDomain}-metadata`,
+      // );
+      // await revalidateTag(
+      //   `${site.subdomain}.${env.NEXT_PUBLIC_ROOT_DOMAIN}-metadata`,
+      // );
+      // site.customDomain &&
+      //   (await revalidateTag(`${site.customDomain}-metadata`));
+
+      return response;
     }),
   delete: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))

@@ -1,5 +1,4 @@
 import Form from "@/components/form";
-import { updateSite } from "@/lib/actions";
 import DeleteSiteForm from "@/components/form/delete-site-form";
 import { api } from "@/trpc/server";
 import Link from "next/link";
@@ -13,6 +12,19 @@ export default async function SiteSettingsIndex({
   const data = await api.site.getById.query({
     id: decodeURIComponent(params.id),
   });
+
+  const updateSite = async ({
+    id,
+    key,
+    value,
+  }: {
+    id: string;
+    key: string;
+    value: string;
+  }) => {
+    "use server";
+    await api.site.update.mutate({ id, key, value });
+  };
 
   return (
     <div className="flex flex-col space-y-6">
@@ -77,7 +89,7 @@ export default async function SiteSettingsIndex({
         handleSubmit={updateSite}
       />
 
-      <DeleteSiteForm siteName={data?.subdomain!} />
+      <DeleteSiteForm siteName={data?.projectName!} />
     </div>
   );
 }
