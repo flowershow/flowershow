@@ -33,6 +33,10 @@ export const siteRouter = createTRPCRouter({
         })
       );
 
+      //     await revalidateTag(
+      //       `${subdomain}.${env.NEXT_PUBLIC_ROOT_DOMAIN}-metadata`,
+      //     );
+
       return ctx.db.site.create({
         data: {
           projectName: randomProjectName,
