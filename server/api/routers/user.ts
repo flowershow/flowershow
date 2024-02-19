@@ -75,8 +75,6 @@ export const userRouter = createTRPCRouter({
       } else {
         // https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-repositories-for-the-authenticated-user
         scopeReposUrl = `/user/repos`;
-        // NOTE: The GitHub API does not support filtering by both type and affiliation
-        // so we need to filter out the user's private repos manually (at least until we support private repos).
         urlParams.set("affiliation", "owner,collaborator");
       }
       do {
@@ -89,7 +87,6 @@ export const userRouter = createTRPCRouter({
         const repos = (await response.json()) as GitHubAPIRepository[];
         allRepos = allRepos.concat(
           repos
-            .filter((repo) => !repo.private)
             .map((repo) => ({
               id: repo.id,
               name: repo.name,
