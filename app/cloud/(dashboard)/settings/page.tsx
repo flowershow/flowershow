@@ -14,7 +14,7 @@ export default async function SettingsPage() {
         <h1 className="font-cal text-3xl font-bold dark:text-white">
           Settings
         </h1>
-        <Form
+        {/* <Form
           title="Name"
           description="Your name on this app."
           helpText="Please use 32 characters maximum."
@@ -38,7 +38,7 @@ export default async function SettingsPage() {
             placeholder: "panic@thedis.co",
           }}
           handleSubmit={editUser}
-        />
+        /> */}
       </div>
     </div>
   );
