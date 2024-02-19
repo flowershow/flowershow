@@ -57,7 +57,7 @@ export default function CreateSiteModal() {
       if (errorFetchingScopes.data?.code === "UNAUTHORIZED") {
         setTimeout(() => {
           signOut();
-        }, 3000);
+        }, 1500);
       }
     }
   }, [errorFetchingScopes]);
@@ -68,7 +68,7 @@ export default function CreateSiteModal() {
       if (errorFetchingRepos.data?.code === "UNAUTHORIZED") {
         setTimeout(() => {
           signOut();
-        }, 3000);
+        }, 1500);
       }
     }
   }, [errorFetchingRepos]);
