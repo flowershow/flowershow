@@ -1,12 +1,12 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
-import { githubFetch } from "../lib/github";
+import { githubFetch } from "@/lib/github";
 import type {
   GitHubScope,
   GitHubAPIOrganization,
   GitHubAPIRepository,
   GitHubRepository,
-} from "../lib/github";
+} from "@/lib/github";
 
 export const userRouter = createTRPCRouter({
   getGitHubScopes: protectedProcedure.query<GitHubScope[]>(async ({ ctx }) => {

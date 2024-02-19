@@ -8,7 +8,7 @@ import {
   publicProcedure,
 } from "@/server/api/trpc";
 import { filePathsToPermalinks } from "@/lib/file-paths-to-permalinks";
-import { githubFetch } from "../lib/github";
+import { githubFetch } from "@/lib/github";
 import {
   addDomainToVercel,
   removeDomainFromVercelProject,
