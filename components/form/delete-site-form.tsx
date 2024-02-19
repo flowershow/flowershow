@@ -5,28 +5,34 @@ import { cn } from "@/lib/utils";
 import { useParams, useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
-import { deleteSite } from "@/lib/actions";
 import va from "@vercel/analytics";
+import { api } from "@/trpc/react";
+import { signOut } from "next-auth/react";
 
 export default function DeleteSiteForm({ siteName }: { siteName: string }) {
   const { id } = useParams() as { id: string };
   const router = useRouter();
+
+  const deleteSiteMutation = api.site.delete.useMutation({
+    onSuccess: () => {
+      va.track("Deleted Site");
+      router.refresh();
+      router.push("/sites");
+      toast.success(`Successfully deleted site!`);
+    },
+    onError: (error) => {
+      toast.error(error.message);
+      if (error.data?.code === "UNAUTHORIZED") {
+        setTimeout(() => {
+          signOut();
+        }, 3000);
+      }
+    },
+  });
+
   return (
     <form
-      action={async (data: FormData) =>
-        deleteSite(data, id, "delete")
-          .then(async (res) => {
-            if (res.error) {
-              toast.error(res.error);
-            } else {
-              va.track("Deleted Site");
-              router.refresh();
-              router.push("/sites");
-              toast.success(`Successfully deleted site!`);
-            }
-          })
-          .catch((err: Error) => toast.error(err.message))
-      }
+      action={async () => deleteSiteMutation.mutate({ id })}
       className="rounded-lg border border-red-600 bg-white dark:bg-black"
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">

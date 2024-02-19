@@ -67,6 +67,11 @@ export const siteRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
+      // await revalidateTag(
+      //   `${site.subdomain}.${env.NEXT_PUBLIC_ROOT_DOMAIN}-metadata`,
+      // );
+      // response.customDomain &&
+      //   (await revalidateTag(`${site.customDomain}-metadata`));
       return ctx.db.site.delete({
         where: { id: input.id },
       });

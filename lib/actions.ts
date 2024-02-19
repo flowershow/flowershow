@@ -204,26 +204,6 @@ export const updateSite = withSiteAuth(
   },
 );
 
-export const deleteSite = withSiteAuth(async (_: FormData, site: Site) => {
-  try {
-    const response = await prisma.site.delete({
-      where: {
-        id: site.id,
-      },
-    });
-    await revalidateTag(
-      `${site.subdomain}.${env.NEXT_PUBLIC_ROOT_DOMAIN}-metadata`,
-    );
-    response.customDomain &&
-      (await revalidateTag(`${site.customDomain}-metadata`));
-    return response;
-  } catch (error: any) {
-    return {
-      error: error.message,
-    };
-  }
-});
-
 // export const getSiteFromPostId = async (postId: string) => {
 //   const post = await prisma.post.findUnique({
 //     where: {
