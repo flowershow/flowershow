@@ -11,7 +11,7 @@ export default async function OverviewSitesCTA() {
     return 0;
   }
 
-  const sites = await api.site.getUserSites.query();
+  const sites = await api.user.getSites.query();
 
   return sites.length > 0 ? (
     <Link

@@ -10,7 +10,7 @@ export default async function Sites({ limit }: { limit?: number }) {
     redirect("/login");
   }
 
-  const sites = await api.site.getUserSites.query({ limit });
+  const sites = await api.user.getSites.query({ limit });
   const username = session.user?.username;
 
   return sites.length > 0 ? (

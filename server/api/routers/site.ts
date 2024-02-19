@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { randomSlug } from "@/lib/random-slug";
-import { unstable_cache } from "next/cache";
+import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 import {
   createTRPCRouter,
@@ -38,9 +38,7 @@ export const siteRouter = createTRPCRouter({
         })
       );
 
-      //     await revalidateTag(
-      //       `${subdomain}.${env.NEXT_PUBLIC_ROOT_DOMAIN}-metadata`,
-      //     );
+      revalidateTag(`user-${ctx.session.user.id}-sites`);
 
       return ctx.db.site.create({
         data: {
@@ -62,8 +60,12 @@ export const siteRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { id, key, value } = input;
-      console.log({ id, key, value });
       let response;
+
+      const site = await ctx.db.site.findUnique({
+        where: { id },
+        include: { user: true },
+      });
 
       // Handling custom domain changes
       if (key === "customDomain") {
@@ -89,93 +91,31 @@ export const siteRouter = createTRPCRouter({
         const site = await ctx.db.site.findUnique({ where: { id } });
         if (site && site.customDomain && site.customDomain !== value) {
           await removeDomainFromVercelProject(site.customDomain);
-          /* Optional: remove domain from Vercel team
-
-          // first, we need to check if the apex domain is being used by other sites
-          const apexDomain = getApexDomain(`https://${site.customDomain}`);
-          const domainCount = await ctx.db.site.count({
-            where: {
-              OR: [
-                {
-                  customDomain: apexDomain,
-                },
-                {
-                  customDomain: {
-                    endsWith: `.${apexDomain}`,
-                  },
-                },
-              ],
-            },
-          });
-
-          // if the apex domain is being used by other sites
-          // we should only remove it from our Vercel project
-          if (domainCount >= 1) {
-            await removeDomainFromVercelProject(site.customDomain);
-          } else {
-            // this is the only site using this apex domain
-            // so we can remove it entirely from our Vercel team
-            await removeDomainFromVercelTeam(
-              site.customDomain
-            );
-          }
-
-          */
         }
+      } else {
+        // If the key is not one of the special cases handled above, we update it directly
+        response = await ctx.db.site.update({
+          where: { id },
+          data: { [key]: value },
+        });
       }
 
-      // Handle other keys like 'image' or 'logo' here
-      // Example for 'image' or 'logo':
-      // else if (key === "image" || key === "logo") {
-      //   if (!env.BLOB_READ_WRITE_TOKEN) {
-      //     return {
-      //       error:
-      //         "Missing BLOB_READ_WRITE_TOKEN token. Note: Vercel Blob is currently in beta – please fill out this form for access: https://tally.so/r/nPDMNd",
-      //     };
-      //   }
+      // revalidate list of sites in user dashboard
+      revalidateTag(`user-${ctx.session.user.id}-sites`);
+      // revalidate the site metadata
+      revalidateTag(`${site?.user?.gh_username}-${site?.projectName}-metadata`);
 
-      //   const file = formData.get(key) as File;
-      //   const filename = `${nanoid()}.${file.type.split("/")[1]}`;
+      if (key === "gh_branch") {
+        // revalidatee the site's permalinks
+        revalidateTag(
+          `${site?.user?.gh_username}-${site?.projectName}-permalinks`,
+        );
+        // revalidate all the pages' content
+        revalidateTag(
+          `${site?.user?.gh_username}-${site?.projectName}-page-content`,
+        );
+      }
 
-      //   const { url } = await put(filename, file, {
-      //     access: "public",
-      //   });
-
-      //   const blurhash = key === "image" ? await getBlurDataURL(url) : null;
-
-      //   response = await prisma.site.update({
-      //     where: {
-      //       id: site.id,
-      //     },
-      //     data: {
-      //       [key]: url,
-      //       ...(blurhash && { imageBlurhash: blurhash }),
-      //     },
-      //   });
-      // }
-
-      // If the key is not one of the special cases handled above, we update it directly
-      // This assumes data contains other fields to update directly without special processing
-
-      response = await ctx.db.site.update({
-        where: { id },
-        data: { [key]: value },
-      });
-
-      // if (error.code === "P2002") {
-      //   return {
-      //     error: `This ${key} is already taken`,
-      //   };
-      // }
-
-      // console.log(
-      //   "Updated site data! Revalidating tags: ",
-      //   `${site.subdomain}.${env.NEXT_PUBLIC_ROOT_DOMAIN}-metadata`,
-      //   `${site.customDomain}-metadata`,
-      // );
-      // await revalidateTag(
-      //   `${site.subdomain}.${env.NEXT_PUBLIC_ROOT_DOMAIN}-metadata`,
-      // );
       // site.customDomain &&
       //   (await revalidateTag(`${site.customDomain}-metadata`));
 
@@ -184,48 +124,33 @@ export const siteRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      // await revalidateTag(
-      //   `${site.subdomain}.${env.NEXT_PUBLIC_ROOT_DOMAIN}-metadata`,
-      // );
-      // response.customDomain &&
-      //   (await revalidateTag(`${site.customDomain}-metadata`));
-      return ctx.db.site.delete({
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.id },
+        include: {
+          user: true,
+        },
+      });
+
+      const response = ctx.db.site.delete({
         where: { id: input.id },
       });
+      // revalidate list of sites in user dashboard
+      revalidateTag(`user-${ctx.session.user.id}-sites`);
+      // revalidate the site metadata
+      revalidateTag(`${site?.user?.gh_username}-${site?.projectName}-metadata`);
+
+      // response.customDomain &&
+      //   (await revalidateTag(`${site.customDomain}-metadata`));
+
+      return response;
     }),
-  getUserSites: protectedProcedure
-    .input(z.object({ limit: z.number().min(1).optional() }).optional())
-    .query(({ ctx, input }) => {
-      return ctx.db.site.findMany({
-        where: { userId: ctx.session.user.id },
-        take: input?.limit,
-      });
-    }),
-  // PUBLIC
-  // getAllDomains: publicProcedure
-  //   .query(({ ctx }) => {
-  //     return ctx.db.site.findMany({
-  //       select: {
-  //         subdomain: true,
-  //         customDomain: true,
-  //       },
-  //     });
-  //   }),
   getById: publicProcedure
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      return await unstable_cache(
-        async () => {
-          return await ctx.db.site.findFirst({
-            where: { id: input.id },
-          });
-        },
-        [`${input.id}-metadata`],
-        {
-          revalidate: 900, // 15 minutes
-          tags: [`${input.id}-metadata`],
-        },
-      )();
+      // don't cache this, it's used in the user dashboard
+      return await ctx.db.site.findFirst({
+        where: { id: input.id },
+      });
     }),
   get: publicProcedure
     .input(
@@ -248,7 +173,7 @@ export const siteRouter = createTRPCRouter({
         },
         [`${input.gh_username}-${input.projectName}-metadata`],
         {
-          revalidate: 900, // 15 minutes
+          revalidate: 60, // 1 minute
           tags: [`${input.gh_username}-${input.projectName}-metadata`],
         },
       )();
@@ -261,6 +186,7 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      // TODO should we only cache the GitHub API call? Or both? Or only the whole procedure?
       return await unstable_cache(
         async () => {
           const site = await ctx.db.site.findFirst({
@@ -309,7 +235,7 @@ export const siteRouter = createTRPCRouter({
         },
         [`${input.gh_username}-${input.projectName}-permalinks`],
         {
-          revalidate: 1, // 15 minutes
+          revalidate: 60, // 1 minute
           tags: [`${input.gh_username}-${input.projectName}-permalinks`],
         },
       )();
@@ -323,96 +249,98 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      // return await unstable_cache(
-      //   async () => {
-      // find site by subdomain or custom domain
-      const site = await ctx.db.site.findFirst({
-        where: {
-          AND: [
-            { projectName: input.projectName },
-            { user: { gh_username: input.gh_username } },
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
+              ],
+            },
+            include: {
+              user: {
+                include: {
+                  accounts: true,
+                },
+              },
+            },
+          });
+
+          if (!site) return null;
+
+          const { gh_repository, gh_branch } = site;
+          const access_token = site.user?.accounts[0]?.access_token; // TODO ? adjust prisma schema to 1:1 relationship between user and account, as we only support GitHub for now
+
+          if (!access_token) {
+            throw new Error(
+              `No access token found for user ${site.user?.id} on site ${site.id}`,
+            );
+          }
+
+          let content: string | null = null;
+
+          // if slug is empty, fetch index.md or README.md
+          if (input.slug === "") {
+            try {
+              // fetch index.md
+              content = await fetchGitHubFile({
+                gh_repository,
+                gh_branch,
+                slug: "index.md",
+                access_token,
+              });
+            } catch (error) {
+              try {
+                // fetch README.md
+                content = await fetchGitHubFile({
+                  gh_repository,
+                  gh_branch,
+                  slug: "README.md",
+                  access_token,
+                });
+              } catch (error) {
+                throw new Error(
+                  `Could not read ${gh_repository}/index.md or ${gh_repository}/README.md on branch ${gh_branch} from GitHub: ${error}`,
+                );
+              }
+            }
+          } else {
+            // fetch [slug].md or [slug]/index.md
+            try {
+              content = await fetchGitHubFile({
+                gh_repository,
+                gh_branch,
+                slug: `${input.slug}.md`,
+                access_token,
+              });
+            } catch (error) {
+              try {
+                content = await fetchGitHubFile({
+                  gh_repository,
+                  gh_branch,
+                  slug: `${input.slug}/index.md`,
+                  access_token,
+                });
+              } catch (error) {
+                throw new Error(
+                  `Could not read ${gh_repository}/${input.slug}.md or ${gh_repository}/${input.slug}/index.md on branch ${gh_branch} from GitHub: ${error}`,
+                );
+              }
+            }
+          }
+
+          return content;
+        },
+        [`${input.gh_username}-${input.projectName}-${input.slug}-content`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [
+            `${input.gh_username}-${input.projectName}-${input.slug}-content`,
+            `${input.gh_username}-${input.projectName}-page-content`,
           ],
         },
-        include: {
-          user: {
-            include: {
-              accounts: true,
-            },
-          },
-        },
-      });
-
-      if (!site) return null;
-
-      const { gh_repository, gh_branch } = site;
-      const access_token = site.user?.accounts[0]?.access_token; // TODO ? adjust prisma schema to 1:1 relationship between user and account, as we only support GitHub for now
-
-      if (!access_token) {
-        throw new Error(
-          `No access token found for user ${site.user?.id} on site ${site.id}`,
-        );
-      }
-
-      let content: string | null = null;
-
-      // if slug is empty, fetch index.md or README.md
-      if (input.slug === "") {
-        try {
-          // fetch index.md
-          content = await fetchGitHubFile({
-            gh_repository,
-            gh_branch,
-            slug: "index.md",
-            access_token,
-          });
-        } catch (error) {
-          try {
-            // fetch README.md
-            content = await fetchGitHubFile({
-              gh_repository,
-              gh_branch,
-              slug: "README.md",
-              access_token,
-            });
-          } catch (error) {
-            throw new Error(
-              `Could not read ${gh_repository}/index.md or ${gh_repository}/README.md on branch ${gh_branch} from GitHub: ${error}`,
-            );
-          }
-        }
-      } else {
-        // fetch [slug].md or [slug]/index.md
-        try {
-          content = await fetchGitHubFile({
-            gh_repository,
-            gh_branch,
-            slug: `${input.slug}.md`,
-            access_token,
-          });
-        } catch (error) {
-          try {
-            content = await fetchGitHubFile({
-              gh_repository,
-              gh_branch,
-              slug: `${input.slug}/index.md`,
-              access_token,
-            });
-          } catch (error) {
-            throw new Error(
-              `Could not read ${gh_repository}/${input.slug}.md or ${gh_repository}/${input.slug}/index.md on branch ${gh_branch} from GitHub: ${error}`,
-            );
-          }
-        }
-      }
-
-      return content;
-      //   },
-      //   [`${input.domain}-${input.slug}`],
-      //   {
-      //     revalidate: 900, // 15 minutes
-      //     tags: [`${input.domain}-${input.slug}`],
-      //   },
-      // )();
+      )();
     }),
 });
 
@@ -431,13 +359,13 @@ async function fetchGitHubProjectFilePaths({
     const response = await githubFetch(
       `/repos/${gh_repository}/git/trees/${gh_branch}?recursive=1`,
       access_token,
+      {
+        next: {
+          revalidate: 60, // 1 minute
+          tags: [`${gh_repository}-${gh_branch}-tree`],
+        },
+      },
     );
-
-    if (!response.ok) {
-      throw new Error(
-        `Failed to fetch GitHub project paths: ${response.statusText}`,
-      );
-    }
 
     const responseJson = (await response.json()) as {
       tree: {
@@ -473,11 +401,13 @@ async function fetchGitHubFile({
     const response = await githubFetch(
       `/repos/${gh_repository}/contents/${slug}?ref=${gh_branch}`,
       access_token,
+      {
+        next: {
+          revalidate: 60, // 1 minute
+          tags: [`${gh_repository}-${gh_branch}-${slug}`],
+        },
+      },
     );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch GitHub file: ${response.statusText}`);
-    }
 
     const responseJson = (await response.json()) as {
       content: string;

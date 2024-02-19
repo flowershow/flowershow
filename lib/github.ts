@@ -11,9 +11,14 @@ const makeGitHubHeaders = (accessToken: string) => {
   };
 };
 
-export async function githubFetch(url: string, accessToken: string) {
+export async function githubFetch(
+  url: string,
+  accessToken: string,
+  options?: { next?: any; cache?: any },
+) {
   const response = await fetch(`${githubAPIBaseURL}${url}`, {
     headers: makeGitHubHeaders(accessToken),
+    ...options,
   });
   if (!response.ok) {
     const statusCode = response.status;
