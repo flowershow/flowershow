@@ -27,7 +27,6 @@ export const env = createEnv({
         ? z.string()
         : z.string().optional(),
     // Add ` on ID and SECRET if you want to make sure they're not empty
-    AUTH_GITHUB_ID: z.string(),
     AUTH_GITHUB_SECRET: z.string(),
     AUTH_BEARER_TOKEN: z.string().optional(), // TODO temp set to optional as not set directly on Vercel
     PROJECT_ID_VERCEL: z.string().optional(), // TODO temp set to optional as not set directly on Vercel
@@ -43,6 +42,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
+    NEXT_PUBLIC_AUTH_GITHUB_ID: z.string(),
     NEXT_PUBLIC_ROOT_DOMAIN: z.string(),
     // Vercel system env var
     // https://vercel.com/docs/projects/environment-variables/system-environment-variables
@@ -60,7 +60,7 @@ export const env = createEnv({
     POSTGRES_PRISMA_URL: process.env.POSTGRES_PRISMA_URL,
     POSTGRES_URL_NON_POOLING: process.env.POSTGRES_URL_NON_POOLING,
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-    AUTH_GITHUB_ID: process.env.AUTH_GITHUB_ID,
+    NEXT_PUBLIC_AUTH_GITHUB_ID: process.env.NEXT_PUBLIC_AUTH_GITHUB_ID,
     AUTH_GITHUB_SECRET: process.env.AUTH_GITHUB_SECRET,
     AUTH_BEARER_TOKEN: process.env.AUTH_BEARER_TOKEN,
     PROJECT_ID_VERCEL: process.env.PROJECT_ID_VERCEL,

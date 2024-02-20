@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { api } from "@/trpc/react";
 import { GithubIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
+import { env } from "@/env.mjs";
 
 export default function CreateSiteModal() {
   const router = useRouter();
@@ -169,6 +170,15 @@ export default function CreateSiteModal() {
                 </option>
               ))}
           </select>
+          <a
+            target="_blank"
+            rel="noreferrer"
+            href={`https://github.com/settings/connections/applications/${env.NEXT_PUBLIC_AUTH_GITHUB_ID}`}
+          >
+            <span className="flex items-center space-x-1 text-xs text-blue-500 hover:text-blue-800">
+              <span>Manage app access</span>
+            </span>
+          </a>
         </div>
 
         <div className="flex flex-col space-y-2">

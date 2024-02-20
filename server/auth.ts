@@ -9,7 +9,7 @@ const VERCEL_DEPLOYMENT = !!env.VERCEL_URL;
 export const authOptions: NextAuthOptions = {
   providers: [
     GitHubProvider({
-      clientId: env.AUTH_GITHUB_ID as string,
+      clientId: env.NEXT_PUBLIC_AUTH_GITHUB_ID as string,
       clientSecret: env.AUTH_GITHUB_SECRET as string,
       authorization: {
         params: {
