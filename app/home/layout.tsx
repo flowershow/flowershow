@@ -14,9 +14,9 @@ export default function HomeLayout({ children }: { children: ReactNode }) {
           links={config.navLinks}
           social={config.social}
         />
-        <div className="max-w-8xl mx-auto px-4 md:px-8">
-          <div className="mx-auto pt-8 lg:px-[16rem]">{children}</div>
+        {children}
 
+        <div className="max-w-8xl mx-auto px-4 md:px-8">
           <Footer links={config.navLinks} author={config.author} />
         </div>
       </div>

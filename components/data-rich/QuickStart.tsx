@@ -26,10 +26,10 @@ export function QuickStart() {
             className="flex flex-col-reverse lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-8"
           >
             <div className="mt-6 lg:col-span-5 lg:mt-0 xl:col-span-4">
-              <h3 className="text-lg font-medium text-gray-900">
+              <h3 className="text-lg font-bold text-[#8F56D7]">
                 {step.title}
               </h3>
-              <p className="mt-2 text-sm text-gray-500">{step.description}</p>
+              <p className="mt-2 text-gray-500">{step.description}</p>
             </div>
             <div className="flex-auto lg:col-span-7 xl:col-span-8">
               {step.snippets ? (
@@ -60,9 +60,9 @@ export function QuickStart() {
 const steps: Step[] = [
   {
     id: "1",
-    title: "Create some markdown files and push them to GitHub",
+    title: "1. CHOOSE YOUR REPO",
     description:
-      "You can create a new GitHub repository or use an existing one. Just make sure to set its visibility to `public`.",
+      "Create or update some markdown files and push them to GitHub. You can create a new GitHub repository or use an existing one. Just make sure to set its visibility to `public`.",
     snippets: [
       {
         file: "blog.md",
@@ -71,7 +71,6 @@ const steps: Step[] = [
 title: My Data-Rich Blog Post
 authors: [Jane Doe]
 date: "2023-11-30"
-layout: blog
 ---
 
 ## Welcome to My First Data-Rich Blog Post
@@ -83,8 +82,9 @@ This is my first blog post. I'm so excited to try publishing it with DataHub!
   },
   {
     id: "2",
-    title: "Enhance your content with some data visualizations",
-    description: "We support line charts, tables, maps, and more!",
+    title: "2. ADD VISUALS",
+    description:
+      "Enhance your content with some data visualizations. Easily add line charts, tables, maps, and more directly into your content.",
     snippets: [
       {
         file: "blog.md",
@@ -93,7 +93,6 @@ This is my first blog post. I'm so excited to try publishing it with DataHub!
 title: My Data-Rich Blog Post
 authors: [Jane Doe]
 date: "2023-11-30"
-layout: blog
 ---
 
 ## Welcome to My First Data-Rich Blog Post
@@ -116,9 +115,9 @@ This is my first blog post. I'm so excited to try publishing it with DataHub!
   },
   {
     id: "3",
-    title: "Publish with DataHub Cloud",
+    title: "3. PUBLISH & SHARE",
     description:
-      "Push your changes to GitHub, sign in to your DataHub Cloud and create a new site with your GitHub repository.",
+      "Push to GitHub, then use DataHub Cloud to bring your site to life instantly. Congrats, your repository is now a beautiful site that keeps your audience captivated!",
     imageSrc: "/example.png",
     imageAlt: "Example of a rendered blog post",
   },
