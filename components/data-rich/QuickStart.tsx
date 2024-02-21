@@ -26,9 +26,7 @@ export function QuickStart() {
             className="flex flex-col-reverse lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-8"
           >
             <div className="mt-6 lg:col-span-5 lg:mt-0 xl:col-span-4">
-              <h3 className="text-lg font-bold text-[#8F56D7]">
-                {step.title}
-              </h3>
+              <h3 className="text-lg font-bold text-[#8F56D7]">{step.title}</h3>
               <p className="mt-2 text-gray-500">{step.description}</p>
             </div>
             <div className="flex-auto lg:col-span-7 xl:col-span-8">

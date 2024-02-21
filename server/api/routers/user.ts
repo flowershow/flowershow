@@ -86,13 +86,12 @@ export const userRouter = createTRPCRouter({
         );
         const repos = (await response.json()) as GitHubAPIRepository[];
         allRepos = allRepos.concat(
-          repos
-            .map((repo) => ({
-              id: repo.id,
-              name: repo.name,
-              full_name: repo.full_name,
-              owner: repo.owner.login,
-            })),
+          repos.map((repo) => ({
+            id: repo.id,
+            name: repo.name,
+            full_name: repo.full_name,
+            owner: repo.owner.login,
+          })),
         );
 
         const linkHeader = response.headers.get("link");
