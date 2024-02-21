@@ -134,14 +134,15 @@ export const DataPackageLayout: React.FC<Props> = ({
         </table>
       </section>
       <section className="my-12">
-        <h2>Data Views</h2>
-        {views.map((_, i) => {
-          return (
-            <div className="mt-10" key={`visualization-${i}`}>
-              <FrictionlessView viewId={i} />
-            </div>
-          );
-        })}
+        {views && <h2>Data Views</h2>}
+        {views &&
+          views.map((_, i) => {
+            return (
+              <div className="mt-10" key={`visualization-${i}`}>
+                <FrictionlessView viewId={i} />
+              </div>
+            );
+          })}
       </section>
       <section className="my-12">
         <h2>Data files</h2>
