@@ -19,7 +19,7 @@ interface View {
 export const FrictionlessViewFactory = ({
   views,
   resources,
-  dataUrlBase,
+  dataUrlBase, // TODO temporary solution for relative paths
 }: {
   views: View[];
   resources: Resource[];

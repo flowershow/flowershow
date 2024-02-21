@@ -30,12 +30,12 @@ const components: any = {
   ...DataRichComponents,
 };
 
-export default function MDX({ source, frontMatter, gh_repository, gh_branch }) {
+export default function MDX({ source, frontMatter, dataUrlBase }) {
   if (frontMatter.datapackage) {
     components.FrictionlessView = FrictionlessViewFactory({
       views: frontMatter.datapackage.views,
       resources: frontMatter.datapackage.resources,
-      dataUrlBase: `https://raw.githubusercontent.com/${gh_repository}/${gh_branch}/`,
+      dataUrlBase,
     });
   }
 
@@ -48,8 +48,7 @@ export default function MDX({ source, frontMatter, gh_repository, gh_branch }) {
         <Component
           {...frontMatter}
           datapackage={frontMatter.datapackage}
-          gh_repository={gh_repository}
-          gh_branch={gh_branch}
+          dataUrlBase={dataUrlBase}
         >
           {children}
         </Component>

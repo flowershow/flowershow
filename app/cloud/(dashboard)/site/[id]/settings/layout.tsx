@@ -3,7 +3,7 @@ import { getSession } from "@/server/auth";
 import prisma from "@/server/db";
 import { notFound, redirect } from "next/navigation";
 import SiteSettingsNav from "./nav";
-import { env } from "@/env.mjs";
+import SiteSettingsHeader from "./header";
 
 export default async function SiteAnalyticsLayout({
   params,
@@ -17,7 +17,7 @@ export default async function SiteAnalyticsLayout({
     redirect("/login");
   }
 
-  const data = await prisma.site.findUnique({
+  const site = await prisma.site.findUnique({
     where: {
       id: decodeURIComponent(params.id),
     },
@@ -26,35 +26,13 @@ export default async function SiteAnalyticsLayout({
     },
   });
 
-  if (!data || data.userId !== session.user.id) {
+  if (!site || site.userId !== session.user.id) {
     notFound();
   }
 
-  const url = `dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${data.user!.gh_username}/${
-    data.projectName
-  }`;
-
   return (
     <>
-      <div className="flex flex-col items-center space-x-4 space-y-2 sm:flex-row sm:space-y-0">
-        <h1 className="font-cal text-xl font-bold dark:text-white sm:text-3xl">
-          Settings for {data.projectName}
-        </h1>
-        <a
-          href={
-            env.NEXT_PUBLIC_VERCEL_ENV
-              ? `https://${url}`
-              : `http://dev.localhost:3000/@${data.user!.gh_username}/${
-                  data.projectName
-                }`
-          }
-          target="_blank"
-          rel="noreferrer"
-          className="truncate rounded-md bg-stone-100 px-2 py-1 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
-        >
-          {url} ↗
-        </a>
-      </div>
+      <SiteSettingsHeader site={site} />
       <SiteSettingsNav />
       {children}
     </>

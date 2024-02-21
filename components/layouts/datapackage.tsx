@@ -2,19 +2,18 @@ import { isResourceWithPath, type DataPackage } from "./datapackage-types";
 import { FrictionlessViewFactory } from "@/components/frictionless-view";
 import { FlatUiTable } from "@portaljs/components";
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
+import { DocumentArrowDownIcon } from "@heroicons/react/24/outline";
 import prettyBytes from "pretty-bytes";
 
 interface Props extends React.PropsWithChildren<{}> {
   datapackage: DataPackage;
-  gh_repository: string; // TODO temporary solution to support relative paths
-  gh_branch: string; // TODO temporary solution to support relative paths
+  dataUrlBase: string;
 }
 
 export const DataPackageLayout: React.FC<Props> = ({
   children,
   datapackage,
-  gh_repository,
-  gh_branch,
+  dataUrlBase,
 }) => {
   const {
     title,
@@ -46,21 +45,13 @@ export const DataPackageLayout: React.FC<Props> = ({
   const FrictionlessView = FrictionlessViewFactory({
     views,
     resources,
-    // TODO temporary solution to support relative paths
-    dataUrlBase: `https://raw.githubusercontent.com/${gh_repository}/${gh_branch}/`,
+    dataUrlBase,
   });
 
   return (
     <article className="prose mx-auto mt-20 max-w-5xl px-12 pb-20 text-primary">
       <header>
         {title && <h1>{title}</h1>}
-        {/* <a
-                    className="font-semibold mb-4"
-                    target="_blank"
-                    href={`https://github.com/${gh_repository}/tree/${gh_branch}`}
-                >
-                    @{gh_repository}
-                </a> */}
         {description && (
           <>
             <p className="text-md">{description}</p>
@@ -164,10 +155,13 @@ export const DataPackageLayout: React.FC<Props> = ({
                   <td>
                     <a
                       target="_blank"
-                      href={`https://github.com/${gh_repository}/blob/${gh_branch}/${r.path}`}
+                      href={`${dataUrlBase}/${r.path}`}
                       className="hover:text-[#6366F1]"
                     >
-                      {r.path}
+                      <div className="flex items-center space-x-1 ">
+                        <span>{r.path}</span>
+                        <DocumentArrowDownIcon className="inline h-4 w-4" />
+                      </div>
                     </a>
                   </td>
                   <td>{r.title || r.name}</td>
@@ -186,9 +180,7 @@ export const DataPackageLayout: React.FC<Props> = ({
               <div key={`resource-preview-${r.name}`} className="mt-10">
                 <h3>{r.title || r.name || r.path}</h3>
                 {/* @ts-expect-error */}
-                <FlatUiTable
-                  url={`https://raw.githubusercontent.com/${gh_repository}/${gh_branch}/${r.path}`}
-                />
+                <FlatUiTable url={`${dataUrlBase}/${r.path}`} />
               </div>
             );
           })}

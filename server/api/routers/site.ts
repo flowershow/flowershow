@@ -1,6 +1,5 @@
+import { revalidateTag, unstable_cache } from "next/cache";
 import { z } from "zod";
-import { randomSlug } from "@/lib/random-slug";
-import { revalidatePath, revalidateTag, unstable_cache } from "next/cache";
 
 import {
   createTRPCRouter,
@@ -8,12 +7,31 @@ import {
   publicProcedure,
 } from "@/server/api/trpc";
 import { filePathsToPermalinks } from "@/lib/file-paths-to-permalinks";
-import { githubFetch } from "@/lib/github";
+import { randomSlug } from "@/lib/random-slug";
+import {
+  fetchGitHubRepoTree,
+  fetchGitHubFile,
+  checkIfBranchExists,
+} from "@/lib/github";
+import {
+  uploadContent,
+  uploadTree,
+  fetchTree,
+  deleteProject,
+  deleteContent,
+  fetchContent,
+} from "@/lib/content-store";
 import {
   addDomainToVercel,
   removeDomainFromVercelProject,
   validDomainRegex,
 } from "@/lib/domains";
+import {
+  isSupportedAssetExtension,
+  isSupportedExtension,
+  isSupportedMarkdownExtension,
+} from "@/lib/types";
+import { env } from "@/env.mjs";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -28,6 +46,19 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // check if branch exists
+      const branchExists = await checkIfBranchExists({
+        gh_repository: input.gh_repository,
+        gh_branch: input.gh_branch,
+        access_token: ctx.session.accessToken,
+      });
+
+      if (!branchExists) {
+        throw new Error(
+          `Branch ${input.gh_branch} does not exist in repository ${input.gh_repository}`,
+        );
+      }
+
       // generate random name
       let randomProjectName: string;
       do {
@@ -38,7 +69,7 @@ export const siteRouter = createTRPCRouter({
         })
       );
 
-      const response = ctx.db.site.create({
+      const site = await ctx.db.site.create({
         data: {
           projectName: randomProjectName,
           gh_repository: input.gh_repository,
@@ -48,9 +79,59 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      revalidateTag(`user-${ctx.session.user.id}-sites`);
+      // upload to content store
+      try {
+        // fetch GitHub repo tree
+        const tree = await fetchGitHubRepoTree({
+          gh_repository: input.gh_repository,
+          gh_branch: input.gh_branch,
+          access_token: ctx.session.accessToken,
+        });
+        // upload tree to content store
+        await uploadTree({
+          projectId: site.id,
+          branch: input.gh_branch,
+          tree,
+        });
+        // upload each file to content store
+        await Promise.all(
+          tree.tree.map(async (file) => {
+            // ignore directories
+            if (file.type === "tree") return;
+            // ignore unsupported file types
+            const [path, extension = ""] = file.path.split(".");
+            if (!isSupportedExtension(extension)) return;
+            // fetch file content from GitHub
+            const content = await fetchGitHubFile({
+              gh_repository: input.gh_repository,
+              gh_branch: input.gh_branch,
+              path: file.path,
+              access_token: ctx.session.accessToken,
+            });
 
-      return response;
+            await uploadContent({
+              projectId: site.id,
+              branch: input.gh_branch,
+              path: isSupportedMarkdownExtension(extension) ? path! : file.path, // TODO assertion
+              content,
+              extension,
+            });
+          }),
+        );
+
+        await ctx.db.site.update({
+          where: { id: site.id },
+          data: {
+            synced: true,
+            syncedAt: new Date(),
+          },
+        });
+      } catch (error) {
+        await ctx.db.site.delete({ where: { id: site.id } });
+        throw new Error(`Failed to upload site content: ${error}`);
+      }
+
+      return site;
     }),
   update: protectedProcedure
     .input(
@@ -102,8 +183,6 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      // revalidate list of sites in user dashboard
-      revalidateTag(`user-${ctx.session.user.id}-sites`);
       // revalidate the site metadata
       revalidateTag(`${site?.user?.gh_username}-${site?.projectName}-metadata`);
 
@@ -133,25 +212,238 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      const response = ctx.db.site.delete({
+      const response = await ctx.db.site.delete({
         where: { id: input.id },
       });
-      // revalidate list of sites in user dashboard
-      revalidateTag(`user-${ctx.session.user.id}-sites`);
+
+      // delete project from content store
+      try {
+        await deleteProject(input.id);
+      } catch (error) {
+        // TODO this should be a log only
+        throw new Error(`Failed to delete site content ${input.id}: ${error}`);
+      }
+
       // revalidate the site metadata
       revalidateTag(`${site?.user?.gh_username}-${site?.projectName}-metadata`);
 
-      // response.customDomain &&
-      //   (await revalidateTag(`${site.customDomain}-metadata`));
-
       return response;
     }),
-  getById: publicProcedure
+  sync: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findFirst({
+        where: {
+          id: input.id,
+        },
+        include: {
+          user: true,
+        },
+      });
+
+      const contentStoreTree = await fetchTree(site!.id, site!.gh_branch);
+
+      if (!contentStoreTree) {
+        // run the upload
+        // upload to content store
+        try {
+          // fetch GitHub repo tree
+          const tree = await fetchGitHubRepoTree({
+            gh_repository: site!.gh_repository,
+            gh_branch: site!.gh_branch,
+            access_token: ctx.session.accessToken,
+          });
+          // upload tree to content store
+          await uploadTree({
+            projectId: site!.id,
+            branch: site!.gh_branch,
+            tree,
+          });
+          // upload each file to content store
+          await Promise.all(
+            tree.tree.map(async (file) => {
+              // ignore directories
+              if (file.type === "tree") return;
+              // ignore unsupported file types
+              const [path, extension = ""] = file.path.split(".");
+              if (!isSupportedExtension(extension)) return;
+              // fetch file content from GitHub
+              const content = await fetchGitHubFile({
+                gh_repository: site!.gh_repository,
+                gh_branch: site!.gh_branch,
+                path: file.path,
+                access_token: ctx.session.accessToken,
+              });
+              await uploadContent({
+                projectId: site!.id,
+                branch: site!.gh_branch,
+                path: isSupportedMarkdownExtension(extension)
+                  ? path!
+                  : file.path, // TODO is there a better way to do this?
+                content,
+                extension,
+              });
+            }),
+          );
+
+          return await ctx.db.site.update({
+            where: { id: site!.id },
+            data: {
+              synced: true,
+              syncedAt: new Date(),
+            },
+          });
+        } catch (error) {
+          throw new Error(`Failed to upload site content: ${error}`);
+        }
+      }
+
+      const gitHubTree = await fetchGitHubRepoTree({
+        gh_repository: site!.gh_repository,
+        gh_branch: site!.gh_branch,
+        access_token: ctx.session.accessToken,
+      });
+
+      if (contentStoreTree.sha !== gitHubTree.sha) {
+        console.log("Trees are different, syncing content store with GitHub");
+        // The trees are different, so we need to sync the content store with GitHub
+        const contentStoreMap = new Map(
+          contentStoreTree.tree.map((file) => [file.path, file.sha]),
+        );
+        const gitHubMap = new Map(
+          gitHubTree.tree.map((file) => [file.path, file.sha]),
+        ); // make sure this matches your data structure
+
+        try {
+          // Check for new or updated files in GitHub
+          for (const [_path, sha] of gitHubMap.entries()) {
+            if (
+              !contentStoreMap.has(_path) ||
+              contentStoreMap.get(_path) !== sha
+            ) {
+              // This means the file is new or updated in GitHub
+              // Fetch and upload the file content to the content store
+              console.log(`Uploading ${_path} to content store`);
+              const [path, extension = ""] = _path.split(".");
+              // ignore unsupported file types
+              if (!isSupportedExtension(extension)) continue;
+              const content = await fetchGitHubFile({
+                gh_repository: site!.gh_repository,
+                gh_branch: site!.gh_branch,
+                path: _path,
+                access_token: ctx.session.accessToken,
+              });
+              await uploadContent({
+                projectId: site!.id,
+                branch: site!.gh_branch,
+                path: isSupportedAssetExtension(extension) ? _path : path!, // TODO assertion
+                content,
+                extension,
+              });
+            }
+          }
+
+          // Check for deleted files in GitHub
+          for (const path of contentStoreMap.keys()) {
+            if (!gitHubMap.has(path)) {
+              // The file exists in the content store but not in GitHub, so delete it from the content store
+              const [_path, extension = ""] = path.split(".");
+              console.log(`Deleting ${path} from content store`);
+              await deleteContent({
+                projectId: site!.id,
+                branch: site!.gh_branch,
+                path: isSupportedMarkdownExtension(extension) ? _path! : path, // TODO find a better way to do this
+              });
+            }
+          }
+          // If all goes well, update the content store tree to match the GitHub tree
+          console.log("Updating content store tree");
+          await uploadTree({
+            projectId: site!.id,
+            branch: site!.gh_branch,
+            tree: gitHubTree,
+          });
+          await ctx.db.site.update({
+            where: { id: site!.id },
+            data: {
+              synced: true,
+              syncedAt: new Date(),
+            },
+          });
+        } catch (error) {
+          await ctx.db.site.update({
+            where: { id: site!.id },
+            data: {
+              synced: false,
+            },
+          });
+          throw new Error(`Failed to sync site ${site!.id}: ${error}`);
+        }
+      }
+
+      // revalidate site status
+      revalidateTag(`${input.id}-status`);
+      // revalidate the site metadata
+      revalidateTag(`${site!.user?.gh_username}-${site!.projectName}-metadata`);
+      // revalidatee the site's permalinks
+      revalidateTag(
+        `${site!.user?.gh_username}-${site!.projectName}-permalinks`,
+      );
+      // revalidate all the pages' content
+      revalidateTag(
+        `${site!.user?.gh_username}-${site!.projectName}-page-content`,
+      );
+    }),
+  // checkSyncStatus: protectedProcedure
+  //   .input(
+  //     z.object({
+  //       id: z.string().min(1),
+  //     }),
+  //   )
+  //   .query(async ({ ctx, input }) => {
+  //     return await unstable_cache(
+  //       async () => {
+
+  //         const site = await ctx.db.site.findFirst({
+  //           where: {
+  //             id: input.id,
+  //           },
+  //         });
+
+  //         // get tree from content store
+  //         const contentStoreTree = await fetchTree(site!.id, site!.gh_branch);
+  //         // get tree from GitHub
+  //         const gitHubTree = await fetchGitHubRepoTree({
+  //           gh_repository: site!.gh_repository,
+  //           gh_branch: site!.gh_branch,
+  //           access_token: ctx.session.accessToken,
+  //         });
+
+  //         return {
+  //           synced: contentStoreTree.sha === gitHubTree.sha,
+  //           syncedAt: site!.syncedAt,
+  //         };
+  //       },
+  //       [`${input.id}-status`],
+  //       {
+  //         revalidate: 1, // 5 minutes
+  //         tags: [`${input.id}-status`],
+  //       },
+  //     )();
+  //   }),
+  getById: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       // don't cache this, it's used in the user dashboard
       return await ctx.db.site.findFirst({
         where: { id: input.id },
+        include: {
+          user: true,
+        },
       });
     }),
   get: publicProcedure
@@ -188,7 +480,6 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      // TODO should we only cache the GitHub API call? Or both? Or only the whole procedure?
       return await unstable_cache(
         async () => {
           const site = await ctx.db.site.findFirst({
@@ -198,39 +489,36 @@ export const siteRouter = createTRPCRouter({
                 { user: { gh_username: input.gh_username } },
               ],
             },
-            include: {
-              user: {
-                include: {
-                  accounts: true,
-                },
-              },
-            },
           });
 
           if (!site) return null;
 
-          const { gh_repository, gh_branch } = site;
-          const access_token = site.user?.accounts[0]?.access_token; // ? TODO adjust prisma schema to 1:1 relationship between user and account, as we only support GitHub for now
+          const tree = await fetchTree(site.id, site.gh_branch);
 
-          if (!access_token) {
-            throw new Error(
-              `No access token found for user ${site.user?.id} on site ${site.id}`,
-            );
-          }
+          if (!tree) return null;
 
-          const filePaths = await fetchGitHubProjectFilePaths({
-            gh_repository,
-            gh_branch,
-            access_token,
-          });
-          // TODO temporary solution for resolving paths to embedded images
-          const ghRawUrl = `raw.githubusercontent.com/${gh_repository}/${gh_branch}`;
-          // TODO temporary solution for relative URLs
-          const siteUrl = `${input.gh_username}/${input.projectName}`;
+          // TODO or should we generate it based on files uploaded to the content store?
+          // this way filtering is not needed
+          const filePaths = tree.tree
+            .filter((file) => {
+              if (file.type === "tree") return false;
+              // ignore unsupported file types
+              const [_, extension = ""] = file.path.split(".");
+              if (!isSupportedExtension(extension)) return false;
+              return true;
+            })
+            .map((file) => {
+              // ignore directories
+              // TODO revise this; filePathsToPermalinks expects a list of file paths with extension
+              return file.path;
+            });
+
+          const r2SiteRawUrl = `https://${env.R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`;
+          const siteBasePath = `/@${input.gh_username}/${input.projectName}`;
           const permalinks = filePathsToPermalinks({
             filePaths,
-            ghRawUrl,
-            siteUrl: siteUrl,
+            rawBaseUrl: r2SiteRawUrl,
+            pathPrefix: siteBasePath,
           });
 
           return permalinks;
@@ -260,73 +548,57 @@ export const siteRouter = createTRPCRouter({
                 { user: { gh_username: input.gh_username } },
               ],
             },
-            include: {
-              user: {
-                include: {
-                  accounts: true,
-                },
-              },
-            },
           });
 
           if (!site) return null;
 
-          const { gh_repository, gh_branch } = site;
-          const access_token = site.user?.accounts[0]?.access_token; // TODO ? adjust prisma schema to 1:1 relationship between user and account, as we only support GitHub for now
-
-          if (!access_token) {
-            throw new Error(
-              `No access token found for user ${site.user?.id} on site ${site.id}`,
-            );
-          }
-
           let content: string | null = null;
 
+          // TODO extract this to a function
           // if slug is empty, fetch index.md or README.md
           if (input.slug === "") {
             try {
-              // fetch index.md
-              content = await fetchGitHubFile({
-                gh_repository,
-                gh_branch,
-                slug: "index.md",
-                access_token,
-              });
+              // });
+              content =
+                (await fetchContent({
+                  projectId: site.id,
+                  branch: site.gh_branch,
+                  path: "index",
+                })) ?? null;
             } catch (error) {
               try {
-                // fetch README.md
-                content = await fetchGitHubFile({
-                  gh_repository,
-                  gh_branch,
-                  slug: "README.md",
-                  access_token,
-                });
+                content =
+                  (await fetchContent({
+                    projectId: site.id,
+                    branch: site.gh_branch,
+                    path: "README",
+                  })) ?? null;
               } catch (error) {
                 throw new Error(
-                  `Could not read ${gh_repository}/index.md or ${gh_repository}/README.md on branch ${gh_branch} from GitHub: ${error}`,
+                  `Could not read ${site.gh_repository}/index.md or ${site.gh_repository}/README.md on branch ${site.gh_branch} from GitHub: ${error}`,
                 );
               }
             }
           } else {
             // fetch [slug].md or [slug]/index.md
             try {
-              content = await fetchGitHubFile({
-                gh_repository,
-                gh_branch,
-                slug: `${input.slug}.md`,
-                access_token,
-              });
+              content =
+                (await fetchContent({
+                  projectId: site.id,
+                  branch: site.gh_branch,
+                  path: input.slug,
+                })) ?? null;
             } catch (error) {
               try {
-                content = await fetchGitHubFile({
-                  gh_repository,
-                  gh_branch,
-                  slug: `${input.slug}/index.md`,
-                  access_token,
-                });
+                content =
+                  (await fetchContent({
+                    projectId: site.id,
+                    branch: site.gh_branch,
+                    path: input.slug + "/index", // TODO also check for README.md
+                  })) ?? null;
               } catch (error) {
                 throw new Error(
-                  `Could not read ${gh_repository}/${input.slug}.md or ${gh_repository}/${input.slug}/index.md on branch ${gh_branch} from GitHub: ${error}`,
+                  `Could not read ${site.gh_repository}/${input.slug}.md or ${site.gh_repository}/${input.slug}/index.md on branch ${site.gh_branch} from GitHub: ${error}`,
                 );
               }
             }
@@ -345,82 +617,3 @@ export const siteRouter = createTRPCRouter({
       )();
     }),
 });
-
-async function fetchGitHubProjectFilePaths({
-  gh_repository,
-  gh_branch,
-  access_token,
-}: {
-  gh_repository: string;
-  gh_branch: string;
-  access_token: string;
-}) {
-  let paths: string[] = [];
-
-  try {
-    const response = await githubFetch(
-      `/repos/${gh_repository}/git/trees/${gh_branch}?recursive=1`,
-      access_token,
-      {
-        next: {
-          revalidate: 60, // 1 minute
-          tags: [`${gh_repository}-${gh_branch}-tree`],
-        },
-      },
-    );
-
-    const responseJson = (await response.json()) as {
-      tree: {
-        path: string;
-        type: "blob" | "tree";
-      }[];
-    };
-
-    paths = responseJson.tree
-      .filter((file) => file.type === "blob") // only include blobs (files) not trees (folders)
-      .map((tree) => tree.path);
-  } catch (error) {
-    throw new Error(`Failed to fetch GitHub project paths: ${error}`);
-  }
-
-  return paths;
-}
-
-async function fetchGitHubFile({
-  gh_repository,
-  gh_branch,
-  slug,
-  access_token,
-}: {
-  gh_repository: string;
-  gh_branch: string;
-  slug: string;
-  access_token: string;
-}) {
-  let content: string | null = null;
-
-  try {
-    const response = await githubFetch(
-      `/repos/${gh_repository}/contents/${slug}?ref=${gh_branch}`,
-      access_token,
-      {
-        next: {
-          revalidate: 60, // 1 minute
-          tags: [`${gh_repository}-${gh_branch}-${slug}`],
-        },
-      },
-    );
-
-    const responseJson = (await response.json()) as {
-      content: string;
-    };
-
-    content = Buffer.from(responseJson.content, "base64").toString();
-  } catch (error) {
-    throw new Error(
-      `Could not read ${gh_repository}/${slug} from GitHub: ${error}`,
-    );
-  }
-
-  return content;
-}

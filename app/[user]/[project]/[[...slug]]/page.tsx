@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import MdxPage from "@/components/mdx";
 import { api } from "@/trpc/server";
 import parse from "@/lib/markdown";
+import { env } from "@/env.mjs";
 
 /* export async function generateMetadata({
  *     params,
@@ -93,7 +94,7 @@ export default async function SitePage({
   );
 
   // TODO temporary solution for fetching files from github
-  const { gh_repository, gh_branch } = (await api.site.get.query({
+  const { id, gh_branch } = (await api.site.get.query({
     gh_username: params.user,
     projectName: params.project,
   }))!;
@@ -103,8 +104,7 @@ export default async function SitePage({
       <MdxPage
         source={mdxSource}
         frontMatter={frontMatter}
-        gh_repository={gh_repository}
-        gh_branch={gh_branch}
+        dataUrlBase={`https://${env.R2_BUCKET_DOMAIN}/${id}/${gh_branch}/raw`}
       />
     </>
   );

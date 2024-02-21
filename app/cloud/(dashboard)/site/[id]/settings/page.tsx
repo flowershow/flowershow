@@ -1,8 +1,6 @@
 import Form from "@/components/form";
 import DeleteSiteForm from "@/components/form/delete-site-form";
 import { api } from "@/trpc/server";
-import Link from "next/link";
-import { ExternalLink } from "lucide-react";
 
 export default async function SiteSettingsIndex({
   params,
@@ -66,16 +64,66 @@ export default async function SiteSettingsIndex({
                 handleSubmit={updateSite}
             /> */}
 
-      <Link
-        href={`https://github.com/${data?.gh_repository}`}
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <div className="flex flex-row gap-2">
-          <h2>{data?.gh_repository} </h2>
-          <ExternalLink />
-        </div>
-      </Link>
+      <Form
+        title="Name"
+        description="The name of your site."
+        helpText="The name must consist only of ASCII letters, digits, and the characters '-' and '_'. Please ensure a maximum of 32 characters is used."
+        inputAttrs={{
+          name: "projectName",
+          type: "text",
+          defaultValue: data?.projectName!,
+          placeholder: "site name",
+          maxLength: 32,
+          pattern: "^[a-zA-Z0-9_-]+$",
+          disallowed: [
+            "www",
+            "cloud",
+            "mail",
+            "ftp",
+            "admin",
+            "login",
+            "api",
+            "webmail",
+            "blog",
+            "shop",
+            "forum",
+            "store",
+            "cdn",
+            "smtp",
+            "imap",
+            "pop",
+            "test",
+            "dev",
+            "stage",
+            "demo",
+            "staging",
+            "beta",
+            "alpha",
+            "sandbox",
+            "mysql",
+            "postgresql",
+            "redis",
+            "mongodb",
+            "auth",
+            "billing",
+            "dashboard",
+            "support",
+            "help",
+            "chat",
+            "download",
+            "upload",
+            "assets",
+            "static",
+            "media",
+            "images",
+            "videos",
+            "css",
+            "js",
+            "fonts",
+          ],
+        }}
+        handleSubmit={updateSite}
+      />
 
       <Form
         title="Branch"

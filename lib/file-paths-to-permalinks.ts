@@ -1,32 +1,42 @@
+import { isSupportedAssetExtension } from "./types";
+
 export const filePathsToPermalinks = ({
   filePaths,
   ignorePatterns = [/\.gitignore/],
-  ghRawUrl,
-  siteUrl,
+  rawBaseUrl, // for assets, e.g. r2 bucket or github raw url
+  pathPrefix, // if the site is hosted in a subdirectory
 }: {
   filePaths: string[];
   ignorePatterns?: Array<RegExp>;
-  ghRawUrl?: string;
-  siteUrl?: string;
+  rawBaseUrl?: string;
+  pathPrefix?: string;
 }) => {
   return filePaths
-    .filter((file) => !ignorePatterns.some((pattern) => file.match(pattern)))
-    .map((file) => pathToPermalinkFunc(file, ghRawUrl, siteUrl));
+    .filter(
+      (filePath) => !ignorePatterns.some((pattern) => filePath.match(pattern)),
+    )
+    .map((filePath) =>
+      pathToPermalinkFunc({ filePath, rawBaseUrl, pathPrefix }),
+    );
 };
 
-const pathToPermalinkFunc = (
-  filePath: string,
-  ghRawUrl?: string,
-  siteUrl?: string,
-) => {
+const pathToPermalinkFunc = ({
+  filePath,
+  rawBaseUrl,
+  pathPrefix,
+}: {
+  filePath: string;
+  rawBaseUrl?: string; // for assets, e.g. r2 bucket or github raw url
+  pathPrefix?: string; // if the site is hosted in a subdirectory
+}) => {
   let permalink = filePath
     .replace(/\.(mdx|md)/, "")
     .replace(/(\/)?index$/, "") // remove index from the end of the file path
     .replace(/(\/)?README$/, ""); // remove README from the end of the file path
-  // for images, keep the extension but add github pages domain prefix
-  if (filePath.match(/\.(png|jpg|jpeg|gif|svg)$/)) {
-    permalink = ghRawUrl ? `https://${ghRawUrl}/${permalink}` : permalink;
-    return permalink;
+  // for embedded assets, keep the extension but add the path prefix, e.g. raw github url or r2 bucket
+  const fileExtension = permalink.split(".").pop();
+  if (fileExtension && isSupportedAssetExtension(fileExtension)) {
+    return rawBaseUrl ? `${rawBaseUrl}/${permalink}` : permalink;
   }
-  return permalink.length > 1 ? `/@${siteUrl}/${permalink}` : `@${siteUrl}/`;
+  return pathPrefix ? `${pathPrefix}/${permalink}` : permalink;
 };

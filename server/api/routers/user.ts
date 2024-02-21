@@ -7,40 +7,38 @@ import type {
   GitHubAPIRepository,
   GitHubRepository,
 } from "@/lib/github";
-import { unstable_cache } from "next/cache";
 
 export const userRouter = createTRPCRouter({
   getSites: protectedProcedure
     .input(z.object({ limit: z.number().min(1).optional() }).optional())
-    .query(({ ctx, input }) => {
-      return unstable_cache(
-        async () => {
-          return await ctx.db.site.findMany({
-            where: { userId: ctx.session.user.id },
-            take: input?.limit,
-          });
-        },
-        [`user-${ctx.session.user.id}-sites`],
-        {
-          revalidate: 900, // 15 minutes
-          tags: [`user-${ctx.session.user.id}-sites`],
-        },
-      )();
+    .query(async ({ ctx, input }) => {
+      return await ctx.db.site.findMany({
+        where: { userId: ctx.session.user.id },
+        take: input?.limit,
+      });
     }),
   getGitHubScopes: protectedProcedure.query<GitHubScope[]>(async ({ ctx }) => {
     const accessToken = ctx.session.accessToken;
 
     // Fetching organizations the user belongs to.
     // https://docs.github.com/en/rest/orgs/members?apiVersion=2022-11-28#list-organization-memberships-for-the-authenticated-user
-    const orgsResponse = await githubFetch(`/user/orgs`, accessToken, {
-      cache: "no-store",
+    const orgsResponse = await githubFetch({
+      url: `/user/orgs`,
+      accessToken,
+      cacheOptions: {
+        cache: "no-store",
+      },
     });
     const orgs = (await orgsResponse.json()) as GitHubAPIOrganization[];
 
     // Fetching the user's own account information.
     // https://docs.github.com/en/rest/users/users?apiVersion=2022-11-28#get-the-authenticated-user
-    const userResponse = await githubFetch(`/user`, accessToken, {
-      cache: "no-store",
+    const userResponse = await githubFetch({
+      url: `/user`,
+      accessToken,
+      cacheOptions: {
+        cache: "no-store",
+      },
     });
     const user = await userResponse.json();
 
@@ -79,11 +77,13 @@ export const userRouter = createTRPCRouter({
       }
       do {
         urlParams.set("page", `${page}`);
-        const response = await githubFetch(
-          `${scopeReposUrl}?${urlParams.toString()}`,
+        const response = await githubFetch({
+          url: `${scopeReposUrl}?${urlParams.toString()}`,
           accessToken,
-          { cache: "no-store" },
-        );
+          cacheOptions: {
+            cache: "no-store",
+          },
+        });
         const repos = (await response.json()) as GitHubAPIRepository[];
         allRepos = allRepos.concat(
           repos.map((repo) => ({

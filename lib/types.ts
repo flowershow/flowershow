@@ -1,3 +1,31 @@
+type SupportedMarkdownExtension = "md" | "mdx";
+
+type SupportedAssetExtension = "csv" | "json" | "jpeg" | "png" | "gif" | "svg";
+
+export type SupportedExtension =
+  | SupportedMarkdownExtension
+  | SupportedAssetExtension;
+
+export const isSupportedExtension = (
+  extension: string,
+): extension is SupportedExtension => {
+  return ["md", "mdx", "csv", "json", "jpeg", "png", "gif", "svg"].includes(
+    extension,
+  );
+};
+
+export const isSupportedAssetExtension = (
+  extension: string,
+): extension is SupportedAssetExtension => {
+  return ["csv", "json", "jpeg", "png", "gif", "svg"].includes(extension);
+};
+
+export const isSupportedMarkdownExtension = (
+  extension: string,
+): extension is SupportedMarkdownExtension => {
+  return ["md", "mdx"].includes(extension);
+};
+
 export type DomainVerificationStatusProps =
   | "Valid Configuration"
   | "Invalid Configuration"

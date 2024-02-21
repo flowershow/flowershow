@@ -16,8 +16,8 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
   const deleteSiteMutation = api.site.delete.useMutation({
     onSuccess: () => {
       va.track("Deleted Site");
-      router.refresh();
       router.push("/sites");
+      router.refresh();
       toast.success(`Successfully deleted site!`);
     },
     onError: (error) => {
@@ -32,7 +32,7 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
 
   return (
     <form
-      action={async () => deleteSiteMutation.mutate({ id })}
+      action={() => deleteSiteMutation.mutate({ id })}
       className="rounded-lg border border-red-600 bg-white dark:bg-black"
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">

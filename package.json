@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.515.0",
+    "@aws-sdk/s3-request-presigner": "^3.515.0",
     "@faker-js/faker": "^8.2.0",
     "@githubocto/flat-ui": "^0.14.1",
     "@headlessui/react": "^1.7.17",
@@ -35,6 +37,7 @@
     "@vercel/postgres": "^0.5.1",
     "ai": "^2.2.22",
     "clsx": "^2.0.0",
+    "crypto-hash": "^3.0.0",
     "date-fns": "^2.30.0",
     "esbuild": "^0.19.9",
     "focus-trap-react": "^10.2.3",

@@ -33,7 +33,12 @@ export const env = createEnv({
     TEAM_ID_VERCEL: z.string().optional(), // TODO temp set to optional as not set directly on Vercel
     VERCEL_URL: z.string().optional(),
     PORT: z.string().optional(),
-    REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS: z.string().default("true")
+    REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS: z.string().default("true"),
+    R2_ACCOUNT_ID: z.string(),
+    R2_ACCESS_KEY_ID: z.string(),
+    R2_SECRET_KEY_ID: z.string(),
+    R2_BUCKET_NAME: z.string(),
+    R2_BUCKET_DOMAIN: z.string(),
   },
 
   /**
@@ -67,7 +72,12 @@ export const env = createEnv({
     TEAM_ID_VERCEL: process.env.TEAM_ID_VERCEL,
     VERCEL_URL: process.env.VERCEL_URL,
     PORT: process.env.PORT,
-    REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS: process.env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS
+    REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS: process.env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS,
+    R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID,
+    R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
+    R2_SECRET_KEY_ID: process.env.R2_SECRET_KEY_ID,
+    R2_BUCKET_NAME: process.env.R2_BUCKET_NAME,
+    R2_BUCKET_DOMAIN: process.env.R2_BUCKET_DOMAIN,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

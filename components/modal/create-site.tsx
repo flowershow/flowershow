@@ -2,7 +2,7 @@
 
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useFormStatus } from "react-dom";
+/* import { useFormStatus } from "react-dom"; */
 import { cn } from "@/lib/utils";
 import LoadingDots from "@/components/icons/loading-dots";
 import { useModal } from "./provider";
@@ -97,40 +97,39 @@ export default function CreateSiteModal() {
     }
   }, [repos]);
 
-  const createSiteMutation = api.site.create.useMutation({
-    onSuccess: (res) => {
-      va.track("Created Site");
-      const { id } = res;
-      router.refresh();
-      router.push(`/site/${id}/settings`);
-      modal?.hide();
-      toast.success(`Successfully created site!`);
-    },
-    onError: (error) => {
-      toast.error(error.message);
-      if (error.data?.code === "UNAUTHORIZED") {
-        setTimeout(() => {
-          signOut();
-        }, 3000);
-      }
-    },
-  });
-
-  const createSite = (formData: FormData) => {
-    const gh_repository = formData.get("gh_repository") as string;
-    const gh_branch = formData.get("gh_branch") as string;
-    const gh_scope = formData.get("gh_scope") as string;
-
-    createSiteMutation.mutate({
-      gh_repository,
-      gh_branch,
-      gh_scope,
+  const { isLoading: isCreatingSite, mutate: createSite } =
+    api.site.create.useMutation({
+      onSuccess: (res) => {
+        va.track("Created Site");
+        const { id } = res;
+        router.refresh();
+        router.push(`/site/${id}/settings`);
+        modal?.hide();
+        toast.success(`Successfully created site!`);
+      },
+      onError: (error) => {
+        toast.error(error.message);
+        if (error.data?.code === "UNAUTHORIZED") {
+          setTimeout(() => {
+            signOut();
+          }, 3000);
+        }
+      },
     });
-  };
 
   return (
     <form
-      action={async (data: FormData) => createSite(data)}
+      action={async (data: FormData) => {
+        const gh_repository = data.get("gh_repository") as string;
+        const gh_branch = data.get("gh_branch") as string;
+        const gh_scope = data.get("gh_scope") as string;
+
+        createSite({
+          gh_repository,
+          gh_branch,
+          gh_scope,
+        });
+      }}
       className="w-full rounded-md bg-white dark:bg-black md:max-w-md md:border md:border-stone-200 md:shadow dark:md:border-stone-700"
     >
       <div className="relative flex flex-col space-y-4 p-5 md:p-10">
@@ -183,7 +182,7 @@ export default function CreateSiteModal() {
 
         <div className="flex flex-col space-y-2">
           <label
-            htmlFor="gh_scope"
+            htmlFor="gh_repository"
             className="text-sm font-medium text-stone-500 dark:text-stone-400"
           >
             <span>Repository</span>
@@ -286,13 +285,14 @@ export default function CreateSiteModal() {
             isErrorFetchingScopes ||
             isErrorFetchingRepos
           }
+          pending={isCreatingSite}
         />
       </div>
     </form>
   );
 }
-function CreateSiteFormButton({ disabled = false }) {
-  const { pending } = useFormStatus();
+function CreateSiteFormButton({ disabled = false, pending = false }) {
+  /* const { pending } = useFormStatus(); // TODO this doesn't work */
   return (
     <button
       className={cn(
