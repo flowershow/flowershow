@@ -38,9 +38,7 @@ export const siteRouter = createTRPCRouter({
         })
       );
 
-      revalidateTag(`user-${ctx.session.user.id}-sites`);
-
-      return ctx.db.site.create({
+      const response = ctx.db.site.create({
         data: {
           projectName: randomProjectName,
           gh_repository: input.gh_repository,
@@ -49,6 +47,10 @@ export const siteRouter = createTRPCRouter({
           user: { connect: { id: ctx.session.user.id } },
         },
       });
+
+      revalidateTag(`user-${ctx.session.user.id}-sites`);
+
+      return response;
     }),
   update: protectedProcedure
     .input(
