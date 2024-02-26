@@ -31,6 +31,13 @@ const components: any = {
 };
 
 export default function MDX({ source, frontMatter, dataUrlBase }) {
+  // fix for commonmark image embeds with relative paths
+  components.img = (props) => {
+    const _src = props.src;
+    const src = _src.startsWith("http") ? _src : `${dataUrlBase}/${_src}`;
+    return <img {...props} src={src} />;
+  };
+  components.img.displayName = "img";
   if (frontMatter.datapackage) {
     components.FrictionlessView = FrictionlessViewFactory({
       views: frontMatter.datapackage.views,
