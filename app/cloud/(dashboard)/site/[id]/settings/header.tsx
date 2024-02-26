@@ -3,18 +3,34 @@ import { GithubIcon } from "lucide-react";
 /* import Status from "./status"; */
 import SyncSiteButton from "./sync-button";
 import { env } from "@/env.mjs";
+import { Site } from "@prisma/client";
 /* import { api } from "@/trpc/server"; */
+
+type SiteWithUser = Site & {
+  user: {
+    gh_username: string | null;
+  } | null;
+};
 
 export default async function SiteSettingsHeader({
   site,
 }: {
-  site: any; // TODO: type this
+  site: SiteWithUser;
 }) {
   /* const syncStatus = await api.site.checkSyncStatus.query({ id: site.id }); */
 
-  const url = `dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user!.gh_username}/${
-    site.projectName
-  }`;
+  const url =
+    env.NEXT_PUBLIC_VERCEL_ENV === "production"
+      ? `https://dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
+          site.user!.gh_username
+        }/${site.projectName}`
+      : env.NEXT_PUBLIC_VERCEL_ENV === "preview"
+        ? `https://staging-dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
+            site.user!.gh_username
+          }/${site.projectName}`
+        : `http://dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
+            site.user!.gh_username
+          }/${site.projectName}`;
 
   return (
     <div className="lg:flex lg:items-center lg:justify-between">
@@ -44,17 +60,7 @@ export default async function SiteSettingsHeader({
           </a>
         </span>
         <span className="ml-3 block">
-          <a
-            href={
-              env.NEXT_PUBLIC_VERCEL_ENV
-                ? `https://${url}`
-                : `http://dev.localhost:3000/@${site.user!.gh_username}/${
-                    site.projectName
-                  }`
-            }
-            target="_blank"
-            rel="noreferrer"
-          >
+          <a href={url} target="_blank" rel="noreferrer">
             <button
               type="button"
               className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"

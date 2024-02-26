@@ -38,7 +38,10 @@ export default async function middleware(req: NextRequest) {
   }`;
 
   // rewrites for cloud pages
-  if (hostname == `cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
+  if (
+    hostname == `cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
+    hostname == `staging-cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
+  ) {
     const session = await getToken({ req });
 
     if (!session && path !== "/login") {
@@ -60,7 +63,10 @@ export default async function middleware(req: NextRequest) {
   // }
 
   // TODO temporary rewrite dev subdomain to `/home` folder
-  if (hostname === `dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}`) {
+  if (
+    hostname === `dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
+    hostname === `staging-dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
+  ) {
     // if path matches /@{username}/{project}/{restofpath} rewrite to /{username}/{project}/{restofpath}}
     const match = path.match(/^\/@([^/]+)\/([^/]+)(.*)/);
     if (match) {
