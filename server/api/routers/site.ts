@@ -7,7 +7,6 @@ import {
   publicProcedure,
 } from "@/server/api/trpc";
 import { filePathsToPermalinks } from "@/lib/file-paths-to-permalinks";
-import { randomSlug } from "@/lib/random-slug";
 import {
   fetchGitHubRepoTree,
   fetchGitHubFile,
@@ -59,19 +58,22 @@ export const siteRouter = createTRPCRouter({
         );
       }
 
-      // generate random name
-      let randomProjectName: string;
-      do {
-        randomProjectName = randomSlug();
-      } while (
+      let projectName = input.gh_repository.split("/")[1] as string;
+      let num = 2;
+
+      while (
         await ctx.db.site.findFirst({
-          where: { subdomain: randomProjectName },
+          where: {
+            AND: [{ projectName }, { user: { id: ctx.session.user.id } }],
+          },
         })
-      );
+      ) {
+        projectName = `${input.gh_repository.split("/")[1]}-${num}`;
+      }
 
       const site = await ctx.db.site.create({
         data: {
-          projectName: randomProjectName,
+          projectName,
           gh_repository: input.gh_repository,
           gh_scope: input.gh_scope,
           gh_branch: input.gh_branch,
