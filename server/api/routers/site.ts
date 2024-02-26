@@ -89,12 +89,6 @@ export const siteRouter = createTRPCRouter({
           gh_branch: input.gh_branch,
           access_token: ctx.session.accessToken,
         });
-        // upload tree to content store
-        await uploadTree({
-          projectId: site.id,
-          branch: input.gh_branch,
-          tree,
-        });
         // upload each file to content store
         await Promise.all(
           tree.tree.map(async (file) => {
@@ -121,6 +115,13 @@ export const siteRouter = createTRPCRouter({
           }),
         );
 
+        // upload tree to content store
+        await uploadTree({
+          projectId: site.id,
+          branch: input.gh_branch,
+          tree,
+        });
+
         await ctx.db.site.update({
           where: { id: site.id },
           data: {
@@ -129,7 +130,12 @@ export const siteRouter = createTRPCRouter({
           },
         });
       } catch (error) {
-        await ctx.db.site.delete({ where: { id: site.id } });
+        await ctx.db.site.update({
+          where: { id: site.id },
+          data: {
+            synced: false,
+          },
+        });
         throw new Error(`Failed to upload site content: ${error}`);
       }
 
@@ -247,27 +253,21 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
+      // fetch content store tree
       const contentStoreTree = await fetchTree(site!.id, site!.gh_branch);
+      // fetch GitHub repo tree
+      const gitHubTree = await fetchGitHubRepoTree({
+        gh_repository: site!.gh_repository,
+        gh_branch: site!.gh_branch,
+        access_token: ctx.session.accessToken,
+      });
 
+      // edge case for when the site has been created but no content has been uploaded
       if (!contentStoreTree) {
-        // run the upload
-        // upload to content store
         try {
-          // fetch GitHub repo tree
-          const tree = await fetchGitHubRepoTree({
-            gh_repository: site!.gh_repository,
-            gh_branch: site!.gh_branch,
-            access_token: ctx.session.accessToken,
-          });
-          // upload tree to content store
-          await uploadTree({
-            projectId: site!.id,
-            branch: site!.gh_branch,
-            tree,
-          });
           // upload each file to content store
           await Promise.all(
-            tree.tree.map(async (file) => {
+            gitHubTree.tree.map(async (file) => {
               // ignore directories
               if (file.type === "tree") return;
               // ignore unsupported file types
@@ -292,6 +292,13 @@ export const siteRouter = createTRPCRouter({
             }),
           );
 
+          // upload tree to content store
+          await uploadTree({
+            projectId: site!.id,
+            branch: site!.gh_branch,
+            tree: gitHubTree,
+          });
+
           return await ctx.db.site.update({
             where: { id: site!.id },
             data: {
@@ -303,12 +310,6 @@ export const siteRouter = createTRPCRouter({
           throw new Error(`Failed to upload site content: ${error}`);
         }
       }
-
-      const gitHubTree = await fetchGitHubRepoTree({
-        gh_repository: site!.gh_repository,
-        gh_branch: site!.gh_branch,
-        access_token: ctx.session.accessToken,
-      });
 
       if (contentStoreTree.sha !== gitHubTree.sha) {
         console.log("Trees are different, syncing content store with GitHub");
