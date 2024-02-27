@@ -181,7 +181,7 @@ export const fetchTree = async (projectId: string, branch: string) => {
     if (!tree) return null;
     return JSON.parse(tree) as GitHubAPIRepoTree;
   } catch (e) {
-    console.error(e);
+    console.log(e);
     return null;
   }
 };

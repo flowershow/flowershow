@@ -34,7 +34,6 @@ import { env } from "@/env.mjs";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
-  // PROTECTED
   create: protectedProcedure
     .input(
       z.object({
@@ -58,6 +57,9 @@ export const siteRouter = createTRPCRouter({
         );
       }
 
+      /* use repository name as an initial project name
+       * and append a number if the name is already taken
+       * */
       let projectName = input.gh_repository.split("/")[1] as string;
       let num = 2;
 
@@ -83,7 +85,6 @@ export const siteRouter = createTRPCRouter({
 
       // upload to content store
       try {
-        // fetch GitHub repo tree
         const tree = await fetchGitHubRepoTree({
           gh_repository: input.gh_repository,
           gh_branch: input.gh_branch,
@@ -262,64 +263,14 @@ export const siteRouter = createTRPCRouter({
         access_token: ctx.session.accessToken,
       });
 
-      // edge case for when the site has been created but no content has been uploaded
-      if (!contentStoreTree) {
-        try {
-          // upload each file to content store
-          await Promise.all(
-            gitHubTree.tree.map(async (file) => {
-              // ignore directories
-              if (file.type === "tree") return;
-              // ignore unsupported file types
-              const [path, extension = ""] = file.path.split(".");
-              if (!isSupportedExtension(extension)) return;
-              // fetch file content from GitHub
-              const content = await fetchGitHubFile({
-                gh_repository: site!.gh_repository,
-                gh_branch: site!.gh_branch,
-                path: file.path,
-                access_token: ctx.session.accessToken,
-              });
-              await uploadContent({
-                projectId: site!.id,
-                branch: site!.gh_branch,
-                path: isSupportedMarkdownExtension(extension)
-                  ? path!
-                  : file.path, // TODO is there a better way to do this?
-                content,
-                extension,
-              });
-            }),
-          );
-
-          // upload tree to content store
-          await uploadTree({
-            projectId: site!.id,
-            branch: site!.gh_branch,
-            tree: gitHubTree,
-          });
-
-          return await ctx.db.site.update({
-            where: { id: site!.id },
-            data: {
-              synced: true,
-              syncedAt: new Date(),
-            },
-          });
-        } catch (error) {
-          throw new Error(`Failed to upload site content: ${error}`);
-        }
-      }
-
-      if (contentStoreTree.sha !== gitHubTree.sha) {
+      if (!contentStoreTree || contentStoreTree.sha !== gitHubTree.sha) {
         console.log("Trees are different, syncing content store with GitHub");
-        // The trees are different, so we need to sync the content store with GitHub
         const contentStoreMap = new Map(
-          contentStoreTree.tree.map((file) => [file.path, file.sha]),
+          contentStoreTree?.tree.map((file) => [file.path, file.sha] || []),
         );
         const gitHubMap = new Map(
           gitHubTree.tree.map((file) => [file.path, file.sha]),
-        ); // make sure this matches your data structure
+        );
 
         try {
           // Check for new or updated files in GitHub
@@ -330,7 +281,6 @@ export const siteRouter = createTRPCRouter({
             ) {
               // This means the file is new or updated in GitHub
               // Fetch and upload the file content to the content store
-              console.log(`Uploading ${_path} to content store`);
               const [path, extension = ""] = _path.split(".");
               // ignore unsupported file types
               if (!isSupportedExtension(extension)) continue;
@@ -355,7 +305,6 @@ export const siteRouter = createTRPCRouter({
             if (!gitHubMap.has(path)) {
               // The file exists in the content store but not in GitHub, so delete it from the content store
               const [_path, extension = ""] = path.split(".");
-              console.log(`Deleting ${path} from content store`);
               await deleteContent({
                 projectId: site!.id,
                 branch: site!.gh_branch,
@@ -364,7 +313,6 @@ export const siteRouter = createTRPCRouter({
             }
           }
           // If all goes well, update the content store tree to match the GitHub tree
-          console.log("Updating content store tree");
           await uploadTree({
             projectId: site!.id,
             branch: site!.gh_branch,
@@ -386,6 +334,8 @@ export const siteRouter = createTRPCRouter({
           });
           throw new Error(`Failed to sync site ${site!.id}: ${error}`);
         }
+      } else {
+        console.log("Trees are the same, no need to sync");
       }
 
       // revalidate site status
