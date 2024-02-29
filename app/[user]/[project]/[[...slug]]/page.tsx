@@ -5,51 +5,51 @@ import parse from "@/lib/markdown";
 import { env } from "@/env.mjs";
 
 async function fetchData(params) {
-    const slug = decodeURIComponent(params.slug);
+  const slug = decodeURIComponent(params.slug);
 
-    let mdString;
-    let permalinks;
+  let mdString;
+  let permalinks;
 
-    try {
-        mdString = await api.site.getPageContent.query({
-            gh_username: params.user,
-            projectName: params.project,
-            slug: slug !== "undefined" ? slug.split(",").join("/") : "",
-        });
-        permalinks = await api.site.getSitePermalinks.query({
-            gh_username: params.user,
-            projectName: params.project,
-        });
-    } catch (error) {
-        notFound();
-    }
+  try {
+    mdString = await api.site.getPageContent.query({
+      gh_username: params.user,
+      projectName: params.project,
+      slug: slug !== "undefined" ? slug.split(",").join("/") : "",
+    });
+    permalinks = await api.site.getSitePermalinks.query({
+      gh_username: params.user,
+      projectName: params.project,
+    });
+  } catch (error) {
+    notFound();
+  }
 
-    const { mdxSource, frontMatter } = await parse(
-        mdString,
-        "mdx",
-        {},
-        permalinks,
-    );
+  const { mdxSource, frontMatter } = await parse(
+    mdString,
+    "mdx",
+    {},
+    permalinks,
+  );
 
-    return { mdxSource, frontMatter };
+  return { mdxSource, frontMatter };
 }
 
 export async function generateMetadata({
-    params,
+  params,
 }: {
-    params: { user: string; project: string; slug: string };
+  params: { user: string; project: string; slug: string };
 }) {
-    const { frontMatter } = await fetchData(params);
-    /* const title: string =
-  *   frontMatter?.title ?? frontMatter?.datapackage?.title ?? params.project; */
-    const title = "test"
-    const description: string =
-        frontMatter?.description ?? frontMatter?.datapackage?.description ?? title;
+  const { frontMatter } = await fetchData(params);
+  /* const title: string =
+   *   frontMatter?.title ?? frontMatter?.datapackage?.title ?? params.project; */
+  const title = "test";
+  const description: string =
+    frontMatter?.description ?? frontMatter?.datapackage?.description ?? title;
 
-    return {
-        title: title,
-        description: description,
-    };
+  return {
+    title: title,
+    description: description,
+  };
 }
 
 /* export async function generateStaticParams() {
@@ -59,24 +59,24 @@ export async function generateMetadata({
  * } */
 
 export default async function SitePage({
-    params,
+  params,
 }: {
-    params: { user: string; project: string; slug: string };
+  params: { user: string; project: string; slug: string };
 }) {
-    const { mdxSource, frontMatter } = await fetchData(params);
+  const { mdxSource, frontMatter } = await fetchData(params);
 
-    const { id, gh_branch } = (await api.site.get.query({
-        gh_username: params.user,
-        projectName: params.project,
-    }))!;
+  const { id, gh_branch } = (await api.site.get.query({
+    gh_username: params.user,
+    projectName: params.project,
+  }))!;
 
-    return (
-        <>
-            <MdxPage
-                source={mdxSource}
-                frontMatter={frontMatter}
-                dataUrlBase={`https://${env.R2_BUCKET_DOMAIN}/${id}/${gh_branch}/raw`}
-            />
-        </>
-    );
+  return (
+    <>
+      <MdxPage
+        source={mdxSource}
+        frontMatter={frontMatter}
+        dataUrlBase={`https://${env.R2_BUCKET_DOMAIN}/${id}/${gh_branch}/raw`}
+      />
+    </>
+  );
 }

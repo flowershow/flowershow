@@ -53,6 +53,7 @@ export const DataPackageLayout: React.FC<Props> = ({
     }
     return <FrictionlessView view={view} resource={resource} />;
   };
+  View.displayName = "View";
 
   return (
     <ErrorBoundary
@@ -142,6 +143,7 @@ export const DataPackageLayout: React.FC<Props> = ({
           {views &&
             views.map((view, id) => (
               <ErrorBoundary
+                key={`view-${view.name}`}
                 FallbackComponent={FallbackComponentFactory({
                   title: `Error in data view \`${view.name}\`:`,
                 })}
@@ -217,8 +219,11 @@ export const DataPackageLayout: React.FC<Props> = ({
   );
 };
 
-const FallbackComponentFactory =
-  ({ title }: { title: string }) =>
-  ({ error }: { error: Error }) => {
+const FallbackComponentFactory = ({ title }: { title: string }) => {
+  const FallbackComponent = ({ error }: { error: Error }) => {
     return <ErrorMessage title={title} message={error.message} />;
   };
+  FallbackComponent.displayName = "FallbackComponent";
+  return FallbackComponent;
+};
+FallbackComponentFactory.displayName = "FallbackComponentFactory";

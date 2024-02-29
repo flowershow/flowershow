@@ -192,6 +192,7 @@ export const mdxComponentsFactory = ({
         </ErrorBoundary>
       );
     };
+    components.FrictionlessView.displayName = "FrictionlessView";
   }
   return components;
 };
@@ -202,8 +203,11 @@ const resolveRelativeUrl = (url: string, urlPrefix: string) => {
     : `${urlPrefix}/${url.replace(/^\/+/g, "")}`;
 };
 
-const FallbackComponentFactory =
-  ({ title }: { title: string }) =>
-  ({ error }: { error: Error }) => {
+const FallbackComponentFactory = ({ title }: { title: string }) => {
+  const FallbackComponent = ({ error }: { error: Error }) => {
     return <ErrorMessage title={title} message={error.message} />;
   };
+  FallbackComponent.displayName = "FallbackComponent";
+  return FallbackComponent;
+};
+FallbackComponentFactory.displayName = "FallbackComponentFactory";
