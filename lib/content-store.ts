@@ -28,6 +28,7 @@ type ContentType =
   | "text/markdown"
   | "text/csv"
   | "application/json"
+  | "application/yaml"
   | "image/jpeg"
   | "image/png"
   | "image/gif"
@@ -97,6 +98,9 @@ const getContentType = (extension: SupportedExtension): ContentType => {
       return "text/csv";
     case "json":
       return "application/json";
+    case "yaml":
+    case "yml":
+      return "application/yaml";
     case "jpeg":
     case "jpg":
       return "image/jpeg";
