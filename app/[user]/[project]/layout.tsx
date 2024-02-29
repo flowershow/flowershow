@@ -10,81 +10,81 @@ import { env } from "@/env.mjs";
 import { api } from "@/trpc/server";
 
 export async function generateMetadata({
-  params,
+    params,
 }: {
-  params: { user: string; project: string };
+    params: { user: string; project: string };
 }): Promise<Metadata | null> {
-  const project = decodeURIComponent(params.project);
-  /* const user = decodeURIComponent(params.user);
+    const project = decodeURIComponent(params.project);
+    /* const user = decodeURIComponent(params.user);
 
-  * const site = await api.site.get.query({
-  *   gh_username: user,
-  *   projectName: project,
-  * });
+    * const site = await api.site.get.query({
+    *   gh_username: user,
+    *   projectName: project,
+    * });
 
-  * if (!site) {
-  *   return null;
-  * } */
+    * if (!site) {
+    *   return null;
+    * } */
 
-  return {
-    title: project,
-    description: "", // TODO add support for project description
-    openGraph: {
-      title: project,
-      description: "", // TODO add support for project description
-      images: ["/thumbnail.png"], // TODO add support for project image
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: project,
-      description: "", // TODO add support for project description
-      images: ["/thumbnail.png"], // TODO add support for project image
-      creator: "@datopian",
-    },
-    icons: ["/favicon.ico"], // TODO add support for project favicon
-    // Optional: Set canonical URL to custom domain if it exists
-    // ...(params.domain.endsWith(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`) &&
-    //   data.customDomain && {
-    //     alternates: {
-    //       canonical: `https://${data.customDomain}`,
-    //     },
-    //   }),
-  };
+    return {
+        title: project,
+        description: "", // TODO add support for project description
+        openGraph: {
+            title: project,
+            description: "", // TODO add support for project description
+            images: ["/thumbnail.png"], // TODO add support for project image
+        },
+        twitter: {
+            card: "summary_large_image",
+            title: project,
+            description: "", // TODO add support for project description
+            images: ["/thumbnail.png"], // TODO add support for project image
+            creator: "@datopian",
+        },
+        icons: ["/favicon.ico"], // TODO add support for project favicon
+        // Optional: Set canonical URL to custom domain if it exists
+        // ...(params.domain.endsWith(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`) &&
+        //   data.customDomain && {
+        //     alternates: {
+        //       canonical: `https://${data.customDomain}`,
+        //     },
+        //   }),
+    };
 }
 
 export default async function SiteLayout({
-  params,
-  children,
+    params,
+    children,
 }: {
-  params: { user: string; project: string };
-  children: ReactNode;
+    params: { user: string; project: string };
+    children: ReactNode;
 }) {
-  const data = await api.site.get.query({
-    gh_username: params.user,
-    projectName: params.project,
-  });
+    const data = await api.site.get.query({
+        gh_username: params.user,
+        projectName: params.project,
+    });
 
-  if (!data) {
-    notFound();
-  }
+    if (!data) {
+        notFound();
+    }
 
-  // Optional: Redirect to custom domain if it exists
-  if (data.customDomain && env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS === "true") {
-    return redirect(`https://${data.customDomain}`);
-  }
+    // Optional: Redirect to custom domain if it exists
+    if (data.customDomain && env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS === "true") {
+        return redirect(`https://${data.customDomain}`);
+    }
 
-  return (
-    <div className={fontMapper["font-work"]}>
-      <div>{children}</div>
+    return (
+        <div className={fontMapper["font-work"]}>
+            <div>{children}</div>
 
-      {/* {domain == `demo.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
+            {/* {domain == `demo.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
                 domain == `platformize.co` ? (
                 <CTA />
             ) : (
                 <ReportAbuse />
             )} */}
-    </div>
-  );
+        </div>
+    );
 }
 
 /*
