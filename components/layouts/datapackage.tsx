@@ -4,7 +4,11 @@ import { DocumentArrowDownIcon } from "@heroicons/react/24/outline";
 import { FlatUiTable } from "@portaljs/components";
 import prettyBytes from "pretty-bytes";
 
-import { isResourceWithPath, type DataPackage } from "./datapackage-types";
+import {
+  isResourceWithPath,
+  type DataPackage,
+  SimpleView,
+} from "./datapackage-types";
 import { FrictionlessView } from "@/components/frictionless-view";
 import { ErrorMessage } from "@/components/error-message";
 
@@ -43,7 +47,7 @@ export const DataPackageLayout: React.FC<Props> = ({
     ? prettyBytes(resourceFilesSize)
     : undefined;
 
-  const View: React.FC<{ view: any; resourceId: number }> = ({
+  const View: React.FC<{ view: SimpleView; resourceId: number }> = ({
     view,
     resourceId,
   }) => {
@@ -51,7 +55,13 @@ export const DataPackageLayout: React.FC<Props> = ({
     if (!resource) {
       throw new Error(`Resource not found for view ${view.name}`);
     }
-    return <FrictionlessView view={view} resource={resource} />;
+    return (
+      <FrictionlessView
+        view={view}
+        resource={resource}
+        dataUrlBase={dataUrlBase}
+      />
+    );
   };
   View.displayName = "View";
 
