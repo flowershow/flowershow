@@ -126,7 +126,7 @@ export interface View {
 export interface SimpleView {
   name: string;
   title: string;
-  resources: string[]; // names of resources in the data package
+  resourceName: string;
   specType: "simple";
   spec: ViewSpec;
 }

@@ -31,6 +31,7 @@ import {
   isSupportedMarkdownExtension,
 } from "@/lib/types";
 import { env } from "@/env.mjs";
+import { TRPCError } from "@trpc/server";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -503,61 +504,18 @@ export const siteRouter = createTRPCRouter({
             },
           });
 
-          if (!site) return null;
-
-          let content: string | null = null;
-
-          // TODO extract this to a function
-          // if slug is empty, fetch index.md or README.md
-          if (input.slug === "") {
-            try {
-              // });
-              content =
-                (await fetchContent({
-                  projectId: site.id,
-                  branch: site.gh_branch,
-                  path: "index",
-                })) ?? null;
-            } catch (error) {
-              try {
-                content =
-                  (await fetchContent({
-                    projectId: site.id,
-                    branch: site.gh_branch,
-                    path: "README",
-                  })) ?? null;
-              } catch (error) {
-                throw new Error(
-                  `Could not read ${site.gh_repository}/index.md or ${site.gh_repository}/README.md on branch ${site.gh_branch} from GitHub: ${error}`,
-                );
-              }
-            }
-          } else {
-            // fetch [slug].md or [slug]/index.md
-            try {
-              content =
-                (await fetchContent({
-                  projectId: site.id,
-                  branch: site.gh_branch,
-                  path: input.slug,
-                })) ?? null;
-            } catch (error) {
-              try {
-                content =
-                  (await fetchContent({
-                    projectId: site.id,
-                    branch: site.gh_branch,
-                    path: input.slug + "/index", // TODO also check for README.md
-                  })) ?? null;
-              } catch (error) {
-                throw new Error(
-                  `Could not read ${site.gh_repository}/${input.slug}.md or ${site.gh_repository}/${input.slug}/index.md on branch ${site.gh_branch} from GitHub: ${error}`,
-                );
-              }
-            }
+          if (!site) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
           }
 
-          return content;
+          return await fetchContent({
+            projectId: site.id,
+            branch: site.gh_branch,
+            path: input.slug,
+          });
         },
         [`${input.gh_username}-${input.projectName}-${input.slug}-content`],
         {

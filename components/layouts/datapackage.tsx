@@ -47,11 +47,8 @@ export const DataPackageLayout: React.FC<Props> = ({
     ? prettyBytes(resourceFilesSize)
     : undefined;
 
-  const View: React.FC<{ view: SimpleView; resourceId: number }> = ({
-    view,
-    resourceId,
-  }) => {
-    const resource = resources[resourceId];
+  const View: React.FC<{ view: SimpleView }> = ({ view }) => {
+    const resource = resources.find((r) => r.name === view.resourceName);
     if (!resource) {
       throw new Error(`Resource not found for view ${view.name}`);
     }
@@ -148,7 +145,7 @@ export const DataPackageLayout: React.FC<Props> = ({
             </tbody>
           </table>
         </section>
-        <section className="my-12">
+        {/* <section className="my-12">
           {views && <h2>Data Views</h2>}
           {views &&
             views.map((view, id) => (
@@ -158,10 +155,10 @@ export const DataPackageLayout: React.FC<Props> = ({
                   title: `Error in data view \`${view.name}\`:`,
                 })}
               >
-                <View view={view} resourceId={id} />
+                <View view={view} />
               </ErrorBoundary>
             ))}
-        </section>
+        </section> */}
         <section className="my-12">
           <h2>Data files</h2>
           <table className="table-auto divide-y divide-gray-300">

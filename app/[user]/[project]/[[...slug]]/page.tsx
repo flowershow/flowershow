@@ -4,7 +4,9 @@ import { api } from "@/trpc/server";
 import parse from "@/lib/markdown";
 import { env } from "@/env.mjs";
 import { ErrorMessage } from "@/components/error-message";
+import { DataPackage } from "@/components/layouts/datapackage-types";
 
+// TODO clean this up a bit
 export async function generateMetadata({
   params,
 }: {
@@ -12,31 +14,41 @@ export async function generateMetadata({
 }) {
   const slug = decodeURIComponent(params.slug);
 
-  let mdString;
+  let content: string;
+  let datapackage: DataPackage | null;
 
   try {
-    mdString = await api.site.getPageContent.query({
+    const page = await api.site.getPageContent.query({
       gh_username: params.user,
       projectName: params.project,
       slug: slug !== "undefined" ? slug.split(",").join("/") : "",
     });
+    content = page.content;
+    datapackage = page.datapackage;
   } catch (error) {
     notFound();
   }
 
-  let frontMatter;
+  let frontMatter: any;
 
   try {
-    const data = await parse(mdString, "mdx", {});
+    // TODO move this to a trpc query ?
+    const data = await parse(content, "mdx", {});
     frontMatter = data.frontMatter;
   } catch (e: any) {
     return {};
   }
 
   const title: string =
-    frontMatter?.title ?? frontMatter?.datapackage?.title ?? params.project;
+    frontMatter?.title ??
+    frontMatter?.datapackage?.title ??
+    datapackage?.title ??
+    params.project;
   const description: string =
-    frontMatter?.description ?? frontMatter?.datapackage?.description ?? title;
+    frontMatter?.description ??
+    frontMatter?.datapackage?.description ??
+    datapackage?.description ??
+    "";
 
   return {
     title,
@@ -50,6 +62,7 @@ export async function generateMetadata({
  *   return [];
  * } */
 
+// TODO clean this up a bit
 export default async function SitePage({
   params,
 }: {
@@ -57,15 +70,18 @@ export default async function SitePage({
 }) {
   const slug = decodeURIComponent(params.slug);
 
-  let mdString;
+  let content: string;
+  let datapackage: DataPackage | null;
   let permalinks;
 
   try {
-    mdString = await api.site.getPageContent.query({
+    const page = await api.site.getPageContent.query({
       gh_username: params.user,
       projectName: params.project,
       slug: slug !== "undefined" ? slug.split(",").join("/") : "",
     });
+    content = page.content;
+    datapackage = page.datapackage;
     permalinks = await api.site.getSitePermalinks.query({
       gh_username: params.user,
       projectName: params.project,
@@ -75,10 +91,13 @@ export default async function SitePage({
   }
 
   let mdxSource;
-  let frontMatter;
+  let frontMatter: {
+    datapackage?: DataPackage;
+    [key: string]: any;
+  } = {};
 
   try {
-    const data = await parse(mdString, "mdx", {}, permalinks);
+    const data = await parse(content, "mdx", {}, permalinks);
     mdxSource = data.mdxSource;
     frontMatter = data.frontMatter;
   } catch (e: any) {
@@ -88,6 +107,8 @@ export default async function SitePage({
       </div>
     );
   }
+
+  frontMatter.datapackage = frontMatter.datapackage ?? datapackage ?? undefined;
 
   const { id, gh_branch } = (await api.site.get.query({
     gh_username: params.user,
