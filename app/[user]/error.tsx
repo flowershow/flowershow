@@ -1,5 +1,4 @@
 "use client";
-import { ErrorMessage } from "@/components/error-message";
 
 export default function Error({ error }: { error: Error }) {
   return (
@@ -7,11 +6,9 @@ export default function Error({ error }: { error: Error }) {
       <div className="max-w-4xl text-center">
         <h1 className="mb-4 text-6xl font-bold text-gray-800">500</h1>
         <p className="mb-8 text-xl text-gray-600">Internal Server Error</p>
-        <ErrorMessage
-          title={error.name}
-          message={error.message}
-          stack={error.stack}
-        />
+        <p className="text-gray-500">
+          An error occurred while rendering this page. Please try again later.
+        </p>
       </div>
     </div>
   );
