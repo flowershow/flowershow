@@ -3,9 +3,12 @@ import MdxPage from "@/components/mdx";
 import { api } from "@/trpc/server";
 import parse from "@/lib/markdown";
 import { env } from "@/env.mjs";
+
 async function fetchData(params) {
   const slug = decodeURIComponent(params.slug);
+
   let mdString;
+  let permalinks;
 
   try {
     mdString = await api.site.getPageContent.query({
@@ -13,19 +16,13 @@ async function fetchData(params) {
       projectName: params.project,
       slug: slug !== "undefined" ? slug.split(",").join("/") : "",
     });
+    permalinks = await api.site.getSitePermalinks.query({
+      gh_username: params.user,
+      projectName: params.project,
+    });
   } catch (error) {
     notFound();
   }
-
-  if (!mdString) {
-    notFound();
-  }
-
-  const permalinks =
-    (await api.site.getSitePermalinks.query({
-      gh_username: params.user,
-      projectName: params.project,
-    })) ?? [];
 
   const { mdxSource, frontMatter } = await parse(
     mdString,
@@ -46,9 +43,7 @@ export async function generateMetadata({
   const title: string =
     frontMatter?.title ?? frontMatter?.datapackage?.title ?? params.project;
   const description: string =
-    frontMatter?.description ??
-    frontMatter?.datapackage?.description ??
-    title;
+    frontMatter?.description ?? frontMatter?.datapackage?.description ?? title;
 
   return {
     title: title,
@@ -69,7 +64,6 @@ export default async function SitePage({
 }) {
   const { mdxSource, frontMatter } = await fetchData(params);
 
-  // TODO temporary solution for fetching files from github
   const { id, gh_branch } = (await api.site.get.query({
     gh_username: params.user,
     projectName: params.project,
