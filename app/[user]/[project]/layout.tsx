@@ -15,47 +15,41 @@ export async function generateMetadata({
   params: { user: string; project: string };
 }): Promise<Metadata | null> {
   const project = decodeURIComponent(params.project);
-  const data = api.site.get.query({
-    gh_username: params.user,
-    projectName: project,
-  });
+  /* const user = decodeURIComponent(params.user);
 
-  if (!data) {
-    return null;
-  }
-  return {};
-  /* const {
-*     name: title,
-*     description,
-*     image,
-*     logo,
-* } = data
+  * const site = await api.site.get.query({
+  *   gh_username: user,
+  *   projectName: project,
+  * });
 
-* return {
-*     title,
-*     description,
-*     openGraph: {
-*         title,
-*         description,
-*         images: [image],
-*     },
-*     twitter: {
-*         card: "summary_large_image",
-*         title,
-*         description,
-*         images: [image],
-*         creator: "@vercel",
-*     },
-*     icons: [logo],
-*     metadataBase: new URL(`https://${domain}`),
-*     // Optional: Set canonical URL to custom domain if it exists
-*     // ...(params.domain.endsWith(`.${env.NEXT_PUBLIC_ROOT_DOMAIN}`) &&
-*     //   data.customDomain && {
-*     //     alternates: {
-*     //       canonical: `https://${data.customDomain}`,
-*     //     },
-*     //   }),
-* }; */
+  * if (!site) {
+  *   return null;
+  * } */
+
+  return {
+    title: project,
+    description: "", // TODO add support for project description
+    openGraph: {
+      title: project,
+      description: "", // TODO add support for project description
+      images: ["/thumbnail.png"], // TODO add support for project image
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: project,
+      description: "", // TODO add support for project description
+      images: ["/thumbnail.png"], // TODO add support for project image
+      creator: "@datopian",
+    },
+    icons: ["/favicon.ico"], // TODO add support for project favicon
+    // Optional: Set canonical URL to custom domain if it exists
+    // ...(params.domain.endsWith(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`) &&
+    //   data.customDomain && {
+    //     alternates: {
+    //       canonical: `https://${data.customDomain}`,
+    //     },
+    //   }),
+  };
 }
 
 export default async function SiteLayout({
