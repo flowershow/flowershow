@@ -40,14 +40,13 @@ export async function generateMetadata({
   params: { user: string; project: string; slug: string };
 }) {
   const { frontMatter } = await fetchData(params);
-  /* const title: string =
-   *   frontMatter?.title ?? frontMatter?.datapackage?.title ?? params.project; */
-  const title = "test";
+  const title: string =
+    frontMatter?.title ?? frontMatter?.datapackage?.title ?? params.project;
   const description: string =
     frontMatter?.description ?? frontMatter?.datapackage?.description ?? title;
 
   return {
-    title: title,
+    title,
     description: description,
   };
 }
