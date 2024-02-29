@@ -3,12 +3,16 @@ import MdxPage from "@/components/mdx";
 import { api } from "@/trpc/server";
 import parse from "@/lib/markdown";
 import { env } from "@/env.mjs";
+import { ErrorMessage } from "@/components/error-message";
 
-async function fetchData(params) {
+export async function generateMetadata({
+  params,
+}: {
+  params: { user: string; project: string; slug: string };
+}) {
   const slug = decodeURIComponent(params.slug);
 
   let mdString;
-  let permalinks;
 
   try {
     mdString = await api.site.getPageContent.query({
@@ -16,30 +20,19 @@ async function fetchData(params) {
       projectName: params.project,
       slug: slug !== "undefined" ? slug.split(",").join("/") : "",
     });
-    permalinks = await api.site.getSitePermalinks.query({
-      gh_username: params.user,
-      projectName: params.project,
-    });
   } catch (error) {
     notFound();
   }
 
-  const { mdxSource, frontMatter } = await parse(
-    mdString,
-    "mdx",
-    {},
-    permalinks,
-  );
+  let frontMatter;
 
-  return { mdxSource, frontMatter };
-}
+  try {
+    const data = await parse(mdString, "mdx", {});
+    frontMatter = data.frontMatter;
+  } catch (e: any) {
+    return {};
+  }
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { user: string; project: string; slug: string };
-}) {
-  const { frontMatter } = await fetchData(params);
   const title: string =
     frontMatter?.title ?? frontMatter?.datapackage?.title ?? params.project;
   const description: string =
@@ -62,7 +55,39 @@ export default async function SitePage({
 }: {
   params: { user: string; project: string; slug: string };
 }) {
-  const { mdxSource, frontMatter } = await fetchData(params);
+  const slug = decodeURIComponent(params.slug);
+
+  let mdString;
+  let permalinks;
+
+  try {
+    mdString = await api.site.getPageContent.query({
+      gh_username: params.user,
+      projectName: params.project,
+      slug: slug !== "undefined" ? slug.split(",").join("/") : "",
+    });
+    permalinks = await api.site.getSitePermalinks.query({
+      gh_username: params.user,
+      projectName: params.project,
+    });
+  } catch (error) {
+    notFound();
+  }
+
+  let mdxSource;
+  let frontMatter;
+
+  try {
+    const data = await parse(mdString, "mdx", {}, permalinks);
+    mdxSource = data.mdxSource;
+    frontMatter = data.frontMatter;
+  } catch (e: any) {
+    return (
+      <div className="p-6">
+        <ErrorMessage title="MDX parsing error:" message={e.message} />
+      </div>
+    );
+  }
 
   const { id, gh_branch } = (await api.site.get.query({
     gh_username: params.user,
@@ -70,12 +95,10 @@ export default async function SitePage({
   }))!;
 
   return (
-    <>
-      <MdxPage
-        source={mdxSource}
-        frontMatter={frontMatter}
-        dataUrlBase={`https://${env.R2_BUCKET_DOMAIN}/${id}/${gh_branch}/raw`}
-      />
-    </>
+    <MdxPage
+      source={mdxSource}
+      frontMatter={frontMatter}
+      dataUrlBase={`https://${env.R2_BUCKET_DOMAIN}/${id}/${gh_branch}/raw`}
+    />
   );
 }
