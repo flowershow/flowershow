@@ -9,7 +9,7 @@ import {
 import type { SupportedExtension } from "./types";
 import { GitHubAPIRepoTree, GitHubAPIFileContent } from "./github";
 import { env } from "@/env.mjs";
-import yaml from "js-yaml";
+import YAML from "yaml";
 import { DataPackage } from "@/components/layouts/datapackage-types";
 
 const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_KEY_ID, R2_BUCKET_NAME } =
@@ -184,7 +184,7 @@ export const fetchContent = async ({
         if (packagePath.endsWith(".json")) {
           datapackage = JSON.parse(packageContent) as DataPackage;
         } else {
-          datapackage = yaml.load(packageContent) as DataPackage;
+          datapackage = YAML.parse(packageContent) as DataPackage;
         }
         break;
       } catch (error) {
