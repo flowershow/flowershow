@@ -44,6 +44,11 @@ const githubFetch = async ({
           code: "FORBIDDEN",
           message: "Access to the GitHub resource is forbidden.",
         });
+      case 404:
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `GitHub resource not found: ${response.statusText}`,
+        });
       default:
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -218,7 +223,7 @@ export const checkIfBranchExists = async ({
   access_token: string;
 }) => {
   try {
-    await githubFetch({
+    return await githubFetch({
       // https://docs.github.com/en/rest/branches/branches?apiVersion=2022-11-28#get-a-branch
       url: `/repos/${gh_repository}/branches/${gh_branch}`,
       accessToken: access_token,
@@ -226,9 +231,13 @@ export const checkIfBranchExists = async ({
         cache: "no-store",
       },
     });
-    return true;
   } catch (error) {
-    return false;
+    if (error instanceof TRPCError) {
+      if (error.code === "NOT_FOUND") {
+        return false;
+      }
+      throw new TRPCError(error);
+    }
   }
 };
 

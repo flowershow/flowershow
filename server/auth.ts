@@ -102,6 +102,8 @@ export const authOptions: NextAuthOptions = {
         id: token.sub,
         // @ts-expect-error
         username: token?.user?.username || token?.user?.gh_username,
+        // @ts-expect-error
+        role: token.user.role,
       };
       // @ts-expect-error
       session.accessToken = token.accessToken;
@@ -119,6 +121,7 @@ export function getSession() {
       username: string;
       email: string;
       image: string;
+      role: string;
     };
     accessToken: string;
   } | null>;
