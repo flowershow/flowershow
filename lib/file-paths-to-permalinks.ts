@@ -38,5 +38,16 @@ const pathToPermalinkFunc = ({
   if (fileExtension && isSupportedAssetExtension(fileExtension)) {
     return rawBaseUrl ? `${rawBaseUrl}/${permalink}` : permalink;
   }
-  return pathPrefix ? `${pathPrefix}/${permalink}` : permalink;
+
+  // TODO temporary hack for datahub.io/docs /collection /blog and /core
+  // so that wikillinks also point to that instead of {user}/{project}/docs etc.
+  let prefix: string | null = null;
+  if (pathPrefix) {
+    prefix = pathPrefix
+      .replace(/\/@olayway\/docs/, "/docs")
+      .replace(/\/@olayway\/blog/, "/blog")
+      .replace(/\/@olayway\/collections/, "/collections")
+  }
+
+  return prefix ? `${prefix}/${permalink}` : permalink;
 };
