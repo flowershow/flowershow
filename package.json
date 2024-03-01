@@ -79,6 +79,7 @@
     "tailwind-merge": "^2.0.0",
     "unist-util-visit": "^5.0.0",
     "use-debounce": "^10.0.0",
+    "yaml": "^2.4.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {

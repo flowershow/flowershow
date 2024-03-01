@@ -9,6 +9,8 @@ import {
 import type { SupportedExtension } from "./types";
 import { GitHubAPIRepoTree, GitHubAPIFileContent } from "./github";
 import { env } from "@/env.mjs";
+import YAML from "yaml";
+import { DataPackage } from "@/components/layouts/datapackage-types";
 
 const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_KEY_ID, R2_BUCKET_NAME } =
   env;
@@ -26,6 +28,7 @@ type ContentType =
   | "text/markdown"
   | "text/csv"
   | "application/json"
+  | "application/yaml"
   | "image/jpeg"
   | "image/png"
   | "image/gif"
@@ -95,7 +98,11 @@ const getContentType = (extension: SupportedExtension): ContentType => {
       return "text/csv";
     case "json":
       return "application/json";
+    case "yaml":
+    case "yml":
+      return "application/yaml";
     case "jpeg":
+    case "jpg":
       return "image/jpeg";
     case "png":
       return "image/png";
@@ -135,7 +142,64 @@ export const fetchContent = async ({
   branch: string;
   path: string;
 }) => {
-  return await fetchR2Object(`${projectId}/${branch}/raw/${path}`);
+  const basePath = `${projectId}/${branch}/raw/`;
+  const potentialPaths = [
+    `${basePath}${path}`,
+    `${basePath}${path}/README`,
+    `${basePath}${path}/index`,
+  ];
+
+  if (path === "") {
+    // Prepend paths for the base directory scenarios
+    potentialPaths.unshift(`${basePath}README`, `${basePath}index`);
+  }
+
+  let content: string | null = null;
+  let datapackage: DataPackage | null = null;
+  let shouldFetchPackage = false;
+  let lastError: unknown = null;
+
+  for (const newPath of potentialPaths) {
+    try {
+      content = (await fetchR2Object(newPath)) ?? null;
+      if (newPath.endsWith("README") || newPath.endsWith("index")) {
+        shouldFetchPackage = true;
+      }
+      break;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+
+  const packagePaths = [
+    `${basePath}${path ? path + "/" : ""}datapackage.json`,
+    `${basePath}${path ? path + "/" : ""}datapackage.yaml`,
+    `${basePath}${path ? path + "/" : ""}datapackage.yml`,
+  ];
+
+  if (shouldFetchPackage) {
+    for (const packagePath of packagePaths) {
+      try {
+        const packageContent = (await fetchR2Object(packagePath)) ?? "";
+        if (packagePath.endsWith(".json")) {
+          datapackage = JSON.parse(packageContent) as DataPackage;
+        } else {
+          datapackage = YAML.parse(packageContent) as DataPackage;
+        }
+        break;
+      } catch (error) {
+        // No action needed here. Keep trying the next possible file.
+      }
+    }
+  }
+
+  if (!content) {
+    throw new Error(
+      `Could not fetch content from any configured path. Last error: ${lastError}`,
+    );
+  }
+
+  return { content, datapackage };
 };
 
 export const deleteContent = async ({
@@ -181,7 +245,7 @@ export const fetchTree = async (projectId: string, branch: string) => {
     if (!tree) return null;
     return JSON.parse(tree) as GitHubAPIRepoTree;
   } catch (e) {
-    console.error(e);
+    console.log(e);
     return null;
   }
 };

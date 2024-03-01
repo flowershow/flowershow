@@ -2,6 +2,8 @@
 // TODO the whole layout shouldn\t be client-side rendered, only parts of it
 import { MDXRemote } from "next-mdx-remote";
 import "@portaljs/components/styles.css";
+import { ErrorBoundary } from "react-error-boundary";
+import { ErrorMessage } from "@/components/error-message";
 
 import layouts from "@/components/layouts";
 import { mdxComponentsFactory } from "./mdx-components-factory";
@@ -16,23 +18,38 @@ export default function MDX({ source, frontMatter, dataUrlBase }) {
   const Component = layouts[layout];
 
   const Layout = ({ children }) => {
-    const authors = (frontMatter.authors || []).map((author) => ({
-      name: author,
-      avatar: "/avatarplaceholder.png", // TODO temporary, until we add back support for authors
-    }));
-
     return (
-      <Component {...frontMatter} authors={authors} dataUrlBase={dataUrlBase}>
-        {children}
-      </Component>
+      <ErrorBoundary FallbackComponent={LayoutFallbackComponent}>
+        <Component {...frontMatter} dataUrlBase={dataUrlBase}>
+          {children}
+        </Component>
+      </ErrorBoundary>
     );
   };
 
   return (
     <article id="mdxpage" className="mt-20 pb-20" suppressHydrationWarning>
       <Layout>
-        <MDXRemote {...source} components={components} />
+        <ErrorBoundary FallbackComponent={MDXFallbackComponent}>
+          <MDXRemote {...source} components={components} />
+        </ErrorBoundary>
       </Layout>
     </article>
   );
 }
+
+const MDXFallbackComponent = ({ error }: { error: Error }) => {
+  return (
+    <ErrorMessage
+      title="MDX rendering error:"
+      message={error.message}
+      stack={error.stack}
+    />
+  );
+};
+
+const LayoutFallbackComponent = ({ error }: { error: Error }) => {
+  return (
+    <ErrorMessage title="Layout rendering error:" message={error.message} />
+  );
+};

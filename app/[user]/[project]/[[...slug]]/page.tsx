@@ -3,46 +3,58 @@ import MdxPage from "@/components/mdx";
 import { api } from "@/trpc/server";
 import parse from "@/lib/markdown";
 import { env } from "@/env.mjs";
+import { ErrorMessage } from "@/components/error-message";
+import { DataPackage } from "@/components/layouts/datapackage-types";
 
-/* export async function generateMetadata({
- *     params,
- * }: {
- *     params: { domain: string; slug: string };
- * }) {
- *     const domain = decodeURIComponent(params.domain);
- *     const slug = decodeURIComponent(params.slug);
- *
- *     const [data, siteData] = await Promise.all([
- *         getPostData(domain, slug),
- *         getSiteData(domain),
- *     ]);
- *     if (!data || !siteData) {
- *         return null;
- *     }
- *     const { title, description } = data;
- *
- *     return {
- *         title,
- *         description,
- *         openGraph: {
- *             title,
- *             description,
- *         },
- *         twitter: {
- *             card: "summary_large_image",
- *             title,
- *             description,
- *             creator: "@vercel",
- *         },
- *         // Optional: Set canonical URL to custom domain if it exists
- *         // ...(params.domain.endsWith(`.${env.NEXT_PUBLIC_ROOT_DOMAIN}`) &&
- *         //   siteData.customDomain && {
- *         //     alternates: {
- *         //       canonical: `https://${siteData.customDomain}/${params.slug}`,
- *         //     },
- *         //   }),
- *     };
- * } */
+// TODO clean this up a bit
+export async function generateMetadata({
+  params,
+}: {
+  params: { user: string; project: string; slug: string };
+}) {
+  const slug = decodeURIComponent(params.slug);
+
+  let content: string;
+  let datapackage: DataPackage | null;
+
+  try {
+    const page = await api.site.getPageContent.query({
+      gh_username: params.user,
+      projectName: params.project,
+      slug: slug !== "undefined" ? slug.split(",").join("/") : "",
+    });
+    content = page.content;
+    datapackage = page.datapackage;
+  } catch (error) {
+    notFound();
+  }
+
+  let frontMatter: any;
+
+  try {
+    // TODO move this to a trpc query ?
+    const data = await parse(content, "mdx", {});
+    frontMatter = data.frontMatter;
+  } catch (e: any) {
+    return {};
+  }
+
+  const title: string =
+    frontMatter?.title ??
+    frontMatter?.datapackage?.title ??
+    datapackage?.title ??
+    params.project;
+  const description: string =
+    frontMatter?.description ??
+    frontMatter?.datapackage?.description ??
+    datapackage?.description ??
+    "";
+
+  return {
+    title,
+    description: description,
+  };
+}
 
 /* export async function generateStaticParams() {
  *   // retrun any static params here,
@@ -50,62 +62,64 @@ import { env } from "@/env.mjs";
  *   return [];
  * } */
 
+// TODO clean this up a bit
 export default async function SitePage({
   params,
 }: {
   params: { user: string; project: string; slug: string };
 }) {
   const slug = decodeURIComponent(params.slug);
-  let mdString;
+
+  let content: string;
+  let datapackage: DataPackage | null;
+  let permalinks;
 
   try {
-    mdString = await api.site.getPageContent.query({
+    const page = await api.site.getPageContent.query({
       gh_username: params.user,
       projectName: params.project,
       slug: slug !== "undefined" ? slug.split(",").join("/") : "",
     });
+    content = page.content;
+    datapackage = page.datapackage;
+    permalinks = await api.site.getSitePermalinks.query({
+      gh_username: params.user,
+      projectName: params.project,
+    });
   } catch (error) {
+    notFound();
+  }
+
+  let mdxSource;
+  let frontMatter: {
+    datapackage?: DataPackage;
+    [key: string]: any;
+  } = {};
+
+  try {
+    const data = await parse(content, "mdx", {}, permalinks);
+    mdxSource = data.mdxSource;
+    frontMatter = data.frontMatter;
+  } catch (e: any) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-100">
-        <div className="text-center">
-          <h1 className="mb-4 text-6xl font-bold text-gray-800">404</h1>
-          <p className="mb-8 text-xl text-gray-600">Page Not Found</p>
-          <p className="text-gray-500">
-            The page you are looking for might not exist or has been moved.
-          </p>
-        </div>
+      <div className="p-6">
+        <ErrorMessage title="MDX parsing error:" message={e.message} />
       </div>
     );
   }
-  if (!mdString) {
-    notFound();
-  }
-  const permalinks =
-    (await api.site.getSitePermalinks.query({
-      gh_username: params.user,
-      projectName: params.project,
-    })) ?? [];
 
-  const { mdxSource, frontMatter } = await parse(
-    mdString,
-    "mdx",
-    {},
-    permalinks,
-  );
+  frontMatter.datapackage = frontMatter.datapackage ?? datapackage ?? undefined;
 
-  // TODO temporary solution for fetching files from github
   const { id, gh_branch } = (await api.site.get.query({
     gh_username: params.user,
     projectName: params.project,
   }))!;
 
   return (
-    <>
-      <MdxPage
-        source={mdxSource}
-        frontMatter={frontMatter}
-        dataUrlBase={`https://${env.R2_BUCKET_DOMAIN}/${id}/${gh_branch}/raw`}
-      />
-    </>
+    <MdxPage
+      source={mdxSource}
+      frontMatter={frontMatter}
+      dataUrlBase={`https://${env.R2_BUCKET_DOMAIN}/${id}/${gh_branch}/raw`}
+    />
   );
 }

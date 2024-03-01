@@ -1,6 +1,7 @@
 interface Props extends React.PropsWithChildren {
   title: string;
-  authors: Author[];
+  authors: string[];
+  /* authors: Author[]; */
   date: string;
 }
 
@@ -37,8 +38,8 @@ export const DataStoryLayout: React.FC<Props> = ({
                                     href={urlPath ? `/${urlPath}` : undefined}
                                 />
                             ))} */}
-              {authors.map(({ name, avatar }) => (
-                <Avatar key={name} name={name} img={avatar} />
+              {authors.map((author) => (
+                <Avatar key={author} name={author} />
               ))}
             </div>
           )}
@@ -51,7 +52,7 @@ export const DataStoryLayout: React.FC<Props> = ({
 
 interface AvatarProps {
   name: string;
-  img: string;
+  img?: string;
   href?: string;
 }
 
@@ -60,13 +61,15 @@ const Avatar: React.FC<AvatarProps> = ({ name, img, href }) => {
   return (
     <Component href={href} className="group mt-2 block flex-shrink-0">
       <div className="flex items-center space-x-2">
-        <div>
-          <img
-            className="inline-block h-9 w-9 rounded-full"
-            src={img}
-            alt={name}
-          />
-        </div>
+        {img && (
+          <div>
+            <img
+              className="inline-block h-9 w-9 rounded-full"
+              src={img}
+              alt={name}
+            />
+          </div>
+        )}
         <div className="ml-3">
           <p className="text-sm font-medium text-primary dark:text-primary-dark">
             {name}

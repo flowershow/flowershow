@@ -1,6 +1,15 @@
 type SupportedMarkdownExtension = "md" | "mdx";
 
-type SupportedAssetExtension = "csv" | "json" | "jpeg" | "png" | "gif" | "svg";
+type SupportedAssetExtension =
+  | "csv"
+  | "json"
+  | "yaml"
+  | "yml"
+  | "jpeg"
+  | "jpg"
+  | "png"
+  | "gif"
+  | "svg";
 
 export type SupportedExtension =
   | SupportedMarkdownExtension
@@ -9,15 +18,35 @@ export type SupportedExtension =
 export const isSupportedExtension = (
   extension: string,
 ): extension is SupportedExtension => {
-  return ["md", "mdx", "csv", "json", "jpeg", "png", "gif", "svg"].includes(
-    extension,
-  );
+  return [
+    "md",
+    "mdx",
+    "csv",
+    "json",
+    "yaml",
+    "yml",
+    "jpeg",
+    "jpg",
+    "png",
+    "gif",
+    "svg",
+  ].includes(extension);
 };
 
 export const isSupportedAssetExtension = (
   extension: string,
 ): extension is SupportedAssetExtension => {
-  return ["csv", "json", "jpeg", "png", "gif", "svg"].includes(extension);
+  return [
+    "csv",
+    "json",
+    "yaml",
+    "yml",
+    "jpeg",
+    "jpg",
+    "png",
+    "gif",
+    "svg",
+  ].includes(extension);
 };
 
 export const isSupportedMarkdownExtension = (

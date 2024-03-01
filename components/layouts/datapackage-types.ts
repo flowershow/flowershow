@@ -21,6 +21,8 @@ export interface DataPackage {
   created?: string; // Should follow RFC3339 format
 
   // Additional properties are also allowed
+  updated?: string; // Should follow RFC3339 format
+  views?: SimpleView[]; // TODO support classic/original views
   [key: string]: any;
 }
 
@@ -51,10 +53,22 @@ interface ResourceBase {
   hash?: string; // the hash for this resource, with algorithm prefix if not MD5
   sources?: Source[];
   licenses?: License[];
-  schema?: object | string; // schema object or url-or-path to the schema JSON document
+  // TODO this should be optional
+  schema: ResourceSchema; // TODO support string with URL to schema as per spec?
 
   // Additional properties are allowed, therefore an index signature is needed
   [key: string]: any;
+}
+
+// TODO check if this is the correct schema
+export interface ResourceSchema {
+  fields: ResourceSchemaField[];
+  // ...
+}
+
+export interface ResourceSchemaField {
+  name: string;
+  type: "date" | "number";
 }
 
 type License = LicenseWithName | LicenseWithPath;
@@ -97,8 +111,40 @@ interface Contributor {
   organization?: string;
 }
 
+export interface View {
+  id?: string;
+  label?: string;
+  resourceName: string;
+  type: string;
+  state: {
+    group: string;
+    series: string[];
+    graphType: GraphType;
+  };
+}
+
+export interface SimpleView {
+  name: string;
+  title: string;
+  resourceName: string;
+  specType: "simple";
+  spec: ViewSpec;
+}
+
+interface ViewSpec {
+  type: GraphType;
+  group: string;
+  series: string[];
+}
+
+type GraphType = "lines-and-points" | "points" | "lines" | "bars" | "columns";
+
 export function isResourceWithPath(
   resource: Resource,
 ): resource is ResourceWithPath {
   return (resource as ResourceWithPath).path !== undefined;
+}
+
+export function isSimpleView(view: SimpleView | View): view is SimpleView {
+  return (view as SimpleView).specType === "simple";
 }

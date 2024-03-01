@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { env } from "@/env.mjs";
 
+const mainAccount = "olayway"; // temporary
+
 export const config = {
   matcher: [
     /*
@@ -67,6 +69,25 @@ export default async function middleware(req: NextRequest) {
     hostname === `dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
     hostname === `staging-dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
   ) {
+    // if path matches /blog/{restofpath} rewrite to /{mainAccount}/blog/{restofpath}
+    if (path.match(/^\/blog/)) {
+      return NextResponse.rewrite(new URL(`/${mainAccount}${path}`, req.url));
+    }
+    // if path matches /docs/{restofpath} rewrite to /{mainAccount}/docs/{restofpath}
+    if (path.match(/^\/docs/)) {
+      return NextResponse.rewrite(new URL(`/${mainAccount}${path}`, req.url));
+    }
+    // if path matches /collections/{restofpath} rewrite to /{mainAccount}/collections/{restofpath}
+    if (path.match(/^\/collections/)) {
+      return NextResponse.rewrite(new URL(`/${mainAccount}${path}`, req.url));
+    }
+    // if path matches /core/{restofpath} rewrite to /{mainAccount}/{restofpath}
+    if (path.match(/^\/core/)) {
+      const pathAfterCore = path.replace(/^\/core/, "");
+      return NextResponse.rewrite(
+        new URL(`/${mainAccount}${pathAfterCore}`, req.url),
+      );
+    }
     // if path matches /@{username}/{project}/{restofpath} rewrite to /{username}/{project}/{restofpath}}
     const match = path.match(/^\/@([^/]+)\/([^/]+)(.*)/);
     if (match) {

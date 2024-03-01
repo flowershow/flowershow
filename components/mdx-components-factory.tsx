@@ -14,6 +14,8 @@ import {
   Vega,
   VegaLite,
 } from "@portaljs/components";
+import { ErrorBoundary } from "react-error-boundary";
+import { ErrorMessage } from "@/components/error-message";
 import { FrictionlessViewFactory } from "./frictionless-view";
 
 export const mdxComponentsFactory = ({
@@ -47,60 +49,150 @@ export const mdxComponentsFactory = ({
     /* Custom components */
     pre,
     mermaid,
-    BucketViewer,
-    Catalog,
-    Map,
+    BucketViewer: (props) => {
+      return (
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`BucketViewer` component error:",
+          })}
+        >
+          <BucketViewer {...props} />
+        </ErrorBoundary>
+      );
+    },
+    Catalog: (props) => {
+      return (
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`Catalog` component error:",
+          })}
+        >
+          <Catalog {...props} />
+        </ErrorBoundary>
+      );
+    },
+    Map: (props) => {
+      return (
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`Map` component error:",
+          })}
+        >
+          <Map {...props} />
+        </ErrorBoundary>
+      );
+    },
     Excel: (props: ExcelProps) => {
       return (
-        <Excel {...props} url={resolveRelativeUrl(props.url, dataUrlBase)} />
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`Excel` component error:",
+          })}
+        >
+          <Excel {...props} url={resolveRelativeUrl(props.url, dataUrlBase)} />
+        </ErrorBoundary>
       );
     },
     FlatUiTable: (props: FlatUiTableProps) => {
-      if (props.url) {
-        props.url = resolveRelativeUrl(props.url, dataUrlBase);
+      let url = props.url;
+      if (url) {
+        url = resolveRelativeUrl(url, dataUrlBase);
       }
-      return <FlatUiTable {...props} />;
+      return (
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`FlatUiTable` component error:",
+          })}
+        >
+          <FlatUiTable {...props} url={url} />
+        </ErrorBoundary>
+      );
     },
     LineChart: (props: LineChartProps) => {
-      if (typeof props.data === "string") {
-        props.data = resolveRelativeUrl(props.data, dataUrlBase);
+      let data = props.data;
+      if (typeof data === "string") {
+        data = resolveRelativeUrl(data, dataUrlBase);
       }
-      return <LineChart {...props} />;
+      return (
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`LineChart` component error:",
+          })}
+        >
+          <LineChart {...props} data={data} />
+        </ErrorBoundary>
+      );
     },
     PdfViewer: (props: PdfViewerProps) => {
       return (
-        <PdfViewer
-          {...props}
-          url={resolveRelativeUrl(props.url, dataUrlBase)}
-        />
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`PdfViewer` component error:",
+          })}
+        >
+          <PdfViewer
+            {...props}
+            url={resolveRelativeUrl(props.url, dataUrlBase)}
+          />
+        </ErrorBoundary>
       );
     },
     Vega: (props) => {
-      if (props.spec.data.URL) {
-        props.spec.data.URL = resolveRelativeUrl(
-          props.spec.data.URL,
-          dataUrlBase,
-        );
+      let spec = props.spec;
+      if (spec.data.URL) {
+        spec.data.URL = resolveRelativeUrl(spec.data.URL, dataUrlBase);
       }
-      return <Vega {...props} />;
+      return (
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`Vega` component error:",
+          })}
+        >
+          <Vega {...props} spec={spec} />
+        </ErrorBoundary>
+      );
     },
     VegaLite: (props) => {
-      if (props.spec.data.URL) {
-        props.spec.data.URL = resolveRelativeUrl(
-          props.spec.data.URL,
-          dataUrlBase,
-        );
+      let spec = props.spec;
+      if (spec.data.URL) {
+        spec.data.URL = resolveRelativeUrl(spec.data.URL, dataUrlBase);
       }
-      return <VegaLite {...props} />;
+      return (
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`VegaLite` component error:",
+          })}
+        >
+          <VegaLite {...props} spec={spec} />
+        </ErrorBoundary>
+      );
     },
   };
 
   if (frontMatter.datapackage) {
-    components.FrictionlessView = FrictionlessViewFactory({
+    const FrictionlessView = FrictionlessViewFactory({
       views: frontMatter.datapackage.views,
       resources: frontMatter.datapackage.resources,
       dataUrlBase,
     });
+    components.FrictionlessView = ({
+      id,
+      fullWidth,
+    }: {
+      id: number;
+      fullWidth: boolean;
+    }) => {
+      return (
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`FrictionlessView` component error:",
+          })}
+        >
+          <FrictionlessView viewId={id} fullWidth={fullWidth} />
+        </ErrorBoundary>
+      );
+    };
+    components.FrictionlessView.displayName = "FrictionlessView";
   }
   return components;
 };
@@ -110,3 +202,12 @@ const resolveRelativeUrl = (url: string, urlPrefix: string) => {
     ? url
     : `${urlPrefix}/${url.replace(/^\/+/g, "")}`;
 };
+
+const FallbackComponentFactory = ({ title }: { title: string }) => {
+  const FallbackComponent = ({ error }: { error: Error }) => {
+    return <ErrorMessage title={title} message={error.message} />;
+  };
+  FallbackComponent.displayName = "FallbackComponent";
+  return FallbackComponent;
+};
+FallbackComponentFactory.displayName = "FallbackComponentFactory";
