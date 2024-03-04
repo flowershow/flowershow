@@ -102,9 +102,9 @@ export default function CreateSiteModal() {
       onSuccess: (res) => {
         va.track("Created Site");
         const { id } = res;
-        router.refresh();
-        router.push(`/site/${id}/settings`);
         modal?.hide();
+        router.push(`/site/${id}/settings`);
+        router.refresh();
         toast.success(`Successfully created site!`);
       },
       onError: (error) => {
