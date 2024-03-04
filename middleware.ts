@@ -66,6 +66,7 @@ export default async function middleware(req: NextRequest) {
 
   // TODO temporary rewrite dev subdomain to `/home` folder
   if (
+    hostname === `${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
     hostname === `dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
     hostname === `staging-dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
   ) {
