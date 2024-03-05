@@ -1,7 +1,7 @@
 import Link from "next/link.js";
 
 interface Props {
-  title: string;
+  title?: string;
   logo?: string;
   version?: string;
   url?: string;

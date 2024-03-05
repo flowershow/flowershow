@@ -20,7 +20,7 @@ export interface SocialLink {
 }
 
 export interface NavConfig {
-  title: string;
+  title?: string;
   links: Array<NavLink>;
   logo?: string;
   version?: string;

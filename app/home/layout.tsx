@@ -9,7 +9,7 @@ export default function HomeLayout({ children }: { children: ReactNode }) {
     <>
       <div className="min-h-screen bg-background dark:bg-background-dark">
         <Nav
-          title={config.navbarTitle.title}
+          title={config.navbarTitle.text}
           logo={config.navbarTitle.logo}
           url={config.author.url}
           links={config.navLinks}
