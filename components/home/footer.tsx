@@ -1,4 +1,19 @@
 import Link from "next/link";
+import { GithubIcon, LinkedinIcon, TwitterIcon } from "lucide-react";
+// TODO dynamic import the above
+
+const DiscordIcon: React.FC<{ [x: string]: unknown }> = (props) => {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      fill="currentColor"
+      viewBox="0 0 16 16"
+      {...props}
+    >
+      <path d="M13.545 2.907a13.227 13.227 0 0 0-3.257-1.011.05.05 0 0 0-.052.025c-.141.25-.297.577-.406.833a12.19 12.19 0 0 0-3.658 0 8.258 8.258 0 0 0-.412-.833.051.051 0 0 0-.052-.025c-1.125.194-2.22.534-3.257 1.011a.041.041 0 0 0-.021.018C.356 6.024-.213 9.047.066 12.032c.001.014.01.028.021.037a13.276 13.276 0 0 0 3.995 2.02.05.05 0 0 0 .056-.019c.308-.42.582-.863.818-1.329a.05.05 0 0 0-.01-.059.051.051 0 0 0-.018-.011 8.875 8.875 0 0 1-1.248-.595.05.05 0 0 1-.02-.066.051.051 0 0 1 .015-.019c.084-.063.168-.129.248-.195a.05.05 0 0 1 .051-.007c2.619 1.196 5.454 1.196 8.041 0a.052.052 0 0 1 .053.007c.08.066.164.132.248.195a.051.051 0 0 1-.004.085 8.254 8.254 0 0 1-1.249.594.05.05 0 0 0-.03.03.052.052 0 0 0 .003.041c.24.465.515.909.817 1.329a.05.05 0 0 0 .056.019 13.235 13.235 0 0 0 4.001-2.02.049.049 0 0 0 .021-.037c.334-3.451-.559-6.449-2.366-9.106a.034.034 0 0 0-.02-.019Zm-8.198 7.307c-.789 0-1.438-.724-1.438-1.612 0-.889.637-1.613 1.438-1.613.807 0 1.45.73 1.438 1.613 0 .888-.637 1.612-1.438 1.612Zm5.316 0c-.788 0-1.438-.724-1.438-1.612 0-.889.637-1.613 1.438-1.613.807 0 1.451.73 1.438 1.613 0 .888-.631 1.612-1.438 1.612Z" />
+    </svg>
+  );
+};
 
 interface FooterLink {
   name: string;
@@ -8,6 +23,11 @@ interface FooterLink {
   }>;
 }
 
+interface FooterSocial {
+  label: "discord" | "github" | "linkedin" | "twitter";
+  href: string;
+}
+
 interface AuthorConfig {
   name: string;
   url?: string;
@@ -15,55 +35,90 @@ interface AuthorConfig {
 }
 
 interface Props {
+  links: Array<FooterLink>;
+  description?: string;
   author: AuthorConfig;
-  links?: Array<FooterLink>;
+  social?: Array<FooterSocial>;
 }
 
-// TODO replace this with some nice tailwindui footer
-export const Footer: React.FC<Props> = ({ links, author }) => {
-  return (
-    <footer className="prose flex h-auto w-full max-w-none flex-col items-center justify-center bg-background pb-20 pt-0 dark:prose-invert dark:bg-background-dark">
-      <div className="grid w-full grid-cols-1 px-14 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
-        {links &&
-          links.map((item) => (
-            <div
-              key={item.name}
-              className="flex flex-col items-center sm:items-start"
-            >
-              <h3 className="inline-flex items-center pt-1 font-bold">
-                {item.name}
-              </h3>
-              {item.subItems.map((subItem) => (
-                <Link
-                  key={subItem.href}
-                  href={subItem.href}
-                  className="main-text inline-flex items-center pt-1 text-center !text-black no-underline sm:text-start"
-                >
-                  {subItem.name}
-                </Link>
-              ))}
-            </div>
-          ))}
-      </div>
-      <p className="flex items-center justify-center">
-        Powered by
-        <a
-          href={author.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center no-underline"
-        >
-          {author.logo && (
-            <img
-              src={author.logo}
-              alt={author.name}
-              className="mx-2 my-0 block h-6"
-            />
-          )}
+const icon = {
+  discord: DiscordIcon,
+  github: GithubIcon,
+  linkedin: LinkedinIcon,
+  twitter: TwitterIcon,
+};
 
-          {author.name}
-        </a>
-      </p>
+export const Footer: React.FC<Props> = ({
+  links,
+  social,
+  author,
+  description,
+}) => {
+  return (
+    <footer className="bg-white" aria-labelledby="footer-heading">
+      <h2 id="footer-heading" className="sr-only">
+        Footer
+      </h2>
+      <div className="mx-auto max-w-7xl px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32">
+        <div className="xl:grid xl:grid-cols-3 xl:gap-8">
+          <div className="space-y-8">
+            <p className="flex">
+              Powered by{" "}
+              <img className="mx-2 h-6" src={author.logo} alt="Company name" />
+              DataHub
+            </p>
+            {description && (
+              <p className="text-sm leading-6 text-gray-600">{description}</p>
+            )}
+            {social && (
+              <div className="flex space-x-6">
+                {social.map((item) => {
+                  const Icon = icon[item.label];
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className="text-gray-400 hover:text-gray-500"
+                    >
+                      <span className="sr-only">{item.label}</span>
+                      <Icon className="h-6 w-6" aria-hidden="true" />
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+          <div className="mt-16 grid grid-cols-3 gap-8 xl:col-span-2 xl:mt-0">
+            {links &&
+              links.map((link) => {
+                return (
+                  <div className="mt-10 md:mt-0">
+                    <h3 className="text-sm font-semibold leading-6 text-gray-900">
+                      {link.name}
+                    </h3>
+                    <ul role="list" className="mt-6 space-y-4">
+                      {link.subItems.map((item) => (
+                        <li key={item.name}>
+                          <Link
+                            href={item.href}
+                            className="text-sm leading-6 text-gray-600 hover:text-gray-900"
+                          >
+                            {item.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                );
+              })}
+          </div>
+        </div>
+        <div className="mt-16 border-t border-gray-900/10 pt-8 sm:mt-20 lg:mt-24">
+          <p className="text-xs leading-5 text-gray-500">
+            &copy; 2024 All rights reserved
+          </p>
+        </div>
+      </div>
     </footer>
   );
 };
