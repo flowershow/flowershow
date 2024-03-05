@@ -1,7 +1,6 @@
 "use client";
 // TODO the whole layout shouldn\t be client-side rendered, only parts of it
 import { MDXRemote } from "next-mdx-remote";
-import "@portaljs/components/styles.css";
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorMessage } from "@/components/error-message";
 
