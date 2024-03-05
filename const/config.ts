@@ -35,19 +35,17 @@ const config = {
       ],
     },
   ],
-  // navLinks: [
-  //     { name: "Data-rich documents", href: "https://dev.datahub.io/data-rich" },
-  //     { name: "Cloud", href: "https://cloud.datahub.io/" },
-  //     { name: "ABOUT", href: "/docs/about" },
-  //     { name: "BLOG", href: "/blog" },
-  //     { name: "FIND DATA", href: "/search" },
-  //     { name: "COLLECTIONS", href: "/collections" },
-  //     { name: "DOCS", href: "/docs" },
-  //     { name: "TOOLS", href: "/download" },
-  //     { name: "TOOLKIT", href: "/toolkit" },
-  //     { name: "CHAT", href: "https://discord.com/invite/KrRzMKU" },
-  // ],
-  social: [{ label: "discord", href: "https://discord.gg/cPxejPzpwt" }],
+  navLinks: [
+    { name: "BLOG", href: "/blog" },
+    { name: "DOCS", href: "/docs" },
+    { name: "COLLECTIONS", href: "/collections" },
+    { name: "FORUM", href: "https://github.com/datahubio/datahub/discussions" },
+    { name: "CHAT", href: "https://discord.com/invite/KrRzMKU" },
+    // { name: "FIND DATA", href: "/search" },
+    // { name: "TOOLS", href: "/download" },
+    // { name: "TOOLKIT", href: "/toolkit" },
+  ],
+  social: [{ label: "discord", href: "https://discord.com/invite/KrRzMKU" }],
 } as any;
 
 export default config;
