@@ -20,14 +20,14 @@ export async function generateMetadata({
   const project = decodeURIComponent(params.project);
   /* const user = decodeURIComponent(params.user);
 
-        * const site = await api.site.get.query({
-        *   gh_username: user,
-        *   projectName: project,
-        * });
+          * const site = await api.site.get.query({
+          *   gh_username: user,
+          *   projectName: project,
+          * });
 
-        * if (!site) {
-        *   return null;
-        * } */
+          * if (!site) {
+          *   return null;
+          * } */
 
   return {
     title: project,
@@ -94,7 +94,7 @@ export default async function SiteLayout({
             )} */}
 
       <div className="max-w-8xl mx-auto px-4 md:px-8">
-        <Footer links={[]} author={config.author} />
+        <Footer links={config.footerLinks} author={config.author} />
       </div>
     </div>
   );

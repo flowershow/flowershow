@@ -46,7 +46,7 @@ export const Footer: React.FC<Props> = ({ links, author }) => {
           ))}
       </div>
       <p className="flex items-center justify-center">
-        Created by
+        Powered by
         <a
           href={author.url}
           target="_blank"
