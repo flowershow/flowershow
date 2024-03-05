@@ -68,7 +68,7 @@ export const DataPackageLayout: React.FC<Props> = ({
         title: `Error in \`datapackage\` layout:`,
       })}
     >
-      <article className="prose mx-auto mt-20 max-w-5xl px-12 pb-20 text-primary">
+      <article className="prose mx-auto mt-20 max-w-6xl px-12 pb-20 text-primary prose-headings:font-medium">
         <header>
           {title && <h1>{title}</h1>}
           {description && (
@@ -96,8 +96,8 @@ export const DataPackageLayout: React.FC<Props> = ({
                 <th>Format</th>
                 {created && <th>Created</th>}
                 {updated && <th>Updated</th>}
-                {licenses && <th>Licenses</th>}
-                {sources && <th>Sources</th>}
+                {licenses && <th>License</th>}
+                {sources && <th>Source</th>}
               </tr>
             </thead>
             <tbody>
@@ -111,34 +111,24 @@ export const DataPackageLayout: React.FC<Props> = ({
                 {updated && <td>{updated}</td>}
                 {licenses && (
                   <td>
-                    {licenses.map((l) => {
-                      return (
-                        <a
-                          key={`license-${l.name}`}
-                          target="_blank"
-                          href={l.path}
-                          className="mb-2 block hover:text-[#6366F1]"
-                        >
-                          {l.title}
-                        </a>
-                      );
-                    })}
+                    <a
+                      target="_blank"
+                      href={licenses[0]?.path}
+                      className="mb-2 block hover:text-[#6366F1]"
+                    >
+                      {licenses[0]?.title || ""}
+                    </a>
                   </td>
                 )}
                 {sources && (
                   <td>
-                    {sources.map((s) => {
-                      return (
-                        <a
-                          key={`source-${s.path}`}
-                          target="_blank"
-                          href={s.path}
-                          className="mb-2 block hover:text-[#6366F1]"
-                        >
-                          {s.title}
-                        </a>
-                      );
-                    })}
+                    <a
+                      target="_blank"
+                      href={sources[0]?.path}
+                      className="mb-2 block hover:text-[#6366F1]"
+                    >
+                      {sources[0]?.title || ""}
+                    </a>
                   </td>
                 )}
               </tr>
@@ -165,8 +155,10 @@ export const DataPackageLayout: React.FC<Props> = ({
             <thead>
               <tr>
                 <th>File</th>
-                <th>Title</th>
                 <th>Description</th>
+                <th>Size</th>
+                <th>Last changed</th>
+                <th>Download</th>
               </tr>
             </thead>
             <tbody>
@@ -176,6 +168,16 @@ export const DataPackageLayout: React.FC<Props> = ({
                     key={`resources-list-${r.name}`}
                     className="even:bg-gray-50"
                   >
+                    <td>
+                      <a href={`#${r.name}`} className="hover:text-[#6366F1]">
+                        <div className="flex items-center space-x-1 ">
+                          <span>{r.name}</span>
+                        </div>
+                      </a>
+                    </td>
+                    <td>{r.description || ""}</td>
+                    <td>{r.bytes ? prettyBytes(r.bytes) : ""}</td>
+                    <td>{r.lastModified || ""}</td>
                     <td>
                       <a
                         target="_blank"
@@ -188,8 +190,6 @@ export const DataPackageLayout: React.FC<Props> = ({
                         </div>
                       </a>
                     </td>
-                    <td>{r.title || r.name}</td>
-                    <td>{r.description || ""}</td>
                   </tr>
                 );
               })}
@@ -202,7 +202,7 @@ export const DataPackageLayout: React.FC<Props> = ({
             {resources.slice(0, 5).map((r) => {
               return (
                 <div key={`resource-preview-${r.name}`} className="mt-10">
-                  <h3>{r.title || r.name || r.path}</h3>
+                  <h3 id={r.name}>{r.title || r.name || r.path}</h3>
 
                   <ErrorBoundary
                     FallbackComponent={FallbackComponentFactory({

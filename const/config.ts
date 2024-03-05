@@ -1,28 +1,64 @@
 const config = {
   author: {
-    name: "Datopian",
-    url: "https://www.datopian.com/",
-    logo: "/datopian-logo-black.png",
+    name: "DataHub",
+    url: "https://datahub.io/",
+    logo: "/datahub-cube.svg",
   },
   navbarTitle: {
     logo: "/datahub-cube.svg",
     text: "",
   },
   title: "DataHub",
+  description:
+    "Turn your markdown into a website in a couple of clicks. Avoid the hassle and complexity of deploying yourself.",
   logo: "/datahub-cube.svg",
-  // navLinks: [
-  //     { name: "Data-rich documents", href: "https://dev.datahub.io/data-rich" },
-  //     { name: "Cloud", href: "https://cloud.datahub.io/" },
-  //     { name: "ABOUT", href: "/docs/about" },
-  //     { name: "BLOG", href: "/blog" },
-  //     { name: "FIND DATA", href: "/search" },
-  //     { name: "COLLECTIONS", href: "/collections" },
-  //     { name: "DOCS", href: "/docs" },
-  //     { name: "TOOLS", href: "/download" },
-  //     { name: "TOOLKIT", href: "/toolkit" },
-  //     { name: "CHAT", href: "https://discord.com/invite/KrRzMKU" },
-  // ],
-  social: [{ label: "discord", href: "https://discord.gg/cPxejPzpwt" }],
+  footerLinks: [
+    {
+      name: "Links",
+      subItems: [
+        { href: "/", name: "Home" },
+        { href: "/docs/terms-of-service", name: "Terms of Service" },
+        // { href: "/docs/privacy", name: "Privacy Policy" },
+        { href: "/blog", name: "Blog" },
+        { href: "/docs", name: "Docs" },
+        { href: "/collections", name: "Collections" },
+        // { href: "https://old.datahub.io/", name: "Old DataHub" },
+      ],
+    },
+    {
+      name: "Support",
+      subItems: [
+        { href: "https://discord.com/invite/KrRzMKU", name: "Chat" },
+        {
+          name: "Discussions",
+          href: "https://github.com/datahubio/datahub/discussions",
+        },
+        // { href: "/docs/faq", name: "FAQ" },
+      ],
+    },
+    {
+      name: "Contact",
+      subItems: [
+        { href: "mailto:support@datahub.io", name: "support@datahub.io" },
+      ],
+    },
+  ],
+  navLinks: [
+    { name: "BLOG", href: "/blog" },
+    { name: "DOCS", href: "/docs" },
+    { name: "COLLECTIONS", href: "/collections" },
+    { name: "FORUM", href: "https://github.com/datahubio/datahub/discussions" },
+    { name: "CHAT", href: "https://discord.com/invite/KrRzMKU" },
+    // { name: "FIND DATA", href: "/search" },
+    // { name: "TOOLS", href: "/download" },
+    // { name: "TOOLKIT", href: "/toolkit" },
+  ],
+  social: [
+    { label: "discord", href: "https://discord.com/invite/KrRzMKU" },
+    { label: "linkedin", href: "https://www.linkedin.com/company/10340373" },
+    { label: "twitter", href: "https://twitter.com/datopian" },
+    { label: "github", href: "https://github.com/datopian" },
+  ],
 } as any;
 
 export default config;
