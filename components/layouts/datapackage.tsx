@@ -68,7 +68,7 @@ export const DataPackageLayout: React.FC<Props> = ({
         title: `Error in \`datapackage\` layout:`,
       })}
     >
-      <article className="prose mx-auto mt-20 max-w-5xl px-12 pb-20 text-primary">
+      <article className="prose mx-auto mt-20 max-w-6xl px-12 pb-20 text-primary">
         <header>
           {title && <h1>{title}</h1>}
           {description && (
