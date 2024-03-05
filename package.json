@@ -74,6 +74,7 @@
     "server-only": "^0.0.1",
     "sharp": "^0.32.6",
     "sonner": "^1.2.0",
+    "strip-markdown": "^6.0.0",
     "superjson": "^2.2.1",
     "swr": "^2.2.4",
     "tailwind-merge": "^2.0.0",

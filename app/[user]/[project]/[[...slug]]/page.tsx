@@ -5,6 +5,7 @@ import parse from "@/lib/markdown";
 import { env } from "@/env.mjs";
 import { ErrorMessage } from "@/components/error-message";
 import { DataPackage } from "@/components/layouts/datapackage-types";
+import { computeDataPackage } from "@/lib/computed-fields";
 
 // TODO clean this up a bit
 export async function generateMetadata({
@@ -108,7 +109,11 @@ export default async function SitePage({
     );
   }
 
-  frontMatter.datapackage = frontMatter.datapackage ?? datapackage ?? undefined;
+  frontMatter.datapackage = computeDataPackage({
+    frontMatter,
+    datapackage,
+    source: content,
+  });
 
   const { id, gh_branch } = (await api.site.get.query({
     gh_username: params.user,
