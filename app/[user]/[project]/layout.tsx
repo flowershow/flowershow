@@ -4,10 +4,13 @@ import { ReactNode } from "react";
 /* import CTA from "@/components/cta";
  * import ReportAbuse from "@/components/report-abuse"; */
 import { notFound, redirect } from "next/navigation";
-import { fontMapper } from "@/styles/fonts";
+/* import { fontMapper } from "@/styles/fonts"; */
 import { Metadata } from "next";
 import { env } from "@/env.mjs";
 import { api } from "@/trpc/server";
+import { Nav } from "@/components/home/nav";
+import { Footer } from "@/components/home/footer";
+import config from "@/const/config";
 
 export async function generateMetadata({
   params,
@@ -17,14 +20,14 @@ export async function generateMetadata({
   const project = decodeURIComponent(params.project);
   /* const user = decodeURIComponent(params.user);
 
-    * const site = await api.site.get.query({
-    *   gh_username: user,
-    *   projectName: project,
-    * });
+        * const site = await api.site.get.query({
+        *   gh_username: user,
+        *   projectName: project,
+        * });
 
-    * if (!site) {
-    *   return null;
-    * } */
+        * if (!site) {
+        *   return null;
+        * } */
 
   return {
     title: project,
@@ -74,8 +77,14 @@ export default async function SiteLayout({
   }
 
   return (
-    <div className={fontMapper["font-work"]}>
-      <div>{children}</div>
+    <div className="min-h-screen bg-background dark:bg-background-dark">
+      <Nav
+        title={data.projectName}
+        logo={config.navbarTitle.logo}
+        url={config.author.url}
+        links={config.navLinks}
+      />
+      {children}
 
       {/* {domain == `demo.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
                 domain == `platformize.co` ? (
@@ -83,6 +92,10 @@ export default async function SiteLayout({
             ) : (
                 <ReportAbuse />
             )} */}
+
+      <div className="max-w-8xl mx-auto px-4 md:px-8">
+        <Footer links={[]} author={config.author} />
+      </div>
     </div>
   );
 }
