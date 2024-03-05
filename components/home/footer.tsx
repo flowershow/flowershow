@@ -92,7 +92,7 @@ export const Footer: React.FC<Props> = ({
             {links &&
               links.map((link) => {
                 return (
-                  <div className="mt-10 md:mt-0">
+                  <div key={link.name} className="mt-10 md:mt-0">
                     <h3 className="text-sm font-semibold leading-6 text-gray-900">
                       {link.name}
                     </h3>
