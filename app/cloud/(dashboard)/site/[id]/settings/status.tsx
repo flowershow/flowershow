@@ -1,52 +1,78 @@
-/* "use client"; */
-/* import { api } from "@/trpc/react"; */
+"use client";
+import { api } from "@/trpc/react";
+import { useParams } from "next/navigation";
+import { useSync } from "./sync-provider";
+
 import {
   CalendarIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
 } from "@heroicons/react/20/solid";
-import LoadingDots from "@/components/icons/loading-dots";
-import { Suspense } from "react";
+import { useEffect } from "react";
 
-export default async function Status({
-  syncStatus,
-}: {
-  syncStatus: {
-    synced: boolean;
-    syncedAt: Date | null;
-  };
-}) {
-  /* const { data: syncStatus, isLoading } = api.site.checkSyncStatus.useQuery({ id }); */
+export default async function Status() {
+  const { id } = useParams() as { id: string };
+  const { refreshKey } = useSync();
+
+  const {
+    data: syncStatus,
+    isLoading,
+    refetch,
+  } = api.site.checkSyncStatus.useQuery(
+    { id },
+    {
+      refetchInterval: 60 * 1000, // refetch every 1 minute
+      keepPreviousData: true,
+    },
+  );
+
+  useEffect(() => {
+    refetch();
+  }, [refreshKey]);
+
   return (
     <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
-      <Suspense fallback={<LoadingDots />}>
-        <div className="mt-2 flex items-center text-sm text-gray-500">
-          {syncStatus?.synced ? (
-            <div className="flex items-center">
-              <CheckCircleIcon
-                className="mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"
-                aria-hidden="true"
-              />
-              <span>Synced</span>
-            </div>
-          ) : (
-            <div className="flex items-center">
-              <ExclamationCircleIcon
-                className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
-                aria-hidden="true"
-              />
-              <span>Outdated</span>
-            </div>
-          )}
-        </div>
-        <div className="mt-2 flex items-center text-sm text-gray-500">
-          <CalendarIcon
-            className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
-            aria-hidden="true"
-          />
-          Last synced {new Date(syncStatus?.syncedAt!)?.toLocaleString() || ""}
-        </div>
-      </Suspense>
+      <div className="mt-2 flex items-center text-sm text-gray-500">
+        {isLoading ? (
+          <div className="flex items-center">
+            <ExclamationCircleIcon
+              className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
+              aria-hidden="true"
+            />
+            <span>-</span>
+          </div>
+        ) : syncStatus?.synced ? (
+          <div className="flex items-center">
+            <CheckCircleIcon
+              className="mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"
+              aria-hidden="true"
+            />
+            <span>Synced</span>
+          </div>
+        ) : (
+          <div className="flex items-center">
+            <ExclamationCircleIcon
+              className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
+              aria-hidden="true"
+            />
+            <span>Outdated</span>
+          </div>
+        )}
+      </div>
+      <div className="mt-2 flex items-center text-sm text-gray-500">
+        <CalendarIcon
+          className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
+          aria-hidden="true"
+        />
+        {isLoading ? (
+          <span>-</span>
+        ) : (
+          <span>
+            Last synced{" "}
+            {new Date(syncStatus?.syncedAt!)?.toLocaleString() || ""}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
