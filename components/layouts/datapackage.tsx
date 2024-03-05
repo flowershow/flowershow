@@ -5,9 +5,13 @@ import { FlatUiTable } from "@portaljs/components";
 import prettyBytes from "pretty-bytes";
 
 import {
-  isResourceWithPath,
   type DataPackage,
-  SimpleView,
+  type SimpleView,
+  type Resource,
+  type View,
+  isResourceWithPath,
+  isSimpleViewWithResourceName,
+  isSimpleView,
 } from "./datapackage-types";
 import { FrictionlessView } from "@/components/frictionless-view";
 import { ErrorMessage } from "@/components/error-message";
@@ -47,8 +51,18 @@ export const DataPackageLayout: React.FC<Props> = ({
     ? prettyBytes(resourceFilesSize)
     : undefined;
 
-  const View: React.FC<{ view: SimpleView }> = ({ view }) => {
-    const resource = resources.find((r) => r.name === view.resourceName);
+  const View: React.FC<{ view: SimpleView | View }> = ({ view }) => {
+    if (!isSimpleView(view)) {
+      throw new Error(
+        'Only views with `specType: "simple"` are supported at the moment.',
+      );
+    }
+    let resource: Resource | undefined;
+    if (isSimpleViewWithResourceName(view)) {
+      resource = resources.find((r) => r.name === view.resourceName);
+    } else {
+      resource = resources.find((r) => r.name === view.resources[0]);
+    }
     if (!resource) {
       throw new Error(`Resource not found for view ${view.name}`);
     }
@@ -135,7 +149,7 @@ export const DataPackageLayout: React.FC<Props> = ({
             </tbody>
           </table>
         </section>
-        {/* <section className="my-12">
+        <section className="my-12">
           {views && <h2>Data Views</h2>}
           {views &&
             views.map((view, id) => (
@@ -148,7 +162,7 @@ export const DataPackageLayout: React.FC<Props> = ({
                 <View view={view} />
               </ErrorBoundary>
             ))}
-        </section> */}
+        </section>
         <section className="my-12">
           <h2>Data files</h2>
           <table className="table-auto divide-y divide-gray-300">

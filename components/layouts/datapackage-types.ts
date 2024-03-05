@@ -29,7 +29,7 @@ export interface DataPackage {
 export type Resource = ResourceWithPath | ResourceWithInlineData;
 
 interface ResourceWithPath extends ResourceBase {
-  path?: string | string[]; // url-or-path or array of url-or-path strings
+  path: string | string[]; // url-or-path or array of url-or-path strings
 }
 
 interface ResourceWithInlineData extends ResourceBase {
@@ -53,8 +53,7 @@ interface ResourceBase {
   hash?: string; // the hash for this resource, with algorithm prefix if not MD5
   sources?: Source[];
   licenses?: License[];
-  // TODO this should be optional
-  schema: ResourceSchema; // TODO support string with URL to schema as per spec?
+  schema?: ResourceSchema; // TODO support string with URL to schema as per spec?
 
   // Additional properties are allowed, therefore an index signature is needed
   [key: string]: any;
@@ -111,40 +110,58 @@ interface Contributor {
   organization?: string;
 }
 
-export interface View {
-  id?: string;
-  label?: string;
+export type View = SimpleView; // TODO support other view types
+
+export type SimpleView = SimpleViewWithResources | SimpleViewWithResourceName;
+
+type SimpleViewWithResources = SimpleViewBase & {
+  resources: string[];
+};
+
+type SimpleViewWithResourceName = SimpleViewBase & {
   resourceName: string;
-  type: string;
-  state: {
+};
+
+interface ViewBase {
+  name: string;
+  title: string;
+  specType: "simple" | "plotly" | "vega" | "vega-lite";
+  spec: any;
+}
+
+interface SimpleViewBase extends ViewBase {
+  specType: "simple";
+  spec: {
+    type: SimpleGraphType;
     group: string;
     series: string[];
-    graphType: GraphType;
   };
 }
 
-export interface SimpleView {
-  name: string;
-  title: string;
-  resourceName: string;
-  specType: "simple";
-  spec: ViewSpec;
+type SimpleGraphType = "line" | "bar";
+
+export function isSimpleView(view: SimpleView | View): view is SimpleView {
+  return (view as SimpleView).specType === "simple";
 }
 
-interface ViewSpec {
-  type: GraphType;
-  group: string;
-  series: string[];
+export function isSimpleViewWithResources(
+  view: SimpleView,
+): view is SimpleViewWithResources {
+  return (view as SimpleViewWithResources).resources !== undefined;
 }
 
-type GraphType = "lines-and-points" | "points" | "lines" | "bars" | "columns";
+export function isSimpleViewWithResourceName(
+  view: SimpleView,
+): view is SimpleViewWithResourceName {
+  return (view as SimpleViewWithResourceName).resourceName !== undefined;
+}
+
+export function isSimpleGraphType(type: string): type is SimpleGraphType {
+  return type === "line" || type === "bar";
+}
 
 export function isResourceWithPath(
   resource: Resource,
 ): resource is ResourceWithPath {
   return (resource as ResourceWithPath).path !== undefined;
-}
-
-export function isSimpleView(view: SimpleView | View): view is SimpleView {
-  return (view as SimpleView).specType === "simple";
 }
