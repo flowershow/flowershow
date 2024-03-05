@@ -19,7 +19,7 @@ export const DataStoryLayout: React.FC<Props> = ({
   const { title, date, authors } = frontMatter;
 
   return (
-    <article className="prose mx-auto mt-20 max-w-3xl px-12 pb-20 text-primary">
+    <article className="prose mx-auto mt-20 max-w-3xl px-12 pb-20 text-primary prose-headings:font-medium">
       <header>
         <div className="mb-4 flex-col items-center">
           {title && <h1 className="flex justify-center">{title}</h1>}
