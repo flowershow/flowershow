@@ -17,14 +17,6 @@ export default function LoginPage() {
       </h1>
       <p className="mt-2 text-center text-sm text-stone-600 dark:text-stone-400">
         Turn your markdown into a website in a couple of clicks. <br />
-        {/* <a
-                    className="font-medium text-black hover:text-stone-800 dark:text-stone-300 dark:hover:text-stone-100"
-                    href="#"
-                    rel="noreferrer"
-                    target="_blank"
-                >
-                    Read the announcement.
-                </a> */}
       </p>
 
       <div className="mx-auto mt-4 w-11/12 max-w-xs sm:w-full">
@@ -35,6 +27,18 @@ export default function LoginPage() {
         >
           <LoginButton />
         </Suspense>
+        <p className="text-center text-xs text-stone-700">
+          By registering, you agree to our
+          <a
+            className="font-medium text-black hover:text-stone-600 dark:text-stone-300 dark:hover:text-stone-100"
+            href="https://datahub.io/docs/terms-of-service"
+            rel="noreferrer"
+            target="_blank"
+          >
+            {" "}
+            Terms of Service.
+          </a>
+        </p>
       </div>
     </div>
   );
