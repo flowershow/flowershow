@@ -1,6 +1,12 @@
 import Link from "next/link";
 
-import type { NavLink } from "./nav";
+interface FooterLink {
+  name: string;
+  subItems: Array<{
+    name: string;
+    href: string;
+  }>;
+}
 
 interface AuthorConfig {
   name: string;
@@ -10,64 +16,52 @@ interface AuthorConfig {
 
 interface Props {
   author: AuthorConfig;
-  links?: Array<NavLink>;
+  links?: Array<FooterLink>;
 }
 
 // TODO replace this with some nice tailwindui footer
 export const Footer: React.FC<Props> = ({ links, author }) => {
   return (
-    <footer className="flex flex-col items-center justify-center gap-3 bg-background px-14 pb-20 pt-16 text-primary dark:bg-background-dark dark:text-primary-dark">
-      {links && (
-        <div className="mb-2 flex w-full flex-wrap justify-center">
-          {links.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="mx-4 inline-flex items-center px-1 py-1 font-semibold text-black no-underline hover:text-primary dark:text-white hover:dark:text-primary-dark"
+    <footer className="prose flex h-auto w-full max-w-none flex-col items-center justify-center bg-background pb-20 pt-0 dark:prose-invert dark:bg-background-dark">
+      <div className="grid w-full grid-cols-1 px-14 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+        {links &&
+          links.map((item) => (
+            <div
+              key={item.name}
+              className="flex flex-col items-center sm:items-start"
             >
-              {/* TODO aria-current={item.current ? "page" : undefined} */}
-              {item.name}
-            </Link>
+              <h3 className="inline-flex items-center pt-1 font-bold">
+                {item.name}
+              </h3>
+              {item.subItems.map((subItem) => (
+                <Link
+                  key={subItem.href}
+                  href={subItem.href}
+                  className="main-text inline-flex items-center pt-1 text-center !text-black no-underline sm:text-start"
+                >
+                  {subItem.name}
+                </Link>
+              ))}
+            </div>
           ))}
-        </div>
-      )}
-      <p className="flex items-center justify-center gap-2">
-        <span>Created by</span>
-        {author.url ? (
-          <a
-            href={author.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1 font-semibold text-black no-underline dark:text-white"
-          >
-            {author.logo && (
-              <img src={author.logo} alt="Logo" className="block h-6" />
-            )}
-            <span>{author.name}</span>
-          </a>
-        ) : (
-          <span className="flex items-center gap-1 font-semibold text-black no-underline dark:text-white">
-            {author.logo && (
-              <img src={author.logo} alt={author.name} className="block h-6" />
-            )}
-            <span>{author.name}</span>
-          </span>
-        )}
-      </p>
-      <p className="flex items-center justify-center gap-1">
-        <span>Made with</span>
+      </div>
+      <p className="flex items-center justify-center">
+        Created by
         <a
-          href="https://flowershow.app/"
+          href={author.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-1 font-semibold text-black no-underline dark:text-white"
+          className="flex items-center no-underline"
         >
-          <img
-            src="https://flowershow.app/images/logo.svg"
-            alt="Logo"
-            className="block h-6"
-          />
-          <span>Flowershow</span>
+          {author.logo && (
+            <img
+              src={author.logo}
+              alt={author.name}
+              className="mx-2 my-0 block h-6"
+            />
+          )}
+
+          {author.name}
         </a>
       </p>
     </footer>

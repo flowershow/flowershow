@@ -10,6 +10,31 @@ const config = {
   },
   title: "DataHub",
   logo: "/datahub-cube.svg",
+  footerLinks: [
+    {
+      name: "LINKS",
+      subItems: [
+        { href: "/", name: "Home" },
+        { href: "/docs/terms-of-service", name: "Terms of Service" },
+        { href: "/docs/privacy", name: "Privacy Policy" },
+        { href: "/blog", name: "Blog" },
+        { href: "https://old.datahub.io/", name: "Old DataHub" },
+      ],
+    },
+    {
+      name: "Support",
+      subItems: [
+        { href: "https://discord.com/invite/KrRzMKU", name: "Chat" },
+        { href: "/docs/faq", name: "FAQ" },
+      ],
+    },
+    {
+      name: "Contact",
+      subItems: [
+        { href: "mailto:support@datahub.io", name: "support@datahub.io" },
+      ],
+    },
+  ],
   // navLinks: [
   //     { name: "Data-rich documents", href: "https://dev.datahub.io/data-rich" },
   //     { name: "Cloud", href: "https://cloud.datahub.io/" },
