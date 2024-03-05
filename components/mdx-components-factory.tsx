@@ -30,8 +30,14 @@ export const mdxComponentsFactory = ({
     a: ({ href, children, ...rest }) => {
       // TODO what was that?
       const processedHref = href.replace(/\.[^/.]+$/, "");
+      const isExternal = processedHref.startsWith("http");
       return (
-        <a href={processedHref} {...rest}>
+        <a
+          target={isExternal ? "_blank" : undefined}
+          rel={isExternal ? "noopener noreferrer" : undefined}
+          href={processedHref}
+          {...rest}
+        >
           {children}
         </a>
       );
