@@ -13,10 +13,10 @@ export default function SiteCard({
 }) {
   const href =
     env.NEXT_PUBLIC_VERCEL_ENV === "production"
-      ? `https://dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${data.projectName}`
+      ? `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${data.projectName}`
       : env.NEXT_PUBLIC_VERCEL_ENV === "preview"
         ? `https://staging-dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${data.projectName}`
-        : `http://dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${data.projectName}`;
+        : `http://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${data.projectName}`;
 
   const url = new URL(href).pathname.replace(/^\/+/, "");
 

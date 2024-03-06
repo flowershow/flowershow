@@ -21,16 +21,16 @@ export default async function SiteSettingsHeader({
 }) {
   const url =
     env.NEXT_PUBLIC_VERCEL_ENV === "production"
-      ? `https://dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
-          site.user!.gh_username
-        }/${site.projectName}`
+      ? `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user!.gh_username}/${
+          site.projectName
+        }`
       : env.NEXT_PUBLIC_VERCEL_ENV === "preview"
         ? `https://staging-dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
             site.user!.gh_username
           }/${site.projectName}`
-        : `http://dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
-            site.user!.gh_username
-          }/${site.projectName}`;
+        : `http://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user!.gh_username}/${
+            site.projectName
+          }`;
 
   return (
     <SyncProvider>
