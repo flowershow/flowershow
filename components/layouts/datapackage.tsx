@@ -83,24 +83,7 @@ export const DataPackageLayout: React.FC<Props> = ({
       })}
     >
       <article className="prose mx-auto mt-20 max-w-6xl px-12 pb-20 text-primary prose-headings:font-medium">
-        <header>
-          {title && <h1>{title}</h1>}
-          {description && (
-            <>
-              <p className="text-md">{description}</p>
-              {/* Read more link */}
-              <a
-                className="inline-block text-sm text-[#6366F1] no-underline hover:underline"
-                href="#readme"
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Read more</span>
-                  <ArrowRightIcon className="inline h-4 w-4" />
-                </div>
-              </a>
-            </>
-          )}
-        </header>
+        <header>{title && <h1>{title}</h1>}</header>
         <section className="my-12">
           <table className="table-auto divide-y divide-gray-300">
             <thead>
@@ -148,6 +131,23 @@ export const DataPackageLayout: React.FC<Props> = ({
               </tr>
             </tbody>
           </table>
+        </section>
+        <section className="my-12">
+          {description && (
+            <>
+              <p className="text-md">{description}</p>
+              {/* Read more link */}
+              <a
+                className="inline-block text-sm text-[#6366F1] no-underline hover:underline"
+                href="#readme"
+              >
+                <div className="flex items-center space-x-1">
+                  <span>Read more</span>
+                  <ArrowRightIcon className="inline h-4 w-4" />
+                </div>
+              </a>
+            </>
+          )}
         </section>
         <section className="my-12">
           {views && <h2>Data Views</h2>}
