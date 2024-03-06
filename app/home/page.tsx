@@ -1,6 +1,6 @@
 import { Section } from "@/components/data-rich/Section";
 import { Hero } from "@/components/data-rich/Hero";
-import { LivePreview } from "@/components/data-rich/LivePreview";
+/* import { LivePreview } from "@/components/data-rich/LivePreview"; */
 import { Features } from "@/components/data-rich/Features";
 /* import { Roadmap } from "@/components/home/Roadmap"; */
 import { CTASection } from "@/components/data-rich/CTASection";
@@ -13,9 +13,9 @@ export default function Home() {
       <div className="max-w-8xl mx-auto px-4 pt-8 md:px-8 lg:px-[8rem] ">
         <Hero />
 
-        <Section className="mt-6 md:mt-8">
+        {/* <Section className="mt-6 md:mt-8">
           <LivePreview />
-        </Section>
+        </Section> */}
 
         <Section>
           <About />

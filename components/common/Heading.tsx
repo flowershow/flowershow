@@ -15,7 +15,7 @@ export function Heading({
     <div className={clsx("mx-auto mb-8 max-w-2xl text-center", className)}>
       <h2
         id={id}
-        className="text-base font-semibold uppercase leading-7 text-[#8F56D7]"
+        className="text-base font-semibold uppercase leading-7 text-orange-400"
       >
         {heading}
       </h2>
