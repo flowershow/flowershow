@@ -116,12 +116,12 @@ function convertSimpleViewToVegaLite({
 
   return {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
-    mark: {
-      type: view.spec.type,
-      color: "#6366F1",
-      strokeWidth: 1,
-      tooltip: true,
-    },
+    /* mark: {
+     *     type: view.spec.type,
+     *     color: "#6366F1",
+     *     strokeWidth: 1,
+     *     tooltip: true,
+     * }, */
     title: view.title,
     width: "container",
     height: 300,
@@ -136,11 +136,46 @@ function convertSimpleViewToVegaLite({
         field: x.name,
         type: xType,
       },
-      y: {
-        field: y.name,
-        type: yType,
-      },
+      tooltip: [
+        /* { "timeUnit": "yearmonthdate", "field": x.name }, */
+        { field: y.name, type: yType },
+        { field: x.name, type: xType },
+      ],
     },
+    layer: [
+      {
+        mark: {
+          type: view.spec.type,
+          color: "#6366F1",
+          strokeWidth: 1,
+        },
+        encoding: {
+          y: {
+            field: y.name,
+            type: yType,
+          },
+        },
+      },
+      {
+        mark: "rule",
+        params: [
+          {
+            name: "hover",
+            select: { type: "point", on: "pointerover" },
+          },
+        ],
+        encoding: {
+          color: {
+            condition: {
+              param: "hover",
+              empty: false,
+              value: "black",
+            },
+            value: "transparent",
+          },
+        },
+      },
+    ],
   };
 }
 
