@@ -17,13 +17,13 @@ export const computeDataPackage = ({
 
   const title =
     datapackage?.title ||
-    frontMatter.datapackage.title ||
+    frontMatter.datapackage?.title ||
     frontMatter.title ||
     extractTitle(source) ||
     "";
   const description =
     datapackage?.description ||
-    frontMatter.datapackage.description ||
+    frontMatter.datapackage?.description ||
     frontMatter.description ||
     extractDescription(source) ||
     "";
