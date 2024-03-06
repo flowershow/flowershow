@@ -37,6 +37,17 @@ export const DataPackageLayout: React.FC<Props> = ({
     sources,
   } = datapackage;
 
+  if (!resources) {
+    return (
+      <>
+        <ErrorMessage
+          title="Error in `datapackage` layout:"
+          message="No resources found in the Data Package."
+        />
+      </>
+    );
+  }
+
   // exclude resources inline data
   const resourceFiles = resources.filter(isResourceWithPath);
   const resourceFilesCount = resourceFiles.length;
