@@ -7,9 +7,11 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { headers } from "next/headers";
 import { cal, inter } from "@/styles/fonts";
 import { Analytics } from "@vercel/analytics/react";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { Providers } from "./providers";
 import { Metadata } from "next";
 import { cn } from "@/lib/utils";
+import config from "@/lib/config";
 
 const title = "DataHub";
 const description =
@@ -54,6 +56,7 @@ export default function RootLayout({
           <Providers>
             {children}
             <Analytics />
+            <GoogleAnalytics gaId={config.analytics} />
           </Providers>
         </TRPCReactProvider>
       </body>
