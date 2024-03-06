@@ -26,7 +26,9 @@ export function QuickStart() {
             className="flex flex-col-reverse lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-8"
           >
             <div className="mt-6 lg:col-span-5 lg:mt-0 xl:col-span-4">
-              <h3 className="text-lg font-bold text-[#8F56D7]">{step.title}</h3>
+              <h3 className="text-lg font-bold text-orange-400">
+                {step.title}
+              </h3>
               <p className="mt-2 text-gray-500">{step.description}</p>
             </div>
             <div className="flex-auto lg:col-span-7 xl:col-span-8">
@@ -60,7 +62,7 @@ const steps: Step[] = [
     id: "1",
     title: "1. CHOOSE YOUR REPO",
     description:
-      "Create or update some markdown files and push them to GitHub. You can create a new GitHub repository or use an existing one. Just make sure to set its visibility to `public`.",
+      "Create or update some markdown files and push them to GitHub. You can create a new GitHub repository or use an existing one.",
     snippets: [
       {
         file: "blog.md",

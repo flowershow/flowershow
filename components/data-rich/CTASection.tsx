@@ -5,15 +5,14 @@ export function CTASection() {
   return (
     <div className="relative w-full overflow-hidden py-20">
       <Image
-        className="absolute left-1/2 top-1/2 max-w-none translate-x-[-44%] translate-y-[-42%]"
-        src="/bg4.jpg"
+        className="absolute top-0 max-w-none opacity-80"
+        src="/bg6.jpg"
         alt=""
-        width={2245}
-        height="100"
         unoptimized
+        fill
       />
       <div className="relative mx-auto max-w-3xl text-center">
-        <h2 className="mt-2 text-3xl font-bold tracking-tight text-primary sm:text-4xl">
+        <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
           Get early dibs on DataHub Cloud!
         </h2>
         <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-primary">

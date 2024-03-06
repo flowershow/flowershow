@@ -54,6 +54,17 @@ export const mdxComponentsFactory = ({
     ),
     /* Custom components */
     pre,
+    code: (props) => {
+      let className = props.className;
+      if (!props.className || !props.className.includes("language-")) {
+        // Set default className to "language-auto" if not found
+        className = props.className
+          ? `${props.className} language-auto`
+          : "language-auto";
+      }
+
+      return <code {...props} className={className}></code>;
+    },
     mermaid,
     BucketViewer: (props) => {
       return (
