@@ -20,7 +20,7 @@ export interface SocialLink {
 }
 
 export interface NavConfig {
-  title: string;
+  title?: string;
   links: Array<NavLink>;
   logo?: string;
   version?: string;
@@ -62,9 +62,11 @@ export const Nav: React.FC<Props> = ({
       <div className="max-w-8xl mx-auto flex h-[4rem] flex-col justify-center p-4 md:px-8">
         <nav className="flex justify-between">
           {/* Mobile navigation  */}
-          <div className="mr-2 flex sm:mr-4 lg:hidden">
-            <NavMobile links={links} />
-          </div>
+          {links && (
+            <div className="mr-2 flex sm:mr-4 lg:hidden">
+              <NavMobile links={links} />
+            </div>
+          )}
           {/* Non-mobile navigation */}
           <div className="flex flex-none items-center">
             <NavTitle title={title} logo={logo} version={version} url={url} />

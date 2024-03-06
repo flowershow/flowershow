@@ -5,9 +5,13 @@ import { FlatUiTable } from "@portaljs/components";
 import prettyBytes from "pretty-bytes";
 
 import {
-  isResourceWithPath,
   type DataPackage,
-  SimpleView,
+  type SimpleView,
+  type Resource,
+  type View,
+  isResourceWithPath,
+  isSimpleViewWithResourceName,
+  isSimpleView,
 } from "./datapackage-types";
 import { FrictionlessView } from "@/components/frictionless-view";
 import { ErrorMessage } from "@/components/error-message";
@@ -47,8 +51,18 @@ export const DataPackageLayout: React.FC<Props> = ({
     ? prettyBytes(resourceFilesSize)
     : undefined;
 
-  const View: React.FC<{ view: SimpleView }> = ({ view }) => {
-    const resource = resources.find((r) => r.name === view.resourceName);
+  const View: React.FC<{ view: SimpleView | View }> = ({ view }) => {
+    if (!isSimpleView(view)) {
+      throw new Error(
+        'Only views with `specType: "simple"` are supported at the moment.',
+      );
+    }
+    let resource: Resource | undefined;
+    if (isSimpleViewWithResourceName(view)) {
+      resource = resources.find((r) => r.name === view.resourceName);
+    } else {
+      resource = resources.find((r) => r.name === view.resources[0]);
+    }
     if (!resource) {
       throw new Error(`Resource not found for view ${view.name}`);
     }
@@ -68,9 +82,57 @@ export const DataPackageLayout: React.FC<Props> = ({
         title: `Error in \`datapackage\` layout:`,
       })}
     >
-      <article className="prose mx-auto mt-20 max-w-5xl px-12 pb-20 text-primary">
-        <header>
-          {title && <h1>{title}</h1>}
+      <article className="prose mx-auto mt-20 max-w-6xl px-12 pb-20 text-primary prose-headings:font-medium">
+        <header>{title && <h1>{title}</h1>}</header>
+        <section className="my-12">
+          <table className="table-auto divide-y divide-gray-300">
+            <thead>
+              <tr>
+                <th>Files</th>
+                {resourceFilesSize > 0 ? <th>Size</th> : null}
+                <th>Format</th>
+                {created && <th>Created</th>}
+                {updated && <th>Updated</th>}
+                {licenses && <th>License</th>}
+                {sources && <th>Source</th>}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{resourceFilesCount}</td>
+                {resourceFilesSize > 0 ? (
+                  <td>{resourceFilesSizeHumanReadable}</td>
+                ) : null}
+                <td>{resouceFilesExtensions}</td>
+                {created && <td>{created}</td>}
+                {updated && <td>{updated}</td>}
+                {licenses && (
+                  <td>
+                    <a
+                      target="_blank"
+                      href={licenses[0]?.path}
+                      className="mb-2 block hover:text-[#6366F1]"
+                    >
+                      {licenses[0]?.title || ""}
+                    </a>
+                  </td>
+                )}
+                {sources && (
+                  <td>
+                    <a
+                      target="_blank"
+                      href={sources[0]?.path}
+                      className="mb-2 block hover:text-[#6366F1]"
+                    >
+                      {sources[0]?.title || ""}
+                    </a>
+                  </td>
+                )}
+              </tr>
+            </tbody>
+          </table>
+        </section>
+        <section className="my-12">
           {description && (
             <>
               <p className="text-md">{description}</p>
@@ -86,66 +148,8 @@ export const DataPackageLayout: React.FC<Props> = ({
               </a>
             </>
           )}
-        </header>
-        <section className="my-12">
-          <table className="table-auto divide-y divide-gray-300">
-            <thead>
-              <tr>
-                <th>Files</th>
-                {resourceFilesSize > 0 ? <th>Size</th> : null}
-                <th>Format</th>
-                {created && <th>Created</th>}
-                {updated && <th>Updated</th>}
-                {licenses && <th>Licenses</th>}
-                {sources && <th>Sources</th>}
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{resourceFilesCount}</td>
-                {resourceFilesSize > 0 ? (
-                  <td>{resourceFilesSizeHumanReadable}</td>
-                ) : null}
-                <td>{resouceFilesExtensions}</td>
-                {created && <td>{created}</td>}
-                {updated && <td>{updated}</td>}
-                {licenses && (
-                  <td>
-                    {licenses.map((l) => {
-                      return (
-                        <a
-                          key={`license-${l.name}`}
-                          target="_blank"
-                          href={l.path}
-                          className="mb-2 block hover:text-[#6366F1]"
-                        >
-                          {l.title}
-                        </a>
-                      );
-                    })}
-                  </td>
-                )}
-                {sources && (
-                  <td>
-                    {sources.map((s) => {
-                      return (
-                        <a
-                          key={`source-${s.path}`}
-                          target="_blank"
-                          href={s.path}
-                          className="mb-2 block hover:text-[#6366F1]"
-                        >
-                          {s.title}
-                        </a>
-                      );
-                    })}
-                  </td>
-                )}
-              </tr>
-            </tbody>
-          </table>
         </section>
-        {/* <section className="my-12">
+        <section className="my-12">
           {views && <h2>Data Views</h2>}
           {views &&
             views.map((view, id) => (
@@ -158,15 +162,17 @@ export const DataPackageLayout: React.FC<Props> = ({
                 <View view={view} />
               </ErrorBoundary>
             ))}
-        </section> */}
+        </section>
         <section className="my-12">
           <h2>Data files</h2>
           <table className="table-auto divide-y divide-gray-300">
             <thead>
               <tr>
                 <th>File</th>
-                <th>Title</th>
                 <th>Description</th>
+                <th>Size</th>
+                <th>Last changed</th>
+                <th>Download</th>
               </tr>
             </thead>
             <tbody>
@@ -176,6 +182,16 @@ export const DataPackageLayout: React.FC<Props> = ({
                     key={`resources-list-${r.name}`}
                     className="even:bg-gray-50"
                   >
+                    <td>
+                      <a href={`#${r.name}`} className="hover:text-[#6366F1]">
+                        <div className="flex items-center space-x-1 ">
+                          <span>{r.name}</span>
+                        </div>
+                      </a>
+                    </td>
+                    <td>{r.description || ""}</td>
+                    <td>{r.bytes ? prettyBytes(r.bytes) : ""}</td>
+                    <td>{r.lastModified || ""}</td>
                     <td>
                       <a
                         target="_blank"
@@ -188,8 +204,6 @@ export const DataPackageLayout: React.FC<Props> = ({
                         </div>
                       </a>
                     </td>
-                    <td>{r.title || r.name}</td>
-                    <td>{r.description || ""}</td>
                   </tr>
                 );
               })}
@@ -202,7 +216,7 @@ export const DataPackageLayout: React.FC<Props> = ({
             {resources.slice(0, 5).map((r) => {
               return (
                 <div key={`resource-preview-${r.name}`} className="mt-10">
-                  <h3>{r.title || r.name || r.path}</h3>
+                  <h3 id={r.name}>{r.title || r.name || r.path}</h3>
 
                   <ErrorBoundary
                     FallbackComponent={FallbackComponentFactory({

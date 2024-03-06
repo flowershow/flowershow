@@ -5,7 +5,7 @@ import { notFound, redirect } from "next/navigation";
 import SiteSettingsNav from "./nav";
 import SiteSettingsHeader from "./header";
 
-export default async function SiteAnalyticsLayout({
+export default async function SiteSettingsLayout({
   params,
   children,
 }: {

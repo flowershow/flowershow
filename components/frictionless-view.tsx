@@ -3,7 +3,6 @@ import type {
   Resource,
   ResourceSchemaField,
   SimpleView,
-  View,
 } from "@/components/layouts/datapackage-types";
 
 type FrictionlessViewReturnType = ({
@@ -95,11 +94,13 @@ function convertSimpleViewToVegaLite({
   view: SimpleView;
   resource: Resource;
 }): VegaLiteSpec {
-  // TODO schema schould be optional according to the spec but is required in the current implementation
+  if (!resource.schema) {
+    throw new Error(`Resource \`${resource.name}\` has no schema`);
+  }
   const x = resource.schema.fields.find((f) => f.name === view.spec.group);
   if (!x) {
     throw new Error(
-      `Field \`${view.spec.group}\` not found in resource schema`,
+      `Field \`${view.spec.group}\` not found in resource schema.`,
     );
   }
   // TODO why is this hard coded to index 0?

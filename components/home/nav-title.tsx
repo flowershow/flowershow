@@ -1,7 +1,7 @@
 import Link from "next/link.js";
 
 interface Props {
-  title: string;
+  title?: string;
   logo?: string;
   version?: string;
   url?: string;
@@ -12,7 +12,7 @@ export const NavTitle: React.FC<Props> = ({ title, logo, version, url }) => {
     <Link
       href={url || "/"}
       aria-label="Home page"
-      className="flex items-center text-xl font-extrabold text-slate-900 dark:text-white sm:text-2xl"
+      className="flex items-center space-x-2 text-xl font-extrabold text-slate-900 dark:text-white sm:text-2xl"
     >
       {logo && <img src={logo} alt={title} className="mr-1 h-8 fill-white" />}
       {title && <span>{title}</span>}

@@ -1,6 +1,7 @@
-import "@/styles/globals.css";
-import "@/styles/prism.css";
+import "@portaljs/components/styles.css";
 import "@portaljs/remark-callouts/styles.css";
+import "@/styles/prism.css";
+import "@/styles/globals.css";
 
 import { TRPCReactProvider } from "@/trpc/react";
 import { headers } from "next/headers";

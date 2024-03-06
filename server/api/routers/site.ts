@@ -336,11 +336,9 @@ export const siteRouter = createTRPCRouter({
           throw new Error(`Failed to sync site ${site!.id}: ${error}`);
         }
       } else {
-        console.log("Trees are the same, no need to sync");
+        throw new Error("Already in sync with GitHub.");
       }
 
-      // revalidate site status
-      revalidateTag(`${input.id}-status`);
       // revalidate the site metadata
       revalidateTag(`${site!.user?.gh_username}-${site!.projectName}-metadata`);
       // revalidatee the site's permalinks
@@ -352,43 +350,35 @@ export const siteRouter = createTRPCRouter({
         `${site!.user?.gh_username}-${site!.projectName}-page-content`,
       );
     }),
-  // checkSyncStatus: protectedProcedure
-  //   .input(
-  //     z.object({
-  //       id: z.string().min(1),
-  //     }),
-  //   )
-  //   .query(async ({ ctx, input }) => {
-  //     return await unstable_cache(
-  //       async () => {
+  checkSyncStatus: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findFirst({
+        where: {
+          id: input.id,
+        },
+      });
 
-  //         const site = await ctx.db.site.findFirst({
-  //           where: {
-  //             id: input.id,
-  //           },
-  //         });
+      // get tree from content store
+      const contentStoreTree = await fetchTree(site!.id, site!.gh_branch);
+      // get tree from GitHub
+      const gitHubTree = await fetchGitHubRepoTree({
+        gh_repository: site!.gh_repository,
+        gh_branch: site!.gh_branch,
+        access_token: ctx.session.accessToken,
+      });
 
-  //         // get tree from content store
-  //         const contentStoreTree = await fetchTree(site!.id, site!.gh_branch);
-  //         // get tree from GitHub
-  //         const gitHubTree = await fetchGitHubRepoTree({
-  //           gh_repository: site!.gh_repository,
-  //           gh_branch: site!.gh_branch,
-  //           access_token: ctx.session.accessToken,
-  //         });
-
-  //         return {
-  //           synced: contentStoreTree.sha === gitHubTree.sha,
-  //           syncedAt: site!.syncedAt,
-  //         };
-  //       },
-  //       [`${input.id}-status`],
-  //       {
-  //         revalidate: 1, // 5 minutes
-  //         tags: [`${input.id}-status`],
-  //       },
-  //     )();
-  //   }),
+      return {
+        synced: !contentStoreTree
+          ? false
+          : contentStoreTree.sha === gitHubTree.sha,
+        syncedAt: site!.syncedAt,
+      };
+    }),
   getById: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {

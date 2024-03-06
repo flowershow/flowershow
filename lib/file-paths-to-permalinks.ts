@@ -46,7 +46,7 @@ const pathToPermalinkFunc = ({
     prefix = pathPrefix
       .replace(/\/@olayway\/docs/, "/docs")
       .replace(/\/@olayway\/blog/, "/blog")
-      .replace(/\/@olayway\/collections/, "/collections")
+      .replace(/\/@olayway\/collections/, "/collections");
   }
 
   return prefix ? `${prefix}/${permalink}` : permalink;
