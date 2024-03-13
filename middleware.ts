@@ -28,7 +28,7 @@ export default async function middleware(req: NextRequest) {
   // special case for Vercel preview deployment URLs
   if (
     hostname.includes("---") &&
-    hostname.endsWith(`.${process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`) // TODO what is this
+    hostname.endsWith(`.${process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`)
   ) {
     hostname = `${hostname.split("---")[0]}.${env.NEXT_PUBLIC_ROOT_DOMAIN}`;
   }
@@ -52,23 +52,15 @@ export default async function middleware(req: NextRequest) {
       return NextResponse.redirect(new URL("/", req.url));
     }
     return NextResponse.rewrite(
-      // TODO temporarily direct users directly to /sites instead of dashboard home page
+      // temporarily direct users directly to /sites instead of dashboard home page
       new URL(`/cloud${path === "/" ? "/sites" : path}`, req.url),
     );
   }
 
-  // // rewrite root application to `/home` folder
-  // if (hostname === env.NEXT_PUBLIC_ROOT_DOMAIN) {
-  //   return NextResponse.rewrite(
-  //     new URL(`/home${path === "/" ? "" : path}`, req.url),
-  //   );
-  // }
-
-  // TODO temporary rewrite dev subdomain to `/home` folder
+  // rewrites for root domain
   if (
     hostname === `${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
-    hostname === `dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
-    hostname === `staging-dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
+    hostname === `staging.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
   ) {
     // if path matches /blog/{restofpath} rewrite to /{mainAccount}/blog/{restofpath}
     if (path.match(/^\/blog/)) {
@@ -101,5 +93,6 @@ export default async function middleware(req: NextRequest) {
     );
   }
 
-  return NextResponse.rewrite(new URL(`/${hostname}${path}`, req.url));
+  // rewrite all other domains and subdomains to /domain/{hostname}/{path}
+  return NextResponse.rewrite(new URL(`/domain/${hostname}${path}`, req.url));
 }

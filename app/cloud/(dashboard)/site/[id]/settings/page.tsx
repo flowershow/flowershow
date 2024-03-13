@@ -137,6 +137,21 @@ export default async function SiteSettingsIndex({
         handleSubmit={updateSite}
       />
 
+      <Form
+        title="Custom Domain"
+        description="The custom domain for your site."
+        helpText="Please enter a valid domain."
+        inputAttrs={{
+          name: "customDomain",
+          type: "text",
+          defaultValue: data?.customDomain!,
+          placeholder: "yourdomain.com",
+          maxLength: 64,
+          pattern: "^[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}$",
+        }}
+        handleSubmit={updateSite}
+      />
+
       <DeleteSiteForm siteName={data?.projectName!} />
     </div>
   );
