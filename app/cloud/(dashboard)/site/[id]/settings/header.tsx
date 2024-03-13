@@ -19,18 +19,25 @@ export default async function SiteSettingsHeader({
 }: {
   site: SiteWithUser;
 }) {
-  const url =
-    env.NEXT_PUBLIC_VERCEL_ENV === "production"
-      ? `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user!.gh_username}/${
-          site.projectName
-        }`
-      : env.NEXT_PUBLIC_VERCEL_ENV === "preview"
-        ? `https://staging-dev.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
-            site.user!.gh_username
-          }/${site.projectName}`
-        : `http://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user!.gh_username}/${
-            site.projectName
-          }`;
+  let url: string;
+
+  if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
+    if (site.customDomain) {
+      url = `https://${site.customDomain}`;
+    } else {
+      url = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
+        site.user!.gh_username
+      }/${site.projectName}`;
+    }
+  } else if (env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
+    url = `https://staging.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
+      site.user!.gh_username
+    }/${site.projectName}`;
+  } else {
+    url = `http://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user!.gh_username}/${
+      site.projectName
+    }`;
+  }
 
   return (
     <SyncProvider>

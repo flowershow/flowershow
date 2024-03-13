@@ -148,7 +148,7 @@ export const siteRouter = createTRPCRouter({
       z.object({
         id: z.string().min(1),
         key: z.string().min(1), // TODO better validation
-        value: z.string().min(1),
+        value: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -389,6 +389,31 @@ export const siteRouter = createTRPCRouter({
           user: true,
         },
       });
+    }),
+  getByDomain: publicProcedure
+    .input(z.object({ domain: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          return ctx.db.site.findFirst({
+            where: {
+              customDomain: input.domain,
+            },
+            include: {
+              user: {
+                select: {
+                  gh_username: true,
+                },
+              },
+            },
+          });
+        },
+        [`${input.domain}-site-metadata`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.domain}-site-metadata`],
+        },
+      )();
     }),
   get: publicProcedure
     .input(
