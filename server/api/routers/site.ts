@@ -181,7 +181,6 @@ export const siteRouter = createTRPCRouter({
           });
         }
         // If the site had a different customDomain before, we need to remove it from Vercel
-        const site = await ctx.db.site.findUnique({ where: { id } });
         if (site && site.customDomain && site.customDomain !== value) {
           await removeDomainFromVercelProject(site.customDomain);
         }

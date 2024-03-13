@@ -1,11 +1,7 @@
 import { ReactNode } from "react";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { Metadata } from "next";
-import { env } from "@/env.mjs";
 import { api } from "@/trpc/server";
-import { Nav } from "@/components/home/nav";
-import { Footer } from "@/components/home/footer";
-import config from "@/const/config";
 
 export async function generateMetadata({
   params,
@@ -15,14 +11,14 @@ export async function generateMetadata({
   const domain = decodeURIComponent(params.domain);
   /* const user = decodeURIComponent(params.user);
 
-                * const site = await api.site.get.query({
-                *   gh_username: user,
-                *   projectName: project,
-                * });
+                  * const site = await api.site.get.query({
+                  *   gh_username: user,
+                  *   projectName: project,
+                  * });
 
-                * if (!site) {
-                *   return null;
-                * } */
+                  * if (!site) {
+                  *   return null;
+                  * } */
 
   return {
     title: domain,
@@ -67,22 +63,7 @@ export default async function SiteLayout({
 
   return (
     <div className="min-h-screen bg-background dark:bg-background-dark">
-      <Nav
-        title={config.navbarTitle.text}
-        logo={config.navbarTitle.logo}
-        url={config.author.url}
-        links={config.navLinks}
-      />
       {children}
-
-      <div className="max-w-8xl mx-auto px-4 md:px-8">
-        <Footer
-          links={config.footerLinks}
-          author={config.author}
-          social={config.social}
-          description={config.description}
-        />
-      </div>
     </div>
   );
 }
