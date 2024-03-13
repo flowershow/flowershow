@@ -52,6 +52,7 @@ export const env = createEnv({
     // Vercel system env var
     // https://vercel.com/docs/projects/environment-variables/system-environment-variables
     NEXT_PUBLIC_VERCEL_ENV: z.string().optional(),
+    NEXT_PUBLIC_DNS_DOMAIN: z.string(),
   },
 
   /**
@@ -78,6 +79,7 @@ export const env = createEnv({
     R2_SECRET_KEY_ID: process.env.R2_SECRET_KEY_ID,
     R2_BUCKET_NAME: process.env.R2_BUCKET_NAME,
     R2_BUCKET_DOMAIN: process.env.R2_BUCKET_DOMAIN,
+    NEXT_PUBLIC_DNS_DOMAIN: process.env.NEXT_PUBLIC_DNS_DOMAIN,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
