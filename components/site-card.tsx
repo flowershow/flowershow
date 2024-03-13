@@ -25,7 +25,8 @@ export default function SiteCard({
     url = `http://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`;
   }
 
-  const urlPath = new URL(url).pathname.replace(/^\/+/, "");
+  const displayedUrl =
+    site.customDomain ?? new URL(url).pathname.replace(/^\/+/, "");
 
   return (
     <div className="relative rounded-lg border border-stone-200 pb-10 shadow-md transition-all hover:shadow-xl dark:border-stone-700 dark:hover:border-white">
@@ -66,7 +67,7 @@ export default function SiteCard({
           rel="noreferrer"
           className="truncate rounded-md bg-stone-100 px-2 py-1 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-200 dark:bg-stone-800 dark:text-stone-400 dark:hover:bg-stone-700"
         >
-          {urlPath} ↗
+          {displayedUrl} ↗
         </a>
         {/* <Link
                     href={`/site/${data.id}/analytics`}
