@@ -18,16 +18,16 @@ export async function generateMetadata({
   params: { user: string; project: string };
 }): Promise<Metadata | null> {
   const project = decodeURIComponent(params.project);
-  /* const user = decodeURIComponent(params.user);
+  const user = decodeURIComponent(params.user);
 
-              * const site = await api.site.get.query({
-              *   gh_username: user,
-              *   projectName: project,
-              * });
+  const site = await api.site.get.query({
+    gh_username: user,
+    projectName: project,
+  });
 
-              * if (!site) {
-              *   return null;
-              * } */
+  if (!site) {
+    return null;
+  }
 
   return {
     title: project,
@@ -45,13 +45,12 @@ export async function generateMetadata({
       creator: "@datopian",
     },
     icons: ["/favicon.ico"], // TODO add support for project favicon
-    // Optional: Set canonical URL to custom domain if it exists
-    // ...(params.domain.endsWith(`.${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`) &&
-    //   data.customDomain && {
-    //     alternates: {
-    //       canonical: `https://${data.customDomain}`,
-    //     },
-    //   }),
+    // Set canonical URL to custom domain if it exists
+    ...(site.customDomain && {
+      alternates: {
+        canonical: `https://${site.customDomain}`,
+      },
+    }),
   };
 }
 

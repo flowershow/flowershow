@@ -35,8 +35,9 @@ export default async function middleware(req: NextRequest) {
 
   const searchParams = req.nextUrl.searchParams.toString();
   // Get the pathname of the request (e.g. /, /about, /blog/first-post)
-  const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""
-    }`;
+  const path = `${url.pathname}${
+    searchParams.length > 0 ? `?${searchParams}` : ""
+  }`;
 
   // rewrites for cloud pages
   if (
