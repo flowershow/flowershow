@@ -148,7 +148,7 @@ export const siteRouter = createTRPCRouter({
       z.object({
         id: z.string().min(1),
         key: z.string().min(1), // TODO better validation
-        value: z.string().min(1),
+        value: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
