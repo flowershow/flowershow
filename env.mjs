@@ -33,7 +33,7 @@ export const env = createEnv({
     TEAM_ID_VERCEL: z.string().optional(), // TODO temp set to optional as not set directly on Vercel
     VERCEL_URL: z.string().optional(),
     PORT: z.string().optional(),
-    REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS: z.string().default("true"),
+    REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS: z.string().default("false"),
     R2_ACCOUNT_ID: z.string(),
     R2_ACCESS_KEY_ID: z.string(),
     R2_SECRET_KEY_ID: z.string(),
