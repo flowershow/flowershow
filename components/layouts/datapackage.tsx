@@ -5,7 +5,6 @@ import { FlatUiTable } from "@portaljs/components";
 import prettyBytes from "pretty-bytes";
 
 import {
-  type DataPackage,
   type SimpleView,
   type Resource,
   type View,
@@ -15,18 +14,15 @@ import {
 } from "./datapackage-types";
 import { FrictionlessView } from "@/components/frictionless-view";
 import { ErrorMessage } from "@/components/error-message";
+import { DatasetPageMetadata } from "@/server/api/types";
 
-interface Props extends React.PropsWithChildren<{}> {
-  datapackage: DataPackage;
-  dataUrlBase: string;
+interface Props extends React.PropsWithChildren {
+  metadata: DatasetPageMetadata;
 }
 
-export const DataPackageLayout: React.FC<Props> = ({
-  children,
-  datapackage,
-  dataUrlBase,
-}) => {
+export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
   const {
+    _rawUrlBase,
     title,
     description,
     resources,
@@ -35,7 +31,7 @@ export const DataPackageLayout: React.FC<Props> = ({
     updated,
     licenses,
     sources,
-  } = datapackage;
+  } = metadata;
 
   if (!resources) {
     return (
@@ -55,7 +51,7 @@ export const DataPackageLayout: React.FC<Props> = ({
     new Set(resourceFiles.map((r) => r.format)),
   ).join(", ");
   const resourceFilesSize = resourceFiles.reduce(
-    (acc, r) => acc + (r.bytes ?? 0),
+    (acc, r) => acc + (r.size ?? 0),
     0,
   );
   const resourceFilesSizeHumanReadable = resourceFilesSize
@@ -81,7 +77,7 @@ export const DataPackageLayout: React.FC<Props> = ({
       <FrictionlessView
         view={view}
         resource={resource}
-        dataUrlBase={dataUrlBase}
+        dataUrlBase={_rawUrlBase}
       />
     );
   };
@@ -100,65 +96,55 @@ export const DataPackageLayout: React.FC<Props> = ({
             <thead>
               <tr>
                 <th>Files</th>
-                {resourceFilesSize > 0 ? <th>Size</th> : null}
+                <th>Size</th>
                 <th>Format</th>
-                {created && <th>Created</th>}
-                {updated && <th>Updated</th>}
-                {licenses && <th>License</th>}
-                {sources && <th>Source</th>}
+                <th>Created</th>
+                <th>Updated</th>
+                <th>License</th>
+                <th>Source</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>{resourceFilesCount}</td>
-                {resourceFilesSize > 0 ? (
-                  <td>{resourceFilesSizeHumanReadable}</td>
-                ) : null}
+                <td>{resourceFilesSizeHumanReadable}</td>
                 <td>{resouceFilesExtensions}</td>
-                {created && <td>{created}</td>}
-                {updated && <td>{updated}</td>}
-                {licenses && (
-                  <td>
-                    <a
-                      target="_blank"
-                      href={licenses[0]?.path}
-                      className="mb-2 block hover:text-[#6366F1]"
-                    >
-                      {licenses[0]?.title || ""}
-                    </a>
-                  </td>
-                )}
-                {sources && (
-                  <td>
-                    <a
-                      target="_blank"
-                      href={sources[0]?.path}
-                      className="mb-2 block hover:text-[#6366F1]"
-                    >
-                      {sources[0]?.title || ""}
-                    </a>
-                  </td>
-                )}
+                <td>{created}</td>
+                <td>{updated}</td>
+                <td>
+                  <a
+                    target="_blank"
+                    href={licenses ? licenses[0]?.path : "#"}
+                    className="mb-2 block hover:text-[#6366F1]"
+                  >
+                    {licenses ? licenses[0]?.title : ""}
+                  </a>
+                </td>
+                <td>
+                  <a
+                    target="_blank"
+                    href={sources ? sources[0]?.path : "#"}
+                    className="mb-2 block hover:text-[#6366F1]"
+                  >
+                    {sources ? sources[0]?.title : ""}
+                  </a>
+                </td>
               </tr>
             </tbody>
           </table>
         </section>
         <section className="my-12">
-          {description && (
-            <>
-              <p className="text-md">{description}</p>
-              {/* Read more link */}
-              <a
-                className="inline-block text-sm text-[#6366F1] no-underline hover:underline"
-                href="#readme"
-              >
-                <div className="flex items-center space-x-1">
-                  <span>Read more</span>
-                  <ArrowRightIcon className="inline h-4 w-4" />
-                </div>
-              </a>
-            </>
-          )}
+          <p className="text-md">{description}</p>
+          {/* Read more link */}
+          <a
+            className="inline-block text-sm text-[#6366F1] no-underline hover:underline"
+            href="#readme"
+          >
+            <div className="flex items-center space-x-1">
+              <span>Read more</span>
+              <ArrowRightIcon className="inline h-4 w-4" />
+            </div>
+          </a>
         </section>
         <section className="my-12">
           {views && <h2>Data Views</h2>}
@@ -182,7 +168,7 @@ export const DataPackageLayout: React.FC<Props> = ({
                 <th>File</th>
                 <th>Description</th>
                 <th>Size</th>
-                <th>Last changed</th>
+                <th>Last modified</th>
                 <th>Download</th>
               </tr>
             </thead>
@@ -201,12 +187,12 @@ export const DataPackageLayout: React.FC<Props> = ({
                       </a>
                     </td>
                     <td>{r.description || ""}</td>
-                    <td>{r.bytes ? prettyBytes(r.bytes) : ""}</td>
+                    <td>{r.size ? prettyBytes(r.size) : ""}</td>
                     <td>{r.lastModified || ""}</td>
                     <td>
                       <a
                         target="_blank"
-                        href={`${dataUrlBase}/${r.path}`}
+                        href={`${_rawUrlBase}/${r.path}`}
                         className="hover:text-[#6366F1]"
                       >
                         <div className="flex items-center space-x-1 ">
@@ -235,7 +221,7 @@ export const DataPackageLayout: React.FC<Props> = ({
                     })}
                   >
                     {/* @ts-expect-error */}
-                    <FlatUiTable url={`${dataUrlBase}/${r.path}`} />
+                    <FlatUiTable url={`${_rawUrlBase}/${r.path}`} />
                   </ErrorBoundary>
                 </div>
               );

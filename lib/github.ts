@@ -264,14 +264,16 @@ export interface GitHubAPIFileContent {
 export interface GitHubAPIRepoTree {
   sha: string;
   url: string;
-  tree: Array<{
-    path: string;
-    mode: string;
-    type: "blob" | "tree";
-    size: number;
-    sha: string;
-    url: string;
-  }>;
+  tree: GitHubAPIRepoTreeItem[];
+}
+
+export interface GitHubAPIRepoTreeItem {
+  path: string;
+  mode: string;
+  type: "blob" | "tree";
+  size: number;
+  sha: string;
+  url: string;
 }
 
 interface GitHubAPIUser {

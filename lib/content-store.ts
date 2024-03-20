@@ -7,10 +7,8 @@ import {
   S3Client,
 } from "@aws-sdk/client-s3";
 import type { SupportedExtension } from "./types";
-import { GitHubAPIRepoTree, GitHubAPIFileContent } from "./github";
+import { GitHubAPIRepoTree } from "./github";
 import { env } from "@/env.mjs";
-import YAML from "yaml";
-import { DataPackage } from "@/components/layouts/datapackage-types";
 
 const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_KEY_ID, R2_BUCKET_NAME } =
   env;
@@ -113,7 +111,7 @@ const getContentType = (extension: SupportedExtension): ContentType => {
   }
 };
 
-export const uploadContent = async ({
+export const uploadFile = async ({
   projectId,
   branch,
   path,
@@ -123,17 +121,17 @@ export const uploadContent = async ({
   projectId: string;
   branch: string;
   path: string;
-  content: GitHubAPIFileContent;
+  content: Buffer;
   extension: SupportedExtension;
 }) => {
   return uploadR2Object({
     key: `${projectId}/${branch}/raw/${path}`,
-    file: Buffer.from(content.content, "base64"),
+    file: content,
     contentType: getContentType(extension),
   });
 };
 
-export const fetchContent = async ({
+export const fetchFile = async ({
   projectId,
   branch,
   path,
@@ -142,67 +140,16 @@ export const fetchContent = async ({
   branch: string;
   path: string;
 }) => {
-  const basePath = `${projectId}/${branch}/raw/`;
-  const potentialPaths = [
-    `${basePath}${path}`,
-    `${basePath}${path}/README`,
-    `${basePath}${path}/index`,
-  ];
-
-  if (path === "") {
-    // Prepend paths for the base directory scenarios
-    potentialPaths.unshift(`${basePath}README`, `${basePath}index`);
-  }
-
-  let content: string | null = null;
-  let datapackage: DataPackage | null = null;
-  let shouldFetchPackage = false;
-  let lastError: unknown = null;
-
-  for (const newPath of potentialPaths) {
-    try {
-      content = (await fetchR2Object(newPath)) ?? null;
-      if (newPath.endsWith("README") || newPath.endsWith("index")) {
-        shouldFetchPackage = true;
-      }
-      break;
-    } catch (error) {
-      lastError = error;
-    }
-  }
-
-  const packagePaths = [
-    `${basePath}${path ? path + "/" : ""}datapackage.json`,
-    `${basePath}${path ? path + "/" : ""}datapackage.yaml`,
-    `${basePath}${path ? path + "/" : ""}datapackage.yml`,
-  ];
-
-  if (shouldFetchPackage) {
-    for (const packagePath of packagePaths) {
-      try {
-        const packageContent = (await fetchR2Object(packagePath)) ?? "";
-        if (packagePath.endsWith(".json")) {
-          datapackage = JSON.parse(packageContent) as DataPackage;
-        } else {
-          datapackage = YAML.parse(packageContent) as DataPackage;
-        }
-        break;
-      } catch (error) {
-        // No action needed here. Keep trying the next possible file.
-      }
-    }
-  }
-
-  if (!content) {
+  try {
+    return (await fetchR2Object(`${projectId}/${branch}/raw/${path}`)) || null;
+  } catch (error) {
     throw new Error(
-      `Could not fetch content from any configured path. Last error: ${lastError}`,
+      `Could not fetch content from any configured path: ${error}`,
     );
   }
-
-  return { content, datapackage };
 };
 
-export const deleteContent = async ({
+export const deleteFile = async ({
   projectId,
   branch,
   path,

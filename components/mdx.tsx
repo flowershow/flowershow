@@ -1,27 +1,27 @@
 "use client";
 // TODO the whole layout shouldn\t be client-side rendered, only parts of it
-import { MDXRemote } from "next-mdx-remote";
+import { MDXRemote, MDXRemoteSerializeResult } from "next-mdx-remote";
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorMessage } from "@/components/error-message";
-
 import layouts from "@/components/layouts";
 import { mdxComponentsFactory } from "./mdx-components-factory";
+import { PageMetadata, isDatasetPage } from "@/server/api/types";
 
-// TODO resolve links in source ?
-export default function MDX({ source, frontMatter, dataUrlBase }) {
-  const components = mdxComponentsFactory({ frontMatter, dataUrlBase });
-  const layout = frontMatter.datapackage
-    ? "datapackage"
-    : frontMatter.layout || "story";
+interface MDXProps {
+  source: MDXRemoteSerializeResult;
+  metadata: PageMetadata;
+}
 
-  const Component = layouts[layout];
+const MDX: React.FC<MDXProps> = ({ source, metadata }) => {
+  const components = mdxComponentsFactory(metadata);
+  const layout = isDatasetPage(metadata) ? "datapackage" : "story";
+
+  const Component = layouts[layout] as any; // TODO fix this
 
   const Layout = ({ children }) => {
     return (
       <ErrorBoundary FallbackComponent={LayoutFallbackComponent}>
-        <Component {...frontMatter} dataUrlBase={dataUrlBase}>
-          {children}
-        </Component>
+        <Component metadata={metadata}>{children}</Component>
       </ErrorBoundary>
     );
   };
@@ -35,7 +35,7 @@ export default function MDX({ source, frontMatter, dataUrlBase }) {
       </Layout>
     </article>
   );
-}
+};
 
 const MDXFallbackComponent = ({ error }: { error: Error }) => {
   return (
@@ -52,3 +52,5 @@ const LayoutFallbackComponent = ({ error }: { error: Error }) => {
     <ErrorMessage title="Layout rendering error:" message={error.message} />
   );
 };
+
+export default MDX;

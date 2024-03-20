@@ -4,6 +4,7 @@ import type {
   ResourceSchemaField,
   SimpleView,
 } from "@/components/layouts/datapackage-types";
+import { DatasetPageMetadata } from "@/server/api/types";
 
 type FrictionlessViewReturnType = ({
   viewId, // view index in the views array
@@ -13,15 +14,11 @@ type FrictionlessViewReturnType = ({
   fullWidth?: boolean;
 }) => JSX.Element;
 
-export const FrictionlessViewFactory = ({
-  views,
-  resources,
-  dataUrlBase, // TODO temporary(?) solution for relative paths
-}: {
-  views: SimpleView[]; // TODO support classic/original DataPackage spec view?
-  resources: Resource[];
-  dataUrlBase: string;
-}): FrictionlessViewReturnType => {
+export const FrictionlessViewFactory = (
+  metadata: DatasetPageMetadata,
+): FrictionlessViewReturnType => {
+  const { views = [], resources, _rawUrlBase } = metadata;
+
   const View = ({
     viewId,
     fullWidth = false,
@@ -43,7 +40,7 @@ export const FrictionlessViewFactory = ({
       <FrictionlessView
         view={view}
         resource={resource}
-        dataUrlBase={dataUrlBase}
+        dataUrlBase={_rawUrlBase}
         fullWidth={fullWidth}
       />
     );

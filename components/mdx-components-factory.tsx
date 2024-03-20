@@ -17,14 +17,9 @@ import {
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorMessage } from "@/components/error-message";
 import { FrictionlessViewFactory } from "./frictionless-view";
+import { PageMetadata, isDatasetPage } from "@/server/api/types";
 
-export const mdxComponentsFactory = ({
-  frontMatter,
-  dataUrlBase,
-}: {
-  frontMatter: any;
-  dataUrlBase: string;
-}) => {
+export const mdxComponentsFactory = (metadata: PageMetadata) => {
   const components: any = {
     /* HTML elements */
     a: ({ href, children, ...rest }) => {
@@ -44,7 +39,10 @@ export const mdxComponentsFactory = ({
     },
     img: (props) => {
       return (
-        <img {...props} src={resolveRelativeUrl(props.src, dataUrlBase)} />
+        <img
+          {...props}
+          src={resolveRelativeUrl(props.src, metadata._rawUrlBase)}
+        />
       );
     },
     table: (props) => (
@@ -106,14 +104,17 @@ export const mdxComponentsFactory = ({
             title: "`Excel` component error:",
           })}
         >
-          <Excel {...props} url={resolveRelativeUrl(props.url, dataUrlBase)} />
+          <Excel
+            {...props}
+            url={resolveRelativeUrl(props.url, metadata._rawUrlBase)}
+          />
         </ErrorBoundary>
       );
     },
     FlatUiTable: (props: FlatUiTableProps) => {
       let url = props.url;
       if (url) {
-        url = resolveRelativeUrl(url, dataUrlBase);
+        url = resolveRelativeUrl(url, metadata._rawUrlBase);
       }
       return (
         <ErrorBoundary
@@ -128,7 +129,7 @@ export const mdxComponentsFactory = ({
     LineChart: (props: LineChartProps) => {
       let data = props.data;
       if (typeof data === "string") {
-        data = resolveRelativeUrl(data, dataUrlBase);
+        data = resolveRelativeUrl(data, metadata._rawUrlBase);
       }
       return (
         <ErrorBoundary
@@ -149,7 +150,7 @@ export const mdxComponentsFactory = ({
         >
           <PdfViewer
             {...props}
-            url={resolveRelativeUrl(props.url, dataUrlBase)}
+            url={resolveRelativeUrl(props.url, metadata._rawUrlBase)}
           />
         </ErrorBoundary>
       );
@@ -157,7 +158,7 @@ export const mdxComponentsFactory = ({
     Vega: (props) => {
       let spec = props.spec;
       if (spec.data.URL) {
-        spec.data.URL = resolveRelativeUrl(spec.data.URL, dataUrlBase);
+        spec.data.URL = resolveRelativeUrl(spec.data.URL, metadata._rawUrlBase);
       }
       return (
         <ErrorBoundary
@@ -172,7 +173,7 @@ export const mdxComponentsFactory = ({
     VegaLite: (props) => {
       let spec = props.spec;
       if (spec.data.URL) {
-        spec.data.URL = resolveRelativeUrl(spec.data.URL, dataUrlBase);
+        spec.data.URL = resolveRelativeUrl(spec.data.URL, metadata._rawUrlBase);
       }
       return (
         <ErrorBoundary
@@ -186,12 +187,8 @@ export const mdxComponentsFactory = ({
     },
   };
 
-  if (frontMatter.datapackage) {
-    const FrictionlessView = FrictionlessViewFactory({
-      views: frontMatter.datapackage.views,
-      resources: frontMatter.datapackage.resources,
-      dataUrlBase,
-    });
+  if (isDatasetPage(metadata)) {
+    const FrictionlessView = FrictionlessViewFactory(metadata);
     components.FrictionlessView = ({
       id,
       fullWidth,

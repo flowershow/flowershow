@@ -95,6 +95,7 @@ model Site {
   userId        String?
   synced        Boolean  @default(false) // whether the site content has been uploaded to R2
   syncedAt      DateTime? // when the site content was last updated in R2
+  files         Json?    @db.JsonB // temporary storage for site files metadata
 
   @@unique([userId, projectName])
   @@index([userId])
