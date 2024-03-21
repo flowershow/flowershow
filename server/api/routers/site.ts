@@ -323,6 +323,7 @@ export const siteRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string().min(1),
+        force: z.boolean().optional(), // don't check if the trees are different
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -339,7 +340,9 @@ export const siteRouter = createTRPCRouter({
       const access_token = ctx.session.accessToken;
 
       // fetch content store tree
-      const contentStoreTree = await fetchTree(id, gh_branch);
+      const contentStoreTree = input.force
+        ? null
+        : await fetchTree(site!.id, site!.gh_branch);
       // fetch GitHub repo tree
       const gitHubTree = await fetchGitHubRepoTree({
         gh_repository,
@@ -348,7 +351,6 @@ export const siteRouter = createTRPCRouter({
       });
 
       if (!contentStoreTree || contentStoreTree.sha !== gitHubTree.sha) {
-        console.log("Trees are different, syncing content store with GitHub");
         const contentStoreMap = new Map(
           contentStoreTree?.tree
             .filter((file) => {
@@ -625,6 +627,12 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
+  getAll: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.session.user.role !== "ADMIN") {
+      throw new Error("Unauthorized");
+    }
+    return await ctx.db.site.findMany({ include: { user: true } });
+  }),
   getPageMetadata: publicProcedure
     .input(
       z.object({
