@@ -12,6 +12,7 @@ import {
   fetchGitHubRepoTree,
   fetchGitHubFile,
   checkIfBranchExists,
+  fetchGitHubFileBlob,
 } from "@/lib/github";
 import {
   uploadFile,
@@ -111,18 +112,16 @@ export const siteRouter = createTRPCRouter({
         // process and upload each file to content store
         await Promise.all(
           filesToProcess.map(async (file) => {
-            const gitHubFile = await fetchGitHubFile({
-              gh_repository,
-              gh_branch,
-              access_token,
-              path: file.path,
-            });
-
-            const fileContentBuffer = Buffer.from(gitHubFile.content, "base64");
-
             const fileExtension = file.path
               .split(".")
               .pop() as SupportedExtension; // files with unsupported extensions were filtered out earlier
+
+            const gitHubFile = await fetchGitHubFileBlob({
+              gh_repository,
+              file_sha: file.sha,
+              access_token,
+            });
+            const fileContentBuffer = Buffer.from(gitHubFile, "utf-8");
 
             await uploadFile({
               projectId: site.id,
@@ -155,6 +154,7 @@ export const siteRouter = createTRPCRouter({
                   }) || null;
 
                 if (datapackageTreeItem) {
+                  // TODO potentially duplicate fetch; refactor to avoid
                   const datapackageGitHubFile = await fetchGitHubFile({
                     gh_repository,
                     gh_branch,
@@ -377,19 +377,15 @@ export const siteRouter = createTRPCRouter({
             ) {
               // This means the file is new or updated in GitHub
               // Fetch and upload the file content to the content store
-              const gitHubFile = await fetchGitHubFile({
-                gh_repository,
-                gh_branch,
-                access_token,
-                path,
-              });
-
-              const fileContentBuffer = Buffer.from(
-                gitHubFile.content,
-                "base64",
-              );
 
               const fileExtension = path.split(".").pop() as SupportedExtension; // files with unsupported extensions were filtered out earlier
+
+              const gitHubFile = await fetchGitHubFileBlob({
+                gh_repository,
+                file_sha: sha,
+                access_token,
+              });
+              const fileContentBuffer = Buffer.from(gitHubFile, "utf-8");
 
               await uploadFile({
                 projectId: id,
@@ -419,6 +415,7 @@ export const siteRouter = createTRPCRouter({
                     }) || null;
 
                   if (datapackageTreeItem) {
+                    // TODO potentially duplicate fetch; refactor to avoid
                     const datapackageGitHubFile = await fetchGitHubFile({
                       gh_repository,
                       gh_branch,
