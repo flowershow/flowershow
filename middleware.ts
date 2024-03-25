@@ -17,6 +17,7 @@ export const config = {
   ],
 };
 
+// TODO this is getting out of hand, we need to refactor this
 export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;
 
@@ -35,8 +36,9 @@ export default async function middleware(req: NextRequest) {
 
   const searchParams = req.nextUrl.searchParams.toString();
   // Get the pathname of the request (e.g. /, /about, /blog/first-post)
-  const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""
-    }`;
+  const path = `${url.pathname}${
+    searchParams.length > 0 ? `?${searchParams}` : ""
+  }`;
 
   // rewrites for cloud pages
   if (
@@ -61,21 +63,25 @@ export default async function middleware(req: NextRequest) {
     hostname === `${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
     hostname === `staging.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
   ) {
-    // if path matches /blog/{restofpath} rewrite to /{mainAccount}/blog/{restofpath}
-    if (path.match(/^\/blog/)) {
+    if (
+      path.match(/^\/blog/) ||
+      path.match(/^\/docs/) ||
+      path.match(/^\/collections/)
+    ) {
+      if (path.match(/\/datapackage\.(json|yaml|yml)$/)) {
+        return NextResponse.rewrite(
+          new URL(`/api/${mainAccount}${path}`, req.url),
+        );
+      }
       return NextResponse.rewrite(new URL(`/${mainAccount}${path}`, req.url));
     }
-    // if path matches /docs/{restofpath} rewrite to /{mainAccount}/docs/{restofpath}
-    if (path.match(/^\/docs/)) {
-      return NextResponse.rewrite(new URL(`/${mainAccount}${path}`, req.url));
-    }
-    // if path matches /collections/{restofpath} rewrite to /{mainAccount}/collections/{restofpath}
-    if (path.match(/^\/collections/)) {
-      return NextResponse.rewrite(new URL(`/${mainAccount}${path}`, req.url));
-    }
-    // if path matches /core/{restofpath} rewrite to /{mainAccount}/{restofpath}
     if (path.match(/^\/core/)) {
       const pathAfterCore = path.replace(/^\/core/, "");
+      if (path.match(/\/datapackage\.(json|yaml|yml)$/)) {
+        return NextResponse.rewrite(
+          new URL(`/api/${mainAccount}${pathAfterCore}`, req.url),
+        );
+      }
       return NextResponse.rewrite(
         new URL(`/${mainAccount}${pathAfterCore}`, req.url),
       );
