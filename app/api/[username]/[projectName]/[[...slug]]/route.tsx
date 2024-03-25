@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createTRPCContext } from "@/server/api/trpc";
 import { appRouter } from "@/server/api/root";
 import { fetchFile } from "@/lib/content-store";
-import { TRPCError } from "@trpc/server";
+import { NotFound } from "@aws-sdk/client-s3";
 
 /**
  * This wraps the `createTRPCContext` helper and provides the required context for the tRPC API when
@@ -49,8 +49,9 @@ export async function GET(
         "Content-Type": "text/plain",
       },
     });
-  } catch (e) {
-    if (e instanceof TRPCError && e.code === "NOT_FOUND") {
+  } catch (error) {
+    console.error(error);
+    if (error instanceof NotFound || (error as Error).name === "NoSuchKey") {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
     return NextResponse.json(

@@ -51,15 +51,22 @@ const uploadR2Object = async ({
   );
 };
 
+const deleteR2Object = async (key: string) => {
+  return R2.send(
+    new DeleteObjectCommand({
+      Bucket: R2_BUCKET_NAME,
+      Key: key,
+    }),
+  );
+};
+
 const fetchR2Object = async (key: string) => {
-  const response = await R2.send(
+  return await R2.send(
     new GetObjectCommand({
       Bucket: R2_BUCKET_NAME,
       Key: key,
     }),
   );
-  // TODO transform to string here or in the caller?
-  return await response.Body?.transformToString();
 };
 
 const emptyR2Directory = async (dir: string) => {
@@ -140,13 +147,8 @@ export const fetchFile = async ({
   branch: string;
   path: string;
 }) => {
-  try {
-    return (await fetchR2Object(`${projectId}/${branch}/raw/${path}`)) || null;
-  } catch (error) {
-    throw new Error(
-      `Could not fetch content from any configured path: ${error}`,
-    );
-  }
+  const response = await fetchR2Object(`${projectId}/${branch}/raw/${path}`);
+  return (await response.Body?.transformToString()) || null;
 };
 
 export const deleteFile = async ({
@@ -158,12 +160,7 @@ export const deleteFile = async ({
   branch: string;
   path: string;
 }) => {
-  await R2.send(
-    new DeleteObjectCommand({
-      Bucket: R2_BUCKET_NAME,
-      Key: `${projectId}/${branch}/raw/${path}`,
-    }),
-  );
+  return deleteR2Object(`${projectId}/${branch}/raw/${path}`);
 };
 
 export const deleteProject = async (projectId: string) => {
@@ -188,11 +185,10 @@ export const uploadTree = async ({
 
 export const fetchTree = async (projectId: string, branch: string) => {
   try {
-    const tree = await fetchR2Object(`${projectId}/${branch}/_tree`);
-    if (!tree) return null;
-    return JSON.parse(tree) as GitHubAPIRepoTree;
+    const response = await fetchR2Object(`${projectId}/${branch}/_tree`);
+    const tree = await response.Body?.transformToString();
+    return tree ? (JSON.parse(tree) as GitHubAPIRepoTree) : null;
   } catch (e) {
-    console.log(e);
     return null;
   }
 };
