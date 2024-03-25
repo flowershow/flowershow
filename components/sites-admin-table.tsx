@@ -11,7 +11,7 @@ type Site = Prisma.SiteGetPayload<{
   include: { user: true };
 }>;
 
-export default async function SitesAdminTable({
+export default function SitesAdminTable({
   sites,
   onSync,
 }: {
@@ -165,9 +165,17 @@ export default async function SitesAdminTable({
                       <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                         {site.syncedAt ? (
                           <time
-                            dateTime={new Date(site.syncedAt).toLocaleString()}
+                            dateTime={new Date(site.syncedAt).toISOString()}
                           >
-                            {new Date(site.syncedAt).toLocaleString()}
+                            {new Date(site.syncedAt).toLocaleString("en-US", {
+                              year: "numeric",
+                              month: "2-digit",
+                              day: "2-digit",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                              hour12: false, // Use 24-hour format
+                            })}
                           </time>
                         ) : (
                           "Not synced"
