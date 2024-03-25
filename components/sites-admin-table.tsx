@@ -16,7 +16,7 @@ export default function SitesAdminTable({
   onSync,
 }: {
   sites: Site[];
-  onSync: (siteId: string) => void;
+  onSync: (siteId: string) => Promise<void>;
 }) {
   const checkbox = useRef<HTMLInputElement>(null);
   const [checked, setChecked] = useState(false);
@@ -28,6 +28,14 @@ export default function SitesAdminTable({
       loading: "Syncing sites...",
       success: "Sites synced successfully",
       error: "Failed to sync sites",
+    });
+  }
+
+  async function syncSingleSite(id: string) {
+    toast.promise(onSync(id), {
+      loading: "Syncing site...",
+      success: "Site synced successfully",
+      error: "Failed to sync site",
     });
   }
 
@@ -124,80 +132,82 @@ export default function SitesAdminTable({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 bg-white">
-                  {sites.map((site) => (
-                    <tr
-                      key={site.id}
-                      className={
-                        sites.includes(site) ? "bg-gray-50" : undefined
-                      }
-                    >
-                      <td className="relative px-7 sm:w-12 sm:px-6">
-                        {sites.includes(site) && (
-                          <div className="absolute inset-y-0 left-0 w-0.5 bg-indigo-600" />
-                        )}
-                        <input
-                          type="checkbox"
-                          className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                          value={site.id}
-                          checked={selectedSites.includes(site.id)}
-                          onChange={(e) =>
-                            setSelectedSites(
-                              e.target.checked
-                                ? [...selectedSites, site.id]
-                                : selectedSites.filter((s) => s !== site.id),
-                            )
-                          }
-                        />
-                      </td>
-                      <td
-                        className={classNames(
-                          "whitespace-nowrap py-4 pr-3 text-sm font-medium",
-                          selectedSites.includes(site.id)
-                            ? "text-indigo-600"
-                            : "text-gray-900",
-                        )}
+                  {sites
+                    .sort((a, b) => a.projectName.localeCompare(b.projectName))
+                    .map((site) => (
+                      <tr
+                        key={site.id}
+                        className={
+                          sites.includes(site) ? "bg-gray-50" : undefined
+                        }
                       >
-                        {site.projectName}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {site.user!.gh_username}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {site.syncedAt ? (
-                          <time
-                            dateTime={new Date(site.syncedAt).toISOString()}
-                          >
-                            {new Date(site.syncedAt).toLocaleString("en-US", {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              second: "2-digit",
-                              hour12: false, // Use 24-hour format
-                            })}
-                          </time>
-                        ) : (
-                          "Not synced"
-                        )}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {site.gh_repository}
-                      </td>
-                      <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                        {site.gh_branch}
-                      </td>
-                      <td className="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-3">
-                        <button
-                          className="text-indigo-600 hover:text-indigo-900"
-                          type="button"
-                          onClick={() => onSync(site.id)}
+                        <td className="relative px-7 sm:w-12 sm:px-6">
+                          {sites.includes(site) && (
+                            <div className="absolute inset-y-0 left-0 w-0.5 bg-indigo-600" />
+                          )}
+                          <input
+                            type="checkbox"
+                            className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                            value={site.id}
+                            checked={selectedSites.includes(site.id)}
+                            onChange={(e) =>
+                              setSelectedSites(
+                                e.target.checked
+                                  ? [...selectedSites, site.id]
+                                  : selectedSites.filter((s) => s !== site.id),
+                              )
+                            }
+                          />
+                        </td>
+                        <td
+                          className={classNames(
+                            "whitespace-nowrap py-4 pr-3 text-sm font-medium",
+                            selectedSites.includes(site.id)
+                              ? "text-indigo-600"
+                              : "text-gray-900",
+                          )}
                         >
-                          Sync<span className="sr-only"></span>
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                          {site.projectName}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {site.user!.gh_username}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {site.syncedAt ? (
+                            <time
+                              dateTime={new Date(site.syncedAt).toISOString()}
+                            >
+                              {new Date(site.syncedAt).toLocaleString("en-US", {
+                                year: "numeric",
+                                month: "2-digit",
+                                day: "2-digit",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                second: "2-digit",
+                                hour12: false, // Use 24-hour format
+                              })}
+                            </time>
+                          ) : (
+                            "Not synced"
+                          )}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {site.gh_repository}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {site.gh_branch}
+                        </td>
+                        <td className="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-3">
+                          <button
+                            className="text-indigo-600 hover:text-indigo-900"
+                            type="button"
+                            onClick={() => syncSingleSite(site.id)}
+                          >
+                            Sync<span className="sr-only"></span>
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
                 </tbody>
               </table>
             </div>
