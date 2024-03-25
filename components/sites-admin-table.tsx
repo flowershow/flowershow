@@ -24,11 +24,14 @@ export default function SitesAdminTable({
   const [selectedSites, setSelectedSites] = useState<string[]>([]);
 
   async function syncSelectedSites() {
-    toast.promise(Promise.all(selectedSites.map((siteId) => onSync(siteId))), {
-      loading: "Syncing sites...",
-      success: "Sites synced successfully",
-      error: "Failed to sync sites",
-    });
+    toast.promise(
+      Promise.allSettled(selectedSites.map((siteId) => onSync(siteId))),
+      {
+        loading: "Syncing sites...",
+        success: "Sites synced successfully",
+        error: "Failed to sync sites",
+      },
+    );
   }
 
   async function syncSingleSite(id: string) {
