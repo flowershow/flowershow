@@ -3,7 +3,7 @@
     "app/api/trpc/**/*.ts": {
       "maxDuration": 300
     },
-    "**/*.tsx": {
+    "**/*": {
       "maxDuration": 300
     }
   }
