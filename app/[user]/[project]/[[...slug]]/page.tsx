@@ -2,12 +2,10 @@ import { notFound } from "next/navigation";
 import MdxPage from "@/components/mdx";
 import { api } from "@/trpc/server";
 import parse from "@/lib/markdown";
-import { env } from "@/env.mjs";
 import { ErrorMessage } from "@/components/error-message";
-import { DataPackage } from "@/components/layouts/datapackage-types";
-import { computeDataPackage } from "@/lib/computed-fields";
+import { PageMetadata } from "@/server/api/types";
+import { MDXRemoteSerializeResult } from "next-mdx-remote";
 
-// TODO clean this up a bit
 export async function generateMetadata({
   params,
 }: {
@@ -15,45 +13,19 @@ export async function generateMetadata({
 }) {
   const slug = decodeURIComponent(params.slug);
 
-  let content: string;
-  let datapackage: DataPackage | null;
+  const pageMetadata = await api.site.getPageMetadata.query({
+    gh_username: params.user,
+    projectName: params.project,
+    slug: slug !== "undefined" ? slug.split(",").join("/") : "/",
+  });
 
-  try {
-    const page = await api.site.getPageContent.query({
-      gh_username: params.user,
-      projectName: params.project,
-      slug: slug !== "undefined" ? slug.split(",").join("/") : "",
-    });
-    content = page.content;
-    datapackage = page.datapackage;
-  } catch (error) {
+  if (!pageMetadata) {
     notFound();
   }
 
-  let frontMatter: any;
-
-  try {
-    // TODO move this to a trpc query ?
-    const data = await parse(content, "mdx", {});
-    frontMatter = data.frontMatter;
-  } catch (e: any) {
-    return {};
-  }
-
-  const title: string =
-    frontMatter?.title ??
-    frontMatter?.datapackage?.title ??
-    datapackage?.title ??
-    params.project;
-  const description: string =
-    frontMatter?.description ??
-    frontMatter?.datapackage?.description ??
-    datapackage?.description ??
-    "";
-
   return {
-    title,
-    description: description,
+    title: pageMetadata.title,
+    description: pageMetadata.description,
   };
 }
 
@@ -63,7 +35,6 @@ export async function generateMetadata({
  *   return [];
  * } */
 
-// TODO clean this up a bit
 export default async function SitePage({
   params,
 }: {
@@ -71,36 +42,55 @@ export default async function SitePage({
 }) {
   const slug = decodeURIComponent(params.slug);
 
-  let content: string;
-  let datapackage: DataPackage | null;
-  let permalinks;
+  let pageMetadata: PageMetadata | null = null;
+  let mdContent: string | null = null;
+  let sitePermalinks: string[] = [];
+  let _mdxSource: MDXRemoteSerializeResult | null = null;
+
+  // TODO temporary to construct dataUrlBase
+  const site = await api.site.get.query({
+    gh_username: params.user,
+    projectName: params.project,
+  });
+
+  if (!site) {
+    notFound();
+  }
 
   try {
-    const page = await api.site.getPageContent.query({
+    pageMetadata = await api.site.getPageMetadata.query({
       gh_username: params.user,
       projectName: params.project,
-      slug: slug !== "undefined" ? slug.split(",").join("/") : "",
-    });
-    content = page.content;
-    datapackage = page.datapackage;
-    permalinks = await api.site.getSitePermalinks.query({
-      gh_username: params.user,
-      projectName: params.project,
+      slug: slug !== "undefined" ? slug.split(",").join("/") : "/",
     });
   } catch (error) {
     notFound();
   }
 
-  let mdxSource;
-  let frontMatter: {
-    datapackage?: DataPackage;
-    [key: string]: any;
-  } = {};
+  if (!pageMetadata) {
+    notFound();
+  }
 
   try {
-    const data = await parse(content, "mdx", {}, permalinks);
-    mdxSource = data.mdxSource;
-    frontMatter = data.frontMatter;
+    const { content, permalinks } = await api.site.getPageContent.query({
+      gh_username: params.user,
+      projectName: params.project,
+      slug: slug !== "undefined" ? slug.split(",").join("/") : "/",
+    });
+    mdContent = content;
+    sitePermalinks = permalinks;
+  } catch (error) {
+    notFound();
+  }
+
+  try {
+    const { mdxSource } = await parse(
+      mdContent ?? "",
+      "mdx",
+      {},
+      sitePermalinks,
+    );
+    _mdxSource = mdxSource;
   } catch (e: any) {
     return (
       <div className="p-6">
@@ -109,22 +99,5 @@ export default async function SitePage({
     );
   }
 
-  frontMatter.datapackage = computeDataPackage({
-    frontMatter,
-    datapackage,
-    source: content,
-  });
-
-  const { id, gh_branch } = (await api.site.get.query({
-    gh_username: params.user,
-    projectName: params.project,
-  }))!;
-
-  return (
-    <MdxPage
-      source={mdxSource}
-      frontMatter={frontMatter}
-      dataUrlBase={`https://${env.R2_BUCKET_DOMAIN}/${id}/${gh_branch}/raw`}
-    />
-  );
+  return <MdxPage source={_mdxSource} metadata={pageMetadata} />;
 }

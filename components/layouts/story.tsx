@@ -1,22 +1,18 @@
+import { StoryPageMetadata } from "@/server/api/types";
+
 interface Props extends React.PropsWithChildren {
-  title: string;
-  authors: string[];
-  /* authors: Author[]; */
-  date: string;
+  metadata: StoryPageMetadata;
 }
 
-interface Author {
-  name: string;
-  avatar: string;
-  /* urlPath: string; */
-}
+/* interface Author {
+ *   name: string;
+ *   avatar: string;
+ *   urlPath: string;
+ * } */
 
 // copied over from https://github.com/datopian/portaljs/blob/main/packages/core/src/ui/BlogLayout/BlogLayout.tsx
-export const DataStoryLayout: React.FC<Props> = ({
-  children,
-  ...frontMatter
-}) => {
-  const { title, date, authors } = frontMatter;
+export const DataStoryLayout: React.FC<Props> = ({ children, metadata }) => {
+  const { title, date, authors } = metadata;
 
   return (
     <article className="prose mx-auto mt-20 max-w-3xl px-12 pb-20 text-primary prose-headings:font-medium">

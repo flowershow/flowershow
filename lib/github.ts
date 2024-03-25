@@ -76,6 +76,25 @@ const githubJsonFetch = async <T>({
   return response.json() as Promise<T>;
 };
 
+const githubRawFetch = async ({
+  url,
+  accessToken,
+  cacheOptions,
+}: {
+  url: string;
+  accessToken: string;
+  cacheOptions?: { next?: any; cache?: any };
+}) => {
+  const response = await githubFetch({
+    url,
+    accessToken,
+    cacheOptions,
+    accept: "application/vnd.github.raw+json",
+  });
+
+  return response.text();
+};
+
 export const fetchGitHubScopes = async (accessToken: string) => {
   // Fetching organizations the user is a member of.
   // https://docs.github.com/en/rest/orgs/orgs?apiVersion=2022-11-28#list-organizations-for-the-authenticated-user
@@ -213,6 +232,31 @@ export const fetchGitHubFile = async ({
   }
 };
 
+export const fetchGitHubFileBlob = async ({
+  gh_repository,
+  file_sha,
+  access_token,
+}: {
+  gh_repository: string;
+  file_sha: string;
+  access_token: string;
+}) => {
+  try {
+    return await githubRawFetch({
+      // https://docs.github.com/en/rest/git/blobs?apiVersion=2022-11-28#get-a-blob
+      url: `/repos/${gh_repository}/git/blobs/${file_sha}`,
+      accessToken: access_token,
+      cacheOptions: {
+        cache: "no-store",
+      },
+    });
+  } catch (error) {
+    throw new Error(
+      `Could not read ${gh_repository}/git/blob/${file_sha} from GitHub: ${error}`,
+    );
+  }
+};
+
 export const checkIfBranchExists = async ({
   gh_repository,
   gh_branch,
@@ -264,14 +308,16 @@ export interface GitHubAPIFileContent {
 export interface GitHubAPIRepoTree {
   sha: string;
   url: string;
-  tree: Array<{
-    path: string;
-    mode: string;
-    type: "blob" | "tree";
-    size: number;
-    sha: string;
-    url: string;
-  }>;
+  tree: GitHubAPIRepoTreeItem[];
+}
+
+export interface GitHubAPIRepoTreeItem {
+  path: string;
+  mode: string;
+  type: "blob" | "tree";
+  size: number;
+  sha: string;
+  url: string;
 }
 
 interface GitHubAPIUser {

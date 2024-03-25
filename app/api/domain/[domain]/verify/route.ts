@@ -8,9 +8,9 @@ import { NextResponse } from "next/server";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { slug: string } },
+  { params }: { params: { domain: string } },
 ) {
-  const domain = decodeURIComponent(params.slug);
+  const domain = decodeURIComponent(params.domain);
   let status: DomainVerificationStatusProps = "Valid Configuration";
 
   const [domainJson, configJson] = await Promise.all([

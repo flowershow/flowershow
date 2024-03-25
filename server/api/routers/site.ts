@@ -1,5 +1,6 @@
 import { revalidateTag, unstable_cache } from "next/cache";
 import { z } from "zod";
+import YAML from "yaml";
 
 import {
   createTRPCRouter,
@@ -11,14 +12,15 @@ import {
   fetchGitHubRepoTree,
   fetchGitHubFile,
   checkIfBranchExists,
+  fetchGitHubFileBlob,
 } from "@/lib/github";
 import {
-  uploadContent,
+  uploadFile,
   uploadTree,
   fetchTree,
   deleteProject,
-  deleteContent,
-  fetchContent,
+  deleteFile,
+  fetchFile,
 } from "@/lib/content-store";
 import {
   addDomainToVercel,
@@ -26,12 +28,15 @@ import {
   validDomainRegex,
 } from "@/lib/domains";
 import {
-  isSupportedAssetExtension,
+  SupportedExtension,
   isSupportedExtension,
   isSupportedMarkdownExtension,
 } from "@/lib/types";
 import { env } from "@/env.mjs";
 import { TRPCError } from "@trpc/server";
+import { computeMetadata } from "@/lib/computed-fields";
+import { DataPackage } from "@/components/layouts/datapackage-types";
+import { PageMetadata } from "../types";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -41,15 +46,17 @@ export const siteRouter = createTRPCRouter({
         gh_repository: z.string().min(1),
         gh_scope: z.string().min(1),
         gh_branch: z.string().min(1),
-        //...
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const { gh_repository, gh_scope, gh_branch } = input;
+      const access_token = ctx.session.accessToken;
+
       // check if branch exists
       const branchExists = await checkIfBranchExists({
-        gh_repository: input.gh_repository,
-        gh_branch: input.gh_branch,
-        access_token: ctx.session.accessToken,
+        gh_repository,
+        gh_branch,
+        access_token,
       });
 
       if (!branchExists) {
@@ -58,10 +65,9 @@ export const siteRouter = createTRPCRouter({
         );
       }
 
-      /* use repository name as an initial project name
-       * and append a number if the name is already taken
-       * */
-      let projectName = input.gh_repository.split("/")[1] as string;
+      //use repository name as an initial project name
+      //and append a number if the name is already taken
+      let projectName = gh_repository.split("/")[1] as string;
       let num = 2;
 
       while (
@@ -74,61 +80,137 @@ export const siteRouter = createTRPCRouter({
         projectName = `${input.gh_repository.split("/")[1]}-${num}`;
       }
 
+      // create site in the database
       const site = await ctx.db.site.create({
         data: {
           projectName,
-          gh_repository: input.gh_repository,
-          gh_scope: input.gh_scope,
-          gh_branch: input.gh_branch,
+          gh_repository,
+          gh_scope,
+          gh_branch,
           user: { connect: { id: ctx.session.user.id } },
         },
       });
 
-      // upload to content store
+      // upload files to content store, parse and save metadata
       try {
+        const filesMetadata: {
+          [url: string]: PageMetadata;
+        } = {};
+
         const tree = await fetchGitHubRepoTree({
-          gh_repository: input.gh_repository,
-          gh_branch: input.gh_branch,
-          access_token: ctx.session.accessToken,
+          gh_repository,
+          gh_branch,
+          access_token,
         });
-        // upload each file to content store
+
+        // filter out directories and unsupported file types
+        const filesToProcess = tree.tree.filter((file) => {
+          if (file.type === "tree") return false;
+          return isSupportedExtension(file.path.split(".").pop() || "");
+        });
+
+        // process and upload each file to content store
         await Promise.all(
-          tree.tree.map(async (file) => {
-            // ignore directories
-            if (file.type === "tree") return;
-            // ignore unsupported file types
-            const [path, extension = ""] = file.path.split(".");
-            if (!isSupportedExtension(extension)) return;
-            // fetch file content from GitHub
-            const content = await fetchGitHubFile({
-              gh_repository: input.gh_repository,
-              gh_branch: input.gh_branch,
+          filesToProcess.map(async (file) => {
+            const fileExtension = file.path
+              .split(".")
+              .pop() as SupportedExtension; // files with unsupported extensions were filtered out earlier
+
+            const gitHubFile = await fetchGitHubFileBlob({
+              gh_repository,
+              file_sha: file.sha,
+              access_token,
+            });
+            const fileContentBuffer = Buffer.from(gitHubFile, "utf-8");
+
+            await uploadFile({
+              projectId: site.id,
+              branch: gh_branch,
               path: file.path,
-              access_token: ctx.session.accessToken,
+              content: fileContentBuffer,
+              extension: fileExtension,
             });
 
-            await uploadContent({
-              projectId: site.id,
-              branch: input.gh_branch,
-              path: isSupportedMarkdownExtension(extension) ? path! : file.path, // TODO assertion
-              content,
-              extension,
-            });
+            // if the file is a markdown file, parse it and save metadata
+            if (isSupportedMarkdownExtension(fileExtension)) {
+              const markdown = fileContentBuffer.toString("utf-8");
+
+              // special case for README.md and index.md files
+              let datapackage: DataPackage | null = null;
+              if (
+                file.path.endsWith("README.md") ||
+                file.path.endsWith("index.md")
+              ) {
+                let fileDir = file.path.split("/").slice(0, -1).join("/");
+                fileDir = fileDir ? `${fileDir}/` : "";
+
+                const datapackageTreeItem =
+                  filesToProcess.find((f) => {
+                    return (
+                      f.path === `${fileDir}datapackage.json` ||
+                      f.path === `${fileDir}datapackage.yaml` ||
+                      f.path === `${fileDir}datapackage.yml`
+                    );
+                  }) || null;
+
+                if (datapackageTreeItem) {
+                  // TODO potentially duplicate fetch; refactor to avoid
+                  const datapackageGitHubFile = await fetchGitHubFile({
+                    gh_repository,
+                    gh_branch,
+                    access_token,
+                    path: datapackageTreeItem.path,
+                  });
+
+                  const datapackageFileExtension = datapackageTreeItem.path
+                    .split(".")
+                    .pop() as SupportedExtension; // json, yaml, or yml are supported
+
+                  const datapackageContentString = Buffer.from(
+                    datapackageGitHubFile.content,
+                    "base64",
+                  ).toString("utf-8");
+
+                  if (datapackageFileExtension === "json") {
+                    datapackage = JSON.parse(
+                      datapackageContentString,
+                    ) as DataPackage;
+                  } else if (
+                    datapackageFileExtension === "yaml" ||
+                    datapackageFileExtension === "yml"
+                  ) {
+                    datapackage = YAML.parse(
+                      datapackageContentString,
+                    ) as DataPackage; // datapackageContent is base64 encoded, so we need to decode it
+                  }
+                }
+              }
+
+              const fileMetadata = await computeMetadata({
+                source: markdown,
+                datapackage,
+                path: file.path,
+                tree,
+                site,
+              });
+
+              filesMetadata[fileMetadata._url] = fileMetadata;
+            }
           }),
         );
 
         // upload tree to content store
         await uploadTree({
           projectId: site.id,
-          branch: input.gh_branch,
+          branch: gh_branch,
           tree,
         });
-
         await ctx.db.site.update({
           where: { id: site.id },
           data: {
             synced: true,
             syncedAt: new Date(),
+            files: filesMetadata as any, // TODO: fix types
           },
         });
       } catch (error) {
@@ -140,7 +222,6 @@ export const siteRouter = createTRPCRouter({
         });
         throw new Error(`Failed to upload site content: ${error}`);
       }
-
       return site;
     }),
   update: protectedProcedure
@@ -196,7 +277,7 @@ export const siteRouter = createTRPCRouter({
       revalidateTag(`${site?.user?.gh_username}-${site?.projectName}-metadata`);
 
       if (key === "gh_branch") {
-        // revalidatee the site's permalinks
+        // revalidate the site's permalinks
         revalidateTag(
           `${site?.user?.gh_username}-${site?.projectName}-permalinks`,
         );
@@ -242,6 +323,7 @@ export const siteRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string().min(1),
+        force: z.boolean().optional(), // don't check if the trees are different
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -254,49 +336,137 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
+      const { id, gh_repository, gh_branch } = site!;
+      const access_token = ctx.session.accessToken;
+
       // fetch content store tree
-      const contentStoreTree = await fetchTree(site!.id, site!.gh_branch);
+      const contentStoreTree = input.force
+        ? null
+        : await fetchTree(site!.id, site!.gh_branch);
       // fetch GitHub repo tree
       const gitHubTree = await fetchGitHubRepoTree({
-        gh_repository: site!.gh_repository,
-        gh_branch: site!.gh_branch,
-        access_token: ctx.session.accessToken,
+        gh_repository,
+        gh_branch,
+        access_token,
       });
 
       if (!contentStoreTree || contentStoreTree.sha !== gitHubTree.sha) {
-        console.log("Trees are different, syncing content store with GitHub");
         const contentStoreMap = new Map(
-          contentStoreTree?.tree.map((file) => [file.path, file.sha] || []),
+          contentStoreTree?.tree
+            .filter((file) => {
+              if (file.type === "tree") return false;
+              return isSupportedExtension(file.path.split(".").pop() || "");
+            })
+            .map((file) => [file.path, file.sha] || []),
         );
         const gitHubMap = new Map(
-          gitHubTree.tree.map((file) => [file.path, file.sha]),
+          gitHubTree.tree
+            .filter((file) => {
+              if (file.type === "tree") return false;
+              return isSupportedExtension(file.path.split(".").pop() || "");
+            })
+            .map((file) => [file.path, file.sha]),
         );
 
         try {
           // Check for new or updated files in GitHub
-          for (const [_path, sha] of gitHubMap.entries()) {
+          for (const [path, sha] of gitHubMap.entries()) {
             if (
-              !contentStoreMap.has(_path) ||
-              contentStoreMap.get(_path) !== sha
+              !contentStoreMap.has(path) ||
+              contentStoreMap.get(path) !== sha
             ) {
               // This means the file is new or updated in GitHub
               // Fetch and upload the file content to the content store
-              const [path, extension = ""] = _path.split(".");
-              // ignore unsupported file types
-              if (!isSupportedExtension(extension)) continue;
-              const content = await fetchGitHubFile({
-                gh_repository: site!.gh_repository,
-                gh_branch: site!.gh_branch,
-                path: _path,
-                access_token: ctx.session.accessToken,
+
+              const fileExtension = path.split(".").pop() as SupportedExtension; // files with unsupported extensions were filtered out earlier
+
+              const gitHubFile = await fetchGitHubFileBlob({
+                gh_repository,
+                file_sha: sha,
+                access_token,
               });
-              await uploadContent({
-                projectId: site!.id,
-                branch: site!.gh_branch,
-                path: isSupportedAssetExtension(extension) ? _path : path!, // TODO assertion
-                content,
-                extension,
+              const fileContentBuffer = Buffer.from(gitHubFile, "utf-8");
+
+              await uploadFile({
+                projectId: id,
+                branch: gh_branch,
+                path,
+                content: fileContentBuffer,
+                extension: fileExtension,
               });
+
+              // if the file is a markdown file, parse it and save metadata
+              if (isSupportedMarkdownExtension(fileExtension)) {
+                const markdown = fileContentBuffer.toString("utf-8");
+
+                // special case for README.md and index.md files
+                let datapackage: DataPackage | null = null;
+                if (path.endsWith("README.md") || path.endsWith("index.md")) {
+                  let fileDir = path.split("/").slice(0, -1).join("/");
+                  fileDir = fileDir ? `${fileDir}/` : "";
+
+                  const datapackageTreeItem =
+                    gitHubTree.tree.find((f) => {
+                      return (
+                        f.path === `${fileDir}datapackage.json` ||
+                        f.path === `${fileDir}datapackage.yaml` ||
+                        f.path === `${fileDir}datapackage.yml`
+                      );
+                    }) || null;
+
+                  if (datapackageTreeItem) {
+                    // TODO potentially duplicate fetch; refactor to avoid
+                    const datapackageGitHubFile = await fetchGitHubFile({
+                      gh_repository,
+                      gh_branch,
+                      access_token,
+                      path: datapackageTreeItem.path,
+                    });
+
+                    const datapackageFileExtension = datapackageTreeItem.path
+                      .split(".")
+                      .pop() as SupportedExtension;
+
+                    const datapackageContentString = Buffer.from(
+                      datapackageGitHubFile.content,
+                      "base64",
+                    ).toString("utf-8");
+
+                    if (datapackageFileExtension === "json") {
+                      datapackage = JSON.parse(
+                        datapackageContentString,
+                      ) as DataPackage;
+                    } else if (
+                      datapackageFileExtension === "yaml" ||
+                      datapackageFileExtension === "yml"
+                    ) {
+                      datapackage = YAML.parse(
+                        datapackageContentString,
+                      ) as DataPackage; // datapackageContent is base64 encoded, so we need to decode it
+                    }
+                  }
+                }
+
+                const fileMetadata = await computeMetadata({
+                  source: markdown,
+                  datapackage,
+                  path,
+                  tree: gitHubTree,
+                  site: site!,
+                });
+
+                const newFilesMetadata = {
+                  ...(site!.files as Record<string, PageMetadata>), // temporary solution
+                  [fileMetadata._url]: fileMetadata,
+                };
+
+                await ctx.db.site.update({
+                  where: { id: site!.id },
+                  data: {
+                    files: newFilesMetadata as any, // fix types
+                  },
+                });
+              }
             }
           }
 
@@ -304,18 +474,32 @@ export const siteRouter = createTRPCRouter({
           for (const path of contentStoreMap.keys()) {
             if (!gitHubMap.has(path)) {
               // The file exists in the content store but not in GitHub, so delete it from the content store
-              const [_path, extension = ""] = path.split(".");
-              await deleteContent({
+              const extension = path.split(".").pop() as SupportedExtension; // files with unsupported extensions were filtered out earlier
+              await deleteFile({
                 projectId: site!.id,
                 branch: site!.gh_branch,
-                path: isSupportedMarkdownExtension(extension) ? _path! : path, // TODO find a better way to do this
+                path,
               });
+              // if the file is a markdown file, remove its metadata from the metadata store
+              if (isSupportedMarkdownExtension(extension)) {
+                const newFilesMetadata = {
+                  ...(site!.files as Record<string, PageMetadata>), // TODO find a better way to do this
+                  [path]: null,
+                };
+
+                await ctx.db.site.update({
+                  where: { id: site!.id },
+                  data: {
+                    files: newFilesMetadata as any, // TODO fix types
+                  },
+                });
+              }
             }
           }
           // If all goes well, update the content store tree to match the GitHub tree
           await uploadTree({
-            projectId: site!.id,
-            branch: site!.gh_branch,
+            projectId: id,
+            branch: gh_branch,
             tree: gitHubTree,
           });
           await ctx.db.site.update({
@@ -440,11 +624,18 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
-  getSitePermalinks: publicProcedure
+  getAll: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.session.user.role !== "ADMIN") {
+      throw new Error("Unauthorized");
+    }
+    return await ctx.db.site.findMany({ include: { user: true } });
+  }),
+  getPageMetadata: publicProcedure
     .input(
       z.object({
         gh_username: z.string().min(1),
         projectName: z.string().min(1),
+        slug: z.string().min(1),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -461,40 +652,17 @@ export const siteRouter = createTRPCRouter({
 
           if (!site) return null;
 
-          const tree = await fetchTree(site.id, site.gh_branch);
-
-          if (!tree) return null;
-
-          // TODO or should we generate it based on files uploaded to the content store?
-          // this way filtering is not needed
-          const filePaths = tree.tree
-            .filter((file) => {
-              if (file.type === "tree") return false;
-              // ignore unsupported file types
-              const [_, extension = ""] = file.path.split(".");
-              if (!isSupportedExtension(extension)) return false;
-              return true;
-            })
-            .map((file) => {
-              // ignore directories
-              // TODO revise this; filePathsToPermalinks expects a list of file paths with extension
-              return file.path;
-            });
-
-          const r2SiteRawUrl = `https://${env.R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`;
-          const siteBasePath = `/@${input.gh_username}/${input.projectName}`;
-          const permalinks = filePathsToPermalinks({
-            filePaths,
-            rawBaseUrl: r2SiteRawUrl,
-            pathPrefix: siteBasePath,
-          });
-
-          return permalinks;
+          const pageMetadata = (
+            site.files ? site.files[input.slug] : {}
+          ) as PageMetadata;
+          return pageMetadata;
         },
-        [`${input.gh_username}-${input.projectName}-permalinks`],
+        [`${input.gh_username}-${input.projectName}-${input.slug}-meta`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.gh_username}-${input.projectName}-permalinks`],
+          tags: [
+            `${input.gh_username}-${input.projectName}-${input.slug}-meta`,
+          ],
         },
       )();
     }),
@@ -516,6 +684,9 @@ export const siteRouter = createTRPCRouter({
                 { user: { gh_username: input.gh_username } },
               ],
             },
+            include: {
+              user: true,
+            },
           });
 
           if (!site) {
@@ -525,11 +696,33 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          return await fetchContent({
+          // TODO types
+          const path = (site.files as { [url: string]: PageMetadata })[
+            input.slug
+          ]?._path!;
+
+          const content = await fetchFile({
             projectId: site.id,
             branch: site.gh_branch,
-            path: input.slug,
+            path,
           });
+
+          // generate a list of permalinks
+          const filePaths = Object.entries(
+            site.files as { [url: string]: PageMetadata },
+          ).map(([url, metadata]) => {
+            // TODO revise this; filePathsToPermalinks expects a list of file paths with extension
+            return metadata._path;
+          });
+          const r2SiteRawUrl = `https://${env.R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`;
+          const siteBasePath = `/@${site.user?.gh_username}/${site.projectName}`;
+          const permalinks = filePathsToPermalinks({
+            filePaths,
+            rawBaseUrl: r2SiteRawUrl,
+            pathPrefix: siteBasePath,
+          });
+
+          return { content, permalinks };
         },
         [`${input.gh_username}-${input.projectName}-${input.slug}-content`],
         {

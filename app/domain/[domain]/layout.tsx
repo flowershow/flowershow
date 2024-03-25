@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { api } from "@/trpc/server";
+import { PageMetadata } from "@/server/api/types";
 
 export async function generateMetadata({
   params,
@@ -9,29 +10,41 @@ export async function generateMetadata({
   params: { domain: string };
 }): Promise<Metadata | null> {
   const domain = decodeURIComponent(params.domain);
-  /* const user = decodeURIComponent(params.user);
 
-                  * const site = await api.site.get.query({
-                  *   gh_username: user,
-                  *   projectName: project,
-                  * });
+  const site = await api.site.getByDomain.query({
+    domain,
+  });
 
-                  * if (!site) {
-                  *   return null;
-                  * } */
+  if (!site) {
+    return null;
+  }
+
+  // temporary solution for site wide title and description
+  const title =
+    (
+      site?.files as {
+        [url: string]: PageMetadata;
+      }
+    )["/"]?.title || site.projectName;
+  const description =
+    (
+      site?.files as {
+        [url: string]: PageMetadata;
+      }
+    )["/"]?.description || "";
 
   return {
-    title: domain,
-    description: "", // TODO add support for project description
+    title: title,
+    description: description,
     openGraph: {
-      title: domain,
-      description: "", // TODO add support for project description
+      title: title,
+      description: description,
       images: ["/thumbnail.png"], // TODO add support for project image
     },
     twitter: {
       card: "summary_large_image",
-      title: domain,
-      description: "", // TODO add support for project description
+      title: title,
+      description: description,
       images: ["/thumbnail.png"], // TODO add support for project image
       creator: "@datopian",
     },

@@ -1,39 +1,75 @@
 import { DataPackage } from "@/components/layouts/datapackage-types";
+import { PageMetadata } from "@/server/api/types";
 import { remark } from "remark";
 import stripMarkdown, { Options } from "strip-markdown";
+import { GitHubAPIRepoTree } from "./github";
+import matter from "gray-matter";
+import { Site } from "@prisma/client";
+import { env } from "@/env.mjs";
 
-export const computeDataPackage = ({
-  frontMatter,
-  datapackage,
+export const computeMetadata = async ({
   source,
+  datapackage,
+  path,
+  tree,
+  site,
 }: {
-  frontMatter: any;
-  datapackage: DataPackage | null;
   source: string;
-}) => {
-  if (!datapackage && !frontMatter.datapackage) {
-    return undefined;
-  }
+  datapackage: DataPackage | null;
+  path: string;
+  tree: GitHubAPIRepoTree;
+  site: Site;
+}): Promise<PageMetadata> => {
+  // TODO try catch
+
+  const { data: frontMatter } = matter(source);
+
+  const _datapackage = frontMatter.datapackage || datapackage;
 
   const title =
-    datapackage?.title ||
-    frontMatter.datapackage?.title ||
     frontMatter.title ||
-    extractTitle(source) ||
-    "";
-  const description =
-    datapackage?.description ||
-    frontMatter.datapackage?.description ||
-    frontMatter.description ||
-    extractDescription(source) ||
+    datapackage?.title ||
+    (await extractTitle(source)) ||
     "";
 
+  const description =
+    frontMatter.description ||
+    datapackage?.description ||
+    (await extractDescription(source)) ||
+    "";
+
+  // add file sizes from github tree to datapackage resources
+  for (const resource of datapackage?.resources || []) {
+    const file = tree.tree.find((file) => file.path === resource.path);
+    if (file) {
+      resource.size = file.size;
+      resource.format = file.path.split(".").pop();
+    }
+  }
+
+  // TODO get created and modified dates from github for each file ?
+
+  delete frontMatter.datapackage;
+
+  // TODO better types
   return {
-    ...datapackage,
-    ...frontMatter.datapackage,
+    _path: path,
+    _url: resolveFilePathToUrl(path),
+    _rawUrlBase: `https://${env.R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
+    _pagetype: datapackage ? "dataset" : "story",
+    ..._datapackage,
+    ...frontMatter,
     title,
     description,
-  } as DataPackage;
+  };
+};
+
+const resolveFilePathToUrl = (filePath: string) => {
+  let url = filePath
+    .replace(/\.(mdx|md)/, "")
+    .replace(/(\/)?(index|README)$/, ""); // remove index or README from the end of the permalink
+  url = url.length > 0 ? url : "/"; // for home page
+  return encodeURI(url);
 };
 
 const extractTitle = async (source: string) => {

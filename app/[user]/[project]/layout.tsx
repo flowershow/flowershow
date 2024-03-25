@@ -11,6 +11,7 @@ import { api } from "@/trpc/server";
 import { Nav } from "@/components/home/nav";
 import { Footer } from "@/components/home/footer";
 import config from "@/const/config";
+import { PageMetadata } from "@/server/api/types";
 
 export async function generateMetadata({
   params,
@@ -29,18 +30,32 @@ export async function generateMetadata({
     return null;
   }
 
+  // temporary solution for site wide title and description
+  const title =
+    (
+      site?.files as {
+        [url: string]: PageMetadata;
+      }
+    )["/"]?.title || project;
+  const description =
+    (
+      site?.files as {
+        [url: string]: PageMetadata;
+      }
+    )["/"]?.description || "";
+
   return {
-    title: project,
-    description: "", // TODO add support for project description
+    title: title,
+    description: description,
     openGraph: {
-      title: project,
-      description: "", // TODO add support for project description
+      title: title,
+      description: description,
       images: ["/thumbnail.png"], // TODO add support for project image
     },
     twitter: {
       card: "summary_large_image",
-      title: project,
-      description: "", // TODO add support for project description
+      title: title,
+      description: description,
       images: ["/thumbnail.png"], // TODO add support for project image
       creator: "@datopian",
     },

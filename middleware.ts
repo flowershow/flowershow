@@ -35,9 +35,8 @@ export default async function middleware(req: NextRequest) {
 
   const searchParams = req.nextUrl.searchParams.toString();
   // Get the pathname of the request (e.g. /, /about, /blog/first-post)
-  const path = `${url.pathname}${
-    searchParams.length > 0 ? `?${searchParams}` : ""
-  }`;
+  const path = `${url.pathname}${searchParams.length > 0 ? `?${searchParams}` : ""
+    }`;
 
   // rewrites for cloud pages
   if (
@@ -84,12 +83,26 @@ export default async function middleware(req: NextRequest) {
     // if path matches /@{username}/{project}/{restofpath} rewrite to /{username}/{project}/{restofpath}}
     const match = path.match(/^\/@([^/]+)\/([^/]+)(.*)/);
     if (match) {
+      // if path matches /.../datapackage.json/yaml/yml rewrite to /api/datapackage/{path}
+      if (path.match(/\/datapackage\.(json|yaml|yml)$/)) {
+        return NextResponse.rewrite(
+          new URL(`/api/${match[1]}/${match[2]}${match[3]}`, req.url),
+        );
+      }
+
       return NextResponse.rewrite(
         new URL(`/${match[1]}/${match[2]}${match[3]}`, req.url),
       );
     }
     return NextResponse.rewrite(
       new URL(`/home${path === "/" ? "" : path}`, req.url),
+    );
+  }
+
+  // if path matches /.../datapackage.json/yaml/yml rewrite to /api/datapackage/{path}
+  if (path.match(/\/datapackage\.(json|yaml|yml)$/)) {
+    return NextResponse.rewrite(
+      new URL(`/api/domain/${hostname}${path}`, req.url),
     );
   }
 
