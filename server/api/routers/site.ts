@@ -116,24 +116,23 @@ export const siteRouter = createTRPCRouter({
               .split(".")
               .pop() as SupportedExtension; // files with unsupported extensions were filtered out earlier
 
-            const gitHubFile = await fetchGitHubFileBlob({
+            const gitHubFileBlob = await fetchGitHubFileBlob({
               gh_repository,
               file_sha: file.sha,
               access_token,
             });
-            const fileContentBuffer = Buffer.from(gitHubFile, "utf-8");
 
             await uploadFile({
               projectId: site.id,
               branch: gh_branch,
               path: file.path,
-              content: fileContentBuffer,
+              content: Buffer.from(await gitHubFileBlob.arrayBuffer()),
               extension: fileExtension,
             });
 
             // if the file is a markdown file, parse it and save metadata
             if (isSupportedMarkdownExtension(fileExtension)) {
-              const markdown = fileContentBuffer.toString("utf-8");
+              const markdown = await gitHubFileBlob.text();
 
               // special case for README.md and index.md files
               let datapackage: DataPackage | null = null;
@@ -380,24 +379,23 @@ export const siteRouter = createTRPCRouter({
 
               const fileExtension = path.split(".").pop() as SupportedExtension; // files with unsupported extensions were filtered out earlier
 
-              const gitHubFile = await fetchGitHubFileBlob({
+              const gitHubFileBlob = await fetchGitHubFileBlob({
                 gh_repository,
                 file_sha: sha,
                 access_token,
               });
-              const fileContentBuffer = Buffer.from(gitHubFile, "utf-8");
 
               await uploadFile({
                 projectId: id,
                 branch: gh_branch,
                 path,
-                content: fileContentBuffer,
+                content: Buffer.from(await gitHubFileBlob.arrayBuffer()),
                 extension: fileExtension,
               });
 
               // if the file is a markdown file, parse it and save metadata
               if (isSupportedMarkdownExtension(fileExtension)) {
-                const markdown = fileContentBuffer.toString("utf-8");
+                const markdown = await gitHubFileBlob.text();
 
                 // special case for README.md and index.md files
                 let datapackage: DataPackage | null = null;

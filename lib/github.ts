@@ -92,7 +92,7 @@ const githubRawFetch = async ({
     accept: "application/vnd.github.raw+json",
   });
 
-  return response.text();
+  return response.blob();
 };
 
 export const fetchGitHubScopes = async (accessToken: string) => {
