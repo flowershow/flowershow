@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import { env } from "@/env.mjs";
 import { Site } from "@prisma/client";
 import { SyncProvider } from "./sync-provider";
+import Link from "next/link";
 
 type SiteWithUser = Site & {
   user: {
@@ -49,6 +50,22 @@ export default async function SiteSettingsHeader({
           <Suspense fallback={<LoadingDots />}>
             <Status />
           </Suspense>
+          <Link
+            href={`https://github.com/${site.gh_repository}`}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-2 inline-flex items-center text-sm text-gray-500 hover:underline"
+          >
+            <GithubIcon
+              className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400"
+              aria-hidden="true"
+            />
+            {/* <CheckCircleIcon
+                                className="mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"
+                                aria-hidden="true"
+                            /> */}
+            <span>{site.gh_repository}</span>
+          </Link>
         </div>
         <div className="mt-5 flex lg:ml-4 lg:mt-0">
           <span className="block">

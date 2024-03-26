@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Globe, Menu, Settings, Bot } from "lucide-react";
+import { ArrowLeft, Layout, FileCode, Menu, Settings, Bot } from "lucide-react";
 import {
   useParams,
   usePathname,
@@ -12,10 +12,25 @@ import Image from "next/image";
 
 const externalLinks = [
   /* {
-   *     name: "Join our discord",
-   *     href: "https://discord.gg/cPxejPzpwt",
-   *     icon: <Bot width={18} />,
-   * } */
+   *     name: "Read announcement",
+   *     href: "https://vercel.com/blog/platforms-starter-kit",
+   *     icon: <Megaphone width={18} />,
+   * }, */
+  /* {
+   *   name: "Read the guide",
+   *   href: "#",
+   *   icon: <FileCode width={18} />,
+   * },
+   * {
+   *   name: "View demo site",
+   *   href: "#",
+   *   icon: <Layout width={18} />,
+   * }, */
+  {
+    name: "Join our discord",
+    href: "https://discord.com/invite/KrRzMKU",
+    icon: <Bot width={18} />,
+  },
 ];
 
 export default function Nav({ children }: { children: ReactNode }) {
