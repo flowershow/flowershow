@@ -43,16 +43,16 @@ export default async function Sites({ limit }: { limit?: number }) {
           </a>
         </li>
         <li>
-          2. Click on "Use this template" button at the top and create a new
-          repository.
+          2. Click on &quot;Use this template&quot; button at the top and create
+          a new repository.
         </li>
         <li>
-          3. Come back here and click on "Create New Site" button at the top of
-          this page.
+          3. Come back here and click on &quot;Create New Site&quot; button at
+          the top of this page.
         </li>
         <li>
-          4. Select the new repository you've just created and click on "Create
-          Site".
+          4. Select the new repository you&apos;ve just created and click on
+          &quot;Create Site&quot;.
         </li>
       </ol>
     </div>
