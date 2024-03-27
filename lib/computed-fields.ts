@@ -28,13 +28,13 @@ export const computeMetadata = async ({
 
   const title =
     frontMatter.title ||
-    datapackage?.title ||
+    _datapackage?.title ||
     (await extractTitle(source)) ||
     "";
 
   const description =
     frontMatter.description ||
-    datapackage?.description ||
+    _datapackage?.description ||
     (await extractDescription(source)) ||
     "";
 
@@ -56,7 +56,7 @@ export const computeMetadata = async ({
     _path: path,
     _url: resolveFilePathToUrl(path),
     _rawUrlBase: `https://${env.R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
-    _pagetype: datapackage ? "dataset" : "story",
+    _pagetype: _datapackage ? "dataset" : "story",
     ..._datapackage,
     ...frontMatter,
     title,
