@@ -11,6 +11,11 @@ import {
   Map,
   PdfViewer,
   PdfViewerProps,
+  Plotly,
+  PlotlyBarChart,
+  PlotlyBarChartProps,
+  PlotlyLineChart,
+  PlotlyLineChartProps,
   Vega,
   VegaLite,
 } from "@portaljs/components";
@@ -152,6 +157,51 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
             {...props}
             url={resolveRelativeUrl(props.url, metadata._rawUrlBase)}
           />
+        </ErrorBoundary>
+      );
+    },
+    Plotly: (props: any) => {
+      let data = props.data;
+      if (typeof data === "string") {
+        data = resolveRelativeUrl(data, metadata._rawUrlBase);
+      }
+      return (
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`Plotly` component error:",
+          })}
+        >
+          <Plotly {...props} data={data} />
+        </ErrorBoundary>
+      );
+    },
+    PlotlyBarChart: (props: PlotlyBarChartProps) => {
+      let url = props.url;
+      if (url) {
+        url = resolveRelativeUrl(url, metadata._rawUrlBase);
+      }
+      return (
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`PlotlyBarChart` component error:",
+          })}
+        >
+          <PlotlyBarChart {...props} url={url} />
+        </ErrorBoundary>
+      );
+    },
+    PlotlyLineChart: (props: PlotlyLineChartProps) => {
+      let url = props.url;
+      if (url) {
+        url = resolveRelativeUrl(url, metadata._rawUrlBase);
+      }
+      return (
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`PlotlyLineChart` component error:",
+          })}
+        >
+          <PlotlyLineChart {...props} url={url} />
         </ErrorBoundary>
       );
     },
