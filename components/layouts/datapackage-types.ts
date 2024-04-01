@@ -138,7 +138,7 @@ interface SimpleViewBase extends ViewBase {
   };
 }
 
-type SimpleGraphType = "line" | "bar";
+type SimpleGraphType = "line" | "bar" | "lines-and-points";
 
 export function isSimpleView(view: SimpleView | View): view is SimpleView {
   return (view as SimpleView).specType === "simple";

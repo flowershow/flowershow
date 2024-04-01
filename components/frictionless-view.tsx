@@ -111,6 +111,10 @@ function convertSimpleViewToVegaLite({
   const xType = inferVegaType(x.type);
   const yType = inferVegaType(y.type);
 
+  // Type of "lines-and-points" is not supported by vega lite
+  // We will use https://vega.github.io/vega-lite/docs/line.html#line-chart-with-point-markers instead
+  const isLineAndPoints = view.spec.type === "lines-and-points";
+
   return {
     $schema: "https://vega.github.io/schema/vega-lite/v5.json",
     /* mark: {
@@ -142,7 +146,8 @@ function convertSimpleViewToVegaLite({
     layer: [
       {
         mark: {
-          type: view.spec.type,
+          type: isLineAndPoints ? "line" : view.spec.type,
+          point: isLineAndPoints,
           color: "#6366F1",
           strokeWidth: 1,
         },
@@ -179,8 +184,8 @@ function convertSimpleViewToVegaLite({
 const inferVegaType = (fieldType: ResourceSchemaField["type"]) => {
   switch (fieldType) {
     case "date":
-      return "Temporal";
+      return "temporal";
     case "number":
-      return "Quantitative";
+      return "quantitative";
   }
 };
