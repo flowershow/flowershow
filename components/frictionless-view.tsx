@@ -183,6 +183,7 @@ function convertSimpleViewToVegaLite({
 
 const inferVegaType = (fieldType: ResourceSchemaField["type"]) => {
   switch (fieldType) {
+    case "yearmonth":
     case "date":
       return "temporal";
     case "number":
