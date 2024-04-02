@@ -1,6 +1,6 @@
-import { Heading } from "@/components/common/Heading";
-import { CodeWindow } from "@/components/data-rich/CodeWindow";
-import type { CodeSnippet } from "@/components/data-rich/CodeWindow";
+import { Heading } from "@/components/heading";
+import { CodeWindow } from "./CodeWindow";
+import type { CodeSnippet } from "./CodeWindow";
 
 type Step = {
   id: string;

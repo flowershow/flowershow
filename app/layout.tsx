@@ -11,7 +11,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import { Providers } from "./providers";
 import { Metadata } from "next";
 import { cn } from "@/lib/utils";
-import config from "@/lib/config";
+import config from "@/const/config";
 
 const title = "DataHub";
 const description =

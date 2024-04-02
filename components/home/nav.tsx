@@ -59,7 +59,7 @@ export const Nav: React.FC<Props> = ({
       )}
     >
       {" "}
-      <div className="max-w-8xl mx-auto flex h-[4rem] flex-col justify-center p-4 md:px-8">
+      <div className="mx-auto flex h-[4rem] max-w-8xl flex-col justify-center p-4 md:px-8">
         <nav className="flex justify-between">
           {/* Mobile navigation  */}
           {links && (
