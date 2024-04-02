@@ -19,10 +19,10 @@ const heroActions = [
   {
     label: "Get started",
     href: "/docs",
-    variant: "outline" as const,
+    variant: "solid" as const,
   },
   /* {
-   *     label: "PortalJS Cloud",
+   *     label: "DataHub Cloud",
    *     href: "#",
    *     variant: "solid" as const,
    * }, */

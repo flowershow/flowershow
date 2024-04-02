@@ -15,7 +15,7 @@ const features: { title: string; description: string; icon: string }[] = [
   {
     title: "Batteries included",
     description:
-      "Full set of portal components out of the box e.g. catalog search, dataset showcase, blog etc.",
+      "Full set of DataHub components out of the box e.g. catalog search, dataset showcase, blog etc.",
     icon: "/icon-batteries-included.svg",
   },
   {
@@ -40,13 +40,13 @@ export default function Features() {
   return (
     <>
       <Heading
-        id="how-portaljs-works"
+        id="how-datahub-works"
         heading="About"
-        subheading="How PortalJS works?"
+        subheading="How DataHub works?"
         accentColor="cyan-500"
       />
       <p className="mt-2 text-center text-lg">
-        PortalJS is built in JavaScript and React on top of the popular Next.js
+        DataHub is built in JavaScript and React on top of the popular Next.js
         framework, assuming a &quot;decoupled&quot; approach where the frontend
         is a separate service from the backend and interacts with backend(s) via
         an API. It can be used with any backend and has out of the box support

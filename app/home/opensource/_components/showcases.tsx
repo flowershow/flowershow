@@ -34,7 +34,7 @@ export default function Showcases() {
       <Heading
         id="showcases"
         heading="Showcases"
-        subheading="Discover what's being powered by PortalJS"
+        subheading="Discover what's being powered by DataHub"
         accentColor="cyan-500"
       />
       <div className="not-prose my-12 grid grid-cols-1 gap-6 md:grid-cols-2">
