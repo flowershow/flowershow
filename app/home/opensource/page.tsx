@@ -2,6 +2,7 @@ import { Section } from "@/components/section";
 import { Hero } from "@/components/hero";
 import FeaturesTiles from "@/components/features-tiles";
 import Image from "next/image";
+import Showcases from "@/components/showcases";
 
 const heroTitle = (
   <>
@@ -87,6 +88,10 @@ export default function Home() {
 
         <Section className="mx-auto max-w-4xl">
           <FeaturesTiles features={features} />
+        </Section>
+
+        <Section className="mx-auto max-w-4xl">
+          <Showcases />
         </Section>
       </div>
     </>
