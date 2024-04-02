@@ -1,4 +1,4 @@
-import { Section } from "@/components/data-rich/Section";
+import { Section } from "@/components/section";
 import { Hero } from "@/components/hero";
 import { Features } from "@/components/data-rich/Features";
 import { CTASection } from "@/components/data-rich/CTASection";
@@ -71,11 +71,11 @@ export default function Home() {
           actions={heroActions}
         />
 
-        <Section>
+        <Section className="mx-auto max-w-4xl">
           <About />
         </Section>
 
-        <Section>
+        <Section className="mx-auto max-w-4xl">
           <Features />
         </Section>
 

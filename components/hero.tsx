@@ -80,6 +80,7 @@ export function Hero({
             ))}
           </div>
         </div>
+        {/* right column */}
         <div className="mx-auto mt-24 max-w-2xl flex-1 lg:mx-0 lg:mt-0">
           <Visual />
         </div>
