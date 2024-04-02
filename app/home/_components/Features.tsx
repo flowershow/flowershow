@@ -6,7 +6,7 @@ import {
   ArrowPathIcon,
   ShareIcon,
 } from "@heroicons/react/24/outline";
-import { Heading } from "@/components/common/Heading";
+import { Heading } from "@/components/heading";
 
 const features = [
   {

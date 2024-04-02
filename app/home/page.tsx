@@ -1,10 +1,10 @@
+import Image from "next/image";
 import { Section } from "@/components/section";
 import { Hero } from "@/components/hero";
-import { Features } from "@/components/data-rich/Features";
-import { CTASection } from "@/components/data-rich/CTASection";
-import { QuickStart } from "@/components/data-rich/QuickStart";
-import { About } from "@/components/data-rich/About";
-import Image from "next/image";
+import { Features } from "./_components/Features";
+import { CTASection } from "./_components/CTASection";
+import { QuickStart } from "./_components/QuickStart";
+import { About } from "./_components/About";
 
 const heroFeatures = [
   "Easy to use",

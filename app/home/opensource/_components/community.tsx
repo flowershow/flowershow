@@ -1,6 +1,6 @@
 "use client";
 import { GithubIcon } from "lucide-react";
-import { DiscordIcon } from "./icons/discord";
+import { DiscordIcon } from "@/components/icons/discord";
 
 import config from "@/const/config";
 import { fetchGitHubRepo, fetchGitHubRepoContributors } from "@/lib/github";

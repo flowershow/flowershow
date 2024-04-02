@@ -1,8 +1,40 @@
-export default function FeaturesTiles({
-  features,
-}: {
-  features: { title: string; description: string; icon: string }[];
-}) {
+const features: { title: string; description: string; icon: string }[] = [
+  {
+    title: "Unified sites",
+    description:
+      "Present data and content in one seamless site, pulling datasets from a DMS (e.g. CKAN) and content from a CMS (e.g. wordpress) with a common internal API",
+    icon: "/icon-unified-sites.svg",
+  },
+  {
+    title: "Developer friendly",
+    description: "Built with familiar frontend tech Javascript, React etc",
+    icon: "/icon-dev-friendly.svg",
+  },
+  {
+    title: "Batteries included",
+    description:
+      "Full set of portal components out of the box e.g. catalog search, dataset showcase, blog etc.",
+    icon: "/icon-batteries-included.svg",
+  },
+  {
+    title: "Easy to theme and customize",
+    description:
+      "installable themes, use standard CSS and React+CSS tooling. Add new routes quickly.",
+    icon: "/icon-easy-to-theme.svg",
+  },
+  {
+    title: "Extensible",
+    description: "quickly extend and develop/import your own React components",
+    icon: "/icon-extensible.svg",
+  },
+  {
+    title: "Well documented",
+    description:
+      "full set of documentation plus the documentation of NextJS and Apollo.",
+    icon: "/icon-well-documented.svg",
+  },
+];
+export default function Features() {
   return (
     <>
       <h2
