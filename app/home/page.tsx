@@ -62,7 +62,7 @@ const heroDescription =
 export default function Home() {
   return (
     <>
-      <div className="max-w-8xl mx-auto px-4 pt-8 md:px-8 lg:px-[8rem] ">
+      <div className="mx-auto max-w-8xl px-4 pt-8 md:px-8 lg:px-[8rem] ">
         <Hero
           title={heroTitle}
           description={heroDescription}
