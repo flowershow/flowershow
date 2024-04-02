@@ -39,7 +39,7 @@ export default function Showcases() {
       />
       <div className="not-prose my-12 grid grid-cols-1 gap-6 md:grid-cols-2">
         {items.map((item) => {
-          return <ShowcasesItem item={item} />;
+          return <ShowcasesItem key={item.title} item={item} />;
         })}
       </div>
     </>

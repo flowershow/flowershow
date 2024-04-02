@@ -47,10 +47,10 @@ export default function Features() {
       />
       <p className="mt-2 text-center text-lg">
         PortalJS is built in JavaScript and React on top of the popular Next.js
-        framework, assuming a "decoupled" approach where the frontend is a
-        separate service from the backend and interacts with backend(s) via an
-        API. It can be used with any backend and has out of the box support for
-        CKAN.
+        framework, assuming a &quot;decoupled&quot; approach where the frontend
+        is a separate service from the backend and interacts with backend(s) via
+        an API. It can be used with any backend and has out of the box support
+        for CKAN.
       </p>
       <div className="not-prose my-12 grid grid-cols-1 gap-6 md:grid-cols-2 ">
         {features.map((feature, i) => (
