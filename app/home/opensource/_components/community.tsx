@@ -1,4 +1,5 @@
 "use client";
+import { Heading } from "@/components/heading";
 import { GithubIcon } from "lucide-react";
 import { DiscordIcon } from "@/components/icons/discord";
 
@@ -50,15 +51,13 @@ export default function Community() {
 
   return (
     <>
-      <h2
-        className="text-3xl font-bold text-primary dark:text-primary-dark"
+      {/* TODO better way to change accent color? */}
+      <Heading
         id="community"
-      >
-        Community
-      </h2>
-      <p className="mt-2 text-lg">
-        We are growing. Get in touch or become a contributor!
-      </p>
+        heading="Community"
+        subheading="Get in touch or become a contributor!"
+        accentColor="cyan-500"
+      />
       <div className="mt-12 flex justify-center">
         <Stat title="Stars on GitHub" value={starsCount} className="mr-10" />
         <Stat title="Contributors" value={contributorsCount} />

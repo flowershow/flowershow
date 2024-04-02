@@ -1,3 +1,5 @@
+import { Heading } from "@/components/heading";
+
 const features: { title: string; description: string; icon: string }[] = [
   {
     title: "Unified sites",
@@ -37,13 +39,13 @@ const features: { title: string; description: string; icon: string }[] = [
 export default function Features() {
   return (
     <>
-      <h2
-        className="text-3xl font-bold text-primary dark:text-primary-dark"
+      <Heading
         id="how-portaljs-works"
-      >
-        How PortalJS works?
-      </h2>
-      <p className="mt-2 text-lg">
+        heading="About"
+        subheading="How PortalJS works?"
+        accentColor="cyan-500"
+      />
+      <p className="mt-2 text-center text-lg">
         PortalJS is built in JavaScript and React on top of the popular Next.js
         framework, assuming a "decoupled" approach where the frontend is a
         separate service from the backend and interacts with backend(s) via an
@@ -56,7 +58,7 @@ export default function Features() {
             key={`feature-${i}`}
             className="group relative rounded-xl border border-slate-200 dark:border-slate-800"
           >
-            <div className="absolute -inset-px rounded-xl border-2 border-transparent opacity-0 [background:linear-gradient(var(--quick-links-hover-bg,theme(colors.sky.50)),var(--quick-links-hover-bg,theme(colors.sky.50)))_padding-box,linear-gradient(to_top,theme(colors.blue.300),theme(colors.blue.400),theme(colors.blue.500))_border-box] group-hover:opacity-100 dark:[--quick-links-hover-bg:theme(colors.slate.800)]" />
+            <div className="absolute -inset-px rounded-xl border-2 border-transparent opacity-0 [background:linear-gradient(var(--quick-links-hover-bg,theme(colors.cyan.50)),var(--quick-links-hover-bg,theme(colors.cyan.50)))_padding-box,linear-gradient(to_top,theme(colors.sky.300),theme(colors.sky.400),theme(colors.sky.500))_border-box] group-hover:opacity-100 dark:[--quick-links-hover-bg:theme(colors.slate.800)]" />
             <div className="relative overflow-hidden rounded-xl p-6">
               <img
                 src={feature.icon}

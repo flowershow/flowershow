@@ -4,18 +4,23 @@ export function Heading({
   id,
   heading,
   subheading,
+  accentColor,
   className,
 }: {
   id: string;
   heading: string;
   subheading: string;
+  accentColor?: string;
   className?: string;
 }) {
   return (
     <div className={clsx("mx-auto mb-8 max-w-2xl text-center", className)}>
       <h2
         id={id}
-        className="text-base font-semibold uppercase leading-7 text-orange-400"
+        className={clsx(
+          "text-base font-semibold uppercase leading-7",
+          accentColor ? `text-${accentColor}` : "text-secondary",
+        )}
       >
         {heading}
       </h2>
