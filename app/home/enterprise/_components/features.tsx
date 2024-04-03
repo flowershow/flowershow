@@ -8,7 +8,7 @@ export const Feature = ({ title, description, image, align = "left" }) => {
           <h3 className="whitespace-pre-line text-3xl font-semibold tracking-tight sm:text-3xl">
             {title}
           </h3>
-          <p className="mt-3 text-lg opacity-75">{description}</p>
+          <p className="mt-3 text-lg leading-8 text-primary">{description}</p>
         </div>
         <div
           className={`relative -mx-4 mt-10 lg:mt-0 ${
@@ -36,7 +36,7 @@ export default function Features() {
         heading="Everything you need"
         subheading="Mature, Functional and Polished"
       />
-      <p className="mt-4 text-center text-2xl opacity-75">
+      <p className="text-center text-lg leading-8 text-primary">
         Get a head-start on your data project using a mature, feature-rich, open
         solution.
       </p>

@@ -38,7 +38,7 @@ const heroActions = [
 ];
 
 const heroVisual = () => (
-  <div className="hidden lg:block">
+  <div className="-my-24 -mr-30 hidden lg:block">
     <DatopianGlobe />
   </div>
 );

@@ -10,7 +10,7 @@ export default function Pricing() {
         heading="Pricing"
         subheading="Find the best plan for you"
       />
-      <p className="mt-4 text-center text-2xl opacity-75">
+      <p className="text-center text-lg leading-8 text-primary">
         Our plans cover all ranges of budgets and needs
       </p>
       <PricingPlans />

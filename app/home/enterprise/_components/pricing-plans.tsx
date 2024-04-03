@@ -100,7 +100,7 @@ export const tiers = [
       },
       { title: "Data curator support (business hours)" },
       { title: "Technical support (24/7)" },
-      { title: "Explore more add-ons", href: "/pricing#addons" },
+      { title: "Explore more add-ons", href: "#addons" },
     ],
   },
   {

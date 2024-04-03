@@ -9,7 +9,7 @@ export default function Contact() {
         heading="Contact"
         subheading="Get in touch with us"
       />
-      <p className="mx-auto mt-3 max-w-2xl text-xl text-slate-400 sm:mt-4">
+      <p className="text-center text-lg leading-8 text-primary">
         Get the answers you need today and join thousands of happy customers.
       </p>
       <div className="mx-auto mt-10 flex max-w-lg justify-center">
