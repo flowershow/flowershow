@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { Button } from "@/components/common/Button";
+import { Button } from "@/components/button";
 
 export function CTASection() {
   return (

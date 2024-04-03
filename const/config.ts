@@ -9,9 +9,12 @@ const config = {
     text: "",
   },
   title: "DataHub",
+  github: "datopian/datahub",
+  discord: "https://discord.com/invite/KrRzMKU",
   description:
     "Turn your markdown into a website in a couple of clicks. Avoid the hassle and complexity of deploying yourself.",
   logo: "/datahub-cube.svg",
+  analytics: "G-R6X92HM43Q",
   footerLinks: [
     {
       name: "Links",

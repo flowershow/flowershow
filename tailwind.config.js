@@ -115,6 +115,9 @@ module.exports = {
       width: {
         1536: "1536px",
       },
+      maxWidth: {
+        "8xl": "88rem",
+      },
       height: {
         150: "37.5rem",
       },

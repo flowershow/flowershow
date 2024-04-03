@@ -5,15 +5,23 @@ const githubAPIVersion = "2022-11-28";
 
 type Accept = "application/vnd.github+json" | "application/vnd.github.raw+json";
 
-const makeGitHubHeaders = (
-  accessToken: string,
-  accept: Accept = "application/vnd.github+json",
-) => {
-  return {
+const makeGitHubHeaders = ({
+  accessToken,
+  accept = "application/vnd.github+json",
+}: {
+  accessToken?: string;
+  accept?: Accept;
+}): HeadersInit => {
+  const headers: Record<string, string> = {
     "X-GitHub-Api-Version": githubAPIVersion,
-    Authorization: `Bearer ${accessToken}`,
     Accept: accept,
   };
+
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return headers;
 };
 
 const githubFetch = async ({
@@ -23,12 +31,12 @@ const githubFetch = async ({
   accept,
 }: {
   url: string;
-  accessToken: string;
+  accessToken?: string;
   cacheOptions?: { next?: any; cache?: any };
   accept?: Accept;
 }) => {
   const response = await fetch(`${githubAPIBaseURL}${url}`, {
-    headers: makeGitHubHeaders(accessToken, accept),
+    headers: makeGitHubHeaders({ accessToken, accept }),
     ...cacheOptions,
   });
   if (!response.ok) {
@@ -65,7 +73,7 @@ const githubJsonFetch = async <T>({
   cacheOptions,
 }: {
   url: string;
-  accessToken: string;
+  accessToken?: string;
   cacheOptions?: { next?: any; cache?: any };
 }) => {
   const response = await githubFetch({
@@ -285,6 +293,44 @@ export const checkIfBranchExists = async ({
   }
 };
 
+export const fetchGitHubRepo = async ({
+  gh_repository,
+  access_token,
+}: {
+  gh_repository: string;
+  access_token?: string;
+}) => {
+  try {
+    return await githubJsonFetch<GitHubAPIRepository>({
+      // https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#get-a-repository
+      url: `/repos/${gh_repository}`,
+      accessToken: access_token,
+    });
+  } catch (error) {
+    throw new Error(`Could not read ${gh_repository} from GitHub: ${error}`);
+  }
+};
+
+export const fetchGitHubRepoContributors = async ({
+  gh_repository,
+  access_token,
+}: {
+  gh_repository: string;
+  access_token?: string;
+}) => {
+  try {
+    return await githubJsonFetch<GitHubAPIContributor[]>({
+      // https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-repository-contributors
+      url: `/repos/${gh_repository}/contributors`,
+      accessToken: access_token,
+    });
+  } catch (error) {
+    throw new Error(
+      `Could not read contributors for ${gh_repository} from GitHub: ${error}`,
+    );
+  }
+};
+
 // export const getGitHubRepoTreeBlobs = async (tree: GitHubAPIRepoTree) => {
 //   return tree.tree
 //     .filter((file) => file.type === "blob") // only include blobs (files) not trees (folders)
@@ -331,6 +377,12 @@ interface GitHubAPIUser {
   // ...
 }
 
+export interface GitHubAPIContributor {
+  login: string;
+  id: number;
+  // ...
+}
+
 interface GitHubAPIOrganization {
   login: string;
   id: number;
@@ -353,6 +405,7 @@ interface GitHubAPIRepository {
   owner: {
     login: string;
   };
+  stargazers_count: number;
 }
 
 interface GitHubScope {

@@ -107,7 +107,7 @@ export default async function SiteLayout({
                 <ReportAbuse />
             )} */}
 
-      <div className="max-w-8xl mx-auto px-4 md:px-8">
+      <div className="mx-auto max-w-8xl px-4 md:px-8">
         <Footer
           links={config.footerLinks}
           author={config.author}
