@@ -4,6 +4,7 @@ import { Hero } from "@/components/hero";
 import SocialProof from "./_components/social-proof";
 import Features from "./_components/features";
 import Solutions from "./_components/solutions";
+import Schedule from "./_components/schedule";
 
 const DatopianGlobe = dynamic(() => import("./_components/globe/globe"), {
     ssr: false,
@@ -67,6 +68,10 @@ export default function Home() {
 
                 <Section className="mx-auto max-w-4xl">
                     <Solutions />
+                </Section>
+
+                <Section className="mx-auto max-w-4xl">
+                    <Schedule />
                 </Section>
             </div>
         </>
