@@ -3,13 +3,17 @@ import { Button } from "@/components/button";
 export function Hero({
   title,
   description,
-  Visual,
+  announcement,
   features,
   actions,
+  Visual,
 }: {
   title: string | JSX.Element;
   description: string;
-  Visual: () => JSX.Element;
+  announcement?: {
+    content: string | JSX.Element;
+    href: string;
+  };
   features?: string[];
   actions?: {
     label: string;
@@ -17,23 +21,26 @@ export function Hero({
     target?: "_blank" | "_self";
     variant?: "outline" | "solid";
   }[];
+  Visual: () => JSX.Element;
 }) {
   return (
     <div className="relative isolate">
       <div className="mt-8 pb-20 sm:mt-10 lg:flex lg:items-center lg:gap-x-10 xl:mt-12">
-        {/* <div className="flex">
-                        <div className="relative flex items-center gap-x-4 rounded-full px-4 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
-                            <span className="font-semibold text-indigo-600">We’re hiring</span>
-                            <span className="h-4 w-px bg-gray-900/10" aria-hidden="true" />
-                            <a href="#" className="flex items-center gap-x-1">
-                                <span className="absolute inset-0" aria-hidden="true" />
-                                See open positions
-                                <SomeIcon className="-mr-2 h-5 w-5 text-gray-400" aria-hidden="true" />
-                            </a>
-                        </div>
-                    </div> */}
         {/* left column */}
         <div className="mx-auto max-w-2xl flex-1 lg:mx-0">
+          <div className="flex">
+            {announcement && (
+              <div className="relative rounded-full px-4 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
+                <a
+                  href={announcement.href}
+                  className="flex items-center gap-x-1"
+                >
+                  <span className="absolute inset-0" aria-hidden="true" />
+                  {announcement.content}
+                </a>
+              </div>
+            )}
+          </div>
           <h1 className="mt-10 max-w-lg text-4xl font-bold tracking-tight dark:text-white sm:text-6xl ">
             {title}
           </h1>
