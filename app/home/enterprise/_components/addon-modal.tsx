@@ -113,7 +113,9 @@ export default forwardRef<AddonModalHandle, AddonModalProps>(
                           {content.addons && content.addons.type === "list" && (
                             <ul className="list-disc">
                               {content.addons.items.map((item) => (
-                                <li className="mb-3">{item.text}</li>
+                                <li key={item.key} className="mb-3">
+                                  {item.text}
+                                </li>
                               ))}
                             </ul>
                           )}

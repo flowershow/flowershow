@@ -133,7 +133,7 @@ function classNames(...classes) {
 }
 export default function PricingPlans() {
   const [frequency, setFrequency] = useState(frequencies[0]);
-  const addonModalRef = useRef<AddonModalHandle>();
+  const addonModalRef = useRef<any>();
 
   return (
     <>

@@ -37,10 +37,10 @@ function DatopianGlobe() {
       const cityB = cities[Math.floor(Math.random() * N)];
       return {
         id: i,
-        startLat: cityA.latitude,
-        startLng: cityA.longitude,
-        endLat: cityB.latitude,
-        endLng: cityB.longitude,
+        startLat: cityA!.latitude,
+        startLng: cityA!.longitude,
+        endLat: cityB!.latitude,
+        endLng: cityB!.longitude,
       };
     });
     setArcsData(calculatedArcs);
