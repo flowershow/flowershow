@@ -159,3 +159,9 @@ html {
     visibility: hidden;
   }
 }
+
+/* Hide first h1 in the article section */
+/* Needed for story type pages do prevent duplicate page title */
+article section h1:first-of-type {
+  display: none;
+}
