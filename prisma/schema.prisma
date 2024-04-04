@@ -74,7 +74,6 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-
 model Site {
   id            String   @id @default(cuid())
   gh_scope      String

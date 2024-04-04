@@ -46,10 +46,11 @@ export const siteRouter = createTRPCRouter({
         gh_repository: z.string().min(1),
         gh_scope: z.string().min(1),
         gh_branch: z.string().min(1),
+        rootDir: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { gh_repository, gh_scope, gh_branch } = input;
+      const { gh_repository, gh_scope, gh_branch, rootDir } = input;
       const access_token = ctx.session.accessToken;
 
       // check if branch exists
@@ -87,6 +88,7 @@ export const siteRouter = createTRPCRouter({
           gh_repository,
           gh_scope,
           gh_branch,
+          rootDir,
           user: { connect: { id: ctx.session.user.id } },
         },
       });
@@ -103,11 +105,18 @@ export const siteRouter = createTRPCRouter({
           access_token,
         });
 
-        // filter out directories and unsupported file types
+        const normalizedRootDir = normalizeDir(rootDir);
+
         const filesToProcess = tree.tree.filter((file) => {
           if (file.type === "tree") return false;
-          return isSupportedExtension(file.path.split(".").pop() || "");
+          const extension = file.path.split(".").pop() || "";
+          if (!isSupportedExtension(extension)) return false;
+          return file.path.startsWith(normalizedRootDir);
         });
+
+        if (filesToProcess.length === 0) {
+          throw new Error("No files in the provided directory to process");
+        }
 
         // process and upload each file to content store
         await Promise.all(
@@ -122,10 +131,12 @@ export const siteRouter = createTRPCRouter({
               access_token,
             });
 
+            const contentStorePath = file.path.replace(normalizedRootDir, "");
+
             await uploadFile({
               projectId: site.id,
               branch: gh_branch,
-              path: file.path,
+              path: contentStorePath,
               content: Buffer.from(await gitHubFileBlob.arrayBuffer()),
               extension: fileExtension,
             });
@@ -188,7 +199,7 @@ export const siteRouter = createTRPCRouter({
               const fileMetadata = await computeMetadata({
                 source: markdown,
                 datapackage,
-                path: file.path,
+                path: contentStorePath,
                 tree,
                 site,
               });
@@ -219,7 +230,7 @@ export const siteRouter = createTRPCRouter({
             synced: false,
           },
         });
-        throw new Error(`Failed to upload site content: ${error}`);
+        throw new Error(`Failed to create site: ${error}`);
       }
       return site;
     }),
@@ -733,3 +744,10 @@ export const siteRouter = createTRPCRouter({
       )();
     }),
 });
+
+export const normalizeDir = (dir: string) => {
+  // remove leading and trailing slashes
+  // remove leading ./
+  const normalizedDir = dir.replace(/^(.?\/)+|\/+$/g, "");
+  return normalizedDir && `${normalizedDir}/`;
+};
