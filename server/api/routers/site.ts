@@ -47,7 +47,7 @@ export const siteRouter = createTRPCRouter({
         gh_repository: z.string().min(1),
         gh_scope: z.string().min(1),
         gh_branch: z.string().min(1),
-        rootDir: z.string(),
+        rootDir: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
