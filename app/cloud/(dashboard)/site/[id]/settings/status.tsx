@@ -1,7 +1,7 @@
 "use client";
 import { api } from "@/trpc/react";
 import { useParams } from "next/navigation";
-import { useSync } from "./sync-provider";
+import { useSync } from "../sync-provider";
 
 import {
   CalendarIcon,

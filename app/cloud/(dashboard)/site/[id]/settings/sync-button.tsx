@@ -6,7 +6,7 @@ import va from "@vercel/analytics";
 import { api } from "@/trpc/react";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import { signOut } from "next-auth/react";
-import { useSync } from "./sync-provider";
+import { useSync } from "../sync-provider";
 
 export default function SyncButton() {
   const { id } = useParams() as { id: string };

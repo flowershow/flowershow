@@ -26,44 +26,6 @@ export default async function SiteSettingsIndex({
 
   return (
     <div className="flex flex-col space-y-6">
-      {/* <Form
-                title="Name"
-                description="The name of your site. This will be used as the meta title on Google as well."
-                helpText="Please use 32 characters maximum."
-                inputAttrs={{
-                    name: "name",
-                    type: "text",
-                    defaultValue: data?.name!,
-                    placeholder: "My Awesome Site",
-                    maxLength: 32,
-                }}
-                handleSubmit={updateSite}
-            /> */}
-
-      {/* <Form
-                title="Description"
-                description="The description of your site. This will be used as the meta description on Google as well."
-                helpText="Include SEO-optimized keywords that you want to rank for."
-                inputAttrs={{
-                    name: "description",
-                    type: "text",
-                    defaultValue: data?.description!,
-                    placeholder: "A blog about really interesting things.",
-                }}
-                handleSubmit={updateSite}
-            /> */}
-
-      {/* <Form
-                title="Repository"
-                description="Repository used to fetch content for your site."
-                inputAttrs={{
-                    name: "gh_repository",
-                    type: "select",
-                    defaultValue: data?.gh_repository!,
-                }}
-                handleSubmit={updateSite}
-            /> */}
-
       <Form
         title="Name"
         description="The name of your site."
@@ -133,6 +95,18 @@ export default async function SiteSettingsIndex({
           name: "gh_branch",
           type: "text",
           defaultValue: data?.gh_branch!,
+        }}
+        handleSubmit={updateSite}
+      />
+
+      <Form
+        title="Root Directory"
+        description="The directory within your project, in which your content is located."
+        helpText="Leave this field empty if your content is not located in a subdirectory."
+        inputAttrs={{
+          name: "rootDir",
+          type: "text",
+          defaultValue: data?.rootDir!,
         }}
         handleSubmit={updateSite}
       />
