@@ -10,7 +10,7 @@ import {
 } from "@heroicons/react/20/solid";
 import { useEffect } from "react";
 
-export default async function Status() {
+export default function Status() {
   const { id } = useParams() as { id: string };
   const { refreshKey } = useSync();
 
@@ -28,7 +28,7 @@ export default async function Status() {
 
   useEffect(() => {
     refetch();
-  }, [refreshKey]);
+  }, [refetch, refreshKey]);
 
   return (
     <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">

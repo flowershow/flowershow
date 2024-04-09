@@ -148,7 +148,7 @@ export const fetchGitHubScopeRepositories = async ({
   let hasNextPage = false;
   let scopeReposUrl: string;
 
-  let urlParams = new URLSearchParams({
+  const urlParams = new URLSearchParams({
     per_page: "100",
   });
 

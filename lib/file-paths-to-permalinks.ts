@@ -29,7 +29,7 @@ const pathToPermalinkFunc = ({
   rawBaseUrl?: string; // for assets, e.g. r2 bucket or github raw url
   pathPrefix?: string; // if the site is hosted in a subdirectory
 }) => {
-  let permalink = filePath
+  const permalink = filePath
     .replace(/\.(mdx|md)/, "")
     .replace(/(\/)?index$/, "") // remove index from the end of the file path
     .replace(/(\/)?README$/, ""); // remove README from the end of the file path

@@ -4,7 +4,7 @@ import { ReactNode, createContext, useContext, useState } from "react";
 
 interface SyncContextProps {
   refreshKey: number;
-  setRefreshKey: (number) => void;
+  setRefreshKey: (number: number) => void;
 }
 
 const SyncContext = createContext<SyncContextProps>({

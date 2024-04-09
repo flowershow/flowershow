@@ -44,7 +44,7 @@ export default async function AdminPanel() {
       input: any;
     }[] = [];
 
-    reposJson.forEach((repo: any) => {});
+    reposJson.forEach(() => {});
 
     for (const repo of reposJson) {
       if (!isValidGhRepo(repo)) {

@@ -47,6 +47,7 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
         <img
           {...props}
           src={resolveRelativeUrl(props.src, metadata._rawUrlBase)}
+          alt="image"
         />
       );
     },
@@ -206,7 +207,7 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
       );
     },
     Vega: (props) => {
-      let spec = props.spec;
+      const spec = props.spec;
       if (spec.data.URL) {
         spec.data.URL = resolveRelativeUrl(spec.data.URL, metadata._rawUrlBase);
       }
@@ -221,7 +222,7 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
       );
     },
     VegaLite: (props) => {
-      let spec = props.spec;
+      const spec = props.spec;
       if (spec.data.URL) {
         spec.data.URL = resolveRelativeUrl(spec.data.URL, metadata._rawUrlBase);
       }

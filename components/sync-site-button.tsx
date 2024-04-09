@@ -11,7 +11,7 @@ export default function SyncSiteButton() {
   const { id } = useParams() as { id: string };
 
   const syncSite = api.site.sync.useMutation({
-    onSuccess: (res) => {
+    onSuccess: () => {
       va.track("Synced Site");
       toast.success(`Successfully synced site!`);
     },

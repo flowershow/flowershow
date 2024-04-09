@@ -50,7 +50,7 @@ export default function SitesAdminTable({
     if (checkbox.current) {
       checkbox.current.indeterminate = isIndeterminate;
     }
-  }, [selectedSites]);
+  }, [selectedSites, sites.length]);
 
   function toggleAll() {
     setSelectedSites(

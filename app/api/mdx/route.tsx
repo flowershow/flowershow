@@ -29,7 +29,7 @@ export async function POST(req) {
   });
 }
 
-function mdxOptions(options, frontmatter) {
+function mdxOptions(options) {
   // this is the recommended way to add custom remark/rehype plugins:
   // The syntax might look weird, but it protects you in case we add/remove
   // plugins in the future.
@@ -86,9 +86,7 @@ function mdxOptions(options, frontmatter) {
         },
       },
     ],
-    // @ts-ignore
     [rehypeKatex, { output: "htmlAndMathml" }],
-    // @ts-ignore
     [rehypePrismPlus, { ignoreMissing: true }],
   ];
 
