@@ -107,6 +107,7 @@ export default async function SiteSettingsIndex({
           name: "rootDir",
           type: "text",
           defaultValue: data?.rootDir!,
+          required: false,
         }}
         handleSubmit={updateSite}
       />
