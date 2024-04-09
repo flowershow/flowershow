@@ -4,23 +4,29 @@ on:
   pull_request:
     branches:
       - main
+      - staging
+  push:
+    branches:
+      - staging
 
 jobs:
   lint:
     name: ESLint
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        node-version: [18]
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v3
         with:
-          node-version: "18"
-
+          version: 8
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
       - name: Install dependencies
-        run: npm install -f
-
+        run: pnpm install
       - name: Run ESLint
-        run: npm run lint
+        run: pnpm lint
