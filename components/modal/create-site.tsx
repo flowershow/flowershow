@@ -61,7 +61,7 @@ export default function CreateSiteModal() {
         }, 1000);
       }
     }
-  }, [errorFetchingScopes, isErrorFetchingScopes]);
+  }, [errorFetchingScopes]);
 
   useEffect(() => {
     if (isErrorFetchingRepos) {
@@ -72,7 +72,7 @@ export default function CreateSiteModal() {
         }, 1000);
       }
     }
-  }, [errorFetchingRepos, isErrorFetchingRepos]);
+  }, [errorFetchingRepos]);
 
   useEffect(() => {
     if (scopes) {
@@ -83,7 +83,7 @@ export default function CreateSiteModal() {
         });
       }
     }
-  }, [data, scopes]);
+  }, [scopes]);
 
   useEffect(() => {
     if (repos) {
@@ -95,7 +95,7 @@ export default function CreateSiteModal() {
         });
       }
     }
-  }, [data, repos]);
+  }, [repos]);
 
   const { isLoading: isCreatingSite, mutate: createSite } =
     api.site.create.useMutation({

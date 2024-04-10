@@ -100,7 +100,7 @@ function hello() {
         });
     }
     bundleCode();
-  }, [code, errorBoundaryKey, isError, previewIsLoading]);
+  }, [code]);
 
   function handleEditorChange(value, event) {
     setCode(value);

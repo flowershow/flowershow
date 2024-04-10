@@ -17,7 +17,7 @@ export const NavMobile: React.FC<Props> = ({ links, author }) => {
   useEffect(() => {
     if (!isOpen) return;
     setIsOpen(false);
-  }, [isOpen, pathname, searchParams]);
+  }, [pathname, searchParams]);
 
   return (
     <>

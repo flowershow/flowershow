@@ -28,7 +28,7 @@ export default function Status() {
 
   useEffect(() => {
     refetch();
-  }, [refetch, refreshKey]);
+  }, [refreshKey]);
 
   return (
     <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
