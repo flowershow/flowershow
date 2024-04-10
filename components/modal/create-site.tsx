@@ -1,5 +1,4 @@
 "use client";
-
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 /* import { useFormStatus } from "react-dom"; */
@@ -21,6 +20,7 @@ export default function CreateSiteModal() {
     gh_scope: "",
     gh_repository: "",
     gh_branch: "main",
+    rootDir: "",
   });
 
   /* useEffect(() => {
@@ -123,11 +123,13 @@ export default function CreateSiteModal() {
         const gh_repository = data.get("gh_repository") as string;
         const gh_branch = data.get("gh_branch") as string;
         const gh_scope = data.get("gh_scope") as string;
+        const rootDir = data.get("rootDir") as string;
 
         createSite({
           gh_repository,
           gh_branch,
           gh_scope,
+          rootDir,
         });
       }}
       className="w-full rounded-md bg-white dark:bg-black md:max-w-md md:border md:border-stone-200 md:shadow dark:md:border-stone-700"
@@ -231,6 +233,28 @@ export default function CreateSiteModal() {
             required
             className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
           />
+        </div>
+
+        <div className="flex flex-col space-y-2">
+          <label
+            htmlFor="rootDir"
+            className="text-sm font-medium text-stone-500 dark:text-stone-400"
+          >
+            <span>Root Dir</span>
+          </label>
+          <input
+            name="rootDir"
+            type="text"
+            value={data.rootDir}
+            onChange={(e) => setData({ ...data, rootDir: e.target.value })}
+            maxLength={32}
+            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
+          />
+
+          <span className="flex items-center space-x-1 text-xs">
+            The directory within your project, in which your content is located.
+            Leave empty if you want to publish the whole repository.
+          </span>
         </div>
 
         {/* <div className="flex flex-col space-y-2">

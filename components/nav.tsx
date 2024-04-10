@@ -1,14 +1,14 @@
 "use client";
 
+import { ArrowLeft, Bot, Menu, Settings } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Layout, FileCode, Menu, Settings, Bot } from "lucide-react";
 import {
   useParams,
   usePathname,
   useSelectedLayoutSegments,
 } from "next/navigation";
 import { ReactNode, useEffect, useMemo, useState } from "react";
-import Image from "next/image";
 
 const externalLinks = [
   /* {

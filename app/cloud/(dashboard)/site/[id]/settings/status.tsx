@@ -1,7 +1,7 @@
 "use client";
 import { api } from "@/trpc/react";
 import { useParams } from "next/navigation";
-import { useSync } from "./sync-provider";
+import { useSync } from "../sync-provider";
 
 import {
   CalendarIcon,
@@ -10,7 +10,7 @@ import {
 } from "@heroicons/react/20/solid";
 import { useEffect } from "react";
 
-export default async function Status() {
+export default function Status() {
   const { id } = useParams() as { id: string };
   const { refreshKey } = useSync();
 

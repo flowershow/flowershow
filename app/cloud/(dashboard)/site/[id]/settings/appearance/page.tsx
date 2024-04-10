@@ -1,5 +1,4 @@
 import prisma from "@/server/db";
-import Form from "@/components/form";
 
 export default async function SiteSettingsAppearance({
   params,

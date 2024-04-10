@@ -13,6 +13,7 @@ import {
   fetchGitHubFile,
   checkIfBranchExists,
   fetchGitHubFileBlob,
+  GitHubAPIRepoTree,
 } from "@/lib/github";
 import {
   uploadFile,
@@ -46,10 +47,11 @@ export const siteRouter = createTRPCRouter({
         gh_repository: z.string().min(1),
         gh_scope: z.string().min(1),
         gh_branch: z.string().min(1),
+        rootDir: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { gh_repository, gh_scope, gh_branch } = input;
+      const { gh_repository, gh_scope, gh_branch, rootDir } = input;
       const access_token = ctx.session.accessToken;
 
       // check if branch exists
@@ -87,123 +89,33 @@ export const siteRouter = createTRPCRouter({
           gh_repository,
           gh_scope,
           gh_branch,
+          rootDir,
           user: { connect: { id: ctx.session.user.id } },
         },
       });
 
-      // upload files to content store, parse and save metadata
       try {
-        const filesMetadata: {
-          [url: string]: PageMetadata;
-        } = {};
-
         const tree = await fetchGitHubRepoTree({
           gh_repository,
           gh_branch,
           access_token,
         });
 
-        // filter out directories and unsupported file types
-        const filesToProcess = tree.tree.filter((file) => {
-          if (file.type === "tree") return false;
-          return isSupportedExtension(file.path.split(".").pop() || "");
+        const filesMetadata = await processGitHubTree({
+          gh_repository,
+          gh_branch,
+          access_token,
+          tree,
+          siteId: site.id,
+          rootDir,
         });
 
-        // process and upload each file to content store
-        await Promise.all(
-          filesToProcess.map(async (file) => {
-            const fileExtension = file.path
-              .split(".")
-              .pop() as SupportedExtension; // files with unsupported extensions were filtered out earlier
-
-            const gitHubFileBlob = await fetchGitHubFileBlob({
-              gh_repository,
-              file_sha: file.sha,
-              access_token,
-            });
-
-            await uploadFile({
-              projectId: site.id,
-              branch: gh_branch,
-              path: file.path,
-              content: Buffer.from(await gitHubFileBlob.arrayBuffer()),
-              extension: fileExtension,
-            });
-
-            // if the file is a markdown file, parse it and save metadata
-            if (isSupportedMarkdownExtension(fileExtension)) {
-              const markdown = await gitHubFileBlob.text();
-
-              // special case for README.md and index.md files
-              let datapackage: DataPackage | null = null;
-              if (
-                file.path.endsWith("README.md") ||
-                file.path.endsWith("index.md")
-              ) {
-                let fileDir = file.path.split("/").slice(0, -1).join("/");
-                fileDir = fileDir ? `${fileDir}/` : "";
-
-                const datapackageTreeItem =
-                  filesToProcess.find((f) => {
-                    return (
-                      f.path === `${fileDir}datapackage.json` ||
-                      f.path === `${fileDir}datapackage.yaml` ||
-                      f.path === `${fileDir}datapackage.yml`
-                    );
-                  }) || null;
-
-                if (datapackageTreeItem) {
-                  // TODO potentially duplicate fetch; refactor to avoid
-                  const datapackageGitHubFile = await fetchGitHubFile({
-                    gh_repository,
-                    gh_branch,
-                    access_token,
-                    path: datapackageTreeItem.path,
-                  });
-
-                  const datapackageFileExtension = datapackageTreeItem.path
-                    .split(".")
-                    .pop() as SupportedExtension; // json, yaml, or yml are supported
-
-                  const datapackageContentString = Buffer.from(
-                    datapackageGitHubFile.content,
-                    "base64",
-                  ).toString("utf-8");
-
-                  if (datapackageFileExtension === "json") {
-                    datapackage = JSON.parse(
-                      datapackageContentString,
-                    ) as DataPackage;
-                  } else if (
-                    datapackageFileExtension === "yaml" ||
-                    datapackageFileExtension === "yml"
-                  ) {
-                    datapackage = YAML.parse(
-                      datapackageContentString,
-                    ) as DataPackage; // datapackageContent is base64 encoded, so we need to decode it
-                  }
-                }
-              }
-
-              const fileMetadata = await computeMetadata({
-                source: markdown,
-                datapackage,
-                path: file.path,
-                tree,
-                site,
-              });
-
-              filesMetadata[fileMetadata._url] = fileMetadata;
-            }
-          }),
-        );
-
-        // upload tree to content store
         await uploadTree({
           projectId: site.id,
           branch: gh_branch,
           tree,
         });
+
         await ctx.db.site.update({
           where: { id: site.id },
           data: {
@@ -219,7 +131,7 @@ export const siteRouter = createTRPCRouter({
             synced: false,
           },
         });
-        throw new Error(`Failed to upload site content: ${error}`);
+        throw new Error(`Failed to create site: ${error}`);
       }
       return site;
     }),
@@ -263,6 +175,56 @@ export const siteRouter = createTRPCRouter({
         // If the site had a different customDomain before, we need to remove it from Vercel
         if (site && site.customDomain && site.customDomain !== value) {
           await removeDomainFromVercelProject(site.customDomain);
+        }
+      } else if (key === "rootDir") {
+        response = await ctx.db.site.update({
+          where: { id },
+          data: {
+            rootDir: value,
+            synced: false,
+            files: {},
+          },
+        });
+        try {
+          const tree = await fetchGitHubRepoTree({
+            gh_repository: response.gh_repository,
+            gh_branch: response.gh_branch,
+            access_token: ctx.session.accessToken,
+          });
+
+          await deleteProject(id);
+
+          const filesMetadata = await processGitHubTree({
+            gh_repository: response.gh_repository,
+            gh_branch: response.gh_branch,
+            access_token: ctx.session.accessToken,
+            tree,
+            siteId: id,
+            rootDir: value,
+          });
+
+          await uploadTree({
+            projectId: id,
+            branch: response.gh_branch,
+            tree,
+          });
+
+          await ctx.db.site.update({
+            where: { id },
+            data: {
+              synced: true,
+              syncedAt: new Date(),
+              files: filesMetadata as any, // TODO: fix types
+            },
+          });
+        } catch (error) {
+          await ctx.db.site.update({
+            where: { id },
+            data: {
+              synced: false,
+            },
+          });
+          throw new Error(`Failed to sync site: ${error}`);
         }
       } else {
         // If the key is not one of the special cases handled above, we update it directly
@@ -338,197 +300,63 @@ export const siteRouter = createTRPCRouter({
       const { id, gh_repository, gh_branch } = site!;
       const access_token = ctx.session.accessToken;
 
-      // fetch content store tree
-      const contentStoreTree = input.force
-        ? null
-        : await fetchTree(site!.id, site!.gh_branch);
-      // fetch GitHub repo tree
-      const gitHubTree = await fetchGitHubRepoTree({
-        gh_repository,
-        gh_branch,
-        access_token,
-      });
+      try {
+        // fetch content store tree
+        const contentStoreTree = input.force
+          ? null
+          : await fetchTree(site!.id, site!.gh_branch);
+        // fetch GitHub repo tree
+        const gitHubTree = await fetchGitHubRepoTree({
+          gh_repository,
+          gh_branch,
+          access_token,
+        });
 
-      if (!contentStoreTree || contentStoreTree.sha !== gitHubTree.sha) {
-        const contentStoreMap = new Map(
-          contentStoreTree?.tree
-            .filter((file) => {
-              if (file.type === "tree") return false;
-              return isSupportedExtension(file.path.split(".").pop() || "");
-            })
-            .map((file) => [file.path, file.sha] || []),
-        );
-        const gitHubMap = new Map(
-          gitHubTree.tree
-            .filter((file) => {
-              if (file.type === "tree") return false;
-              return isSupportedExtension(file.path.split(".").pop() || "");
-            })
-            .map((file) => [file.path, file.sha]),
-        );
+        const filesMetadata = await processGitHubTree({
+          gh_repository,
+          gh_branch,
+          access_token,
+          tree: gitHubTree,
+          previousTree: contentStoreTree,
+          siteId: id,
+          rootDir: site!.rootDir,
+        });
 
-        try {
-          // Check for new or updated files in GitHub
-          for (const [path, sha] of gitHubMap.entries()) {
-            if (
-              !contentStoreMap.has(path) ||
-              contentStoreMap.get(path) !== sha
-            ) {
-              // This means the file is new or updated in GitHub
-              // Fetch and upload the file content to the content store
-
-              const fileExtension = path.split(".").pop() as SupportedExtension; // files with unsupported extensions were filtered out earlier
-
-              const gitHubFileBlob = await fetchGitHubFileBlob({
-                gh_repository,
-                file_sha: sha,
-                access_token,
-              });
-
-              await uploadFile({
-                projectId: id,
-                branch: gh_branch,
-                path,
-                content: Buffer.from(await gitHubFileBlob.arrayBuffer()),
-                extension: fileExtension,
-              });
-
-              // if the file is a markdown file, parse it and save metadata
-              if (isSupportedMarkdownExtension(fileExtension)) {
-                const markdown = await gitHubFileBlob.text();
-
-                // special case for README.md and index.md files
-                let datapackage: DataPackage | null = null;
-                if (path.endsWith("README.md") || path.endsWith("index.md")) {
-                  let fileDir = path.split("/").slice(0, -1).join("/");
-                  fileDir = fileDir ? `${fileDir}/` : "";
-
-                  const datapackageTreeItem =
-                    gitHubTree.tree.find((f) => {
-                      return (
-                        f.path === `${fileDir}datapackage.json` ||
-                        f.path === `${fileDir}datapackage.yaml` ||
-                        f.path === `${fileDir}datapackage.yml`
-                      );
-                    }) || null;
-
-                  if (datapackageTreeItem) {
-                    // TODO potentially duplicate fetch; refactor to avoid
-                    const datapackageGitHubFile = await fetchGitHubFile({
-                      gh_repository,
-                      gh_branch,
-                      access_token,
-                      path: datapackageTreeItem.path,
-                    });
-
-                    const datapackageFileExtension = datapackageTreeItem.path
-                      .split(".")
-                      .pop() as SupportedExtension;
-
-                    const datapackageContentString = Buffer.from(
-                      datapackageGitHubFile.content,
-                      "base64",
-                    ).toString("utf-8");
-
-                    if (datapackageFileExtension === "json") {
-                      datapackage = JSON.parse(
-                        datapackageContentString,
-                      ) as DataPackage;
-                    } else if (
-                      datapackageFileExtension === "yaml" ||
-                      datapackageFileExtension === "yml"
-                    ) {
-                      datapackage = YAML.parse(
-                        datapackageContentString,
-                      ) as DataPackage; // datapackageContent is base64 encoded, so we need to decode it
-                    }
-                  }
-                }
-
-                const fileMetadata = await computeMetadata({
-                  source: markdown,
-                  datapackage,
-                  path,
-                  tree: gitHubTree,
-                  site: site!,
-                });
-
-                const newFilesMetadata = {
-                  ...(site!.files as Record<string, PageMetadata>), // temporary solution
-                  [fileMetadata._url]: fileMetadata,
-                };
-
-                await ctx.db.site.update({
-                  where: { id: site!.id },
-                  data: {
-                    files: newFilesMetadata as any, // fix types
-                  },
-                });
-              }
-            }
-          }
-
-          // Check for deleted files in GitHub
-          for (const path of contentStoreMap.keys()) {
-            if (!gitHubMap.has(path)) {
-              // The file exists in the content store but not in GitHub, so delete it from the content store
-              const extension = path.split(".").pop() as SupportedExtension; // files with unsupported extensions were filtered out earlier
-              await deleteFile({
-                projectId: site!.id,
-                branch: site!.gh_branch,
-                path,
-              });
-              // if the file is a markdown file, remove its metadata from the metadata store
-              if (isSupportedMarkdownExtension(extension)) {
-                const newFilesMetadata = {
-                  ...(site!.files as Record<string, PageMetadata>), // TODO find a better way to do this
-                  [path]: null,
-                };
-
-                await ctx.db.site.update({
-                  where: { id: site!.id },
-                  data: {
-                    files: newFilesMetadata as any, // TODO fix types
-                  },
-                });
-              }
-            }
-          }
-          // If all goes well, update the content store tree to match the GitHub tree
-          await uploadTree({
-            projectId: id,
-            branch: gh_branch,
-            tree: gitHubTree,
-          });
-          await ctx.db.site.update({
-            where: { id: site!.id },
-            data: {
-              synced: true,
-              syncedAt: new Date(),
-            },
-          });
-        } catch (error) {
-          await ctx.db.site.update({
-            where: { id: site!.id },
-            data: {
-              synced: false,
-            },
-          });
-          throw new Error(`Failed to sync site ${site!.id}: ${error}`);
-        }
-      } else {
-        throw new Error("Already in sync with GitHub.");
+        // If all goes well, update the content store tree to match the GitHub tree
+        await uploadTree({
+          projectId: id,
+          branch: gh_branch,
+          tree: gitHubTree,
+        });
+        await ctx.db.site.update({
+          where: { id: site!.id },
+          data: {
+            files: filesMetadata as any, // TODO: fix types
+            synced: true,
+            syncedAt: new Date(),
+          },
+        });
+      } catch (error) {
+        await ctx.db.site.update({
+          where: { id: site!.id },
+          data: {
+            synced: false,
+          },
+        });
+        throw new Error(`Failed to sync site ${site!.id}: ${error}`);
       }
 
       // revalidate the site metadata
-      revalidateTag(`${site!.user?.gh_username}-${site!.projectName}-metadata`);
+      revalidateTag(
+        `${site!.user?.gh_username} - ${site!.projectName} - metadata`,
+      );
       // revalidatee the site's permalinks
       revalidateTag(
-        `${site!.user?.gh_username}-${site!.projectName}-permalinks`,
+        `${site!.user?.gh_username} - ${site!.projectName} - permalinks`,
       );
       // revalidate all the pages' content
       revalidateTag(
-        `${site!.user?.gh_username}-${site!.projectName}-page-content`,
+        `${site!.user?.gh_username} - ${site!.projectName} - page - content`,
       );
     }),
   checkSyncStatus: protectedProcedure
@@ -554,9 +382,10 @@ export const siteRouter = createTRPCRouter({
       });
 
       return {
-        synced: !contentStoreTree
-          ? false
-          : contentStoreTree.sha === gitHubTree.sha,
+        synced:
+          site!.synced &&
+          contentStoreTree &&
+          contentStoreTree.sha === gitHubTree.sha,
         syncedAt: site!.syncedAt,
       };
     }),
@@ -589,10 +418,10 @@ export const siteRouter = createTRPCRouter({
             },
           });
         },
-        [`${input.domain}-site-metadata`],
+        [`${input.domain} - site - metadata`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.domain}-site-metadata`],
+          tags: [`${input.domain} - site - metadata`],
         },
       )();
     }),
@@ -615,10 +444,10 @@ export const siteRouter = createTRPCRouter({
             },
           });
         },
-        [`${input.gh_username}-${input.projectName}-metadata`],
+        [`${input.gh_username} - ${input.projectName} - metadata`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.gh_username}-${input.projectName}-metadata`],
+          tags: [`${input.gh_username} - ${input.projectName} - metadata`],
         },
       )();
     }),
@@ -655,11 +484,11 @@ export const siteRouter = createTRPCRouter({
           ) as PageMetadata;
           return pageMetadata;
         },
-        [`${input.gh_username}-${input.projectName}-${input.slug}-meta`],
+        [`${input.gh_username} - ${input.projectName} - ${input.slug} - meta`],
         {
           revalidate: 60, // 1 minute
           tags: [
-            `${input.gh_username}-${input.projectName}-${input.slug}-meta`,
+            `${input.gh_username} - ${input.projectName} - ${input.slug} - meta`,
           ],
         },
       )();
@@ -733,3 +562,169 @@ export const siteRouter = createTRPCRouter({
       )();
     }),
 });
+
+export const normalizeDir = (dir: string | null) => {
+  // remove leading and trailing slashes
+  // remove leading ./
+  if (!dir) return "";
+  const normalizedDir = dir.replace(/^(.?\/)+|\/+$/g, "");
+  return normalizedDir && `${normalizedDir}/`;
+};
+
+const processGitHubTree = async ({
+  gh_repository,
+  gh_branch,
+  access_token,
+  tree,
+  previousTree,
+  siteId,
+  rootDir,
+  filesMetadata = {},
+}: {
+  gh_repository: string;
+  gh_branch: string;
+  access_token: string;
+  tree: GitHubAPIRepoTree;
+  siteId: string;
+  previousTree?: GitHubAPIRepoTree | null; // fix this type
+  rootDir?: string | null; // fix this type
+  filesMetadata?: { [url: string]: PageMetadata };
+}) => {
+  // adjust user input to be comparable to file paths from GitHub API tree
+  // it's used to filter out files that are not in the rootDir
+  const normalizedRootDir = normalizeDir(rootDir || null);
+
+  if (previousTree && previousTree.sha === tree.sha) {
+    throw new Error("Already in sync with GitHub.");
+  }
+
+  // if previousTree is not provided, the map will be empty
+  const contentStoreMap = new Map(
+    previousTree?.tree
+      .filter((file) => {
+        if (file.type === "tree") return false;
+        if (!isSupportedExtension(file.path.split(".").pop() || ""))
+          return false;
+        return file.path.startsWith(normalizedRootDir);
+      })
+      .map((file) => [file.path, file.sha] || []),
+  );
+
+  const gitHubMap = new Map(
+    tree.tree
+      .filter((file) => {
+        if (file.type === "tree") return false;
+        if (!isSupportedExtension(file.path.split(".").pop() || ""))
+          return false;
+        return file.path.startsWith(normalizedRootDir);
+      })
+      .map((file) => [file.path, file.sha]),
+  );
+
+  // process and upload each file from gitHubMap to the content store
+  try {
+    for (const [path, sha] of gitHubMap.entries()) {
+      // check if the file is already in the content store and hasn't changed
+      if (contentStoreMap.has(path) && contentStoreMap.get(path) === sha) {
+        continue;
+      }
+      // fetch and upload the file content to the content store
+      const fileExtension = path.split(".").pop() as SupportedExtension; // files with unsupported extensions were filtered out earlier
+
+      const contentStoreFilePath = path.replace(normalizedRootDir, "");
+
+      const gitHubFileBlob = await fetchGitHubFileBlob({
+        gh_repository,
+        file_sha: sha,
+        access_token,
+      });
+
+      await uploadFile({
+        projectId: siteId,
+        branch: gh_branch,
+        path: contentStoreFilePath,
+        content: Buffer.from(await gitHubFileBlob.arrayBuffer()),
+        extension: fileExtension,
+      });
+
+      // if the file is a markdown file, parse it and save metadata
+      if (isSupportedMarkdownExtension(fileExtension)) {
+        const markdown = await gitHubFileBlob.text();
+
+        // special case for README.md and index.md files
+        let datapackage: DataPackage | null = null;
+        if (path.endsWith("README.md") || path.endsWith("index.md")) {
+          let fileDir = path.split("/").slice(0, -1).join("/");
+          fileDir = fileDir ? `${fileDir}/` : "";
+
+          const datapackageTreeItem =
+            // TODO probably should look for the file in the map isntead
+            tree.tree.find((f) => {
+              return (
+                f.path === `${fileDir}datapackage.json` ||
+                f.path === `${fileDir}datapackage.yaml` ||
+                f.path === `${fileDir}datapackage.yml`
+              );
+            }) || null;
+
+          if (datapackageTreeItem) {
+            // TODO potentially duplicate fetch; refactor to avoid
+            const datapackageGitHubFile = await fetchGitHubFile({
+              gh_repository,
+              gh_branch,
+              access_token,
+              path: datapackageTreeItem.path,
+            });
+
+            const datapackageFileExtension = datapackageTreeItem.path
+              .split(".")
+              .pop() as SupportedExtension; // json, yaml, or yml are supported
+
+            const datapackageContentString = Buffer.from(
+              datapackageGitHubFile.content,
+              "base64",
+            ).toString("utf-8");
+
+            if (datapackageFileExtension === "json") {
+              datapackage = JSON.parse(datapackageContentString) as DataPackage;
+            } else if (
+              datapackageFileExtension === "yaml" ||
+              datapackageFileExtension === "yml"
+            ) {
+              datapackage = YAML.parse(datapackageContentString) as DataPackage; // datapackageContent is base64 encoded, so we need to decode it
+            }
+          }
+        }
+
+        const fileMetadata = await computeMetadata({
+          source: markdown,
+          datapackage,
+          path: contentStoreFilePath,
+          tree,
+          siteId,
+          gh_branch,
+        });
+
+        filesMetadata[fileMetadata._url] = fileMetadata;
+      }
+    }
+
+    // check for deleted files in GitHub
+    for (const path of contentStoreMap.keys()) {
+      if (!gitHubMap.has(path)) {
+        // the file exists in the content store but not in GitHub, so delete it from the content store
+        const contentStorePath = path.replace(normalizedRootDir, "");
+        await deleteFile({
+          projectId: siteId,
+          branch: gh_branch,
+          path: contentStorePath,
+        });
+        delete filesMetadata[contentStorePath];
+      }
+    }
+  } catch (error) {
+    console.error("Error processing GitHub tree:", error);
+    throw new Error("Error processing GitHub tree");
+  }
+  return filesMetadata;
+};

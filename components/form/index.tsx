@@ -1,5 +1,4 @@
 "use client";
-
 import LoadingDots from "@/components/icons/loading-dots";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
@@ -11,6 +10,7 @@ import DomainConfiguration from "./domain-configuration";
 import Uploader from "./uploader";
 import va from "@vercel/analytics";
 import { env } from "@/env.mjs";
+import { useSync } from "@/app/cloud/(dashboard)/site/[id]/sync-provider";
 
 export default function Form({
   title,
@@ -26,6 +26,7 @@ export default function Form({
     name: string;
     type: string;
     defaultValue: string;
+    required?: boolean;
     placeholder?: string;
     maxLength?: number;
     pattern?: string;
@@ -44,6 +45,10 @@ export default function Form({
   const { id } = useParams() as { id: string };
   const router = useRouter();
   const { update } = useSession();
+  const { setRefreshKey } = useSync();
+
+  const required = inputAttrs.required ?? true;
+
   return (
     <form
       action={async (data: FormData) => {
@@ -95,6 +100,9 @@ export default function Form({
           })
           .catch((error) => {
             toast.error(`Error: ${error.message}`);
+          })
+          .finally(() => {
+            setRefreshKey((prev) => prev + 1);
           });
       }}
       className="isolate rounded-lg border border-stone-200 bg-white dark:border-stone-700 dark:bg-black"
@@ -125,7 +133,7 @@ export default function Form({
           <div className="flex w-full max-w-md">
             <input
               {...inputAttrs}
-              required
+              required={required}
               className="z-10 flex-1 rounded-l-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
             />
             <div className="flex items-center rounded-r-md border border-l-0 border-stone-300 bg-stone-100 px-3 text-sm dark:border-stone-600 dark:bg-stone-800 dark:text-stone-400">
@@ -147,14 +155,14 @@ export default function Form({
         ) : inputAttrs.name === "description" ? (
           <textarea
             {...inputAttrs}
+            required={required}
             rows={3}
-            required
             className="w-full max-w-xl rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
           />
         ) : (
           <input
             {...inputAttrs}
-            required
+            required={required}
             className="w-full max-w-md rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
           />
         )}

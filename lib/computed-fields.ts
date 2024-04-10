@@ -12,13 +12,15 @@ export const computeMetadata = async ({
   datapackage,
   path,
   tree,
-  site,
+  siteId,
+  gh_branch,
 }: {
   source: string;
   datapackage: DataPackage | null;
   path: string;
   tree: GitHubAPIRepoTree;
-  site: Site;
+  siteId: Site["id"];
+  gh_branch: Site["gh_branch"];
 }): Promise<PageMetadata> => {
   // TODO try catch
 
@@ -55,7 +57,7 @@ export const computeMetadata = async ({
   return {
     _path: path,
     _url: resolveFilePathToUrl(path),
-    _rawUrlBase: `https://${env.R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
+    _rawUrlBase: `https://${env.R2_BUCKET_DOMAIN}/${siteId}/${gh_branch}/raw`,
     _pagetype: _datapackage ? "dataset" : "story",
     ..._datapackage,
     ...frontMatter,

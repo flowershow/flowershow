@@ -1,28 +1,78 @@
+import dynamic from "next/dynamic";
 import { Mermaid as mermaid, Pre as pre } from "@portaljs/core";
-import {
-  BucketViewer,
-  Catalog,
-  Excel,
+import type {
   ExcelProps,
-  FlatUiTable,
   FlatUiTableProps,
-  LineChart,
   LineChartProps,
-  Map,
-  PdfViewer,
   PdfViewerProps,
-  Plotly,
-  PlotlyBarChart,
   PlotlyBarChartProps,
-  PlotlyLineChart,
   PlotlyLineChartProps,
-  Vega,
-  VegaLite,
 } from "@portaljs/components";
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorMessage } from "@/components/error-message";
 import { FrictionlessViewFactory } from "./frictionless-view";
 import { PageMetadata, isDatasetPage } from "@/server/api/types";
+
+const BucketViewer = dynamic(() =>
+  import("@portaljs/components").then((module) => ({
+    default: module.BucketViewer,
+  })),
+);
+const Catalog = dynamic(() =>
+  import("@portaljs/components").then((module) => ({
+    default: module.Catalog,
+  })),
+);
+const Excel = dynamic(() =>
+  import("@portaljs/components").then((module) => ({
+    default: module.Excel,
+  })),
+);
+const FlatUiTable = dynamic(() =>
+  import("@portaljs/components").then((module) => ({
+    default: module.FlatUiTable,
+  })),
+);
+const LineChart = dynamic(() =>
+  import("@portaljs/components").then((module) => ({
+    default: module.LineChart,
+  })),
+);
+const Map = dynamic(() =>
+  import("@portaljs/components").then((module) => ({
+    default: module.Map,
+  })),
+);
+const PdfViewer = dynamic(() =>
+  import("@portaljs/components").then((module) => ({
+    default: module.PdfViewer,
+  })),
+);
+const Plotly = dynamic(() =>
+  import("@portaljs/components").then((module) => ({
+    default: module.Plotly,
+  })),
+);
+const PlotlyBarChart = dynamic(() =>
+  import("@portaljs/components").then((module) => ({
+    default: module.PlotlyBarChart,
+  })),
+);
+const PlotlyLineChart = dynamic(() =>
+  import("@portaljs/components").then((module) => ({
+    default: module.PlotlyLineChart,
+  })),
+);
+const Vega = dynamic(() =>
+  import("@portaljs/components").then((module) => ({
+    default: module.Vega,
+  })),
+);
+const VegaLite = dynamic(() =>
+  import("@portaljs/components").then((module) => ({
+    default: module.VegaLite,
+  })),
+);
 
 export const mdxComponentsFactory = (metadata: PageMetadata) => {
   const components: any = {
@@ -47,6 +97,7 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
         <img
           {...props}
           src={resolveRelativeUrl(props.src, metadata._rawUrlBase)}
+          alt="image"
         />
       );
     },
@@ -206,7 +257,7 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
       );
     },
     Vega: (props) => {
-      let spec = props.spec;
+      const spec = props.spec;
       if (spec.data.URL) {
         spec.data.URL = resolveRelativeUrl(spec.data.URL, metadata._rawUrlBase);
       }
@@ -221,7 +272,7 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
       );
     },
     VegaLite: (props) => {
-      let spec = props.spec;
+      const spec = props.spec;
       if (spec.data.URL) {
         spec.data.URL = resolveRelativeUrl(spec.data.URL, metadata._rawUrlBase);
       }

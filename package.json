@@ -6,7 +6,14 @@
     "format:write": "prettier --write \"**/*.{css,js,json,jsx,ts,tsx}\"",
     "format": "prettier \"**/*.{css,js,json,jsx,ts,tsx}\"",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "prepare": "husky install"
+  },
+  "lint-staged": {
+    "*.{css,js,json,jsx,ts,tsx}": [
+      "eslint",
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.515.0",
@@ -31,6 +38,7 @@
     "@trpc/next": "^10.37.1",
     "@trpc/react-query": "^10.37.1",
     "@trpc/server": "^10.37.1",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@upstash/ratelimit": "^0.4.4",
     "@vercel/analytics": "^1.1.1",
     "@vercel/blob": "^0.15.0",
@@ -87,6 +95,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@next/eslint-plugin-next": "^14.1.4",
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/typography": "^0.5.10",
     "@types/js-cookie": "^3.0.6",
@@ -94,9 +103,15 @@
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
     "@types/three": "^0.163.0",
+    "@typescript-eslint/parser": "^7.5.0",
     "autoprefixer": "^10.4.16",
     "eslint": "8.53.0",
     "eslint-config-next": "^14.0.2",
+    "eslint-plugin-react": "^7.34.1",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.6",
+    "husky": "^8.0.0",
+    "lint-staged": "^15.2.2",
     "postcss": "^8.4.31",
     "prettier": "^3.1.0",
     "prettier-plugin-tailwindcss": "^0.5.7",
