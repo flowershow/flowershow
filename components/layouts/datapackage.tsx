@@ -1,7 +1,7 @@
+import dynamic from "next/dynamic";
 import { ErrorBoundary } from "react-error-boundary";
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
 import { DocumentArrowDownIcon } from "@heroicons/react/24/outline";
-import { FlatUiTable } from "@portaljs/components";
 import prettyBytes from "pretty-bytes";
 
 import {
@@ -19,6 +19,10 @@ import { DatasetPageMetadata } from "@/server/api/types";
 interface Props extends React.PropsWithChildren {
   metadata: DatasetPageMetadata;
 }
+
+const FlatUiTable = dynamic(() =>
+  import("@portaljs/components").then((mod) => mod.FlatUiTable),
+);
 
 export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
   const {
