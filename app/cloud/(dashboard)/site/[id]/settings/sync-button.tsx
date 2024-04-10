@@ -16,7 +16,7 @@ export default function SyncButton() {
     onSuccess: (res) => {
       va.track("Synced Site");
       toast.success(`Successfully synced site!`);
-      setRefreshKey((prev) => prev + 1);
+      setRefreshKey((prev: number) => prev + 1);
     },
     onError: (error) => {
       toast.error(error.message);

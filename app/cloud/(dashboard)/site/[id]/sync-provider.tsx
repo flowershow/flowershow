@@ -1,10 +1,16 @@
 "use client";
 
-import { ReactNode, createContext, useContext, useState } from "react";
+import {
+  ReactNode,
+  Dispatch,
+  createContext,
+  useContext,
+  useState,
+} from "react";
 
 interface SyncContextProps {
   refreshKey: number;
-  setRefreshKey: (number: number) => void;
+  setRefreshKey: Dispatch<React.SetStateAction<number>>;
 }
 
 const SyncContext = createContext<SyncContextProps>({
