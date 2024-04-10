@@ -150,7 +150,6 @@ export default function CreateSiteModal() {
           <select
             name="gh_scope"
             className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
-            autoFocus
             value={data.gh_scope}
             required
             placeholder="Select a GitHub account"
@@ -192,7 +191,6 @@ export default function CreateSiteModal() {
           <select
             name="gh_repository"
             className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
-            autoFocus
             value={data.gh_repository}
             required
             placeholder="Select a repository"
@@ -226,7 +224,6 @@ export default function CreateSiteModal() {
           <input
             name="gh_branch"
             type="text"
-            autoFocus
             value={data.gh_branch}
             onChange={(e) => setData({ ...data, gh_branch: e.target.value })}
             maxLength={32}
