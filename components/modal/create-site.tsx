@@ -245,7 +245,6 @@ export default function CreateSiteModal() {
           <input
             name="rootDir"
             type="text"
-            autoFocus
             value={data.rootDir}
             onChange={(e) => setData({ ...data, rootDir: e.target.value })}
             maxLength={32}
