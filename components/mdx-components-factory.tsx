@@ -78,14 +78,18 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
   const components: any = {
     /* HTML elements */
     a: ({ href, children, ...rest }) => {
-      // TODO what was that?
-      const processedHref = href.replace(/\.[^/.]+$/, "");
-      const isExternal = processedHref.startsWith("http");
+      let normalizedHref = href;
+      const isExternal = href.startsWith("http");
+      const isHeading = /^#/.test(href);
+      if (!isExternal && !isHeading) {
+        normalizedHref = normalizeHref(href, metadata._urlBase, metadata._path);
+      }
+
       return (
         <a
           target={isExternal ? "_blank" : undefined}
           rel={isExternal ? "noopener noreferrer" : undefined}
-          href={processedHref}
+          href={normalizedHref}
           {...rest}
         >
           {children}
@@ -325,4 +329,26 @@ const FallbackComponentFactory = ({ title }: { title: string }) => {
   FallbackComponent.displayName = "FallbackComponent";
   return FallbackComponent;
 };
+
 FallbackComponentFactory.displayName = "FallbackComponentFactory";
+
+// TODO probably better to create a remark/rehype plugin for this
+const normalizeHref = (href: string, urlBase: string, filePath: string) => {
+  let normalizedHref = href;
+
+  if (filePath.endsWith("README.md") || filePath.endsWith("index.md")) {
+    if (!href.startsWith(urlBase)) {
+      if (href.startsWith("/")) {
+        normalizedHref = `${urlBase}${href}`;
+      } else if (href.startsWith("../")) {
+        const parentPath = `/${filePath}`.split("/").slice(0, -2).join("/");
+        normalizedHref = `${urlBase}${parentPath}/${href.replace("../", "")}`;
+      } else {
+        const parts = filePath.split("/");
+        parts[parts.length - 1] = href.replace(/^\.\//, "");
+        normalizedHref = `${urlBase}/${parts.join("/")}`;
+      }
+    }
+  }
+  return normalizedHref;
+};

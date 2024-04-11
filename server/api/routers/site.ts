@@ -108,7 +108,7 @@ export const siteRouter = createTRPCRouter({
           gh_branch,
           access_token,
           tree,
-          siteId: site.id,
+          site,
           rootDir,
         });
 
@@ -208,7 +208,7 @@ export const siteRouter = createTRPCRouter({
             gh_branch: response.gh_branch,
             access_token: ctx.session.accessToken,
             tree,
-            siteId: id,
+            site,
             rootDir: value,
           });
 
@@ -334,7 +334,7 @@ export const siteRouter = createTRPCRouter({
           access_token,
           tree: gitHubTree,
           previousTree: contentStoreTree,
-          siteId: id,
+          site,
           filesMetadata: site.files as any, // TODO: fix types
           rootDir: site!.rootDir,
         });
@@ -605,8 +605,8 @@ const processGitHubTree = async ({
   gh_branch,
   access_token,
   tree,
+  site,
   previousTree,
-  siteId,
   rootDir,
   filesMetadata = {},
 }: {
@@ -614,7 +614,7 @@ const processGitHubTree = async ({
   gh_branch: string;
   access_token: string;
   tree: GitHubAPIRepoTree;
-  siteId: string;
+  site: SiteWithUser;
   previousTree?: GitHubAPIRepoTree | null; // fix this type
   rootDir?: string | null; // fix this type
   filesMetadata?: { [url: string]: PageMetadata };
@@ -669,7 +669,7 @@ const processGitHubTree = async ({
       });
 
       await uploadFile({
-        projectId: siteId,
+        projectId: site.id,
         branch: gh_branch,
         path: contentStoreFilePath,
         content: Buffer.from(await gitHubFileBlob.arrayBuffer()),
@@ -730,8 +730,7 @@ const processGitHubTree = async ({
           datapackage,
           path: contentStoreFilePath,
           tree,
-          siteId,
-          gh_branch,
+          site,
         });
 
         filesMetadata[fileMetadata._url] = fileMetadata;
@@ -744,7 +743,7 @@ const processGitHubTree = async ({
         // the file exists in the content store but not in GitHub, so delete it from the content store
         const contentStorePath = path.replace(normalizedRootDir, "");
         await deleteFile({
-          projectId: siteId,
+          projectId: site.id,
           branch: gh_branch,
           path: contentStorePath,
         });
