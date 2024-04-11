@@ -7,20 +7,24 @@ import matter from "gray-matter";
 import { Site } from "@prisma/client";
 import { env } from "@/env.mjs";
 
+type SiteWithUser = Site & {
+  user: {
+    gh_username: string | null;
+  } | null;
+};
+
 export const computeMetadata = async ({
   source,
   datapackage,
   path,
   tree,
-  siteId,
-  gh_branch,
+  site,
 }: {
   source: string;
   datapackage: DataPackage | null;
   path: string;
   tree: GitHubAPIRepoTree;
-  siteId: Site["id"];
-  gh_branch: Site["gh_branch"];
+  site: SiteWithUser;
 }): Promise<PageMetadata> => {
   // TODO try catch
 
@@ -57,7 +61,8 @@ export const computeMetadata = async ({
   return {
     _path: path,
     _url: resolveFilePathToUrl(path),
-    _rawUrlBase: `https://${env.R2_BUCKET_DOMAIN}/${siteId}/${gh_branch}/raw`,
+    _urlBase: `/@${site.user!.gh_username}/${site.projectName}`,
+    _rawUrlBase: `https://${env.R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
     _pagetype: _datapackage ? "dataset" : "story",
     ..._datapackage,
     ...frontMatter,

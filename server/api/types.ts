@@ -4,6 +4,7 @@ interface PageMetadataBase {
   _url: string; // url at which the file is available on the site
   _path: string; // path to the file in the repository
   _pagetype: "dataset" | "story";
+  _urlBase: string; // base url of the site
   _rawUrlBase: string; // temporary solution to resolve relative paths in data visualization components client side
   // _tags: string[];
   // _tasks: string[];
