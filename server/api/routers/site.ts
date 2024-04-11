@@ -38,6 +38,7 @@ import { TRPCError } from "@trpc/server";
 import { computeMetadata } from "@/lib/computed-fields";
 import { DataPackage } from "@/components/layouts/datapackage-types";
 import { PageMetadata } from "../types";
+import { Site } from "@prisma/client";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -92,6 +93,7 @@ export const siteRouter = createTRPCRouter({
           rootDir,
           user: { connect: { id: ctx.session.user.id } },
         },
+        include: { user: true },
       });
 
       try {
@@ -151,6 +153,13 @@ export const siteRouter = createTRPCRouter({
         where: { id },
         include: { user: true },
       });
+
+      if (!site) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Site not found",
+        });
+      }
 
       // Handling custom domain changes
       if (key === "customDomain") {
@@ -297,6 +306,13 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
+      if (!site) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Site not found",
+        });
+      }
+
       const { id, gh_repository, gh_branch } = site!;
       const access_token = ctx.session.accessToken;
 
@@ -319,6 +335,7 @@ export const siteRouter = createTRPCRouter({
           tree: gitHubTree,
           previousTree: contentStoreTree,
           siteId: id,
+          filesMetadata: site.files as any, // TODO: fix types
           rootDir: site!.rootDir,
         });
 
@@ -477,7 +494,12 @@ export const siteRouter = createTRPCRouter({
             },
           });
 
-          if (!site) return null;
+          if (!site) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
+          }
 
           const pageMetadata = (
             site.files ? site.files[input.slug] : {}
@@ -571,6 +593,13 @@ export const normalizeDir = (dir: string | null) => {
   return normalizedDir && `${normalizedDir}/`;
 };
 
+type SiteWithUser = Site & {
+  user: {
+    gh_username: string | null;
+  } | null;
+};
+
+// TODO revise and refactor this function
 const processGitHubTree = async ({
   gh_repository,
   gh_branch,
