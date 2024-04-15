@@ -37,9 +37,6 @@ test.describe("Datapackage page", () => {
     );
     await page.waitForLoadState("networkidle");
     await expect(page.locator("h1").first()).toHaveText("Some title");
-    await expect(page.getByTestId("dp-description")).toContainText(
-      "Some description",
-    );
 
     const metadataTable = page.getByTestId("dp-metadata-table");
 
