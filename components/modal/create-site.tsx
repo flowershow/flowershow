@@ -119,6 +119,7 @@ export default function CreateSiteModal() {
 
   return (
     <form
+      data-testId="create-site-form"
       action={async (data: FormData) => {
         const gh_repository = data.get("gh_repository") as string;
         const gh_branch = data.get("gh_branch") as string;
@@ -148,6 +149,7 @@ export default function CreateSiteModal() {
             </span>
           </label>
           <select
+            aria-label="GitHub Account"
             name="gh_scope"
             className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
             value={data.gh_scope}
@@ -189,6 +191,7 @@ export default function CreateSiteModal() {
             <span>Repository</span>
           </label>
           <select
+            aria-label="Repository"
             name="gh_repository"
             className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
             value={data.gh_repository}
