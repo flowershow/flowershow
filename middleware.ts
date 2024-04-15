@@ -66,8 +66,7 @@ export default async function middleware(req: NextRequest) {
     if (
       path.match(/^\/blog/) ||
       path.match(/^\/docs/) ||
-      path.match(/^\/collections/) ||
-      path.match(/^\/awesome/)
+      path.match(/^\/collections/)
     ) {
       if (path.match(/\/datapackage\.(json|yaml|yml)$/)) {
         return NextResponse.rewrite(
@@ -75,6 +74,12 @@ export default async function middleware(req: NextRequest) {
         );
       }
       return NextResponse.rewrite(new URL(`/${mainAccount}${path}`, req.url));
+    }
+    if (path.match(/^\/awesome/)) {
+      // redirect to collections
+      return NextResponse.redirect(
+        new URL(path.replace("/awesome", "/collections"), req.url),
+      );
     }
     if (path.match(/^\/core/)) {
       const pathAfterCore = path.replace(/^\/core/, "");
