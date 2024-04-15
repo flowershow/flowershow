@@ -7,7 +7,8 @@
     "format": "prettier \"**/*.{css,js,json,jsx,ts,tsx}\"",
     "start": "next start",
     "lint": "next lint",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "test": "playwright test"
   },
   "lint-staged": {
     "*.{css,js,json,jsx,ts,tsx}": [
@@ -96,6 +97,7 @@
   },
   "devDependencies": {
     "@next/eslint-plugin-next": "^14.1.4",
+    "@playwright/test": "^1.43.1",
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/typography": "^0.5.10",
     "@types/js-cookie": "^3.0.6",
@@ -105,6 +107,7 @@
     "@types/three": "^0.163.0",
     "@typescript-eslint/parser": "^7.5.0",
     "autoprefixer": "^10.4.16",
+    "dotenv": "^16.4.5",
     "eslint": "8.53.0",
     "eslint-config-next": "^14.0.2",
     "eslint-plugin-react": "^7.34.1",

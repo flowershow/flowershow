@@ -96,7 +96,10 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
       <article className="prose mx-auto mt-20 max-w-6xl px-12 pb-20 text-primary prose-headings:font-medium">
         <header>{title && <h1>{title}</h1>}</header>
         <section className="my-12">
-          <table className="table-auto divide-y divide-gray-300">
+          <table
+            data-testId="dp-metadata-table"
+            className="table-auto divide-y divide-gray-300"
+          >
             <thead>
               <tr>
                 <th>Files</th>
@@ -137,7 +140,7 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
             </tbody>
           </table>
         </section>
-        <section className="my-12">
+        <section data-testId="dp-description" className="my-12">
           <p className="text-md">{description}</p>
           {/* Read more link */}
           <a
@@ -150,10 +153,10 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
             </div>
           </a>
         </section>
-        <section className="my-12">
-          {views && <h2>Data Views</h2>}
-          {views &&
-            views.map((view, id) => (
+        {views && (
+          <section data-testId="dp-views" className="my-12">
+            <h2>Data Views</h2>
+            {views.map((view, id) => (
               <ErrorBoundary
                 key={`view-${view.name}`}
                 FallbackComponent={FallbackComponentFactory({
@@ -163,8 +166,9 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
                 <View view={view} />
               </ErrorBoundary>
             ))}
-        </section>
-        <section className="my-12">
+          </section>
+        )}
+        <section data-testId="dp-files" className="my-12">
           <h2>Data files</h2>
           <table className="table-auto divide-y divide-gray-300">
             <thead>
@@ -211,12 +215,16 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
             </tbody>
           </table>
         </section>
-        <section className="my-12">
+        <section data-testId="dp-previews" className="my-12">
           <h2>Data Previews</h2>
           <div>
             {resources.slice(0, 5).map((r) => {
               return (
-                <div key={`resource-preview-${r.name}`} className="mt-10">
+                <div
+                  data-testId="dp-preview"
+                  key={`resource-preview-${r.name}`}
+                  className="mt-10"
+                >
                   <h3 id={r.name}>{r.title || r.name || r.path}</h3>
 
                   <ErrorBoundary
@@ -233,7 +241,11 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
           </div>
         </section>
         <hr />
-        <section id="readme" className="mx-auto max-w-3xl">
+        <section
+          data-testId="dp-readme"
+          id="readme"
+          className="mx-auto max-w-3xl"
+        >
           {children}
         </section>
       </article>
