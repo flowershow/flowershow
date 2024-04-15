@@ -35,3 +35,8 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

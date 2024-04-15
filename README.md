@@ -68,3 +68,57 @@ All necessary environment variables should be defined in a `.env` file. Create t
 2. Set up the local development environment by creating a `.env` file from `.env.example`.
 3. Install dependencies with `pnpm i`.
 4. Run the development server with `pnpm dev`.
+
+## Tests
+
+1. Make sure you have access to this repository: https://github.com/datopian/datahub-cloud-test-repo
+
+2. Start the app:
+
+```sh
+pnpm dev
+```
+
+3. Run the following command in a new terminal window to authenticate in the app. This command will open the app in a new browser window, allowing you to manually login.
+
+```sh
+npx playwright open --save-storage="./playwright/.auth/user.json" http://cloud.localhost:3000/login
+```
+
+You can close this browser window. Playwright will now save authenticated browser state to `./playwright/.auth/user.json` which will then be used in all the tests.
+
+4. Now you can run your tests:
+
+```
+pnpm test
+```
+
+🚧 TODO: running tests in GitHub workflow
+
+### Running in debug mode
+
+```sh
+npx playwright test --debug
+```
+
+### Running with UI mode
+
+🚧 TODO find a better way to share created site object
+
+1. Manually execute global setup.
+
+```sh
+npx playwright test ./tests/global.setup.ts --no-deps
+```
+
+3. Run tests.
+
+```sh
+E2E_SITE_ID="<siteid>" npx playwright test --ui
+```
+
+4. Clean up after you've finished testing.
+
+```sh
+E2E_SITE_ID="<siteid>" npx playwright test ./tests/global.teardown.ts
+```

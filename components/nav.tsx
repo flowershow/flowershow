@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Bot, Menu, Settings } from "lucide-react";
+import { ArrowLeft, Bot, Menu, Settings, FileCode } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -15,17 +15,17 @@ const externalLinks = [
    *     name: "Read announcement",
    *     href: "https://vercel.com/blog/platforms-starter-kit",
    *     icon: <Megaphone width={18} />,
-   * }, */
-  /* {
-   *   name: "Read the guide",
-   *   href: "#",
-   *   icon: <FileCode width={18} />,
    * },
    * {
-   *   name: "View demo site",
-   *   href: "#",
-   *   icon: <Layout width={18} />,
+   *     name: "View demo site",
+   *     href: "#",
+   *     icon: <Layout width={18} />,
    * }, */
+  {
+    name: "Read the guide",
+    href: "https://datahub.io/docs",
+    icon: <FileCode width={18} />,
+  },
   {
     name: "Join our discord",
     href: "https://discord.com/invite/KrRzMKU",
