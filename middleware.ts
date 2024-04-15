@@ -63,7 +63,13 @@ export default async function middleware(req: NextRequest) {
     hostname === `${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
     hostname === `staging.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
   ) {
-    if (
+    if (path.match(/^\/awesome/)) {
+      console.log("rewriting awesome");
+      // redirect /awesome/* to /core/*
+      return NextResponse.redirect(
+        new URL(path.replace(/^\/awesome/, "/core"), req.url),
+      );
+    } else if (
       path.match(/^\/blog/) ||
       path.match(/^\/docs/) ||
       path.match(/^\/collections/)
