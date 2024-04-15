@@ -66,7 +66,8 @@ export default async function middleware(req: NextRequest) {
     if (
       path.match(/^\/blog/) ||
       path.match(/^\/docs/) ||
-      path.match(/^\/collections/)
+      path.match(/^\/collections/) ||
+      path.match(/^\/awesome/)
     ) {
       if (path.match(/\/datapackage\.(json|yaml|yml)$/)) {
         return NextResponse.rewrite(
