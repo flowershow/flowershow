@@ -75,6 +75,18 @@ export default async function middleware(req: NextRequest) {
       }
       return NextResponse.rewrite(new URL(`/${mainAccount}${path}`, req.url));
     }
+    // if path ends with /abc/r/restof/path redirect to /abc
+    if (path.match(/\/r\/.+$/)) {
+      return NextResponse.redirect(
+        new URL(path.replace(/\/r\/.+$/, ""), req.url),
+      );
+    }
+    // if path ends with /abc/r/restof/path redirect to /abc
+    if (path.match(/\/view\/.+$/)) {
+      return NextResponse.redirect(
+        new URL(path.replace(/\/view\/.+$/, ""), req.url),
+      );
+    }
     if (path.match(/^\/awesome/)) {
       // redirect to collections
       return NextResponse.redirect(
