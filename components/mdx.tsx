@@ -27,13 +27,13 @@ const MDX: React.FC<MDXProps> = ({ source, metadata }) => {
   };
 
   return (
-    <article id="mdxpage" suppressHydrationWarning>
+    <div id="mdxpage" suppressHydrationWarning>
       <Layout>
         <ErrorBoundary FallbackComponent={MDXFallbackComponent}>
           <MDXRemote {...source} components={components} />
         </ErrorBoundary>
       </Layout>
-    </article>
+    </div>
   );
 };
 
