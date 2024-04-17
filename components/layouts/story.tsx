@@ -12,34 +12,27 @@ interface Props extends React.PropsWithChildren {
 
 // copied over from https://github.com/datopian/portaljs/blob/main/packages/core/src/ui/BlogLayout/BlogLayout.tsx
 export const DataStoryLayout: React.FC<Props> = ({ children, metadata }) => {
-  const { title, date, authors } = metadata;
+  const { title, description, date, authors } = metadata;
 
   return (
-    <article className="prose mx-auto mt-20 max-w-3xl px-12 pb-20 text-primary prose-headings:font-medium">
-      <header>
-        <div className="mb-4 flex-col items-center">
-          {title && <h1 className="flex justify-center">{title}</h1>}
-          {date && (
-            <p className="flex justify-center text-sm text-zinc-400 dark:text-zinc-500">
-              <time dateTime={date}>{formatDate(date)}</time>
-            </p>
-          )}
-          {authors && (
-            <div className="not-prose flex flex-wrap items-center justify-center space-x-6 space-y-3">
-              {/* {authors.map(({ name, avatar, urlPath }) => (
-                                <Avatar
-                                    key={urlPath || name}
-                                    name={name}
-                                    img={avatar}
-                                    href={urlPath ? `/${urlPath}` : undefined}
-                                />
-                            ))} */}
-              {authors.map((author) => (
-                <Avatar key={author} name={author} />
-              ))}
-            </div>
-          )}
-        </div>
+    <article className="prose-headings:font-headings prose mx-auto max-w-3xl px-6 pt-12 dark:prose-invert lg:prose-xl prose-headings:font-medium prose-a:break-words">
+      <header className="flex flex-col gap-y-5">
+        <h1 className="!mb-2">{title}</h1>
+        <p className="not-prose text-xl font-light text-primary/75 md:text-2xl">
+          {description}
+        </p>
+        {(authors || date) && (
+          <div className="flex items-center gap-x-3 border-b border-t border-primary/10 py-2 text-sm text-primary/75">
+            {authors?.length && (
+              <div className="flex items-center gap-x-3">
+                {authors.map((author) => (
+                  <Avatar key={author} name={author} />
+                ))}
+              </div>
+            )}
+            {date && <time dateTime={date}>{formatDate(date)}</time>}
+          </div>
+        )}
       </header>
       <section>{children}</section>
     </article>
@@ -55,22 +48,18 @@ interface AvatarProps {
 const Avatar: React.FC<AvatarProps> = ({ name, img, href }) => {
   const Component = href ? "a" : "div";
   return (
-    <Component href={href} className="group mt-2 block flex-shrink-0">
+    <Component href={href} className="group block flex-shrink-0">
       <div className="flex items-center space-x-2">
         {img && (
-          <div>
-            <img
-              className="inline-block h-9 w-9 rounded-full"
-              src={img}
-              alt={name}
-            />
-          </div>
+          <img
+            className="inline-block h-9 w-9 rounded-full"
+            src={img}
+            alt={name}
+          />
         )}
-        <div className="ml-3">
-          <p className="text-sm font-medium text-primary dark:text-primary-dark">
-            {name}
-          </p>
-        </div>
+        <span className="text-sm font-medium text-primary dark:text-primary-dark">
+          {name}
+        </span>
       </div>
     </Component>
   );
