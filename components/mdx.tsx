@@ -27,7 +27,7 @@ const MDX: React.FC<MDXProps> = ({ source, metadata }) => {
   };
 
   return (
-    <article id="mdxpage" className="mt-20 pb-20" suppressHydrationWarning>
+    <article id="mdxpage" suppressHydrationWarning>
       <Layout>
         <ErrorBoundary FallbackComponent={MDXFallbackComponent}>
           <MDXRemote {...source} components={components} />
