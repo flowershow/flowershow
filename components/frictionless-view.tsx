@@ -23,13 +23,7 @@ export const FrictionlessViewFactory = (
 ): FrictionlessViewReturnType => {
   const { views = [], resources, _rawUrlBase } = metadata;
 
-  const View = ({
-    viewId,
-    fullWidth = false,
-  }: {
-    viewId: number;
-    fullWidth?: boolean;
-  }) => {
+  const View = ({ viewId }: { viewId: number; fullWidth?: boolean }) => {
     const view = views[viewId];
     if (!view) {
       throw new Error(`View ${viewId} not found`);
@@ -45,7 +39,6 @@ export const FrictionlessViewFactory = (
         view={view}
         resource={resource}
         dataUrlBase={_rawUrlBase}
-        fullWidth={fullWidth}
       />
     );
   };
@@ -56,14 +49,12 @@ interface FrictionlessViewProps {
   view: SimpleView; // TODO support classic/original DataPackage spec view ?
   resource: Resource;
   dataUrlBase?: string; // TODO temporary(?) solution for relative paths
-  fullWidth?: boolean;
 }
 
 export const FrictionlessView: React.FC<FrictionlessViewProps> = ({
   view,
   resource,
   dataUrlBase = "",
-  fullWidth = false,
 }) => {
   const vegaSpec = convertSimpleViewToVegaLite({ view, resource });
 
@@ -75,7 +66,6 @@ export const FrictionlessView: React.FC<FrictionlessViewProps> = ({
 
   return (
     <VegaLite
-      fullWidth={fullWidth}
       spec={vegaSpec}
       actions={{ editor: false }}
       downloadFileName={resource.name}
