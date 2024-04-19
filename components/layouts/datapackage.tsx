@@ -72,8 +72,12 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
     if (isSimpleViewWithResourceName(view)) {
       resource = resources.find((r) => r.name === view.resourceName);
     } else {
+      if (!view.resources || view.resources.length === 0) {
+        throw new Error(`No resources found for the view`);
+      }
       resource = resources.find((r) => r.name === view.resources[0]);
     }
+
     if (!resource) {
       throw new Error(`Resource not found for view ${view.name}`);
     }
