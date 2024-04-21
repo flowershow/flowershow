@@ -15,10 +15,10 @@ export const DataStoryLayout: React.FC<Props> = ({ children, metadata }) => {
   const { title, description, date, authors } = metadata;
 
   return (
-    <article className="prose-headings:font-headings prose mx-auto max-w-3xl px-6 pt-12 dark:prose-invert lg:prose-xl prose-headings:font-medium prose-a:break-words">
+    <article className="prose-headings:font-headings prose mx-auto max-w-4xl px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
       <header className="flex flex-col gap-y-5">
         <h1 className="!mb-2">{title}</h1>
-        <p className="not-prose text-xl font-light text-primary/75 md:text-2xl">
+        <p className="!my-0 text-xl font-light text-primary/75 md:text-2xl">
           {description}
         </p>
         {(authors || date) && (
