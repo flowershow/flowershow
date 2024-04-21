@@ -12,6 +12,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import { ErrorMessage } from "@/components/error-message";
 import { FrictionlessViewFactory } from "./frictionless-view";
 import { PageMetadata, isDatasetPage } from "@/server/api/types";
+import { normalizeLink } from "@/lib/normalize-link";
 
 const BucketViewer = dynamic(() =>
   import("@portaljs/components").then((module) => ({
@@ -82,7 +83,7 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
       const isExternal = href.startsWith("http");
       const isHeading = /^#/.test(href);
       if (!isExternal && !isHeading) {
-        normalizedHref = normalizeHref(href, metadata._urlBase, metadata._path);
+        normalizedHref = normalizeLink(href, metadata._urlBase, metadata._path);
       }
 
       return (
@@ -331,24 +332,3 @@ const FallbackComponentFactory = ({ title }: { title: string }) => {
 };
 
 FallbackComponentFactory.displayName = "FallbackComponentFactory";
-
-// TODO probably better to create a remark/rehype plugin for this
-const normalizeHref = (href: string, urlBase: string, filePath: string) => {
-  let normalizedHref = href;
-
-  if (filePath.endsWith("README.md") || filePath.endsWith("index.md")) {
-    if (!href.startsWith(urlBase)) {
-      if (href.startsWith("/")) {
-        normalizedHref = `${urlBase}${href}`;
-      } else if (href.startsWith("../")) {
-        const parentPath = `/${filePath}`.split("/").slice(0, -2).join("/");
-        normalizedHref = `${urlBase}${parentPath}/${href.replace("../", "")}`;
-      } else {
-        const parts = filePath.split("/");
-        parts[parts.length - 1] = href.replace(/^\.\//, "");
-        normalizedHref = `${urlBase}/${parts.join("/")}`;
-      }
-    }
-  }
-  return normalizedHref;
-};
