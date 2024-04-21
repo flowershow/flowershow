@@ -90,7 +90,7 @@ You can close this browser window. Playwright will now save authenticated browse
 4. Now you can run your tests:
 
 ```
-pnpm test
+pnpm test:e2e
 ```
 
 🚧 TODO: running tests in GitHub workflow
