@@ -58,11 +58,22 @@ export const computeMetadata = async ({
 
   delete frontMatter.datapackage;
 
+  let _urlBase = `/@${site.user!.gh_username}/${site.projectName}`;
+
+  // TODO this is a temporary hack for our special datahubio projects
+  if (_urlBase === "/@olayway/blog") {
+    _urlBase = "/blog";
+  } else if (_urlBase === "/@olayway/docs") {
+    _urlBase = "/docs";
+  } else if (_urlBase === "/@olayway/collections") {
+    _urlBase = "/collections";
+  }
+
   // TODO better types
   return {
     _path: path,
     _url: resolveFilePathToUrl(path),
-    _urlBase: `/@${site.user!.gh_username}/${site.projectName}`,
+    _urlBase,
     _rawUrlBase: `https://${env.R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
     _pagetype: _datapackage ? "dataset" : "story",
     ..._datapackage,
