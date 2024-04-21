@@ -31,6 +31,7 @@ export const computeMetadata = async ({
   const { data: frontMatter } = matter(source);
 
   const _datapackage = frontMatter.datapackage || datapackage;
+  const isDatapackage = !!_datapackage;
 
   const title =
     frontMatter.title ||
@@ -41,7 +42,7 @@ export const computeMetadata = async ({
   const description =
     frontMatter.description ||
     _datapackage?.description ||
-    (await extractDescription(source)) ||
+    (isDatapackage && (await extractDescription(source))) ||
     "";
 
   // add file sizes from github tree to datapackage resources

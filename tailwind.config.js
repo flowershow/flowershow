@@ -140,6 +140,16 @@ module.exports = {
             "blockquote p:first-of-type::after": { content: "none" },
           },
         },
+        lg: {
+          css: {
+            h1: {
+              fontSize: "2.25em",
+              marginTop: "0",
+              marginBottom: "0.88em",
+              lineHeight: 1.2,
+            },
+          },
+        },
       },
       keyframes: {
         wiggle: {

@@ -78,11 +78,13 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
       throw new Error(`Resource not found for view ${view.name}`);
     }
     return (
-      <FrictionlessView
-        view={view}
-        resource={resource}
-        dataUrlBase={_rawUrlBase}
-      />
+      <div className="not-prose md:text-base">
+        <FrictionlessView
+          view={view}
+          resource={resource}
+          dataUrlBase={_rawUrlBase}
+        />
+      </div>
     );
   };
   View.displayName = "View";
@@ -93,9 +95,9 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
         title: `Error in \`datapackage\` layout:`,
       })}
     >
-      <article className="prose mx-auto mt-20 max-w-6xl px-12 pb-20 text-primary prose-headings:font-medium">
-        <header>{title && <h1>{title}</h1>}</header>
-        <section className="my-12">
+      <article className="prose-headings:font-headings prose mx-auto max-w-6xl px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
+        <header className="mb-8 flex flex-col gap-y-5">
+          <h1 className="!mb-2">{title}</h1>
           <table
             data-testId="dp-metadata-table"
             className="table-auto divide-y divide-gray-300"
@@ -139,20 +141,20 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
               </tr>
             </tbody>
           </table>
-        </section>
-        <section data-testId="dp-description" className="my-12">
-          <p className="text-md">{description}</p>
-          {/* Read more link */}
-          <a
-            className="inline-block text-sm text-[#6366F1] no-underline hover:underline"
-            href="#readme"
-          >
-            <div className="flex items-center space-x-1">
-              <span>Read more</span>
-              <ArrowRightIcon className="inline h-4 w-4" />
-            </div>
-          </a>
-        </section>
+          <div data-testId="dp-description">
+            <p className="text-md">{description}</p>
+            {/* Read more link */}
+            <a
+              className="inline-block text-[#6366F1] no-underline hover:underline"
+              href="#readme"
+            >
+              <div className="flex items-center space-x-1">
+                <span>Read more</span>
+                <ArrowRightIcon className="inline h-4 w-4" />
+              </div>
+            </a>
+          </div>
+        </header>
         {views && (
           <section data-testId="dp-views" className="my-12">
             <h2>Data Views</h2>
@@ -169,7 +171,7 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
           </section>
         )}
         <section data-testId="dp-files" className="my-12">
-          <h2>Data files</h2>
+          <h2>Data Files</h2>
           <table className="table-auto divide-y divide-gray-300">
             <thead>
               <tr>
@@ -232,8 +234,10 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
                       title: `Error in resource preview \`${r.name}\`:`,
                     })}
                   >
-                    {/* @ts-expect-error */}
-                    <FlatUiTable url={`${_rawUrlBase}/${r.path}`} />
+                    <div className="not-prose md:text-base">
+                      {/* @ts-expect-error */}
+                      <FlatUiTable url={`${_rawUrlBase}/${r.path}`} />
+                    </div>
                   </ErrorBoundary>
                 </div>
               );
@@ -244,7 +248,7 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
         <section
           data-testId="dp-readme"
           id="readme"
-          className="mx-auto max-w-3xl"
+          className="mx-auto max-w-4xl"
         >
           {children}
         </section>

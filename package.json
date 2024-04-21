@@ -11,10 +11,7 @@
     "test": "playwright test"
   },
   "lint-staged": {
-    "*.{css,js,json,jsx,ts,tsx}": [
-      "eslint",
-      "prettier --write"
-    ]
+    "*.{css,js,json,jsx,ts,tsx}": ["next lint", "prettier --write"]
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.515.0",

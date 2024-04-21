@@ -354,12 +354,6 @@ export const siteRouter = createTRPCRouter({
           },
         });
       } catch (error) {
-        await ctx.db.site.update({
-          where: { id: site!.id },
-          data: {
-            synced: false,
-          },
-        });
         throw new Error(`Failed to sync site ${site!.id}: ${error}`);
       }
 
