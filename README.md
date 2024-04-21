@@ -108,7 +108,7 @@ npx playwright test --debug
 1. Manually execute global setup.
 
 ```sh
-npx playwright test ./tests/global.setup.ts --no-deps
+npx playwright test ./e2e/global.setup.ts --no-deps
 ```
 
 3. Run tests.
@@ -120,5 +120,5 @@ E2E_SITE_ID="<siteid>" npx playwright test --ui
 4. Clean up after you've finished testing.
 
 ```sh
-E2E_SITE_ID="<siteid>" npx playwright test ./tests/global.teardown.ts
+E2E_SITE_ID="<siteid>" npx playwright test ./e2e/global.teardown.ts
 ```
