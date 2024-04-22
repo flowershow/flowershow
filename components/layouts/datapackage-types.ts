@@ -67,7 +67,7 @@ export interface ResourceSchema {
 
 export interface ResourceSchemaField {
   name: string;
-  type: "date" | "number" | "yearmonth";
+  type: "date" | "number" | "yearmonth" | "year";
 }
 
 type License = LicenseWithName | LicenseWithPath;
