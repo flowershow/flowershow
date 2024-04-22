@@ -24,6 +24,13 @@ const FlatUiTable = dynamic(() =>
   import("@portaljs/components").then((mod) => mod.FlatUiTable),
 );
 
+class ResourceNotFoundError extends Error {
+  constructor(viewName) {
+    super(`Resource not found for view ${viewName}`);
+    this.name = this.constructor.name;
+  }
+}
+
 export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
   const {
     _rawUrlBase,
@@ -72,10 +79,14 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
     if (isSimpleViewWithResourceName(view)) {
       resource = resources.find((r) => r.name === view.resourceName);
     } else {
+      if (!view.resources || view.resources.length === 0) {
+        throw new ResourceNotFoundError(view.name);
+      }
       resource = resources.find((r) => r.name === view.resources[0]);
     }
+
     if (!resource) {
-      throw new Error(`Resource not found for view ${view.name}`);
+      throw new ResourceNotFoundError(view.name);
     }
     return (
       <div className="not-prose md:text-base">
