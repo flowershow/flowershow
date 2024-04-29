@@ -1,10 +1,5 @@
-/* import Image from "next/image";
- * import Link from "next/link"; */
 import { ReactNode } from "react";
-/* import CTA from "@/components/cta";
- * import ReportAbuse from "@/components/report-abuse"; */
 import { notFound, redirect } from "next/navigation";
-/* import { fontMapper } from "@/styles/fonts"; */
 import { Metadata } from "next";
 import { env } from "@/env.mjs";
 import { api } from "@/trpc/server";
@@ -90,32 +85,40 @@ export default async function SiteLayout({
     return redirect(`https://${data.customDomain}`);
   }
 
-  return (
-    <div className="min-h-screen bg-background dark:bg-background-dark">
-      <Nav
-        title={config.navbarTitle.text}
-        logo={config.navbarTitle.logo}
-        url={config.author.url}
-        links={config.navLinks}
-      />
-      {children}
+  const customCss = await api.site.getCustomStyles.query({
+    gh_username: params.user,
+    projectName: params.project,
+  });
 
-      {/* {domain == `demo.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
+  return (
+    <>
+      {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
+      <div className="min-h-screen bg-background dark:bg-background-dark">
+        <Nav
+          title={config.navbarTitle.text}
+          logo={config.navbarTitle.logo}
+          url={config.author.url}
+          links={config.navLinks}
+        />
+        {children}
+
+        {/* {domain == `demo.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
                 domain == `platformize.co` ? (
                 <CTA />
             ) : (
                 <ReportAbuse />
             )} */}
 
-      <div className="mx-auto max-w-8xl px-4 md:px-8">
-        <Footer
-          links={config.footerLinks}
-          author={config.author}
-          social={config.social}
-          description={config.description}
-        />
+        <div className="mx-auto max-w-8xl px-4 md:px-8">
+          <Footer
+            links={config.footerLinks}
+            author={config.author}
+            social={config.social}
+            description={config.description}
+          />
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

@@ -462,6 +462,46 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
+  getCustomStyles: publicProcedure
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
+              ],
+            },
+          });
+
+          if (!site) {
+            return null;
+          }
+
+          try {
+            return await fetchFile({
+              projectId: site.id,
+              branch: site.gh_branch,
+              path: "custom.css",
+            });
+          } catch {
+            return null;
+          }
+        },
+        [`${input.gh_username} - ${input.projectName} - customStyles`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.gh_username} - ${input.projectName} - customStyles`],
+        },
+      )();
+    }),
   getAll: protectedProcedure.query(async ({ ctx }) => {
     if (ctx.session.user.role !== "ADMIN") {
       throw new Error("Unauthorized");
