@@ -3,7 +3,9 @@ import { Mermaid as mermaid, Pre as pre } from "@portaljs/core";
 import type {
   ExcelProps,
   FlatUiTableProps,
+  IframeProps,
   LineChartProps,
+  MapProps,
   PdfViewerProps,
   PlotlyBarChartProps,
   PlotlyLineChartProps,
@@ -14,11 +16,6 @@ import { FrictionlessViewFactory } from "./frictionless-view";
 import { PageMetadata, isDatasetPage } from "@/server/api/types";
 import { normalizeLink } from "@/lib/normalize-link";
 
-const BucketViewer = dynamic(() =>
-  import("@portaljs/components").then((module) => ({
-    default: module.BucketViewer,
-  })),
-);
 const Catalog = dynamic(() =>
   import("@portaljs/components").then((module) => ({
     default: module.Catalog,
@@ -32,6 +29,11 @@ const Excel = dynamic(() =>
 const FlatUiTable = dynamic(() =>
   import("@portaljs/components").then((module) => ({
     default: module.FlatUiTable,
+  })),
+);
+const Iframe = dynamic(() =>
+  import("@portaljs/components").then((module) => ({
+    default: module.Iframe,
   })),
 );
 const LineChart = dynamic(() =>
@@ -125,17 +127,6 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
       return <code {...props} className={className}></code>;
     },
     mermaid,
-    BucketViewer: (props) => {
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`BucketViewer` component error:",
-          })}
-        >
-          <BucketViewer {...props} />
-        </ErrorBoundary>
-      );
-    },
     Catalog: (props) => {
       return (
         <ErrorBoundary
@@ -147,35 +138,36 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
         </ErrorBoundary>
       );
     },
-    Map: (props) => {
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`Map` component error:",
-          })}
-        >
-          <Map {...props} />
-        </ErrorBoundary>
-      );
-    },
     Excel: (props: ExcelProps) => {
+      props.data.url = resolveRelativeUrl(props.data.url, metadata._rawUrlBase);
       return (
         <ErrorBoundary
           FallbackComponent={FallbackComponentFactory({
             title: "`Excel` component error:",
           })}
         >
-          <Excel
-            {...props}
-            url={resolveRelativeUrl(props.url, metadata._rawUrlBase)}
-          />
+          <Excel {...props} />
+        </ErrorBoundary>
+      );
+    },
+    Iframe: (props: IframeProps) => {
+      props.data.url = resolveRelativeUrl(props.data.url, metadata._rawUrlBase);
+      return (
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`Excel` component error:",
+          })}
+        >
+          <Iframe {...props} />
         </ErrorBoundary>
       );
     },
     FlatUiTable: (props: FlatUiTableProps) => {
-      let url = props.url;
-      if (url) {
-        url = resolveRelativeUrl(url, metadata._rawUrlBase);
+      if (props.data.url) {
+        props.data.url = resolveRelativeUrl(
+          props.data.url,
+          metadata._rawUrlBase,
+        );
       }
       return (
         <ErrorBoundary
@@ -183,14 +175,16 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
             title: "`FlatUiTable` component error:",
           })}
         >
-          <FlatUiTable {...props} url={url} />
+          <FlatUiTable {...props} />
         </ErrorBoundary>
       );
     },
     LineChart: (props: LineChartProps) => {
-      let data = props.data;
-      if (typeof data === "string") {
-        data = resolveRelativeUrl(data, metadata._rawUrlBase);
+      if (props.data.url) {
+        props.data.url = resolveRelativeUrl(
+          props.data.url,
+          metadata._rawUrlBase,
+        );
       }
       return (
         <ErrorBoundary
@@ -198,25 +192,44 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
             title: "`LineChart` component error:",
           })}
         >
-          <LineChart {...props} data={data} />
+          <LineChart {...props} />
+        </ErrorBoundary>
+      );
+    },
+    Map: (props: MapProps) => {
+      const layers = props.layers.map((layer) => {
+        if (layer.data.url) {
+          layer.data.url = resolveRelativeUrl(
+            layer.data.url,
+            metadata._rawUrlBase,
+          );
+        }
+        return layer;
+      });
+
+      return (
+        <ErrorBoundary
+          FallbackComponent={FallbackComponentFactory({
+            title: "`Map` component error:",
+          })}
+        >
+          <Map {...props} layers={layers} />
         </ErrorBoundary>
       );
     },
     PdfViewer: (props: PdfViewerProps) => {
+      props.data.url = resolveRelativeUrl(props.data.url, metadata._rawUrlBase);
       return (
         <ErrorBoundary
           FallbackComponent={FallbackComponentFactory({
             title: "`PdfViewer` component error:",
           })}
         >
-          <PdfViewer
-            {...props}
-            url={resolveRelativeUrl(props.url, metadata._rawUrlBase)}
-          />
+          <PdfViewer {...props} />
         </ErrorBoundary>
       );
     },
-    Plotly: (props: any) => {
+    Plotly: (props) => {
       let data = props.data;
       if (typeof data === "string") {
         data = resolveRelativeUrl(data, metadata._rawUrlBase);
@@ -232,9 +245,11 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
       );
     },
     PlotlyBarChart: (props: PlotlyBarChartProps) => {
-      let url = props.url;
-      if (url) {
-        url = resolveRelativeUrl(url, metadata._rawUrlBase);
+      if (props.data.url) {
+        props.data.url = resolveRelativeUrl(
+          props.data.url,
+          metadata._rawUrlBase,
+        );
       }
       return (
         <ErrorBoundary
@@ -242,14 +257,16 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
             title: "`PlotlyBarChart` component error:",
           })}
         >
-          <PlotlyBarChart {...props} url={url} />
+          <PlotlyBarChart {...props} />
         </ErrorBoundary>
       );
     },
     PlotlyLineChart: (props: PlotlyLineChartProps) => {
-      let url = props.url;
-      if (url) {
-        url = resolveRelativeUrl(url, metadata._rawUrlBase);
+      if (props.data.url) {
+        props.data.url = resolveRelativeUrl(
+          props.data.url,
+          metadata._rawUrlBase,
+        );
       }
       return (
         <ErrorBoundary
@@ -257,7 +274,7 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
             title: "`PlotlyLineChart` component error:",
           })}
         >
-          <PlotlyLineChart {...props} url={url} />
+          <PlotlyLineChart {...props} />
         </ErrorBoundary>
       );
     },
