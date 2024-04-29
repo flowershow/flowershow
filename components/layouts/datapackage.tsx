@@ -247,7 +247,11 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
                   >
                     <div className="not-prose md:text-base">
                       {/* @ts-expect-error */}
-                      <FlatUiTable url={`${_rawUrlBase}/${r.path}`} />
+                      <FlatUiTable
+                        data={{
+                          url: `${_rawUrlBase}/${r.path}`,
+                        }}
+                      />
                     </div>
                   </ErrorBoundary>
                 </div>
