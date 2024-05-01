@@ -9,9 +9,9 @@ import { MDXRemoteSerializeResult } from "next-mdx-remote";
 export async function generateMetadata({
   params,
 }: {
-  params: { domain: string; slug: string };
+  params: { domain: string; slug?: string[] };
 }) {
-  const slug = decodeURIComponent(params.slug);
+  let pageMetadata: PageMetadata | null = null;
 
   const site = await api.site.getByDomain.query({ domain: params.domain });
 
@@ -19,11 +19,15 @@ export async function generateMetadata({
     notFound();
   }
 
-  const pageMetadata = await api.site.getPageMetadata.query({
-    gh_username: site.user!.gh_username!,
-    projectName: site.projectName,
-    slug: slug !== "undefined" ? slug.split(",").join("/") : "/",
-  });
+  try {
+    pageMetadata = await api.site.getPageMetadata.query({
+      gh_username: site.user!.gh_username!,
+      projectName: site.projectName,
+      slug: params.slug ? params.slug.join("/") : "/",
+    });
+  } catch (error) {
+    notFound();
+  }
 
   if (!pageMetadata) {
     notFound();
@@ -44,10 +48,8 @@ export async function generateMetadata({
 export default async function SitePage({
   params,
 }: {
-  params: { domain: string; slug: string };
+  params: { domain: string; slug?: string[] };
 }) {
-  const slug = decodeURIComponent(params.slug);
-
   let pageMetadata: PageMetadata | null = null;
   let mdContent: string | null = null;
   let sitePermalinks: string[] = [];
@@ -63,7 +65,7 @@ export default async function SitePage({
     pageMetadata = await api.site.getPageMetadata.query({
       gh_username: site.user!.gh_username!,
       projectName: site.projectName,
-      slug: slug !== "undefined" ? slug.split(",").join("/") : "/",
+      slug: params.slug ? params.slug.join("/") : "/",
     });
   } catch (error) {
     notFound();
@@ -77,7 +79,7 @@ export default async function SitePage({
     const { content, permalinks } = await api.site.getPageContent.query({
       gh_username: site.user!.gh_username!,
       projectName: site.projectName,
-      slug: slug !== "undefined" ? slug.split(",").join("/") : "/",
+      slug: params.slug ? params.slug.join("/") : "/",
     });
     mdContent = content;
     sitePermalinks = permalinks;
