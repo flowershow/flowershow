@@ -82,9 +82,7 @@ export default async function SiteLayout({
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
-      <div className="min-h-screen bg-background dark:bg-background-dark">
-        {children}
-      </div>
+      <div className="min-h-screen bg-background">{children}</div>
     </>
   );
 }

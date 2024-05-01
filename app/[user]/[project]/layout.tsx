@@ -93,7 +93,7 @@ export default async function SiteLayout({
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
-      <div className="min-h-screen bg-background dark:bg-background-dark">
+      <div className="min-h-screen bg-background">
         <Nav
           title={config.navbarTitle.text}
           logo={config.navbarTitle.logo}

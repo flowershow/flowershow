@@ -32,7 +32,7 @@
     "@portaljs/core": "^1.0.8",
     "@portaljs/remark-callouts": "^1.0.5",
     "@portaljs/remark-embed": "^1.0.5",
-    "@portaljs/remark-wiki-link": "^1.1.2",
+    "@portaljs/remark-wiki-link": "^1.1.3",
     "@prisma/client": "^5.5.2",
     "@t3-oss/env-nextjs": "^0.7.1",
     "@tanstack/react-query": "^4.32.6",
