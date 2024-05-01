@@ -15,6 +15,8 @@ import {
 import { FrictionlessView } from "@/components/frictionless-view";
 import { ErrorMessage } from "@/components/error-message";
 import { DatasetPageMetadata } from "@/server/api/types";
+import { ResourcePreview } from "./resource-preview";
+import { FallbackComponentFactory } from "./fallback-component-factory";
 
 interface Props extends React.PropsWithChildren {
   metadata: DatasetPageMetadata;
@@ -99,6 +101,10 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
     );
   };
   View.displayName = "View";
+
+  const supportedResources = resources.filter(
+    (resource) => resource.format === "csv" || resource.format === "geojson",
+  );
 
   return (
     <ErrorBoundary
@@ -228,37 +234,20 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
             </tbody>
           </table>
         </section>
-        <section data-testId="dp-previews" className="my-12">
-          <h2>Data Previews</h2>
-          <div>
-            {resources.slice(0, 5).map((r) => {
-              return (
-                <div
-                  data-testId="dp-preview"
-                  key={`resource-preview-${r.name}`}
-                  className="mt-10"
-                >
-                  <h3 id={r.name}>{r.title || r.name || r.path}</h3>
-
-                  <ErrorBoundary
-                    FallbackComponent={FallbackComponentFactory({
-                      title: `Error in resource preview \`${r.name}\`:`,
-                    })}
-                  >
-                    <div className="not-prose md:text-base">
-                      {/* @ts-expect-error */}
-                      <FlatUiTable
-                        data={{
-                          url: `${_rawUrlBase}/${r.path}`,
-                        }}
-                      />
-                    </div>
-                  </ErrorBoundary>
-                </div>
-              );
-            })}
-          </div>
-        </section>
+        {supportedResources.length > 0 && (
+          <section data-testId="dp-previews" className="my-12">
+            <h2>Data Previews</h2>
+            <div>
+              {supportedResources.slice(0, 5).map((resource) => (
+                <ResourcePreview
+                  resource={resource}
+                  rawUrlBase={_rawUrlBase}
+                  key={resource.name}
+                />
+              ))}
+            </div>
+          </section>
+        )}
         <hr />
         <section
           data-testId="dp-readme"
@@ -271,12 +260,3 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
     </ErrorBoundary>
   );
 };
-
-const FallbackComponentFactory = ({ title }: { title: string }) => {
-  const FallbackComponent = ({ error }: { error: Error }) => {
-    return <ErrorMessage title={title} message={error.message} />;
-  };
-  FallbackComponent.displayName = "FallbackComponent";
-  return FallbackComponent;
-};
-FallbackComponentFactory.displayName = "FallbackComponentFactory";
