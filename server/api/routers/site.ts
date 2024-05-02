@@ -116,12 +116,22 @@ export const siteRouter = createTRPCRouter({
           tree,
         });
 
+        const path = filesMetadata[`config.json`]?._path!;
+
+        const configString = await fetchFile({
+          projectId: site.id,
+          branch: site.gh_branch,
+          path,
+        });
+        const config = JSON.parse(configString || "{}");
+
         await ctx.db.site.update({
           where: { id: site.id },
           data: {
             synced: true,
             syncedAt: new Date(),
             files: filesMetadata as any, // TODO: fix types
+            config: config,
           },
         });
       } catch (error) {
@@ -216,12 +226,22 @@ export const siteRouter = createTRPCRouter({
             tree,
           });
 
+          const path = filesMetadata[`config.json`]?._path!;
+
+          const configString = await fetchFile({
+            projectId: site.id,
+            branch: site.gh_branch,
+            path,
+          });
+          const config = JSON.parse(configString || "{}");
+
           await ctx.db.site.update({
             where: { id },
             data: {
               synced: true,
               syncedAt: new Date(),
               files: filesMetadata as any, // TODO: fix types
+              config: config,
             },
           });
         } catch (error) {
@@ -343,12 +363,23 @@ export const siteRouter = createTRPCRouter({
           branch: gh_branch,
           tree: gitHubTree,
         });
+
+        const path = filesMetadata[`config.json`]?._path!;
+
+        const configString = await fetchFile({
+          projectId: site.id,
+          branch: site.gh_branch,
+          path,
+        });
+        const config = JSON.parse(configString || "{}");
+
         await ctx.db.site.update({
           where: { id: site!.id },
           data: {
             files: filesMetadata as any, // TODO: fix types
             synced: true,
             syncedAt: new Date(),
+            config: config,
           },
         });
       } catch (error) {
@@ -627,6 +658,141 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
+  getSiteTitle: publicProcedure
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
+              ],
+            },
+            include: {
+              user: true,
+            },
+          });
+
+          if (!site) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
+          }
+
+          const configJson = await getSiteConfig(site);
+
+          if (!configJson) {
+            return "";
+          }
+
+          const { title } = JSON.parse(configJson);
+          return title || "";
+        },
+        [`${input.gh_username}-${input.projectName}-title`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.gh_username}-${input.projectName}-title`],
+        },
+      )();
+    }),
+  getSiteDescription: publicProcedure
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
+              ],
+            },
+            include: {
+              user: true,
+            },
+          });
+
+          if (!site) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
+          }
+
+          const configJson = await getSiteConfig(site);
+
+          if (!configJson) {
+            return "";
+          }
+
+          const { description } = JSON.parse(configJson);
+          return description || "";
+        },
+        [`${input.gh_username}-${input.projectName}-description`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.gh_username}-${input.projectName}-description`],
+        },
+      )();
+    }),
+  getSiteAuthor: publicProcedure
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
+              ],
+            },
+            include: {
+              user: true,
+            },
+          });
+
+          if (!site) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
+          }
+
+          const configJson = await getSiteConfig(site);
+
+          if (!configJson) {
+            return "";
+          }
+
+          const { author } = JSON.parse(configJson);
+          return author || "";
+        },
+        [`${input.gh_username}-${input.projectName}-author`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.gh_username}-${input.projectName}-author`],
+        },
+      )();
+    }),
 });
 
 export const normalizeDir = (dir: string | null) => {
@@ -721,7 +887,10 @@ const processGitHubTree = async ({
       });
 
       // if the file is a markdown file, parse it and save metadata
-      if (isSupportedMarkdownExtension(fileExtension)) {
+      if (
+        isSupportedMarkdownExtension(fileExtension) ||
+        fileExtension === "json"
+      ) {
         const markdown = await gitHubFileBlob.text();
 
         // special case for README.md and index.md files
@@ -800,3 +969,15 @@ const processGitHubTree = async ({
   }
   return filesMetadata;
 };
+
+async function getSiteConfig(site) {
+  const path = (site.files as { [url: string]: PageMetadata })[`config.json`]
+    ?._path!;
+
+  const configJson = await fetchFile({
+    projectId: site.id,
+    branch: site.gh_branch,
+    path,
+  });
+  return configJson;
+}
