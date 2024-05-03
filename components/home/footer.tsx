@@ -42,7 +42,7 @@ export const Footer: React.FC<Props> = ({
   description,
 }) => {
   return (
-    <footer className="bg-white" aria-labelledby="footer-heading">
+    <footer className="bg-background" aria-labelledby="footer-heading">
       <h2 id="footer-heading" className="sr-only">
         Footer
       </h2>

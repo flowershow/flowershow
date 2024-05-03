@@ -74,9 +74,15 @@ export default async function SiteLayout({
     notFound();
   }
 
+  const customCss = await api.site.getCustomStyles.query({
+    gh_username: data.user!.gh_username!,
+    projectName: data.projectName,
+  });
+
   return (
-    <div className="min-h-screen bg-background dark:bg-background-dark">
-      {children}
-    </div>
+    <>
+      {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
+      <div className="min-h-screen bg-background">{children}</div>
+    </>
   );
 }
