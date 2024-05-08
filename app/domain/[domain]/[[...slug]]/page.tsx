@@ -103,5 +103,7 @@ export default async function SitePage({
     );
   }
 
-  return <MdxPage source={_mdxSource} metadata={pageMetadata} />;
+  return (
+    <MdxPage source={_mdxSource} metadata={pageMetadata} siteMetadata={site} />
+  );
 }

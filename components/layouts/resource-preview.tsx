@@ -8,15 +8,8 @@ export const FlatUiTable = dynamic(() =>
   import("@portaljs/components").then((mod) => mod.FlatUiTable),
 );
 
-export const ResourcePreview = ({
-  resource,
-  rawUrlBase,
-}: {
-  resource: Resource;
-  rawUrlBase: string;
-}) => {
+export const ResourcePreview = ({ resource }: { resource: Resource }) => {
   const resourceTitle = resource.title || resource.name || resource.path;
-  const resourceDataUrl = `${rawUrlBase}/${resource.path}`;
 
   return (
     <div
@@ -36,7 +29,7 @@ export const ResourcePreview = ({
             {/* @ts-expect-error */}
             <FlatUiTable
               data={{
-                url: `${rawUrlBase}/${resource.path}`,
+                url: resource.path,
               }}
             />
           </div>
@@ -48,7 +41,7 @@ export const ResourcePreview = ({
             }}
             layers={[
               {
-                data: { url: resourceDataUrl },
+                data: { url: resource.path },
                 name: "Polygons",
                 tooltip: {
                   propNames: ["name"],

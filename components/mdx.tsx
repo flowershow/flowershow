@@ -6,14 +6,22 @@ import { ErrorMessage } from "@/components/error-message";
 import layouts from "@/components/layouts";
 import { mdxComponentsFactory } from "./mdx-components-factory";
 import { PageMetadata, isDatasetPage } from "@/server/api/types";
+import { Site } from "@prisma/client";
+
+type SiteWithUser = Site & {
+  user: {
+    gh_username: string | null;
+  } | null;
+};
 
 interface MDXProps {
   source: MDXRemoteSerializeResult;
   metadata: PageMetadata;
+  siteMetadata: SiteWithUser;
 }
 
-const MDX: React.FC<MDXProps> = ({ source, metadata }) => {
-  const components = mdxComponentsFactory(metadata);
+const MDX: React.FC<MDXProps> = ({ source, metadata, siteMetadata }) => {
+  const components = mdxComponentsFactory({ metadata, siteMetadata });
   const layout = isDatasetPage(metadata) ? "datapackage" : "story";
 
   const Component = layouts[layout] as any; // TODO fix this
@@ -21,7 +29,9 @@ const MDX: React.FC<MDXProps> = ({ source, metadata }) => {
   const Layout = ({ children }) => {
     return (
       <ErrorBoundary FallbackComponent={LayoutFallbackComponent}>
-        <Component metadata={metadata}>{children}</Component>
+        <Component metadata={metadata} siteMetadata={siteMetadata}>
+          {children}
+        </Component>
       </ErrorBoundary>
     );
   };
