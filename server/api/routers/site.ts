@@ -7,7 +7,6 @@ import {
   protectedProcedure,
   publicProcedure,
 } from "@/server/api/trpc";
-import { filePathsToPermalinks } from "@/lib/file-paths-to-permalinks";
 import {
   fetchGitHubRepoTree,
   fetchGitHubFile,
@@ -33,7 +32,6 @@ import {
   isSupportedExtension,
   isSupportedMarkdownExtension,
 } from "@/lib/types";
-import { env } from "@/env.mjs";
 import { TRPCError } from "@trpc/server";
 import { computeMetadata } from "@/lib/computed-fields";
 import { DataPackage } from "@/components/layouts/datapackage-types";
@@ -453,12 +451,59 @@ export const siteRouter = createTRPCRouter({
                 { user: { gh_username: input.gh_username } },
               ],
             },
+            include: {
+              user: {
+                select: {
+                  gh_username: true,
+                },
+              },
+            },
           });
         },
         [`${input.gh_username} - ${input.projectName} - metadata`],
         {
           revalidate: 60, // 1 minute
           tags: [`${input.gh_username} - ${input.projectName} - metadata`],
+        },
+      )();
+    }),
+  getCustomStyles: publicProcedure
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
+              ],
+            },
+          });
+
+          if (!site) {
+            return null;
+          }
+
+          try {
+            return await fetchFile({
+              projectId: site.id,
+              branch: site.gh_branch,
+              path: "custom.css",
+            });
+          } catch {
+            return null;
+          }
+        },
+        [`${input.gh_username} - ${input.projectName} - customStyles`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.gh_username} - ${input.projectName} - customStyles`],
         },
       )();
     }),
@@ -551,19 +596,24 @@ export const siteRouter = createTRPCRouter({
           });
 
           // generate a list of permalinks
-          const filePaths = Object.entries(
-            site.files as { [url: string]: PageMetadata },
-          ).map(([url, metadata]) => {
-            // TODO revise this; filePathsToPermalinks expects a list of file paths with extension
-            return metadata._path;
-          });
-          const r2SiteRawUrl = `https://${env.R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`;
-          const siteBasePath = `/@${site.user?.gh_username}/${site.projectName}`;
-          const permalinks = filePathsToPermalinks({
-            filePaths,
-            rawBaseUrl: r2SiteRawUrl,
-            pathPrefix: siteBasePath,
-          });
+
+          // TODO this is a workaround because we don't have and index of all files in the db yet
+          // otherwise we could just query the db for all files
+          const tree = await fetchTree(site.id, site.gh_branch);
+
+          if (!tree) {
+            return { content, permalinks: [] };
+          }
+
+          const normalizedRootDir = normalizeDir(site.rootDir || null);
+          const permalinks = tree.tree
+            .filter((file) => {
+              if (file.type === "tree") return false;
+              if (!isSupportedExtension(file.path.split(".").pop() || ""))
+                return false;
+              return file.path.startsWith(normalizedRootDir);
+            })
+            .map((file) => "/" + file.path.replace(/\.mdx?$/, ""));
 
           return { content, permalinks };
         },

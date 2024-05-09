@@ -30,6 +30,7 @@ export const isSupportedExtension = (
     "png",
     "gif",
     "svg",
+    "css",
   ].includes(extension);
 };
 

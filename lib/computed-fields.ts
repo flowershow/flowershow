@@ -5,6 +5,7 @@ import stripMarkdown, { Options } from "strip-markdown";
 import { GitHubAPIRepoTree } from "./github";
 import matter from "gray-matter";
 import { Site } from "@prisma/client";
+import { resolveLink } from "@/lib/resolve-link";
 import { env } from "@/env.mjs";
 
 type SiteWithUser = Site & {
@@ -26,8 +27,6 @@ export const computeMetadata = async ({
   tree: GitHubAPIRepoTree;
   site: SiteWithUser;
 }): Promise<PageMetadata> => {
-  // TODO try catch
-
   const { data: frontMatter } = matter(source);
 
   const _datapackage = frontMatter.datapackage || datapackage;
@@ -51,30 +50,20 @@ export const computeMetadata = async ({
     if (file) {
       resource.size = file.size;
       resource.format = file.path.split(".").pop();
+      resource.path = resolveLink({
+        link: resource.path,
+        filePath: path,
+        prefixPath: `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
+      });
     }
   }
 
-  // TODO get created and modified dates from github for each file ?
-
   delete frontMatter.datapackage;
-
-  let _urlBase = `/@${site.user!.gh_username}/${site.projectName}`;
-
-  // TODO this is a temporary hack for our special datahubio projects
-  if (_urlBase === "/@olayway/blog") {
-    _urlBase = "/blog";
-  } else if (_urlBase === "/@olayway/docs") {
-    _urlBase = "/docs";
-  } else if (_urlBase === "/@olayway/collections") {
-    _urlBase = "/collections";
-  }
 
   // TODO better types
   return {
     _path: path,
     _url: resolveFilePathToUrl(path),
-    _urlBase,
-    _rawUrlBase: `https://${env.R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
     _pagetype: _datapackage ? "dataset" : "story",
     ..._datapackage,
     ...frontMatter,

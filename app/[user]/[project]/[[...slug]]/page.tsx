@@ -49,7 +49,6 @@ export default async function SitePage({
   let sitePermalinks: string[] = [];
   let _mdxSource: MDXRemoteSerializeResult | null = null;
 
-  // TODO temporary to construct dataUrlBase
   const site = await api.site.get.query({
     gh_username: params.user,
     projectName: params.project,
@@ -101,5 +100,7 @@ export default async function SitePage({
     );
   }
 
-  return <MdxPage source={_mdxSource} metadata={pageMetadata} />;
+  return (
+    <MdxPage source={_mdxSource} metadata={pageMetadata} siteMetadata={site} />
+  );
 }
