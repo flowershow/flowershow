@@ -1,7 +1,14 @@
 type SupportedMarkdownExtension = "md" | "mdx";
 
+export const isSupportedMarkdownExtension = (
+  extension: string,
+): extension is SupportedMarkdownExtension => {
+  return ["md", "mdx"].includes(extension);
+};
+
 type SupportedAssetExtension =
   | "csv"
+  | "geojson"
   | "json"
   | "yaml"
   | "yml"
@@ -11,6 +18,23 @@ type SupportedAssetExtension =
   | "gif"
   | "svg";
 
+export const isSupportedAssetExtension = (
+  extension: string,
+): extension is SupportedAssetExtension => {
+  return [
+    "csv",
+    "geojson",
+    "json",
+    "yaml",
+    "yml",
+    "jpeg",
+    "jpg",
+    "png",
+    "gif",
+    "svg",
+  ].includes(extension);
+};
+
 export type SupportedExtension =
   | SupportedMarkdownExtension
   | SupportedAssetExtension;
@@ -18,42 +42,10 @@ export type SupportedExtension =
 export const isSupportedExtension = (
   extension: string,
 ): extension is SupportedExtension => {
-  return [
-    "md",
-    "mdx",
-    "csv",
-    "json",
-    "yaml",
-    "yml",
-    "jpeg",
-    "jpg",
-    "png",
-    "gif",
-    "svg",
-    "css",
-  ].includes(extension);
-};
-
-export const isSupportedAssetExtension = (
-  extension: string,
-): extension is SupportedAssetExtension => {
-  return [
-    "csv",
-    "json",
-    "yaml",
-    "yml",
-    "jpeg",
-    "jpg",
-    "png",
-    "gif",
-    "svg",
-  ].includes(extension);
-};
-
-export const isSupportedMarkdownExtension = (
-  extension: string,
-): extension is SupportedMarkdownExtension => {
-  return ["md", "mdx"].includes(extension);
+  return (
+    isSupportedMarkdownExtension(extension) ||
+    isSupportedAssetExtension(extension)
+  );
 };
 
 export type DomainVerificationStatusProps =
