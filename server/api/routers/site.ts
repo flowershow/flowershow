@@ -37,7 +37,7 @@ import { computeMetadata } from "@/lib/computed-fields";
 import { DataPackage } from "@/components/layouts/datapackage-types";
 import { PageMetadata } from "../types";
 import { Site } from "@prisma/client";
-import { SiteConfig } from "@/components/SiteConfig";
+import type { SiteConfig } from "@/components/SiteConfig";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -655,9 +655,6 @@ export const siteRouter = createTRPCRouter({
                 { user: { gh_username: input.gh_username } },
               ],
             },
-            include: {
-              user: true,
-            },
           });
 
           if (!site) {
@@ -668,16 +665,9 @@ export const siteRouter = createTRPCRouter({
           }
 
           let configJson: SiteConfig = {};
-          if (site.config !== null && typeof site.config === "string") {
-            try {
-              configJson = JSON.parse(site.config);
-            } catch (error) {
-              console.error("Error parsing JSON:", error);
-              // Handle the error gracefully, e.g., assign a default value
-              // or return an error object indicating the failure
-            }
+          if (site.config !== null && typeof site.config === "object") {
+            configJson = site.config as SiteConfig;
           }
-
           return configJson;
         },
         [`${input.gh_username}-${input.projectName}-config`],
@@ -882,9 +872,8 @@ async function fetchConfigFile(
       try {
         config = JSON.parse(configString);
       } catch (error) {
+        // Handle the error gracefully for now
         console.error("Error parsing JSON:", error);
-        // Handle the error gracefully, e.g., assign a default value
-        // or return an error object indicating the failure
       }
     }
   }
