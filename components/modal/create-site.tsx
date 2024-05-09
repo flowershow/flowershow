@@ -119,7 +119,7 @@ export default function CreateSiteModal() {
 
   return (
     <form
-      data-testId="create-site-form"
+      data-testid="create-site-form"
       action={async (data: FormData) => {
         const gh_repository = data.get("gh_repository") as string;
         const gh_branch = data.get("gh_branch") as string;
