@@ -37,6 +37,7 @@ import { computeMetadata } from "@/lib/computed-fields";
 import { DataPackage } from "@/components/layouts/datapackage-types";
 import { PageMetadata } from "../types";
 import { Site } from "@prisma/client";
+import { SiteConfig } from "@/components/SiteConfig";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -116,14 +117,7 @@ export const siteRouter = createTRPCRouter({
           tree,
         });
 
-        const path = filesMetadata[`config.json`]?._path!;
-
-        const configString = await fetchFile({
-          projectId: site.id,
-          branch: site.gh_branch,
-          path,
-        });
-        const config = JSON.parse(configString || "{}");
+        let config = await fetchConfigFile(filesMetadata, site);
 
         await ctx.db.site.update({
           where: { id: site.id },
@@ -226,14 +220,7 @@ export const siteRouter = createTRPCRouter({
             tree,
           });
 
-          const path = filesMetadata[`config.json`]?._path!;
-
-          const configString = await fetchFile({
-            projectId: site.id,
-            branch: site.gh_branch,
-            path,
-          });
-          const config = JSON.parse(configString || "{}");
+          let config = await fetchConfigFile(filesMetadata, site);
 
           await ctx.db.site.update({
             where: { id },
@@ -364,14 +351,7 @@ export const siteRouter = createTRPCRouter({
           tree: gitHubTree,
         });
 
-        const path = filesMetadata[`config.json`]?._path!;
-
-        const configString = await fetchFile({
-          projectId: site.id,
-          branch: site.gh_branch,
-          path,
-        });
-        const config = JSON.parse(configString || "{}");
+        let config = await fetchConfigFile(filesMetadata, site);
 
         await ctx.db.site.update({
           where: { id: site!.id },
@@ -658,7 +638,7 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
-  getSiteTitle: publicProcedure
+  getSiteConfig: publicProcedure
     .input(
       z.object({
         gh_username: z.string().min(1),
@@ -687,109 +667,23 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          const configJson = await getSiteConfig(site);
-
-          if (!configJson) {
-            return "";
+          let configJson: SiteConfig = {};
+          if (site.config !== null && typeof site.config === "string") {
+            try {
+              configJson = JSON.parse(site.config);
+            } catch (error) {
+              console.error("Error parsing JSON:", error);
+              // Handle the error gracefully, e.g., assign a default value
+              // or return an error object indicating the failure
+            }
           }
 
-          const { title } = JSON.parse(configJson);
-          return title || "";
+          return configJson;
         },
-        [`${input.gh_username}-${input.projectName}-title`],
+        [`${input.gh_username}-${input.projectName}-config`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.gh_username}-${input.projectName}-title`],
-        },
-      )();
-    }),
-  getSiteDescription: publicProcedure
-    .input(
-      z.object({
-        gh_username: z.string().min(1),
-        projectName: z.string().min(1),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      return await unstable_cache(
-        async () => {
-          const site = await ctx.db.site.findFirst({
-            where: {
-              AND: [
-                { projectName: input.projectName },
-                { user: { gh_username: input.gh_username } },
-              ],
-            },
-            include: {
-              user: true,
-            },
-          });
-
-          if (!site) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
-            });
-          }
-
-          const configJson = await getSiteConfig(site);
-
-          if (!configJson) {
-            return "";
-          }
-
-          const { description } = JSON.parse(configJson);
-          return description || "";
-        },
-        [`${input.gh_username}-${input.projectName}-description`],
-        {
-          revalidate: 60, // 1 minute
-          tags: [`${input.gh_username}-${input.projectName}-description`],
-        },
-      )();
-    }),
-  getSiteAuthor: publicProcedure
-    .input(
-      z.object({
-        gh_username: z.string().min(1),
-        projectName: z.string().min(1),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      return await unstable_cache(
-        async () => {
-          const site = await ctx.db.site.findFirst({
-            where: {
-              AND: [
-                { projectName: input.projectName },
-                { user: { gh_username: input.gh_username } },
-              ],
-            },
-            include: {
-              user: true,
-            },
-          });
-
-          if (!site) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
-            });
-          }
-
-          const configJson = await getSiteConfig(site);
-
-          if (!configJson) {
-            return "";
-          }
-
-          const { author } = JSON.parse(configJson);
-          return author || "";
-        },
-        [`${input.gh_username}-${input.projectName}-author`],
-        {
-          revalidate: 60, // 1 minute
-          tags: [`${input.gh_username}-${input.projectName}-author`],
+          tags: [`${input.gh_username}-${input.projectName}-config`],
         },
       )();
     }),
@@ -970,14 +864,29 @@ const processGitHubTree = async ({
   return filesMetadata;
 };
 
-async function getSiteConfig(site) {
-  const path = (site.files as { [url: string]: PageMetadata })[`config.json`]
-    ?._path!;
+async function fetchConfigFile(
+  filesMetadata: { [url: string]: PageMetadata },
+  site,
+) {
+  let config = {};
+  if (filesMetadata[`config.json`] && filesMetadata[`config.json`]?._path) {
+    const path = filesMetadata[`config.json`]?._path;
 
-  const configJson = await fetchFile({
-    projectId: site.id,
-    branch: site.gh_branch,
-    path,
-  });
-  return configJson;
+    const configString = await fetchFile({
+      projectId: site.id,
+      branch: site.gh_branch,
+      path,
+    });
+
+    if (configString) {
+      try {
+        config = JSON.parse(configString);
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
+        // Handle the error gracefully, e.g., assign a default value
+        // or return an error object indicating the failure
+      }
+    }
+  }
+  return config;
 }

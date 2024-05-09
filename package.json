@@ -64,6 +64,7 @@
     "next": "14.0.2",
     "next-auth": "4.24.5",
     "next-mdx-remote": "^4.4.1",
+    "next-seo": "^6.5.0",
     "novel": "^0.1.22",
     "openai-edge": "^1.2.2",
     "pretty-bytes": "^6.1.1",

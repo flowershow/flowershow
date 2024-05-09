@@ -7,6 +7,7 @@ import { Nav } from "@/components/home/nav";
 import { Footer } from "@/components/home/footer";
 import config from "@/const/config";
 import { PageMetadata } from "@/server/api/types";
+import { NextSeo } from "next-seo";
 
 export async function generateMetadata({
   params,
@@ -90,10 +91,19 @@ export default async function SiteLayout({
     projectName: params.project,
   });
 
+  const siteConfig = await api.site.getSiteConfig.query({
+    gh_username: params.user,
+    projectName: params.project,
+  });
+  const title = siteConfig?.title || config.title;
+  const description = siteConfig?.description || config.description;
+  const author = siteConfig?.author || config.author;
+
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
       <div className="min-h-screen bg-background">
+        <NextSeo title={title} description={description} />
         <Nav
           title={config.navbarTitle.text}
           logo={config.navbarTitle.logo}
@@ -112,7 +122,7 @@ export default async function SiteLayout({
         <div className="mx-auto max-w-8xl px-4 md:px-8">
           <Footer
             links={config.footerLinks}
-            author={config.author}
+            author={author}
             social={config.social}
             description={config.description}
           />
