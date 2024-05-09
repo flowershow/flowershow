@@ -25,6 +25,7 @@ const R2 = new S3Client({
 type ContentType =
   | "text/markdown"
   | "text/csv"
+  | "application/geo+json"
   | "application/json"
   | "application/yaml"
   | "image/jpeg"
@@ -101,6 +102,8 @@ const getContentType = (extension: SupportedExtension): ContentType => {
       return "text/markdown";
     case "csv":
       return "text/csv";
+    case "geojson":
+      return "application/geo+json";
     case "json":
       return "application/json";
     case "yaml":
