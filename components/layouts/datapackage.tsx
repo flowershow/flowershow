@@ -1,4 +1,3 @@
-import dynamic from "next/dynamic";
 import { ErrorBoundary } from "react-error-boundary";
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
 import { DocumentArrowDownIcon } from "@heroicons/react/24/outline";
@@ -17,14 +16,20 @@ import { ErrorMessage } from "@/components/error-message";
 import { DatasetPageMetadata } from "@/server/api/types";
 import { ResourcePreview } from "./resource-preview";
 import { FallbackComponentFactory } from "./fallback-component-factory";
+import { Site } from "@prisma/client";
+import { env } from "@/env.mjs";
+import { resolveLink } from "@/lib/resolve-link";
+
+type SiteWithUser = Site & {
+  user: {
+    gh_username: string | null;
+  } | null;
+};
 
 interface Props extends React.PropsWithChildren {
   metadata: DatasetPageMetadata;
+  siteMetadata: SiteWithUser;
 }
-
-const FlatUiTable = dynamic(() =>
-  import("@portaljs/components").then((mod) => mod.FlatUiTable),
-);
 
 class ResourceNotFoundError extends Error {
   constructor(viewName) {
@@ -33,9 +38,12 @@ class ResourceNotFoundError extends Error {
   }
 }
 
-export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
+export const DataPackageLayout: React.FC<Props> = ({
+  children,
+  metadata,
+  siteMetadata,
+}) => {
   const {
-    _rawUrlBase,
     title,
     description,
     resources,
@@ -71,6 +79,29 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
     ? prettyBytes(resourceFilesSize)
     : undefined;
 
+  // TODO this is only needed for old sites
+  // new sites have links in datapackage resolved in computed-fields lib
+  // this should be removed when all sites are migrated or we have a better solution
+  // not worth the effort to sync all the sites until we have a clear plan
+  // (e.g. probably we'll be implementing an index of all files which can change the way we resolve links)
+  const pathToR2SiteFolder = `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${siteMetadata.id}/${siteMetadata.gh_branch}/raw`;
+
+  const _resources = resources
+    .filter(
+      (resource) => resource.format === "csv" || resource.format === "geojson",
+    )
+    // TODO this is temporary, related to comment above over pathToR2SiteFolder
+    .map((resource) => {
+      return {
+        ...resource,
+        path: resolveLink({
+          link: resource.path,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        }),
+      };
+    });
+
   const View: React.FC<{ view: SimpleView | View }> = ({ view }) => {
     if (!isSimpleView(view)) {
       throw new Error(
@@ -79,12 +110,12 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
     }
     let resource: Resource | undefined;
     if (isSimpleViewWithResourceName(view)) {
-      resource = resources.find((r) => r.name === view.resourceName);
+      resource = _resources.find((r) => r.name === view.resourceName);
     } else {
       if (!view.resources || view.resources.length === 0) {
         throw new ResourceNotFoundError(view.name);
       }
-      resource = resources.find((r) => r.name === view.resources[0]);
+      resource = _resources.find((r) => r.name === view.resources[0]);
     }
 
     if (!resource) {
@@ -92,19 +123,11 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
     }
     return (
       <div className="not-prose md:text-base">
-        <FrictionlessView
-          view={view}
-          resource={resource}
-          dataUrlBase={_rawUrlBase}
-        />
+        <FrictionlessView view={view} resource={resource} />
       </div>
     );
   };
   View.displayName = "View";
-
-  const supportedResources = resources.filter(
-    (resource) => resource.format === "csv" || resource.format === "geojson",
-  );
 
   return (
     <ErrorBoundary
@@ -219,11 +242,11 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
                     <td>
                       <a
                         target="_blank"
-                        href={`${_rawUrlBase}/${r.path}`}
+                        href={r.path}
                         className="hover:text-[#6366F1]"
                       >
                         <div className="flex items-center space-x-1 ">
-                          <span>{r.path}</span>
+                          <span>{r.name}</span>
                           <DocumentArrowDownIcon className="inline h-4 w-4" />
                         </div>
                       </a>
@@ -234,16 +257,12 @@ export const DataPackageLayout: React.FC<Props> = ({ children, metadata }) => {
             </tbody>
           </table>
         </section>
-        {supportedResources.length > 0 && (
+        {_resources.length > 0 && (
           <section data-testId="dp-previews" className="my-12">
             <h2>Data Previews</h2>
             <div>
-              {supportedResources.slice(0, 5).map((resource) => (
-                <ResourcePreview
-                  resource={resource}
-                  rawUrlBase={_rawUrlBase}
-                  key={resource.name}
-                />
+              {_resources.slice(0, 5).map((resource) => (
+                <ResourcePreview resource={resource} key={resource.name} />
               ))}
             </div>
           </section>

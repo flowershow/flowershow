@@ -38,7 +38,6 @@ export const env = createEnv({
     R2_ACCESS_KEY_ID: z.string(),
     R2_SECRET_KEY_ID: z.string(),
     R2_BUCKET_NAME: z.string(),
-    R2_BUCKET_DOMAIN: z.string(),
   },
 
   /**
@@ -53,6 +52,7 @@ export const env = createEnv({
     // https://vercel.com/docs/projects/environment-variables/system-environment-variables
     NEXT_PUBLIC_VERCEL_ENV: z.string().optional(),
     NEXT_PUBLIC_DNS_DOMAIN: z.string(),
+    NEXT_PUBLIC_R2_BUCKET_DOMAIN: z.string(),
   },
 
   /**
@@ -78,7 +78,7 @@ export const env = createEnv({
     R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
     R2_SECRET_KEY_ID: process.env.R2_SECRET_KEY_ID,
     R2_BUCKET_NAME: process.env.R2_BUCKET_NAME,
-    R2_BUCKET_DOMAIN: process.env.R2_BUCKET_DOMAIN,
+    NEXT_PUBLIC_R2_BUCKET_DOMAIN: process.env.NEXT_PUBLIC_R2_BUCKET_DOMAIN,
     NEXT_PUBLIC_DNS_DOMAIN: process.env.NEXT_PUBLIC_DNS_DOMAIN,
   },
   /**

@@ -1,3 +1,4 @@
+"use client";
 import dynamic from "next/dynamic";
 import { Mermaid as mermaid, Pre as pre } from "@portaljs/core";
 import type {
@@ -14,7 +15,9 @@ import { ErrorBoundary } from "react-error-boundary";
 import { ErrorMessage } from "@/components/error-message";
 import { FrictionlessViewFactory } from "./frictionless-view";
 import { PageMetadata, isDatasetPage } from "@/server/api/types";
-import { normalizeLink } from "@/lib/normalize-link";
+import { resolveLink } from "@/lib/resolve-link";
+import { Site } from "@prisma/client";
+import { env } from "@/env.mjs";
 
 const Catalog = dynamic(() =>
   import("@portaljs/components").then((module) => ({
@@ -77,16 +80,40 @@ const VegaLite = dynamic(() =>
   })),
 );
 
-export const mdxComponentsFactory = (metadata: PageMetadata) => {
+type SiteWithUser = Site & {
+  user: {
+    gh_username: string | null;
+  } | null;
+};
+
+export const mdxComponentsFactory = ({
+  metadata,
+  siteMetadata,
+}: {
+  metadata: PageMetadata;
+  siteMetadata: SiteWithUser;
+}) => {
+  const pathToR2SiteFolder = `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${siteMetadata.id}/${siteMetadata.gh_branch}/raw`;
+
   const components: any = {
     /* HTML elements */
-    a: ({ href, children, ...rest }) => {
-      let normalizedHref = href;
-      const isExternal = href.startsWith("http");
-      const isHeading = /^#/.test(href);
-      if (!isExternal && !isHeading) {
-        normalizedHref = normalizeLink(href, metadata._urlBase, metadata._path);
+    a: ({
+      href,
+      children,
+      ...rest
+    }: React.LinkHTMLAttributes<HTMLAnchorElement>) => {
+      if (!href) {
+        return <a {...rest}>{children}</a>;
       }
+
+      const isExternal = href.startsWith("http");
+      const normalizedHref = resolveLink({
+        link: href,
+        filePath: metadata._path,
+        prefixPath: siteMetadata.customDomain
+          ? ""
+          : `/@${siteMetadata.user!.gh_username}/${siteMetadata.projectName}`,
+      });
 
       return (
         <a
@@ -99,22 +126,27 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
         </a>
       );
     },
-    img: (props) => {
-      return (
-        <img
-          {...props}
-          src={resolveRelativeUrl(props.src, metadata._rawUrlBase)}
-          alt="image"
-        />
-      );
+    img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
+      if (!props.src) {
+        return <img {...props} />;
+      }
+
+      const normalizedSrc = resolveLink({
+        link: props.src,
+        filePath: metadata._path,
+        prefixPath: pathToR2SiteFolder,
+      });
+
+      return <img {...props} src={normalizedSrc} />;
     },
-    table: (props) => (
+    table: (props: React.TableHTMLAttributes<HTMLTableElement>) => (
       <div className="overflow-x-auto">
         <table {...props} />
       </div>
     ),
     /* Custom components */
     pre,
+    mermaid,
     code: (props) => {
       let className = props.className;
       if (!props.className || !props.className.includes("language-")) {
@@ -126,7 +158,6 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
 
       return <code {...props} className={className}></code>;
     },
-    mermaid,
     Catalog: (props) => {
       return (
         <ErrorBoundary
@@ -139,7 +170,11 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
       );
     },
     Excel: (props: ExcelProps) => {
-      props.data.url = resolveRelativeUrl(props.data.url, metadata._rawUrlBase);
+      props.data.url = resolveLink({
+        link: props.data.url,
+        filePath: metadata._path,
+        prefixPath: pathToR2SiteFolder,
+      });
       return (
         <ErrorBoundary
           FallbackComponent={FallbackComponentFactory({
@@ -151,7 +186,11 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
       );
     },
     Iframe: (props: IframeProps) => {
-      props.data.url = resolveRelativeUrl(props.data.url, metadata._rawUrlBase);
+      props.data.url = resolveLink({
+        link: props.data.url,
+        filePath: metadata._path,
+        prefixPath: pathToR2SiteFolder,
+      });
       return (
         <ErrorBoundary
           FallbackComponent={FallbackComponentFactory({
@@ -164,27 +203,21 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
     },
     FlatUiTable: (props: FlatUiTableProps) => {
       if (props.data.url) {
-        props.data.url = resolveRelativeUrl(
-          props.data.url,
-          metadata._rawUrlBase,
-        );
+        props.data.url = resolveLink({
+          link: props.data.url,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        });
       }
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`FlatUiTable` component error:",
-          })}
-        >
-          <FlatUiTable {...props} />
-        </ErrorBoundary>
-      );
+      return <FlatUiTable {...props} />;
     },
     LineChart: (props: LineChartProps) => {
       if (props.data.url) {
-        props.data.url = resolveRelativeUrl(
-          props.data.url,
-          metadata._rawUrlBase,
-        );
+        props.data.url = resolveLink({
+          link: props.data.url,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        });
       }
       return (
         <ErrorBoundary
@@ -199,10 +232,11 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
     Map: (props: MapProps) => {
       const layers = props.layers.map((layer) => {
         if (layer.data.url) {
-          layer.data.url = resolveRelativeUrl(
-            layer.data.url,
-            metadata._rawUrlBase,
-          );
+          layer.data.url = resolveLink({
+            link: layer.data.url,
+            filePath: metadata._path,
+            prefixPath: pathToR2SiteFolder,
+          });
         }
         return layer;
       });
@@ -218,7 +252,11 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
       );
     },
     PdfViewer: (props: PdfViewerProps) => {
-      props.data.url = resolveRelativeUrl(props.data.url, metadata._rawUrlBase);
+      props.data.url = resolveLink({
+        link: props.data.url,
+        filePath: metadata._path,
+        prefixPath: pathToR2SiteFolder,
+      });
       return (
         <ErrorBoundary
           FallbackComponent={FallbackComponentFactory({
@@ -232,7 +270,11 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
     Plotly: (props) => {
       let data = props.data;
       if (typeof data === "string") {
-        data = resolveRelativeUrl(data, metadata._rawUrlBase);
+        data = resolveLink({
+          link: data,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        });
       }
       return (
         <ErrorBoundary
@@ -246,10 +288,11 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
     },
     PlotlyBarChart: (props: PlotlyBarChartProps) => {
       if (props.data.url) {
-        props.data.url = resolveRelativeUrl(
-          props.data.url,
-          metadata._rawUrlBase,
-        );
+        props.data.url = resolveLink({
+          link: props.data.url,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        });
       }
       return (
         <ErrorBoundary
@@ -263,10 +306,11 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
     },
     PlotlyLineChart: (props: PlotlyLineChartProps) => {
       if (props.data.url) {
-        props.data.url = resolveRelativeUrl(
-          props.data.url,
-          metadata._rawUrlBase,
-        );
+        props.data.url = resolveLink({
+          link: props.data.url,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        });
       }
       return (
         <ErrorBoundary
@@ -281,7 +325,11 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
     Vega: (props) => {
       const spec = props.spec;
       if (spec.data.URL) {
-        spec.data.URL = resolveRelativeUrl(spec.data.URL, metadata._rawUrlBase);
+        spec.data.URL = resolveLink({
+          link: spec.data.URL,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        });
       }
       return (
         <ErrorBoundary
@@ -296,7 +344,11 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
     VegaLite: (props) => {
       const spec = props.spec;
       if (spec.data.URL) {
-        spec.data.URL = resolveRelativeUrl(spec.data.URL, metadata._rawUrlBase);
+        spec.data.URL = resolveLink({
+          link: spec.data.URL,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        });
       }
       return (
         <ErrorBoundary
@@ -311,6 +363,7 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
   };
 
   if (isDatasetPage(metadata)) {
+    // TODO
     const FrictionlessView = FrictionlessViewFactory(metadata);
     components.FrictionlessView = ({
       id,
@@ -332,12 +385,6 @@ export const mdxComponentsFactory = (metadata: PageMetadata) => {
     components.FrictionlessView.displayName = "FrictionlessView";
   }
   return components;
-};
-
-const resolveRelativeUrl = (url: string, urlPrefix: string) => {
-  return url.startsWith("http")
-    ? url
-    : `${urlPrefix}/${url.replace(/^\/+/g, "")}`;
 };
 
 const FallbackComponentFactory = ({ title }: { title: string }) => {
