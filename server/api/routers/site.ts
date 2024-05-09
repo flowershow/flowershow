@@ -117,7 +117,13 @@ export const siteRouter = createTRPCRouter({
           tree,
         });
 
-        let config = await fetchConfigFile(filesMetadata, site);
+        let config = {};
+        const hasConfigFile =
+          filesMetadata[`config.json`] && filesMetadata[`config.json`]?._path;
+        if (hasConfigFile) {
+          const path = filesMetadata[`config.json`]?._path!;
+          config = await fetchConfigFile(path, site.id, site.gh_branch);
+        }
 
         await ctx.db.site.update({
           where: { id: site.id },
@@ -220,7 +226,13 @@ export const siteRouter = createTRPCRouter({
             tree,
           });
 
-          let config = await fetchConfigFile(filesMetadata, site);
+          let config = {};
+          const hasConfigFile =
+            filesMetadata[`config.json`] && filesMetadata[`config.json`]?._path;
+          if (hasConfigFile) {
+            const path = filesMetadata[`config.json`]?._path!;
+            config = await fetchConfigFile(path, site.id, site.gh_branch);
+          }
 
           await ctx.db.site.update({
             where: { id },
@@ -351,7 +363,13 @@ export const siteRouter = createTRPCRouter({
           tree: gitHubTree,
         });
 
-        let config = await fetchConfigFile(filesMetadata, site);
+        let config = {};
+        const hasConfigFile =
+          filesMetadata[`config.json`] && filesMetadata[`config.json`]?._path;
+        if (hasConfigFile) {
+          const path = filesMetadata[`config.json`]?._path!;
+          config = await fetchConfigFile(path, site.id, site.gh_branch);
+        }
 
         await ctx.db.site.update({
           where: { id: site!.id },
@@ -855,26 +873,27 @@ const processGitHubTree = async ({
 };
 
 async function fetchConfigFile(
-  filesMetadata: { [url: string]: PageMetadata },
-  site,
+  pathToConfigFile: string,
+  siteId: string,
+  siteBranch: string,
 ) {
   let config = {};
-  if (filesMetadata[`config.json`] && filesMetadata[`config.json`]?._path) {
-    const path = filesMetadata[`config.json`]?._path;
+  if (!pathToConfigFile) {
+    throw new Error("Missing or undefined config.json path");
+  }
 
-    const configString = await fetchFile({
-      projectId: site.id,
-      branch: site.gh_branch,
-      path,
-    });
+  const configString = await fetchFile({
+    projectId: siteId,
+    branch: siteBranch,
+    path: pathToConfigFile,
+  });
 
-    if (configString) {
-      try {
-        config = JSON.parse(configString);
-      } catch (error) {
-        // Handle the error gracefully for now
-        console.error("Error parsing JSON:", error);
-      }
+  if (configString) {
+    try {
+      config = JSON.parse(configString);
+    } catch (error) {
+      // Handle the error gracefully for now
+      console.error("Error parsing JSON:", error);
     }
   }
   return config;
