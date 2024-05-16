@@ -28,6 +28,7 @@ type ContentType =
   | "application/geo+json"
   | "application/json"
   | "application/yaml"
+  | "text/css"
   | "image/jpeg"
   | "image/png"
   | "image/gif"
@@ -109,6 +110,8 @@ const getContentType = (extension: SupportedExtension): ContentType => {
     case "yaml":
     case "yml":
       return "application/yaml";
+    case "css":
+      return "text/css";
     case "jpeg":
     case "jpg":
       return "image/jpeg";
