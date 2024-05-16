@@ -19,12 +19,6 @@ export async function generateMetadata({
       projectName: params.project,
       slug: params.slug ? params.slug.join("/") : "/",
     });
-    const config = await api.site.getSiteConfig.query({
-      gh_username: params.user,
-      projectName: params.project,
-    });
-    pageMetadata.title = config?.title || pageMetadata.title;
-    pageMetadata.description = config?.description || pageMetadata.description;
   } catch (error) {
     notFound();
   }
