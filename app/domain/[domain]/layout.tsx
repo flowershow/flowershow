@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { Metadata } from "next";
 import { api } from "@/trpc/server";
-import { PageMetadata } from "@/server/api/types";
 
 export async function generateMetadata({
   params,
@@ -19,22 +18,19 @@ export async function generateMetadata({
     return null;
   }
 
-  // temporary solution for site wide title and description
-  const title =
-    (
-      site?.files as {
-        [url: string]: PageMetadata;
-      }
-    )["/"]?.title || site.projectName;
-  const description =
-    (
-      site?.files as {
-        [url: string]: PageMetadata;
-      }
-    )["/"]?.description || "";
+  const siteConfig = await api.site.getConfig.query({
+    gh_username: site.user?.gh_username!,
+    projectName: site.projectName,
+  });
+
+  const title = siteConfig?.title || site.projectName;
+  const description = siteConfig?.description || "";
 
   return {
-    title: title,
+    title: {
+      template: "%s",
+      default: title,
+    },
     description: description,
     openGraph: {
       title: title,
