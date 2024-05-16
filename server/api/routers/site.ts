@@ -117,21 +117,12 @@ export const siteRouter = createTRPCRouter({
           tree,
         });
 
-        let config = {};
-        const hasConfigFile =
-          filesMetadata[`config.json`] && filesMetadata[`config.json`]?._path;
-        if (hasConfigFile) {
-          const path = filesMetadata[`config.json`]?._path!;
-          config = await fetchConfigFile(path, site.id, site.gh_branch);
-        }
-
         await ctx.db.site.update({
           where: { id: site.id },
           data: {
             synced: true,
             syncedAt: new Date(),
             files: filesMetadata as any, // TODO: fix types
-            config: config,
           },
         });
       } catch (error) {
@@ -226,21 +217,12 @@ export const siteRouter = createTRPCRouter({
             tree,
           });
 
-          let config = {};
-          const hasConfigFile =
-            filesMetadata[`config.json`] && filesMetadata[`config.json`]?._path;
-          if (hasConfigFile) {
-            const path = filesMetadata[`config.json`]?._path!;
-            config = await fetchConfigFile(path, site.id, site.gh_branch);
-          }
-
           await ctx.db.site.update({
             where: { id },
             data: {
               synced: true,
               syncedAt: new Date(),
               files: filesMetadata as any, // TODO: fix types
-              config: config,
             },
           });
         } catch (error) {
@@ -363,21 +345,12 @@ export const siteRouter = createTRPCRouter({
           tree: gitHubTree,
         });
 
-        let config = {};
-        const hasConfigFile =
-          filesMetadata[`config.json`] && filesMetadata[`config.json`]?._path;
-        if (hasConfigFile) {
-          const path = filesMetadata[`config.json`]?._path!;
-          config = await fetchConfigFile(path, site.id, site.gh_branch);
-        }
-
         await ctx.db.site.update({
           where: { id: site!.id },
           data: {
             files: filesMetadata as any, // TODO: fix types
             synced: true,
             syncedAt: new Date(),
-            config: config,
           },
         });
       } catch (error) {
@@ -536,6 +509,47 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
+  getConfig: publicProcedure
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
+              ],
+            },
+          });
+
+          if (!site) {
+            return null;
+          }
+
+          try {
+            const config = await fetchFile({
+              projectId: site.id,
+              branch: site.gh_branch,
+              path: "config.json",
+            });
+            return config ? JSON.parse(config) : null;
+          } catch {
+            return null;
+          }
+        },
+        [`${input.gh_username} - ${input.projectName} - customStyles`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.gh_username} - ${input.projectName} - customStyles`],
+        },
+      )();
+    }),
   getAll: protectedProcedure.query(async ({ ctx }) => {
     if (ctx.session.user.role !== "ADMIN") {
       throw new Error("Unauthorized");
@@ -653,45 +667,6 @@ export const siteRouter = createTRPCRouter({
             `${input.gh_username}-${input.projectName}-${input.slug}-content`,
             `${input.gh_username}-${input.projectName}-page-content`,
           ],
-        },
-      )();
-    }),
-  getSiteConfig: publicProcedure
-    .input(
-      z.object({
-        gh_username: z.string().min(1),
-        projectName: z.string().min(1),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      return await unstable_cache(
-        async () => {
-          const site = await ctx.db.site.findFirst({
-            where: {
-              AND: [
-                { projectName: input.projectName },
-                { user: { gh_username: input.gh_username } },
-              ],
-            },
-          });
-
-          if (!site) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
-            });
-          }
-
-          let configJson: SiteConfig = {};
-          if (site.config !== null && typeof site.config === "object") {
-            configJson = site.config as SiteConfig;
-          }
-          return configJson;
-        },
-        [`${input.gh_username}-${input.projectName}-config`],
-        {
-          revalidate: 60, // 1 minute
-          tags: [`${input.gh_username}-${input.projectName}-config`],
         },
       )();
     }),
@@ -871,30 +846,3 @@ const processGitHubTree = async ({
   }
   return filesMetadata;
 };
-
-async function fetchConfigFile(
-  pathToConfigFile: string,
-  siteId: string,
-  siteBranch: string,
-) {
-  let config = {};
-  if (!pathToConfigFile) {
-    throw new Error("Missing or undefined config.json path");
-  }
-
-  const configString = await fetchFile({
-    projectId: siteId,
-    branch: siteBranch,
-    path: pathToConfigFile,
-  });
-
-  if (configString) {
-    try {
-      config = JSON.parse(configString);
-    } catch (error) {
-      // Handle the error gracefully for now
-      console.error("Error parsing JSON:", error);
-    }
-  }
-  return config;
-}
