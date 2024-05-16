@@ -37,7 +37,8 @@ import { computeMetadata } from "@/lib/computed-fields";
 import { DataPackage } from "@/components/layouts/datapackage-types";
 import { PageMetadata } from "../types";
 import { Site } from "@prisma/client";
-import type { SiteConfig } from "@/components/SiteConfig";
+import { buildNestedTree } from "@/lib/build-nested-tree";
+
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -531,7 +532,6 @@ export const siteRouter = createTRPCRouter({
           if (!site) {
             return null;
           }
-
           try {
             const config = await fetchFile({
               projectId: site.id,
@@ -547,6 +547,54 @@ export const siteRouter = createTRPCRouter({
         {
           revalidate: 60, // 1 minute
           tags: [`${input.gh_username} - ${input.projectName} - customStyles`],
+        },
+      )();
+    }),
+  getTree: publicProcedure
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
+              ],
+            },
+          });
+
+          if (!site) {
+            return null;
+          }
+          try {
+
+            const gitHubTree = await fetchTree(site.id, site.gh_branch);
+
+            if (!gitHubTree) {
+              return null;
+            }
+
+            if (!site.customDomain) {
+              return buildNestedTree(
+                gitHubTree,
+                `/@${input.gh_username}/${input.projectName}`,
+              );
+            }
+            return buildNestedTree(gitHubTree);
+          } catch {
+            return null;
+          }
+        },
+        [`${input.gh_username} - ${input.projectName} - tree`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.gh_username} - ${input.projectName} - tree`],
         },
       )();
     }),
