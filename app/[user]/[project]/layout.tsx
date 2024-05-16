@@ -91,11 +91,23 @@ export default async function SiteLayout({
   });
 
   const title =
-    siteConfig.navbarTitle?.text || siteConfig?.title || defaultConfig.title;
+    siteConfig?.navbarTitle?.text ??
+    siteConfig?.title ??
+    defaultConfig.navbarTitle?.text ??
+    defaultConfig.title;
   const logo =
-    siteConfig.navbarTitle?.logo || siteConfig?.logo || defaultConfig.logo;
-  const url = `/@${params.user}/${params.project}`;
-  const navLinks = siteConfig?.navLinks || [];
+    siteConfig?.navbarTitle?.logo ??
+    siteConfig?.logo ??
+    defaultConfig.navbarTitle?.logo ??
+    defaultConfig.logo;
+  let url: string;
+  // temporary solution for all the datahubio sites currently published on Ola's account
+  if (params.user === "olayway") {
+    url = defaultConfig.author.url;
+  } else {
+    url = siteConfig?.author?.url ?? `/@${params.user}/${params.project}`;
+  }
+  const navLinks = siteConfig?.navLinks || defaultConfig.navLinks;
 
   return (
     <>
