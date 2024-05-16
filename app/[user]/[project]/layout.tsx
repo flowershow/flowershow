@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { Metadata } from "next";
 import { env } from "@/env.mjs";
 import { api } from "@/trpc/server";
-import { Nav } from "@/components/home/nav";
+import Nav from "@/components/nav";
 import { Footer } from "@/components/home/footer";
 import defaultConfig from "@/const/config";
 
@@ -109,11 +109,23 @@ export default async function SiteLayout({
   }
   const navLinks = siteConfig?.navLinks || defaultConfig.navLinks;
 
+  const treeItems =
+    (await api.site.getTree.query({
+      gh_username: params.user,
+      projectName: params.project,
+    })) || [];
+
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
-      <div className="min-h-screen bg-background">
-        <Nav title={title} logo={logo} url={url} links={navLinks} />
+      <div className="min-h-screen bg-background sm:pl-60">
+        <Nav
+          treeItems={treeItems}
+          title={title}
+          logo={logo}
+          url={url}
+          links={navLinks}
+        />
         {children}
         <div className="mx-auto max-w-8xl px-4 md:px-8">
           <Footer
