@@ -361,7 +361,7 @@ export interface GitHubAPIRepoTreeItem {
   path: string;
   mode: string;
   type: "blob" | "tree";
-  size: number;
+  size?: number;
   sha: string;
   url: string;
 }
