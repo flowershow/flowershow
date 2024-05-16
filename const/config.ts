@@ -1,19 +1,19 @@
 const config = {
-  author: {
-    name: "DataHub",
-    url: "https://datahub.io/",
-    logo: "/datahub-cube.svg",
-  },
+  title: "DataHub",
+  description:
+    "Turn your markdown into a website in a couple of clicks. Avoid the hassle and complexity of deploying yourself.",
+  logo: "/datahub-cube.svg",
   navbarTitle: {
     logo: "/datahub-cube.svg",
     text: "",
   },
-  title: "DataHub",
+  author: {
+    name: "",
+    url: "https://datahub.io/",
+    logo: "/datahub-cube.svg",
+  },
   github: "datopian/datahub",
   discord: "https://discord.com/invite/KrRzMKU",
-  description:
-    "Turn your markdown into a website in a couple of clicks. Avoid the hassle and complexity of deploying yourself.",
-  logo: "/datahub-cube.svg",
   analytics: "G-R6X92HM43Q",
   footerLinks: [
     {

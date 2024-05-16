@@ -13,7 +13,7 @@ export const ResourcePreview = ({ resource }: { resource: Resource }) => {
 
   return (
     <div
-      data-testId="dp-preview"
+      data-testid="dp-preview"
       key={`resource-preview-${resource.name}`}
       className="mt-10"
     >

@@ -55,7 +55,7 @@ export const Nav: React.FC<Props> = ({
     <div
       className={clsx(
         "sticky top-0 z-50 w-full",
-        isScrolled && "bg-white shadow-sm",
+        isScrolled && "bg-background shadow-sm",
       )}
     >
       {" "}

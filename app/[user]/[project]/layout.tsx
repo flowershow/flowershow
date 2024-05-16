@@ -5,8 +5,7 @@ import { env } from "@/env.mjs";
 import { api } from "@/trpc/server";
 import { Nav } from "@/components/home/nav";
 import { Footer } from "@/components/home/footer";
-import config from "@/const/config";
-import { PageMetadata } from "@/server/api/types";
+import defaultConfig from "@/const/config";
 
 export async function generateMetadata({
   params,
@@ -25,22 +24,18 @@ export async function generateMetadata({
     return null;
   }
 
-  // temporary solution for site wide title and description
-  const title =
-    (
-      site?.files as {
-        [url: string]: PageMetadata;
-      }
-    )["/"]?.title || project;
-  const description =
-    (
-      site?.files as {
-        [url: string]: PageMetadata;
-      }
-    )["/"]?.description || "";
+  const siteConfig = await api.site.getConfig.query({
+    gh_username: params.user,
+    projectName: params.project,
+  });
+  const title = siteConfig?.title || site.projectName;
+  const description = siteConfig?.description || "";
 
   return {
-    title: title,
+    title: {
+      template: "%s",
+      default: title,
+    },
     description: description,
     openGraph: {
       title: title,
@@ -90,64 +85,45 @@ export default async function SiteLayout({
     projectName: params.project,
   });
 
+  const siteConfig = await api.site.getConfig.query({
+    gh_username: params.user,
+    projectName: params.project,
+  });
+
+  const title =
+    siteConfig?.navbarTitle?.text ??
+    siteConfig?.title ??
+    defaultConfig.navbarTitle?.text ??
+    defaultConfig.title;
+  const logo =
+    siteConfig?.navbarTitle?.logo ??
+    siteConfig?.logo ??
+    defaultConfig.navbarTitle?.logo ??
+    defaultConfig.logo;
+  let url: string;
+  // temporary solution for all the datahubio sites currently published on Ola's account
+  if (params.user === "olayway") {
+    url = defaultConfig.author.url;
+  } else {
+    url = siteConfig?.author?.url ?? `/@${params.user}/${params.project}`;
+  }
+  const navLinks = siteConfig?.navLinks || defaultConfig.navLinks;
+
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
       <div className="min-h-screen bg-background">
-        <Nav
-          title={config.navbarTitle.text}
-          logo={config.navbarTitle.logo}
-          url={config.author.url}
-          links={config.navLinks}
-        />
+        <Nav title={title} logo={logo} url={url} links={navLinks} />
         {children}
-
-        {/* {domain == `demo.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
-                domain == `platformize.co` ? (
-                <CTA />
-            ) : (
-                <ReportAbuse />
-            )} */}
-
         <div className="mx-auto max-w-8xl px-4 md:px-8">
           <Footer
-            links={config.footerLinks}
-            author={config.author}
-            social={config.social}
-            description={config.description}
+            links={defaultConfig.footerLinks}
+            author={defaultConfig.author}
+            social={defaultConfig.social}
+            description={defaultConfig.description}
           />
         </div>
       </div>
     </>
   );
 }
-
-/*
- *         <div className={fontMapper[data.font]}>
- *             <div className="ease left-0 right-0 top-0 z-30 flex h-16 bg-white transition-all duration-150 dark:bg-black dark:text-white">
- *                 <div className="mx-auto flex h-full max-w-screen-xl items-center justify-center space-x-5 px-10 sm:px-20">
- *                     <Link href="/" className="flex items-center justify-center">
- *                         <div className="inline-block h-8 w-8 overflow-hidden rounded-full align-middle">
- *                             <Image
- *                                 alt={data.name || ""}
- *                                 height={40}
- *                                 src={data.logo || ""}
- *                                 width={40}
- *                             />
- *                         </div>
- *                         <span className="ml-3 inline-block truncate font-title font-medium">
- *                             {data.name}
- *                         </span>
- *                     </Link>
- *                 </div>
- *             </div>
- *
- *             <div className="mt-20">{children}</div>
- *
- *             {domain == `demo.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
- *                 domain == `platformize.co` ? (
- *                 <CTA />
- *             ) : (
- *                 <ReportAbuse />
- *             )}
- *         </div> */

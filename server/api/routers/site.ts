@@ -37,6 +37,7 @@ import { computeMetadata } from "@/lib/computed-fields";
 import { DataPackage } from "@/components/layouts/datapackage-types";
 import { PageMetadata } from "../types";
 import { Site } from "@prisma/client";
+import type { SiteConfig } from "@/components/SiteConfig";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -343,6 +344,7 @@ export const siteRouter = createTRPCRouter({
           branch: gh_branch,
           tree: gitHubTree,
         });
+
         await ctx.db.site.update({
           where: { id: site!.id },
           data: {
@@ -496,6 +498,47 @@ export const siteRouter = createTRPCRouter({
               branch: site.gh_branch,
               path: "custom.css",
             });
+          } catch {
+            return null;
+          }
+        },
+        [`${input.gh_username} - ${input.projectName} - customStyles`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.gh_username} - ${input.projectName} - customStyles`],
+        },
+      )();
+    }),
+  getConfig: publicProcedure
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
+              ],
+            },
+          });
+
+          if (!site) {
+            return null;
+          }
+
+          try {
+            const config = await fetchFile({
+              projectId: site.id,
+              branch: site.gh_branch,
+              path: "config.json",
+            });
+            return config ? JSON.parse(config) : null;
           } catch {
             return null;
           }
@@ -721,7 +764,10 @@ const processGitHubTree = async ({
       });
 
       // if the file is a markdown file, parse it and save metadata
-      if (isSupportedMarkdownExtension(fileExtension)) {
+      if (
+        isSupportedMarkdownExtension(fileExtension) ||
+        fileExtension === "json"
+      ) {
         const markdown = await gitHubFileBlob.text();
 
         // special case for README.md and index.md files
