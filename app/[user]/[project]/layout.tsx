@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { api } from "@/trpc/server";
 import { env } from "@/env.mjs";
@@ -94,11 +94,13 @@ export default async function SiteLayout({
   const user = decodeURIComponent(params.user);
 
   let site: SiteWithUser | null = null;
+  let isCustomDomain = false;
 
   if (user === "_domain") {
     site = await api.site.getByDomain.query({
       domain: project,
     });
+    isCustomDomain = true;
 
     // Redirect to custom domain if it exists
     if (
@@ -134,17 +136,15 @@ export default async function SiteLayout({
     defaultConfig.navbarTitle?.text ??
     defaultConfig.title;
 
-  const logoPath =
-    siteConfig?.navbarTitle?.logo ??
-    siteConfig?.logo ??
-    defaultConfig.navbarTitle?.logo ??
-    defaultConfig.logo;
+  const customLogoPath = siteConfig?.navbarTitle?.logo ?? siteConfig?.logo;
 
-  const logo = resolveLink({
-    link: logoPath,
-    filePath: "config.json",
-    prefixPath: `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
-  });
+  const logo = customLogoPath
+    ? resolveLink({
+        link: customLogoPath,
+        filePath: "config.json",
+        prefixPath: `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
+      })
+    : defaultConfig.navbarTitle?.logo ?? defaultConfig.logo;
 
   // TODO temporary solution for all the datahubio sites currently published on Ola's account
   let url: string;
@@ -155,13 +155,23 @@ export default async function SiteLayout({
   }
 
   // TODO get either navLinks or treeItems, not both
-  const navLinks = siteConfig?.navLinks || [];
+  const navLinks = siteConfig?.navLinks || defaultConfig.navLinks;
 
   const treeItems =
     (await api.site.getTree.query({
       gh_username: site.user!.gh_username!,
       projectName: site.projectName,
     })) || [];
+
+  // configurable on custom domain only (future paid feature potentially)
+  const footerLinks =
+    (isCustomDomain && siteConfig?.footerLinks) || defaultConfig.footerLinks;
+  const footerAuthor =
+    (isCustomDomain && siteConfig?.author) || defaultConfig.author;
+  const footerSocial =
+    (isCustomDomain && siteConfig?.social) || defaultConfig.social;
+  const footerDescription =
+    (isCustomDomain && siteConfig?.description) || defaultConfig.description;
 
   return (
     <>
@@ -172,9 +182,9 @@ export default async function SiteLayout({
           <div className="min-h-screen sm:pl-60">
             {children}
             <Footer
-              author={defaultConfig.author}
-              social={defaultConfig.social}
-              description={defaultConfig.description}
+              author={footerAuthor}
+              social={footerSocial}
+              description={footerDescription}
             />
           </div>
         </div>
@@ -183,10 +193,10 @@ export default async function SiteLayout({
           <Navbar title={title} logo={logo} url={url} links={navLinks} />
           {children}
           <Footer
-            links={defaultConfig.footerLinks}
-            author={defaultConfig.author}
-            social={defaultConfig.social}
-            description={defaultConfig.description}
+            links={footerLinks}
+            author={footerAuthor}
+            social={footerSocial}
+            description={footerDescription}
           />
         </div>
       )}

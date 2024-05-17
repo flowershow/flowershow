@@ -28,7 +28,11 @@ export default function Footer({
         Footer
       </h2>
       <div className="mx-auto max-w-8xl px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32">
-        <div className={clsx(links && "lg:grid lg:grid-cols-3 lg:gap-10")}>
+        <div
+          className={clsx(
+            links && links.length > 0 && "lg:grid lg:grid-cols-3 lg:gap-10",
+          )}
+        >
           <div className="space-y-8">
             <p className="flex">
               Powered by{" "}
@@ -56,7 +60,7 @@ export default function Footer({
               </div>
             )}
           </div>
-          {links && (
+          {links && links.length > 0 && (
             <div className="mt-16 grid grid-cols-3 gap-8 lg:col-span-2 lg:mt-0">
               {links.map((link) => {
                 return (

@@ -10,6 +10,9 @@ export interface SiteConfig {
   author?: AuthorConfig;
   navLinks?: NavLink[];
   showSidebar?: boolean;
+  // custom domain only (future paid feature potentially)
+  social: SocialLink[];
+  footerLinks?: FooterLink[];
 }
 
 /* --------------
@@ -17,10 +20,8 @@ export interface SiteConfig {
  * --------------
  */
 export interface ExtendedSiteConfig extends SiteConfigStrict {
-  social: SocialLink[];
-  footerLinks: FooterLink[];
-  github: string;
-  discord: string;
+  github: string; // TODO is this needed?
+  discord: string; // TODO is this needed?
   analytics: string;
 }
 
@@ -36,7 +37,7 @@ type SiteConfigStrict = WithRequired<
 export interface NavbarTitleConfig {
   logo: string;
   text: string;
-  version?: string;
+  // version?: string; // has no effect on the UI atm
 }
 
 export interface FooterLink {

@@ -41,6 +41,7 @@ import {
   buildNestedTree,
   buildNestedTreeFromFilesMap,
 } from "@/lib/build-nested-tree";
+import { SiteConfig } from "@/components/types";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -540,7 +541,8 @@ export const siteRouter = createTRPCRouter({
               branch: site.gh_branch,
               path: "config.json",
             });
-            return config ? JSON.parse(config) : null;
+            // TODO is casting to SiteConfig safe?
+            return config ? (JSON.parse(config) as SiteConfig) : null;
           } catch {
             return null;
           }
