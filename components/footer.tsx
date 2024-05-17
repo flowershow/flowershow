@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { GithubIcon, LinkedinIcon, TwitterIcon } from "lucide-react";
 import { DiscordIcon } from "./icons/discord";
-import { AuthorConfig, FooterLink, SocialLink } from "./types";
+import { AuthorConfig, FooterLink, SocialLink, SocialPlatform } from "./types";
 import clsx from "clsx";
 
-const icon = {
+const icon: { [K in SocialPlatform]: React.FC<any> } = {
   discord: DiscordIcon,
   github: GithubIcon,
   linkedin: LinkedinIcon,

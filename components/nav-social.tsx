@@ -1,15 +1,17 @@
 import Link from "next/link.js";
-import type { SocialLink, SocialPlatform } from "./nav";
+import type { SocialLink, SocialPlatform } from "./types";
+import { GithubIcon, LinkedinIcon, TwitterIcon } from "lucide-react";
 import { DiscordIcon } from "./icons/discord";
-import { GitHubIcon } from "./icons/github";
 
 interface Props {
   links: Array<SocialLink>;
 }
 
 const icons: { [K in SocialPlatform]: React.FC<any> } = {
-  github: GitHubIcon,
   discord: DiscordIcon,
+  github: GithubIcon,
+  linkedin: LinkedinIcon,
+  twitter: TwitterIcon,
 };
 
 export const NavSocial: React.FC<Props> = ({ links }) => {
