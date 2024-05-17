@@ -37,8 +37,10 @@ import { computeMetadata } from "@/lib/computed-fields";
 import { DataPackage } from "@/components/layouts/datapackage-types";
 import { PageMetadata } from "../types";
 import { Site } from "@prisma/client";
-import { buildNestedTree } from "@/lib/build-nested-tree";
-
+import {
+  buildNestedTree,
+  buildNestedTreeFromFilesMap,
+} from "@/lib/build-nested-tree";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -573,20 +575,27 @@ export const siteRouter = createTRPCRouter({
             return null;
           }
           try {
+            // const gitHubTree = await fetchTree(site.id, site.gh_branch);
 
-            const gitHubTree = await fetchTree(site.id, site.gh_branch);
-
-            if (!gitHubTree) {
-              return null;
-            }
+            // if (!gitHubTree) {
+            //   return null;
+            // }
 
             if (!site.customDomain) {
-              return buildNestedTree(
-                gitHubTree,
+              // return buildNestedTree(
+              //   gitHubTree,
+              //   `/@${input.gh_username}/${input.projectName}`,
+              // );
+
+              return buildNestedTreeFromFilesMap(
+                Object.values(site.files as { [key: string]: PageMetadata }),
                 `/@${input.gh_username}/${input.projectName}`,
               );
             }
-            return buildNestedTree(gitHubTree);
+            // return buildNestedTree(gitHubTree);
+            return buildNestedTreeFromFilesMap(
+              Object.values(site.files as { [key: string]: PageMetadata }),
+            );
           } catch {
             return null;
           }
@@ -812,10 +821,7 @@ const processGitHubTree = async ({
       });
 
       // if the file is a markdown file, parse it and save metadata
-      if (
-        isSupportedMarkdownExtension(fileExtension) ||
-        fileExtension === "json"
-      ) {
+      if (isSupportedMarkdownExtension(fileExtension)) {
         const markdown = await gitHubFileBlob.text();
 
         // special case for README.md and index.md files

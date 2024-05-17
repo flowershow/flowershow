@@ -43,7 +43,7 @@ export default function TreeView({
             <Link
               href={item.path!}
               className={clsx(
-                "pl-2",
+                "pl-3",
                 "block cursor-pointer text-sm text-gray-700",
                 isCurrent(item.path!) &&
                   "border-secondary font-medium text-secondary",
@@ -67,7 +67,7 @@ export default function TreeView({
                       )}
                       aria-hidden="true"
                     />
-                    {item.label}
+                    {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
                   </Disclosure.Button>
                   <Transition
                     enter="duration-200 ease-out"

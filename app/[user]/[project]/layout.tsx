@@ -3,9 +3,11 @@ import { notFound, redirect } from "next/navigation";
 import { Metadata } from "next";
 import { env } from "@/env.mjs";
 import { api } from "@/trpc/server";
-import Nav from "@/components/sidebar-nav";
-import { Footer } from "@/components/footer";
+import Sidebar from "@/components/sidebar";
+import Navbar from "@/components/nav";
+import Footer from "@/components/footer";
 import defaultConfig from "@/const/config";
+import { resolveLink } from "@/lib/resolve-link";
 
 interface RouteParams {
   user: string;
@@ -73,25 +75,24 @@ export default async function SiteLayout({
   params: RouteParams;
   children: ReactNode;
 }) {
-  const data = await api.site.get.query({
+  const site = await api.site.get.query({
     gh_username: params.user,
     projectName: params.project,
   });
 
-  if (!data) {
+  if (!site) {
     notFound();
   }
 
   // Redirect to custom domain if it exists
-  if (data.customDomain && env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS === "true") {
-    return redirect(`https://${data.customDomain}`);
+  if (site.customDomain && env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS === "true") {
+    return redirect(`https://${site.customDomain}`);
   }
 
   const customCss = await api.site.getCustomStyles.query({
     gh_username: params.user,
     projectName: params.project,
   });
-
   const siteConfig = await api.site.getConfig.query({
     gh_username: params.user,
     projectName: params.project,
@@ -102,19 +103,28 @@ export default async function SiteLayout({
     siteConfig?.title ??
     defaultConfig.navbarTitle?.text ??
     defaultConfig.title;
-  const logo =
+
+  const logoPath =
     siteConfig?.navbarTitle?.logo ??
     siteConfig?.logo ??
     defaultConfig.navbarTitle?.logo ??
     defaultConfig.logo;
+
+  const logo = resolveLink({
+    link: logoPath,
+    filePath: "config.json",
+    prefixPath: `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
+  });
+
+  const navLinks = siteConfig?.navLinks || defaultConfig.navLinks;
+
+  // TODO temporary solution for all the datahubio sites currently published on Ola's account
   let url: string;
-  // temporary solution for all the datahubio sites currently published on Ola's account
   if (params.user === "olayway") {
     url = defaultConfig.author.url;
   } else {
     url = siteConfig?.author?.url ?? `/@${params.user}/${params.project}`;
   }
-  const navLinks = siteConfig?.navLinks || defaultConfig.navLinks;
 
   const treeItems =
     (await api.site.getTree.query({
@@ -125,9 +135,21 @@ export default async function SiteLayout({
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
-      <div>
-        <Nav treeItems={treeItems} title={title} logo={logo} url={url} />
-        <div className="min-h-screen sm:pl-60">
+      {siteConfig?.showSidebar ? (
+        <div>
+          <Sidebar title={title} logo={logo} url={url} treeItems={treeItems} />
+          <div className="min-h-screen sm:pl-60">
+            {children}
+            <Footer
+              author={defaultConfig.author}
+              social={defaultConfig.social}
+              description={defaultConfig.description}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="min-h-screen">
+          <Navbar title={title} logo={logo} url={url} links={navLinks} />
           {children}
           <Footer
             links={defaultConfig.footerLinks}
@@ -136,7 +158,7 @@ export default async function SiteLayout({
             description={defaultConfig.description}
           />
         </div>
-      </div>
+      )}
     </>
   );
 }

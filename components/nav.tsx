@@ -7,23 +7,21 @@ import { NavTitle } from "./nav-title";
 import { NavSocial } from "./nav-social";
 import { NavLink, SocialLink } from "./types";
 
-interface Props extends React.PropsWithChildren {
-  title?: string;
-  logo?: string;
-  url?: string;
-  version?: string;
-  links?: Array<NavLink>;
-  social?: Array<SocialLink>;
-}
-
-export const Nav: React.FC<Props> = ({
+export default function Nav({
   title,
   logo,
   url,
   version,
   links,
   social,
-}) => {
+}: {
+  title?: string;
+  logo?: string;
+  url?: string;
+  version?: string;
+  links?: Array<NavLink>;
+  social?: Array<SocialLink>;
+}) {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -72,4 +70,4 @@ export const Nav: React.FC<Props> = ({
       </div>
     </div>
   );
-};
+}

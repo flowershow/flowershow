@@ -13,7 +13,7 @@ import { NavTitle } from "./nav-title";
  *     },
  * ]; */
 
-export default function Nav({
+export default function Sidebar({
   treeItems,
   title,
   logo,

@@ -9,6 +9,7 @@ export interface SiteConfig {
   navbarTitle?: NavbarTitleConfig;
   author?: AuthorConfig;
   navLinks?: NavLink[];
+  showSidebar?: boolean;
 }
 
 /* --------------
@@ -46,7 +47,7 @@ export interface FooterLink {
 export interface AuthorConfig {
   name: string;
   logo: string;
-  url?: string;
+  url: string;
 }
 
 export interface NavLink {

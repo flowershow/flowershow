@@ -1,7 +1,11 @@
 import "@testing-library/jest-dom";
-import { buildNestedTree } from "./build-nested-tree";
+import {
+  buildNestedTree,
+  buildNestedTreeFromFilesMap,
+} from "./build-nested-tree";
 import type { NestedRepoTree } from "./build-nested-tree";
 import { GitHubAPIRepoTree } from "./github";
+import { PageMetadata } from "@/server/api/types";
 
 test("buildNestedTree", () => {
   const flatTree: GitHubAPIRepoTree = {
@@ -162,6 +166,129 @@ test("buildNestedTree", () => {
 
   // ignore files that are not markdown
   const nestedTree = buildNestedTree(flatTree, "/@username/abc");
+  // expect(nestedTree.length).toBe(expectedNestedTree.length);
+  // expect(nestedTree[0]).toMatchObject(expectedNestedTree[0]!);
+  // expect(nestedTree[1]).toMatchObject(expectedNestedTree[1]!);
+  // expect(nestedTree[2]).toMatchObject(expectedNestedTree[2]!);
+  expect(nestedTree).toMatchObject(expectedNestedTree);
+});
+
+test("buildNestedTreeFromFilesMap", () => {
+  const flatTree: PageMetadata[] = [
+    {
+      _path: "blog/2024/may/aaa.md",
+      _url: "blog/2024/may/aaa",
+      _pagetype: "story",
+      title: "Aaa Title",
+      description: "Aaa Description",
+    },
+    {
+      _path: "blog/2024/may/README.md",
+      _url: "blog/2024/may",
+      _pagetype: "story",
+      title: "May README Title",
+      description: "May Description",
+    },
+    {
+      _path: "blog/2024/december/ccc.md",
+      _url: "blog/2024/december/ccc",
+      _pagetype: "story",
+      title: "Ccc Title",
+      description: "Ccc Description",
+    },
+    {
+      _path: "notes/eee.md",
+      _url: "notes/eee",
+      _pagetype: "story",
+      title: "Eee Title",
+      description: "Eee Description",
+    },
+    {
+      _path: "notes/ddd.md",
+      _url: "notes/ddd",
+      _pagetype: "story",
+      title: "Ddd Title",
+      description: "Ddd Description",
+    },
+    {
+      _path: "README.md",
+      _url: "/",
+      _pagetype: "story",
+      title: "README Title",
+      description: "Readme Description",
+    },
+  ];
+
+  const expectedNestedTree: NestedRepoTree = [
+    {
+      id: "blog",
+      label: "blog",
+      path: "/@username/abc/blog",
+      children: [
+        {
+          id: "blog/2024",
+          label: "2024",
+          path: "/@username/abc/blog/2024",
+          children: [
+            {
+              id: "blog/2024/december",
+              label: "december",
+              path: "/@username/abc/blog/2024/december",
+              children: [
+                {
+                  id: "blog/2024/december/ccc.md",
+                  label: "Ccc Title",
+                  path: "/@username/abc/blog/2024/december/ccc",
+                },
+              ],
+            },
+            {
+              id: "blog/2024/may",
+              label: "may",
+              path: "/@username/abc/blog/2024/may",
+              children: [
+                {
+                  id: "blog/2024/may/aaa.md",
+                  label: "Aaa Title",
+                  path: "/@username/abc/blog/2024/may/aaa",
+                },
+                {
+                  id: "blog/2024/may/README.md",
+                  label: "May README Title",
+                  path: "/@username/abc/blog/2024/may",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: "notes",
+      label: "notes",
+      path: "/@username/abc/notes",
+      children: [
+        {
+          id: "notes/ddd.md",
+          label: "Ddd Title",
+          path: "/@username/abc/notes/ddd",
+        },
+        {
+          id: "notes/eee.md",
+          label: "Eee Title",
+          path: "/@username/abc/notes/eee",
+        },
+      ],
+    },
+    {
+      id: "README.md",
+      label: "README Title",
+      path: "/@username/abc",
+    },
+  ];
+
+  // ignore files that are not markdown
+  const nestedTree = buildNestedTreeFromFilesMap(flatTree, "/@username/abc");
   // expect(nestedTree.length).toBe(expectedNestedTree.length);
   // expect(nestedTree[0]).toMatchObject(expectedNestedTree[0]!);
   // expect(nestedTree[1]).toMatchObject(expectedNestedTree[1]!);
