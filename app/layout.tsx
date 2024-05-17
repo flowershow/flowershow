@@ -13,25 +13,21 @@ import { Metadata } from "next";
 import { cn } from "@/lib/utils";
 import config from "@/const/config";
 
-const title = "DataHub";
-const description =
-  "Turn your markdown into a website in a couple of clicks. Avoid the hassle and complexity of deploying yourself.";
-const image = "/thumbnail.png";
-
 export const metadata: Metadata = {
-  title,
-  description,
+  title: config.title,
+  description: config.description,
+  // TODO add everything below to config
   icons: ["/favicon.ico"],
   openGraph: {
-    title,
-    description,
-    images: [image],
+    title: config.title,
+    description: config.description,
+    images: ["/thumbnail.png"],
   },
   twitter: {
     card: "summary_large_image",
-    title,
-    description,
-    images: [image],
+    title: config.title,
+    description: config.description,
+    images: ["/thumbnail.png"],
     creator: "@datopian",
   },
 };
@@ -51,7 +47,7 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className={cn(cal.variable, inter.variable)}>
+      <body className={cn(cal.variable, inter.variable, "bg-background")}>
         <TRPCReactProvider headers={headers()}>
           <Providers>
             {children}

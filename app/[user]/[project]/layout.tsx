@@ -1,16 +1,23 @@
 import { ReactNode } from "react";
 import { notFound, redirect } from "next/navigation";
 import { Metadata } from "next";
-import { env } from "@/env.mjs";
 import { api } from "@/trpc/server";
-import { Nav } from "@/components/home/nav";
-import { Footer } from "@/components/home/footer";
+import { env } from "@/env.mjs";
+import Sidebar from "@/components/sidebar";
+import Navbar from "@/components/nav";
+import Footer from "@/components/footer";
 import defaultConfig from "@/const/config";
+import { resolveLink } from "@/lib/resolve-link";
+
+interface RouteParams {
+  user: string;
+  project: string;
+}
 
 export async function generateMetadata({
   params,
 }: {
-  params: { user: string; project: string };
+  params: RouteParams;
 }): Promise<Metadata | null> {
   const project = decodeURIComponent(params.project);
   const user = decodeURIComponent(params.user);
@@ -28,6 +35,7 @@ export async function generateMetadata({
     gh_username: params.user,
     projectName: params.project,
   });
+
   const title = siteConfig?.title || site.projectName;
   const description = siteConfig?.description || "";
 
@@ -37,19 +45,20 @@ export async function generateMetadata({
       default: title,
     },
     description: description,
+    // TODO add everything below to config
     openGraph: {
       title: title,
       description: description,
-      images: ["/thumbnail.png"], // TODO add support for project image
+      images: ["/thumbnail.png"],
     },
     twitter: {
       card: "summary_large_image",
       title: title,
       description: description,
-      images: ["/thumbnail.png"], // TODO add support for project image
+      images: ["/thumbnail.png"],
       creator: "@datopian",
     },
-    icons: ["/favicon.ico"], // TODO add support for project favicon
+    icons: ["/favicon.ico"],
     // Set canonical URL to custom domain if it exists
     ...(site.customDomain && {
       alternates: {
@@ -63,28 +72,27 @@ export default async function SiteLayout({
   params,
   children,
 }: {
-  params: { user: string; project: string };
+  params: RouteParams;
   children: ReactNode;
 }) {
-  const data = await api.site.get.query({
+  const site = await api.site.get.query({
     gh_username: params.user,
     projectName: params.project,
   });
 
-  if (!data) {
+  if (!site) {
     notFound();
   }
 
-  // Optional: Redirect to custom domain if it exists
-  if (data.customDomain && env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS === "true") {
-    return redirect(`https://${data.customDomain}`);
+  // Redirect to custom domain if it exists
+  if (site.customDomain && env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS === "true") {
+    return redirect(`https://${site.customDomain}`);
   }
 
   const customCss = await api.site.getCustomStyles.query({
     gh_username: params.user,
     projectName: params.project,
   });
-
   const siteConfig = await api.site.getConfig.query({
     gh_username: params.user,
     projectName: params.project,
@@ -95,27 +103,55 @@ export default async function SiteLayout({
     siteConfig?.title ??
     defaultConfig.navbarTitle?.text ??
     defaultConfig.title;
-  const logo =
+
+  const logoPath =
     siteConfig?.navbarTitle?.logo ??
     siteConfig?.logo ??
     defaultConfig.navbarTitle?.logo ??
     defaultConfig.logo;
+
+  const logo = resolveLink({
+    link: logoPath,
+    filePath: "config.json",
+    prefixPath: `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
+  });
+
+  // TODO temporary solution for all the datahubio sites currently published on Ola's account
   let url: string;
-  // temporary solution for all the datahubio sites currently published on Ola's account
   if (params.user === "olayway") {
     url = defaultConfig.author.url;
   } else {
     url = siteConfig?.author?.url ?? `/@${params.user}/${params.project}`;
   }
-  const navLinks = siteConfig?.navLinks || defaultConfig.navLinks;
+
+  // TODO get either navLinks or treeItems, not both
+  const navLinks = siteConfig?.navLinks || [];
+
+  const treeItems =
+    (await api.site.getTree.query({
+      gh_username: params.user,
+      projectName: params.project,
+    })) || [];
 
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
-      <div className="min-h-screen bg-background">
-        <Nav title={title} logo={logo} url={url} links={navLinks} />
-        {children}
-        <div className="mx-auto max-w-8xl px-4 md:px-8">
+      {siteConfig?.showSidebar ? (
+        <div>
+          <Sidebar title={title} logo={logo} url={url} treeItems={treeItems} />
+          <div className="min-h-screen sm:pl-60">
+            {children}
+            <Footer
+              author={defaultConfig.author}
+              social={defaultConfig.social}
+              description={defaultConfig.description}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="min-h-screen">
+          <Navbar title={title} logo={logo} url={url} links={navLinks} />
+          {children}
           <Footer
             links={defaultConfig.footerLinks}
             author={defaultConfig.author}
@@ -123,7 +159,7 @@ export default async function SiteLayout({
             description={defaultConfig.description}
           />
         </div>
-      </div>
+      )}
     </>
   );
 }

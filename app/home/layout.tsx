@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
-import { Nav } from "@/components/home/nav";
-import { Footer } from "@/components/home/footer";
+import Nav from "@/components/nav";
+import Footer from "@/components/footer";
 import config from "@/const/config";
 
 export default function HomeLayout({ children }: { children: ReactNode }) {

@@ -3,7 +3,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Dialog, Menu } from "@headlessui/react";
 import { MenuIcon, CloseIcon } from "@/components/icons";
-import type { NavLink } from "./nav";
+import type { NavLink } from "./types";
 
 interface Props {
   author?: string;
