@@ -1,31 +1,13 @@
 import Link from "next/link";
 import { GithubIcon, LinkedinIcon, TwitterIcon } from "lucide-react";
-import { DiscordIcon } from "../icons/discord";
-
-interface FooterLink {
-  name: string;
-  subItems: Array<{
-    name: string;
-    href: string;
-  }>;
-}
-
-interface FooterSocial {
-  label: "discord" | "github" | "linkedin" | "twitter";
-  href: string;
-}
-
-interface AuthorConfig {
-  name: string;
-  url?: string;
-  logo?: string;
-}
+import { DiscordIcon } from "./icons/discord";
+import { AuthorConfig, FooterLink, SocialLink } from "./types";
 
 interface Props {
-  links: Array<FooterLink>;
   description?: string;
   author: AuthorConfig;
-  social?: Array<FooterSocial>;
+  social?: Array<SocialLink>;
+  links: Array<FooterLink>;
 }
 
 const icon = {

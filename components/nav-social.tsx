@@ -1,7 +1,7 @@
 import Link from "next/link.js";
 import type { SocialLink, SocialPlatform } from "./nav";
-import { DiscordIcon } from "../icons/discord";
-import { GitHubIcon } from "../icons/github";
+import { DiscordIcon } from "./icons/discord";
+import { GitHubIcon } from "./icons/github";
 
 interface Props {
   links: Array<SocialLink>;
