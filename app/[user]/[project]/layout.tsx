@@ -3,14 +3,19 @@ import { notFound, redirect } from "next/navigation";
 import { Metadata } from "next";
 import { env } from "@/env.mjs";
 import { api } from "@/trpc/server";
-import Nav from "@/components/nav";
-import { Footer } from "@/components/home/footer";
+import Nav from "@/components/sidebar-nav";
+import { Footer } from "@/components/footer";
 import defaultConfig from "@/const/config";
+
+interface RouteParams {
+  user: string;
+  project: string;
+}
 
 export async function generateMetadata({
   params,
 }: {
-  params: { user: string; project: string };
+  params: RouteParams;
 }): Promise<Metadata | null> {
   const project = decodeURIComponent(params.project);
   const user = decodeURIComponent(params.user);
@@ -28,6 +33,7 @@ export async function generateMetadata({
     gh_username: params.user,
     projectName: params.project,
   });
+
   const title = siteConfig?.title || site.projectName;
   const description = siteConfig?.description || "";
 
@@ -37,19 +43,20 @@ export async function generateMetadata({
       default: title,
     },
     description: description,
+    // TODO add everything below to config
     openGraph: {
       title: title,
       description: description,
-      images: ["/thumbnail.png"], // TODO add support for project image
+      images: ["/thumbnail.png"],
     },
     twitter: {
       card: "summary_large_image",
       title: title,
       description: description,
-      images: ["/thumbnail.png"], // TODO add support for project image
+      images: ["/thumbnail.png"],
       creator: "@datopian",
     },
-    icons: ["/favicon.ico"], // TODO add support for project favicon
+    icons: ["/favicon.ico"],
     // Set canonical URL to custom domain if it exists
     ...(site.customDomain && {
       alternates: {
@@ -63,7 +70,7 @@ export default async function SiteLayout({
   params,
   children,
 }: {
-  params: { user: string; project: string };
+  params: RouteParams;
   children: ReactNode;
 }) {
   const data = await api.site.get.query({
@@ -75,7 +82,7 @@ export default async function SiteLayout({
     notFound();
   }
 
-  // Optional: Redirect to custom domain if it exists
+  // Redirect to custom domain if it exists
   if (data.customDomain && env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS === "true") {
     return redirect(`https://${data.customDomain}`);
   }
@@ -118,16 +125,10 @@ export default async function SiteLayout({
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
-      <div className="min-h-screen bg-background sm:pl-60">
-        <Nav
-          treeItems={treeItems}
-          title={title}
-          logo={logo}
-          url={url}
-          links={navLinks}
-        />
-        {children}
-        <div className="mx-auto max-w-8xl px-4 md:px-8">
+      <div>
+        <Nav treeItems={treeItems} title={title} logo={logo} url={url} />
+        <div className="min-h-screen sm:pl-60">
+          {children}
           <Footer
             links={defaultConfig.footerLinks}
             author={defaultConfig.author}

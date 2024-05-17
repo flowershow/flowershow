@@ -1,71 +1,75 @@
 "use client";
-import { Menu } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
-import TreeView, { TreeViewItem } from "./tree-view";
+import { useState, useEffect } from "react";
+import clsx from "clsx";
+import { NavMobile } from "./nav-mobile";
+import { NavItem } from "./nav-item";
+import { NavTitle } from "./nav-title";
+import { NavSocial } from "./nav-social";
+import { NavLink, SocialLink } from "./types";
 
-const externalLinks = [
-  /* {
-   *     name: "Join our discord",
-   *     href: "https://discord.com/invite/KrRzMKU",
-   *     icon: <Bot width={18} />,
-   * }, */
-];
+interface Props extends React.PropsWithChildren {
+  title?: string;
+  logo?: string;
+  url?: string;
+  version?: string;
+  links?: Array<NavLink>;
+  social?: Array<SocialLink>;
+}
 
-export default function Nav({ treeItems }: { treeItems: TreeViewItem[] }) {
-  const pathname = usePathname();
-  const [showSidebar, setShowSidebar] = useState(false);
+export const Nav: React.FC<Props> = ({
+  title,
+  logo,
+  url,
+  version,
+  links,
+  social,
+}) => {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    function onScroll() {
+      setIsScrolled(window.scrollY > 0);
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, []);
 
   return (
-    <>
-      <button
-        className="fixed right-5 top-7 z-20 sm:hidden"
-        onClick={() => setShowSidebar(!showSidebar)}
-      >
-        <Menu width={48} height={32} className="dark:text-white" />
-      </button>
-      <div
-        className={`transform ${
-          showSidebar ? "w-full translate-x-0" : "-translate-x-full"
-        } fixed z-10 flex h-full flex-col justify-between space-y-4 border-r border-stone-200 bg-background p-4 transition-all dark:border-stone-700 dark:bg-stone-900 sm:w-60 sm:translate-x-0`}
-      >
-        <Link
-          href="/"
-          className="rounded-lg p-2 hover:bg-stone-200 dark:hover:bg-stone-700"
-        >
-          <Image
-            src="/datahub-cube.svg"
-            width={24}
-            height={24}
-            alt="Logo"
-            className="dark:scale-110 dark:rounded-full dark:border dark:border-stone-400"
-          />
-        </Link>
-        <div className="h-full overflow-y-auto">
-          <TreeView items={treeItems} currentPath={pathname} />
-        </div>
-        {/* <div>
-                    {externalLinks.map(({ name, href, icon }) => (
-                        <a
-                            key={name}
-                            href={href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-between rounded-lg px-2 py-1.5 transition-all duration-150 ease-in-out hover:bg-stone-200 active:bg-stone-300 dark:text-white dark:hover:bg-stone-700 dark:active:bg-stone-800"
-                        >
-                            <div className="flex items-center space-x-3">
-                                {icon}
-                                <span className="text-sm font-medium">{name}</span>
-                            </div>
-                            <p>↗</p>
-                        </a>
-                    ))}
-                </div> */}
-        {/* <div className="my-2 border-t border-stone-200 dark:border-stone-700" />
-                    {children} */}
+    <div
+      className={clsx(
+        "sticky top-0 z-50 w-full",
+        isScrolled && "bg-background shadow-sm",
+      )}
+    >
+      {" "}
+      <div className="mx-auto flex h-[4rem] max-w-8xl flex-col justify-center p-4 md:px-8">
+        <nav className="flex justify-between">
+          {/* Mobile navigation  */}
+          {links && (
+            <div className="mr-2 flex sm:mr-4 lg:hidden">
+              <NavMobile links={links} />
+            </div>
+          )}
+          {/* Non-mobile navigation */}
+          <div className="flex flex-none items-center">
+            <NavTitle title={title} logo={logo} version={version} url={url} />
+            {links && (
+              <div className="ml-8 mr-6 hidden sm:mr-8 md:mr-0 lg:flex">
+                {links.map((link) => (
+                  <NavItem link={link} key={link.name} />
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Search field and social links */}
+          <div className="relative flex w-full basis-auto items-center justify-end gap-6 md:shrink xl:gap-8">
+            {social && <NavSocial links={social} />}
+          </div>
+        </nav>
       </div>
-    </>
+    </div>
   );
-}
+};
