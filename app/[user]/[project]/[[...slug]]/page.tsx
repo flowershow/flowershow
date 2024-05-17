@@ -5,19 +5,49 @@ import parse from "@/lib/markdown";
 import { ErrorMessage } from "@/components/error-message";
 import { PageMetadata } from "@/server/api/types";
 import { MDXRemoteSerializeResult } from "next-mdx-remote";
+import { Site } from "@prisma/client";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { user: string; project: string; slug?: string[] };
-}) {
+type SiteWithUser = Site & {
+  user: {
+    gh_username: string | null;
+  } | null;
+};
+
+interface RouteParams {
+  user: string;
+  project: string;
+  slug?: string[];
+}
+
+export async function generateMetadata({ params }: { params: RouteParams }) {
+  const project = decodeURIComponent(params.project);
+  const user = decodeURIComponent(params.user);
+  const slug = params.slug ? decodeURIComponent(params.slug.join("/")) : "/";
+
+  let site: SiteWithUser | null = null;
+
+  if (user === "_domain") {
+    site = await api.site.getByDomain.query({
+      domain: project,
+    });
+  } else {
+    site = await api.site.get.query({
+      gh_username: user,
+      projectName: project,
+    });
+  }
+
+  if (!site) {
+    notFound();
+  }
+
   let pageMetadata: PageMetadata | null = null;
 
   try {
     pageMetadata = await api.site.getPageMetadata.query({
-      gh_username: params.user,
-      projectName: params.project,
-      slug: params.slug ? params.slug.join("/") : "/",
+      gh_username: site.user?.gh_username!,
+      projectName: site.projectName,
+      slug,
     });
   } catch (error) {
     notFound();
@@ -39,30 +69,35 @@ export async function generateMetadata({
  *   return [];
  * } */
 
-export default async function SitePage({
-  params,
-}: {
-  params: { user: string; project: string; slug?: string[] };
-}) {
-  let pageMetadata: PageMetadata | null = null;
-  let mdContent: string | null = null;
-  let sitePermalinks: string[] = [];
-  let _mdxSource: MDXRemoteSerializeResult | null = null;
+export default async function SitePage({ params }: { params: RouteParams }) {
+  const project = decodeURIComponent(params.project);
+  const user = decodeURIComponent(params.user);
+  const slug = params.slug ? decodeURIComponent(params.slug.join("/")) : "/";
 
-  const site = await api.site.get.query({
-    gh_username: params.user,
-    projectName: params.project,
-  });
+  let site: SiteWithUser | null = null;
+
+  if (user === "_domain") {
+    site = await api.site.getByDomain.query({
+      domain: project,
+    });
+  } else {
+    site = await api.site.get.query({
+      gh_username: user,
+      projectName: project,
+    });
+  }
 
   if (!site) {
     notFound();
   }
 
+  let pageMetadata: PageMetadata | null = null;
+
   try {
     pageMetadata = await api.site.getPageMetadata.query({
-      gh_username: params.user,
-      projectName: params.project,
-      slug: params.slug ? params.slug.join("/") : "/",
+      gh_username: site.user?.gh_username!,
+      projectName: site.projectName,
+      slug,
     });
   } catch (error) {
     notFound();
@@ -72,11 +107,15 @@ export default async function SitePage({
     notFound();
   }
 
+  let mdContent: string | null = null;
+  let sitePermalinks: string[] = [];
+  let _mdxSource: MDXRemoteSerializeResult | null = null;
+
   try {
     const { content, permalinks } = await api.site.getPageContent.query({
-      gh_username: params.user,
-      projectName: params.project,
-      slug: params.slug ? params.slug.join("/") : "/",
+      gh_username: site.user?.gh_username!,
+      projectName: site.projectName,
+      slug,
     });
     mdContent = content;
     sitePermalinks = permalinks;

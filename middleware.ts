@@ -131,5 +131,5 @@ export default async function middleware(req: NextRequest) {
   }
 
   // rewrite all other domains and subdomains to /domain/{hostname}/{path}
-  return NextResponse.rewrite(new URL(`/domain/${hostname}${path}`, req.url));
+  return NextResponse.rewrite(new URL(`/_domain/${hostname}${path}`, req.url));
 }

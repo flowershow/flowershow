@@ -8,6 +8,13 @@ import Navbar from "@/components/nav";
 import Footer from "@/components/footer";
 import defaultConfig from "@/const/config";
 import { resolveLink } from "@/lib/resolve-link";
+import { Site } from "@prisma/client";
+
+type SiteWithUser = Site & {
+  user: {
+    gh_username: string | null;
+  } | null;
+};
 
 interface RouteParams {
   user: string;
@@ -22,18 +29,26 @@ export async function generateMetadata({
   const project = decodeURIComponent(params.project);
   const user = decodeURIComponent(params.user);
 
-  const site = await api.site.get.query({
-    gh_username: user,
-    projectName: project,
-  });
+  let site: SiteWithUser | null = null;
+
+  if (user === "_domain") {
+    site = await api.site.getByDomain.query({
+      domain: project,
+    });
+  } else {
+    site = await api.site.get.query({
+      gh_username: user,
+      projectName: project,
+    });
+  }
 
   if (!site) {
     return null;
   }
 
   const siteConfig = await api.site.getConfig.query({
-    gh_username: params.user,
-    projectName: params.project,
+    gh_username: site.user!.gh_username!,
+    projectName: site.projectName,
   });
 
   const title = siteConfig?.title || site.projectName;
@@ -75,27 +90,42 @@ export default async function SiteLayout({
   params: RouteParams;
   children: ReactNode;
 }) {
-  const site = await api.site.get.query({
-    gh_username: params.user,
-    projectName: params.project,
-  });
+  const project = decodeURIComponent(params.project);
+  const user = decodeURIComponent(params.user);
 
-  if (!site) {
-    notFound();
+  let site: SiteWithUser | null = null;
+
+  if (user === "_domain") {
+    site = await api.site.getByDomain.query({
+      domain: project,
+    });
+
+    // Redirect to custom domain if it exists
+    if (
+      site &&
+      site.customDomain &&
+      env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS === "true"
+    ) {
+      return redirect(`https://${site.customDomain}`);
+    }
+  } else {
+    site = await api.site.get.query({
+      gh_username: user,
+      projectName: project,
+    });
   }
 
-  // Redirect to custom domain if it exists
-  if (site.customDomain && env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS === "true") {
-    return redirect(`https://${site.customDomain}`);
+  if (!site) {
+    return null;
   }
 
   const customCss = await api.site.getCustomStyles.query({
-    gh_username: params.user,
-    projectName: params.project,
+    gh_username: site.user!.gh_username!,
+    projectName: site.projectName,
   });
   const siteConfig = await api.site.getConfig.query({
-    gh_username: params.user,
-    projectName: params.project,
+    gh_username: site.user!.gh_username!,
+    projectName: site.projectName,
   });
 
   const title =
@@ -118,7 +148,7 @@ export default async function SiteLayout({
 
   // TODO temporary solution for all the datahubio sites currently published on Ola's account
   let url: string;
-  if (params.user === "olayway") {
+  if (user === "olayway") {
     url = defaultConfig.author.url;
   } else {
     url = siteConfig?.author?.url ?? `/@${params.user}/${params.project}`;
@@ -129,8 +159,8 @@ export default async function SiteLayout({
 
   const treeItems =
     (await api.site.getTree.query({
-      gh_username: params.user,
-      projectName: params.project,
+      gh_username: site.user!.gh_username!,
+      projectName: site.projectName,
     })) || [];
 
   return (
