@@ -2,8 +2,9 @@
 import { useRef, useState } from "react";
 import { CheckIcon } from "@heroicons/react/24/outline";
 import { RadioGroup } from "@headlessui/react";
-import AddonModal, { AddonModalHandle } from "./addon-modal";
+import AddonModal from "./addon-modal";
 import { Button } from "@/components/button";
+import clsx from "clsx";
 
 export const frequencies = [
   { value: "monthly", label: "Monthly" },
@@ -128,9 +129,6 @@ export const tiers = [
   },
 ];
 
-function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
 export default function PricingPlans() {
   const [frequency, setFrequency] = useState(frequencies[0]);
   const addonModalRef = useRef<any>();
@@ -151,7 +149,7 @@ export default function PricingPlans() {
               key={option.value}
               value={option}
               className={({ checked }) =>
-                classNames(
+                clsx(
                   checked ? "bg-secondary text-black" : "",
                   "cursor-pointer rounded-full px-2.5 py-1",
                 )
@@ -170,7 +168,7 @@ export default function PricingPlans() {
         {tiers.map((tier) => (
           <div
             key={tier.id}
-            className={classNames(
+            className={clsx(
               tier.featured
                 ? "z-10 bg-slate-200 shadow-xl ring-1 ring-gray-900/10 dark:bg-slate-900"
                 : "bg-slate-200 ring-1 ring-white/10 dark:bg-slate-900 lg:bg-transparent lg:pb-14 lg:ring-0 dark:lg:bg-transparent",
@@ -180,7 +178,7 @@ export default function PricingPlans() {
             <div className="p-8 lg:pt-12 xl:p-10 xl:pt-14">
               <h3
                 id={tier.id}
-                className={classNames(
+                className={clsx(
                   tier.featured ? "" : "",
                   "text-sm font-semibold leading-6",
                 )}
@@ -190,7 +188,7 @@ export default function PricingPlans() {
               <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between lg:flex-col lg:items-stretch">
                 <div className="mt-2 flex items-center gap-x-4">
                   <p
-                    className={classNames(
+                    className={clsx(
                       tier.featured ? "" : "",
                       "text-4xl font-bold tracking-tight",
                     )}
@@ -214,7 +212,7 @@ export default function PricingPlans() {
               <div className="mt-8 flow-root sm:mt-10">
                 <ul
                   role="list"
-                  className={classNames(
+                  className={clsx(
                     tier.featured
                       ? "divide-gray-900/5 border-gray-900/5"
                       : "divide-white/5 border-white/5 ",
@@ -224,7 +222,7 @@ export default function PricingPlans() {
                   {tier.mainFeatures.map((mainFeature) => (
                     <li key={mainFeature.title} className="flex gap-x-3 py-2">
                       <CheckIcon
-                        className={classNames(
+                        className={clsx(
                           tier.featured ? "text-secondary" : "",
                           "h-6 w-5 flex-none text-secondary",
                         )}

@@ -62,10 +62,6 @@ const addOns = [
   },
 ];
 
-function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
-
 export default function Example() {
   return (
     <>
@@ -78,7 +74,7 @@ export default function Example() {
         {addOns.map((addOn, actionIdx) => (
           <div
             key={addOn.title}
-            className={classNames(
+            className={clsx(
               actionIdx === 0
                 ? "rounded-tl-lg rounded-tr-lg sm:rounded-tr-none"
                 : "",
@@ -92,7 +88,7 @@ export default function Example() {
           >
             <div>
               <span
-                className={classNames(
+                className={clsx(
                   addOn.iconBackground,
                   addOn.iconForeground,
                   "inline-flex rounded-lg p-3 ring-4 ring-white dark:ring-slate-800",
