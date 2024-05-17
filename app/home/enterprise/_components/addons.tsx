@@ -7,6 +7,7 @@ import {
   PresentationChartBarIcon,
 } from "@heroicons/react/24/solid";
 import { Heading } from "@/components/heading";
+import clsx from "clsx";
 
 const addOns = [
   {

@@ -1,8 +1,8 @@
 import { ReactNode } from "react";
 import { notFound, redirect } from "next/navigation";
 import { Metadata } from "next";
-import { env } from "@/env.mjs";
 import { api } from "@/trpc/server";
+import { env } from "@/env.mjs";
 import Sidebar from "@/components/sidebar";
 import Navbar from "@/components/nav";
 import Footer from "@/components/footer";
@@ -116,8 +116,6 @@ export default async function SiteLayout({
     prefixPath: `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
   });
 
-  const navLinks = siteConfig?.navLinks || defaultConfig.navLinks;
-
   // TODO temporary solution for all the datahubio sites currently published on Ola's account
   let url: string;
   if (params.user === "olayway") {
@@ -125,6 +123,9 @@ export default async function SiteLayout({
   } else {
     url = siteConfig?.author?.url ?? `/@${params.user}/${params.project}`;
   }
+
+  // TODO get either navLinks or treeItems, not both
+  const navLinks = siteConfig?.navLinks || [];
 
   const treeItems =
     (await api.site.getTree.query({
