@@ -27,7 +27,14 @@ export interface ExtendedSiteConfig extends SiteConfigStrict {
 
 type SiteConfigStrict = WithRequired<
   SiteConfig,
-  "title" | "description" | "logo" | "navbarTitle" | "author" | "navLinks"
+  | "title"
+  | "description"
+  | "logo"
+  | "navbarTitle"
+  | "author"
+  | "navLinks"
+  | "social"
+  | "footerLinks"
 >;
 
 /* --------------

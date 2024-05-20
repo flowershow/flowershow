@@ -158,8 +158,8 @@ export const DataPackageLayout: React.FC<Props> = ({
                 <td>{resourceFilesCount}</td>
                 <td>{resourceFilesSizeHumanReadable}</td>
                 <td>{resouceFilesExtensions}</td>
-                <td>{created}</td>
-                <td>{updated}</td>
+                <td>{created && created.substring(0, 10)}</td>
+                <td>{updated && updated.substring(0, 10)}</td>
                 <td>
                   <a
                     target="_blank"
@@ -238,7 +238,7 @@ export const DataPackageLayout: React.FC<Props> = ({
                     </td>
                     <td>{r.description || ""}</td>
                     <td>{r.size ? prettyBytes(r.size) : ""}</td>
-                    <td>{r.lastModified || ""}</td>
+                    <td>{r.lastModified && r.lastModified.substring(0, 10)}</td>
                     <td>
                       <a
                         target="_blank"
