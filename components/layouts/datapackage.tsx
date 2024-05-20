@@ -139,7 +139,7 @@ export const DataPackageLayout: React.FC<Props> = ({
         <header className="mb-8 flex flex-col gap-y-5">
           <h1 className="!mb-2">{title}</h1>
           <table
-            data-testId="dp-metadata-table"
+            data-testid="dp-metadata-table"
             className="table-auto divide-y divide-gray-300"
           >
             <thead>
@@ -158,8 +158,8 @@ export const DataPackageLayout: React.FC<Props> = ({
                 <td>{resourceFilesCount}</td>
                 <td>{resourceFilesSizeHumanReadable}</td>
                 <td>{resouceFilesExtensions}</td>
-                <td>{created}</td>
-                <td>{updated}</td>
+                <td>{created && created.substring(0, 10)}</td>
+                <td>{updated && updated.substring(0, 10)}</td>
                 <td>
                   <a
                     target="_blank"
@@ -181,7 +181,7 @@ export const DataPackageLayout: React.FC<Props> = ({
               </tr>
             </tbody>
           </table>
-          <div data-testId="dp-description">
+          <div data-testid="dp-description">
             <p className="text-md">{description}</p>
             {/* Read more link */}
             <a
@@ -196,7 +196,7 @@ export const DataPackageLayout: React.FC<Props> = ({
           </div>
         </header>
         {views && (
-          <section data-testId="dp-views" className="my-12">
+          <section data-testid="dp-views" className="my-12">
             <h2>Data Views</h2>
             {views.map((view, id) => (
               <ErrorBoundary
@@ -210,7 +210,7 @@ export const DataPackageLayout: React.FC<Props> = ({
             ))}
           </section>
         )}
-        <section data-testId="dp-files" className="my-12">
+        <section data-testid="dp-files" className="my-12">
           <h2>Data Files</h2>
           <table className="table-auto divide-y divide-gray-300">
             <thead>
@@ -238,7 +238,7 @@ export const DataPackageLayout: React.FC<Props> = ({
                     </td>
                     <td>{r.description || ""}</td>
                     <td>{r.size ? prettyBytes(r.size) : ""}</td>
-                    <td>{r.lastModified || ""}</td>
+                    <td>{r.lastModified && r.lastModified.substring(0, 10)}</td>
                     <td>
                       <a
                         target="_blank"
@@ -258,7 +258,7 @@ export const DataPackageLayout: React.FC<Props> = ({
           </table>
         </section>
         {_resources.length > 0 && (
-          <section data-testId="dp-previews" className="my-12">
+          <section data-testid="dp-previews" className="my-12">
             <h2>Data Previews</h2>
             <div>
               {_resources.slice(0, 5).map((resource) => (
@@ -269,7 +269,7 @@ export const DataPackageLayout: React.FC<Props> = ({
         )}
         <hr />
         <section
-          data-testId="dp-readme"
+          data-testid="dp-readme"
           id="readme"
           className="mx-auto max-w-4xl"
         >

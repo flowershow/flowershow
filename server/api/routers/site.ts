@@ -37,6 +37,11 @@ import { computeMetadata } from "@/lib/computed-fields";
 import { DataPackage } from "@/components/layouts/datapackage-types";
 import { PageMetadata } from "../types";
 import { Site } from "@prisma/client";
+import {
+  buildNestedTree,
+  buildNestedTreeFromFilesMap,
+} from "@/lib/build-nested-tree";
+import { SiteConfig } from "@/components/types";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -343,6 +348,7 @@ export const siteRouter = createTRPCRouter({
           branch: gh_branch,
           tree: gitHubTree,
         });
+
         await ctx.db.site.update({
           where: { id: site!.id },
           data: {
@@ -504,6 +510,102 @@ export const siteRouter = createTRPCRouter({
         {
           revalidate: 60, // 1 minute
           tags: [`${input.gh_username} - ${input.projectName} - customStyles`],
+        },
+      )();
+    }),
+  getConfig: publicProcedure
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
+              ],
+            },
+          });
+
+          if (!site) {
+            return null;
+          }
+          try {
+            const config = await fetchFile({
+              projectId: site.id,
+              branch: site.gh_branch,
+              path: "config.json",
+            });
+            // TODO is casting to SiteConfig safe?
+            return config ? (JSON.parse(config) as SiteConfig) : null;
+          } catch {
+            return null;
+          }
+        },
+        [`${input.gh_username} - ${input.projectName} - customStyles`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.gh_username} - ${input.projectName} - customStyles`],
+        },
+      )();
+    }),
+  getTree: publicProcedure
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
+              ],
+            },
+          });
+
+          if (!site) {
+            return null;
+          }
+          try {
+            // const gitHubTree = await fetchTree(site.id, site.gh_branch);
+
+            // if (!gitHubTree) {
+            //   return null;
+            // }
+
+            if (!site.customDomain) {
+              // return buildNestedTree(
+              //   gitHubTree,
+              //   `/@${input.gh_username}/${input.projectName}`,
+              // );
+
+              return buildNestedTreeFromFilesMap(
+                Object.values(site.files as { [key: string]: PageMetadata }),
+                `/@${input.gh_username}/${input.projectName}`,
+              );
+            }
+            // return buildNestedTree(gitHubTree);
+            return buildNestedTreeFromFilesMap(
+              Object.values(site.files as { [key: string]: PageMetadata }),
+            );
+          } catch {
+            return null;
+          }
+        },
+        [`${input.gh_username} - ${input.projectName} - tree`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.gh_username} - ${input.projectName} - tree`],
         },
       )();
     }),

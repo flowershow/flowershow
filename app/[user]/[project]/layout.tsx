@@ -1,60 +1,79 @@
 import { ReactNode } from "react";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { Metadata } from "next";
-import { env } from "@/env.mjs";
 import { api } from "@/trpc/server";
-import { Nav } from "@/components/home/nav";
-import { Footer } from "@/components/home/footer";
-import config from "@/const/config";
-import { PageMetadata } from "@/server/api/types";
+import { env } from "@/env.mjs";
+import Sidebar from "@/components/sidebar";
+import Navbar from "@/components/nav";
+import Footer from "@/components/footer";
+import defaultConfig from "@/const/config";
+import { resolveLink } from "@/lib/resolve-link";
+import { Site } from "@prisma/client";
+
+type SiteWithUser = Site & {
+  user: {
+    gh_username: string | null;
+  } | null;
+};
+
+interface RouteParams {
+  user: string;
+  project: string;
+}
 
 export async function generateMetadata({
   params,
 }: {
-  params: { user: string; project: string };
+  params: RouteParams;
 }): Promise<Metadata | null> {
   const project = decodeURIComponent(params.project);
   const user = decodeURIComponent(params.user);
 
-  const site = await api.site.get.query({
-    gh_username: user,
-    projectName: project,
-  });
+  let site: SiteWithUser | null = null;
+
+  if (user === "_domain") {
+    site = await api.site.getByDomain.query({
+      domain: project,
+    });
+  } else {
+    site = await api.site.get.query({
+      gh_username: user,
+      projectName: project,
+    });
+  }
 
   if (!site) {
     return null;
   }
 
-  // temporary solution for site wide title and description
-  const title =
-    (
-      site?.files as {
-        [url: string]: PageMetadata;
-      }
-    )["/"]?.title || project;
-  const description =
-    (
-      site?.files as {
-        [url: string]: PageMetadata;
-      }
-    )["/"]?.description || "";
+  const siteConfig = await api.site.getConfig.query({
+    gh_username: site.user!.gh_username!,
+    projectName: site.projectName,
+  });
+
+  const title = siteConfig?.title || site.projectName;
+  const description = siteConfig?.description || "";
 
   return {
-    title: title,
+    title: {
+      template: "%s",
+      default: title,
+    },
     description: description,
+    // TODO add everything below to config
     openGraph: {
       title: title,
       description: description,
-      images: ["/thumbnail.png"], // TODO add support for project image
+      images: ["/thumbnail.png"],
     },
     twitter: {
       card: "summary_large_image",
       title: title,
       description: description,
-      images: ["/thumbnail.png"], // TODO add support for project image
+      images: ["/thumbnail.png"],
       creator: "@datopian",
     },
-    icons: ["/favicon.ico"], // TODO add support for project favicon
+    icons: ["/favicon.ico"],
     // Set canonical URL to custom domain if it exists
     ...(site.customDomain && {
       alternates: {
@@ -68,86 +87,119 @@ export default async function SiteLayout({
   params,
   children,
 }: {
-  params: { user: string; project: string };
+  params: RouteParams;
   children: ReactNode;
 }) {
-  const data = await api.site.get.query({
-    gh_username: params.user,
-    projectName: params.project,
-  });
+  const project = decodeURIComponent(params.project);
+  const user = decodeURIComponent(params.user);
 
-  if (!data) {
-    notFound();
+  let site: SiteWithUser | null = null;
+  let isCustomDomain = false;
+
+  if (user === "_domain") {
+    site = await api.site.getByDomain.query({
+      domain: project,
+    });
+    isCustomDomain = true;
+
+    // Redirect to custom domain if it exists
+    if (
+      site &&
+      site.customDomain &&
+      env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS === "true"
+    ) {
+      return redirect(`https://${site.customDomain}`);
+    }
+  } else {
+    site = await api.site.get.query({
+      gh_username: user,
+      projectName: project,
+    });
   }
 
-  // Optional: Redirect to custom domain if it exists
-  if (data.customDomain && env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS === "true") {
-    return redirect(`https://${data.customDomain}`);
+  if (!site) {
+    return null;
   }
 
   const customCss = await api.site.getCustomStyles.query({
-    gh_username: params.user,
-    projectName: params.project,
+    gh_username: site.user!.gh_username!,
+    projectName: site.projectName,
   });
+  const siteConfig = await api.site.getConfig.query({
+    gh_username: site.user!.gh_username!,
+    projectName: site.projectName,
+  });
+
+  const title =
+    siteConfig?.navbarTitle?.text ??
+    siteConfig?.title ??
+    defaultConfig.navbarTitle?.text ??
+    defaultConfig.title;
+
+  const customLogoPath = siteConfig?.navbarTitle?.logo ?? siteConfig?.logo;
+
+  const logo = customLogoPath
+    ? resolveLink({
+        link: customLogoPath,
+        filePath: "config.json",
+        prefixPath: `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
+      })
+    : defaultConfig.navbarTitle?.logo ?? defaultConfig.logo;
+
+  // TODO temporary solution for all the datahubio sites currently published on Ola's account
+  let url: string;
+  if (user === "olayway") {
+    url = defaultConfig.author.url;
+  } else {
+    url = siteConfig?.author?.url ?? `/@${params.user}/${params.project}`;
+  }
+
+  // TODO get either navLinks or treeItems, not both
+  const navLinks = siteConfig?.navLinks || defaultConfig.navLinks;
+
+  const treeItems =
+    (await api.site.getTree.query({
+      gh_username: site.user!.gh_username!,
+      projectName: site.projectName,
+    })) || [];
+
+  // configurable on custom domain only (future paid feature potentially)
+  const footerLinks =
+    (isCustomDomain && siteConfig?.footerLinks) || defaultConfig.footerLinks;
+  const footerAuthor =
+    (isCustomDomain && siteConfig?.author) || defaultConfig.author;
+  const footerSocial =
+    (isCustomDomain && siteConfig?.social) || defaultConfig.social;
+  const footerDescription =
+    (isCustomDomain && siteConfig?.description) || defaultConfig.description;
 
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
-      <div className="min-h-screen bg-background">
-        <Nav
-          title={config.navbarTitle.text}
-          logo={config.navbarTitle.logo}
-          url={config.author.url}
-          links={config.navLinks}
-        />
-        {children}
-
-        {/* {domain == `demo.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
-                domain == `platformize.co` ? (
-                <CTA />
-            ) : (
-                <ReportAbuse />
-            )} */}
-
-        <div className="mx-auto max-w-8xl px-4 md:px-8">
+      {siteConfig?.showSidebar ? (
+        <div>
+          <Sidebar title={title} logo={logo} url={url} treeItems={treeItems} />
+          <div className="min-h-screen sm:pl-60">
+            {children}
+            <Footer
+              author={footerAuthor}
+              social={footerSocial}
+              description={footerDescription}
+            />
+          </div>
+        </div>
+      ) : (
+        <div className="min-h-screen">
+          <Navbar title={title} logo={logo} url={url} links={navLinks} />
+          {children}
           <Footer
-            links={config.footerLinks}
-            author={config.author}
-            social={config.social}
-            description={config.description}
+            links={footerLinks}
+            author={footerAuthor}
+            social={footerSocial}
+            description={footerDescription}
           />
         </div>
-      </div>
+      )}
     </>
   );
 }
-
-/*
- *         <div className={fontMapper[data.font]}>
- *             <div className="ease left-0 right-0 top-0 z-30 flex h-16 bg-white transition-all duration-150 dark:bg-black dark:text-white">
- *                 <div className="mx-auto flex h-full max-w-screen-xl items-center justify-center space-x-5 px-10 sm:px-20">
- *                     <Link href="/" className="flex items-center justify-center">
- *                         <div className="inline-block h-8 w-8 overflow-hidden rounded-full align-middle">
- *                             <Image
- *                                 alt={data.name || ""}
- *                                 height={40}
- *                                 src={data.logo || ""}
- *                                 width={40}
- *                             />
- *                         </div>
- *                         <span className="ml-3 inline-block truncate font-title font-medium">
- *                             {data.name}
- *                         </span>
- *                     </Link>
- *                 </div>
- *             </div>
- *
- *             <div className="mt-20">{children}</div>
- *
- *             {domain == `demo.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
- *                 domain == `platformize.co` ? (
- *                 <CTA />
- *             ) : (
- *                 <ReportAbuse />
- *             )}
- *         </div> */

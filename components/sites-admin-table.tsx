@@ -2,10 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Prisma } from "@prisma/client";
 import { toast } from "sonner";
-
-function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
+import clsx from "clsx";
 
 type Site = Prisma.SiteGetPayload<{
   include: { user: true };
@@ -163,7 +160,7 @@ export default function SitesAdminTable({
                           />
                         </td>
                         <td
-                          className={classNames(
+                          className={clsx(
                             "whitespace-nowrap py-4 pr-3 text-sm font-medium",
                             selectedSites.includes(site.id)
                               ? "text-indigo-600"

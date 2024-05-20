@@ -1,6 +1,6 @@
 import { Menu } from "@headlessui/react";
 import Link from "next/link.js";
-import type { NavLink } from "./nav";
+import type { NavLink } from "./types";
 
 interface Props {
   link: NavLink;

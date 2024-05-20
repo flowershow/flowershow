@@ -12,6 +12,7 @@ type SupportedAssetExtension =
   | "json"
   | "yaml"
   | "yml"
+  | "css"
   | "jpeg"
   | "jpg"
   | "png"
@@ -27,6 +28,7 @@ export const isSupportedAssetExtension = (
     "json",
     "yaml",
     "yml",
+    "css",
     "jpeg",
     "jpg",
     "png",

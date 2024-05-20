@@ -45,7 +45,7 @@ export const computeMetadata = async ({
     "";
 
   // add file sizes from github tree to datapackage resources
-  for (const resource of datapackage?.resources || []) {
+  for (const resource of _datapackage?.resources || []) {
     const file = tree.tree.find((file) => file.path === resource.path);
     if (file) {
       resource.size = file.size;
