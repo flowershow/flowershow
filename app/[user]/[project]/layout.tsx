@@ -151,7 +151,10 @@ export default async function SiteLayout({
   if (user === "olayway") {
     url = defaultConfig.author.url;
   } else {
-    url = siteConfig?.author?.url ?? `/@${params.user}/${params.project}`;
+    url =
+      siteConfig?.author?.url ??
+      site.customDomain ??
+      `/@${params.user}/${params.project}`;
   }
 
   // TODO get either navLinks or treeItems, not both
