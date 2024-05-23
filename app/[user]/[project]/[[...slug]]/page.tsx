@@ -22,7 +22,7 @@ interface RouteParams {
 export async function generateMetadata({ params }: { params: RouteParams }) {
   const project = decodeURIComponent(params.project);
   const user = decodeURIComponent(params.user);
-  const slug = params.slug ? decodeURIComponent(params.slug.join("/")) : "/";
+  const slug = params.slug ? params.slug.join("/") : "/";
 
   let site: SiteWithUser | null = null;
 
@@ -72,7 +72,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
 export default async function SitePage({ params }: { params: RouteParams }) {
   const project = decodeURIComponent(params.project);
   const user = decodeURIComponent(params.user);
-  const slug = params.slug ? decodeURIComponent(params.slug.join("/")) : "/";
+  const slug = params.slug ? params.slug.join("/") : "/";
 
   let site: SiteWithUser | null = null;
 
