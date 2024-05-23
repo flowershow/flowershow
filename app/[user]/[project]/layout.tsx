@@ -101,7 +101,11 @@ export default async function SiteLayout({
       domain: project,
     });
     isCustomDomain = true;
-
+  } else {
+    site = await api.site.get.query({
+      gh_username: user,
+      projectName: project,
+    });
     // Redirect to custom domain if it exists
     if (
       site &&
@@ -110,11 +114,6 @@ export default async function SiteLayout({
     ) {
       return redirect(`https://${site.customDomain}`);
     }
-  } else {
-    site = await api.site.get.query({
-      gh_username: user,
-      projectName: project,
-    });
   }
 
   if (!site) {
