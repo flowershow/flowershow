@@ -72,7 +72,7 @@ export const computeMetadata = async ({
   };
 };
 
-const resolveFilePathToUrl = (filePath: string) => {
+export const resolveFilePathToUrl = (filePath: string) => {
   let url = filePath
     .replace(/\.(mdx|md)/, "")
     .replace(/(\/)?(index|README)$/, ""); // remove index or README from the end of the permalink

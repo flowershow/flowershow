@@ -33,7 +33,7 @@ import {
   isSupportedMarkdownExtension,
 } from "@/lib/types";
 import { TRPCError } from "@trpc/server";
-import { computeMetadata } from "@/lib/computed-fields";
+import { computeMetadata, resolveFilePathToUrl } from "@/lib/computed-fields";
 import { DataPackage } from "@/components/layouts/datapackage-types";
 import { PageMetadata } from "../types";
 import { Site } from "@prisma/client";
@@ -362,16 +362,16 @@ export const siteRouter = createTRPCRouter({
       }
 
       // revalidate the site metadata
-      revalidateTag(
-        `${site!.user?.gh_username} - ${site!.projectName} - metadata`,
-      );
+      revalidateTag(`${site!.user?.gh_username}-${site!.projectName}-metadata`);
       // revalidatee the site's permalinks
       revalidateTag(
-        `${site!.user?.gh_username} - ${site!.projectName} - permalinks`,
+        `${site!.user?.gh_username}-${site!.projectName}-permalinks`,
       );
+      // revalidate the site tree
+      revalidateTag(`${site?.user?.gh_username}-${site?.projectName}-tree`);
       // revalidate all the pages' content
       revalidateTag(
-        `${site!.user?.gh_username} - ${site!.projectName} - page - content`,
+        `${site!.user?.gh_username}-${site!.projectName}-page-content`,
       );
     }),
   checkSyncStatus: protectedProcedure
@@ -576,6 +576,7 @@ export const siteRouter = createTRPCRouter({
           if (!site) {
             return null;
           }
+
           try {
             // const gitHubTree = await fetchTree(site.id, site.gh_branch);
 
@@ -602,10 +603,10 @@ export const siteRouter = createTRPCRouter({
             return null;
           }
         },
-        [`${input.gh_username} - ${input.projectName} - tree`],
+        [`${input.gh_username}-${input.projectName}-tree`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.gh_username} - ${input.projectName} - tree`],
+          tags: [`${input.gh_username}-${input.projectName}-tree`],
         },
       )();
     }),
@@ -893,7 +894,8 @@ const processGitHubTree = async ({
           branch: gh_branch,
           path: contentStorePath,
         });
-        delete filesMetadata[contentStorePath];
+        const deletedFileUrl = resolveFilePathToUrl(contentStorePath);
+        delete filesMetadata[deletedFileUrl];
       }
     }
   } catch (error) {
