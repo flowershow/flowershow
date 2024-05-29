@@ -37,10 +37,7 @@ import { computeMetadata, resolveFilePathToUrl } from "@/lib/computed-fields";
 import { DataPackage } from "@/components/layouts/datapackage-types";
 import { PageMetadata } from "../types";
 import { Site } from "@prisma/client";
-import {
-  buildNestedTree,
-  buildNestedTreeFromFilesMap,
-} from "@/lib/build-nested-tree";
+import { buildNestedTreeFromFilesMap } from "@/lib/build-nested-tree";
 import { SiteConfig } from "@/components/types";
 
 /* eslint-disable */
@@ -296,7 +293,7 @@ export const siteRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string().min(1),
-        force: z.boolean().optional(), // don't check if the trees are different
+        force: z.boolean().default(false),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -320,11 +317,7 @@ export const siteRouter = createTRPCRouter({
       const access_token = ctx.session.accessToken;
 
       try {
-        // fetch content store tree
-        const contentStoreTree = input.force
-          ? null
-          : await fetchTree(site!.id, site!.gh_branch);
-        // fetch GitHub repo tree
+        const contentStoreTree = await fetchTree(site!.id, site!.gh_branch);
         const gitHubTree = await fetchGitHubRepoTree({
           gh_repository,
           gh_branch,
@@ -338,8 +331,10 @@ export const siteRouter = createTRPCRouter({
           tree: gitHubTree,
           previousTree: contentStoreTree,
           site,
-          filesMetadata: site.files as any, // TODO: fix types
+          // ignore current site.files if force is true; compute it from scratch
+          filesMetadata: input.force ? {} : (site.files as any), // TODO: fix types
           rootDir: site!.rootDir,
+          force: input.force,
         });
 
         // If all goes well, update the content store tree to match the GitHub tree
@@ -756,6 +751,7 @@ const processGitHubTree = async ({
   previousTree,
   rootDir,
   filesMetadata = {},
+  force = false,
 }: {
   gh_repository: string;
   gh_branch: string;
@@ -765,12 +761,13 @@ const processGitHubTree = async ({
   previousTree?: GitHubAPIRepoTree | null; // fix this type
   rootDir?: string | null; // fix this type
   filesMetadata?: { [url: string]: PageMetadata };
+  force?: boolean;
 }) => {
   // adjust user input to be comparable to file paths from GitHub API tree
   // it's used to filter out files that are not in the rootDir
   const normalizedRootDir = normalizeDir(rootDir || null);
 
-  if (previousTree && previousTree.sha === tree.sha) {
+  if (previousTree && previousTree.sha === tree.sha && !force) {
     throw new Error("Already in sync with GitHub.");
   }
 
@@ -801,7 +798,11 @@ const processGitHubTree = async ({
   try {
     for (const [path, sha] of gitHubMap.entries()) {
       // check if the file is already in the content store and hasn't changed
-      if (contentStoreMap.has(path) && contentStoreMap.get(path) === sha) {
+      if (
+        !force &&
+        contentStoreMap.has(path) &&
+        contentStoreMap.get(path) === sha
+      ) {
         continue;
       }
       // fetch and upload the file content to the content store
