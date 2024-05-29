@@ -19,7 +19,7 @@ const heroTitle = (
   </>
 );
 
-const heroDescription = `PortalJS Cloud is the simplest way of getting started with Open Data
+const heroDescription = `Datahub is the simplest way of getting started with Open Data
 for governments, non-profits, academics and companies of all sizes.`;
 
 const heroActions = [
@@ -44,7 +44,7 @@ const heroVisual = () => (
 );
 
 const heroAnnouncement = {
-  content: "🔥 PortalJS Cloud (beta) is now available ➡️",
+  content: "🔥 Datahub (beta) is now available ➡️",
   href: "https://cloud.portaljs.com/auth/signup",
 };
 
