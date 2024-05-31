@@ -10,6 +10,8 @@ module.exports = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./lib/**/*.{js,ts,jsx,tsx}",
     "./node_modules/@tremor/**/*.{js,ts,jsx,tsx}", // Tremor module
+    "./node_modules/@portaljs/core/dist/*.js",
+    "./node_modules/@portaljs/core/*.js",
   ],
   theme: {
     extend: {

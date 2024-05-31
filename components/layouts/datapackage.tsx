@@ -197,7 +197,7 @@ export const DataPackageLayout: React.FC<Props> = ({
         </header>
         {views && (
           <section data-testid="dp-views" className="my-12">
-            <h2>Data Views</h2>
+            <h2 id="data-views">Data Views</h2>
             {views.map((view, id) => (
               <ErrorBoundary
                 key={`view-${view.name}`}
@@ -211,7 +211,7 @@ export const DataPackageLayout: React.FC<Props> = ({
           </section>
         )}
         <section data-testid="dp-files" className="my-12">
-          <h2>Data Files</h2>
+          <h2 id="data-files">Data Files</h2>
           <table className="table-auto divide-y divide-gray-300">
             <thead>
               <tr>
@@ -259,7 +259,7 @@ export const DataPackageLayout: React.FC<Props> = ({
         </section>
         {_resources.length > 0 && (
           <section data-testid="dp-previews" className="my-12">
-            <h2>Data Previews</h2>
+            <h2 id="data-previews">Data Previews</h2>
             <div>
               {_resources.slice(0, 5).map((resource) => (
                 <ResourcePreview resource={resource} key={resource.name} />

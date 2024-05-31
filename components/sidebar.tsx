@@ -30,18 +30,18 @@ export default function Sidebar({
   return (
     <>
       <button
-        className="fixed right-5 top-7 z-20 sm:hidden"
+        className="fixed right-5 top-7 z-20 lg:hidden"
         onClick={() => setShowSidebar(!showSidebar)}
       >
         <Menu width={48} height={32} className="dark:text-white" />
       </button>
       <div
         className={`transform ${
-          showSidebar ? "w-full translate-x-0" : "-translate-x-full"
-        } fixed z-10 flex h-full flex-col justify-between space-y-4 border-r border-stone-200 bg-background p-4 transition-all dark:border-stone-700 dark:bg-stone-900 sm:w-60 sm:translate-x-0`}
+          showSidebar ? "w-[19rem] translate-x-0" : "hidden -translate-x-full"
+        } fixed inset-0 left-[max(0px,calc(50%-45rem))] right-auto z-10 h-full flex-col justify-between space-y-4 overflow-y-auto border-r border-stone-200 bg-background p-4 pb-10 pl-8 pr-6 transition-all dark:border-stone-700 dark:bg-stone-900 sm:translate-x-0 lg:top-12 lg:block lg:w-[19rem]`}
       >
         <NavTitle title={title} logo={logo} url={url} />
-        <div className="h-full overflow-y-auto">
+        <div className="relative lg:text-sm lg:leading-6">
           <TreeView items={treeItems} currentPath={pathname} />
         </div>
         {/* <div>
