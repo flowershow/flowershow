@@ -3,26 +3,18 @@ import { Button } from "@/components/button";
 
 export function CTASection() {
   return (
-    <div className="relative w-full overflow-hidden py-20">
-      <Image
-        className="absolute top-0 max-w-none opacity-80"
-        src="/bg6.jpg"
-        alt=""
-        unoptimized
-        fill
-      />
+    <div className="relative w-full overflow-hidden bg-custom-radial py-20 text-white">
       <div className="relative mx-auto max-w-3xl text-center">
-        <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
-          Get early dibs on DataHub Cloud!
+        <h2 className="mt-2 text-6xl font-bold tracking-tight sm:text-4xl">
+          Get Started for Free
         </h2>
-        <p className="mx-auto mt-6 max-w-xl text-lg leading-8 text-primary">
-          Hop on our waitlist, and you&apos;ll be the first to know when
-          it&apos;s ready to roll out. Get early access, special offers, and a
-          chance to shape our product.{" "}
+        <p className="mx-auto mt-6 max-w-xl text-xl leading-8">
+          Join our Beta community and shape the future of DataHub Cloud with
+          your feedback.
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <Button href="https://tally.so/r/wad1O2">
-            <span>Sign up for free for early access</span>
+            <span>Get started for free</span>
           </Button>
         </div>
       </div>

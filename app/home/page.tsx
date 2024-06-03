@@ -1,63 +1,36 @@
-import Image from "next/image";
 import { Section } from "@/components/section";
+import { CTASection } from "@/app/home/_components/CTASection";
+import { QuickStart } from "@/app/home/_components/QuickStart";
 import { Hero } from "@/components/hero";
+import FAQ from "@/app/home/_components/FAQ";
+import TestimonialSection from "@/app/home/_components/Testimonials";
+import { VisualDemo } from "@/app/home/_components/VisualDemo";
+import Showcase from "@/app/home/_components/Showcase";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 import { Features } from "./_components/Features";
-import { CTASection } from "./_components/CTASection";
-import { QuickStart } from "./_components/QuickStart";
-import { About } from "./_components/About";
+import { Heart } from "lucide-react";
 
 const heroFeatures = [
   "Easy to use",
   "Markdown-based",
   "Hosted for you",
   "Run-off GitHub",
-  "Open source",
 ];
 
-const heroTitle = (
-  <>
-    Build elegant data-driven sites with markdown &{" "}
-    <span className="text-orange-400">deploy in seconds.</span>
-  </>
-);
+const heroTitle = <>Publish your datasets directly from Github</>;
 
 const heroActions = [
   {
-    label: "Join the waitlist",
-    href: "https://tally.so/r/wad1O2",
+    label: "Get started for free",
+    href: "",
     target: "_blank" as const,
     variant: "solid" as const,
   },
-  /* {
-   *     label: "View on GitHub",
-   *     href: "/",
-   *     variant: "outline",
-   * }, */
 ];
 
-const heroVisual = () => (
-  <div className="relative">
-    <Image
-      src="/Readme.png"
-      alt=""
-      className="relative -top-8 w-3/4 rounded-lg shadow-xl"
-      width={490}
-      height={540}
-      unoptimized
-    />
-    <Image
-      src="/my-datarich-blog.png"
-      alt=""
-      className="absolute left-1/3 top-12 w-3/4 rounded-lg shadow-2xl"
-      width={490}
-      height={540}
-      unoptimized
-    />
-  </div>
-);
-
 const heroDescription =
-  "Publish datasets, data stories and data portals using markdown with a few clicks.";
+  "Turn your Github repositories into dynamic data-rich sites with a few clicks. No coding.";
 
 export default function Home() {
   return (
@@ -66,13 +39,18 @@ export default function Home() {
         <Hero
           title={heroTitle}
           description={heroDescription}
-          Visual={heroVisual}
           features={heroFeatures}
           actions={heroActions}
-        />
+        >
+          <HeroMessage />
+        </Hero>
 
-        <Section className="mx-auto max-w-4xl">
-          <About />
+        <Section>
+          <VisualDemo />
+        </Section>
+
+        <Section>
+          <QuickStart />
         </Section>
 
         <Section className="mx-auto max-w-4xl">
@@ -80,7 +58,15 @@ export default function Home() {
         </Section>
 
         <Section>
-          <QuickStart />
+          <Showcase />
+        </Section>
+
+        <Section>
+          <TestimonialSection />
+        </Section>
+
+        <Section>
+          <FAQ />
         </Section>
       </div>
 
@@ -93,5 +79,21 @@ export default function Home() {
             </Section>
  */}
     </>
+  );
+}
+
+function HeroMessage() {
+  return (
+    <div className="text-center">
+      <p className="mt-2 text-base font-light text-gray-500">
+        No credit card required
+      </p>
+
+      <p className="mt-4 flex items-center justify-center text-lg font-bold">
+        Built with{" "}
+        <Heart className="mx-2 fill-orange-400 text-orange-400" size={24} /> by
+        Datopian
+      </p>
+    </div>
   );
 }

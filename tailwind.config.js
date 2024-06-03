@@ -15,6 +15,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      backgroundImage: {
+        'custom-radial': 'radial-gradient(circle, hsla(27, 96%, 61%, 1) 0%, hsla(42, 92%, 53%, 1) 100%)',
+      },
       colors: {
         // TODO can we use just tremor styles below
         background: {

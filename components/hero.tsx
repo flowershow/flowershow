@@ -1,4 +1,5 @@
 import { Button } from "@/components/button";
+import clsx from "clsx";
 
 export function Hero({
   title,
@@ -7,6 +8,7 @@ export function Hero({
   features,
   actions,
   Visual,
+  children,
 }: {
   title: string | JSX.Element;
   description: string;
@@ -21,13 +23,19 @@ export function Hero({
     target?: "_blank" | "_self";
     variant?: "outline" | "solid";
   }[];
-  Visual: () => JSX.Element;
+  Visual?: () => JSX.Element;
+  children?: JSX.Element;
 }) {
   return (
     <div className="relative isolate">
-      <div className="mt-8 pb-20 sm:mt-10 lg:flex lg:items-center lg:gap-x-10 xl:mt-12">
+      <div
+        className={clsx(
+          "mt-8 pb-10 sm:mt-24",
+          Visual && "lg:flex lg:items-center lg:gap-x-10 xl:mt-24",
+        )}
+      >
         {/* left column */}
-        <div className="mx-auto max-w-2xl flex-1 lg:mx-0">
+        <div className={clsx("mx-auto flex-1", Visual && "max-w-2xl lg:mx-0")}>
           <div className="flex">
             {announcement && (
               <div className="relative rounded-full px-4 py-1 text-sm leading-6 text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
@@ -41,39 +49,58 @@ export function Hero({
               </div>
             )}
           </div>
-          <h1 className="mt-10 max-w-lg text-4xl font-bold tracking-tight dark:text-white sm:text-6xl ">
+          <h1
+            className={clsx(
+              "mt-10 max-w-4xl text-4xl font-bold tracking-tight dark:text-white sm:text-6xl",
+              !Visual && "max-w-none text-center",
+            )}
+          >
             {title}
           </h1>
-          <p className="mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400">
+          <p
+            className={clsx(
+              "mt-6 text-lg leading-8 text-gray-600 dark:text-gray-400",
+              !Visual && "max-w-none text-center",
+            )}
+          >
             {description}
           </p>
           {features && (
-            <div className="mt-6">
-              {features.map((feature) => (
-                <p
-                  className="flex items-center space-x-2 text-lg font-medium leading-8 text-primary dark:text-primary-dark"
-                  key={feature}
-                >
-                  <span className="left-1 top-1 h-5 w-5 text-orange-400">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path
-                        fill-rule="evenodd"
-                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                        clip-rule="evenodd"
-                      ></path>
-                    </svg>
-                  </span>
-                  <span>{feature}</span>
-                </p>
-              ))}
+            <div
+              className={clsx("mt-6", !Visual && "flex flex-col items-center")}
+            >
+              <div className="grid grid-cols-2 gap-4">
+                {features.map((feature) => (
+                  <p
+                    className="flex items-center space-x-2 text-lg font-medium leading-8 text-primary dark:text-primary-dark"
+                    key={feature}
+                  >
+                    <span className="left-1 top-1 h-5 w-5 text-orange-400">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                          clipRule="evenodd"
+                        ></path>
+                      </svg>
+                    </span>
+                    <span>{feature}</span>
+                  </p>
+                ))}
+              </div>
             </div>
           )}
-          <div className="mt-10 flex gap-x-6">
+          <div
+            className={clsx(
+              "mt-5 flex gap-x-6",
+              !Visual && "flex-col items-center",
+            )}
+          >
             {actions?.map(({ label, href, target = "_self", variant }) => (
               <Button
                 key={label}
@@ -87,10 +114,14 @@ export function Hero({
             ))}
           </div>
         </div>
+
         {/* right column */}
-        <div className="mx-auto mt-24 max-w-2xl flex-1 lg:mx-0 lg:mt-0">
-          <Visual />
-        </div>
+        {Visual && (
+          <div className="mx-auto mt-24 max-w-2xl flex-1 lg:mx-0 lg:mt-0">
+            <Visual />
+          </div>
+        )}
+        {children}
       </div>
     </div>
   );
