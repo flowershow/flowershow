@@ -1,14 +1,15 @@
 import { Heading } from "@/components/heading";
-import { CodeWindow } from "./CodeWindow";
-import type { CodeSnippet } from "./CodeWindow";
+import { ExternalLink } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { ReactNode } from "react";
 
 type Step = {
   id: string;
   title: string;
-  description: string;
-  imageSrc?: string;
-  imageAlt?: string;
-  snippets?: CodeSnippet[];
+  description: ReactNode;
+  imageSrc: string;
+  imageAlt: string;
 };
 
 export function QuickStart() {
@@ -17,34 +18,11 @@ export function QuickStart() {
       <Heading
         id="quick-start"
         heading="Quickstart"
-        subheading="Start creating data-rich stories in just a few steps"
+        subheading="Publish your dataset in just a few steps"
       />
-      <div className="space-y-16 pt-6">
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((step) => (
-          <div
-            key={step.id}
-            className="flex flex-col-reverse lg:grid lg:grid-cols-12 lg:items-start lg:gap-x-8"
-          >
-            <div className="mt-6 lg:col-span-5 lg:mt-0 xl:col-span-4">
-              <h3 className="text-lg font-bold text-orange-400">
-                {step.title}
-              </h3>
-              <p className="mt-2 text-gray-500">{step.description}</p>
-            </div>
-            <div className="flex-auto lg:col-span-7 xl:col-span-8">
-              {step.snippets ? (
-                <CodeWindow snippets={step.snippets} />
-              ) : (
-                <div className="rounded-lg bg-gray-100">
-                  <img
-                    src={step.imageSrc}
-                    alt={step.imageAlt}
-                    className="rounded-md border border-gray-100 object-cover object-center"
-                  />
-                </div>
-              )}
-            </div>
-          </div>
+          <QuickStartStep key={step.id} step={step} />
         ))}
       </div>
 
@@ -57,68 +35,87 @@ export function QuickStart() {
   );
 }
 
+function QuickStartStep({ step }: { step: Step }) {
+  return (
+    <div key={step.id} className="flex flex-col items-center">
+      <div className="mt-6 flex flex-col items-center sm:block">
+        <Image
+          width="1324"
+          height="912"
+          src={step.imageSrc}
+          alt={step.imageSrc}
+          className="w-[50%] sm:w-full"
+        />
+        <p className="font-light text-gray-600">Step {step.id}</p>
+        <h3 className="mb-2 mt-6 text-lg font-bold">{step.title}</h3>
+        <p className="py-1 text-gray-500">{step.description}</p>
+      </div>
+    </div>
+  );
+}
+
 const steps: Step[] = [
   {
     id: "1",
-    title: "1. CHOOSE YOUR REPO",
-    description:
-      "Create or update some markdown files and push them to GitHub. You can create a new GitHub repository or use an existing one.",
-    snippets: [
-      {
-        file: "blog.md",
-        language: "markdown",
-        code: `---
-title: My Data-Rich Blog Post
-authors: [Jane Doe]
-date: "2023-11-30"
----
-
-## Welcome to My First Data-Rich Blog Post
-
-This is my first blog post. I'm so excited to try publishing it with DataHub!
-`,
-      },
-    ],
+    title: "CHOOSE OR CREATE A GITHUB REPO",
+    description: (
+      <span>
+        Whether starting fresh with a new GitHub repo or using an existing one,
+        the first step is simple. Add your datasets directly to your repo. For a
+        smooth start, use our{" "}
+        <Link
+          href="https://github.com/datahubio/datahub-cloud-template"
+          className="font-bold text-orange-400"
+          target="_blank"
+        >
+          pre-configured template{" "}
+          <ExternalLink className="inline-block" width={15} />
+        </Link>
+      </span>
+    ),
+    imageSrc: "/choose-create-github-repo.svg",
+    imageAlt: "CHOOSE OR CREATE A GITHUB REPO Image",
   },
   {
     id: "2",
-    title: "2. ADD VISUALS",
-    description:
-      "Enhance your content with some data visualizations. Easily add line charts, tables, maps, and more directly into your content.",
-    snippets: [
-      {
-        file: "blog.md",
-        language: "markdown",
-        code: `---
-title: My Data-Rich Blog Post
-authors: [Jane Doe]
-date: "2023-11-30"
----
-
-## Welcome to My First Data-Rich Blog Post
-
-This is my first blog post. I'm so excited to try publishing it with DataHub!
-
-<LineChart
-  data={[
-    ["1850", -0.41765878],
-    ["1851", -0.2333498],
-    ["1852", -0.22939907],
-    ["1853", -0.27035445],
-    ["1854", -0.29163003],
-  ]}
-/>
-
-`,
-      },
-    ],
+    title: "PUBLISH IT WITH DATAHUB CLOUD",
+    description: (
+      <span>
+        Just push your changes to GitHub. With a single click in DataHub Cloud,
+        your updated site is live and ready to impress.
+      </span>
+    ),
+    imageSrc: "/publish-with-datahub-cloud.svg",
+    imageAlt: "CHOOSE OR CREATE A GITHUB REPO Image",
   },
   {
     id: "3",
-    title: "3. PUBLISH & SHARE",
-    description:
-      "Push to GitHub, then use DataHub Cloud to bring your site to life instantly. Congrats, your repository is now a beautiful site that keeps your audience captivated!",
-    imageSrc: "/example.png",
-    imageAlt: "Example of a rendered blog post",
+    title: "ADD VISUALS (OPTIONAL)",
+    description: (
+      <span>
+        You can enhance your dataset with some data visualizations. Insert line
+        charts, tables, and maps directly into your content - no coding skills
+        needed. Read how to{" "}
+        <Link
+          href="https://datahub.io/@Daniellappv/datahub-cloud-template-2/docs/Add%20visuals%20and%20data-rich%20components"
+          className="font-bold text-orange-400"
+          target="_blank"
+        >
+          add visuals and data-rich components{" "}
+          <ExternalLink className="inline-block" width={15} />
+        </Link>
+      </span>
+    ),
+    imageSrc: "/add-visuals-optional.svg",
+    imageAlt: "CHOOSE OR CREATE A GITHUB REPO Image",
+  },
+  {
+    id: "4",
+    title: "SHARE IT WITH THE WORLD",
+    description: (
+      <span> You can now share your awesome dataset page with the world! </span>
+    ),
+    imageSrc: "/share-with-the-world.svg",
+    imageAlt: "CHOOSE OR CREATE A GITHUB REPO Image",
   },
 ];
