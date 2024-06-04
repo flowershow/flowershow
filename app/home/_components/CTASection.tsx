@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { Button } from "@/components/button";
 
 export function CTASection() {
@@ -13,7 +12,7 @@ export function CTASection() {
           your feedback.
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
-          <Button href="https://tally.so/r/wad1O2">
+          <Button href="https://cloud.datahub.io/" target="_blank">
             <span>Get started for free</span>
           </Button>
         </div>

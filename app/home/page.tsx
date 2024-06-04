@@ -23,7 +23,7 @@ const heroTitle = <>Publish your datasets directly from Github</>;
 const heroActions = [
   {
     label: "Get started for free",
-    href: "https://tally.so/r/wad1O2",
+    href: "https://cloud.datahub.io/",
     target: "_blank" as const,
     variant: "solid" as const,
   },
