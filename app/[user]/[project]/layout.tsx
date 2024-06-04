@@ -9,6 +9,8 @@ import Footer from "@/components/footer";
 import defaultConfig from "@/const/config";
 import { resolveLink } from "@/lib/resolve-link";
 import { Site } from "@prisma/client";
+import TableOfContentsSidebar from "@/components/table-of-content";
+import clsx from "clsx";
 
 type SiteWithUser = Site & {
   user: {
@@ -178,30 +180,35 @@ export default async function SiteLayout({
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
-      {siteConfig?.showSidebar ? (
-        <div>
-          <Sidebar title={title} logo={logo} url={url} treeItems={treeItems} />
-          <div className="min-h-screen sm:pl-60">
-            {children}
-            <Footer
-              author={footerAuthor}
-              social={footerSocial}
-              description={footerDescription}
+      <div className="min-h-screen">
+        {!siteConfig?.showSidebar && (
+          <Navbar title={title} logo={logo} url={url} links={navLinks} />
+        )}
+
+        <div className="mx-auto max-w-8xl px-4 sm:px-6 md:px-8">
+          {siteConfig?.showSidebar && (
+            <Sidebar
+              title={title}
+              logo={logo}
+              url={url}
+              treeItems={treeItems}
             />
+          )}
+          <div className={clsx(siteConfig?.showSidebar && "lg:pl-[19.5rem]")}>
+            <div className="top-4 mx-auto xl:ml-0 xl:mr-[15.5rem] xl:max-w-none xl:pr-16">
+              {children}
+              <div className="mx-auto max-w-8xl px-4">
+                <Footer
+                  author={footerAuthor}
+                  social={footerSocial}
+                  description={footerDescription}
+                />
+              </div>
+            </div>
+            <TableOfContentsSidebar />
           </div>
         </div>
-      ) : (
-        <div className="min-h-screen">
-          <Navbar title={title} logo={logo} url={url} links={navLinks} />
-          {children}
-          <Footer
-            links={footerLinks}
-            author={footerAuthor}
-            social={footerSocial}
-            description={footerDescription}
-          />
-        </div>
-      )}
+      </div>
     </>
   );
 }

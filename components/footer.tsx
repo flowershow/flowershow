@@ -24,9 +24,9 @@ export default function Footer({
 }) {
   return (
     <footer className="bg-background" aria-labelledby="footer-heading">
-      <h2 id="footer-heading" className="sr-only">
+      <p id="footer-heading" className="sr-only">
         Footer
-      </h2>
+      </p>
       <div className="mx-auto max-w-8xl px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32">
         <div
           className={clsx(

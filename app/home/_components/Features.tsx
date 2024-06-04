@@ -10,34 +10,34 @@ import { Heading } from "@/components/heading";
 
 const features = [
   {
-    name: "Simple syntax:",
+    name: "Simple syntax",
     description: "Simply markdown with some cool extra features.",
     icon: DocumentTextIcon,
   },
   {
-    name: "Elegant data visualisations:",
+    name: "Elegant data visualizations",
     description: "Enrich your stories with charts, maps, and more.",
     icon: ChartBarSquareIcon,
   },
   {
-    name: "No vendor lock-in:",
+    name: "No vendor lock-in",
     description:
       "The content and data is always only yours. Check it in to git and deploy with DataHub.",
     icon: LockOpenIcon,
   },
   {
-    name: "Always up to date:",
+    name: "Always up-to-date",
     description:
       "Your site's content is always up to date with the latest changes in the repo.",
     icon: ArrowPathIcon,
   },
   {
-    name: "Instant publishing:",
+    name: "Instant publishing",
     description: "Publish in just a few clicks with DataHub.",
     icon: PaperAirplaneIcon,
   },
   {
-    name: "Share & collaborate easily:",
+    name: "Share & collaborate easily",
     description: "Instantly share insights and co-edit with your team.",
     icon: ShareIcon,
   },
@@ -47,7 +47,7 @@ export function Features() {
   return (
     <>
       <Heading id="features" heading="Features" subheading="Key features" />
-      <dl className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 leading-7 text-gray-500 text-primary dark:text-primary-dark sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:gap-x-16">
+      <dl className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 leading-7 text-gray-500 dark:text-primary-dark sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:gap-x-16">
         {features.map((feature) => (
           <div key={feature.name} className="relative pl-9">
             <dt className="inline font-semibold text-slate-900 dark:text-slate-100">
@@ -55,7 +55,8 @@ export function Features() {
                 <feature.icon aria-hidden />
               </span>
               {feature.name}
-            </dt>{" "}
+            </dt>
+            {": "}
             <dd className="inline">{feature.description}</dd>
           </div>
         ))}

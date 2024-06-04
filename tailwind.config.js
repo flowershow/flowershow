@@ -10,9 +10,14 @@ module.exports = {
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./lib/**/*.{js,ts,jsx,tsx}",
     "./node_modules/@tremor/**/*.{js,ts,jsx,tsx}", // Tremor module
+    "./node_modules/@portaljs/core/dist/*.js",
+    "./node_modules/@portaljs/core/*.js",
   ],
   theme: {
     extend: {
+      backgroundImage: {
+        'custom-radial': 'radial-gradient(circle, hsla(27, 96%, 61%, 1) 0%, hsla(42, 92%, 53%, 1) 100%)',
+      },
       colors: {
         // TODO can we use just tremor styles below
         background: {
