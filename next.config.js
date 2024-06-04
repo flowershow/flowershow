@@ -18,8 +18,6 @@ module.exports = {
       { hostname: "www.google.com" },
       { hostname: "flag.vercel.app" },
       { hostname: "illustrations.popsy.co" },
-      // This's for a temp placeholder, remove if no longer needed
-      { hostname: "images.spr.so" },
     ],
   },
 };
