@@ -54,12 +54,12 @@ const Showcase: React.FC = () => {
       <Slider {...settings}>
         {showcaseItems.map((item, index) => (
           <div key={index} className="px-2">
-            <div className="overflow-hidden rounded-lg border border-dashed border-gray-300 p-4">
+            <div className="overflow-hidden rounded-lg border border-dashed border-gray-300">
               <Link target="_blank" href={item.href}>
                 <img
                   src={item.image}
                   alt={`Showcase ${index + 1}`}
-                  className="w-full object-contain"
+                  className="h-96 w-full border object-cover object-right-top md:h-[750px] md:object-cover md:object-left-top"
                 />
 
                 <div className="relative">
