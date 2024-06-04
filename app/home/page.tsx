@@ -32,10 +32,12 @@ const heroActions = [
 const heroDescription =
   "Turn your Github repositories into dynamic data-rich sites with a few clicks. No coding.";
 
+const containerWidth = "mx-auto max-w-8xl px-4 pt-8 md:px-8 lg:px-[8rem]";
+
 export default function Home() {
   return (
     <>
-      <div className="mx-auto max-w-8xl px-4 pt-8 md:px-8 lg:px-[8rem] ">
+      <div className={containerWidth}>
         <Hero
           title={heroTitle}
           description={heroDescription}
@@ -60,11 +62,13 @@ export default function Home() {
         <Section>
           <Showcase />
         </Section>
+      </div>
 
-        <Section>
-          <TestimonialSection />
-        </Section>
+      <Section className="w-full">
+        <TestimonialSection />
+      </Section>
 
+      <div className={containerWidth}>
         <Section>
           <FAQ />
         </Section>
@@ -74,10 +78,11 @@ export default function Home() {
         <CTASection />
       </Section>
 
-      {/* <Section className="!max-w-3xl">
-                <Roadmap />
-            </Section>
- */}
+      {/* 
+        <Section className="!max-w-3xl">
+          <Roadmap />
+        </Section>
+        */}
     </>
   );
 }
