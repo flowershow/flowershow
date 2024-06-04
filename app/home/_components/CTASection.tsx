@@ -3,7 +3,7 @@ import { Button } from "@/components/button";
 
 export function CTASection() {
   return (
-    <div className="relative w-full overflow-hidden bg-custom-radial py-20 text-white">
+    <div className="relative w-full overflow-hidden bg-custom-radial py-20 text-black">
       <div className="relative mx-auto max-w-3xl text-center">
         <h2 className="mt-2 text-6xl font-bold tracking-tight sm:text-4xl">
           Get Started for Free

@@ -1,7 +1,7 @@
 export function VisualDemo() {
   return (
     <div>
-      <h1 className="mt-16 text-center text-lg font-bold tracking-tight dark:text-white sm:text-4xl">
+      <h1 className="mt-12 text-center text-lg font-bold tracking-tight dark:text-white sm:text-4xl">
         Your GitHub. Our Platform. Perfect Harmony.
       </h1>
       <p className="mx-auto mt-6 max-w-xl text-center text-lg leading-8 text-gray-600 dark:text-gray-400">

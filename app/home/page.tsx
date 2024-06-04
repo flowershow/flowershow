@@ -32,7 +32,7 @@ const heroActions = [
 const heroDescription =
   "Turn your Github repositories into dynamic data-rich sites with a few clicks. No coding.";
 
-const containerWidth = "mx-auto max-w-8xl px-4 pt-8 md:px-8 lg:px-[8rem]";
+const containerWidth = "mx-auto max-w-8xl px-4 md:px-8 lg:px-[8rem]";
 
 export default function Home() {
   return (
@@ -47,34 +47,34 @@ export default function Home() {
           <HeroMessage />
         </Hero>
 
-        <Section>
+        <Section className="mt-18 md:mt-24">
           <VisualDemo />
         </Section>
 
-        <Section>
+        <Section className="mt-18 md:mt-24">
           <QuickStart />
         </Section>
 
-        <Section className="mx-auto max-w-4xl">
+        <Section className="mt-18 mx-auto max-w-4xl md:mt-24">
           <Features />
         </Section>
 
-        <Section>
+        <Section className="mt-18 md:mt-24">
           <Showcase />
         </Section>
       </div>
 
-      <Section className="w-full">
+      <Section className="mt-18 w-full md:mt-24">
         <TestimonialSection />
       </Section>
 
       <div className={containerWidth}>
-        <Section>
+        <Section className="mt-18 md:mt-24">
           <FAQ />
         </Section>
       </div>
 
-      <Section className="w-full">
+      <Section className="mt-18 w-full md:mt-24">
         <CTASection />
       </Section>
 

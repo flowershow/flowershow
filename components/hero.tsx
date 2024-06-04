@@ -30,7 +30,7 @@ export function Hero({
     <div className="relative isolate">
       <div
         className={clsx(
-          "mt-8 pb-10 sm:mt-24",
+          "mt-8 pb-10 sm:mt-28",
           Visual && "lg:flex lg:items-center lg:gap-x-10 xl:mt-24",
         )}
       >
