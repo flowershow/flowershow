@@ -18,17 +18,17 @@ const showcaseItems = [
   },
   {
     image: "/datahub-showcase-finance-vix.png",
-    description: "Dataset ( CBOE Volatility Index )",
+    description: "Dataset (CBOE Volatility Index)",
     href: "https://datahub.io/core/finance-vix",
   },
   {
     image: "/datahub-showcase-oil-prices-this.png",
-    description: "Dataset ( Brent and WTI Spot Prices )",
+    description: "Dataset (Brent and WTI Spot Prices)",
     href: "https://datahub.io/@Daniellappv/oil-prices-this",
   },
   {
     image: "/datahub-showcase-co2-ppm.png",
-    description: "Dataset ( Trends in Atmospheric Carbon Dioxide )",
+    description: "Dataset (Trends in Atmospheric Carbon Dioxide)",
     href: "https://datahub.io/core/co2-ppm",
   },
 ];
