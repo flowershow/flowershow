@@ -73,7 +73,17 @@ const faqData = [
       <>
         DataHub Cloud supports a variety of visualizations including line
         charts, bar charts, maps, and tables. You can enhance your datasets with
-        these visuals simply by using our components.
+        these visuals simply by using our components. You can check them out
+        <Link
+          href="https://datahub.io/docs"
+          className="font-bold text-orange-400"
+          target="_blank"
+        >
+          {" "}
+          here
+          <ExternalLink className="inline-block" width={15} />
+        </Link>
+        .
       </>
     ),
   },
