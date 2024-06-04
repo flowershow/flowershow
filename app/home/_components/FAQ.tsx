@@ -1,54 +1,122 @@
 "use client";
 import clsx from "clsx";
+import { ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 const faqData = [
   {
     question: "What is DataHub Cloud?",
-    answer:
-      "DataHub Cloud is a platform that allows you to easily publish and share datasets from GitHub. It converts raw data and Markdown files into beautifully presented, interactive sites.",
+    answer: (
+      <>
+        DataHub Cloud is a platform that allows you to easily publish and share
+        datasets from GitHub. It converts raw data and Markdown files into
+        beautifully presented, interactive sites.
+      </>
+    ),
   },
   {
     question: "How do I start using DataHub Cloud?",
-    answer:
-      "Start by linking your GitHub repository to DataHub Cloud, add data and edit your markdown files. Our platform processes these files to generate your beautifully formatted, dataset site, which you can then customize and publish with ease. Our quick start guide provides detailed instructions on how to set this up.",
+    answer: (
+      <>
+        Start by linking your GitHub repository to DataHub Cloud, add data and
+        edit your markdown files. Our platform processes these files to generate
+        your beautifully formatted, dataset site, which you can then customize
+        and publish with ease.
+        <Link
+          href="https://datahub.io/docs"
+          className="font-bold text-orange-400"
+          target="_blank"
+        >
+          {" "}
+          Our quick start guide{" "}
+          <ExternalLink className="inline-block" width={15} />
+        </Link>
+        provides detailed instructions on how to set this up.
+      </>
+    ),
   },
   {
     question: "Can I create a dataset page without coding?",
-    answer:
-      "Absolutely! DataHub Cloud is designed for ease of use, allowing you to create dataset pages using simple markdown files without any coding required. Our tools handle the conversion and presentation for you.",
+    answer: (
+      <>
+        Absolutely! DataHub Cloud is designed for ease of use, allowing you to
+        create dataset pages using simple markdown files without any coding
+        required. Our tools handle the conversion and presentation for you.
+      </>
+    ),
   },
   {
     question: "How many sites can I manage with DataHub Cloud?",
-    answer:
-      "Currently, there is no limit to the number of dataset sites you can create and manage with DataHub Cloud. Each GitHub repository connected to your account can serve as a separate site.",
+    answer: (
+      <>
+        Currently, there is no limit to the number of dataset sites you can
+        create and manage with DataHub Cloud. Each GitHub repository connected
+        to your account can serve as a separate site.
+      </>
+    ),
   },
   {
     question: "Can I use DataHub Cloud if I'm not familiar with GitHub?",
-    answer:
-      "Yes, you can! While familiarity with GitHub enhances your experience, you don’t need to be an expert. Our platform is designed to be user-friendly, and we provide detailed guides to help you along the way.",
+    answer: (
+      <>
+        Yes, you can! While familiarity with GitHub enhances your experience,
+        you don’t need to be an expert. Our platform is designed to be
+        user-friendly, and we provide detailed guides to help you along the way.
+      </>
+    ),
   },
   {
     question:
       "What types of data visualizations can I create with DataHub Cloud?",
-    answer:
-      "DataHub Cloud supports a variety of visualizations including line charts, bar charts, maps, and tables. You can enhance your datasets with these visuals simply by using our components.",
+    answer: (
+      <>
+        DataHub Cloud supports a variety of visualizations including line
+        charts, bar charts, maps, and tables. You can enhance your datasets with
+        these visuals simply by using our components.
+      </>
+    ),
   },
   {
     question:
       "How can I ensure my data remains secure when using DataHub Cloud?",
-    answer:
-      "Data security is our top priority. DataHub Cloud does not store your data - it remains within your GitHub repository. We use OAuth for authentication and operate with read-only access to your repositories unless otherwise required for functionality.",
+    answer: (
+      <>
+        Data security is our top priority. DataHub Cloud does not store your
+        data - it remains within your GitHub repository. We use OAuth for
+        authentication and operate with read-only access to your repositories
+        unless otherwise required for functionality.
+      </>
+    ),
   },
   {
     question: "Is there a cost to use DataHub Cloud?",
-    answer:
-      "DataHub Cloud currently offers a free version that users can sign up for. As we develop and add more features, additional premium plans will be introduced.",
+    answer: (
+      <>
+        DataHub Cloud currently offers a free version that users can sign up
+        for. As we develop and add more features, additional premium plans will
+        be introduced.
+      </>
+    ),
   },
   {
     question: "What support options are available if I need help?",
-    answer:
-      "Our support team is ready to assist you with any questions or issues you might encounter. The quickest way to get help is to join our community on Discord, where you can chat directly with our team and other users.",
+    answer: (
+      <>
+        Our support team is ready to assist you with any questions or issues you
+        might encounter. The quickest way to get help is to
+        <Link
+          href="https://discord.gg/ZB4j9B5gXm"
+          className="font-bold text-orange-400"
+          target="_blank"
+        >
+          {" "}
+          join our community on Discord{" "}
+          <ExternalLink className="inline-block" width={15} />
+        </Link>
+        , where you can chat directly with our team and other users.
+      </>
+    ),
   },
 ];
 
