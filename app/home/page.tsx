@@ -64,9 +64,10 @@ export default function Home() {
         </Section>
       </div>
 
-      <Section className="mt-18 w-full md:mt-24">
+      {/* This's removed for now as we don't have real testimonials */}
+      {/* <Section className="mt-18 w-full md:mt-24">
         <TestimonialSection />
-      </Section>
+      </Section> */}
 
       <div className={containerWidth}>
         <Section className="mt-18 md:mt-24">
