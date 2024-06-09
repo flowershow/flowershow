@@ -14,13 +14,12 @@ const DatopianGlobe = dynamic(() => import("./_components/globe/globe"), {
 
 const heroTitle = (
   <>
-    Managed Data Portal in the Cloud
+    Fully Managed<br />Data Portal<br />in the Cloud
     {/* <span className="text-cyan-500"></span> */}
   </>
 );
 
-const heroDescription = `Datahub is the simplest way of getting started with Open Data
-for governments, non-profits, academics and companies of all sizes.`;
+const heroDescription = `Datahub Enterprise is the simplest way to create data portals and data catalogs. For governments, non-profits, researchers and companies of all sizes.`;
 
 const heroActions = [
   {
@@ -44,7 +43,7 @@ const heroVisual = () => (
 );
 
 const heroAnnouncement = {
-  content: "🔥 Datahub (beta) is now available ➡️",
+  content: "🔥 Datahub Enterprise (beta) is now available ➡️",
   href: "https://cloud.portaljs.com/auth/signup",
 };
 
