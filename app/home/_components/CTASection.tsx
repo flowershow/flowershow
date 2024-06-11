@@ -12,7 +12,10 @@ export function CTASection() {
           your feedback.
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
-          <Button href="https://cloud.datahub.io/" target="_blank">
+          <Button
+            href="https://0613d040.sibforms.com/serve/MUIFAMLy5tXMDC-gFjXRxBEcvyVYV9O9KLVoKMp1n6WMXE4LBazZkkV78pTBf3FnJHdhQpJoOYL3KsAbAv9yDYJooerqar47yy2RQkuP_Vs0CEkHexRMrkWsbKtTIi_DMOa9KfzpRVFa959hSXqJByMY5Gj9OrZtEX3ZrfO5OJHh7fLxh3nYgnNIBwGTpxJ25XA_MxOKv_kHKNgM"
+            target="_blank"
+          >
             <span>Get started for free</span>
           </Button>
         </div>
