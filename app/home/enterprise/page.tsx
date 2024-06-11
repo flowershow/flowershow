@@ -14,7 +14,11 @@ const DatopianGlobe = dynamic(() => import("./_components/globe/globe"), {
 
 const heroTitle = (
   <>
-    Fully Managed<br />Data Portal<br />in the Cloud
+    Fully Managed
+    <br />
+    Data Portal
+    <br />
+    in the Cloud
     {/* <span className="text-cyan-500"></span> */}
   </>
 );
