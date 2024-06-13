@@ -79,6 +79,7 @@ model Site {
   gh_scope      String
   gh_repository String
   gh_branch     String
+  auto_sync     Boolean  @default(false)
   // description   String?  @db.Text
   // logo          String?  @default("https://public.blob.vercel-storage.com/eEZHAoPTOBSYGBE3/JRajRyC-PhBHEinQkupt02jqfKacBVHLWJq7Iy.png") @db.Text
   // font          String   @default("font-cal")
