@@ -29,14 +29,20 @@ const githubFetch = async ({
   accessToken,
   cacheOptions,
   accept,
+  method,
+  body,
 }: {
   url: string;
   accessToken?: string;
   cacheOptions?: { next?: any; cache?: any };
   accept?: Accept;
+  method?: "GET" | "POST" | "PUT" | "DELETE";
+  body?: any;
 }) => {
   const response = await fetch(`${githubAPIBaseURL}${url}`, {
     headers: makeGitHubHeaders({ accessToken, accept }),
+    method,
+    body: body ? JSON.stringify(body) : undefined,
     ...cacheOptions,
   });
   if (!response.ok) {
@@ -71,15 +77,21 @@ const githubJsonFetch = async <T>({
   url,
   accessToken,
   cacheOptions,
+  method,
+  body,
 }: {
   url: string;
   accessToken?: string;
   cacheOptions?: { next?: any; cache?: any };
+  method?: "GET" | "POST" | "PUT" | "DELETE";
+  body?: any;
 }) => {
   const response = await githubFetch({
     url,
     accessToken,
     cacheOptions,
+    method,
+    body,
   });
   return response.json() as Promise<T>;
 };
@@ -331,6 +343,50 @@ export const fetchGitHubRepoContributors = async ({
   }
 };
 
+export const createGitHubRepoWebhook = async ({
+  gh_repository,
+  access_token,
+  webhook_url,
+}: {
+  gh_repository: string;
+  access_token: string;
+  webhook_url: string;
+}) => {
+  return await githubJsonFetch<GitHubAPIWebhook>({
+    // https://docs.github.com/en/rest/repos/webhooks?apiVersion=2022-11-28#create-a-repository-webhook
+    url: `/repos/${gh_repository}/hooks`,
+    accessToken: access_token,
+    method: "POST",
+    body: {
+      name: "web",
+      active: true,
+      events: ["push"],
+      config: {
+        url: webhook_url,
+        content_type: "json",
+        // secret: env.GITHUB_WEBHOOK_SECRET,
+      },
+    },
+  });
+};
+
+export const deleteGitHubRepoWebhook = async ({
+  gh_repository,
+  webhook_id,
+  access_token,
+}: {
+  gh_repository: string;
+  webhook_id: number;
+  access_token: string;
+}) => {
+  return await githubFetch({
+    // https://docs.github.com/en/rest/repos/webhooks?apiVersion=2022-11-28#delete-a-repository-webhook
+    url: `/repos/${gh_repository}/hooks/${webhook_id}`,
+    accessToken: access_token,
+    method: "DELETE",
+  });
+};
+
 // export const getGitHubRepoTreeBlobs = async (tree: GitHubAPIRepoTree) => {
 //   return tree.tree
 //     .filter((file) => file.type === "blob") // only include blobs (files) not trees (folders)
@@ -406,6 +462,13 @@ interface GitHubAPIRepository {
     login: string;
   };
   stargazers_count: number;
+}
+
+interface GitHubAPIWebhook {
+  id: number;
+  active: boolean;
+  events: string[];
+  // ...
 }
 
 interface GitHubScope {
