@@ -127,6 +127,18 @@ export default async function SiteSettingsIndex({
         handleSubmit={updateSite}
       />
 
+      <Form
+        title="Auto-sync"
+        description="Automatically sync your site after each change to the GitHub repository."
+        helpText="The app will install a GitHub webhook in your repository to listen to new commits made to it."
+        inputAttrs={{
+          name: "autoSync",
+          type: "text",
+          defaultValue: Boolean(data?.autoSync!).toString(),
+        }}
+        handleSubmit={updateSite}
+      />
+
       <DeleteSiteForm siteName={data?.projectName!} />
     </div>
   );
