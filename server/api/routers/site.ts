@@ -12,8 +12,10 @@ import {
   fetchGitHubFile,
   checkIfBranchExists,
   fetchGitHubFileBlob,
-  GitHubAPIRepoTree,
+  createGitHubRepoWebhook,
+  deleteGitHubRepoWebhook,
 } from "@/lib/github";
+import type { GitHubAPIRepoTree } from "@/lib/github";
 import {
   uploadFile,
   uploadTree,
@@ -39,6 +41,7 @@ import { PageMetadata } from "../types";
 import { Site } from "@prisma/client";
 import { buildNestedTreeFromFilesMap } from "@/lib/build-nested-tree";
 import { SiteConfig } from "@/components/types";
+import { env } from "@/env.mjs";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -235,6 +238,36 @@ export const siteRouter = createTRPCRouter({
           });
           throw new Error(`Failed to sync site: ${error}`);
         }
+      } else if (key === "autoSync") {
+        if (value === "true") {
+          try {
+            const { id: webhookId } = await createGitHubRepoWebhook({
+              gh_repository: site.gh_repository,
+              access_token: ctx.session.accessToken,
+              webhook_url: env.GITHUB_WEBHOOK_URL, // TODO use env var
+            });
+            response = await ctx.db.site.update({
+              where: { id },
+              data: { autoSync: true, webhookId: webhookId.toString() },
+            });
+          } catch (error) {
+            throw new Error(`Failed to create webhook: ${error}`);
+          }
+        } else {
+          try {
+            await deleteGitHubRepoWebhook({
+              gh_repository: site.gh_repository,
+              access_token: ctx.session.accessToken,
+              webhook_id: Number(site.webhookId),
+            });
+            response = await ctx.db.site.update({
+              where: { id },
+              data: { autoSync: false, webhookId: null },
+            });
+          } catch (error) {
+            throw new Error(`Failed to delete webhook: ${error}`);
+          }
+        }
       } else {
         // If the key is not one of the special cases handled above, we update it directly
         response = await ctx.db.site.update({
@@ -272,9 +305,18 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      const response = await ctx.db.site.delete({
-        where: { id: input.id },
-      });
+      // delete webhook if autoSync is enabled
+      if (site?.webhookId) {
+        try {
+          await deleteGitHubRepoWebhook({
+            gh_repository: site!.gh_repository,
+            access_token: ctx.session.accessToken,
+            webhook_id: Number(site!.webhookId),
+          });
+        } catch (error) {
+          throw new Error(`Failed to delete webhook: ${error}`);
+        }
+      }
 
       // delete project from content store
       try {
@@ -283,6 +325,10 @@ export const siteRouter = createTRPCRouter({
         // TODO this should be a log only
         throw new Error(`Failed to delete site content ${input.id}: ${error}`);
       }
+
+      const response = await ctx.db.site.delete({
+        where: { id: input.id },
+      });
 
       // revalidate the site metadata
       revalidateTag(`${site?.user?.gh_username}-${site?.projectName}-metadata`);
@@ -742,7 +788,7 @@ type SiteWithUser = Site & {
 };
 
 // TODO revise and refactor this function
-const processGitHubTree = async ({
+export const processGitHubTree = async ({
   gh_repository,
   gh_branch,
   access_token,
