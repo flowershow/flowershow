@@ -346,11 +346,13 @@ export const fetchGitHubRepoContributors = async ({
 export const createGitHubRepoWebhook = async ({
   gh_repository,
   access_token,
-  webhook_url,
+  url,
+  secret,
 }: {
   gh_repository: string;
   access_token: string;
-  webhook_url: string;
+  url: string;
+  secret: string;
 }) => {
   return await githubJsonFetch<GitHubAPIWebhook>({
     // https://docs.github.com/en/rest/repos/webhooks?apiVersion=2022-11-28#create-a-repository-webhook
@@ -362,9 +364,9 @@ export const createGitHubRepoWebhook = async ({
       active: true,
       events: ["push"],
       config: {
-        url: webhook_url,
         content_type: "json",
-        // secret: env.GITHUB_WEBHOOK_SECRET,
+        url,
+        secret,
       },
     },
   });
