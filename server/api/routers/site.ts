@@ -130,6 +130,7 @@ export const siteRouter = createTRPCRouter({
           },
         });
       } catch (error) {
+        // TODO cleanup ?
         await ctx.db.site.update({
           where: { id: site.id },
           data: {
@@ -138,6 +139,22 @@ export const siteRouter = createTRPCRouter({
         });
         throw new Error(`Failed to create site: ${error}`);
       }
+
+      try {
+        const { id: webhookId } = await createGitHubRepoWebhook({
+          gh_repository: site.gh_repository,
+          access_token: ctx.session.accessToken,
+          url: env.GITHUB_WEBHOOK_URL,
+          secret: env.GITHUB_WEBHOOK_SECRET,
+        });
+        await ctx.db.site.update({
+          where: { id: site.id },
+          data: { autoSync: true, webhookId: webhookId.toString() },
+        });
+      } catch (error) {
+        console.log(`Failed to create webhook: ${error}`);
+      }
+
       return site;
     }),
   update: protectedProcedure
@@ -244,7 +261,8 @@ export const siteRouter = createTRPCRouter({
             const { id: webhookId } = await createGitHubRepoWebhook({
               gh_repository: site.gh_repository,
               access_token: ctx.session.accessToken,
-              webhook_url: env.GITHUB_WEBHOOK_URL, // TODO use env var
+              url: env.GITHUB_WEBHOOK_URL,
+              secret: env.GITHUB_WEBHOOK_SECRET,
             });
             response = await ctx.db.site.update({
               where: { id },
@@ -266,6 +284,7 @@ export const siteRouter = createTRPCRouter({
             });
           } catch (error) {
             throw new Error(`Failed to delete webhook: ${error}`);
+            // TODO if the webhook doesn't exist, we should still update the site
           }
         }
       } else {
@@ -314,7 +333,7 @@ export const siteRouter = createTRPCRouter({
             webhook_id: Number(site!.webhookId),
           });
         } catch (error) {
-          throw new Error(`Failed to delete webhook: ${error}`);
+          console.error(`Failed to delete webhook: ${error}`);
         }
       }
 
