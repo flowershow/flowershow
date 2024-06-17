@@ -1,9 +1,7 @@
 // import { buffer } from 'micro';
 // import crypto from 'crypto';
-
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/server/db";
-import { env } from "@/env.mjs";
 import { fetchTree, uploadTree } from "@/lib/content-store";
 import { fetchGitHubRepoTree } from "@/lib/github";
 import { processGitHubTree } from "@/server/api/routers/site";
@@ -48,15 +46,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Site not found" }, { status: 404 });
   }
 
+  // TODO this is temporary solution; it should be queued instead of blocking the request
+  if (site.syncStatus === "PENDING") {
+    return new Response("Event not processed: sync already in progress", {
+      status: 204,
+    });
+  }
+
   if (event === "ping") {
     return NextResponse.json({ message: "Event processed" });
   }
 
   if (payload.ref !== `refs/heads/${site.gh_branch}` || event !== "push") {
-    return NextResponse.json(
-      { message: "Event not processed" },
-      { status: 204 },
-    );
+    return new Response("Event not processed", { status: 204 });
   }
 
   const account = await prisma.account.findFirst({
@@ -66,6 +68,16 @@ export async function POST(req: NextRequest) {
   });
   const { id, gh_repository, gh_branch } = site!;
   const access_token = account!.access_token!;
+
+  await prisma.site.update({
+    where: { id: site!.id },
+    data: {
+      syncStatus: "PENDING",
+    },
+  });
+
+  // simulating a long-running process
+  await new Promise((resolve) => setTimeout(resolve, 30 * 1000));
 
   // this is copied and only slightly modified from the sync TRPC route,
   // as can't call the route directly as it's protected and requires a user session;
@@ -100,7 +112,7 @@ export async function POST(req: NextRequest) {
       where: { id: site!.id },
       data: {
         files: filesMetadata as any, // TODO: fix types
-        synced: true,
+        syncStatus: "SUCCESS",
         syncedAt: new Date(),
       },
     });
@@ -118,7 +130,12 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message: "Event processed" });
   } catch (error) {
-    console.error("Error syncing repository:", error);
+    await prisma.site.update({
+      where: { id: site!.id },
+      data: {
+        syncStatus: "ERROR",
+      },
+    });
     return NextResponse.json(
       { error: "Error syncing repository" },
       { status: 500 },

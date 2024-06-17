@@ -124,7 +124,7 @@ export const siteRouter = createTRPCRouter({
         await ctx.db.site.update({
           where: { id: site.id },
           data: {
-            synced: true,
+            syncStatus: "SUCCESS",
             syncedAt: new Date(),
             files: filesMetadata as any, // TODO: fix types
           },
@@ -133,7 +133,7 @@ export const siteRouter = createTRPCRouter({
         await ctx.db.site.update({
           where: { id: site.id },
           data: {
-            synced: false,
+            syncStatus: "ERROR",
           },
         });
         throw new Error(`Failed to create site: ${error}`);
@@ -193,7 +193,7 @@ export const siteRouter = createTRPCRouter({
           where: { id },
           data: {
             rootDir: value,
-            synced: false,
+            syncStatus: "PENDING",
             files: {},
           },
         });
@@ -224,7 +224,7 @@ export const siteRouter = createTRPCRouter({
           await ctx.db.site.update({
             where: { id },
             data: {
-              synced: true,
+              syncStatus: "SUCCESS",
               syncedAt: new Date(),
               files: filesMetadata as any, // TODO: fix types
             },
@@ -233,7 +233,7 @@ export const siteRouter = createTRPCRouter({
           await ctx.db.site.update({
             where: { id },
             data: {
-              synced: false,
+              syncStatus: "ERROR",
             },
           });
           throw new Error(`Failed to sync site: ${error}`);
@@ -359,8 +359,25 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
+      if (site.syncStatus === "PENDING") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Sync already in progress",
+        });
+      }
+
       const { id, gh_repository, gh_branch } = site!;
       const access_token = ctx.session.accessToken;
+
+      await ctx.db.site.update({
+        where: { id },
+        data: {
+          syncStatus: "PENDING",
+        },
+      });
+
+      // simulating a long-running process
+      await new Promise((resolve) => setTimeout(resolve, 5 * 1000));
 
       try {
         const contentStoreTree = await fetchTree(site!.id, site!.gh_branch);
@@ -394,11 +411,17 @@ export const siteRouter = createTRPCRouter({
           where: { id: site!.id },
           data: {
             files: filesMetadata as any, // TODO: fix types
-            synced: true,
+            syncStatus: "SUCCESS",
             syncedAt: new Date(),
           },
         });
       } catch (error) {
+        await ctx.db.site.update({
+          where: { id: site!.id },
+          data: {
+            syncStatus: "ERROR",
+          },
+        });
         throw new Error(`Failed to sync site ${site!.id}: ${error}`);
       }
 
@@ -438,10 +461,8 @@ export const siteRouter = createTRPCRouter({
       });
 
       return {
-        synced:
-          site!.synced &&
-          contentStoreTree &&
-          contentStoreTree.sha === gitHubTree.sha,
+        isUpToDate: contentStoreTree && contentStoreTree.sha === gitHubTree.sha,
+        syncStatus: site!.syncStatus,
         syncedAt: site!.syncedAt,
       };
     }),
