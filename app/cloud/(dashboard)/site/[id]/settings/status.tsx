@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useSync } from "../sync-provider";
 
 import {
+  ArrowDownCircleIcon,
   CalendarIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,
@@ -12,7 +13,7 @@ import { useEffect } from "react";
 
 export default function Status() {
   const { id } = useParams() as { id: string };
-  const { refreshKey } = useSync();
+  const { refreshKey, isPending } = useSync();
 
   const {
     data: syncStatus,
@@ -21,8 +22,9 @@ export default function Status() {
   } = api.site.checkSyncStatus.useQuery(
     { id },
     {
-      refetchInterval: 60 * 1000, // refetch every 1 minute
+      refetchInterval: 30 * 1000,
       keepPreviousData: true,
+      refetchOnWindowFocus: "always",
     },
   );
 
@@ -41,13 +43,21 @@ export default function Status() {
             />
             <span>-</span>
           </div>
-        ) : syncStatus?.synced ? (
+        ) : syncStatus?.isUpToDate ? (
           <div className="flex items-center">
             <CheckCircleIcon
               className="mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"
               aria-hidden="true"
             />
             <span>Synced</span>
+          </div>
+        ) : syncStatus?.syncStatus === "PENDING" || isPending ? (
+          <div className="flex items-center">
+            <ArrowDownCircleIcon
+              className="mr-1.5 h-5 w-5 flex-shrink-0 text-orange-400"
+              aria-hidden="true"
+            />
+            <span>Syncing...</span>
           </div>
         ) : (
           <div className="flex items-center">
