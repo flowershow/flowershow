@@ -1,5 +1,3 @@
-// import { buffer } from 'micro';
-// import crypto from 'crypto';
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/server/db";
 import { fetchTree, uploadTree } from "@/lib/content-store";
@@ -7,13 +5,6 @@ import { fetchGitHubRepoTree } from "@/lib/github";
 import { processGitHubTree } from "@/server/api/routers/site";
 import { revalidateTag } from "next/cache";
 import { env } from "@/env.mjs";
-
-// Disable body parsing to handle raw payload
-// export const config = {
-//   api: {
-//     bodyParser: false,
-//   },
-// };
 
 export async function POST(req: NextRequest) {
   const secret = env.GITHUB_WEBHOOK_SECRET;
