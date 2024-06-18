@@ -3,7 +3,6 @@
 import LoadingDots from "@/components/icons/loading-dots";
 import { cn } from "@/lib/utils";
 import { useParams, useRouter } from "next/navigation";
-import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
 import va from "@vercel/analytics";
 import { api } from "@/trpc/react";
@@ -13,26 +12,27 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
   const { id } = useParams() as { id: string };
   const router = useRouter();
 
-  const deleteSiteMutation = api.site.delete.useMutation({
-    onSuccess: () => {
-      va.track("Deleted Site");
-      router.push("/sites");
-      router.refresh();
-      toast.success(`Successfully deleted site!`);
-    },
-    onError: (error) => {
-      toast.error(error.message);
-      if (error.data?.code === "UNAUTHORIZED") {
-        setTimeout(() => {
-          signOut();
-        }, 3000);
-      }
-    },
-  });
+  const { isLoading: isDeletingSite, mutate: deleteSite } =
+    api.site.delete.useMutation({
+      onSuccess: () => {
+        va.track("Deleted Site");
+        router.push("/sites");
+        router.refresh();
+        toast.success(`Successfully deleted site!`);
+      },
+      onError: (error) => {
+        toast.error(error.message);
+        if (error.data?.code === "UNAUTHORIZED") {
+          setTimeout(() => {
+            signOut();
+          }, 3000);
+        }
+      },
+    });
 
   return (
     <form
-      action={() => deleteSiteMutation.mutate({ id })}
+      action={() => deleteSite({ id })}
       className="rounded-lg border border-red-600 bg-white dark:bg-black"
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
@@ -57,15 +57,15 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
           This action is irreversible. Please proceed with caution.
         </p>
         <div className="w-32">
-          <FormButton />
+          <FormButton pending={isDeletingSite} />
         </div>
       </div>
     </form>
   );
 }
 
-function FormButton() {
-  const { pending } = useFormStatus();
+function FormButton({ pending = false }) {
+  /* const { pending } = useFormStatus(); // TODO this doesn't work */
   return (
     <button
       className={cn(

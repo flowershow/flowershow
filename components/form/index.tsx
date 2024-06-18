@@ -5,12 +5,14 @@ import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import { useFormStatus } from "react-dom";
 import { toast } from "sonner";
+import { Switch } from "@headlessui/react";
 import DomainStatus from "./domain-status";
 import DomainConfiguration from "./domain-configuration";
 import Uploader from "./uploader";
 import va from "@vercel/analytics";
 import { env } from "@/env.mjs";
 import { useSync } from "@/app/cloud/(dashboard)/site/[id]/sync-provider";
+import clsx from "clsx";
 
 export default function Form({
   title,
@@ -21,7 +23,7 @@ export default function Form({
 }: {
   title: string;
   description: string;
-  helpText: string;
+  helpText?: string;
   inputAttrs: {
     name: string;
     type: string;
@@ -112,7 +114,51 @@ export default function Form({
         <p className="text-sm text-stone-500 dark:text-stone-400">
           {description}
         </p>
-        {inputAttrs.name === "image" || inputAttrs.name === "logo" ? (
+        {inputAttrs.name === "autoSync" ? (
+          <Switch
+            checked={inputAttrs.defaultValue === "true"}
+            onChange={() => {
+              handleSubmit({
+                id,
+                key: inputAttrs.name,
+                value: inputAttrs.defaultValue === "true" ? "false" : "true",
+              })
+                .then(async () => {
+                  va.track(`Updated ${inputAttrs.name}`, id ? { id } : {});
+                  if (id) {
+                    router.refresh();
+                  } else {
+                    await update();
+                    router.refresh();
+                  }
+                  toast.success(`Successfully updated ${inputAttrs.name}!`);
+                })
+                .catch((error) => {
+                  toast.error(`Error: ${error.message}`);
+                })
+                .finally(() => {
+                  setRefreshKey((prev) => prev + 1);
+                });
+            }}
+            className={clsx(
+              inputAttrs.defaultValue === "true"
+                ? "bg-indigo-600"
+                : "bg-gray-200",
+              "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
+            )}
+          >
+            <span className="sr-only">Use setting</span>
+            <span
+              aria-hidden="true"
+              className={clsx(
+                inputAttrs.defaultValue === "true"
+                  ? "translate-x-5"
+                  : "translate-x-0",
+                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+              )}
+            />
+          </Switch>
+        ) : inputAttrs.name === "image" || inputAttrs.name === "logo" ? (
           <Uploader
             defaultValue={inputAttrs.defaultValue}
             name={inputAttrs.name}
@@ -172,7 +218,7 @@ export default function Form({
       )}
       <div className="flex flex-col items-center justify-center space-y-2 rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800 sm:flex-row sm:justify-between sm:space-y-0 sm:px-10">
         <p className="text-sm text-stone-500 dark:text-stone-400">{helpText}</p>
-        <FormButton />
+        {inputAttrs.name !== "autoSync" && <FormButton />}
       </div>
     </form>
   );
