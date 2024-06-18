@@ -38,6 +38,8 @@ export const env = createEnv({
     R2_ACCESS_KEY_ID: z.string(),
     R2_SECRET_KEY_ID: z.string(),
     R2_BUCKET_NAME: z.string(),
+    GITHUB_WEBHOOK_SECRET: z.string(),
+    GITHUB_WEBHOOK_URL: z.string(),
   },
 
   /**
@@ -80,6 +82,8 @@ export const env = createEnv({
     R2_BUCKET_NAME: process.env.R2_BUCKET_NAME,
     NEXT_PUBLIC_R2_BUCKET_DOMAIN: process.env.NEXT_PUBLIC_R2_BUCKET_DOMAIN,
     NEXT_PUBLIC_DNS_DOMAIN: process.env.NEXT_PUBLIC_DNS_DOMAIN,
+    GITHUB_WEBHOOK_SECRET: process.env.GITHUB_WEBHOOK_SECRET,
+    GITHUB_WEBHOOK_URL: process.env.GITHUB_WEBHOOK_URL,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

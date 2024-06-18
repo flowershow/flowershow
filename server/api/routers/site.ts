@@ -12,8 +12,10 @@ import {
   fetchGitHubFile,
   checkIfBranchExists,
   fetchGitHubFileBlob,
-  GitHubAPIRepoTree,
+  createGitHubRepoWebhook,
+  deleteGitHubRepoWebhook,
 } from "@/lib/github";
+import type { GitHubAPIRepoTree } from "@/lib/github";
 import {
   uploadFile,
   uploadTree,
@@ -39,6 +41,7 @@ import { PageMetadata } from "../types";
 import { Site } from "@prisma/client";
 import { buildNestedTreeFromFilesMap } from "@/lib/build-nested-tree";
 import { SiteConfig } from "@/components/types";
+import { env } from "@/env.mjs";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -121,20 +124,37 @@ export const siteRouter = createTRPCRouter({
         await ctx.db.site.update({
           where: { id: site.id },
           data: {
-            synced: true,
+            syncStatus: "SUCCESS",
             syncedAt: new Date(),
             files: filesMetadata as any, // TODO: fix types
           },
         });
       } catch (error) {
+        // TODO cleanup ?
         await ctx.db.site.update({
           where: { id: site.id },
           data: {
-            synced: false,
+            syncStatus: "ERROR",
           },
         });
         throw new Error(`Failed to create site: ${error}`);
       }
+
+      try {
+        const { id: webhookId } = await createGitHubRepoWebhook({
+          gh_repository: site.gh_repository,
+          access_token: ctx.session.accessToken,
+          url: env.GITHUB_WEBHOOK_URL,
+          secret: env.GITHUB_WEBHOOK_SECRET,
+        });
+        await ctx.db.site.update({
+          where: { id: site.id },
+          data: { autoSync: true, webhookId: webhookId.toString() },
+        });
+      } catch (error) {
+        console.log(`Failed to create webhook: ${error}`);
+      }
+
       return site;
     }),
   update: protectedProcedure
@@ -190,7 +210,7 @@ export const siteRouter = createTRPCRouter({
           where: { id },
           data: {
             rootDir: value,
-            synced: false,
+            syncStatus: "PENDING",
             files: {},
           },
         });
@@ -221,7 +241,7 @@ export const siteRouter = createTRPCRouter({
           await ctx.db.site.update({
             where: { id },
             data: {
-              synced: true,
+              syncStatus: "SUCCESS",
               syncedAt: new Date(),
               files: filesMetadata as any, // TODO: fix types
             },
@@ -230,10 +250,42 @@ export const siteRouter = createTRPCRouter({
           await ctx.db.site.update({
             where: { id },
             data: {
-              synced: false,
+              syncStatus: "ERROR",
             },
           });
           throw new Error(`Failed to sync site: ${error}`);
+        }
+      } else if (key === "autoSync") {
+        if (value === "true") {
+          try {
+            const { id: webhookId } = await createGitHubRepoWebhook({
+              gh_repository: site.gh_repository,
+              access_token: ctx.session.accessToken,
+              url: env.GITHUB_WEBHOOK_URL,
+              secret: env.GITHUB_WEBHOOK_SECRET,
+            });
+            response = await ctx.db.site.update({
+              where: { id },
+              data: { autoSync: true, webhookId: webhookId.toString() },
+            });
+          } catch (error) {
+            throw new Error(`Failed to create webhook: ${error}`);
+          }
+        } else {
+          try {
+            await deleteGitHubRepoWebhook({
+              gh_repository: site.gh_repository,
+              access_token: ctx.session.accessToken,
+              webhook_id: Number(site.webhookId),
+            });
+            response = await ctx.db.site.update({
+              where: { id },
+              data: { autoSync: false, webhookId: null },
+            });
+          } catch (error) {
+            throw new Error(`Failed to delete webhook: ${error}`);
+            // TODO if the webhook doesn't exist, we should still update the site
+          }
         }
       } else {
         // If the key is not one of the special cases handled above, we update it directly
@@ -272,9 +324,18 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      const response = await ctx.db.site.delete({
-        where: { id: input.id },
-      });
+      // delete webhook if autoSync is enabled
+      if (site?.webhookId) {
+        try {
+          await deleteGitHubRepoWebhook({
+            gh_repository: site!.gh_repository,
+            access_token: ctx.session.accessToken,
+            webhook_id: Number(site!.webhookId),
+          });
+        } catch (error) {
+          console.error(`Failed to delete webhook: ${error}`);
+        }
+      }
 
       // delete project from content store
       try {
@@ -283,6 +344,10 @@ export const siteRouter = createTRPCRouter({
         // TODO this should be a log only
         throw new Error(`Failed to delete site content ${input.id}: ${error}`);
       }
+
+      const response = await ctx.db.site.delete({
+        where: { id: input.id },
+      });
 
       // revalidate the site metadata
       revalidateTag(`${site?.user?.gh_username}-${site?.projectName}-metadata`);
@@ -313,8 +378,25 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
+      if (site.syncStatus === "PENDING") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Sync already in progress",
+        });
+      }
+
       const { id, gh_repository, gh_branch } = site!;
       const access_token = ctx.session.accessToken;
+
+      await ctx.db.site.update({
+        where: { id },
+        data: {
+          syncStatus: "PENDING",
+        },
+      });
+
+      // simulating a long-running process
+      await new Promise((resolve) => setTimeout(resolve, 5 * 1000));
 
       try {
         const contentStoreTree = await fetchTree(site!.id, site!.gh_branch);
@@ -348,11 +430,17 @@ export const siteRouter = createTRPCRouter({
           where: { id: site!.id },
           data: {
             files: filesMetadata as any, // TODO: fix types
-            synced: true,
+            syncStatus: "SUCCESS",
             syncedAt: new Date(),
           },
         });
       } catch (error) {
+        await ctx.db.site.update({
+          where: { id: site!.id },
+          data: {
+            syncStatus: "ERROR",
+          },
+        });
         throw new Error(`Failed to sync site ${site!.id}: ${error}`);
       }
 
@@ -392,10 +480,8 @@ export const siteRouter = createTRPCRouter({
       });
 
       return {
-        synced:
-          site!.synced &&
-          contentStoreTree &&
-          contentStoreTree.sha === gitHubTree.sha,
+        isUpToDate: contentStoreTree && contentStoreTree.sha === gitHubTree.sha,
+        syncStatus: site!.syncStatus,
         syncedAt: site!.syncedAt,
       };
     }),
@@ -742,7 +828,7 @@ type SiteWithUser = Site & {
 };
 
 // TODO revise and refactor this function
-const processGitHubTree = async ({
+export const processGitHubTree = async ({
   gh_repository,
   gh_branch,
   access_token,
