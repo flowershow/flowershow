@@ -154,7 +154,7 @@ export default async function SiteLayout({
   } else {
     url =
       siteConfig?.author?.url ??
-      site.customDomain ??
+      (site.customDomain ? `https://${site.customDomain}` : null) ??
       `/@${params.user}/${params.project}`;
   }
 
@@ -184,7 +184,6 @@ export default async function SiteLayout({
         {!siteConfig?.showSidebar && (
           <Navbar title={title} logo={logo} url={url} links={navLinks} />
         )}
-
         <div className="mx-auto max-w-8xl px-4 sm:px-6 md:px-8">
           {siteConfig?.showSidebar && (
             <Sidebar
