@@ -1,4 +1,3 @@
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { NonRetriableError } from "inngest";
 import YAML from "yaml";
 
@@ -31,7 +30,13 @@ import { revalidateTag } from "next/cache";
 export const syncSite = inngest.createFunction(
   {
     id: "sync",
-    concurrency: 10,
+    concurrency: [
+      {
+        scope: "account",
+        limit: 10,
+        key: "event.data.access_token",
+      },
+    ],
     // retries: 2,
     cancelOn: [
       {
@@ -319,7 +324,13 @@ export const syncSite = inngest.createFunction(
 export const deleteSite = inngest.createFunction(
   {
     id: "delete",
-    concurrency: 10,
+    concurrency: [
+      {
+        scope: "account",
+        limit: 10,
+        key: "event.data.access_token",
+      },
+    ],
     // retries: 2,
   },
   { event: "site/delete" },
