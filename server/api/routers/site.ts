@@ -93,7 +93,7 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      inngest.send({
+      await inngest.send({
         name: "site/sync",
         data: {
           siteId: site.id,
@@ -157,7 +157,7 @@ export const siteRouter = createTRPCRouter({
         }
       } else if (key === "rootDir") {
         await deleteProject(id); // TODO move to inngest workflow as well ?
-        inngest.send({
+        await inngest.send({
           name: "site/sync",
           data: {
             siteId: id,
@@ -236,18 +236,22 @@ export const siteRouter = createTRPCRouter({
       });
 
       if (site?.webhookId) {
-        await deleteGitHubRepoWebhook({
-          gh_repository: site!.gh_repository,
-          webhook_id: Number(site!.webhookId),
-          access_token: ctx.session.accessToken,
-        });
+        try {
+          await deleteGitHubRepoWebhook({
+            gh_repository: site!.gh_repository,
+            webhook_id: Number(site!.webhookId),
+            access_token: ctx.session.accessToken,
+          });
+        } catch (error) {
+          console.error("Failed to delete webhook", error);
+        }
       }
 
       await ctx.db.site.delete({
         where: { id: input.id },
       });
 
-      inngest.send({
+      await inngest.send({
         name: "site/delete",
         data: {
           siteId: input.id,
@@ -286,7 +290,7 @@ export const siteRouter = createTRPCRouter({
       const { id, gh_repository, gh_branch } = site!;
       const access_token = ctx.session.accessToken;
 
-      inngest.send({
+      await inngest.send({
         name: "site/sync",
         data: {
           siteId: id,
