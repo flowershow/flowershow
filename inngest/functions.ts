@@ -331,32 +331,9 @@ export const deleteSite = inngest.createFunction(
   async ({ event, step }) => {
     const { siteId } = event.data;
 
-    const site = await step
-      .run(
-        "fetch-site",
-        async () =>
-          await prisma.site.findUnique({
-            where: { id: siteId },
-            include: { user: true },
-          }),
-      )
-      .catch((e) => {
-        if (e instanceof PrismaClientKnownRequestError) {
-          if (e.code === "P2015") {
-            throw new NonRetriableError("Site does not exist");
-          }
-          throw e;
-        }
-      });
-
     await step.run(
       "delete-site-from-content-store",
       async () => await deleteProject(siteId),
     );
-
-    // TODO does this even work
-    await step.run("revalidate-tags", async () => {
-      revalidateTag(`${site?.user?.gh_username}-${site?.projectName}-metadata`);
-    });
   },
 );
