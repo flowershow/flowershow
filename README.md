@@ -68,6 +68,7 @@ All necessary environment variables should be defined in a `.env` file. Create t
 2. Set up the local development environment by creating a `.env` file from `.env.example`.
 3. Install dependencies with `pnpm i`.
 4. Run the development server with `pnpm dev`.
+5. Run `npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest` to start local Inngest instance and connect it the the app.
 
 ## Tests
 
