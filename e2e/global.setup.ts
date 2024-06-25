@@ -60,7 +60,6 @@ setup("Create test site", async ({ page, context }) => {
 //       caller.site.create({
 //         gh_repository: GH_REPOSITORY!,
 //         gh_branch: "main",
-//         gh_scope: GH_USERNAME!,
 //       });
 
 //     console.log("site", site);

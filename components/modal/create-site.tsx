@@ -105,7 +105,6 @@ export default function CreateSiteModal() {
         modal?.hide();
         router.push(`/site/${id}/settings`);
         router.refresh();
-        toast.success(`Successfully created site!`);
       },
       onError: (error) => {
         toast.error(error.message);
@@ -123,13 +122,11 @@ export default function CreateSiteModal() {
       action={async (data: FormData) => {
         const gh_repository = data.get("gh_repository") as string;
         const gh_branch = data.get("gh_branch") as string;
-        const gh_scope = data.get("gh_scope") as string;
         const rootDir = data.get("rootDir") as string;
 
         createSite({
           gh_repository,
           gh_branch,
-          gh_scope,
           rootDir,
         });
       }}

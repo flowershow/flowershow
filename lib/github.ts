@@ -1,3 +1,4 @@
+import { env } from "@/env.mjs";
 import { TRPCError } from "@trpc/server";
 
 const githubAPIBaseURL = "https://api.github.com";
@@ -112,7 +113,7 @@ const githubRawFetch = async ({
     accept: "application/vnd.github.raw+json",
   });
 
-  return response.blob();
+  return await response.blob();
 };
 
 export const fetchGitHubScopes = async (accessToken: string) => {
@@ -210,19 +211,13 @@ export const fetchGitHubRepoTree = async ({
   gh_branch: string;
   access_token: string;
 }) => {
-  try {
-    return await githubJsonFetch<GitHubAPIRepoTree>({
-      url: `/repos/${gh_repository}/git/trees/${gh_branch}?recursive=1`,
-      accessToken: access_token,
-      cacheOptions: {
-        cache: "no-store",
-      },
-    });
-  } catch (error) {
-    throw new Error(
-      `Failed to fetch GitHub repository tree ${gh_repository}: ${error}`,
-    );
-  }
+  return await githubJsonFetch<GitHubAPIRepoTree>({
+    url: `/repos/${gh_repository}/git/trees/${gh_branch}?recursive=1`,
+    accessToken: access_token,
+    cacheOptions: {
+      cache: "no-store",
+    },
+  });
 };
 
 export const fetchGitHubFile = async ({
@@ -252,7 +247,7 @@ export const fetchGitHubFile = async ({
   }
 };
 
-export const fetchGitHubFileBlob = async ({
+export const fetchGitHubFileRaw = async ({
   gh_repository,
   file_sha,
   access_token,
@@ -261,20 +256,14 @@ export const fetchGitHubFileBlob = async ({
   file_sha: string;
   access_token: string;
 }) => {
-  try {
-    return await githubRawFetch({
-      // https://docs.github.com/en/rest/git/blobs?apiVersion=2022-11-28#get-a-blob
-      url: `/repos/${gh_repository}/git/blobs/${file_sha}`,
-      accessToken: access_token,
-      cacheOptions: {
-        cache: "no-store",
-      },
-    });
-  } catch (error) {
-    throw new Error(
-      `Could not read ${gh_repository}/git/blob/${file_sha} from GitHub: ${error}`,
-    );
-  }
+  return await githubRawFetch({
+    // https://docs.github.com/en/rest/git/blobs?apiVersion=2022-11-28#get-a-blob
+    url: `/repos/${gh_repository}/git/blobs/${file_sha}`,
+    accessToken: access_token,
+    cacheOptions: {
+      cache: "no-store",
+    },
+  });
 };
 
 export const checkIfBranchExists = async ({
@@ -346,14 +335,12 @@ export const fetchGitHubRepoContributors = async ({
 export const createGitHubRepoWebhook = async ({
   gh_repository,
   access_token,
-  url,
-  secret,
 }: {
   gh_repository: string;
   access_token: string;
-  url: string;
-  secret: string;
 }) => {
+  // Note: If you're getting "Unprocessable entity" error from GitHub,
+  // there is a chance that the webhook with the same URL already exists.
   return await githubJsonFetch<GitHubAPIWebhook>({
     // https://docs.github.com/en/rest/repos/webhooks?apiVersion=2022-11-28#create-a-repository-webhook
     url: `/repos/${gh_repository}/hooks`,
@@ -365,8 +352,8 @@ export const createGitHubRepoWebhook = async ({
       events: ["push"],
       config: {
         content_type: "json",
-        url,
-        secret,
+        url: env.GITHUB_WEBHOOK_URL,
+        secret: env.GITHUB_WEBHOOK_SECRET,
       },
     },
   });

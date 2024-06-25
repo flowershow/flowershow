@@ -70,7 +70,6 @@ export default async function AdminPanel() {
       try {
         await api.site.create.mutate({
           gh_repository: repo.full_name,
-          gh_scope,
           gh_branch: repo.branch,
         });
       } catch (e) {

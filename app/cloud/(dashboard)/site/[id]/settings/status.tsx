@@ -22,7 +22,7 @@ export default function Status() {
   } = api.site.checkSyncStatus.useQuery(
     { id },
     {
-      refetchInterval: 30 * 1000,
+      refetchInterval: 10 * 1000,
       keepPreviousData: true,
       refetchOnWindowFocus: "always",
     },
@@ -79,7 +79,9 @@ export default function Status() {
         ) : (
           <span>
             Last synced{" "}
-            {new Date(syncStatus?.syncedAt!)?.toLocaleString() || ""}
+            {syncStatus && syncStatus.syncedAt
+              ? new Date(syncStatus?.syncedAt)?.toLocaleString()
+              : "—"}
           </span>
         )}
       </div>

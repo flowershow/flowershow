@@ -76,7 +76,6 @@ model VerificationToken {
 
 model Site {
   id            String   @id @default(cuid())
-  gh_scope      String
   gh_repository String
   gh_branch     String
   // description   String?  @db.Text

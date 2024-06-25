@@ -45,7 +45,6 @@ export async function POST(req: NextRequest) {
     try {
       await caller.site.create({
         gh_repository: repo,
-        gh_scope: scope,
         gh_branch: site.branch,
       });
     } catch (e) {

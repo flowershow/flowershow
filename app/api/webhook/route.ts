@@ -1,26 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import prisma from "@/server/db";
-import { fetchTree, uploadTree } from "@/lib/content-store";
-import { fetchGitHubRepoTree } from "@/lib/github";
-import { processGitHubTree } from "@/server/api/routers/site";
-import { revalidateTag } from "next/cache";
 import { env } from "@/env.mjs";
+import { inngest } from "@/inngest/client";
 
 export async function POST(req: NextRequest) {
-  const secret = env.GITHUB_WEBHOOK_SECRET;
-
-  const payload = await req.json();
-
-  if (!verifySignature(secret, req.headers.get("x-hub-signature")!, payload)) {
-    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
-  }
-
   const event = req.headers.get("x-github-event");
-  const webhookId = req.headers.get("x-github-hook-id")!;
 
   if (event === "ping") {
-    return NextResponse.json({ message: "Event processed" });
+    return new Response("Event processed", { status: 200 });
   }
+
+  const secret = env.GITHUB_WEBHOOK_SECRET;
+  const signature = req.headers.get("x-hub-signature")!;
+  const payload = await req.json();
+
+  if (!verifySignature(secret, signature, payload)) {
+    return new Response("Invalid signature", { status: 401 });
+  }
+
+  const webhookId = req.headers.get("x-github-hook-id")!;
 
   const site = await prisma.site.findUnique({
     where: {
@@ -32,14 +30,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (!site) {
-    return NextResponse.json({ error: "Site not found" }, { status: 404 });
-  }
-
-  // TODO this is temporary solution; it should be queued instead of blocking the request
-  if (site.syncStatus === "PENDING") {
-    return new Response("Event not processed: sync already in progress", {
-      status: 401,
-    });
+    return new Response("Site not found", { status: 404 });
   }
 
   if (payload.ref !== `refs/heads/${site.gh_branch}` || event !== "push") {
@@ -51,8 +42,6 @@ export async function POST(req: NextRequest) {
       userId: site.userId!,
     },
   });
-  const { id, gh_repository, gh_branch } = site!;
-  const access_token = account!.access_token!;
 
   await prisma.site.update({
     where: { id: site!.id },
@@ -61,71 +50,18 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // simulating a long-running process
-  // await new Promise((resolve) => setTimeout(resolve, 5 * 1000));
+  inngest.send({
+    name: "site/sync",
+    data: {
+      siteId: site.id,
+      gh_repository: site.gh_repository,
+      gh_branch: site.gh_branch,
+      rootDir: site.rootDir,
+      access_token: account!.access_token!,
+    },
+  });
 
-  // this is copied and only slightly modified from the sync TRPC route,
-  // as can't call the route directly as it's protected and requires a user session;
-  // will be moved to an Inngest workflow soon anyway so it's ok for now
-  try {
-    const contentStoreTree = await fetchTree(site!.id, site!.gh_branch);
-    const gitHubTree = await fetchGitHubRepoTree({
-      gh_repository,
-      gh_branch,
-      access_token,
-    });
-
-    const filesMetadata = await processGitHubTree({
-      gh_repository,
-      gh_branch,
-      access_token,
-      tree: gitHubTree,
-      previousTree: contentStoreTree,
-      site,
-      filesMetadata: site.files as any, // TODO: fix types
-      rootDir: site!.rootDir,
-    });
-
-    // If all goes well, update the content store tree to match the GitHub tree
-    await uploadTree({
-      projectId: id,
-      branch: gh_branch,
-      tree: gitHubTree,
-    });
-
-    await prisma.site.update({
-      where: { id: site!.id },
-      data: {
-        files: filesMetadata as any, // TODO: fix types
-        syncStatus: "SUCCESS",
-        syncedAt: new Date(),
-      },
-    });
-
-    // revalidate the site metadata
-    revalidateTag(`${site!.user?.gh_username}-${site!.projectName}-metadata`);
-    // revalidatee the site's permalinks
-    revalidateTag(`${site!.user?.gh_username}-${site!.projectName}-permalinks`);
-    // revalidate the site tree
-    revalidateTag(`${site?.user?.gh_username}-${site?.projectName}-tree`);
-    // revalidate all the pages' content
-    revalidateTag(
-      `${site!.user?.gh_username}-${site!.projectName}-page-content`,
-    );
-
-    return NextResponse.json({ message: "Event processed" });
-  } catch (error) {
-    await prisma.site.update({
-      where: { id: site!.id },
-      data: {
-        syncStatus: "ERROR",
-      },
-    });
-    return NextResponse.json(
-      { error: "Error syncing repository" },
-      { status: 500 },
-    );
-  }
+  return new Response("Event processed", { status: 200 });
 }
 
 const encoder = new TextEncoder();
