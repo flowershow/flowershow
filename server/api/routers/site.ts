@@ -88,6 +88,7 @@ export const siteRouter = createTRPCRouter({
           rootDir,
           autoSync: !!webhookId,
           webhookId,
+          syncStatus: "PENDING",
           user: { connect: { id: ctx.session.user.id } },
         },
       });
@@ -272,13 +273,6 @@ export const siteRouter = createTRPCRouter({
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Site not found",
-        });
-      }
-
-      if (site.syncStatus === "PENDING") {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Sync already in progress",
         });
       }
 
