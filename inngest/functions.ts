@@ -65,23 +65,18 @@ export const syncSite = inngest.createFunction(
       initialSync = false,
     } = event.data;
 
-    const site = await step
-      .run(
-        "fetch-site",
-        async () =>
-          await prisma.site.findUnique({
-            where: { id: siteId },
-            include: { user: true },
-          }),
-      )
-      .catch((e) => {
-        if (e instanceof PrismaClientKnownRequestError) {
-          if (e.code === "P2015") {
-            throw new NonRetriableError("Site does not exist");
-          }
-          throw e;
-        }
-      });
+    const site = await step.run(
+      "fetch-site",
+      async () =>
+        await prisma.site.findUnique({
+          where: { id: siteId },
+          include: { user: true },
+        }),
+    );
+
+    if (!site) {
+      throw new NonRetriableError("Site does not exist");
+    }
 
     await step.run(
       "update-sync-status",
