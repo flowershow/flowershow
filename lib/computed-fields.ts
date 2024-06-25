@@ -4,28 +4,20 @@ import { remark } from "remark";
 import stripMarkdown, { Options } from "strip-markdown";
 import { GitHubAPIRepoTree } from "./github";
 import matter from "gray-matter";
-import { Site } from "@prisma/client";
 import { resolveLink } from "@/lib/resolve-link";
-import { env } from "@/env.mjs";
-
-type SiteWithUser = Site & {
-  user: {
-    gh_username: string | null;
-  } | null;
-};
 
 export const computeMetadata = async ({
   source,
   datapackage,
   path,
   tree,
-  site,
+  contentStoreUrlBase,
 }: {
   source: string;
   datapackage: DataPackage | null;
   path: string;
   tree: GitHubAPIRepoTree;
-  site: SiteWithUser;
+  contentStoreUrlBase: string;
 }): Promise<PageMetadata> => {
   const { data: frontMatter } = matter(source);
 
@@ -53,7 +45,7 @@ export const computeMetadata = async ({
       resource.path = resolveLink({
         link: resource.path,
         filePath: path,
-        prefixPath: `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
+        prefixPath: contentStoreUrlBase,
       });
     }
   }
@@ -81,7 +73,6 @@ export const resolveFilePathToUrl = (filePath: string) => {
 };
 
 const extractTitle = async (source: string) => {
-  console.log("extractTitle", source);
   const heading = source.trim().match(/#\s+(.*)/);
   if (heading && heading[1]) {
     const title = heading[1]

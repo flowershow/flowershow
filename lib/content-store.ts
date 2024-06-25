@@ -190,11 +190,7 @@ export const uploadTree = async ({
 };
 
 export const fetchTree = async (projectId: string, branch: string) => {
-  try {
-    const response = await fetchR2Object(`${projectId}/${branch}/_tree`);
-    const tree = await response.Body?.transformToString();
-    return tree ? (JSON.parse(tree) as GitHubAPIRepoTree) : null;
-  } catch (e) {
-    return null;
-  }
+  const response = await fetchR2Object(`${projectId}/${branch}/_tree`);
+  const tree = await response.Body?.transformToString();
+  return tree ? (JSON.parse(tree) as GitHubAPIRepoTree) : null;
 };

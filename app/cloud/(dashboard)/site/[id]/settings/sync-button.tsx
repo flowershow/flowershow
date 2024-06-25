@@ -16,7 +16,7 @@ export default function SyncButton() {
     api.site.checkSyncStatus.useQuery(
       { id },
       {
-        refetchInterval: 30 * 1000,
+        refetchInterval: 10 * 1000,
         keepPreviousData: true,
         refetchOnWindowFocus: "always",
       },
