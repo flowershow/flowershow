@@ -9,6 +9,7 @@ interface SiteSync {
     rootDir: string | null;
     access_token: string;
     initialSync?: boolean;
+    forceSync?: boolean;
   };
 }
 

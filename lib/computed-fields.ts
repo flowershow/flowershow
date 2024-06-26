@@ -38,15 +38,15 @@ export const computeMetadata = async ({
 
   // add file sizes from github tree to datapackage resources
   for (const resource of _datapackage?.resources || []) {
-    const file = tree.tree.find((file) => file.path === resource.path);
+    const absoluteResourcePath = resolveLink({
+      link: resource.path,
+      filePath: path,
+    }).slice(1);
+    const file = tree.tree.find((file) => file.path === absoluteResourcePath);
     if (file) {
       resource.size = file.size;
       resource.format = file.path.split(".").pop();
-      resource.path = resolveLink({
-        link: resource.path,
-        filePath: path,
-        prefixPath: contentStoreUrlBase,
-      });
+      resource.path = contentStoreUrlBase + "/" + absoluteResourcePath;
     }
   }
 

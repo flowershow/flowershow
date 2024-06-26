@@ -3,6 +3,7 @@ import prisma from "@/server/db";
 import { env } from "@/env.mjs";
 import { inngest } from "@/inngest/client";
 
+// TODO https://www.inngest.com/docs/platform/webhooks
 export async function POST(req: NextRequest) {
   const event = req.headers.get("x-github-event");
 
