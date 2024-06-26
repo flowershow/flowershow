@@ -68,6 +68,7 @@ export const syncSite = inngest.createFunction(
       rootDir,
       access_token,
       initialSync = false,
+      forceSync = false,
     } = event.data;
 
     const site = await step.run(
@@ -94,7 +95,8 @@ export const syncSite = inngest.createFunction(
 
     const contentStoreTree = await step.run(
       "fetch-content-store-tree",
-      async () => (initialSync ? null : await fetchTree(siteId, gh_branch)),
+      async () =>
+        initialSync || forceSync ? null : await fetchTree(siteId, gh_branch),
     );
 
     const gitHubTree = await step.run(

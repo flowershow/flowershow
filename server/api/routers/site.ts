@@ -298,6 +298,7 @@ export const siteRouter = createTRPCRouter({
           gh_branch,
           rootDir: site!.rootDir,
           access_token,
+          forceSync: input.force,
         },
       });
     }),
