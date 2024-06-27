@@ -352,8 +352,8 @@ export const createGitHubRepoWebhook = async ({
       events: ["push"],
       config: {
         content_type: "json",
-        url: env.GITHUB_WEBHOOK_URL,
-        secret: env.GITHUB_WEBHOOK_SECRET,
+        url: env.GH_WEBHOOK_URL,
+        secret: env.GH_WEBHOOK_SECRET,
       },
     },
   });
