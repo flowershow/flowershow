@@ -27,7 +27,7 @@ const parse = async function (
   scope: object,
   permalinks?: string[],
 ) {
-  const { content, data } = matter(source);
+  const { content, data } = matter(source, {});
 
   const mdxSource = await serialize(
     { value: content, path: format },

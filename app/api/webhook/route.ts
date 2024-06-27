@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
     return new Response("Event processed", { status: 200 });
   }
 
-  const secret = env.GITHUB_WEBHOOK_SECRET;
+  const secret = env.GH_WEBHOOK_SECRET;
   const signature = req.headers.get("x-hub-signature")!;
   const payload = await req.json();
 
