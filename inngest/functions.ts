@@ -110,6 +110,14 @@ export const syncSite = inngest.createFunction(
     );
 
     if (contentStoreTree && contentStoreTree.sha === gitHubTree.sha) {
+      await step.run(
+        "update-sync-status",
+        async () =>
+          await prisma.site.update({
+            where: { id: siteId },
+            data: { syncStatus: "SUCCESS" },
+          }),
+      );
       return {
         event,
         body: "No changes detected",
