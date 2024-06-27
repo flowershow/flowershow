@@ -19,7 +19,7 @@ export const computeMetadata = async ({
   tree: GitHubAPIRepoTree;
   contentStoreUrlBase: string;
 }): Promise<PageMetadata> => {
-  const { data: frontMatter } = matter(source);
+  const { data: frontMatter } = matter(source, {});
 
   const _datapackage = frontMatter.datapackage || datapackage;
   const isDatapackage = !!_datapackage;
