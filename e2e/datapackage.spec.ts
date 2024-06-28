@@ -1,43 +1,49 @@
-import { test, expect } from "@playwright/test";
-import { BASE_URL } from "./constants";
+import { test, expect, Page } from "@playwright/test";
 
-import prisma from "@/server/db";
-import { Site } from "@prisma/client";
+import "dotenv/config";
 
-type SiteWithUser = Site & {
-  user: {
-    gh_username: string | null;
-  } | null;
-};
+test.describe.configure({ mode: "parallel" });
 
-let site: SiteWithUser | null = null;
+test.describe("README with datapackage.json", () => {
+  let page: Page;
 
-test.describe("Datapackage page", () => {
-  test.beforeAll(async () => {
-    const siteId = process.env.E2E_SITE_ID;
-
-    // TODO get from shared json?
-    site = await prisma.site.findUnique({
-      where: {
-        id: siteId,
-      },
-      include: {
-        user: true,
-      },
-    });
-    if (!site) {
-      throw new Error(`Site with id ${siteId} not found`);
-    }
+  test.beforeAll(async ({ browser }) => {
+    page = await browser.newPage();
+    await page.goto(
+      `${process.env.E2E_TEST_SITE!}/datasets/with-datapackage-json`,
+    );
+    await page.waitForTimeout(1000);
+    // await page.waitForLoadState("networkidle");
+  });
+  test.afterAll(async () => {
+    await page.close();
   });
 
-  test("Datapackage layout", async ({ page }) => {
-    // TODO replace hardcoded values with values from json
-    await page.goto(
-      `${BASE_URL}/@${site!.user!.gh_username}/${site!.projectName}`,
+  test("Title, description and README body", async () => {
+    await expect(page.locator("h1").first()).toHaveText(
+      "Datapackage with datapackage.json title",
     );
-    await page.waitForLoadState("networkidle");
-    await expect(page.locator("h1").first()).toHaveText("Some title");
 
+    const description = page.getByTestId("dp-description");
+    await expect(description).toContainText(
+      "Datapackage with datapackage.json description",
+    );
+    await expect(
+      description.getByRole("link", { name: "Read more" }),
+    ).toBeVisible();
+    await expect(
+      description.getByRole("link", { name: "Read more" }),
+    ).toHaveAttribute("href", "#readme");
+
+    const readme = page.getByTestId("dp-readme");
+    await expect(readme).toHaveAttribute("id", "readme");
+    await expect(readme).toBeVisible();
+    await expect(readme).toContainText(
+      "Datapackage with datapackage.json description",
+    );
+  });
+
+  test("Metadata table", async () => {
     const metadataTable = page.getByTestId("dp-metadata-table");
 
     await expect(metadataTable.locator("th").nth(0)).toContainText("Files");
@@ -49,37 +55,38 @@ test.describe("Datapackage page", () => {
     await expect(metadataTable.locator("th").nth(2)).toContainText("Format");
     await expect(metadataTable.locator("td").nth(2)).toContainText("csv");
 
-    // await expect(metadataTable.locator("th").nth(3)).toContainText("Created");
-    // await expect(metadataTable.locator("td").nth(3)).toContainText("2021-09-01");
+    await expect(metadataTable.locator("th").nth(3)).toContainText("Created");
+    await expect(metadataTable.locator("td").nth(3)).toBeEmpty();
 
-    // await expect(metadataTable.locator("th").nth(4)).toContainText("Updated");
-    // await expect(metadataTable.locator("td").nth(4)).toContainText("2021-09-01");
+    await expect(metadataTable.locator("th").nth(4)).toContainText("Updated");
+    await expect(metadataTable.locator("td").nth(4)).toBeEmpty();
 
     await expect(metadataTable.locator("th").nth(5)).toContainText("License");
     await expect(metadataTable.locator("td").nth(5)).toContainText(
       "License 1 Title",
     );
+    await expect(
+      metadataTable.locator("td").nth(5).locator("a"),
+    ).toHaveAttribute("href", "https://license-1.com");
 
     await expect(metadataTable.locator("th").nth(6)).toContainText("Source");
     await expect(metadataTable.locator("td").nth(6)).toContainText(
       "Source 1 Title",
     );
-
-    const description = page.getByTestId("dp-description");
-    await expect(description).toContainText("Some description ...");
     await expect(
-      description.getByRole("link", { name: "Read more" }),
-    ).toBeVisible();
-    await expect(
-      description.getByRole("link", { name: "Read more" }),
-    ).toHaveAttribute("href", "#readme");
+      metadataTable.locator("td").nth(6).locator("a"),
+    ).toHaveAttribute("href", "https://source-1.com");
+  });
 
+  test("Data views", async () => {
     const dataViews = page.getByTestId("dp-views");
     await expect(
       dataViews.getByRole("heading", { name: "Data Views" }),
     ).toBeVisible();
-    expect(await dataViews.locator(".chart-wrapper").count()).toBe(1);
+    expect(await dataViews.locator(".vega-embed").count()).toBe(1);
+  });
 
+  test("Data files table", async () => {
     const dataFiles = page.getByTestId("dp-files");
     await expect(
       dataFiles.getByRole("heading", { name: "Data Files" }),
@@ -123,27 +130,59 @@ test.describe("Datapackage page", () => {
       .nth(4)
       .locator("a")
       .first();
-    await expect(resouce1DownloadLink).toContainText("data/resource-1.csv");
+    await expect(resouce1DownloadLink).toContainText("resource-1");
     const downloadPromise = page.waitForEvent("download");
     await resouce1DownloadLink.click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe("resource-1.csv");
+  });
 
-    const filePreviews = page.getByTestId("dp-previews");
+  test("Data previews", async () => {
+    const dataPreviews = page.getByTestId("dp-previews");
     await expect(
-      filePreviews.getByRole("heading", { name: "Data Previews" }),
+      dataPreviews.getByRole("heading", { name: "Data Previews" }),
     ).toBeVisible();
-    expect(await filePreviews.getByTestId("dp-preview").count()).toBe(2);
+    expect(await dataPreviews.getByTestId("dp-preview").count()).toBe(2);
 
     // test first preview
-    const preview1 = filePreviews.getByTestId("dp-preview").nth(0);
+    const preview1 = dataPreviews.getByTestId("dp-preview").nth(0);
     await expect(
       preview1.getByRole("heading", { name: "resource-1" }),
     ).toBeVisible();
-    expect(preview1.locator(".github-octo-flat-ui")).toBeVisible();
+    // expect(preview1.locator(".github-octo-flat-ui")).toBeVisible();
+  });
+});
 
-    const readme = page.getByTestId("dp-readme");
-    await expect(readme).toBeVisible();
-    await expect(readme).toContainText("Some description");
+// Simplified version of the previous test as content is the same
+test.describe("README with frontmatter datapackage", () => {
+  let page: Page;
+
+  test.beforeAll(async ({ browser }) => {
+    page = await browser.newPage();
+    await page.goto(
+      `${process.env.E2E_TEST_SITE!}/datasets/with-datapackage-frontmatter`,
+    );
+    await page.waitForTimeout(1000);
+  });
+  test.afterAll(async () => {
+    await page.close();
+  });
+
+  test("Data views", async () => {
+    const dataViews = page.getByTestId("dp-views");
+    await expect(
+      dataViews.getByRole("heading", { name: "Data Views" }),
+    ).toBeVisible();
+    expect(await dataViews.locator(".vega-embed").count()).toBe(1);
+  });
+
+  test("Data files table", async () => {
+    const dataFiles = page.getByTestId("dp-files");
+    expect(await dataFiles.locator("tbody").locator("tr").count()).toBe(2);
+  });
+
+  test("Data previews", async () => {
+    const dataPreviews = page.getByTestId("dp-previews");
+    expect(await dataPreviews.getByTestId("dp-preview").count()).toBe(2);
   });
 });

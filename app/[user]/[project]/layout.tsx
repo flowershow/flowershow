@@ -147,15 +147,14 @@ export default async function SiteLayout({
       })
     : defaultConfig.navbarTitle?.logo ?? defaultConfig.logo;
 
-  // TODO temporary solution for all the datahubio sites currently published on Ola's account
   let url: string;
-  if (user === "olayway") {
+  // TODO temporary solution for all the datahubio sites currently published on Ola's account
+  if (user === "olayway" && process.env.NODE_ENV === "production") {
     url = defaultConfig.author.url;
   } else {
-    url =
-      siteConfig?.author?.url ??
-      (site.customDomain ? `https://${site.customDomain}` : null) ??
-      `/@${params.user}/${params.project}`;
+    url = site.customDomain
+      ? `https://${site.customDomain}`
+      : siteConfig?.author?.url ?? `/@${params.user}/${params.project}`;
   }
 
   // TODO get either navLinks or treeItems, not both

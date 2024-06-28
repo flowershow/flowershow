@@ -21,7 +21,10 @@ export default function TableOfContentsSidebar() {
   return (
     <>
       {tableOfContents.length > 0 && (
-        <div className="fixed bottom-0 right-[max(0px,calc(50%-45rem))] top-4 z-20 hidden w-[19.5rem] overflow-y-auto py-10 xl:block">
+        <div
+          data-testid="toc"
+          className="fixed bottom-0 right-[max(0px,calc(50%-45rem))] top-4 z-20 hidden w-[19.5rem] overflow-y-auto py-10 xl:block"
+        >
           <TableOfContentsList
             tableOfContents={tableOfContents}
             currentSection={""}
