@@ -16,7 +16,7 @@ export const DataStoryLayout: React.FC<Props> = ({ children, metadata }) => {
 
   return (
     <article className="prose-headings:font-headings prose mx-auto max-w-4xl px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
-      <header className="flex flex-col gap-y-5">
+      <header data-testid="story-header" className="flex flex-col gap-y-5">
         <h1 className="!mb-2">{title}</h1>
         <p className="!my-0 text-xl font-light text-primary/75 md:text-2xl">
           {description}
@@ -24,7 +24,10 @@ export const DataStoryLayout: React.FC<Props> = ({ children, metadata }) => {
         {(authors || date) && (
           <div className="flex items-center gap-x-3 border-b border-t border-primary/10 py-2 text-sm text-primary/75">
             {authors?.length && (
-              <div className="flex items-center gap-x-3">
+              <div
+                data-testid="story-author"
+                className="flex items-center gap-x-3"
+              >
                 {authors.map((author) => (
                   <Avatar key={author} name={author} />
                 ))}

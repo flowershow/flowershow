@@ -10,6 +10,7 @@ interface Props {
 export const NavTitle: React.FC<Props> = ({ title, logo, version, url }) => {
   return (
     <Link
+      data-testid="nav-title"
       href={url || "/"}
       aria-label="Home page"
       className="flex items-center space-x-2 text-xl font-extrabold text-slate-900 dark:text-white sm:text-2xl"

@@ -1,5 +1,4 @@
 import { defineConfig, devices } from "@playwright/test";
-import { BASE_URL } from "./e2e/constants";
 
 /**
  * Read environment variables from file.
@@ -25,37 +24,21 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    // baseURL: 'http://127.0.0.1:3000',
+    baseURL: process.env.E2E_BASE_URL,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
-  },
-  /* Run your local dev server before starting the tests */
-  webServer: {
-    command: "pnpm dev",
-    url: BASE_URL,
-    reuseExistingServer: !process.env.CI,
-    timeout: 60 * 1000,
   },
   /* Configure projects for major browsers */
   projects: [
     {
       name: "global-setup",
       testMatch: /global\.setup\.ts/,
-      teardown: "global-teardown",
-      use: {
-        storageState: "playwright/.auth/user.json",
-      },
-    },
-    {
-      name: "global-teardown",
-      testMatch: /global\.teardown\.ts/,
     },
     {
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
-        storageState: "playwright/.auth/user.json",
       },
       dependencies: ["global-setup"],
     },

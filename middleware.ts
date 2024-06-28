@@ -27,11 +27,8 @@ export default async function middleware(req: NextRequest) {
     .replace(".localhost:3000", `.${env.NEXT_PUBLIC_ROOT_DOMAIN}`);
 
   // special case for Vercel preview deployment URLs
-  if (
-    hostname.includes("---") &&
-    hostname.endsWith(`.${process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`)
-  ) {
-    hostname = `${hostname.split("---")[0]}.${env.NEXT_PUBLIC_ROOT_DOMAIN}`;
+  if (hostname.endsWith(`.${env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`)) {
+    hostname = `${env.NEXT_PUBLIC_ROOT_DOMAIN}`;
   }
 
   const searchParams = req.nextUrl.searchParams.toString();

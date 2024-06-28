@@ -1,44 +1,31 @@
 import { test, expect } from "@playwright/test";
-import { BASE_URL } from "./constants";
 
-import prisma from "@/server/db";
-import { Site } from "@prisma/client";
+import "dotenv/config";
 
-type SiteWithUser = Site & {
-  user: {
-    gh_username: string | null;
-  } | null;
-};
+test("Data story with frontmatter metadata", async ({ page }) => {
+  await page.goto(`${process.env.E2E_TEST_SITE!}/blog/post-1`);
 
-let site: SiteWithUser | null = null;
+  const header = page.getByTestId("story-header");
 
-test.describe("Datastory page", () => {
-  test.beforeAll(async () => {
-    const siteId = process.env.E2E_SITE_ID;
+  await expect(header.locator("h1")).toHaveCount(1);
+  await expect(header.locator("h1").first()).toHaveText("Blog Post 1");
 
-    // TODO get from shared json?
-    site = await prisma.site.findUnique({
-      where: {
-        id: siteId,
-      },
-      include: {
-        user: true,
-      },
-    });
-    if (!site) {
-      throw new Error(`Site with id ${siteId} not found`);
-    }
-  });
+  await expect(header.locator("p")).toContainText("Blog Post 1 Description");
 
-  test("Datastory layout", async ({ page }) => {
-    // TODO replace hardcoded values with values from json
-    await page.goto(
-      `${BASE_URL}/@${site!.user!.gh_username}/${site!.projectName}/blog`,
-    );
-    await page.waitForLoadState();
-    expect(
-      await page.getByRole("heading", { name: "Blog home page" }).count(),
-    ).toBe(1);
-    await expect(page.locator("h1").first()).toHaveText("Blog home page");
-  });
+  const author = header.getByTestId("story-author").first();
+  await expect(author).toContainText("John Doe");
+
+  await expect(header.locator("time")).toContainText("June 6, 2024");
+});
+
+test("Data story without frontmatter metadata", async ({ page }) => {
+  await page.goto(`${process.env.E2E_TEST_SITE!}/blog/post-2`);
+
+  const header = page.getByTestId("story-header");
+
+  await expect(header.locator("h1")).toHaveCount(1);
+  await expect(header.locator("h1").first()).toHaveText("Blog Post 2");
+
+  // TODO
+  // await expect(header.locator("p")).toContainText("Blog Post 2 Description");
 });

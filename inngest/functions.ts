@@ -161,6 +161,8 @@ export const syncSite = inngest.createFunction(
 
     const promises = Array.from(gitHubTreeItems.entries()).map(
       async ([path, sha]) => {
+        // TODO this will make any changes to datapackage.json files be skipped
+        // if README.md hasn't changed as well
         if (
           contentStoreTreeItems.has(path) &&
           contentStoreTreeItems.get(path) === sha

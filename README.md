@@ -80,21 +80,16 @@ All necessary environment variables should be defined in a `.env` file. Create t
 pnpm dev
 ```
 
-3. Run the following command in a new terminal window to authenticate in the app. This command will open the app in a new browser window, allowing you to manually login.
+3. Create a new site using the above mentioned repository in your local DataHub Cloud.
+
+4. Run the following command to run the tests.
 
 ```sh
-npx playwright open --save-storage="./playwright/.auth/user.json" http://cloud.localhost:3000/login
+# pnpm test:e2e
+npx playwright test
 ```
 
-You can close this browser window. Playwright will now save authenticated browser state to `./playwright/.auth/user.json` which will then be used in all the tests.
-
-4. Now you can run your tests:
-
-```
-pnpm test:e2e
-```
-
-🚧 TODO: running tests in GitHub workflow
+Note, that when running the tests locally, you need to make sure to sync the site manually each time you make changes to the test repository.
 
 ### Running in debug mode
 
@@ -102,24 +97,8 @@ pnpm test:e2e
 npx playwright test --debug
 ```
 
-### Running with UI mode
-
-🚧 TODO find a better way to share created site object
-
-1. Manually execute global setup.
+### Running in UI mode
 
 ```sh
-npx playwright test ./e2e/global.setup.ts --no-deps
-```
-
-3. Run tests.
-
-```sh
-E2E_SITE_ID="<siteid>" npx playwright test --ui
-```
-
-4. Clean up after you've finished testing.
-
-```sh
-E2E_SITE_ID="<siteid>" npx playwright test ./e2e/global.teardown.ts
+npx playwright test --ui
 ```
