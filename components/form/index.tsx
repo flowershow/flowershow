@@ -79,10 +79,9 @@ export default function Form({
         if (
           inputAttrs.name === "customDomain" &&
           inputAttrs.defaultValue &&
-          data.get("customDomain") !== inputAttrs.defaultValue &&
-          !confirm("Are you sure you want to change your custom domain?")
+          data.get("customDomain") !== inputAttrs.defaultValue
         ) {
-          return;
+          //
         }
         // TODO should be a better way to handle the type of the value
         handleSubmit({
