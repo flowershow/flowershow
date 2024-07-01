@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  inngest.send({
+  await inngest.send({
     name: "site/sync",
     data: {
       siteId: site.id,
