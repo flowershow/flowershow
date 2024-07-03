@@ -183,7 +183,13 @@ export default async function SiteLayout({
         {!siteConfig?.showSidebar && (
           <Navbar title={title} logo={logo} url={url} links={navLinks} />
         )}
-        <div className="mx-auto max-w-8xl px-4 sm:px-6 md:px-8">
+        <div
+          className={`flex ${
+            siteConfig?.showSidebar
+              ? "container mx-auto "
+              : "mx-auto max-w-8xl px-4 sm:px-6 md:px-8"
+          }`}
+        >
           {siteConfig?.showSidebar && (
             <Sidebar
               title={title}
@@ -192,10 +198,10 @@ export default async function SiteLayout({
               treeItems={treeItems}
             />
           )}
-          <div className={clsx(siteConfig?.showSidebar && "lg:pl-[19.5rem]")}>
-            <div className="top-4 mx-auto xl:ml-0 xl:mr-[15.5rem] xl:max-w-none xl:pr-16">
+          <div className={`w-full`}>
+            <div className="mx-auto w-full md:px-10">
               {children}
-              <div className="mx-auto max-w-8xl px-4">
+              <div className="mx-auto w-full ">
                 <Footer
                   author={footerAuthor}
                   social={footerSocial}
@@ -203,8 +209,10 @@ export default async function SiteLayout({
                 />
               </div>
             </div>
-            <TableOfContentsSidebar />
           </div>
+          <TableOfContentsSidebar
+            className={!siteConfig?.showSidebar ? "pt-[48px]" : ""}
+          />
         </div>
       </div>
     </>

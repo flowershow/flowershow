@@ -13,7 +13,7 @@ export const NavTitle: React.FC<Props> = ({ title, logo, version, url }) => {
       data-testid="nav-title"
       href={url || "/"}
       aria-label="Home page"
-      className="flex items-center space-x-2 text-xl font-extrabold text-slate-900 dark:text-white sm:text-2xl"
+      className="sticky top-0 z-10 flex items-center space-x-2 bg-white pb-[10px] text-xl font-extrabold text-slate-900 dark:text-white sm:text-2xl"
     >
       {logo && <img src={logo} alt="" className="mr-1 h-8 fill-white" />}
       {title && <span>{title}</span>}

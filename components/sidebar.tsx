@@ -30,16 +30,16 @@ export default function Sidebar({
   return (
     <>
       <button
-        className="fixed right-5 top-7 z-20 lg:hidden"
+        className="fixed right-0 top-7 z-20 md:right-5 lg:hidden"
         onClick={() => setShowSidebar(!showSidebar)}
       >
         <Menu width={48} height={32} className="dark:text-white" />
       </button>
       <div
         data-testid="sidebar"
-        className={`transform ${
+        className={`fixed top-0 h-screen transform lg:sticky lg:top-[3rem] lg:h-[calc(100vh-6rem)] ${
           showSidebar ? "w-[19rem] translate-x-0" : "hidden -translate-x-full"
-        } fixed inset-0 left-[max(0px,calc(50%-45rem))] right-auto z-10 h-full flex-col justify-between space-y-4 overflow-y-auto border-r border-stone-200 bg-background p-4 pb-10 pl-8 pr-6 transition-all dark:border-stone-700 dark:bg-stone-900 sm:translate-x-0 lg:top-12 lg:block lg:w-[19rem]`}
+        }  inset-0  z-10 flex-col justify-between space-y-4 overflow-y-auto border-r border-stone-200 bg-background px-6 pb-10 pt-10 transition-all dark:border-stone-700 dark:bg-stone-900 sm:translate-x-0 lg:block lg:w-[20rem] lg:pt-0`}
       >
         <NavTitle title={title} logo={logo} url={url} />
         <div className="relative lg:text-sm lg:leading-6">

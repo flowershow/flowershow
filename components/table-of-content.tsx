@@ -7,7 +7,11 @@ import {
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 
-export default function TableOfContentsSidebar() {
+export default function TableOfContentsSidebar({
+  className = "",
+}: {
+  className?: string;
+}) {
   const [tableOfContents, setTableOfContents] = useState<TocSection[]>([]);
   const currentPath = usePathname();
 
@@ -23,7 +27,7 @@ export default function TableOfContentsSidebar() {
       {tableOfContents.length > 0 && (
         <div
           data-testid="toc"
-          className="fixed bottom-0 right-[max(0px,calc(50%-45rem))] top-4 z-20 hidden w-[19.5rem] overflow-y-auto py-10 xl:block"
+          className={`sticky top-[3rem] z-20 hidden h-[calc(100vh-6rem)] w-[19.5rem] overflow-y-auto  pl-6 xl:block ${className}`}
         >
           <TableOfContentsList
             tableOfContents={tableOfContents}
