@@ -113,7 +113,7 @@ const steps: Step[] = [
     id: "4",
     title: "SHARE IT WITH THE WORLD",
     description: (
-      <span> You can now share your awesome dataset page with the world! </span>
+      <span> You can now share your awesome data-rich page with the world! </span>
     ),
     imageSrc: "/share-with-the-world.svg",
     imageAlt: "CHOOSE OR CREATE A GITHUB REPO Image",
