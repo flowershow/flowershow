@@ -18,7 +18,7 @@ export function QuickStart() {
       <Heading
         id="quick-start"
         heading="Quickstart"
-        subheading="Publish your dataset in just a few steps"
+        subheading="Publish your data-rich stories in just a few steps"
       />
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {steps.map((step) => (
