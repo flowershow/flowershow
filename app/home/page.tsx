@@ -18,7 +18,7 @@ const heroFeatures = [
   "Run-off GitHub",
 ];
 
-const heroTitle = <>Publish your datasets directly from Github</>;
+const heroTitle = <>Publish your markdown notes directly from Github</>;
 
 const heroActions = [
   {
