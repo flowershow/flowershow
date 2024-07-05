@@ -6,7 +6,7 @@ export function VisualDemo() {
       </h1>
       <p className="mx-auto mt-6 max-w-xl text-center text-lg leading-8 text-gray-600 dark:text-gray-400">
         DataHub Cloud syncs directly with your GitHub, allowing you to manage
-        and publish datasets where you&apos;re already comfortable working.
+        and publish your markdown and/or data files where you&apos;re already comfortable working.
         Focus on your data and leave everything else to us.
       </p>
       <div className="mt-8 flex flex-row flex-wrap items-center justify-center gap-8 md:flex-nowrap">
