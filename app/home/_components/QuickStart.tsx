@@ -93,7 +93,7 @@ const steps: Step[] = [
     title: "ADD VISUALS (OPTIONAL)",
     description: (
       <span>
-        You can enhance your dataset with some data visualizations. Insert line
+        You can enhance your page with some data visualizations. Insert line
         charts, tables, and maps directly into your content - no coding skills
         needed. Read how to{" "}
         <Link
