@@ -1,4 +1,4 @@
-# DataHub Cloud Developer Guide 🚧
+# DataHub Cloud Developer Guide 🚧 🚧 
 
 Welcome to the DataHub Cloud developer guide. DataHub Cloud is a NextJS multitenant application designed for seamlessly publishing markdown content from GitHub repositories. This README serves as a comprehensive guide for developers working on the project.
 
