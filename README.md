@@ -64,11 +64,16 @@ All necessary environment variables should be defined in a `.env` file. Create t
 
 ## Setup for Local Development
 
-1. Clone the repository.
+1. Clone the [repository](https://github.com/datopian/datahub-next).
 2. Set up the local development environment by creating a `.env` file from `.env.example`.
-3. Install dependencies with `pnpm i`.
-4. Run the development server with `pnpm dev`.
-5. Run `npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest` to start local Inngest instance and connect it the the app.
+3. Create Postgres database
+4. Edit database variables in `.env` file
+5. Install pnpm: `npm install -g pnpm`
+6. Install project dependencies with `pnpm i`.
+7. Generate prisma schema with `npx prisma generate`
+8. Create schema in my local database with `npx prisma db push`
+9. Run the development server with `pnpm dev`.
+10. Run `npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest` to start local Inngest instance and connect it the the app.
 
 ## Tests
 
