@@ -71,7 +71,7 @@ All necessary environment variables should be defined in a `.env` file. Create t
 5. Install pnpm: `npm install -g pnpm`
 6. Install project dependencies with `pnpm i`.
 7. Generate prisma schema with `npx prisma generate`
-8. Create schema in my local database with `npx prisma db push`
+8. Create schema in local database with `npx prisma db push`
 9. Run the development server with `pnpm dev`.
 10. Run `npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest` to start local Inngest instance and connect it the the app.
 
