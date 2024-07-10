@@ -1,4 +1,5 @@
 import dynamic from "next/dynamic";
+import { Metadata } from "next";
 import { Section } from "@/components/section";
 import { Hero } from "@/components/hero";
 import SocialProof from "./_components/social-proof";
@@ -7,6 +8,39 @@ import Solutions from "./_components/solutions";
 import Contact from "./_components/contact";
 import Pricing from "./_components/pricing";
 import Addons from "./_components/addons";
+import config from "@/const/config";
+
+export const metadata: Metadata = {
+  title: config.title,
+  description: config.description,
+  icons: ["/favicon.ico"],
+  openGraph: {
+    title: config.title,
+    description: config.description,
+    images: [
+      {
+        url: "/enterprise.png",
+        width: 1200,
+        height: 627,
+        alt: "",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: config.title,
+    description: config.description,
+    images: [
+      {
+        url: "enterprise.png",
+        width: 800,
+        height: 418,
+        alt: "Thumbnail",
+      },
+    ],
+    creator: "@datopian",
+  },
+};
 
 const DatopianGlobe = dynamic(() => import("./_components/globe/globe"), {
   ssr: false,

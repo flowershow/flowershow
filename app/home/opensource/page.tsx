@@ -3,7 +3,41 @@ import Showcases from "./_components/showcases";
 import Community from "./_components/community";
 import Features from "./_components/features";
 import { Section } from "@/components/section";
+import { Metadata } from "next";
 import { Hero } from "@/components/hero";
+import config from "@/const/config";
+
+export const metadata: Metadata = {
+  title: config.title,
+  description: config.description,
+  icons: ["/favicon.ico"],
+  openGraph: {
+    title: config.title,
+    description: config.description,
+    images: [
+      {
+        url: "/opensource.jpeg",
+        width: 1200,
+        height: 627,
+        alt: "",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: config.title,
+    description: config.description,
+    images: [
+      {
+        url: "/opensource.jpeg",
+        width: 800,
+        height: 418,
+        alt: "Thumbnail",
+      },
+    ],
+    creator: "@datopian",
+  },
+};
 
 const heroTitle = (
   <>
