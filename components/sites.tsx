@@ -14,9 +14,11 @@ export default async function Sites({ limit }: { limit?: number }) {
 
   return sites.length > 0 ? (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-      {sites.map((site) => (
-        <SiteCard key={site.id} data={site} username={username} />
-      ))}
+      {sites
+        .sort((a, b) => a.projectName.localeCompare(b.projectName))
+        .map((site) => (
+          <SiteCard key={site.id} data={site} username={username} />
+        ))}
     </div>
   ) : (
     <div className="flex flex-col items-center space-y-6 py-24">
