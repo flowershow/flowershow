@@ -11,6 +11,7 @@ import { resolveLink } from "@/lib/resolve-link";
 import { Site } from "@prisma/client";
 import TableOfContentsSidebar from "@/components/table-of-content";
 import clsx from "clsx";
+import MultiColumnLayout from "@/components/layouts/multi-column-layout";
 
 type SiteWithUser = Site & {
   user: {
@@ -179,42 +180,56 @@ export default async function SiteLayout({
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
-      <div className="min-h-screen">
-        {!siteConfig?.showSidebar && (
-          <Navbar title={title} logo={logo} url={url} links={navLinks} />
-        )}
-        <div
-          className={`flex ${
-            siteConfig?.showSidebar
-              ? "container mx-auto "
-              : "mx-auto max-w-8xl px-4 sm:px-6 md:px-8"
-          }`}
+
+      {siteConfig?.showSidebar ? (
+        <MultiColumnLayout
+          title={title}
+          logo={logo}
+          url={url}
+          treeItems={treeItems}
         >
-          {siteConfig?.showSidebar && (
-            <Sidebar
-              title={title}
-              logo={logo}
-              url={url}
-              treeItems={treeItems}
-            />
+          {children}
+        </MultiColumnLayout>
+      ) : (
+        <div className="min-h-screen">
+          {!siteConfig?.showSidebar && (
+            <Navbar title={title} logo={logo} url={url} links={navLinks} />
           )}
-          <div className={`w-full`}>
-            <div className="mx-auto w-full md:px-10">
-              {children}
-              <div className="mx-auto w-full ">
-                <Footer
-                  author={footerAuthor}
-                  social={footerSocial}
-                  description={footerDescription}
-                />
+          <div
+            className={`flex ${
+              siteConfig?.showSidebar
+                ? "container mx-auto "
+                : "mx-auto max-w-8xl px-4 sm:px-6 md:px-8"
+            }`}
+          >
+            {siteConfig?.showSidebar && (
+              <Sidebar
+                title={title}
+                logo={logo}
+                url={url}
+                treeItems={treeItems}
+              />
+            )}
+            <div className={`w-full`}>
+              <div className="mx-auto w-full md:px-10">
+                {children}
+                <div className="mx-auto w-full ">
+                  <Footer
+                    author={footerAuthor}
+                    social={footerSocial}
+                    description={footerDescription}
+                  />
+                </div>
               </div>
             </div>
+            <TableOfContentsSidebar
+              className={
+                "sticky top-[76px] h-[calc(100vh-76px)] w-[320px] overflow-y-auto pl-6"
+              }
+            />
           </div>
-          <TableOfContentsSidebar
-            className={!siteConfig?.showSidebar ? "pt-[48px]" : ""}
-          />
         </div>
-      </div>
+      )}
     </>
   );
 }

@@ -27,7 +27,7 @@ export default function TableOfContentsSidebar({
       {tableOfContents.length > 0 && (
         <div
           data-testid="toc"
-          className={`sticky top-[3rem] z-20 hidden h-[calc(100vh-6rem)] w-[19.5rem] overflow-y-auto  pl-6 xl:block ${className}`}
+          className={`hidden h-full overflow-y-auto xl:block ${className}`}
         >
           <TableOfContentsList
             tableOfContents={tableOfContents}
