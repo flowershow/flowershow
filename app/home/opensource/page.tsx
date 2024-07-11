@@ -16,7 +16,7 @@ export const metadata: Metadata = {
     description: config.description,
     images: [
       {
-        url: "/opensource.jpeg",
+        url: "/opensource.png",
         width: 1200,
         height: 627,
         alt: "",
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     description: config.description,
     images: [
       {
-        url: "/opensource.jpeg",
+        url: "/opensource.png",
         width: 800,
         height: 418,
         alt: "Thumbnail",

@@ -1,7 +1,7 @@
 "use client";
 import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import TreeView, { TreeViewItem } from "./tree-view";
 import { NavTitle } from "./nav-title";
 
@@ -26,25 +26,6 @@ export default function Sidebar({
 }) {
   const pathname = usePathname();
   const [showSidebar, setShowSidebar] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
-
-  const handleClickOutside = (event) => {
-    if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-      setShowSidebar(false);
-    }
-  };
-
-  useEffect(() => {
-    {
-      showSidebar
-        ? document.addEventListener("click", handleClickOutside)
-        : document.removeEventListener("click", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("click", handleClickOutside);
-    };
-  }, [showSidebar]);
 
   return (
     <>
@@ -55,7 +36,6 @@ export default function Sidebar({
         <Menu width={48} height={32} className="dark:text-white" />
       </button>
       <div
-        ref={sidebarRef}
         data-testid="sidebar"
         className={`transform ${
           showSidebar ? "w-[19rem] translate-x-0" : "hidden -translate-x-full"
