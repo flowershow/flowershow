@@ -108,7 +108,10 @@ export default function MultiColumnLayout({
             </button>
           </div>
           {/*sticky sidebar*/}
-          <aside className="sticky top-0 hidden h-[100vh] w-44 shrink-0 overflow-y-auto border-r border-stone-200 py-10  lg:block ">
+          <aside
+            className="sticky top-0 hidden h-[100vh] w-44 shrink-0 overflow-y-auto border-r border-stone-200 py-10  lg:block "
+            data-testid="sidebar"
+          >
             <Sidebar
               title={title}
               url={url}
