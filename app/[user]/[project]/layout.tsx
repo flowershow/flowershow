@@ -11,7 +11,7 @@ import { resolveLink } from "@/lib/resolve-link";
 import { Site } from "@prisma/client";
 import TableOfContentsSidebar from "@/components/table-of-content";
 import clsx from "clsx";
-import MultiColumnLayout from "@/components/layouts/multi-column-sticky";
+import MultiColumnLayout from "@/components/layouts/multi-column-fixed";
 
 type SiteWithUser = Site & {
   user: {

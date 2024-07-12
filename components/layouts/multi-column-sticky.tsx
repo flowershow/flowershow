@@ -115,7 +115,7 @@ export default function MultiColumnLayout({
       </Transition.Root>
 
       <div className="flex min-h-full flex-col">
-        <div className="mx-auto flex w-full w-full max-w-8xl items-start gap-x-8 px-4  sm:px-6 lg:px-8 xl:min-w-[1264px] xl:max-w-[85%]">
+        <div className="mx-auto flex w-full w-full max-w-8xl items-start gap-x-8 px-4  sm:px-6 lg:px-8 xl:min-w-[1264px] xl:max-w-[95%] 2xl:max-w-[1600px]">
           {/*sidebar control*/}
           <div className="fixed right-0 top-0 z-30 flex items-center justify-end gap-x-6 px-4 pt-4 sm:px-6 lg:hidden">
             <button
@@ -129,7 +129,7 @@ export default function MultiColumnLayout({
           </div>
           {/*sticky sidebar*/}
           <aside
-            className="sticky top-0 hidden h-[100vh] w-44 shrink-0 overflow-y-auto border-r border-stone-200 py-10  lg:block "
+            className="sticky top-0 hidden h-[100vh] w-[200px] shrink-0 overflow-y-auto border-r border-stone-200 px-2 py-10  lg:block "
             data-testid="sidebar"
           >
             <Sidebar
