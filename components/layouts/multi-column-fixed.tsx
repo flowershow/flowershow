@@ -35,7 +35,7 @@ export function Sidebar({
   return (
     <>
       <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6">
-        <div className="mt-8 flex h-16 shrink-0 items-center">
+        <div className="mt-8 flex  shrink-0 items-center">
           <NavTitle title={title} logo={logo} url={url} />
         </div>
         <nav className="flex flex-1 flex-col">
@@ -133,7 +133,7 @@ export default function MultiColumnLayout({
         </div>
       </main>
 
-      <aside className="xl:w-90 fixed inset-y-0 right-0 hidden overflow-y-auto px-4 py-6 sm:px-2 lg:px-8 xl:block xl:w-[235px]">
+      <aside className="xl:w-90 fixed inset-y-0 right-0 hidden overflow-y-auto px-4 py-8 sm:px-2 lg:px-8 xl:block xl:w-[235px]">
         <TableOfContentsSidebar />
       </aside>
     </div>
