@@ -9,10 +9,11 @@ import { cal, inter } from "@/styles/fonts";
 import { Analytics } from "@vercel/analytics/react";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { Providers } from "./providers";
+import { Metadata } from "next";
 import { cn } from "@/lib/utils";
 import config from "@/const/config";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: config.title,
   description: config.description,
   icons: ["/favicon.ico"],
