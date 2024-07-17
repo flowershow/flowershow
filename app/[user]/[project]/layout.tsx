@@ -3,15 +3,13 @@ import { redirect } from "next/navigation";
 import { Metadata } from "next";
 import { api } from "@/trpc/server";
 import { env } from "@/env.mjs";
-import Sidebar from "@/components/sidebar";
 import Navbar from "@/components/nav";
 import Footer from "@/components/footer";
 import defaultConfig from "@/const/config";
 import { resolveLink } from "@/lib/resolve-link";
 import { Site } from "@prisma/client";
 import TableOfContentsSidebar from "@/components/table-of-content";
-import clsx from "clsx";
-import MultiColumnLayout from "@/components/layouts/multi-column-fixed";
+import Sidebar from "@/components/sidebar";
 
 type SiteWithUser = Site & {
   user: {
@@ -177,59 +175,55 @@ export default async function SiteLayout({
   const footerDescription =
     (isCustomDomain && siteConfig?.description) || defaultConfig.description;
 
+  const showSidebar = siteConfig?.showSidebar;
+
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
 
-      {siteConfig?.showSidebar ? (
-        <MultiColumnLayout
-          title={title}
-          logo={logo}
-          url={url}
-          treeItems={treeItems}
+      <div className="min-h-screen">
+        {!showSidebar && (
+          <Navbar title={title} logo={logo} url={url} links={navLinks} />
+        )}
+
+        {showSidebar && (
+          <Sidebar title={title} logo={logo} url={url} navigation={treeItems} />
+        )}
+
+        <main
+          className={`${
+            showSidebar
+              ? "lg:pl-72"
+              : "mx-auto flex max-w-8xl px-4 sm:px-6 md:px-8"
+          }`}
         >
-          {children}
-        </MultiColumnLayout>
-      ) : (
-        <div className="min-h-screen">
-          {!siteConfig?.showSidebar && (
-            <Navbar title={title} logo={logo} url={url} links={navLinks} />
-          )}
           <div
-            className={`flex ${
-              siteConfig?.showSidebar
-                ? "container mx-auto "
-                : "mx-auto max-w-8xl px-4 sm:px-6 md:px-8"
+            className={` ${
+              showSidebar ? "xl:pr-[235px] 2xl:pr-[340px]" : "px-4"
             }`}
           >
-            {siteConfig?.showSidebar && (
-              <Sidebar
-                title={title}
-                logo={logo}
-                url={url}
-                treeItems={treeItems}
-              />
-            )}
-            <div className={`w-full`}>
-              <div className="mx-auto w-full md:px-10">
-                {children}
-                <div className="mx-auto w-full ">
-                  <Footer
-                    author={footerAuthor}
-                    social={footerSocial}
-                    description={footerDescription}
-                  />
-                </div>
+            <div className="px-4 pb-10 pt-0 sm:px-6 lg:px-8 ">
+              <div>{children}</div>
+              <div className="mx-auto w-full ">
+                <Footer
+                  author={footerAuthor}
+                  social={footerSocial}
+                  description={footerDescription}
+                />
               </div>
             </div>
-            <TableOfContentsSidebar
-              className={
-                "sticky top-[76px] h-[calc(100vh-76px)] w-[320px] overflow-y-auto pl-6"
-              }
-            />
           </div>
-        </div>
-      )}
+          <aside
+            className={`inset-y-0 right-0 hidden overflow-y-auto px-4 sm:px-2 lg:px-8 xl:block  ${
+              showSidebar
+                ? "fixed py-8 xl:w-[235px] 2xl:w-[340px]"
+                : "sticky top-[70px] h-[calc(100vh-70px)] xl:w-[320px]"
+            } `}
+          >
+            <TableOfContentsSidebar />
+          </aside>
+        </main>
+      </div>
     </>
   );
 }
