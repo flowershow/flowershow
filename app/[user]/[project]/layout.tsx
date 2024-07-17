@@ -192,25 +192,21 @@ export default async function SiteLayout({
 
         <main
           className={`${
-            showSidebar
-              ? "lg:pl-72"
-              : "mx-auto flex max-w-8xl px-4 sm:px-6 md:px-8"
+            showSidebar ? "lg:pl-72" : "mx-auto flex max-w-8xl sm:px-4 md:px-8"
           }`}
         >
           <div
-            className={` ${
-              showSidebar ? "xl:pr-[235px] 2xl:pr-[340px]" : "px-4"
+            className={`page-content sm:px-4 xl:px-12 ${
+              showSidebar ? "xl:pr-[235px] 2xl:pr-[340px]" : ""
             }`}
           >
-            <div className="px-4 pb-10 pt-0 sm:px-6 lg:px-8 ">
-              <div>{children}</div>
-              <div className="mx-auto w-full ">
-                <Footer
-                  author={footerAuthor}
-                  social={footerSocial}
-                  description={footerDescription}
-                />
-              </div>
+            {children}
+            <div className="mx-auto w-full ">
+              <Footer
+                author={footerAuthor}
+                social={footerSocial}
+                description={footerDescription}
+              />
             </div>
           </div>
           <aside
