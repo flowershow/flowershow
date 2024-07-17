@@ -11,12 +11,14 @@ import Addons from "./_components/addons";
 import config from "@/const/config";
 
 export const metadata: Metadata = {
-  title: config.title,
-  description: config.description,
+  title: "Fully Managed Data Portal in the Cloud",
+  description:
+    "Datahub Enterprise is the simplest way to create data portals and data catalogs. For governments, non-profits, researchers and companies of all sizes.",
   icons: ["/favicon.ico"],
   openGraph: {
-    title: config.title,
-    description: config.description,
+    title: "Fully Managed Data Portal in the Cloud",
+    description:
+      "Datahub Enterprise is the simplest way to create data portals and data catalogs. For governments, non-profits, researchers and companies of all sizes.",
     images: [
       {
         url: "/enterprise.png",
@@ -28,8 +30,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: config.title,
-    description: config.description,
+    title: "Fully Managed Data Portal in the Cloud",
+    description:
+      "Datahub Enterprise is the simplest way to create data portals and data catalogs. For governments, non-profits, researchers and companies of all sizes.",
     images: [
       {
         url: "enterprise.png",

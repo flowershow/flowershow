@@ -8,12 +8,14 @@ import { Hero } from "@/components/hero";
 import config from "@/const/config";
 
 export const metadata: Metadata = {
-  title: config.title,
-  description: config.description,
+  title: "The JavaScript framework for data portals.",
+  description:
+    "Rapidly build rich data portals using a modern frontend framework.",
   icons: ["/favicon.ico"],
   openGraph: {
-    title: config.title,
-    description: config.description,
+    title: "The JavaScript framework for data portals.",
+    description:
+      "Rapidly build rich data portals using a modern frontend framework.",
     images: [
       {
         url: "/opensource.png",
@@ -25,8 +27,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: config.title,
-    description: config.description,
+    title: "The JavaScript framework for data portals.",
+    description:
+      "Rapidly build rich data portals using a modern frontend framework.",
     images: [
       {
         url: "/opensource.png",
