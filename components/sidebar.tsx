@@ -1,69 +1,111 @@
 "use client";
 import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import TreeView, { TreeViewItem } from "./tree-view";
 import { NavTitle } from "./nav-title";
+import { Dialog, Transition } from "@headlessui/react";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
-/* const externalLinks = [
- *   {
- *         name: "Join our discord",
- *         href: "https://discord.com/invite/KrRzMKU",
- *         icon: <Bot width={18} />,
- *     },
- * ]; */
+const SidebarNav = ({ title, logo, url, navigation }) => {
+  const pathname = usePathname();
+  return (
+    <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6">
+      <div className="mt-8 flex  shrink-0 items-center">
+        <NavTitle title={title} logo={logo} url={url} />
+      </div>
+      <nav className="flex flex-1 flex-col">
+        <TreeView items={navigation} currentPath={pathname} />
+      </nav>
+    </div>
+  );
+};
 
 export default function Sidebar({
-  treeItems,
   title,
   logo,
   url,
+  navigation,
 }: {
-  treeItems: TreeViewItem[];
   title: string;
   logo: string;
   url: string;
+  navigation: Array<TreeViewItem>;
 }) {
   const pathname = usePathname();
-  const [showSidebar, setShowSidebar] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    setSidebarOpen(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   return (
     <>
-      <button
-        className="fixed right-5 top-7 z-20 lg:hidden"
-        onClick={() => setShowSidebar(!showSidebar)}
-      >
-        <Menu width={48} height={32} className="dark:text-white" />
-      </button>
+      <Transition.Root show={sidebarOpen} as={Fragment}>
+        <Dialog onClose={setSidebarOpen} className="relative z-50 lg:hidden">
+          <Transition.Child
+            as={Fragment}
+            enter="transition-opacity duration-300 ease-linear"
+          >
+            <Dialog.Backdrop className="fixed inset-0 z-40 bg-gray-900/50 data-[closed]:opacity-0" />
+          </Transition.Child>
+          <Transition.Child
+            as={Fragment}
+            enter="transition ease-in-out duration-300 transform"
+            enterFrom="-translate-x-full"
+            enterTo="translate-x-0"
+            leave="transition ease-in-out duration-300 transform"
+            leaveFrom="translate-x-0"
+            leaveTo="-translate-x-full"
+          >
+            <div className="fixed inset-0 flex">
+              <Dialog.Panel className="relative mr-16 flex w-full max-w-xs flex-1 transform transition duration-300 ease-in-out data-[closed]:-translate-x-full">
+                <div className="absolute left-full top-0 flex w-16 justify-center pt-5 duration-300 ease-in-out data-[closed]:opacity-0">
+                  <button
+                    type="button"
+                    onClick={() => setSidebarOpen(false)}
+                    className="-m-2.5 p-2.5"
+                  >
+                    <span className="sr-only">Close sidebar</span>
+                    <XMarkIcon
+                      aria-hidden="true"
+                      className="h-8 w-8 text-white"
+                    />
+                  </button>
+                </div>
+                <SidebarNav
+                  title={title}
+                  url={url}
+                  logo={logo}
+                  navigation={navigation}
+                />
+              </Dialog.Panel>
+            </div>
+          </Transition.Child>
+        </Dialog>
+      </Transition.Root>
       <div
+        className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col"
         data-testid="sidebar"
-        className={`transform ${
-          showSidebar ? "w-[19rem] translate-x-0" : "hidden -translate-x-full"
-        } fixed inset-0 left-[max(0px,calc(50%-45rem))] right-auto z-10 h-full flex-col justify-between space-y-4 overflow-y-auto border-r border-stone-200 bg-background p-4 pb-10 pl-8 pr-6 transition-all dark:border-stone-700 dark:bg-stone-900 sm:translate-x-0 lg:top-12 lg:block lg:w-[19rem]`}
       >
-        <NavTitle title={title} logo={logo} url={url} />
-        <div className="relative lg:text-sm lg:leading-6">
-          <TreeView items={treeItems} currentPath={pathname} />
-        </div>
-        {/* <div>
-                    {externalLinks.map(({ name, href, icon }) => (
-                        <a
-                            key={name}
-                            href={href}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-between rounded-lg px-2 py-1.5 transition-all duration-150 ease-in-out hover:bg-stone-200 active:bg-stone-300 dark:text-white dark:hover:bg-stone-700 dark:active:bg-stone-800"
-                        >
-                            <div className="flex items-center space-x-3">
-                                {icon}
-                                <span className="text-sm font-medium">{name}</span>
-                            </div>
-                            <p>↗</p>
-                        </a>
-                    ))}
-                </div> */}
-        {/* <div className="my-2 border-t border-stone-200 dark:border-stone-700" />
-                    {children} */}
+        <SidebarNav
+          title={title}
+          url={url}
+          logo={logo}
+          navigation={navigation}
+        />
+      </div>
+      <div className="fixed right-0 top-0 z-30 flex items-center justify-end gap-x-6 px-4 pt-4 sm:px-6 lg:hidden">
+        <button
+          type="button"
+          onClick={() => setSidebarOpen(true)}
+          className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
+        >
+          <span className="sr-only">Open sidebar</span>
+          <Bars3Icon aria-hidden="true" className="h-8 w-8" />
+        </button>
       </div>
     </>
   );

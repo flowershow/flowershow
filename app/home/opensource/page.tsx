@@ -3,7 +3,44 @@ import Showcases from "./_components/showcases";
 import Community from "./_components/community";
 import Features from "./_components/features";
 import { Section } from "@/components/section";
+import { Metadata } from "next";
 import { Hero } from "@/components/hero";
+import config from "@/const/config";
+
+export const metadata: Metadata = {
+  title: "The JavaScript framework for data portals.",
+  description:
+    "Rapidly build rich data portals using a modern frontend framework.",
+  icons: ["/favicon.ico"],
+  openGraph: {
+    title: "The JavaScript framework for data portals.",
+    description:
+      "Rapidly build rich data portals using a modern frontend framework.",
+    images: [
+      {
+        url: "/opensource.png",
+        width: 1200,
+        height: 627,
+        alt: "",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "The JavaScript framework for data portals.",
+    description:
+      "Rapidly build rich data portals using a modern frontend framework.",
+    images: [
+      {
+        url: "/opensource.png",
+        width: 800,
+        height: 418,
+        alt: "Thumbnail",
+      },
+    ],
+    creator: "@datopian",
+  },
+};
 
 const heroTitle = (
   <>
