@@ -135,7 +135,7 @@ export const DataPackageLayout: React.FC<Props> = ({
         title: `Error in \`datapackage\` layout:`,
       })}
     >
-      <article className="prose-headings:font-headings prose mx-auto max-w-6xl px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
+      <article className="prose-headings:font-headings prose mx-auto max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
         <header className="mb-8 flex flex-col gap-y-5">
           <h1 className="!mb-2">{title}</h1>
           <table
@@ -271,7 +271,7 @@ export const DataPackageLayout: React.FC<Props> = ({
         <section
           data-testid="dp-readme"
           id="readme"
-          className="mx-auto max-w-4xl"
+          className="mx-auto max-w-full"
         >
           {children}
         </section>
