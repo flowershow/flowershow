@@ -26,9 +26,9 @@ export default function PricingPage() {
                   role="list"
                   className="  flex flex-col gap-8 text-gray-600 lg:flex-row"
                 >
-                  <li className="lg:w-[33%]">
+                  <li className="py-1 lg:w-[33%]">
                     <span>
-                      <strong className="mb-4 block text-center font-semibold leading-[16px] text-gray-900">
+                      <strong className="bold mb-2 mt-6 block text-lg font-bold text-slate-900">
                         Enjoy Premium Features, On Us!
                       </strong>{" "}
                       While we perfect our pricing, enjoy all premium features
@@ -36,15 +36,15 @@ export default function PricingPage() {
                       offer.
                     </span>
                   </li>
-                  <li className="lg:w-[33%]">
+                  <li className="py-1 lg:w-[33%]">
                     <span>
-                      <strong className="mb-4 block text-center font-semibold leading-[16px] text-gray-900">
+                      <strong className="bold mb-2 mt-6 block text-lg font-bold text-slate-900">
                         We’d Love Your Feedback
                       </strong>{" "}
                       Your feedback is invaluable. Share your thoughts and
                       suggestions on{" "}
                       <Link
-                        className="text-black underline"
+                        className="text-orange-400 underline"
                         href="https://discord.com/invite/KrRzMKU"
                         target="_blank"
                       >
@@ -53,9 +53,9 @@ export default function PricingPage() {
                       to help us tailor our pricing plan to your needs.
                     </span>
                   </li>
-                  <li className="lg:w-[33%]">
+                  <li className="py-1 lg:w-[33%]">
                     <span>
-                      <strong className="mb-4 block text-center font-semibold leading-[16px] text-gray-900">
+                      <strong className="bold mb-2 mt-6 block text-lg font-bold text-slate-900">
                         What’s Next?
                       </strong>{" "}
                       Our pricing plan will be announced soon. Stay tuned for
