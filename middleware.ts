@@ -90,6 +90,11 @@ export default async function middleware(req: NextRequest) {
         new URL(path.replace("/awesome", "/collections"), req.url),
       );
     }
+    if (path.match(/^\/notes/)) {
+      return NextResponse.rewrite(
+        new URL(path.replace("/notes", "/rufuspollock/data-notes"), req.url),
+      );
+    }
     if (path.match(/^\/core/)) {
       const pathAfterCore = path.replace(/^\/core/, "");
       if (path.match(/\/datapackage\.(json|yaml|yml)$/)) {
