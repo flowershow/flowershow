@@ -182,22 +182,21 @@ export default async function SiteLayout({
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
 
       <div className="min-h-screen">
-        {!showSidebar && (
+        {!showSidebar ? (
           <Navbar title={title} logo={logo} url={url} links={navLinks} />
-        )}
-
-        {showSidebar && (
+        ) : (
           <Sidebar title={title} logo={logo} url={url} navigation={treeItems} />
         )}
-
         <main
           className={`${
             showSidebar ? "lg:pl-72" : "mx-auto flex max-w-8xl sm:px-4 md:px-8"
           }`}
         >
           <div
-            className={`page-content sm:px-4 xl:px-12 ${
-              showSidebar ? "xl:pr-[235px] 2xl:pr-[340px]" : ""
+            className={`page-content max-w-full sm:px-4 xl:px-12 ${
+              showSidebar
+                ? "xl:pr-[235px] 2xl:pr-[340px]"
+                : "xl:max-w-[calc(100%-320px)]"
             }`}
           >
             {children}
@@ -213,7 +212,7 @@ export default async function SiteLayout({
             className={`inset-y-0 right-0 hidden overflow-y-auto px-4 sm:px-2 lg:px-8 xl:block  ${
               showSidebar
                 ? "fixed py-8 xl:w-[235px] 2xl:w-[340px]"
-                : "sticky top-[70px] h-[calc(100vh-70px)] xl:w-[320px]"
+                : "sticky top-[70px] h-[calc(100vh-70px)] xl:min-w-[320px]"
             } `}
           >
             <TableOfContentsSidebar />
