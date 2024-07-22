@@ -1,4 +1,4 @@
-# DataHub Cloud Developer Guide 🚧 🚧 
+# DataHub Cloud Developer Guide 🚧 🚧
 
 Welcome to the DataHub Cloud developer guide. DataHub Cloud is a NextJS multitenant application designed for seamlessly publishing markdown content from GitHub repositories. This README serves as a comprehensive guide for developers working on the project.
 
@@ -107,3 +107,37 @@ npx playwright test --debug
 ```sh
 npx playwright test --ui
 ```
+
+## Caveats
+
+### Special `datahub.io/xxx` pages
+
+Main DataHub Cloud landing page as well as `/opensource` and `/enterprise` can be located in `/app/home` folder. These are regular Next.js pages.
+
+However, there are some pages available under `/xxx` (as compared to `/@<username>/<sitename>`) and are not Next.js pages written in tsx files. These include:
+
+- `/core/xxx`
+  - alias for `/@olayway/xxx`
+  - sites published on `olayway`'s account off of GitHub repositories found in https://github.com/datasets organisation
+  - e.g. `/core/airport-codes` is a site named `airport-codes` published on `olayway` user account
+- `/blog`
+  - alias for `@olayway/blog`
+  - site published on `olayway`'s account off of https://github.com/datahubio/blog
+  - auto-syncs so no need for the site owner to manually sync after changes
+- `/collections`
+  - alias for `@olayway/collections`
+  - site published on `olayway`'s account off of https://github.com/datasets/awesome-data
+  - auto-syncs so no need for the site owner to manually sync after changes
+- `/docs`
+  - alias for `@olayway/docs`
+  - site published on `olayway`'s account off of https://github.com/datahubio/datahub-cloud-template
+  - auto-syncs so no need for the site owner to manually sync after changes
+- `/notes`
+  - alias for `@rufuspollock/data-notes`
+  - site published on `rufuspollock`'s account off of https://datahub.io/@rufuspollock/data-notes
+
+Q: Why the above aliases are used?
+A: All the above mentioned pages are just "sites" built using DataHub Cloud (dogfooding). Since we don't want them to be available at `@some-dh-team-member/abc-site` we created aliases for them. This is probably a temporary solution and on top of URL rewrites require a few hacks scattered throughout the code to make things work.
+
+Q: How can these be modified/extended?
+A: Take a look at `/middleware.ts` file.
