@@ -513,9 +513,31 @@ export const siteRouter = createTRPCRouter({
 
           try {
             if (!site.customDomain) {
+              let prefix = "";
+
+              // hacky solutions to handle "special" own DataHub pages/sites
+              // see "Caveats" part of README
+              if (input.gh_username === "olayway") {
+                if (input.projectName === "docs") {
+                  prefix = "/docs";
+                }
+                if (input.projectName === "blog") {
+                  prefix = "/blog";
+                }
+                if (input.projectName === "collections") {
+                  prefix = "/collections";
+                }
+              } else if (input.gh_username === "rufuspollock") {
+                if (input.projectName === "data-notes") {
+                  prefix = "/notes";
+                }
+              } else {
+                prefix = `/@${input.gh_username}/${input.projectName}`;
+              }
+
               return buildNestedTreeFromFilesMap(
                 Object.values(site.files as { [key: string]: PageMetadata }),
-                `/@${input.gh_username}/${input.projectName}`,
+                prefix,
               );
             }
             // return buildNestedTree(gitHubTree);
