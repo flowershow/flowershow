@@ -34,11 +34,11 @@ export default function Footer({
           )}
         >
           <div className="space-y-8">
-            <p className="flex">
-              Powered by{" "}
+            <Link href="https://datahub.io" className="flex">
+              Built with{" "}
               <img className="mx-2 h-6" src={author.logo} alt="Company name" />
-              DataHub
-            </p>
+              Datahub
+            </Link>
             {description && (
               <p className="text-sm leading-6 text-gray-600">{description}</p>
             )}
