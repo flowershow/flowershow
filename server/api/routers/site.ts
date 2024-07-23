@@ -513,7 +513,7 @@ export const siteRouter = createTRPCRouter({
 
           try {
             if (!site.customDomain) {
-              let prefix = "";
+              let prefix = `/@${input.gh_username}/${input.projectName}`;
 
               // hacky solutions to handle "special" own DataHub pages/sites
               // see "Caveats" part of README
@@ -531,8 +531,6 @@ export const siteRouter = createTRPCRouter({
                 if (input.projectName === "data-notes") {
                   prefix = "/notes";
                 }
-              } else {
-                prefix = `/@${input.gh_username}/${input.projectName}`;
               }
 
               return buildNestedTreeFromFilesMap(
