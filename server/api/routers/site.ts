@@ -12,6 +12,7 @@ import {
   checkIfBranchExists,
   createGitHubRepoWebhook,
   deleteGitHubRepoWebhook,
+  GitHubAPIRepoTree,
 } from "@/lib/github";
 import { fetchTree, deleteProject, fetchFile } from "@/lib/content-store";
 import {
@@ -315,26 +316,34 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      if (site!.syncStatus === "PENDING") {
-        return {
-          isUpToDate: false,
-          syncStatus: site!.syncStatus,
-          syncedAt: site!.syncedAt,
-        };
+      // return false for PENDING and ERROR statuses
+      let isUpToDate = false;
+
+      if (site?.syncStatus === "SUCCESS") {
+        // get tree from content store
+        let contentStoreTree: GitHubAPIRepoTree | null = null;
+
+        try {
+          contentStoreTree = await fetchTree(site!.id, site!.gh_branch);
+        } catch (error) {
+          console.error("Failed to fetch tree from content store", error);
+        }
+
+        // get tree from GitHub
+        const gitHubTree = await fetchGitHubRepoTree({
+          gh_repository: site!.gh_repository,
+          gh_branch: site!.gh_branch,
+          access_token: ctx.session.accessToken,
+        });
+        isUpToDate = contentStoreTree
+          ? contentStoreTree.sha === gitHubTree.sha
+          : false;
       }
 
-      // get tree from content store
-      const contentStoreTree = await fetchTree(site!.id, site!.gh_branch);
-      // get tree from GitHub
-      const gitHubTree = await fetchGitHubRepoTree({
-        gh_repository: site!.gh_repository,
-        gh_branch: site!.gh_branch,
-        access_token: ctx.session.accessToken,
-      });
-
       return {
-        isUpToDate: contentStoreTree && contentStoreTree.sha === gitHubTree.sha,
+        isUpToDate,
         syncStatus: site!.syncStatus,
+        syncError: JSON.stringify(site!.syncError), // why need to stringify?
         syncedAt: site!.syncedAt,
       };
     }),

@@ -93,6 +93,7 @@ model Site {
   user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId        String?
   syncStatus    Status   @default(SUCCESS)
+  syncError     Json?
   syncedAt      DateTime? // when the site content was last updated in R2
   autoSync      Boolean  @default(false)
   webhookId     String?  @unique

@@ -21,6 +21,7 @@ import {
 import { computeMetadata, resolveFilePathToUrl } from "@/lib/computed-fields";
 import {
   SupportedExtension,
+  SyncError,
   isSupportedExtension,
   isSupportedMarkdownExtension,
 } from "@/lib/types";
@@ -48,15 +49,26 @@ export const syncSite = inngest.createFunction(
         if: "async.data.siteId == event.data.siteId",
       },
     ],
-    onFailure: async ({ event, step }) => {
-      await step.run(
-        "update-sync-status",
-        async () =>
+    onFailure: async ({ error, event, step }) => {
+      await step.run("update-sync-status", async () => {
+        // const errorType = isKnownSyncErrorType(error.message) ? error.message : "INTERNAL_ERROR";
+        if (error.message !== "MARKDOWN_PARSING_ERROR") {
+          const syncError: SyncError = {
+            datetime: new Date().toISOString(),
+            type: "INTERNAL_ERROR",
+            // message: error.cause as string ?? error.message,
+            message: error.message,
+            error: JSON.stringify(error),
+          };
           await prisma.site.update({
             where: { id: event.data.event.data.siteId }, // TODO this can't be right
-            data: { syncStatus: "ERROR" },
-          }),
-      );
+            data: {
+              syncStatus: "ERROR",
+              syncError: syncError as any, // TODO fix types
+            },
+          });
+        }
+      });
     },
   },
   { event: "site/sync" },
@@ -80,10 +92,6 @@ export const syncSite = inngest.createFunction(
         }),
     );
 
-    if (!site) {
-      throw new NonRetriableError("Site does not exist");
-    }
-
     await step.run(
       "update-sync-status",
       async () =>
@@ -95,8 +103,19 @@ export const syncSite = inngest.createFunction(
 
     const contentStoreTree = await step.run(
       "fetch-content-store-tree",
-      async () =>
-        initialSync || forceSync ? null : await fetchTree(siteId, gh_branch),
+      async () => {
+        if (initialSync || forceSync) {
+          return null;
+        }
+        try {
+          return await fetchTree(siteId, gh_branch);
+        } catch (error: any) {
+          if (error.name === "NoSuchKey") {
+            return null;
+          }
+          throw error;
+        }
+      },
     );
 
     const gitHubTree = await step.run(
@@ -243,17 +262,45 @@ export const syncSite = inngest.createFunction(
               }
             }
 
-            const metadata = await computeMetadata({
-              source: markdown,
-              datapackage,
-              path: contentStoreFilePath,
-              tree: gitHubTree,
-              contentStoreUrlBase: `https://${
-                env.NEXT_PUBLIC_R2_BUCKET_DOMAIN
-              }/${site!.id}/${site!.gh_branch}/raw`,
-            });
+            try {
+              const metadata = await computeMetadata({
+                source: markdown,
+                datapackage,
+                path: contentStoreFilePath,
+                tree: gitHubTree,
+                contentStoreUrlBase: `https://${
+                  env.NEXT_PUBLIC_R2_BUCKET_DOMAIN
+                }/${site!.id}/${site!.gh_branch}/raw`,
+              });
 
-            return { metadata };
+              return { metadata };
+            } catch (error: any) {
+              if (error.name === "YAMLException") {
+                // TODO this is temporary as I couldn't get read the passed {cause: error} in the onFailed handler
+                // See post in inngest discord forum https://discord.com/channels/842170679536517141/1265692893117550768
+                const syncError: SyncError = {
+                  datetime: new Date().toISOString(),
+                  type: "MARKDOWN_PARSING_ERROR",
+                  message: `Failed to parse YAML frontmatter in ${contentStoreFilePath}: ${error.message}`,
+                  error: JSON.stringify(error),
+                };
+
+                await prisma.site.update({
+                  where: { id: site!.id }, // TODO this can't be right
+                  data: {
+                    syncStatus: "ERROR",
+                    syncError: syncError as any, // TODO fix types
+                  },
+                });
+
+                // Only this should be needed and the above should be removed but
+                // I couldn't get the error to be passed to the onFailure handler
+                // also, currently the original error is not visible in inngest logs ...
+                throw new NonRetriableError("MARKDOWN_PARSING_ERROR", {
+                  cause: error,
+                });
+              }
+            }
           }
 
           return null;
