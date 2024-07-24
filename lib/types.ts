@@ -108,3 +108,18 @@ export interface DomainVerificationResponse {
     reason: string;
   }[];
 }
+
+export interface SyncError {
+  datetime: string;
+  type: KnownSyncErrorType | "INTERNAL_ERROR";
+  message: string;
+  error: any; // original error object
+}
+
+export type KnownSyncErrorType = "MARKDOWN_PARSING_ERROR"; // tb expanded
+
+export const isKnownSyncErrorType = (
+  type: string,
+): type is KnownSyncErrorType => {
+  return ["MARKDOWN_PARSING_ERROR"].includes(type);
+};
