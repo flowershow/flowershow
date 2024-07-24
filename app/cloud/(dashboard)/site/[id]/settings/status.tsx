@@ -93,7 +93,7 @@ export default function Status() {
               >
                 <Popover.Panel className="absolute left-1/2 flex w-screen max-w-min -translate-x-1/2 px-4">
                   <div className="max-h-80 w-80 shrink overflow-y-auto rounded-xl bg-white p-4 text-sm leading-6 text-gray-900 shadow-lg ring-1 ring-gray-900/5">
-                    {syncStatus
+                    {syncStatus && JSON.parse(syncStatus.syncError as string)
                       ? JSON.parse(syncStatus.syncError as string).message
                       : "Unknown error"}
                   </div>

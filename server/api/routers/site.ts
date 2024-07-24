@@ -343,7 +343,7 @@ export const siteRouter = createTRPCRouter({
       return {
         isUpToDate,
         syncStatus: site!.syncStatus,
-        syncError: JSON.stringify(site!.syncError), // why need to stringify?
+        syncError: JSON.stringify(site!.syncError),
         syncedAt: site!.syncedAt,
       };
     }),
