@@ -243,17 +243,31 @@ export const syncSite = inngest.createFunction(
               }
             }
 
-            const metadata = await computeMetadata({
-              source: markdown,
-              datapackage,
-              path: contentStoreFilePath,
-              tree: gitHubTree,
-              contentStoreUrlBase: `https://${
-                env.NEXT_PUBLIC_R2_BUCKET_DOMAIN
-              }/${site!.id}/${site!.gh_branch}/raw`,
-            });
+            try {
+              const metadata = await computeMetadata({
+                source: markdown,
+                datapackage,
+                path: contentStoreFilePath,
+                tree: gitHubTree,
+                contentStoreUrlBase: `https://${
+                  env.NEXT_PUBLIC_R2_BUCKET_DOMAIN
+                }/${site!.id}/${site!.gh_branch}/raw`,
+              });
 
-            return { metadata };
+              return { metadata };
+            } catch (e: any) {
+              let errorMessage;
+              if (e.name === "YAMLException") {
+                errorMessage = `Failed to parse YAML frontmatter in ${contentStoreFilePath}: ${e.message}`;
+              } else {
+                errorMessage = `Failed to compute metadata for ${contentStoreFilePath}: ${e.message}`;
+              }
+              await prisma.site.update({
+                where: { id: siteId },
+                data: { syncMessage: errorMessage },
+              });
+              throw new NonRetriableError(e);
+            }
           }
 
           return null;
