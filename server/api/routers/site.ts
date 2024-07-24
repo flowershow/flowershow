@@ -319,6 +319,7 @@ export const siteRouter = createTRPCRouter({
         return {
           isUpToDate: false,
           syncStatus: site!.syncStatus,
+          syncMessage: site!.syncMessage,
           syncedAt: site!.syncedAt,
         };
       }
@@ -335,6 +336,7 @@ export const siteRouter = createTRPCRouter({
       return {
         isUpToDate: contentStoreTree && contentStoreTree.sha === gitHubTree.sha,
         syncStatus: site!.syncStatus,
+        syncMessage: site!.syncMessage,
         syncedAt: site!.syncedAt,
       };
     }),
