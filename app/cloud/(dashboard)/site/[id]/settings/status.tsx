@@ -62,7 +62,7 @@ export default function Status() {
             <span>Syncing...</span>
           </div>
         ) : syncStatus?.syncStatus === "ERROR" ? (
-          <div className="group flex items-center hover:cursor-pointer">
+          <div className="group flex items-center hover:cursor-default">
             <ExclamationCircleIcon
               className="mr-1.5 h-5 w-5 flex-shrink-0 text-red-400"
               aria-hidden="true"
@@ -93,7 +93,9 @@ export default function Status() {
               >
                 <Popover.Panel className="absolute left-1/2 flex w-screen max-w-min -translate-x-1/2 px-4">
                   <div className="max-h-80 w-80 shrink overflow-y-auto rounded-xl bg-white p-4 text-sm leading-6 text-gray-900 shadow-lg ring-1 ring-gray-900/5">
-                    {syncStatus?.syncMessage}
+                    {syncStatus
+                      ? JSON.parse(syncStatus.syncError as string).message
+                      : "Unknown error"}
                   </div>
                 </Popover.Panel>
               </Transition>
