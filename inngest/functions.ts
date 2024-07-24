@@ -3,6 +3,7 @@ import YAML from "yaml";
 
 import { inngest } from "./client";
 import prisma from "@/server/db";
+import { Prisma } from "@prisma/client";
 import { normalizeDir } from "@/server/api/routers/site";
 import { DataPackage } from "@/components/layouts/datapackage-types";
 import { env } from "@/env.mjs";
@@ -129,6 +130,7 @@ export const syncSite = inngest.createFunction(
     );
 
     if (contentStoreTree && contentStoreTree.sha === gitHubTree.sha) {
+      // why was this here?
       await step.run(
         "update-sync-status",
         async () =>
@@ -357,6 +359,7 @@ export const syncSite = inngest.createFunction(
           data: {
             files: filesMetadata as any, // TODO: fix types
             syncStatus: "SUCCESS",
+            syncError: Prisma.DbNull,
             syncedAt: new Date(),
           },
         }),
