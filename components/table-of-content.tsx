@@ -3,6 +3,7 @@ import {
   TableOfContents as TableOfContentsList,
   TocSection,
   collectHeadings,
+  useTableOfContents,
 } from "@portaljs/core";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
@@ -13,6 +14,7 @@ export default function TableOfContentsSidebar({
   className?: string;
 }) {
   const [tableOfContents, setTableOfContents] = useState<TocSection[]>([]);
+  const currentSection = useTableOfContents(tableOfContents);
   const currentPath = usePathname();
 
   useEffect(() => {
@@ -31,7 +33,7 @@ export default function TableOfContentsSidebar({
         >
           <TableOfContentsList
             tableOfContents={tableOfContents}
-            currentSection={""}
+            currentSection={currentSection}
           />
         </div>
       )}
