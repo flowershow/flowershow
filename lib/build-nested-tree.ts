@@ -26,7 +26,7 @@ export const buildNestedTreeFromFilesMap = (
         label: !currentPart.endsWith(".md")
           ? currentPart
           : item.title || currentPart.replace(/\.md$/, ""),
-        path: `${prefix}/${path}`.replace(/(\/index|\/README)?\.md$/, ""),
+        path: `${prefix}/${item._url.replace(/%20/g, "+")}`,
       };
       tree.push(node);
     }
