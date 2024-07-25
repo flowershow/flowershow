@@ -32,8 +32,10 @@ export default async function middleware(req: NextRequest) {
   }
 
   const searchParams = req.nextUrl.searchParams.toString();
-  // Get the pathname of the request (e.g. /, /about, /blog/first-post)
-  const path = `${url.pathname}${
+  // Translate + to %20
+  // https://github.com/datopian/datahub/issues/1172
+  const pathname = url.pathname.replace(/\+/g, "%20");
+  const path = `${pathname}${
     searchParams.length > 0 ? `?${searchParams}` : ""
   }`;
 
