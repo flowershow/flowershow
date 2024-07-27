@@ -78,6 +78,7 @@ export const siteRouter = createTRPCRouter({
         })
       ) {
         projectName = `${input.gh_repository.split("/")[1]}-${num}`;
+        num++;
       }
 
       // create site in the database
