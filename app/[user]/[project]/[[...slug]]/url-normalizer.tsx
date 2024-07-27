@@ -8,8 +8,6 @@ const UrlNormalizer = () => {
 
   useEffect(() => {
     const normalizedPath = path.replace(/%20/g, "+");
-    console.log("path", path);
-    console.log("normalizedPath", normalizedPath);
     if (normalizedPath !== path) {
       router.replace(normalizedPath);
     }
