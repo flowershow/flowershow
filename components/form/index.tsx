@@ -132,8 +132,10 @@ export default function Form({
                   }
                   toast.success(`Successfully updated ${inputAttrs.name}!`);
                 })
-                .catch((error) => {
-                  toast.error(`Error: ${error.message}`);
+                .catch(() => {
+                  toast.error(
+                    "Failed to create webhook. Check if the repository has a webhook for this application already installed.",
+                  );
                 })
                 .finally(() => {
                   setRefreshKey((prev) => prev + 1);

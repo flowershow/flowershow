@@ -78,6 +78,7 @@ export const siteRouter = createTRPCRouter({
         })
       ) {
         projectName = `${input.gh_repository.split("/")[1]}-${num}`;
+        num++;
       }
 
       // create site in the database
@@ -181,7 +182,6 @@ export const siteRouter = createTRPCRouter({
               data: { autoSync: true, webhookId: webhookId.toString() },
             });
           } catch (error) {
-            console.error("Failed to create webhook", error);
             throw new Error(
               "Failed to create webhook. Check if the repository has a webhook already installed.",
             );
