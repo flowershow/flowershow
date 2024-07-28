@@ -26,7 +26,10 @@ export const buildNestedTreeFromFilesMap = (
         label: !currentPart.endsWith(".md")
           ? currentPart
           : item.title || currentPart.replace(/\.md$/, ""),
-        path: `${prefix}/${path}`.replace(/(\/index|\/README)?\.md$/, ""),
+        path: `${prefix}/${path}`
+          .replace(/(\/index|\/README)?\.md$/, "")
+          .replace(/\+/, "%2B")
+          .replace(/\s/g, "+"),
       };
       tree.push(node);
     }
@@ -84,7 +87,10 @@ export const buildNestedTree = (
       node = {
         id: path,
         label: currentPart.replace(/\.md$/, ""),
-        path: `${prefix}/${path}`.replace(/(\/index|\/README)?\.md$/, ""),
+        path: `${prefix}/${path}`
+          .replace(/(\/index|\/README)?\.md$/, "")
+          .replace(/\+/, "%2B")
+          .replace(/\s/g, "+"),
       };
       tree.push(node);
     }

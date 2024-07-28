@@ -20,7 +20,6 @@ import {
   removeDomainFromVercelProject,
   validDomainRegex,
 } from "@/lib/domains";
-import { isSupportedExtension } from "@/lib/types";
 import { TRPCError } from "@trpc/server";
 import { PageMetadata } from "../types";
 import { buildNestedTreeFromFilesMap } from "@/lib/build-nested-tree";
@@ -650,25 +649,10 @@ export const siteRouter = createTRPCRouter({
             path,
           });
 
-          // generate a list of permalinks
-
-          // TODO this is a workaround because we don't have and index of all files in the db yet
-          // otherwise we could just query the db for all files
-          const tree = await fetchTree(site.id, site.gh_branch);
-
-          if (!tree) {
-            return { content, permalinks: [] };
-          }
-
-          const normalizedRootDir = normalizeDir(site.rootDir || null);
-          const permalinks = tree.tree
-            .filter((file) => {
-              if (file.type === "tree") return false;
-              if (!isSupportedExtension(file.path.split(".").pop() || ""))
-                return false;
-              return file.path.startsWith(normalizedRootDir);
-            })
-            .map((file) => "/" + file.path.replace(/\.mdx?$/, ""));
+          const siteUrls = site.files ? Object.keys(site.files) : [];
+          const permalinks = siteUrls.map((url) =>
+            url === "/" ? "/README" : `/${decodeURI(url).replace(/%2B/g, "+")}`,
+          );
 
           return { content, permalinks };
         },

@@ -113,7 +113,9 @@ export const mdxComponentsFactory = ({
         prefixPath: siteMetadata.customDomain
           ? ""
           : `/@${siteMetadata.user!.gh_username}/${siteMetadata.projectName}`,
-      });
+      })
+        .replace(/\+/g, "%2B")
+        .replace(/\s/g, "+");
 
       return (
         <a
