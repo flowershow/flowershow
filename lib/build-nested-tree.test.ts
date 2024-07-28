@@ -44,14 +44,6 @@ test("buildNestedTree", () => {
         mode: "100644",
       },
       {
-        path: "blog/2024/may/+ and spaces.md",
-        sha: "blog/2024/may/+ and spaces-sha",
-        url: "https://api.github.com/repos/username/repo/git/blobs/blog/2024/may/+ and spaces-sha",
-        size: 100,
-        type: "blob",
-        mode: "100644",
-      },
-      {
         path: "blog/2024/may/README.md",
         sha: "blog/2024/may/README-sha",
         url: "https://api.github.com/repos/username/repo/git/blobs/blog/2024/may/README-sha",
@@ -145,11 +137,6 @@ test("buildNestedTree", () => {
               path: "/@username/abc/blog/2024/may",
               children: [
                 {
-                  id: "blog/2024/may/+ and spaces.md",
-                  label: "+ and spaces",
-                  path: "/@username/abc/blog/2024/may/%2B+and+spaces",
-                },
-                {
                   id: "blog/2024/may/aaa.md",
                   label: "aaa",
                   path: "/@username/abc/blog/2024/may/aaa",
@@ -188,13 +175,6 @@ test("buildNestedTree", () => {
 
 test("buildNestedTreeFromFilesMap", () => {
   const flatTree: PageMetadata[] = [
-    {
-      _path: "blog/2024/may/+ and spaces.md",
-      _url: "blog/2024/may/%2B%20and%20spaces",
-      _pagetype: "story",
-      title: "+ And Spaces Title",
-      description: "+ And Spaces Description",
-    },
     {
       _path: "blog/2024/may/aaa.md",
       _url: "blog/2024/may/aaa",
@@ -267,11 +247,6 @@ test("buildNestedTreeFromFilesMap", () => {
               label: "may",
               path: "/@username/abc/blog/2024/may",
               children: [
-                {
-                  id: "blog/2024/may/+ and spaces.md",
-                  label: "+ And Spaces Title",
-                  path: "/@username/abc/blog/2024/may/%2B+and+spaces",
-                },
                 {
                   id: "blog/2024/may/aaa.md",
                   label: "Aaa Title",

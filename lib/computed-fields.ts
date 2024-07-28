@@ -69,7 +69,7 @@ export const resolveFilePathToUrl = (filePath: string) => {
     .replace(/\.(mdx|md)/, "")
     .replace(/(\/)?(index|README)$/, ""); // remove index or README from the end of the permalink
   url = url.length > 0 ? url : "/"; // for home page
-  return encodeURI(url).replace(/\+/g, "%2B");
+  return encodeURI(url);
 };
 
 const extractTitle = async (source: string) => {
