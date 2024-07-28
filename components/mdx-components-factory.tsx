@@ -18,6 +18,7 @@ import { PageMetadata, isDatasetPage } from "@/server/api/types";
 import { resolveLink } from "@/lib/resolve-link";
 import { Site } from "@prisma/client";
 import { env } from "@/env.mjs";
+import { customEncodeUrl } from "@/lib/url-encoder";
 
 const Catalog = dynamic(() =>
   import("@portaljs/components").then((module) => ({
@@ -107,8 +108,10 @@ export const mdxComponentsFactory = ({
       }
 
       const isExternal = href.startsWith("http");
+      const encodedHref = customEncodeUrl(href);
+
       const normalizedHref = resolveLink({
-        link: href,
+        link: encodedHref,
         filePath: metadata._path,
         prefixPath: siteMetadata.customDomain
           ? ""

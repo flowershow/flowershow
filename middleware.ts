@@ -32,10 +32,12 @@ export default async function middleware(req: NextRequest) {
   }
 
   const searchParams = req.nextUrl.searchParams.toString();
-  // Get the pathname of the request (e.g. /, /about, /blog/first-post)
-  const path = `${url.pathname}${
-    searchParams.length > 0 ? `?${searchParams}` : ""
-  }`;
+  // Translate + to %20 (our custom space encoding for better UX),
+  // otherwise it will get encoded as %2B
+  // https://github.com/datopian/datahub/issues/1172
+  const pathname = url.pathname.replace(/\+/g, "%20");
+  const path = `${pathname}${searchParams.length > 0 ? `?${searchParams}` : ""
+    }`;
 
   // rewrites for cloud pages
   if (
