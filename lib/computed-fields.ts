@@ -5,6 +5,7 @@ import stripMarkdown, { Options } from "strip-markdown";
 import { GitHubAPIRepoTree } from "./github";
 import matter from "gray-matter";
 import { resolveLink } from "@/lib/resolve-link";
+import { customEncodeUrl } from "./url-encoder";
 
 export const computeMetadata = async ({
   source,
@@ -69,7 +70,7 @@ export const resolveFilePathToUrl = (filePath: string) => {
     .replace(/\.(mdx|md)/, "")
     .replace(/(\/)?(index|README)$/, ""); // remove index or README from the end of the permalink
   url = url.length > 0 ? url : "/"; // for home page
-  return encodeURI(url);
+  return customEncodeUrl(url);
 };
 
 const extractTitle = async (source: string) => {
