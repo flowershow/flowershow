@@ -1,6 +1,7 @@
 import { PageMetadata } from "@/server/api/types";
 import type { GitHubAPIRepoTree, GitHubAPIRepoTreeItem } from "./github";
 import type { TreeViewItem } from "@/components/tree-view";
+import { customEncodeUrl } from "./url-encoder";
 
 export type NestedRepoTree = TreeViewItem[];
 
@@ -20,13 +21,15 @@ export const buildNestedTreeFromFilesMap = (
     const path = parentPath ? `${parentPath}/${currentPart}` : currentPart;
 
     let node = tree.find((n) => n.label === currentPart);
+    const urlPath = customEncodeUrl(path);
+
     if (!node) {
       node = {
         id: path,
         label: !currentPart.endsWith(".md")
           ? currentPart
           : item.title || currentPart.replace(/\.md$/, ""),
-        path: `${prefix}/${path}`.replace(/(\/index|\/README)?\.md$/, ""),
+        path: `${prefix}/${urlPath}`.replace(/(\/index|\/README)?\.md$/, ""),
       };
       tree.push(node);
     }
@@ -80,11 +83,13 @@ export const buildNestedTree = (
     const path = parentPath ? `${parentPath}/${currentPart}` : currentPart;
 
     let node = tree.find((n) => n.label === currentPart);
+    const urlPath = customEncodeUrl(path);
+
     if (!node) {
       node = {
         id: path,
         label: currentPart.replace(/\.md$/, ""),
-        path: `${prefix}/${path}`.replace(/(\/index|\/README)?\.md$/, ""),
+        path: `${prefix}/${urlPath}`.replace(/(\/index|\/README)?\.md$/, ""),
       };
       tree.push(node);
     }

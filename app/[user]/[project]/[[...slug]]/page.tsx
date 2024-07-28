@@ -6,6 +6,7 @@ import { ErrorMessage } from "@/components/error-message";
 import { PageMetadata } from "@/server/api/types";
 import { MDXRemoteSerializeResult } from "next-mdx-remote";
 import { Site } from "@prisma/client";
+import UrlNormalizer from "./url-normalizer";
 
 type SiteWithUser = Site & {
   user: {
@@ -23,6 +24,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   const project = decodeURIComponent(params.project);
   const user = decodeURIComponent(params.user);
   const slug = params.slug ? params.slug.join("/") : "/";
+  const decodedSlug = slug.replace(/%20/g, "+");
 
   let site: SiteWithUser | null = null;
 
@@ -47,7 +49,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     pageMetadata = await api.site.getPageMetadata.query({
       gh_username: site.user?.gh_username!,
       projectName: site.projectName,
-      slug,
+      slug: decodedSlug,
     });
   } catch (error) {
     notFound();
@@ -73,6 +75,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   const project = decodeURIComponent(params.project);
   const user = decodeURIComponent(params.user);
   const slug = params.slug ? params.slug.join("/") : "/";
+  const decodedSlug = slug.replace(/%20/g, "+");
 
   let site: SiteWithUser | null = null;
 
@@ -97,7 +100,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     pageMetadata = await api.site.getPageMetadata.query({
       gh_username: site.user?.gh_username!,
       projectName: site.projectName,
-      slug,
+      slug: decodedSlug,
     });
   } catch (error) {
     notFound();
@@ -115,7 +118,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     const { content, permalinks } = await api.site.getPageContent.query({
       gh_username: site.user?.gh_username!,
       projectName: site.projectName,
-      slug,
+      slug: decodedSlug,
     });
     mdContent = content;
     sitePermalinks = permalinks;
@@ -140,6 +143,13 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   }
 
   return (
-    <MdxPage source={_mdxSource} metadata={pageMetadata} siteMetadata={site} />
+    <>
+      <UrlNormalizer />
+      <MdxPage
+        source={_mdxSource}
+        metadata={pageMetadata}
+        siteMetadata={site}
+      />
+    </>
   );
 }
