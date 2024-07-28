@@ -32,10 +32,8 @@ export default async function middleware(req: NextRequest) {
   }
 
   const searchParams = req.nextUrl.searchParams.toString();
-  // Translate + to %20
-  // https://github.com/datopian/datahub/issues/1172
-  const pathname = url.pathname.replace(/\+/g, "%20");
-  const path = `${pathname}${
+  // Get the pathname of the request (e.g. /, /about, /blog/first-post)
+  const path = `${url.pathname}${
     searchParams.length > 0 ? `?${searchParams}` : ""
   }`;
 

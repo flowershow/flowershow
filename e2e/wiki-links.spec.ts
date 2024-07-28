@@ -29,39 +29,35 @@ test.describe("Markdown links resolution", () => {
       `${linkBaseUrl}/blog/post-1`,
     );
 
-    const rootREADME = obsidianWikiLinks.nth(1);
-    await expect(rootREADME).toHaveText("README");
-    await expect(rootREADME).toHaveAttribute("href", `${linkBaseUrl}`);
-
-    const relativePathLink = obsidianWikiLinks.nth(2);
+    const relativePathLink = obsidianWikiLinks.nth(1);
     await expect(relativePathLink).toHaveText("./post-1");
     await expect(relativePathLink).toHaveAttribute(
       "href",
       `${linkBaseUrl}/blog/post-1`,
     );
 
-    const absolutePathLink = obsidianWikiLinks.nth(3);
+    const absolutePathLink = obsidianWikiLinks.nth(2);
     await expect(absolutePathLink).toHaveText("/blog/post-1");
     await expect(absolutePathLink).toHaveAttribute(
       "href",
       `${linkBaseUrl}/blog/post-1`,
     );
 
-    const absolutePathLinkToRootReadme = obsidianWikiLinks.nth(4);
+    const absolutePathLinkToRootReadme = obsidianWikiLinks.nth(3);
     await expect(absolutePathLinkToRootReadme).toHaveText("/README");
     await expect(absolutePathLinkToRootReadme).toHaveAttribute(
       "href",
       `${linkBaseUrl}`,
     );
 
-    const backwardPathLinkToRootReadme = obsidianWikiLinks.nth(5);
+    const backwardPathLinkToRootReadme = obsidianWikiLinks.nth(4);
     await expect(backwardPathLinkToRootReadme).toHaveText("../README");
     await expect(backwardPathLinkToRootReadme).toHaveAttribute(
       "href",
       `${linkBaseUrl}`,
     );
 
-    const linkWithExtension = obsidianWikiLinks.nth(6);
+    const linkWithExtension = obsidianWikiLinks.nth(5);
     await expect(linkWithExtension).toHaveText("/blog/post-1.md");
   });
 
