@@ -3,12 +3,35 @@ import { GithubIcon, LinkedinIcon, TwitterIcon } from "lucide-react";
 import { DiscordIcon } from "./icons/discord";
 import { AuthorConfig, FooterLink, SocialLink, SocialPlatform } from "./types";
 import clsx from "clsx";
+import DefaultConfig from "@/const/config";
+import Image from "next/image";
 
 const icon: { [K in SocialPlatform]: React.FC<any> } = {
   discord: DiscordIcon,
   github: GithubIcon,
   linkedin: LinkedinIcon,
   twitter: TwitterIcon,
+};
+
+const AuthorInfo = ({ logo, name, url }: AuthorConfig) => {
+  const Element = url ? "a" : "span";
+  return (
+    <Element
+      {...(url ? { href: url } : {})}
+      className="flex items-center gap-1 font-semibold no-underline"
+    >
+      {logo && (
+        <Image
+          width={24}
+          height={24}
+          className="mx-1 h-6"
+          src={logo}
+          alt={`${name} Logo`}
+        />
+      )}
+      {name}
+    </Element>
+  );
 };
 
 export default function Footer({
@@ -22,21 +45,35 @@ export default function Footer({
   social?: Array<SocialLink>;
   description?: string;
 }) {
+  console.log(author);
   return (
     <footer className="bg-background" aria-labelledby="footer-heading">
       <p id="footer-heading" className="sr-only">
         Footer
       </p>
-      <div className="mx-auto max-w-8xl px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32">
+
+      <div className="mx-auto px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32">
         <div
           className={clsx(
             links && links.length > 0 && "lg:grid lg:grid-cols-3 lg:gap-10",
           )}
         >
           <div className="space-y-8">
+            {author.name && (
+              <div className="flex gap-1 ">
+                <span>Created by </span>
+                <AuthorInfo name={author.name} url={author.url} logo="" />
+              </div>
+            )}
             <Link href="https://datahub.io" className="flex">
               Built with{" "}
-              <img className="mx-2 h-6" src={author.logo} alt="Company name" />
+              <Image
+                width={24}
+                height={24}
+                className="mx-2 h-6"
+                src={DefaultConfig.author.logo}
+                alt="DataHub Logo"
+              />
               DataHub
             </Link>
             {description && (

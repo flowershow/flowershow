@@ -168,8 +168,7 @@ export default async function SiteLayout({
   // configurable on custom domain only (future paid feature potentially)
   const footerLinks =
     (isCustomDomain && siteConfig?.footerLinks) || defaultConfig.footerLinks;
-  const footerAuthor =
-    (isCustomDomain && siteConfig?.author) || defaultConfig.author;
+  const footerAuthor = siteConfig?.author || defaultConfig.author;
   const footerSocial =
     (isCustomDomain && siteConfig?.social) || defaultConfig.social;
   const footerDescription =
