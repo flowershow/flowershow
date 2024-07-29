@@ -22,7 +22,6 @@ export interface SiteConfig {
 export interface ExtendedSiteConfig extends SiteConfigStrict {
   github: string; // TODO is this needed?
   discord: string; // TODO is this needed?
-  analytics: string;
 }
 
 type SiteConfigStrict = WithRequired<

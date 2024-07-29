@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import prisma from "@/server/db";
 import { env } from "@/env.mjs";
 import { inngest } from "@/inngest/client";
+import axios from "axios";
 
 // TODO https://www.inngest.com/docs/platform/webhooks
 export async function POST(req: NextRequest) {
@@ -32,6 +33,29 @@ export async function POST(req: NextRequest) {
 
   if (!site) {
     return new Response("Site not found", { status: 404 });
+  }
+
+  if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
+    try {
+      const payload = {
+        client_id: site.userId,
+        events: [
+          {
+            name: "auto_sync",
+            params: {
+              userId: site.userId,
+              siteId: site.id,
+            },
+          },
+        ],
+      };
+      await axios.post(
+        `https://www.google-analytics.com/mp/collect?measurement_id=${env.GA_MEASUREMENT_ID}&api_secret=${env.GA_SECRET}`,
+        payload,
+      );
+    } catch (error) {
+      console.error("Error sending GTM event", error);
+    }
   }
 
   if (payload.ref !== `refs/heads/${site.gh_branch}` || event !== "push") {
