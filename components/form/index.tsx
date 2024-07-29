@@ -9,7 +9,6 @@ import { Switch } from "@headlessui/react";
 import DomainStatus from "./domain-status";
 import DomainConfiguration from "./domain-configuration";
 import Uploader from "./uploader";
-import va from "@vercel/analytics";
 import { env } from "@/env.mjs";
 import { useSync } from "@/app/cloud/(dashboard)/site/[id]/sync-provider";
 import clsx from "clsx";
@@ -90,7 +89,6 @@ export default function Form({
           value: data.get(inputAttrs.name)!.toString(),
         })
           .then(async () => {
-            va.track(`Updated ${inputAttrs.name}`, id ? { id } : {});
             if (id) {
               router.refresh();
             } else {
@@ -123,7 +121,6 @@ export default function Form({
                 value: inputAttrs.defaultValue === "true" ? "false" : "true",
               })
                 .then(async () => {
-                  va.track(`Updated ${inputAttrs.name}`, id ? { id } : {});
                   if (id) {
                     router.refresh();
                   } else {

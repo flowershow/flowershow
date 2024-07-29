@@ -6,7 +6,6 @@ import "@/styles/globals.css";
 import { TRPCReactProvider } from "@/trpc/react";
 import { headers } from "next/headers";
 import { cal, inter } from "@/styles/fonts";
-import { Analytics } from "@vercel/analytics/react";
 import { GoogleTagManager } from "@next/third-parties/google";
 import { Providers } from "./providers";
 import { Metadata } from "next";
@@ -65,7 +64,6 @@ export default function RootLayout({
         <TRPCReactProvider headers={headers()}>
           <Providers>
             {children}
-            <Analytics />
             <GoogleTagManager gtmId={env.GTM_ID} />
           </Providers>
         </TRPCReactProvider>

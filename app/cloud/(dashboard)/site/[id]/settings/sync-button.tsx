@@ -1,6 +1,5 @@
 "use client";
 import { toast } from "sonner";
-import va from "@vercel/analytics";
 import { api } from "@/trpc/react";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import { signOut } from "next-auth/react";
@@ -43,7 +42,6 @@ export default function SyncButton({
         }
       },
       onSuccess: (res) => {
-        va.track("Synced Site");
         /* toast.success(`Successfully synced site!`); */
         setIsPending(false);
         setRefreshKey((prev: number) => prev + 1);

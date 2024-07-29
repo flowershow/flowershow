@@ -4,7 +4,6 @@ import LoadingDots from "@/components/icons/loading-dots";
 import { cn } from "@/lib/utils";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
-import va from "@vercel/analytics";
 import { api } from "@/trpc/react";
 import { signOut } from "next-auth/react";
 
@@ -15,7 +14,6 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
   const { isLoading: isDeletingSite, mutate: deleteSite } =
     api.site.delete.useMutation({
       onSuccess: () => {
-        va.track("Deleted Site");
         router.push("/sites");
         router.refresh();
         toast.success(`Successfully deleted site!`);

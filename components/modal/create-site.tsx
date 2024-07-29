@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import LoadingDots from "@/components/icons/loading-dots";
 import { useModal } from "./provider";
-import va from "@vercel/analytics";
 import { useEffect, useState } from "react";
 import { api } from "@/trpc/react";
 import { GithubIcon } from "lucide-react";
@@ -100,7 +99,6 @@ export default function CreateSiteModal() {
   const { isLoading: isCreatingSite, mutate: createSite } =
     api.site.create.useMutation({
       onSuccess: (res) => {
-        va.track("Created Site");
         const { id } = res;
         modal?.hide();
         router.push(`/site/${id}/settings`);
