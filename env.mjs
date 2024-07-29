@@ -40,6 +40,7 @@ export const env = createEnv({
     R2_BUCKET_NAME: z.string(),
     GH_WEBHOOK_SECRET: z.string(),
     GH_WEBHOOK_URL: z.string(),
+    GTM_ID: z.string()
   },
 
   /**
@@ -86,6 +87,7 @@ export const env = createEnv({
     NEXT_PUBLIC_DNS_DOMAIN: process.env.NEXT_PUBLIC_DNS_DOMAIN,
     GH_WEBHOOK_SECRET: process.env.GH_WEBHOOK_SECRET,
     GH_WEBHOOK_URL: process.env.GH_WEBHOOK_URL,
+    GTM_ID: process.env.GTM_ID
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

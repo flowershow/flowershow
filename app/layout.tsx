@@ -7,11 +7,12 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { headers } from "next/headers";
 import { cal, inter } from "@/styles/fonts";
 import { Analytics } from "@vercel/analytics/react";
-import { GoogleAnalytics } from "@next/third-parties/google";
+import { GoogleTagManager } from "@next/third-parties/google";
 import { Providers } from "./providers";
 import { Metadata } from "next";
 import { cn } from "@/lib/utils";
 import config from "@/const/config";
+import { env } from "@/env.mjs";
 
 export const metadata: Metadata = {
   title: config.title,
@@ -65,7 +66,7 @@ export default function RootLayout({
           <Providers>
             {children}
             <Analytics />
-            <GoogleAnalytics gaId={config.analytics} />
+            <GoogleTagManager gtmId={env.GTM_ID} />
           </Providers>
         </TRPCReactProvider>
       </body>
