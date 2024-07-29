@@ -168,7 +168,6 @@ export default async function SiteLayout({
   // configurable on custom domain only (future paid feature potentially)
   const footerLinks =
     (isCustomDomain && siteConfig?.footerLinks) || defaultConfig.footerLinks;
-  const footerAuthor = siteConfig?.author || defaultConfig.author;
   const footerSocial =
     (isCustomDomain && siteConfig?.social) || defaultConfig.social;
   const footerDescription =
@@ -201,7 +200,7 @@ export default async function SiteLayout({
             {children}
             <div className="mx-auto w-full ">
               <Footer
-                author={footerAuthor}
+                author={siteConfig?.author}
                 social={footerSocial}
                 description={footerDescription}
               />

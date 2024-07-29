@@ -3,7 +3,7 @@ import { GithubIcon, LinkedinIcon, TwitterIcon } from "lucide-react";
 import { DiscordIcon } from "./icons/discord";
 import { AuthorConfig, FooterLink, SocialLink, SocialPlatform } from "./types";
 import clsx from "clsx";
-import DefaultConfig from "@/const/config";
+import defaultConfig from "@/const/config";
 import Image from "next/image";
 
 const icon: { [K in SocialPlatform]: React.FC<any> } = {
@@ -40,12 +40,11 @@ export default function Footer({
   social,
   description,
 }: {
-  author: AuthorConfig;
+  author?: AuthorConfig | null;
   links?: Array<FooterLink>;
   social?: Array<SocialLink>;
   description?: string;
 }) {
-  console.log(author);
   return (
     <footer className="bg-background" aria-labelledby="footer-heading">
       <p id="footer-heading" className="sr-only">
@@ -59,7 +58,7 @@ export default function Footer({
           )}
         >
           <div className="space-y-8">
-            {author.name && (
+            {author?.name && (
               <div className="flex gap-1 ">
                 <span>Created by </span>
                 <AuthorInfo name={author.name} url={author.url} logo="" />
@@ -71,7 +70,7 @@ export default function Footer({
                 width={24}
                 height={24}
                 className="mx-2 h-6"
-                src={DefaultConfig.author.logo}
+                src={defaultConfig.author.logo}
                 alt="DataHub Logo"
               />
               DataHub
