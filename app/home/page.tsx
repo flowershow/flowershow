@@ -3,7 +3,6 @@ import { CTASection } from "@/app/home/_components/CTASection";
 import { QuickStart } from "@/app/home/_components/QuickStart";
 import { Hero } from "@/components/hero";
 import FAQ from "@/app/home/_components/FAQ";
-import TestimonialSection from "@/app/home/_components/Testimonials";
 import { VisualDemo } from "@/app/home/_components/VisualDemo";
 import Showcase from "@/app/home/_components/Showcase";
 import "slick-carousel/slick/slick.css";
