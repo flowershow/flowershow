@@ -85,7 +85,7 @@ export default async function SiteSettingsHeader({
           </a>
         </span>
         <span className="ml-3">
-          <SyncSiteButton />
+          <SyncSiteButton siteId={site.id} userId={site.userId!} />
         </span>
         <span className="ml-3 block">
           <a href={url} target="_blank" rel="noreferrer">

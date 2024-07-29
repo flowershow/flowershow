@@ -1,20 +1,26 @@
 "use client";
 import { toast } from "sonner";
-import { useParams } from "next/navigation";
 import va from "@vercel/analytics";
 import { api } from "@/trpc/react";
 import { ArrowPathIcon } from "@heroicons/react/20/solid";
 import { signOut } from "next-auth/react";
 import { useSync } from "../sync-provider";
 import clsx from "clsx";
+import { sendGTMEvent } from "@next/third-parties/google";
+import { env } from "@/env.mjs";
 
-export default function SyncButton() {
-  const { id } = useParams() as { id: string };
+export default function SyncButton({
+  siteId,
+  userId,
+}: {
+  siteId: string;
+  userId: string;
+}) {
   const { setRefreshKey, setIsPending } = useSync();
 
   const { data: syncStatus, isLoading: isLoadingStatusCheck } =
     api.site.checkSyncStatus.useQuery(
-      { id },
+      { id: siteId },
       {
         refetchInterval: 10 * 1000,
         keepPreviousData: true,
@@ -24,10 +30,17 @@ export default function SyncButton() {
 
   const { mutate: syncSite, isLoading: isLoadingMutation } =
     api.site.sync.useMutation({
-      onMutate: () => {
+      onMutate: async () => {
         // hack to immedaitely update the status, as there is no way
         // to revalidate the query from the TRPC method
         setIsPending(true);
+        if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
+          sendGTMEvent({
+            event: "manual_sync",
+            siteId,
+            userId,
+          });
+        }
       },
       onSuccess: (res) => {
         va.track("Synced Site");
@@ -60,7 +73,7 @@ export default function SyncButton() {
         "inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50",
         isDisabled && "cursor-default opacity-50 hover:bg-white",
       )}
-      onClick={() => syncSite({ id })}
+      onClick={() => syncSite({ id: siteId })}
       disabled={isDisabled}
     >
       <ArrowPathIcon

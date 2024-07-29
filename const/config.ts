@@ -16,7 +16,6 @@ const config: ExtendedSiteConfig = {
   },
   github: "https://github.com/datopian/datahub",
   discord: "https://discord.com/invite/KrRzMKU",
-  analytics: "G-R6X92HM43Q",
   footerLinks: [
     {
       name: "Links",
