@@ -29,6 +29,6 @@ test("General layout and config", async ({ page }) => {
   await expect(createdBy.locator("a")).toContainText("Tester Author");
   await expect(createdBy.locator("a")).toHaveAttribute(
     "href",
-    "https://datahub.io",
+    "http://tester.author",
   );
 });
