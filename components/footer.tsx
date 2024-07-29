@@ -59,7 +59,7 @@ export default function Footer({
         >
           <div className="space-y-8">
             {author?.name && (
-              <div className="flex gap-1 ">
+              <div className="flex gap-1 " data-testid="created-by">
                 <span>Created by </span>
                 <AuthorInfo name={author.name} url={author.url} logo="" />
               </div>
