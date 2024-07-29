@@ -108,10 +108,9 @@ export const mdxComponentsFactory = ({
       }
 
       const isExternal = href.startsWith("http");
-      const encodedHref = customEncodeUrl(href);
 
       const normalizedHref = resolveLink({
-        link: encodedHref,
+        link: isExternal ? href : customEncodeUrl(href),
         filePath: metadata._path,
         prefixPath: siteMetadata.customDomain
           ? ""

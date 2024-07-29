@@ -115,5 +115,9 @@ test.describe("Markdown links resolution", () => {
       "href",
       `${linkBaseUrl}`,
     );
+
+    const externalLink = commonMarkLinks.nth(5);
+    await expect(externalLink).toHaveText("External link");
+    await expect(externalLink).toHaveAttribute("href", "https://example.com");
   });
 });
