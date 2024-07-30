@@ -5,7 +5,6 @@ import { SiteConfig } from "@/components/types";
 export interface SiteProviderProps {
   children: ReactNode;
 }
-
 export interface SiteSettingsProps {
   branch: string;
   repository: string;
