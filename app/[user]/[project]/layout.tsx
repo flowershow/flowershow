@@ -10,6 +10,7 @@ import { resolveLink } from "@/lib/resolve-link";
 import { Site } from "@prisma/client";
 import TableOfContentsSidebar from "@/components/table-of-content";
 import Sidebar from "@/components/sidebar";
+import SiteWrapper from "@/components/site";
 
 type SiteWithUser = Site & {
   user: {
@@ -176,7 +177,10 @@ export default async function SiteLayout({
   const showSidebar = siteConfig?.showSidebar;
 
   return (
-    <>
+    <SiteWrapper
+      siteConfig={siteConfig}
+      siteSettings={{ branch: site.gh_branch, repository: site.gh_repository }}
+    >
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
 
       <div className="min-h-screen">
@@ -198,6 +202,7 @@ export default async function SiteLayout({
             }`}
           >
             {children}
+
             <div className="mx-auto w-full ">
               <Footer
                 author={siteConfig?.author}
@@ -217,6 +222,6 @@ export default async function SiteLayout({
           </aside>
         </main>
       </div>
-    </>
+    </SiteWrapper>
   );
 }

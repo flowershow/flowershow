@@ -13,6 +13,7 @@ export interface SiteConfig {
   // custom domain only (future paid feature potentially)
   social: SocialLink[];
   footerLinks?: FooterLink[];
+  showEditLink?: boolean;
 }
 
 /* --------------
