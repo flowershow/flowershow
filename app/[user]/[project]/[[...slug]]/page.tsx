@@ -95,6 +95,11 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     notFound();
   }
 
+  const siteConfig = await api.site.getConfig.query({
+    gh_username: site.user!.gh_username!,
+    projectName: site.projectName,
+  });
+
   let pageMetadata: PageMetadata | null = null;
 
   try {
@@ -150,9 +155,13 @@ export default async function SitePage({ params }: { params: RouteParams }) {
         source={_mdxSource}
         metadata={pageMetadata}
         siteMetadata={site}
+        showRepositoryLink={siteConfig?.showRepositoryLink}
       />
-
-      <EditPageButton pageContentPath={pageMetadata._path} />
+      {siteConfig?.showEditLink && (
+        <EditPageButton
+          url={`https://github.com/${site?.gh_repository}/edit/${site?.gh_branch}/${pageMetadata._path}`}
+        />
+      )}
     </>
   );
 }

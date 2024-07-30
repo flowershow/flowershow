@@ -18,9 +18,15 @@ interface MDXProps {
   source: MDXRemoteSerializeResult;
   metadata: PageMetadata;
   siteMetadata: SiteWithUser;
+  showRepositoryLink?: boolean;
 }
 
-const MDX: React.FC<MDXProps> = ({ source, metadata, siteMetadata }) => {
+const MDX: React.FC<MDXProps> = ({
+  source,
+  metadata,
+  siteMetadata,
+  showRepositoryLink,
+}) => {
   const components = mdxComponentsFactory({ metadata, siteMetadata });
   const layout = isDatasetPage(metadata) ? "datapackage" : "story";
 
@@ -29,7 +35,11 @@ const MDX: React.FC<MDXProps> = ({ source, metadata, siteMetadata }) => {
   const Layout = ({ children }) => {
     return (
       <ErrorBoundary FallbackComponent={LayoutFallbackComponent}>
-        <Component metadata={metadata} siteMetadata={siteMetadata}>
+        <Component
+          metadata={metadata}
+          siteMetadata={siteMetadata}
+          showRepositoryLink={showRepositoryLink}
+        >
           {children}
         </Component>
       </ErrorBoundary>

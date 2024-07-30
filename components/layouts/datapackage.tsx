@@ -19,9 +19,9 @@ import { FallbackComponentFactory } from "./fallback-component-factory";
 import { Site } from "@prisma/client";
 import { env } from "@/env.mjs";
 import { resolveLink } from "@/lib/resolve-link";
-import { useSiteContext } from "../site/provider";
+
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Github } from "lucide-react";
 
 type SiteWithUser = Site & {
   user: {
@@ -32,6 +32,7 @@ type SiteWithUser = Site & {
 interface Props extends React.PropsWithChildren {
   metadata: DatasetPageMetadata;
   siteMetadata: SiteWithUser;
+  showRepositoryLink: boolean;
 }
 
 class ResourceNotFoundError extends Error {
@@ -45,6 +46,7 @@ export const DataPackageLayout: React.FC<Props> = ({
   children,
   metadata,
   siteMetadata,
+  showRepositoryLink,
 }) => {
   const {
     title,
@@ -56,8 +58,6 @@ export const DataPackageLayout: React.FC<Props> = ({
     licenses,
     sources,
   } = metadata;
-
-  const { config } = useSiteContext();
 
   if (!resources) {
     return (
@@ -143,16 +143,18 @@ export const DataPackageLayout: React.FC<Props> = ({
       <article className="prose-headings:font-headings prose mx-auto max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
         <header className="mb-8 flex flex-col gap-y-5">
           <h1 className="!mb-2">{title}</h1>
-          {config?.showRepositoryLink && (
-            <div className="flex items-center gap-1">
-              Source:
+          {showRepositoryLink && (
+            <div
+              className="flex items-center gap-1 "
+              data-testid="goto-repository"
+            >
+              <Github width={18} />
               <Link
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
                 href={`https://github.com/${siteMetadata?.gh_repository}`}
                 target="_blank"
               >
                 {siteMetadata.projectName}
-                <ExternalLink width={16} />
               </Link>
             </div>
           )}

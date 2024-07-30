@@ -151,6 +151,18 @@ test.describe("README with datapackage.json", () => {
     ).toBeVisible();
     // expect(preview1.locator(".github-octo-flat-ui")).toBeVisible();
   });
+
+  test("Show Repository Link", async () => {
+    const gotoRepo = page.getByTestId("goto-repository");
+    await expect(gotoRepo).toBeVisible();
+    await expect(gotoRepo.locator("a")).toContainText(
+      process.env.E2E_GH_REPOSITORY!,
+    );
+    await expect(gotoRepo.locator("a")).toHaveAttribute(
+      "href",
+      `https://github.com/datopian/${process.env.E2E_GH_REPOSITORY!}`,
+    );
+  });
 });
 
 // Simplified version of the previous test as content is the same
