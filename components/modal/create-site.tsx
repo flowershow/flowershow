@@ -10,6 +10,7 @@ import { api } from "@/trpc/react";
 import { GithubIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { env } from "@/env.mjs";
+import { sendGTMEvent } from "@next/third-parties/google";
 
 export default function CreateSiteModal() {
   const router = useRouter();
@@ -100,6 +101,12 @@ export default function CreateSiteModal() {
     api.site.create.useMutation({
       onSuccess: (res) => {
         const { id } = res;
+        if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
+          sendGTMEvent({
+            event: "create_site",
+            userId: res.userId,
+          });
+        }
         modal?.hide();
         router.push(`/site/${id}/settings`);
         router.refresh();

@@ -198,6 +198,7 @@ export default async function SiteLayout({
             }`}
           >
             {children}
+
             <div className="mx-auto w-full ">
               <Footer
                 author={siteConfig?.author}

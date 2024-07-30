@@ -7,6 +7,7 @@ import { PageMetadata } from "@/server/api/types";
 import { MDXRemoteSerializeResult } from "next-mdx-remote";
 import { Site } from "@prisma/client";
 import UrlNormalizer from "./url-normalizer";
+import EditPageButton from "@/components/edit-page-button";
 
 type SiteWithUser = Site & {
   user: {
@@ -94,6 +95,11 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     notFound();
   }
 
+  const siteConfig = await api.site.getConfig.query({
+    gh_username: site.user!.gh_username!,
+    projectName: site.projectName,
+  });
+
   let pageMetadata: PageMetadata | null = null;
 
   try {
@@ -150,6 +156,11 @@ export default async function SitePage({ params }: { params: RouteParams }) {
         metadata={pageMetadata}
         siteMetadata={site}
       />
+      {siteConfig?.showEditLink && (
+        <EditPageButton
+          url={`https://github.com/${site?.gh_repository}/edit/${site?.gh_branch}/${pageMetadata._path}`}
+        />
+      )}
     </>
   );
 }
