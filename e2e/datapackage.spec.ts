@@ -156,11 +156,11 @@ test.describe("README with datapackage.json", () => {
     const gotoRepo = page.getByTestId("goto-repository");
     await expect(gotoRepo).toBeVisible();
     await expect(gotoRepo.locator("a")).toContainText(
-      process.env.E2E_GH_REPOSITORY!,
+      "datahub-cloud-test-repo",
     );
     await expect(gotoRepo.locator("a")).toHaveAttribute(
       "href",
-      `https://github.com/datopian/${process.env.E2E_GH_REPOSITORY!}`,
+      `https://github.com/datopian/datahub-cloud-test-repo`,
     );
   });
 });
