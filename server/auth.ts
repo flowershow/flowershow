@@ -3,6 +3,7 @@ import GitHubProvider from "next-auth/providers/github";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/server/db";
 import { env } from "@/env.mjs";
+import axios from "axios";
 
 const VERCEL_DEPLOYMENT = !!env.VERCEL_URL;
 
@@ -47,6 +48,30 @@ export const authOptions: NextAuthOptions = {
           : undefined,
         secure: VERCEL_DEPLOYMENT,
       },
+    },
+  },
+  events: {
+    createUser: async (message: any) => {
+      if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
+        try {
+          const payload = {
+            events: [
+              {
+                name: "sign_up",
+                params: {
+                  userId: message.user.id,
+                },
+              },
+            ],
+          };
+          await axios.post(
+            `https://www.google-analytics.com/mp/collect?measurement_id=${env.GA_MEASUREMENT_ID}&api_secret=${env.GA_SECRET}`,
+            payload,
+          );
+        } catch (error) {
+          console.error("Error sending GTM event", error);
+        }
+      }
     },
   },
   callbacks: {
