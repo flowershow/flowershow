@@ -32,7 +32,6 @@ type SiteWithUser = Site & {
 interface Props extends React.PropsWithChildren {
   metadata: DatasetPageMetadata;
   siteMetadata: SiteWithUser;
-  showRepositoryLink: boolean;
 }
 
 class ResourceNotFoundError extends Error {
@@ -46,7 +45,6 @@ export const DataPackageLayout: React.FC<Props> = ({
   children,
   metadata,
   siteMetadata,
-  showRepositoryLink,
 }) => {
   const {
     title,
@@ -143,21 +141,21 @@ export const DataPackageLayout: React.FC<Props> = ({
       <article className="prose-headings:font-headings prose mx-auto max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
         <header className="mb-8 flex flex-col gap-y-5">
           <h1 className="!mb-2">{title}</h1>
-          {showRepositoryLink && (
-            <div
-              className="flex items-center gap-1 "
-              data-testid="goto-repository"
+
+          <div
+            className="flex items-center gap-1 "
+            data-testid="goto-repository"
+          >
+            <Github width={18} />
+            <Link
+              className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
+              href={`https://github.com/${siteMetadata?.gh_repository}`}
+              target="_blank"
             >
-              <Github width={18} />
-              <Link
-                className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
-                href={`https://github.com/${siteMetadata?.gh_repository}`}
-                target="_blank"
-              >
-                {siteMetadata.projectName}
-              </Link>
-            </div>
-          )}
+              {siteMetadata.projectName}
+            </Link>
+          </div>
+
           <table
             data-testid="dp-metadata-table"
             className="table-auto divide-y divide-gray-300"

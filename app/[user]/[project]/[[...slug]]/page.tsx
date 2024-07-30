@@ -155,7 +155,6 @@ export default async function SitePage({ params }: { params: RouteParams }) {
         source={_mdxSource}
         metadata={pageMetadata}
         siteMetadata={site}
-        showRepositoryLink={siteConfig?.showRepositoryLink}
       />
       {siteConfig?.showEditLink && (
         <EditPageButton

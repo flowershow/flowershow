@@ -1,4 +1,3 @@
-"use client";
 import { EditIcon } from "lucide-react";
 import { Button } from "./button";
 import Link from "next/link";
@@ -11,7 +10,7 @@ export default function EditPageButton({ url }: { url: string }) {
     >
       <Link
         href={url}
-        className="mt-4 flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
+        className="mt-4 flex w-fit items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
         target="_blank"
       >
         Edit this page <EditIcon width={16} />

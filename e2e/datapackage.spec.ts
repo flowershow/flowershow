@@ -163,6 +163,15 @@ test.describe("README with datapackage.json", () => {
       `https://github.com/datopian/datahub-cloud-test-repo`,
     );
   });
+
+  test("Show Edit Page Link", async () => {
+    const editPage = page.getByTestId("edit-page-btn");
+    await expect(editPage.locator("a")).toBeVisible();
+    await expect(editPage.locator("a")).toHaveAttribute(
+      "href",
+      "https://github.com/datopian/datahub-cloud-test-repo/edit/main/datasets/with-datapackage-json/README.md",
+    );
+  });
 });
 
 // Simplified version of the previous test as content is the same
