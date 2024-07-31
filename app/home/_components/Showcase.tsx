@@ -1,5 +1,4 @@
 "use client";
-import "./Showcase.css";
 import { Heading } from "@/components/heading";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
