@@ -64,7 +64,7 @@ export default function Footer({
                 <AuthorInfo name={author.name} url={author.url} logo="" />
               </div>
             )}
-            <Link href="https://datahub.io" className="flex">
+            <Link href="https://datahub.io" className="inline-flex">
               Built with{" "}
               <Image
                 width={24}

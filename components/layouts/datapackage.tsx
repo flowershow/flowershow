@@ -151,8 +151,9 @@ export const DataPackageLayout: React.FC<Props> = ({
               className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
               href={`https://github.com/${siteMetadata?.gh_repository}`}
               target="_blank"
+              rel="noreferrer"
             >
-              {siteMetadata.projectName}
+              {siteMetadata.gh_repository}
             </Link>
           </div>
 
