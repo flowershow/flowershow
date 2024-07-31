@@ -19,6 +19,7 @@ import { FallbackComponentFactory } from "./fallback-component-factory";
 import { Site } from "@prisma/client";
 import { env } from "@/env.mjs";
 import { resolveLink } from "@/lib/resolve-link";
+import Script from "next/script";
 
 import Link from "next/link";
 import { ExternalLink, Github } from "lucide-react";
@@ -55,6 +56,7 @@ export const DataPackageLayout: React.FC<Props> = ({
     updated,
     licenses,
     sources,
+    contributors,
   } = metadata;
 
   if (!resources) {
@@ -132,169 +134,194 @@ export const DataPackageLayout: React.FC<Props> = ({
   };
   View.displayName = "View";
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Dataset",
+    title: title,
+    description: description,
+    license: licenses ? licenses[0]?.title : "",
+    creator: siteMetadata.user?.gh_username,
+    keywords: resources.map((r) => r.name).join(", "),
+    sources: sources ? sources.map((s) => s.title) : [],
+    contributor: contributors ? contributors.map((c) => c.title) : [],
+    dateCreated: created,
+    dateModified: updated,
+  };
+
   return (
-    <ErrorBoundary
-      FallbackComponent={FallbackComponentFactory({
-        title: `Error in \`datapackage\` layout:`,
-      })}
-    >
-      <article className="prose-headings:font-headings prose mx-auto max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
-        <header className="mb-8 flex flex-col gap-y-5">
-          <h1 className="!mb-2">{title}</h1>
+    <>
+      <Script
+        id="json-ld-datapackage"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd),
+        }}
+      />
+      <ErrorBoundary
+        FallbackComponent={FallbackComponentFactory({
+          title: `Error in \`datapackage\` layout:`,
+        })}
+      >
+        <article className="prose-headings:font-headings prose mx-auto max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
+          <header className="mb-8 flex flex-col gap-y-5">
+            <h1 className="!mb-2">{title}</h1>
 
-          <div
-            className="flex items-center gap-1 "
-            data-testid="goto-repository"
-          >
-            <Github width={18} />
-            <Link
-              className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
-              href={`https://github.com/${siteMetadata?.gh_repository}`}
-              target="_blank"
-              rel="noreferrer"
+            <div
+              className="flex items-center gap-1 "
+              data-testid="goto-repository"
             >
-              {siteMetadata.gh_repository}
-            </Link>
-          </div>
-
-          <table
-            data-testid="dp-metadata-table"
-            className="table-auto divide-y divide-gray-300"
-          >
-            <thead>
-              <tr>
-                <th>Files</th>
-                <th>Size</th>
-                <th>Format</th>
-                <th>Created</th>
-                <th>Updated</th>
-                <th>License</th>
-                <th>Source</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>{resourceFilesCount}</td>
-                <td>{resourceFilesSizeHumanReadable}</td>
-                <td>{resouceFilesExtensions}</td>
-                <td>{created && created.substring(0, 10)}</td>
-                <td>{updated && updated.substring(0, 10)}</td>
-                <td>
-                  <a
-                    target="_blank"
-                    href={licenses ? licenses[0]?.path : "#"}
-                    className="mb-2 block hover:text-[#6366F1]"
-                  >
-                    {licenses ? licenses[0]?.title : ""}
-                  </a>
-                </td>
-                <td>
-                  <a
-                    target="_blank"
-                    href={sources ? sources[0]?.path : "#"}
-                    className="mb-2 block hover:text-[#6366F1]"
-                  >
-                    {sources ? sources[0]?.title : ""}
-                  </a>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-          <div data-testid="dp-description">
-            <p className="text-md">{description}</p>
-            {/* Read more link */}
-            <a
-              className="inline-block text-[#6366F1] no-underline hover:underline"
-              href="#readme"
-            >
-              <div className="flex items-center space-x-1">
-                <span>Read more</span>
-                <ArrowRightIcon className="inline h-4 w-4" />
-              </div>
-            </a>
-          </div>
-        </header>
-        {views && (
-          <section data-testid="dp-views" className="my-12">
-            <h2 id="data-views">Data Views</h2>
-            {views.map((view, id) => (
-              <ErrorBoundary
-                key={`view-${view.name}`}
-                FallbackComponent={FallbackComponentFactory({
-                  title: `Error in data view \`${view.name}\`:`,
-                })}
+              <Github width={18} />
+              <Link
+                className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
+                href={`https://github.com/${siteMetadata?.gh_repository}`}
+                target="_blank"
+                rel="noreferrer"
               >
-                <View view={view} />
-              </ErrorBoundary>
-            ))}
-          </section>
-        )}
-        <section data-testid="dp-files" className="my-12">
-          <h2 id="data-files">Data Files</h2>
-          <table className="table-auto divide-y divide-gray-300">
-            <thead>
-              <tr>
-                <th>File</th>
-                <th>Description</th>
-                <th>Size</th>
-                <th>Last modified</th>
-                <th>Download</th>
-              </tr>
-            </thead>
-            <tbody>
-              {resources.map((r) => {
-                return (
-                  <tr
-                    key={`resources-list-${r.name}`}
-                    className="even:bg-gray-50"
-                  >
-                    <td>
-                      <a href={`#${r.name}`} className="hover:text-[#6366F1]">
-                        <div className="flex items-center space-x-1 ">
-                          <span>{r.name}</span>
-                        </div>
-                      </a>
-                    </td>
-                    <td>{r.description || ""}</td>
-                    <td>{r.size ? prettyBytes(r.size) : ""}</td>
-                    <td>{r.lastModified && r.lastModified.substring(0, 10)}</td>
-                    <td>
-                      <a
-                        target="_blank"
-                        href={r.path}
-                        className="hover:text-[#6366F1]"
-                      >
-                        <div className="flex items-center space-x-1 ">
-                          <span>{r.name}</span>
-                          <DocumentArrowDownIcon className="inline h-4 w-4" />
-                        </div>
-                      </a>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </section>
-        {_resources.length > 0 && (
-          <section data-testid="dp-previews" className="my-12">
-            <h2 id="data-previews">Data Previews</h2>
-            <div>
-              {_resources.slice(0, 5).map((resource) => (
-                <ResourcePreview resource={resource} key={resource.name} />
-              ))}
+                {siteMetadata.gh_repository}
+              </Link>
             </div>
+
+            <table
+              data-testid="dp-metadata-table"
+              className="table-auto divide-y divide-gray-300"
+            >
+              <thead>
+                <tr>
+                  <th>Files</th>
+                  <th>Size</th>
+                  <th>Format</th>
+                  <th>Created</th>
+                  <th>Updated</th>
+                  <th>License</th>
+                  <th>Source</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>{resourceFilesCount}</td>
+                  <td>{resourceFilesSizeHumanReadable}</td>
+                  <td>{resouceFilesExtensions}</td>
+                  <td>{created && created.substring(0, 10)}</td>
+                  <td>{updated && updated.substring(0, 10)}</td>
+                  <td>
+                    <a
+                      target="_blank"
+                      href={licenses ? licenses[0]?.path : "#"}
+                      className="mb-2 block hover:text-[#6366F1]"
+                    >
+                      {licenses ? licenses[0]?.title : ""}
+                    </a>
+                  </td>
+                  <td>
+                    <a
+                      target="_blank"
+                      href={sources ? sources[0]?.path : "#"}
+                      className="mb-2 block hover:text-[#6366F1]"
+                    >
+                      {sources ? sources[0]?.title : ""}
+                    </a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+            <div data-testid="dp-description">
+              <p className="text-md">{description}</p>
+              {/* Read more link */}
+              <a
+                className="inline-block text-[#6366F1] no-underline hover:underline"
+                href="#readme"
+              >
+                <div className="flex items-center space-x-1">
+                  <span>Read more</span>
+                  <ArrowRightIcon className="inline h-4 w-4" />
+                </div>
+              </a>
+            </div>
+          </header>
+          {views && (
+            <section data-testid="dp-views" className="my-12">
+              <h2 id="data-views">Data Views</h2>
+              {views.map((view, id) => (
+                <ErrorBoundary
+                  key={`view-${view.name}`}
+                  FallbackComponent={FallbackComponentFactory({
+                    title: `Error in data view \`${view.name}\`:`,
+                  })}
+                >
+                  <View view={view} />
+                </ErrorBoundary>
+              ))}
+            </section>
+          )}
+          <section data-testid="dp-files" className="my-12">
+            <h2 id="data-files">Data Files</h2>
+            <table className="table-auto divide-y divide-gray-300">
+              <thead>
+                <tr>
+                  <th>File</th>
+                  <th>Description</th>
+                  <th>Size</th>
+                  <th>Last modified</th>
+                  <th>Download</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resources.map((r) => {
+                  return (
+                    <tr
+                      key={`resources-list-${r.name}`}
+                      className="even:bg-gray-50"
+                    >
+                      <td>
+                        <a href={`#${r.name}`} className="hover:text-[#6366F1]">
+                          <div className="flex items-center space-x-1 ">
+                            <span>{r.name}</span>
+                          </div>
+                        </a>
+                      </td>
+                      <td>{r.description || ""}</td>
+                      <td>{r.size ? prettyBytes(r.size) : ""}</td>
+                      <td>
+                        {r.lastModified && r.lastModified.substring(0, 10)}
+                      </td>
+                      <td>
+                        <a
+                          target="_blank"
+                          href={r.path}
+                          className="hover:text-[#6366F1]"
+                        >
+                          <div className="flex items-center space-x-1 ">
+                            <span>{r.name}</span>
+                            <DocumentArrowDownIcon className="inline h-4 w-4" />
+                          </div>
+                        </a>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </section>
-        )}
-        <hr />
-        <section
-          data-testid="dp-readme"
-          id="readme"
-          className="mx-auto max-w-full"
-        >
-          {children}
-        </section>
-      </article>
-    </ErrorBoundary>
+          {_resources.length > 0 && (
+            <section data-testid="dp-previews" className="my-12">
+              <h2 id="data-previews">Data Previews</h2>
+              <div>
+                {_resources.slice(0, 5).map((resource) => (
+                  <ResourcePreview resource={resource} key={resource.name} />
+                ))}
+              </div>
+            </section>
+          )}
+          <hr />
+          <section
+            data-testid="dp-readme"
+            id="readme"
+            className="mx-auto max-w-full"
+          >
+            {children}
+          </section>
+        </article>
+      </ErrorBoundary>
+    </>
   );
 };
