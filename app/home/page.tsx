@@ -94,7 +94,7 @@ function HeroMessage() {
         No credit card required
       </p>
 
-      <p className="mt-4 flex items-center justify-center text-lg font-bold">
+      <p className="mt-10 flex items-center justify-center text-lg font-bold">
         Built with{" "}
         <Heart className="mx-2 fill-orange-400 text-orange-400" size={24} /> by
         Datopian
