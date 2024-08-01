@@ -97,9 +97,13 @@ const Showcase: React.FC = () => {
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 3000,
-    appendDots: (dots) => <ul className="pt-[20px]"> {dots} </ul>,
+    appendDots: (dots) => (
+      <div className="pt-[20px]" style={{ bottom: -50 }}>
+        {" "}
+        {dots}{" "}
+      </div>
+    ),
   };
-
   return (
     <div className="showcase-carousel mx-auto mt-16 max-w-6xl px-4">
       <Heading
