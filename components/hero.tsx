@@ -69,7 +69,7 @@ export function Hero({
             <div
               className={clsx("mt-6", !Visual && "flex flex-col items-center")}
             >
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-1 sm:grid-cols-2 sm:gap-2">
                 {features.map((feature) => (
                   <p
                     className="flex items-center space-x-2 text-lg font-medium leading-8 text-primary dark:text-primary-dark"
@@ -97,7 +97,7 @@ export function Hero({
           )}
           <div
             className={clsx(
-              "mt-5 flex gap-x-6",
+              "mt-6 flex gap-x-6",
               !Visual && "flex-col items-center",
             )}
           >

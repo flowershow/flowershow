@@ -104,7 +104,7 @@ export default function CreateSiteModal() {
         if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
           sendGTMEvent({
             event: "create_site",
-            userId: res.userId,
+            user_id: res.userId,
           });
         }
         modal?.hide();

@@ -4,7 +4,7 @@ export function CTASection() {
   return (
     <div className="relative w-full overflow-hidden bg-custom-radial py-20 text-black">
       <div className="relative mx-auto max-w-3xl text-center">
-        <h2 className="mt-2 text-6xl font-bold tracking-tight sm:text-4xl">
+        <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-6xl">
           Get Started for Free
         </h2>
         <p className="mx-auto mt-6 max-w-xl text-xl leading-8">

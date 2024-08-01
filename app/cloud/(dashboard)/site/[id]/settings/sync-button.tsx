@@ -36,8 +36,8 @@ export default function SyncButton({
         if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
           sendGTMEvent({
             event: "manual_sync",
-            siteId,
-            userId,
+            site_id: siteId,
+            user_id: userId,
           });
         }
       },

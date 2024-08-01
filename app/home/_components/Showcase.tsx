@@ -97,10 +97,15 @@ const Showcase: React.FC = () => {
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 3000,
+    appendDots: (dots) => (
+      <div className="pt-[20px]" style={{ bottom: -50 }}>
+        {" "}
+        {dots}{" "}
+      </div>
+    ),
   };
-
   return (
-    <div className="mx-auto mt-16 max-w-6xl px-4">
+    <div className="showcase-carousel mx-auto mt-16 max-w-6xl px-4">
       <Heading
         id="showcase"
         heading="SHOWCASE"
@@ -114,7 +119,7 @@ const Showcase: React.FC = () => {
                 <img
                   src={item.image}
                   alt={`Showcase ${index + 1}`}
-                  className="h-96 w-full border object-cover object-right-top md:h-[750px] md:object-cover md:object-left-top"
+                  className="h-80 w-full border object-contain object-center  sm:object-cover md:h-[750px] md:object-left-top"
                 />
 
                 <div className="relative">
@@ -127,8 +132,9 @@ const Showcase: React.FC = () => {
                 </div>
 
                 <div className="p-4 text-center">
-                  <div className="text-lg font-bold text-orange-400 dark:text-primary-dark">
-                    {item.description} <ExternalLink className="inline-flex" />
+                  <div className="flex items-center justify-center gap-1 text-sm font-bold text-orange-400 dark:text-primary-dark sm:text-lg">
+                    {item.description}{" "}
+                    <ExternalLink className="inline-flex w-[16px] sm:w-[24px]" />
                   </div>
                 </div>
               </Link>
