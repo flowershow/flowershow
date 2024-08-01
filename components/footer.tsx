@@ -97,7 +97,7 @@ export default function Footer({
             )}
           </div>
           {links && links.length > 0 && (
-            <div className="mt-16 grid grid-cols-3 gap-8 lg:col-span-2 lg:mt-0">
+            <div className="mt-16 grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-2 lg:mt-0">
               {links.map((link) => {
                 return (
                   <div key={link.name} className="mt-10 md:mt-0">
