@@ -23,6 +23,7 @@ import Script from "next/script";
 
 import Link from "next/link";
 import { ExternalLink, Github } from "lucide-react";
+import path from "path";
 
 type SiteWithUser = Site & {
   user: {
@@ -56,7 +57,6 @@ export const DataPackageLayout: React.FC<Props> = ({
     updated,
     licenses,
     sources,
-    contributors,
   } = metadata;
 
   if (!resources) {
@@ -137,15 +137,49 @@ export const DataPackageLayout: React.FC<Props> = ({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Dataset",
-    title: title,
-    description: description,
-    license: licenses ? licenses[0]?.title : "",
-    creator: siteMetadata.user?.gh_username,
-    keywords: resources.map((r) => r.name).join(", "),
-    sources: sources ? sources.map((s) => s.title) : [],
-    contributor: contributors ? contributors.map((c) => c.title) : [],
-    dateCreated: created,
-    dateModified: updated,
+    name: metadata.title,
+    description: metadata.description,
+    identifier: metadata.id,
+    url: metadata.homepage,
+    version: metadata.version,
+    dateCreated: metadata.created,
+    license: metadata.licenses
+      ? metadata.licenses.map((license) => ({
+          "@type": "CreativeWork",
+          name: license.name || "", // Primary title of the license
+          url: license.path || "",
+          alternativeHeadline: license.title || "", // Secondary title or subtitle
+        }))
+      : [],
+    citation: metadata.sources
+      ? metadata.sources.map((source) => ({
+          "@type": "CreativeWork",
+          url: source.path || "",
+        }))
+      : [],
+    creator: metadata.contributor
+      ? metadata.contributor.map((contributor) => ({
+          "@type": "Person",
+          name: contributor.title || "",
+          url: contributor.path || "",
+          contactPoint: {
+            "@type": "ContactPoint",
+            email: contributor.email || "",
+          },
+          description: contributor.role || "", // Use description to convey role
+        }))
+      : [],
+    keywords: metadata.keywords,
+    image: metadata.image,
+    distribution: metadata.resources
+      ? metadata.resources.map((resource) => ({
+          "@type": "DataDownload",
+          encodingFormat: resource.format || resource.mediatype || "text/csv",
+          name: resource.name || "",
+          contentUrl: resource.path || "", // Assuming `path` is available in the resource
+          description: resource.description || "",
+        }))
+      : [],
   };
 
   return (
