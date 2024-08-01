@@ -38,13 +38,12 @@ export async function POST(req: NextRequest) {
   if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
     try {
       const payload = {
-        client_id: site.userId,
         events: [
           {
             name: "auto_sync",
             params: {
-              userId: site.userId,
-              siteId: site.id,
+              user_id: site.userId,
+              site_id: site.id,
             },
           },
         ],
