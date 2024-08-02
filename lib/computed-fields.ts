@@ -74,7 +74,7 @@ export const resolveFilePathToUrl = (filePath: string) => {
 };
 
 const extractTitle = async (source: string) => {
-  const heading = source.trim().match(/#\s+(.*)/);
+  const heading = source.trim().match(/^#\s+(.*)$/m);
   if (heading && heading[1]) {
     const title = heading[1]
       // replace wikilink with only text value
