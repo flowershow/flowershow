@@ -63,7 +63,7 @@ export default function Nav({
             )}
           </div>
           {/* Search field and social links */}
-          <div className="relative flex w-full basis-auto items-center justify-end gap-6 md:shrink xl:gap-8">
+          <div className="relative flex w-full basis-auto items-center justify-end gap-4 sm:gap-6 md:shrink xl:gap-8">
             {social && <NavSocial links={social} />}
           </div>
         </nav>

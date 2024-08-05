@@ -168,8 +168,7 @@ export default async function SiteLayout({
   // configurable on custom domain only (future paid feature potentially)
   const footerLinks =
     (isCustomDomain && siteConfig?.footerLinks) || defaultConfig.footerLinks;
-  const footerSocial =
-    (isCustomDomain && siteConfig?.social) || defaultConfig.social;
+  const socialLinks = siteConfig?.social;
   const footerDescription =
     (isCustomDomain && siteConfig?.description) || defaultConfig.description;
 
@@ -181,7 +180,13 @@ export default async function SiteLayout({
 
       <div className="min-h-screen">
         {!showSidebar ? (
-          <Navbar title={title} logo={logo} url={url} links={navLinks} />
+          <Navbar
+            title={title}
+            logo={logo}
+            url={url}
+            links={navLinks}
+            social={socialLinks}
+          />
         ) : (
           <Sidebar title={title} logo={logo} url={url} navigation={treeItems} />
         )}
@@ -202,7 +207,7 @@ export default async function SiteLayout({
             <div className="mx-auto w-full ">
               <Footer
                 author={siteConfig?.author}
-                social={footerSocial}
+                social={socialLinks}
                 description={footerDescription}
               />
             </div>

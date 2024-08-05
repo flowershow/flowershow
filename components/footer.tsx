@@ -1,17 +1,10 @@
 import Link from "next/link";
-import { GithubIcon, LinkedinIcon, TwitterIcon } from "lucide-react";
-import { DiscordIcon } from "./icons/discord";
-import { AuthorConfig, FooterLink, SocialLink, SocialPlatform } from "./types";
+import { AuthorConfig, FooterLink, SocialLink } from "./types";
 import clsx from "clsx";
 import defaultConfig from "@/const/config";
 import Image from "next/image";
 
-const icon: { [K in SocialPlatform]: React.FC<any> } = {
-  discord: DiscordIcon,
-  github: GithubIcon,
-  linkedin: LinkedinIcon,
-  twitter: TwitterIcon,
-};
+import { socialIcons as icon } from "@/lib/social-icons";
 
 const AuthorInfo = ({ logo, name, url }: AuthorConfig) => {
   const Element = url ? "a" : "span";
@@ -79,7 +72,7 @@ export default function Footer({
               <p className="text-sm leading-6 text-gray-600">{description}</p>
             )}
             {social && (
-              <div className="flex space-x-6">
+              <div className="flex space-x-4 md:space-x-6">
                 {social.map((item) => {
                   const Icon = icon[item.label];
                   return (
@@ -89,7 +82,10 @@ export default function Footer({
                       className="text-gray-400 hover:text-gray-500"
                     >
                       <span className="sr-only">{item.label}</span>
-                      <Icon className="h-6 w-6" aria-hidden="true" />
+                      <Icon
+                        className="h-5 w-5 md:h-6 md:w-6"
+                        aria-hidden="true"
+                      />
                     </Link>
                   );
                 })}
