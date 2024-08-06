@@ -1,5 +1,6 @@
 "use client";
 import { Heading } from "@/components/heading";
+import chunkArray from "@/lib/chunk-array";
 import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import React from "react";
@@ -7,15 +8,26 @@ import Slider from "react-slick";
 
 const showcaseItems = [
   {
-    image: "/datahub-showcase-stratgy.lifeitself.png",
-    description: "Lifeitself",
-    href: "https://strategy.lifeitself.org/",
+    image: "/datahub-showcase-cross-section-scattering.png",
+    description: "Cross Section Scattering",
+    href: "https://datahub.io/@LuisVCSilva/cross_section_scattering",
   },
   {
-    image: "/datahub-showcase-data.qiot.kz.png",
-    description: "qiot.kz",
-    href: "https://data.qiot.kz/",
+    image: "/datahub-showcase-city-ranking-kz-2022.png",
+    description: "City Ranking KZ 2022",
+    href: "https://datahub.io/@TyuninaA/city-ranking",
   },
+  {
+    image: "/datahub-showcase-notes-lifeitself.png",
+    description: "Lifeitself notes",
+    href: "https://notes.lifeitself.org/",
+  },
+  {
+    image: "/datahub-showcase-press-freedom-2024.png",
+    description: "Press Freedom 2024",
+    href: "https://datahub.io/@cheredia19/press-freedom-2024",
+  },
+
   {
     image: "/datahub-showcase-finance-vix.png",
     description: "Dataset ( CBOE Volatility Index )",
@@ -56,15 +68,11 @@ const showcaseItems = [
     description: "Imprisoned journalists 2024",
     href: "https://datahub.io/@cheredia19/imprisoned-journalists-2024",
   },
+
   {
-    image: "/datahub-showcase-press-freedom-2024.png",
-    description: "Press Freedom 2024",
-    href: "https://datahub.io/@cheredia19/press-freedom-2024",
-  },
-  {
-    image: "/datahub-showcase-cross-section-scattering.png",
-    description: "Cross Section Scattering",
-    href: "https://datahub.io/@LuisVCSilva/cross_section_scattering",
+    image: "/datahub-showcase-data.qiot.kz.png",
+    description: "qiot.kz",
+    href: "https://data.qiot.kz/",
   },
   {
     image: "/datahub-showcase-tourist-arrivals-in-nepal.png",
@@ -72,19 +80,14 @@ const showcaseItems = [
     href: "https://datahub.io/@sagargg/tourist-arrivals-in-nepal",
   },
   {
-    image: "/datahub-showcase-city-ranking-kz-2022.png",
-    description: "City Ranking KZ 2022",
-    href: "https://datahub.io/@TyuninaA/city-ranking",
-  },
-  {
-    image: "/datahub-showcase-notes-lifeitself.png",
-    description: "Lifeitself notes",
-    href: "https://notes.lifeitself.org/",
-  },
-  {
     image: "/datahub-showcase-david-handbook.png",
     description: "David's handbook",
     href: "https://datahub.io/@davidgasquez/handbook",
+  },
+  {
+    image: "/datahub-showcase-stratgy.lifeitself.png",
+    description: "Lifeitself",
+    href: "https://strategy.lifeitself.org/",
   },
 ];
 
@@ -95,14 +98,7 @@ const Showcase: React.FC = () => {
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 3000,
-    appendDots: (dots) => (
-      <div className="pt-[20px]" style={{ bottom: -50 }}>
-        {" "}
-        {dots}{" "}
-      </div>
-    ),
+    autoplay: false,
   };
   return (
     <div className="showcase-carousel mx-auto mt-16 max-w-6xl px-4">
@@ -111,36 +107,41 @@ const Showcase: React.FC = () => {
         heading="SHOWCASE"
         subheading="What others are creating"
       />
+
       <Slider {...settings}>
-        {showcaseItems.map((item, index) => (
-          <div key={index} className="px-2">
-            <div className="overflow-hidden rounded-lg border border-dashed border-gray-300">
-              <Link target="_blank" href={item.href}>
-                <img
-                  src={item.image}
-                  alt={`Showcase ${index + 1}`}
-                  className="h-80 w-full border object-contain object-center  sm:object-cover md:h-[750px] md:object-left-top"
-                />
-
-                <div className="relative">
-                  <div
-                    className="absolute inset-0 flex items-center"
-                    aria-hidden="true"
+        {chunkArray(showcaseItems, 6).map((chunk, chunkIndex) => {
+          return (
+            <div key={`slide-item-${chunkIndex}`}>
+              <div className="mx-auto mb-10 mt-16 grid max-w-2xl grid-cols-1 gap-x-8 gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2 xl:grid-cols-3">
+                {chunk.map((post, index) => (
+                  <article
+                    key={`${index}`}
+                    className="flex flex-col items-start justify-between"
                   >
-                    <div className="w-full border-t border-gray-300"></div>
-                  </div>
-                </div>
-
-                <div className="p-4 text-center">
-                  <div className="flex items-center justify-center gap-1 text-sm font-bold text-orange-400 dark:text-primary-dark sm:text-lg">
-                    {item.description}{" "}
-                    <ExternalLink className="inline-flex w-[16px] sm:w-[24px]" />
-                  </div>
-                </div>
-              </Link>
+                    <a href={post.href} className="group relative">
+                      <div className="relative w-full">
+                        <img
+                          alt=""
+                          src={post.image}
+                          className="aspect-[16/9] w-full rounded-2xl bg-gray-100 object-cover sm:aspect-[2/1] lg:aspect-[3/2]"
+                        />
+                        <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/10" />
+                      </div>
+                      <div className="max-w-xl">
+                        <div className=" relative">
+                          <h3 className="mt-3 text-lg font-semibold leading-6 text-gray-900 group-hover:text-gray-600">
+                            <span className="absolute inset-0" />
+                            {post.description}
+                          </h3>
+                        </div>
+                      </div>
+                    </a>
+                  </article>
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </Slider>
     </div>
   );
