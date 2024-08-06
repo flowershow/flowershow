@@ -1,7 +1,6 @@
 "use client";
 import { Heading } from "@/components/heading";
 import chunkArray from "@/lib/chunk-array";
-import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import React from "react";
 import Slider from "react-slick";
@@ -32,6 +31,11 @@ const showcaseItems = [
     image: "/datahub-showcase-finance-vix.png",
     description: "Dataset ( CBOE Volatility Index )",
     href: "https://datahub.io/core/finance-vix",
+  },
+  {
+    image: "/datahub-showcase-tourist-arrivals-in-nepal.png",
+    description: "Tourist arrivals in Nepal",
+    href: "https://datahub.io/@sagargg/tourist-arrivals-in-nepal",
   },
   {
     image: "/datahub-showcase-oil-prices-this.png",
@@ -68,17 +72,12 @@ const showcaseItems = [
     description: "Imprisoned journalists 2024",
     href: "https://datahub.io/@cheredia19/imprisoned-journalists-2024",
   },
-
   {
     image: "/datahub-showcase-data.qiot.kz.png",
     description: "qiot.kz",
     href: "https://data.qiot.kz/",
   },
-  {
-    image: "/datahub-showcase-tourist-arrivals-in-nepal.png",
-    description: "Tourist arrivals in Nepal",
-    href: "https://datahub.io/@sagargg/tourist-arrivals-in-nepal",
-  },
+
   {
     image: "/datahub-showcase-david-handbook.png",
     description: "David's handbook",
@@ -118,7 +117,7 @@ const Showcase: React.FC = () => {
                     key={`${index}`}
                     className="flex flex-col items-start justify-between"
                   >
-                    <a href={post.href} className="group relative">
+                    <Link href={post.href} className="group relative">
                       <div className="relative w-full">
                         <img
                           alt=""
@@ -135,7 +134,7 @@ const Showcase: React.FC = () => {
                           </h3>
                         </div>
                       </div>
-                    </a>
+                    </Link>
                   </article>
                 ))}
               </div>
