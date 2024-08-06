@@ -6,6 +6,7 @@ import { GitHubAPIRepoTree } from "./github";
 import matter from "gray-matter";
 import { resolveLink } from "@/lib/resolve-link";
 import { customEncodeUrl } from "./url-encoder";
+import { extractTitle } from "./extract-title";
 
 export const computeMetadata = async ({
   source,
@@ -71,19 +72,6 @@ export const resolveFilePathToUrl = (filePath: string) => {
     .replace(/(\/)?(index|README)$/, ""); // remove index or README from the end of the permalink
   url = url.length > 0 ? url : "/"; // for home page
   return customEncodeUrl(url);
-};
-
-const extractTitle = async (source: string) => {
-  const heading = source.trim().match(/^#\s+(.*)$/m);
-  if (heading && heading[1]) {
-    const title = heading[1]
-      // replace wikilink with only text value
-      .replace(/\[\[([\S]*?)]]/, "$1");
-
-    const stripTitle = await remark().use(stripMarkdown).process(title);
-    return stripTitle.toString().trim();
-  }
-  return null;
 };
 
 const extractDescription = async (source: string) => {
