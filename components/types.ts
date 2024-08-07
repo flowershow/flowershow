@@ -64,7 +64,14 @@ export interface NavLink {
   href: string;
 }
 
-export type SocialPlatform = "github" | "discord" | "linkedin" | "twitter";
+export type SocialPlatform =
+  | "github"
+  | "discord"
+  | "linkedin"
+  | "twitter"
+  | "facebook"
+  | "instagram"
+  | "youtube";
 
 export interface SocialLink {
   label: SocialPlatform;
