@@ -4,7 +4,7 @@ import clsx from "clsx";
 import defaultConfig from "@/const/config";
 import Image from "next/image";
 
-import { socialIcons as icon } from "@/lib/social-icons";
+import { socialIcons as icon } from "@/components/social-icons";
 
 const AuthorInfo = ({ logo, name, url }: AuthorConfig) => {
   const Element = url ? "a" : "span";
