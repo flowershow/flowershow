@@ -194,7 +194,7 @@ export default async function SiteLayout({
             className={`page-content max-w-full sm:px-4 lg:px-12 ${
               showSidebar
                 ? "xl:px-12 xl:pr-[235px] 2xl:pr-[340px]"
-                : "xl:max-w-[calc(100%-230px)] xl:pl-12 xl:pr-0"
+                : "xl:max-w-[calc(100%-230px)] xl:pl-12 xl:pr-5"
             }`}
           >
             {children}
