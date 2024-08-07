@@ -6,6 +6,8 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { signOut } from "next-auth/react";
+import { sendGTMEvent } from "@next/third-parties/google";
+import { env } from "@/env.mjs";
 
 export default function DeleteSiteForm({ siteName }: { siteName: string }) {
   const { id } = useParams() as { id: string };
@@ -13,7 +15,14 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
 
   const { isLoading: isDeletingSite, mutate: deleteSite } =
     api.site.delete.useMutation({
-      onSuccess: () => {
+      onSuccess: (res) => {
+        if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
+          sendGTMEvent({
+            event: "delete_site",
+            user_id: res?.userId,
+            site_id: res?.id,
+          });
+        }
         router.push("/sites");
         router.refresh();
         toast.success(`Successfully deleted site!`);
