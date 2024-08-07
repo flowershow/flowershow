@@ -259,6 +259,8 @@ export const siteRouter = createTRPCRouter({
           access_token: ctx.session.accessToken,
         },
       });
+
+      return site;
     }),
   sync: protectedProcedure
     .input(
@@ -655,8 +657,8 @@ export const siteRouter = createTRPCRouter({
             url === "/"
               ? "/README"
               : `/${decodeURIComponent(
-                url.replace(/\+/g, " ").replace(/%2B/g, "+"),
-              )}`,
+                  url.replace(/\+/g, " ").replace(/%2B/g, "+"),
+                )}`,
           );
 
           return { content, permalinks };
