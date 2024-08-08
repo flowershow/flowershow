@@ -140,7 +140,10 @@ export const DataPackageLayout: React.FC<Props> = ({
     name: metadata.title,
     description: metadata.description,
     identifier: metadata.id,
-    url: metadata.homepage,
+    url: `${
+      siteMetadata.customDomain ??
+      `https://datahub.io/${siteMetadata.projectName}`
+    }/${metadata._url}`,
     version: metadata.version,
     dateCreated: metadata.created,
     license: metadata.licenses
@@ -174,7 +177,7 @@ export const DataPackageLayout: React.FC<Props> = ({
     distribution: metadata.resources
       ? metadata.resources.map((resource) => ({
           "@type": "DataDownload",
-          encodingFormat: resource.format || resource.mediatype || "text/csv",
+          encodingFormat: resource.mediatype || "",
           name: resource.name || "",
           contentUrl: resource.path || "", // Assuming `path` is available in the resource
           description: resource.description || "",
