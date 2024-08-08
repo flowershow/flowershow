@@ -4,9 +4,9 @@ import { extractTitle } from "./extract-title";
 describe("extractTitle", () => {
   it("extracts the first heading correctly", async () => {
     const source = `
-        ## Second Heading
-        # First Heading
-        # Another Heading
+## Second Heading
+# First Heading
+# Another Heading
       `;
     const expected = null;
     const result = await extractTitle(source);
@@ -15,8 +15,8 @@ describe("extractTitle", () => {
 
   it("returns null if there is no first heading", async () => {
     const source = `
-        ## Heading
-        Some other content
+## Heading
+Some other content
       `;
     const expected = null;
     const result = await extractTitle(source);
@@ -25,7 +25,7 @@ describe("extractTitle", () => {
 
   it("extracts link text correctly", async () => {
     const source = `
-        # [[Link Text]]
+# [[Link Text]]
       `;
     const expected = "Link Text";
     const result = await extractTitle(source);
@@ -34,7 +34,7 @@ describe("extractTitle", () => {
 
   it("extracts bold title correctly", async () => {
     const source = `
-        # **Bold Title**
+# **Bold Title**
       `;
     const expected = "Bold Title";
     const result = await extractTitle(source);
@@ -43,9 +43,9 @@ describe("extractTitle", () => {
 
   it("extracts the first heading with introductory text", async () => {
     const source = `
-        Some introduction text
-        # First Heading
-        ## Second Heading
+Some introduction text
+# First Heading
+## Second Heading
       `;
     const expected = null;
     const result = await extractTitle(source);
@@ -54,7 +54,7 @@ describe("extractTitle", () => {
 
   it("extracts bold title correctly", async () => {
     const source = `
-          # __Bold Title__
+# __Bold Title__
         `;
     const expected = "Bold Title";
     const result = await extractTitle(source);
@@ -63,7 +63,7 @@ describe("extractTitle", () => {
 
   it("extracts bold title correctly", async () => {
     const source = `
-          # __Bold Title__
+# __Bold Title__
         `;
     const expected = "Bold Title";
     const result = await extractTitle(source);
@@ -72,7 +72,7 @@ describe("extractTitle", () => {
 
   it("extracts bold title correctly", async () => {
     const source = `
-          #Text
+#Text
         `;
     const expected = null;
     const result = await extractTitle(source);
