@@ -62,7 +62,7 @@ Some introduction text
   });
 
 
-  it("extracts bold title correctly", async () => {
+  it("doesn't extract incorrect heading", async () => {
     const source = `
 #Text
         `;
