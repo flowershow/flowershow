@@ -194,7 +194,7 @@ export default async function SiteLayout({
             className={`page-content max-w-full sm:px-4 lg:px-12 ${
               showSidebar
                 ? "xl:px-12 xl:pr-[235px] 2xl:pr-[340px]"
-                : "xl:max-w-[calc(100%-230px)] xl:pl-12 xl:pr-5"
+                : "xl:max-w-[calc(100%-200px)] xl:px-12"
             }`}
           >
             {children}
@@ -211,7 +211,7 @@ export default async function SiteLayout({
             className={`inset-y-0 right-0 hidden overflow-y-auto px-4 sm:px-2  xl:block  ${
               showSidebar
                 ? "fixed py-8 lg:px-8 xl:w-[235px] 2xl:w-[340px]"
-                : "sticky top-[70px] h-[calc(100vh-70px)] px-4 xl:min-w-[230px]"
+                : "sticky top-[70px] h-[calc(100vh-70px)] xl:min-w-[200px] xl:px-0"
             } `}
           >
             <TableOfContentsSidebar className="pt-4" />
