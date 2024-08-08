@@ -61,14 +61,6 @@ Some introduction text
     expect(result).toBe(expected);
   });
 
-  it("extracts bold title correctly", async () => {
-    const source = `
-# __Bold Title__
-        `;
-    const expected = "Bold Title";
-    const result = await extractTitle(source);
-    expect(result).toBe(expected);
-  });
 
   it("extracts bold title correctly", async () => {
     const source = `
