@@ -12,6 +12,7 @@ import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
 import rehypePrismPlus from "rehype-prism-plus";
 
+
 const getMdxConfig = ({
   permalinks,
   parseFrontmatter = true,
@@ -81,5 +82,10 @@ const getMdxConfig = ({
     },
   };
 };
+
+
+export function processContent(content: string): string {
+  return content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
 export default getMdxConfig;
