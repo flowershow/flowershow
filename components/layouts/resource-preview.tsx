@@ -1,11 +1,14 @@
 import { ErrorBoundary } from "react-error-boundary";
 import { type Resource } from "./datapackage-types";
-import { Map } from "@portaljs/components";
 import { FallbackComponentFactory } from "./fallback-component-factory";
 import dynamic from "next/dynamic";
 
 export const FlatUiTable = dynamic(() =>
   import("@portaljs/components").then((mod) => mod.FlatUiTable),
+);
+
+export const Map = dynamic(() =>
+  import("@portaljs/components").then((mod) => mod.Map),
 );
 
 export const ResourcePreview = ({ resource }: { resource: Resource }) => {

@@ -1,4 +1,3 @@
-import matter from "gray-matter";
 import mdxMermaid from "mdx-mermaid";
 import { h } from "hastscript";
 import remarkCallouts from "@portaljs/remark-callouts";
@@ -7,42 +6,33 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkSmartypants from "remark-smartypants";
 import remarkToc from "remark-toc";
-import { remarkWikiLink } from "@portaljs/remark-wiki-link";
+// import { remarkWikiLink } from "@portaljs/remark-wiki-link";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
 import rehypePrismPlus from "rehype-prism-plus";
-import { serialize } from "next-mdx-remote/serialize";
+import { compileMDX } from "next-mdx-remote/rsc";
 
-/**
- * Parse a markdown or MDX file to an MDX source form + front matter data
- *
- * @source: the contents of a markdown or mdx file
- * @format: used to indicate to next-mdx-remote which format to use (md or mdx)
- * @returns: { mdxSource: mdxSource, frontMatter: ...}
- */
 const parse = async function (
   source: string,
-  format: "md" | "mdx",
-  scope: object,
+  components: { [key: string]: any },
   permalinks?: string[],
 ) {
-  const { content, data } = matter(source, {});
-
-  const mdxSource = await serialize(
-    { value: content, path: format },
-    {
-      // Optionally pass remark/rehype plugins
+  const { content, frontmatter } = await compileMDX({
+    source,
+    components,
+    options: {
+      parseFrontmatter: true,
       mdxOptions: {
         remarkPlugins: [
           remarkEmbed,
-          remarkGfm,
+          remarkGfm as any,
           // @ts-ignore
           [remarkSmartypants, { quotes: false, dashes: "oldschool" }],
           remarkMath,
           // @ts-ignore
           remarkCallouts,
-          [remarkWikiLink, { permalinks, pathFormat: "obsidian-short" }],
+          // [remarkWikiLink, { permalinks, pathFormat: "obsidian-short" }],
           [
             remarkToc,
             {
@@ -92,15 +82,13 @@ const parse = async function (
           // @ts-ignore
           [rehypePrismPlus, { ignoreMissing: true }],
         ],
-        format,
       },
-      scope: { ...scope, ...data },
     },
-  );
+  });
 
   return {
-    mdxSource: mdxSource,
-    frontMatter: data,
+    content,
+    frontmatter,
   };
 };
 

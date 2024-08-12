@@ -1,13 +1,13 @@
 import { notFound } from "next/navigation";
-import MdxPage from "@/components/mdx";
 import { api } from "@/trpc/server";
 import parse from "@/lib/markdown";
 import { ErrorMessage } from "@/components/error-message";
 import { PageMetadata } from "@/server/api/types";
-import { MDXRemoteSerializeResult } from "next-mdx-remote";
 import { Site } from "@prisma/client";
 import UrlNormalizer from "./url-normalizer";
 import EditPageButton from "@/components/edit-page-button";
+import { ReactElement } from "react";
+import { mdxComponentsFactory } from "@/components/mdx-components-factory";
 
 type SiteWithUser = Site & {
   user: {
@@ -118,7 +118,9 @@ export default async function SitePage({ params }: { params: RouteParams }) {
 
   let mdContent: string | null = null;
   let sitePermalinks: string[] = [];
-  let _mdxSource: MDXRemoteSerializeResult | null = null;
+
+  let compiledSource: ReactElement | null = null;
+  let metadata: object | null = null;
 
   try {
     const { content, permalinks } = await api.site.getPageContent.query({
@@ -132,14 +134,19 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     notFound();
   }
 
+  const components = mdxComponentsFactory({
+    metadata: pageMetadata,
+    siteMetadata: site,
+  });
+
   try {
-    const { mdxSource } = await parse(
+    const { content, frontmatter } = await parse(
       mdContent ?? "",
-      "mdx",
       {},
       sitePermalinks,
     );
-    _mdxSource = mdxSource;
+    compiledSource = content;
+    metadata = frontmatter;
   } catch (e: any) {
     return (
       <div className="p-6">
@@ -151,11 +158,12 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   return (
     <>
       <UrlNormalizer />
-      <MdxPage
-        source={_mdxSource}
-        metadata={pageMetadata}
-        siteMetadata={site}
-      />
+      {compiledSource}
+      {/* <MdxPage
+                source={_mdxSource}
+                metadata={pageMetadata}
+                siteMetadata={site}
+            /> */}
       {siteConfig?.showEditLink && (
         <EditPageButton
           url={`https://github.com/${site?.gh_repository}/edit/${site?.gh_branch}/${pageMetadata._path}`}
