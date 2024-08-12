@@ -138,8 +138,8 @@ dependencies:
     specifier: 4.24.5
     version: 4.24.5(next@14.0.2)(react-dom@18.2.0)(react@18.2.0)
   next-mdx-remote:
-    specifier: ^4.4.1
-    version: 4.4.1(react-dom@18.2.0)(react@18.2.0)
+    specifier: ^5.0.0
+    version: 5.0.0(@types/react@18.2.37)(react@18.2.0)
   novel:
     specifier: ^0.1.22
     version: 0.1.22(@babel/core@7.24.4)(react@18.2.0)(solid-js@1.8.7)(svelte@4.2.8)(vue@3.3.11)
@@ -2702,9 +2702,50 @@ packages:
       - supports-color
     dev: false
 
+  /@mdx-js/mdx@3.0.1:
+    resolution: {integrity: sha512-eIQ4QTrOWyL3LWEe/bu6Taqzq2HQvHcyTMaOrI95P2/LmJE7AsfPfgJGuFLPVqBUE1BC1rik3VIhU+s9u72arA==}
+    dependencies:
+      '@types/estree': 1.0.5
+      '@types/estree-jsx': 1.0.3
+      '@types/hast': 3.0.3
+      '@types/mdx': 2.0.10
+      collapse-white-space: 2.1.0
+      devlop: 1.1.0
+      estree-util-build-jsx: 3.0.1
+      estree-util-is-identifier-name: 3.0.0
+      estree-util-to-js: 2.0.0
+      estree-walker: 3.0.3
+      hast-util-to-estree: 3.1.0
+      hast-util-to-jsx-runtime: 2.3.0
+      markdown-extensions: 2.0.0
+      periscopic: 3.1.0
+      remark-mdx: 3.0.0
+      remark-parse: 11.0.0
+      remark-rehype: 11.0.0
+      source-map: 0.7.4
+      unified: 11.0.4
+      unist-util-position-from-estree: 2.0.0
+      unist-util-stringify-position: 4.0.0
+      unist-util-visit: 5.0.0
+      vfile: 6.0.1
+    transitivePeerDependencies:
+      - supports-color
+    dev: false
+
   /@mdx-js/react@2.3.0(react@18.2.0):
     resolution: {integrity: sha512-zQH//gdOmuu7nt2oJR29vFhDv88oGPmVw6BggmrHeMI+xgEkp1B2dX9/bMBSYtK0dyLX/aOmesKS09g222K1/g==}
     peerDependencies:
+      react: '>=16'
+    dependencies:
+      '@types/mdx': 2.0.10
+      '@types/react': 18.2.37
+      react: 18.2.0
+    dev: false
+
+  /@mdx-js/react@3.0.1(@types/react@18.2.37)(react@18.2.0):
+    resolution: {integrity: sha512-9ZrPIU4MGf6et1m1ov3zKf+q9+deetI51zprKB1D/z3NOb+rUxxtEl3mCjW5wTGh6VhRdwPueh1oRzi6ezkA8A==}
+    peerDependencies:
+      '@types/react': '>=16'
       react: '>=16'
     dependencies:
       '@types/mdx': 2.0.10
@@ -13843,6 +13884,24 @@ packages:
       - supports-color
     dev: false
 
+  /next-mdx-remote@5.0.0(@types/react@18.2.37)(react@18.2.0):
+    resolution: {integrity: sha512-RNNbqRpK9/dcIFZs/esQhuLA8jANqlH694yqoDBK8hkVdJUndzzGmnPHa2nyi90N4Z9VmzuSWNRpr5ItT3M7xQ==}
+    engines: {node: '>=14', npm: '>=7'}
+    peerDependencies:
+      react: '>=16'
+    dependencies:
+      '@babel/code-frame': 7.24.2
+      '@mdx-js/mdx': 3.0.1
+      '@mdx-js/react': 3.0.1(@types/react@18.2.37)(react@18.2.0)
+      react: 18.2.0
+      unist-util-remove: 3.1.1
+      vfile: 6.0.1
+      vfile-matter: 5.0.0
+    transitivePeerDependencies:
+      - '@types/react'
+      - supports-color
+    dev: false
+
   /next-themes@0.2.1(next@14.0.2)(react-dom@18.2.0)(react@18.2.0):
     resolution: {integrity: sha512-B+AKNfYNIzh0vqQQKqQItTS8evEouKD7H5Hj3kmuPERwddR2TxvDSFZuTj6T7Jfn1oyeUyJMydPl1Bkxkh0W7A==}
     peerDependencies:
@@ -14358,7 +14417,7 @@ packages:
     resolution: {integrity: sha512-ayCKvm/phCGxOkYRSCM82iDwct8/EonSEgCSxWxD7ve6jHggsFl4fZVQBPRNgQoKiuV/odhFrGzQXZwbifC8Rg==}
     engines: {node: '>=8'}
     dependencies:
-      '@babel/code-frame': 7.23.5
+      '@babel/code-frame': 7.24.2
       error-ex: 1.3.2
       json-parse-even-better-errors: 2.3.1
       lines-and-columns: 1.2.4
@@ -17930,6 +17989,14 @@ packages:
       unist-util-visit: 5.0.0
     dev: false
 
+  /unist-util-remove@3.1.1:
+    resolution: {integrity: sha512-kfCqZK5YVY5yEa89tvpl7KnBBHu2c6CzMkqHUrlOqaRgGOMp0sMvwWOVrbAtj03KhovQB7i96Gda72v/EFE0vw==}
+    dependencies:
+      '@types/unist': 2.0.10
+      unist-util-is: 5.2.1
+      unist-util-visit-parents: 5.1.3
+    dev: false
+
   /unist-util-stringify-position@3.0.3:
     resolution: {integrity: sha512-k5GzIBZ/QatR8N5X2y+drfpWG8IDBzdnVj6OInRNWm1oXrzydiaAT2OQiA8DPRRZyAKb9b6I2a6PxYklZD0gKg==}
     dependencies:
@@ -18631,6 +18698,13 @@ packages:
       '@types/js-yaml': 4.0.9
       is-buffer: 2.0.5
       js-yaml: 4.1.0
+    dev: false
+
+  /vfile-matter@5.0.0:
+    resolution: {integrity: sha512-jhPSqlj8hTSkTXOqyxbUeZAFFVq/iwu/jukcApEqc/7DOidaAth6rDc0Zgg0vWpzUnWkwFP7aK28l6nBmxMqdQ==}
+    dependencies:
+      vfile: 6.0.1
+      yaml: 2.4.0
     dev: false
 
   /vfile-message@3.1.4:
