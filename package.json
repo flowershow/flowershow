@@ -22,7 +22,6 @@
     "@aws-sdk/client-s3": "^3.515.0",
     "@aws-sdk/s3-request-presigner": "^3.515.0",
     "@faker-js/faker": "^8.2.0",
-    "@githubocto/flat-ui": "^0.14.1",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "@monaco-editor/react": "^4.6.0",
