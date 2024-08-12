@@ -44,7 +44,7 @@ export default function Footer({
         Footer
       </p>
 
-      <div className="mx-auto px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32">
+      <div className="mx-auto px-6 pb-[60px] pt-16 sm:pb-8 sm:pt-24 lg:px-8 lg:pt-32">
         <div
           className={clsx(
             links && links.length > 0 && "lg:grid lg:grid-cols-3 lg:gap-10",
@@ -57,17 +57,7 @@ export default function Footer({
                 <AuthorInfo name={author.name} url={author.url} logo="" />
               </div>
             )}
-            <Link href="https://datahub.io" className="inline-flex">
-              Built with{" "}
-              <Image
-                width={24}
-                height={24}
-                className="mx-2 h-6"
-                src={defaultConfig.author.logo}
-                alt="DataHub Logo"
-              />
-              DataHub
-            </Link>
+
             {description && (
               <p className="text-sm leading-6 text-gray-600">{description}</p>
             )}
