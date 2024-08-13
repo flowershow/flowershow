@@ -438,7 +438,10 @@ export const siteRouter = createTRPCRouter({
           });
 
           if (!site) {
-            return null;
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
           }
 
           try {
@@ -478,8 +481,12 @@ export const siteRouter = createTRPCRouter({
           });
 
           if (!site) {
-            return null;
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
           }
+
           try {
             const config = await fetchFile({
               projectId: site.id,
@@ -519,7 +526,10 @@ export const siteRouter = createTRPCRouter({
           });
 
           if (!site) {
-            return null;
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
           }
 
           try {
