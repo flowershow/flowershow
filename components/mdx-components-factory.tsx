@@ -32,6 +32,7 @@ import type {
   PlotlyBarChartProps,
   PlotlyLineChartProps,
 } from "./portaljs-components";
+import { FrictionlessViewFactory } from "./frictionless-view";
 
 type SiteWithUser = Site & {
   user: {
@@ -232,6 +233,21 @@ export const mdxComponentsFactory = ({
       return <VegaLite {...props} spec={spec} />;
     },
   };
+
+  if (isDatasetPage(metadata)) {
+    // TODO is this needed at all?
+    const FrictionlessView = FrictionlessViewFactory(metadata);
+    components.FrictionlessView = ({
+      id,
+      fullWidth,
+    }: {
+      id: number;
+      fullWidth: boolean;
+    }) => {
+      return <FrictionlessView viewId={id} fullWidth={fullWidth} />;
+    };
+    components.FrictionlessView.displayName = "FrictionlessView";
+  }
 
   return components;
 };
