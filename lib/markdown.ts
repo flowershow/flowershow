@@ -13,16 +13,22 @@ import rehypeSlug from "rehype-slug";
 import rehypePrismPlus from "rehype-prism-plus";
 import { compileMDX } from "next-mdx-remote/rsc";
 
-const parse = async function (
-  source: string,
-  components: { [key: string]: any },
-  permalinks?: string[],
-) {
+const compile = async ({
+  source,
+  components,
+  permalinks,
+  parseFrontmatter = false,
+}: {
+  source: string;
+  components: { [key: string]: any };
+  permalinks: string[];
+  parseFrontmatter: boolean;
+}) => {
   const { content, frontmatter } = await compileMDX({
     source,
     components,
     options: {
-      parseFrontmatter: true,
+      parseFrontmatter,
       mdxOptions: {
         remarkPlugins: [
           remarkEmbed,
@@ -92,4 +98,4 @@ const parse = async function (
   };
 };
 
-export default parse;
+export default compile;
