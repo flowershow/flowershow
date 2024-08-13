@@ -1,12 +1,12 @@
-const normalizeUrl = (_url: string | undefined) => {
-  return _url?.startsWith("/") ? _url : "/" + _url;
+const normalizeUrl = (path: string) => {
+  return path?.startsWith("/") ? path : "/" + path;
 };
 
-const isPathIncluded = (filePath: string, collection: string[]) => {
-  filePath = normalizeUrl(filePath);
+const isPathIncluded = (path: string, collection: string[]) => {
+  path = normalizeUrl(path);
   return collection.some((item) => {
     item = normalizeUrl(item);
-    return item === filePath || filePath?.startsWith(item + "/");
+    return item === path || path.startsWith(item + "/");
   });
 };
 

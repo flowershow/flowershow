@@ -28,6 +28,7 @@ import {
 } from "@/lib/types";
 import { revalidateTag } from "next/cache";
 import { isPathVisible } from "@/lib/path-validator";
+import { SiteConfig } from "@/components/types";
 
 // TODO handle different types of errors when fetching from GH or uploading to CS
 export const syncSite = inngest.createFunction(
@@ -94,20 +95,23 @@ export const syncSite = inngest.createFunction(
         }),
     );
 
-    const siteConfig = await step.run("fetch-site-config", async () => {
-      const config = await fetchGitHubFile({
-        gh_repository,
-        gh_branch,
-        path: "config.json",
-        access_token,
-      });
-      return JSON.parse(
-        Buffer.from(config.content, "base64").toString("utf-8"),
-      );
-    });
+    const siteConfig: SiteConfig = await step.run(
+      "fetch-site-config",
+      async () => {
+        const config = await fetchGitHubFile({
+          gh_repository,
+          gh_branch,
+          path: "config.json",
+          access_token,
+        });
+        return JSON.parse(
+          Buffer.from(config.content, "base64").toString("utf-8"),
+        );
+      },
+    );
 
-    const includes: string[] = siteConfig?.contentInclude;
-    const excludes: string[] = siteConfig?.contentExclude;
+    const includes: string[] = siteConfig?.contentInclude || [];
+    const excludes: string[] = siteConfig?.contentExclude || [];
 
     await step.run(
       "update-sync-status",
