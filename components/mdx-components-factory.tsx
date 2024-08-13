@@ -1,6 +1,3 @@
-/* import { Mermaid as mermaid, Pre as pre } from "@portaljs/core"; */
-/* import { ErrorBoundary } from "react-error-boundary"; */
-import { ErrorMessage } from "@/components/error-message";
 import { PageMetadata, isDatasetPage } from "@/server/api/types";
 import { resolveLink } from "@/lib/resolve-link";
 import { Site } from "@prisma/client";
@@ -20,7 +17,9 @@ import {
   PlotlyLineChart,
   Vega,
   VegaLite,
-} from "./portaljs-components";
+  Pre,
+  Mermaid,
+} from "./client-components-wrapper";
 
 import type {
   ExcelProps,
@@ -31,7 +30,7 @@ import type {
   PdfViewerProps,
   PlotlyBarChartProps,
   PlotlyLineChartProps,
-} from "./portaljs-components";
+} from "./client-components-wrapper";
 import { FrictionlessViewFactory } from "./frictionless-view";
 
 type SiteWithUser = Site & {
@@ -105,8 +104,8 @@ export const mdxComponentsFactory = ({
       </div>
     ),
     /* Custom components */
-    /* pre,
-     * mermaid, */
+    pre: Pre,
+    mermaid: Mermaid,
     code: (props) => {
       let className = props.className;
       if (!props.className || !props.className.includes("language-")) {
@@ -251,13 +250,3 @@ export const mdxComponentsFactory = ({
 
   return components;
 };
-
-const FallbackComponentFactory = ({ title }: { title: string }) => {
-  const FallbackComponent = ({ error }: { error: Error }) => {
-    return <ErrorMessage title={title} message={error.message} />;
-  };
-  FallbackComponent.displayName = "FallbackComponent";
-  return FallbackComponent;
-};
-
-FallbackComponentFactory.displayName = "FallbackComponentFactory";
