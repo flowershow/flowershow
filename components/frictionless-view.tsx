@@ -1,4 +1,3 @@
-import dynamic from "next/dynamic";
 import type {
   Resource,
   ResourceSchemaField,
@@ -6,9 +5,7 @@ import type {
 } from "@/components/layouts/datapackage-types";
 import { DatasetPageMetadata } from "@/server/api/types";
 
-const VegaLite = dynamic(() =>
-  import("@portaljs/components").then((mod) => mod.VegaLite),
-);
+import { VegaLite } from "./client-components-wrapper";
 
 type FrictionlessViewReturnType = ({
   viewId, // view index in the views array
