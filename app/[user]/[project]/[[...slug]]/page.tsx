@@ -142,7 +142,8 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   try {
     const { content, frontmatter } = await parse(
       mdContent ?? "",
-      {},
+      components,
+      /* {}, */
       sitePermalinks,
     );
     compiledSource = content;

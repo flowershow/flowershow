@@ -7,7 +7,31 @@ import { Site } from "@prisma/client";
 import { env } from "@/env.mjs";
 import { customEncodeUrl } from "@/lib/url-encoder";
 
-import { Catalog } from "./portaljs-components";
+import {
+  Catalog,
+  Excel,
+  FlatUiTable,
+  Iframe,
+  LineChart,
+  Map,
+  PdfViewer,
+  Plotly,
+  PlotlyBarChart,
+  PlotlyLineChart,
+  Vega,
+  VegaLite,
+} from "./portaljs-components";
+
+import type {
+  ExcelProps,
+  FlatUiTableProps,
+  IframeProps,
+  LineChartProps,
+  MapProps,
+  PdfViewerProps,
+  PlotlyBarChartProps,
+  PlotlyLineChartProps,
+} from "./portaljs-components";
 
 type SiteWithUser = Site & {
   user: {
@@ -95,6 +119,117 @@ export const mdxComponentsFactory = ({
     },
     Catalog: (props) => {
       return <Catalog {...props} />;
+    },
+    Excel: (props: ExcelProps) => {
+      props.data.url = resolveLink({
+        link: props.data.url,
+        filePath: metadata._path,
+        prefixPath: pathToR2SiteFolder,
+      });
+      return <Excel {...props} />;
+    },
+    Iframe: (props: IframeProps) => {
+      props.data.url = resolveLink({
+        link: props.data.url,
+        filePath: metadata._path,
+        prefixPath: pathToR2SiteFolder,
+      });
+      return <Iframe {...props} />;
+    },
+    FlatUiTable: (props: FlatUiTableProps) => {
+      if (props.data.url) {
+        props.data.url = resolveLink({
+          link: props.data.url,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        });
+      }
+      return <FlatUiTable {...props} />;
+    },
+    LineChart: (props: LineChartProps) => {
+      if (props.data.url) {
+        props.data.url = resolveLink({
+          link: props.data.url,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        });
+      }
+      return <LineChart {...props} />;
+    },
+    Map: (props: MapProps) => {
+      const layers = props.layers.map((layer) => {
+        if (layer.data.url) {
+          layer.data.url = resolveLink({
+            link: layer.data.url,
+            filePath: metadata._path,
+            prefixPath: pathToR2SiteFolder,
+          });
+        }
+        return layer;
+      });
+
+      return <Map {...props} layers={layers} />;
+    },
+    PdfViewer: (props: PdfViewerProps) => {
+      props.data.url = resolveLink({
+        link: props.data.url,
+        filePath: metadata._path,
+        prefixPath: pathToR2SiteFolder,
+      });
+      return <PdfViewer {...props} />;
+    },
+    Plotly: (props) => {
+      let data = props.data;
+      if (typeof data === "string") {
+        data = resolveLink({
+          link: data,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        });
+      }
+      return <Plotly {...props} data={data} />;
+    },
+    PlotlyBarChart: (props: PlotlyBarChartProps) => {
+      if (props.data.url) {
+        props.data.url = resolveLink({
+          link: props.data.url,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        });
+      }
+      return <PlotlyBarChart {...props} />;
+    },
+    PlotlyLineChart: (props: PlotlyLineChartProps) => {
+      if (props.data.url) {
+        props.data.url = resolveLink({
+          link: props.data.url,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        });
+      }
+      return <PlotlyLineChart {...props} />;
+    },
+    Vega: (props) => {
+      const spec = props.spec;
+      if (spec.data.URL) {
+        spec.data.URL = resolveLink({
+          link: spec.data.URL,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        });
+      }
+      return <Vega {...props} spec={spec} />;
+    },
+    VegaLite: (props) => {
+      const spec = props.spec;
+      if (spec.data.URL) {
+        spec.data.URL = resolveLink({
+          link: spec.data.URL,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        });
+      }
+      return <VegaLite {...props} spec={spec} />;
     },
   };
 
