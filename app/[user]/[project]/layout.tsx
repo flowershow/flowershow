@@ -10,6 +10,7 @@ import { resolveLink } from "@/lib/resolve-link";
 import { Site } from "@prisma/client";
 import TableOfContentsSidebar from "@/components/table-of-content";
 import Sidebar from "@/components/sidebar";
+import BuiltWithDataHub from "@/components/built-with-datahub";
 
 type SiteWithUser = Site & {
   user: {
@@ -169,8 +170,7 @@ export default async function SiteLayout({
   const footerLinks =
     (isCustomDomain && siteConfig?.footerLinks) || defaultConfig.footerLinks;
   const socialLinks = siteConfig?.social;
-  const footerDescription =
-    (isCustomDomain && siteConfig?.description) || defaultConfig.description;
+  const footerDescription = siteConfig?.description;
 
   const showSidebar = siteConfig?.showSidebar;
 
@@ -215,12 +215,14 @@ export default async function SiteLayout({
           <aside
             className={`inset-y-0 right-0 hidden overflow-y-auto px-4 sm:px-2  xl:block  ${
               showSidebar
-                ? "fixed py-8 lg:px-8 xl:w-[235px] 2xl:w-[340px]"
-                : "sticky top-[70px] h-[calc(100vh-70px)] xl:min-w-[200px] xl:px-0"
-            } `}
+                ? "fixed pb-[80px] pt-8 lg:px-8 xl:w-[235px] 2xl:w-[340px]"
+                : "sticky top-[70px] h-[calc(100vh-140px)] xl:min-w-[200px] xl:px-0"
+            }`}
           >
             <TableOfContentsSidebar className="pt-4" />
           </aside>
+
+          <BuiltWithDataHub />
         </main>
       </div>
     </>
