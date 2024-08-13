@@ -56,10 +56,6 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     notFound();
   }
 
-  if (!pageMetadata) {
-    notFound();
-  }
-
   return {
     title: pageMetadata.title,
     description: pageMetadata.description,
@@ -95,11 +91,13 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     notFound();
   }
 
+  // get site config
   const siteConfig = await api.site.getConfig.query({
     gh_username: site.user!.gh_username!,
     projectName: site.projectName,
   });
 
+  // get indexed page metadata (frontmatter + datapackage (if any) + some other metadata)
   let pageMetadata: PageMetadata | null = null;
 
   try {
@@ -112,27 +110,30 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     notFound();
   }
 
-  if (!pageMetadata) {
-    notFound();
-  }
-
-  let mdContent: string | null = null;
-  let sitePermalinks: string[] = [];
-
-  let compiledSource: ReactElement | null = null;
-  let metadata: object | null = null;
+  let pageContent: string | null = null;
 
   try {
-    const { content, permalinks } = await api.site.getPageContent.query({
+    pageContent = await api.site.getPageContent.query({
       gh_username: site.user?.gh_username!,
       projectName: site.projectName,
       slug: decodedSlug,
     });
-    mdContent = content;
-    sitePermalinks = permalinks;
   } catch (error) {
     notFound();
   }
+
+  let sitePermalinks: string[] = [];
+
+  try {
+    sitePermalinks = await api.site.getPermalinks.query({
+      gh_username: site.user?.gh_username!,
+      projectName: site.projectName,
+    });
+  } catch (error) {
+    notFound();
+  }
+
+  let compiledSource: ReactElement | null = null;
 
   const components = mdxComponentsFactory({
     metadata: pageMetadata,
@@ -140,14 +141,12 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   });
 
   try {
-    const { content, frontmatter } = await parse(
-      mdContent ?? "",
+    const { content } = await parse(
+      pageContent ?? "",
       components,
-      /* {}, */
       sitePermalinks,
     );
     compiledSource = content;
-    metadata = frontmatter;
   } catch (e: any) {
     return (
       <div className="p-6">
