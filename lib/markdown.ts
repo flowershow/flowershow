@@ -83,7 +83,6 @@ const getMdxConfig = ({
   };
 };
 
-
 export function processContent(content: string): string {
   return content.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
