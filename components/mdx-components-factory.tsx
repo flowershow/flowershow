@@ -108,20 +108,25 @@ export const mdxComponentsFactory = ({
       }
 
       const isExternal = href.startsWith("http");
+      const isHeading = href.startsWith("#");
 
-      const normalizedHref = resolveLink({
-        link: isExternal ? href : customEncodeUrl(href),
-        filePath: metadata._path,
-        prefixPath: siteMetadata.customDomain
-          ? ""
-          : `/@${siteMetadata.user!.gh_username}/${siteMetadata.projectName}`,
-      });
+      const _href = isHeading
+        ? href
+        : resolveLink({
+            link: isExternal ? href : customEncodeUrl(href),
+            filePath: metadata._path,
+            prefixPath: siteMetadata.customDomain
+              ? ""
+              : `/@${siteMetadata.user!.gh_username}/${
+                  siteMetadata.projectName
+                }`,
+          });
 
       return (
         <a
           target={isExternal ? "_blank" : undefined}
           rel={isExternal ? "noopener noreferrer" : undefined}
-          href={normalizedHref}
+          href={_href}
           {...rest}
         >
           {children}
