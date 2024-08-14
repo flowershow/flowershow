@@ -14,7 +14,8 @@ export interface SiteConfig {
   social: SocialLink[];
   footerLinks?: FooterLink[];
   showEditLink?: boolean;
-  showRepositoryLink?: boolean;
+  contentInclude?: string[];
+  contentExclude?: string[];
 }
 
 /* --------------
