@@ -61,7 +61,7 @@
     "mdx-bundler": "^10.0.1",
     "mdx-mermaid": "^2.0.0",
     "nanoid": "^4.0.2",
-    "next": "14.0.2",
+    "next": "14.2.5",
     "next-auth": "4.24.5",
     "next-mdx-remote": "^5.0.0",
     "novel": "^0.1.22",
