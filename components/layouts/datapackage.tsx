@@ -16,14 +16,17 @@ import { ErrorMessage } from "@/components/error-message";
 import { DatasetPageMetadata } from "@/server/api/types";
 import { ResourcePreview } from "./resource-preview";
 import { FallbackComponentFactory } from "./fallback-component-factory";
+import { useState, useEffect } from "react";
 import { Site } from "@prisma/client";
 import { env } from "@/env.mjs";
 import { resolveLink } from "@/lib/resolve-link";
 import Script from "next/script";
-
+import SocialShareMenu from "@/components/social-share-menu";
 import Link from "next/link";
 import { ExternalLink, Github } from "lucide-react";
 import path from "path";
+import { socialIcons } from "../social-icons";
+import config from "@/const/config";
 
 type SiteWithUser = Site & {
   user: {
@@ -59,6 +62,25 @@ export const DataPackageLayout: React.FC<Props> = ({
     sources,
   } = metadata;
 
+  const [bannerMessage, setBannerMessage] = useState("");
+  const [showBanner, setShowBanner] = useState(false);
+
+  useEffect(() => {
+    let timeoutId;
+
+    if (showBanner) {
+      timeoutId = setTimeout(() => {
+        setShowBanner(false);
+      }, 2000);
+    }
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [showBanner]);
+
   if (!resources) {
     return (
       <>
@@ -83,6 +105,52 @@ export const DataPackageLayout: React.FC<Props> = ({
   const resourceFilesSizeHumanReadable = resourceFilesSize
     ? prettyBytes(resourceFilesSize)
     : undefined;
+
+  const handleCopyClick = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setBannerMessage("Copied to clipboard!");
+    } catch (err) {
+      setBannerMessage("Failed to copy!");
+    } finally {
+      setShowBanner(true);
+    }
+  };
+
+  const onShareClick = (link, text) => (e) => {
+    e.preventDefault();
+    window.open(link, text, "width=650,height=650");
+  };
+
+  const shareOptions = [
+    {
+      name: "Share on Twitter",
+      icon: socialIcons.twitter,
+      href: config.social.find((s) => s.label === "twitter")?.href,
+      onClick: onShareClick(
+        config.social.find((s) => s.label === "twitter")?.href,
+        "Share on X",
+      ),
+    },
+    {
+      name: "Share on LinkedIn",
+      icon: socialIcons.linkedin,
+      href: config.social.find((s) => s.label === "linkedin")?.href,
+      onClick: onShareClick(
+        config.social.find((s) => s.label === "linkedin")?.href,
+        "Share on LinkedIn",
+      ),
+    },
+    {
+      name: "Share on Facebook",
+      icon: socialIcons.facebook,
+      href: config.social.find((s) => s.label === "facebook")?.href,
+      onClick: onShareClick(
+        config.social.find((s) => s.label === "facebook")?.href,
+        "Share on Facebook",
+      ),
+    },
+  ];
 
   // TODO this is only needed for old sites
   // new sites have links in datapackage resolved in computed-fields lib
@@ -202,22 +270,28 @@ export const DataPackageLayout: React.FC<Props> = ({
         <article className="prose-headings:font-headings prose mx-auto max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
           <header className="mb-8 flex flex-col gap-y-5">
             <h1 className="!mb-2">{title}</h1>
-
-            <div
-              className="flex items-center gap-1 "
-              data-testid="goto-repository"
-            >
-              <Github width={18} />
-              <Link
-                className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
-                href={`https://github.com/${siteMetadata?.gh_repository}`}
-                target="_blank"
-                rel="noreferrer"
+            <div className="flex items-center justify-between">
+              <div
+                className="flex items-center gap-1 "
+                data-testid="goto-repository"
               >
-                {siteMetadata.gh_repository}
-              </Link>
+                <Github width={18} />
+                <Link
+                  className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
+                  href={`https://github.com/${siteMetadata?.gh_repository}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {siteMetadata.gh_repository}
+                </Link>
+              </div>
+              <div className="flex shrink-0 grow items-center justify-end">
+                <SocialShareMenu
+                  onCopyClick={handleCopyClick}
+                  shareOptions={shareOptions}
+                />
+              </div>
             </div>
-
             <table
               data-testid="dp-metadata-table"
               className="table-auto divide-y divide-gray-300"

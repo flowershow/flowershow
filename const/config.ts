@@ -60,6 +60,7 @@ const config: ExtendedSiteConfig = {
     { label: "discord", href: "https://discord.com/invite/KrRzMKU" },
     { label: "linkedin", href: "https://www.linkedin.com/company/10340373" },
     { label: "twitter", href: "https://twitter.com/datopian" },
+    { label: "facebook", href: "https://www.facebook.com/datopianltd/" },
     { label: "github", href: "https://github.com/datopian" },
   ],
 };
