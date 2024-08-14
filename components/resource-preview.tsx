@@ -1,7 +1,9 @@
-import { type Resource } from "./datapackage-types";
+import { type Resource } from "./layouts/datapackage-types";
 import { FlatUiTable, Map } from "@/components/client-components-wrapper";
 
-export const ResourcePreview = ({ resource }: { resource: Resource }) => {
+export const ResourcePreview: React.FC<{ resource: Resource }> = ({
+  resource,
+}) => {
   const resourceTitle = resource.title || resource.name || resource.path;
 
   return (

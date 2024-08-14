@@ -36,7 +36,7 @@ const MDXLayout: React.FC<MDXLayoutProps> = ({
   };
 
   return (
-    <div id="mdxpage" suppressHydrationWarning>
+    <div id="mdxpage">
       <Layout>{children}</Layout>
     </div>
   );

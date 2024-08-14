@@ -1,36 +1,71 @@
 "use client";
-// Note that the above line is required to make the import of the components work
-// as they themselves do not have the "use client" pragma
 // https://nextjs.org/docs/app/building-your-application/rendering/composition-patterns#using-third-party-packages-and-providers
+import dynamic from "next/dynamic";
 
-// TODO update @portaljs/components to use the pragma
 import {
-  Catalog,
-  Excel,
   ExcelProps,
-  FlatUiTable,
   FlatUiTableProps,
-  Iframe,
   IframeProps,
-  LineChart,
   LineChartProps,
-  Map,
   MapProps,
-  PdfViewer,
   PdfViewerProps,
-  Plotly,
-  PlotlyBarChart,
   PlotlyBarChartProps,
-  PlotlyLineChart,
   PlotlyLineChartProps,
-  Vega,
-  VegaLite,
 } from "@portaljs/components";
 
-// TODO update @portaljs/core to use the pragma
 import { Pre } from "@portaljs/core";
-
 import { Mermaid } from "mdx-mermaid/lib/Mermaid";
+
+// use dynamic import to disable server side rendering for these components
+// as they depend on the window object
+const Catalog = dynamic(
+  () => import("@portaljs/components").then((mod) => mod.Catalog),
+  { ssr: false },
+);
+const Excel = dynamic(
+  () => import("@portaljs/components").then((mod) => mod.Excel),
+  { ssr: false },
+);
+const FlatUiTable = dynamic(
+  () => import("@portaljs/components").then((mod) => mod.FlatUiTable),
+  { ssr: false },
+);
+const Iframe = dynamic(
+  () => import("@portaljs/components").then((mod) => mod.Iframe),
+  { ssr: false },
+);
+const LineChart = dynamic(
+  () => import("@portaljs/components").then((mod) => mod.LineChart),
+  { ssr: false },
+);
+const Map = dynamic(
+  () => import("@portaljs/components").then((mod) => mod.Map),
+  { ssr: false },
+);
+const PdfViewer = dynamic(
+  () => import("@portaljs/components").then((mod) => mod.PdfViewer),
+  { ssr: false },
+);
+const Plotly = dynamic(
+  () => import("@portaljs/components").then((mod) => mod.Plotly),
+  { ssr: false },
+);
+const PlotlyBarChart = dynamic(
+  () => import("@portaljs/components").then((mod) => mod.PlotlyBarChart),
+  { ssr: false },
+);
+const PlotlyLineChart = dynamic(
+  () => import("@portaljs/components").then((mod) => mod.PlotlyLineChart),
+  { ssr: false },
+);
+const Vega = dynamic(
+  () => import("@portaljs/components").then((mod) => mod.Vega),
+  { ssr: false },
+);
+const VegaLite = dynamic(
+  () => import("@portaljs/components").then((mod) => mod.VegaLite),
+  { ssr: false },
+);
 
 export {
   Catalog,
