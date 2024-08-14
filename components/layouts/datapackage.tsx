@@ -23,8 +23,7 @@ import { resolveLink } from "@/lib/resolve-link";
 import Script from "next/script";
 import SocialShareMenu from "@/components/social-share-menu";
 import Link from "next/link";
-import { ExternalLink, Github } from "lucide-react";
-import path from "path";
+import { Github } from "lucide-react";
 import { socialIcons } from "../social-icons";
 import config from "@/const/config";
 
