@@ -14,10 +14,14 @@ import {
 } from "@portaljs/components";
 
 import { Pre } from "@portaljs/core";
-import { Mermaid } from "mdx-mermaid/lib/Mermaid";
 
 // use dynamic import to disable server side rendering for these components
 // as they depend on the window object
+
+const Mermaid = dynamic(
+  () => import("mdx-mermaid/lib/Mermaid").then((mod) => mod.Mermaid),
+  { ssr: false },
+);
 const Catalog = dynamic(
   () => import("@portaljs/components").then((mod) => mod.Catalog),
   { ssr: false },
