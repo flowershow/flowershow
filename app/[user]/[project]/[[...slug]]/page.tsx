@@ -2,7 +2,6 @@ import { ReactElement } from "react";
 import { notFound } from "next/navigation";
 
 import { api } from "@/trpc/server";
-import compile from "@/lib/markdown";
 import { PageMetadata } from "@/server/api/types";
 import { Site } from "@prisma/client";
 import UrlNormalizer from "./url-normalizer";
@@ -12,6 +11,8 @@ import { mdxComponentsFactory } from "@/components/mdx-components-factory";
 import EditPageButton from "@/components/edit-page-button";
 import { SiteConfig } from "@/components/types";
 import MdxLayout from "@/components/mdx-layout";
+import { MDXRemote } from "next-mdx-remote/rsc";
+import getOptions from "@/lib/markdown";
 
 type SiteWithUser = Site & {
   user: {
@@ -147,28 +148,35 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     siteMetadata: site,
   });
 
-  let CompiledMDX: ReactElement | null = null;
+  const options = getOptions({ permalinks: sitePermalinks }) as any;
 
-  try {
-    const { content } = await compile({
-      source: pageContent,
-      components: customMDXComponents,
-      permalinks: sitePermalinks,
-    });
-    CompiledMDX = content;
-  } catch (e: any) {
-    return (
-      <div className="p-6">
-        <ErrorMessage title="MDX parsing error:" message={e.message} />
-      </div>
-    );
-  }
+  /* let CompiledMDX: ReactElement | null = null;
+
+  * try {
+  *   const { content } = await compile({
+  *     source: pageContent,
+  *     components: customMDXComponents,
+  *     permalinks: sitePermalinks,
+  *   });
+  *   CompiledMDX = content;
+  * } catch (e: any) {
+  *   return (
+  *     <div className="p-6">
+  *       <ErrorMessage title="MDX parsing error:" message={e.message} />
+  *     </div>
+  *   );
+  * } */
 
   return (
     <>
       <UrlNormalizer />
       <MdxLayout metadata={pageMetadata} siteMetadata={site}>
-        {CompiledMDX}
+        {/* {CompiledMDX} */}
+        <MDXRemote
+          source={pageContent}
+          components={customMDXComponents}
+          options={options}
+        />
       </MdxLayout>
       {siteConfig?.showEditLink && (
         <EditPageButton
