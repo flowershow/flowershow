@@ -14,7 +14,7 @@ import rehypePrismPlus from "rehype-prism-plus";
 
 const getMdxConfig = ({
   permalinks,
-  parseFrontmatter = false,
+  parseFrontmatter = true,
 }: {
   permalinks: string[];
   parseFrontmatter?: boolean;
