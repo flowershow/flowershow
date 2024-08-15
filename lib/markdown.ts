@@ -85,9 +85,8 @@ const getMdxConfig = ({
 
 export function processContent(content: string): string {
   return content
-    // Convert specific symbols first
-    .replace(/<(?![a-zA-Z])/g, "&lt;")
-    .replace(/(?<![a-zA-Z\\/])>/g, "&gt;");
+    .replace(/<(?!(\/?)[a-zA-Z])/g, "&lt;")
+    .replace(/(?<![a-zA-Z"\\/])>/g, "&gt;");
 }
 
 export default getMdxConfig;

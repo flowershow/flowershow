@@ -62,4 +62,11 @@ describe("escapeSpecialCharacters", () => {
     const result = escapeSpecialCharacters(input);
     expect(result).toBe(expectedOutput);
   });
+
+  it("should handle a string with multiple replacements", () => {
+    const result = escapeSpecialCharacters(
+      '<div data-testid="obsidian-wiki-links">',
+    );
+    expect(result).toBe('<div data-testid="obsidian-wiki-links">');
+  });
 });
