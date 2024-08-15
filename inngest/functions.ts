@@ -10,6 +10,7 @@ import { env } from "@/env.mjs";
 import {
   deleteFile,
   deleteProject,
+  fetchFile,
   fetchTree,
   uploadFile,
   uploadTree,
@@ -95,18 +96,19 @@ export const syncSite = inngest.createFunction(
         }),
     );
 
-    const siteConfig: SiteConfig = await step.run(
+    const siteConfig: SiteConfig | null = await step.run(
       "fetch-site-config",
       async () => {
-        const config = await fetchGitHubFile({
-          gh_repository,
-          gh_branch,
-          path: "config.json",
-          access_token,
-        });
-        return JSON.parse(
-          Buffer.from(config.content, "base64").toString("utf-8"),
-        );
+        try {
+          const config = await fetchFile({
+            projectId: siteId,
+            branch: gh_branch,
+            path: "config.json",
+          });
+          return config ? (JSON.parse(config) as SiteConfig) : null;
+        } catch {
+          return null;
+        }
       },
     );
 
