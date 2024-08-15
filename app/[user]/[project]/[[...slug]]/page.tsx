@@ -1,13 +1,18 @@
+import { ReactElement } from "react";
 import { notFound } from "next/navigation";
-import MdxPage from "@/components/mdx";
+
 import { api } from "@/trpc/server";
-import parse from "@/lib/markdown";
-import { ErrorMessage } from "@/components/error-message";
 import { PageMetadata } from "@/server/api/types";
-import { MDXRemoteSerializeResult } from "next-mdx-remote";
 import { Site } from "@prisma/client";
 import UrlNormalizer from "./url-normalizer";
+
+import { ErrorMessage } from "@/components/error-message";
+import { mdxComponentsFactory } from "@/components/mdx-components-factory";
 import EditPageButton from "@/components/edit-page-button";
+import { SiteConfig } from "@/components/types";
+import MdxLayout from "@/components/mdx-layout";
+import { MDXRemote } from "next-mdx-remote/rsc";
+import getOptions from "@/lib/markdown";
 
 type SiteWithUser = Site & {
   user: {
@@ -56,10 +61,6 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     notFound();
   }
 
-  if (!pageMetadata) {
-    notFound();
-  }
-
   return {
     title: pageMetadata.title,
     description: pageMetadata.description,
@@ -95,10 +96,27 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     notFound();
   }
 
-  const siteConfig = await api.site.getConfig.query({
-    gh_username: site.user!.gh_username!,
-    projectName: site.projectName,
-  });
+  let siteConfig: SiteConfig | null = null;
+
+  try {
+    siteConfig = await api.site.getConfig.query({
+      gh_username: site.user!.gh_username!,
+      projectName: site.projectName,
+    });
+  } catch (error) {
+    notFound();
+  }
+
+  let sitePermalinks: string[] = [];
+
+  try {
+    sitePermalinks = await api.site.getPermalinks.query({
+      gh_username: site.user?.gh_username!,
+      projectName: site.projectName,
+    });
+  } catch (error) {
+    notFound();
+  }
 
   let pageMetadata: PageMetadata | null = null;
 
@@ -112,50 +130,54 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     notFound();
   }
 
-  if (!pageMetadata) {
-    notFound();
-  }
-
-  let mdContent: string | null = null;
-  let sitePermalinks: string[] = [];
-  let _mdxSource: MDXRemoteSerializeResult | null = null;
+  let pageContent: string;
 
   try {
-    const { content, permalinks } = await api.site.getPageContent.query({
-      gh_username: site.user?.gh_username!,
-      projectName: site.projectName,
-      slug: decodedSlug,
-    });
-    mdContent = content;
-    sitePermalinks = permalinks;
+    pageContent =
+      (await api.site.getPageContent.query({
+        gh_username: site.user?.gh_username!,
+        projectName: site.projectName,
+        slug: decodedSlug,
+      })) ?? "";
   } catch (error) {
     notFound();
   }
 
-  try {
-    const { mdxSource } = await parse(
-      mdContent ?? "",
-      "mdx",
-      {},
-      sitePermalinks,
-    );
-    _mdxSource = mdxSource;
-  } catch (e: any) {
-    return (
-      <div className="p-6">
-        <ErrorMessage title="MDX parsing error:" message={e.message} />
-      </div>
-    );
-  }
+  const customMDXComponents = mdxComponentsFactory({
+    metadata: pageMetadata,
+    siteMetadata: site,
+  });
+
+  const options = getOptions({ permalinks: sitePermalinks }) as any;
+
+  /* let CompiledMDX: ReactElement | null = null;
+
+  * try {
+  *   const { content } = await compile({
+  *     source: pageContent,
+  *     components: customMDXComponents,
+  *     permalinks: sitePermalinks,
+  *   });
+  *   CompiledMDX = content;
+  * } catch (e: any) {
+  *   return (
+  *     <div className="p-6">
+  *       <ErrorMessage title="MDX parsing error:" message={e.message} />
+  *     </div>
+  *   );
+  * } */
 
   return (
     <>
       <UrlNormalizer />
-      <MdxPage
-        source={_mdxSource}
-        metadata={pageMetadata}
-        siteMetadata={site}
-      />
+      <MdxLayout metadata={pageMetadata} siteMetadata={site}>
+        {/* {CompiledMDX} */}
+        <MDXRemote
+          source={pageContent}
+          components={customMDXComponents}
+          options={options}
+        />
+      </MdxLayout>
       {siteConfig?.showEditLink && (
         <EditPageButton
           url={`https://github.com/${site?.gh_repository}/edit/${site?.gh_branch}/${pageMetadata._path}`}

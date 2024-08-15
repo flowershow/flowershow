@@ -438,7 +438,10 @@ export const siteRouter = createTRPCRouter({
           });
 
           if (!site) {
-            return null;
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
           }
 
           try {
@@ -478,8 +481,12 @@ export const siteRouter = createTRPCRouter({
           });
 
           if (!site) {
-            return null;
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
           }
+
           try {
             const config = await fetchFile({
               projectId: site.id,
@@ -519,7 +526,10 @@ export const siteRouter = createTRPCRouter({
           });
 
           if (!site) {
-            return null;
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
           }
 
           try {
@@ -564,6 +574,48 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
+  getPermalinks: publicProcedure
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
+              ],
+            },
+          });
+
+          if (!site) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
+          }
+
+          const siteUrls = site.files ? Object.keys(site.files) : [];
+          return siteUrls.map((url) =>
+            url === "/"
+              ? "/README"
+              : `/${decodeURIComponent(
+                  url.replace(/\+/g, " ").replace(/%2B/g, "+"),
+                )}`,
+          );
+        },
+        [`${input.gh_username}-${input.projectName}-permalinks`],
+        {
+          revalidate: 60, // 1 minute
+          // tags: [`${input.gh_username}-${input.projectName}-permalinks`],
+        },
+      )();
+    }),
   getAll: protectedProcedure.query(async ({ ctx }) => {
     if (ctx.session.user.role !== "ADMIN") {
       throw new Error("Unauthorized");
@@ -600,6 +652,14 @@ export const siteRouter = createTRPCRouter({
           const pageMetadata = (
             site.files ? site.files[input.slug] : {}
           ) as PageMetadata;
+
+          if (!pageMetadata) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Page not found",
+            });
+          }
+
           return pageMetadata;
         },
         [`${input.gh_username} - ${input.projectName} - ${input.slug} - meta`],
@@ -652,16 +712,7 @@ export const siteRouter = createTRPCRouter({
             path,
           });
 
-          const siteUrls = site.files ? Object.keys(site.files) : [];
-          const permalinks = siteUrls.map((url) =>
-            url === "/"
-              ? "/README"
-              : `/${decodeURIComponent(
-                  url.replace(/\+/g, " ").replace(/%2B/g, "+"),
-                )}`,
-          );
-
-          return { content, permalinks };
+          return content;
         },
         [`${input.gh_username}-${input.projectName}-${input.slug}-content`],
         {
