@@ -27,6 +27,8 @@ import {
   isSupportedMarkdownExtension,
 } from "@/lib/types";
 import { revalidateTag } from "next/cache";
+import { isPathVisible } from "@/lib/path-validator";
+import { SiteConfig } from "@/components/types";
 
 // TODO handle different types of errors when fetching from GH or uploading to CS
 export const syncSite = inngest.createFunction(
@@ -93,6 +95,24 @@ export const syncSite = inngest.createFunction(
         }),
     );
 
+    const siteConfig: SiteConfig = await step.run(
+      "fetch-site-config",
+      async () => {
+        const config = await fetchGitHubFile({
+          gh_repository,
+          gh_branch,
+          path: "config.json",
+          access_token,
+        });
+        return JSON.parse(
+          Buffer.from(config.content, "base64").toString("utf-8"),
+        );
+      },
+    );
+
+    const includes: string[] = siteConfig?.contentInclude || [];
+    const excludes: string[] = siteConfig?.contentExclude || [];
+
     await step.run(
       "update-sync-status",
       async () =>
@@ -119,15 +139,19 @@ export const syncSite = inngest.createFunction(
       },
     );
 
-    const gitHubTree = await step.run(
-      "fetch-github-tree",
-      async () =>
-        await fetchGitHubRepoTree({
-          gh_repository,
-          gh_branch,
-          access_token,
-        }),
-    );
+    const gitHubTree = await step.run("fetch-github-tree", async () => {
+      const repoTree = await fetchGitHubRepoTree({
+        gh_repository,
+        gh_branch,
+        access_token,
+      });
+      return {
+        ...repoTree,
+        tree: repoTree.tree.filter((file) =>
+          isPathVisible(file.path, includes, excludes),
+        ),
+      };
+    });
 
     if (contentStoreTree && contentStoreTree.sha === gitHubTree.sha) {
       // why was this here?
@@ -309,7 +333,9 @@ export const syncSite = inngest.createFunction(
         });
 
         if (fileMetadata?.metadata) {
-          filesMetadata[fileMetadata.metadata._url] = fileMetadata.metadata;
+          if (!fileMetadata.metadata?.isDraft)
+            filesMetadata[fileMetadata.metadata._url] = fileMetadata.metadata;
+          else delete filesMetadata[fileMetadata.metadata._url];
         }
       },
     );

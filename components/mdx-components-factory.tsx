@@ -1,6 +1,26 @@
-"use client";
-import dynamic from "next/dynamic";
-import { Mermaid as mermaid, Pre as pre } from "@portaljs/core";
+import { PageMetadata, isDatasetPage } from "@/server/api/types";
+import { resolveLink } from "@/lib/resolve-link";
+import { Site } from "@prisma/client";
+import { env } from "@/env.mjs";
+import { customEncodeUrl } from "@/lib/url-encoder";
+
+import {
+  Catalog,
+  Excel,
+  FlatUiTable,
+  Iframe,
+  LineChart,
+  Map,
+  PdfViewer,
+  Plotly,
+  PlotlyBarChart,
+  PlotlyLineChart,
+  Vega,
+  VegaLite,
+  Pre,
+  Mermaid,
+} from "./client-components-wrapper";
+
 import type {
   ExcelProps,
   FlatUiTableProps,
@@ -10,76 +30,8 @@ import type {
   PdfViewerProps,
   PlotlyBarChartProps,
   PlotlyLineChartProps,
-} from "@portaljs/components";
-import { ErrorBoundary } from "react-error-boundary";
-import { ErrorMessage } from "@/components/error-message";
+} from "./client-components-wrapper";
 import { FrictionlessViewFactory } from "./frictionless-view";
-import { PageMetadata, isDatasetPage } from "@/server/api/types";
-import { resolveLink } from "@/lib/resolve-link";
-import { Site } from "@prisma/client";
-import { env } from "@/env.mjs";
-import { customEncodeUrl } from "@/lib/url-encoder";
-
-const Catalog = dynamic(() =>
-  import("@portaljs/components").then((module) => ({
-    default: module.Catalog,
-  })),
-);
-const Excel = dynamic(() =>
-  import("@portaljs/components").then((module) => ({
-    default: module.Excel,
-  })),
-);
-const FlatUiTable = dynamic(() =>
-  import("@portaljs/components").then((module) => ({
-    default: module.FlatUiTable,
-  })),
-);
-const Iframe = dynamic(() =>
-  import("@portaljs/components").then((module) => ({
-    default: module.Iframe,
-  })),
-);
-const LineChart = dynamic(() =>
-  import("@portaljs/components").then((module) => ({
-    default: module.LineChart,
-  })),
-);
-const Map = dynamic(() =>
-  import("@portaljs/components").then((module) => ({
-    default: module.Map,
-  })),
-);
-const PdfViewer = dynamic(() =>
-  import("@portaljs/components").then((module) => ({
-    default: module.PdfViewer,
-  })),
-);
-const Plotly = dynamic(() =>
-  import("@portaljs/components").then((module) => ({
-    default: module.Plotly,
-  })),
-);
-const PlotlyBarChart = dynamic(() =>
-  import("@portaljs/components").then((module) => ({
-    default: module.PlotlyBarChart,
-  })),
-);
-const PlotlyLineChart = dynamic(() =>
-  import("@portaljs/components").then((module) => ({
-    default: module.PlotlyLineChart,
-  })),
-);
-const Vega = dynamic(() =>
-  import("@portaljs/components").then((module) => ({
-    default: module.Vega,
-  })),
-);
-const VegaLite = dynamic(() =>
-  import("@portaljs/components").then((module) => ({
-    default: module.VegaLite,
-  })),
-);
 
 type SiteWithUser = Site & {
   user: {
@@ -108,20 +60,25 @@ export const mdxComponentsFactory = ({
       }
 
       const isExternal = href.startsWith("http");
+      const isHeading = href.startsWith("#");
 
-      const normalizedHref = resolveLink({
-        link: isExternal ? href : customEncodeUrl(href),
-        filePath: metadata._path,
-        prefixPath: siteMetadata.customDomain
-          ? ""
-          : `/@${siteMetadata.user!.gh_username}/${siteMetadata.projectName}`,
-      });
+      const _href = isHeading
+        ? href
+        : resolveLink({
+            link: isExternal ? href : customEncodeUrl(href),
+            filePath: metadata._path,
+            prefixPath: siteMetadata.customDomain
+              ? ""
+              : `/@${siteMetadata.user!.gh_username}/${
+                  siteMetadata.projectName
+                }`,
+          });
 
       return (
         <a
           target={isExternal ? "_blank" : undefined}
           rel={isExternal ? "noopener noreferrer" : undefined}
-          href={normalizedHref}
+          href={_href}
           {...rest}
         >
           {children}
@@ -147,8 +104,8 @@ export const mdxComponentsFactory = ({
       </div>
     ),
     /* Custom components */
-    pre,
-    mermaid,
+    pre: Pre,
+    mermaid: Mermaid,
     code: (props) => {
       let className = props.className;
       if (!props.className || !props.className.includes("language-")) {
@@ -161,15 +118,7 @@ export const mdxComponentsFactory = ({
       return <code {...props} className={className}></code>;
     },
     Catalog: (props) => {
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`Catalog` component error:",
-          })}
-        >
-          <Catalog {...props} />
-        </ErrorBoundary>
-      );
+      return <Catalog {...props} />;
     },
     Excel: (props: ExcelProps) => {
       props.data.url = resolveLink({
@@ -177,15 +126,7 @@ export const mdxComponentsFactory = ({
         filePath: metadata._path,
         prefixPath: pathToR2SiteFolder,
       });
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`Excel` component error:",
-          })}
-        >
-          <Excel {...props} />
-        </ErrorBoundary>
-      );
+      return <Excel {...props} />;
     },
     Iframe: (props: IframeProps) => {
       props.data.url = resolveLink({
@@ -193,15 +134,7 @@ export const mdxComponentsFactory = ({
         filePath: metadata._path,
         prefixPath: pathToR2SiteFolder,
       });
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`Excel` component error:",
-          })}
-        >
-          <Iframe {...props} />
-        </ErrorBoundary>
-      );
+      return <Iframe {...props} />;
     },
     FlatUiTable: (props: FlatUiTableProps) => {
       if (props.data.url) {
@@ -221,15 +154,7 @@ export const mdxComponentsFactory = ({
           prefixPath: pathToR2SiteFolder,
         });
       }
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`LineChart` component error:",
-          })}
-        >
-          <LineChart {...props} />
-        </ErrorBoundary>
-      );
+      return <LineChart {...props} />;
     },
     Map: (props: MapProps) => {
       const layers = props.layers.map((layer) => {
@@ -243,15 +168,7 @@ export const mdxComponentsFactory = ({
         return layer;
       });
 
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`Map` component error:",
-          })}
-        >
-          <Map {...props} layers={layers} />
-        </ErrorBoundary>
-      );
+      return <Map {...props} layers={layers} />;
     },
     PdfViewer: (props: PdfViewerProps) => {
       props.data.url = resolveLink({
@@ -259,15 +176,7 @@ export const mdxComponentsFactory = ({
         filePath: metadata._path,
         prefixPath: pathToR2SiteFolder,
       });
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`PdfViewer` component error:",
-          })}
-        >
-          <PdfViewer {...props} />
-        </ErrorBoundary>
-      );
+      return <PdfViewer {...props} />;
     },
     Plotly: (props) => {
       let data = props.data;
@@ -278,15 +187,7 @@ export const mdxComponentsFactory = ({
           prefixPath: pathToR2SiteFolder,
         });
       }
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`Plotly` component error:",
-          })}
-        >
-          <Plotly {...props} data={data} />
-        </ErrorBoundary>
-      );
+      return <Plotly {...props} data={data} />;
     },
     PlotlyBarChart: (props: PlotlyBarChartProps) => {
       if (props.data.url) {
@@ -296,15 +197,7 @@ export const mdxComponentsFactory = ({
           prefixPath: pathToR2SiteFolder,
         });
       }
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`PlotlyBarChart` component error:",
-          })}
-        >
-          <PlotlyBarChart {...props} />
-        </ErrorBoundary>
-      );
+      return <PlotlyBarChart {...props} />;
     },
     PlotlyLineChart: (props: PlotlyLineChartProps) => {
       if (props.data.url) {
@@ -314,15 +207,7 @@ export const mdxComponentsFactory = ({
           prefixPath: pathToR2SiteFolder,
         });
       }
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`PlotlyLineChart` component error:",
-          })}
-        >
-          <PlotlyLineChart {...props} />
-        </ErrorBoundary>
-      );
+      return <PlotlyLineChart {...props} />;
     },
     Vega: (props) => {
       const spec = props.spec;
@@ -333,15 +218,7 @@ export const mdxComponentsFactory = ({
           prefixPath: pathToR2SiteFolder,
         });
       }
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`Vega` component error:",
-          })}
-        >
-          <Vega {...props} spec={spec} />
-        </ErrorBoundary>
-      );
+      return <Vega {...props} spec={spec} />;
     },
     VegaLite: (props) => {
       const spec = props.spec;
@@ -352,20 +229,12 @@ export const mdxComponentsFactory = ({
           prefixPath: pathToR2SiteFolder,
         });
       }
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`VegaLite` component error:",
-          })}
-        >
-          <VegaLite {...props} spec={spec} />
-        </ErrorBoundary>
-      );
+      return <VegaLite {...props} spec={spec} />;
     },
   };
 
   if (isDatasetPage(metadata)) {
-    // TODO
+    // TODO is this needed at all?
     const FrictionlessView = FrictionlessViewFactory(metadata);
     components.FrictionlessView = ({
       id,
@@ -374,27 +243,10 @@ export const mdxComponentsFactory = ({
       id: number;
       fullWidth: boolean;
     }) => {
-      return (
-        <ErrorBoundary
-          FallbackComponent={FallbackComponentFactory({
-            title: "`FrictionlessView` component error:",
-          })}
-        >
-          <FrictionlessView viewId={id} fullWidth={fullWidth} />
-        </ErrorBoundary>
-      );
+      return <FrictionlessView viewId={id} fullWidth={fullWidth} />;
     };
     components.FrictionlessView.displayName = "FrictionlessView";
   }
+
   return components;
 };
-
-const FallbackComponentFactory = ({ title }: { title: string }) => {
-  const FallbackComponent = ({ error }: { error: Error }) => {
-    return <ErrorMessage title={title} message={error.message} />;
-  };
-  FallbackComponent.displayName = "FallbackComponent";
-  return FallbackComponent;
-};
-
-FallbackComponentFactory.displayName = "FallbackComponentFactory";

@@ -12,7 +12,6 @@ test.describe("README with datapackage.json", () => {
     await page.goto(
       `${process.env.E2E_TEST_SITE!}/datasets/with-datapackage-json`,
     );
-    await page.waitForTimeout(1000);
     // await page.waitForLoadState("networkidle");
   });
   test.afterAll(async () => {
@@ -83,7 +82,13 @@ test.describe("README with datapackage.json", () => {
     await expect(
       dataViews.getByRole("heading", { name: "Data Views" }),
     ).toBeVisible();
-    expect(await dataViews.locator(".vega-embed").count()).toBe(1);
+
+    await expect(async () => {
+      const count = await dataViews.locator(".vega-embed").count();
+      expect(count).toBe(1);
+    }).toPass({
+      timeout: 30000,
+    });
   });
 
   test("Data files table", async () => {
@@ -183,7 +188,7 @@ test.describe("README with frontmatter datapackage", () => {
     await page.goto(
       `${process.env.E2E_TEST_SITE!}/datasets/with-datapackage-frontmatter`,
     );
-    await page.waitForTimeout(1000);
+    // await page.waitForLoadState("networkidle");
   });
   test.afterAll(async () => {
     await page.close();
@@ -194,7 +199,13 @@ test.describe("README with frontmatter datapackage", () => {
     await expect(
       dataViews.getByRole("heading", { name: "Data Views" }),
     ).toBeVisible();
-    expect(await dataViews.locator(".vega-embed").count()).toBe(1);
+    await expect(async () => {
+      const count = await dataViews.locator(".vega-embed").count();
+      expect(count).toBe(1);
+    }).toPass({
+      timeout: 30000, // Timeout in milliseconds (30 seconds in this example)
+    });
+    // expect(await dataViews.locator(".vega-embed").count()).toBe(1);
   });
 
   test("Data files table", async () => {
