@@ -25,8 +25,7 @@ import SocialShareMenu from "@/components/social-share-menu";
 import { FloatingBanner } from "@/components/floating-banner";
 import { transformObjectToParams } from "@/lib/transform-object-to-params";
 import Link from "next/link";
-import { ExternalLink, Github } from "lucide-react";
-import path from "path";
+import { Github } from "lucide-react";
 import { socialIcons } from "../social-icons";
 import config from "@/const/config";
 

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { Fragment } from "react";
 import { Menu, Transition } from "@headlessui/react";
-import { ArrowUpOnSquareIcon, LinkIcon } from "@heroicons/react/20/solid";
+import { LinkIcon } from "@heroicons/react/20/solid";
+import { ArrowUpOnSquareIcon } from "@heroicons/react/24/outline";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(" ");
@@ -11,7 +12,12 @@ export default function SocialShareMenu({ shareOptions, onCopyClick }) {
   return (
     <Menu as="div" className="relative flex text-left">
       <Menu.Button>
-        <ArrowUpOnSquareIcon className="h-5 w-5" aria-hidden="true" />
+        <div className="flex items-center gap-1">
+          <ArrowUpOnSquareIcon className="h-5 w-5" aria-hidden="true" />
+          <span className="font-normal text-slate-600 hover:underline">
+            Share
+          </span>
+        </div>
         <Transition
           as={Fragment}
           enter="transition ease-out duration-100"
@@ -28,7 +34,7 @@ export default function SocialShareMenu({ shareOptions, onCopyClick }) {
                   <button
                     onClick={onCopyClick}
                     className={classNames(
-                      active ? "text-primary" : "text-inherit",
+                      active ? "text-primary" : "text-slate-500",
                       "group flex items-center px-4 py-2 text-sm",
                     )}
                   >
@@ -48,8 +54,8 @@ export default function SocialShareMenu({ shareOptions, onCopyClick }) {
                       target="_blank"
                       rel="noopener noreferrer"
                       className={classNames(
-                        active ? "text-primary" : "text-inherit",
-                        "group flex items-center px-4 py-2 text-sm",
+                        active ? "text-primary" : "text-slate-500",
+                        "group flex items-center px-4 py-2 text-sm font-normal no-underline",
                       )}
                     >
                       <option.icon
