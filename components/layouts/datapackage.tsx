@@ -22,6 +22,8 @@ import { env } from "@/env.mjs";
 import { resolveLink } from "@/lib/resolve-link";
 import Script from "next/script";
 import SocialShareMenu from "@/components/social-share-menu";
+import { FloatingBanner } from "@/components/floating-banner";
+import { transformObjectToParams } from "@/lib/transform-object-to-params";
 import Link from "next/link";
 import { ExternalLink, Github } from "lucide-react";
 import path from "path";
@@ -51,6 +53,9 @@ export const DataPackageLayout: React.FC<Props> = ({
   metadata,
   siteMetadata,
 }) => {
+  const [bannerMessage, setBannerMessage] = useState("");
+  const [showBanner, setShowBanner] = useState(false);
+
   const {
     title,
     description,
@@ -61,9 +66,6 @@ export const DataPackageLayout: React.FC<Props> = ({
     licenses,
     sources,
   } = metadata;
-
-  const [bannerMessage, setBannerMessage] = useState("");
-  const [showBanner, setShowBanner] = useState(false);
 
   useEffect(() => {
     let timeoutId;
@@ -80,6 +82,22 @@ export const DataPackageLayout: React.FC<Props> = ({
       }
     };
   }, [showBanner]);
+
+  const handleCopyClick = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setBannerMessage("Copied to clipboard!");
+    } catch (err) {
+      setBannerMessage("Failed to copy!");
+    } finally {
+      setShowBanner(true);
+    }
+  };
+
+  const onShareClick = (link, text) => (e) => {
+    e.preventDefault();
+    window.open(link, text, "width=650,height=650");
+  };
 
   if (!resources) {
     return (
@@ -106,49 +124,48 @@ export const DataPackageLayout: React.FC<Props> = ({
     ? prettyBytes(resourceFilesSize)
     : undefined;
 
-  const handleCopyClick = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setBannerMessage("Copied to clipboard!");
-    } catch (err) {
-      setBannerMessage("Failed to copy!");
-    } finally {
-      setShowBanner(true);
-    }
-  };
+  const twitterShareLink =
+    "https://twitter.com/intent/tweet" +
+    transformObjectToParams({
+      url: window.location.href,
+      text: title,
+      via: "forlifeitself",
+      // hashtags: categories.join(',') // TODO
+    });
 
-  const onShareClick = (link, text) => (e) => {
-    e.preventDefault();
-    window.open(link, text, "width=650,height=650");
-  };
+  const facebookShareLink =
+    "https://www.facebook.com/sharer/sharer.php" +
+    transformObjectToParams({
+      u: window.location.href,
+      quote: title,
+    });
+
+  const linkedInShareLink =
+    "https://www.linkedin.com/sharing/share-offsite" +
+    transformObjectToParams({
+      url: window.location.href,
+      title: title,
+      source: "forlifeitself",
+    });
 
   const shareOptions = [
     {
       name: "Share on Twitter",
       icon: socialIcons.twitter,
-      href: config.social.find((s) => s.label === "twitter")?.href,
-      onClick: onShareClick(
-        config.social.find((s) => s.label === "twitter")?.href,
-        "Share on X",
-      ),
+      href: twitterShareLink,
+      onClick: onShareClick(twitterShareLink, "Share on X"),
     },
     {
       name: "Share on LinkedIn",
       icon: socialIcons.linkedin,
-      href: config.social.find((s) => s.label === "linkedin")?.href,
-      onClick: onShareClick(
-        config.social.find((s) => s.label === "linkedin")?.href,
-        "Share on LinkedIn",
-      ),
+      href: linkedInShareLink,
+      onClick: onShareClick(linkedInShareLink, "Share on LinkedIn"),
     },
     {
       name: "Share on Facebook",
       icon: socialIcons.facebook,
-      href: config.social.find((s) => s.label === "facebook")?.href,
-      onClick: onShareClick(
-        config.social.find((s) => s.label === "facebook")?.href,
-        "Share on Facebook",
-      ),
+      href: facebookShareLink,
+      onClick: onShareClick(facebookShareLink, "Share on Facebook"),
     },
   ];
 
@@ -432,6 +449,9 @@ export const DataPackageLayout: React.FC<Props> = ({
             {children}
           </section>
         </article>
+        <FloatingBanner onClose={() => setShowBanner(false)} show={showBanner}>
+          {bannerMessage}
+        </FloatingBanner>
       </ErrorBoundary>
     </>
   );
