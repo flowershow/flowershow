@@ -2,7 +2,7 @@
 import { escapeSpecialCharacters } from "./escape-special-character";
 import "@testing-library/jest-dom";
 
-describe("processContent", () => {
+describe("escapeSpecialCharacters", () => {
   it("should replace < with &lt;", () => {
     const result = escapeSpecialCharacters("<");
     expect(result).toBe("&lt;");
@@ -29,7 +29,37 @@ describe("processContent", () => {
   });
 
   it("should handle a string with multiple replacements", () => {
-    const result = escapeSpecialCharacters("A <= B > C <=> D");
-    expect(result).toBe("A &lt;= B &gt; C &lt;=&gt; D");
+    const result = escapeSpecialCharacters(
+      "<LineChart/> <= <BarChart/> <=> <PieChart/>",
+    );
+    expect(result).toBe("<LineChart/> &lt;= <BarChart/> &lt;=&gt; <PieChart/>");
+  });
+  it("should handle complex strings with tags and attributes", () => {
+    const input = `<LineChart
+  data={{
+    values: [
+      {
+        value: -0.41765878,
+        year: '1850'
+      }
+    ]
+  }}
+  xAxis="year"
+  yAxis="value"
+/>`;
+    const expectedOutput = `<LineChart
+  data={{
+    values: [
+      {
+        value: -0.41765878,
+        year: '1850'
+      }
+    ]
+  }}
+  xAxis="year"
+  yAxis="value"
+/>`;
+    const result = escapeSpecialCharacters(input);
+    expect(result).toBe(expectedOutput);
   });
 });
