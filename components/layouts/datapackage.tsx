@@ -18,9 +18,10 @@ import { Site } from "@prisma/client";
 import { env } from "@/env.mjs";
 import { resolveLink } from "@/lib/resolve-link";
 import Script from "next/script";
-
 import Link from "next/link";
 import { Github } from "lucide-react";
+import getJsonLd from "./getJsonLd";
+import dynamic from "next/dynamic";
 
 type SiteWithUser = Site & {
   user: {
@@ -33,12 +34,10 @@ interface Props extends React.PropsWithChildren {
   siteMetadata: SiteWithUser;
 }
 
-class ResourceNotFoundError extends Error {
-  constructor(viewName) {
-    super(`Resource not found for view ${viewName}`);
-    this.name = this.constructor.name;
-  }
-}
+const SocialShareMenu = dynamic(
+  () => import("@/components/social-share-menu"),
+  { ssr: false },
+);
 
 export const DataPackageLayout: React.FC<Props> = ({
   children,
@@ -58,17 +57,15 @@ export const DataPackageLayout: React.FC<Props> = ({
 
   if (!resources) {
     return (
-      <>
-        <ErrorMessage
-          title="Error in `datapackage` layout:"
-          message="No resources found in the Data Package."
-        />
-      </>
+      <ErrorMessage
+        title="Error in `datapackage` layout:"
+        message="No resources found in the Data Package."
+      />
     );
   }
 
   // exclude resources inline data
-  const resourceFiles = resources.filter(isResourceWithPath);
+  const resourceFiles = metadata.resources.filter(isResourceWithPath);
   const resourceFilesCount = resourceFiles.length;
   const resouceFilesExtensions = Array.from(
     new Set(resourceFiles.map((r) => r.format)),
@@ -106,8 +103,11 @@ export const DataPackageLayout: React.FC<Props> = ({
 
   const View: React.FC<{ view: SimpleView | View }> = ({ view }) => {
     if (!isSimpleView(view)) {
-      throw new Error(
-        'Only views with `specType: "simple"` are supported at the moment.',
+      return (
+        <ErrorMessage
+          title="Error in datapackage:"
+          message='Only views with `specType: "simple"` are supported at the moment.'
+        />
       );
     }
     let resource: Resource | undefined;
@@ -115,13 +115,23 @@ export const DataPackageLayout: React.FC<Props> = ({
       resource = _resources.find((r) => r.name === view.resourceName);
     } else {
       if (!view.resources || view.resources.length === 0) {
-        throw new ResourceNotFoundError(view.name);
+        return (
+          <ErrorMessage
+            title="Error in datapackage:"
+            message={`Resource not found for view: ${view.name}`}
+          />
+        );
       }
       resource = _resources.find((r) => r.name === view.resources[0]);
     }
 
     if (!resource) {
-      throw new ResourceNotFoundError(view.name);
+      return (
+        <ErrorMessage
+          title="Error in datapackage:"
+          message={`Resource not found for view: ${view.name}`}
+        />
+      );
     }
     return (
       <div className="not-prose md:text-base">
@@ -131,85 +141,37 @@ export const DataPackageLayout: React.FC<Props> = ({
   };
   View.displayName = "View";
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Dataset",
-    name: metadata.title,
-    description: metadata.description,
-    identifier: metadata.id,
-    url: `${
-      siteMetadata.customDomain ??
-      `https://datahub.io/${siteMetadata.projectName}`
-    }/${metadata._url}`,
-    version: metadata.version,
-    dateCreated: metadata.created,
-    license: metadata.licenses
-      ? metadata.licenses.map((license) => ({
-          "@type": "CreativeWork",
-          name: license.name || "", // Primary title of the license
-          url: license.path || "",
-          alternativeHeadline: license.title || "", // Secondary title or subtitle
-        }))
-      : [],
-    citation: metadata.sources
-      ? metadata.sources.map((source) => ({
-          "@type": "CreativeWork",
-          url: source.path || "",
-        }))
-      : [],
-    creator: metadata.contributor
-      ? metadata.contributor.map((contributor) => ({
-          "@type": "Person",
-          name: contributor.title || "",
-          url: contributor.path || "",
-          contactPoint: {
-            "@type": "ContactPoint",
-            email: contributor.email || "",
-          },
-          description: contributor.role || "", // Use description to convey role
-        }))
-      : [],
-    keywords: metadata.keywords,
-    image: metadata.image,
-    distribution: metadata.resources
-      ? metadata.resources.map((resource) => ({
-          "@type": "DataDownload",
-          encodingFormat: resource.mediatype || "",
-          name: resource.name || "",
-          contentUrl: resource.path || "", // Assuming `path` is available in the resource
-          description: resource.description || "",
-        }))
-      : [],
-  };
+  const jsonLd = getJsonLd({ metadata, siteMetadata });
 
   return (
     <>
       <Script
         id="json-ld-datapackage"
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <article className="prose-headings:font-headings prose mx-auto max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
         <header className="mb-8 flex flex-col gap-y-5">
           <h1 className="!mb-2">{title}</h1>
-
-          <div
-            className="flex items-center gap-1 "
-            data-testid="goto-repository"
-          >
-            <Github width={18} />
-            <Link
-              className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
-              href={`https://github.com/${siteMetadata?.gh_repository}`}
-              target="_blank"
-              rel="noreferrer"
+          <div className="flex items-center justify-between">
+            <div
+              className="flex items-center gap-1 "
+              data-testid="goto-repository"
             >
-              {siteMetadata.gh_repository}
-            </Link>
+              <Github width={18} />
+              <Link
+                className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
+                href={`https://github.com/${siteMetadata?.gh_repository}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {siteMetadata.gh_repository}
+              </Link>
+            </div>
+            <div className="flex shrink-0 grow items-center justify-end">
+              <SocialShareMenu shareTitle={title} />
+            </div>
           </div>
-
           <table
             data-testid="dp-metadata-table"
             className="table-auto divide-y divide-gray-300"
