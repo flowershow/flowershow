@@ -34,13 +34,6 @@ interface Props extends React.PropsWithChildren {
   siteMetadata: SiteWithUser;
 }
 
-class ResourceNotFoundError extends Error {
-  constructor(viewName: string) {
-    super(`Resource not found for view ${viewName}`);
-    this.name = this.constructor.name;
-  }
-}
-
 const SocialShareMenu = dynamic(
   () => import("@/components/social-share-menu"),
   { ssr: false },
@@ -64,12 +57,10 @@ export const DataPackageLayout: React.FC<Props> = ({
 
   if (!resources) {
     return (
-      <>
-        <ErrorMessage
-          title="Error in `datapackage` layout:"
-          message="No resources found in the Data Package."
-        />
-      </>
+      <ErrorMessage
+        title="Error in `datapackage` layout:"
+        message="No resources found in the Data Package."
+      />
     );
   }
 
@@ -112,8 +103,11 @@ export const DataPackageLayout: React.FC<Props> = ({
 
   const View: React.FC<{ view: SimpleView | View }> = ({ view }) => {
     if (!isSimpleView(view)) {
-      throw new Error(
-        'Only views with `specType: "simple"` are supported at the moment.',
+      return (
+        <ErrorMessage
+          title="Error in datapackage:"
+          message='Only views with `specType: "simple"` are supported at the moment.'
+        />
       );
     }
     let resource: Resource | undefined;
@@ -121,13 +115,23 @@ export const DataPackageLayout: React.FC<Props> = ({
       resource = _resources.find((r) => r.name === view.resourceName);
     } else {
       if (!view.resources || view.resources.length === 0) {
-        throw new ResourceNotFoundError(view.name);
+        return (
+          <ErrorMessage
+            title="Error in datapackage:"
+            message={`Resource not found for view: ${view.name}`}
+          />
+        );
       }
       resource = _resources.find((r) => r.name === view.resources[0]);
     }
 
     if (!resource) {
-      throw new ResourceNotFoundError(view.name);
+      return (
+        <ErrorMessage
+          title="Error in datapackage:"
+          message={`Resource not found for view: ${view.name}`}
+        />
+      );
     }
     return (
       <div className="not-prose md:text-base">
