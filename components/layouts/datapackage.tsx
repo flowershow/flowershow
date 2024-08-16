@@ -18,9 +18,10 @@ import { Site } from "@prisma/client";
 import { env } from "@/env.mjs";
 import { resolveLink } from "@/lib/resolve-link";
 import Script from "next/script";
-
+import SocialShareMenu from "@/components/social-share-menu";
 import Link from "next/link";
 import { Github } from "lucide-react";
+import getJsonLd from "./getJsonLd";
 
 type SiteWithUser = Site & {
   user: {
@@ -34,7 +35,7 @@ interface Props extends React.PropsWithChildren {
 }
 
 class ResourceNotFoundError extends Error {
-  constructor(viewName) {
+  constructor(viewName: string) {
     super(`Resource not found for view ${viewName}`);
     this.name = this.constructor.name;
   }
@@ -68,7 +69,7 @@ export const DataPackageLayout: React.FC<Props> = ({
   }
 
   // exclude resources inline data
-  const resourceFiles = resources.filter(isResourceWithPath);
+  const resourceFiles = metadata.resources.filter(isResourceWithPath);
   const resourceFilesCount = resourceFiles.length;
   const resouceFilesExtensions = Array.from(
     new Set(resourceFiles.map((r) => r.format)),
@@ -131,85 +132,37 @@ export const DataPackageLayout: React.FC<Props> = ({
   };
   View.displayName = "View";
 
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Dataset",
-    name: metadata.title,
-    description: metadata.description,
-    identifier: metadata.id,
-    url: `${
-      siteMetadata.customDomain ??
-      `https://datahub.io/${siteMetadata.projectName}`
-    }/${metadata._url}`,
-    version: metadata.version,
-    dateCreated: metadata.created,
-    license: metadata.licenses
-      ? metadata.licenses.map((license) => ({
-          "@type": "CreativeWork",
-          name: license.name || "", // Primary title of the license
-          url: license.path || "",
-          alternativeHeadline: license.title || "", // Secondary title or subtitle
-        }))
-      : [],
-    citation: metadata.sources
-      ? metadata.sources.map((source) => ({
-          "@type": "CreativeWork",
-          url: source.path || "",
-        }))
-      : [],
-    creator: metadata.contributor
-      ? metadata.contributor.map((contributor) => ({
-          "@type": "Person",
-          name: contributor.title || "",
-          url: contributor.path || "",
-          contactPoint: {
-            "@type": "ContactPoint",
-            email: contributor.email || "",
-          },
-          description: contributor.role || "", // Use description to convey role
-        }))
-      : [],
-    keywords: metadata.keywords,
-    image: metadata.image,
-    distribution: metadata.resources
-      ? metadata.resources.map((resource) => ({
-          "@type": "DataDownload",
-          encodingFormat: resource.mediatype || "",
-          name: resource.name || "",
-          contentUrl: resource.path || "", // Assuming `path` is available in the resource
-          description: resource.description || "",
-        }))
-      : [],
-  };
+  const jsonLd = getJsonLd({ metadata, siteMetadata });
 
   return (
     <>
       <Script
         id="json-ld-datapackage"
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <article className="prose-headings:font-headings prose mx-auto max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
         <header className="mb-8 flex flex-col gap-y-5">
           <h1 className="!mb-2">{title}</h1>
-
-          <div
-            className="flex items-center gap-1 "
-            data-testid="goto-repository"
-          >
-            <Github width={18} />
-            <Link
-              className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
-              href={`https://github.com/${siteMetadata?.gh_repository}`}
-              target="_blank"
-              rel="noreferrer"
+          <div className="flex items-center justify-between">
+            <div
+              className="flex items-center gap-1 "
+              data-testid="goto-repository"
             >
-              {siteMetadata.gh_repository}
-            </Link>
+              <Github width={18} />
+              <Link
+                className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
+                href={`https://github.com/${siteMetadata?.gh_repository}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {siteMetadata.gh_repository}
+              </Link>
+            </div>
+            <div className="flex shrink-0 grow items-center justify-end">
+              <SocialShareMenu shareTitle={title} />
+            </div>
           </div>
-
           <table
             data-testid="dp-metadata-table"
             className="table-auto divide-y divide-gray-300"
