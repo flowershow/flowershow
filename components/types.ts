@@ -10,7 +10,7 @@ export interface SiteConfig {
   author?: AuthorConfig;
   navLinks?: NavLink[];
   showSidebar?: boolean;
-  // custom domain only (future paid feature potentially)
+  analytics?: string;
   social: SocialLink[];
   footerLinks?: FooterLink[];
   showEditLink?: boolean;

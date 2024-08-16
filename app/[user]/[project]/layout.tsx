@@ -11,6 +11,7 @@ import { Site } from "@prisma/client";
 import TableOfContentsSidebar from "@/components/table-of-content";
 import Sidebar from "@/components/sidebar";
 import BuiltWithDataHub from "@/components/built-with-datahub";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 type SiteWithUser = Site & {
   user: {
@@ -166,17 +167,14 @@ export default async function SiteLayout({
       projectName: site.projectName,
     })) || [];
 
-  // configurable on custom domain only (future paid feature potentially)
-  const footerLinks =
-    (isCustomDomain && siteConfig?.footerLinks) || defaultConfig.footerLinks;
   const socialLinks = siteConfig?.social;
   const footerDescription = siteConfig?.description;
-
   const showSidebar = siteConfig?.showSidebar;
 
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
+      {siteConfig?.analytics && <GoogleAnalytics gaId={siteConfig.analytics} />}
 
       <div className="min-h-screen">
         {!showSidebar ? (
