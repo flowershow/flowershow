@@ -18,10 +18,10 @@ import { Site } from "@prisma/client";
 import { env } from "@/env.mjs";
 import { resolveLink } from "@/lib/resolve-link";
 import Script from "next/script";
-import SocialShareMenu from "@/components/social-share-menu";
 import Link from "next/link";
 import { Github } from "lucide-react";
 import getJsonLd from "./getJsonLd";
+import dynamic from "next/dynamic";
 
 type SiteWithUser = Site & {
   user: {
@@ -40,6 +40,11 @@ class ResourceNotFoundError extends Error {
     this.name = this.constructor.name;
   }
 }
+
+const SocialShareMenu = dynamic(
+  () => import("@/components/social-share-menu"),
+  { ssr: false },
+);
 
 export const DataPackageLayout: React.FC<Props> = ({
   children,
