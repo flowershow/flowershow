@@ -3,390 +3,297 @@ import { DocumentArrowDownIcon } from "@heroicons/react/24/outline";
 import prettyBytes from "pretty-bytes";
 
 import {
-    type SimpleView,
-    type Resource,
-    type View,
-    isResourceWithPath,
-    isSimpleViewWithResourceName,
-    isSimpleView,
+  type SimpleView,
+  type Resource,
+  type View,
+  isResourceWithPath,
+  isSimpleViewWithResourceName,
+  isSimpleView,
 } from "./datapackage-types";
 import { FrictionlessView } from "@/components/frictionless-view";
 import { ErrorMessage } from "@/components/error-message";
 import { DatasetPageMetadata } from "@/server/api/types";
-import { useState, useEffect } from "react";
 import { ResourcePreview } from "@/components/resource-preview";
 import { Site } from "@prisma/client";
 import { env } from "@/env.mjs";
 import { resolveLink } from "@/lib/resolve-link";
 import Script from "next/script";
 import SocialShareMenu from "@/components/social-share-menu";
-import { FloatingBanner } from "@/components/floating-banner";
-import { transformObjectToParams } from "@/lib/transform-object-to-params";
 import Link from "next/link";
 import { Github } from "lucide-react";
-import { socialIcons } from "../social-icons";
 import getJsonLd from "./getJsonLd";
 
-
 type SiteWithUser = Site & {
-    user: {
-        gh_username: string | null;
-    } | null;
+  user: {
+    gh_username: string | null;
+  } | null;
 };
 
 interface Props extends React.PropsWithChildren {
-    metadata: DatasetPageMetadata;
-    siteMetadata: SiteWithUser;
+  metadata: DatasetPageMetadata;
+  siteMetadata: SiteWithUser;
 }
 
 class ResourceNotFoundError extends Error {
-    constructor(viewName) {
-        super(`Resource not found for view ${viewName}`);
-        this.name = this.constructor.name;
-    }
+  constructor(viewName: string) {
+    super(`Resource not found for view ${viewName}`);
+    this.name = this.constructor.name;
+  }
 }
 
 export const DataPackageLayout: React.FC<Props> = ({
-    children,
-    metadata,
-    siteMetadata,
+  children,
+  metadata,
+  siteMetadata,
 }) => {
-    const {
-        title,
-        description,
-        resources,
-        views,
-        created,
-        updated,
-        licenses,
-        sources,
-    } = metadata;
+  const {
+    title,
+    description,
+    resources,
+    views,
+    created,
+    updated,
+    licenses,
+    sources,
+  } = metadata;
 
-    if (!resources) {
-        return (
-            <>
-                <ErrorMessage
-                    title="Error in `datapackage` layout:"
-                    message="No resources found in the Data Package."
-                />
-            </>
-        );
+  if (!resources) {
+    return (
+      <>
+        <ErrorMessage
+          title="Error in `datapackage` layout:"
+          message="No resources found in the Data Package."
+        />
+      </>
+    );
+  }
+
+  // exclude resources inline data
+  const resourceFiles = metadata.resources.filter(isResourceWithPath);
+  const resourceFilesCount = resourceFiles.length;
+  const resouceFilesExtensions = Array.from(
+    new Set(resourceFiles.map((r) => r.format)),
+  ).join(", ");
+  const resourceFilesSize = resourceFiles.reduce(
+    (acc, r) => acc + (r.size ?? 0),
+    0,
+  );
+  const resourceFilesSizeHumanReadable = resourceFilesSize
+    ? prettyBytes(resourceFilesSize)
+    : undefined;
+
+  // TODO this is only needed for old sites
+  // new sites have links in datapackage resolved in computed-fields lib
+  // this should be removed when all sites are migrated or we have a better solution
+  // not worth the effort to sync all the sites until we have a clear plan
+  // (e.g. probably we'll be implementing an index of all files which can change the way we resolve links)
+  const pathToR2SiteFolder = `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${siteMetadata.id}/${siteMetadata.gh_branch}/raw`;
+
+  const _resources = resources
+    .filter(
+      (resource) => resource.format === "csv" || resource.format === "geojson",
+    )
+    // TODO this is temporary, related to comment above over pathToR2SiteFolder
+    .map((resource) => {
+      return {
+        ...resource,
+        path: resolveLink({
+          link: resource.path,
+          filePath: metadata._path,
+          prefixPath: pathToR2SiteFolder,
+        }),
+      };
+    });
+
+  const View: React.FC<{ view: SimpleView | View }> = ({ view }) => {
+    if (!isSimpleView(view)) {
+      throw new Error(
+        'Only views with `specType: "simple"` are supported at the moment.',
+      );
+    }
+    let resource: Resource | undefined;
+    if (isSimpleViewWithResourceName(view)) {
+      resource = _resources.find((r) => r.name === view.resourceName);
+    } else {
+      if (!view.resources || view.resources.length === 0) {
+        throw new ResourceNotFoundError(view.name);
+      }
+      resource = _resources.find((r) => r.name === view.resources[0]);
     }
 
-    // exclude resources inline data
-    const resourceFiles = metadata.resources.filter(isResourceWithPath);
-    const resourceFilesCount = resourceFiles.length;
-    const resouceFilesExtensions = Array.from(
-        new Set(resourceFiles.map((r) => r.format)),
-    ).join(", ");
-    const resourceFilesSize = resourceFiles.reduce(
-        (acc, r) => acc + (r.size ?? 0),
-        0,
-    );
-    const resourceFilesSizeHumanReadable = resourceFilesSize
-        ? prettyBytes(resourceFilesSize)
-        : undefined;
-
-    const [bannerMessage, setBannerMessage] = useState("");
-    const [showBanner, setShowBanner] = useState(false);
-
-    useEffect(() => {
-        let timeoutId: NodeJS.Timeout | null = null;
-
-        if (showBanner) {
-            timeoutId = setTimeout(() => {
-                setShowBanner(false);
-            }, 2000);
-        }
-
-        return () => {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
-            }
-        };
-    }, [showBanner]);
-
-    const handleCopyClick = async () => {
-        try {
-            await navigator.clipboard.writeText(window.location.href);
-            setBannerMessage("Copied to clipboard!");
-        } catch (err) {
-            setBannerMessage("Failed to copy!");
-        } finally {
-            setShowBanner(true);
-        }
-    };
-
-    const onShareClick = (link, text) => (e) => {
-        e.preventDefault();
-        window.open(link, text, "width=650,height=650");
-    };
-
-
-    const twitterShareLink =
-        "https://twitter.com/intent/tweet" +
-        transformObjectToParams({
-            url: window.location.href,
-            text: title,
-            via: "forlifeitself",
-            // hashtags: categories.join(',') // TODO
-        });
-
-    const facebookShareLink =
-        "https://www.facebook.com/sharer/sharer.php" +
-        transformObjectToParams({
-            u: window.location.href,
-            quote: title,
-        });
-
-    const linkedInShareLink =
-        "https://www.linkedin.com/sharing/share-offsite" +
-        transformObjectToParams({
-            url: window.location.href,
-            title: title,
-            source: "forlifeitself",
-        });
-
-    const shareOptions = [
-        {
-            name: "Share on Twitter",
-            icon: socialIcons.twitter,
-            href: twitterShareLink,
-            onClick: onShareClick(twitterShareLink, "Share on X"),
-        },
-        {
-            name: "Share on LinkedIn",
-            icon: socialIcons.linkedin,
-            href: linkedInShareLink,
-            onClick: onShareClick(linkedInShareLink, "Share on LinkedIn"),
-        },
-        {
-            name: "Share on Facebook",
-            icon: socialIcons.facebook,
-            href: facebookShareLink,
-            onClick: onShareClick(facebookShareLink, "Share on Facebook"),
-        },
-    ];
-
-    // TODO this is only needed for old sites
-    // new sites have links in datapackage resolved in computed-fields lib
-    // this should be removed when all sites are migrated or we have a better solution
-    // not worth the effort to sync all the sites until we have a clear plan
-    // (e.g. probably we'll be implementing an index of all files which can change the way we resolve links)
-    const pathToR2SiteFolder = `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${siteMetadata.id}/${siteMetadata.gh_branch}/raw`;
-
-    const _resources = resources
-        .filter(
-            (resource) => resource.format === "csv" || resource.format === "geojson",
-        )
-        // TODO this is temporary, related to comment above over pathToR2SiteFolder
-        .map((resource) => {
-            return {
-                ...resource,
-                path: resolveLink({
-                    link: resource.path,
-                    filePath: metadata._path,
-                    prefixPath: pathToR2SiteFolder,
-                }),
-            };
-        });
-
-    const View: React.FC<{ view: SimpleView | View }> = ({ view }) => {
-        if (!isSimpleView(view)) {
-            throw new Error(
-                'Only views with `specType: "simple"` are supported at the moment.',
-            );
-        }
-        let resource: Resource | undefined;
-        if (isSimpleViewWithResourceName(view)) {
-            resource = _resources.find((r) => r.name === view.resourceName);
-        } else {
-            if (!view.resources || view.resources.length === 0) {
-                throw new ResourceNotFoundError(view.name);
-            }
-            resource = _resources.find((r) => r.name === view.resources[0]);
-        }
-
-        if (!resource) {
-            throw new ResourceNotFoundError(view.name);
-        }
-        return (
-            <div className="not-prose md:text-base">
-                <FrictionlessView view={view} resource={resource} />
-            </div>
-        );
-    };
-    View.displayName = "View";
-
-    const jsonLd = getJsonLd({ metadata, siteMetadata });
-
+    if (!resource) {
+      throw new ResourceNotFoundError(view.name);
+    }
     return (
-        <>
-            <Script
-                id="json-ld-datapackage"
-                type="application/ld+json"
-                dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-            />
-            <article className="prose-headings:font-headings prose mx-auto max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
-                <header className="mb-8 flex flex-col gap-y-5">
-                    <h1 className="!mb-2">{title}</h1>
-                    <div className="flex items-center justify-between">
-                        <div
-                            className="flex items-center gap-1 "
-                            data-testid="goto-repository"
-                        >
-                            <Github width={18} />
-                            <Link
-                                className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
-                                href={`https://github.com/${siteMetadata?.gh_repository}`}
-                                target="_blank"
-                                rel="noreferrer"
-                            >
-                                {siteMetadata.gh_repository}
-                            </Link>
-                        </div>
-                        <div className="flex shrink-0 grow items-center justify-end">
-                            <SocialShareMenu
-                                onCopyClick={handleCopyClick}
-                                shareOptions={shareOptions}
-                            />
-                        </div>
-                    </div>
-                    <table
-                        data-testid="dp-metadata-table"
-                        className="table-auto divide-y divide-gray-300"
-                    >
-                        <thead>
-                            <tr>
-                                <th>Files</th>
-                                <th>Size</th>
-                                <th>Format</th>
-                                <th>Created</th>
-                                <th>Updated</th>
-                                <th>License</th>
-                                <th>Source</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>{resourceFilesCount}</td>
-                                <td>{resourceFilesSizeHumanReadable}</td>
-                                <td>{resouceFilesExtensions}</td>
-                                <td>{created && created.substring(0, 10)}</td>
-                                <td>{updated && updated.substring(0, 10)}</td>
-                                <td>
-                                    <a
-                                        target="_blank"
-                                        href={licenses ? licenses[0]?.path : "#"}
-                                        className="mb-2 block hover:text-[#6366F1]"
-                                    >
-                                        {licenses ? licenses[0]?.title : ""}
-                                    </a>
-                                </td>
-                                <td>
-                                    <a
-                                        target="_blank"
-                                        href={sources ? sources[0]?.path : "#"}
-                                        className="mb-2 block hover:text-[#6366F1]"
-                                    >
-                                        {sources ? sources[0]?.title : ""}
-                                    </a>
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
-                    <div data-testid="dp-description">
-                        <p className="text-md">{description}</p>
-                        {/* Read more link */}
-                        <a
-                            className="inline-block text-[#6366F1] no-underline hover:underline"
-                            href="#readme"
-                        >
-                            <div className="flex items-center space-x-1">
-                                <span>Read more</span>
-                                <ArrowRightIcon className="inline h-4 w-4" />
-                            </div>
-                        </a>
-                    </div>
-                </header >
-                {views && (
-                    <section data-testid="dp-views" className="my-12">
-                        <h2 id="data-views">Data Views</h2>
-                        {views.map((view, id) => (
-                            <View view={view} key={id} />
-                        ))}
-                    </section>
-                )
-                }
-                <section data-testid="dp-files" className="my-12">
-                    <h2 id="data-files">Data Files</h2>
-                    <table className="table-auto divide-y divide-gray-300">
-                        <thead>
-                            <tr>
-                                <th>File</th>
-                                <th>Description</th>
-                                <th>Size</th>
-                                <th>Last modified</th>
-                                <th>Download</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {resources.map((r) => {
-                                return (
-                                    <tr
-                                        key={`resources-list-${r.name}`}
-                                        className="even:bg-gray-50"
-                                    >
-                                        <td>
-                                            <a href={`#${r.name}`} className="hover:text-[#6366F1]">
-                                                <div className="flex items-center space-x-1 ">
-                                                    <span>{r.name}</span>
-                                                </div>
-                                            </a>
-                                        </td>
-                                        <td>{r.description || ""}</td>
-                                        <td>{r.size ? prettyBytes(r.size) : ""}</td>
-                                        <td>{r.lastModified && r.lastModified.substring(0, 10)}</td>
-                                        <td>
-                                            <a
-                                                target="_blank"
-                                                href={r.path}
-                                                className="hover:text-[#6366F1]"
-                                            >
-                                                <div className="flex items-center space-x-1 ">
-                                                    <span>{r.name}</span>
-                                                    <DocumentArrowDownIcon className="inline h-4 w-4" />
-                                                </div>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </section>
-                {_resources.length > 0 && (
-                    <section data-testid="dp-previews" className="my-12">
-                        <h2 id="data-previews">Data Previews</h2>
-                        <div>
-                            {_resources.slice(0, 5).map((resource) => (
-                                <ResourcePreview resource={resource} key={resource.name} />
-                            ))}
-                        </div>
-                    </section>
-                )}
-                <hr />
-                <section
-                    data-testid="dp-readme"
-                    id="readme"
-                    className="mx-auto max-w-full"
-                >
-                    {children}
-                </section>
-            </article>
-            <FloatingBanner onClose={() => setShowBanner(false)} show={showBanner}>
-                {bannerMessage}
-            </FloatingBanner>
-        </>
+      <div className="not-prose md:text-base">
+        <FrictionlessView view={view} resource={resource} />
+      </div>
     );
+  };
+  View.displayName = "View";
+
+  const jsonLd = getJsonLd({ metadata, siteMetadata });
+
+  return (
+    <>
+      <Script
+        id="json-ld-datapackage"
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <article className="prose-headings:font-headings prose mx-auto max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
+        <header className="mb-8 flex flex-col gap-y-5">
+          <h1 className="!mb-2">{title}</h1>
+          <div className="flex items-center justify-between">
+            <div
+              className="flex items-center gap-1 "
+              data-testid="goto-repository"
+            >
+              <Github width={18} />
+              <Link
+                className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
+                href={`https://github.com/${siteMetadata?.gh_repository}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {siteMetadata.gh_repository}
+              </Link>
+            </div>
+            <div className="flex shrink-0 grow items-center justify-end">
+              <SocialShareMenu shareTitle={title} />
+            </div>
+          </div>
+          <table
+            data-testid="dp-metadata-table"
+            className="table-auto divide-y divide-gray-300"
+          >
+            <thead>
+              <tr>
+                <th>Files</th>
+                <th>Size</th>
+                <th>Format</th>
+                <th>Created</th>
+                <th>Updated</th>
+                <th>License</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>{resourceFilesCount}</td>
+                <td>{resourceFilesSizeHumanReadable}</td>
+                <td>{resouceFilesExtensions}</td>
+                <td>{created && created.substring(0, 10)}</td>
+                <td>{updated && updated.substring(0, 10)}</td>
+                <td>
+                  <a
+                    target="_blank"
+                    href={licenses ? licenses[0]?.path : "#"}
+                    className="mb-2 block hover:text-[#6366F1]"
+                  >
+                    {licenses ? licenses[0]?.title : ""}
+                  </a>
+                </td>
+                <td>
+                  <a
+                    target="_blank"
+                    href={sources ? sources[0]?.path : "#"}
+                    className="mb-2 block hover:text-[#6366F1]"
+                  >
+                    {sources ? sources[0]?.title : ""}
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div data-testid="dp-description">
+            <p className="text-md">{description}</p>
+            {/* Read more link */}
+            <a
+              className="inline-block text-[#6366F1] no-underline hover:underline"
+              href="#readme"
+            >
+              <div className="flex items-center space-x-1">
+                <span>Read more</span>
+                <ArrowRightIcon className="inline h-4 w-4" />
+              </div>
+            </a>
+          </div>
+        </header>
+        {views && (
+          <section data-testid="dp-views" className="my-12">
+            <h2 id="data-views">Data Views</h2>
+            {views.map((view, id) => (
+              <View view={view} key={id} />
+            ))}
+          </section>
+        )}
+        <section data-testid="dp-files" className="my-12">
+          <h2 id="data-files">Data Files</h2>
+          <table className="table-auto divide-y divide-gray-300">
+            <thead>
+              <tr>
+                <th>File</th>
+                <th>Description</th>
+                <th>Size</th>
+                <th>Last modified</th>
+                <th>Download</th>
+              </tr>
+            </thead>
+            <tbody>
+              {resources.map((r) => {
+                return (
+                  <tr
+                    key={`resources-list-${r.name}`}
+                    className="even:bg-gray-50"
+                  >
+                    <td>
+                      <a href={`#${r.name}`} className="hover:text-[#6366F1]">
+                        <div className="flex items-center space-x-1 ">
+                          <span>{r.name}</span>
+                        </div>
+                      </a>
+                    </td>
+                    <td>{r.description || ""}</td>
+                    <td>{r.size ? prettyBytes(r.size) : ""}</td>
+                    <td>{r.lastModified && r.lastModified.substring(0, 10)}</td>
+                    <td>
+                      <a
+                        target="_blank"
+                        href={r.path}
+                        className="hover:text-[#6366F1]"
+                      >
+                        <div className="flex items-center space-x-1 ">
+                          <span>{r.name}</span>
+                          <DocumentArrowDownIcon className="inline h-4 w-4" />
+                        </div>
+                      </a>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </section>
+        {_resources.length > 0 && (
+          <section data-testid="dp-previews" className="my-12">
+            <h2 id="data-previews">Data Previews</h2>
+            <div>
+              {_resources.slice(0, 5).map((resource) => (
+                <ResourcePreview resource={resource} key={resource.name} />
+              ))}
+            </div>
+          </section>
+        )}
+        <hr />
+        <section
+          data-testid="dp-readme"
+          id="readme"
+          className="mx-auto max-w-full"
+        >
+          {children}
+        </section>
+      </article>
+    </>
+  );
 };
