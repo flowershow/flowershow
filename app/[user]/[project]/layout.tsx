@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { Metadata } from "next";
 import { api } from "@/trpc/server";
 import { env } from "@/env.mjs";
@@ -46,7 +46,7 @@ export async function generateMetadata({
   }
 
   if (!site) {
-    return null;
+    notFound();
   }
 
   const siteConfig = await api.site.getConfig.query({
@@ -97,13 +97,11 @@ export default async function SiteLayout({
   const user = decodeURIComponent(params.user);
 
   let site: SiteWithUser | null = null;
-  let isCustomDomain = false;
 
   if (user === "_domain") {
     site = await api.site.getByDomain.query({
       domain: project,
     });
-    isCustomDomain = true;
   } else {
     site = await api.site.get.query({
       gh_username: user,
@@ -120,7 +118,7 @@ export default async function SiteLayout({
   }
 
   if (!site) {
-    return null;
+    notFound();
   }
 
   const customCss = await api.site.getCustomStyles.query({
