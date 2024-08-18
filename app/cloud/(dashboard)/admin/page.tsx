@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { api } from "@/trpc/server";
 import { getSession } from "@/server/auth";
-import BulkCreateForm from "@/components/form/bulk-create-form";
-import SitesAdminTable from "@/components/sites-admin-table";
+import BulkCreateForm from "@/app/cloud/(dashboard)/admin/_components/bulk-create";
+import SitesAdminTable from "@/app/cloud/(dashboard)/admin/_components/sites-table";
 
 export default async function AdminPanel() {
   const session = await getSession();
@@ -13,17 +13,6 @@ export default async function AdminPanel() {
     notFound();
   }
 
-  const sites = await api.site.getAll.query();
-
-  const forceSyncSite = async (id: string) => {
-    "use server";
-    await api.site.sync.mutate({
-      id,
-      force: true,
-    });
-  };
-
-  // TODO extract into a trpc procedure
   const bulkCreateSites = async (formData: FormData) => {
     "use server";
     const repos = formData.get("repos");
@@ -101,7 +90,7 @@ export default async function AdminPanel() {
   return (
     <div className="flex flex-col space-y-6">
       <BulkCreateForm handleSubmit={bulkCreateSites} />
-      <SitesAdminTable onSync={forceSyncSite} sites={sites} />
+      <SitesAdminTable />
     </div>
   );
 }
