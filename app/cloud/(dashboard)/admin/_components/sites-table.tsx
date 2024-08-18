@@ -1,43 +1,34 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Prisma } from "@prisma/client";
-import { toast } from "sonner";
 import clsx from "clsx";
+import { api } from "@/trpc/react";
 
-type Site = Prisma.SiteGetPayload<{
-  include: { user: true };
-}>;
-
-export default function SitesAdminTable({
-  sites,
-  onSync,
-}: {
-  sites: Site[];
-  onSync: (siteId: string) => Promise<void>;
-}) {
+export default function SitesAdminTable() {
   const checkbox = useRef<HTMLInputElement>(null);
   const [checked, setChecked] = useState(false);
   const [indeterminate, setIndeterminate] = useState(false);
   const [selectedSites, setSelectedSites] = useState<string[]>([]);
 
-  async function syncSelectedSites() {
-    toast.promise(
-      Promise.allSettled(selectedSites.map((siteId) => onSync(siteId))),
-      {
-        loading: "Syncing sites...",
-        success: "Sites synced successfully",
-        error: "Failed to sync sites",
-      },
-    );
-  }
+  const { data: sites } = api.site.getAll.useQuery(undefined, {
+    initialData: [],
+    refetchInterval: 5 * 1000,
+    refetchOnWindowFocus: "always",
+  });
+  const { mutate: syncSite } = api.site.sync.useMutation();
 
-  async function syncSingleSite(id: string) {
-    toast.promise(onSync(id), {
-      loading: "Syncing site...",
-      success: "Site synced successfully",
-      error: "Failed to sync site",
+  const forceSyncSite = (id: string) =>
+    syncSite({
+      id,
+      force: true,
     });
-  }
+
+  const syncSelectedSites = () => {
+    selectedSites.forEach((siteId) => forceSyncSite(siteId));
+  };
+
+  const syncSingleSite = (id: string) => {
+    forceSyncSite(id);
+  };
 
   useEffect(() => {
     const isIndeterminate =
@@ -110,6 +101,12 @@ export default function SitesAdminTable({
                       className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                     >
                       Synced at
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                    >
+                      Sync status
                     </th>
                     <th
                       scope="col"
@@ -189,6 +186,15 @@ export default function SitesAdminTable({
                             </time>
                           ) : (
                             "Not synced"
+                          )}
+                        </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                          {site.syncStatus === "SUCCESS" ? (
+                            <span className="text-green-600">Success</span>
+                          ) : site.syncStatus === "ERROR" ? (
+                            <span className="text-red-600">Error</span>
+                          ) : (
+                            <span className="text-yellow-600">Pending</span>
                           )}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
