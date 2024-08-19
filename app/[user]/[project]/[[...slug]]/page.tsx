@@ -9,7 +9,6 @@ import { SiteConfig } from "@/components/types";
 import MdxLayout from "@/components/mdx-layout";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import { getMdxOptions } from "@/lib/markdown";
-import { processMdxString } from "@/lib/process-mdx-string";
 
 type SiteWithUser = Site & {
   user: {
@@ -130,13 +129,12 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   let pageContent: string;
 
   try {
-    const content =
+    pageContent =
       (await api.site.getPageContent.query({
         gh_username: site.user?.gh_username!,
         projectName: site.projectName,
         slug: decodedSlug,
       })) ?? "";
-    pageContent = processMdxString(content);
   } catch (error) {
     notFound();
   }
