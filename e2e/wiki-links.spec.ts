@@ -3,6 +3,8 @@ import { test, expect, Page } from "@playwright/test";
 import "dotenv/config";
 
 const linkBaseUrl = `/${process.env.E2E_TEST_SITE}`;
+const imageR2SrcRegex =
+  /https:\/\/\w+-r2.datahub.io\/\w+\/main\/raw\/assets\/image.jpg/;
 
 test.describe.configure({ mode: "parallel" });
 
@@ -65,16 +67,18 @@ test.describe("Markdown links resolution", () => {
     await expect(linkWithExtension).toHaveText("/blog/post-1.md");
   });
 
-  // test("Obsidian embeds", async () => {
-  //     const obsidianEmbeds = page.getByTestId("obsidian-embeds").getByRole("img");
+  test("Obsidian embeds", async () => {
+    const obsidianEmbeds = page.getByTestId("obsidian-embeds").getByRole("img");
 
-  //     const shortestPathEmbed = obsidianEmbeds.nth(0);
-  //     await expect(shortestPathEmbed).toHaveAttribute(
-  //         "src",
-  //         `${linkBaseUrl}/blog/post-1`,
-  //     );
+    const shortestPathEmbed = obsidianEmbeds.nth(0);
+    await expect(shortestPathEmbed).toHaveAttribute("src", imageR2SrcRegex);
 
-  // });
+    const backwardPathEmbed = obsidianEmbeds.nth(1);
+    await expect(backwardPathEmbed).toHaveAttribute("src", imageR2SrcRegex);
+
+    const absolutePathEmbed = obsidianEmbeds.nth(2);
+    await expect(absolutePathEmbed).toHaveAttribute("src", imageR2SrcRegex);
+  });
 
   test("CommonMark links", async () => {
     const commonMarkLinks = page
@@ -119,5 +123,17 @@ test.describe("Markdown links resolution", () => {
     const externalLink = commonMarkLinks.nth(5);
     await expect(externalLink).toHaveText("External link");
     await expect(externalLink).toHaveAttribute("href", "https://example.com");
+  });
+
+  test("CommonMark images", async () => {
+    const commonMarkImages = page
+      .getByTestId("common-mark-embeds")
+      .getByRole("img");
+
+    const backwardPathImage = commonMarkImages.nth(0);
+    await expect(backwardPathImage).toHaveAttribute("src", imageR2SrcRegex);
+
+    const absolutePathImage = commonMarkImages.nth(1);
+    await expect(absolutePathImage).toHaveAttribute("src", imageR2SrcRegex);
   });
 });

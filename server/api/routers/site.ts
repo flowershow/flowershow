@@ -20,11 +20,11 @@ import {
   removeDomainFromVercelProject,
   validDomainRegex,
 } from "@/lib/domains";
-import { isSupportedExtension } from "@/lib/types";
 import { TRPCError } from "@trpc/server";
 import { PageMetadata } from "../types";
 import { buildNestedTreeFromFilesMap } from "@/lib/build-nested-tree";
 import { SiteConfig } from "@/components/types";
+import { isSupportedExtension } from "@/lib/types";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -600,19 +600,31 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          const siteUrls = site.files ? Object.keys(site.files) : [];
-          return siteUrls.map((url) =>
-            url === "/"
-              ? "/README"
-              : `/${decodeURIComponent(
-                  url.replace(/\+/g, " ").replace(/%2B/g, "+"),
-                )}`,
-          );
+          // TODO this is a workaround because we don't have and index of all files in the db yet
+          // otherwise we could just query the db for all files
+          const tree = await fetchTree(site.id, site.gh_branch);
+
+          if (!tree) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site tree not found",
+            });
+          }
+
+          const normalizedRootDir = normalizeDir(site.rootDir || null);
+          return tree.tree
+            .filter((file) => {
+              if (file.type === "tree") return false;
+              if (!isSupportedExtension(file.path.split(".").pop() || ""))
+                return false;
+              return file.path.startsWith(normalizedRootDir);
+            })
+            .map((file) => "/" + file.path.replace(/\.mdx?$/, ""));
         },
         [`${input.gh_username}-${input.projectName}-permalinks`],
         {
           revalidate: 60, // 1 minute
-          // tags: [`${input.gh_username}-${input.projectName}-permalinks`],
+          tags: [`${input.gh_username}-${input.projectName}-permalinks`],
         },
       )();
     }),
