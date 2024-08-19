@@ -36,8 +36,9 @@ export default async function middleware(req: NextRequest) {
   // otherwise it will get encoded as %2B
   // https://github.com/datopian/datahub/issues/1172
   const pathname = url.pathname.replace(/\+/g, "%20");
-  const path = `${pathname}${searchParams.length > 0 ? `?${searchParams}` : ""
-    }`;
+  const path = `${pathname}${
+    searchParams.length > 0 ? `?${searchParams}` : ""
+  }`;
 
   // rewrites for cloud pages
   if (
@@ -62,6 +63,13 @@ export default async function middleware(req: NextRequest) {
     hostname === `${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
     hostname === `staging.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
   ) {
+    // temporary redirect /docs/dms/:path to /docs/DMS/:path
+    if (path.match(/^\/docs\/dms/)) {
+      return NextResponse.redirect(
+        new URL(path.replace("/docs/dms", "/docs/DMS"), req.url),
+      );
+    }
+
     if (
       path.match(/^\/blog/) ||
       path.match(/^\/docs/) ||
