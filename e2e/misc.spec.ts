@@ -42,4 +42,18 @@ test.describe("Files with spaces and other special signs", () => {
       `/${process.env.E2E_TEST_SITE}/blog/Post+With+Special+Signs+%25%26(1)%2B`,
     );
   });
+
+  test("MDX parsing error should be displayed on the page", async ({
+    page,
+  }) => {
+    const responsePromise = page.waitForResponse(
+      process.env.E2E_TEST_SITE! + `/blog/mdx-error`,
+    );
+    await page.goto(process.env.E2E_TEST_SITE! + `/blog/mdx-error`);
+    const response = await responsePromise;
+    expect(response.status()).toBe(200);
+
+    const error = page.getByTestId("mdx-error");
+    await expect(error).toHaveText(/\[next-mdx-remote\] error compiling MDX/);
+  });
 });

@@ -3,12 +3,9 @@ import { api } from "@/trpc/server";
 import { PageMetadata } from "@/server/api/types";
 import { Site } from "@prisma/client";
 import UrlNormalizer from "./url-normalizer";
-import { mdxComponentsFactory } from "@/components/mdx-components-factory";
 import EditPageButton from "@/components/edit-page-button";
 import { SiteConfig } from "@/components/types";
-import MdxLayout from "@/components/mdx-layout";
-import { MDXRemote } from "next-mdx-remote/rsc";
-import { getMdxOptions } from "@/lib/markdown";
+import MDX from "@/components/MDX";
 
 type SiteWithUser = Site & {
   user: {
@@ -139,24 +136,15 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     notFound();
   }
 
-  const customMDXComponents = mdxComponentsFactory({
-    metadata: pageMetadata,
-    siteMetadata: site,
-  });
-
-  const options = getMdxOptions({ permalinks: sitePermalinks }) as any;
-
   return (
     <>
       <UrlNormalizer />
-      <MdxLayout metadata={pageMetadata} siteMetadata={site}>
-        {/* {CompiledMDX} */}
-        <MDXRemote
-          source={pageContent}
-          components={customMDXComponents}
-          options={options}
-        />
-      </MdxLayout>
+      <MDX
+        source={pageContent}
+        metadata={pageMetadata}
+        siteMetadata={site}
+        sitePermalinks={sitePermalinks}
+      />
       {siteConfig?.showEditLink && (
         <EditPageButton
           url={`https://github.com/${site?.gh_repository}/edit/${site?.gh_branch}/${pageMetadata._path}`}
