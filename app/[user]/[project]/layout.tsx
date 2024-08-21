@@ -192,13 +192,13 @@ export default async function SiteLayout({
           }`}
         >
           <div
-            className={`page-content w-full sm:px-4 lg:px-12 ${
+            className={`page-content flex min-h-screen w-full flex-col sm:px-4 lg:px-12 ${
               showSidebar
                 ? "xl:px-12 xl:pr-[235px] 2xl:pr-[340px]"
                 : " xl:px-12"
             }`}
           >
-            {children}
+            <div className="flex-grow">{children}</div>
 
             <div className="mx-auto w-full ">
               <Footer
