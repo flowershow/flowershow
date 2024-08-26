@@ -6,6 +6,8 @@ import { NavItem } from "./nav-item";
 import { NavTitle } from "./nav-title";
 import { NavSocial } from "./nav-social";
 import { NavLink, SocialLink } from "./types";
+import Link from "next/link";
+import { env } from "@/env.mjs";
 
 export default function Nav({
   title,
@@ -34,6 +36,16 @@ export default function Nav({
       window.removeEventListener("scroll", onScroll);
     };
   }, []);
+
+  const signInLink: string = (() => {
+    let url = "";
+    if (env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
+      url = `https://staging-cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}/login`;
+    } else {
+      url = `http://cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}/login`;
+    }
+    return url;
+  })();
 
   return (
     <div
@@ -65,6 +77,12 @@ export default function Nav({
           {/* Search field and social links */}
           <div className="relative flex w-full basis-auto items-center justify-end gap-4 sm:gap-6 md:shrink xl:gap-8">
             {social && <NavSocial links={social} />}
+            <Link
+              href={signInLink}
+              className="border-l-2 pl-6 text-sm font-medium text-slate-500 hover:text-slate-600"
+            >
+              Sign In
+            </Link>
           </div>
         </nav>
       </div>

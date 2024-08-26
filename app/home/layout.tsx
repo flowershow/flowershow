@@ -5,6 +5,7 @@ import config from "@/const/config";
 
 export default function HomeLayout({ children }: { children: ReactNode }) {
   const social = config.social.filter((s) => s.label === "discord");
+
   return (
     <>
       <div className="min-h-screen bg-background dark:bg-background-dark">

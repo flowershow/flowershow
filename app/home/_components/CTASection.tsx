@@ -1,6 +1,17 @@
 import { Button } from "@/components/button";
+import { env } from "@/env.mjs";
 
 export function CTASection() {
+  const CTAhref: string = (() => {
+    let url = "";
+    if (env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
+      url = `https://staging-cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}/login`;
+    } else {
+      url = `http://cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}/login`;
+    }
+    return url;
+  })();
+
   return (
     <div className="relative w-full overflow-hidden bg-custom-radial py-20 text-black">
       <div className="relative mx-auto max-w-3xl text-center">
@@ -12,10 +23,7 @@ export function CTASection() {
           your feedback.
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
-          <Button
-            href="https://0613d040.sibforms.com/serve/MUIFAMLy5tXMDC-gFjXRxBEcvyVYV9O9KLVoKMp1n6WMXE4LBazZkkV78pTBf3FnJHdhQpJoOYL3KsAbAv9yDYJooerqar47yy2RQkuP_Vs0CEkHexRMrkWsbKtTIi_DMOa9KfzpRVFa959hSXqJByMY5Gj9OrZtEX3ZrfO5OJHh7fLxh3nYgnNIBwGTpxJ25XA_MxOKv_kHKNgM"
-            target="_blank"
-          >
+          <Button href={CTAhref}>
             <span>Get started for free</span>
           </Button>
         </div>

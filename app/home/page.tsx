@@ -9,6 +9,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { Features } from "./_components/Features";
 import { Heart } from "lucide-react";
+import { env } from "@/env.mjs";
 
 const heroFeatures = [
   "Easy to use",
@@ -19,11 +20,20 @@ const heroFeatures = [
 
 const heroTitle = <>Publish your markdown notes directly from Github</>;
 
+const heroHref: string = (() => {
+  let url = "";
+  if (env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
+    url = `https://staging-cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}/login`;
+  } else {
+    url = `http://cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}/login`;
+  }
+  return url;
+})();
+
 const heroActions = [
   {
     label: "Get started for free",
-    href: "https://0613d040.sibforms.com/serve/MUIFAMLy5tXMDC-gFjXRxBEcvyVYV9O9KLVoKMp1n6WMXE4LBazZkkV78pTBf3FnJHdhQpJoOYL3KsAbAv9yDYJooerqar47yy2RQkuP_Vs0CEkHexRMrkWsbKtTIi_DMOa9KfzpRVFa959hSXqJByMY5Gj9OrZtEX3ZrfO5OJHh7fLxh3nYgnNIBwGTpxJ25XA_MxOKv_kHKNgM",
-    target: "_blank" as const,
+    href: heroHref,
     variant: "solid" as const,
   },
 ];

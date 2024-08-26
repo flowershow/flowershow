@@ -11,7 +11,7 @@ export const NavItem: React.FC<Props> = ({ link }) => {
     <Menu as="div" className="relative">
       <Link
         href={link.href}
-        className="mr-2 inline-flex items-center px-1 pt-1 text-sm font-medium text-slate-500 hover:text-slate-600"
+        className="mr-4 inline-flex items-center px-1 pt-1 text-sm font-medium text-slate-500 hover:text-slate-600"
       >
         {link.name}
       </Link>
