@@ -5,7 +5,7 @@ import Features from "./_components/features";
 import { Section } from "@/components/section";
 import { Metadata } from "next";
 import { Hero } from "@/components/hero";
-import config from "@/const/config";
+import { env } from "@/env.mjs";
 
 export const metadata: Metadata = {
   title: "The JavaScript framework for data portals.",
@@ -16,6 +16,8 @@ export const metadata: Metadata = {
     title: "The JavaScript framework for data portals.",
     description:
       "Rapidly build rich data portals using a modern frontend framework.",
+    type: "website",
+    url: `${env.NEXT_PUBLIC_ROOT_DOMAIN}/opensource`,
     images: [
       {
         url: "/opensource.png",

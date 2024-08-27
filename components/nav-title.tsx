@@ -15,7 +15,7 @@ export const NavTitle: React.FC<Props> = ({ title, logo, version, url }) => {
       aria-label="Home page"
       className="flex items-center space-x-2 text-xl font-extrabold text-slate-900 dark:text-white"
     >
-      {logo && <img src={logo} alt="" className="mr-1 h-8 fill-white" />}
+      {logo && <img src={logo} alt="Logo" className="mr-1 h-8 fill-white" />}
       {title && <span>{title}</span>}
       {version && (
         <span className="ml-2 inline-flex items-center rounded-full bg-gray-50 px-2 py-1 text-xs font-medium text-gray-600 ring-1 ring-inset ring-gray-500/10">

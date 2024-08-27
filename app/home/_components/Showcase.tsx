@@ -120,7 +120,7 @@ const Showcase: React.FC = () => {
                     <Link href={post.href} className="group relative">
                       <div className="relative w-full">
                         <img
-                          alt=""
+                          alt={post.description}
                           src={post.image}
                           className="aspect-[16/9] w-full rounded-2xl bg-gray-100 object-cover sm:aspect-[2/1] lg:aspect-[3/2]"
                         />

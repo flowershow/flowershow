@@ -8,7 +8,7 @@ import Solutions from "./_components/solutions";
 import Contact from "./_components/contact";
 import Pricing from "./_components/pricing";
 import Addons from "./_components/addons";
-import config from "@/const/config";
+import { env } from "@/env.mjs";
 
 export const metadata: Metadata = {
   title: "Fully Managed Data Portal in the Cloud",
@@ -19,6 +19,8 @@ export const metadata: Metadata = {
     title: "Fully Managed Data Portal in the Cloud",
     description:
       "Datahub Enterprise is the simplest way to create data portals and data catalogs. For governments, non-profits, researchers and companies of all sizes.",
+    type: "website",
+    url: `${env.NEXT_PUBLIC_ROOT_DOMAIN}/enterprise`,
     images: [
       {
         url: "/enterprise.png",

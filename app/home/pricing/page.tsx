@@ -1,8 +1,43 @@
 /* eslint-disable react/no-unescaped-entities */
-import { Hero } from "@/components/hero";
 import { CTASection } from "./_components/CTASection";
 import Link from "next/link";
 import { Heading } from "@/components/heading";
+import { Metadata } from "next";
+import { env } from "@/env.mjs";
+
+export const metadata: Metadata = {
+  title: "DataHub Cloud Pricing",
+  description: "DataHub Cloud Premium plan is coming soon.",
+  icons: ["/favicon.ico"],
+  openGraph: {
+    title: "DataHub Pricing",
+    description: "DataHub Cloud Premium plan is coming soon.",
+    type: "website",
+    url: `${env.NEXT_PUBLIC_ROOT_DOMAIN}/pricing`,
+    images: [
+      {
+        url: "/thumbnail.png",
+        width: 1200,
+        height: 627,
+        alt: "Thumbnail",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "DataHub Pricing",
+    description: "DataHub Pricing is coming soon",
+    images: [
+      {
+        url: "/thumbnail.png",
+        width: 800,
+        height: 418,
+        alt: "Thumbnail",
+      },
+    ],
+    creator: "@datopian",
+  },
+};
 
 export default function PricingPage() {
   return (
@@ -10,9 +45,10 @@ export default function PricingPage() {
       <div className="mx-auto mb-[40px]  max-w-8xl px-4 pt-8 md:px-8 lg:px-[8rem]">
         <div className="relative isolate overflow-hidden text-center">
           <div className="mx-auto  px-6 lg:px-8">
+            <h1 className="sr-only">Coming Soon</h1>
             <Heading
-              id="comming-soon"
-              heading="Comming soon..."
+              id="coming-soon"
+              heading="Coming soon..."
               subheading="We're On It!"
             />
             <p className="max-w- mx-auto mb-[40px] max-w-[650px] text-center text-lg leading-8 text-primary">

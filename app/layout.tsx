@@ -20,6 +20,8 @@ export const metadata: Metadata = {
   openGraph: {
     title: config.title,
     description: config.description,
+    type: "website",
+    url: config.author.url,
     images: [
       {
         url: "/thumbnail.png",

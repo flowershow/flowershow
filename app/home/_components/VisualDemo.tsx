@@ -11,9 +11,9 @@ export function VisualDemo() {
 
   return (
     <div>
-      <h1 className="mt-12 text-center text-lg font-bold tracking-tight dark:text-white sm:text-4xl">
+      <h2 className="mt-12 text-center text-lg font-bold tracking-tight dark:text-white sm:text-4xl">
         Your GitHub. Our Platform. Perfect Harmony.
-      </h1>
+      </h2>
       <p className="mx-auto mt-6 max-w-xl text-center text-lg leading-8 text-gray-600 dark:text-gray-400">
         DataHub Cloud syncs directly with your GitHub, allowing you to manage
         and publish your markdown and/or data files where you&apos;re already
