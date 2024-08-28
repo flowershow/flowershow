@@ -12,11 +12,12 @@ async function Sitemap() {
   const internalPaths = ["/", "/enterprise", "/opensource", "/pricing"];
 
   const internalUrls = internalPaths.map(
-    (path) => `${env.NEXT_PUBLIC_ROOT_DOMAIN}${path === "/" ? "" : path}`,
+    (path) =>
+      `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}${path === "/" ? "" : path}`,
   );
 
   const userSiteUrls = sites.flatMap((site) => {
-    const baseUrl = `${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
+    const baseUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
       site.user!.gh_username
     }/${site.projectName}`;
 
