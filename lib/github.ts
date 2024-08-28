@@ -74,7 +74,7 @@ const githubFetch = async ({
   return response;
 };
 
-const githubJsonFetch = async <T>({
+export const githubJsonFetch = async <T>({
   url,
   accessToken,
   cacheOptions,

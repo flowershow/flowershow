@@ -15,9 +15,11 @@ import {
   uploadTree,
 } from "@/lib/content-store";
 import {
+  GitHubAPIFileContent,
   fetchGitHubFile,
   fetchGitHubFileRaw,
   fetchGitHubRepoTree,
+  githubJsonFetch,
 } from "@/lib/github";
 import { computeMetadata, resolveFilePathToUrl } from "@/lib/computed-fields";
 import {
@@ -98,15 +100,29 @@ export const syncSite = inngest.createFunction(
     const siteConfig: SiteConfig = await step.run(
       "fetch-site-config",
       async () => {
-        const config = await fetchGitHubFile({
-          gh_repository,
-          gh_branch,
-          path: "config.json",
-          access_token,
-        });
-        return JSON.parse(
-          Buffer.from(config.content, "base64").toString("utf-8"),
-        );
+        try {
+          const config = await githubJsonFetch<GitHubAPIFileContent>({
+            // https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content
+            url: `/repos/${gh_repository}/contents/config.json?ref=${gh_branch}`,
+            accessToken: access_token,
+            cacheOptions: {
+              cache: "no-store",
+            },
+          });
+          return JSON.parse(
+            Buffer.from(config.content, "base64").toString("utf-8"),
+          );
+        } catch (e: any) {
+          if (e.code == "NOT_FOUND") {
+            return {};
+          }
+          throw new NonRetriableError(
+            "Failed to fetch site's config.json file.",
+            {
+              cause: e,
+            },
+          );
+        }
       },
     );
 
