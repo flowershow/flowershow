@@ -22,7 +22,7 @@ async function Sitemap() {
 
     return Object.keys((site.files as any) || []).map((url) => {
       if (url === "/") return baseUrl;
-      return `${baseUrl}/${url}`;
+      return `${baseUrl}/${url.replace(/&/g, "%26")}`;
     });
   });
 
