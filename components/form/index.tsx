@@ -53,8 +53,9 @@ export default function Form({
   return (
     <form
       action={async (data: FormData) => {
-        if (inputAttrs.name === "subdomain") {
-          if (
+        if (inputAttrs.name === "projectName") {
+          {
+            /* if (
             inputAttrs.disallowed &&
             inputAttrs.disallowed.includes(
               data.get("subdomain")?.toString() || "",
@@ -62,15 +63,16 @@ export default function Form({
           ) {
             toast.error(`Error: This subdomain name is not allowed!`);
             return;
+          } */
           }
           if (
             inputAttrs.pattern &&
             !RegExp(inputAttrs.pattern).test(
-              data.get("subdomain")?.toString() || "",
+              data.get("projectName")?.toString() || "",
             )
           ) {
             toast.error(
-              `Error: The name can only contain ASCII letters, digits, and the characters -, and _`,
+              `Error: Project name can only contain ASCII letters, digits, and the characters -, and _`,
             );
             return;
           }
