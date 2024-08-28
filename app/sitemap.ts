@@ -1,7 +1,11 @@
 import { env } from "@/env.mjs";
 import prisma from "@/server/db";
+// temporary solution to https://github.com/datopian/datahub/issues/1296
+import { unstable_noStore as noStore } from "next/cache";
 
 async function Sitemap() {
+  noStore();
+
   const sites = await prisma.site.findMany({
     include: { user: true },
   });
