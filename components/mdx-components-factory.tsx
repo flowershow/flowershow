@@ -211,9 +211,9 @@ export const mdxComponentsFactory = ({
     },
     Vega: (props) => {
       const spec = props.spec;
-      if (spec.data.URL) {
-        spec.data.URL = resolveLink({
-          link: spec.data.URL,
+      if (spec.data.url) {
+        spec.data.url = resolveLink({
+          link: spec.data.url,
           filePath: metadata._path,
           prefixPath: pathToR2SiteFolder,
         });
@@ -222,9 +222,9 @@ export const mdxComponentsFactory = ({
     },
     VegaLite: (props) => {
       const spec = props.spec;
-      if (spec.data.URL) {
-        spec.data.URL = resolveLink({
-          link: spec.data.URL,
+      if (spec.data.url) {
+        spec.data.url = resolveLink({
+          link: spec.data.url,
           filePath: metadata._path,
           prefixPath: pathToR2SiteFolder,
         });
