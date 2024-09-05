@@ -44,6 +44,10 @@ export const env = createEnv({
     GA_MEASUREMENT_ID: z.string(),
     GA_SECRET: z.string(),
 
+    BREVO_API_URL: z.string(),
+    BREVO_API_KEY: z.string(),
+    BREVO_CONTACT_LISTID: z.number()
+
   },
 
   /**
@@ -93,6 +97,9 @@ export const env = createEnv({
     GTM_ID: process.env.GTM_ID,
     GA_MEASUREMENT_ID: process.env.GA_MEASUREMENT_ID,
     GA_SECRET: process.env.GA_SECRET,
+    BREVO_API_URL : process.env.BREVO_API_URL,
+    BREVO_API_KEY: process.env.BREVO_API_KEY,
+    BREVO_CONTACT_LISTID: Number(process.env.BREVO_CONTACT_LISTID)
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

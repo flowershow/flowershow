@@ -52,6 +52,23 @@ export const authOptions: NextAuthOptions = {
   },
   events: {
     createUser: async (message: any) => {
+      try {
+        axios.post(
+          `${env.BREVO_API_URL}`,
+          {
+            email: message.user.email,
+            listIds: [env.BREVO_CONTACT_LISTID],
+          },
+          {
+            headers: {
+              "api-key": `${env.BREVO_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+      } catch (error) {
+        console.log("Error subscribing user", error);
+      }
       if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
         try {
           const payload = {
