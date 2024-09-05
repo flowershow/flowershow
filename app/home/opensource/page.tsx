@@ -60,11 +60,11 @@ const heroActions = [
     href: "/docs",
     variant: "solid" as const,
   },
-  /* {
-   *     label: "DataHub Cloud",
-   *     href: "#",
-   *     variant: "solid" as const,
-   * }, */
+  {
+    label: "Try DataHub Portal",
+    href: "/portal",
+    variant: "outline" as const,
+  },
 ];
 
 const heroVisual = () => (

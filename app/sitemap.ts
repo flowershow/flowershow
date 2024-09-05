@@ -9,7 +9,7 @@ async function Sitemap() {
   const sites = await prisma.site.findMany({
     include: { user: true },
   });
-  const internalPaths = ["/", "/enterprise", "/opensource", "/pricing"];
+  const internalPaths = ["/", "/portal", "/opensource", "/pricing"];
 
   const internalUrls = internalPaths.map(
     (path) =>

@@ -13,17 +13,17 @@ import { env } from "@/env.mjs";
 export const metadata: Metadata = {
   title: "Fully Managed Data Portal in the Cloud",
   description:
-    "Datahub Enterprise is the simplest way to create data portals and data catalogs. For governments, non-profits, researchers and companies of all sizes.",
+    "DataHub Portal  is the simplest way to create data portals and data catalogs. For governments, non-profits, researchers and companies of all sizes.",
   icons: ["/favicon.ico"],
   openGraph: {
     title: "Fully Managed Data Portal in the Cloud",
     description:
-      "Datahub Enterprise is the simplest way to create data portals and data catalogs. For governments, non-profits, researchers and companies of all sizes.",
+      "DataHub Portal is the simplest way to create data portals and data catalogs. For governments, non-profits, researchers and companies of all sizes.",
     type: "website",
-    url: `${env.NEXT_PUBLIC_ROOT_DOMAIN}/enterprise`,
+    url: `${env.NEXT_PUBLIC_ROOT_DOMAIN}/portal`,
     images: [
       {
-        url: "/enterprise.png",
+        url: "/portal.png",
         width: 1200,
         height: 627,
         alt: "",
@@ -34,10 +34,10 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Fully Managed Data Portal in the Cloud",
     description:
-      "Datahub Enterprise is the simplest way to create data portals and data catalogs. For governments, non-profits, researchers and companies of all sizes.",
+      "DataHub Portal is the simplest way to create data portals and data catalogs. For governments, non-profits, researchers and companies of all sizes.",
     images: [
       {
-        url: "enterprise.png",
+        url: "portal.png",
         width: 800,
         height: 418,
         alt: "Thumbnail",
@@ -62,7 +62,7 @@ const heroTitle = (
   </>
 );
 
-const heroDescription = `Datahub Enterprise is the simplest way to create data portals and data catalogs. For governments, non-profits, researchers and companies of all sizes.`;
+const heroDescription = `DataHub Portal is the simplest way to create data portals and data catalogs. For governments, non-profits, researchers and companies of all sizes.`;
 
 const heroActions = [
   {
@@ -86,7 +86,7 @@ const heroVisual = () => (
 );
 
 const heroAnnouncement = {
-  content: "🔥 Datahub Enterprise (beta) is now available ➡️",
+  content: "🔥 DataHub Portal (beta) is now available ➡️",
   href: "https://cloud.portaljs.com/auth/signup",
 };
 
