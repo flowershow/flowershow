@@ -49,6 +49,7 @@ const uploadR2Object = async ({
       Key: key,
       Body: file,
       ContentType: contentType,
+      CacheControl: "no-cache",
     }),
   );
 };
