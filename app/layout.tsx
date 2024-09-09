@@ -3,6 +3,7 @@ import "@portaljs/remark-callouts/styles.css";
 import "@/styles/prism.css";
 import "@/styles/globals.css";
 
+import { getSession } from "@/server/auth";
 import { TRPCReactProvider } from "@/trpc/react";
 import { headers } from "next/headers";
 import { cal, inter } from "@/styles/fonts";
@@ -47,11 +48,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await getSession();
+
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
@@ -66,7 +69,12 @@ export default function RootLayout({
         <TRPCReactProvider headers={headers()}>
           <Providers>
             {children}
-            <GoogleTagManager gtmId={env.GTM_ID} />
+            <GoogleTagManager
+              {...(session?.user.id
+                ? { dataLayer: { user_id: session.user.id } }
+                : {})}
+              gtmId={env.GTM_ID}
+            />
           </Providers>
         </TRPCReactProvider>
       </body>

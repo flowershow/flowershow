@@ -100,15 +100,15 @@ export default function CreateSiteModal() {
   const { isLoading: isCreatingSite, mutate: createSite } =
     api.site.create.useMutation({
       onSuccess: (res) => {
-        const { id } = res;
-        if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
-          sendGTMEvent({
-            event: "create_site",
-            user_id: res.userId,
-          });
-        }
+        /* if (env.NEXT_PUBLIC_VERCEL_ENV === "production") { */
+        sendGTMEvent({
+          event: "create_site",
+          user_id: res.userId,
+          site_id: res.id,
+        });
+        /* } */
         modal?.hide();
-        router.push(`/site/${id}/settings`);
+        router.push(`/site/${res.id}/settings`);
         router.refresh();
       },
       onError: (error) => {
