@@ -57,6 +57,13 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   return {
     title: pageMetadata.title,
     description: pageMetadata.description,
+    // Set canonical URL to custom domain if it exists
+    // Maybe not needed since we redirect to a custom domain if it exists ?
+    ...(site.customDomain && {
+      alternates: {
+        canonical: `https://${site.customDomain}/${slug}`,
+      },
+    }),
   };
 }
 

@@ -57,6 +57,8 @@ export async function generateMetadata({
   const title = siteConfig?.title || site.projectName;
   const description = siteConfig?.description || "";
 
+  console.log({ site });
+
   return {
     title: {
       template: "%s",
@@ -77,12 +79,6 @@ export async function generateMetadata({
       creator: "@datopian",
     },
     icons: ["/favicon.ico"],
-    // Set canonical URL to custom domain if it exists
-    ...(site.customDomain && {
-      alternates: {
-        canonical: `https://${site.customDomain}`,
-      },
-    }),
   };
 }
 
