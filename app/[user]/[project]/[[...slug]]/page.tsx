@@ -6,6 +6,7 @@ import UrlNormalizer from "./url-normalizer";
 import EditPageButton from "@/components/edit-page-button";
 import { SiteConfig } from "@/components/types";
 import MDX from "@/components/MDX";
+import { env } from "@/env.mjs";
 
 type SiteWithUser = Site & {
   user: {
@@ -54,14 +55,32 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     notFound();
   }
 
+  let canonicalUrl: string | null = null;
+
+  if (site.customDomain) {
+    canonicalUrl = `https://${site.customDomain}/${slug}`;
+  }
+  // hack to handle our "special" sites
+  if (user === "olayway") {
+    if (site.gh_repository === "datasets/awesome-data") {
+      canonicalUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/collections/${slug}`;
+    } else if (site.gh_repository === "datahubio/docs") {
+      canonicalUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/docs/${slug}`;
+    } else if (site.gh_repository === "datahubio/blog") {
+      canonicalUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/blog/${slug}`;
+    } else if (site.gh_repository.startsWith("datasets/")) {
+      canonicalUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/core/${slug}`;
+    }
+  }
+
   return {
     title: pageMetadata.title,
     description: pageMetadata.description,
     // Set canonical URL to custom domain if it exists
     // Maybe not needed since we redirect to a custom domain if it exists ?
-    ...(site.customDomain && {
+    ...(canonicalUrl && {
       alternates: {
-        canonical: `https://${site.customDomain}/${slug}`,
+        canonical: canonicalUrl,
       },
     }),
   };

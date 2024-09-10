@@ -17,9 +17,24 @@ async function Sitemap() {
   );
 
   const userSiteUrls = sites.flatMap((site) => {
-    const baseUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
-      site.user!.gh_username
-    }/${site.projectName}`;
+    let sitePath: string | null = null;
+
+    // hack to handle our "special" sites
+    if (site.user?.gh_username === "olayway") {
+      if (site.gh_repository === "datasets/awesome-data") {
+        sitePath = "collections";
+      } else if (site.gh_repository === "datahubio/docs") {
+        sitePath = "docs";
+      } else if (site.gh_repository === "datahubio/blog") {
+        sitePath = "blog";
+      } else if (site.gh_repository.startsWith("datasets/")) {
+        sitePath = site.gh_repository.replace("datasets/", "core/");
+      }
+    }
+
+    sitePath = sitePath ?? `@${site.user!.gh_username}/${site.projectName}`;
+
+    const baseUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/${sitePath}`;
 
     return Object.keys((site.files as any) || []).map((url) => {
       if (url === "/") return baseUrl;
@@ -29,6 +44,7 @@ async function Sitemap() {
 
   return [...internalUrls, ...userSiteUrls].map((url) => ({
     url,
+    // TODO temporary solution as we don't have this data in the db yet
     lastModified: new Date(),
   }));
 }
