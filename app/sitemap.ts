@@ -21,7 +21,9 @@ async function Sitemap() {
 
     // hack to handle our "special" sites
     if (site.user?.gh_username === "olayway") {
-      if (site.gh_repository === "datasets/awesome-data") {
+      if (site.gh_repository === "datopian/product") {
+        return;
+      } else if (site.gh_repository === "datasets/awesome-data") {
         sitePath = "collections";
       } else if (site.gh_repository === "datahubio/docs") {
         sitePath = "docs";
