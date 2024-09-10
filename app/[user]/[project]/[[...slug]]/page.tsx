@@ -55,21 +55,22 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     notFound();
   }
 
-  let canonicalUrl: string | null = null;
+  let canonicalUrlBase: string | null = null;
 
   if (site.customDomain) {
-    canonicalUrl = `https://${site.customDomain}/${slug}`;
-  }
-  // hack to handle our "special" sites
-  if (user === "olayway") {
-    if (site.gh_repository === "datasets/awesome-data") {
-      canonicalUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/collections/${slug}`;
+    canonicalUrlBase = `https://${site.customDomain}`;
+  } else if (user === "olayway") {
+    // hack to handle our "special" sites
+    if (site.gh_repository === "datopian/product") {
+      canonicalUrlBase = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/notes`;
+    } else if (site.gh_repository === "datasets/awesome-data") {
+      canonicalUrlBase = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/collections`;
     } else if (site.gh_repository === "datahubio/docs") {
-      canonicalUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/docs/${slug}`;
+      canonicalUrlBase = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/docs`;
     } else if (site.gh_repository === "datahubio/blog") {
-      canonicalUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/blog/${slug}`;
+      canonicalUrlBase = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/blog`;
     } else if (site.gh_repository.startsWith("datasets/")) {
-      canonicalUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/core/${slug}`;
+      canonicalUrlBase = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/core`;
     }
   }
 
@@ -78,9 +79,12 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     description: pageMetadata.description,
     // Set canonical URL to custom domain if it exists
     // Maybe not needed since we redirect to a custom domain if it exists ?
-    ...(canonicalUrl && {
+    ...(canonicalUrlBase && {
       alternates: {
-        canonical: canonicalUrl,
+        canonical:
+          decodedSlug === "/"
+            ? `${canonicalUrlBase}`
+            : `${canonicalUrlBase}/${decodedSlug}`,
       },
     }),
   };
