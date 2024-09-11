@@ -164,6 +164,7 @@ export default async function SiteLayout({
   const socialLinks = siteConfig?.social;
   const footerDescription = siteConfig?.description;
   const showSidebar = siteConfig?.showSidebar;
+  const showToc = siteConfig?.showToc ?? true;
 
   return (
     <>
@@ -204,15 +205,17 @@ export default async function SiteLayout({
               />
             </div>
           </div>
-          <aside
-            className={`inset-y-0 right-0 hidden overflow-y-auto px-4 sm:px-2  xl:block  ${
-              showSidebar
-                ? "fixed pb-[80px] pt-8 lg:px-8 xl:w-[235px] 2xl:w-[340px]"
-                : "sticky top-[100px] h-[calc(100vh-200px)] w-[200px] xl:px-0"
-            }`}
-          >
-            <TableOfContentsSidebar className="pt-4" />
-          </aside>
+          {showToc && (
+            <aside
+              className={`inset-y-0 right-0 hidden overflow-y-auto px-4 sm:px-2  xl:block  ${
+                showSidebar
+                  ? "fixed pb-[80px] pt-8 lg:px-8 xl:w-[235px] 2xl:w-[340px]"
+                  : "sticky top-[100px] h-[calc(100vh-200px)] w-[200px] xl:px-0"
+              }`}
+            >
+              <TableOfContentsSidebar className="pt-4" />
+            </aside>
+          )}
 
           <BuiltWithDataHub />
         </main>

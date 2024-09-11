@@ -10,6 +10,7 @@ export interface SiteConfig {
   author?: AuthorConfig;
   navLinks?: NavLink[];
   showSidebar?: boolean;
+  showToc?: boolean;
   analytics?: string;
   social: SocialLink[];
   footerLinks?: FooterLink[];
