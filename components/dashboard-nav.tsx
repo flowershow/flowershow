@@ -23,7 +23,7 @@ const externalLinks = [
    * }, */
   {
     name: "Read the guide",
-    href: "https://datahub.io/docs",
+    href: "https://datahub.io/docs/DataHub+Cloud",
     icon: <FileCode width={18} />,
   },
   {
