@@ -57,6 +57,10 @@ export async function GET(
   const resourceNameOrId = match[1];
   const extension = match[2];
 
+  if (!resourceNameOrId || !extension) {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
   // find the resource in the datapackage (included in PageMetadata)
   const pageMetadata = (
     site.files as {
@@ -68,9 +72,12 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const resource = pageMetadata.resources.find(
-    (r) => r.name === resourceNameOrId || r.id === resourceNameOrId,
-  );
+  const resource =
+    pageMetadata.resources.find(
+      (r) => r.name === resourceNameOrId || r.id === resourceNameOrId,
+    ) || pageMetadata.resources[parseInt(resourceNameOrId, 10)];
+
+  console.log("resource", resource);
 
   if (!resource) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -79,7 +86,38 @@ export async function GET(
   const resourcePath = resource.path; // absolute path as we store paths transformed to absolute paths in the db
   const host = req.nextUrl.host;
   const protocol = req.nextUrl.protocol;
-  const rawFilePermalink = `${protocol}//${host}/@${username}/${projectName}/_r/-/${resourcePath}`;
+
+  let rawFilePermalinkBase: string;
+
+  // TODO there should be a better way to handle this
+  if (site.customDomain) {
+    rawFilePermalinkBase = `/_r/-`;
+    // NOTE: aliases
+    // temporary solution for our aliased sites
+  } else if (site.user?.gh_username === "olayway") {
+    if (site.gh_repository.startsWith("datasets/")) {
+      rawFilePermalinkBase = `/core/${site.projectName}/_r/-`;
+    } else if (site.projectName === "blog") {
+      rawFilePermalinkBase = `/blog/_r/-`;
+    } else if (site.projectName === "docs") {
+      rawFilePermalinkBase = `/docs/_r/-`;
+    } else if (site.projectName === "collections") {
+      rawFilePermalinkBase = `/collections/_r/-`;
+    } else {
+      rawFilePermalinkBase = `/@${site.user.gh_username}/${site.projectName}/_r/-`;
+    }
+  } else if (
+    site.user?.gh_username === "rufuspollock" &&
+    site.projectName === "notes"
+  ) {
+    rawFilePermalinkBase = `/notes/_r/-`;
+  } else {
+    rawFilePermalinkBase = `/@${site.user!.gh_username}/${
+      site.projectName
+    }/_r/-`;
+  }
+
+  const rawFilePermalink = `${protocol}//${host}${rawFilePermalinkBase}/${resourcePath}`;
 
   // if extension same as in resource path, redirect to raw file permalink
   if (resourcePath.endsWith(`.${extension}`)) {
