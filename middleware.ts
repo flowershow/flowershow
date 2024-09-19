@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { env } from "@/env.mjs";
 
-const mainAccount = "olayway"; // temporary
-
 export const config = {
   matcher: [
     /*
@@ -40,7 +38,7 @@ export default async function middleware(req: NextRequest) {
     searchParams.length > 0 ? `?${searchParams}` : ""
   }`;
 
-  // rewrites for cloud pages
+  // rewrites & redirects for cloud domain (dashboard)
   if (
     hostname == `cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
     hostname == `staging-cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
@@ -49,96 +47,139 @@ export default async function middleware(req: NextRequest) {
 
     if (!session && path !== "/login") {
       return NextResponse.redirect(new URL("/login", req.url));
-    } else if (session && path == "/login") {
+    }
+    if (session && path == "/login") {
       return NextResponse.redirect(new URL("/", req.url));
     }
-    return NextResponse.rewrite(
-      // temporarily direct users directly to /sites instead of dashboard home page
-      new URL(`/cloud${path === "/" ? "/sites" : path}`, req.url),
-    );
+    if (path === "/") {
+      return NextResponse.redirect(new URL("/sites", req.url));
+    }
+    return NextResponse.rewrite(new URL(`/cloud${path}`, req.url));
   }
 
-  // rewrites for root domain
+  // rewrites & redirects for root domain (all user pages and our home/landing pages)
   if (
     hostname === `${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
     hostname === `staging.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
   ) {
-    // temporary redirect /docs/dms/:path to /docs/DMS/:path
-    if (path.match(/^\/docs\/dms/)) {
-      return NextResponse.redirect(
-        new URL(path.replace("/docs/dms", "/docs/DMS"), req.url),
-      );
-    }
-
-    if (
-      path.match(/^\/blog/) ||
-      path.match(/^\/docs/) ||
-      path.match(/^\/collections/)
-    ) {
-      if (path.match(/\/datapackage\.(json|yaml|yml)$/)) {
-        return NextResponse.rewrite(
-          new URL(`/api/${mainAccount}${path}`, req.url),
-        );
-      }
-      return NextResponse.rewrite(new URL(`/${mainAccount}${path}`, req.url));
-    }
-    // if path ends with /abc/r/restof/path redirect to /abc
-    if (path.match(/\/r\/.+$/)) {
-      return NextResponse.redirect(
-        new URL(path.replace(/\/r\/.+$/, ""), req.url),
-      );
-    }
-    // if path ends with /abc/r/restof/path redirect to /abc
-    if (path.match(/\/view\/.+$/)) {
-      return NextResponse.redirect(
-        new URL(path.replace(/\/view\/.+$/, ""), req.url),
-      );
-    }
     if (path.match(/^\/awesome/)) {
       // redirect to collections
       return NextResponse.redirect(
-        new URL(path.replace("/awesome", "/collections"), req.url),
+        new URL(path.replace(/^\/awesome/, "/collections"), req.url),
       );
     }
-    if (path.match(/^\/notes/)) {
-      return NextResponse.rewrite(
-        new URL(path.replace("/notes", "/rufuspollock/data-notes"), req.url),
-      );
-    }
-    if (path.match(/^\/core/)) {
-      const pathAfterCore = path.replace(/^\/core/, "");
-      if (path.match(/\/datapackage\.(json|yaml|yml)$/)) {
+
+    // NOTE: aliases
+    const aliasResolvedPath = path
+      .replace(/^\/core/, `/@olayway`)
+      .replace(/^\/docs/, `/@olayway/docs`)
+      .replace(/^\/blog/, `/@olayway/blog`)
+      .replace(/^\/collections/, `/@olayway/collections`)
+      .replace(/^\/notes/, `/@rufuspollock/data-notes`);
+
+    // if resolved path matches /@{username}/{project}/{restofpath}
+    const userProjectMatch = aliasResolvedPath.match(
+      /^\/@([^/]+)\/([^/]+)(.*)/,
+    );
+
+    if (userProjectMatch) {
+      const username = userProjectMatch[1];
+      const projectName = userProjectMatch[2];
+      const restOfPath = userProjectMatch[3];
+
+      const rawPathMatch = restOfPath?.match(/^\/_r\/(-)\/(.*)/);
+
+      // raw file paths (e.g. /_r/-/data/some.csv)
+      if (rawPathMatch) {
+        const branch = rawPathMatch[1];
+        const filePath = rawPathMatch[2];
+
         return NextResponse.rewrite(
-          new URL(`/api/${mainAccount}${pathAfterCore}`, req.url),
+          new URL(
+            `/api/raw/${username}/${projectName}/${branch}/${filePath}`,
+            req.url,
+          ),
         );
       }
-      return NextResponse.rewrite(
-        new URL(`/${mainAccount}${pathAfterCore}`, req.url),
-      );
-    }
-    // if path matches /@{username}/{project}/{restofpath} rewrite to /{username}/{project}/{restofpath}}
-    const match = path.match(/^\/@([^/]+)\/([^/]+)(.*)/);
-    if (match) {
-      // if path matches /.../datapackage.json/yaml/yml rewrite to /api/datapackage/{path}
-      if (path.match(/\/datapackage\.(json|yaml|yml)$/)) {
+
+      // datapackage paths (e.g. /datapackage.json)
+      if (restOfPath?.match(/\/datapackage\.(json|yaml|yml)$/)) {
+        // TODO: make this a redirect (permanent) so that people use raw path instead?
         return NextResponse.rewrite(
-          new URL(`/api/${match[1]}/${match[2]}${match[3]}`, req.url),
+          new URL(
+            `/api/raw/${username}/${projectName}/-${restOfPath}`,
+            req.url,
+          ),
+        );
+      }
+
+      // OLD - to be removed in the future
+
+      // NOTE: doesn't support nested paths
+      if (restOfPath?.match(/^\/view\/.+$/)) {
+        return NextResponse.redirect(
+          new URL(path.replace(/\/view\/.+$/, ""), req.url),
+        );
+      }
+
+      // NOTE: doesn't support nested paths
+      if (restOfPath?.match(/^\/r\/.+$/)) {
+        const resourceWithExtension = restOfPath.replace(/^\/r\//, "");
+        return NextResponse.rewrite(
+          new URL(
+            `/api/raw-old/${username}/${projectName}/${resourceWithExtension}`,
+            req.url,
+          ),
         );
       }
 
       return NextResponse.rewrite(
-        new URL(`/${match[1]}/${match[2]}${match[3]}`, req.url),
+        new URL(`/${username}/${projectName}${restOfPath}`, req.url),
       );
+    } else {
+      // otherwise it's a normal JSX page in /home folder
+      return NextResponse.rewrite(new URL(`/home${path}`, req.url));
     }
+  }
+
+  const rawPathMatch = path?.match(/^\/_r\/(-)\/(.*)/);
+
+  // raw file paths (e.g. /_r/-/data/some.csv)
+  if (rawPathMatch) {
+    console.log("rawPathMatch", rawPathMatch);
+    const branch = rawPathMatch[1];
+    const filePath = rawPathMatch[2];
+
     return NextResponse.rewrite(
-      new URL(`/home${path === "/" ? "" : path}`, req.url),
+      new URL(`/api/raw/_domain/${hostname}/${branch}/${filePath}`, req.url),
     );
   }
 
-  // if path matches /.../datapackage.json/yaml/yml rewrite to /api/datapackage/{path}
-  if (path.match(/\/datapackage\.(json|yaml|yml)$/)) {
+  // datapackage paths (e.g. /datapackage.json)
+  if (path?.match(/\/datapackage\.(json|yaml|yml)$/)) {
+    // TODO: make this a redirect (permanent) so that people use raw path instead?
     return NextResponse.rewrite(
-      new URL(`/api/domain/${hostname}${path}`, req.url),
+      new URL(`/api/raw/_domain/${hostname}/-${path}`, req.url),
+    );
+  }
+
+  // OLD - to be removed in the future
+
+  // NOTE: doesn't support nested paths
+  if (path?.match(/^\/view\/.+$/)) {
+    return NextResponse.redirect(
+      new URL(path.replace(/\/view\/.+$/, ""), req.url),
+    );
+  }
+
+  // NOTE: doesn't support nested paths
+  if (path?.match(/^\/r\/.+$/)) {
+    const resourceWithExtension = path.replace(/^\/r\//, "");
+    return NextResponse.rewrite(
+      new URL(
+        `/api/raw-old/_domain/${hostname}/${resourceWithExtension}`,
+        req.url,
+      ),
     );
   }
 

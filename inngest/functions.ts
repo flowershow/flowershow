@@ -310,9 +310,6 @@ export const syncSite = inngest.createFunction(
                 datapackage,
                 path: contentStoreFilePath,
                 tree: gitHubTree,
-                contentStoreUrlBase: `https://${
-                  env.NEXT_PUBLIC_R2_BUCKET_DOMAIN
-                }/${site!.id}/${site!.gh_branch}/raw`,
               });
 
               return { metadata };

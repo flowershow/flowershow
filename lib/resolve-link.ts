@@ -41,6 +41,8 @@ export const resolveLink = ({
       prefixPath = "/docs";
     } else if (prefixPath === "/@olayway/collections") {
       prefixPath = "/collections";
+    } else if (prefixPath === "/@olayway/notes") {
+      prefixPath = "/notes";
     }
     resolvedLink = prefixPath + resolvedLink;
   }

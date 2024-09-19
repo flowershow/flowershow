@@ -136,6 +136,12 @@ test.describe("README with datapackage.json", () => {
       .locator("a")
       .first();
     await expect(resouce1DownloadLink).toContainText("resource-1");
+    await expect(resouce1DownloadLink).toHaveAttribute(
+      "href",
+      `/${process.env
+        .E2E_TEST_SITE!}/_r/-/datasets/with-datapackage-json/data/resource-1.csv`,
+    );
+
     const downloadPromise = page.waitForEvent("download");
     await resouce1DownloadLink.click();
     const download = await downloadPromise;

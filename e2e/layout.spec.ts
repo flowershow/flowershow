@@ -21,8 +21,8 @@ test("General layout and config", async ({ page }) => {
   const toc = page.getByTestId("toc");
   await expect(toc).toBeVisible();
   await expect(toc).toContainText("On this page");
-  await expect(toc.locator("li").first().locator("li")).toHaveCount(2);
-  await expect(toc.locator("li").nth(2).locator("li")).toHaveCount(0);
+  await expect(toc.locator("li").nth(0).locator("li")).toHaveCount(0);
+  await expect(toc.locator("li").nth(1).locator("li")).toHaveCount(1);
 
   const createdBy = page.getByTestId("created-by");
   await expect(createdBy.locator("span")).toContainText("Created by");

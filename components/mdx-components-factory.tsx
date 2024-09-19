@@ -1,7 +1,6 @@
 import { PageMetadata, isDatasetPage } from "@/server/api/types";
 import { resolveLink } from "@/lib/resolve-link";
 import { Site } from "@prisma/client";
-import { env } from "@/env.mjs";
 import { customEncodeUrl } from "@/lib/url-encoder";
 
 import {
@@ -46,7 +45,35 @@ export const mdxComponentsFactory = ({
   metadata: PageMetadata;
   siteMetadata: SiteWithUser;
 }) => {
-  const pathToR2SiteFolder = `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${siteMetadata.id}/${siteMetadata.gh_branch}/raw`;
+  let rawFilePermalinkBase: string;
+
+  // TODO there should be a better way to handle this
+  if (siteMetadata.customDomain) {
+    rawFilePermalinkBase = `/_r/-`;
+    // NOTE: aliases
+    // temporary solution for our aliased sites
+  } else if (siteMetadata.user?.gh_username === "olayway") {
+    if (siteMetadata.gh_repository.startsWith("datasets/")) {
+      rawFilePermalinkBase = `/core/${siteMetadata.projectName}/_r/-`;
+    } else if (siteMetadata.projectName === "blog") {
+      rawFilePermalinkBase = `/blog/_r/-`;
+    } else if (siteMetadata.projectName === "docs") {
+      rawFilePermalinkBase = `/docs/_r/-/`;
+    } else if (siteMetadata.projectName === "collections") {
+      rawFilePermalinkBase = `/collections/_r/-`;
+    } else {
+      rawFilePermalinkBase = `/@${siteMetadata.user.gh_username}/${siteMetadata.projectName}/_r/-`;
+    }
+  } else if (
+    siteMetadata.user?.gh_username === "rufuspollock" &&
+    siteMetadata.projectName === "notes"
+  ) {
+    rawFilePermalinkBase = `/notes/_r/-`;
+  } else {
+    rawFilePermalinkBase = `/@${siteMetadata.user!.gh_username}/${
+      siteMetadata.projectName
+    }/_r/-`;
+  }
 
   const components: any = {
     /* HTML elements */
@@ -93,7 +120,7 @@ export const mdxComponentsFactory = ({
       const normalizedSrc = resolveLink({
         link: props.src,
         filePath: metadata._path,
-        prefixPath: pathToR2SiteFolder,
+        prefixPath: rawFilePermalinkBase,
       });
 
       return <img {...props} src={normalizedSrc} />;
@@ -124,7 +151,7 @@ export const mdxComponentsFactory = ({
       props.data.url = resolveLink({
         link: props.data.url,
         filePath: metadata._path,
-        prefixPath: pathToR2SiteFolder,
+        prefixPath: rawFilePermalinkBase,
       });
       return <Excel {...props} />;
     },
@@ -132,7 +159,7 @@ export const mdxComponentsFactory = ({
       props.data.url = resolveLink({
         link: props.data.url,
         filePath: metadata._path,
-        prefixPath: pathToR2SiteFolder,
+        prefixPath: rawFilePermalinkBase,
       });
       return <Iframe {...props} />;
     },
@@ -141,7 +168,7 @@ export const mdxComponentsFactory = ({
         props.data.url = resolveLink({
           link: props.data.url,
           filePath: metadata._path,
-          prefixPath: pathToR2SiteFolder,
+          prefixPath: rawFilePermalinkBase,
         });
       }
       return <FlatUiTable {...props} />;
@@ -151,7 +178,7 @@ export const mdxComponentsFactory = ({
         props.data.url = resolveLink({
           link: props.data.url,
           filePath: metadata._path,
-          prefixPath: pathToR2SiteFolder,
+          prefixPath: rawFilePermalinkBase,
         });
       }
       return <LineChart {...props} />;
@@ -162,7 +189,7 @@ export const mdxComponentsFactory = ({
           layer.data.url = resolveLink({
             link: layer.data.url,
             filePath: metadata._path,
-            prefixPath: pathToR2SiteFolder,
+            prefixPath: rawFilePermalinkBase,
           });
         }
         return layer;
@@ -174,7 +201,7 @@ export const mdxComponentsFactory = ({
       props.data.url = resolveLink({
         link: props.data.url,
         filePath: metadata._path,
-        prefixPath: pathToR2SiteFolder,
+        prefixPath: rawFilePermalinkBase,
       });
       return <PdfViewer {...props} />;
     },
@@ -184,7 +211,7 @@ export const mdxComponentsFactory = ({
         data = resolveLink({
           link: data,
           filePath: metadata._path,
-          prefixPath: pathToR2SiteFolder,
+          prefixPath: rawFilePermalinkBase,
         });
       }
       return <Plotly {...props} data={data} />;
@@ -194,7 +221,7 @@ export const mdxComponentsFactory = ({
         props.data.url = resolveLink({
           link: props.data.url,
           filePath: metadata._path,
-          prefixPath: pathToR2SiteFolder,
+          prefixPath: rawFilePermalinkBase,
         });
       }
       return <PlotlyBarChart {...props} />;
@@ -204,7 +231,7 @@ export const mdxComponentsFactory = ({
         props.data.url = resolveLink({
           link: props.data.url,
           filePath: metadata._path,
-          prefixPath: pathToR2SiteFolder,
+          prefixPath: rawFilePermalinkBase,
         });
       }
       return <PlotlyLineChart {...props} />;
@@ -215,7 +242,7 @@ export const mdxComponentsFactory = ({
         spec.data.url = resolveLink({
           link: spec.data.url,
           filePath: metadata._path,
-          prefixPath: pathToR2SiteFolder,
+          prefixPath: rawFilePermalinkBase,
         });
       }
       return <Vega {...props} spec={spec} />;
@@ -226,7 +253,7 @@ export const mdxComponentsFactory = ({
         spec.data.url = resolveLink({
           link: spec.data.url,
           filePath: metadata._path,
-          prefixPath: pathToR2SiteFolder,
+          prefixPath: rawFilePermalinkBase,
         });
       }
       return <VegaLite {...props} spec={spec} />;

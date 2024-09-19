@@ -15,7 +15,6 @@ import { ErrorMessage } from "@/components/error-message";
 import { DatasetPageMetadata } from "@/server/api/types";
 import { ResourcePreview } from "@/components/resource-preview";
 import { Site } from "@prisma/client";
-import { env } from "@/env.mjs";
 import { resolveLink } from "@/lib/resolve-link";
 import Script from "next/script";
 import Link from "next/link";
@@ -78,28 +77,46 @@ export const DataPackageLayout: React.FC<Props> = ({
     ? prettyBytes(resourceFilesSize)
     : undefined;
 
-  // TODO this is only needed for old sites
-  // new sites have links in datapackage resolved in computed-fields lib
-  // this should be removed when all sites are migrated or we have a better solution
-  // not worth the effort to sync all the sites until we have a clear plan
-  // (e.g. probably we'll be implementing an index of all files which can change the way we resolve links)
-  const pathToR2SiteFolder = `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${siteMetadata.id}/${siteMetadata.gh_branch}/raw`;
+  let rawFilePermalinkBase: string;
 
-  const _resources = resources
-    .filter(
-      (resource) => resource.format === "csv" || resource.format === "geojson",
-    )
-    // TODO this is temporary, related to comment above over pathToR2SiteFolder
-    .map((resource) => {
-      return {
-        ...resource,
-        path: resolveLink({
-          link: resource.path,
-          filePath: metadata._path,
-          prefixPath: pathToR2SiteFolder,
-        }),
-      };
-    });
+  // TODO there should be a better way to handle this
+  if (siteMetadata.customDomain) {
+    rawFilePermalinkBase = `/_r/-`;
+    // NOTE: aliases
+    // temporary solution for our aliased sites
+  } else if (siteMetadata.user?.gh_username === "olayway") {
+    if (siteMetadata.gh_repository.startsWith("datasets/")) {
+      rawFilePermalinkBase = `/core/${siteMetadata.projectName}/_r/-`;
+    } else if (siteMetadata.projectName === "blog") {
+      rawFilePermalinkBase = `/blog/_r/-`;
+    } else if (siteMetadata.projectName === "docs") {
+      rawFilePermalinkBase = `/docs/_r/-`;
+    } else if (siteMetadata.projectName === "collections") {
+      rawFilePermalinkBase = `/collections/_r/-`;
+    } else {
+      rawFilePermalinkBase = `/@${siteMetadata.user.gh_username}/${siteMetadata.projectName}/_r/-`;
+    }
+  } else if (
+    siteMetadata.user?.gh_username === "rufuspollock" &&
+    siteMetadata.projectName === "notes"
+  ) {
+    rawFilePermalinkBase = `/notes/_r/-`;
+  } else {
+    rawFilePermalinkBase = `/@${siteMetadata.user!.gh_username}/${
+      siteMetadata.projectName
+    }/_r/-`;
+  }
+
+  const _resources = resources.map((resource) => {
+    return {
+      ...resource,
+      path: resolveLink({
+        link: resource.path,
+        filePath: metadata._path,
+        prefixPath: rawFilePermalinkBase,
+      }),
+    };
+  });
 
   const View: React.FC<{ view: SimpleView | View }> = ({ view }) => {
     if (!isSimpleView(view)) {
@@ -110,9 +127,25 @@ export const DataPackageLayout: React.FC<Props> = ({
         />
       );
     }
+
     let resource: Resource | undefined;
+
     if (isSimpleViewWithResourceName(view)) {
       resource = _resources.find((r) => r.name === view.resourceName);
+      // if resource is not csv or geojson skip
+      if (
+        resource &&
+        !["csv", "geojson"].includes(
+          resource.format || resource.path.split(".").pop(),
+        )
+      ) {
+        return (
+          <ErrorMessage
+            title="Error in datapackage:"
+            message={`Resource format not supported for view: ${view.name}`}
+          />
+        );
+      }
     } else {
       if (!view.resources || view.resources.length === 0) {
         return (
@@ -269,7 +302,7 @@ export const DataPackageLayout: React.FC<Props> = ({
                     <td>
                       <a
                         target="_blank"
-                        href={r.path}
+                        href={`${rawFilePermalinkBase}/${r.path}`}
                         className="hover:text-[#6366F1]"
                       >
                         <div className="flex items-center space-x-1 ">

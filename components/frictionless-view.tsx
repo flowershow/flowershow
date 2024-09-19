@@ -18,7 +18,7 @@ type FrictionlessViewReturnType = ({
 export const FrictionlessViewFactory = (
   metadata: DatasetPageMetadata,
 ): FrictionlessViewReturnType => {
-  const { views = [], resources, _rawUrlBase } = metadata;
+  const { views = [], resources } = metadata;
 
   const View = ({ viewId }: { viewId: number; fullWidth?: boolean }) => {
     const view = views[viewId];
@@ -31,13 +31,7 @@ export const FrictionlessViewFactory = (
       throw new Error(`Resource not found for view id ${viewId}`);
     }
 
-    return (
-      <FrictionlessView
-        view={view}
-        resource={resource}
-        dataUrlBase={_rawUrlBase}
-      />
-    );
+    return <FrictionlessView view={view} resource={resource} />;
   };
   return View;
 };
@@ -45,20 +39,16 @@ export const FrictionlessViewFactory = (
 interface FrictionlessViewProps {
   view: SimpleView; // TODO support classic/original DataPackage spec view ?
   resource: Resource;
-  dataUrlBase?: string; // TODO temporary(?) solution for relative paths
 }
 
 export const FrictionlessView: React.FC<FrictionlessViewProps> = ({
   view,
   resource,
-  dataUrlBase = "",
 }) => {
   const vegaSpec = convertSimpleViewToVegaLite({ view, resource });
 
   vegaSpec.data = {
-    url: resource.path.startsWith("http")
-      ? resource.path
-      : `${dataUrlBase}/${resource.path}`,
+    url: resource.path,
   };
 
   return (

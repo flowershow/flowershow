@@ -3,8 +3,7 @@ import { test, expect, Page } from "@playwright/test";
 import "dotenv/config";
 
 const linkBaseUrl = `/${process.env.E2E_TEST_SITE}`;
-const imageR2SrcRegex =
-  /https:\/\/\w+-r2.datahub.io\/\w+\/main\/raw\/assets\/image.jpg/;
+const imagePath = `/${process.env.E2E_TEST_SITE}/_r/-/assets/image.jpg`;
 
 test.describe.configure({ mode: "parallel" });
 
@@ -71,13 +70,13 @@ test.describe("Markdown links resolution", () => {
     const obsidianEmbeds = page.getByTestId("obsidian-embeds").getByRole("img");
 
     const shortestPathEmbed = obsidianEmbeds.nth(0);
-    await expect(shortestPathEmbed).toHaveAttribute("src", imageR2SrcRegex);
+    await expect(shortestPathEmbed).toHaveAttribute("src", imagePath);
 
     const backwardPathEmbed = obsidianEmbeds.nth(1);
-    await expect(backwardPathEmbed).toHaveAttribute("src", imageR2SrcRegex);
+    await expect(backwardPathEmbed).toHaveAttribute("src", imagePath);
 
     const absolutePathEmbed = obsidianEmbeds.nth(2);
-    await expect(absolutePathEmbed).toHaveAttribute("src", imageR2SrcRegex);
+    await expect(absolutePathEmbed).toHaveAttribute("src", imagePath);
   });
 
   test("CommonMark links", async () => {
@@ -131,9 +130,9 @@ test.describe("Markdown links resolution", () => {
       .getByRole("img");
 
     const backwardPathImage = commonMarkImages.nth(0);
-    await expect(backwardPathImage).toHaveAttribute("src", imageR2SrcRegex);
+    await expect(backwardPathImage).toHaveAttribute("src", imagePath);
 
     const absolutePathImage = commonMarkImages.nth(1);
-    await expect(absolutePathImage).toHaveAttribute("src", imageR2SrcRegex);
+    await expect(absolutePathImage).toHaveAttribute("src", imagePath);
   });
 });

@@ -13,13 +13,11 @@ export const computeMetadata = async ({
   datapackage,
   path,
   tree,
-  contentStoreUrlBase,
 }: {
   source: string;
   datapackage: DataPackage | null;
-  path: string;
+  path: string; // absolute path without leading slash
   tree: GitHubAPIRepoTree;
-  contentStoreUrlBase: string;
 }): Promise<PageMetadata> => {
   const { data: frontMatter } = matter(source, {});
 
@@ -44,11 +42,13 @@ export const computeMetadata = async ({
       link: resource.path,
       filePath: path,
     }).slice(1);
+
+    resource.path = absoluteResourcePath; // absolute path without leading slash
+
     const file = tree.tree.find((file) => file.path === absoluteResourcePath);
     if (file) {
       resource.size = file.size;
       resource.format = file.path.split(".").pop();
-      resource.path = contentStoreUrlBase + "/" + absoluteResourcePath;
     }
   }
 
