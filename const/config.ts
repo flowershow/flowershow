@@ -53,7 +53,6 @@ const config: ExtendedSiteConfig = {
     { name: "Showcase", href: "/showcase" },
     { name: "Opensource", href: "/opensource" },
     { name: "Pricing", href: "/pricing" },
-    { name: "Showcase", href: "/showcase" },
     { name: "Forum", href: "https://github.com/datahubio/datahub/discussions" },
     { name: "Chat", href: "https://discord.com/invite/KrRzMKU" },
   ],
