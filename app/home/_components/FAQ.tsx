@@ -10,7 +10,7 @@ const faqData = [
     answer: (
       <>
         DataHub Cloud is a platform that allows you to easily publish and share
-        datasets from GitHub. It converts raw data and Markdown files into
+       both datasets and markdown notes directly from GitHub. It converts raw data and Markdown files into
         beautifully presented, interactive sites.
       </>
     ),
@@ -19,8 +19,8 @@ const faqData = [
     question: "How do I start using DataHub Cloud?",
     answer: (
       <>
-        Start by linking your GitHub repository to DataHub Cloud, add data and
-        edit your markdown files. Our platform processes these files to generate
+        Start by linking your GitHub repository to DataHub Cloud, then add your datasets and/or markdown 
+        files. Our platform processes these files to generate
         your beautifully formatted, dataset site, which you can then customize
         and publish with ease.
         <Link
@@ -41,8 +41,10 @@ const faqData = [
     answer: (
       <>
         Absolutely! DataHub Cloud is designed for ease of use, allowing you to
-        create dataset pages using simple markdown files without any coding
-        required. Our tools handle the conversion and presentation for you.
+        create pages using simple markdown files without any coding
+        required. Whether you’re publishing datasets or simple markdown notes, 
+        our tools handle the conversion and presentation for you. 
+    
       </>
     ),
   },
