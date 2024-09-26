@@ -74,9 +74,23 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     }
   }
 
+  const { title, description } = pageMetadata;
+
   return {
-    title: pageMetadata.title,
-    description: pageMetadata.description,
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: ["/thumbnail.png"],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/thumbnail.png"],
+      creator: "@datopian",
+    },
     // Set canonical URL to custom domain if it exists
     // Maybe not needed since we redirect to a custom domain if it exists ?
     ...(canonicalUrlBase && {
