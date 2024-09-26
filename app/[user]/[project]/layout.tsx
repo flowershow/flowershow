@@ -57,8 +57,6 @@ export async function generateMetadata({
   const title = siteConfig?.title || site.projectName;
   const description = siteConfig?.description || "";
 
-  console.log({ site });
-
   return {
     title: {
       template: "%s",
@@ -79,6 +77,12 @@ export async function generateMetadata({
       creator: "@datopian",
     },
     icons: ["/favicon.ico"],
+    metadataBase: new URL(
+      site.customDomain ??
+        `${env.NEXT_PUBLIC_VERCEL_ENV === "production" ? "https" : "http"}://${
+          env.NEXT_PUBLIC_ROOT_DOMAIN
+        }`,
+    ),
   };
 }
 

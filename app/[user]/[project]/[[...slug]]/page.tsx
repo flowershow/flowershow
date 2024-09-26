@@ -87,6 +87,12 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
             : `${canonicalUrlBase}/${decodedSlug}`,
       },
     }),
+    metadataBase: new URL(
+      site.customDomain ??
+        `${env.NEXT_PUBLIC_VERCEL_ENV === "production" ? "https" : "http"}://${
+          env.NEXT_PUBLIC_ROOT_DOMAIN
+        }`,
+    ),
   };
 }
 
