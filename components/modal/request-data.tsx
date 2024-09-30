@@ -30,6 +30,7 @@ export default function RequestDataModal() {
     api.home.sendDataRequest.useMutation({
       onSuccess: (res) => {
         modal?.hide();
+        toast.success("Request sent! We'll get back to you soon.");
       },
       onError: (error) => {
         toast.error(error.message);
@@ -170,7 +171,7 @@ function SendRequestButton({ disabled = false, pending = false }) {
       )}
       disabled={pending || disabled}
     >
-      {pending ? <LoadingDots color="#808080" /> : <p>Send request</p>}
+      {pending ? <LoadingDots color="#808080" /> : <p>Request quote</p>}
     </button>
   );
 }
