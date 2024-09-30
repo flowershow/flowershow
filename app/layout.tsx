@@ -14,38 +14,46 @@ import { cn } from "@/lib/utils";
 import config from "@/const/config";
 import { env } from "@/env.mjs";
 
+const { title, description, author } = config;
+
 export const metadata: Metadata = {
-  title: config.title,
-  description: config.description,
+  title,
+  description,
   icons: ["/favicon.ico"],
   openGraph: {
-    title: config.title,
-    description: config.description,
+    title,
+    description,
     type: "website",
-    url: config.author.url,
+    url: author.url,
     images: [
       {
         url: "/thumbnail.png",
         width: 1200,
-        height: 627,
+        height: 630,
         alt: "Thumbnail",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: config.title,
-    description: config.description,
+    title,
+    description,
     images: [
       {
         url: "/thumbnail.png",
-        width: 800,
-        height: 418,
+        width: 1200,
+        height: 630,
         alt: "Thumbnail",
       },
     ],
     creator: "@datopian",
   },
+  metadataBase: new URL(
+    env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
+    env.NEXT_PUBLIC_VERCEL_ENV === "preview"
+      ? `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}`
+      : `http://localhost:3000`,
+  ),
 };
 
 export default async function RootLayout({

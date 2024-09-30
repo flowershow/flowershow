@@ -62,27 +62,41 @@ export async function generateMetadata({
       template: "%s",
       default: title,
     },
-    description: description,
-    // TODO add everything below to config
+    description,
+    icons: ["/favicon.ico"],
     openGraph: {
-      title: title,
-      description: description,
-      images: ["/thumbnail.png"],
+      title,
+      description,
+      type: "website",
+      /* url: author.url, */
+      images: [
+        {
+          url: "/thumbnail.png",
+          width: 1200,
+          height: 630,
+          alt: "Thumbnail",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
-      title: title,
-      description: description,
-      images: ["/thumbnail.png"],
+      title,
+      description,
+      images: [
+        {
+          url: "/thumbnail.png",
+          width: 1200,
+          height: 630,
+          alt: "Thumbnail",
+        },
+      ],
       creator: "@datopian",
     },
-    icons: ["/favicon.ico"],
     metadataBase: new URL(
-      site.customDomain
-        ? `https://${site.customDomain}`
-        : env.VERCEL_URL
-          ? `https://${env.VERCEL_URL}`
-          : `http://localhost:3000`,
+      env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
+      env.NEXT_PUBLIC_VERCEL_ENV === "preview"
+        ? `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}`
+        : `http://localhost:3000`,
     ),
   };
 }

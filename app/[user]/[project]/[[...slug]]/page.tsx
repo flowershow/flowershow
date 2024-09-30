@@ -82,13 +82,28 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     openGraph: {
       title,
       description,
-      images: ["/thumbnail.png"],
+      /* url: author.url, */
+      images: [
+        {
+          url: "/thumbnail.png",
+          width: 1200,
+          height: 630,
+          alt: "Thumbnail",
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
-      images: ["/thumbnail.png"],
+      images: [
+        {
+          url: "/thumbnail.png",
+          width: 1200,
+          height: 630,
+          alt: "Thumbnail",
+        },
+      ],
       creator: "@datopian",
     },
     // Set canonical URL to custom domain if it exists
@@ -102,11 +117,10 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
       },
     }),
     metadataBase: new URL(
-      site.customDomain
-        ? `https://${site.customDomain}`
-        : env.VERCEL_URL
-          ? `https://${env.VERCEL_URL}`
-          : `http://localhost:3000`,
+      env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
+      env.NEXT_PUBLIC_VERCEL_ENV === "preview"
+        ? `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}`
+        : `http://localhost:3000`,
     ),
   };
 }

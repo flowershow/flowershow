@@ -1,3 +1,4 @@
+import { Metadata } from "next";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { Heart } from "lucide-react";
@@ -12,6 +13,43 @@ import { Showcase } from "./_components/Showcase";
 import { FAQ } from "./_components/FAQ";
 
 import { env } from "@/env.mjs";
+
+export const metadata: Metadata = {
+  title: "Publish your markdown notes directly from Github.",
+  description:
+    "Turn your Github repositories into dynamic data-rich sites with a few clicks. No coding.",
+  icons: ["/favicon.ico"],
+  openGraph: {
+    title: "Publish your markdown notes directly from Github.",
+    description:
+      "Turn your Github repositories into dynamic data-rich sites with a few clicks. No coding.",
+    type: "website",
+    url: `${env.NEXT_PUBLIC_ROOT_DOMAIN}/publish`,
+    images: [
+      {
+        url: "/publish_thumbnail.png",
+        width: 1200,
+        height: 630,
+        alt: "Thumbnail",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Publish your markdown notes directly from Github.",
+    description:
+      "Turn your Github repositories into dynamic data-rich sites with a few clicks. No coding.",
+    images: [
+      {
+        url: "/publish_thumbnail.png",
+        width: 1200,
+        height: 630,
+        alt: "Thumbnail",
+      },
+    ],
+    creator: "@datopian",
+  },
+};
 
 const heroFeatures = [
   "Easy to use",
