@@ -146,7 +146,6 @@ export default async function middleware(req: NextRequest) {
 
   // raw file paths (e.g. /_r/-/data/some.csv)
   if (rawPathMatch) {
-    console.log("rawPathMatch", rawPathMatch);
     const branch = rawPathMatch[1];
     const filePath = rawPathMatch[2];
 
