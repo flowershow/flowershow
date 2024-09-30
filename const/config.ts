@@ -26,7 +26,6 @@ const config: ExtendedSiteConfig = {
         { href: "/collections", name: "Collections" },
         { href: "/publish", name: "Publish" },
         { href: "/showcase", name: "Showcase" },
-        { href: "/opensource", name: "Open Source" },
         { href: "/pricing", name: "Pricing" },
       ],
     },
@@ -54,9 +53,7 @@ const config: ExtendedSiteConfig = {
     { name: "Collections", href: "/collections" },
     { name: "Publish", href: "/publish" },
     { name: "Showcase", href: "/showcase" },
-    { name: "Opensource", href: "/opensource" },
     { name: "Pricing", href: "/pricing" },
-    { name: "Forum", href: "https://github.com/datahubio/datahub/discussions" },
     { name: "Chat", href: "https://discord.com/invite/KrRzMKU" },
   ],
   social: [
