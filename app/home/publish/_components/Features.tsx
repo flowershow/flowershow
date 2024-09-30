@@ -6,7 +6,9 @@ import {
   ArrowPathIcon,
   ShareIcon,
 } from "@heroicons/react/24/outline";
+
 import { Heading } from "@/components/heading";
+import { Container } from "@/components/container";
 
 const features = [
   {
@@ -45,7 +47,7 @@ const features = [
 
 export function Features() {
   return (
-    <>
+    <Container>
       <Heading id="features" heading="Features" subheading="Key features" />
       <dl className="mx-auto mt-16 grid max-w-2xl grid-cols-1 gap-8 leading-7 text-gray-500 dark:text-primary-dark sm:grid-cols-2 lg:mx-0 lg:max-w-none lg:gap-x-16">
         {features.map((feature) => (
@@ -61,6 +63,6 @@ export function Features() {
           </div>
         ))}
       </dl>
-    </>
+    </Container>
   );
 }

@@ -1,11 +1,12 @@
 "use client";
-import { Heading } from "@/components/heading";
-import { GithubIcon } from "lucide-react";
-import { DiscordIcon } from "@/components/icons/discord";
-
-import config from "@/const/config";
-import { fetchGitHubRepo, fetchGitHubRepoContributors } from "@/lib/github";
 import { useEffect, useState } from "react";
+import { GithubIcon } from "lucide-react";
+
+import { Heading } from "@/components/heading";
+import { Container } from "@/components/container";
+import { DiscordIcon } from "@/components/icons/discord";
+import { fetchGitHubRepo, fetchGitHubRepoContributors } from "@/lib/github";
+import config from "@/const/config";
 
 const Stat = ({ title, value, ...props }) => {
   return (
@@ -32,7 +33,7 @@ const IconButton = ({ Icon, text, href, ...props }) => {
   );
 };
 
-export default function Community() {
+export function Community() {
   const [starsCount, setStarsCount] = useState<number>();
   const [contributorsCount, setContributorsCount] = useState<number>();
 
@@ -50,7 +51,7 @@ export default function Community() {
   }, []);
 
   return (
-    <>
+    <Container>
       {/* TODO better way to change accent color? */}
       <Heading
         id="community"
@@ -76,7 +77,7 @@ export default function Community() {
           className="mb-4 w-full sm:mr-4 sm:w-auto"
         />
       </div>
-    </>
+    </Container>
   );
 }
 

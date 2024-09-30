@@ -3,7 +3,7 @@ import { ExtendedSiteConfig } from "@/components/types";
 const config: ExtendedSiteConfig = {
   title: "DataHub",
   description:
-    "Turn your markdown into a website in a couple of clicks. Avoid the hassle and complexity of deploying yourself.",
+    "At Datahub, we provide various solutions to Publish and Deploy your Data with power and simplicity. Datahub is the fastest way for individuals, teams and organizations to publish, deploy and share their data.",
   logo: "/datahub-cube.svg",
   navbarTitle: {
     logo: "/datahub-cube.svg",
@@ -21,12 +21,13 @@ const config: ExtendedSiteConfig = {
       name: "Links",
       subItems: [
         { href: "/", name: "Home" },
-        { href: "/docs/terms-of-service", name: "Terms of Service" },
         { href: "/blog", name: "Blog" },
         { href: "/docs", name: "Docs" },
-        { href: "/showcase", name: "Showcase" },
         { href: "/collections", name: "Collections" },
+        { href: "/publish", name: "Publish" },
+        { href: "/showcase", name: "Showcase" },
         { href: "/opensource", name: "Open Source" },
+        { href: "/pricing", name: "Pricing" },
       ],
     },
     {
@@ -37,6 +38,7 @@ const config: ExtendedSiteConfig = {
           name: "Discussions",
           href: "https://github.com/datopian/datahub/discussions",
         },
+        { href: "/docs/terms-of-service", name: "Terms of Service" },
       ],
     },
     {
@@ -50,6 +52,7 @@ const config: ExtendedSiteConfig = {
     { name: "Blog", href: "/blog" },
     { name: "Docs", href: "/docs" },
     { name: "Collections", href: "/collections" },
+    { name: "Publish", href: "/publish" },
     { name: "Showcase", href: "/showcase" },
     { name: "Opensource", href: "/opensource" },
     { name: "Pricing", href: "/pricing" },

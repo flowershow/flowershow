@@ -1,10 +1,11 @@
-import Image from "next/image";
-import Showcases from "./_components/showcases";
-import Community from "./_components/community";
-import Features from "./_components/features";
-import { Section } from "@/components/section";
 import { Metadata } from "next";
+import Image from "next/image";
+
+import { Section } from "@/components/section";
 import { Hero } from "@/components/hero";
+import { Showcases } from "./_components/showcases";
+import { Community } from "./_components/community";
+import { Features } from "./_components/features";
 import { env } from "@/env.mjs";
 
 export const metadata: Metadata = {
@@ -81,26 +82,24 @@ const heroVisual = () => (
 export default function Home() {
   return (
     <>
-      <div className="mx-auto max-w-8xl px-4 pt-8 md:px-8 lg:px-[8rem] ">
-        <Hero
-          title={heroTitle}
-          description={heroDescription}
-          Visual={heroVisual}
-          actions={heroActions}
-        />
+      <Hero
+        title={heroTitle}
+        description={heroDescription}
+        Visual={heroVisual}
+        actions={heroActions}
+      />
 
-        <Section className="mx-auto max-w-4xl">
-          <Features />
-        </Section>
+      <Section>
+        <Features />
+      </Section>
 
-        <Section className="mx-auto max-w-4xl">
-          <Showcases />
-        </Section>
+      <Section>
+        <Showcases />
+      </Section>
 
-        <Section className="mx-auto max-w-4xl">
-          <Community />
-        </Section>
-      </div>
+      <Section>
+        <Community />
+      </Section>
     </>
   );
 }

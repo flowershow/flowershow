@@ -30,3 +30,11 @@ export const isDatasetPage = (
 ): pageMetadata is DatasetPageMetadata => {
   return pageMetadata._pagetype === "dataset";
 };
+
+export enum OrganizationType {
+  "Business" = "Business",
+  "Charity / NGO" = "Charity / NGO",
+  "Academic / Teacher / Researcher" = "Academic / Teacher / Researcher",
+  "Individual" = "Individual",
+  "Student" = "Student",
+}

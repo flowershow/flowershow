@@ -1,12 +1,13 @@
 "use client";
-import { Heading } from "@/components/heading";
-import { showcaseItems } from "@/const/showcase";
-import chunkArray from "@/lib/chunk-array";
 import Link from "next/link";
-import React from "react";
 import Slider from "react-slick";
+import chunkArray from "@/lib/chunk-array";
 
-const Showcase: React.FC = () => {
+import { Heading } from "@/components/heading";
+import { Container } from "@/components/container";
+import { showcaseItems } from "@/const/showcase-items";
+
+export function Showcase() {
   const settings = {
     dots: true,
     infinite: true,
@@ -16,7 +17,7 @@ const Showcase: React.FC = () => {
     autoplay: false,
   };
   return (
-    <div className="showcase-carousel mx-auto  max-w-6xl px-4">
+    <Container>
       <Heading
         id="showcase"
         heading="SHOWCASE"
@@ -58,8 +59,6 @@ const Showcase: React.FC = () => {
           );
         })}
       </Slider>
-    </div>
+    </Container>
   );
-};
-
-export default Showcase;
+}

@@ -1,5 +1,7 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
+
+import { Container } from "@/components/container";
 
 export function VisualDemo() {
   useEffect(() => {
@@ -10,7 +12,7 @@ export function VisualDemo() {
   }, []);
 
   return (
-    <div>
+    <Container>
       <h2 className="mt-12 text-center text-lg font-bold tracking-tight dark:text-white sm:text-4xl">
         Your GitHub. Our Platform. Perfect Harmony.
       </h2>
@@ -33,6 +35,6 @@ export function VisualDemo() {
           </video>
         </div>
       </div>
-    </div>
+    </Container>
   );
 }

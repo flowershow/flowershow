@@ -381,6 +381,32 @@ export const deleteGitHubRepoWebhook = async ({
 //     .filter((file) => file.type === "blob") // only include blobs (files) not trees (folders)
 // }
 
+export const submitGitHubIssue = async ({
+  gh_repository,
+  title,
+  body,
+  labels,
+  access_token,
+}: {
+  gh_repository: string;
+  title: string;
+  body: string;
+  labels?: string[];
+  access_token: string;
+}) => {
+  return await githubJsonFetch<GitHubAPIIssue>({
+    // https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28#create-an-issue
+    url: `/repos/${gh_repository}/issues`,
+    accessToken: access_token,
+    method: "POST",
+    body: {
+      title,
+      body,
+      labels,
+    },
+  });
+};
+
 export interface GitHubAPIFileContent {
   type: "file";
   encoding: "base64";
@@ -457,6 +483,15 @@ interface GitHubAPIWebhook {
   id: number;
   active: boolean;
   events: string[];
+  // ...
+}
+
+interface GitHubAPIIssue {
+  id: number;
+  number: number;
+  title: string;
+  body: string;
+  labels: string[];
   // ...
 }
 

@@ -1,10 +1,12 @@
 "use client";
-import clsx from "clsx";
-import { ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import clsx from "clsx";
+import { ExternalLink } from "lucide-react";
 
-const faqData = [
+import { Container } from "@/components/container";
+
+const FAQs = [
   {
     question: "What is DataHub Cloud?",
     answer: (
@@ -132,7 +134,7 @@ const faqData = [
   },
 ];
 
-const FAQ = () => {
+export function FAQ() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   const toggleFAQ = (index: number) => {
@@ -140,10 +142,10 @@ const FAQ = () => {
   };
 
   return (
-    <div className="mx-auto mt-16 max-w-3xl">
+    <Container>
       <h2 className="mb-4 text-2xl font-bold">FAQs</h2>
       <div className="space-y-4">
-        {faqData.map((faq, index) => (
+        {FAQs.map((faq, index) => (
           <div key={index} className="rounded-lg border border-gray-300 p-4">
             <button
               onClick={() => toggleFAQ(index)}
@@ -178,8 +180,6 @@ const FAQ = () => {
           </div>
         ))}
       </div>
-    </div>
+    </Container>
   );
-};
-
-export default FAQ;
+}

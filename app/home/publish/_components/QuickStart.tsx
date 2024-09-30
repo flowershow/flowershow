@@ -1,8 +1,10 @@
-import { Heading } from "@/components/heading";
-import { ExternalLink } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { ReactNode } from "react";
+import { ExternalLink } from "lucide-react";
+
+import { Heading } from "@/components/heading";
+import { Container } from "@/components/container";
 
 type Step = {
   id: string;
@@ -11,48 +13,6 @@ type Step = {
   imageSrc: string;
   imageAlt: string;
 };
-
-export function QuickStart() {
-  return (
-    <>
-      <Heading
-        id="quick-start"
-        heading="Quickstart"
-        subheading="Publish your data-rich stories in just a few steps"
-      />
-      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        {steps.map((step) => (
-          <QuickStartStep key={step.id} step={step} />
-        ))}
-      </div>
-
-      {/* <div className="mt-20 flex items-center justify-center gap-x-6">
-                <Button href="https://datarich-demo.datahub.io/posts/story1">
-                    <span>Read full tutorial</span>
-                </Button>
-            </div> */}
-    </>
-  );
-}
-
-function QuickStartStep({ step }: { step: Step }) {
-  return (
-    <div key={step.id} className="flex flex-col items-center">
-      <div className="mt-6 flex flex-col items-center sm:block">
-        <Image
-          width="1324"
-          height="912"
-          src={step.imageSrc}
-          alt={step.imageSrc}
-          className="w-[50%] sm:w-full"
-        />
-        <p className="font-light text-gray-600">Step {step.id}</p>
-        <h3 className="mb-2 mt-6 text-lg font-bold">{step.title}</h3>
-        <p className="py-1 text-gray-500">{step.description}</p>
-      </div>
-    </div>
-  );
-}
 
 const steps: Step[] = [
   {
@@ -113,9 +73,42 @@ const steps: Step[] = [
     id: "4",
     title: "SHARE IT WITH THE WORLD",
     description: (
-      <span> You can now share your awesome data-rich page with the world! </span>
+      <span>
+        {" "}
+        You can now share your awesome data-rich page with the world!{" "}
+      </span>
     ),
     imageSrc: "/share-with-the-world.svg",
     imageAlt: "CHOOSE OR CREATE A GITHUB REPO Image",
   },
 ];
+
+export function QuickStart() {
+  return (
+    <Container>
+      <Heading
+        id="quick-start"
+        heading="Quickstart"
+        subheading="Publish your data-rich stories in just a few steps"
+      />
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        {steps.map((step) => (
+          <div key={step.id} className="flex flex-col items-center">
+            <div className="mt-6 flex flex-col items-center sm:block">
+              <Image
+                width="1324"
+                height="912"
+                src={step.imageSrc}
+                alt={step.imageSrc}
+                className="w-[50%] sm:w-full"
+              />
+              <p className="font-light text-gray-600">Step {step.id}</p>
+              <h3 className="mb-2 mt-6 text-lg font-bold">{step.title}</h3>
+              <p className="py-1 text-gray-500">{step.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </Container>
+  );
+}

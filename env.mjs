@@ -40,10 +40,10 @@ export const env = createEnv({
     R2_BUCKET_NAME: z.string(),
     GH_WEBHOOK_SECRET: z.string(),
     GH_WEBHOOK_URL: z.string(),
+    GH_ACCESS_TOKEN: z.string(),
     GTM_ID: z.string(),
     GA_MEASUREMENT_ID: z.string(),
     GA_SECRET: z.string(),
-
     BREVO_API_URL: z.string(),
     BREVO_API_KEY: z.string(),
     BREVO_CONTACT_LISTID: z.number()
@@ -94,10 +94,11 @@ export const env = createEnv({
     NEXT_PUBLIC_DNS_DOMAIN: process.env.NEXT_PUBLIC_DNS_DOMAIN,
     GH_WEBHOOK_SECRET: process.env.GH_WEBHOOK_SECRET,
     GH_WEBHOOK_URL: process.env.GH_WEBHOOK_URL,
+    GH_ACCESS_TOKEN: process.env.GH_ACCESS_TOKEN,
     GTM_ID: process.env.GTM_ID,
     GA_MEASUREMENT_ID: process.env.GA_MEASUREMENT_ID,
     GA_SECRET: process.env.GA_SECRET,
-    BREVO_API_URL : process.env.BREVO_API_URL,
+    BREVO_API_URL: process.env.BREVO_API_URL,
     BREVO_API_KEY: process.env.BREVO_API_KEY,
     BREVO_CONTACT_LISTID: Number(process.env.BREVO_CONTACT_LISTID)
   },

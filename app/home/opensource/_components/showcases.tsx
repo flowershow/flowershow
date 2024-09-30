@@ -1,4 +1,5 @@
 import { Heading } from "@/components/heading";
+import { Container } from "@/components/container";
 
 const items = [
   {
@@ -28,9 +29,9 @@ const items = [
   },
 ];
 
-export default function Showcases() {
+export function Showcases() {
   return (
-    <>
+    <Container>
       <Heading
         id="showcases"
         heading="Showcases"
@@ -38,35 +39,30 @@ export default function Showcases() {
         accentColor="cyan-500"
       />
       <div className="not-prose my-12 grid grid-cols-1 gap-6 md:grid-cols-2">
-        {items.map((item) => {
-          return <ShowcasesItem key={item.title} item={item} />;
-        })}
+        {items.map((item) => (
+          <a
+            className="border-1 group relative overflow-hidden rounded shadow-lg"
+            target="_blank"
+            href={item.href}
+            key={item.title}
+          >
+            <div
+              className="aspect-video w-full bg-cover bg-top bg-no-repeat transition-all duration-200 group-hover:scale-105 group-hover:blur-sm"
+              style={{ backgroundImage: `url(${item.image})` }}
+            >
+              <div className="h-full w-full bg-black opacity-0 transition-all duration-200 group-hover:opacity-50"></div>
+            </div>
+            <div>
+              <div className="absolute bottom-0 left-0 right-0 top-0 flex items-center justify-center px-2 opacity-0 transition-all duration-200 group-hover:opacity-100">
+                <div className="text-center text-primary-dark">
+                  <span className="text-xl font-semibold">{item.title}</span>
+                  <p className="text-base font-medium">{item.description}</p>
+                </div>
+              </div>
+            </div>
+          </a>
+        ))}
       </div>
-    </>
-  );
-}
-
-function ShowcasesItem({ item }) {
-  return (
-    <a
-      className="border-1 group relative overflow-hidden rounded shadow-lg"
-      target="_blank"
-      href={item.href}
-    >
-      <div
-        className="aspect-video w-full bg-cover bg-top bg-no-repeat transition-all duration-200 group-hover:scale-105 group-hover:blur-sm"
-        style={{ backgroundImage: `url(${item.image})` }}
-      >
-        <div className="h-full w-full bg-black opacity-0 transition-all duration-200 group-hover:opacity-50"></div>
-      </div>
-      <div>
-        <div className="absolute bottom-0 left-0 right-0 top-0 flex items-center justify-center px-2 opacity-0 transition-all duration-200 group-hover:opacity-100">
-          <div className="text-center text-primary-dark">
-            <span className="text-xl font-semibold">{item.title}</span>
-            <p className="text-base font-medium">{item.description}</p>
-          </div>
-        </div>
-      </div>
-    </a>
+    </Container>
   );
 }

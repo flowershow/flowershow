@@ -32,7 +32,7 @@ export default function HomeLayout({ children }: { children: ReactNode }) {
             href={signInLink}
             className="border-l-2 pl-6 text-sm font-medium text-slate-500 hover:text-slate-600"
           >
-            Sign In
+            DataHub Cloud Login
           </Link>
         </Nav>
         {children}

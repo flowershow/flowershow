@@ -1,98 +1,68 @@
-import { Section } from "@/components/section";
-import { CTASection } from "@/app/home/_components/CTASection";
-import { QuickStart } from "@/app/home/_components/QuickStart";
-import { Hero } from "@/components/hero";
-import FAQ from "@/app/home/_components/FAQ";
-import { VisualDemo } from "@/app/home/_components/VisualDemo";
-import Showcase from "@/app/home/_components/Showcase";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { Features } from "./_components/Features";
 import { Heart } from "lucide-react";
-import { env } from "@/env.mjs";
 
-const heroFeatures = [
-  "Easy to use",
-  "Markdown-based",
-  "Hosted for you",
-  "Run-off GitHub",
-];
+import { Section } from "@/components/section";
+import { Hero } from "@/components/hero";
+import { RequestData } from "./_components/request-data";
+import { LogoCloud } from "./_components/logo-cloud";
+import { DiscoverSection } from "./_components/discover-section";
+import { WeeklyPick } from "./_components/weekly-pick";
+import { PublishSection } from "./_components/publish-section";
+import { Newsletter } from "./_components/newsletter";
 
-const heroTitle = <>Publish your markdown notes directly from Github</>;
-
-const heroHref: string = (() => {
-  let url = "";
-  if (env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
-    url = `https://staging-cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}/login`;
-  } else {
-    url = `http://cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}/login`;
-  }
-  return url;
-})();
+const heroTitle = <>Find, Share and Publish Quality Data with Datahub</>;
 
 const heroActions = [
   {
-    label: "Get started for free",
-    href: heroHref,
+    label: "Discover datasets",
+    href: "/collections",
     variant: "solid" as const,
+  },
+  {
+    label: "Publish your dataset",
+    href: "/publish",
+    variant: "outline" as const,
   },
 ];
 
 const heroDescription =
-  "Turn your Github repositories into dynamic data-rich sites with a few clicks. No coding.";
-
-const containerWidth = "mx-auto max-w-8xl px-4 md:px-8 lg:px-[8rem]";
+  "With thousands of free datasets and a Premium Data Service, Datahub ensures you always find the data you need, right when you need It – updated, accurate, and tailored to your requirements.";
 
 export default function Home() {
   return (
     <>
-      <div className={containerWidth}>
-        <Hero
-          title={heroTitle}
-          description={heroDescription}
-          features={heroFeatures}
-          actions={heroActions}
-        >
-          <HeroMessage />
-        </Hero>
+      <Hero
+        title={heroTitle}
+        description={heroDescription}
+        actions={heroActions}
+      >
+        <HeroMessage />
+      </Hero>
 
-        <Section className="mt-18 md:mt-24">
-          <VisualDemo />
-        </Section>
-
-        <Section className="mt-18 md:mt-24">
-          <QuickStart />
-        </Section>
-
-        <Section className="mt-18 mx-auto max-w-4xl md:mt-24">
-          <Features />
-        </Section>
-
-        <Section className="mt-18 md:mt-24">
-          <Showcase />
-        </Section>
-      </div>
-
-      {/* This's removed for now as we don't have real testimonials */}
-      {/* <Section className="mt-18 w-full md:mt-24">
-        <TestimonialSection />
-      </Section> */}
-
-      <div className={containerWidth}>
-        <Section className="mt-18 md:mt-24">
-          <FAQ />
-        </Section>
-      </div>
-
-      <Section className="mt-18 w-full md:mt-24">
-        <CTASection />
+      <Section>
+        <LogoCloud />
       </Section>
 
-      {/*
-        <Section className="!max-w-3xl">
-          <Roadmap />
-        </Section>
-        */}
+      <Section>
+        <DiscoverSection />
+      </Section>
+
+      <Section>
+        <RequestData />
+      </Section>
+
+      <Section>
+        <WeeklyPick />
+      </Section>
+
+      <div className="mt-12 md:mt-16">
+        <PublishSection />
+      </div>
+
+      <Section>
+        <Newsletter />
+      </Section>
     </>
   );
 }
@@ -100,10 +70,6 @@ export default function Home() {
 function HeroMessage() {
   return (
     <div className="text-center">
-      <p className="mt-2 text-base font-light text-gray-500">
-        No credit card required
-      </p>
-
       <p className="mt-10 flex items-center justify-center text-lg font-bold">
         Built with{" "}
         <Heart className="mx-2 fill-orange-400 text-orange-400" size={24} /> by

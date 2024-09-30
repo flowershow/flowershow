@@ -1,4 +1,5 @@
 import { Heading } from "@/components/heading";
+import { Container } from "@/components/container";
 
 const features: { title: string; description: string; icon: string }[] = [
   {
@@ -36,9 +37,9 @@ const features: { title: string; description: string; icon: string }[] = [
     icon: "/icon-well-documented.svg",
   },
 ];
-export default function Features() {
+export function Features() {
   return (
-    <>
+    <Container>
       <Heading
         id="how-datahub-works"
         heading="About"
@@ -76,6 +77,6 @@ export default function Features() {
           </div>
         ))}
       </div>
-    </>
+    </Container>
   );
 }
