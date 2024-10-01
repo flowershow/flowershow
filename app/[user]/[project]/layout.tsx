@@ -1,17 +1,21 @@
-import { ReactNode } from "react";
-import { notFound, redirect } from "next/navigation";
 import { Metadata } from "next";
-import { api } from "@/trpc/server";
-import { env } from "@/env.mjs";
+import { notFound, redirect } from "next/navigation";
+import { ReactNode } from "react";
+import { GoogleAnalytics } from "@next/third-parties/google";
+import { Site } from "@prisma/client";
+
 import Navbar from "@/components/nav";
 import Footer from "@/components/footer";
 import defaultConfig from "@/const/config";
-import { resolveLink } from "@/lib/resolve-link";
-import { Site } from "@prisma/client";
 import TableOfContentsSidebar from "@/components/table-of-content";
 import Sidebar from "@/components/sidebar";
 import BuiltWithDataHub from "@/components/built-with-datahub";
-import { GoogleAnalytics } from "@next/third-parties/google";
+import { DataRequestBanner } from "@/components/data-request-banner";
+import { resolveLink } from "@/lib/resolve-link";
+import { isCoreDatasetOrCollection } from "@/lib/is-core-dataset";
+import { api } from "@/trpc/server";
+import { env } from "@/env.mjs";
+import { cn } from "@/lib/utils";
 
 type SiteWithUser = Site & {
   user: {
@@ -185,6 +189,8 @@ export default async function SiteLayout({
   const showSidebar = siteConfig?.showSidebar;
   const showToc = siteConfig?.showToc ?? true;
 
+  const showDataRequestBanner = isCoreDatasetOrCollection(site);
+
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
@@ -216,7 +222,9 @@ export default async function SiteLayout({
           >
             <div className="flex-grow">{children}</div>
 
-            <div className="mx-auto w-full ">
+            <div
+              className={cn("mx-auto w-full", showDataRequestBanner && "mb-12")}
+            >
               <Footer
                 author={siteConfig?.author}
                 social={socialLinks}
@@ -236,9 +244,10 @@ export default async function SiteLayout({
             </aside>
           )}
 
-          <BuiltWithDataHub />
+          {!showDataRequestBanner && <BuiltWithDataHub />}
         </main>
       </div>
+      {showDataRequestBanner && <DataRequestBanner />}
     </>
   );
 }
