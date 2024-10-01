@@ -75,6 +75,7 @@
     "react-slick": "^0.30.2",
     "react-syntax-highlighter": "^15.5.0",
     "react-textarea-autosize": "^8.5.3",
+    "react-turnstile": "^1.1.4",
     "react-tweet": "^3.1.1",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-katex": "^7.0.0",

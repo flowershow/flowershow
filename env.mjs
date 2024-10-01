@@ -46,8 +46,8 @@ export const env = createEnv({
     GA_SECRET: z.string(),
     BREVO_API_URL: z.string(),
     BREVO_API_KEY: z.string(),
-    BREVO_CONTACT_LISTID: z.number()
-
+    BREVO_CONTACT_LISTID: z.number(),
+    TURNSTILE_SECRET_KEY: z.string()
   },
 
   /**
@@ -64,6 +64,7 @@ export const env = createEnv({
     NEXT_PUBLIC_VERCEL_ENV: z.string().optional(),
     NEXT_PUBLIC_DNS_DOMAIN: z.string(),
     NEXT_PUBLIC_R2_BUCKET_DOMAIN: z.string(),
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string(),
   },
 
   /**
@@ -100,7 +101,9 @@ export const env = createEnv({
     GA_SECRET: process.env.GA_SECRET,
     BREVO_API_URL: process.env.BREVO_API_URL,
     BREVO_API_KEY: process.env.BREVO_API_KEY,
-    BREVO_CONTACT_LISTID: Number(process.env.BREVO_CONTACT_LISTID)
+    BREVO_CONTACT_LISTID: Number(process.env.BREVO_CONTACT_LISTID),
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+    TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

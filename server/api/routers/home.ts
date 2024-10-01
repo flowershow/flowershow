@@ -12,9 +12,29 @@ export const homeRouter = createTRPCRouter({
         email: z.string().email(),
         organization_type: z.nativeEnum(OrganizationType),
         description: z.string(),
+        captcha_token: z.string(),
       }),
     )
     .mutation(async ({ input }) => {
+      const verificationResponse = await fetch(
+        "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+          body: `secret=${encodeURIComponent(
+            env.TURNSTILE_SECRET_KEY,
+          )}&response=${encodeURIComponent(input.captcha_token)}`,
+        },
+      );
+
+      const verificationResult = await verificationResponse.json();
+
+      if (!verificationResult.success) {
+        throw new Error("Failed to verify captcha token");
+      }
+
       // submit an issue to the github repo
       if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
         await submitGitHubIssue({
