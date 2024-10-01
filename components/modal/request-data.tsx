@@ -56,6 +56,7 @@ export default function RequestDataModal() {
 
     sendRequest({
       ...formData,
+      location: window.location.href,
       captcha_token: token,
     });
   };

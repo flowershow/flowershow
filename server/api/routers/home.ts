@@ -12,6 +12,7 @@ export const homeRouter = createTRPCRouter({
         email: z.string().email(),
         organization_type: z.nativeEnum(OrganizationType),
         description: z.string(),
+        location: z.string(),
         captcha_token: z.string(),
       }),
     )
@@ -43,6 +44,7 @@ export const homeRouter = createTRPCRouter({
           body: `**Name:** ${input.name}
 **Email:** ${input.email}
 **Organization Type:** ${input.organization_type}
+**Location:** ${input.location}
 
 ${input.description}`,
           labels: ["data-request"],
