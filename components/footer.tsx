@@ -110,7 +110,20 @@ export default function Footer({
         </div>
         <div className="mt-8 border-t border-gray-900/10 pt-8 sm:mt-10 lg:mt-12">
           <p className="text-xs leading-5 text-gray-500">
-            &copy; 2024 All rights reserved
+            <span>&copy; 2024 All rights reserved</span>
+            <svg
+              viewBox="0 0 2 2"
+              aria-hidden="true"
+              className="mx-2 inline h-0.5 w-0.5 fill-current"
+            >
+              <circle r={1} cx={1} cy={1} />
+            </svg>
+            Built with{" "}
+            <Link href="/publish">
+              <span className="text-gray-600 hover:text-gray-900">
+                DataHub Cloud
+              </span>
+            </Link>
           </p>
         </div>
       </div>
