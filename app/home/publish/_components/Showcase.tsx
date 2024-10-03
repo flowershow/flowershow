@@ -59,6 +59,15 @@ export function Showcase() {
           );
         })}
       </Slider>
+
+      {/* <div className="mt-16 text-center">
+                <Link
+                    href="/publish/showcase"
+                    className="text-orange-400 hover:text-orange-500"
+                >
+                    <span>View all</span>
+                </Link>
+            </div> */}
     </Container>
   );
 }
