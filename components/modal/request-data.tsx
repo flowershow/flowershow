@@ -37,7 +37,7 @@ export default function RequestDataModal() {
         toast.success("Request sent! We'll get back to you soon.");
       },
       onError: (error) => {
-        toast.error(error.message);
+        toast.error("Failed to send request. Please try again.");
       },
     });
 

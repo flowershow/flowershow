@@ -39,7 +39,7 @@ export const homeRouter = createTRPCRouter({
       // submit an issue to the github repo
       if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
         await submitGitHubIssue({
-          gh_repository: "datopian/sales",
+          gh_repository: "datopian/datahub-sales",
           title: `New request from ${input.name}`,
           body: `**Name:** ${input.name}
 **Email:** ${input.email}
