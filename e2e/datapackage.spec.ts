@@ -166,6 +166,25 @@ test.describe("README with datapackage.json", () => {
   test("Resources schema", async () => {
     const dataPreviews = page.getByTestId("dp-previews");
     expect(await dataPreviews.getByTestId("dp-schema").count()).toBe(2);
+
+    // test first schema
+    const schema1 = dataPreviews.getByTestId("dp-schema").nth(0);
+    await expect(
+      schema1.getByRole("heading", { name: "Schema" }),
+    ).toBeVisible();
+    const schemaTable = schema1.getByRole("table");
+    await expect(schemaTable).toBeVisible();
+    expect(await schemaTable.locator("tbody").locator("tr").count()).toBe(2);
+    const expectedHeaders = [
+      "name",
+      "type",
+      "format",
+      "decimalChar",
+      "groupChar",
+    ];
+    expectedHeaders.forEach((header, index) => {
+      expect(schemaTable.locator("th").nth(index)).toContainText(header);
+    });
   });
 
   test("Show Repository Link", async () => {

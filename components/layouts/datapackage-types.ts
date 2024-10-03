@@ -61,13 +61,14 @@ interface ResourceBase {
 
 // TODO check if this is the correct schema
 export interface ResourceSchema {
-  fields: ResourceSchemaField[];
+  fields?: ResourceSchemaField[];
   // ...
 }
 
 export interface ResourceSchemaField {
   name: string;
   type: "date" | "number" | "yearmonth" | "year";
+  [key: string]: any;
 }
 
 type License = LicenseWithName | LicenseWithPath;

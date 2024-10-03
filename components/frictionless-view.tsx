@@ -75,14 +75,16 @@ function convertSimpleViewToVegaLite({
   if (!resource.schema) {
     throw new Error(`Resource \`${resource.name}\` has no schema`);
   }
-  const x = resource.schema.fields.find((f) => f.name === view.spec.group);
+  const x = resource.schema?.fields?.find((f) => f.name === view.spec.group);
   if (!x) {
     throw new Error(
       `Field \`${view.spec.group}\` not found in resource schema.`,
     );
   }
   // TODO why is this hard coded to index 0?
-  const y = resource.schema.fields.find((f) => f.name === view.spec.series[0]);
+  const y = resource.schema?.fields?.find(
+    (f) => f.name === view.spec.series[0],
+  );
   if (!y) {
     throw new Error(
       `Field \`${view.spec.series[0]}\` not found in resource \`${resource.name}\` schema`,
