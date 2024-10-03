@@ -163,6 +163,11 @@ test.describe("README with datapackage.json", () => {
     // expect(preview1.locator(".github-octo-flat-ui")).toBeVisible();
   });
 
+  test("Resources schema", async () => {
+    const dataPreviews = page.getByTestId("dp-previews");
+    expect(await dataPreviews.getByTestId("dp-schema").count()).toBe(2);
+  });
+
   test("Show Repository Link", async () => {
     const gotoRepo = page.getByTestId("goto-repository");
     await expect(gotoRepo).toBeVisible();
@@ -222,5 +227,10 @@ test.describe("README with frontmatter datapackage", () => {
   test("Data previews", async () => {
     const dataPreviews = page.getByTestId("dp-previews");
     expect(await dataPreviews.getByTestId("dp-preview").count()).toBe(2);
+  });
+
+  test("Resources schema", async () => {
+    const dataPreviews = page.getByTestId("dp-previews");
+    expect(await dataPreviews.getByTestId("dp-schema").count()).toBe(2);
   });
 });

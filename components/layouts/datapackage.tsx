@@ -21,6 +21,7 @@ import Link from "next/link";
 import { Github } from "lucide-react";
 import getJsonLd from "./getJsonLd";
 import dynamic from "next/dynamic";
+import { ResourceSchema } from "../resource-schema";
 
 type SiteWithUser = Site & {
   user: {
@@ -183,7 +184,7 @@ export const DataPackageLayout: React.FC<Props> = ({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <article className="prose-headings:font-headings prose mx-auto max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
+      <article className="prose-headings:font-headings lg:prose-md prose mx-auto max-w-full px-6 pt-12 dark:prose-invert prose-headings:font-medium prose-a:break-words ">
         <header className="mb-8 flex flex-col gap-y-5">
           <h1 className="!mb-2">{title}</h1>
           <div className="flex items-center justify-between">
@@ -322,7 +323,12 @@ export const DataPackageLayout: React.FC<Props> = ({
             <h2 id="data-previews">Data Previews</h2>
             <div>
               {_resources.slice(0, 5).map((resource) => (
-                <ResourcePreview resource={resource} key={resource.name} />
+                <div key={resource.name}>
+                  <ResourcePreview resource={resource} />
+                  {resource.schema && (
+                    <ResourceSchema schema={resource.schema} />
+                  )}
+                </div>
               ))}
             </div>
           </section>
