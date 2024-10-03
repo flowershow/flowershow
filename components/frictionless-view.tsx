@@ -164,7 +164,7 @@ function convertSimpleViewToVegaLite({
 
 const inferVegaType = (fieldType: ResourceSchemaField["type"]) => {
   const isSupportedFieldType =
-    ["yearmonth", "date", "number"].indexOf(fieldType) !== -1;
+    ["yearmonth", "year", "date", "number"].indexOf(fieldType) !== -1;
   if (!isSupportedFieldType) {
     throw new Error(`Unsupported field type: ${fieldType}`);
   }
