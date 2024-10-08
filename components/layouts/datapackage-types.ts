@@ -67,7 +67,7 @@ export interface ResourceSchema {
 
 export interface ResourceSchemaField {
   name: string;
-  type: "date" | "number" | "yearmonth" | "year";
+  type: "yearmonth" | "year" | "date" | "number" | "integer" | "string";
   [key: string]: any;
 }
 

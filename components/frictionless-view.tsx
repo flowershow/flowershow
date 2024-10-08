@@ -1,10 +1,10 @@
+import { DatasetPageMetadata } from "@/server/api/types";
 import type {
   Resource,
   ResourceSchemaField,
   SimpleView,
 } from "@/components/layouts/datapackage-types";
-import { DatasetPageMetadata } from "@/server/api/types";
-
+import { ErrorMessage } from "@/components/error-message";
 import { VegaLite } from "./client-components-wrapper";
 
 type FrictionlessViewReturnType = ({
@@ -45,7 +45,13 @@ export const FrictionlessView: React.FC<FrictionlessViewProps> = ({
   view,
   resource,
 }) => {
-  const vegaSpec = convertSimpleViewToVegaLite({ view, resource });
+  let vegaSpec;
+
+  try {
+    vegaSpec = convertSimpleViewToVegaLite({ view, resource });
+  } catch (e: any) {
+    return <ErrorMessage title="Error in datapackage:" message={e.message} />;
+  }
 
   vegaSpec.data = {
     url: resource.path,
@@ -177,6 +183,7 @@ const inferVegaType = (fieldType: ResourceSchemaField["type"]) => {
     case "date":
       return "temporal";
     case "number":
+    case "integer":
       return "quantitative";
   }
 };
