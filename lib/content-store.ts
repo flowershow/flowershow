@@ -158,6 +158,19 @@ export const fetchFile = async ({
   return (await response.Body?.transformToString()) || null;
 };
 
+export const getFileModificationTime = async ({
+  projectId,
+  branch,
+  path,
+}: {
+  projectId: string;
+  branch: string;
+  path: string;
+}) => {
+  const response = await fetchR2Object(`${projectId}/${branch}/raw/${path}`);
+  return response.LastModified;
+};
+
 export const deleteFile = async ({
   projectId,
   branch,

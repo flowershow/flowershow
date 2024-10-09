@@ -47,7 +47,7 @@ export const computeMetadata = async ({
 
     const file = tree.tree.find((file) => file.path === absoluteResourcePath);
     if (file) {
-      resource.size = file.size;
+      resource.bytes = file.size;
       resource.format = file.path.split(".").pop();
     }
   }
