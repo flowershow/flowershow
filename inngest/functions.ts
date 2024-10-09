@@ -6,7 +6,6 @@ import prisma from "@/server/db";
 import { Prisma } from "@prisma/client";
 import { normalizeDir } from "@/server/api/routers/site";
 import { DataPackage } from "@/components/layouts/datapackage-types";
-import { env } from "@/env.mjs";
 import {
   deleteFile,
   deleteProject,
@@ -31,6 +30,20 @@ import {
 import { revalidateTag } from "next/cache";
 import { isPathVisible } from "@/lib/path-validator";
 import { SiteConfig } from "@/components/types";
+
+const parseDataPackage = (content: string, extension: string): DataPackage => {
+  if (extension === "json") {
+    return JSON.parse(content) as DataPackage;
+  } else if (extension === "yaml" || extension === "yml") {
+    return YAML.parse(content) as DataPackage; // datapackageContent is base64 encoded, so we need to decode it
+  }
+  throw new NonRetriableError("Unsupported data package format");
+};
+
+const getFileDir = (path: string): string => {
+  const fileDir = path.substring(0, path.lastIndexOf("/") + 1);
+  return fileDir;
+};
 
 // TODO handle different types of errors when fetching from GH or uploading to CS
 export const syncSite = inngest.createFunction(
@@ -170,7 +183,6 @@ export const syncSite = inngest.createFunction(
     });
 
     if (contentStoreTree && contentStoreTree.sha === gitHubTree.sha) {
-      // why was this here?
       await step.run(
         "update-sync-status",
         async () =>
@@ -222,8 +234,6 @@ export const syncSite = inngest.createFunction(
 
     const promises = Array.from(gitHubTreeItems.entries()).map(
       async ([path, sha]) => {
-        // TODO this will make any changes to datapackage.json files be skipped
-        // if README.md hasn't changed as well
         if (
           contentStoreTreeItems.has(path) &&
           contentStoreTreeItems.get(path) === sha
@@ -231,8 +241,6 @@ export const syncSite = inngest.createFunction(
           return null;
         }
 
-        // check if the file is already in the content store and hasn't changed
-        // fetch and upload the file content to the content store
         const fileExtension = path.split(".").pop() as SupportedExtension; // files with unsupported extensions were filtered out earlier
 
         const contentStoreFilePath = path.replace(normalizedRootDir, "");
@@ -252,27 +260,26 @@ export const syncSite = inngest.createFunction(
             extension: fileExtension,
           });
 
+          let markdownFilePath = contentStoreFilePath;
+          let markdown: string;
+          let datapackage: DataPackage | null = null;
+
           if (isSupportedMarkdownExtension(fileExtension)) {
-            const markdown = await gitHubFileBlob.text();
+            // if it's a markdown file, process it
 
-            // special case for README.md and index.md files
-            let datapackage: DataPackage | null = null;
+            markdown = await gitHubFileBlob.text();
+
+            // if it's a README.md or index.md file, find the datapackage file in the same directory (if it exists)
             if (path.endsWith("README.md") || path.endsWith("index.md")) {
-              let fileDir = path.split("/").slice(0, -1).join("/");
-              fileDir = fileDir ? `${fileDir}/` : "";
+              const fileDir = getFileDir(path);
 
-              const datapackageTreeItem =
-                // TODO probably should look for the file in the map isntead
-                gitHubTree.tree.find((f) => {
-                  return (
-                    f.path === `${fileDir}datapackage.json` ||
-                    f.path === `${fileDir}datapackage.yaml` ||
-                    f.path === `${fileDir}datapackage.yml`
-                  );
-                }) || null;
+              const datapackageTreeItem = gitHubTree.tree.find((f) =>
+                new RegExp(`${fileDir}datapackage\\.(json|ya?ml)$`).test(
+                  f.path,
+                ),
+              );
 
               if (datapackageTreeItem) {
-                // TODO potentially duplicate fetch; refactor to avoid
                 const datapackageGitHubFile = await fetchGitHubFile({
                   gh_repository,
                   gh_branch,
@@ -282,67 +289,97 @@ export const syncSite = inngest.createFunction(
 
                 const datapackageFileExtension = datapackageTreeItem.path
                   .split(".")
-                  .pop() as SupportedExtension; // json, yaml, or yml are supported
+                  .pop() as SupportedExtension; // json, yaml, and yml are supported
 
                 const datapackageContentString = Buffer.from(
                   datapackageGitHubFile.content,
                   "base64",
                 ).toString("utf-8");
 
-                if (datapackageFileExtension === "json") {
-                  datapackage = JSON.parse(
-                    datapackageContentString,
-                  ) as DataPackage;
-                } else if (
-                  datapackageFileExtension === "yaml" ||
-                  datapackageFileExtension === "yml"
-                ) {
-                  datapackage = YAML.parse(
-                    datapackageContentString,
-                  ) as DataPackage; // datapackageContent is base64 encoded, so we need to decode it
-                }
+                datapackage = parseDataPackage(
+                  datapackageContentString,
+                  datapackageFileExtension,
+                );
               }
             }
+          } else if (path.match(/datapackage\.(json|ya?ml)$/)) {
+            // if it's a datapackage file, find the README.md or index.md file in the same directory
+            // TODO there should be a better way to do this
+            // TODO it's possible that the datapackage has already been processed with the README.md or index.md file above
+            // so would be good to avoid processing it again
 
-            try {
-              const metadata = await computeMetadata({
-                source: markdown,
-                datapackage,
-                path: contentStoreFilePath,
-                tree: gitHubTree,
-              });
+            const fileDir = getFileDir(path);
 
-              return { metadata };
-            } catch (error: any) {
-              if (error.name === "YAMLException") {
-                // TODO this is temporary as I couldn't get read the passed {cause: error} in the onFailed handler
-                // See post in inngest discord forum https://discord.com/channels/842170679536517141/1265692893117550768
-                const syncError: SyncError = {
-                  datetime: new Date().toISOString(),
-                  type: "MARKDOWN_PARSING_ERROR",
-                  message: `Failed to parse YAML frontmatter in ${contentStoreFilePath}: ${error.message}`,
-                  error: JSON.stringify(error),
-                };
+            const readmeTreeItem = gitHubTree.tree.find((f) => {
+              return (
+                f.path === `${fileDir}README.md` ||
+                f.path === `${fileDir}index.md`
+              );
+            });
 
-                await prisma.site.update({
-                  where: { id: site!.id }, // TODO this can't be right
-                  data: {
-                    syncStatus: "ERROR",
-                    syncError: syncError as any, // TODO fix types
-                  },
-                });
-
-                // Only this should be needed and the above should be removed but
-                // I couldn't get the error to be passed to the onFailure handler
-                // also, currently the original error is not visible in inngest logs ...
-                throw new NonRetriableError("MARKDOWN_PARSING_ERROR", {
-                  cause: error,
-                });
-              }
+            // if README.md or index.md file is not found, skip processing the datapackage file
+            if (!readmeTreeItem) {
+              return null;
             }
+
+            const readmeGitHubFileBlob = await fetchGitHubFileRaw({
+              gh_repository,
+              file_sha: readmeTreeItem.sha,
+              access_token,
+            });
+
+            markdown = await readmeGitHubFileBlob.text();
+            markdownFilePath = readmeTreeItem.path.replace(
+              normalizedRootDir,
+              "",
+            );
+
+            const datapackageContentString = await gitHubFileBlob.text();
+            datapackage = parseDataPackage(
+              datapackageContentString,
+              fileExtension,
+            );
+          } else {
+            // if it's not a markdown or datapackage file, just upload the file and return
+            return null;
           }
 
-          return null;
+          try {
+            const metadata = await computeMetadata({
+              source: markdown,
+              datapackage,
+              path: markdownFilePath,
+              tree: gitHubTree,
+            });
+
+            return { metadata };
+          } catch (error: any) {
+            if (error.name === "YAMLException") {
+              // TODO this is temporary as I couldn't get read the passed {cause: error} in the onFailed handler
+              // See post in inngest discord forum https://discord.com/channels/842170679536517141/1265692893117550768
+              const syncError: SyncError = {
+                datetime: new Date().toISOString(),
+                type: "MARKDOWN_PARSING_ERROR",
+                message: `Failed to parse YAML frontmatter in ${contentStoreFilePath}: ${error.message}`,
+                error: JSON.stringify(error),
+              };
+
+              await prisma.site.update({
+                where: { id: site!.id }, // TODO this can't be right
+                data: {
+                  syncStatus: "ERROR",
+                  syncError: syncError as any, // TODO fix types
+                },
+              });
+
+              // Only this should be needed and the above should be removed but
+              // I couldn't get the error to be passed to the onFailure handler
+              // also, currently the original error is not visible in inngest logs ...
+              throw new NonRetriableError("MARKDOWN_PARSING_ERROR", {
+                cause: error,
+              });
+            }
+          }
         });
 
         if (fileMetadata?.metadata) {
@@ -374,6 +411,41 @@ export const syncSite = inngest.createFunction(
 
           const deletedFileUrl = resolveFilePathToUrl(contentStorePath);
           delete filesMetadata[deletedFileUrl];
+
+          // if the deleted file is a datapackage file, re-compute the metadata for the README.md or index.md file in the same directory
+          if (path.match(/datapackage\.(json|ya?ml)$/)) {
+            const fileDir = getFileDir(path);
+
+            const readmeTreeItem = gitHubTree.tree.find((f) => {
+              return (
+                f.path === `${fileDir}README.md` ||
+                f.path === `${fileDir}index.md`
+              );
+            });
+
+            if (readmeTreeItem) {
+              const readmeGitHubFileBlob = await fetchGitHubFileRaw({
+                gh_repository,
+                file_sha: readmeTreeItem.sha,
+                access_token,
+              });
+
+              const markdown = await readmeGitHubFileBlob.text();
+              const markdownFilePath = readmeTreeItem.path.replace(
+                normalizedRootDir,
+                "",
+              );
+
+              const metadata = await computeMetadata({
+                source: markdown,
+                datapackage: null,
+                path: markdownFilePath,
+                tree: gitHubTree,
+              });
+
+              filesMetadata[metadata._url] = metadata;
+            }
+          }
         }
       },
     );
