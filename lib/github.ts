@@ -27,6 +27,7 @@ const makeGitHubHeaders = ({
 
 const githubFetch = async ({
   url,
+  queryParams,
   accessToken,
   cacheOptions,
   accept,
@@ -34,13 +35,15 @@ const githubFetch = async ({
   body,
 }: {
   url: string;
+  queryParams?: Record<string, string>;
   accessToken?: string;
   cacheOptions?: { next?: any; cache?: any };
   accept?: Accept;
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: any;
 }) => {
-  const response = await fetch(`${githubAPIBaseURL}${url}`, {
+  const urlParams = new URLSearchParams(queryParams);
+  const response = await fetch(`${githubAPIBaseURL}${url}?${urlParams}`, {
     headers: makeGitHubHeaders({ accessToken, accept }),
     method,
     body: body ? JSON.stringify(body) : undefined,
@@ -76,12 +79,14 @@ const githubFetch = async ({
 
 export const githubJsonFetch = async <T>({
   url,
+  queryParams,
   accessToken,
   cacheOptions,
   method,
   body,
 }: {
   url: string;
+  queryParams?: Record<string, string>;
   accessToken?: string;
   cacheOptions?: { next?: any; cache?: any };
   method?: "GET" | "POST" | "PUT" | "DELETE";
@@ -89,6 +94,7 @@ export const githubJsonFetch = async <T>({
 }) => {
   const response = await githubFetch({
     url,
+    queryParams,
     accessToken,
     cacheOptions,
     method,
@@ -407,6 +413,35 @@ export const submitGitHubIssue = async ({
   });
 };
 
+export const getFileLastCommitTimestamp = async ({
+  gh_repository,
+  branch,
+  file_path,
+  access_token,
+}: {
+  gh_repository: string;
+  branch: string;
+  file_path: string;
+  access_token: string;
+}) => {
+  const commits = await githubJsonFetch<GitHubAPICommit[]>({
+    // https://docs.github.com/en/rest/commits/commits?apiVersion=2022-11-28#list-commits
+    url: `/repos/${gh_repository}/commits`,
+    accessToken: access_token,
+    queryParams: {
+      sha: branch,
+      path: file_path,
+      per_page: "1",
+    },
+  });
+
+  if (commits.length === 0) {
+    return null;
+  }
+
+  return commits[0]!.commit.author.date;
+};
+
 export interface GitHubAPIFileContent {
   type: "file";
   encoding: "base64";
@@ -492,6 +527,17 @@ interface GitHubAPIIssue {
   title: string;
   body: string;
   labels: string[];
+  // ...
+}
+
+interface GitHubAPICommit {
+  sha: string;
+  commit: {
+    author: {
+      date: string;
+      // ...
+    };
+  };
   // ...
 }
 

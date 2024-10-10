@@ -77,8 +77,6 @@ export async function GET(
       (r) => r.name === resourceNameOrId || r.id === resourceNameOrId,
     ) || pageMetadata.resources[parseInt(resourceNameOrId, 10)];
 
-  console.log("resource", resource);
-
   if (!resource) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }

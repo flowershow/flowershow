@@ -13,6 +13,7 @@ import {
   createGitHubRepoWebhook,
   deleteGitHubRepoWebhook,
   GitHubAPIRepoTree,
+  getFileLastCommitTimestamp,
 } from "@/lib/github";
 import { fetchTree, deleteProject, fetchFile } from "@/lib/content-store";
 import {
@@ -25,6 +26,7 @@ import { PageMetadata } from "../types";
 import { buildNestedTreeFromFilesMap } from "@/lib/build-nested-tree";
 import { SiteConfig } from "@/components/types";
 import { isSupportedExtension } from "@/lib/types";
+import { env } from "@/env.mjs";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -732,6 +734,59 @@ export const siteRouter = createTRPCRouter({
           tags: [
             `${input.gh_username}-${input.projectName}-${input.slug}-content`,
             `${input.gh_username}-${input.projectName}-page-content`,
+          ],
+        },
+      )();
+    }),
+  // TODO TEMPORARY SOLUTION UNTIL WE HAVE A DB INDEX OF ALL FILES AND THEIR METADATA
+  getFileLastModifiedDate: publicProcedure
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+        path: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
+              ],
+            },
+          });
+
+          if (!site) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
+          }
+
+          // NOTE: only fetch for our core datasets as it requires a GitHub access token
+          // and we don't want to consume the rate limit for other users
+          // each time sb visits their site
+          if (!site.gh_repository.startsWith("datasets/")) {
+            return null;
+          }
+
+          return await getFileLastCommitTimestamp({
+            gh_repository: site.gh_repository,
+            branch: site.gh_branch,
+            file_path: input.path,
+            access_token: env.GH_ACCESS_TOKEN,
+          });
+        },
+        [
+          `${input.gh_username}-${input.projectName}-${input.path}-last-modified`,
+        ],
+        {
+          revalidate: 60 * 5,
+          tags: [
+            `${input.gh_username}-${input.projectName}-${input.path}-last-modified`,
           ],
         },
       )();

@@ -2,6 +2,7 @@ import Script from "next/script";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import prettyBytes from "pretty-bytes";
+import { formatDistanceToNow } from "date-fns";
 import { Github } from "lucide-react";
 import { ArrowRightIcon } from "@heroicons/react/20/solid";
 import { DocumentArrowDownIcon } from "@heroicons/react/24/outline";
@@ -19,9 +20,9 @@ import { ErrorMessage } from "@/components/error-message";
 import { ResourcePreview } from "@/components/resource-preview";
 import { DatasetPageMetadata } from "@/server/api/types";
 import { Site } from "@prisma/client";
-import { getFileModificationTime } from "@/lib/content-store";
 import getJsonLd from "./getJsonLd";
 import { ResourceSchema } from "../resource-schema";
+import { api } from "@/trpc/server";
 
 const SocialShareMenu = dynamic(
   () => import("@/components/social-share-menu"),
@@ -70,8 +71,6 @@ export const DataPackageLayout: React.FC<Props> = async ({
     new Set(resourceFiles.map((r) => r.format)),
   ).join(", ");
 
-  console.log("resourceFiles: ", resourceFiles[0]);
-
   const resourceFilesSize = resourceFiles.reduce(
     (acc, r) => acc + (r.bytes ?? 0),
     0,
@@ -80,24 +79,22 @@ export const DataPackageLayout: React.FC<Props> = async ({
   const rawFilePermalinkBase = generateRawFilePermalinkBase(siteMetadata);
 
   const resourcesAdjusted = await Promise.all(
-    resources.map(async (resource) => ({
-      ...resource,
-      path: rawFilePermalinkBase + "/" + resource.path,
-      lastModified:
-        resource.lastModified ??
-        (
-          await getFileModificationTime({
-            projectId: siteMetadata.id,
-            branch: siteMetadata.gh_branch,
+    resources.map(async (resource) => {
+      const lastModified: string | null = resource.lastModified
+        ? new Date(resource.lastModified).toISOString()
+        : await api.site.getFileLastModifiedDate.query({
+            gh_username: siteMetadata.user!.gh_username!,
+            projectName: siteMetadata.projectName,
             path: resource.path,
-          })
-        )
-          ?.toISOString()
-          .split("T")[0],
-    })),
-  );
+          });
 
-  console.log("resourcesAdjusted: ", resourcesAdjusted[0]);
+      return {
+        ...resource,
+        path: rawFilePermalinkBase + "/" + resource.path,
+        lastModified,
+      };
+    }),
+  );
 
   const datasetLastModifiedDate =
     updated ?? getEarliestResourceModificationTime(resourcesAdjusted);
@@ -153,10 +150,32 @@ export const DataPackageLayout: React.FC<Props> = async ({
                 <td>{resourceFilesCount}</td>
                 <td>{prettyBytes(resourceFilesSize)}</td>
                 <td>{resouceFilesExtensions}</td>
-                <td className="whitespace-nowrap">
-                  {created && created.split("T")[0]}
+                <td
+                  className="cursor-default whitespace-nowrap"
+                  title={created ? new Date(created).toLocaleString() : ""}
+                >
+                  <span>
+                    {created &&
+                      formatDistanceToNow(new Date(created), {
+                        addSuffix: true,
+                      })}
+                  </span>
                 </td>
-                <td className="whitespace-nowrap">{datasetLastModifiedDate}</td>
+                <td
+                  className="cursor-default whitespace-nowrap"
+                  title={
+                    datasetLastModifiedDate
+                      ? new Date(datasetLastModifiedDate).toLocaleString()
+                      : ""
+                  }
+                >
+                  <span>
+                    {datasetLastModifiedDate &&
+                      formatDistanceToNow(new Date(datasetLastModifiedDate), {
+                        addSuffix: true,
+                      })}
+                  </span>
+                </td>
                 <td>
                   <a
                     target="_blank"
@@ -228,8 +247,20 @@ export const DataPackageLayout: React.FC<Props> = async ({
                     </td>
                     <td>{r.description || ""}</td>
                     <td>{r.bytes ? prettyBytes(r.bytes) : ""}</td>
-                    <td className="whitespace-nowrap">
-                      {r.lastModified && r.lastModified.substring(0, 10)}
+                    <td
+                      className="cursor-default whitespace-nowrap"
+                      title={
+                        r.lastModified
+                          ? new Date(r.lastModified).toLocaleString()
+                          : ""
+                      }
+                    >
+                      <span>
+                        {r.lastModified &&
+                          formatDistanceToNow(new Date(r.lastModified), {
+                            addSuffix: true,
+                          })}
+                      </span>
                     </td>
                     <td>
                       <a
@@ -366,11 +397,15 @@ const generateRawFilePermalinkBase = (siteMetadata: SiteWithUser) => {
 };
 
 const getEarliestResourceModificationTime = (resources: Resource[]) => {
-  return resources
-    .reduce((acc, r) => {
-      const lastModified = new Date(r.lastModified);
-      return acc < lastModified ? acc : lastModified;
-    }, new Date())
-    .toISOString()
-    .split("T")[0];
+  return resources.reduce((acc, resource) => {
+    if (!resource.lastModified) {
+      return acc;
+    }
+    if (!acc) {
+      return resource.lastModified;
+    }
+    if (new Date(resource.lastModified) < new Date(acc)) {
+      return resource.lastModified;
+    }
+  }, null);
 };
