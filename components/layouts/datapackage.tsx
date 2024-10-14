@@ -54,6 +54,7 @@ export const DataPackageLayout: React.FC<Props> = async ({
     updated,
     licenses,
     sources,
+    collection,
   } = metadata;
 
   if (!resources) {
@@ -303,6 +304,18 @@ export const DataPackageLayout: React.FC<Props> = async ({
         >
           {children}
         </section>
+        {collection && (
+          <section data-testid="dp-collection" className="my-12">
+            <Link
+              href={`/collections/${collection}`}
+              className="no-underline hover:underline"
+            >
+              <button className="mt-6 rounded-md bg-orange-50 px-3.5 py-2.5 text-sm font-semibold text-orange-600 shadow-sm hover:bg-orange-100">
+                Discover similar datasets →
+              </button>
+            </Link>
+          </section>
+        )}
       </article>
     </>
   );

@@ -20,9 +20,10 @@ export interface DataPackage {
   image?: string;
   created?: string; // Should follow RFC3339 format
 
-  // Additional properties are also allowed
+  // Additional properties
   updated?: string; // Should follow RFC3339 format
   views?: SimpleView[]; // TODO support classic/original views
+  collection?: string; // awesome-data repo collection md file path
   [key: string]: any;
 }
 
