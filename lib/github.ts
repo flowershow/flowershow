@@ -27,7 +27,6 @@ const makeGitHubHeaders = ({
 
 const githubFetch = async ({
   url,
-  queryParams,
   accessToken,
   cacheOptions,
   accept,
@@ -35,15 +34,13 @@ const githubFetch = async ({
   body,
 }: {
   url: string;
-  queryParams?: Record<string, string>;
   accessToken?: string;
   cacheOptions?: { next?: any; cache?: any };
   accept?: Accept;
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: any;
 }) => {
-  const urlParams = new URLSearchParams(queryParams);
-  const response = await fetch(`${githubAPIBaseURL}${url}?${urlParams}`, {
+  const response = await fetch(`${githubAPIBaseURL}${url}`, {
     headers: makeGitHubHeaders({ accessToken, accept }),
     method,
     body: body ? JSON.stringify(body) : undefined,
@@ -79,7 +76,6 @@ const githubFetch = async ({
 
 export const githubJsonFetch = async <T>({
   url,
-  queryParams,
   accessToken,
   cacheOptions,
   method,
@@ -94,7 +90,6 @@ export const githubJsonFetch = async <T>({
 }) => {
   const response = await githubFetch({
     url,
-    queryParams,
     accessToken,
     cacheOptions,
     method,
@@ -189,6 +184,7 @@ export const fetchGitHubScopeRepositories = async ({
       },
     });
     const repos = (await response.json()) as GitHubAPIRepository[];
+
     allRepos = allRepos.concat(
       repos.map((repo) => ({
         id: repo.id,
@@ -199,6 +195,7 @@ export const fetchGitHubScopeRepositories = async ({
     );
 
     const linkHeader = response.headers.get("link");
+
     hasNextPage = linkHeader ? linkHeader.includes('rel="next"') : false;
     page++;
   } while (hasNextPage);
@@ -424,15 +421,15 @@ export const getFileLastCommitTimestamp = async ({
   file_path: string;
   access_token: string;
 }) => {
+  const queryParams = new URLSearchParams({
+    sha: branch,
+    path: file_path,
+    per_page: "1",
+  });
   const commits = await githubJsonFetch<GitHubAPICommit[]>({
     // https://docs.github.com/en/rest/commits/commits?apiVersion=2022-11-28#list-commits
-    url: `/repos/${gh_repository}/commits`,
+    url: `/repos/${gh_repository}/commits?${queryParams.toString()}`,
     accessToken: access_token,
-    queryParams: {
-      sha: branch,
-      path: file_path,
-      per_page: "1",
-    },
   });
 
   if (commits.length === 0) {
