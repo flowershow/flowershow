@@ -57,7 +57,7 @@
     "hastscript": "^8.0.0",
     "inngest": "^3.19.14",
     "js-cookie": "^3.0.5",
-    "lucide-react": "^0.292.0",
+    "lucide-react": "^0.453.0",
     "mdx-bundler": "^10.0.1",
     "mdx-mermaid": "^2.0.0",
     "nanoid": "^4.0.2",

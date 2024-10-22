@@ -70,12 +70,20 @@ export default async function middleware(req: NextRequest) {
     }
 
     // NOTE: aliases
-    const aliasResolvedPath = path
+    let aliasResolvedPath = path
       .replace(/^\/core/, `/@olayway`)
       .replace(/^\/docs/, `/@olayway/docs`)
       .replace(/^\/blog/, `/@olayway/blog`)
-      .replace(/^\/collections/, `/@olayway/collections`)
       .replace(/^\/notes/, `/@rufuspollock/data-notes`);
+
+    // if path is /collections/... then redirect to /@olayway/collections/...
+    // but not if it's index /collections page
+    if (aliasResolvedPath.match(/^\/collections\/.+/)) {
+      aliasResolvedPath = aliasResolvedPath.replace(
+        /^\/collections/,
+        `/@olayway/collections`,
+      );
+    }
 
     // if resolved path matches /@{username}/{project}/{restofpath}
     const userProjectMatch = aliasResolvedPath.match(
