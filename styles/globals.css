@@ -165,3 +165,7 @@ html {
 article section h1:first-of-type {
   display: none;
 }
+
+#mdxpage .gh-badge {
+  display: none;
+}
