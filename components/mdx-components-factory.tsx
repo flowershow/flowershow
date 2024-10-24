@@ -2,6 +2,8 @@ import { PageMetadata, isDatasetPage } from "@/server/api/types";
 import { resolveLink } from "@/lib/resolve-link";
 import { Site } from "@prisma/client";
 import { customEncodeUrl } from "@/lib/url-encoder";
+import { ErrorBoundary } from "react-error-boundary";
+import { ErrorMessage } from "@/components/error-message";
 
 import {
   Catalog,
@@ -45,35 +47,40 @@ export const mdxComponentsFactory = ({
   metadata: PageMetadata;
   siteMetadata: SiteWithUser;
 }) => {
+  const { gh_username } = siteMetadata.user || {};
+  const { projectName, gh_repository, customDomain } = siteMetadata;
+
   let rawFilePermalinkBase: string;
 
   // TODO there should be a better way to handle this
-  if (siteMetadata.customDomain) {
+  if (customDomain) {
     rawFilePermalinkBase = `/_r/-`;
     // NOTE: aliases
     // temporary solution for our aliased sites
-  } else if (siteMetadata.user?.gh_username === "olayway") {
-    if (siteMetadata.gh_repository.startsWith("datasets/")) {
-      rawFilePermalinkBase = `/core/${siteMetadata.projectName}/_r/-`;
-    } else if (siteMetadata.projectName === "blog") {
+  } else if (gh_username === "olayway") {
+    if (gh_repository.startsWith("datasets/")) {
+      rawFilePermalinkBase = `/core/${projectName}/_r/-`;
+    } else if (projectName === "blog") {
       rawFilePermalinkBase = `/blog/_r/-`;
-    } else if (siteMetadata.projectName === "docs") {
+    } else if (projectName === "docs") {
       rawFilePermalinkBase = `/docs/_r/-/`;
-    } else if (siteMetadata.projectName === "collections") {
+    } else if (projectName === "collections") {
       rawFilePermalinkBase = `/collections/_r/-`;
     } else {
-      rawFilePermalinkBase = `/@${siteMetadata.user.gh_username}/${siteMetadata.projectName}/_r/-`;
+      rawFilePermalinkBase = `/@${gh_username}/${projectName}/_r/-`;
     }
-  } else if (
-    siteMetadata.user?.gh_username === "rufuspollock" &&
-    siteMetadata.projectName === "notes"
-  ) {
+  } else if (gh_username === "rufuspollock" && projectName === "notes") {
     rawFilePermalinkBase = `/notes/_r/-`;
   } else {
-    rawFilePermalinkBase = `/@${siteMetadata.user!.gh_username}/${
-      siteMetadata.projectName
-    }/_r/-`;
+    rawFilePermalinkBase = `/@${gh_username}/${projectName}/_r/-`;
   }
+
+  const resolveDataUrl = (url: string) =>
+    resolveLink({
+      link: url,
+      filePath: metadata._path,
+      prefixPath: rawFilePermalinkBase,
+    });
 
   const components: any = {
     /* HTML elements */
@@ -82,9 +89,7 @@ export const mdxComponentsFactory = ({
       children,
       ...rest
     }: React.LinkHTMLAttributes<HTMLAnchorElement>) => {
-      if (!href) {
-        return <a {...rest}>{children}</a>;
-      }
+      if (!href) return <a {...rest}>{children}</a>;
 
       const isExternal = href.startsWith("http");
       const isHeading = href.startsWith("#");
@@ -96,9 +101,7 @@ export const mdxComponentsFactory = ({
             filePath: metadata._path,
             prefixPath: siteMetadata.customDomain
               ? ""
-              : `/@${siteMetadata.user!.gh_username}/${
-                  siteMetadata.projectName
-                }`,
+              : `/@${gh_username}/${projectName}`,
           });
 
       return (
@@ -113,9 +116,7 @@ export const mdxComponentsFactory = ({
       );
     },
     img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
-      if (!props.src) {
-        return <img {...props} />;
-      }
+      if (!props.src) return <img {...props} />;
 
       const normalizedSrc = resolveLink({
         link: props.src,
@@ -134,130 +135,64 @@ export const mdxComponentsFactory = ({
     pre: Pre,
     mermaid: Mermaid,
     code: (props) => {
-      let className = props.className;
-      if (!props.className || !props.className.includes("language-")) {
-        // Set default className to "language-auto" if not found
-        className = props.className
-          ? `${props.className} language-auto`
-          : "language-auto";
-      }
-
+      const className = props.className?.includes("language-")
+        ? props.className
+        : `${props.className || ""} language-auto`;
       return <code {...props} className={className}></code>;
     },
-    Catalog: (props) => {
-      return <Catalog {...props} />;
-    },
-    Excel: (props: ExcelProps) => {
-      props.data.url = resolveLink({
-        link: props.data.url,
-        filePath: metadata._path,
-        prefixPath: rawFilePermalinkBase,
-      });
+    Catalog: withErrorBoundary(Catalog, "Catalog"),
+    Excel: withErrorBoundary((props: ExcelProps) => {
+      props.data.url = resolveDataUrl(props.data.url);
       return <Excel {...props} />;
-    },
-    Iframe: (props: IframeProps) => {
-      props.data.url = resolveLink({
-        link: props.data.url,
-        filePath: metadata._path,
-        prefixPath: rawFilePermalinkBase,
-      });
+    }, "Excel"),
+    Iframe: withErrorBoundary((props: IframeProps) => {
+      props.data.url = resolveDataUrl(props.data.url);
       return <Iframe {...props} />;
-    },
-    FlatUiTable: (props: FlatUiTableProps) => {
-      if (props.data.url) {
-        props.data.url = resolveLink({
-          link: props.data.url,
-          filePath: metadata._path,
-          prefixPath: rawFilePermalinkBase,
-        });
-      }
+    }, "Iframe"),
+    FlatUiTable: withErrorBoundary((props: FlatUiTableProps) => {
+      if (props.data?.url) props.data.url = resolveDataUrl(props.data.url);
       return <FlatUiTable {...props} />;
-    },
-    LineChart: (props: LineChartProps) => {
-      if (props.data.url) {
-        props.data.url = resolveLink({
-          link: props.data.url,
-          filePath: metadata._path,
-          prefixPath: rawFilePermalinkBase,
-        });
-      }
+    }, "FlatUiTable"),
+    LineChart: withErrorBoundary((props: LineChartProps) => {
+      if (props.data?.url) props.data.url = resolveDataUrl(props.data.url);
       return <LineChart {...props} />;
-    },
-    Map: (props: MapProps) => {
+    }, "LineChart"),
+    Map: withErrorBoundary((props: MapProps) => {
       const layers = props.layers.map((layer) => {
-        if (layer.data.url) {
-          layer.data.url = resolveLink({
-            link: layer.data.url,
-            filePath: metadata._path,
-            prefixPath: rawFilePermalinkBase,
-          });
-        }
+        if (layer.data.url) layer.data.url = resolveDataUrl(layer.data.url);
         return layer;
       });
-
       return <Map {...props} layers={layers} />;
-    },
-    PdfViewer: (props: PdfViewerProps) => {
-      props.data.url = resolveLink({
-        link: props.data.url,
-        filePath: metadata._path,
-        prefixPath: rawFilePermalinkBase,
-      });
+    }, "Map"),
+    PdfViewer: withErrorBoundary((props: PdfViewerProps) => {
+      props.data.url = resolveDataUrl(props.data.url);
       return <PdfViewer {...props} />;
-    },
-    Plotly: (props) => {
-      let data = props.data;
-      if (typeof data === "string") {
-        data = resolveLink({
-          link: data,
-          filePath: metadata._path,
-          prefixPath: rawFilePermalinkBase,
-        });
-      }
+    }, "PdfViewer"),
+    Plotly: withErrorBoundary((props) => {
+      const data =
+        typeof props.data === "string"
+          ? resolveDataUrl(props.data)
+          : props.data;
       return <Plotly {...props} data={data} />;
-    },
-    PlotlyBarChart: (props: PlotlyBarChartProps) => {
-      if (props.data.url) {
-        props.data.url = resolveLink({
-          link: props.data.url,
-          filePath: metadata._path,
-          prefixPath: rawFilePermalinkBase,
-        });
-      }
+    }, "Plotly"),
+    PlotlyBarChart: withErrorBoundary((props: PlotlyBarChartProps) => {
+      if (props.data.url) props.data.url = resolveDataUrl(props.data.url);
       return <PlotlyBarChart {...props} />;
-    },
-    PlotlyLineChart: (props: PlotlyLineChartProps) => {
-      if (props.data.url) {
-        props.data.url = resolveLink({
-          link: props.data.url,
-          filePath: metadata._path,
-          prefixPath: rawFilePermalinkBase,
-        });
-      }
+    }, "PlotlyBarChart"),
+    PlotlyLineChart: withErrorBoundary((props: PlotlyLineChartProps) => {
+      if (props.data.url) props.data.url = resolveDataUrl(props.data.url);
       return <PlotlyLineChart {...props} />;
-    },
-    Vega: (props) => {
-      const spec = props.spec;
-      if (spec.data.url) {
-        spec.data.url = resolveLink({
-          link: spec.data.url,
-          filePath: metadata._path,
-          prefixPath: rawFilePermalinkBase,
-        });
-      }
-      return <Vega {...props} spec={spec} />;
-    },
-    VegaLite: (props) => {
-      const spec = props.spec;
-      if (spec.data.url) {
-        spec.data.url = resolveLink({
-          link: spec.data.url,
-          filePath: metadata._path,
-          prefixPath: rawFilePermalinkBase,
-        });
-      }
-      return <VegaLite {...props} spec={spec} />;
-    },
+    }, "PlotlyLineChart"),
+    Vega: withErrorBoundary((props) => {
+      if (props.spec.data.url)
+        props.spec.data.url = resolveDataUrl(props.spec.data.url);
+      return <Vega {...props} />;
+    }, "Vega"),
+    VegaLite: withErrorBoundary((props) => {
+      if (props.spec.data.url)
+        props.spec.data.url = resolveDataUrl(props.spec.data.url);
+      return <VegaLite {...props} />;
+    }, "VegaLite"),
   };
 
   if (isDatasetPage(metadata)) {
@@ -269,11 +204,29 @@ export const mdxComponentsFactory = ({
     }: {
       id: number;
       fullWidth: boolean;
-    }) => {
-      return <FrictionlessView viewId={id} fullWidth={fullWidth} />;
-    };
+    }) => <FrictionlessView viewId={id} fullWidth={fullWidth} />;
     components.FrictionlessView.displayName = "FrictionlessView";
   }
 
   return components;
+};
+
+const withErrorBoundary = (
+  Component: React.ComponentType<any>,
+  componentName: string,
+) => {
+  const WrappedComponent = (props: any) => (
+    <ErrorBoundary
+      fallback={
+        <ErrorMessage
+          title={`Error in ${componentName} component`}
+          message="Make sure you're using the component correctly."
+        />
+      }
+    >
+      <Component {...props} />
+    </ErrorBoundary>
+  );
+  WrappedComponent.displayName = "ErrorBoundary";
+  return WrappedComponent;
 };
