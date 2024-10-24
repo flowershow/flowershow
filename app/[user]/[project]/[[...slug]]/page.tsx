@@ -7,6 +7,7 @@ import { SiteConfig } from "@/components/types";
 import MDX from "@/components/MDX";
 import { env } from "@/env.mjs";
 import type { SiteWithUser } from "@/types";
+import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 
 interface RouteParams {
   user: string;
@@ -22,6 +23,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
 
   let site: SiteWithUser | null = null;
 
+  // NOTE: custom domains handling
   if (user === "_domain") {
     site = await api.site.getByDomain.query({
       domain: project,
@@ -39,34 +41,24 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
 
   let pageMetadata: PageMetadata | null = null;
 
+  const { customDomain, projectName, user: siteUser } = site;
+
+  const gh_username = siteUser!.gh_username!;
+
   try {
     pageMetadata = await api.site.getPageMetadata.query({
-      gh_username: site.user?.gh_username!,
-      projectName: site.projectName,
+      gh_username,
+      projectName,
       slug: decodedSlug,
     });
   } catch (error) {
     notFound();
   }
 
-  let canonicalUrlBase: string | null = null;
-
-  if (site.customDomain) {
-    canonicalUrlBase = `https://${site.customDomain}`;
-  } else if (user === "olayway") {
-    // hack to handle our "special" sites
-    if (site.gh_repository === "datopian/product") {
-      canonicalUrlBase = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/notes`;
-    } else if (site.gh_repository === "datasets/awesome-data") {
-      canonicalUrlBase = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/collections`;
-    } else if (site.gh_repository === "datahubio/docs") {
-      canonicalUrlBase = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/docs`;
-    } else if (site.gh_repository === "datahubio/blog") {
-      canonicalUrlBase = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/blog`;
-    } else if (site.gh_repository.startsWith("datasets/")) {
-      canonicalUrlBase = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/core`;
-    }
-  }
+  const canonicalUrlBase = customDomain
+    ? `https://${site.customDomain}`
+    : `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}` +
+      resolveSiteAlias(`/@${gh_username}/${projectName}`, "to");
 
   const { title, description } = pageMetadata;
 

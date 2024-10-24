@@ -3,6 +3,7 @@ import { createTRPCContext } from "@/server/api/trpc";
 import { appRouter } from "@/server/api/root";
 import { PageMetadata, isDatasetPage } from "@/server/api/types";
 import type { SiteWithUser } from "@/types";
+import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 
 /**
  * Creates the tRPC context required for API calls.
@@ -19,8 +20,8 @@ export async function GET(
     params,
   }: {
     params: {
-      username: string;
-      projectName: string;
+      user: string;
+      project: string;
       resourceWithExtension: string;
     };
   },
@@ -29,19 +30,20 @@ export async function GET(
   const caller = appRouter.createCaller(ctx);
   // NOTE currently branch is not implemented and is always equal to "-"
   /* const { username, projectName, branch, slug } = params; */
-  const { username, projectName, resourceWithExtension } = params;
+  const { user, project, resourceWithExtension } = params;
 
   let site: SiteWithUser | null = null;
 
-  if (username === "_domain") {
-    site = await caller.site.getByDomain({
-      domain: projectName,
-    });
+  // NOTE: custom domains handling
+  if (user === "_domain") {
+    site = (await caller.site.getByDomain({
+      domain: project,
+    })) as SiteWithUser;
   } else {
-    site = await caller.site.get({
-      gh_username: username!,
-      projectName: projectName!,
-    });
+    site = (await caller.site.get({
+      gh_username: user,
+      projectName: project,
+    })) as SiteWithUser;
   }
 
   if (!site) {
@@ -85,35 +87,13 @@ export async function GET(
   const host = req.nextUrl.host;
   const protocol = req.nextUrl.protocol;
 
-  let rawFilePermalinkBase: string;
+  const { customDomain, projectName, user: siteUser } = site;
 
-  // TODO there should be a better way to handle this
-  if (site.customDomain) {
-    rawFilePermalinkBase = `/_r/-`;
-    // NOTE: aliases
-    // temporary solution for our aliased sites
-  } else if (site.user?.gh_username === "olayway") {
-    if (site.gh_repository.startsWith("datasets/")) {
-      rawFilePermalinkBase = `/core/${site.projectName}/_r/-`;
-    } else if (site.projectName === "blog") {
-      rawFilePermalinkBase = `/blog/_r/-`;
-    } else if (site.projectName === "docs") {
-      rawFilePermalinkBase = `/docs/_r/-`;
-    } else if (site.projectName === "collections") {
-      rawFilePermalinkBase = `/collections/_r/-`;
-    } else {
-      rawFilePermalinkBase = `/@${site.user.gh_username}/${site.projectName}/_r/-`;
-    }
-  } else if (
-    site.user?.gh_username === "rufuspollock" &&
-    site.projectName === "notes"
-  ) {
-    rawFilePermalinkBase = `/notes/_r/-`;
-  } else {
-    rawFilePermalinkBase = `/@${site.user!.gh_username}/${
-      site.projectName
-    }/_r/-`;
-  }
+  const gh_username = siteUser!.gh_username!;
+
+  const rawFilePermalinkBase = customDomain
+    ? `/_r/-`
+    : resolveSiteAlias(`/@${gh_username}/${projectName}`, "to") + `/_r/-`;
 
   const rawFilePermalink = `${protocol}//${host}${rawFilePermalinkBase}/${resourcePath}`;
 

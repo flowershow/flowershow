@@ -1,5 +1,7 @@
 import { env } from "@/env.mjs";
+import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 import prisma from "@/server/db";
+import { SiteWithUser } from "@/types";
 // temporary solution to https://github.com/datopian/datahub/issues/1296
 import { unstable_noStore as noStore } from "next/cache";
 
@@ -17,26 +19,15 @@ async function Sitemap() {
   );
 
   const userSiteUrls = sites.flatMap((site) => {
-    let sitePath: string | null = null;
+    const { customDomain, projectName, user: siteUser } = site;
 
-    // hack to handle our "special" sites
-    if (site.user?.gh_username === "olayway") {
-      if (site.gh_repository === "datopian/product") {
-        return;
-      } else if (site.gh_repository === "datasets/awesome-data") {
-        sitePath = "collections";
-      } else if (site.gh_repository === "datahubio/docs") {
-        sitePath = "docs";
-      } else if (site.gh_repository === "datahubio/blog") {
-        sitePath = "blog";
-      } else if (site.gh_repository.startsWith("datasets/")) {
-        sitePath = site.gh_repository.replace("datasets/", "core/");
-      }
-    }
+    const gh_username = siteUser!.gh_username!;
 
-    sitePath = sitePath ?? `@${site.user!.gh_username}/${site.projectName}`;
+    // NOTE: don't include custom domain paths
+    if (customDomain) return [];
 
-    const baseUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/${sitePath}`;
+    const sitePath = resolveSiteAlias(`/@${gh_username}/${projectName}`, "to");
+    const baseUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}${sitePath}`;
 
     return Object.keys((site.files as any) || []).map((url) => {
       if (url === "/") return baseUrl;

@@ -33,6 +33,7 @@ import type {
   PlotlyLineChartProps,
 } from "./client-components-wrapper";
 import { FrictionlessViewFactory } from "./frictionless-view";
+import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 
 export const mdxComponentsFactory = ({
   metadata,
@@ -41,33 +42,13 @@ export const mdxComponentsFactory = ({
   metadata: PageMetadata;
   siteMetadata: SiteWithUser;
 }) => {
-  const { gh_username } = siteMetadata.user || {};
-  const { projectName, gh_repository, customDomain } = siteMetadata;
+  const { projectName, customDomain, user: siteUser } = siteMetadata;
 
-  let rawFilePermalinkBase: string;
+  const gh_username = siteUser!.gh_username!;
 
-  // TODO there should be a better way to handle this
-  if (customDomain) {
-    rawFilePermalinkBase = `/_r/-`;
-    // NOTE: aliases
-    // temporary solution for our aliased sites
-  } else if (gh_username === "olayway") {
-    if (gh_repository.startsWith("datasets/")) {
-      rawFilePermalinkBase = `/core/${projectName}/_r/-`;
-    } else if (projectName === "blog") {
-      rawFilePermalinkBase = `/blog/_r/-`;
-    } else if (projectName === "docs") {
-      rawFilePermalinkBase = `/docs/_r/-/`;
-    } else if (projectName === "collections") {
-      rawFilePermalinkBase = `/collections/_r/-`;
-    } else {
-      rawFilePermalinkBase = `/@${gh_username}/${projectName}/_r/-`;
-    }
-  } else if (gh_username === "rufuspollock" && projectName === "notes") {
-    rawFilePermalinkBase = `/notes/_r/-`;
-  } else {
-    rawFilePermalinkBase = `/@${gh_username}/${projectName}/_r/-`;
-  }
+  const rawFilePermalinkBase = customDomain
+    ? `/_r/-`
+    : resolveSiteAlias(`/@${gh_username}/${projectName}`, "to") + `/_r/-`;
 
   const resolveDataUrl = (url: string) =>
     resolveLink({

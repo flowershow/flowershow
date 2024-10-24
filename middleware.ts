@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { env } from "@/env.mjs";
+import { resolveSiteAlias } from "./lib/resolve-site-alias";
 
 export const config = {
   matcher: [
@@ -69,20 +70,10 @@ export default async function middleware(req: NextRequest) {
       );
     }
 
-    // NOTE: aliases
-    let aliasResolvedPath = path
-      .replace(/^\/core/, `/@olayway`)
-      .replace(/^\/docs/, `/@olayway/docs`)
-      .replace(/^\/blog/, `/@olayway/blog`)
-      .replace(/^\/notes/, `/@rufuspollock/data-notes`);
+    const aliasResolvedPath = resolveSiteAlias(path, "from");
 
-    // if path is /collections/... then redirect to /@olayway/collections/...
-    // but not if it's index /collections page
-    if (aliasResolvedPath.match(/^\/collections\/.+/)) {
-      aliasResolvedPath = aliasResolvedPath.replace(
-        /^\/collections/,
-        `/@olayway/collections`,
-      );
+    if (aliasResolvedPath === "/collections") {
+      return NextResponse.rewrite(new URL(`/home/collections`, req.url));
     }
 
     // if resolved path matches /@{username}/{project}/{restofpath}

@@ -1,4 +1,5 @@
 import * as path from "path";
+import { resolveSiteAlias } from "./resolve-site-alias";
 
 export const resolveLink = ({
   link,
@@ -34,17 +35,7 @@ export const resolveLink = ({
   }
 
   if (prefixPath) {
-    // hacky way to handle links on our special sites
-    if (prefixPath === "/@olayway/blog") {
-      prefixPath = "/blog";
-    } else if (prefixPath === "/@olayway/docs") {
-      prefixPath = "/docs";
-    } else if (prefixPath === "/@olayway/collections") {
-      prefixPath = "/collections";
-    } else if (prefixPath === "/@olayway/notes") {
-      prefixPath = "/notes";
-    }
-    resolvedLink = prefixPath + resolvedLink;
+    resolvedLink = resolveSiteAlias(prefixPath, "to") + resolvedLink;
   }
 
   // if the link ends with `.md` or `.mdx` remove it

@@ -23,6 +23,7 @@ import getJsonLd from "./getJsonLd";
 import { ResourceSchema } from "../resource-schema";
 import { api } from "@/trpc/server";
 import type { SiteWithUser } from "@/types";
+import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 
 const SocialShareMenu = dynamic(
   () => import("@/components/social-share-menu"),
@@ -71,7 +72,13 @@ export const DataPackageLayout: React.FC<Props> = async ({
     0,
   );
 
-  const rawFilePermalinkBase = generateRawFilePermalinkBase(siteMetadata);
+  const { projectName, customDomain, user: siteUser } = siteMetadata;
+
+  const gh_username = siteUser!.gh_username!;
+
+  const rawFilePermalinkBase = customDomain
+    ? `/_r/-`
+    : resolveSiteAlias(`/@${gh_username}/${projectName}`, "to") + `/_r/-`;
 
   const resourcesAdjusted = await Promise.all(
     resources.map(async (resource) => {
@@ -371,36 +378,6 @@ const View: React.FC<{ view: SimpleView | View; resources: Resource[] }> = ({
       <FrictionlessView view={view} resource={resource} />
     </div>
   );
-};
-
-const generateRawFilePermalinkBase = (siteMetadata: SiteWithUser) => {
-  // TODO there should be a better way to handle this
-  if (siteMetadata.customDomain) {
-    return `/_r/-`;
-    // NOTE: aliases
-    // temporary solution for our aliased sites
-  } else if (siteMetadata.user?.gh_username === "olayway") {
-    if (siteMetadata.gh_repository.startsWith("datasets/")) {
-      return `/core/${siteMetadata.projectName}/_r/-`;
-    } else if (siteMetadata.projectName === "blog") {
-      return `/blog/_r/-`;
-    } else if (siteMetadata.projectName === "docs") {
-      return `/docs/_r/-`;
-    } else if (siteMetadata.projectName === "collections") {
-      return `/collections/_r/-`;
-    } else {
-      return `/@${siteMetadata.user.gh_username}/${siteMetadata.projectName}/_r/-`;
-    }
-  } else if (
-    siteMetadata.user?.gh_username === "rufuspollock" &&
-    siteMetadata.projectName === "notes"
-  ) {
-    return `/notes/_r/-`;
-  } else {
-    return `/@${siteMetadata.user!.gh_username}/${
-      siteMetadata.projectName
-    }/_r/-`;
-  }
 };
 
 const getEarliestResourceModificationTime = (resources: Resource[]) => {

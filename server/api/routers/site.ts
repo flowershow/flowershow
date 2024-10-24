@@ -27,6 +27,7 @@ import { buildNestedTreeFromFilesMap } from "@/lib/build-nested-tree";
 import { SiteConfig } from "@/components/types";
 import { isSupportedExtension } from "@/lib/types";
 import { env } from "@/env.mjs";
+import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -534,36 +535,17 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
+          const { gh_username, projectName } = input;
+          const { customDomain } = site;
+
           try {
-            if (!site.customDomain) {
-              let prefix = `/@${input.gh_username}/${input.projectName}`;
+            const prefix = customDomain
+              ? ""
+              : resolveSiteAlias(`/@${gh_username}/${projectName}`, "to");
 
-              // hacky solutions to handle "special" own DataHub pages/sites
-              // see "Caveats" part of README
-              if (input.gh_username === "olayway") {
-                if (input.projectName === "docs") {
-                  prefix = "/docs";
-                }
-                if (input.projectName === "blog") {
-                  prefix = "/blog";
-                }
-                if (input.projectName === "collections") {
-                  prefix = "/collections";
-                }
-              } else if (input.gh_username === "rufuspollock") {
-                if (input.projectName === "data-notes") {
-                  prefix = "/notes";
-                }
-              }
-
-              return buildNestedTreeFromFilesMap(
-                Object.values(site.files as { [key: string]: PageMetadata }),
-                prefix,
-              );
-            }
-            // return buildNestedTree(gitHubTree);
             return buildNestedTreeFromFilesMap(
               Object.values(site.files as { [key: string]: PageMetadata }),
+              prefix,
             );
           } catch {
             return null;
