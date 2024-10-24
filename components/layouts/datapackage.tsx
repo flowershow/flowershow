@@ -19,21 +19,15 @@ import { FrictionlessView } from "@/components/frictionless-view";
 import { ErrorMessage } from "@/components/error-message";
 import { ResourcePreview } from "@/components/resource-preview";
 import { DatasetPageMetadata } from "@/server/api/types";
-import { Site } from "@prisma/client";
 import getJsonLd from "./getJsonLd";
 import { ResourceSchema } from "../resource-schema";
 import { api } from "@/trpc/server";
+import type { SiteWithUser } from "@/types";
 
 const SocialShareMenu = dynamic(
   () => import("@/components/social-share-menu"),
   { ssr: false },
 );
-
-type SiteWithUser = Site & {
-  user: {
-    gh_username: string | null;
-  } | null;
-};
 
 interface Props extends React.PropsWithChildren {
   metadata: DatasetPageMetadata;

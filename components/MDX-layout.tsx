@@ -1,18 +1,12 @@
 import { DataStoryLayout } from "./layouts/story";
 import { DataPackageLayout } from "./layouts/datapackage";
 import { PageMetadata } from "@/server/api/types";
-import { Site } from "@prisma/client";
+import type { SiteWithUser } from "@/types";
 
 interface Props extends React.PropsWithChildren {
   metadata: PageMetadata;
   siteMetadata: SiteWithUser;
 }
-
-type SiteWithUser = Site & {
-  user: {
-    gh_username: string | null;
-  } | null;
-};
 
 const Layout: React.FC<Props> = ({ metadata, siteMetadata, children }) => {
   if (metadata._pagetype === "dataset") {

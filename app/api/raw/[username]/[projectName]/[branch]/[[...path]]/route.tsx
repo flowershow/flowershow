@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createTRPCContext } from "@/server/api/trpc";
 import { appRouter } from "@/server/api/root";
 import { env } from "@/env.mjs";
-import { Site } from "@prisma/client";
+import type { SiteWithUser } from "@/types";
 
 /**
  * Creates the tRPC context required for API calls.
@@ -58,9 +58,3 @@ export async function GET(
 
   return NextResponse.redirect(R2FileUrl, { status: 302 });
 }
-
-type SiteWithUser = Site & {
-  user: {
-    gh_username: string | null;
-  } | null;
-};

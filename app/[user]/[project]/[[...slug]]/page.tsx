@@ -1,18 +1,12 @@
 import { notFound } from "next/navigation";
 import { api } from "@/trpc/server";
 import { PageMetadata } from "@/server/api/types";
-import { Site } from "@prisma/client";
 import UrlNormalizer from "./url-normalizer";
 import EditPageButton from "@/components/edit-page-button";
 import { SiteConfig } from "@/components/types";
 import MDX from "@/components/MDX";
 import { env } from "@/env.mjs";
-
-type SiteWithUser = Site & {
-  user: {
-    gh_username: string | null;
-  } | null;
-};
+import type { SiteWithUser } from "@/types";
 
 interface RouteParams {
   user: string;

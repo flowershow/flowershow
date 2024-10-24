@@ -5,14 +5,8 @@ import SyncSiteButton from "./sync-button";
 import LoadingDots from "@/components/icons/loading-dots";
 import { Suspense } from "react";
 import { env } from "@/env.mjs";
-import { Site } from "@prisma/client";
 import Link from "next/link";
-
-type SiteWithUser = Site & {
-  user: {
-    gh_username: string | null;
-  } | null;
-};
+import type { SiteWithUser } from "@/types";
 
 export default async function SiteSettingsHeader({
   site,

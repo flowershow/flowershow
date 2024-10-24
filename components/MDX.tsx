@@ -1,16 +1,10 @@
 import { PageMetadata } from "@/server/api/types";
-import { Site } from "@prisma/client";
 import { compileMDX } from "next-mdx-remote/rsc";
 import { getMdxOptions } from "@/lib/markdown";
 import { mdxComponentsFactory } from "@/components/mdx-components-factory";
 import Layout from "./MDX-layout";
 import { ErrorMessage } from "./error-message";
-
-type SiteWithUser = Site & {
-  user: {
-    gh_username: string | null;
-  } | null;
-};
+import type { SiteWithUser } from "@/types";
 
 const MDX = async ({
   source,

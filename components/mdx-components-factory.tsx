@@ -1,9 +1,9 @@
 import { PageMetadata, isDatasetPage } from "@/server/api/types";
 import { resolveLink } from "@/lib/resolve-link";
-import { Site } from "@prisma/client";
 import { customEncodeUrl } from "@/lib/url-encoder";
 import { ErrorBoundary } from "react-error-boundary";
 import { ErrorMessage } from "@/components/error-message";
+import type { SiteWithUser } from "@/types";
 
 import {
   Catalog,
@@ -33,12 +33,6 @@ import type {
   PlotlyLineChartProps,
 } from "./client-components-wrapper";
 import { FrictionlessViewFactory } from "./frictionless-view";
-
-type SiteWithUser = Site & {
-  user: {
-    gh_username: string | null;
-  } | null;
-};
 
 export const mdxComponentsFactory = ({
   metadata,

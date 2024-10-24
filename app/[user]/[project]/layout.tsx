@@ -2,7 +2,6 @@ import { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ReactNode } from "react";
 import { GoogleAnalytics } from "@next/third-parties/google";
-import { Site } from "@prisma/client";
 
 import Navbar from "@/components/nav";
 import Footer from "@/components/footer";
@@ -16,12 +15,7 @@ import { isCoreDatasetOrCollection } from "@/lib/is-core-dataset";
 import { api } from "@/trpc/server";
 import { env } from "@/env.mjs";
 import { cn } from "@/lib/utils";
-
-type SiteWithUser = Site & {
-  user: {
-    gh_username: string | null;
-  } | null;
-};
+import type { SiteWithUser } from "@/types";
 
 interface RouteParams {
   user: string;
