@@ -30,8 +30,8 @@ dependencies:
     specifier: ^14.2.8
     version: 14.2.8(next@14.2.5)(react@18.2.0)
   '@portaljs/components':
-    specifier: ^1.2.0
-    version: 1.2.0(@types/react@18.2.37)(ag-grid-community@30.2.1)(mapbox-gl@1.13.3)(postcss@8.4.31)(react-dom@18.2.0)(react@18.2.0)(tailwindcss@3.3.5)(ts-node@10.9.2)
+    specifier: ^1.2.1
+    version: 1.2.1(@types/react@18.2.37)(ag-grid-community@30.2.1)(mapbox-gl@1.13.3)(postcss@8.4.31)(react-dom@18.2.0)(react@18.2.0)(tailwindcss@3.3.5)(ts-node@10.9.2)
   '@portaljs/core':
     specifier: ^1.0.8
     version: 1.0.8(@algolia/client-search@4.21.1)(@types/react-dom@18.2.15)(@types/react@18.2.37)(mdx-mermaid@2.0.0)(next-themes@0.2.1)(next@14.2.5)(react-dom@18.2.0)(react@18.2.0)(search-insights@2.13.0)
@@ -3059,8 +3059,8 @@ packages:
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
     dev: false
 
-  /@portaljs/components@1.2.0(@types/react@18.2.37)(ag-grid-community@30.2.1)(mapbox-gl@1.13.3)(postcss@8.4.31)(react-dom@18.2.0)(react@18.2.0)(tailwindcss@3.3.5)(ts-node@10.9.2):
-    resolution: {integrity: sha512-aFwX/S+UzBOufVoMlwqOiSic93hqtcyWLFNNDP4T6fCuC8LVdDCxuFWVGLtslk5Ja9sHPYINfRgDkPMU7aMc4g==}
+  /@portaljs/components@1.2.1(@types/react@18.2.37)(ag-grid-community@30.2.1)(mapbox-gl@1.13.3)(postcss@8.4.31)(react-dom@18.2.0)(react@18.2.0)(tailwindcss@3.3.5)(ts-node@10.9.2):
+    resolution: {integrity: sha512-woLi0ST7GNMC3cyRE61UWwOvn1m8iDVWt9HskkMvARCP/fz06KzYGCxVgxk5XrkezHcWfMl1E7GgtdRkuO0ZRQ==}
     peerDependencies:
       react: ^18.2.0
       react-dom: ^18.2.0
