@@ -30,8 +30,8 @@ dependencies:
     specifier: ^14.2.8
     version: 14.2.8(next@14.2.5)(react@18.2.0)
   '@portaljs/components':
-    specifier: ^1.0.0
-    version: 1.0.0(@types/react@18.2.37)(ag-grid-community@30.2.1)(mapbox-gl@1.13.3)(postcss@8.4.31)(react-dom@18.2.0)(react@18.2.0)(tailwindcss@3.3.5)(ts-node@10.9.2)
+    specifier: ^1.2.0
+    version: 1.2.0(@types/react@18.2.37)(ag-grid-community@30.2.1)(mapbox-gl@1.13.3)(postcss@8.4.31)(react-dom@18.2.0)(react@18.2.0)(tailwindcss@3.3.5)(ts-node@10.9.2)
   '@portaljs/core':
     specifier: ^1.0.8
     version: 1.0.8(@algolia/client-search@4.21.1)(@types/react-dom@18.2.15)(@types/react@18.2.37)(mdx-mermaid@2.0.0)(next-themes@0.2.1)(next@14.2.5)(react-dom@18.2.0)(react@18.2.0)(search-insights@2.13.0)
@@ -1308,14 +1308,6 @@ packages:
       js-tokens: 4.0.0
       picocolors: 1.0.0
 
-  /@babel/parser@7.23.6:
-    resolution: {integrity: sha512-Z2uID7YJ7oNvAI20O9X0bblw7Qqs8Q2hFy0R9tAfnfLkp5MW0UH9eUvnDSnFwKZ0AvgS1ucqR4KzvVHgnke1VQ==}
-    engines: {node: '>=6.0.0'}
-    hasBin: true
-    dependencies:
-      '@babel/types': 7.24.0
-    dev: false
-
   /@babel/parser@7.24.4:
     resolution: {integrity: sha512-zTvEBcghmeBma9QIGunWevvBAp4/Qu9Bdq+2k0Ot4fVMD6v3dsC9WOcRSKk7tRRyBM/53yKMJko9xOatGQAwSg==}
     engines: {node: '>=6.0.0'}
@@ -1457,15 +1449,6 @@ packages:
     engines: {node: '>=6.9.0'}
     dependencies:
       regenerator-runtime: 0.14.0
-
-  /@babel/template@7.22.15:
-    resolution: {integrity: sha512-QPErUVm4uyJa60rkI73qneDacvdvzxshT3kksGqlGWYdOTIUOwJ7RDUL8sGqslY1uXWSL6xMFKEXDS3ox2uF0w==}
-    engines: {node: '>=6.9.0'}
-    dependencies:
-      '@babel/code-frame': 7.24.2
-      '@babel/parser': 7.24.4
-      '@babel/types': 7.24.0
-    dev: false
 
   /@babel/template@7.24.0:
     resolution: {integrity: sha512-Bkf2q8lMB0AFpX0NFEqSbx1OkTHf0f+0j82mkw+ZpzBnkk7e9Ql0891vlfgi+kHwOk8tQjiQHpqh4LaSa0fKEA==}
@@ -3076,8 +3059,8 @@ packages:
     resolution: {integrity: sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==}
     dev: false
 
-  /@portaljs/components@1.0.0(@types/react@18.2.37)(ag-grid-community@30.2.1)(mapbox-gl@1.13.3)(postcss@8.4.31)(react-dom@18.2.0)(react@18.2.0)(tailwindcss@3.3.5)(ts-node@10.9.2):
-    resolution: {integrity: sha512-fo6UXv9z+gHFHLn3IrONUCjHEmCmOeBkx62AUJabQoquruqB1blhcjcWDQXwGGUPK0Nom2q3ElcDpqKayV9fQQ==}
+  /@portaljs/components@1.2.0(@types/react@18.2.37)(ag-grid-community@30.2.1)(mapbox-gl@1.13.3)(postcss@8.4.31)(react-dom@18.2.0)(react@18.2.0)(tailwindcss@3.3.5)(ts-node@10.9.2):
+    resolution: {integrity: sha512-aFwX/S+UzBOufVoMlwqOiSic93hqtcyWLFNNDP4T6fCuC8LVdDCxuFWVGLtslk5Ja9sHPYINfRgDkPMU7aMc4g==}
     peerDependencies:
       react: ^18.2.0
       react-dom: ^18.2.0
@@ -17684,8 +17667,8 @@ packages:
     resolution: {integrity: sha512-2Vg09mp+nA70AWUedJ8WRgB2me3buq7JGbOnjHnFnNaBzomVu5k7lJ9YGpByIlre+UYr7QRhtlj7+IUKxvCrUA==}
     engines: {node: '>=12.13.0'}
     dependencies:
-      '@babel/parser': 7.23.6
-      '@babel/template': 7.22.15
+      '@babel/parser': 7.24.4
+      '@babel/template': 7.24.0
       autoprefixer: 10.4.16(postcss@8.4.32)
       babel-plugin-macros: 2.8.0
       chalk: 4.1.2

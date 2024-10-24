@@ -5,7 +5,7 @@ import type {
   SimpleView,
 } from "@/components/layouts/datapackage-types";
 import { ErrorMessage } from "@/components/error-message";
-import { VegaLite } from "./client-components-wrapper";
+import { VegaLite, LineChart } from "./client-components-wrapper";
 
 type FrictionlessViewReturnType = ({
   viewId, // view index in the views array
@@ -36,34 +36,59 @@ export const FrictionlessViewFactory = (
   return View;
 };
 
-interface FrictionlessViewProps {
-  view: SimpleView; // TODO support classic/original DataPackage spec view ?
-  resource: Resource;
-}
-
-export const FrictionlessView: React.FC<FrictionlessViewProps> = ({
+export const FrictionlessView = ({
   view,
   resource,
+}: {
+  view: SimpleView;
+  resource: Resource;
 }) => {
-  let vegaSpec;
+  if (view.spec.type === "line") {
+    if (view.spec.series.length > 1) {
+      return (
+        <LineChart
+          data={{ url: resource.path }}
+          xAxis={view.spec.group}
+          yAxis={view.spec.series}
+        />
+      );
+    } else if (view.spec.series.length === 1) {
+      return (
+        <LineChart
+          data={{ url: resource.path }}
+          xAxis={view.spec.group}
+          yAxis={view.spec.series[0]!}
+        />
+      );
+    } else {
+      return (
+        <ErrorMessage
+          title="Error in datapackage:"
+          message="No series defined for line chart"
+        />
+      );
+    }
+  } else {
+    let vegaSpec;
 
-  try {
-    vegaSpec = convertSimpleViewToVegaLite({ view, resource });
-  } catch (e: any) {
-    return <ErrorMessage title="Error in datapackage:" message={e.message} />;
+    try {
+      vegaSpec = convertSimpleViewToVegaLite({ view, resource });
+    } catch (e: any) {
+      return <ErrorMessage title="Error in datapackage:" message={e.message} />;
+    }
+
+    vegaSpec.data = {
+      url: resource.path,
+    };
+
+    return (
+      <VegaLite
+        spec={vegaSpec}
+        actions={{ editor: false }}
+        downloadFileName={resource.name}
+      />
+    );
   }
-
-  vegaSpec.data = {
-    url: resource.path,
-  };
-
-  return (
-    <VegaLite
-      spec={vegaSpec}
-      actions={{ editor: false }}
-      downloadFileName={resource.name}
-    />
-  );
 };
 
 // TODO import it from @portaljs/components
