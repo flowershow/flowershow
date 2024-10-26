@@ -82,13 +82,15 @@ export const DataPackageLayout: React.FC<Props> = async ({
 
   const resourcesAdjusted = await Promise.all(
     resources.map(async (resource) => {
-      const lastModified: string | null = resource.lastModified
-        ? new Date(resource.lastModified).toISOString()
-        : await api.site.getFileLastModifiedDate.query({
-            gh_username: siteMetadata.user!.gh_username!,
-            projectName: siteMetadata.projectName,
-            path: resource.path,
-          });
+      const lastModified: string | null = resource.path.startsWith("http")
+        ? null
+        : resource.lastModified
+          ? new Date(resource.lastModified).toISOString()
+          : await api.site.getFileLastModifiedDate.query({
+              gh_username: siteMetadata.user!.gh_username!,
+              projectName: siteMetadata.projectName,
+              path: resource.path,
+            });
 
       return {
         ...resource,
