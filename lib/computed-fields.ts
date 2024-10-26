@@ -22,7 +22,7 @@ export const computeMetadata = async ({
   const { data: frontMatter } = matter(source, {});
 
   const _datapackage = frontMatter.datapackage || datapackage;
-  const isDatapackage = !!_datapackage;
+  const isDataset = !!_datapackage;
 
   const title =
     frontMatter.title ||
@@ -33,26 +33,25 @@ export const computeMetadata = async ({
   const description =
     frontMatter.description ||
     _datapackage?.description ||
-    (isDatapackage && (await extractDescription(source))) ||
+    (isDataset && (await extractDescription(source))) ||
     "";
 
   // add file sizes from github tree to datapackage resources
   for (const resource of _datapackage?.resources || []) {
-    const absoluteResourcePath = resolveLink({
+    resource.path = resolveLink({
       link: resource.path,
       filePath: path,
-    }).slice(1);
+    }).replace(/^\//, ""); // remove leading slash
 
-    resource.path = absoluteResourcePath; // absolute path without leading slash
+    const resourceFile = tree.tree.find((file) => file.path === resource.path);
 
-    const file = tree.tree.find((file) => file.path === absoluteResourcePath);
-    if (file) {
-      resource.bytes = file.size;
-      resource.format = file.path.split(".").pop();
+    if (resourceFile) {
+      resource.bytes = resourceFile.size;
+      resource.format = resourceFile.path.split(".").pop();
     }
   }
 
-  delete frontMatter.datapackage;
+  delete frontMatter.datapackage; // delete to avoid duplication as it's already in _datapackage, which is merged into the final object
 
   // TODO better types
   return {

@@ -92,7 +92,9 @@ export const DataPackageLayout: React.FC<Props> = async ({
 
       return {
         ...resource,
-        path: rawFilePermalinkBase + "/" + resource.path,
+        path: resource.path.startsWith("http")
+          ? resource.path
+          : rawFilePermalinkBase + "/" + resource.path,
         lastModified,
       };
     }),
