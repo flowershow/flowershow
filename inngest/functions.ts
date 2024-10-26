@@ -274,7 +274,7 @@ export const syncSite = inngest.createFunction(
               const fileDir = getFileDir(path);
 
               const datapackageTreeItem = gitHubTree.tree.find((f) =>
-                new RegExp(`${fileDir}datapackage\\.(json|ya?ml)$`).test(
+                new RegExp(`^${fileDir}datapackage\\.(json|ya?ml)$`).test(
                   f.path,
                 ),
               );
