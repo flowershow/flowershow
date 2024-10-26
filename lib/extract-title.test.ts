@@ -8,7 +8,7 @@ describe("extractTitle", () => {
 # First Heading
 # Another Heading
       `;
-    const expected = null;
+    const expected = "First Heading";
     const result = await extractTitle(source);
     expect(result).toBe(expected);
   });
@@ -47,7 +47,7 @@ Some introduction text
 # First Heading
 ## Second Heading
       `;
-    const expected = null;
+    const expected = "First Heading";
     const result = await extractTitle(source);
     expect(result).toBe(expected);
   });
@@ -60,7 +60,6 @@ Some introduction text
     const result = await extractTitle(source);
     expect(result).toBe(expected);
   });
-
 
   it("doesn't extract incorrect heading", async () => {
     const source = `
