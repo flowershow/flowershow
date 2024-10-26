@@ -49,7 +49,7 @@ test.describe("README with datapackage.json", () => {
     await expect(metadataTable.locator("td").nth(0)).toContainText("2");
 
     await expect(metadataTable.locator("th").nth(1)).toContainText("Size");
-    await expect(metadataTable.locator("td").nth(1)).toContainText("200 kB");
+    await expect(metadataTable.locator("td").nth(1)).toContainText("165 kB");
 
     await expect(metadataTable.locator("th").nth(2)).toContainText("Format");
     await expect(metadataTable.locator("td").nth(2)).toContainText("csv");
@@ -100,41 +100,26 @@ test.describe("README with datapackage.json", () => {
     await expect(dataFilesTable).toBeVisible();
     expect(await dataFilesTable.locator("tbody").locator("tr").count()).toBe(2);
 
-    // test first row
     await expect(dataFilesTable.locator("th").nth(0)).toContainText("File");
-    await expect(
-      dataFilesTable.locator("tbody").locator("tr").nth(0).locator("td").nth(0),
-    ).toContainText("resource-1");
-    await expect(
-      dataFilesTable
-        .locator("tbody")
-        .locator("tr")
-        .nth(0)
-        .locator("td")
-        .nth(0)
-        .getByRole("link"),
-    ).toHaveAttribute("href", "#resource-1");
-
-    // await expect(dataFilesTable.locator("th").nth(1)).toContainText("Description");
-    // await expect(dataFilesTable.locator("tr").nth(0).locator("td").nth(1)).toContainText("Some description");
-
+    await expect(dataFilesTable.locator("th").nth(1)).toContainText(
+      "Description",
+    );
     await expect(dataFilesTable.locator("th").nth(2)).toContainText("Size");
-    await expect(
-      dataFilesTable.locator("tbody").locator("tr").nth(0).locator("td").nth(2),
-    ).toContainText("165 kB");
-
     await expect(dataFilesTable.locator("th").nth(3)).toContainText(
       "Last modified",
     );
-    // await expect(
-    //   dataFilesTable.locator("tbody").locator("tr").nth(0).locator("td").nth(3),
-    // ).not.toBeEmpty();
-
     await expect(dataFilesTable.locator("th").nth(4)).toContainText("Download");
-    const resouce1DownloadLink = dataFilesTable
-      .locator("tbody")
-      .locator("tr")
-      .nth(0)
+
+    // test first row
+    const firstRow = dataFilesTable.locator("tbody").locator("tr").nth(0);
+    await expect(firstRow.locator("td").nth(0)).toContainText("resource-1");
+    await expect(
+      firstRow.locator("td").nth(0).getByRole("link"),
+    ).toHaveAttribute("href", "#resource-1");
+
+    await expect(firstRow.locator("td").nth(2)).toContainText("165 kB");
+
+    const resouce1DownloadLink = firstRow
       .locator("td")
       .nth(4)
       .locator("a")
@@ -150,6 +135,26 @@ test.describe("README with datapackage.json", () => {
     await resouce1DownloadLink.click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toBe("resource-1.csv");
+
+    // test second row
+    const secondRow = dataFilesTable.locator("tbody").locator("tr").nth(1);
+    await expect(secondRow.locator("td").nth(0)).toContainText("resource-2");
+    await expect(
+      secondRow.locator("td").nth(0).getByRole("link"),
+    ).toHaveAttribute("href", "#resource-2");
+
+    await expect(secondRow.locator("td").nth(2)).toContainText("");
+
+    const resouce2DownloadLink = secondRow
+      .locator("td")
+      .nth(4)
+      .locator("a")
+      .first();
+    await expect(resouce2DownloadLink).toContainText("resource-2");
+    await expect(resouce2DownloadLink).toHaveAttribute(
+      "href",
+      "https://external-data.org/resource-2.csv",
+    );
   });
 
   test("Data previews", async () => {
