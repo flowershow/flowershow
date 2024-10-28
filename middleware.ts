@@ -69,6 +69,12 @@ export default async function middleware(req: NextRequest) {
       );
     }
 
+    if (path.match(/^\/sports-data\//)) {
+      return NextResponse.redirect(
+        new URL(path.replace(/^\/sports-data/, "/core"), req.url),
+      );
+    }
+
     if (path.match(/^\/awesome/)) {
       // redirect to collections
       return NextResponse.redirect(
