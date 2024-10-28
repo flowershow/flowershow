@@ -1,7 +1,6 @@
 import { env } from "@/env.mjs";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 import prisma from "@/server/db";
-import { SiteWithUser } from "@/types";
 // temporary solution to https://github.com/datopian/datahub/issues/1296
 import { unstable_noStore as noStore } from "next/cache";
 
@@ -11,7 +10,7 @@ async function Sitemap() {
   const sites = await prisma.site.findMany({
     include: { user: true },
   });
-  const internalPaths = ["/", "/portal", "/opensource", "/pricing"];
+  const internalPaths = ["/", "/collections", "/publish", "/pricing"];
 
   const internalUrls = internalPaths.map(
     (path) =>
