@@ -11,7 +11,7 @@ export const resolveSiteAlias = (
     { origin: "/@olayway/blog", alias: "/blog" },
     { origin: "/@olayway/docs", alias: "/docs" },
     { origin: "/@olayway/collections", alias: "/collections" },
-    { origin: "/@olayway/postal-codes", alias: "/logistics/postal-codes" },
+    { origin: "/@olayway/postal-codes-", alias: "/logistics/postal-codes-" },
     { origin: "/@olayway", alias: "/core" }, // NOTE: this must be last, as it's a catch-all for all other sites under /@olayway
     { origin: "/@rufuspollock/data-notes", alias: "/notes" },
   ];
