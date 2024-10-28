@@ -18,7 +18,11 @@ const organizationTypes = [
   OrganizationType.Student,
 ];
 
-export default function RequestDataModal() {
+export default function RequestDataModal({
+  description,
+}: {
+  description?: string;
+}) {
   const modal = useModal();
   const siteKey = env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
@@ -26,7 +30,7 @@ export default function RequestDataModal() {
     name: "",
     email: "",
     organization_type: OrganizationType.Business,
-    description: "",
+    description: description || "",
   });
   const [token, setToken] = useState("");
 

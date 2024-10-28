@@ -25,6 +25,9 @@ export interface DataPackage {
   views?: SimpleView[]; // TODO support classic/original views
   collection?: string; // awesome-data repo collection md file path
   [key: string]: any;
+
+  // custom
+  has_premium?: boolean;
 }
 
 export type Resource = ResourceWithPath | ResourceWithInlineData;

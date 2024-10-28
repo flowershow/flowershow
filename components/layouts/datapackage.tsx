@@ -4,7 +4,10 @@ import dynamic from "next/dynamic";
 import prettyBytes from "pretty-bytes";
 import { formatDistanceToNow } from "date-fns";
 import { Github } from "lucide-react";
-import { ArrowRightIcon } from "@heroicons/react/20/solid";
+import {
+  ArrowRightIcon,
+  InformationCircleIcon,
+} from "@heroicons/react/20/solid";
 import { DocumentArrowDownIcon } from "@heroicons/react/24/outline";
 
 import {
@@ -24,6 +27,8 @@ import { ResourceSchema } from "../resource-schema";
 import { api } from "@/trpc/server";
 import type { SiteWithUser } from "@/types";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
+import RequestDataButton from "../request-data-button";
+import RequestDataModal from "../modal/request-data";
 
 const SocialShareMenu = dynamic(
   () => import("@/components/social-share-menu"),
@@ -106,6 +111,7 @@ export const DataPackageLayout: React.FC<Props> = async ({
     updated ?? getEarliestResourceModificationTime(resourcesAdjusted);
 
   const jsonLd = getJsonLd({ metadata, siteMetadata });
+  const isPremiumDataset = metadata.has_premium;
 
   return (
     <>
@@ -116,7 +122,36 @@ export const DataPackageLayout: React.FC<Props> = async ({
       />
       <article className="prose-headings:font-headings lg:prose-md prose mx-auto max-w-full px-6 pt-12 dark:prose-invert prose-headings:font-medium prose-a:break-words ">
         <header className="mb-8 flex flex-col gap-y-5">
-          <h1 className="!mb-2">{title}</h1>
+          <h1 className="mb-2">{title}</h1>
+          {isPremiumDataset && (
+            <div className="rounded-md bg-orange-50 p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <InformationCircleIcon
+                    aria-hidden="true"
+                    className="h-5 w-5 text-orange-400"
+                  />
+                </div>
+                <div className="ml-3 flex-1 md:flex md:justify-between">
+                  <p className="my-0 text-sm text-orange-700">
+                    Request access to view and download the premium version of
+                    this dataset.
+                  </p>
+                  <p className="mb-0 mt-3 text-sm md:ml-6 md:mt-0">
+                    <RequestDataButton
+                      style="text"
+                      className="whitespace-nowrap font-medium text-orange-700 hover:text-orange-600"
+                      text="Request &rarr;"
+                    >
+                      <RequestDataModal
+                        description={`I would like to request access to the premium version of this dataset - ${title}`}
+                      />
+                    </RequestDataButton>
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
           <div className="flex items-center justify-between">
             <div
               className="flex items-center gap-1 "
