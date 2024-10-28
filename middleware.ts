@@ -75,6 +75,12 @@ export default async function middleware(req: NextRequest) {
       );
     }
 
+    if (path.match(/^\/london\//)) {
+      return NextResponse.redirect(
+        new URL(path.replace(/^\/london\//, "/core/london-"), req.url),
+      );
+    }
+
     if (path.match(/^\/awesome/)) {
       // redirect to collections
       return NextResponse.redirect(
