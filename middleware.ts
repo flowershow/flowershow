@@ -63,6 +63,12 @@ export default async function middleware(req: NextRequest) {
     hostname === `${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
     hostname === `staging.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
   ) {
+    if (path.match(/^\/world-bank/)) {
+      return NextResponse.redirect(
+        new URL(`/core/world-development-indicators`, req.url),
+      );
+    }
+
     if (path.match(/^\/awesome/)) {
       // redirect to collections
       return NextResponse.redirect(
