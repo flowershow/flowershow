@@ -15,71 +15,60 @@ export default async function AdminPanel() {
 
   const bulkCreateSites = async (formData: FormData) => {
     "use server";
-    const repos = formData.get("repos");
-    if (!repos) {
+    const sitesJson = formData.get("sitesData");
+    if (!sitesJson) {
       throw new Error("No repos provided");
     }
-    let reposJson;
+    let sites;
     try {
-      reposJson = JSON.parse(repos as string);
+      sites = JSON.parse(sitesJson as string);
     } catch (e) {
       throw new Error("Invalid JSON");
     }
-    if (!Array.isArray(reposJson)) {
+    if (!Array.isArray(sites)) {
       throw new Error("Invalid input. Expected array of objects");
     }
-    const failedRepos: {
+    const failedSites: {
       error: string;
       input: any;
     }[] = [];
 
-    reposJson.forEach(() => {});
+    for (const site of sites) {
+      if (!isValidSiteData(site)) {
+        failedSites.push({
+          input: site,
+          error: "Invalid input",
+        });
+        continue;
+      }
+      const { gh_repository, gh_branch, rootDir, projectName } = site;
 
-    for (const repo of reposJson) {
-      if (!isValidGhRepo(repo)) {
-        failedRepos.push({
-          input: repo,
-          error: "Invalid input",
-        });
-        continue;
-      }
-      const [gh_scope, gh_repository] = repo.full_name.split("/");
-      const gh_branch = repo.branch;
-      if (
-        typeof gh_scope !== "string" ||
-        typeof gh_repository !== "string" ||
-        typeof gh_branch !== "string"
-      ) {
-        failedRepos.push({
-          input: repo,
-          error: "Invalid input",
-        });
-        continue;
-      }
       try {
         await api.site.create.mutate({
-          gh_repository: repo.full_name,
-          gh_branch: repo.branch,
+          gh_repository,
+          gh_branch,
+          rootDir,
+          projectName,
         });
       } catch (e) {
         if (e instanceof Error) {
-          failedRepos.push({
-            input: repo,
+          failedSites.push({
+            input: site,
             error: e.message,
           });
         } else {
-          failedRepos.push({
-            input: repo,
+          failedSites.push({
+            input: site,
             error: "Unknown error",
           });
         }
       }
     }
 
-    if (failedRepos.length > 0) {
+    if (failedSites.length > 0) {
       return {
         message: "Some sites failed to create",
-        body: failedRepos,
+        body: failedSites,
       };
     }
     return {
@@ -95,11 +84,18 @@ export default async function AdminPanel() {
   );
 }
 
-interface GhRepo {
-  full_name: string; // e.g. "octocat/Hello-World"
-  branch: string; // e.g. "main"
+interface SiteData {
+  gh_repository: string; // e.g. "octocat/Hello-World"
+  gh_branch: string; // e.g. "main"
+  rootDir: string;
+  projectName: string;
 }
 
-const isValidGhRepo = (x: any): x is GhRepo => {
-  return typeof x.full_name === "string" && typeof x.branch === "string";
+const isValidSiteData = (x: any): x is SiteData => {
+  return (
+    typeof x.gh_repository === "string" &&
+    typeof x.gh_branch === "string" &&
+    typeof x.rootDir === "string" &&
+    typeof x.projectName === "string"
+  );
 };

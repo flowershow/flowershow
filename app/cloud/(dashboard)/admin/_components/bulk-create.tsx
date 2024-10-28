@@ -21,12 +21,10 @@ export default function BulkCreateForm({
 
   const placeholder = `[
   {
-    "full_name": "johndoe/some-repo",
-    "branch": "main",
-  },
-  {
-    "full_name": "janedoe/another-repo",
-    "branch": "main",
+    "gh_repository": "johndoe/some-repo",
+    "gh_branch": "main",
+    "rootDir": "/",
+    "projectName": "abc"
   }
 ]`;
 
@@ -53,7 +51,7 @@ export default function BulkCreateForm({
         </p>
 
         <textarea
-          name="repos"
+          name="sitesData"
           rows={10}
           required
           placeholder={placeholder}

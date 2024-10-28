@@ -37,6 +37,7 @@ export const siteRouter = createTRPCRouter({
         gh_repository: z.string().min(1),
         gh_branch: z.string().min(1),
         rootDir: z.string().optional(),
+        projectName: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -70,7 +71,8 @@ export const siteRouter = createTRPCRouter({
 
       //use repository name as an initial project name
       //and append a number if the name is already taken
-      let projectName = gh_repository.split("/")[1] as string;
+      let projectName =
+        input.projectName ?? (gh_repository.split("/")[1] as string);
       let num = 2;
 
       while (
