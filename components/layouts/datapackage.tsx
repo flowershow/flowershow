@@ -152,22 +152,27 @@ export const DataPackageLayout: React.FC<Props> = async ({
               </div>
             </div>
           )}
-          <div className="flex items-center justify-between">
-            <div
-              className="flex items-center gap-1 "
-              data-testid="goto-repository"
-            >
-              <Github width={18} />
-              <Link
-                className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
-                href={`https://github.com/${siteMetadata?.gh_repository}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {siteMetadata.gh_repository}
-              </Link>
-            </div>
-            <div className="flex shrink-0 grow items-center justify-end">
+          <div className="flex items-center justify-start gap-x-2">
+            {!isPremiumDataset && (
+              <>
+                <div
+                  className="flex items-center gap-1"
+                  data-testid="goto-repository"
+                >
+                  <Github width={18} />
+                  <Link
+                    className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
+                    href={`https://github.com/${siteMetadata?.gh_repository}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    {siteMetadata.gh_repository}
+                  </Link>
+                </div>
+                <span>•</span>
+              </>
+            )}
+            <div className="flex items-center">
               <SocialShareMenu shareTitle={title} />
             </div>
           </div>
