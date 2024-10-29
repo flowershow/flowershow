@@ -63,6 +63,11 @@ export default async function middleware(req: NextRequest) {
     hostname === `${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
     hostname === `staging.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
   ) {
+    if (path === "/collections") {
+      console.log("redirecting to /home/collections");
+      return NextResponse.rewrite(new URL(`/home/collections`, req.url));
+    }
+
     if (path.match(/^\/world-bank/)) {
       return NextResponse.redirect(
         new URL(`/core/world-development-indicators`, req.url),
@@ -89,10 +94,6 @@ export default async function middleware(req: NextRequest) {
     }
 
     const aliasResolvedPath = resolveSiteAlias(path, "from");
-
-    if (aliasResolvedPath === "/collections") {
-      return NextResponse.rewrite(new URL(`/home/collections`, req.url));
-    }
 
     // if resolved path matches /@{username}/{project}/{restofpath}
     const userProjectMatch = aliasResolvedPath.match(
