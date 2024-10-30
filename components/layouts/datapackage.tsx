@@ -110,6 +110,8 @@ export const DataPackageLayout: React.FC<Props> = async ({
   const datasetLastModifiedDate =
     updated ?? getEarliestResourceModificationTime(resourcesAdjusted);
 
+  console.log("datasetLastModifiedDate", datasetLastModifiedDate);
+
   const jsonLd = getJsonLd({ metadata, siteMetadata });
   const isPremiumDataset = metadata.has_premium;
 
@@ -435,5 +437,6 @@ const getEarliestResourceModificationTime = (resources: Resource[]) => {
     if (new Date(resource.lastModified) < new Date(acc)) {
       return resource.lastModified;
     }
+    return acc;
   }, null);
 };
