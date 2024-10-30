@@ -80,6 +80,12 @@ export default async function middleware(req: NextRequest) {
       );
     }
 
+    if (path.match(/^\/machine-learning\//)) {
+      return NextResponse.redirect(
+        new URL(path.replace(/^\/machine-learning/, "/core"), req.url),
+      );
+    }
+
     if (path.match(/^\/london\//)) {
       return NextResponse.redirect(
         new URL(path.replace(/^\/london\//, "/core/london-"), req.url),
