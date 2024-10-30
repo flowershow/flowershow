@@ -66,6 +66,14 @@ export const mdxComponentsFactory = ({
     }: React.LinkHTMLAttributes<HTMLAnchorElement>) => {
       if (!href) return <a {...rest}>{children}</a>;
 
+      if (href.startsWith("mailto:")) {
+        return (
+          <a href={href} {...rest}>
+            {children}
+          </a>
+        );
+      }
+
       const isExternal = href.startsWith("http");
       const isHeading = href.startsWith("#");
 
