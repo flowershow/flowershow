@@ -87,10 +87,10 @@ export const DataPackageLayout: React.FC<Props> = async ({
 
   const resourcesAdjusted = await Promise.all(
     resources.map(async (resource) => {
-      const lastModified: string | null = resource.path.startsWith("http")
+      const modified: string | null = resource.path.startsWith("http")
         ? null
-        : resource.lastModified
-          ? new Date(resource.lastModified).toISOString()
+        : resource.modified
+          ? new Date(resource.modified).toISOString()
           : await api.site.getFileLastModifiedDate.query({
               gh_username: siteMetadata.user!.gh_username!,
               projectName: siteMetadata.projectName,
@@ -102,7 +102,7 @@ export const DataPackageLayout: React.FC<Props> = async ({
         path: resource.path.startsWith("http")
           ? resource.path
           : rawFilePermalinkBase + "/" + resource.path,
-        lastModified,
+        modified,
       };
     }),
   );
@@ -298,14 +298,14 @@ export const DataPackageLayout: React.FC<Props> = async ({
                     <td
                       className="cursor-default whitespace-nowrap"
                       title={
-                        r.lastModified
-                          ? new Date(r.lastModified).toLocaleString()
+                        r.modified
+                          ? new Date(r.modified).toLocaleString()
                           : ""
                       }
                     >
                       <span>
-                        {r.lastModified &&
-                          formatDistanceToNow(new Date(r.lastModified), {
+                        {r.modified &&
+                          formatDistanceToNow(new Date(r.modified), {
                             addSuffix: true,
                           })}
                       </span>
@@ -428,14 +428,14 @@ const View: React.FC<{ view: SimpleView | View; resources: Resource[] }> = ({
 
 const getEarliestResourceModificationTime = (resources: Resource[]) => {
   return resources.reduce((acc, resource) => {
-    if (!resource.lastModified) {
+    if (!resource.modified) {
       return acc;
     }
     if (!acc) {
-      return resource.lastModified;
+      return resource.modified;
     }
-    if (new Date(resource.lastModified) < new Date(acc)) {
-      return resource.lastModified;
+    if (new Date(resource.modified) < new Date(acc)) {
+      return resource.modified;
     }
     return acc;
   }, null);
