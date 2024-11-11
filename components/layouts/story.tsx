@@ -12,7 +12,7 @@ interface Props extends React.PropsWithChildren {
 
 // copied over from https://github.com/datopian/portaljs/blob/main/packages/core/src/ui/BlogLayout/BlogLayout.tsx
 export const DataStoryLayout: React.FC<Props> = ({ children, metadata }) => {
-  const { title, description, date, authors } = metadata;
+  const { title, description, date, modified, authors } = metadata;
 
   return (
     <article className="prose-headings:font-headings prose max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
@@ -22,7 +22,7 @@ export const DataStoryLayout: React.FC<Props> = ({ children, metadata }) => {
         <p className="!my-0 text-xl font-light text-primary/75 md:text-2xl">
           {description}
         </p>
-        {(authors || date) && (
+        {(authors || date || modified) && (
           <div className="flex items-center gap-x-3 border-b border-t border-primary/10 py-2 text-sm text-primary/75">
             {authors?.length && (
               <div
@@ -34,7 +34,7 @@ export const DataStoryLayout: React.FC<Props> = ({ children, metadata }) => {
                 ))}
               </div>
             )}
-            {date && <time dateTime={date}>{formatDate(date)}</time>}
+            {modified || date && <time dateTime={modified || date}>{formatDate(modified || date)}</time>}
           </div>
         )}
       </header>
