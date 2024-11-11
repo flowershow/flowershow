@@ -21,6 +21,7 @@ export interface StoryPageMetadata extends PageMetadataBase {
   description: string;
   date?: string;
   authors?: string[];
+  modified?: string;
 }
 
 export type PageMetadata = DatasetPageMetadata | StoryPageMetadata;
