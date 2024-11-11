@@ -1,3 +1,7 @@
+// TODO this whole file is a mess but we're porbably going to drop
+// support for datapackage views in favour of in-markdown components usage
+// so it's not worth fixing it for now
+
 import { DatasetPageMetadata } from "@/server/api/types";
 import type {
   Resource,
@@ -44,12 +48,23 @@ export const FrictionlessView = ({
   resource: Resource;
 }) => {
   if (view.spec.type === "line") {
+    const xAxisField = resource.schema?.fields?.find(
+      (f) => f.id === view.spec.group || f.name === view.spec.group,
+    );
+    const xAxisTimeUnit =
+      xAxisField?.type === "date" && xAxisField.format === "yyyy-mm"
+        ? "yearmonth"
+        : xAxisField?.type === "date"
+          ? "yearmonthdate"
+          : xAxisField?.type;
+
     if (view.spec.series.length > 1) {
       return (
         <LineChart
           data={{ url: resource.path }}
           xAxis={view.spec.group}
           yAxis={view.spec.series}
+          xAxisTimeUnit={xAxisTimeUnit as any}
         />
       );
     } else if (view.spec.series.length === 1) {
@@ -58,6 +73,7 @@ export const FrictionlessView = ({
           data={{ url: resource.path }}
           xAxis={view.spec.group}
           yAxis={view.spec.series[0]!}
+          xAxisTimeUnit={xAxisTimeUnit as any}
         />
       );
     } else {
