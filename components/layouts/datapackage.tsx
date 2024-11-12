@@ -71,7 +71,6 @@ export const DataPackageLayout: React.FC<Props> = async ({
   const resouceFilesExtensions = Array.from(
     new Set(resourceFiles.map((r) => r.format)),
   ).join(", ");
-
   const resourceFilesSize = resourceFiles.reduce(
     (acc, r) => acc + (r.bytes ?? 0),
     0,
@@ -85,23 +84,37 @@ export const DataPackageLayout: React.FC<Props> = async ({
     ? `/_r/-`
     : resolveSiteAlias(`/@${gh_username}/${projectName}`, "to") + `/_r/-`;
 
+  const getResourceLastModifiedDate = async (resource: Resource) => {
+    if (resource.modified) {
+      return new Date(resource.modified).toISOString();
+    }
+    if (resource.path.startsWith("http")) {
+      return null;
+    }
+
+    return await api.site.getFileLastModifiedDate.query({
+      gh_username: siteMetadata.user!.gh_username!,
+      projectName: siteMetadata.projectName,
+      path: resource.path,
+    });
+  };
+
+  const getResourceFileUrl = (resource: Resource) => {
+    if (resource.path.startsWith("http")) {
+      return resource.path;
+    }
+
+    return rawFilePermalinkBase + "/" + resource.path;
+  };
+
   const resourcesAdjusted = await Promise.all(
     resources.map(async (resource) => {
-      const modified: string | null = resource.path.startsWith("http")
-        ? null
-        : resource.modified
-          ? new Date(resource.modified).toISOString()
-          : await api.site.getFileLastModifiedDate.query({
-              gh_username: siteMetadata.user!.gh_username!,
-              projectName: siteMetadata.projectName,
-              path: resource.path,
-            });
+      const modified = await getResourceLastModifiedDate(resource);
+      const path = getResourceFileUrl(resource);
 
       return {
         ...resource,
-        path: resource.path.startsWith("http")
-          ? resource.path
-          : rawFilePermalinkBase + "/" + resource.path,
+        path,
         modified,
       };
     }),
@@ -298,9 +311,7 @@ export const DataPackageLayout: React.FC<Props> = async ({
                     <td
                       className="cursor-default whitespace-nowrap"
                       title={
-                        r.modified
-                          ? new Date(r.modified).toLocaleString()
-                          : ""
+                        r.modified ? new Date(r.modified).toLocaleString() : ""
                       }
                     >
                       <span>
