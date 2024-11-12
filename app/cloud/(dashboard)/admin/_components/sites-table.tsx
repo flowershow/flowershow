@@ -8,6 +8,9 @@ export default function SitesAdminTable() {
   const [checked, setChecked] = useState(false);
   const [indeterminate, setIndeterminate] = useState(false);
   const [selectedSites, setSelectedSites] = useState<string[]>([]);
+  const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(
+    null,
+  );
 
   const { data: sites } = api.site.getAll.useQuery(undefined, {
     initialData: [],
@@ -131,7 +134,7 @@ export default function SitesAdminTable() {
                 <tbody className="divide-y divide-gray-200 bg-white">
                   {sites
                     .sort((a, b) => a.projectName.localeCompare(b.projectName))
-                    .map((site) => (
+                    .map((site, index) => (
                       <tr
                         key={site.id}
                         className={
@@ -147,13 +150,54 @@ export default function SitesAdminTable() {
                             className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
                             value={site.id}
                             checked={selectedSites.includes(site.id)}
-                            onChange={(e) =>
-                              setSelectedSites(
-                                e.target.checked
-                                  ? [...selectedSites, site.id]
-                                  : selectedSites.filter((s) => s !== site.id),
-                              )
-                            }
+                            onChange={(e) => {
+                              let newSelectedSites = [...selectedSites];
+                              const shiftKeyPressed = (e as any).nativeEvent
+                                .shiftKey;
+
+                              if (
+                                shiftKeyPressed &&
+                                lastSelectedIndex !== null
+                              ) {
+                                // Shift key is pressed, handle range selection
+                                const start = Math.min(
+                                  lastSelectedIndex,
+                                  index,
+                                );
+                                const end = Math.max(lastSelectedIndex, index);
+                                const siteIdsInRange = sites
+                                  .slice(start, end + 1)
+                                  .map((s) => s.id);
+
+                                if (e.target.checked) {
+                                  // Select range
+                                  siteIdsInRange.forEach((siteId) => {
+                                    if (!newSelectedSites.includes(siteId)) {
+                                      newSelectedSites.push(siteId);
+                                    }
+                                  });
+                                } else {
+                                  // Unselect range
+                                  newSelectedSites = newSelectedSites.filter(
+                                    (siteId) =>
+                                      !siteIdsInRange.includes(siteId),
+                                  );
+                                }
+                                setSelectedSites(newSelectedSites);
+                              } else {
+                                // Regular click without shift
+                                if (e.target.checked) {
+                                  newSelectedSites.push(site.id);
+                                } else {
+                                  newSelectedSites = newSelectedSites.filter(
+                                    (s) => s !== site.id,
+                                  );
+                                }
+                                setSelectedSites(newSelectedSites);
+                              }
+                              // Update the last selected index
+                              setLastSelectedIndex(index);
+                            }}
                           />
                         </td>
                         <td
