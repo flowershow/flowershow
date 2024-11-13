@@ -3,6 +3,7 @@ import { Container } from "@/components/container";
 import clsx from "clsx";
 
 export function CTASection({
+  id,
   title,
   description,
   filled = false,
@@ -10,8 +11,8 @@ export function CTASection({
   linkText,
   linkUrl,
   children,
-  ...props
 }: {
+  id?: string;
   title: string;
   description: string;
   filled?: boolean;
@@ -22,7 +23,7 @@ export function CTASection({
 }) {
   return (
     <div
-      {...props}
+      id={id}
       className={clsx(
         "py-20 text-center text-black",
         filled ? "bg-custom-radial" : "bg-white",
