@@ -10,6 +10,7 @@ export function CTASection({
   linkText,
   linkUrl,
   children,
+  ...props
 }: {
   title: string;
   description: string;
@@ -21,6 +22,7 @@ export function CTASection({
 }) {
   return (
     <div
+      {...props}
       className={clsx(
         "py-20 text-center text-black",
         filled ? "bg-custom-radial" : "bg-white",
