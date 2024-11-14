@@ -34,7 +34,11 @@ export const DataStoryLayout: React.FC<Props> = ({ children, metadata }) => {
                 ))}
               </div>
             )}
-            {modified || date && <time dateTime={modified || date}>{formatDate(modified || date)}</time>}
+            {(modified || date) && (
+              <time dateTime={modified || date}>
+                {formatDate(modified! || date!)}
+              </time>
+            )}
           </div>
         )}
       </header>
@@ -75,5 +79,6 @@ const formatDate = (date: string, locales = "en-US") => {
     month: "long",
     day: "numeric",
   };
+
   return new Date(date).toLocaleDateString(locales, options);
 };
