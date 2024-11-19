@@ -12,25 +12,25 @@ export function WeeklyPick() {
           WEEKLY PICK
         </h2>
         <p className="mt-2 text-3xl font-bold tracking-tight text-gray-900 sm:text-4xl">
-          Country Codes
+          Global Temperature Time Series
         </p>
         <p className="mt-6 text-lg leading-8 text-gray-600">
-          Need accurate country codes? This dataset provides a comprehensive
-          list of country codes alongside their official country names. It’s
-          available in a convenient CSV format, ready for free download. Ideal
-          for developers, analysts, and anyone handling international data or
-          building location-based applications.
+          Access extensive datasets from the GISS Surface Temperature (GISTEMP)
+          analysis and the global component of Climate at a Glance (GCAG). These
+          datasets include global monthly mean and annual mean temperature
+          anomalies in degrees Celsius, providing detailed records of
+          temperature changes over time. The GISTEMP data are available from
+          1880 to the present, while the GCAG data span from 1850 to the
+          present.
         </p>
       </div>
       <div className="my-8">
         {/* @ts-expect-error */}
-        <FlatUiTable
-          data={{ url: "/core/country-codes/_r/-/data/country-codes.csv" }}
-        />
+        <FlatUiTable data={{ url: "/core/global-temp/_r/-/data/annual.csv" }} />
       </div>
       <div className="text-end">
         <Link
-          href="/core/country-codes"
+          href="/core/global-temp"
           className="text-orange-400 hover:text-orange-500"
         >
           <span>View dataset →</span>
