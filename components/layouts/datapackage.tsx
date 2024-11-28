@@ -3,12 +3,8 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import prettyBytes from "pretty-bytes";
 import { formatDistanceToNow } from "date-fns";
-import { Github } from "lucide-react";
-import {
-  ArrowRightIcon,
-  InformationCircleIcon,
-} from "@heroicons/react/20/solid";
-import { DocumentArrowDownIcon } from "@heroicons/react/24/outline";
+import { ArrowRightIcon, InfoIcon, FileDownIcon } from "lucide-react";
+import { GithubIcon } from "@/components/icons";
 
 import {
   type SimpleView,
@@ -142,7 +138,7 @@ export const DataPackageLayout: React.FC<Props> = async ({
             <div className="rounded-md bg-orange-50 p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
-                  <InformationCircleIcon
+                  <InfoIcon
                     aria-hidden="true"
                     className="h-5 w-5 text-orange-400"
                   />
@@ -174,7 +170,7 @@ export const DataPackageLayout: React.FC<Props> = async ({
                   className="flex items-center gap-1"
                   data-testid="goto-repository"
                 >
-                  <Github width={18} />
+                  <GithubIcon width={18} />
                   <Link
                     className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
                     href={`https://github.com/${siteMetadata?.gh_repository}`}
@@ -329,7 +325,7 @@ export const DataPackageLayout: React.FC<Props> = async ({
                       >
                         <div className="flex items-center space-x-1 ">
                           <span>{r.name}</span>
-                          <DocumentArrowDownIcon className="inline h-4 w-4" />
+                          <FileDownIcon className="inline h-4 w-4" />
                         </div>
                       </a>
                     </td>

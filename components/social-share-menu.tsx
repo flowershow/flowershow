@@ -2,8 +2,7 @@
 import Link from "next/link";
 import { Fragment } from "react";
 import { Menu, Transition } from "@headlessui/react";
-import { LinkIcon } from "@heroicons/react/20/solid";
-import { ArrowUpOnSquareIcon } from "@heroicons/react/24/outline";
+import { LinkIcon, ShareIcon } from "lucide-react";
 import { transformObjectToParams } from "@/lib/transform-object-to-params";
 import { socialIcons } from "@/components/social-icons";
 import { toast } from "sonner";
@@ -80,7 +79,7 @@ export default function SocialShareMenu({
       <Menu as="div" className="relative flex text-left">
         <Menu.Button>
           <div className="flex items-center gap-1">
-            <ArrowUpOnSquareIcon className="h-5 w-5" aria-hidden="true" />
+            <ShareIcon className="h-5 w-5" aria-hidden="true" />
             <span className="font-normal text-slate-600 hover:underline">
               Share
             </span>

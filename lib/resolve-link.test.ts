@@ -1,3 +1,17 @@
+jest.mock(
+  "../config.json",
+  () => ({
+    siteAliases: [
+      { origin: "/@olayway/blog", alias: "/blog" },
+      { origin: "/@olayway/docs", alias: "/docs" },
+      { origin: "/@olayway/collections", alias: "/collections" },
+      { origin: "/@rufuspollock/data-notes", alias: "/notes" },
+      { origin: "/@olayway/co2-ppm", alias: "/core/co2-ppm" },
+    ],
+  }),
+  { virtual: true },
+);
+
 import "@testing-library/jest-dom";
 import { resolveLink } from "./resolve-link";
 

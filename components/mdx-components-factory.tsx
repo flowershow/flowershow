@@ -1,10 +1,11 @@
+import { ErrorBoundary } from "react-error-boundary";
 import { PageMetadata, isDatasetPage } from "@/server/api/types";
 import { resolveLink } from "@/lib/resolve-link";
 import { customEncodeUrl } from "@/lib/url-encoder";
-import { ErrorBoundary } from "react-error-boundary";
+import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 import { ErrorMessage } from "@/components/error-message";
-import type { SiteWithUser } from "@/types";
-
+import { resolveSiteAlias } from "@/lib/resolve-site-alias";
+import { FrictionlessViewFactory } from "./frictionless-view";
 import {
   Catalog,
   Excel,
@@ -22,6 +23,7 @@ import {
   Mermaid,
 } from "./client-components-wrapper";
 
+import type { SiteWithUser } from "@/types";
 import type {
   ExcelProps,
   FlatUiTableProps,
@@ -32,8 +34,6 @@ import type {
   PlotlyBarChartProps,
   PlotlyLineChartProps,
 } from "./client-components-wrapper";
-import { FrictionlessViewFactory } from "./frictionless-view";
-import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 
 export const mdxComponentsFactory = ({
   metadata,
@@ -56,6 +56,62 @@ export const mdxComponentsFactory = ({
       filePath: metadata._path,
       prefixPath: rawFilePermalinkBase,
     });
+
+  const dataVisComponents = {
+    Catalog: withErrorBoundary(Catalog, "Catalog"),
+    Excel: withErrorBoundary((props: ExcelProps) => {
+      props.data.url = resolveDataUrl(props.data.url);
+      return <Excel {...props} />;
+    }, "Excel"),
+    Iframe: withErrorBoundary((props: IframeProps) => {
+      props.data.url = resolveDataUrl(props.data.url);
+      return <Iframe {...props} />;
+    }, "Iframe"),
+    FlatUiTable: withErrorBoundary((props: FlatUiTableProps) => {
+      if (props.data?.url) props.data.url = resolveDataUrl(props.data.url);
+      return <FlatUiTable {...props} />;
+    }, "FlatUiTable"),
+    LineChart: withErrorBoundary((props: LineChartProps) => {
+      if (props.data?.url) props.data.url = resolveDataUrl(props.data.url);
+      return <LineChart {...props} />;
+    }, "LineChart"),
+    Map: withErrorBoundary((props: MapProps) => {
+      const layers = props.layers.map((layer) => {
+        if (layer.data.url) layer.data.url = resolveDataUrl(layer.data.url);
+        return layer;
+      });
+      return <Map {...props} layers={layers} />;
+    }, "Map"),
+    PdfViewer: withErrorBoundary((props: PdfViewerProps) => {
+      props.data.url = resolveDataUrl(props.data.url);
+      return <PdfViewer {...props} />;
+    }, "PdfViewer"),
+    Plotly: withErrorBoundary((props) => {
+      const data =
+        typeof props.data === "string"
+          ? resolveDataUrl(props.data)
+          : props.data;
+      return <Plotly {...props} data={data} />;
+    }, "Plotly"),
+    PlotlyBarChart: withErrorBoundary((props: PlotlyBarChartProps) => {
+      if (props.data.url) props.data.url = resolveDataUrl(props.data.url);
+      return <PlotlyBarChart {...props} />;
+    }, "PlotlyBarChart"),
+    PlotlyLineChart: withErrorBoundary((props: PlotlyLineChartProps) => {
+      if (props.data.url) props.data.url = resolveDataUrl(props.data.url);
+      return <PlotlyLineChart {...props} />;
+    }, "PlotlyLineChart"),
+    Vega: withErrorBoundary((props) => {
+      if (props.spec.data.url)
+        props.spec.data.url = resolveDataUrl(props.spec.data.url);
+      return <Vega {...props} />;
+    }, "Vega"),
+    VegaLite: withErrorBoundary((props) => {
+      if (props.spec.data.url)
+        props.spec.data.url = resolveDataUrl(props.spec.data.url);
+      return <VegaLite {...props} />;
+    }, "VegaLite"),
+  };
 
   const components: any = {
     /* HTML elements */
@@ -123,59 +179,7 @@ export const mdxComponentsFactory = ({
         : `${props.className || ""} language-auto`;
       return <code {...props} className={className}></code>;
     },
-    Catalog: withErrorBoundary(Catalog, "Catalog"),
-    Excel: withErrorBoundary((props: ExcelProps) => {
-      props.data.url = resolveDataUrl(props.data.url);
-      return <Excel {...props} />;
-    }, "Excel"),
-    Iframe: withErrorBoundary((props: IframeProps) => {
-      props.data.url = resolveDataUrl(props.data.url);
-      return <Iframe {...props} />;
-    }, "Iframe"),
-    FlatUiTable: withErrorBoundary((props: FlatUiTableProps) => {
-      if (props.data?.url) props.data.url = resolveDataUrl(props.data.url);
-      return <FlatUiTable {...props} />;
-    }, "FlatUiTable"),
-    LineChart: withErrorBoundary((props: LineChartProps) => {
-      if (props.data?.url) props.data.url = resolveDataUrl(props.data.url);
-      return <LineChart {...props} />;
-    }, "LineChart"),
-    Map: withErrorBoundary((props: MapProps) => {
-      const layers = props.layers.map((layer) => {
-        if (layer.data.url) layer.data.url = resolveDataUrl(layer.data.url);
-        return layer;
-      });
-      return <Map {...props} layers={layers} />;
-    }, "Map"),
-    PdfViewer: withErrorBoundary((props: PdfViewerProps) => {
-      props.data.url = resolveDataUrl(props.data.url);
-      return <PdfViewer {...props} />;
-    }, "PdfViewer"),
-    Plotly: withErrorBoundary((props) => {
-      const data =
-        typeof props.data === "string"
-          ? resolveDataUrl(props.data)
-          : props.data;
-      return <Plotly {...props} data={data} />;
-    }, "Plotly"),
-    PlotlyBarChart: withErrorBoundary((props: PlotlyBarChartProps) => {
-      if (props.data.url) props.data.url = resolveDataUrl(props.data.url);
-      return <PlotlyBarChart {...props} />;
-    }, "PlotlyBarChart"),
-    PlotlyLineChart: withErrorBoundary((props: PlotlyLineChartProps) => {
-      if (props.data.url) props.data.url = resolveDataUrl(props.data.url);
-      return <PlotlyLineChart {...props} />;
-    }, "PlotlyLineChart"),
-    Vega: withErrorBoundary((props) => {
-      if (props.spec.data.url)
-        props.spec.data.url = resolveDataUrl(props.spec.data.url);
-      return <Vega {...props} />;
-    }, "Vega"),
-    VegaLite: withErrorBoundary((props) => {
-      if (props.spec.data.url)
-        props.spec.data.url = resolveDataUrl(props.spec.data.url);
-      return <VegaLite {...props} />;
-    }, "VegaLite"),
+    ...(isFeatureEnabled(Feature.DataVisComponents) ? dataVisComponents : {}),
   };
 
   if (isDatasetPage(metadata)) {

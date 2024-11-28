@@ -1,18 +1,32 @@
 "use client";
-import { Menu } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Fragment, useEffect, useState } from "react";
 import TreeView, { TreeViewItem } from "./tree-view";
-import { NavTitle } from "./nav-title";
-import { Dialog, Transition } from "@headlessui/react";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogPanel,
+  Transition,
+  TransitionChild,
+} from "@headlessui/react";
+import { MenuIcon, XIcon } from "lucide-react";
+import Link from "next/link";
 
 const SidebarNav = ({ title, logo, url, navigation }) => {
   const pathname = usePathname();
   return (
     <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6">
-      <div className="mt-8 flex  shrink-0 items-center">
-        <NavTitle title={title} logo={logo} url={url} />
+      <div className="mt-12 flex  shrink-0 items-center">
+        <Link
+          data-testid="nav-title"
+          href={url || "/"}
+          className="flex items-center space-x-2 text-xl font-extrabold text-slate-900 dark:text-white"
+        >
+          {logo && (
+            <img src={logo} alt="Logo" className="mr-1 h-8 fill-white" />
+          )}
+          {title && <span>{title}</span>}
+        </Link>
       </div>
       <nav className="flex flex-1 flex-col">
         <TreeView items={navigation} currentPath={pathname} />
@@ -43,15 +57,15 @@ export default function Sidebar({
 
   return (
     <>
-      <Transition.Root show={sidebarOpen} as={Fragment}>
+      <Transition show={sidebarOpen} as={Fragment}>
         <Dialog onClose={setSidebarOpen} className="relative z-50 lg:hidden">
-          <Transition.Child
+          <TransitionChild
             as={Fragment}
             enter="transition-opacity duration-300 ease-linear"
           >
-            <Dialog.Backdrop className="fixed inset-0 z-40 bg-gray-900/50 data-[closed]:opacity-0" />
-          </Transition.Child>
-          <Transition.Child
+            <DialogBackdrop className="fixed inset-0 z-40 bg-gray-900/50 data-[closed]:opacity-0" />
+          </TransitionChild>
+          <TransitionChild
             as={Fragment}
             enter="transition ease-in-out duration-300 transform"
             enterFrom="-translate-x-full"
@@ -61,7 +75,7 @@ export default function Sidebar({
             leaveTo="-translate-x-full"
           >
             <div className="fixed inset-0 flex">
-              <Dialog.Panel className="relative mr-16 flex w-full max-w-xs flex-1 transform transition duration-300 ease-in-out data-[closed]:-translate-x-full">
+              <DialogPanel className="relative mr-16 flex w-full max-w-xs flex-1 transform transition duration-300 ease-in-out data-[closed]:-translate-x-full">
                 <div className="absolute left-full top-0 flex w-16 justify-center pt-5 duration-300 ease-in-out data-[closed]:opacity-0">
                   <button
                     type="button"
@@ -69,10 +83,7 @@ export default function Sidebar({
                     className="-m-2.5 p-2.5"
                   >
                     <span className="sr-only">Close sidebar</span>
-                    <XMarkIcon
-                      aria-hidden="true"
-                      className="h-8 w-8 text-white"
-                    />
+                    <XIcon aria-hidden="true" className="h-8 w-8 text-white" />
                   </button>
                 </div>
                 <SidebarNav
@@ -81,11 +92,11 @@ export default function Sidebar({
                   logo={logo}
                   navigation={navigation}
                 />
-              </Dialog.Panel>
+              </DialogPanel>
             </div>
-          </Transition.Child>
+          </TransitionChild>
         </Dialog>
-      </Transition.Root>
+      </Transition>
       <div
         className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col"
         data-testid="sidebar"
@@ -104,7 +115,7 @@ export default function Sidebar({
           className="-m-2.5 p-2.5 text-gray-700 lg:hidden"
         >
           <span className="sr-only">Open sidebar</span>
-          <Bars3Icon aria-hidden="true" className="h-8 w-8" />
+          <MenuIcon aria-hidden="true" className="size-6" />
         </button>
       </div>
     </>

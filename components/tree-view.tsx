@@ -1,6 +1,6 @@
 "use client";
 import { Disclosure, Transition } from "@headlessui/react";
-import { ChevronRightIcon } from "@heroicons/react/20/solid";
+import { ChevronRightIcon } from "lucide-react";
 import clsx from "clsx";
 import Link from "next/link";
 

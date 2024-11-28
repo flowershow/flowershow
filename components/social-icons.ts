@@ -1,20 +1,22 @@
-import { DiscordIcon } from "@/components/icons/discord";
 import { SocialPlatform } from "@/components/types";
+
 import {
+  DiscordIcon,
   FacebookIcon,
   GithubIcon,
   InstagramIcon,
-  LinkedinIcon,
-  TwitterIcon,
-  YoutubeIcon,
-} from "lucide-react";
+  LinkedInIcon,
+  XIcon,
+  YouTubeIcon,
+} from "@/components/icons";
 
 export const socialIcons: { [K in SocialPlatform]: React.FC<any> } = {
   discord: DiscordIcon,
-  github: GithubIcon,
-  linkedin: LinkedinIcon,
-  twitter: TwitterIcon,
   facebook: FacebookIcon,
+  github: GithubIcon,
   instagram: InstagramIcon,
-  youtube: YoutubeIcon,
+  linkedin: LinkedInIcon,
+  twitter: XIcon,
+  x: XIcon,
+  youtube: YouTubeIcon,
 };

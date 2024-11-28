@@ -1,36 +1,40 @@
 "use client";
+import Image from "next/image";
+import Link from "next/link";
 import { useState, useEffect } from "react";
+import { MenuIcon, XIcon } from "lucide-react";
 import clsx from "clsx";
-import { NavMobile } from "./nav-mobile";
-import { NavItem } from "./nav-item";
-import { NavTitle } from "./nav-title";
-import { NavSocial } from "./nav-social";
+import {
+  Disclosure,
+  DisclosureButton,
+  DisclosurePanel,
+  Transition,
+} from "@headlessui/react";
 import { NavLink, SocialLink } from "./types";
+import config from "@/config.json";
+import { socialIcons } from "./social-icons";
 
 interface Props extends React.PropsWithChildren {
   title?: string;
   logo?: string;
   url?: string;
-  version?: string;
   links?: Array<NavLink>;
   social?: Array<SocialLink>;
 }
 
-const Nav: React.FC<Props> = ({
-  title,
-  logo,
-  url,
-  version,
-  links,
-  social,
-  children,
-}) => {
+const Nav = ({
+  title = "",
+  logo = config.logo,
+  url = "/",
+  links = [],
+  social = [],
+}: Props) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    function onScroll() {
+    const onScroll = () => {
       setIsScrolled(window.scrollY > 0);
-    }
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
@@ -39,40 +43,103 @@ const Nav: React.FC<Props> = ({
   }, []);
 
   return (
-    <div
+    <Disclosure
+      as="nav"
       className={clsx(
-        "sticky top-0 z-50 w-full",
-        isScrolled && "bg-background shadow-sm",
+        "sticky top-0 z-10 bg-background",
+        isScrolled && "shadow-sm",
       )}
     >
-      {" "}
-      <div className="mx-auto flex h-[4rem] max-w-8xl flex-col justify-center p-4 md:px-8">
-        <nav className="flex justify-between">
-          {/* Mobile navigation  */}
-          {links && (
-            <div className="mr-2 flex sm:mr-4 lg:hidden">
-              <NavMobile links={links} />
+      <div className="mx-auto max-w-7xl px-4 text-sm sm:px-6 lg:px-8">
+        <div className="flex h-16 justify-between">
+          <div className="flex">
+            <Link href={url} className="flex shrink-0 items-center">
+              <Image alt={title} src={logo} width={24} height={24} />
+            </Link>
+            <div className="hidden sm:ml-6 sm:space-x-8 md:flex">
+              {links.map((link) => (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="inline-flex items-center px-1 pt-1 font-medium text-gray-900"
+                >
+                  {link.name}
+                </a>
+              ))}
+            </div>
+          </div>
+          <div className="hidden space-x-1 sm:ml-6 sm:items-center md:flex">
+            {social.map((link) => {
+              const Icon = socialIcons[link.label];
+              return (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="relative p-1 text-primary hover:text-gray-500 focus:outline-none"
+                >
+                  <Icon className="h-5 w-5" />
+                </a>
+              );
+            })}
+          </div>
+          {links.length > 0 && (
+            <div className="-mr-2 flex items-center md:hidden">
+              {/* Mobile menu button */}
+              <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:text-gray-500 focus:outline-none">
+                <span className="absolute -inset-0.5" />
+                <span className="sr-only">Open main menu</span>
+                <MenuIcon
+                  aria-hidden="true"
+                  className="size-6 block group-data-[open]:hidden"
+                />
+                <XIcon
+                  aria-hidden="true"
+                  className="size-6 hidden group-data-[open]:block"
+                />
+              </DisclosureButton>
             </div>
           )}
-          {/* Non-mobile navigation */}
-          <div className="flex flex-none items-center">
-            <NavTitle title={title} logo={logo} version={version} url={url} />
-            {links && (
-              <div className="ml-8 mr-6 hidden sm:mr-8 md:mr-0 lg:flex">
-                {links.map((link) => (
-                  <NavItem link={link} key={link.name} />
-                ))}
-              </div>
-            )}
-          </div>
-          {/* Search field and social links */}
-          <div className="relative flex w-full basis-auto items-center justify-end gap-4 sm:gap-6 md:shrink xl:gap-8">
-            {social && <NavSocial links={social} />}
-            {children}
-          </div>
-        </nav>
+        </div>
       </div>
-    </div>
+
+      <DisclosurePanel
+        transition
+        className="border-b border-gray-100 transition duration-200 ease-out data-[closed]:-translate-y-6 data-[closed]:opacity-0 md:hidden"
+      >
+        {links.length > 0 && (
+          <div className="space-y-1 pb-6 pt-2">
+            {links.map((link) => (
+              <DisclosureButton
+                key={link.name}
+                as="a"
+                href={link.href}
+                className="block px-6 py-2 text-base font-medium text-primary hover:text-secondary sm:px-8"
+              >
+                {link.name}
+              </DisclosureButton>
+            ))}
+          </div>
+        )}
+        {social.length > 0 && (
+          <div className="border-t border-gray-100 py-3">
+            <div className="space-y-1">
+              {social.map((link) => {
+                const Icon = socialIcons[link.label];
+                return (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    className="relative p-1 text-primary hover:text-gray-500 focus:outline-none"
+                  >
+                    <Icon className="h-5 w-5" />
+                  </a>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </DisclosurePanel>
+    </Disclosure>
   );
 };
 

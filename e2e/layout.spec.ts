@@ -23,12 +23,4 @@ test("General layout and config", async ({ page }) => {
   await expect(toc).toContainText("On this page");
   await expect(toc.locator("li").nth(0).locator("li")).toHaveCount(0);
   await expect(toc.locator("li").nth(1).locator("li")).toHaveCount(1);
-
-  const createdBy = page.getByTestId("created-by");
-  await expect(createdBy.locator("span")).toContainText("Created by");
-  await expect(createdBy.locator("a")).toContainText("Tester Author");
-  await expect(createdBy.locator("a")).toHaveAttribute(
-    "href",
-    "http://tester.author",
-  );
 });

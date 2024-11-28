@@ -1,7 +1,7 @@
 "use client";
 import { toast } from "sonner";
 import { api } from "@/trpc/react";
-import { ArrowPathIcon } from "@heroicons/react/20/solid";
+import { RefreshCwIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useSync } from "../sync-provider";
 import clsx from "clsx";
@@ -75,7 +75,7 @@ export default function SyncButton({
       onClick={() => syncSite({ id: siteId })}
       disabled={isDisabled}
     >
-      <ArrowPathIcon
+      <RefreshCwIcon
         className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400"
         aria-hidden="true"
       />

@@ -1,7 +1,9 @@
-import { getSession } from "@/server/auth";
 import { redirect } from "next/navigation";
+
 import SiteCard from "./site-card";
+import { getSession } from "@/server/auth";
 import { api } from "@/trpc/server";
+import config from "@/config.json";
 
 export default async function Sites({ limit }: { limit?: number }) {
   const session = await getSession();
@@ -37,11 +39,12 @@ export default async function Sites({ limit }: { limit?: number }) {
         <li>
           1. Go to this URL with our template:{" "}
           <a
-            href="https://github.com/datahubio/datahub-cloud-template"
+            href={config.githubTemplateUrl}
             className="text-blue-500"
+            target="_blank"
           >
             {" "}
-            https://github.com/datahubio/datahub-cloud-template
+            {config.githubTemplateUrl}
           </a>
         </li>
         <li>

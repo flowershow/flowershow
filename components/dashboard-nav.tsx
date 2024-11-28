@@ -1,6 +1,4 @@
 "use client";
-
-import { ArrowLeft, Bot, Menu, Settings, FileCode } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -9,29 +7,43 @@ import {
   useSelectedLayoutSegments,
 } from "next/navigation";
 import { ReactNode, useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft,
+  Bot,
+  Menu,
+  Settings,
+  FileCode,
+  Megaphone,
+  Layout,
+} from "lucide-react";
 
-const externalLinks = [
-  /* {
-   *     name: "Read announcement",
-   *     href: "https://vercel.com/blog/platforms-starter-kit",
-   *     icon: <Megaphone width={18} />,
-   * },
-   * {
-   *     name: "View demo site",
-   *     href: "#",
-   *     icon: <Layout width={18} />,
-   * }, */
-  {
-    name: "Read the guide",
-    href: "https://datahub.io/docs/DataHub+Cloud",
-    icon: <FileCode width={18} />,
-  },
-  {
-    name: "Join our discord",
-    href: "https://discord.com/invite/KrRzMKU",
-    icon: <Bot width={18} />,
-  },
-];
+import config from "@/config.json";
+
+const externalLinks = config.dashboardSidebar.links
+  .map((link) => {
+    if (!link.href) return null;
+
+    let icon;
+    switch (link.type) {
+      case "discord":
+        icon = <Bot width={18} />;
+        break;
+      case "demo":
+        icon = <Layout width={18} />;
+        break;
+      case "announcement":
+        icon = <Megaphone width={18} />;
+        break;
+      case "guide":
+      default:
+        icon = <FileCode width={18} />;
+    }
+    return {
+      ...link,
+      icon,
+    };
+  })
+  .filter(isDefined);
 
 export default function Nav({ children }: { children: ReactNode }) {
   const segments = useSelectedLayoutSegments();
@@ -146,7 +158,7 @@ export default function Nav({ children }: { children: ReactNode }) {
             className="rounded-lg p-2 hover:bg-stone-200 dark:hover:bg-stone-700"
           >
             <Image
-              src="/datahub-cube.svg"
+              src={config.logo}
               width={24}
               height={24}
               alt="Logo"
@@ -170,9 +182,9 @@ export default function Nav({ children }: { children: ReactNode }) {
         </div>
         <div>
           <div className="grid gap-1">
-            {externalLinks.map(({ name, href, icon }) => (
+            {externalLinks.map(({ text, href, icon }) => (
               <a
-                key={name}
+                key={text}
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -180,7 +192,7 @@ export default function Nav({ children }: { children: ReactNode }) {
               >
                 <div className="flex items-center space-x-3">
                   {icon}
-                  <span className="text-sm font-medium">{name}</span>
+                  <span className="text-sm font-medium">{text}</span>
                 </div>
                 <p>↗</p>
               </a>
@@ -192,4 +204,8 @@ export default function Nav({ children }: { children: ReactNode }) {
       </div>
     </>
   );
+}
+
+function isDefined<T>(value: T | null | undefined): value is NonNullable<T> {
+  return value !== null && value !== undefined;
 }

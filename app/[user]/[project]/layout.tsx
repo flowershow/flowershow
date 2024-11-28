@@ -5,17 +5,18 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 
 import Navbar from "@/components/nav";
 import Footer from "@/components/footer";
-import defaultConfig from "@/const/config";
 import TableOfContentsSidebar from "@/components/table-of-content";
 import Sidebar from "@/components/sidebar";
-import BuiltWithDataHub from "@/components/built-with-datahub";
+import BuiltWithFloatingButton from "@/components/built-with-floating-button";
 import { DataRequestBanner } from "@/components/data-request-banner";
+
+import config from "@/config.json";
 import { resolveLink } from "@/lib/resolve-link";
-import { isCoreDatasetOrCollection } from "@/lib/is-core-dataset";
-import { api } from "@/trpc/server";
-import { env } from "@/env.mjs";
+import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 import { cn } from "@/lib/utils";
 import type { SiteWithUser } from "@/types";
+import { api } from "@/trpc/server";
+import { env } from "@/env.mjs";
 
 interface RouteParams {
   user: string;
@@ -61,7 +62,7 @@ export async function generateMetadata({
       default: title,
     },
     description,
-    icons: ["/favicon.ico"],
+    icons: [config.favicon],
     openGraph: {
       title,
       description,
@@ -69,7 +70,7 @@ export async function generateMetadata({
       /* url: author.url, */
       images: [
         {
-          url: "/thumbnail.png",
+          url: config.thumbnail,
           width: 1200,
           height: 630,
           alt: "Thumbnail",
@@ -82,7 +83,7 @@ export async function generateMetadata({
       description,
       images: [
         {
-          url: "/thumbnail.png",
+          url: config.thumbnail,
           width: 1200,
           height: 630,
           alt: "Thumbnail",
@@ -144,33 +145,38 @@ export default async function SiteLayout({
   });
 
   const title =
-    siteConfig?.navbarTitle?.text ??
-    siteConfig?.title ??
-    defaultConfig.navbarTitle?.text ??
-    defaultConfig.title;
+    siteConfig?.navbarTitle?.text ?? siteConfig?.title ?? config.navbar.text;
 
   const customLogoPath = siteConfig?.navbarTitle?.logo ?? siteConfig?.logo;
 
   const logo = customLogoPath
     ? resolveLink({
         link: customLogoPath,
-        filePath: "config.json",
+        filePath: "config.json", // TODO this is ugly
         prefixPath: `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
       })
-    : defaultConfig.navbarTitle?.logo ?? defaultConfig.logo;
+    : config.logo;
 
-  let url: string;
-  // TODO temporary solution for all the datahubio sites currently published on Ola's account
-  if (user === "olayway" && process.env.NODE_ENV === "production") {
-    url = defaultConfig.author.url;
-  } else {
-    url = site.customDomain
-      ? `https://${site.customDomain}`
-      : siteConfig?.author?.url ?? `/@${params.user}/${params.project}`;
-  }
+  // TODO: This is a temporary fix to handle our own sites, which are currently published under the user "olayway"
+  const url =
+    params.user === "olayway"
+      ? "/"
+      : site.customDomain
+        ? `https://${site.customDomain}`
+        : `/@${params.user}/${params.project}`;
 
-  // TODO get either navLinks or treeItems, not both
-  const navLinks = siteConfig?.navLinks || defaultConfig.navLinks;
+  const navLinks = (siteConfig?.navLinks || []).map((link) => {
+    return {
+      ...link,
+      href: resolveLink({
+        link: link.href,
+        filePath: "config.json", // TODO this is ugly
+        prefixPath:
+          site?.customDomain ??
+          `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site?.user?.gh_username}/${site?.projectName}`,
+      }),
+    };
+  });
 
   const treeItems =
     (await api.site.getTree.query({
@@ -179,11 +185,10 @@ export default async function SiteLayout({
     })) || [];
 
   const socialLinks = siteConfig?.social;
-  const footerDescription = siteConfig?.description;
   const showSidebar = siteConfig?.showSidebar;
   const showToc = siteConfig?.showToc ?? true;
 
-  const showDataRequestBanner = isCoreDatasetOrCollection(site);
+  const showDataRequestBanner = isFeatureEnabled(Feature.DataRequest, site);
 
   return (
     <>
@@ -191,7 +196,9 @@ export default async function SiteLayout({
       {siteConfig?.analytics && <GoogleAnalytics gaId={siteConfig.analytics} />}
 
       <div className="min-h-screen">
-        {!showSidebar ? (
+        {showSidebar ? (
+          <Sidebar title={title} logo={logo} url={url} navigation={treeItems} />
+        ) : (
           <Navbar
             title={title}
             logo={logo}
@@ -199,8 +206,6 @@ export default async function SiteLayout({
             links={navLinks}
             social={socialLinks}
           />
-        ) : (
-          <Sidebar title={title} logo={logo} url={url} navigation={treeItems} />
         )}
         <main
           className={`${
@@ -219,11 +224,7 @@ export default async function SiteLayout({
             <div
               className={cn("mx-auto w-full", showDataRequestBanner && "mb-12")}
             >
-              <Footer
-                author={siteConfig?.author}
-                social={socialLinks}
-                description={footerDescription}
-              />
+              <Footer />
             </div>
           </div>
           {showToc && (
@@ -238,7 +239,7 @@ export default async function SiteLayout({
             </aside>
           )}
 
-          {!showDataRequestBanner && <BuiltWithDataHub />}
+          {!showDataRequestBanner && <BuiltWithFloatingButton />}
         </main>
       </div>
       {showDataRequestBanner && <DataRequestBanner />}

@@ -1,7 +1,3 @@
-/* --------------
- * User site config
- * --------------
- */
 export interface SiteConfig {
   title?: string;
   description?: string;
@@ -19,31 +15,6 @@ export interface SiteConfig {
   contentExclude?: string[];
 }
 
-/* --------------
- * DataHub Cloud site's config
- * --------------
- */
-export interface ExtendedSiteConfig extends SiteConfigStrict {
-  github: string; // TODO is this needed?
-  discord: string; // TODO is this needed?
-}
-
-type SiteConfigStrict = WithRequired<
-  SiteConfig,
-  | "title"
-  | "description"
-  | "logo"
-  | "navbarTitle"
-  | "author"
-  | "navLinks"
-  | "social"
-  | "footerLinks"
->;
-
-/* --------------
- * Config types
- * --------------
- */
 export interface NavbarTitleConfig {
   logo: string;
   text: string;
@@ -71,6 +42,7 @@ export type SocialPlatform =
   | "discord"
   | "linkedin"
   | "twitter"
+  | "x"
   | "facebook"
   | "instagram"
   | "youtube";
@@ -79,6 +51,3 @@ export interface SocialLink {
   label: SocialPlatform;
   href: string;
 }
-
-type WithRequired<T, K extends keyof T> = Required<Pick<T, K>> &
-  Partial<Omit<T, K>>;

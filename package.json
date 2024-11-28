@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "dev": "prisma generate && next dev",
-    "build": "prisma generate && prisma db push && next build",
+    "build": "pnpm fetch-config && prisma generate && prisma db push && next build",
     "format:write": "prettier --write \"**/*.{css,js,json,jsx,ts,tsx}\"",
     "format": "prettier \"**/*.{css,js,json,jsx,ts,tsx}\"",
     "start": "next start",
@@ -10,20 +10,17 @@
     "prepare": "husky install",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "fetch-config": "node ./scripts/fetch-app-config.mjs"
   },
   "lint-staged": {
-    "*.{css,js,json,jsx,ts,tsx}": [
-      "npx eslint",
-      "prettier --write"
-    ]
+    "*.{js,jsx,ts,tsx}": ["npx eslint", "prettier --write"]
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.515.0",
     "@aws-sdk/s3-request-presigner": "^3.515.0",
     "@faker-js/faker": "^8.2.0",
-    "@headlessui/react": "^1.7.17",
-    "@heroicons/react": "^2.0.18",
+    "@headlessui/react": "^2.2.0",
     "@monaco-editor/react": "^4.6.0",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@next/third-parties": "^14.2.8",
@@ -40,7 +37,6 @@
     "@trpc/next": "^10.37.1",
     "@trpc/react-query": "^10.37.1",
     "@trpc/server": "^10.37.1",
-    "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@upstash/ratelimit": "^0.4.4",
     "@vercel/blob": "^0.15.0",
     "@vercel/kv": "^1.0.0",
@@ -116,11 +112,10 @@
     "@typescript-eslint/parser": "^7.5.0",
     "autoprefixer": "^10.4.16",
     "dotenv": "^16.4.5",
-    "eslint": "8.56.0",
+    "eslint": "^8.57.0",
     "eslint-config-next": "^14.0.2",
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.4.6",
     "husky": "^8.0.0",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",

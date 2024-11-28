@@ -40,3 +40,6 @@ yarn-error.log*
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+
+# cloud app config (fetched per product)
+/config

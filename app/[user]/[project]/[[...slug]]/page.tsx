@@ -1,13 +1,15 @@
 import { notFound } from "next/navigation";
+
+import EditPageButton from "@/components/edit-page-button";
+import MDX from "@/components/MDX";
+import { SiteConfig } from "@/components/types";
 import { api } from "@/trpc/server";
 import { PageMetadata } from "@/server/api/types";
-import UrlNormalizer from "./url-normalizer";
-import EditPageButton from "@/components/edit-page-button";
-import { SiteConfig } from "@/components/types";
-import MDX from "@/components/MDX";
 import { env } from "@/env.mjs";
 import type { SiteWithUser } from "@/types";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
+import UrlNormalizer from "./url-normalizer";
+import config from "@/config.json";
 
 interface RouteParams {
   user: string;
@@ -71,7 +73,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
       /* url: author.url, */
       images: [
         {
-          url: "/thumbnail.png",
+          url: config.thumbnail,
           width: 1200,
           height: 630,
           alt: "Thumbnail",
@@ -84,7 +86,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
       description,
       images: [
         {
-          url: "/thumbnail.png",
+          url: config.thumbnail,
           width: 1200,
           height: 630,
           alt: "Thumbnail",

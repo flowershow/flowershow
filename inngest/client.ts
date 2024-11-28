@@ -1,3 +1,4 @@
+import { env } from "@/env.mjs";
 import { EventSchemas, Inngest } from "inngest";
 
 /* Types */
@@ -31,6 +32,6 @@ type Events = {
 
 /* Client */
 export const inngest = new Inngest({
-  id: "my-app",
+  id: `${env.INNGEST_APP_ID}`,
   schemas: new EventSchemas().fromRecord<Events>(),
 });

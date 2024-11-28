@@ -1,5 +1,5 @@
-import { ArrowTopRightOnSquareIcon } from "@heroicons/react/20/solid";
-import { GithubIcon } from "lucide-react";
+import { SquareArrowOutUpRight } from "lucide-react";
+import { GithubIcon } from "@/components/icons";
 import Status from "./status";
 import SyncSiteButton from "./sync-button";
 import LoadingDots from "@/components/icons/loading-dots";
@@ -87,7 +87,7 @@ export default async function SiteSettingsHeader({
               type="button"
               className="inline-flex items-center rounded-md bg-green-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
             >
-              <ArrowTopRightOnSquareIcon
+              <SquareArrowOutUpRight
                 className="-ml-0.5 mr-1.5 h-5 w-5"
                 aria-hidden="true"
               />

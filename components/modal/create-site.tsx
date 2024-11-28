@@ -7,7 +7,7 @@ import LoadingDots from "@/components/icons/loading-dots";
 import { useModal } from "./provider";
 import { useEffect, useState } from "react";
 import { api } from "@/trpc/react";
-import { GithubIcon } from "lucide-react";
+import { GithubIcon } from "@/components/icons";
 import { signOut } from "next-auth/react";
 import { env } from "@/env.mjs";
 import { sendGTMEvent } from "@next/third-parties/google";

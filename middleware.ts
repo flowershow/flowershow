@@ -39,7 +39,7 @@ export default async function middleware(req: NextRequest) {
     searchParams.length > 0 ? `?${searchParams}` : ""
   }`;
 
-  // rewrites & redirects for cloud domain (dashboard)
+  // CLOUD DOMAIN
   if (
     hostname == `cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
     hostname == `staging-cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
@@ -58,47 +58,11 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.rewrite(new URL(`/cloud${path}`, req.url));
   }
 
-  // rewrites & redirects for root domain (all user pages and our home/landing pages)
+  // ROOT DOMAIN
   if (
     hostname === `${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
     hostname === `staging.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
   ) {
-    if (path === "/collections") {
-      console.log("redirecting to /home/collections");
-      return NextResponse.rewrite(new URL(`/home/collections`, req.url));
-    }
-
-    if (path.match(/^\/world-bank/)) {
-      return NextResponse.redirect(
-        new URL(`/core/world-development-indicators`, req.url),
-      );
-    }
-
-    if (path.match(/^\/sports-data\//)) {
-      return NextResponse.redirect(
-        new URL(path.replace(/^\/sports-data/, "/core"), req.url),
-      );
-    }
-
-    if (path.match(/^\/machine-learning\//)) {
-      return NextResponse.redirect(
-        new URL(path.replace(/^\/machine-learning/, "/core"), req.url),
-      );
-    }
-
-    if (path.match(/^\/london\//)) {
-      return NextResponse.redirect(
-        new URL(path.replace(/^\/london\//, "/core/london-"), req.url),
-      );
-    }
-
-    if (path.match(/^\/awesome/)) {
-      // redirect to collections
-      return NextResponse.redirect(
-        new URL(path.replace(/^\/awesome/, "/collections"), req.url),
-      );
-    }
-
     const aliasResolvedPath = resolveSiteAlias(path, "from");
 
     // if resolved path matches /@{username}/{project}/{restofpath}
@@ -166,6 +130,7 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
+  // CUSTOM DOMAIN
   const rawPathMatch = path?.match(/^\/_r\/(-)\/(.*)/);
 
   // raw file paths (e.g. /_r/-/data/some.csv)

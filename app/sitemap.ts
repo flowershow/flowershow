@@ -10,12 +10,6 @@ async function Sitemap() {
   const sites = await prisma.site.findMany({
     include: { user: true },
   });
-  const internalPaths = ["/", "/collections", "/publish", "/pricing"];
-
-  const internalUrls = internalPaths.map(
-    (path) =>
-      `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}${path === "/" ? "" : path}`,
-  );
 
   const userSiteUrls = sites.flatMap((site) => {
     const { customDomain, projectName, user: siteUser } = site;
@@ -29,16 +23,16 @@ async function Sitemap() {
     const baseUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}${sitePath}`;
 
     return Object.keys((site.files as any) || []).map((url) => {
-      if (url === "/") return baseUrl;
-      return `${baseUrl}/${url.replace(/&/g, "%26")}`;
+      const _url =
+        url === "/" ? baseUrl : `${baseUrl}/${url.replace(/&/g, "%26")}`;
+      return {
+        url: _url,
+        lastModified: new Date(),
+      };
     });
   });
 
-  return [...internalUrls, ...userSiteUrls].map((url) => ({
-    url,
-    // TODO temporary solution as we don't have this data in the db yet
-    lastModified: new Date(),
-  }));
+  return userSiteUrls;
 }
 
 export default Sitemap;

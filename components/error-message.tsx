@@ -1,4 +1,4 @@
-import { XCircleIcon } from "@heroicons/react/20/solid";
+import { CircleXIcon } from "lucide-react";
 
 interface Props extends React.PropsWithChildren {
   title: string;
@@ -14,7 +14,7 @@ export const ErrorMessage: React.FC<Props> = ({ title, message, stack }) => {
     >
       <div className="flex">
         <div className="flex-shrink-0">
-          <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+          <CircleXIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
         </div>
         <div className="mx-3">
           <p className="my-0 text-sm font-medium text-red-800">{title}</p>
