@@ -7,5 +7,5 @@ export { default as InstagramIcon } from "./instagram";
 export { default as LinkedInIcon } from "./linkedin";
 export { default as LoadingDots } from "./loading-dots";
 export { default as MarkdownIcon } from "./markdown";
-export { default as XIcon } from "./x";
+export { default as TwitterIcon } from "./twitter";
 export { default as YouTubeIcon } from "./youtube";

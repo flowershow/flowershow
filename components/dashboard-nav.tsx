@@ -182,9 +182,9 @@ export default function Nav({ children }: { children: ReactNode }) {
         </div>
         <div>
           <div className="grid gap-1">
-            {externalLinks.map(({ text, href, icon }) => (
+            {externalLinks.map(({ name, href, icon }) => (
               <a
-                key={text}
+                key={name}
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -192,7 +192,7 @@ export default function Nav({ children }: { children: ReactNode }) {
               >
                 <div className="flex items-center space-x-3">
                   {icon}
-                  <span className="text-sm font-medium">{text}</span>
+                  <span className="text-sm font-medium">{name}</span>
                 </div>
                 <p>↗</p>
               </a>

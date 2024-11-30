@@ -49,5 +49,6 @@ export type SocialPlatform =
 
 export interface SocialLink {
   label: SocialPlatform;
+  name: string;
   href: string;
 }

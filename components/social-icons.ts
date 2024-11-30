@@ -6,7 +6,7 @@ import {
   GithubIcon,
   InstagramIcon,
   LinkedInIcon,
-  XIcon,
+  TwitterIcon,
   YouTubeIcon,
 } from "@/components/icons";
 
@@ -16,7 +16,7 @@ export const socialIcons: { [K in SocialPlatform]: React.FC<any> } = {
   github: GithubIcon,
   instagram: InstagramIcon,
   linkedin: LinkedInIcon,
-  twitter: XIcon,
-  x: XIcon,
+  twitter: TwitterIcon,
+  x: TwitterIcon,
   youtube: YouTubeIcon,
 };

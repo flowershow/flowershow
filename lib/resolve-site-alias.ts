@@ -24,3 +24,10 @@ export const resolveSiteAlias = (
 
   return s;
 };
+
+export const isAliasedSite = (username: string, site: string) => {
+  const aliases = config.siteAliases || [];
+  return aliases.some((alias) =>
+    `/@${username}/${site}`.startsWith(alias.origin),
+  );
+};

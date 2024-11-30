@@ -1,4 +1,4 @@
-const XIcon: React.FC<{ [x: string]: unknown }> = (props) => {
+const TwitterIcon: React.FC<{ [x: string]: unknown }> = (props) => {
   return (
     /* https://simpleicons.org/ */
     <svg
@@ -15,4 +15,4 @@ const XIcon: React.FC<{ [x: string]: unknown }> = (props) => {
   );
 };
 
-export default XIcon;
+export default TwitterIcon;

@@ -3,7 +3,7 @@ import { notFound, redirect } from "next/navigation";
 import { ReactNode } from "react";
 import { GoogleAnalytics } from "@next/third-parties/google";
 
-import Navbar from "@/components/nav";
+import Nav from "@/components/nav";
 import Footer from "@/components/footer";
 import TableOfContentsSidebar from "@/components/table-of-content";
 import Sidebar from "@/components/sidebar";
@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils";
 import type { SiteWithUser } from "@/types";
 import { api } from "@/trpc/server";
 import { env } from "@/env.mjs";
+import { isAliasedSite } from "@/lib/resolve-site-alias";
+import { SocialPlatform } from "@/components/types";
 
 interface RouteParams {
   user: string;
@@ -144,39 +146,61 @@ export default async function SiteLayout({
     projectName: site.projectName,
   });
 
-  const title =
-    siteConfig?.navbarTitle?.text ?? siteConfig?.title ?? config.navbar.text;
-
-  const customLogoPath = siteConfig?.navbarTitle?.logo ?? siteConfig?.logo;
-
-  const logo = customLogoPath
-    ? resolveLink({
-        link: customLogoPath,
-        filePath: "config.json", // TODO this is ugly
-        prefixPath: `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
-      })
-    : config.logo;
-
-  // TODO: This is a temporary fix to handle our own sites, which are currently published under the user "olayway"
-  const url =
-    params.user === "olayway"
-      ? "/"
-      : site.customDomain
+  const navConfig = (function () {
+    if (isAliasedSite(site.user!.gh_username!, site.projectName)) {
+      return {
+        url: `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}`,
+        title: config.title,
+        logo: config.logo,
+        links: config.navbar.links,
+        social: config.navbar.social as {
+          name: string;
+          label: SocialPlatform;
+          href: string;
+        }[],
+        cta: config.navbar.cta,
+      };
+    } else {
+      const url = site.customDomain
         ? `https://${site.customDomain}`
         : `/@${params.user}/${params.project}`;
 
-  const navLinks = (siteConfig?.navLinks || []).map((link) => {
-    return {
-      ...link,
-      href: resolveLink({
-        link: link.href,
-        filePath: "config.json", // TODO this is ugly
-        prefixPath:
-          site?.customDomain ??
-          `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site?.user?.gh_username}/${site?.projectName}`,
-      }),
-    };
-  });
+      const title = siteConfig?.navbarTitle?.text ?? siteConfig?.title ?? "";
+
+      const customLogoPath = siteConfig?.navbarTitle?.logo ?? siteConfig?.logo;
+
+      const logo = customLogoPath
+        ? resolveLink({
+            link: customLogoPath,
+            filePath: "config.json", // TODO this is ugly
+            prefixPath: `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
+          })
+        : config.logo;
+
+      const links = (siteConfig?.navLinks || []).map((link) => {
+        return {
+          ...link,
+          href: resolveLink({
+            link: link.href,
+            filePath: "config.json", // TODO this is ugly
+            prefixPath:
+              site?.customDomain ??
+              `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site?.user?.gh_username}/${site?.projectName}`,
+          }),
+        };
+      });
+
+      return {
+        url,
+        title,
+        logo,
+        links,
+        social: [], // Not supported for user sites atm
+      };
+    }
+  })();
+
+  const { title, logo, url, links, social, cta } = navConfig;
 
   const treeItems =
     (await api.site.getTree.query({
@@ -184,10 +208,8 @@ export default async function SiteLayout({
       projectName: site.projectName,
     })) || [];
 
-  const socialLinks = siteConfig?.social;
   const showSidebar = siteConfig?.showSidebar;
   const showToc = siteConfig?.showToc ?? true;
-
   const showDataRequestBanner = isFeatureEnabled(Feature.DataRequest, site);
 
   return (
@@ -199,12 +221,13 @@ export default async function SiteLayout({
         {showSidebar ? (
           <Sidebar title={title} logo={logo} url={url} navigation={treeItems} />
         ) : (
-          <Navbar
+          <Nav
             title={title}
             logo={logo}
             url={url}
-            links={navLinks}
-            social={socialLinks}
+            links={links}
+            social={social}
+            cta={cta}
           />
         )}
         <main
