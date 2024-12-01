@@ -64,9 +64,11 @@ Since both of these projects are using the single root datahub.io domain, there 
 
 Worker: https://dash.cloudflare.com/83025b28472d6aa2bf5ae59f3724aa78/workers/services/view/datahub-io-reverse-proxy
 
+NOTE: this is not a perfect solution as it currently relies on `Referer` header when fetching additional resources like static files from `public` folder or files from `_next` folder, to route the request to the correct app. This approach is not very reliable as in some cases the `Referer` header might not exist. We need to add a [base path](https://nextjs.org/docs/app/api-reference/next-config-js/basePath) to one of the apps to easily differentiate the requests (e.g. adding `/_` base path would make all the content of the app available at `/_/...`, including `/_/_next/...` and any static files from public folder).
+
 ### Subdomains
 
-DataHub Cloud dashboard uses `cloud` subdomain and `staging-cloud` for staging environment.
+DataHub Cloud dashboard uses `cloud` subdomain for production and `staging-cloud` for staging environment.
 
 ## Environment Variables
 
@@ -75,7 +77,7 @@ All the necessary environment variables should be defined in a `.env` file. Crea
 - It is crucial to reflect any changes or additions to the environment variables in `env.mjs`.
 - Use `import { env } from './env.mjs'` for accessing environment variables to ensure proper handling and avoid direct access through `process.env`.
 
-Note: you can find most of the development variable values in Vercel https://vercel.com/datopian1/datahub-next-new/settings/environment-variables (filter for "Development" variables).
+Note: you can find most of the development variables values in Vercel https://vercel.com/datopian1/datahub-next-new/settings/environment-variables (filter for "Development" variables).
 
 ## App config
 
@@ -164,29 +166,36 @@ npx playwright test --debug
 npx playwright test --ui
 ```
 
-## Caveats
+## Content
 
-### Special `datahub.io/xxx` pages
+### Special (aka "Aliased") `datahub.io/xxx` pages
 
 - `/core/xxx`
   - alias for `/@olayway/xxx`
   - sites published on `olayway`'s account off of GitHub repositories found in https://github.com/datasets organisation
   - e.g. `/core/airport-codes` is a site named `airport-codes` published on `olayway` user account
+  - all core datasets have auto-sync turned on
 - `/blog`
   - alias for `@olayway/blog`
   - site published on `olayway`'s account off of https://github.com/datahubio/blog
-  - auto-syncs so no need for the site owner to manually sync after changes
-- `/collections`
-  - alias for `@olayway/collections`
+  - auto-sync turned on
+- `/collections/*`
+  - alias for `@olayway/collections/*`
   - site published on `olayway`'s account off of https://github.com/datasets/awesome-data
   - auto-syncs so no need for the site owner to manually sync after changes
+  - NOTE: `/collections` landing page is not built off of the `README.md` file in this case. It's a Nextj.js page in `datahub-io` GitHub project
 - `/docs`
   - alias for `@olayway/docs`
   - site published on `olayway`'s account off of https://github.com/datahubio/datahub-cloud-template
-  - auto-syncs so no need for the site owner to manually sync after changes
+  - auto-sync turned on
 - `/notes`
   - alias for `@rufuspollock/data-notes`
   - site published on `rufuspollock`'s account off of https://datahub.io/@rufuspollock/data-notes
+  - auto-sync turned on
+- `/logistics/postal-codes-*`
+  - **aliases** for `@olayway/postal-codes-*`
+  - **sites** published on `olayway`'s account off of datasets in https://github.com/datapian/postal-codes (e.g. `/logistics/postal-codes-ad` -> https://github.com/datopian/postal-codes/tree/main/datasets/ad)
+  - do not auto-sync ! (currently requires access to `/admin` page in the cloud app and syncing manually there (NOTE: shift-click multiple items selection is available))
 
 Q: Why the above aliases are used?
 A: All the above mentioned pages are just "sites" built using DataHub Cloud (dogfooding). Since we don't want them to be available at `@some-dh-team-member/abc-site` we created aliases for them.
