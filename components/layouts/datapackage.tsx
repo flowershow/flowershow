@@ -123,6 +123,7 @@ export const DataPackageLayout: React.FC<Props> = async ({
 
   const jsonLd = getJsonLd({ metadata, siteMetadata });
   const isPremiumDataset = metadata.has_premium;
+  const hideGitRepo = metadata.hide_git_repo;
 
   return (
     <>
@@ -164,7 +165,7 @@ export const DataPackageLayout: React.FC<Props> = async ({
             </div>
           )}
           <div className="flex items-center justify-start gap-x-2">
-            {!isPremiumDataset && (
+            {!hideGitRepo && (
               <>
                 <div
                   className="flex items-center gap-1"
