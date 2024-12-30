@@ -166,14 +166,14 @@ export const DataPackageLayout: React.FC<Props> = async ({
             </div>
           )}
           {hasSolutions && hasSolutions.length > 0 && (
-            <section data-testid="dp-solutions" className="my-12">
+            <section data-testid="dp-solutions">
               {hasSolutions.map((solutionName) => (
                 <Link
                   key={solutionName}
                   href={`/solutions/${solutionName}`}
                   className="no-underline hover:underline"
                 >
-                  <button className="mt-6 rounded-md bg-orange-50 px-3.5 py-2.5 text-sm font-semibold text-orange-600 shadow-sm hover:bg-orange-100">
+                  <button className="rounded-md border border-black px-3.5 py-2.5 text-sm text-slate-600 shadow-sm hover:bg-orange-100">
                     Explore data solution →
                   </button>
                 </Link>
