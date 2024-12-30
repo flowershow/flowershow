@@ -124,6 +124,7 @@ export const DataPackageLayout: React.FC<Props> = async ({
   const jsonLd = getJsonLd({ metadata, siteMetadata });
   const isPremiumDataset = metadata.has_premium;
   const hideGitRepo = metadata.hide_git_repo;
+  const hasSolutions = metadata.has_solutions;
 
   return (
     <>
@@ -164,6 +165,22 @@ export const DataPackageLayout: React.FC<Props> = async ({
               </div>
             </div>
           )}
+          {hasSolutions && hasSolutions.length > 0 && (
+            <section data-testid="dp-solutions" className="my-12">
+              {hasSolutions.map((solutionName) => (
+                <Link
+                  key={solutionName}
+                  href={`/solutions/${solutionName}`}
+                  className="no-underline hover:underline"
+                >
+                  <button className="mt-6 rounded-md bg-orange-50 px-3.5 py-2.5 text-sm font-semibold text-orange-600 shadow-sm hover:bg-orange-100">
+                    Explore data solution →
+                  </button>
+                </Link>
+              ))}
+            </section>
+          )}
+
           <div className="flex items-center justify-start gap-x-2">
             {!hideGitRepo && (
               <>
