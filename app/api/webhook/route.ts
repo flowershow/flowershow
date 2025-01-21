@@ -20,16 +20,33 @@ export async function POST(req: NextRequest) {
     return new Response("Invalid signature", { status: 401 });
   }
 
-  const webhookId = req.headers.get("x-github-hook-id")!;
+  const webhookId = req.headers.get("x-github-hook-id");
+  const siteId = req.nextUrl.searchParams.get("siteid");
 
-  const site = await prisma.site.findUnique({
-    where: {
-      webhookId,
-    },
-    include: {
-      user: true,
-    },
-  });
+  let site;
+  if (siteId) {
+    site = await prisma.site.findUnique({
+      where: {
+        id: siteId,
+      },
+      include: {
+        user: true,
+      },
+    });
+  }
+
+  // DON'T REMOVE
+  // this is for backwards compatibility for sites that had webhooks created without the siteid query param
+  if (!site && webhookId) {
+    site = await prisma.site.findUnique({
+      where: {
+        webhookId,
+      },
+      include: {
+        user: true,
+      },
+    });
+  }
 
   if (!site) {
     return new Response("Site not found", { status: 404 });

@@ -338,9 +338,11 @@ export const fetchGitHubRepoContributors = async ({
 export const createGitHubRepoWebhook = async ({
   gh_repository,
   access_token,
+  webhookUrl,
 }: {
   gh_repository: string;
   access_token: string;
+  webhookUrl?: string;
 }) => {
   // Note: If you're getting "Unprocessable entity" error from GitHub,
   // there is a chance that the webhook with the same URL already exists.
@@ -355,7 +357,7 @@ export const createGitHubRepoWebhook = async ({
       events: ["push"],
       config: {
         content_type: "json",
-        url: env.GH_WEBHOOK_URL,
+        url: webhookUrl,
         secret: env.GH_WEBHOOK_SECRET,
       },
     },

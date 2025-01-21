@@ -57,18 +57,6 @@ export const siteRouter = createTRPCRouter({
         );
       }
 
-      let webhookId: string | null = null;
-
-      try {
-        const response = await createGitHubRepoWebhook({
-          gh_repository,
-          access_token,
-        });
-        webhookId = response.id.toString();
-      } catch (e) {
-        console.error("Failed to create webhook", e);
-      }
-
       //use repository name as an initial project name
       //and append a number if the name is already taken
       let projectName =
@@ -86,19 +74,41 @@ export const siteRouter = createTRPCRouter({
         num++;
       }
 
-      // create site in the database
+      // First create site without webhook
       const site = await ctx.db.site.create({
         data: {
           projectName,
           gh_repository,
           gh_branch,
           rootDir,
-          autoSync: !!webhookId,
-          webhookId,
+          autoSync: false,
+          webhookId: null,
           syncStatus: "PENDING",
           user: { connect: { id: ctx.session.user.id } },
         },
       });
+
+      // Then create webhook with site-specific URL
+      let webhookId: string | null = null;
+      try {
+        const response = await createGitHubRepoWebhook({
+          gh_repository,
+          access_token,
+          webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${site.id}`, // Add site ID to webhook URL
+        });
+        webhookId = response.id.toString();
+
+        // Update site with webhook info
+        await ctx.db.site.update({
+          where: { id: site.id },
+          data: {
+            autoSync: true,
+            webhookId,
+          },
+        });
+      } catch (e) {
+        console.error("Failed to create webhook", e);
+      }
 
       await inngest.send({
         name: "site/sync",
@@ -181,6 +191,7 @@ export const siteRouter = createTRPCRouter({
             const { id: webhookId } = await createGitHubRepoWebhook({
               gh_repository: site.gh_repository,
               access_token: ctx.session.accessToken,
+              webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${site.id}`, // Add site ID to webhook URL
             });
             result = await ctx.db.site.update({
               where: { id },
