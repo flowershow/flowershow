@@ -26,6 +26,7 @@ import {
   SyncError,
   isSupportedExtension,
   isSupportedMarkdownExtension,
+  isKnownSyncErrorType,
 } from "@/lib/types";
 import { revalidateTag } from "next/cache";
 import { isPathVisible } from "@/lib/path-validator";
@@ -69,23 +70,40 @@ export const syncSite = inngest.createFunction(
     ],
     onFailure: async ({ error, event, step }) => {
       await step.run("update-sync-status", async () => {
-        // const errorType = isKnownSyncErrorType(error.message) ? error.message : "INTERNAL_ERROR";
-        if (error.message !== "MARKDOWN_PARSING_ERROR") {
-          const syncError: SyncError = {
-            datetime: new Date().toISOString(),
-            type: "INTERNAL_ERROR",
-            // message: error.cause as string ?? error.message,
-            message: error.message,
-            error: JSON.stringify(error),
-          };
-          await prisma.site.update({
-            where: { id: event.data.event.data.siteId }, // TODO this can't be right
-            data: {
-              syncStatus: "ERROR",
-              syncError: syncError as any, // TODO fix types
-            },
-          });
+        if (error.message === "MARKDOWN_PARSING_ERROR") {
+          // Currently handled in the process-file step to have more detailed error message saved to the db
+          // (inngest is going to add back `cause` property in the future allow for passing more information to the onFailure handler)
+          return;
         }
+
+        const errorType = isKnownSyncErrorType(error.message)
+          ? error.message
+          : "INTERNAL_ERROR";
+        // TODO check if inngest has added support for `cause` field already
+        let errorMessage = error.message; // default to error code for now
+        switch (errorType) {
+          case "INVALID_ROOT_DIR":
+            errorMessage =
+              "The specified directory does not exist in the repository. Please check the path and try again.";
+            break;
+          default:
+            errorMessage = "Unknown error occured.";
+        }
+
+        const syncError: SyncError = {
+          datetime: new Date().toISOString(),
+          type: errorType,
+          message: errorMessage,
+          error: JSON.stringify(error),
+        };
+
+        await prisma.site.update({
+          where: { id: event.data.event.data.siteId },
+          data: {
+            syncStatus: "ERROR",
+            syncError: syncError as any, // TODO fix types
+          },
+        });
       });
     },
   },
@@ -174,6 +192,21 @@ export const syncSite = inngest.createFunction(
         gh_branch,
         access_token,
       });
+
+      // Validate rootDir exists if specified
+      if (rootDir) {
+        const normalizedRootDir = normalizeDir(rootDir);
+        const rootDirExists = repoTree.tree.some(
+          (file) =>
+            file.type === "tree" &&
+            file.path === normalizedRootDir.slice(0, -1),
+        );
+
+        if (!rootDirExists) {
+          throw new NonRetriableError("INVALID_ROOT_DIR");
+        }
+      }
+
       return {
         ...repoTree,
         tree: repoTree.tree.filter((file) =>
@@ -218,7 +251,7 @@ export const syncSite = inngest.createFunction(
             return false;
           return file.path.startsWith(normalizedRootDir);
         })
-        .map((file) => [file.path, file.sha] || []),
+        .map((file) => [file.path, file.sha]),
     );
 
     const gitHubTreeItems = new Map(

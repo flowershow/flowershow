@@ -116,10 +116,10 @@ export interface SyncError {
   error: any; // original error object
 }
 
-export type KnownSyncErrorType = "MARKDOWN_PARSING_ERROR"; // tb expanded
+export type KnownSyncErrorType = "MARKDOWN_PARSING_ERROR" | "INVALID_ROOT_DIR";
 
 export const isKnownSyncErrorType = (
   type: string,
 ): type is KnownSyncErrorType => {
-  return ["MARKDOWN_PARSING_ERROR"].includes(type);
+  return ["MARKDOWN_PARSING_ERROR", "INVALID_ROOT_DIR"].includes(type);
 };
