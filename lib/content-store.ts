@@ -80,19 +80,25 @@ const emptyR2Directory = async (dir: string) => {
     }),
   );
 
-  if (listedObjects.Contents?.length === 0) return;
+  // Return early if no contents or empty contents
+  if (!listedObjects.Contents || listedObjects.Contents.length === 0) return;
 
-  const objectsToDelete = listedObjects.Contents?.map(({ Key }) => ({ Key }));
+  const objectsToDelete = listedObjects.Contents.map(({ Key }) => ({
+    Key: Key || "", // Ensure Key is never undefined
+  })).filter(({ Key }) => Key !== ""); // Filter out any empty keys
 
-  await R2.send(
-    new DeleteObjectsCommand({
-      Bucket: R2_BUCKET_NAME,
-      Delete: {
-        Objects: objectsToDelete,
-        Quiet: false,
-      },
-    }),
-  );
+  // Only send delete command if we have objects to delete
+  if (objectsToDelete.length > 0) {
+    await R2.send(
+      new DeleteObjectsCommand({
+        Bucket: R2_BUCKET_NAME,
+        Delete: {
+          Objects: objectsToDelete,
+          Quiet: false,
+        },
+      }),
+    );
+  }
 
   if (listedObjects.IsTruncated) await emptyR2Directory(dir);
 };
