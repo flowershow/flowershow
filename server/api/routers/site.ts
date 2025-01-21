@@ -173,6 +173,10 @@ export const siteRouter = createTRPCRouter({
           await removeDomainFromVercelProject(site.customDomain);
         }
       } else if (key === "rootDir") {
+        result = await ctx.db.site.update({
+          where: { id },
+          data: { rootDir: value },
+        });
         await deleteProject(id); // TODO move to inngest workflow as well ?
         await inngest.send({
           name: "site/sync",
