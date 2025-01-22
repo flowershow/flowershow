@@ -14,7 +14,10 @@
     "fetch-config": "node ./scripts/fetch-app-config.mjs"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": ["npx eslint", "prettier --write"]
+    "*.{js,jsx,ts,tsx}": [
+      "npx eslint",
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.515.0",
@@ -114,6 +117,7 @@
     "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
     "eslint-config-next": "^14.0.2",
+    "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-react": "^7.34.1",
     "eslint-plugin-react-hooks": "^4.6.0",
     "husky": "^8.0.0",
