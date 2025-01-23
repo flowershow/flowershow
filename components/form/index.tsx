@@ -113,7 +113,8 @@ export default function Form({
         <p className="text-sm text-stone-500 dark:text-stone-400">
           {description}
         </p>
-        {inputAttrs.name === "autoSync" ? (
+        {inputAttrs.name === "autoSync" ||
+        inputAttrs.name === "enableComments" ? (
           <Switch
             checked={inputAttrs.defaultValue === "true"}
             onChange={() => {
@@ -133,7 +134,9 @@ export default function Form({
                 })
                 .catch(() => {
                   toast.error(
-                    "Failed to create webhook. Check if the repository has a webhook for this application already installed.",
+                    inputAttrs.name === "autoSync"
+                      ? "Failed to create webhook. Check if the repository has a webhook for this application already installed."
+                      : "Failed to enable comments.",
                   );
                 })
                 .finally(() => {

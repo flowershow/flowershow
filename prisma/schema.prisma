@@ -98,6 +98,9 @@ model Site {
   autoSync      Boolean  @default(false)
   webhookId     String?  @unique
   files         Json?    @db.JsonB // temporary storage for site files metadata
+  enableComments Boolean  @default(false)
+  giscusRepoId  String?
+  giscusCategoryId String?
 
   @@unique([userId, projectName])
   @@index([userId])

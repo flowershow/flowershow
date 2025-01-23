@@ -222,11 +222,17 @@ export const siteRouter = createTRPCRouter({
             // TODO if the webhook doesn't exist, we should still update the site
           }
         }
+      } else if (key === "giscusRepoId" || key === "giscusCategoryId") {
+        // Handle Giscus IDs as plain strings
+        result = await ctx.db.site.update({
+          where: { id },
+          data: { [key]: value },
+        });
       } else {
         // If the key is not one of the special cases handled above, we update it directly
         result = await ctx.db.site.update({
           where: { id },
-          data: { [key]: value },
+          data: { [key]: JSON.parse(value) },
         });
       }
 

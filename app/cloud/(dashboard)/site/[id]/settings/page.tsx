@@ -93,6 +93,50 @@ export default async function SiteSettingsIndex({
         handleSubmit={updateSite}
       />
 
+      <Form
+        title="Comments"
+        description="Enable Giscus comments on your site pages."
+        helpText="This will add a comments section powered by GitHub Discussions to your pages. You'll need to install the Giscus app - https://github.com/apps/giscus - in your repository and enable GitHub Discussions in your repository settings."
+        inputAttrs={{
+          name: "enableComments",
+          type: "text",
+          defaultValue: Boolean(data?.enableComments!).toString(),
+        }}
+        handleSubmit={updateSite}
+      />
+
+      {data?.enableComments && (
+        <>
+          <Form
+            title="Giscus Repository ID"
+            description="The ID of your GitHub repository for Giscus."
+            helpText="You can find this in your Giscus configuration at https://giscus.app. After selecting your repository, the Repository ID will be shown in the configuration section. It starts with 'R_'."
+            inputAttrs={{
+              name: "giscusRepoId",
+              type: "text",
+              defaultValue: data?.giscusRepoId || "",
+              required: true,
+              placeholder: "R_kgDOxxxxxx",
+            }}
+            handleSubmit={updateSite}
+          />
+
+          <Form
+            title="Giscus Category ID"
+            description="The ID of the discussion category in your repository."
+            helpText="You can find this in your Giscus configuration at https://giscus.app. After selecting your discussion category, the Category ID will be shown in the configuration section. It starts with 'DIC_'."
+            inputAttrs={{
+              name: "giscusCategoryId",
+              type: "text",
+              defaultValue: data?.giscusCategoryId || "",
+              required: true,
+              placeholder: "DIC_kwDOxxxxxx",
+            }}
+            handleSubmit={updateSite}
+          />
+        </>
+      )}
+
       <DeleteSiteForm siteName={data?.projectName!} />
     </div>
   );

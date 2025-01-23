@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 
 import EditPageButton from "@/components/edit-page-button";
 import MDX from "@/components/MDX";
+import Comments from "@/components/comments";
 import { SiteConfig } from "@/components/types";
 import { api } from "@/trpc/server";
 import { PageMetadata } from "@/server/api/types";
@@ -203,6 +204,12 @@ export default async function SitePage({ params }: { params: RouteParams }) {
           url={`https://github.com/${site?.gh_repository}/edit/${site?.gh_branch}/${pageMetadata._path}`}
         />
       )}
+      <Comments
+        repo={site.gh_repository}
+        enabled={Boolean(site.enableComments)}
+        repoId={site.giscusRepoId}
+        categoryId={site.giscusCategoryId}
+      />
     </>
   );
 }
