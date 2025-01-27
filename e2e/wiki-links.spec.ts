@@ -1,9 +1,8 @@
 import { test, expect, Page } from "@playwright/test";
+import { testSite } from "./test-utils";
 
-import "dotenv/config";
-
-const linkBaseUrl = `/${process.env.E2E_TEST_SITE}`;
-const imagePath = `/${process.env.E2E_TEST_SITE}/_r/-/assets/image.jpg`;
+const linkBaseUrl = `/${testSite}`;
+const imagePath = `/${testSite}/_r/-/assets/image.jpg`;
 
 test.describe.configure({ mode: "parallel" });
 
@@ -12,7 +11,7 @@ test.describe("Markdown links resolution", () => {
 
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage();
-    await page.goto(`${process.env.E2E_TEST_SITE!}/blog`);
+    await page.goto(`${testSite}/blog`);
   });
   test.afterAll(async () => {
     await page.close();

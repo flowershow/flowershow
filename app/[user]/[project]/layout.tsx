@@ -173,7 +173,7 @@ export default async function SiteLayout({
         ? resolveLink({
             link: customLogoPath,
             filePath: "config.json", // TODO this is ugly
-            prefixPath: `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
+            prefixPath: `https://${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
           })
         : config.logo;
 

@@ -1,9 +1,8 @@
 import { test, expect } from "@playwright/test";
-
-import "dotenv/config";
+import { testSite } from "./test-utils";
 
 test("General layout and config", async ({ page }) => {
-  await page.goto(process.env.E2E_TEST_SITE!);
+  await page.goto(testSite);
 
   const navTitle = page.getByTestId("nav-title");
   await expect(navTitle).toBeVisible();
@@ -11,7 +10,7 @@ test("General layout and config", async ({ page }) => {
   // which makes the logo link = datahub.io
   // await expect(navTitle).toHaveAttribute(
   //   "href",
-  //   `/${process.env.E2E_TEST_SITE}`,
+  //   `/${testSite}`,
   // );
   await expect(navTitle).toContainText("Test site title");
   await expect(navTitle.locator("img")).toHaveAttribute("src", /logo.jpeg$/);

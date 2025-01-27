@@ -52,9 +52,12 @@ export async function GET(
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const R2FileUrl = `https://${env.NEXT_PUBLIC_R2_BUCKET_DOMAIN}/${site.id}/${
-    site.gh_branch
-  }/raw/${path.join("/")}`;
+  // In development with MinIO, use http://. In production with R2, use https://
+  const protocol =
+    process.env.NODE_ENV === "development" ? "http://" : "https://";
+  const R2FileUrl = `${protocol}${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${
+    site.id
+  }/${site.gh_branch}/raw/${path.join("/")}`;
 
   return NextResponse.redirect(R2FileUrl, { status: 302 });
 }

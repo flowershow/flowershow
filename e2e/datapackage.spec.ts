@@ -1,6 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-
-import "dotenv/config";
+import { testSite } from "./test-utils";
 
 test.describe.configure({ mode: "parallel" });
 
@@ -9,9 +8,7 @@ test.describe("README with datapackage.json", () => {
 
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage();
-    await page.goto(
-      `${process.env.E2E_TEST_SITE!}/datasets/with-datapackage-json`,
-    );
+    await page.goto(`${testSite}/datasets/with-datapackage-json`);
     // await page.waitForLoadState("networkidle");
   });
   test.afterAll(async () => {
@@ -127,8 +124,7 @@ test.describe("README with datapackage.json", () => {
     await expect(resouce1DownloadLink).toContainText("resource-1");
     await expect(resouce1DownloadLink).toHaveAttribute(
       "href",
-      `/${process.env
-        .E2E_TEST_SITE!}/_r/-/datasets/with-datapackage-json/data/resource-1.csv`,
+      `/${testSite}/_r/-/datasets/with-datapackage-json/data/resource-1.csv`,
     );
 
     const downloadPromise = page.waitForEvent("download");
@@ -224,9 +220,7 @@ test.describe("README with frontmatter datapackage", () => {
 
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage();
-    await page.goto(
-      `${process.env.E2E_TEST_SITE!}/datasets/with-datapackage-frontmatter`,
-    );
+    await page.goto(`${testSite}/datasets/with-datapackage-frontmatter`);
     // await page.waitForLoadState("networkidle");
   });
   test.afterAll(async () => {

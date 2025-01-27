@@ -1,9 +1,8 @@
 import { test, expect } from "@playwright/test";
-
-import "dotenv/config";
+import { testSite } from "./test-utils";
 
 test("Data story with frontmatter metadata", async ({ page }) => {
-  await page.goto(`${process.env.E2E_TEST_SITE!}/blog/post-1`);
+  await page.goto(`${testSite}/blog/post-1`);
 
   const header = page.getByTestId("story-header");
 
@@ -19,7 +18,7 @@ test("Data story with frontmatter metadata", async ({ page }) => {
 });
 
 test("Data story without frontmatter metadata", async ({ page }) => {
-  await page.goto(`${process.env.E2E_TEST_SITE!}/blog/post-2`);
+  await page.goto(`${testSite}/blog/post-2`);
 
   const header = page.getByTestId("story-header");
 

@@ -10,16 +10,23 @@ import type { SupportedExtension } from "./types";
 import { GitHubAPIRepoTree } from "./github";
 import { env } from "@/env.mjs";
 
-const { R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_KEY_ID, R2_BUCKET_NAME } =
-  env;
+const {
+  S3_ENDPOINT,
+  S3_ACCESS_KEY_ID,
+  S3_SECRET_ACCESS_KEY,
+  S3_BUCKET_NAME,
+  S3_REGION,
+  S3_FORCE_PATH_STYLE,
+} = env;
 
-const R2 = new S3Client({
-  region: "auto",
-  endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+const s3Client = new S3Client({
+  region: S3_REGION,
+  endpoint: S3_ENDPOINT,
   credentials: {
-    accessKeyId: R2_ACCESS_KEY_ID,
-    secretAccessKey: R2_SECRET_KEY_ID,
+    accessKeyId: S3_ACCESS_KEY_ID,
+    secretAccessKey: S3_SECRET_ACCESS_KEY,
   },
+  forcePathStyle: S3_FORCE_PATH_STYLE,
 });
 
 type ContentType =
@@ -34,7 +41,7 @@ type ContentType =
   | "image/gif"
   | "image/svg+xml";
 
-const uploadR2Object = async ({
+const uploadS3Object = async ({
   key,
   file,
   contentType,
@@ -43,9 +50,9 @@ const uploadR2Object = async ({
   file: Buffer;
   contentType: ContentType;
 }) => {
-  return R2.send(
+  return s3Client.send(
     new PutObjectCommand({
-      Bucket: R2_BUCKET_NAME,
+      Bucket: S3_BUCKET_NAME,
       Key: key,
       Body: file,
       ContentType: contentType,
@@ -54,28 +61,28 @@ const uploadR2Object = async ({
   );
 };
 
-const deleteR2Object = async (key: string) => {
-  return R2.send(
+const deleteS3Object = async (key: string) => {
+  return s3Client.send(
     new DeleteObjectCommand({
-      Bucket: R2_BUCKET_NAME,
+      Bucket: S3_BUCKET_NAME,
       Key: key,
     }),
   );
 };
 
-const fetchR2Object = async (key: string) => {
-  return await R2.send(
+const fetchS3Object = async (key: string) => {
+  return await s3Client.send(
     new GetObjectCommand({
-      Bucket: R2_BUCKET_NAME,
+      Bucket: S3_BUCKET_NAME,
       Key: key,
     }),
   );
 };
 
-const emptyR2Directory = async (dir: string) => {
-  const listedObjects = await R2.send(
+const emptyS3Directory = async (dir: string) => {
+  const listedObjects = await s3Client.send(
     new ListObjectsV2Command({
-      Bucket: R2_BUCKET_NAME,
+      Bucket: S3_BUCKET_NAME,
       Prefix: dir,
     }),
   );
@@ -89,9 +96,9 @@ const emptyR2Directory = async (dir: string) => {
 
   // Only send delete command if we have objects to delete
   if (objectsToDelete.length > 0) {
-    await R2.send(
+    await s3Client.send(
       new DeleteObjectsCommand({
-        Bucket: R2_BUCKET_NAME,
+        Bucket: S3_BUCKET_NAME,
         Delete: {
           Objects: objectsToDelete,
           Quiet: false,
@@ -100,7 +107,7 @@ const emptyR2Directory = async (dir: string) => {
     );
   }
 
-  if (listedObjects.IsTruncated) await emptyR2Directory(dir);
+  if (listedObjects.IsTruncated) await emptyS3Directory(dir);
 };
 
 const getContentType = (extension: SupportedExtension): ContentType => {
@@ -144,7 +151,7 @@ export const uploadFile = async ({
   content: Buffer;
   extension: SupportedExtension;
 }) => {
-  return uploadR2Object({
+  return uploadS3Object({
     key: `${projectId}/${branch}/raw/${path}`,
     file: content,
     contentType: getContentType(extension),
@@ -160,7 +167,7 @@ export const fetchFile = async ({
   branch: string;
   path: string;
 }) => {
-  const response = await fetchR2Object(`${projectId}/${branch}/raw/${path}`);
+  const response = await fetchS3Object(`${projectId}/${branch}/raw/${path}`);
   return (await response.Body?.transformToString()) || null;
 };
 
@@ -173,11 +180,11 @@ export const deleteFile = async ({
   branch: string;
   path: string;
 }) => {
-  return deleteR2Object(`${projectId}/${branch}/raw/${path}`);
+  return deleteS3Object(`${projectId}/${branch}/raw/${path}`);
 };
 
 export const deleteProject = async (projectId: string) => {
-  await emptyR2Directory(`${projectId}/`);
+  await emptyS3Directory(`${projectId}/`);
 };
 
 export const uploadTree = async ({
@@ -189,7 +196,7 @@ export const uploadTree = async ({
   branch: string;
   tree: GitHubAPIRepoTree;
 }) => {
-  return uploadR2Object({
+  return uploadS3Object({
     key: `${projectId}/${branch}/_tree`,
     file: Buffer.from(JSON.stringify(tree)),
     contentType: "application/json",
@@ -197,7 +204,7 @@ export const uploadTree = async ({
 };
 
 export const fetchTree = async (projectId: string, branch: string) => {
-  const response = await fetchR2Object(`${projectId}/${branch}/_tree`);
+  const response = await fetchS3Object(`${projectId}/${branch}/_tree`);
   const tree = await response.Body?.transformToString();
   return tree ? (JSON.parse(tree) as GitHubAPIRepoTree) : null;
 };

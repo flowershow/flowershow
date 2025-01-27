@@ -14,12 +14,8 @@ export const env = createEnv({
       // VERCEL_URL doesn't include `https` so it cant be validated as a URL
       process.env.VERCEL ? z.string() : z.string().url(),
     ),
-    POSTGRES_PRISMA_URL: z
-      .string()
-      .url(),
-    POSTGRES_URL_NON_POOLING: z
-      .string()
-      .url(),
+    POSTGRES_PRISMA_URL: z.string().url(),
+    POSTGRES_URL_NON_POOLING: z.string().url(),
     // TURSO_AUTH_TOKEN: z.string(),
     // TURSO_DATABASE_URL: z.string().url(),
     NEXTAUTH_SECRET:
@@ -34,10 +30,12 @@ export const env = createEnv({
     VERCEL_URL: z.string().optional(),
     PORT: z.string().optional(),
     REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS: z.string().default("false"),
-    R2_ACCOUNT_ID: z.string(),
-    R2_ACCESS_KEY_ID: z.string(),
-    R2_SECRET_KEY_ID: z.string(),
-    R2_BUCKET_NAME: z.string(),
+    S3_ENDPOINT: z.string(),
+    S3_ACCESS_KEY_ID: z.string(),
+    S3_SECRET_ACCESS_KEY: z.string(),
+    S3_BUCKET_NAME: z.string(),
+    S3_REGION: z.string().default("auto"),
+    S3_FORCE_PATH_STYLE: z.enum(['true', 'false']).default('false').transform(val => val === 'true'),
     GH_WEBHOOK_SECRET: z.string(),
     GH_WEBHOOK_URL: z.string(),
     GH_ACCESS_TOKEN: z.string(),
@@ -64,7 +62,7 @@ export const env = createEnv({
     // https://vercel.com/docs/projects/environment-variables/system-environment-variables
     NEXT_PUBLIC_VERCEL_ENV: z.string().optional(),
     NEXT_PUBLIC_DNS_DOMAIN: z.string(),
-    NEXT_PUBLIC_R2_BUCKET_DOMAIN: z.string(),
+    NEXT_PUBLIC_S3_BUCKET_DOMAIN: z.string(), // Public domain where objects are accessible
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string(),
   },
 
@@ -75,7 +73,8 @@ export const env = createEnv({
   runtimeEnv: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     NEXT_PUBLIC_ROOT_DOMAIN: process.env.NEXT_PUBLIC_ROOT_DOMAIN,
-    NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX: process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX,
+    NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX:
+      process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX,
     NEXT_PUBLIC_VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV,
     POSTGRES_PRISMA_URL: process.env.POSTGRES_PRISMA_URL,
     POSTGRES_URL_NON_POOLING: process.env.POSTGRES_URL_NON_POOLING,
@@ -87,12 +86,15 @@ export const env = createEnv({
     TEAM_ID_VERCEL: process.env.TEAM_ID_VERCEL,
     VERCEL_URL: process.env.VERCEL_URL,
     PORT: process.env.PORT,
-    REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS: process.env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS,
-    R2_ACCOUNT_ID: process.env.R2_ACCOUNT_ID,
-    R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
-    R2_SECRET_KEY_ID: process.env.R2_SECRET_KEY_ID,
-    R2_BUCKET_NAME: process.env.R2_BUCKET_NAME,
-    NEXT_PUBLIC_R2_BUCKET_DOMAIN: process.env.NEXT_PUBLIC_R2_BUCKET_DOMAIN,
+    REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS:
+      process.env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS,
+    S3_ENDPOINT: process.env.S3_ENDPOINT,
+    S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID,
+    S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY,
+    S3_BUCKET_NAME: process.env.S3_BUCKET_NAME,
+    S3_REGION: process.env.S3_REGION,
+    S3_FORCE_PATH_STYLE: process.env.S3_FORCE_PATH_STYLE,
+    NEXT_PUBLIC_S3_BUCKET_DOMAIN: process.env.NEXT_PUBLIC_S3_BUCKET_DOMAIN,
     NEXT_PUBLIC_DNS_DOMAIN: process.env.NEXT_PUBLIC_DNS_DOMAIN,
     GH_WEBHOOK_SECRET: process.env.GH_WEBHOOK_SECRET,
     GH_WEBHOOK_URL: process.env.GH_WEBHOOK_URL,
