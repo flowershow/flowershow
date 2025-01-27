@@ -5,6 +5,7 @@ DataHub Cloud is a NextJS multitenant application designed for seamlessly publis
 ## Project Overview
 
 The application provides:
+
 - Multi-tenant architecture supporting multiple users and sites
 - Built-in authentication via GitHub
 - Markdown content publishing from GitHub repositories
@@ -14,6 +15,7 @@ The application provides:
 ## Architecture
 
 The application is built with:
+
 - **Frontend**: Next.js with TypeScript
 - **Database**: PostgreSQL for user accounts and site metadata
 - **Storage**: R2 Cloudflare buckets for content storage
@@ -30,6 +32,7 @@ The application is built with:
 3. Set up local PostgreSQL database
 4. Configure database variables in `.env`
 5. Set up MinIO for local storage:
+
    ```bash
    # Install MinIO on MacOS
    brew install minio/stable/minio
@@ -37,7 +40,9 @@ The application is built with:
    # Start MinIO server
    minio server ~/minio
    ```
+
 6. Configure MinIO bucket:
+
    - Open MinIO Console at http://localhost:9000
    - Login with default credentials (minioadmin/minioadmin)
    - Click "Buckets" → "Create Bucket"
@@ -63,11 +68,11 @@ The application is built with:
 - Create `.env` file based on `.env.example`
 - All environment variables must be defined in `env.mjs`
 - Access variables using `import { env } from './env.mjs'`
-- Development variables available in [Vercel project settings](https://vercel.com/datopian1/datahub-next-new/settings/environment-variables)
 
 ### App Configuration
 
 The application is configurable via `config.json` file (path set via `APP_CONFIG_URL`). Configuration options include:
+
 - Title
 - Description
 - Favicon URL
@@ -84,6 +89,7 @@ Current config file: [DataHub Cloud config.json](https://dash.cloudflare.com/830
 ### Databases
 
 PostgreSQL databases on Vercel:
+
 - Production: `datahub-cloud`
 - Staging: `datahub-cloud-staging`
 - Development: Local PostgreSQL instance
@@ -91,6 +97,7 @@ PostgreSQL databases on Vercel:
 ### Content Storage
 
 R2 Cloudflare buckets:
+
 - Production: `datahub-cloud`
 - Staging: `datahub-cloud-staging`
 - Development: Local MinIO instance
@@ -98,6 +105,7 @@ R2 Cloudflare buckets:
 ### Authentication
 
 GitHub OAuth applications under Datopian account:
+
 - Production: `DataHub Cloud`
 - Staging: `DataHub Cloud - Staging`
 - Development: `DataHub Cloud - Dev`
@@ -107,10 +115,12 @@ GitHub OAuth applications under Datopian account:
 #### Root Domain (datahub.io)
 
 Two projects share the datahub.io domain:
+
 1. DataHub Cloud app (`@username/projectname` paths)
 2. DataHub.io website (landing pages)
 
 Traffic routing managed by Cloudflare worker:
+
 - Landing pages (`/`, `/publish`, `/pricing`, `/collections`) → datahub-io project
 - All other paths → datahub-next-new project
 
@@ -126,6 +136,7 @@ Worker: [datahub-io-reverse-proxy](https://dash.cloudflare.com/83025b28472d6aa2b
 ### Branching Strategy
 
 Two main branches:
+
 - `main` (production)
   - Protected branch
   - No direct pushes
@@ -144,6 +155,7 @@ Two main branches:
 ### Commit Strategy
 
 We use a squash-based system:
+
 1. Developers work freely on feature branches
 2. PRs are squash-merged to `staging`
 3. Commit messages follow conventional commits specification
@@ -158,16 +170,19 @@ Access to https://github.com/datopian/datahub-cloud-test-repo
 ### Running Tests
 
 Start the application:
+
 ```bash
 pnpm dev
 ```
 
 Run tests:
+
 ```bash
 npx playwright test
 ```
 
 Debug modes:
+
 ```bash
 # Debug mode
 npx playwright test --debug
@@ -183,35 +198,41 @@ npx playwright test --ui
 DataHub Cloud manages several aliased pages:
 
 #### Core Datasets
+
 - Path: `/core/xxx`
 - Alias for: `/@olayway/xxx`
 - Source: https://github.com/datasets
 - Auto-sync enabled
 
 #### Blog
+
 - Path: `/blog`
 - Alias for: `@olayway/blog`
 - Source: https://github.com/datahubio/blog
 - Auto-sync enabled
 
 #### Collections
+
 - Path: `/collections/*`
 - Alias for: `@olayway/collections/*`
 - Source: https://github.com/datasets/awesome-data
 - Auto-sync enabled
 
 #### Documentation
+
 - Path: `/docs`
 - Alias for: `@olayway/docs`
 - Source: https://github.com/datahubio/datahub-cloud-template
 - Auto-sync enabled
 
 #### Notes
+
 - Path: `/notes`
 - Alias for: `@rufuspollock/data-notes`
 - Auto-sync enabled
 
 #### Logistics
+
 - Path: `/logistics/postal-codes-*`
 - Alias for: `@olayway/postal-codes-*`
 - Source: https://github.com/datopian/postal-codes
@@ -228,11 +249,13 @@ DataHub Cloud manages several aliased pages:
 ### Common Issues
 
 1. MinIO Connection Issues
+
    - Verify MinIO is running
    - Check credentials in `.env`
    - Ensure bucket is publicly accessible
 
 2. Database Connection
+
    - Verify PostgreSQL is running
    - Check database credentials
    - Ensure schema is up to date
