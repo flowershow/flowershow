@@ -178,8 +178,17 @@ pnpm dev
 Run tests:
 
 ```bash
+# Run all non-authenticated tests
 npx playwright test
+
+# Run authenticated dashboard tests
+npx playwright test dashboard.spec.ts
+
+# Run specific test file
+npx playwright test path/to/test.spec.ts
 ```
+
+Note: If you need to reprocess a test site even when its repository content hasn't changed (e.g., when the app's processing logic has changed), you can uncomment the `forceSync` option in `e2e/global.setup.ts`.
 
 Debug modes:
 
@@ -190,6 +199,26 @@ npx playwright test --debug
 # UI mode
 npx playwright test --ui
 ```
+
+**Important:** Always run E2E tests locally before submitting PRs, especially tests that require authentication (like `dashboard.spec.ts`). This ensures that authenticated features are properly tested since these tests are automatically skipped in CI environment.
+
+### Authenticated Tests
+
+Some tests (like dashboard.spec.ts) require authentication. These tests:
+
+1. Are automatically skipped in CI environment
+2. Require manual login by default:
+   - When running dashboard tests, a browser window will open
+   - You'll need to manually log in with your GitHub account
+   - The test will continue automatically after successful login
+   - Your authentication state will be saved for subsequent test runs
+
+3. For non-2FA accounts only: You can optionally automate login by setting GitHub credentials in `.env`:
+   ```
+   E2E_GH_USERNAME=your-github-username
+   E2E_GH_PASSWORD=your-github-password
+   ```
+   Note: This only works for accounts without 2FA enabled. For accounts with 2FA, use manual login.
 
 ## Content Management
 
@@ -261,6 +290,7 @@ DataHub Cloud manages several aliased pages:
    - Ensure schema is up to date
 
 3. OAuth Authentication
+
    - Verify correct OAuth app configuration
    - Check callback URLs
    - Ensure environment variables are set

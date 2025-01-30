@@ -24,7 +24,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.E2E_BASE_URL,
+    baseURL: "http://localhost:3000",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -41,7 +41,30 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
       },
       dependencies: ["global-setup"],
+      testIgnore: /dashboard\.spec\.ts/,
     },
+    // Only include dashboard tests when not running in CI
+    ...(!process.env.CI
+      ? [
+          {
+            name: "auth-setup",
+            testMatch: /auth\.setup\.ts/,
+            use: {
+              baseURL: "http://cloud.localhost:3000",
+            },
+          },
+          {
+            name: "chromium-dashboard",
+            use: {
+              ...devices["Desktop Chrome"],
+              storageState: "playwright/.auth/user.json",
+              baseURL: "http://cloud.localhost:3000",
+            },
+            dependencies: ["auth-setup"],
+            testMatch: /dashboard\.spec\.ts/,
+          },
+        ]
+      : []),
     // {
     //   name: 'firefox',
     //   use: { ...devices['Desktop Firefox'] },

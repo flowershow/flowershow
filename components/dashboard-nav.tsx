@@ -148,6 +148,7 @@ export default function Nav({ children }: { children: ReactNode }) {
         <Menu width={48} height={32} className="dark:text-white" />
       </button>
       <div
+        data-testid="dashboard-sidebar"
         className={`transform ${
           showSidebar ? "w-full translate-x-0" : "-translate-x-full"
         } fixed z-10 flex h-full flex-col justify-between border-r border-stone-200 bg-stone-100 p-4 transition-all dark:border-stone-700 dark:bg-stone-900 sm:w-60 sm:translate-x-0`}
@@ -165,7 +166,7 @@ export default function Nav({ children }: { children: ReactNode }) {
               className="dark:scale-110 dark:rounded-full dark:border dark:border-stone-400"
             />
           </Link>
-          <div className="grid gap-1">
+          <nav className="grid gap-1">
             {tabs.map(({ name, href, isActive, icon }) => (
               <Link
                 key={name}
@@ -178,10 +179,10 @@ export default function Nav({ children }: { children: ReactNode }) {
                 <span className="text-sm font-medium">{name}</span>
               </Link>
             ))}
-          </div>
+          </nav>
         </div>
         <div>
-          <div className="grid gap-1">
+          <nav className="grid gap-1">
             {externalLinks.map(({ name, href, icon }) => (
               <a
                 key={name}
@@ -197,7 +198,7 @@ export default function Nav({ children }: { children: ReactNode }) {
                 <p>↗</p>
               </a>
             ))}
-          </div>
+          </nav>
           <div className="my-2 border-t border-stone-200 dark:border-stone-700" />
           {children}
         </div>

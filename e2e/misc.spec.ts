@@ -21,7 +21,7 @@ test.describe("Files with spaces and other special signs", () => {
 
     // test that %20 spaces in the URL has been replaced with + signs
     await page.waitForURL(
-      `${process.env.E2E_BASE_URL}/${testSite}/blog/Post+With+Special+Signs+%25%26(1)%2B`,
+      `/${testSite}/blog/Post+With+Special+Signs+%25%26(1)%2B`,
     );
   });
 

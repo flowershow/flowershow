@@ -35,7 +35,10 @@ export const env = createEnv({
     S3_SECRET_ACCESS_KEY: z.string(),
     S3_BUCKET_NAME: z.string(),
     S3_REGION: z.string().default("auto"),
-    S3_FORCE_PATH_STYLE: z.enum(['true', 'false']).default('false').transform(val => val === 'true'),
+    S3_FORCE_PATH_STYLE: z
+      .enum(["true", "false"])
+      .default("false")
+      .transform((val) => val === "true"),
     GH_WEBHOOK_SECRET: z.string(),
     GH_WEBHOOK_URL: z.string(),
     GH_ACCESS_TOKEN: z.string(),
@@ -47,6 +50,9 @@ export const env = createEnv({
     BREVO_CONTACT_LISTID: z.number(),
     TURNSTILE_SECRET_KEY: z.string(),
     INNGEST_APP_ID: z.string(),
+    // E2E test variables
+    E2E_GH_USERNAME: z.string().optional(),
+    E2E_GH_PASSWORD: z.string().optional(),
   },
 
   /**
@@ -108,6 +114,9 @@ export const env = createEnv({
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
     TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
     INNGEST_APP_ID: process.env.INNGEST_APP_ID,
+    // E2E test variables
+    E2E_GH_USERNAME: process.env.E2E_GH_USERNAME,
+    E2E_GH_PASSWORD: process.env.E2E_GH_PASSWORD,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

@@ -1,5 +1,5 @@
 import { test, expect, Page } from "@playwright/test";
-import { testSite } from "./test-utils";
+import { testSite, githubScope, githubRepo } from "./test-utils";
 
 test.describe.configure({ mode: "parallel" });
 
@@ -9,7 +9,8 @@ test.describe("README with datapackage.json", () => {
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage();
     await page.goto(`${testSite}/datasets/with-datapackage-json`);
-    // await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
   });
   test.afterAll(async () => {
     await page.close();
@@ -195,12 +196,10 @@ test.describe("README with datapackage.json", () => {
   test("Show Repository Link", async () => {
     const gotoRepo = page.getByTestId("goto-repository");
     await expect(gotoRepo).toBeVisible();
-    await expect(gotoRepo.locator("a")).toContainText(
-      "datahub-cloud-test-repo",
-    );
+    await expect(gotoRepo.locator("a")).toContainText(githubRepo);
     await expect(gotoRepo.locator("a")).toHaveAttribute(
       "href",
-      `https://github.com/datopian/datahub-cloud-test-repo`,
+      `https://github.com/${githubScope}/${githubRepo}`,
     );
   });
 
@@ -209,7 +208,7 @@ test.describe("README with datapackage.json", () => {
     await expect(editPage.locator("a")).toBeVisible();
     await expect(editPage.locator("a")).toHaveAttribute(
       "href",
-      "https://github.com/datopian/datahub-cloud-test-repo/edit/main/datasets/with-datapackage-json/README.md",
+      `https://github.com/${githubScope}/${githubRepo}/edit/main/datasets/with-datapackage-json/README.md`,
     );
   });
 });
@@ -221,7 +220,8 @@ test.describe("README with frontmatter datapackage", () => {
   test.beforeAll(async ({ browser }) => {
     page = await browser.newPage();
     await page.goto(`${testSite}/datasets/with-datapackage-frontmatter`);
-    // await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("domcontentloaded");
   });
   test.afterAll(async () => {
     await page.close();

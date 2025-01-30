@@ -4,11 +4,14 @@ export const testUser = {
   name: "E2E Test User",
 };
 
+// GitHub repository details
+export const githubScope = "datopian";
+export const githubRepo = "datahub-cloud-test-repo";
+
 export const testProject = {
   name: "test-site",
-  repository: "datopian/datahub-cloud-test-repo",
+  repository: `${githubScope}/${githubRepo}`,
   branch: "main",
 };
 
-// Site path in the format used by tests (@username/projectName)
 export const testSite = `@${testUser.username}/${testProject.name}`;
