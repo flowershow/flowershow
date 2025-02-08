@@ -10,7 +10,9 @@ import { env } from "@/env.mjs";
 import type { SiteWithUser } from "@/types";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 import UrlNormalizer from "./url-normalizer";
-import config from "@/config.json";
+import { getConfig } from "@/lib/app-config";
+
+const config = getConfig();
 
 interface RouteParams {
   user: string;

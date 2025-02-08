@@ -1,24 +1,3 @@
-export interface SiteConfig {
-  title?: string;
-  description?: string;
-  logo?: string;
-  nav?: {
-    logo?: string;
-    title?: string;
-    links?: NavLink[];
-    social?: SocialLink[];
-    cta?: NavLink;
-  };
-  analytics?: string;
-  // content management
-  contentInclude?: string[];
-  contentExclude?: string[];
-  // feature toggles
-  showSidebar?: boolean;
-  showToc?: boolean;
-  showEditLink?: boolean;
-}
-
 export interface NavLink {
   name: string;
   href: string;
@@ -37,3 +16,51 @@ export type SocialPlatform =
   | "facebook"
   | "instagram"
   | "youtube";
+
+export interface NavConfig {
+  logo?: string;
+  title?: string;
+  links?: NavLink[];
+  social?: SocialLink[];
+}
+
+export interface SiteConfig {
+  title?: string;
+  description?: string;
+  logo?: string;
+  nav?: NavConfig;
+  analytics?: string;
+  contentInclude?: string[];
+  contentExclude?: string[];
+  showSidebar?: boolean;
+  showToc?: boolean;
+  showEditLink?: boolean;
+}
+
+export interface SiteAlias {
+  origin: string;
+  alias: string;
+}
+
+export interface DashboardLink extends NavLink {
+  type: "guide" | "discord" | "announcement" | "demo";
+}
+
+export interface AppNavConfig extends NavConfig {
+  cta?: NavLink;
+}
+
+export interface AppConfig extends SiteConfig {
+  logo: string;
+  favicon: string;
+  thumbnail: string;
+  termsOfService: string;
+  githubTemplateUrl: string;
+  landingPageUrl: string;
+  nav: AppNavConfig;
+  dashboardSidebar: {
+    links: DashboardLink[];
+  };
+  siteAliases?: SiteAlias[];
+  dataVisComponentsEnabled?: boolean;
+}

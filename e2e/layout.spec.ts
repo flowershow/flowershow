@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { testSite } from "./test-utils";
-import config from "@/config.json";
+import { getConfig } from "@/lib/app-config";
+
+const config = getConfig();
 
 test.describe("Site layout and configuration", () => {
   test("applies metadata from site config", async ({ page }) => {

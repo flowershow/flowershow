@@ -1,6 +1,7 @@
-import config from "@/config.json";
 import { SiteWithUser } from "@/types";
-import { Site } from "@prisma/client";
+import { getConfig } from "./app-config";
+
+const config = getConfig();
 
 export const resolveSiteAlias = (
   s: string,

@@ -16,8 +16,9 @@ import {
   Megaphone,
   Layout,
 } from "lucide-react";
+import { getConfig } from "@/lib/app-config";
 
-import config from "@/config.json";
+const config = getConfig();
 
 const externalLinks = config.dashboardSidebar.links
   .map((link) => {

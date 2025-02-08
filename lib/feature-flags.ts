@@ -1,7 +1,9 @@
 /* eslint @typescript-eslint/no-duplicate-enum-values: 0 */
 import { env } from "@/env.mjs";
 import { Site } from "@prisma/client";
-import config from "@/config.json";
+import { getConfig } from "./app-config";
+
+const config = getConfig();
 
 export function isFeatureEnabled(feature: Feature, site?: Site) {
   switch (feature) {

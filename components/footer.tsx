@@ -1,4 +1,6 @@
-import config from "@/config.json";
+import { getConfig } from "@/lib/app-config";
+
+const config = getConfig();
 
 export default function Footer() {
   return (

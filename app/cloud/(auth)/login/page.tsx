@@ -2,7 +2,9 @@ import Image from "next/image";
 import { Suspense } from "react";
 
 import LoginButton from "./login-button";
-import config from "@/config.json";
+import { getConfig } from "@/lib/app-config";
+
+const config = getConfig();
 
 export default function LoginPage() {
   return (

@@ -1,6 +1,7 @@
 import { Metadata } from "next";
 import { headers } from "next/headers";
 import { GoogleTagManager } from "@next/third-parties/google";
+import clsx from "clsx";
 
 import "@portaljs/components/styles.css";
 import "@portaljs/remark-callouts/styles.css";
@@ -12,15 +13,14 @@ import { TRPCReactProvider } from "@/trpc/react";
 import { cal, inter } from "@/styles/fonts";
 import { env } from "@/env.mjs";
 import { Providers } from "./providers";
-import config from "config.json";
-import clsx from "clsx";
+import { getConfig } from "@/lib/app-config";
 
-const { title, description } = config;
+const { title, description, favicon, thumbnail } = getConfig();
 
 export const metadata: Metadata = {
   title,
   description,
-  icons: [config.favicon],
+  icons: [favicon],
   openGraph: {
     title,
     description,
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     url: `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}`,
     images: [
       {
-        url: config.thumbnail,
+        url: thumbnail,
         width: 1200,
         height: 630,
         alt: "Thumbnail",
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     description,
     images: [
       {
-        url: config.thumbnail,
+        url: thumbnail,
         width: 1200,
         height: 630,
         alt: "Thumbnail",

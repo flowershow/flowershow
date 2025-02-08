@@ -2,8 +2,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { getConfig } from "@/lib/app-config";
 
-import config from "config.json";
+const config = getConfig();
 
 export default function BuiltWithFloatingButton() {
   const [rightPosition, setRightPosition] = useState<any>({

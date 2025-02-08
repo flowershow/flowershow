@@ -10,7 +10,6 @@ import Sidebar from "@/components/sidebar";
 import BuiltWithFloatingButton from "@/components/built-with-floating-button";
 import DataRequestBanner from "@/components/data-request-banner";
 
-import config from "@/config.json";
 import { resolveLink } from "@/lib/resolve-link";
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 import { cn } from "@/lib/utils";
@@ -19,6 +18,9 @@ import { api } from "@/trpc/server";
 import { env } from "@/env.mjs";
 import { isInternalSite } from "@/lib/resolve-site-alias";
 import { SiteConfig } from "@/components/types";
+import { getConfig } from "@/lib/app-config";
+
+const config = getConfig();
 
 interface RouteParams {
   user: string;

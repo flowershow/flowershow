@@ -3,7 +3,9 @@ import { redirect } from "next/navigation";
 import SiteCard from "./site-card";
 import { getSession } from "@/server/auth";
 import { api } from "@/trpc/server";
-import config from "@/config.json";
+import { getConfig } from "@/lib/app-config";
+
+const config = getConfig();
 
 export default async function Sites({ limit }: { limit?: number }) {
   const session = await getSession();
