@@ -31,6 +31,7 @@ export default function BuiltWithFloatingButton() {
 
   return (
     <Link
+      data-testid="built-with-button"
       href={config.landingPageUrl}
       className="fixed bottom-[16px] right-[32px] z-[400] flex items-center rounded-[40px] bg-white px-3 py-2 text-sm tracking-[-.4px] shadow-[0_8px_20px_0_rgba(0,0,0,.08)] sm:bottom-[32px] "
       style={{ right: `${rightPosition}` }}
@@ -41,7 +42,7 @@ export default function BuiltWithFloatingButton() {
         height={18}
         className="mx-2"
         src={config.logo}
-        alt={config.title}
+        alt="Logo"
       />
       <span className="text-sm font-medium">{config.title}</span>
     </Link>

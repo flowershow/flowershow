@@ -2,39 +2,30 @@ export interface SiteConfig {
   title?: string;
   description?: string;
   logo?: string;
-  navbarTitle?: NavbarTitleConfig;
-  author?: AuthorConfig;
-  navLinks?: NavLink[];
-  showSidebar?: boolean;
-  showToc?: boolean;
+  nav?: {
+    logo?: string;
+    title?: string;
+    links?: NavLink[];
+    social?: SocialLink[];
+    cta?: NavLink;
+  };
   analytics?: string;
-  social: SocialLink[];
-  footerLinks?: FooterLink[];
-  showEditLink?: boolean;
+  // content management
   contentInclude?: string[];
   contentExclude?: string[];
-}
-
-export interface NavbarTitleConfig {
-  logo: string;
-  text: string;
-  // version?: string; // has no effect on the UI atm
-}
-
-export interface FooterLink {
-  name: string;
-  subItems: NavLink[];
-}
-
-export interface AuthorConfig {
-  name: string;
-  logo: string;
-  url: string;
+  // feature toggles
+  showSidebar?: boolean;
+  showToc?: boolean;
+  showEditLink?: boolean;
 }
 
 export interface NavLink {
   name: string;
   href: string;
+}
+
+export interface SocialLink extends NavLink {
+  label: SocialPlatform;
 }
 
 export type SocialPlatform =
@@ -46,9 +37,3 @@ export type SocialPlatform =
   | "facebook"
   | "instagram"
   | "youtube";
-
-export interface SocialLink {
-  label: SocialPlatform;
-  name: string;
-  href: string;
-}

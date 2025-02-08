@@ -29,7 +29,6 @@ export const env = createEnv({
     TEAM_ID_VERCEL: z.string().optional(), // TODO temp set to optional as not set directly on Vercel
     VERCEL_URL: z.string().optional(),
     PORT: z.string().optional(),
-    REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS: z.string().default("false"),
     S3_ENDPOINT: z.string(),
     S3_ACCESS_KEY_ID: z.string(),
     S3_SECRET_ACCESS_KEY: z.string(),
@@ -92,8 +91,6 @@ export const env = createEnv({
     TEAM_ID_VERCEL: process.env.TEAM_ID_VERCEL,
     VERCEL_URL: process.env.VERCEL_URL,
     PORT: process.env.PORT,
-    REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS:
-      process.env.REDIRECT_TO_CUSTOM_DOMAIN_IF_EXISTS,
     S3_ENDPOINT: process.env.S3_ENDPOINT,
     S3_ACCESS_KEY_ID: process.env.S3_ACCESS_KEY_ID,
     S3_SECRET_ACCESS_KEY: process.env.S3_SECRET_ACCESS_KEY,

@@ -1,25 +1,153 @@
 import { test, expect } from "@playwright/test";
 import { testSite } from "./test-utils";
+import config from "@/config.json";
 
-test("General layout and config", async ({ page }) => {
-  await page.goto(testSite);
+test.describe("Site layout and configuration", () => {
+  test("applies metadata from site config", async ({ page }) => {
+    await page.goto(testSite);
 
-  const navTitle = page.getByTestId("nav-title");
-  await expect(navTitle).toBeVisible();
-  // This won't work atm becaue the test site is deployed at olayway's account
-  // which makes the logo link = datahub.io
-  // await expect(navTitle).toHaveAttribute(
-  //   "href",
-  //   `/${testSite}`,
-  // );
-  await expect(navTitle).toContainText("Test site title");
-  await expect(navTitle.locator("img")).toHaveAttribute("src", /logo.jpeg$/);
+    // Check page title and meta description
+    await expect(page).toHaveTitle("Page Title From Frontmatter");
+    const metaDescription = page.locator('meta[name="description"]');
+    await expect(metaDescription).toHaveAttribute(
+      "content",
+      "Page Description From Frontmatter",
+    );
 
-  await expect(page.getByTestId("sidebar")).toBeVisible();
+    // Check OpenGraph and Twitter meta tags
+    await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+      "content",
+      "Page Title From Frontmatter",
+    );
+    await expect(
+      page.locator('meta[property="og:description"]'),
+    ).toHaveAttribute("content", "Page Description From Frontmatter");
+    await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute(
+      "content",
+      "Page Title From Frontmatter",
+    );
+    await expect(
+      page.locator('meta[name="twitter:description"]'),
+    ).toHaveAttribute("content", "Page Description From Frontmatter");
 
-  const toc = page.getByTestId("toc");
-  await expect(toc).toBeVisible();
-  await expect(toc).toContainText("On this page");
-  await expect(toc.locator("li").nth(0).locator("li")).toHaveCount(0);
-  await expect(toc.locator("li").nth(1).locator("li")).toHaveCount(1);
+    // Check favicon and thumbnail
+    await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
+      "href",
+      config.favicon,
+    );
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
+      "content",
+      config.thumbnail,
+    );
+    await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute(
+      "content",
+      config.thumbnail,
+    );
+  });
+
+  test("applies navigation configuration", async ({ page }) => {
+    await page.goto(testSite);
+
+    const navbar = page.getByTestId("navbar");
+
+    // Check nav title and logo
+    await expect(navbar).toBeVisible();
+    await expect(navbar.locator("img")).toHaveAttribute("src", /logo.jpg/);
+    await expect(navbar).toContainText("SiteName");
+    await expect(navbar.getByTestId("navbar-logo-link")).toHaveAttribute(
+      "href",
+      `/${testSite}`,
+    );
+
+    // Check navigation links
+    await expect(navbar.getByRole("link", { name: "About" })).toBeVisible();
+    await expect(navbar.getByRole("link", { name: "About" })).toHaveAttribute(
+      "href",
+      `/${testSite}/about`,
+    );
+    await expect(navbar.getByRole("link", { name: "Docs" })).toBeVisible();
+    await expect(navbar.getByRole("link", { name: "Docs" })).toHaveAttribute(
+      "href",
+      `/${testSite}/docs`,
+    );
+
+    // Check social links if configured
+    const socialLinks = page.getByTestId("navbar-socials").getByRole("link");
+    await expect(await socialLinks.count()).toEqual(1);
+    await expect(socialLinks.nth(0)).toHaveAttribute(
+      "href",
+      "https://discord.link/abc",
+    );
+  });
+
+  test("applies layout configuration", async ({ page }) => {
+    await page.goto(testSite);
+
+    // Check Table of Contents visibility (showToc: true by default)
+    const toc = page.getByTestId("toc");
+    await expect(toc).toBeVisible();
+    await expect(toc).toContainText("On this page");
+    await expect(toc.locator("li").nth(0).locator("li")).toHaveCount(0);
+    await expect(toc.locator("li").nth(1).locator("li")).toHaveCount(1);
+
+    // Check sidebar is not visible by default (showSidebar: false)
+    const sidebar = page.getByTestId("sidebar");
+    await expect(sidebar).not.toBeVisible();
+
+    // Verify main content layout classes when sidebar is disabled
+    const main = page.locator("main");
+    await expect(main).toHaveClass(/mx-auto flex max-w-8xl/);
+    await expect(main).toHaveClass(/sm:px-4 md:px-8/);
+
+    const content = main.locator(".page-content");
+    await expect(content).toHaveClass(/flex min-h-screen w-full flex-col/);
+    await expect(content).toHaveClass(/sm:px-4 lg:px-12 xl:px-12/);
+
+    // Check custom CSS if present
+    const customStyles = page.locator("style[data-custom-css]");
+    if ((await customStyles.count()) > 0) {
+      await expect(customStyles).toBeAttached();
+    }
+  });
+
+  // test("applies correct layout with sidebar enabled", async ({ page }) => {
+  //   // Note: You'll need to configure the test site to have showSidebar: true
+  //   await page.goto(testSite);
+
+  //   const sidebar = page.getByTestId("sidebar");
+  //   if (await sidebar.isVisible()) {
+  //     // Verify sidebar content
+  //     // TODO
+  //   }
+  // });
+
+  // test("applies fallback values correctly", async ({ page }) => {
+  //   await page.goto(testSite);
+
+  //   // Title should fallback to project name if not in config
+  //   const title = await page.title();
+  //   expect(title).toBeTruthy();
+
+  //   // Description should be empty string if not in config
+  //   const description = await page
+  //     .locator('meta[name="description"]')
+  //     .getAttribute("content");
+  //   expect(description).toBeDefined();
+
+  //   // Nav links should be empty array if not in config
+  //   const navLinks = page.getByTestId("nav-links");
+  //   if ((await navLinks.count()) > 0) {
+  //     const links = await navLinks.locator("a").count();
+  //     expect(links).toBeGreaterThanOrEqual(0);
+  //   }
+  // });
+
+  test("shows correct UI elements based on data request feature flag", async ({
+    page,
+  }) => {
+    await page.goto(testSite);
+
+    await expect(page.getByTestId("built-with-button")).toBeVisible();
+    await expect(page.locator("footer")).toHaveText(/Built with/);
+  });
 });

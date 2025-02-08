@@ -561,18 +561,14 @@ export const siteRouter = createTRPCRouter({
           const { gh_username, projectName } = input;
           const { customDomain } = site;
 
-          try {
-            const prefix = customDomain
-              ? ""
-              : resolveSiteAlias(`/@${gh_username}/${projectName}`, "to");
+          const prefix = customDomain
+            ? ""
+            : resolveSiteAlias(`/@${gh_username}/${projectName}`, "to");
 
-            return buildNestedTreeFromFilesMap(
-              Object.values(site.files as { [key: string]: PageMetadata }),
-              prefix,
-            );
-          } catch {
-            return null;
-          }
+          return buildNestedTreeFromFilesMap(
+            Object.values(site.files as { [key: string]: PageMetadata }),
+            prefix,
+          );
         },
         [`${input.gh_username}-${input.projectName}-tree`],
         {

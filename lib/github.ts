@@ -35,7 +35,7 @@ const githubFetch = async ({
 }: {
   url: string;
   accessToken?: string;
-  cacheOptions?: { next?: any; cache?: any };
+  cacheOptions?: { next?: any; cache?: RequestCache };
   accept?: Accept;
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: any;
@@ -84,7 +84,7 @@ export const githubJsonFetch = async <T>({
   url: string;
   queryParams?: Record<string, string>;
   accessToken?: string;
-  cacheOptions?: { next?: any; cache?: any };
+  cacheOptions?: { next?: any; cache?: RequestCache };
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: any;
 }) => {
@@ -105,7 +105,7 @@ const githubRawFetch = async ({
 }: {
   url: string;
   accessToken: string;
-  cacheOptions?: { next?: any; cache?: any };
+  cacheOptions?: { next?: any; cache?: RequestCache };
 }) => {
   const response = await githubFetch({
     url,

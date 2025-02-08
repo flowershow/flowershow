@@ -22,22 +22,18 @@ import {
   TwitterIcon,
   YouTubeIcon,
 } from "@/components/icons";
+import { NavLink, SocialLink } from "./types";
 
-const Nav = ({
-  logo,
-  title = "",
-  url = "/",
-  links,
-  social,
-  cta,
-}: {
+export interface Props {
   logo: string;
-  title?: string;
   url?: string;
-  links?: Array<{ name: string; href: string }>;
-  social?: Array<{ label: SocialPlatform; name: string; href: string }>;
-  cta?: { name: string; href: string };
-}) => {
+  title?: string;
+  links?: NavLink[];
+  social?: SocialLink[];
+  cta?: NavLink;
+}
+
+const Nav = ({ logo, url = "/", title, links, social, cta }: Props) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -54,6 +50,7 @@ const Nav = ({
   return (
     <Disclosure
       as="nav"
+      data-testid="navbar"
       className={clsx(
         "sticky top-0 z-10 bg-background",
         isScrolled && "shadow-sm",
@@ -62,11 +59,19 @@ const Nav = ({
       <div className="mx-auto max-w-7xl px-4 text-sm sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
           <div className="flex">
-            <Link href={url} className="flex shrink-0 items-center">
-              <Image alt={title} src={logo} width={24} height={24} />
+            <Link
+              data-testid="navbar-logo-link"
+              href={url}
+              className="flex items-center space-x-2 text-xl font-extrabold text-slate-900 dark:text-white"
+            >
+              <Image alt="Logo" src={logo} width={24} height={24} />
+              {title && <span>{title}</span>}
             </Link>
             {links && (
-              <div className="hidden sm:ml-6 sm:space-x-8 md:flex">
+              <div
+                data-testid="navbar-links"
+                className="hidden sm:ml-6 sm:space-x-8 md:flex"
+              >
                 {links.map((link) => (
                   <a
                     key={link.name}
@@ -80,7 +85,10 @@ const Nav = ({
             )}
           </div>
           {(social || cta) && (
-            <div className="hidden sm:ml-6 sm:items-center md:flex">
+            <div
+              data-testid="navbar-socials"
+              className="hidden sm:ml-6 sm:items-center md:flex"
+            >
               {social &&
                 social.map(({ label, href, name }) => {
                   const Icon = socialIcons[label];

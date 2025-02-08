@@ -11,41 +11,20 @@ import {
 } from "@headlessui/react";
 import { MenuIcon, XIcon } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
-const SidebarNav = ({ title, logo, url, navigation }) => {
-  const pathname = usePathname();
-  return (
-    <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6">
-      <div className="mt-12 flex  shrink-0 items-center">
-        <Link
-          data-testid="nav-title"
-          href={url || "/"}
-          className="flex items-center space-x-2 text-xl font-extrabold text-slate-900 dark:text-white"
-        >
-          {logo && (
-            <img src={logo} alt="Logo" className="mr-1 h-8 fill-white" />
-          )}
-          {title && <span>{title}</span>}
-        </Link>
-      </div>
-      <nav className="flex flex-1 flex-col">
-        <TreeView items={navigation} currentPath={pathname} />
-      </nav>
-    </div>
-  );
-};
-
-export default function Sidebar({
-  title,
-  logo,
-  url,
-  navigation,
-}: {
-  title: string;
+export interface Props {
   logo: string;
-  url: string;
-  navigation: Array<TreeViewItem>;
-}) {
+  url?: string;
+  title?: string;
+  items: TreeViewItem[];
+  // TODO support other fields that Nav component support
+  // links?: { name: string; href: string }[];
+  // social?: { name: string; href: string; label: SocialPlatform }[];
+  // cta?: { name: string; href: string };
+}
+
+export default function Sidebar({ logo, url = "/", title, items }: Props) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -57,7 +36,7 @@ export default function Sidebar({
 
   return (
     <>
-      <Transition show={sidebarOpen} as={Fragment}>
+      <Transition show={sidebarOpen} as={Fragment} data-testid="sidebar">
         <Dialog onClose={setSidebarOpen} className="relative z-50 lg:hidden">
           <TransitionChild
             as={Fragment}
@@ -86,11 +65,11 @@ export default function Sidebar({
                     <XIcon aria-hidden="true" className="h-8 w-8 text-white" />
                   </button>
                 </div>
-                <SidebarNav
+                <SidebarNavigation
                   title={title}
                   url={url}
                   logo={logo}
-                  navigation={navigation}
+                  items={items}
                 />
               </DialogPanel>
             </div>
@@ -101,12 +80,7 @@ export default function Sidebar({
         className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col"
         data-testid="sidebar"
       >
-        <SidebarNav
-          title={title}
-          url={url}
-          logo={logo}
-          navigation={navigation}
-        />
+        <SidebarNavigation title={title} url={url} logo={logo} items={items} />
       </div>
       <div className="fixed right-0 top-0 z-30 flex items-center justify-end gap-x-6 px-4 pt-4 sm:px-6 lg:hidden">
         <button
@@ -121,3 +95,23 @@ export default function Sidebar({
     </>
   );
 }
+
+const SidebarNavigation = ({ logo, url = "/", title, items }: Props) => {
+  const pathname = usePathname();
+  return (
+    <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6">
+      <div className="mt-12 flex  shrink-0 items-center">
+        <Link
+          href={url}
+          className="flex items-center space-x-2 text-xl font-extrabold text-slate-900 dark:text-white"
+        >
+          <Image alt="Logo" src={logo} width={24} height={24} />
+          {title && <span>{title}</span>}
+        </Link>
+      </div>
+      <nav className="flex flex-1 flex-col">
+        <TreeView items={items} currentPath={pathname} />
+      </nav>
+    </div>
+  );
+};

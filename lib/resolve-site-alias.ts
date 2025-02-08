@@ -1,4 +1,6 @@
 import config from "@/config.json";
+import { SiteWithUser } from "@/types";
+import { Site } from "@prisma/client";
 
 export const resolveSiteAlias = (
   s: string,
@@ -25,9 +27,9 @@ export const resolveSiteAlias = (
   return s;
 };
 
-export const isAliasedSite = (username: string, site: string) => {
+export const isInternalSite = (site: SiteWithUser) => {
   const aliases = config.siteAliases || [];
   return aliases.some((alias) =>
-    `/@${username}/${site}`.startsWith(alias.origin),
+    `/@${site.user!.gh_username}/${site}`.startsWith(alias.origin),
   );
 };

@@ -2,7 +2,7 @@
 import { useModal } from "@/components/modal/provider";
 import RequestDataModal from "@/components/modal/request-data";
 
-export function DataRequestBanner() {
+function DataRequestBanner() {
   const modal = useModal();
 
   return (
@@ -25,3 +25,5 @@ export function DataRequestBanner() {
     </div>
   );
 }
+
+export default DataRequestBanner;
