@@ -416,7 +416,7 @@ export const syncSite = inngest.createFunction(
         });
 
         if (fileMetadata?.metadata) {
-          if (!fileMetadata.metadata?.isDraft)
+          if (fileMetadata.metadata?.publish !== false)
             filesMetadata[fileMetadata.metadata._url] = fileMetadata.metadata;
           else delete filesMetadata[fileMetadata.metadata._url];
         }

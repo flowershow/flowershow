@@ -4,7 +4,7 @@ interface PageMetadataBase {
   _url: string; // url at which the file is available on the site
   _path: string; // path to the file in the repository
   _pagetype: "dataset" | "story";
-  isDraft: boolean;
+  publish: boolean;
   // _tags: string[];
   // _tasks: string[];
 }

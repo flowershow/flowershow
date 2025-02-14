@@ -16,7 +16,7 @@ test.describe("Check if content is visible based on contentInclude/contentExclud
     await expect(heading).toHaveText("404");
   });
 
-  test("Content with isDraft: true is not shown", async ({ page }) => {
+  test("Content with publish: false is not shown", async ({ page }) => {
     await page.goto(testSite + `/blog/draft-article`);
     const heading = page.locator("h1");
     await expect(heading).toHaveText("404");

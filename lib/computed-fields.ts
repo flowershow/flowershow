@@ -28,6 +28,10 @@ export const computeMetadata = async ({
     frontMatter.title ||
     _datapackage?.title ||
     (await extractTitle(source)) ||
+    path
+      .split("/")
+      .pop()
+      ?.replace(/\.(mdx|md)$/, "") ||
     "";
 
   const description =
