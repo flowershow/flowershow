@@ -51,6 +51,7 @@ export interface AppNavConfig extends NavConfig {
 }
 
 export interface AppConfig extends SiteConfig {
+  product: "flowershow" | "datahub";
   logo: string;
   favicon: string;
   thumbnail: string;

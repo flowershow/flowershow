@@ -18,6 +18,7 @@ const typedSocialLinks =
 // Construct the fully typed config
 const typedConfig: AppConfig = {
   ...config,
+  product: config.product as "flowershow" | "datahub",
   nav: {
     ...(config.nav || {}),
     social: typedSocialLinks,
