@@ -10,9 +10,10 @@ test.describe("Dashboard", () => {
     const page = await context.newPage();
 
     // Create a new site and store its ID
-    await page.goto("/sites");
-    await page.getByRole("button", { name: /Create New Site/i }).click();
-    await expect(page.getByTestId("create-site-modal")).toBeVisible();
+    await page.goto("/");
+    await page.getByRole("link", { name: /Publish your Markdown/i }).click();
+    await expect(page).toHaveURL(/\/new/);
+    await expect(page.getByTestId("create-site-form")).toBeVisible();
     await page.getByLabel("Repository").selectOption(githubRepo);
     await page.getByRole("button", { name: /Create Site/i }).click();
 
@@ -49,18 +50,6 @@ test.describe("Dashboard", () => {
         throw error; // Re-throw to ensure test failure if cleanup fails
       }
     }
-  });
-
-  test("should display user sites", async ({ page }) => {
-    await page.goto("/sites");
-
-    // Check if we're on the dashboard page
-    await expect(
-      page.getByRole("heading", { name: "All Sites" }),
-    ).toBeVisible();
-
-    // Verify dashboard navigation is present
-    await expect(page.getByTestId("dashboard-sidebar")).toBeVisible();
   });
 
   test("should validate and update site name", async ({ page }) => {

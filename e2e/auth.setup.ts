@@ -48,7 +48,7 @@ setup("authenticate", async ({ page }) => {
         );
         // Wait for successful redirect back to our app
         console.log("Waiting for manual login completion and redirect...");
-        await page.waitForURL("**/sites", { timeout: 120000 }); // 2 minute timeout for manual login
+        await page.waitForURL("/", { timeout: 120000 }); // 2 minute timeout for manual login
         console.log("Manual login completed successfully");
       } else {
         // Automated login mode - we know both username and password exist here
@@ -76,7 +76,7 @@ setup("authenticate", async ({ page }) => {
 
         // Wait for redirect back to our app
         console.log("Waiting for redirect to dashboard...");
-        await page.waitForURL("**/sites");
+        await page.waitForURL("/");
         console.log("Reached dashboard:", page.url());
       }
 

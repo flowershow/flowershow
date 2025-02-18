@@ -52,9 +52,6 @@ export default async function middleware(req: NextRequest) {
     if (session && path == "/login") {
       return NextResponse.redirect(new URL("/", req.url));
     }
-    if (path === "/") {
-      return NextResponse.redirect(new URL("/sites", req.url));
-    }
     return NextResponse.rewrite(new URL(`/cloud${path}`, req.url));
   }
 
