@@ -117,21 +117,23 @@ const Nav = ({ logo, url = "/", title, links, social, cta }: Props) => {
             </div>
           )}
 
-          <div className="-mr-2 flex items-center md:hidden">
-            {/* Mobile menu button */}
-            <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:text-gray-500 focus:outline-none">
-              <span className="absolute -inset-0.5" />
-              <span className="sr-only">Open main menu</span>
-              <MenuIcon
-                aria-hidden="true"
-                className="size-6 block group-data-[open]:hidden"
-              />
-              <XIcon
-                aria-hidden="true"
-                className="size-6 hidden group-data-[open]:block"
-              />
-            </DisclosureButton>
-          </div>
+          {(links?.length || social?.length) && (
+            <div className="-mr-2 flex items-center md:hidden">
+              {/* Mobile menu button */}
+              <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:text-gray-500 focus:outline-none">
+                <span className="absolute -inset-0.5" />
+                <span className="sr-only">Open main menu</span>
+                <MenuIcon
+                  aria-hidden="true"
+                  className="size-6 block group-data-[open]:hidden"
+                />
+                <XIcon
+                  aria-hidden="true"
+                  className="size-6 hidden group-data-[open]:block"
+                />
+              </DisclosureButton>
+            </div>
+          )}
         </div>
       </div>
 

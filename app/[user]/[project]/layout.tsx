@@ -237,7 +237,7 @@ function getNavConfig({
     navConfig.url = "/";
     navConfig.title = (config.nav as any).title; // TODO fix type
     navConfig.links = config.nav.links;
-    navConfig.social = (config.nav.social || []) as NavProps["social"];
+    navConfig.social = config.nav.social;
     navConfig.cta = config.nav.cta;
   } else {
     const customLogo = siteConfig?.nav?.logo ?? siteConfig?.logo;
@@ -257,26 +257,31 @@ function getNavConfig({
 
     navConfig.title = siteConfig?.nav?.title;
 
-    navConfig.links = (siteConfig?.nav?.links || []).map((link: any) => ({
-      ...link,
-      href: resolveLink({
-        link: link.href,
-        filePath: "config.json",
-        prefixPath: site.customDomain
-          ? ""
-          : `/@${site.user?.gh_username}/${site.projectName}`,
-      }),
-    }));
-    navConfig.social = (siteConfig?.nav?.social || []).map((link: any) => ({
-      ...link,
-      href: resolveLink({
-        link: link.href,
-        filePath: "config.json",
-        prefixPath: site.customDomain
-          ? ""
-          : `/@${site.user?.gh_username}/${site.projectName}`,
-      }),
-    }));
+    if (siteConfig?.nav?.links) {
+      navConfig.links = siteConfig?.nav?.links.map((link: any) => ({
+        ...link,
+        href: resolveLink({
+          link: link.href,
+          filePath: "config.json",
+          prefixPath: site.customDomain
+            ? ""
+            : `/@${site.user?.gh_username}/${site.projectName}`,
+        }),
+      }));
+    }
+
+    if (siteConfig?.nav?.social) {
+      navConfig.social = siteConfig?.nav?.social.map((link: any) => ({
+        ...link,
+        href: resolveLink({
+          link: link.href,
+          filePath: "config.json",
+          prefixPath: site.customDomain
+            ? ""
+            : `/@${site.user?.gh_username}/${site.projectName}`,
+        }),
+      }));
+    }
   }
 
   return navConfig;
