@@ -23,7 +23,7 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
             site_id: res?.id,
           });
         }
-        router.push("/sites");
+        router.push("/");
         router.refresh();
         toast.success(`Successfully deleted site!`);
       },
