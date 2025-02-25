@@ -16,17 +16,14 @@ export const env = createEnv({
     ),
     POSTGRES_PRISMA_URL: z.string().url(),
     POSTGRES_URL_NON_POOLING: z.string().url(),
-    // TURSO_AUTH_TOKEN: z.string(),
-    // TURSO_DATABASE_URL: z.string().url(),
     NEXTAUTH_SECRET:
       process.env.NODE_ENV === "production"
         ? z.string()
         : z.string().optional(),
-    // Add ` on ID and SECRET if you want to make sure they're not empty
     AUTH_GITHUB_SECRET: z.string(),
-    AUTH_BEARER_TOKEN: z.string().optional(), // TODO temp set to optional as not set directly on Vercel
-    PROJECT_ID_VERCEL: z.string().optional(), // TODO temp set to optional as not set directly on Vercel
-    TEAM_ID_VERCEL: z.string().optional(), // TODO temp set to optional as not set directly on Vercel
+    AUTH_BEARER_TOKEN: z.string().optional(),
+    PROJECT_ID_VERCEL: z.string().optional(),
+    TEAM_ID_VERCEL: z.string().optional(),
     VERCEL_URL: z.string().optional(),
     PORT: z.string().optional(),
     S3_ENDPOINT: z.string(),
@@ -46,10 +43,10 @@ export const env = createEnv({
     GA_SECRET: z.string(),
     BREVO_API_URL: z.string(),
     BREVO_API_KEY: z.string(),
-    BREVO_CONTACT_LISTID: z.number(),
+    BREVO_CONTACT_LISTID: z.string().optional(),
+    BREVO_WELCOME_TEMPLATE_ID: z.string().optional(),
     TURNSTILE_SECRET_KEY: z.string(),
     INNGEST_APP_ID: z.string(),
-    // E2E test variables
     E2E_GH_USERNAME: z.string().optional(),
     E2E_GH_PASSWORD: z.string().optional(),
   },
@@ -63,11 +60,9 @@ export const env = createEnv({
     NEXT_PUBLIC_AUTH_GITHUB_ID: z.string(),
     NEXT_PUBLIC_ROOT_DOMAIN: z.string(),
     NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX: z.string(),
-    // Vercel system env var
-    // https://vercel.com/docs/projects/environment-variables/system-environment-variables
     NEXT_PUBLIC_VERCEL_ENV: z.string().optional(),
     NEXT_PUBLIC_DNS_DOMAIN: z.string(),
-    NEXT_PUBLIC_S3_BUCKET_DOMAIN: z.string(), // Public domain where objects are accessible
+    NEXT_PUBLIC_S3_BUCKET_DOMAIN: z.string(),
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string(),
   },
 
@@ -107,22 +102,14 @@ export const env = createEnv({
     GA_SECRET: process.env.GA_SECRET,
     BREVO_API_URL: process.env.BREVO_API_URL,
     BREVO_API_KEY: process.env.BREVO_API_KEY,
-    BREVO_CONTACT_LISTID: Number(process.env.BREVO_CONTACT_LISTID),
+    BREVO_CONTACT_LISTID: process.env.BREVO_CONTACT_LISTID,
+    BREVO_WELCOME_TEMPLATE_ID: process.env.BREVO_WELCOME_TEMPLATE_ID,
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
     TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
     INNGEST_APP_ID: process.env.INNGEST_APP_ID,
-    // E2E test variables
     E2E_GH_USERNAME: process.env.E2E_GH_USERNAME,
     E2E_GH_PASSWORD: process.env.E2E_GH_PASSWORD,
   },
-  /**
-   * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially
-   * useful for Docker builds.
-   */
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
-  /**
-   * Makes it so that empty strings are treated as undefined.
-   * `SOME_VAR: z.string()` and `SOME_VAR=''` will throw an error.
-   */
   emptyStringAsUndefined: true,
 });
