@@ -114,8 +114,8 @@ jobs:
 
       - name: Start Inngest
         run: |
-          npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest &
-          sleep 5
+          npx -y inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest &
+          sleep 7
 
       - name: Run Playwright tests
         run: npx playwright test
