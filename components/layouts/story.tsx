@@ -1,79 +1,52 @@
 import { StoryPageMetadata } from "@/server/api/types";
+import { SocialShare } from "../social-share";
 
 interface Props extends React.PropsWithChildren {
   metadata: StoryPageMetadata;
 }
 
-/* interface Author {
- *   name: string;
- *   avatar: string;
- *   urlPath: string;
- * } */
-
-// copied over from https://github.com/datopian/portaljs/blob/main/packages/core/src/ui/BlogLayout/BlogLayout.tsx
 export const DataStoryLayout: React.FC<Props> = ({ children, metadata }) => {
-  const { title, description, date, modified, authors } = metadata;
+  const { title, description, date } = metadata;
+
+  const formattedDate = date ? formatDate(date) : null;
 
   return (
-    <article className="prose-headings:font-headings prose max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words ">
-      <header data-testid="story-header" className="flex flex-col gap-y-5">
-        {title && <h1 className="!mb-2">{title}</h1>}
-
-        <p className="!my-0 text-xl font-light text-primary/75 md:text-2xl">
-          {description}
-        </p>
-        {(authors || date || modified) && (
-          <div className="flex items-center gap-x-3 border-b border-t border-primary/10 py-2 text-sm text-primary/75">
-            {authors?.length && (
-              <div
-                data-testid="story-author"
-                className="flex items-center gap-x-3"
-              >
-                {authors.map((author) => (
-                  <Avatar key={author} name={author} />
-                ))}
-              </div>
-            )}
-            {(modified || date) && (
-              <time dateTime={modified || date}>
-                {formatDate(modified! || date!)}
-              </time>
-            )}
+    <article>
+      <header data-testid="story-header">
+        {date && formattedDate && (
+          <div className="mb-2 font-light text-gray-500">
+            Published{" "}
+            <time dateTime={new Date(date).toISOString()}>{formattedDate}</time>
           </div>
         )}
+
+        {title && (
+          <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight lg:text-5xl">
+            {title}
+          </h1>
+        )}
+
+        {description && (
+          <p className="text-lg font-light text-primary/75 md:text-xl">
+            {description}
+          </p>
+        )}
+
+        <SocialShare title={title || ""} />
       </header>
-      <section>{children}</section>
+      <section className="prose prose-lg mt-12 max-w-none font-body dark:prose-invert lg:prose-xl prose-headings:font-title prose-headings:font-bold prose-headings:tracking-tight prose-a:break-words">
+        {children}
+      </section>
     </article>
   );
 };
 
-interface AvatarProps {
-  name: string;
-  img?: string;
-  href?: string;
-}
+const formatDate = (
+  date: string | undefined,
+  locales = "en-US",
+): string | null => {
+  if (!date) return null;
 
-const Avatar: React.FC<AvatarProps> = ({ name, img, href }) => {
-  const Component = href ? "a" : "div";
-  return (
-    <Component href={href} className="group block flex-shrink-0">
-      <div className="flex items-center space-x-2">
-        {img && (
-          <img
-            className="inline-block h-9 w-9 rounded-full"
-            src={img}
-            alt={name}
-          />
-        )}
-        <span className="text-sm font-medium text-primary dark:text-primary-dark">
-          {name}
-        </span>
-      </div>
-    </Component>
-  );
-};
-
-const formatDate = (date: string, locales = "en-US") => {
   const options: Intl.DateTimeFormatOptions = {
     year: "numeric",
     month: "long",

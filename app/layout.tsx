@@ -10,7 +10,7 @@ import "@/styles/globals.css";
 
 import { getSession } from "@/server/auth";
 import { TRPCReactProvider } from "@/trpc/react";
-import { cal, inter } from "@/styles/fonts";
+import { cal, inter, lora } from "@/styles/fonts";
 import { env } from "@/env.mjs";
 import { Providers } from "./providers";
 import { getConfig } from "@/lib/app-config";
@@ -68,7 +68,14 @@ export default async function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className={clsx(cal.variable, inter.variable, "bg-background")}>
+      <body
+        className={clsx(
+          cal.variable,
+          inter.variable,
+          lora.variable,
+          "bg-background",
+        )}
+      >
         <TRPCReactProvider headers={headers()}>
           <Providers>
             {children}

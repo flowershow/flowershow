@@ -5,7 +5,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 
 import Nav, { type Props as NavProps } from "@/components/nav";
 import Footer from "@/components/footer";
-import TableOfContentsSidebar from "@/components/table-of-content";
+import TableOfContents from "@/components/table-of-contents";
 import Sidebar from "@/components/sidebar";
 import BuiltWithFloatingButton from "@/components/built-with-floating-button";
 import DataRequestBanner from "@/components/data-request-banner";
@@ -19,6 +19,8 @@ import { env } from "@/env.mjs";
 import { isInternalSite } from "@/lib/resolve-site-alias";
 import { SiteConfig } from "@/components/types";
 import { getConfig } from "@/lib/app-config";
+import { BellIcon } from "lucide-react";
+import clsx from "clsx";
 
 const config = getConfig();
 
@@ -129,7 +131,6 @@ export default async function SiteLayout({
     siteConfig,
   });
   const showSidebar = siteConfig?.showSidebar ?? false;
-  const showToc = siteConfig?.showToc ?? true;
   const showDataRequestBanner = isFeatureEnabled(Feature.DataRequest, site);
 
   return (
@@ -137,11 +138,8 @@ export default async function SiteLayout({
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
       {siteConfig?.analytics && <GoogleAnalytics gaId={siteConfig.analytics} />}
 
-      <div className="min-h-screen">
-        {showSidebar ? (
-          // TODO add support for other Nav component props
-          <Sidebar title={title} logo={logo} url={url} items={treeItems} />
-        ) : (
+      <div className="min-h-full">
+        {!showSidebar && (
           <Nav
             title={title}
             logo={logo}
@@ -151,44 +149,37 @@ export default async function SiteLayout({
             cta={cta}
           />
         )}
-        <main
-          className={cn(
-            showSidebar ? "lg:pl-72" : "mx-auto flex max-w-8xl sm:px-4 md:px-8",
+
+        <div
+          className={clsx(
+            "mx-auto flex w-full items-start gap-x-8 px-4 sm:px-6 lg:px-8",
+            showSidebar ? "max-w-[92rem]" : "max-w-6xl",
           )}
         >
-          <div
-            className={cn(
-              "page-content flex min-h-screen w-full flex-col sm:px-4 lg:px-12",
-              showSidebar
-                ? "xl:px-12 xl:pr-[235px] 2xl:pr-[340px]"
-                : "xl:px-12",
-            )}
-          >
-            <div className="flex-grow">{children}</div>
-
-            <div
-              className={cn("mx-auto w-full", showDataRequestBanner && "mb-12")}
-            >
-              <Footer />
-            </div>
-          </div>
-          {showToc && (
-            <aside
-              className={cn(
-                "inset-y-0 right-0 hidden overflow-y-auto px-4 sm:px-2 xl:block",
-                showSidebar
-                  ? "fixed pb-[80px] pt-8 lg:px-8 xl:w-[235px] 2xl:w-[340px]"
-                  : "sticky top-[100px] h-[calc(100vh-200px)] w-[200px] xl:px-0",
-              )}
-            >
-              <TableOfContentsSidebar className="pt-4" />
-            </aside>
+          {showSidebar && (
+            <Sidebar title={title} logo={logo} url={url} items={treeItems} />
           )}
 
+          <main className="flex-1 px-2 pt-12">
+            {children}
+            <div className={cn(showDataRequestBanner && "mb-12")}>
+              <Footer />
+            </div>
+          </main>
+
+          <aside
+            className={clsx(
+              "w-58 sticky hidden shrink-0",
+              showSidebar ? "top-12 xl:block" : "top-28 lg:block",
+            )}
+          >
+            <TableOfContents />
+          </aside>
+
           {!showDataRequestBanner && <BuiltWithFloatingButton />}
-        </main>
+          {showDataRequestBanner && <DataRequestBanner />}
+        </div>
       </div>
-      {showDataRequestBanner && <DataRequestBanner />}
     </>
   );
 }

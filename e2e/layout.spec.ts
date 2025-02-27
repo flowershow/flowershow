@@ -85,13 +85,6 @@ test.describe("Site layout and configuration", () => {
   test("applies layout configuration", async ({ page }) => {
     await page.goto(testSite);
 
-    // Check Table of Contents visibility (showToc: true by default)
-    const toc = page.getByTestId("toc");
-    await expect(toc).toBeVisible();
-    await expect(toc).toContainText("On this page");
-    await expect(toc.locator("li").nth(0).locator("li")).toHaveCount(0);
-    await expect(toc.locator("li").nth(1).locator("li")).toHaveCount(1);
-
     // Check sidebar is not visible by default (showSidebar: false)
     const sidebar = page.getByTestId("sidebar");
     await expect(sidebar).not.toBeVisible();

@@ -36,13 +36,14 @@ export default function Sidebar({ logo, url = "/", title, items }: Props) {
 
   return (
     <>
+      {/* Mobile navigation */}
       <Transition show={sidebarOpen} as={Fragment} data-testid="sidebar">
         <Dialog onClose={setSidebarOpen} className="relative z-50 lg:hidden">
           <TransitionChild
             as={Fragment}
             enter="transition-opacity duration-300 ease-linear"
           >
-            <DialogBackdrop className="fixed inset-0 z-40 bg-gray-900/50 data-[closed]:opacity-0" />
+            <DialogBackdrop className="fixed inset-0 z-10 bg-gray-900/50 data-[closed]:opacity-0" />
           </TransitionChild>
           <TransitionChild
             as={Fragment}
@@ -53,8 +54,8 @@ export default function Sidebar({ logo, url = "/", title, items }: Props) {
             leaveFrom="translate-x-0"
             leaveTo="-translate-x-full"
           >
-            <div className="fixed inset-0 flex">
-              <DialogPanel className="relative mr-16 flex w-full max-w-xs flex-1 transform transition duration-300 ease-in-out data-[closed]:-translate-x-full">
+            <div className="fixed inset-0 z-50 flex">
+              <DialogPanel className="relative mr-16 flex w-64 transform transition duration-300 ease-in-out data-[closed]:-translate-x-full">
                 <div className="absolute left-full top-0 flex w-16 justify-center pt-5 duration-300 ease-in-out data-[closed]:opacity-0">
                   <button
                     type="button"
@@ -76,12 +77,7 @@ export default function Sidebar({ logo, url = "/", title, items }: Props) {
           </TransitionChild>
         </Dialog>
       </Transition>
-      <div
-        className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-72 lg:flex-col"
-        data-testid="sidebar"
-      >
-        <SidebarNavigation title={title} url={url} logo={logo} items={items} />
-      </div>
+
       <div className="fixed right-0 top-0 z-30 flex items-center justify-end gap-x-6 px-4 pt-4 sm:px-6 lg:hidden">
         <button
           type="button"
@@ -92,6 +88,14 @@ export default function Sidebar({ logo, url = "/", title, items }: Props) {
           <MenuIcon aria-hidden="true" className="size-6" />
         </button>
       </div>
+
+      {/* Desktop navigation */}
+      <aside
+        data-testid="sidebar"
+        className="sticky top-12 hidden w-64 shrink-0 lg:block"
+      >
+        <SidebarNavigation title={title} url={url} logo={logo} items={items} />
+      </aside>
     </>
   );
 }
@@ -99,14 +103,15 @@ export default function Sidebar({ logo, url = "/", title, items }: Props) {
 const SidebarNavigation = ({ logo, url = "/", title, items }: Props) => {
   const pathname = usePathname();
   return (
-    <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 bg-white px-6">
-      <div className="mt-12 flex  shrink-0 items-center">
-        <Link
-          href={url}
-          className="flex items-center space-x-2 text-xl font-extrabold text-slate-900 dark:text-white"
-        >
-          <Image alt="Logo" src={logo} width={24} height={24} />
-          {title && <span>{title}</span>}
+    <div className="flex flex-col gap-y-5 overflow-y-auto px-2">
+      <div className="shrink-0">
+        <Link href={url} className="flex flex-col items-start space-y-2">
+          <Image alt="Logo" src={logo} width={40} height={40} />
+          {title && (
+            <span className="font-body text-[1.5rem] text-slate-900">
+              {title}
+            </span>
+          )}
         </Link>
       </div>
       <nav className="flex flex-1 flex-col">

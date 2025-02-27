@@ -1,5 +1,8 @@
-const { fontFamily } = require("tailwindcss/defaultTheme");
-const colors = require("tailwindcss/colors");
+import { fontFamily } from "tailwindcss/defaultTheme";
+import colors from "tailwindcss/colors";
+import typography from "@tailwindcss/typography";
+import forms from "@tailwindcss/forms";
+import animate from "tailwindcss-animate";
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -15,9 +18,6 @@ module.exports = {
   ],
   theme: {
     extend: {
-      backgroundImage: {
-        'custom-radial': 'radial-gradient(circle, hsla(27, 96%, 61%, 1) 0%, hsla(42, 92%, 53%, 1) 100%)',
-      },
       colors: {
         // TODO can we use just tremor styles below
         background: {
@@ -130,29 +130,16 @@ module.exports = {
         30: "7.5rem",
       },
       fontFamily: {
-        default: ["var(--font-inter)", ...fontFamily.sans],
-        cal: ["var(--font-cal)", ...fontFamily.sans],
         title: ["var(--font-title)", ...fontFamily.sans],
+        body: ["var(--font-body)", ...fontFamily.serif],
+        cal: ["var(--font-cal)", ...fontFamily.sans],
         mono: ["Consolas", ...fontFamily.mono],
       },
       typography: {
         DEFAULT: {
           css: {
-            pre: {
-              backgroundColor: "#fafafa",
-            },
             "blockquote p:first-of-type::before": { content: "none" },
             "blockquote p:first-of-type::after": { content: "none" },
-          },
-        },
-        lg: {
-          css: {
-            h1: {
-              fontSize: "2.25em",
-              marginTop: "0",
-              marginBottom: "0.88em",
-              lineHeight: 1.2,
-            },
           },
         },
       },
@@ -203,9 +190,5 @@ module.exports = {
         /^(fill-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-(?:50|100|200|300|400|500|600|700|800|900|950))$/,
     },
   ],
-  plugins: [
-    require("@tailwindcss/typography"),
-    require("@tailwindcss/forms"),
-    require("tailwindcss-animate"),
-  ],
+  plugins: [typography, forms, animate],
 };

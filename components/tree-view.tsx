@@ -36,7 +36,7 @@ export default function TreeView({
           className={clsx(
             "py-1",
             level > 0 &&
-              "hover:text-default border-l-[1px] border-primary/30 hover:border-secondary",
+              "border-l-[1px] border-primary/30 hover:border-secondary",
           )}
         >
           {!item.children ? (
@@ -44,9 +44,9 @@ export default function TreeView({
               href={item.path!}
               className={clsx(
                 "pl-3",
-                "block cursor-pointer text-sm text-gray-700",
+                "block cursor-pointer text-sm font-light text-gray-500",
                 isCurrent(item.path!) &&
-                  "border-secondary font-medium text-secondary",
+                  "border-secondary font-light text-secondary",
               )}
             >
               {item.label}
@@ -57,7 +57,7 @@ export default function TreeView({
                 <>
                   <Disclosure.Button
                     className={clsx(
-                      "flex w-full items-center text-left text-sm font-semibold text-primary",
+                      "flex w-full items-center text-left text-sm font-normal text-primary",
                     )}
                   >
                     <ChevronRightIcon

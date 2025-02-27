@@ -33,7 +33,6 @@ export interface SiteConfig {
   contentInclude?: string[];
   contentExclude?: string[];
   showSidebar?: boolean;
-  showToc?: boolean;
   showEditLink?: boolean;
 }
 

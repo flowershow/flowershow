@@ -56,7 +56,7 @@ const Nav = ({ logo, url = "/", title, links, social, cta }: Props) => {
         isScrolled && "shadow-sm",
       )}
     >
-      <div className="mx-auto max-w-7xl px-4 text-sm sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-8xl px-4 text-sm sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between">
           <div className="flex">
             <Link
