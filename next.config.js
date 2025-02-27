@@ -17,11 +17,6 @@ module.exports = {
     },
   },
   images: {
-    remotePatterns: [
-      { hostname: "*.datahub.io" },
-      { hostname: "*.flowershow.app" },
-      { hostname: "avatars.githubusercontent.com" },
-      { hostname: "localhost" },
-    ],
+    remotePatterns: [{ hostname: "*" }],
   },
 };
