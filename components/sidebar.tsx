@@ -55,7 +55,7 @@ export default function Sidebar({ logo, url = "/", title, items }: Props) {
             leaveTo="-translate-x-full"
           >
             <div className="fixed inset-0 z-50 flex">
-              <DialogPanel className="relative mr-16 flex w-64 transform transition duration-300 ease-in-out data-[closed]:-translate-x-full">
+              <DialogPanel className="w-84 relative mr-16 flex transform bg-background px-8 pt-12 transition duration-300 ease-in-out data-[closed]:-translate-x-full">
                 <div className="absolute left-full top-0 flex w-16 justify-center pt-5 duration-300 ease-in-out data-[closed]:opacity-0">
                   <button
                     type="button"
