@@ -124,7 +124,7 @@ export const mdxComponentsFactory = ({
 
       if (href.startsWith("mailto:")) {
         return (
-          <a href={href} {...rest}>
+          <a className="break-words" href={href} {...rest}>
             {children}
           </a>
         );

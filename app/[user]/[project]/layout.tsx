@@ -152,8 +152,8 @@ export default async function SiteLayout({
 
         <div
           className={clsx(
-            "mx-auto flex w-full items-start gap-x-8 px-4 sm:px-6 lg:px-8",
-            showSidebar ? "max-w-[92rem]" : "max-w-6xl",
+            "mx-auto flex items-start gap-x-8 px-4 sm:px-6 lg:px-8",
+            showSidebar ? "max-w-[92rem]" : "max-w-7xl",
           )}
         >
           {showSidebar && (
@@ -169,7 +169,7 @@ export default async function SiteLayout({
 
           <aside
             className={clsx(
-              "w-58 sticky hidden shrink-0",
+              "sticky hidden w-56 shrink-0",
               showSidebar ? "top-12 xl:block" : "top-28 lg:block",
             )}
           >
