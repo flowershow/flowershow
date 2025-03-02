@@ -122,7 +122,7 @@ export default async function SiteLayout({
         <main>{children}</main>
 
         <div className="hidden xl:block">
-          <aside className="sticky top-[8rem]">
+          <aside className="sticky top-[8rem] pl-4">
             <TableOfContents />
           </aside>
         </div>

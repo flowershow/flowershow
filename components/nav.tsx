@@ -83,7 +83,7 @@ const Nav = ({
                 {links && (
                   <div
                     data-testid="navbar-links"
-                    className="ml-6 hidden space-x-8 text-[0.95rem] font-medium tracking-tight md:flex"
+                    className="ml-6 hidden space-x-8 text-[0.95rem] font-medium tracking-tight lg:flex"
                   >
                     {links.map((link) => (
                       <a
@@ -97,7 +97,7 @@ const Nav = ({
                   </div>
                 )}
               </div>
-              <div className="hidden md:flex md:items-center">
+              <div className="hidden lg:flex lg:items-center">
                 {(social || cta) && (
                   <div
                     data-testid="navbar-socials"
@@ -133,7 +133,7 @@ const Nav = ({
               </div>
 
               {(links?.length || social?.length) && (
-                <div className="-mr-2 flex items-center md:hidden">
+                <div className="-mr-2 flex items-center lg:hidden">
                   {/* Mobile menu button */}
                   <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-primary-muted hover:text-primary focus:outline-none">
                     <span className="absolute -inset-0.5" />
@@ -155,7 +155,7 @@ const Nav = ({
           <DisclosurePanel
             as="nav"
             transition
-            className="block h-[calc(100vh-4rem)] overflow-scroll overscroll-none border-b border-primary-faint md:hidden"
+            className="block h-[calc(100vh-4rem)] overflow-scroll overscroll-none border-b border-primary-faint lg:hidden"
           >
             {links && (
               <div className="space-y-1 py-3 font-medium">
