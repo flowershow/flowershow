@@ -1,6 +1,6 @@
 import { PageMetadata } from "@/server/api/types";
 import type { GitHubAPIRepoTree, GitHubAPIRepoTreeItem } from "./github";
-import type { TreeViewItem } from "@/components/tree-view";
+import type { TreeViewItem } from "@/components/site-map";
 import { customEncodeUrl } from "./url-encoder";
 
 export type NestedRepoTree = TreeViewItem[];

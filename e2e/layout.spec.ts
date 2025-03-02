@@ -89,15 +89,6 @@ test.describe("Site layout and configuration", () => {
     const sidebar = page.getByTestId("sidebar");
     await expect(sidebar).not.toBeVisible();
 
-    // Verify main content layout classes when sidebar is disabled
-    const main = page.locator("main");
-    await expect(main).toHaveClass(/mx-auto flex max-w-8xl/);
-    await expect(main).toHaveClass(/sm:px-4 md:px-8/);
-
-    const content = main.locator(".page-content");
-    await expect(content).toHaveClass(/flex min-h-screen w-full flex-col/);
-    await expect(content).toHaveClass(/sm:px-4 lg:px-12 xl:px-12/);
-
     // Check custom CSS if present
     const customStyles = page.locator("style[data-custom-css]");
     if ((await customStyles.count()) > 0) {

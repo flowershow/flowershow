@@ -11,6 +11,7 @@ import type { SiteWithUser } from "@/types";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 import UrlNormalizer from "./url-normalizer";
 import { getConfig } from "@/lib/app-config";
+import { resolveLink } from "@/lib/resolve-link";
 
 const config = getConfig();
 
@@ -67,16 +68,31 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
 
   const { title, description } = pageMetadata;
 
+  const rawFilePermalinkBase = customDomain
+    ? `/_r/-`
+    : `/@${gh_username}/${projectName}` + `/_r/-`;
+
+  const resolveDataUrl = (url: string) =>
+    resolveLink({
+      link: url,
+      filePath: pageMetadata!._path,
+      prefixPath: rawFilePermalinkBase,
+    });
+
+  const imageUrl = pageMetadata!.image
+    ? resolveDataUrl(pageMetadata!.image)
+    : config.thumbnail;
+
   return {
-    title,
+    title: title ?? projectName,
     description,
     openGraph: {
-      title,
+      title: title ?? projectName,
       description,
       /* url: author.url, */
       images: [
         {
-          url: config.thumbnail,
+          url: imageUrl,
           width: 1200,
           height: 630,
           alt: "Thumbnail",
@@ -89,7 +105,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
       description,
       images: [
         {
-          url: config.thumbnail,
+          url: imageUrl,
           width: 1200,
           height: 630,
           alt: "Thumbnail",

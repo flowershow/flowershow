@@ -1,7 +1,13 @@
 "use client";
 import Link from "next/link";
 import { Fragment } from "react";
-import { Menu, Transition } from "@headlessui/react";
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  Transition,
+} from "@headlessui/react";
 import { LinkIcon, ShareIcon } from "lucide-react";
 import { transformObjectToParams } from "@/lib/transform-object-to-params";
 import { socialIcons } from "@/components/social-icons";
@@ -77,12 +83,10 @@ export default function SocialShareMenu({
   return (
     <>
       <Menu as="div" className="relative flex text-left">
-        <Menu.Button>
+        <MenuButton>
           <div className="flex items-center gap-1">
             <ShareIcon className="h-5 w-5" aria-hidden="true" />
-            <span className="font-normal text-slate-600 hover:underline">
-              Share
-            </span>
+            <span className="font-normal hover:underline">Share</span>
           </div>
           <Transition
             as={Fragment}
@@ -93,14 +97,14 @@ export default function SocialShareMenu({
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
           >
-            <Menu.Items className="absolute left-0 z-10 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+            <MenuItems className="absolute left-0 z-10 mt-2 w-56 origin-top-right divide-y divide-gray-100 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
               <div className="py-1">
-                <Menu.Item>
+                <MenuItem>
                   {({ active }) => (
                     <button
                       onClick={onCopyClick}
                       className={classNames(
-                        active ? "text-primary" : "text-slate-500",
+                        active && "text-primary-subtle",
                         "group flex items-center px-4 py-2 text-sm",
                       )}
                     >
@@ -108,11 +112,11 @@ export default function SocialShareMenu({
                       Copy link
                     </button>
                   )}
-                </Menu.Item>
+                </MenuItem>
               </div>
               <div className="py-1">
                 {shareOptions.map((option) => (
-                  <Menu.Item key={option.name}>
+                  <MenuItem key={option.name}>
                     {({ active }) => (
                       <Link
                         href={option.href}
@@ -120,7 +124,7 @@ export default function SocialShareMenu({
                         target="_blank"
                         rel="noopener noreferrer"
                         className={classNames(
-                          active ? "text-primary" : "text-slate-500",
+                          active && "text-primary-subtle",
                           "group flex items-center px-4 py-2 text-sm font-normal no-underline",
                         )}
                       >
@@ -131,12 +135,12 @@ export default function SocialShareMenu({
                         {option.name}
                       </Link>
                     )}
-                  </Menu.Item>
+                  </MenuItem>
                 ))}
               </div>
-            </Menu.Items>
+            </MenuItems>
           </Transition>
-        </Menu.Button>
+        </MenuButton>
       </Menu>
     </>
   );

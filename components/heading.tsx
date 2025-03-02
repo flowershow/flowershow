@@ -24,7 +24,7 @@ export function Heading({
       >
         {heading}
       </h2>
-      <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+      <p className="mt-2 text-3xl font-bold tracking-tight text-primary-strong sm:text-4xl">
         {subheading}
       </p>
     </div>

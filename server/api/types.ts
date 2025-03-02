@@ -3,10 +3,23 @@ import { DataPackage } from "@/components/layouts/datapackage-types";
 interface PageMetadataBase {
   _url: string; // url at which the file is available on the site
   _path: string; // path to the file in the repository
-  _pagetype: "dataset" | "story";
+  _pagetype: "wiki" | "blog" | "dataset";
+  title?: string;
+  description?: string;
   publish: boolean;
-  // _tags: string[];
-  // _tasks: string[];
+}
+
+export interface WikiPageMetadata extends PageMetadataBase {
+  _pagetype: "wiki";
+  image?: string;
+}
+
+export interface BlogPageMetadata extends PageMetadataBase {
+  _pagetype: "blog";
+  authors?: string[];
+  image?: string;
+  date?: string;
+  modified?: string;
 }
 
 export interface DatasetPageMetadata extends PageMetadataBase, DataPackage {
@@ -15,16 +28,10 @@ export interface DatasetPageMetadata extends PageMetadataBase, DataPackage {
   description: string;
 }
 
-export interface StoryPageMetadata extends PageMetadataBase {
-  _pagetype: "story";
-  title: string;
-  description: string;
-  date?: string;
-  authors?: string[];
-  modified?: string;
-}
-
-export type PageMetadata = DatasetPageMetadata | StoryPageMetadata;
+export type PageMetadata =
+  | WikiPageMetadata
+  | BlogPageMetadata
+  | DatasetPageMetadata;
 
 export const isDatasetPage = (
   pageMetadata: PageMetadata,

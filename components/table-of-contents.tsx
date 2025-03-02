@@ -6,6 +6,7 @@ import {
 } from "@portaljs/core";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import clsx from "clsx";
 
 function TableOfContentsSection({
   section,
@@ -22,11 +23,11 @@ function TableOfContentsSection({
     <li className="mt-2">
       <a
         href={`#${section.id}`}
-        className={`block text-sm ${
-          level ? "pl-" + (level * 4).toString() : ""
-        } hover:text-gray-700 ${
-          isActive ? "font-medium text-gray-900" : "font-light text-gray-500"
-        }`}
+        className={clsx(
+          "block text-sm hover:font-medium hover:text-primary-strong",
+          level && `pl-${(level * 4).toString()}`,
+          isActive ? "text-primary-emphasis" : "font-light",
+        )}
       >
         {section.title}
       </a>
@@ -67,8 +68,8 @@ export default function TableOfContents({
   }
 
   return (
-    <div data-testid="toc" className="px-2">
-      <h3 className="mb-4 text-xs font-normal uppercase tracking-wider text-gray-500">
+    <div data-testid="toc">
+      <h3 className="mb-4 text-xs font-normal uppercase tracking-wider">
         On this page
       </h3>
       <nav>

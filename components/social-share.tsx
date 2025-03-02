@@ -22,7 +22,7 @@ export const SocialShare = ({ title }: SocialShareProps) => {
 
   return (
     <div className="mt-8 border-t border-gray-200 pt-6">
-      <h3 className="text-xs font-normal uppercase tracking-wider text-gray-500">
+      <h3 className="text-xs font-normal uppercase tracking-wider text-primary-muted">
         SHARE THIS POST
       </h3>
       <div className="mt-4 flex space-x-4">
@@ -32,7 +32,7 @@ export const SocialShare = ({ title }: SocialShareProps) => {
           )}&url=${encodeURIComponent(currentUrl)}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-gray-400 hover:text-gray-500"
+          className="hover:text-primary"
         >
           <TwitterIcon {...iconProps} />
         </a>
@@ -42,7 +42,7 @@ export const SocialShare = ({ title }: SocialShareProps) => {
           )}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-gray-400 hover:text-gray-500"
+          className="hover:text-primary"
         >
           <LinkedInIcon {...iconProps} />
         </a>
@@ -52,7 +52,7 @@ export const SocialShare = ({ title }: SocialShareProps) => {
           )}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-gray-400 hover:text-gray-500"
+          className="hover:text-primary"
         >
           <FacebookIcon {...iconProps} />
         </a>

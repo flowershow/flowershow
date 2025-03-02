@@ -1,18 +1,9 @@
-// import {
-//   SimpleLayout,
-//   DocsLayout,
-//   UnstyledLayout,
-//   BlogLayout,
-// } from "@portaljs/core";
-
 import { DataPackageLayout } from "./datapackage";
-import { DataStoryLayout } from "./story";
+import { BlogLayout } from "./blog";
+import { WikiLayout } from "./wiki";
 
 export default {
-  // simple: SimpleLayout,
-  // docs: DocsLayout,
-  // unstyled: UnstyledLayout,
-  // blog: BlogLayout,
   datapackage: DataPackageLayout,
-  story: DataStoryLayout,
+  blog: BlogLayout,
+  wiki: WikiLayout,
 };

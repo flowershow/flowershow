@@ -10,6 +10,7 @@ export const lora = Lora({
 
 export const inter = Inter({
   variable: "--font-title",
+  weight: ["200", "300", "400", "500", "600"],
   subsets: ["latin"],
 });
 

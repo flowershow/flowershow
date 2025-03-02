@@ -19,14 +19,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // TODO can we use just tremor styles below
         background: {
           DEFAULT: colors.white,
-          dark: colors.slate[900],
         },
         primary: {
-          DEFAULT: colors.gray[700],
-          dark: colors.gray[300],
+          faint: colors.zinc[200],
+          muted: colors.zinc[400],
+          subtle: colors.zinc[500],
+          DEFAULT: colors.zinc[700],
+          emphasis: colors.zinc[800],
+          strong: colors.zinc[900],
         },
         secondary: {
           DEFAULT: colors.orange[400],
@@ -140,6 +142,7 @@ module.exports = {
           css: {
             "blockquote p:first-of-type::before": { content: "none" },
             "blockquote p:first-of-type::after": { content: "none" },
+            fontSize: "1.125em",
           },
         },
       },

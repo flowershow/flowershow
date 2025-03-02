@@ -73,7 +73,7 @@ export default async function RootLayout({
           cal.variable,
           inter.variable,
           lora.variable,
-          "bg-background",
+          "bg-background text-primary",
         )}
       >
         <TRPCReactProvider headers={headers()}>

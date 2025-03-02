@@ -1,6 +1,4 @@
 "use client";
-// TODO move this component to @portajs/core or other shared package
-// Note: exactly the same one is currently used in datahub-io
 import { useEffect, useState } from "react";
 
 import {
@@ -9,7 +7,7 @@ import {
   DisclosurePanel,
 } from "@headlessui/react";
 import clsx from "clsx";
-import { MenuIcon, XIcon } from "lucide-react";
+import { ChevronRightIcon, MenuIcon, XIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -23,17 +21,28 @@ import {
   YouTubeIcon,
 } from "@/components/icons";
 import { NavLink, SocialLink } from "./types";
+import SiteMap, { TreeViewItem } from "./site-map";
+import { usePathname } from "next/navigation";
 
 export interface Props {
   logo: string;
   url?: string;
   title?: string;
   links?: NavLink[];
+  siteMap?: TreeViewItem[];
   social?: SocialLink[];
   cta?: NavLink;
 }
 
-const Nav = ({ logo, url = "/", title, links, social, cta }: Props) => {
+const Nav = ({
+  logo,
+  url = "/",
+  title,
+  links,
+  siteMap,
+  social,
+  cta,
+}: Props) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -48,143 +57,222 @@ const Nav = ({ logo, url = "/", title, links, social, cta }: Props) => {
   }, []);
 
   return (
-    <Disclosure
-      as="nav"
-      data-testid="navbar"
-      className={clsx(
-        "sticky top-0 z-10 bg-background",
-        isScrolled && "shadow-sm",
-      )}
-    >
-      <div className="mx-auto max-w-8xl px-4 text-sm sm:px-6 lg:px-8">
-        <div className="flex h-16 justify-between">
-          <div className="flex">
-            <Link
-              data-testid="navbar-logo-link"
-              href={url}
-              className="flex items-center space-x-2 text-xl font-extrabold text-slate-900 dark:text-white"
-            >
-              <Image alt="Logo" src={logo} width={24} height={24} />
-              {title && <span>{title}</span>}
-            </Link>
+    <Disclosure>
+      {({ open, close }) => (
+        <div
+          data-testid="navbar"
+          className={clsx(
+            "z-10 bg-background font-title text-base font-normal",
+            isScrolled && "shadow-sm",
+            open ? "fixed inset-0 md:sticky" : "sticky top-0",
+          )}
+        >
+          <header
+            className={clsx("mx-auto px-4 text-sm", open && "sticky top-0")}
+          >
+            <div className="flex h-16 justify-between">
+              <div className="flex">
+                <Link
+                  data-testid="navbar-logo-link"
+                  href={url}
+                  className="flex items-center space-x-3 text-lg font-semibold tracking-tight text-primary-strong md:text-xl"
+                >
+                  <Image alt="Logo" src={logo} width={32} height={32} />
+                  {title && <span>{title}</span>}
+                </Link>
+                {links && (
+                  <div
+                    data-testid="navbar-links"
+                    className="ml-6 hidden space-x-8 text-[0.95rem] font-medium tracking-tight md:flex"
+                  >
+                    {links.map((link) => (
+                      <a
+                        key={link.name}
+                        href={link.href}
+                        className="inline-flex items-center px-1"
+                      >
+                        {link.name}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="hidden md:flex md:items-center">
+                {(social || cta) && (
+                  <div
+                    data-testid="navbar-socials"
+                    className="flex items-center sm:ml-6"
+                  >
+                    {social &&
+                      social.map(({ label, href, name }) => {
+                        const Icon = socialIcons[label];
+                        return (
+                          <a
+                            key={label}
+                            href={href}
+                            className="relative p-1 focus:outline-none"
+                          >
+                            <span className="sr-only">{name}</span>
+                            {Icon ? <Icon className="h-6 w-6" /> : name}
+                          </a>
+                        );
+                      })}
+                    {cta && (
+                      <>
+                        <span className="mx-2 h-6 border-r border-zinc-200" />
+                        <a
+                          href={cta.href}
+                          className="relative p-1 focus:outline-none"
+                        >
+                          <span>{cta.name}</span>
+                        </a>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {(links?.length || social?.length) && (
+                <div className="-mr-2 flex items-center md:hidden">
+                  {/* Mobile menu button */}
+                  <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-primary-muted hover:text-primary focus:outline-none">
+                    <span className="absolute -inset-0.5" />
+                    <span className="sr-only">Open main menu</span>
+                    <MenuIcon
+                      aria-hidden="true"
+                      className="size-6 block group-data-[open]:hidden"
+                    />
+                    <XIcon
+                      aria-hidden="true"
+                      className="size-6 hidden group-data-[open]:block"
+                    />
+                  </DisclosureButton>
+                </div>
+              )}
+            </div>
+          </header>
+
+          <DisclosurePanel
+            as="nav"
+            transition
+            className="block h-[calc(100vh-4rem)] overflow-scroll overscroll-none border-b border-primary-faint md:hidden"
+          >
             {links && (
-              <div
-                data-testid="navbar-links"
-                className="hidden sm:ml-6 sm:space-x-8 md:flex"
-              >
+              <div className="space-y-1 py-3 font-medium">
                 {links.map((link) => (
-                  <a
+                  <DisclosureButton
                     key={link.name}
+                    as="a"
                     href={link.href}
-                    className="inline-flex items-center px-1 pt-1 font-medium text-gray-900"
+                    className="block px-4 py-1 hover:font-semibold hover:text-primary-emphasis"
                   >
                     {link.name}
-                  </a>
+                  </DisclosureButton>
                 ))}
               </div>
             )}
-          </div>
-          {(social || cta) && (
-            <div
-              data-testid="navbar-socials"
-              className="hidden sm:ml-6 sm:items-center md:flex"
-            >
-              {social &&
-                social.map(({ label, href, name }) => {
-                  const Icon = socialIcons[label];
-                  return (
-                    <a
-                      key={label}
-                      href={href}
-                      className="relative p-1 text-primary hover:text-gray-500 focus:outline-none"
+            {(cta || social) && (
+              <div className="border-t border-primary-faint py-3 font-medium">
+                <div className="space-y-1 px-4">
+                  {social &&
+                    social.map(({ label, name, href }) => (
+                      <DisclosureButton
+                        key={label}
+                        as="a"
+                        href={href}
+                        className="block flex items-center space-x-2 py-1 hover:font-semibold hover:text-primary-emphasis"
+                      >
+                        <span>{name}</span>
+                      </DisclosureButton>
+                    ))}
+                  {cta && (
+                    <DisclosureButton
+                      as="a"
+                      href={cta.href}
+                      className="block py-1 hover:font-semibold hover:text-primary-emphasis"
                     >
-                      <span className="sr-only">{name}</span>
-                      {Icon ? <Icon className="h-6 w-6" /> : name}
-                    </a>
-                  );
-                })}
-              {cta && (
-                <>
-                  <span className="mx-2 h-6 border-r border-gray-200" />
-                  <a
-                    href={cta.href}
-                    className="relative p-1 text-primary hover:text-gray-500 focus:outline-none"
-                  >
-                    <span>{cta.name}</span>
-                  </a>
-                </>
-              )}
-            </div>
-          )}
-
-          {(links?.length || social?.length) && (
-            <div className="-mr-2 flex items-center md:hidden">
-              {/* Mobile menu button */}
-              <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:text-gray-500 focus:outline-none">
-                <span className="absolute -inset-0.5" />
-                <span className="sr-only">Open main menu</span>
-                <MenuIcon
-                  aria-hidden="true"
-                  className="size-6 block group-data-[open]:hidden"
-                />
-                <XIcon
-                  aria-hidden="true"
-                  className="size-6 hidden group-data-[open]:block"
-                />
-              </DisclosureButton>
-            </div>
-          )}
+                      {cta.name}
+                    </DisclosureButton>
+                  )}
+                </div>
+              </div>
+            )}
+            {siteMap && (
+              <div className="border-t border-primary-faint px-4 py-3 font-light">
+                <TreeView items={siteMap} onLinkClick={close} />
+              </div>
+            )}
+          </DisclosurePanel>
         </div>
-      </div>
-
-      <DisclosurePanel
-        transition
-        className="border-b border-gray-100 transition duration-200 ease-out data-[closed]:-translate-y-6 data-[closed]:opacity-0 md:hidden"
-      >
-        {links && (
-          <div className="space-y-1 pb-3 pt-2">
-            {links.map((link) => (
-              <DisclosureButton
-                key={link.name}
-                as="a"
-                href={link.href}
-                className="block px-4 py-2 text-base font-semibold text-primary hover:text-secondary"
-              >
-                {link.name}
-              </DisclosureButton>
-            ))}
-          </div>
-        )}
-        {(cta || social) && (
-          <div className="border-y border-gray-100 py-3">
-            <div className="space-y-1">
-              {social &&
-                social.map(({ label, name, href }) => (
-                  <DisclosureButton
-                    key={label}
-                    as="a"
-                    href={href}
-                    className="block flex content-center space-x-2 px-4 py-2 text-base font-medium text-primary hover:text-secondary"
-                  >
-                    {name}
-                  </DisclosureButton>
-                ))}
-              {cta && (
-                <DisclosureButton
-                  as="a"
-                  href={cta.href}
-                  className="block px-4 py-2 text-base font-medium text-primary hover:text-secondary"
-                >
-                  {cta.name}
-                </DisclosureButton>
-              )}
-            </div>
-          </div>
-        )}
-      </DisclosurePanel>
+      )}
     </Disclosure>
   );
 };
+
+function TreeView({
+  items,
+  level = 0,
+  onLinkClick,
+}: {
+  items: TreeViewItem[];
+  level?: number;
+  onLinkClick?: () => void;
+}) {
+  const currentPath = usePathname();
+  const isCurrent = (path: string) => currentPath === path;
+  const isCurrentParent = (path: string) => currentPath?.startsWith(path);
+
+  return (
+    <ul className={clsx("space-y-1 py-1", level && "pl-5")}>
+      {items.map((item) => (
+        <li key={item.label} className="py-1">
+          {item.children ? (
+            <Disclosure defaultOpen={isCurrentParent(item.path!)}>
+              {({ open }) => (
+                <>
+                  <DisclosureButton
+                    className={clsx(
+                      "flex w-full items-center text-left hover:font-semibold hover:text-primary-emphasis",
+                      open && "mb-1",
+                    )}
+                  >
+                    <ChevronRightIcon
+                      className={clsx(
+                        "mr-1 h-4 w-4",
+                        open && "rotate-90 transform",
+                      )}
+                    />
+                    <span className="transition">
+                      {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
+                    </span>
+                  </DisclosureButton>
+                  <DisclosurePanel>
+                    <TreeView
+                      items={item.children!}
+                      level={level + 1}
+                      onLinkClick={onLinkClick}
+                    />
+                  </DisclosurePanel>
+                </>
+              )}
+            </Disclosure>
+          ) : (
+            <Link
+              href={item.path!}
+              className={clsx(
+                "transition hover:font-semibold hover:text-primary-emphasis",
+                isCurrent(item.path) && "text-primary-emphasis",
+              )}
+              onClick={onLinkClick}
+            >
+              {item.label}
+            </Link>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 type SocialPlatform =
   | "github"

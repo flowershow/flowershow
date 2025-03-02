@@ -1,95 +1,26 @@
-import { Metadata } from "next";
-import { notFound, redirect } from "next/navigation";
 import { ReactNode } from "react";
-import { GoogleAnalytics } from "@next/third-parties/google";
-
-import Nav, { type Props as NavProps } from "@/components/nav";
-import Footer from "@/components/footer";
-import TableOfContents from "@/components/table-of-contents";
-import Sidebar from "@/components/sidebar";
-import BuiltWithFloatingButton from "@/components/built-with-floating-button";
-import DataRequestBanner from "@/components/data-request-banner";
-
-import { resolveLink } from "@/lib/resolve-link";
-import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
-import { cn } from "@/lib/utils";
-import type { SiteWithUser } from "@/types";
 import { api } from "@/trpc/server";
 import { env } from "@/env.mjs";
-import { isInternalSite } from "@/lib/resolve-site-alias";
-import { SiteConfig } from "@/components/types";
 import { getConfig } from "@/lib/app-config";
-import { BellIcon } from "lucide-react";
+import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
+import { SiteWithUser } from "@/types";
+import { notFound, redirect } from "next/navigation";
+import { SiteConfig } from "@/components/types";
+import { isInternalSite } from "@/lib/resolve-site-alias";
+import { resolveLink } from "@/lib/resolve-link";
+import Nav, { type Props as NavProps } from "@/components/nav";
+import SiteMap from "@/components/site-map";
+import Footer from "@/components/footer";
+import BuiltWithFloatingButton from "@/components/built-with-floating-button";
+import DataRequestBanner from "@/components/data-request-banner";
 import clsx from "clsx";
+import TableOfContents from "@/components/table-of-contents";
 
 const config = getConfig();
 
 interface RouteParams {
   user: string;
   project: string;
-}
-
-export async function generateMetadata({
-  params,
-}: {
-  params: RouteParams;
-}): Promise<Metadata | null> {
-  const project = decodeURIComponent(params.project);
-  const user = decodeURIComponent(params.user);
-
-  const site = await getSiteData(user, project);
-
-  // TODO should be saved to db and pulled from there along with the site data
-  const siteConfig = await api.site.getConfig.query({
-    gh_username: site.user!.gh_username!,
-    projectName: site.projectName,
-  });
-
-  const title = siteConfig?.title || site.projectName;
-  const description = siteConfig?.description || "";
-
-  return {
-    title: {
-      template: "%s",
-      default: title,
-    },
-    description,
-    icons: [config.favicon],
-    openGraph: {
-      title,
-      description,
-      type: "website",
-      /* url: author.url, */
-      images: [
-        {
-          url: config.thumbnail,
-          width: 1200,
-          height: 630,
-          alt: "Thumbnail",
-        },
-      ],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [
-        {
-          url: config.thumbnail,
-          width: 1200,
-          height: 630,
-          alt: "Thumbnail",
-        },
-      ],
-      creator: "@datopian",
-    },
-    metadataBase: new URL(
-      env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
-      env.NEXT_PUBLIC_VERCEL_ENV === "preview"
-        ? `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}`
-        : `http://localhost:3000`,
-    ),
-  };
 }
 
 export default async function SiteLayout({
@@ -105,7 +36,7 @@ export default async function SiteLayout({
   const site = await getSiteData(user, project);
   const ghUsername = site.user?.gh_username!;
 
-  const [customCss, siteConfig, treeItems] = await Promise.all([
+  const [customCss, siteConfig, siteMap] = await Promise.all([
     api.site.getCustomStyles
       .query({
         gh_username: ghUsername,
@@ -130,57 +61,83 @@ export default async function SiteLayout({
     site,
     siteConfig,
   });
-  const showSidebar = siteConfig?.showSidebar ?? false;
+  // TODO rename config to showSitemap
+  const showSitemap = siteConfig?.showSidebar ?? false;
+  // const showHero = true; // TODO
   const showDataRequestBanner = isFeatureEnabled(Feature.DataRequest, site);
 
   return (
-    <>
-      {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
-      {siteConfig?.analytics && <GoogleAnalytics gaId={siteConfig.analytics} />}
+    <div className="flex min-h-full flex-col">
+      <Nav
+        logo={logo}
+        url={url}
+        cta={cta}
+        title={title}
+        links={links}
+        social={social}
+        siteMap={siteMap}
+      />
 
-      <div className="min-h-full">
-        {!showSidebar && (
-          <Nav
-            title={title}
-            logo={logo}
-            url={url}
-            links={links}
-            social={social}
-            cta={cta}
-          />
+      {/* <div className="relative isolate bg-gradient-to-r from-yellow-100/10 to-white px-6 pt-14 lg:px-8">
+        <div className="mx-auto max-w-2xl py-32 lg:py-36">
+          <div className="text-center">
+            <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-7xl">
+              Data to enrich your online business
+            </h1>
+            <p className="text-pretty mt-8 text-lg font-medium text-gray-500 sm:text-xl/8">
+              Anim aute id magna aliqua ad ad non deserunt sunt. Qui irure qui
+              lorem cupidatat commodo. Elit sunt amet fugiat veniam occaecat.
+            </p>
+            <div className="mt-10 flex items-center justify-center gap-x-6">
+              <a
+                href="#"
+                className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+              >
+                Get started
+              </a>
+              <a href="#" className="text-sm/6 font-semibold text-gray-900">
+                Learn more <span aria-hidden="true">→</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div> */}
+
+      <div
+        className={clsx(
+          "mx-auto mt-16 grid w-full px-8 sm:px-10 lg:px-12",
+          showSitemap
+            ? "max-w-screen-2xl grid-cols-[minmax(0,1fr)] gap-x-12 lg:grid-cols-[16rem,minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_12rem]"
+            : "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[minmax(0,1fr),12rem]",
+        )}
+      >
+        {showSitemap && (
+          <div className="hidden lg:block">
+            <aside className="sticky top-[8rem] min-h-[85vh] border-r pr-6">
+              <SiteMap items={siteMap} />
+            </aside>
+          </div>
         )}
 
-        <div
-          className={clsx(
-            "mx-auto flex items-start gap-x-8 px-4 sm:px-6 lg:px-8",
-            showSidebar ? "max-w-[92rem]" : "max-w-7xl",
-          )}
-        >
-          {showSidebar && (
-            <Sidebar title={title} logo={logo} url={url} items={treeItems} />
-          )}
+        <main>{children}</main>
 
-          <main className="flex-1 px-2 pt-12">
-            {children}
-            <div className={cn(showDataRequestBanner && "mb-12")}>
-              <Footer />
-            </div>
-          </main>
-
-          <aside
-            className={clsx(
-              "sticky hidden w-56 shrink-0",
-              showSidebar ? "top-12 xl:block" : "top-28 lg:block",
-            )}
-          >
+        <div className="hidden xl:block">
+          <aside className="sticky top-[8rem]">
             <TableOfContents />
           </aside>
-
-          {!showDataRequestBanner && <BuiltWithFloatingButton />}
-          {showDataRequestBanner && <DataRequestBanner />}
         </div>
       </div>
-    </>
+
+      <div className="mx-auto w-full max-w-8xl px-8 sm:px-10 lg:px-12">
+        <Footer />
+      </div>
+
+      {showDataRequestBanner ? (
+        <DataRequestBanner />
+      ) : (
+        <BuiltWithFloatingButton />
+      )}
+    </div>
   );
 }
 

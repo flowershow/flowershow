@@ -163,7 +163,7 @@ export const mdxComponentsFactory = ({
         prefixPath: rawFilePermalinkBase,
       });
 
-      return <img {...props} src={normalizedSrc} />;
+      return <img {...props} className="rounded-md" src={normalizedSrc} />;
     },
     table: (props: React.TableHTMLAttributes<HTMLTableElement>) => (
       <div className="overflow-x-auto">

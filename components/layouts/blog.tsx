@@ -1,11 +1,13 @@
-import { StoryPageMetadata } from "@/server/api/types";
+import { BlogPageMetadata } from "@/server/api/types";
 import { SocialShare } from "../social-share";
+import { SiteWithUser } from "@/types";
 
 interface Props extends React.PropsWithChildren {
-  metadata: StoryPageMetadata;
+  metadata: BlogPageMetadata;
+  siteMetadata: SiteWithUser;
 }
 
-export const DataStoryLayout: React.FC<Props> = ({ children, metadata }) => {
+export const BlogLayout: React.FC<Props> = ({ children, metadata }) => {
   const { title, description, date } = metadata;
 
   const formattedDate = date ? formatDate(date) : null;
@@ -14,7 +16,7 @@ export const DataStoryLayout: React.FC<Props> = ({ children, metadata }) => {
     <article>
       <header data-testid="story-header">
         {date && formattedDate && (
-          <div className="mb-2 font-light text-gray-500">
+          <div className="mb-2 font-light">
             Published{" "}
             <time dateTime={new Date(date).toISOString()}>{formattedDate}</time>
           </div>
@@ -27,7 +29,7 @@ export const DataStoryLayout: React.FC<Props> = ({ children, metadata }) => {
         )}
 
         {description && (
-          <p className="text-lg font-light text-primary/75 md:text-xl">
+          <p className="text-lg font-light text-primary-subtle md:text-xl">
             {description}
           </p>
         )}
