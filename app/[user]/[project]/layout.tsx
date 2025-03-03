@@ -118,7 +118,7 @@ export default async function SiteLayout({
         >
           {showSitemap && (
             <div className="hidden lg:block">
-              <aside className="sticky top-[8rem] min-h-[85vh] border-r pr-6">
+              <aside className="sticky top-[8rem] border-r pr-6">
                 <SiteMap items={siteMap} />
               </aside>
             </div>
