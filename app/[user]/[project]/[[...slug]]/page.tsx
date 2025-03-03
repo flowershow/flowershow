@@ -68,9 +68,17 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
 
   const { title, description } = pageMetadata;
 
+  const protocol =
+    env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
+    env.NEXT_PUBLIC_VERCEL_ENV === "preview"
+      ? "https"
+      : "http";
   const rawFilePermalinkBase = customDomain
-    ? `/_r/-`
-    : `/@${gh_username}/${projectName}` + `/_r/-`;
+    ? `${protocol}://${site.customDomain}/_r/-`
+    : `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${resolveSiteAlias(
+        `/@${gh_username}/${projectName}`,
+        "to",
+      )}/_r/-`;
 
   const resolveDataUrl = (url: string) =>
     resolveLink({
