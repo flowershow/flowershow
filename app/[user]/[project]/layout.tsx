@@ -15,6 +15,7 @@ import BuiltWithFloatingButton from "@/components/built-with-floating-button";
 import DataRequestBanner from "@/components/data-request-banner";
 import clsx from "clsx";
 import TableOfContents from "@/components/table-of-contents";
+import { GoogleAnalytics } from "@next/third-parties/google";
 
 const config = getConfig();
 
@@ -67,77 +68,82 @@ export default async function SiteLayout({
   const showDataRequestBanner = isFeatureEnabled(Feature.DataRequest, site);
 
   return (
-    <div className="flex min-h-full flex-col">
-      <Nav
-        logo={logo}
-        url={url}
-        cta={cta}
-        title={title}
-        links={links}
-        social={social}
-        siteMap={siteMap}
-      />
+    <>
+      {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
+      {siteConfig?.analytics && <GoogleAnalytics gaId={siteConfig.analytics} />}
 
-      {/* <div className="relative isolate bg-gradient-to-r from-yellow-100/10 to-white px-6 pt-14 lg:px-8">
-        <div className="mx-auto max-w-2xl py-32 lg:py-36">
-          <div className="text-center">
-            <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-7xl">
-              Data to enrich your online business
-            </h1>
-            <p className="text-pretty mt-8 text-lg font-medium text-gray-500 sm:text-xl/8">
-              Anim aute id magna aliqua ad ad non deserunt sunt. Qui irure qui
-              lorem cupidatat commodo. Elit sunt amet fugiat veniam occaecat.
-            </p>
-            <div className="mt-10 flex items-center justify-center gap-x-6">
-              <a
-                href="#"
-                className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-              >
-                Get started
-              </a>
-              <a href="#" className="text-sm/6 font-semibold text-gray-900">
-                Learn more <span aria-hidden="true">→</span>
-              </a>
+      <div className="flex min-h-full flex-col">
+        <Nav
+          logo={logo}
+          url={url}
+          cta={cta}
+          title={title}
+          links={links}
+          social={social}
+          siteMap={siteMap}
+        />
+
+        {/* <div className="relative isolate bg-gradient-to-r from-yellow-100/10 to-white px-6 pt-14 lg:px-8">
+          <div className="mx-auto max-w-2xl py-32 lg:py-36">
+            <div className="text-center">
+              <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-7xl">
+                Data to enrich your online business
+              </h1>
+              <p className="text-pretty mt-8 text-lg font-medium text-gray-500 sm:text-xl/8">
+                Anim aute id magna aliqua ad ad non deserunt sunt. Qui irure qui
+                lorem cupidatat commodo. Elit sunt amet fugiat veniam occaecat.
+              </p>
+              <div className="mt-10 flex items-center justify-center gap-x-6">
+                <a
+                  href="#"
+                  className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+                >
+                  Get started
+                </a>
+                <a href="#" className="text-sm/6 font-semibold text-gray-900">
+                  Learn more <span aria-hidden="true">→</span>
+                </a>
+              </div>
             </div>
           </div>
-        </div>
-      </div> */}
+        </div> */}
 
-      <div
-        className={clsx(
-          "mx-auto mt-16 grid w-full px-8 sm:px-10 lg:px-12",
-          showSitemap
-            ? "max-w-screen-2xl grid-cols-[minmax(0,1fr)] gap-x-12 lg:grid-cols-[16rem,minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_12rem]"
-            : "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[minmax(0,1fr),12rem]",
-        )}
-      >
-        {showSitemap && (
-          <div className="hidden lg:block">
-            <aside className="sticky top-[8rem] min-h-[85vh] border-r pr-6">
-              <SiteMap items={siteMap} />
+        <div
+          className={clsx(
+            "mx-auto mt-16 grid w-full px-8 sm:px-10 lg:px-12",
+            showSitemap
+              ? "max-w-screen-2xl grid-cols-[minmax(0,1fr)] gap-x-12 lg:grid-cols-[16rem,minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_12rem]"
+              : "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[minmax(0,1fr),12rem]",
+          )}
+        >
+          {showSitemap && (
+            <div className="hidden lg:block">
+              <aside className="sticky top-[8rem] min-h-[85vh] border-r pr-6">
+                <SiteMap items={siteMap} />
+              </aside>
+            </div>
+          )}
+
+          <main>{children}</main>
+
+          <div className="hidden xl:block">
+            <aside className="sticky top-[8rem] pl-4">
+              <TableOfContents />
             </aside>
           </div>
-        )}
-
-        <main>{children}</main>
-
-        <div className="hidden xl:block">
-          <aside className="sticky top-[8rem] pl-4">
-            <TableOfContents />
-          </aside>
         </div>
-      </div>
 
-      <div className="mx-auto w-full max-w-8xl px-8 sm:px-10 lg:px-12">
-        <Footer />
-      </div>
+        <div className="mx-auto w-full max-w-8xl px-8 sm:px-10 lg:px-12">
+          <Footer />
+        </div>
 
-      {showDataRequestBanner ? (
-        <DataRequestBanner />
-      ) : (
-        <BuiltWithFloatingButton />
-      )}
-    </div>
+        {showDataRequestBanner ? (
+          <DataRequestBanner />
+        ) : (
+          <BuiltWithFloatingButton />
+        )}
+      </div>
+    </>
   );
 }
 
