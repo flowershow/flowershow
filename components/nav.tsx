@@ -75,7 +75,7 @@ const Nav = ({
                 <Link
                   data-testid="navbar-logo-link"
                   href={url}
-                  className="flex items-center space-x-3 text-lg font-semibold tracking-tight text-primary-strong md:text-xl"
+                  className="text-primary-strong flex items-center space-x-3 text-lg font-semibold tracking-tight md:text-xl"
                 >
                   <Image alt="Logo" src={logo} width={32} height={32} />
                   {title && <span>{title}</span>}
@@ -135,7 +135,7 @@ const Nav = ({
               {(links?.length || social?.length) && (
                 <div className="-mr-2 flex items-center lg:hidden">
                   {/* Mobile menu button */}
-                  <DisclosureButton className="group relative inline-flex items-center justify-center rounded-md p-2 text-primary-muted hover:text-primary focus:outline-none">
+                  <DisclosureButton className="text-primary-muted group relative inline-flex items-center justify-center rounded-md p-2 hover:text-primary focus:outline-none">
                     <span className="absolute -inset-0.5" />
                     <span className="sr-only">Open main menu</span>
                     <MenuIcon
@@ -155,7 +155,7 @@ const Nav = ({
           <DisclosurePanel
             as="nav"
             transition
-            className="block h-[calc(100vh-4rem)] overflow-scroll overscroll-none border-b border-primary-faint lg:hidden"
+            className="border-primary-faint block h-[calc(100vh-4rem)] overflow-scroll overscroll-none border-b lg:hidden"
           >
             {links && (
               <div className="space-y-1 py-3 font-medium">
@@ -164,7 +164,7 @@ const Nav = ({
                     key={link.name}
                     as="a"
                     href={link.href}
-                    className="block px-4 py-1 hover:font-semibold hover:text-primary-emphasis"
+                    className="hover:text-primary-emphasis block px-4 py-1 hover:font-semibold"
                   >
                     {link.name}
                   </DisclosureButton>
@@ -172,7 +172,7 @@ const Nav = ({
               </div>
             )}
             {(cta || social) && (
-              <div className="border-t border-primary-faint py-3 font-medium">
+              <div className="border-primary-faint border-t py-3 font-medium">
                 <div className="space-y-1 px-4">
                   {social &&
                     social.map(({ label, name, href }) => (
@@ -180,7 +180,7 @@ const Nav = ({
                         key={label}
                         as="a"
                         href={href}
-                        className="block flex items-center space-x-2 py-1 hover:font-semibold hover:text-primary-emphasis"
+                        className="hover:text-primary-emphasis block flex items-center space-x-2 py-1 hover:font-semibold"
                       >
                         <span>{name}</span>
                       </DisclosureButton>
@@ -189,7 +189,7 @@ const Nav = ({
                     <DisclosureButton
                       as="a"
                       href={cta.href}
-                      className="block py-1 hover:font-semibold hover:text-primary-emphasis"
+                      className="hover:text-primary-emphasis block py-1 hover:font-semibold"
                     >
                       {cta.name}
                     </DisclosureButton>
@@ -198,7 +198,7 @@ const Nav = ({
               </div>
             )}
             {siteMap && (
-              <div className="border-t border-primary-faint px-4 py-3 font-light">
+              <div className="border-primary-faint border-t px-4 py-3 font-light">
                 <TreeView items={siteMap} onLinkClick={close} />
               </div>
             )}
@@ -232,7 +232,7 @@ function TreeView({
                 <>
                   <DisclosureButton
                     className={clsx(
-                      "flex w-full items-center text-left hover:font-semibold hover:text-primary-emphasis",
+                      "hover:text-primary-emphasis flex w-full items-center text-left hover:font-semibold",
                       open && "mb-1",
                     )}
                   >
@@ -260,7 +260,7 @@ function TreeView({
             <Link
               href={item.path!}
               className={clsx(
-                "transition hover:font-semibold hover:text-primary-emphasis",
+                "hover:text-primary-emphasis transition hover:font-semibold",
                 isCurrent(item.path) && "text-primary-emphasis",
               )}
               onClick={onLinkClick}

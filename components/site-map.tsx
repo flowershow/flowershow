@@ -35,7 +35,7 @@ function TreeView({
             <Disclosure defaultOpen={isCurrentParent(item.path!)}>
               {({ open }) => (
                 <>
-                  <DisclosureButton className="flex w-full items-center text-left hover:font-semibold hover:text-primary-emphasis">
+                  <DisclosureButton className="hover:text-primary-emphasis flex w-full items-center text-left hover:font-semibold">
                     <ChevronRightIcon
                       className={clsx(
                         "mr-1 h-4 w-4",
@@ -56,7 +56,7 @@ function TreeView({
             <Link
               href={item.path!}
               className={clsx(
-                "transition hover:font-semibold hover:text-primary-emphasis",
+                "hover:text-primary-emphasis transition hover:font-semibold",
                 isCurrent(item.path) && "text-primary-emphasis",
               )}
             >
@@ -77,7 +77,7 @@ export default function SiteMap({
   level?: number;
 }) {
   return (
-    <nav className="font-title text-sm font-normal text-primary-subtle">
+    <nav className="text-primary-subtle font-title text-sm font-normal">
       <TreeView items={items} level={level} />
     </nav>
   );

@@ -34,6 +34,11 @@ export interface SiteConfig {
   contentExclude?: string[];
   showSidebar?: boolean;
   showEditLink?: boolean;
+  showHero?: boolean;
+  cta?: Array<{
+    href: string;
+    label: string;
+  }>; // CTAs used if hero is enabled (only 2 supported)
 }
 
 export interface SiteAlias {

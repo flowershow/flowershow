@@ -12,7 +12,7 @@ export const WikiLayout: React.FC<Props> = ({
   metadata,
   siteMetadata,
 }) => {
-  const { title, description, image } = metadata;
+  const { title, description, image, showHero } = metadata;
 
   const rawFilePermalinkBase = siteMetadata.customDomain
     ? `/_r/-`
@@ -28,28 +28,30 @@ export const WikiLayout: React.FC<Props> = ({
 
   return (
     <article>
-      <header data-testid="story-header">
-        {title && (
-          <h1 className="mb-6 text-4xl font-semibold leading-none tracking-tight text-primary-strong sm:text-5xl">
-            {title}
-          </h1>
-        )}
+      {!showHero && (
+        <header className="mb-12" data-testid="story-header">
+          {title && (
+            <h1 className="text-primary-strong mb-6 text-4xl font-semibold leading-none tracking-tight sm:text-5xl">
+              {title}
+            </h1>
+          )}
 
-        {description && (
-          <p className="text-lg font-light text-primary-subtle sm:text-xl">
-            {description}
-          </p>
-        )}
+          {description && (
+            <p className="text-primary-subtle text-lg font-light sm:text-xl">
+              {description}
+            </p>
+          )}
 
-        {image && (
-          <img
-            alt="Hero image"
-            src={resolveDataUrl(image)}
-            className="my-8 w-full rounded-md object-cover"
-          />
-        )}
-      </header>
-      <section className="prose mt-12 max-w-none font-light leading-tight text-primary dark:prose-invert prose-headings:font-title prose-headings:tracking-tight prose-headings:text-primary-strong prose-a:break-words">
+          {image && (
+            <img
+              alt="Featured image"
+              src={resolveDataUrl(image)}
+              className="my-8 w-full rounded-md object-cover"
+            />
+          )}
+        </header>
+      )}
+      <section className="prose-headings:text-primary-strong prose  max-w-none font-light leading-tight text-primary dark:prose-invert prose-headings:font-title prose-headings:tracking-tight prose-a:break-words">
         {children}
       </section>
     </article>

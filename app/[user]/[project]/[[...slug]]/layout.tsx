@@ -16,15 +16,17 @@ import DataRequestBanner from "@/components/data-request-banner";
 import clsx from "clsx";
 import TableOfContents from "@/components/table-of-contents";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { PageMetadata } from "@/server/api/types";
 
 const config = getConfig();
 
 interface RouteParams {
   user: string;
   project: string;
+  slug?: string[];
 }
 
-export default async function SiteLayout({
+export default async function Layout({
   params,
   children,
 }: {
@@ -33,6 +35,8 @@ export default async function SiteLayout({
 }) {
   const project = decodeURIComponent(params.project);
   const user = decodeURIComponent(params.user); // user's github username or "_domain" (see middleware)
+  const slug = params.slug ? params.slug.join("/") : "/";
+  const decodedSlug = slug.replace(/%20/g, "+");
 
   const site = await getSiteData(user, project);
   const ghUsername = site.user?.gh_username!;
@@ -62,17 +66,51 @@ export default async function SiteLayout({
     site,
     siteConfig,
   });
-  // TODO rename config to showSitemap
+
+  let pageMetadata: PageMetadata | null = null;
+
+  try {
+    pageMetadata = await api.site.getPageMetadata.query({
+      gh_username: site.user?.gh_username!,
+      projectName: site.projectName,
+      slug: decodedSlug,
+    });
+  } catch (error) {
+    notFound();
+  }
+
   const showSitemap = siteConfig?.showSidebar ?? false;
-  // const showHero = true; // TODO
   const showDataRequestBanner = isFeatureEnabled(Feature.DataRequest, site);
+  const showHero = pageMetadata.showHero ?? siteConfig?.showHero;
+
+  const resolveHeroCtaHref = (href: string) => {
+    return resolveLink({
+      link: href ?? "",
+      filePath: pageMetadata!._path,
+      prefixPath: site.customDomain
+        ? ""
+        : `/@${site.user?.gh_username}/${site.projectName}`,
+    });
+  };
+
+  const resolveHeroImageSrc = (src: string) => {
+    const rawFilePermalinkBase = site.customDomain
+      ? `/_r/-`
+      : `/@${site.user!.gh_username}/${site.projectName}` + `/_r/-`;
+
+    return resolveLink({
+      link: src,
+      filePath: pageMetadata!._path,
+      prefixPath: rawFilePermalinkBase,
+    });
+  };
 
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
       {siteConfig?.analytics && <GoogleAnalytics gaId={siteConfig.analytics} />}
 
-      <div className="flex min-h-full flex-col">
+      <div className="flex w-full flex-col">
         <Nav
           logo={logo}
           url={url}
@@ -83,58 +121,96 @@ export default async function SiteLayout({
           siteMap={siteMap}
         />
 
-        {/* <div className="relative isolate bg-gradient-to-r from-yellow-100/10 to-white px-6 pt-14 lg:px-8">
-          <div className="mx-auto max-w-2xl py-32 lg:py-36">
-            <div className="text-center">
-              <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-7xl">
-                Data to enrich your online business
-              </h1>
-              <p className="text-pretty mt-8 text-lg font-medium text-gray-500 sm:text-xl/8">
-                Anim aute id magna aliqua ad ad non deserunt sunt. Qui irure qui
-                lorem cupidatat commodo. Elit sunt amet fugiat veniam occaecat.
-              </p>
-              <div className="mt-10 flex items-center justify-center gap-x-6">
-                <a
-                  href="#"
-                  className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
-                >
-                  Get started
-                </a>
-                <a href="#" className="text-sm/6 font-semibold text-gray-900">
-                  Learn more <span aria-hidden="true">→</span>
-                </a>
+        {showHero && (
+          <div className="relative bg-neutral-50">
+            <div
+              className={clsx(
+                "mx-auto",
+                pageMetadata.image
+                  ? "max-w-screen-2xl lg:grid lg:grid-cols-12 lg:gap-x-8"
+                  : "max-w-3xl text-center",
+              )}
+            >
+              <div className="pb-16 pt-10 sm:pb-20 lg:col-span-7 lg:px-0 lg:pb-32 lg:pt-28 xl:col-span-6">
+                <div className="mx-auto px-8 sm:px-10 lg:mx-0 lg:px-12">
+                  <h1 className="text-pretty mt-24 font-title text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl">
+                    {pageMetadata.title}
+                  </h1>
+                  <p className="text-pretty mt-8 text-lg font-medium text-primary sm:text-xl/8">
+                    {pageMetadata.description}
+                  </p>
+                  {pageMetadata.cta && (
+                    <div
+                      className={clsx(
+                        "mt-10 flex items-center gap-x-6",
+                        !pageMetadata.image && "justify-center",
+                      )}
+                    >
+                      {pageMetadata.cta[0] && (
+                        <a
+                          href={resolveHeroCtaHref(pageMetadata.cta[0].href)}
+                          className="rounded-md bg-secondary px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-secondary/90"
+                        >
+                          {pageMetadata.cta[0].label}
+                        </a>
+                      )}
+                      {pageMetadata.cta[1] && (
+                        <a
+                          href={resolveHeroCtaHref(pageMetadata.cta[1].href)}
+                          className="text-sm/6 font-semibold text-primary-strong"
+                        >
+                          {pageMetadata.cta[1].label}
+                          <span aria-hidden="true" className="ml-1">
+                            →
+                          </span>
+                        </a>
+                      )}
+                    </div>
+                  )}
+                </div>
               </div>
+              {pageMetadata.image && (
+                <div className="relative lg:col-span-5 lg:-mr-8 xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0">
+                  <img
+                    alt=""
+                    src={resolveHeroImageSrc(pageMetadata.image)}
+                    className="aspect-[3/2] w-full bg-gray-50 object-cover lg:absolute lg:inset-0 lg:aspect-auto lg:h-full"
+                  />
+                </div>
+              )}
             </div>
           </div>
-        </div> */}
+        )}
 
-        <div
-          className={clsx(
-            "mx-auto mt-16 grid w-full px-8 sm:px-10 lg:px-12",
-            showSitemap
-              ? "max-w-screen-2xl grid-cols-[minmax(0,1fr)] gap-x-12 lg:grid-cols-[16rem,minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_12rem]"
-              : "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[minmax(0,1fr),12rem]",
-          )}
-        >
-          {showSitemap && (
-            <div className="hidden lg:block">
-              <aside className="sticky top-[8rem] border-r pr-6">
-                <SiteMap items={siteMap} />
+        <div className="relative">
+          <div
+            className={clsx(
+              "mx-auto mt-16 grid w-full px-8 sm:px-10 lg:px-12",
+              showSitemap
+                ? "max-w-screen-2xl grid-cols-[minmax(0,1fr)] gap-x-12 lg:grid-cols-[16rem,minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_12rem]"
+                : "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[minmax(0,1fr),12rem]",
+            )}
+          >
+            {showSitemap && (
+              <div className="hidden lg:block">
+                <aside className="sticky top-[8rem] border-r pr-6">
+                  <SiteMap items={siteMap} />
+                </aside>
+              </div>
+            )}
+
+            <main>{children}</main>
+
+            <div className="hidden xl:block">
+              <aside className="sticky top-[8rem] pl-4">
+                <TableOfContents />
               </aside>
             </div>
-          )}
-
-          <main>{children}</main>
-
-          <div className="hidden xl:block">
-            <aside className="sticky top-[8rem] pl-4">
-              <TableOfContents />
-            </aside>
           </div>
-        </div>
 
-        <div className="mx-auto w-full max-w-8xl px-8 sm:px-10 lg:px-12">
-          <Footer />
+          <div className="mx-auto w-full max-w-8xl px-8 sm:px-10 lg:px-12">
+            <Footer />
+          </div>
         </div>
 
         {showDataRequestBanner ? (

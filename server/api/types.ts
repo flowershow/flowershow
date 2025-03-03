@@ -7,6 +7,11 @@ interface PageMetadataBase {
   title?: string;
   description?: string;
   publish: boolean;
+  showHero?: boolean;
+  cta?: Array<{
+    href: string;
+    label: string;
+  }>; // CTAs used if hero is enabled (only 2 supported)
 }
 
 export interface WikiPageMetadata extends PageMetadataBase {
