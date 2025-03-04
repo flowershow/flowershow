@@ -12,7 +12,9 @@ export const WikiLayout: React.FC<Props> = ({
   metadata,
   siteMetadata,
 }) => {
-  const { title, description, image, showHero } = metadata;
+  const { title, description, image, showHero, date, authors } = metadata;
+
+  const formattedDate = date ? formatDate(date) : null;
 
   const rawFilePermalinkBase = siteMetadata.customDomain
     ? `/_r/-`
@@ -29,15 +31,26 @@ export const WikiLayout: React.FC<Props> = ({
   return (
     <article>
       {!showHero && (
-        <header className="mb-12" data-testid="story-header">
+        <header className="mb-8 space-y-3" data-testid="story-header">
+          {date && formattedDate && (
+            <div className="font-light text-primary/70">
+              Published{" "}
+              <time dateTime={new Date(date).toISOString()}>
+                {formattedDate}
+              </time>
+            </div>
+          )}
+
           {title && (
-            <h1 className="text-primary-strong mb-6 text-4xl font-semibold leading-none tracking-tight sm:text-5xl">
+            <h1 className="text-primary-strong text-primary-emphasis text-[3rem] font-semibold leading-[3.25rem] tracking-tight sm:text-[3.5rem] sm:leading-[3.75rem]">
               {title}
             </h1>
           )}
 
+          {authors && <p className="py-2">By {authors.join(", ")}</p>}
+
           {description && (
-            <p className="text-primary-subtle text-lg font-light sm:text-xl">
+            <p className="text-primary-subtle py-4 text-lg font-light sm:text-xl">
               {description}
             </p>
           )}
@@ -46,14 +59,31 @@ export const WikiLayout: React.FC<Props> = ({
             <img
               alt="Featured image"
               src={resolveDataUrl(image)}
-              className="my-8 w-full rounded-md object-cover"
+              className="w-full rounded-md object-cover"
             />
           )}
+
+          <div className="border-b pb-8" />
         </header>
       )}
-      <section className="prose-headings:text-primary-strong prose  max-w-none font-light leading-tight text-primary dark:prose-invert prose-headings:font-title prose-headings:tracking-tight prose-a:break-words">
+      <section className="prose-headings:text-primary-strong prose max-w-none font-body font-normal text-primary dark:prose-invert prose-headings:font-title prose-headings:tracking-tight prose-a:break-words">
         {children}
       </section>
     </article>
   );
+};
+
+const formatDate = (
+  date: string | undefined,
+  locales = "en-US",
+): string | null => {
+  if (!date) return null;
+
+  const options: Intl.DateTimeFormatOptions = {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  };
+
+  return new Date(date).toLocaleDateString(locales, options);
 };

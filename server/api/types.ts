@@ -17,6 +17,8 @@ interface PageMetadataBase {
 export interface WikiPageMetadata extends PageMetadataBase {
   _pagetype: "wiki";
   image?: string;
+  date?: string;
+  authors?: string[];
 }
 
 export interface BlogPageMetadata extends PageMetadataBase {
