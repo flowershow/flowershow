@@ -1,17 +1,17 @@
 export default function ObsidianQuickstart() {
   return (
     <div className="flex max-w-screen-xl flex-col px-8 py-16">
-      {/* <div className="mb-8 w-full max-w-[600px]">
+      <div className="mb-8 w-full max-w-[600px]">
         <div className="relative overflow-hidden pt-[56.25%]">
           <iframe
             className="absolute inset-0 h-full w-full"
-            src="https://www.youtube.com/embed/HxD6NWYCea0"
+            src="https://www.youtube.com/embed/OOqvj-MZjh0"
             title="Flowershow Obsidian Tutorial"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
         </div>
-      </div> */}
+      </div>
       <div className="flex items-center justify-between">
         <h1 className="font-cal text-3xl font-bold dark:text-white">
           Publish Your Obsidian Vault (in 2 minutes)
