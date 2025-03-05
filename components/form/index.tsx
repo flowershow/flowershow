@@ -189,17 +189,26 @@ export default function Form({
             </div>
           </div>
         ) : inputAttrs.name === "customDomain" ? (
-          <div className="relative flex w-full max-w-md">
-            <input
-              {...inputAttrs}
-              className="z-10 flex-1 rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
-            />
-            {inputAttrs.defaultValue && (
-              <div className="absolute right-3 z-10 flex h-full items-center">
-                <DomainStatus domain={inputAttrs.defaultValue} />
-              </div>
-            )}
-          </div>
+          <>
+            <div className="relative flex w-full max-w-md">
+              <input
+                {...inputAttrs}
+                className="z-10 flex-1 rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
+              />
+              {inputAttrs.defaultValue && (
+                <div className="absolute right-3 z-10 flex h-full items-center">
+                  <DomainStatus domain={inputAttrs.defaultValue} />
+                </div>
+              )}
+            </div>
+
+            <div className="rounded-md bg-blue-50 p-3 dark:bg-blue-900/20">
+              <p className="text-sm text-blue-700 dark:text-blue-200">
+                Note: Custom domain support is temporarily enabled during the
+                beta phase and will become a premium feature soon.
+              </p>
+            </div>
+          </>
         ) : inputAttrs.name === "description" ? (
           <textarea
             {...inputAttrs}
