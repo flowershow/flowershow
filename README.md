@@ -205,8 +205,7 @@ graph TD
 
 The sync process can be monitored through the Inngest Dashboard:
 
-- Production: [Inngest Dashboard](https://app.inngest.com/datopian/datahub-cloud/functions)
-- Staging: [Staging Dashboard](https://app.inngest.com/datopian/datahub-cloud-staging/functions)
+[Inngest Dashboard](https://app.inngest.com) (you need an invite to the organization)
 
 Key metrics available:
 
