@@ -33,8 +33,9 @@ export interface SiteConfig {
   contentInclude?: string[];
   contentExclude?: string[];
   showSidebar?: boolean;
-  showEditLink?: boolean;
+  showToc?: boolean;
   showHero?: boolean;
+  showEditLink?: boolean;
   cta?: Array<{
     href: string;
     label: string;

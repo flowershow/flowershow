@@ -7,7 +7,10 @@ interface PageMetadataBase {
   title?: string;
   description?: string;
   publish: boolean;
+  showSidebar?: boolean;
+  showToc?: boolean;
   showHero?: boolean;
+  showEditLink?: boolean;
   cta?: Array<{
     href: string;
     label: string;

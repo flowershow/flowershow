@@ -79,7 +79,9 @@ export default async function Layout({
     notFound();
   }
 
-  const showSitemap = siteConfig?.showSidebar ?? false;
+  const showSitemap =
+    pageMetadata.showSidebar ?? siteConfig?.showSidebar ?? false;
+  const showToc = pageMetadata.showToc ?? siteConfig?.showToc ?? true;
   const showDataRequestBanner = isFeatureEnabled(Feature.DataRequest, site);
   const showHero = pageMetadata.showHero ?? siteConfig?.showHero;
 
@@ -186,9 +188,16 @@ export default async function Layout({
           <div
             className={clsx(
               "mx-auto mt-16 grid w-full px-8 sm:px-10 lg:px-12",
-              showSitemap
-                ? "max-w-screen-2xl grid-cols-[minmax(0,1fr)] gap-x-12 lg:grid-cols-[16rem,minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_12rem]"
-                : "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[minmax(0,1fr),12rem]",
+              showSitemap &&
+                showToc &&
+                "max-w-screen-2xl grid-cols-[minmax(0,1fr)] gap-x-12 lg:grid-cols-[16rem,minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_12rem]",
+              !showSitemap &&
+                showToc &&
+                "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[minmax(0,1fr),12rem]",
+              showSitemap &&
+                !showToc &&
+                "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[12rem,minmax(0,1fr)]",
+              !showSitemap && !showToc && "max-w-6xl",
             )}
           >
             {showSitemap && (
@@ -201,11 +210,13 @@ export default async function Layout({
 
             <main>{children}</main>
 
-            <div className="hidden xl:block">
-              <aside className="sticky top-[8rem] h-[calc(100vh-4rem)] overflow-y-auto pb-16 pl-4">
-                <TableOfContents />
-              </aside>
-            </div>
+            {showToc && (
+              <div className="hidden xl:block">
+                <aside className="sticky top-[8rem] h-[calc(100vh-4rem)] overflow-y-auto pb-16 pl-4">
+                  <TableOfContents />
+                </aside>
+              </div>
+            )}
           </div>
 
           <div className="mx-auto w-full max-w-8xl px-8 sm:px-10 lg:px-12">
