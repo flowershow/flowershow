@@ -133,7 +133,7 @@ export default async function Layout({
             >
               <div className="pb-16 pt-10 sm:pb-20 lg:col-span-7 lg:px-0 lg:pb-32 lg:pt-28 xl:col-span-6">
                 <div className="mx-auto px-8 sm:px-10 lg:mx-0 lg:px-12">
-                  <h1 className="text-pretty text-primary-strong mt-24 font-title text-5xl font-semibold tracking-tight sm:mt-10 sm:text-6xl">
+                  <h1 className="text-pretty mt-24 font-title text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl">
                     {pageMetadata.title}
                   </h1>
                   <p className="text-pretty mt-8 text-lg font-medium text-primary sm:text-xl/8">
@@ -157,7 +157,7 @@ export default async function Layout({
                       {pageMetadata.cta[1] && (
                         <a
                           href={resolveHeroCtaHref(pageMetadata.cta[1].href)}
-                          className="text-primary-strong text-sm/6 font-semibold"
+                          className="text-sm/6 font-semibold text-primary-strong"
                         >
                           {pageMetadata.cta[1].label}
                           <span aria-hidden="true" className="ml-1">
@@ -193,7 +193,7 @@ export default async function Layout({
           >
             {showSitemap && (
               <div className="hidden lg:block">
-                <aside className="sticky top-[8rem] pr-6">
+                <aside className="sticky top-[8rem] h-[calc(100vh-4rem)] overflow-y-auto pb-16 pr-4">
                   <SiteMap items={siteMap} />
                 </aside>
               </div>
@@ -202,7 +202,7 @@ export default async function Layout({
             <main>{children}</main>
 
             <div className="hidden xl:block">
-              <aside className="sticky top-[8rem] pl-4">
+              <aside className="sticky top-[8rem] h-[calc(100vh-4rem)] overflow-y-auto pb-16 pl-4">
                 <TableOfContents />
               </aside>
             </div>
