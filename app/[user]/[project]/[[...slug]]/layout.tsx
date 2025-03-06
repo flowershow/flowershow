@@ -197,7 +197,7 @@ export default async function Layout({
               showSitemap &&
                 !showToc &&
                 "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[12rem,minmax(0,1fr)]",
-              !showSitemap && !showToc && "max-w-6xl",
+              !showSitemap && !showToc && "max-w-5xl",
             )}
           >
             {showSitemap && (
