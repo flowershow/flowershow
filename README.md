@@ -1,6 +1,6 @@
 # DataHub Cloud
 
-DataHub Cloud is a NextJS multitenant application designed for seamlessly publishing markdown content from GitHub repositories. It enables users to create and manage their own sites with content synced directly from GitHub repositories.
+DataHub Cloud is a NextJS multitenant application designed for seamlessly publishing markdown content from GitHub repositories.
 
 ## Project Overview
 
@@ -17,11 +17,213 @@ The application provides:
 The application is built with:
 
 - **Frontend**: Next.js with TypeScript
-- **Database**: PostgreSQL for user accounts and site metadata
+- **Database**: PostgreSQL (Neon, managed by Vercel) for user accounts and site metadata
 - **Storage**: R2 Cloudflare buckets for content storage
 - **Authentication**: NextAuth with GitHub OAuth
 - **Deployment**: Vercel
 - **Background Jobs**: Inngest
+
+## Site Creation and Data Flow
+
+The site creation process follows these steps:
+
+1. **GitHub Authentication**
+
+- Users authenticate with GitHub OAuth
+- Application requests necessary repository access permissions
+- User can manage app access through GitHub settings
+
+2. **Site Configuration**
+
+- User selects:
+  - GitHub account
+  - Repository to publish from
+  - Branch to track (defaults to 'main')
+  - Root directory (optional, for publishing specific folder)
+- User creates a new site with the selected configurations
+
+3. **Site Content Processing**
+
+- Initial site synchronization triggered
+  - Content filtered by supported file types (.md, .json, .yaml)
+  - Markdown files processed for:
+    - YAML frontmatter
+    - Associated datapackage metadata
+    - Computed fields (URL, title, description)
+  - Files uploaded to R2 Cloudflare buckets
+  - Metadata stored in PostgreSQL
+
+4. **Consecutive Site Content Synchronization**
+
+- Automatic sync triggered with GitHub webhooks (default)
+- Manual sync option available
+
+## Content Synchronization Architecture
+
+### Inngest Configuration
+
+The synchronization process is managed by Inngest, with configuration files located in:
+
+- `/inngest/client.ts` - Event definitions and client setup
+- `/inngest/functions.ts` - Sync and delete functions implementation
+
+```mermaid
+graph TD
+    subgraph "Trigger Sources"
+        GH[GitHub Push] -->|Webhook| WH[Webhook Handler]
+        UI[Manual UI Trigger] -->|Direct| IE[Inngest Event]
+        WH -->|Validate & Filter| IE
+    end
+
+    subgraph "Event Processing"
+        IE -->|site/sync| SF[Sync Function]
+        IE -->|site/delete| DF[Delete Function]
+    end
+```
+
+### Sync Process Details
+
+![](./inngest.webp)
+
+1. **Event Handling and Routes**
+
+- Webhook Handler (`/app/api/webhook/route.ts`):
+
+  - Receives GitHub push events
+  - Validates webhook signatures
+  - Filters events by branch
+  - Triggers Inngest sync events
+
+- Inngest Handler (`/app/api/inngest/route.ts`):
+
+  - Serves Inngest webhook endpoints
+  - Registers sync and delete functions
+  - Handles function execution and retries
+
+- Function Configuration (`/inngest/functions.ts`):
+  - Concurrency limit: 10 per account
+  - Cancellation on: new sync or delete events
+  - Error handling with specific error types:
+    - MARKDOWN_PARSING_ERROR
+    - INVALID_ROOT_DIR
+    - INTERNAL_ERROR
+
+2. **Sync Trigger Points**
+
+   - Automatic (via GitHub webhooks):
+     - Push events to tracked branch
+     - Validated using webhook secret
+     - Branch-specific filtering
+   - Manual (via UI):
+     - User-initiated sync
+     - Force sync option available
+   - Initial sync:
+     - On site creation
+     - Full repository processing
+
+3. **Detailed Sync Steps**
+   When a site sync is triggered (either automatically or manually), the following steps occur in sequence:
+
+   a. **Initial Setup**
+
+   - Fetch site details and user information from PostgreSQL
+   - Update site's sync status to "PENDING"
+   - Load site configuration from repository's config.json
+   - Parse content include/exclude patterns from config
+   - Validate root directory exists (if specified)
+
+   b. **Tree Comparison**
+
+   - Fetch current content tree from R2 storage
+   - Fetch repository tree from GitHub API
+   - Compare SHA hashes to detect changes
+   - If trees match (no changes):
+     - Update sync status to "SUCCESS"
+     - Exit sync process early
+
+   c. **File Processing**
+   For each changed file:
+
+   - Filter by supported extensions (.md, .json, .yaml)
+   - Apply content include/exclude patterns
+   - Download file content from GitHub
+   - Upload raw file to R2 storage
+   - For markdown files:
+     - Parse YAML frontmatter for metadata
+     - Look for associated datapackage file
+     - If README.md/index.md, check directory for datapackage
+     - Compute metadata (URL, title, description)
+     - Store metadata in PostgreSQL
+   - For datapackage files:
+     - Find associated README.md/index.md
+     - Parse package metadata
+     - Update linked markdown file metadata
+     - Store combined metadata in PostgreSQL
+
+   d. **Deletion Handling**
+
+   - Compare old and new trees to find deleted files
+   - Remove deleted files from R2 storage
+   - Clean up associated metadata from PostgreSQL
+   - For deleted datapackage files:
+     - Recompute metadata for associated markdown files
+     - Update database records accordingly
+
+   e. **Final Steps**
+
+   - Upload new tree structure to R2
+   - Update site metadata in PostgreSQL
+   - Update sync status to "SUCCESS"
+   - Clear any previous sync errors
+   - Update sync timestamp
+   - Revalidate Next.js cache tags for:
+     - Site metadata
+     - Site permalinks
+     - Site tree
+     - Page content
+
+4. **Content Storage**
+
+   - Files stored in R2 Cloudflare buckets
+   - Tree structure maintained for efficient diffing
+   - Metadata stored in PostgreSQL for quick access
+
+5. **Error Handling**
+   - Detailed error messages stored in database
+   - Non-retriable errors marked permanent:
+     - Invalid root directory
+     - YAML frontmatter parsing errors
+     - Invalid datapackage format
+   - Retriable errors with automatic retry:
+     - GitHub API rate limits
+     - Network timeouts
+     - Storage upload failures
+   - Error status visible in site dashboard
+   - Detailed error logs in Inngest dashboard
+
+### Monitoring and Debugging
+
+The sync process can be monitored through the Inngest Dashboard:
+
+- Production: [Inngest Dashboard](https://app.inngest.com/datopian/datahub-cloud/functions)
+- Staging: [Staging Dashboard](https://app.inngest.com/datopian/datahub-cloud-staging/functions)
+
+Key metrics available:
+
+- Success/failure rates
+- Processing times
+- Error distribution
+- Event queues
+
+### Local Development
+
+For local development, run the Inngest dev server:
+
+```bash
+npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest
+```
+
+Monitor local events at: http://localhost:8288/
 
 ## Environment Setup
 
@@ -208,6 +410,7 @@ Some tests (like dashboard.spec.ts) require authentication. These tests:
 
 1. Are automatically skipped in CI environment
 2. Require manual login by default:
+
    - When running dashboard tests, a browser window will open
    - You'll need to manually log in with your GitHub account
    - The test will continue automatically after successful login
