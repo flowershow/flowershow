@@ -16,14 +16,14 @@ export default async function Sites({ limit }: { limit?: number }) {
             icon: ObsidianIcon,
           },
           {
-            title: "Publish your Markdown content",
+            title: "Publish your markdown from GitHub",
             href: "/new",
             icon: MarkdownIcon,
           },
         ]
       : [
           {
-            title: "Publish your Markdown content",
+            title: "Publish your markdown from GitHub",
             href: "/new",
             icon: MarkdownIcon,
           },
