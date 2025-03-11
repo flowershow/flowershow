@@ -8,40 +8,50 @@ const config = getConfig();
 
 export default function LoginPage() {
   return (
-    <div className="mx-5 border border-stone-200 py-10 dark:border-stone-700 sm:mx-auto sm:w-full sm:max-w-md sm:rounded-lg sm:shadow-md">
+    <div className="mx-5 border border-primary-faint p-10 sm:mx-auto sm:w-full sm:max-w-md sm:rounded-lg sm:shadow-md md:max-w-lg md:p-12">
       <Image
         alt={`${config.title} logo`}
         width={100}
         height={100}
-        className="relative mx-auto h-12 w-auto dark:scale-110 dark:rounded-full dark:border dark:border-stone-400"
+        className="relative mx-auto h-12 w-auto"
         src={config.logo}
       />
-      <h1 className="mt-6 text-center font-cal text-3xl dark:text-white">
-        {config.title}
-      </h1>
-      <p className="mt-2 text-center text-sm text-stone-600 dark:text-stone-400">
+      <h1 className="mt-6 text-center font-cal text-3xl">{config.title}</h1>
+      <p className="mt-2 text-center text-sm">
         Turn your markdown into a website in a couple of clicks. <br />
       </p>
 
-      <div className="mx-auto mt-4 w-11/12 max-w-xs sm:w-full">
+      <div className="mt-4">
         <Suspense
           fallback={
-            <div className="my-2 h-10 w-full rounded-md border border-stone-200 bg-stone-100 dark:border-stone-700 dark:bg-stone-800" />
+            <div className="my-2 h-10 w-full rounded-md border border-primary-faint bg-primary-faint" />
           }
         >
           <LoginButton />
         </Suspense>
-        <p className="text-center text-xs text-stone-700">
+        <p className="mt-2 text-center text-xs">
           By registering, you agree to our
           <a
-            className="font-medium text-black hover:text-stone-600 dark:text-stone-300 dark:hover:text-stone-100"
+            className="font-medium hover:text-primary-subtle"
             href={config.termsOfService}
-            rel="noreferrer"
             target="_blank"
           >
             {" "}
             Terms of Service.
           </a>
+        </p>
+        <p className="mt-3 border-t pt-3 text-center text-xs text-primary-subtle">
+          We use GitHub to securely sync your vault and markdown files with
+          Flowershow for a seamless experience. No GitHub account? No problem—
+          <a
+            target="_blank"
+            rel="noreferrer noopener"
+            className="underline"
+            href="https://github.com/signup"
+          >
+            sign up
+          </a>{" "}
+          will take just a few seconds.
         </p>
       </div>
     </div>
