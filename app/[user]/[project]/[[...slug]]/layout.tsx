@@ -83,6 +83,8 @@ export default async function Layout({
     pageMetadata.showSidebar ?? siteConfig?.showSidebar ?? false;
   const showToc = pageMetadata.showToc ?? siteConfig?.showToc ?? true;
   const showDataRequestBanner = isFeatureEnabled(Feature.DataRequest, site);
+  const showBuiltWithButton =
+    !isFeatureEnabled(Feature.NoBranding, site) && !showDataRequestBanner;
   const showHero = pageMetadata.showHero ?? siteConfig?.showHero;
 
   const resolveHeroCtaHref = (href: string) => {
@@ -224,11 +226,8 @@ export default async function Layout({
           </div>
         </div>
 
-        {showDataRequestBanner ? (
-          <DataRequestBanner />
-        ) : (
-          <BuiltWithFloatingButton />
-        )}
+        {showDataRequestBanner && <DataRequestBanner />}
+        {showBuiltWithButton && <BuiltWithFloatingButton />}
       </div>
     </>
   );

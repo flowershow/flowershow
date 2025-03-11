@@ -1,15 +1,21 @@
 import Form from "@/components/form";
 import DeleteSiteForm from "@/components/form/delete-site-form";
+import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 import { api } from "@/trpc/server";
+import { notFound } from "next/navigation";
 
 export default async function SiteSettingsIndex({
   params,
 }: {
   params: { id: string };
 }) {
-  const data = await api.site.getById.query({
+  const site = await api.site.getById.query({
     id: decodeURIComponent(params.id),
   });
+
+  if (!site) {
+    notFound();
+  }
 
   const updateSite = async ({
     id,
@@ -33,7 +39,7 @@ export default async function SiteSettingsIndex({
         inputAttrs={{
           name: "projectName",
           type: "text",
-          defaultValue: data?.projectName!,
+          defaultValue: site?.projectName!,
           placeholder: "site name",
           maxLength: 32,
           pattern: "^[a-zA-Z0-9_.-]+$",
@@ -48,7 +54,7 @@ export default async function SiteSettingsIndex({
         inputAttrs={{
           name: "gh_branch",
           type: "text",
-          defaultValue: data?.gh_branch!,
+          defaultValue: site?.gh_branch!,
         }}
         handleSubmit={updateSite}
       />
@@ -60,23 +66,8 @@ export default async function SiteSettingsIndex({
         inputAttrs={{
           name: "rootDir",
           type: "text",
-          defaultValue: data?.rootDir!,
+          defaultValue: site?.rootDir!,
           required: false,
-        }}
-        handleSubmit={updateSite}
-      />
-
-      <Form
-        title="Custom Domain"
-        description="The custom domain for your site."
-        helpText="Please enter a valid domain."
-        inputAttrs={{
-          name: "customDomain",
-          type: "text",
-          defaultValue: data?.customDomain!,
-          placeholder: "yourdomain.com",
-          maxLength: 64,
-          pattern: "^[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}$",
         }}
         handleSubmit={updateSite}
       />
@@ -88,7 +79,7 @@ export default async function SiteSettingsIndex({
         inputAttrs={{
           name: "autoSync",
           type: "text",
-          defaultValue: Boolean(data?.autoSync!).toString(),
+          defaultValue: Boolean(site?.autoSync!).toString(),
         }}
         handleSubmit={updateSite}
       />
@@ -100,12 +91,12 @@ export default async function SiteSettingsIndex({
         inputAttrs={{
           name: "enableComments",
           type: "text",
-          defaultValue: Boolean(data?.enableComments!).toString(),
+          defaultValue: Boolean(site?.enableComments!).toString(),
         }}
         handleSubmit={updateSite}
       />
 
-      {data?.enableComments && (
+      {site?.enableComments && (
         <>
           <Form
             title="Giscus Repository ID"
@@ -114,7 +105,7 @@ export default async function SiteSettingsIndex({
             inputAttrs={{
               name: "giscusRepoId",
               type: "text",
-              defaultValue: data?.giscusRepoId || "",
+              defaultValue: site?.giscusRepoId || "",
               required: true,
               placeholder: "R_kgDOxxxxxx",
             }}
@@ -128,7 +119,7 @@ export default async function SiteSettingsIndex({
             inputAttrs={{
               name: "giscusCategoryId",
               type: "text",
-              defaultValue: data?.giscusCategoryId || "",
+              defaultValue: site?.giscusCategoryId || "",
               required: true,
               placeholder: "DIC_kwDOxxxxxx",
             }}
@@ -137,7 +128,29 @@ export default async function SiteSettingsIndex({
         </>
       )}
 
-      <DeleteSiteForm siteName={data?.projectName!} />
+      <Form
+        title="Custom Domain"
+        description="The custom domain for your site."
+        helpText={
+          isFeatureEnabled(Feature.CustomDomain, site)
+            ? "Enter a valid domain."
+            : "Available on Premium plan only."
+        }
+        disabled={!isFeatureEnabled(Feature.CustomDomain, site)}
+        inputAttrs={{
+          name: "customDomain",
+          type: "text",
+          defaultValue: isFeatureEnabled(Feature.CustomDomain, site)
+            ? site?.customDomain!
+            : "",
+          placeholder: "yourdomain.com",
+          maxLength: 64,
+          pattern: "^[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}$",
+        }}
+        handleSubmit={updateSite}
+      />
+
+      <DeleteSiteForm siteName={site?.projectName!} />
     </div>
   );
 }

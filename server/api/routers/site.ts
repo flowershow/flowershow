@@ -344,6 +344,13 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
+      if (!site) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: `Site ${input.id} not found.`,
+        });
+      }
+
       // return false for PENDING and ERROR statuses
       let isUpToDate = false;
 

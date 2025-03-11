@@ -1,8 +1,13 @@
 import { test as setup } from "@playwright/test";
 import prisma from "../server/db";
 import { inngest } from "../inngest/client";
-import { testUser, testProject } from "./test-utils";
-
+import {
+  testUser,
+  testProject,
+  premiumProject,
+  checkServiceHealth,
+} from "./test-utils";
+import { Plan } from "@prisma/client";
 import "dotenv/config";
 import { env } from "@/env.mjs";
 
@@ -11,82 +16,48 @@ setup.describe.configure({
   retries: 0,
 });
 
-async function checkServiceHealth(url: string, serviceName: string) {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`${serviceName} returned status ${response.status}`);
-    }
-    console.log(`[${new Date().toISOString()}] ${serviceName} is running`);
-  } catch (error) {
-    console.error(
-      `[${new Date().toISOString()}] ${serviceName} is not running:`,
-      error,
-    );
-    throw new Error(
-      `${serviceName} is not running. Please start the service before running tests.`,
-    );
-  }
-}
-
 async function checkRequiredServices() {
   await checkServiceHealth("http://cloud.localhost:3000", "Next.js app");
   await checkServiceHealth("http://localhost:8288", "Inngest");
   await checkServiceHealth("http://localhost:9000/minio/health/live", "MinIO");
 }
 
-setup("Setup test site", async () => {
-  // Check if all required services are running
-  await checkRequiredServices();
-
-  // Create test user
-  const user = await prisma.user.upsert({
-    where: { email: testUser.email },
-    update: {},
-    create: {
-      email: testUser.email,
-      name: testUser.name,
-      gh_username: testUser.username,
-    },
-  });
-
-  // Create GitHub account for the user
-  const account = await prisma.account.upsert({
-    where: {
-      provider_providerAccountId: {
-        provider: "github",
-        providerAccountId: testUser.username,
-      },
-    },
-    update: {
-      access_token: env.GH_ACCESS_TOKEN,
-    },
-    create: {
-      userId: user.id,
-      type: "oauth",
-      provider: "github",
-      providerAccountId: testUser.username,
-      access_token: env.GH_ACCESS_TOKEN,
-    },
-  });
-
+async function createAndSyncSite(
+  userId: string,
+  projectName: string,
+  repository: string,
+  branch: string,
+  plan?: Plan,
+) {
   // Create test site
   const site = await prisma.site.upsert({
     where: {
       userId_projectName: {
-        userId: user.id,
-        projectName: testProject.name,
+        userId,
+        projectName,
       },
     },
     update: {},
     create: {
-      userId: user.id,
-      projectName: testProject.name,
-      gh_repository: testProject.repository,
-      gh_branch: testProject.branch,
+      userId,
+      projectName,
+      gh_repository: repository,
+      gh_branch: branch,
       syncStatus: "PENDING",
+      plan,
     },
   });
+
+  const account = await prisma.account.findFirst({
+    where: {
+      userId,
+      provider: "github",
+    },
+  });
+
+  if (!account?.access_token) {
+    throw new Error("No GitHub account found for user");
+  }
 
   await inngest.send({
     name: "site/sync",
@@ -152,4 +123,57 @@ setup("Setup test site", async () => {
   };
 
   await waitForSync();
+}
+
+setup("Setup test sites", async () => {
+  // Check if all required services are running
+  await checkRequiredServices();
+
+  // Create test user
+  const user = await prisma.user.upsert({
+    where: { email: testUser.email },
+    update: {},
+    create: {
+      email: testUser.email,
+      name: testUser.name,
+      gh_username: testUser.username,
+    },
+  });
+
+  // Create GitHub account for the user
+  await prisma.account.upsert({
+    where: {
+      provider_providerAccountId: {
+        provider: "github",
+        providerAccountId: testUser.username,
+      },
+    },
+    update: {
+      access_token: env.GH_ACCESS_TOKEN,
+    },
+    create: {
+      userId: user.id,
+      type: "oauth",
+      provider: "github",
+      providerAccountId: testUser.username,
+      access_token: env.GH_ACCESS_TOKEN,
+    },
+  });
+
+  // Create and sync free plan site
+  await createAndSyncSite(
+    user.id,
+    testProject.name,
+    testProject.repository,
+    testProject.branch,
+  );
+
+  // Create and sync premium plan site
+  await createAndSyncSite(
+    user.id,
+    premiumProject.name,
+    premiumProject.repository,
+    premiumProject.branch,
+    Plan.PREMIUM,
+  );
 });

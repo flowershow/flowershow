@@ -41,7 +41,7 @@ export default defineConfig({
         ...devices["Desktop Chrome"],
       },
       dependencies: ["global-setup"],
-      testIgnore: /dashboard\.spec\.ts/,
+      testIgnore: /(dashboard|subscription)\.spec\.ts/,
     },
     // Only include dashboard tests when not running in CI
     ...(!process.env.CI
@@ -61,7 +61,7 @@ export default defineConfig({
               baseURL: "http://cloud.localhost:3000",
             },
             dependencies: ["auth-setup"],
-            testMatch: /dashboard\.spec\.ts/,
+            testMatch: /(dashboard|subscription)\.spec\.ts/,
           },
         ]
       : []),

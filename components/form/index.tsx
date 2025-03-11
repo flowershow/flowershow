@@ -9,19 +9,20 @@ import { Switch } from "@headlessui/react";
 import DomainStatus from "./domain-status";
 import DomainConfiguration from "./domain-configuration";
 import Uploader from "./uploader";
-import { env } from "@/env.mjs";
 import { useSync } from "@/app/cloud/(dashboard)/site/[id]/sync-provider";
 import clsx from "clsx";
 
 export default function Form({
   title,
   description,
+  disabled = false,
   helpText,
   inputAttrs,
   handleSubmit,
 }: {
   title: string;
   description: string;
+  disabled?: boolean;
   helpText?: string;
   inputAttrs: {
     name: string;
@@ -106,7 +107,10 @@ export default function Form({
             setRefreshKey((prev) => prev + 1);
           });
       }}
-      className="isolate rounded-lg border border-stone-200 bg-white dark:border-stone-700 dark:bg-black"
+      className={cn(
+        "isolate rounded-lg border border-stone-200 dark:border-stone-700 dark:bg-black",
+        disabled ? "bg-stone-50" : "bg-white",
+      )}
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
         <h2 className="font-cal text-xl dark:text-white">{title}</h2>
@@ -115,6 +119,7 @@ export default function Form({
         </p>
         {["autoSync", "enableComments"].includes(inputAttrs.name) ? (
           <Switch
+            disabled={disabled}
             checked={inputAttrs.defaultValue === "true"}
             onChange={() => {
               handleSubmit({
@@ -165,50 +170,19 @@ export default function Form({
             defaultValue={inputAttrs.defaultValue}
             name={inputAttrs.name}
           />
-        ) : inputAttrs.name === "font" ? (
-          <div className="flex max-w-sm items-center overflow-hidden rounded-lg border border-stone-600">
-            <select
-              name="font"
-              defaultValue={inputAttrs.defaultValue}
-              className="w-full rounded-none border-none bg-white px-4 py-2 text-sm font-medium text-stone-700 focus:outline-none focus:ring-black dark:bg-black dark:text-stone-200 dark:focus:ring-white"
-            >
-              <option value="font-cal">Cal Sans</option>
-              <option value="font-lora">Lora</option>
-              <option value="font-work">Work Sans</option>
-            </select>
-          </div>
-        ) : inputAttrs.name === "subdomain" ? (
-          <div className="flex w-full max-w-md">
+        ) : inputAttrs.name === "customDomain" ? (
+          <div className="relative flex w-full max-w-md">
             <input
               {...inputAttrs}
-              required={required}
-              className="z-10 flex-1 rounded-l-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
+              disabled={disabled}
+              className="z-10 flex-1 rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
             />
-            <div className="flex items-center rounded-r-md border border-l-0 border-stone-300 bg-stone-100 px-3 text-sm dark:border-stone-600 dark:bg-stone-800 dark:text-stone-400">
-              {env.NEXT_PUBLIC_ROOT_DOMAIN}
-            </div>
+            {!disabled && inputAttrs.defaultValue && (
+              <div className="absolute right-3 z-10 flex h-full items-center">
+                <DomainStatus domain={inputAttrs.defaultValue} />
+              </div>
+            )}
           </div>
-        ) : inputAttrs.name === "customDomain" ? (
-          <>
-            <div className="relative flex w-full max-w-md">
-              <input
-                {...inputAttrs}
-                className="z-10 flex-1 rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
-              />
-              {inputAttrs.defaultValue && (
-                <div className="absolute right-3 z-10 flex h-full items-center">
-                  <DomainStatus domain={inputAttrs.defaultValue} />
-                </div>
-              )}
-            </div>
-
-            <div className="rounded-md bg-blue-50 p-3 dark:bg-blue-900/20">
-              <p className="text-sm text-blue-700 dark:text-blue-200">
-                Note: Custom domain support is temporarily enabled during the
-                beta phase and will become a premium feature soon.
-              </p>
-            </div>
-          </>
         ) : inputAttrs.name === "description" ? (
           <textarea
             {...inputAttrs}
@@ -228,10 +202,18 @@ export default function Form({
         <DomainConfiguration domain={inputAttrs.defaultValue} />
       )}
       <div className="flex flex-col items-center justify-center space-y-2 rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800 sm:flex-row sm:justify-between sm:space-y-0 sm:px-10">
-        <p className="text-sm text-stone-500 dark:text-stone-400">{helpText}</p>
-        {!["autoSync", "enableComments"].includes(inputAttrs.name) && (
-          <FormButton />
-        )}
+        <p
+          className={cn(
+            "text-sm",
+            disabled
+              ? "dark:text-ambder-400 text-amber-500"
+              : "text-stone-500 dark:text-stone-400",
+          )}
+        >
+          {helpText}
+        </p>
+        {!["autoSync", "enableComments"].includes(inputAttrs.name) &&
+          !disabled && <FormButton />}
       </div>
     </form>
   );

@@ -34,6 +34,7 @@ type ButtonProps<
 > = {
   variant?: Variant;
   color?: Color;
+  disabled?: boolean;
 } & (
   | Omit<React.ComponentPropsWithoutRef<typeof Link>, "color">
   | (Omit<React.ComponentPropsWithoutRef<"button">, "color"> & {
@@ -44,13 +45,20 @@ type ButtonProps<
 export function Button<
   Color extends ColorKey<Variant>,
   Variant extends VariantKey = "solid",
->({ variant, color, className, ...props }: ButtonProps<Variant, Color>) {
+>({
+  variant,
+  color,
+  disabled,
+  className,
+  ...props
+}: ButtonProps<Variant, Color>) {
   variant = variant ?? ("solid" as Variant);
   color = color ?? ("slate" as Color);
 
   className = clsx(
     baseStyles[variant],
     variantStyles[variant][color] as any,
+    disabled && "cursor-default",
     className,
   );
 

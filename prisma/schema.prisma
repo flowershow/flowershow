@@ -17,20 +17,38 @@ enum Role {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
+  id              String    @id @default(cuid())
+  name            String?
   // if you are using Github OAuth, you can get rid of the username attribute (that is for Twitter OAuth)
-  username      String?
-  gh_username   String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  role          Role      @default(USER)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  accounts      Account[]
-  sessions      Session[]
-  sites         Site[]
+  username        String?
+  gh_username     String?
+  email           String?   @unique
+  emailVerified   DateTime?
+  image           String?
+  role            Role      @default(USER)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  accounts        Account[]
+  sessions        Session[]
+  sites           Site[]
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  siteId               String    @unique
+  stripeCustomerId     String    @unique
+  stripeSubscriptionId String    @unique
+  stripePriceId        String    // to track which price/plan the subscription is for
+  status               SubscriptionStatus
+  interval             String    // month, year
+  currentPeriodStart   DateTime  @default(now())
+  currentPeriodEnd     DateTime
+  cancelAtPeriodEnd    Boolean   @default(false)
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  site                 Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
 }
 
 model Account {
@@ -78,15 +96,9 @@ model Site {
   id            String   @id @default(cuid())
   gh_repository String
   gh_branch     String
-  // description   String?  @db.Text
-  // logo          String?  @default("https://public.blob.vercel-storage.com/eEZHAoPTOBSYGBE3/JRajRyC-PhBHEinQkupt02jqfKacBVHLWJq7Iy.png") @db.Text
-  // font          String   @default("font-cal")
-  // image         String?  @default("https://public.blob.vercel-storage.com/eEZHAoPTOBSYGBE3/hxfcV5V-eInX3jbVUhjAt1suB7zB88uGd1j20b.png") @db.Text
-  // imageBlurhash String?  @default("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAhCAYAAACbffiEAAAACXBIWXMAABYlAAAWJQFJUiTwAAABfUlEQVR4nN3XyZLDIAwE0Pz/v3q3r55JDlSBplsIEI49h76k4opexCK/juP4eXjOT149f2Tf9ySPgcjCc7kdpBTgDPKByKK2bTPFEdMO0RDrusJ0wLRBGCIuelmWJAjkgPGDSIQEMBDCfA2CEPM80+Qwl0JkNxBimiaYGOTUlXYI60YoehzHJDEm7kxjV3whOQTD3AaCuhGKHoYhyb+CBMwjIAFz647kTqyapdV4enGINuDJMSScPmijSwjCaHeLcT77C7EC0C1ugaCTi2HYfAZANgj6Z9A8xY5eiYghDMNQBJNCWhASot0jGsSCUiHWZcSGQjaWWCDaGMOWnsCcn2QhVkRuxqqNxMSdUSElCDbp1hbNOsa6Ugxh7xXauF4DyM1m5BLtCylBXgaxvPXVwEoOBjeIFVODtW74oj1yBQah3E8tyz3SkpolKS9Geo9YMD1QJR1Go4oJkgO1pgbNZq0AOUPChyjvh7vlXaQa+X1UXwKxgHokB2XPxbX+AnijwIU4ahazAAAAAElFTkSuQmCC") @db.Text
   subdomain     String?  @unique
   customDomain  String?  @unique
   rootDir       String?
-  // message404    String?  @default("Blimey! You've found a page that doesn't exist.") @db.Text
   projectName   String
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -101,6 +113,8 @@ model Site {
   enableComments Boolean  @default(false)
   giscusRepoId  String?
   giscusCategoryId String?
+  plan      Plan @default(FREE)
+  subscription  Subscription?
 
   @@unique([userId, projectName])
   @@index([userId])
@@ -112,12 +126,18 @@ enum Status {
   ERROR
 }
 
-// model Example {
-//   id            Int     @id @default(autoincrement())
-//   name          String?
-//   description   String? @db.Text
-//   domainCount   Int?
-//   url           String?
-//   image         String? @db.Text
-//   imageBlurhash String? @db.Text
-// }
+enum Plan {
+  FREE
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  active
+  canceled
+  past_due
+  incomplete
+  incomplete_expired
+  trialing
+  unpaid
+  paused
+}

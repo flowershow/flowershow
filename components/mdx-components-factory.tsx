@@ -179,7 +179,9 @@ export const mdxComponentsFactory = ({
         : `${props.className || ""} language-auto`;
       return <code {...props} className={className}></code>;
     },
-    ...(isFeatureEnabled(Feature.DataVisComponents) ? dataVisComponents : {}),
+    ...(isFeatureEnabled(Feature.DataVisComponents, siteMetadata)
+      ? dataVisComponents
+      : {}),
   };
 
   if (isDatasetPage(metadata)) {

@@ -31,7 +31,7 @@ export const WikiLayout: React.FC<Props> = ({
   return (
     <article>
       {!showHero && (
-        <header className="mb-8 space-y-4" data-testid="story-header">
+        <header className="mb-8 space-y-4" data-testid="wiki-header">
           <div className="space-y-2">
             {date && formattedDate && (
               <div className="font-light text-primary/70">

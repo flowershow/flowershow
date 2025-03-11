@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { testSite } from "./test-utils";
+import { testSite, premiumSite } from "./test-utils";
 import { getConfig } from "@/lib/app-config";
 
 const config = getConfig();
@@ -7,6 +7,10 @@ const config = getConfig();
 test.describe("Site layout and configuration", () => {
   test("applies metadata from site config", async ({ page }) => {
     await page.goto(testSite);
+    const navTitle = page.getByTestId("navbar-logo-link");
+    await expect(navTitle).toBeVisible();
+    await expect(navTitle).toHaveAttribute("href", `/${testSite}`);
+    await expect(navTitle).toContainText("SiteName");
 
     // Check page title and meta description
     await expect(page).toHaveTitle("Page Title From Frontmatter");
@@ -135,5 +139,22 @@ test.describe("Site layout and configuration", () => {
 
     await expect(page.getByTestId("built-with-button")).toBeVisible();
     await expect(page.locator("footer")).toHaveText(/Built with/);
+  });
+
+  test("Branding elements visibility based on plan", async ({ page }) => {
+    // Test FREE plan (branding visible)
+    await page.goto(testSite);
+    const navLogo = page.locator("nav img").first();
+
+    // Should show built-with button
+    const builtWithButton = page.getByTestId("built-with-button");
+    await expect(builtWithButton).toBeVisible();
+    await expect(builtWithButton).toContainText("Built with");
+
+    // Test Premium plan (no branding)
+    await page.goto(premiumSite);
+
+    // Should not show built-with button
+    await expect(builtWithButton).not.toBeVisible();
   });
 });

@@ -262,6 +262,40 @@ Monitor local events at: http://localhost:8288/
     ```
 14. Visit app at `http://cloud.localhost:3000`
 
+#### Stripe Setup for Local Development
+
+1. Install the [Stripe CLI](https://stripe.com/docs/stripe-cli#install):
+
+   ```bash
+   brew install stripe-cli
+   ```
+
+2. Log in to your Stripe account:
+
+   ```bash
+   stripe login
+   ```
+
+3. Start the Stripe webhook listener:
+
+   ```bash
+   stripe listen --forward-to localhost:3000/api/stripe/webhook
+   ```
+
+4. Copy the webhook signing secret that Stripe CLI outputs and update your `.env`:
+
+   ```
+   STRIPE_WEBHOOK_SECRET=whsec_.... # Use the secret from stripe listen command
+   ```
+
+5. Keep the Stripe CLI running in a separate terminal while testing subscriptions
+
+The webhook listener will now forward Stripe events to your local server, enabling:
+
+- Subscription creation and management
+- Premium plan activation
+- Subscription updates and cancellations
+
 ## Environment Configuration
 
 ### Environment Variables
@@ -387,6 +421,9 @@ npx playwright test dashboard.spec.ts
 
 # Run specific test file
 npx playwright test path/to/test.spec.ts
+
+# Run specific test by name
+npx playwright test --grep "should show subscription options on free tier"
 ```
 
 Note: If you need to reprocess a test site even when its repository content hasn't changed (e.g., when the app's processing logic has changed), you can uncomment the `forceSync` option in `e2e/global.setup.ts`.
@@ -496,5 +533,12 @@ DataHub Cloud manages several aliased pages:
    - Verify correct OAuth app configuration
    - Check callback URLs
    - Ensure environment variables are set
+
+4. Stripe Integration
+   - Ensure Stripe CLI is running with webhook forwarding
+   - Verify STRIPE_WEBHOOK_SECRET matches Stripe CLI output
+   - Check Stripe CLI logs for webhook delivery status
+   - Confirm subscription events in Stripe Dashboard
+   - Verify database updates after subscription events
 
 For additional support, please create an issue in the GitHub repository.

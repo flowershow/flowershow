@@ -1,27 +1,53 @@
-/* eslint @typescript-eslint/no-duplicate-enum-values: 0 */
 import { env } from "@/env.mjs";
-import { Site } from "@prisma/client";
+import { Site, Plan } from "@prisma/client";
 import { getConfig } from "./app-config";
 
 const config = getConfig();
 
-export function isFeatureEnabled(feature: Feature, site?: Site) {
+export enum Feature {
+  DataRequest = "DataRequest",
+  DataVisComponents = "DataVisComponents",
+  CustomDomain = "CustomDomain",
+  NoBranding = "NoBranding",
+  // AutoSync = "AutoSync",
+  // Comments = "Comments",
+  // Analytics = "Analytics",
+}
+
+// Define which features are available for each plan
+const PREMIUM_FEATURES: Feature[] = [
+  Feature.CustomDomain,
+  Feature.NoBranding,
+  // Feature.AutoSync,
+  // Feature.Comments,
+  // Feature.Analytics,
+];
+
+/**
+ * Check if a feature is enabled for a site
+ */
+export function isFeatureEnabled(feature: Feature, site: Site): boolean {
   switch (feature) {
     case Feature.DataRequest:
-      // This should also be abstracted away so that there is no mention of datahub.io
       return (
         env.NEXT_PUBLIC_ROOT_DOMAIN === "datahub.io" &&
         (site?.gh_repository.startsWith("datasets/") ||
           site?.gh_repository === "datopian/postal-codes")
       );
     case Feature.DataVisComponents:
-      return config.dataVisComponentsEnabled;
-    default:
-      return false;
+      return config.dataVisComponentsEnabled ?? false;
   }
+
+  // Check if feature is available in site's plan
+  if (PREMIUM_FEATURES.includes(feature)) {
+    return site?.plan === Plan.PREMIUM;
+  }
+  return false;
 }
 
-export enum Feature {
-  DataRequest = "DataRequest",
-  DataVisComponents = "DataVisComponents",
+/**
+ * Type guard to check if a string is a valid Feature
+ */
+export function isValidFeature(feature: string): feature is Feature {
+  return Object.values(Feature).includes(feature as Feature);
 }

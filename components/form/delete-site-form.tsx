@@ -1,6 +1,5 @@
 "use client";
 
-import LoadingDots from "@/components/icons/loading-dots";
 import { cn } from "@/lib/utils";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -8,10 +7,28 @@ import { api } from "@/trpc/react";
 import { signOut } from "next-auth/react";
 import { sendGTMEvent } from "@next/third-parties/google";
 import { env } from "@/env.mjs";
+import { useState } from "react";
+import type { Subscription } from "@prisma/client";
+import LoadingDots from "@/components/icons/loading-dots";
+
+type SubscriptionWithInterval = Subscription & {
+  interval?: "month" | "year";
+  cancelAtPeriodEnd?: boolean;
+};
 
 export default function DeleteSiteForm({ siteName }: { siteName: string }) {
   const { id } = useParams() as { id: string };
   const router = useRouter();
+  const [showSubscriptionWarning, setShowSubscriptionWarning] = useState(false);
+
+  // Query subscription details
+  const { data: subscription } = api.stripe.getSiteSubscription.useQuery(
+    { siteId: id },
+    {
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  );
 
   const { isLoading: isDeletingSite, mutate: deleteSite } =
     api.site.delete.useMutation({
@@ -37,42 +54,124 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
       },
     });
 
+  const { mutate: cancelSubscription } =
+    api.stripe.cancelSubscription.useMutation({
+      onSuccess: () => {
+        deleteSite({ id });
+      },
+      onError: (error) => {
+        toast.error(error.message);
+        setShowSubscriptionWarning(false);
+      },
+    });
+
+  const handleDelete = () => {
+    if (subscription && subscription.status === "active") {
+      setShowSubscriptionWarning(true);
+    } else {
+      deleteSite({ id });
+    }
+  };
+
   return (
-    <form
-      action={() => deleteSite({ id })}
-      className="rounded-lg border border-red-600 bg-white dark:bg-black"
-    >
-      <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
-        <h2 className="font-cal text-xl dark:text-white">Delete Site</h2>
-        <p className="text-sm text-stone-500 dark:text-stone-400">
-          Deletes your site and all posts associated with it. Type in the name
-          of your site <b>{siteName}</b> to confirm.
-        </p>
+    <>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleDelete();
+        }}
+        className="rounded-lg border border-red-600 bg-white dark:bg-black"
+      >
+        <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
+          <h2 className="font-cal text-xl dark:text-white">Delete Site</h2>
+          <p className="text-sm text-stone-500 dark:text-stone-400">
+            Deletes your site and all posts associated with it. Type in the name
+            of your site <b>{siteName}</b> to confirm.
+          </p>
 
-        <input
-          name="confirm"
-          type="text"
-          required
-          pattern={siteName}
-          placeholder={siteName}
-          className="w-full max-w-md rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
-        />
-      </div>
-
-      <div className="flex flex-col items-center justify-center space-y-2 rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800 sm:flex-row sm:justify-between sm:space-y-0 sm:px-10">
-        <p className="text-center text-sm text-stone-500 dark:text-stone-400">
-          This action is irreversible. Please proceed with caution.
-        </p>
-        <div className="w-32">
-          <FormButton pending={isDeletingSite} />
+          <input
+            data-testid="delete-site-input"
+            name="confirm"
+            type="text"
+            required
+            pattern={siteName}
+            placeholder={siteName}
+            className="w-full max-w-md rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
+          />
         </div>
-      </div>
-    </form>
+
+        <div className="flex flex-col items-center justify-center space-y-2 rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800 sm:flex-row sm:justify-between sm:space-y-0 sm:px-10">
+          <p className="text-center text-sm text-stone-500 dark:text-stone-400">
+            This action is irreversible. Please proceed with caution.
+          </p>
+          <div className="w-32">
+            <FormButton pending={isDeletingSite} />
+          </div>
+        </div>
+      </form>
+
+      {showSubscriptionWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="w-full max-w-md rounded-lg bg-white p-6 dark:bg-black">
+            <h3 className="mb-4 text-lg font-semibold">
+              Active Subscription Warning
+            </h3>
+            <div className="mb-4 text-sm text-stone-500 dark:text-stone-400">
+              <p>
+                {subscription?.cancelAtPeriodEnd ? (
+                  <>
+                    This site has a subscription that is already scheduled to
+                    cancel at the end of the current billing period. Deleting
+                    the site now will immediately cancel the subscription.
+                  </>
+                ) : (
+                  "This site has an active subscription that will be automatically cancelled."
+                )}
+              </p>
+              {subscription?.currentPeriodEnd && (
+                <p className="mt-2">
+                  {subscription?.cancelAtPeriodEnd
+                    ? "Scheduled cancellation date"
+                    : "Next billing date"}
+                  :{" "}
+                  {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                  <br />
+                  Billing period:{" "}
+                  {(subscription as SubscriptionWithInterval)?.interval ===
+                  "year"
+                    ? "Annually"
+                    : "Monthly"}
+                </p>
+              )}
+              <p className="mt-4 font-medium">
+                Are you sure you want to delete this site and immediately cancel
+                its subscription?
+              </p>
+            </div>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowSubscriptionWarning(false)}
+                className="rounded-md border border-stone-200 px-4 py-2 text-sm text-stone-900 hover:bg-stone-100 dark:border-stone-700 dark:text-white dark:hover:bg-stone-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  cancelSubscription({ siteId: id });
+                }}
+                className="rounded-md border border-red-600 bg-red-600 px-4 py-2 text-sm text-white hover:bg-white hover:text-red-600"
+              >
+                Delete Site
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
 function FormButton({ pending = false }) {
-  /* const { pending } = useFormStatus(); // TODO this doesn't work */
   return (
     <button
       className={cn(

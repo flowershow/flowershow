@@ -1,24 +1,17 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  useParams,
-  usePathname,
-  useSelectedLayoutSegments,
-} from "next/navigation";
+import { useParams, useSelectedLayoutSegments } from "next/navigation";
 import { ReactNode, useMemo } from "react";
 import {
   BotIcon,
-  MenuIcon,
   FileCodeIcon,
   MegaphoneIcon,
   LayoutIcon,
-  XIcon,
+  CreditCardIcon,
 } from "lucide-react";
 import {
   Disclosure,
-  DisclosureButton,
-  DisclosurePanel,
   Menu,
   MenuButton,
   MenuItem,

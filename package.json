@@ -3,8 +3,8 @@
   "scripts": {
     "dev": "prisma generate && next dev",
     "build": "pnpm fetch-config && prisma generate && prisma db push && next build",
-    "format:write": "prettier --write \"**/*.{css,js,json,jsx,ts,tsx}\"",
-    "format": "prettier \"**/*.{css,js,json,jsx,ts,tsx}\"",
+    "format:write": "prettier --write '**/*.{css,js,json,jsx,ts,tsx}'",
+    "format": "prettier '**/*.{css,js,json,jsx,ts,tsx}'",
     "start": "next start",
     "lint": "next lint",
     "prepare": "husky install",
@@ -15,7 +15,7 @@
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "npx eslint",
+      "next lint --fix --file",
       "prettier --write"
     ]
   },
@@ -35,6 +35,8 @@
     "@portaljs/remark-embed": "^1.0.5",
     "@portaljs/remark-wiki-link": "^1.1.3",
     "@prisma/client": "^5.5.2",
+    "@stripe/react-stripe-js": "^3.1.1",
+    "@stripe/stripe-js": "^5.5.0",
     "@t3-oss/env-nextjs": "^0.7.1",
     "@tanstack/react-query": "^4.32.6",
     "@tremor/react": "^3.11.1",
@@ -92,6 +94,7 @@
     "slick-carousel": "^1.8.1",
     "sonner": "^1.2.0",
     "strip-markdown": "^6.0.0",
+    "stripe": "^17.5.0",
     "superjson": "^2.2.1",
     "swr": "^2.2.4",
     "tailwind-merge": "^2.0.0",
