@@ -2,7 +2,6 @@ import { ReactNode } from "react";
 import { getSession } from "@/server/auth";
 import prisma from "@/server/db";
 import { notFound, redirect } from "next/navigation";
-import SiteSettingsNav from "./nav";
 import SiteSettingsHeader from "./header";
 
 export default async function SiteSettingsLayout({
@@ -33,7 +32,6 @@ export default async function SiteSettingsLayout({
   return (
     <>
       <SiteSettingsHeader site={site} />
-      <SiteSettingsNav />
       {children}
     </>
   );

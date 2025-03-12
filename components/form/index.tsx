@@ -113,7 +113,9 @@ export default function Form({
       )}
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
-        <h2 className="font-cal text-xl dark:text-white">{title}</h2>
+        <h2 id={inputAttrs.name} className="font-cal text-xl dark:text-white">
+          {title}
+        </h2>
         <p className="text-sm text-stone-500 dark:text-stone-400">
           {description}
         </p>

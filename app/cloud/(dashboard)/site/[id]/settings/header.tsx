@@ -36,7 +36,7 @@ export default async function SiteSettingsHeader({
 
   return (
     <>
-      <div className="lg:flex lg:items-start lg:justify-between">
+      <div className="border-b border-stone-200 pb-4 lg:flex lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           <h2 className="mb-2 text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
             <div className="flex items-center gap-2">

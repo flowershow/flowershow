@@ -86,7 +86,9 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
   return (
     <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-5 sm:p-10">
       <div className="mb-6 border-b border-gray-200 pb-4">
-        <h3 className="text-sm font-medium text-primary-muted">Current Plan</h3>
+        <h3 id="billing" className="text-sm font-medium text-primary-muted">
+          Current Plan
+        </h3>
 
         {subscription?.status === "canceled" && (
           <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
