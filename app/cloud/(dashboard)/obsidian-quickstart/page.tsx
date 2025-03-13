@@ -5,37 +5,64 @@ export default function ObsidianQuickstart() {
         <div className="relative overflow-hidden pt-[56.25%]">
           <iframe
             className="absolute inset-0 h-full w-full"
-            src="https://www.youtube.com/embed/OOqvj-MZjh0"
+            src="https://www.youtube.com/embed/_2cwU6zwNWQ"
             title="Flowershow Obsidian Tutorial"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
         </div>
       </div>
+
       <div className="flex items-center justify-between">
         <h1 className="font-cal text-3xl font-bold dark:text-white">
           Publish Your Obsidian Vault (in 2 minutes)
         </h1>
       </div>
+
       <div className="mt-6">
-        <h3 className="mt-4 text-lg font-semibold">Create your site</h3>
+        <h3 className="mt-4 text-lg font-semibold">
+          Step 1: Install the Flowershow Plugin
+        </h3>
+        <div className="mt-2 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+          <ol className="list-inside list-decimal space-y-3">
+            <li>Open Obsidian.</li>
+            <li>Go to Settings {`>`} Community Plugins.</li>
+            <li>Search for &quot;FlowerShow&quot; and click Install.</li>
+            <li>Enable the plugin once installed.</li>
+          </ol>
+        </div>
+
+        <h3 className="mt-4 text-lg font-semibold">
+          Step 2: Create a GitHub Repository for Syncing
+        </h3>
         <div className="mt-2 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
           <ol className="list-inside list-decimal space-y-3">
             <li>
-              Go to our{" "}
+              Create a Github repository. This will act as a backup and sync
+              point between Obsidian and Flowershow.
+            </li>
+            <li>
+              Use our{" "}
               <a
                 className="underline"
                 target="_blank"
                 rel="noreferrer noopener"
                 href="https://github.com/flowershow/flowershow-cloud-template/tree/main"
               >
-                GitHub template repository
+                template repository
               </a>{" "}
-              and click &quot;Use this template&quot; button to create a new
-              repository (can be private if you want). It will be used to
-              synchronize between obsidian and Flowershow (plus it provides a
-              handy backup!).
+              – click &quot;Use this template&quot; button to create a new
+              repository (can be private if you want).
             </li>
+          </ol>
+        </div>
+
+        <h3 className="mt-4 text-lg font-semibold">
+          Step 3: Connect Flowershow to Your GitHub Repository
+        </h3>
+        <div className="mt-2 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+          <ol className="list-inside list-decimal space-y-3">
+            <li>Go back to Flowershow Cloud dashboard</li>
             <li>
               Click{" "}
               <a
@@ -44,38 +71,40 @@ export default function ObsidianQuickstart() {
                 target="_blank"
                 rel="noreferrer noopener"
               >
-                here
-              </a>{" "}
-              and create a new site from that repository.
+                here and create a new site from that repository.
+              </a>
+              )
             </li>
+            <li>Select the GitHub repository you just created.</li>
             <li>
-              When the site finishes syncing, click the &quot;Visit&quot; button
-              to open it.
+              Click Create Website — your Flowershow will set up your site in
+              seconds!
             </li>
           </ol>
         </div>
 
-        <h3 className="mt-4 text-lg font-semibold">Publish Obsidian vault</h3>
+        <h3 className="mt-4 text-lg font-semibold">
+          Step 4: Sync Your Obsidian Vault & Publish
+        </h3>
         <div className="mt-2 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
-          <ol className="list-inside list-decimal space-y-3" start={4}>
+          <ol className="list-inside list-decimal space-y-3">
             <li>
-              If you haven&apos;t already, install and enable the Flowershow
-              plugin in your Obsidian vault.
+              Go back to Obsidian and go to the Flowershow plugin settings.
             </li>
+            <li>Enter the details for your GitHub repository.</li>
             <li>
-              In the plugin settings, enter your GitHub username, name of the
-              repository you&apos;ve created earlier and a GitHub Personal
-              Access Token.
-            </li>
-            <li>
-              Click the Flowershow icon in Obsidian ribbon and use available
-              options to synchronize your vault&apos;s content with your site.
+              Go to the Flowershow button in the sidebar and select the notes to
+              publish — and that&apos;s it!
             </li>
           </ol>
         </div>
-        <p className="mt-8 text-xl font-semibold">
-          Done! Your notes are now ready to be shared with the world! 💐
-        </p>
+
+        <div className="mt-8 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-900/20">
+          <p className="text-green-700 dark:text-green-300">
+            Congratulations! Your Obsidian Vault is now published with
+            Flowershow. 💐
+          </p>
+        </div>
       </div>
     </div>
   );
