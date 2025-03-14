@@ -15,6 +15,13 @@ export function isPathVisible(
   includes: string[],
   excludes: string[],
 ) {
+  const normalizedPath = normalizeUrl(path);
+
+  // Always allow config.json and custom.css
+  if (normalizedPath === "/config.json" || normalizedPath === "/custom.css") {
+    return true;
+  }
+
   // Check if the path is excluded
   if (isPathIncluded(path, excludes)) {
     return false;
