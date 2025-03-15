@@ -228,6 +228,67 @@ test.describe("Subscription", () => {
     await expect(
       page.getByRole("button", { name: "Delete Site" }),
     ).toBeVisible();
+  });
+
+  test("should allow to cancel subscription", async ({ page }) => {
+    test.fail(!createdSiteId, "Site ID is required for this test");
+
+    // Navigate to site settings
+    await page.goto(`/site/${createdSiteId}/settings`);
+
+    // Click manage subscription button and wait for billing portal URL
+    await Promise.all([
+      page.waitForResponse((response) =>
+        response.url().includes("/api/trpc/stripe.getBillingPortal"),
+      ),
+      page.getByRole("button", { name: /Manage Subscription/i }).click(),
+    ]);
+
+    // Wait for navigation to Stripe billing portal
+    await page.waitForURL((url: URL) =>
+      url.toString().includes("billing.stripe.com"),
+    );
+
+    // Click cancel subscription button
+    await page.getByRole("link", { name: /Cancel subscription/i }).click();
+    // Confirm
+    await page.getByRole("button", { name: /Cancel subscription/i }).click();
+    // Don't leave feedback
+    await page.getByRole("button", { name: /No thanks/i }).click();
+
+    // Click return to site button
+    await page.getByRole("link", { name: /Return to/i }).click();
+
+    // Wait for redirect back to settings
+    await page.waitForURL((url: URL) =>
+      url.toString().includes(`/site/${createdSiteId}/settings`),
+    );
+
+    // Verify subscription is cancelled but still active
+    await expect(page.getByText(/Your subscription will end on/)).toBeVisible();
+  });
+
+  test("should show subscription warning when deleting site with cancelled (but still valid) subscription", async ({
+    page,
+  }) => {
+    test.fail(!createdSiteId, "Site ID is required for this test");
+
+    // Navigate to site settings
+    await page.goto(`/site/${createdSiteId}/settings`);
+
+    // Type site name to confirm deletion
+    // Get the first heading on the page which should be the site name
+    const siteName = await page.getByTestId("site-name").first().textContent();
+    await page
+      .getByTestId("delete-site-input")
+      .fill(siteName?.replace("Delete Site", "").trim() || "");
+
+    // Click delete button and verify warning modal appears
+    await page.getByRole("button", { name: /Confirm Delete/i }).click();
+
+    // Verify subscription warning modal content
+    await expect(page.getByText("Active Subscription Warning")).toBeVisible();
+    await expect(page.getByText(/Scheduled cancellation date/)).toBeVisible();
 
     // Click delete and verify redirect
     await page.getByRole("button", { name: "Delete Site" }).click();
