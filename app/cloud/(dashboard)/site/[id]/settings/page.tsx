@@ -144,7 +144,7 @@ export default async function SiteSettingsIndex({
           description="The custom domain for your site."
           helpText={
             isFeatureEnabled(Feature.CustomDomain, site)
-              ? "Enter a valid domain."
+              ? "Enter a valid domain and configure it in your DNS provider."
               : "Available on Premium plan only."
           }
           disabled={!isFeatureEnabled(Feature.CustomDomain, site)}

@@ -84,11 +84,18 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
   };
 
   return (
-    <div className="space-y-4 rounded-lg border border-gray-200 bg-white p-5 sm:p-10">
-      <div className="mb-6 border-b border-gray-200 pb-4">
-        <h3 id="billing" className="text-sm font-medium text-primary-muted">
-          Current Plan
-        </h3>
+    <div className="rounded-lg border border-stone-200 bg-white">
+      <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
+        <h2 id="billing" className="font-cal text-xl">
+          Billing
+        </h2>
+
+        <p>
+          Current plan:
+          <span className="ml-1 font-semibold">
+            {subscription?.status === "active" ? "Premium" : "Free"}
+          </span>
+        </p>
 
         {subscription?.status === "canceled" && (
           <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
@@ -96,69 +103,68 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
           </span>
         )}
 
-        <div className="mt-2 flex items-center gap-2">
-          <span className="font-cal text-xl font-semibold">
-            {subscription?.status === "active" ? "Premium" : "Free Plan"}
-          </span>
-        </div>
+        {(!subscription || subscription.status !== "active") && (
+          <div className="space-y-4">
+            <div>
+              <p className="mb-2 flex items-baseline gap-x-2 text-lg">
+                <span className="text-xl font-semibold tracking-tight text-stone-900">
+                  {getPriceString(plans.PREMIUM)}
+                </span>
+                <span className="text-stone-500">USD</span>
+              </p>
+              <p className="text-stone-500">
+                per month, per site, billed {frequency.label.toLowerCase()}
+              </p>
+            </div>
+            <div className="inline-block">
+              <fieldset aria-label="Payment frequency">
+                <RadioGroup
+                  value={frequency}
+                  onChange={setFrequency}
+                  className="grid grid-cols-2 gap-x-1 rounded-md p-1 text-center text-xs/5 font-semibold ring-1 ring-inset ring-stone-200"
+                >
+                  {frequencies.map((option) => (
+                    <Radio
+                      key={option.value}
+                      value={option}
+                      className="cursor-pointer rounded-md px-2.5 py-1 text-stone-500 data-[checked]:bg-black data-[checked]:text-white"
+                    >
+                      {option.label}
+                    </Radio>
+                  ))}
+                </RadioGroup>
+              </fieldset>
+            </div>
+          </div>
+        )}
+
+        {subscription?.status === "active" && subscription.currentPeriodEnd && (
+          <div className="text-sm text-stone-500">
+            {subscription.cancelAtPeriodEnd ? (
+              <p className="font-medium text-amber-600">
+                Your subscription will end on{" "}
+                {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+              </p>
+            ) : (
+              <p>
+                Next billing date:{" "}
+                {new Date(subscription.currentPeriodEnd).toLocaleDateString()}{" "}
+                <span className="text-stone-500">
+                  (Renews{" "}
+                  {subscription.interval === "month" ? "monthly" : "annually"})
+                </span>
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
-      {(!subscription || subscription.status !== "active") && (
-        <div className="mt-6 space-y-4">
-          <div>
-            <p className="mb-2 flex items-baseline gap-x-2">
-              <span className="text-4xl font-semibold tracking-tight">
-                {getPriceString(plans.PREMIUM)}
-              </span>
-              <span className="text-xl text-primary-subtle">USD</span>
-            </p>
-            <p className="text-primary-subtle">
-              per month, per site, billed {frequency.label.toLowerCase()}
-            </p>
-          </div>
-          <div className="inline-block">
-            <fieldset aria-label="Payment frequency">
-              <RadioGroup
-                value={frequency}
-                onChange={setFrequency}
-                className="grid grid-cols-2 gap-x-1 rounded-md p-1 text-center text-xs/5 font-semibold ring-1 ring-inset ring-gray-200"
-              >
-                {frequencies.map((option) => (
-                  <Radio
-                    key={option.value}
-                    value={option}
-                    className="cursor-pointer rounded-md px-2.5 py-1 text-primary-subtle data-[checked]:bg-indigo-600 data-[checked]:text-white"
-                  >
-                    {option.label}
-                  </Radio>
-                ))}
-              </RadioGroup>
-            </fieldset>
-          </div>
-        </div>
-      )}
-
-      {subscription?.status === "active" && subscription.currentPeriodEnd && (
-        <div className="mt-4 text-sm text-primary-subtle">
-          {subscription.cancelAtPeriodEnd ? (
-            <p className="font-medium text-amber-600">
-              Your subscription will end on{" "}
-              {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
-            </p>
-          ) : (
-            <p>
-              Next billing date:{" "}
-              {new Date(subscription.currentPeriodEnd).toLocaleDateString()}{" "}
-              <span className="text-primary-subtle">
-                (Renews{" "}
-                {subscription.interval === "month" ? "monthly" : "annually"})
-              </span>
-            </p>
-          )}
-        </div>
-      )}
-
-      <div className="mt-6">
+      <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
+        <p className="w-full text-sm text-stone-500">
+          {subscription?.status === "active"
+            ? "Manage your subscription and payment method."
+            : "Select billing interval and upgrade to Premium."}
+        </p>
         <LoadingButton
           onClick={
             subscription?.status === "active"

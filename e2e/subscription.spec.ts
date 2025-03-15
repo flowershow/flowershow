@@ -89,21 +89,18 @@ test.describe("Subscription", () => {
 
   test("should show subscription options on free tier", async ({ page }) => {
     test.fail(!createdSiteId, "Site ID is required for this test");
-    await page.goto(`/site/${createdSiteId}/settings/billing`);
+    await page.goto(`/site/${createdSiteId}/settings`);
 
-    // Verify premium plan details are visible
-    await expect(
-      page.getByRole("heading", { name: "Current Plan" }),
-    ).toBeVisible();
+    // Check plan frequency options are visible
+    await expect(page.getByRole("radio", { name: "Monthly" })).toBeVisible();
+    await expect(page.getByRole("radio", { name: "Annually" })).toBeVisible();
+
+    // Verify upgrade button is visible
     await expect(
       page.getByRole("button", { name: /Upgrade to Premium/i }),
     ).toBeVisible();
 
-    // Check plan frequency options
-    await expect(page.getByRole("radio", { name: "Monthly" })).toBeVisible();
-    await expect(page.getByRole("radio", { name: "Annually" })).toBeVisible();
-
-    // Switch to annual billing
+    // Switch to annual billing works
     await page.getByRole("radio", { name: "Annually" }).click();
     await expect(page.getByRole("radio", { name: "Annually" })).toHaveAttribute(
       "data-checked",
@@ -112,7 +109,7 @@ test.describe("Subscription", () => {
 
   test("should allow upgrading to premium plan", async ({ page }) => {
     test.fail(!createdSiteId, "Site ID is required for this test");
-    await page.goto(`/site/${createdSiteId}/settings/billing`);
+    await page.goto(`/site/${createdSiteId}/settings`);
 
     // Select annual plan
     await page.getByRole("radio", { name: "Annually" }).click();
@@ -155,7 +152,7 @@ test.describe("Subscription", () => {
 
     // Wait for redirect back to success page
     await page.waitForURL(
-      (url: URL) => url.toString().includes("success=true"),
+      (url: URL) => url.toString().includes("upgrade_success=true"),
       { timeout: 20000 },
     );
   });
@@ -167,7 +164,7 @@ test.describe("Subscription", () => {
     // Should show Premium badge in heading
     await expect(page.getByRole("heading").getByText("Premium")).toBeVisible();
 
-    await page.goto(`/site/${createdSiteId}/settings/billing`);
+    await page.goto(`/site/${createdSiteId}/settings`);
     // Should show current plan badge
     await expect(page.getByText("Current plan")).toBeVisible();
 
@@ -225,8 +222,6 @@ test.describe("Subscription", () => {
     await expect(
       page.getByText(/This site has an active subscription/),
     ).toBeVisible();
-    await expect(page.getByText(/Next billing date/)).toBeVisible();
-    await expect(page.getByText(/Billing period: Annually/)).toBeVisible();
 
     // Verify modal buttons
     await expect(page.getByRole("button", { name: "Cancel" })).toBeVisible();

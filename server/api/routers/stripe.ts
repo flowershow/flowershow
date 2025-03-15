@@ -104,8 +104,8 @@ export const stripeRouter = createTRPCRouter({
         metadata: {
           siteId: input.siteId,
         },
-        success_url: `${returnURLBase}/${input.siteId}/settings/billing?success=true`,
-        cancel_url: `${returnURLBase}/${input.siteId}/settings/billing?canceled=true`,
+        success_url: `${returnURLBase}/${input.siteId}/settings?upgrade_success=true`,
+        cancel_url: `${returnURLBase}/${input.siteId}/settings?upgrade_cancelled=true`,
       });
 
       return { url: checkoutSession.url };
@@ -146,7 +146,7 @@ export const stripeRouter = createTRPCRouter({
 
       const portalSession = await stripe.billingPortal.sessions.create({
         customer: site.subscription.stripeCustomerId,
-        return_url: `${returnURLBase}/${input.siteId}/settings/billing`,
+        return_url: `${returnURLBase}/${input.siteId}/settings`,
       });
 
       return { url: portalSession.url };
