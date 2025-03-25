@@ -6,6 +6,7 @@ import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 import { ErrorMessage } from "@/components/error-message";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 import { FrictionlessViewFactory } from "./frictionless-view";
+import { default as Index, IndexProps } from "./index-component";
 import {
   Catalog,
   Excel,
@@ -59,6 +60,9 @@ export const mdxComponentsFactory = ({
 
   const dataVisComponents = {
     Catalog: withErrorBoundary(Catalog, "Catalog"),
+    Index: withErrorBoundary((props: IndexProps) => {
+      return <Index {...props} siteId={siteMetadata.id} />;
+    }, "Index"),
     Excel: withErrorBoundary((props: ExcelProps) => {
       props.data.url = resolveDataUrl(props.data.url);
       return <Excel {...props} />;

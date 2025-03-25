@@ -638,6 +638,53 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
+  getCatalogFiles: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+        dir: z.string().min(1), // absolute dir
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [{ id: input.siteId }],
+            },
+          });
+
+          if (!site) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
+          }
+
+          const dir = input.dir.replace(/^\//, "");
+          const dirReadmePath = dir + "/README.md";
+          const dirIndexPath = dir + "/index.md";
+
+          console.log({ dir, dirIndexPath, dirReadmePath });
+
+          const files = Object.values(
+            site.files as { [key: string]: PageMetadata },
+          ).filter(
+            (file) =>
+              file._path.startsWith(dir) &&
+              file._path !== dirReadmePath &&
+              file._path !== dirIndexPath,
+          );
+
+          return files;
+        },
+        [`${input.siteId}-${input.dir}-files`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.siteId}-${input.dir}-files`],
+        },
+      )();
+    }),
   getAll: protectedProcedure.query(async ({ ctx }) => {
     if (ctx.session.user.role !== "ADMIN") {
       throw new Error("Unauthorized");
