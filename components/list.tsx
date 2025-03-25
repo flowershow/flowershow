@@ -1,11 +1,11 @@
 import { api } from "@/trpc/server";
 
-export interface IndexProps {
+export interface ListProps {
   siteId: string;
   dir?: string;
 }
 
-export default async function Index({ siteId, dir = "" }: IndexProps) {
+export default async function List({ siteId, dir = "" }: ListProps) {
   const files = await api.site.getCatalogFiles.query({ siteId, dir });
 
   if (!files.length) {
