@@ -14,9 +14,24 @@ export default async function Index({ siteId, dir = "" }: IndexProps) {
     );
   }
 
+  // Sort files by date (if available) and then by title
+  const sortedFiles = [...files].sort((a, b) => {
+    // If both have dates, compare dates first
+    if (a.date && b.date) {
+      const dateComparison =
+        new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (dateComparison !== 0) return dateComparison;
+    }
+    // If only one has a date, prioritize the one with date
+    if (a.date) return -1;
+    if (b.date) return 1;
+    // If no dates or dates are equal, compare titles
+    return (a.title || "").localeCompare(b.title || "");
+  });
+
   return (
     <div className="not-prose">
-      {files.map((file) => (
+      {sortedFiles.map((file) => (
         <article
           key={file._path}
           className="relative isolate flex flex-col gap-8 border-b border-[#e5e7eb] py-8 last:border-b-0 lg:flex-row lg:py-12"
