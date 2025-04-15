@@ -17,26 +17,27 @@ export default async function List({ siteId, dir = "" }: ListProps) {
   // Sort files by date (if available) and then by title
   const sortedFiles = [...files].sort((a, b) => {
     // If both have dates, compare dates first
-    if (a.date && b.date) {
+    if (a.metadata.date && b.metadata.date) {
       const dateComparison =
-        new Date(b.date).getTime() - new Date(a.date).getTime();
+        new Date(b.metadata.date).getTime() -
+        new Date(a.metadata.date).getTime();
       if (dateComparison !== 0) return dateComparison;
     }
     // If only one has a date, prioritize the one with date
-    if (a.date) return -1;
-    if (b.date) return 1;
+    if (a.metadata.date) return -1;
+    if (b.metadata.date) return 1;
     // If no dates or dates are equal, compare titles
-    return (a.title || "").localeCompare(b.title || "");
+    return (a.metadata.title || "").localeCompare(b.metadata.title || "");
   });
 
   return (
     <div className="not-prose">
       {sortedFiles.map((file) => (
         <article
-          key={file._path}
+          key={file._url}
           className="relative isolate flex flex-col gap-8 border-b border-[#e5e7eb] py-8 last:border-b-0 lg:flex-row lg:py-12"
         >
-          <a href={file._url}>
+          <a href={file._url!}>
             {/* <div className="relative aspect-video sm:aspect-[2/1] lg:aspect-square lg:w-64 lg:shrink-0">
             <img
               alt=""
@@ -47,9 +48,12 @@ export default async function List({ siteId, dir = "" }: ListProps) {
           </div> */}
             <div>
               <div className="flex items-center gap-x-4 font-title text-xs">
-                {file.date && (
-                  <time dateTime={file.date} className="text-primary-subtle">
-                    {file.date.slice(0, 10)}
+                {file.metadata.date && (
+                  <time
+                    dateTime={file.metadata.date}
+                    className="text-primary-subtle"
+                  >
+                    {file.metadata.date.slice(0, 10)}
                   </time>
                 )}
                 {/* <a
@@ -62,9 +66,9 @@ export default async function List({ siteId, dir = "" }: ListProps) {
               <div className="group relative max-w-xl">
                 <h3 className="mt-3 font-title text-lg/6 font-semibold text-primary-strong group-hover:text-primary">
                   <span className="absolute inset-0" />
-                  {file.title}
+                  {file.metadata.title}
                 </h3>
-                <p className="mt-5 text-primary">{file.description}</p>
+                <p className="mt-5 text-primary">{file.metadata.description}</p>
               </div>
               {/* <div className="mt-6 flex border-t border-gray-900/5 pt-6">
               <div className="relative flex items-center gap-x-4">

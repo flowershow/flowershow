@@ -4,7 +4,6 @@ import { SiteWithUser } from "@/types";
 
 interface Props extends React.PropsWithChildren {
   metadata: BlogPageMetadata;
-  siteMetadata: SiteWithUser;
 }
 
 export const BlogLayout: React.FC<Props> = ({ children, metadata }) => {

@@ -89,13 +89,6 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  await prisma.site.update({
-    where: { id: site!.id },
-    data: {
-      syncStatus: "PENDING",
-    },
-  });
-
   await inngest.send({
     name: "site/sync",
     data: {

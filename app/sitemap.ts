@@ -8,11 +8,26 @@ async function Sitemap() {
   noStore();
 
   const sites = await prisma.site.findMany({
-    include: { user: true },
+    include: {
+      user: true,
+      blobs: {
+        where: {
+          syncStatus: "SUCCESS",
+          OR: [
+            { appPath: { endsWith: ".md" } },
+            { appPath: { endsWith: ".mdx" } },
+          ],
+        },
+        select: {
+          appPath: true,
+          updatedAt: true,
+        },
+      },
+    },
   });
 
   const userSiteUrls = sites.flatMap((site) => {
-    const { customDomain, projectName, user: siteUser } = site;
+    const { customDomain, projectName, user: siteUser, blobs } = site;
 
     const gh_username = siteUser!.gh_username!;
 
@@ -22,14 +37,26 @@ async function Sitemap() {
     const sitePath = resolveSiteAlias(`/@${gh_username}/${projectName}`, "to");
     const baseUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}${sitePath}`;
 
-    return Object.keys((site.files as any) || []).map((url) => {
-      const _url =
-        url === "/" ? baseUrl : `${baseUrl}/${url.replace(/&/g, "%26")}`;
-      return {
-        url: _url,
-        lastModified: new Date(),
-      };
+    // Add the base site URL
+    const urls = [
+      {
+        url: baseUrl,
+        lastModified: site.updatedAt,
+      },
+    ];
+
+    // Add URLs for each blob
+    blobs.forEach((blob) => {
+      if (blob.appPath === "/") return; // Skip root path as it's already added
+      urls.push({
+        url: `${baseUrl}/${blob
+          .appPath!.replace(/^\//, "")
+          .replace(/&/g, "%26")}`,
+        lastModified: blob.updatedAt,
+      });
     });
+
+    return urls;
   });
 
   return userSiteUrls;

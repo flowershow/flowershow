@@ -61,12 +61,12 @@ model Account {
   refresh_token_expires_in Int?
   access_token             String?
   expires_at               Int?
-  token_type               String?
-  scope                    String?
-  id_token                 String?
-  session_state            String?
-  oauth_token_secret       String?
-  oauth_token              String?
+  token_type              String?
+  scope                   String?
+  id_token                String?
+  session_state           String?
+  oauth_token_secret      String?
+  oauth_token             String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -104,20 +104,39 @@ model Site {
   updatedAt     DateTime @updatedAt
   user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId        String?
-  syncStatus    Status   @default(SUCCESS)
-  syncError     Json?
-  syncedAt      DateTime? // when the site content was last updated in R2
   autoSync      Boolean  @default(false)
   webhookId     String?  @unique
-  files         Json?    @db.JsonB // temporary storage for site files metadata
   enableComments Boolean  @default(false)
   giscusRepoId  String?
   giscusCategoryId String?
-  plan      Plan @default(FREE)
+  plan          Plan     @default(FREE)
   subscription  Subscription?
+  blobs         Blob[]
+  tree          Json?    @db.JsonB // GitHub tree data
 
   @@unique([userId, projectName])
   @@index([userId])
+}
+
+model Blob {
+  id        String   @id @default(cuid())
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  siteId    String
+  path      String   // Original file path
+  appPath   String?   // URL-friendly path
+  size      Int
+  sha       String
+  metadata  Json     @db.JsonB
+  extension String?  // File extension
+  syncStatus Status  @default(PENDING)
+  syncError  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([siteId, path])
+  @@unique([siteId, appPath])
+  @@index([siteId])
+  @@index([appPath])
 }
 
 enum Status {

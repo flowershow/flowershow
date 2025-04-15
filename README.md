@@ -104,7 +104,7 @@ graph TD
   - Concurrency limit: 10 per account
   - Cancellation on: new sync or delete events
   - Error handling with specific error types:
-    - MARKDOWN_PARSING_ERROR
+    - BLOB_SYNC_ERROR
     - INVALID_ROOT_DIR
     - INTERNAL_ERROR
 

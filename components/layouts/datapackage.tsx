@@ -1,4 +1,3 @@
-import Script from "next/script";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import prettyBytes from "pretty-bytes";
@@ -18,11 +17,7 @@ import { FrictionlessView } from "@/components/frictionless-view";
 import { ErrorMessage } from "@/components/error-message";
 import { ResourcePreview } from "@/components/resource-preview";
 import { DatasetPageMetadata } from "@/server/api/types";
-import getJsonLd from "./getJsonLd";
 import { ResourceSchema } from "../resource-schema";
-import { api } from "@/trpc/server";
-import type { SiteWithUser } from "@/types";
-import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 import RequestDataButton from "../request-data-button";
 import RequestDataModal from "../modal/request-data";
 
@@ -33,13 +28,15 @@ const SocialShareMenu = dynamic(
 
 interface Props extends React.PropsWithChildren {
   metadata: DatasetPageMetadata;
-  siteMetadata: SiteWithUser;
+  resolveAssetUrl: (url: string) => string;
+  ghRepository: string;
 }
 
 export const DataPackageLayout: React.FC<Props> = async ({
   children,
   metadata,
-  siteMetadata,
+  resolveAssetUrl,
+  ghRepository,
 }) => {
   const {
     title,
@@ -72,67 +69,15 @@ export const DataPackageLayout: React.FC<Props> = async ({
     0,
   );
 
-  const { projectName, customDomain, user: siteUser } = siteMetadata;
-
-  const gh_username = siteUser!.gh_username!;
-
-  const rawFilePermalinkBase = customDomain
-    ? `/_r/-`
-    : resolveSiteAlias(`/@${gh_username}/${projectName}`, "to") + `/_r/-`;
-
-  const getResourceLastModifiedDate = async (resource: Resource) => {
-    if (resource.modified) {
-      return new Date(resource.modified).toISOString();
-    }
-    if (resource.path.startsWith("http")) {
-      return null;
-    }
-
-    return await api.site.getFileLastModifiedDate.query({
-      gh_username: siteMetadata.user!.gh_username!,
-      projectName: siteMetadata.projectName,
-      path: resource.path,
-    });
-  };
-
-  const getResourceFileUrl = (resource: Resource) => {
-    if (resource.path.startsWith("http")) {
-      return resource.path;
-    }
-
-    return rawFilePermalinkBase + "/" + resource.path;
-  };
-
-  const resourcesAdjusted = await Promise.all(
-    resources.map(async (resource) => {
-      const modified = await getResourceLastModifiedDate(resource);
-      const path = getResourceFileUrl(resource);
-
-      return {
-        ...resource,
-        path,
-        modified,
-      };
-    }),
-  );
-
   const datasetLastModifiedDate =
-    updated ?? getEarliestResourceModificationTime(resourcesAdjusted);
+    updated ?? getEarliestResourceModificationTime(resources);
 
-  console.log("datasetLastModifiedDate", datasetLastModifiedDate);
-
-  const jsonLd = getJsonLd({ metadata, siteMetadata });
   const isPremiumDataset = metadata.has_premium;
   const hideGitRepo = metadata.hide_git_repo;
   const hasSolutions = metadata.has_solutions;
 
   return (
     <>
-      <Script
-        id="json-ld-datapackage"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
       <article className="lg:prose-md prose max-w-none dark:prose-invert prose-headings:font-title prose-headings:font-medium prose-a:break-words">
         <header className="mb-8 flex flex-col gap-y-5">
           <h1 className="mb-2">{title}</h1>
@@ -191,11 +136,11 @@ export const DataPackageLayout: React.FC<Props> = async ({
                   <GithubIcon width={18} />
                   <Link
                     className="flex items-center gap-1 font-normal text-slate-600 no-underline hover:underline"
-                    href={`https://github.com/${siteMetadata?.gh_repository}`}
+                    href={`https://github.com/${ghRepository}`}
                     target="_blank"
                     rel="noreferrer"
                   >
-                    {siteMetadata.gh_repository}
+                    {ghRepository}
                   </Link>
                 </div>
                 <span>•</span>
@@ -290,7 +235,7 @@ export const DataPackageLayout: React.FC<Props> = async ({
           <section data-testid="dp-views" className="my-12">
             <h2 id="data-views">Data Views</h2>
             {views.map((view, id) => (
-              <View key={id} view={view} resources={resourcesAdjusted} />
+              <View key={id} view={view} resources={resources} />
             ))}
           </section>
         )}
@@ -307,7 +252,7 @@ export const DataPackageLayout: React.FC<Props> = async ({
               </tr>
             </thead>
             <tbody>
-              {resourcesAdjusted.map((r) => {
+              {resources.map((r) => {
                 return (
                   <tr
                     key={`resources-list-${r.name}`}
@@ -338,7 +283,7 @@ export const DataPackageLayout: React.FC<Props> = async ({
                     <td>
                       <a
                         target="_blank"
-                        href={r.path}
+                        href={resolveAssetUrl(r.path)}
                         className="hover:text-[#6366F1]"
                       >
                         <div className="flex items-center space-x-1 ">
@@ -353,11 +298,11 @@ export const DataPackageLayout: React.FC<Props> = async ({
             </tbody>
           </table>
         </section>
-        {resourcesAdjusted.length > 0 && (
+        {resources.length > 0 && (
           <section data-testid="dp-previews" className="my-12">
             <h2 id="data-previews">Data Previews</h2>
             <div>
-              {resourcesAdjusted.slice(0, 5).map((resource) => (
+              {resources.slice(0, 5).map((resource) => (
                 <div key={resource.name}>
                   <ResourcePreview resource={resource} />
                   {resource.schema && (

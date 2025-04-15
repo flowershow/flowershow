@@ -1,9 +1,7 @@
 import { DataPackage } from "@/components/layouts/datapackage-types";
 
 interface PageMetadataBase {
-  _url: string; // url at which the file is available on the site
-  _path: string; // path to the file in the repository
-  _pagetype: "wiki" | "blog" | "dataset";
+  layout: "wiki" | "blog" | "dataset";
   title?: string;
   description?: string;
   publish: boolean;
@@ -18,14 +16,14 @@ interface PageMetadataBase {
 }
 
 export interface WikiPageMetadata extends PageMetadataBase {
-  _pagetype: "wiki";
+  layout: "wiki";
   image?: string;
   date?: string;
   authors?: string[];
 }
 
 export interface BlogPageMetadata extends PageMetadataBase {
-  _pagetype: "blog";
+  layout: "blog";
   authors?: string[];
   image?: string;
   date?: string;
@@ -33,7 +31,7 @@ export interface BlogPageMetadata extends PageMetadataBase {
 }
 
 export interface DatasetPageMetadata extends PageMetadataBase, DataPackage {
-  _pagetype: "dataset";
+  layout: "dataset";
   title: string;
   description: string;
 }
@@ -46,7 +44,7 @@ export type PageMetadata =
 export const isDatasetPage = (
   pageMetadata: PageMetadata,
 ): pageMetadata is DatasetPageMetadata => {
-  return pageMetadata._pagetype === "dataset";
+  return pageMetadata.layout === "dataset";
 };
 
 export enum OrganizationType {

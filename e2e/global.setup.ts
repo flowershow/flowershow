@@ -43,7 +43,6 @@ async function createAndSyncSite(
       projectName,
       gh_repository: repository,
       gh_branch: branch,
-      syncStatus: "PENDING",
       plan,
     },
   });
@@ -78,20 +77,6 @@ async function createAndSyncSite(
         id: site.id,
       },
     });
-
-    console.log(
-      `[${new Date().toISOString()}] Current sync status:`,
-      _site?.syncStatus,
-    );
-
-    if (_site?.syncStatus === "SUCCESS") {
-      return true;
-    }
-
-    if (_site?.syncStatus === "ERROR") {
-      console.error("Sync failed. Error:", _site.syncError);
-      throw new Error(`Sync error. Site ID: ${site.id}`);
-    }
 
     return false;
   };

@@ -18,7 +18,7 @@ export default function SyncButton({
   const { setRefreshKey, setIsPending } = useSync();
 
   const { data: syncStatus, isLoading: isLoadingStatusCheck } =
-    api.site.checkSyncStatus.useQuery(
+    api.site.getSyncStatus.useQuery(
       { id: siteId },
       {
         refetchInterval: 10 * 1000,

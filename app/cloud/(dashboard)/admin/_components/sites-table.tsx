@@ -103,18 +103,6 @@ export default function SitesAdminTable() {
                       scope="col"
                       className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                     >
-                      Synced at
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                    >
-                      Sync status
-                    </th>
-                    <th
-                      scope="col"
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
-                    >
                       Repository
                     </th>
                     <th
@@ -212,34 +200,6 @@ export default function SitesAdminTable() {
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {site.user!.gh_username}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {site.syncedAt ? (
-                            <time
-                              dateTime={new Date(site.syncedAt).toISOString()}
-                            >
-                              {new Date(site.syncedAt).toLocaleString("en-US", {
-                                year: "numeric",
-                                month: "2-digit",
-                                day: "2-digit",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                second: "2-digit",
-                                hour12: false, // Use 24-hour format
-                              })}
-                            </time>
-                          ) : (
-                            "Not synced"
-                          )}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {site.syncStatus === "SUCCESS" ? (
-                            <span className="text-green-600">Success</span>
-                          ) : site.syncStatus === "ERROR" ? (
-                            <span className="text-red-600">Error</span>
-                          ) : (
-                            <span className="text-yellow-600">Pending</span>
-                          )}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {site.gh_repository}

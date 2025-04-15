@@ -64,20 +64,20 @@ export async function GET(
   }
 
   // find the resource in the datapackage (included in PageMetadata)
-  const pageMetadata = (
-    site.files as {
-      [key: string]: PageMetadata;
-    }
-  )["/"]; // project home page; this route doesn't support nested datasets
+  const { metadata } = await caller.site.getPageContent({
+    gh_username: user,
+    projectName: project,
+    slug: "/",
+  });
 
-  if (!pageMetadata || !isDatasetPage(pageMetadata)) {
+  if (!isDatasetPage(metadata)) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   const resource =
-    pageMetadata.resources.find(
+    metadata.resources.find(
       (r) => r.name === resourceNameOrId || r.id === resourceNameOrId,
-    ) || pageMetadata.resources[parseInt(resourceNameOrId, 10)];
+    ) || metadata.resources[parseInt(resourceNameOrId, 10)];
 
   if (!resource) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });

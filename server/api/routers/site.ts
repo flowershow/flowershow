@@ -1,5 +1,6 @@
 import { revalidateTag, unstable_cache } from "next/cache";
 import { z } from "zod";
+import { parse as parseYAML } from "yaml";
 
 import { inngest } from "@/inngest/client";
 import {
@@ -12,25 +13,99 @@ import {
   checkIfBranchExists,
   createGitHubRepoWebhook,
   deleteGitHubRepoWebhook,
-  GitHubAPIRepoTree,
-  getFileLastCommitTimestamp,
 } from "@/lib/github";
-import { fetchTree, deleteProject, fetchFile } from "@/lib/content-store";
+import { deleteProject, fetchFile } from "@/lib/content-store";
 import {
   addDomainToVercel,
   removeDomainFromVercelProject,
   validDomainRegex,
 } from "@/lib/domains";
 import { TRPCError } from "@trpc/server";
-import { PageMetadata } from "../types";
-import { buildNestedTreeFromFilesMap } from "@/lib/build-nested-tree";
+import { buildSiteMapFromSiteBlobs } from "@/lib/build-site-map";
 import { SiteConfig } from "@/components/types";
-import { isSupportedExtension } from "@/lib/types";
 import { env } from "@/env.mjs";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
+import { Blob, Status } from "@prisma/client";
+import { PageMetadata, DatasetPageMetadata } from "../types";
+import { resolveLink } from "@/lib/resolve-link";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
+  get: publicProcedure
+    .input(
+      z.object({
+        gh_username: z.string().min(1),
+        projectName: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          return ctx.db.site.findFirst({
+            where: {
+              AND: [
+                { projectName: input.projectName },
+                { user: { gh_username: input.gh_username } },
+              ],
+            },
+            include: {
+              user: {
+                select: {
+                  gh_username: true,
+                },
+              },
+            },
+          });
+        },
+        [`${input.gh_username} - ${input.projectName} - metadata`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.gh_username} - ${input.projectName} - metadata`],
+        },
+      )();
+    }),
+  getById: protectedProcedure
+    .input(z.object({ id: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      // don't cache this, it's used in the user dashboard
+      return await ctx.db.site.findFirst({
+        where: { id: input.id },
+        include: {
+          user: true,
+        },
+      });
+    }),
+  getByDomain: publicProcedure
+    .input(z.object({ domain: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async () => {
+          return ctx.db.site.findFirst({
+            where: {
+              customDomain: input.domain,
+            },
+            include: {
+              user: {
+                select: {
+                  gh_username: true,
+                },
+              },
+            },
+          });
+        },
+        [`${input.domain} - site - metadata`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.domain} - site - metadata`],
+        },
+      )();
+    }),
+  getAll: protectedProcedure.query(async ({ ctx }) => {
+    if (ctx.session.user.role !== "ADMIN") {
+      throw new Error("Unauthorized");
+    }
+    return await ctx.db.site.findMany({ include: { user: true } });
+  }),
   create: protectedProcedure
     .input(
       z.object({
@@ -83,22 +158,21 @@ export const siteRouter = createTRPCRouter({
           rootDir,
           autoSync: false,
           webhookId: null,
-          syncStatus: "PENDING",
           user: { connect: { id: ctx.session.user.id } },
         },
       });
 
-      // Then create webhook with site-specific URL
+      // Then create a webhook that includes site ID in the URL
       let webhookId: string | null = null;
       try {
         const response = await createGitHubRepoWebhook({
           gh_repository,
           access_token,
-          webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${site.id}`, // Add site ID to webhook URL
+          webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${site.id}`,
         });
         webhookId = response.id.toString();
 
-        // Update site with webhook info
+        // Update site with webhook ID
         await ctx.db.site.update({
           where: { id: site.id },
           data: {
@@ -128,7 +202,7 @@ export const siteRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.string().min(1),
-        key: z.string().min(1), // TODO better validation
+        key: z.string().min(1),
         value: z.string(),
       }),
     )
@@ -249,10 +323,6 @@ export const siteRouter = createTRPCRouter({
           `${site?.user?.gh_username}-${site?.projectName}-page-content`,
         );
       }
-
-      // site.customDomain &&
-      //   (await revalidateTag(`${site.customDomain}-metadata`));
-
       return result;
     }),
   delete: protectedProcedure
@@ -309,13 +379,6 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      await ctx.db.site.update({
-        where: { id: input.id },
-        data: {
-          syncStatus: "PENDING",
-        },
-      });
-
       const { id, gh_repository, gh_branch } = site!;
       const access_token = ctx.session.accessToken;
 
@@ -327,129 +390,91 @@ export const siteRouter = createTRPCRouter({
           gh_branch,
           rootDir: site!.rootDir,
           access_token,
-          forceSync: input.force,
         },
       });
     }),
-  checkSyncStatus: protectedProcedure
+
+  getSyncStatus: protectedProcedure
     .input(
       z.object({
         id: z.string().min(1),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const site = await ctx.db.site.findFirst({
+      // Get all blobs for the site
+      const blobs = await ctx.db.blob.findMany({
         where: {
-          id: input.id,
+          siteId: input.id,
         },
+        select: {
+          syncStatus: true,
+          syncError: true,
+          updatedAt: true,
+          path: true,
+        },
+      });
+
+      // Get site data for tree comparison
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.id },
       });
 
       if (!site) {
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: `Site ${input.id} not found.`,
+          message: "Site not found",
         });
       }
 
-      // return false for PENDING and ERROR statuses
+      // Calculate aggregate sync status
+      let aggregateSyncStatus: Status = "SUCCESS";
+      let syncError: string | null = null;
+      let latestSyncedAt: Date | null = null;
+
+      // If any blob is PENDING, site is PENDING
+      if (blobs.some((b) => b.syncStatus === "PENDING")) {
+        aggregateSyncStatus = "PENDING";
+      }
+      // If any blob is ERROR, site is ERROR
+      else if (blobs.some((b) => b.syncStatus === "ERROR")) {
+        aggregateSyncStatus = "ERROR";
+        const errorMessages = blobs
+          .filter((b) => b.syncStatus === "ERROR")
+          .map((b) =>
+            b.syncError
+              ? `[${b.path}]: ${b.syncError}`
+              : `[${b.path}]: Unknown error`,
+          );
+        syncError = errorMessages.join("\n");
+      }
+
+      // Get the most recent update date
+      latestSyncedAt =
+        blobs
+          .map((b) => b.updatedAt)
+          .sort((a, b) => b.getTime() - a.getTime())[0] || null;
+
       let isUpToDate = false;
 
-      if (site?.syncStatus === "SUCCESS") {
-        // get tree from content store
-        let contentStoreTree: GitHubAPIRepoTree | null = null;
+      if (aggregateSyncStatus === "SUCCESS") {
+        // get current site tree
+        let currentTree = site.tree;
 
-        try {
-          contentStoreTree = await fetchTree(site!.id, site!.gh_branch);
-        } catch (error) {
-          console.error("Failed to fetch tree from content store", error);
-        }
-
-        // get tree from GitHub
+        // get latest tree from GitHub
         const gitHubTree = await fetchGitHubRepoTree({
           gh_repository: site!.gh_repository,
           gh_branch: site!.gh_branch,
           access_token: ctx.session.accessToken,
         });
-        isUpToDate = contentStoreTree
-          ? contentStoreTree.sha === gitHubTree.sha
-          : false;
+        isUpToDate = currentTree?.["sha"] === gitHubTree.sha;
       }
 
       return {
         isUpToDate,
-        syncStatus: site!.syncStatus,
-        syncError: JSON.stringify(site!.syncError),
-        syncedAt: site!.syncedAt,
+        syncStatus: aggregateSyncStatus,
+        syncError,
+        syncedAt: latestSyncedAt,
       };
-    }),
-  getById: protectedProcedure
-    .input(z.object({ id: z.string().min(1) }))
-    .query(async ({ ctx, input }) => {
-      // don't cache this, it's used in the user dashboard
-      return await ctx.db.site.findFirst({
-        where: { id: input.id },
-        include: {
-          user: true,
-        },
-      });
-    }),
-  getByDomain: publicProcedure
-    .input(z.object({ domain: z.string().min(1) }))
-    .query(async ({ ctx, input }) => {
-      return await unstable_cache(
-        async () => {
-          return ctx.db.site.findFirst({
-            where: {
-              customDomain: input.domain,
-            },
-            include: {
-              user: {
-                select: {
-                  gh_username: true,
-                },
-              },
-            },
-          });
-        },
-        [`${input.domain} - site - metadata`],
-        {
-          revalidate: 60, // 1 minute
-          tags: [`${input.domain} - site - metadata`],
-        },
-      )();
-    }),
-  get: publicProcedure
-    .input(
-      z.object({
-        gh_username: z.string().min(1),
-        projectName: z.string().min(1),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      return await unstable_cache(
-        async () => {
-          return ctx.db.site.findFirst({
-            where: {
-              AND: [
-                { projectName: input.projectName },
-                { user: { gh_username: input.gh_username } },
-              ],
-            },
-            include: {
-              user: {
-                select: {
-                  gh_username: true,
-                },
-              },
-            },
-          });
-        },
-        [`${input.gh_username} - ${input.projectName} - metadata`],
-        {
-          revalidate: 60, // 1 minute
-          tags: [`${input.gh_username} - ${input.projectName} - metadata`],
-        },
-      )();
     }),
   getCustomStyles: publicProcedure
     .input(
@@ -494,6 +519,7 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
+
   getConfig: publicProcedure
     .input(
       z.object({
@@ -539,7 +565,8 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
-  getTree: publicProcedure
+
+  getSiteMap: publicProcedure
     .input(
       z.object({
         gh_username: z.string().min(1),
@@ -572,10 +599,22 @@ export const siteRouter = createTRPCRouter({
             ? ""
             : resolveSiteAlias(`/@${gh_username}/${projectName}`, "to");
 
-          return buildNestedTreeFromFilesMap(
-            Object.values(site.files as { [key: string]: PageMetadata }),
-            prefix,
-          );
+          // Get all blobs for the site
+          const blobs = (await ctx.db.blob.findMany({
+            where: {
+              siteId: site.id,
+              extension: {
+                in: ["md", "mdx"],
+              },
+            },
+            select: {
+              path: true,
+              appPath: true,
+              metadata: true,
+            },
+          })) as Blob[];
+
+          return buildSiteMapFromSiteBlobs(blobs, prefix);
         },
         [`${input.gh_username}-${input.projectName}-tree`],
         {
@@ -584,6 +623,7 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
+
   getPermalinks: publicProcedure
     .input(
       z.object({
@@ -610,26 +650,16 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          // TODO this is a workaround because we don't have and index of all files in the db yet
-          // otherwise we could just query the db for all files
-          const tree = await fetchTree(site.id, site.gh_branch);
+          const blobs = await ctx.db.blob.findMany({
+            where: {
+              siteId: site.id,
+            },
+            select: {
+              path: true,
+            },
+          });
 
-          if (!tree) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site tree not found",
-            });
-          }
-
-          const normalizedRootDir = normalizeDir(site.rootDir || null);
-          return tree.tree
-            .filter((file) => {
-              if (file.type === "tree") return false;
-              if (!isSupportedExtension(file.path.split(".").pop() || ""))
-                return false;
-              return file.path.startsWith(normalizedRootDir);
-            })
-            .map((file) => "/" + file.path.replace(/\.mdx?$/, ""));
+          return blobs.map((blob) => blob.path);
         },
         [`${input.gh_username}-${input.projectName}-permalinks`],
         {
@@ -665,34 +695,38 @@ export const siteRouter = createTRPCRouter({
           const dirReadmePath = dir + "/README.md";
           const dirIndexPath = dir + "/index.md";
 
-          console.log({ dir, dirIndexPath, dirReadmePath });
+          const blobs = await ctx.db.blob.findMany({
+            where: {
+              siteId: site.id,
+              path: {
+                startsWith: dir,
+                not: {
+                  in: [dirReadmePath, dirIndexPath],
+                },
+              },
+              extension: {
+                in: ["mdx", "md"],
+              },
+            },
+            select: {
+              appPath: true,
+              metadata: true,
+            },
+          });
 
-          const files = Object.values(
-            site.files as { [key: string]: PageMetadata },
-          ).filter(
-            (file) =>
-              file._path.startsWith(dir) &&
-              !file._path.slice(dir.length + 1).includes("/") &&
-              file._path !== dirReadmePath &&
-              file._path !== dirIndexPath,
-          );
-
-          return files;
+          return blobs.map((b) => ({
+            _url: b.appPath,
+            metadata: b.metadata as PageMetadata,
+          }));
         },
-        [`${input.siteId}-${input.dir}-files`],
+        [`${input.siteId}-${input.dir}-blobs`],
         {
           revalidate: 60, // 1 minute
           tags: [`${input.siteId}-${input.dir}-files`],
         },
       )();
     }),
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    if (ctx.session.user.role !== "ADMIN") {
-      throw new Error("Unauthorized");
-    }
-    return await ctx.db.site.findMany({ include: { user: true } });
-  }),
-  getPageMetadata: publicProcedure
+  getBlob: publicProcedure
     .input(
       z.object({
         gh_username: z.string().min(1),
@@ -719,18 +753,23 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          const pageMetadata = (
-            site.files ? site.files[input.slug] : {}
-          ) as PageMetadata;
+          const blob = await ctx.db.blob.findUnique({
+            where: {
+              siteId_appPath: {
+                siteId: site.id,
+                appPath: input.slug,
+              },
+            },
+          });
 
-          if (!pageMetadata) {
+          if (!blob) {
             throw new TRPCError({
               code: "NOT_FOUND",
               message: "Page not found",
             });
           }
 
-          return pageMetadata;
+          return blob;
         },
         [`${input.gh_username} - ${input.projectName} - ${input.slug} - meta`],
         {
@@ -771,18 +810,128 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          // TODO types
-          const path = (site.files as { [url: string]: PageMetadata })[
-            input.slug
-          ]?._path!;
+          const blob = await ctx.db.blob.findUnique({
+            where: {
+              siteId_appPath: {
+                siteId: site.id,
+                appPath: input.slug,
+              },
+            },
+          });
+
+          if (!blob) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Page not found",
+            });
+          }
 
           const content = await fetchFile({
             projectId: site.id,
             branch: site.gh_branch,
-            path,
+            path: blob.path,
           });
 
-          return content;
+          let metadata = blob.metadata as PageMetadata;
+
+          if (metadata.layout === "dataset") {
+            // Get the directory path from blob.path
+            const dirPath = blob.path.split("/").slice(0, -1).join("/");
+
+            // Look for datapackage files in the same directory
+            // For root directory files (like README.md), dirPath will be empty
+            // so we need to handle that case specially to avoid paths starting with "/"
+            const datapackagePaths = dirPath
+              ? [
+                  `${dirPath}/datapackage.json`,
+                  `${dirPath}/datapackage.yaml`,
+                  `${dirPath}/datapackage.yml`,
+                ]
+              : ["datapackage.json", "datapackage.yaml", "datapackage.yml"];
+
+            const possibleDatapackages = await ctx.db.blob.findFirst({
+              where: {
+                siteId: site.id,
+                path: {
+                  in: datapackagePaths,
+                },
+              },
+            });
+
+            if (possibleDatapackages) {
+              // Fetch and parse the datapackage file
+              const datapackageContent = await fetchFile({
+                projectId: site.id,
+                branch: site.gh_branch,
+                path: possibleDatapackages.path,
+              });
+
+              if (datapackageContent) {
+                try {
+                  // Parse JSON or YAML based on file extension
+                  const datapackage = possibleDatapackages.path.endsWith(
+                    ".json",
+                  )
+                    ? JSON.parse(datapackageContent)
+                    : parseYAML(datapackageContent);
+
+                  // Hydrate with some extra resource metadata
+                  datapackage.resources = await Promise.all(
+                    datapackage.resources.map(async (resource) => {
+                      let modifiedDate;
+
+                      if (resource.modified) {
+                        modifiedDate = new Date(
+                          resource.modified,
+                        ).toISOString();
+                      } else if (resource.path.startsWith("http")) {
+                        modifiedDate = null;
+                      } else {
+                        const resourceBlob = await ctx.db.blob.findUnique({
+                          where: {
+                            siteId_appPath: {
+                              siteId: site.id,
+                              appPath: input.slug,
+                            },
+                          },
+                        });
+                        modifiedDate = resourceBlob?.updatedAt;
+                      }
+
+                      // TODO not sure where to put it, it's duplicate already used elsewher
+                      const rawFilePermalinkBase = site.customDomain
+                        ? `/_r/-`
+                        : `/@${site.user!.gh_username}/${site.projectName}` +
+                          `/_r/-`;
+
+                      const resolveAssetUrl = (url: string) =>
+                        resolveLink({
+                          link: url,
+                          filePath: blob.path,
+                          prefixPath: rawFilePermalinkBase,
+                        });
+
+                      return {
+                        ...resource,
+                        modified: modifiedDate,
+                        path: resolveAssetUrl(resource.path),
+                      };
+                    }),
+                  );
+
+                  // Merge datapackage properties into metadata
+                  metadata = {
+                    ...metadata,
+                    ...datapackage,
+                  } as DatasetPageMetadata;
+                } catch (error) {
+                  console.error("Failed to parse datapackage:", error);
+                }
+              }
+            }
+          }
+
+          return { content, metadata };
         },
         [`${input.gh_username}-${input.projectName}-${input.slug}-content`],
         {
@@ -794,65 +943,4 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
-  // TODO TEMPORARY SOLUTION UNTIL WE HAVE A DB INDEX OF ALL FILES AND THEIR METADATA
-  getFileLastModifiedDate: publicProcedure
-    .input(
-      z.object({
-        gh_username: z.string().min(1),
-        projectName: z.string().min(1),
-        path: z.string(),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      return await unstable_cache(
-        async () => {
-          const site = await ctx.db.site.findFirst({
-            where: {
-              AND: [
-                { projectName: input.projectName },
-                { user: { gh_username: input.gh_username } },
-              ],
-            },
-          });
-
-          if (!site) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
-            });
-          }
-
-          // NOTE: only fetch for our core datasets as it requires a GitHub access token
-          // and we don't want to consume the rate limit for other users
-          // each time sb visits their site
-          if (!site.gh_repository.startsWith("datasets/")) {
-            return null;
-          }
-
-          return await getFileLastCommitTimestamp({
-            gh_repository: site.gh_repository,
-            branch: site.gh_branch,
-            file_path: input.path,
-            access_token: env.GH_ACCESS_TOKEN,
-          });
-        },
-        [
-          `${input.gh_username}-${input.projectName}-${input.path}-last-modified`,
-        ],
-        {
-          revalidate: 60 * 5,
-          tags: [
-            `${input.gh_username}-${input.projectName}-${input.path}-last-modified`,
-          ],
-        },
-      )();
-    }),
 });
-
-export const normalizeDir = (dir: string | null) => {
-  // remove leading and trailing slashes
-  // remove leading ./
-  if (!dir) return "";
-  const normalizedDir = dir.replace(/^(.?\/)+|\/+$/g, "");
-  return normalizedDir && `${normalizedDir}/`;
-};

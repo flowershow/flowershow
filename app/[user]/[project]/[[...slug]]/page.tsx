@@ -1,17 +1,29 @@
 import { notFound } from "next/navigation";
+import { compileMDX } from "next-mdx-remote/rsc";
+
+import { Blob } from "@prisma/client";
 
 import EditPageButton from "@/components/edit-page-button";
-import MDX from "@/components/MDX";
 import Comments from "@/components/comments";
 import { SiteConfig } from "@/components/types";
+import { mdxComponentsFactory } from "@/components/mdx-components-factory";
+import { ErrorMessage } from "@/components/error-message";
+import { WikiLayout } from "@/components/layouts/wiki";
+import { DataPackageLayout } from "@/components/layouts/datapackage";
+
+import { getConfig } from "@/lib/app-config";
+import { getMdxOptions } from "@/lib/markdown";
+import { resolveSiteAlias } from "@/lib/resolve-site-alias";
+import { resolveLink } from "@/lib/resolve-link";
+
 import { api } from "@/trpc/server";
 import { PageMetadata } from "@/server/api/types";
 import { env } from "@/env.mjs";
 import type { SiteWithUser } from "@/types";
-import { resolveSiteAlias } from "@/lib/resolve-site-alias";
+
 import UrlNormalizer from "./url-normalizer";
-import { getConfig } from "@/lib/app-config";
-import { resolveLink } from "@/lib/resolve-link";
+import Script from "next/script";
+import getJsonLd from "@/components/layouts/getJsonLd";
 
 const config = getConfig();
 
@@ -45,14 +57,18 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     notFound();
   }
 
-  let pageMetadata: PageMetadata | null = null;
-
   const { customDomain, projectName, user: siteUser } = site;
-
   const gh_username = siteUser!.gh_username!;
 
+  const canonicalUrlBase = customDomain
+    ? `https://${site.customDomain}`
+    : `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}` +
+      resolveSiteAlias(`/@${gh_username}/${projectName}`, "to");
+
+  let blob: Blob;
+
   try {
-    pageMetadata = await api.site.getPageMetadata.query({
+    blob = await api.site.getBlob.query({
       gh_username,
       projectName,
       slug: decodedSlug,
@@ -61,18 +77,26 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     notFound();
   }
 
-  const canonicalUrlBase = customDomain
-    ? `https://${site.customDomain}`
-    : `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}` +
-      resolveSiteAlias(`/@${gh_username}/${projectName}`, "to");
+  let metadata: PageMetadata;
 
-  const { title, description } = pageMetadata;
+  // TODO it is not optimal to query blob and metadata separately, but this is needed for datapackage page types
+  try {
+    const page = await api.site.getPageContent.query({
+      gh_username,
+      projectName,
+      slug: decodedSlug,
+    });
+    metadata = page.metadata;
+  } catch (error) {
+    notFound();
+  }
 
   const protocol =
     env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
     env.NEXT_PUBLIC_VERCEL_ENV === "preview"
       ? "https"
       : "http";
+
   const rawFilePermalinkBase = customDomain
     ? `${protocol}://${site.customDomain}/_r/-`
     : `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${resolveSiteAlias(
@@ -83,13 +107,15 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   const resolveDataUrl = (url: string) =>
     resolveLink({
       link: url,
-      filePath: pageMetadata!._path,
+      filePath: blob.path,
       prefixPath: rawFilePermalinkBase,
     });
 
-  const imageUrl = pageMetadata!.image
-    ? resolveDataUrl(pageMetadata!.image)
+  const imageUrl = metadata.image
+    ? resolveDataUrl(metadata.image)
     : config.thumbnail;
+
+  const { title, description } = metadata;
 
   return {
     title: title ?? projectName,
@@ -191,10 +217,10 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     notFound();
   }
 
-  let pageMetadata: PageMetadata | null = null;
+  let blob: Blob;
 
   try {
-    pageMetadata = await api.site.getPageMetadata.query({
+    blob = await api.site.getBlob.query({
       gh_username: site.user?.gh_username!,
       projectName: site.projectName,
       slug: decodedSlug,
@@ -203,31 +229,101 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     notFound();
   }
 
-  let pageContent: string;
+  let page;
 
+  // TODO it's not optimal to query separate blob and metadata, but it's needed for now for datapackage pages
+  // so that datapackage file is merged into the page's metadata
   try {
-    pageContent =
-      (await api.site.getPageContent.query({
-        gh_username: site.user?.gh_username!,
-        projectName: site.projectName,
-        slug: decodedSlug,
-      })) ?? "";
+    page = await api.site.getPageContent.query({
+      gh_username: site.user?.gh_username!,
+      projectName: site.projectName,
+      slug: decodedSlug,
+    });
   } catch (error) {
     notFound();
   }
 
+  const mdxComponents = mdxComponentsFactory({
+    blob,
+    site,
+  });
+  const mdxOptions = getMdxOptions({ permalinks: sitePermalinks }) as any;
+
+  let compiledMDX: any;
+
+  try {
+    const { content } = await compileMDX({
+      source: page.content,
+      components: mdxComponents,
+      options: mdxOptions,
+    });
+    compiledMDX = content;
+  } catch (error: any) {
+    compiledMDX = (
+      <div
+        data-testid="mdx-error"
+        className="prose-headings:font-headings prose max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words"
+      >
+        <ErrorMessage title="Error parsing MDX:" message={error.message} />
+      </div>
+    );
+  }
+
+  const rawFilePermalinkBase = site.customDomain
+    ? `/_r/-`
+    : `/@${site.user!.gh_username}/${site.projectName}` + `/_r/-`;
+
+  const resolveAssetUrl = (url: string) =>
+    resolveLink({
+      link: url,
+      filePath: blob.path,
+      prefixPath: rawFilePermalinkBase,
+    });
+
+  const jsonLd = getJsonLd({ metadata: page.metadata, siteMetadata: site });
+
+  const Layout = ({ children }) => {
+    switch (page.metadata.layout) {
+      case "dataset":
+        return (
+          <>
+            <Script
+              id="json-ld-datapackage"
+              type="application/ld+json"
+              dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+            />
+            <DataPackageLayout
+              metadata={page.metadata}
+              resolveAssetUrl={resolveAssetUrl}
+              ghRepository={site!.gh_repository}
+            >
+              {children}
+            </DataPackageLayout>
+          </>
+        );
+      default:
+        return (
+          <WikiLayout
+            metadata={page.metadata}
+            resolveAssetUrl={resolveAssetUrl}
+          >
+            {children}
+          </WikiLayout>
+        );
+    }
+  };
+
   return (
     <>
       <UrlNormalizer />
-      <MDX
-        source={pageContent}
-        metadata={pageMetadata}
-        siteMetadata={site}
-        sitePermalinks={sitePermalinks}
-      />
+
+      <div id="mdxpage">
+        <Layout>{compiledMDX}</Layout>
+      </div>
+
       {siteConfig?.showEditLink && (
         <EditPageButton
-          url={`https://github.com/${site?.gh_repository}/edit/${site?.gh_branch}/${pageMetadata._path}`}
+          url={`https://github.com/${site?.gh_repository}/edit/${site?.gh_branch}/${blob.path}`}
         />
       )}
       <Comments

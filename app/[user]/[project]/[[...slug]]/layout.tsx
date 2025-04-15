@@ -17,6 +17,7 @@ import clsx from "clsx";
 import TableOfContents from "@/components/table-of-contents";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { PageMetadata } from "@/server/api/types";
+import { Blob } from "@prisma/client";
 
 const config = getConfig();
 
@@ -54,7 +55,7 @@ export default async function Layout({
         projectName: site.projectName,
       })
       .catch(() => null),
-    api.site.getTree
+    api.site.getSiteMap
       .query({
         gh_username: ghUsername,
         projectName: site.projectName,
@@ -67,10 +68,10 @@ export default async function Layout({
     siteConfig,
   });
 
-  let pageMetadata: PageMetadata | null = null;
+  let blob: Blob;
 
   try {
-    pageMetadata = await api.site.getPageMetadata.query({
+    blob = await api.site.getBlob.query({
       gh_username: site.user?.gh_username!,
       projectName: site.projectName,
       slug: decodedSlug,
@@ -78,6 +79,8 @@ export default async function Layout({
   } catch (error) {
     notFound();
   }
+
+  const pageMetadata = blob.metadata as PageMetadata;
 
   const showSitemap =
     pageMetadata.showSidebar ?? siteConfig?.showSidebar ?? false;
@@ -90,7 +93,7 @@ export default async function Layout({
   const resolveHeroCtaHref = (href: string) => {
     return resolveLink({
       link: href ?? "",
-      filePath: pageMetadata!._path,
+      filePath: blob.path,
       prefixPath: site.customDomain
         ? ""
         : `/@${site.user?.gh_username}/${site.projectName}`,
@@ -104,7 +107,7 @@ export default async function Layout({
 
     return resolveLink({
       link: src,
-      filePath: pageMetadata!._path,
+      filePath: blob.path,
       prefixPath: rawFilePermalinkBase,
     });
   };

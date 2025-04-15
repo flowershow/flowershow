@@ -26,7 +26,7 @@ export default function Status() {
     data: syncStatus,
     isLoading,
     refetch,
-  } = api.site.checkSyncStatus.useQuery(
+  } = api.site.getSyncStatus.useQuery(
     { id },
     {
       refetchInterval: 10 * 1000,
@@ -100,9 +100,7 @@ export default function Status() {
                     onMouseLeave={() => setShowErrorDialog(false)}
                     className="max-h-80 w-80 shrink overflow-y-auto rounded-xl bg-white p-4 text-sm leading-6 text-gray-900 shadow-lg ring-1 ring-gray-900/5"
                   >
-                    {syncStatus && JSON.parse(syncStatus.syncError as string)
-                      ? JSON.parse(syncStatus.syncError as string).message
-                      : "Unknown error"}
+                    {syncStatus && syncStatus.syncError}
                   </div>
                 </PopoverPanel>
               </Transition>

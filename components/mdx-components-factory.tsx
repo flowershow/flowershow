@@ -1,5 +1,9 @@
 import { ErrorBoundary } from "react-error-boundary";
-import { PageMetadata, isDatasetPage } from "@/server/api/types";
+import {
+  DatasetPageMetadata,
+  PageMetadata,
+  isDatasetPage,
+} from "@/server/api/types";
 import { resolveLink } from "@/lib/resolve-link";
 import { customEncodeUrl } from "@/lib/url-encoder";
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
@@ -36,15 +40,16 @@ import type {
   PlotlyBarChartProps,
   PlotlyLineChartProps,
 } from "./client-components-wrapper";
+import { Blob } from "@prisma/client";
 
 export const mdxComponentsFactory = ({
-  metadata,
-  siteMetadata,
+  blob,
+  site,
 }: {
-  metadata: PageMetadata;
-  siteMetadata: SiteWithUser;
+  blob: Blob;
+  site: SiteWithUser;
 }) => {
-  const { projectName, customDomain, user: siteUser } = siteMetadata;
+  const { projectName, customDomain, user: siteUser } = site;
 
   const gh_username = siteUser!.gh_username!;
 
@@ -55,14 +60,14 @@ export const mdxComponentsFactory = ({
   const resolveDataUrl = (url: string) =>
     resolveLink({
       link: url,
-      filePath: metadata._path,
+      filePath: blob.path,
       prefixPath: rawFilePermalinkBase,
     });
 
   const dataVisComponents = {
     Catalog: withErrorBoundary(Catalog, "Catalog"),
     List: withErrorBoundary((props: ListProps) => {
-      return <List {...props} siteId={siteMetadata.id} />;
+      return <List {...props} siteId={site.id} />;
     }, "List"),
     Excel: withErrorBoundary((props: ExcelProps) => {
       props.data.url = resolveDataUrl(props.data.url);
@@ -142,8 +147,8 @@ export const mdxComponentsFactory = ({
         ? href
         : resolveLink({
             link: isExternal ? href : customEncodeUrl(href),
-            filePath: metadata._path,
-            prefixPath: siteMetadata.customDomain
+            filePath: blob.path,
+            prefixPath: site.customDomain
               ? ""
               : `/@${gh_username}/${projectName}`,
           });
@@ -164,7 +169,7 @@ export const mdxComponentsFactory = ({
 
       const normalizedSrc = resolveLink({
         link: props.src,
-        filePath: metadata._path,
+        filePath: blob.path,
         prefixPath: rawFilePermalinkBase,
       });
 
@@ -184,14 +189,16 @@ export const mdxComponentsFactory = ({
         : `${props.className || ""} language-auto`;
       return <code {...props} className={className}></code>;
     },
-    ...(isFeatureEnabled(Feature.DataVisComponents, siteMetadata)
+    ...(isFeatureEnabled(Feature.DataVisComponents, site)
       ? dataVisComponents
       : {}),
   };
 
-  if (isDatasetPage(metadata)) {
+  if (isDatasetPage(blob.metadata as PageMetadata)) {
     // TODO is this needed at all?
-    const FrictionlessView = FrictionlessViewFactory(metadata);
+    const FrictionlessView = FrictionlessViewFactory(
+      blob.metadata as DatasetPageMetadata,
+    );
     components.FrictionlessView = ({
       id,
       fullWidth,

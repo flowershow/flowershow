@@ -54,7 +54,12 @@ export default function Nav({ children }: { children: ReactNode }) {
   const segments = useSelectedLayoutSegments();
   const { id } = useParams() as { id: string };
 
-  const { data: site } = api.site.getById.useQuery({ id });
+  const { data: site } = api.site.getById.useQuery(
+    { id },
+    {
+      enabled: !!id,
+    },
+  );
 
   const pages = useMemo(() => {
     if (segments[0] === "site" && id && site) {

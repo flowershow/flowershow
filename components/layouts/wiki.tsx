@@ -4,29 +4,17 @@ import { SiteWithUser } from "@/types";
 
 interface Props extends React.PropsWithChildren {
   metadata: WikiPageMetadata;
-  siteMetadata: SiteWithUser;
+  resolveAssetUrl: (url: string) => string;
 }
 
 export const WikiLayout: React.FC<Props> = ({
   children,
   metadata,
-  siteMetadata,
+  resolveAssetUrl,
 }) => {
   const { title, description, image, showHero, date, authors } = metadata;
 
   const formattedDate = date ? formatDate(date) : null;
-
-  const rawFilePermalinkBase = siteMetadata.customDomain
-    ? `/_r/-`
-    : `/@${siteMetadata.user!.gh_username}/${siteMetadata.projectName}` +
-      `/_r/-`;
-
-  const resolveDataUrl = (url: string) =>
-    resolveLink({
-      link: url,
-      filePath: metadata._path,
-      prefixPath: rawFilePermalinkBase,
-    });
 
   return (
     <article>
@@ -60,7 +48,7 @@ export const WikiLayout: React.FC<Props> = ({
           {image && (
             <img
               alt="Featured image"
-              src={resolveDataUrl(image)}
+              src={resolveAssetUrl(image)}
               className="w-full rounded-md object-cover"
             />
           )}

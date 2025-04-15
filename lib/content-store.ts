@@ -6,7 +6,6 @@ import {
   DeleteObjectCommand,
   S3Client,
 } from "@aws-sdk/client-s3";
-import type { SupportedExtension } from "./types";
 import { GitHubAPIRepoTree } from "./github";
 import { env } from "@/env.mjs";
 
@@ -32,6 +31,7 @@ const s3Client = new S3Client({
 type ContentType =
   | "text/markdown"
   | "text/csv"
+  | "text/plain"
   | "application/geo+json"
   | "application/json"
   | "application/yaml"
@@ -111,7 +111,7 @@ const emptyS3Directory = async (dir: string) => {
   if (listedObjects.IsTruncated) await emptyS3Directory(dir);
 };
 
-const getContentType = (extension: SupportedExtension): ContentType => {
+const getContentType = (extension: string): ContentType => {
   switch (extension) {
     case "md":
     case "mdx":
@@ -154,7 +154,7 @@ export const uploadFile = async ({
   branch: string;
   path: string;
   content: Buffer;
-  extension: SupportedExtension;
+  extension: string;
 }) => {
   return uploadS3Object({
     key: `${projectId}/${branch}/raw/${path}`,
