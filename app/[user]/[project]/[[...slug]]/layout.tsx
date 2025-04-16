@@ -135,7 +135,7 @@ export default async function Layout({
                   : "max-w-3xl text-center",
               )}
             >
-              <div className="pb-16 pt-10 sm:pb-20 lg:col-span-7 lg:px-0 lg:pb-32 lg:pt-28 xl:col-span-6">
+              <div className="pb-16 pt-10 sm:pb-20 lg:col-span-6 lg:px-0 lg:pb-32 lg:pt-28">
                 <div className="mx-auto px-8 sm:px-10 lg:mx-0 lg:px-12">
                   <h1 className="text-pretty mt-24 font-title text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl">
                     {pageMetadata.title}
@@ -174,11 +174,11 @@ export default async function Layout({
                 </div>
               </div>
               {pageMetadata.image && (
-                <div className="relative lg:col-span-5 lg:-mr-8 xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0">
+                <div className="relative lg:col-span-6">
                   <img
                     alt=""
                     src={resolveHeroImageSrc(pageMetadata.image)}
-                    className="aspect-[3/2] w-full bg-gray-50 object-cover lg:absolute lg:inset-0 lg:aspect-auto lg:h-full"
+                    className="aspect-[3/2] w-full bg-gray-50 object-contain p-4 lg:absolute lg:inset-0 lg:aspect-auto lg:h-full lg:p-8"
                   />
                 </div>
               )}
