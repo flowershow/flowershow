@@ -17,7 +17,8 @@ type SupportedAssetExtension =
   | "jpg"
   | "png"
   | "gif"
-  | "svg";
+  | "svg"
+  | "mp4";
 
 export const isSupportedAssetExtension = (
   extension: string,
@@ -34,6 +35,7 @@ export const isSupportedAssetExtension = (
     "png",
     "gif",
     "svg",
+    "mp4",
   ].includes(extension);
 };
 
