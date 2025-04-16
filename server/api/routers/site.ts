@@ -672,6 +672,7 @@ export const siteRouter = createTRPCRouter({
           ).filter(
             (file) =>
               file._path.startsWith(dir) &&
+              !file._path.slice(dir.length + 1).includes("/") &&
               file._path !== dirReadmePath &&
               file._path !== dirIndexPath,
           );
