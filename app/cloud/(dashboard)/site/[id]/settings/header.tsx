@@ -25,7 +25,7 @@ export default async function SiteSettingsHeader({
       }/${site.projectName}`;
     }
   } else if (env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
-    url = `https://staging.${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
+    url = `https://staging-${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
       site.user!.gh_username
     }/${site.projectName}`;
   } else {
