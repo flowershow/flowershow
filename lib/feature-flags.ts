@@ -36,11 +36,14 @@ export function isFeatureEnabled(feature: Feature, site: Site): boolean {
       );
     case Feature.DataVisComponents:
       return config.dataVisComponentsEnabled ?? false;
+    case Feature.NoBranding:
+      return site.customDomain === "flowershow.app"
+        ? false
+        : site.plan === Plan.PREMIUM;
   }
 
-  // Check if feature is available in site's plan
   if (PREMIUM_FEATURES.includes(feature)) {
-    return site?.plan === Plan.PREMIUM;
+    return site.plan === Plan.PREMIUM;
   }
   return false;
 }
