@@ -20,14 +20,12 @@ export const config = {
 export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;
 
-  // Get hostname of request (e.g. demo.vercel.pub, demo.localhost:3000)
-  let hostname = req.headers
-    .get("host")!
-    .replace(".localhost:3000", `.${env.NEXT_PUBLIC_ROOT_DOMAIN}`);
+  // Get hostname of request
+  let hostname = req.headers.get("host")!;
 
   // special case for Vercel preview deployment URLs
   if (hostname.endsWith(`.${env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`)) {
-    hostname = `${env.NEXT_PUBLIC_ROOT_DOMAIN}`;
+    hostname = env.NEXT_PUBLIC_ROOT_DOMAIN;
   }
 
   const searchParams = req.nextUrl.searchParams.toString();
@@ -41,8 +39,8 @@ export default async function middleware(req: NextRequest) {
 
   // CLOUD DOMAIN
   if (
-    hostname == `cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
-    hostname == `staging-cloud.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
+    hostname === env.NEXT_PUBLIC_CLOUD_DOMAIN ||
+    hostname === `staging-${env.NEXT_PUBLIC_CLOUD_DOMAIN}`
   ) {
     const session = await getToken({ req });
 
@@ -57,8 +55,8 @@ export default async function middleware(req: NextRequest) {
 
   // ROOT DOMAIN
   if (
-    hostname === `${env.NEXT_PUBLIC_ROOT_DOMAIN}` ||
-    hostname === `staging.${env.NEXT_PUBLIC_ROOT_DOMAIN}`
+    hostname === env.NEXT_PUBLIC_ROOT_DOMAIN ||
+    hostname === `staging-${env.NEXT_PUBLIC_ROOT_DOMAIN}`
   ) {
     const aliasResolvedPath = resolveSiteAlias(path, "from");
 

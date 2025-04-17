@@ -63,6 +63,7 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_AUTH_GITHUB_ID: z.string(),
     NEXT_PUBLIC_ROOT_DOMAIN: z.string(),
+    NEXT_PUBLIC_CLOUD_DOMAIN: z.string(),
     NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX: z.string(),
     NEXT_PUBLIC_VERCEL_ENV: z.string().optional(),
     NEXT_PUBLIC_DNS_DOMAIN: z.string(),
@@ -77,6 +78,7 @@ export const env = createEnv({
   runtimeEnv: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     NEXT_PUBLIC_ROOT_DOMAIN: process.env.NEXT_PUBLIC_ROOT_DOMAIN,
+    NEXT_PUBLIC_CLOUD_DOMAIN: process.env.NEXT_PUBLIC_CLOUD_DOMAIN,
     NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX:
       process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX,
     NEXT_PUBLIC_VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV,
