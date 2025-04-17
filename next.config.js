@@ -9,17 +9,6 @@ module.exports = {
         destination: "/portal",
         permanent: true,
       },
-      {
-        source: "/@:path*",
-        destination: "https://my.flowershow.app/@:path*",
-        permanent: true,
-        has: [
-          {
-            type: "host",
-            value: "flowershow.app",
-          },
-        ],
-      },
     ];
   },
   experimental: {

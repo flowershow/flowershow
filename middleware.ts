@@ -37,6 +37,14 @@ export default async function middleware(req: NextRequest) {
     searchParams.length > 0 ? `?${searchParams}` : ""
   }`;
 
+  // Handle legacy Flowershow user site URLs
+  if (hostname === "flowershow.app" && path.startsWith("/@")) {
+    return NextResponse.redirect(
+      new URL(`https://my.flowershow.app${path}`, req.url),
+      { status: 301 },
+    );
+  }
+
   // CLOUD DOMAIN
   if (
     hostname === env.NEXT_PUBLIC_CLOUD_DOMAIN ||
