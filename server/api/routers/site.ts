@@ -659,7 +659,7 @@ export const siteRouter = createTRPCRouter({
             },
           });
 
-          return blobs.map((blob) => blob.path);
+          return blobs.map((blob) => "/" + blob.path.replace(/\.mdx?$/, ""));
         },
         [`${input.gh_username}-${input.projectName}-permalinks`],
         {
