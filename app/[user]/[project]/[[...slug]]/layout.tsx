@@ -119,6 +119,7 @@ export default async function Layout({
 
       <div className="flex w-full flex-col">
         <Nav
+          site={site}
           logo={logo}
           url={url}
           cta={cta}
@@ -271,8 +272,8 @@ function getNavConfig({
 }: {
   site: SiteWithUser;
   siteConfig: SiteConfig | null;
-}): NavProps {
-  const navConfig: NavProps = {
+}): Omit<NavProps, "siteId" | "site"> {
+  const navConfig: Omit<NavProps, "siteId" | "site"> = {
     logo: config.logo,
   };
 

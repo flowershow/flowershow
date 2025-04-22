@@ -53,6 +53,7 @@ export const env = createEnv({
     STRIPE_PREMIUM_YEARLY_PRICE_ID: z.string(),
     E2E_GH_USERNAME: z.string().optional(),
     E2E_GH_PASSWORD: z.string().optional(),
+    TYPESENSE_ADMIN_API_KEY: z.string(),
   },
 
   /**
@@ -69,6 +70,10 @@ export const env = createEnv({
     NEXT_PUBLIC_DNS_DOMAIN: z.string(),
     NEXT_PUBLIC_S3_BUCKET_DOMAIN: z.string(),
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string(),
+    NEXT_PUBLIC_TYPESENSE_CLIENT_API_KEY: z.string(),
+    NEXT_PUBLIC_TYPESENSE_HOST: z.string(),
+    NEXT_PUBLIC_TYPESENSE_PORT: z.string(),
+    NEXT_PUBLIC_TYPESENSE_PROTOCOL: z.string(),
   },
 
   /**
@@ -120,6 +125,12 @@ export const env = createEnv({
     STRIPE_PREMIUM_YEARLY_PRICE_ID: process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID,
     E2E_GH_USERNAME: process.env.E2E_GH_USERNAME,
     E2E_GH_PASSWORD: process.env.E2E_GH_PASSWORD,
+    TYPESENSE_ADMIN_API_KEY: process.env.TYPESENSE_ADMIN_API_KEY,
+    NEXT_PUBLIC_TYPESENSE_CLIENT_API_KEY:
+      process.env.NEXT_PUBLIC_TYPESENSE_CLIENT_API_KEY,
+    NEXT_PUBLIC_TYPESENSE_HOST: process.env.NEXT_PUBLIC_TYPESENSE_HOST,
+    NEXT_PUBLIC_TYPESENSE_PORT: process.env.NEXT_PUBLIC_TYPESENSE_PORT,
+    NEXT_PUBLIC_TYPESENSE_PROTOCOL: process.env.NEXT_PUBLIC_TYPESENSE_PROTOCOL,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,

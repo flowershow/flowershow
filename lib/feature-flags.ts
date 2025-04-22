@@ -9,6 +9,7 @@ export enum Feature {
   DataVisComponents = "DataVisComponents",
   CustomDomain = "CustomDomain",
   NoBranding = "NoBranding",
+  Search = "Search",
   // AutoSync = "AutoSync",
   // Comments = "Comments",
   // Analytics = "Analytics",
@@ -18,6 +19,7 @@ export enum Feature {
 const PREMIUM_FEATURES: Feature[] = [
   Feature.CustomDomain,
   Feature.NoBranding,
+  Feature.Search,
   // Feature.AutoSync,
   // Feature.Comments,
   // Feature.Analytics,

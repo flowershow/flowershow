@@ -8,8 +8,6 @@ export default function getJsonLd({
   metadata: DatasetPageMetadata;
   siteMetadata: Site;
 }) {
-  console.log({ resources: metadata.resources });
-
   return {
     "@context": "https://schema.org",
     "@type": "Dataset",

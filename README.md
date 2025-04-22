@@ -250,17 +250,30 @@ Monitor local events at: http://localhost:8288/
    - Create bucket named "datahub"
    - Set bucket Access Policy to "public"
 
-7. Run `pnpm fetch-config` or create your own `config.json` file
-8. Install pnpm: `npm install -g pnpm`
-9. Install dependencies: `pnpm i`
-10. Generate Prisma schema: `npx prisma generate`
-11. Create database schema: `npx prisma db push`
-12. Start development server: `pnpm dev`
-13. Start local Inngest instance:
+7. Set up Typesense for local search:
+
+   For installation instructions, see the [Typesense Installation Guide](https://typesense.org/docs/guide/install-typesense.html)
+
+   After installation, configure the following environment variables in `.env`:
+
+   ```
+   NEXT_PUBLIC_TYPESENSE_CLIENT_API_KEY=xyz  # Default
+   NEXT_PUBLIC_TYPESENSE_HOST=localhost
+   NEXT_PUBLIC_TYPESENSE_PORT=8108           # Default Typesense port
+   NEXT_PUBLIC_TYPESENSE_PROTOCOL=http
+   ```
+
+8. Run `pnpm fetch-config` or create your own `config.json` file
+9. Install pnpm: `npm install -g pnpm`
+10. Install dependencies: `pnpm i`
+11. Generate Prisma schema: `npx prisma generate`
+12. Create database schema: `npx prisma db push`
+13. Start development server: `pnpm dev`
+14. Start local Inngest instance:
     ```bash
     npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest
     ```
-14. Visit app at `http://cloud.localhost:3000`
+15. Visit app at `http://cloud.localhost:3000`
 
 #### Stripe Setup for Local Development
 
@@ -533,12 +546,16 @@ DataHub Cloud manages several aliased pages:
    - Verify correct OAuth app configuration
    - Check callback URLs
    - Ensure environment variables are set
-
 4. Stripe Integration
-   - Ensure Stripe CLI is running with webhook forwarding
-   - Verify STRIPE_WEBHOOK_SECRET matches Stripe CLI output
-   - Check Stripe CLI logs for webhook delivery status
-   - Confirm subscription events in Stripe Dashboard
-   - Verify database updates after subscription events
+    - Ensure Stripe CLI is running with webhook forwarding
+    - Verify STRIPE_WEBHOOK_SECRET matches Stripe CLI output
+    - Check Stripe CLI logs for webhook delivery status
+    - Confirm subscription events in Stripe Dashboard
+    - Verify database updates after subscription events
+
+5. Typesense Search
+    - Check Typesense health status: `curl http://localhost:8108/health`
+    - Verify environment variables in `.env`
+    - Check browser console for connection errors
 
 For additional support, please create an issue in the GitHub repository.

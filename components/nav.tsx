@@ -1,15 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
+import clsx from "clsx";
 import {
   Disclosure,
   DisclosureButton,
   DisclosurePanel,
 } from "@headlessui/react";
-import clsx from "clsx";
 import { ChevronRightIcon, MenuIcon, XIcon } from "lucide-react";
-import Image from "next/image";
-import Link from "next/link";
 
 import {
   DiscordIcon,
@@ -21,10 +22,13 @@ import {
   YouTubeIcon,
 } from "@/components/icons";
 import { NavLink, SocialLink } from "./types";
-import SiteMap, { TreeViewItem } from "./site-map";
-import { usePathname } from "next/navigation";
+import { TreeViewItem } from "./site-map";
+import { Search } from "./search";
+import { SiteWithUser } from "@/types";
+import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 
 export interface Props {
+  site: SiteWithUser;
   logo: string;
   url?: string;
   title?: string;
@@ -35,6 +39,7 @@ export interface Props {
 }
 
 const Nav = ({
+  site,
   logo,
   url = "/",
   title,
@@ -56,6 +61,10 @@ const Nav = ({
     };
   }, []);
 
+  const searchResultPrefix = site.customDomain
+    ? "/"
+    : `/@${site.user!.gh_username}/${site.projectName}/`;
+
   return (
     <Disclosure>
       {({ open, close }) => (
@@ -70,8 +79,8 @@ const Nav = ({
           <header
             className={clsx("mx-auto px-4 text-sm", open && "sticky top-0")}
           >
-            <div className="flex h-16 justify-between">
-              <div className="flex">
+            <div className="flex h-16 justify-between space-x-2">
+              <div className="flex items-center space-x-2">
                 <Link
                   data-testid="navbar-logo-link"
                   href={url}
@@ -83,7 +92,7 @@ const Nav = ({
                 {links && (
                   <div
                     data-testid="navbar-links"
-                    className="ml-6 hidden space-x-8 text-[0.95rem] font-medium tracking-tight lg:flex"
+                    className="ml-6 hidden space-x-4 text-[0.95rem] font-medium tracking-tight lg:flex"
                   >
                     {links.map((link) => (
                       <a
@@ -95,6 +104,11 @@ const Nav = ({
                       </a>
                     ))}
                   </div>
+                )}
+              </div>
+              <div className="flex shrink-0 grow items-center justify-end">
+                {isFeatureEnabled(Feature.Search, site) && (
+                  <Search indexId={site.id} prefix={searchResultPrefix} />
                 )}
               </div>
               <div className="hidden lg:flex lg:items-center">

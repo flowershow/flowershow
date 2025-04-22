@@ -3,6 +3,7 @@ import { z } from "zod";
 import { parse as parseYAML } from "yaml";
 
 import { inngest } from "@/inngest/client";
+import { createSiteCollection, deleteSiteCollection } from "@/lib/typesense";
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -28,6 +29,7 @@ import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 import { Blob, Status } from "@prisma/client";
 import { PageMetadata, DatasetPageMetadata } from "../types";
 import { resolveLink } from "@/lib/resolve-link";
+import { SiteWithUser } from "@/types";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -64,16 +66,16 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
-  getById: protectedProcedure
+  getById: publicProcedure
     .input(z.object({ id: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
       // don't cache this, it's used in the user dashboard
-      return await ctx.db.site.findFirst({
+      return (await ctx.db.site.findFirst({
         where: { id: input.id },
         include: {
           user: true,
         },
-      });
+      })) as SiteWithUser;
     }),
   getByDomain: publicProcedure
     .input(z.object({ domain: z.string().min(1) }))
@@ -183,6 +185,9 @@ export const siteRouter = createTRPCRouter({
       } catch (e) {
         console.error("Failed to create webhook", e);
       }
+
+      // Create Typesense collection
+      await createSiteCollection(site.id);
 
       await inngest.send({
         name: "site/sync",
@@ -355,6 +360,12 @@ export const siteRouter = createTRPCRouter({
           access_token: ctx.session.accessToken,
         },
       });
+
+      try {
+        await deleteSiteCollection(input.id);
+      } catch (e) {
+        console.error(e);
+      }
 
       return site;
     }),
