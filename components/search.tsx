@@ -5,8 +5,8 @@ import {
   Highlight,
   useInstantSearch,
   Snippet,
+  InstantSearch,
 } from "react-instantsearch";
-import { InstantSearchNext as InstantSearch } from "react-instantsearch-nextjs";
 import { searchClient } from "@/lib/typesense-client";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
