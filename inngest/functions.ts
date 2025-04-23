@@ -3,6 +3,7 @@ import { inngest } from "./client";
 import prisma from "@/server/db";
 import { normalizeDir } from "@/lib/utils";
 import { deleteFile, deleteProject, uploadFile } from "@/lib/content-store";
+import { typesense } from "@/lib/typesense";
 import {
   GitHubAPIFileContent,
   fetchGitHubFileRaw,
@@ -219,6 +220,17 @@ export const syncSite = inngest.createFunction(
             branch: gh_branch,
             path: blob.path,
           });
+
+          // Delete the document from Typesense if it exists
+          try {
+            await typesense.collections(siteId).documents(blob.id).delete();
+          } catch (error: any) {
+            // Ignore 404 errors (document not found)
+            if (error?.httpStatus !== 404) {
+              console.error("Failed to delete Typesense document:", error);
+            }
+          }
+
           await prisma.blob.delete({
             where: {
               id: blob.id,
