@@ -101,11 +101,10 @@ html {
   }
 }
 
-/* Hide first h1 in the article section */
-/* Needed for story type pages do prevent duplicate page title */
-/* article section h1:first-of-type {
+/* Hide second h1 on any page */
+#mdxpage section:first-of-type h1 {
   display: none;
-} */
+}
 
 #mdxpage .gh-badge {
   display: none;
