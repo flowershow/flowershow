@@ -39,8 +39,14 @@ export const syncSite = inngest.createFunction(
   },
   { event: "site/sync" },
   async ({ event, step }) => {
-    const { siteId, gh_repository, gh_branch, rootDir, access_token } =
-      event.data;
+    const {
+      siteId,
+      gh_repository,
+      gh_branch,
+      rootDir,
+      access_token,
+      forceSync,
+    } = event.data;
 
     const site = await step.run(
       "fetch-site",
@@ -124,20 +130,22 @@ export const syncSite = inngest.createFunction(
     const promises = targetSiteItems.map(
       async ({ ghTreeItem, contentStorePath }, index) => {
         try {
-          await step.run(`sync-blob-${index}`, async () => {
-            const blob = await prisma.blob.findUnique({
-              where: {
-                siteId_path: {
-                  siteId,
-                  path: contentStorePath,
-                },
+          const blob = await prisma.blob.findUnique({
+            where: {
+              siteId_path: {
+                siteId,
+                path: contentStorePath,
               },
-            });
+            },
+          });
 
-            if (blob && blob.sha === ghTreeItem.sha) {
-              return;
-            }
+          // Skip if SHA matches and force sync is not enabled
+          if (!forceSync && blob && blob.sha === ghTreeItem.sha) {
+            return;
+          }
 
+          // Only create a step for files that need processing
+          await step.run(`sync-blob-${ghTreeItem.path}`, async () => {
             const extension = ghTreeItem.path.split(".").pop() || "";
 
             const gitHubFile = await fetchGitHubFileRaw({
