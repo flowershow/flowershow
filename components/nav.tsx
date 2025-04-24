@@ -24,11 +24,8 @@ import {
 import { NavLink, SocialLink } from "./types";
 import { TreeViewItem } from "./site-map";
 import { Search } from "./search";
-import { SiteWithUser } from "@/types";
-import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 
 export interface Props {
-  site: SiteWithUser;
   logo: string;
   url?: string;
   title?: string;
@@ -36,10 +33,12 @@ export interface Props {
   siteMap?: TreeViewItem[];
   social?: SocialLink[];
   cta?: NavLink;
+  showSearch?: boolean;
+  searchId?: string; // ID of a collection to search in (site ID)
+  searchPrefix?: string;
 }
 
 const Nav = ({
-  site,
   logo,
   url = "/",
   title,
@@ -47,6 +46,9 @@ const Nav = ({
   siteMap,
   social,
   cta,
+  showSearch = false,
+  searchId,
+  searchPrefix,
 }: Props) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -60,10 +62,6 @@ const Nav = ({
       window.removeEventListener("scroll", onScroll);
     };
   }, []);
-
-  const searchResultPrefix = site.customDomain
-    ? "/"
-    : `/@${site.user!.gh_username}/${site.projectName}/`;
 
   return (
     <Disclosure>
@@ -107,8 +105,8 @@ const Nav = ({
                 )}
               </div>
               <div className="flex shrink-0 grow items-center justify-end">
-                {isFeatureEnabled(Feature.Search, site) && (
-                  <Search indexId={site.id} prefix={searchResultPrefix} />
+                {showSearch && (
+                  <Search indexId={searchId!} prefix={searchPrefix!} />
                 )}
               </div>
               <div className="hidden lg:flex lg:items-center">

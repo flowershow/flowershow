@@ -89,6 +89,8 @@ export default async function Layout({
   const showBuiltWithButton =
     !isFeatureEnabled(Feature.NoBranding, site) && !showDataRequestBanner;
   const showHero = pageMetadata.showHero ?? siteConfig?.showHero;
+  const showSearch =
+    isFeatureEnabled(Feature.Search, site) && siteConfig?.showSearch;
 
   const resolveHeroCtaHref = (href: string) => {
     return resolveLink({
@@ -112,6 +114,10 @@ export default async function Layout({
     });
   };
 
+  const searchResultPrefix = site.customDomain
+    ? "/"
+    : `/@${site.user!.gh_username}/${site.projectName}/`;
+
   return (
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
@@ -119,7 +125,6 @@ export default async function Layout({
 
       <div className="flex w-full flex-col">
         <Nav
-          site={site}
           logo={logo}
           url={url}
           cta={cta}
@@ -127,6 +132,9 @@ export default async function Layout({
           links={links}
           social={social}
           siteMap={siteMap}
+          showSearch={showSearch}
+          searchId={site.id}
+          searchPrefix={searchResultPrefix}
         />
 
         {showHero && (
