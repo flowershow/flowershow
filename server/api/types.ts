@@ -9,6 +9,7 @@ interface PageMetadataBase {
   showToc?: boolean;
   showHero?: boolean;
   showEditLink?: boolean;
+  showComments?: boolean;
   cta?: Array<{
     href: string;
     label: string;

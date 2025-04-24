@@ -282,6 +282,13 @@ export default async function SitePage({ params }: { params: RouteParams }) {
 
   const jsonLd = getJsonLd({ metadata: page.metadata, siteMetadata: site });
 
+  const metadata = (blob.metadata ?? {}) as PageMetadata;
+
+  const showEditLink = metadata.showEditLink ?? siteConfig?.showEditLink;
+  const showPageComments =
+    site.enableComments &&
+    (metadata.showComments ?? siteConfig?.showComments ?? site.enableComments);
+
   const Layout = ({ children }) => {
     switch (page.metadata.layout) {
       case "dataset":
@@ -321,17 +328,19 @@ export default async function SitePage({ params }: { params: RouteParams }) {
         <Layout>{compiledMDX}</Layout>
       </div>
 
-      {siteConfig?.showEditLink && (
+      {showEditLink && (
         <EditPageButton
           url={`https://github.com/${site?.gh_repository}/edit/${site?.gh_branch}/${blob.path}`}
         />
       )}
-      <Comments
-        repo={site.gh_repository}
-        enabled={Boolean(site.enableComments)}
-        repoId={site.giscusRepoId}
-        categoryId={site.giscusCategoryId}
-      />
+      {showPageComments && (
+        <Comments
+          repo={site.gh_repository}
+          enabled={Boolean(site.enableComments)}
+          repoId={site.giscusRepoId}
+          categoryId={site.giscusCategoryId}
+        />
+      )}
     </>
   );
 }
