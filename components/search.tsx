@@ -51,6 +51,8 @@ function SearchResults({ prefix }: { prefix: string }) {
     [prefix],
   );
 
+  console.log({ results });
+
   // Only show results if there's an actual query and results
   if (!hasQuery || !hasResults || status === "stalled") {
     return null;
@@ -90,16 +92,7 @@ export function Search({ indexId, prefix }: SearchProps) {
   }, []);
 
   return (
-    <InstantSearch
-      searchClient={searchClient}
-      indexName={indexId}
-      insights
-      initialUiState={{
-        [indexId]: {
-          query: "",
-        },
-      }}
-    >
+    <InstantSearch searchClient={searchClient} indexName={indexId} insights>
       <div className="relative ml-4" ref={searchRef}>
         <SearchBox
           placeholder="Search..."
