@@ -4,11 +4,6 @@ import { parse as parseYAML } from "yaml";
 
 import { inngest } from "@/inngest/client";
 import {
-  createSiteCollection,
-  deleteSiteCollection,
-  siteCollectionExists,
-} from "@/lib/typesense";
-import {
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
@@ -190,9 +185,6 @@ export const siteRouter = createTRPCRouter({
         console.error("Failed to create webhook", e);
       }
 
-      // Create Typesense collection
-      await createSiteCollection(site.id);
-
       await inngest.send({
         name: "site/sync",
         data: {
@@ -365,12 +357,6 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      try {
-        await deleteSiteCollection(input.id);
-      } catch (e) {
-        console.error(e);
-      }
-
       return site;
     }),
   sync: protectedProcedure
@@ -396,12 +382,6 @@ export const siteRouter = createTRPCRouter({
 
       const { id, gh_repository, gh_branch } = site!;
       const access_token = ctx.session.accessToken;
-
-      const typesenseCollectionExists = await siteCollectionExists(id);
-
-      if (!typesenseCollectionExists) {
-        await createSiteCollection(id);
-      }
 
       await inngest.send({
         name: "site/sync",

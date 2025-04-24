@@ -81,3 +81,18 @@ export async function deleteSiteCollection(siteId: string) {
 export async function siteCollectionExists(siteId: string) {
   return await typesense.collections(`${siteId}`).exists();
 }
+
+/**
+ * Delete a document
+ */
+export async function deleteSiteDocument(siteId: string, documentId: string) {
+  try {
+    await typesense.collections(siteId).documents(documentId).delete();
+  } catch (error: any) {
+    // If document doesn't exist, that's fine
+    if (error?.httpStatus !== 404) {
+      console.error("Failed to delete Typesense document:", error);
+      throw error;
+    }
+  }
+}

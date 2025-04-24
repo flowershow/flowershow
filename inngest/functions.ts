@@ -3,7 +3,12 @@ import { inngest } from "./client";
 import prisma from "@/server/db";
 import { normalizeDir } from "@/lib/utils";
 import { deleteFile, deleteProject, uploadFile } from "@/lib/content-store";
-import { typesense } from "@/lib/typesense";
+import {
+  createSiteCollection,
+  deleteSiteCollection,
+  deleteSiteDocument,
+  siteCollectionExists,
+} from "@/lib/typesense";
 import {
   GitHubAPIFileContent,
   fetchGitHubFileRaw,
@@ -85,6 +90,12 @@ export const syncSite = inngest.createFunction(
         }
       },
     );
+
+    const typesenseCollectionExists = await siteCollectionExists(siteId);
+
+    if (!typesenseCollectionExists) {
+      await createSiteCollection(siteId);
+    }
 
     const includes: string[] = siteConfig?.contentInclude || [];
     const excludes: string[] = siteConfig?.contentExclude || [];
@@ -230,14 +241,7 @@ export const syncSite = inngest.createFunction(
           });
 
           // Delete the document from Typesense if it exists
-          try {
-            await typesense.collections(siteId).documents(blob.id).delete();
-          } catch (error: any) {
-            // Ignore 404 errors (document not found)
-            if (error?.httpStatus !== 404) {
-              console.error("Failed to delete Typesense document:", error);
-            }
-          }
+          await deleteSiteDocument(siteId, blob.id);
 
           await prisma.blob.delete({
             where: {
@@ -287,5 +291,6 @@ export const deleteSite = inngest.createFunction(
     const { siteId } = event.data;
     // Delete from content store first
     await deleteProject(siteId);
+    await deleteSiteCollection(siteId);
   },
 );
