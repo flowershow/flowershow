@@ -42,26 +42,30 @@ export default async function Layout({
   const site = await getSiteData(user, project);
   const ghUsername = site.user?.gh_username!;
 
-  const [customCss, siteConfig, siteMap] = await Promise.all([
-    api.site.getCustomStyles
+  const customCss = await api.site.getCustomStyles
+    .query({
+      gh_username: ghUsername,
+      projectName: site.projectName,
+    })
+    .catch(() => null);
+
+  const siteConfig = await api.site.getConfig
+    .query({
+      gh_username: ghUsername,
+      projectName: site.projectName,
+    })
+    .catch(() => null);
+
+  let siteMap;
+
+  if (siteConfig?.showSidebar) {
+    siteMap = await api.site.getSiteMap
       .query({
         gh_username: ghUsername,
         projectName: site.projectName,
       })
-      .catch(() => null),
-    api.site.getConfig
-      .query({
-        gh_username: ghUsername,
-        projectName: site.projectName,
-      })
-      .catch(() => null),
-    api.site.getSiteMap
-      .query({
-        gh_username: ghUsername,
-        projectName: site.projectName,
-      })
-      .catch(() => []),
-  ]);
+      .catch(() => []);
+  }
 
   const { title, logo, url, links, social, cta } = getNavConfig({
     site,
@@ -82,7 +86,7 @@ export default async function Layout({
 
   const pageMetadata = blob.metadata as PageMetadata;
 
-  const showSitemap =
+  const showSidebar =
     pageMetadata.showSidebar ?? siteConfig?.showSidebar ?? false;
   const showToc = pageMetadata.showToc ?? siteConfig?.showToc ?? true;
   const showDataRequestBanner = isFeatureEnabled(Feature.DataRequest, site);
@@ -131,6 +135,7 @@ export default async function Layout({
           title={title}
           links={links}
           social={social}
+          showSiteMap={showSidebar}
           siteMap={siteMap}
           showSearch={showSearch}
           searchId={site.id}
@@ -202,19 +207,19 @@ export default async function Layout({
           <div
             className={clsx(
               "mx-auto mt-16 grid w-full px-8 sm:px-10 lg:px-12",
-              showSitemap &&
+              showSidebar &&
                 showToc &&
                 "max-w-screen-2xl grid-cols-[minmax(0,1fr)] gap-x-12 lg:grid-cols-[16rem,minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_12rem]",
-              !showSitemap &&
+              !showSidebar &&
                 showToc &&
                 "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[minmax(0,1fr),12rem]",
-              showSitemap &&
+              showSidebar &&
                 !showToc &&
                 "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[12rem,minmax(0,1fr)]",
-              !showSitemap && !showToc && "max-w-5xl",
+              !showSidebar && !showToc && "max-w-5xl",
             )}
           >
-            {showSitemap && (
+            {showSidebar && (
               <div className="hidden lg:block">
                 <aside className="sticky top-[8rem] h-[calc(100vh-4rem)] overflow-y-auto pb-16 pr-4">
                   <SiteMap items={siteMap} />

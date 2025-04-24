@@ -30,6 +30,7 @@ export interface Props {
   url?: string;
   title?: string;
   links?: NavLink[];
+  showSiteMap?: boolean;
   siteMap?: TreeViewItem[];
   social?: SocialLink[];
   cta?: NavLink;
@@ -43,6 +44,7 @@ const Nav = ({
   url = "/",
   title,
   links,
+  showSiteMap = false,
   siteMap,
   social,
   cta,
@@ -209,7 +211,7 @@ const Nav = ({
                 </div>
               </div>
             )}
-            {siteMap && (
+            {showSiteMap && siteMap && (
               <div className="border-t border-primary-faint px-4 py-3 font-light">
                 <TreeView items={siteMap} onLinkClick={close} />
               </div>
