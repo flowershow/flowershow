@@ -74,3 +74,10 @@ export async function deleteSiteCollection(siteId: string) {
     }
   }
 }
+
+/**
+ * Get a site's collection
+ */
+export async function siteCollectionExists(siteId: string) {
+  return await typesense.collections(`${siteId}`).exists();
+}

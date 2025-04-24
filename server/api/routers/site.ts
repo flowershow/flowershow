@@ -3,7 +3,11 @@ import { z } from "zod";
 import { parse as parseYAML } from "yaml";
 
 import { inngest } from "@/inngest/client";
-import { createSiteCollection, deleteSiteCollection } from "@/lib/typesense";
+import {
+  createSiteCollection,
+  deleteSiteCollection,
+  siteCollectionExists,
+} from "@/lib/typesense";
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -392,6 +396,12 @@ export const siteRouter = createTRPCRouter({
 
       const { id, gh_repository, gh_branch } = site!;
       const access_token = ctx.session.accessToken;
+
+      const typesenseCollectionExists = await siteCollectionExists(id);
+
+      if (!typesenseCollectionExists) {
+        await createSiteCollection(id);
+      }
 
       await inngest.send({
         name: "site/sync",
