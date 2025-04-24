@@ -161,6 +161,25 @@ export default async function SiteSettingsIndex({
           handleSubmit={updateSite}
         />
 
+        <Form
+          title="Full-Text Search"
+          description="Enable full-text search functionality for your site."
+          helpText={
+            isFeatureEnabled(Feature.Search, site)
+              ? "Enable to add a search box that allows users to search through all your site's content."
+              : "Available on Premium plan only."
+          }
+          disabled={!isFeatureEnabled(Feature.Search, site)}
+          inputAttrs={{
+            name: "enableSearch",
+            type: "text",
+            defaultValue: isFeatureEnabled(Feature.Search, site)
+              ? Boolean(site?.enableSearch).toString()
+              : "false",
+          }}
+          handleSubmit={updateSite}
+        />
+
         <Billing siteId={site.id} subscription={subscription} plans={PLANS} />
 
         <DeleteSiteForm siteName={site?.projectName!} />

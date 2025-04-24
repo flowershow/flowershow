@@ -37,7 +37,6 @@ export interface SiteConfig {
   showHero?: boolean;
   showEditLink?: boolean;
   showComments?: boolean;
-  showSearch?: boolean;
   cta?: Array<{
     href: string;
     label: string;

@@ -109,6 +109,7 @@ model Site {
   enableComments Boolean  @default(false)
   giscusRepoId  String?
   giscusCategoryId String?
+  enableSearch  Boolean  @default(false)
   plan          Plan     @default(FREE)
   subscription  Subscription?
   blobs         Blob[]

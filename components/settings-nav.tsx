@@ -11,6 +11,7 @@ const navItems = [
   { name: "Auto-Sync", href: "#autoSync" },
   { name: "Comments", href: "#enableComments" },
   { name: "Custom Domain", href: "#customDomain" },
+  { name: "Full-Text Search", href: "#enableSearch" },
   { name: "Billing", href: "#billing" },
   { name: "Delete Site", href: "#deleteSite" },
 ];

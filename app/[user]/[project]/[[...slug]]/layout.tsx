@@ -94,7 +94,7 @@ export default async function Layout({
     !isFeatureEnabled(Feature.NoBranding, site) && !showDataRequestBanner;
   const showHero = pageMetadata.showHero ?? siteConfig?.showHero;
   const showSearch =
-    isFeatureEnabled(Feature.Search, site) && siteConfig?.showSearch;
+    isFeatureEnabled(Feature.Search, site) && site.enableSearch;
 
   const resolveHeroCtaHref = (href: string) => {
     return resolveLink({

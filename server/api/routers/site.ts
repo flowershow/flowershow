@@ -305,10 +305,28 @@ export const siteRouter = createTRPCRouter({
           return val;
         };
 
+        const convertedValue = convertValue(value);
         result = await ctx.db.site.update({
           where: { id },
-          data: { [key]: convertValue(value) },
+          data: { [key]: convertedValue },
         });
+
+        // If enableSearch is being turned on, trigger a force sync to index all files
+        // Note: this is a temporary solution, to make sure people who upgrade now have their
+        // site's indexes updated (but we index all documents, even for non-premium users atm, which we shouldn't)
+        if (key === "enableSearch" && convertedValue === true) {
+          await inngest.send({
+            name: "site/sync",
+            data: {
+              siteId: id,
+              gh_repository: site.gh_repository,
+              gh_branch: site.gh_branch,
+              rootDir: site.rootDir,
+              access_token: ctx.session.accessToken,
+              forceSync: true,
+            },
+          });
+        }
       }
 
       // revalidate the site metadata

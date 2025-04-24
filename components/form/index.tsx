@@ -119,7 +119,9 @@ export default function Form({
         <p className="text-sm text-stone-500 dark:text-stone-400">
           {description}
         </p>
-        {["autoSync", "enableComments"].includes(inputAttrs.name) ? (
+        {["autoSync", "enableComments", "enableSearch"].includes(
+          inputAttrs.name,
+        ) ? (
           <Switch
             disabled={disabled}
             checked={inputAttrs.defaultValue === "true"}
@@ -142,7 +144,9 @@ export default function Form({
                   toast.error(
                     inputAttrs.name === "autoSync"
                       ? "Failed to create webhook. Check if the repository has a webhook for this application already installed."
-                      : "Failed to enable comments.",
+                      : inputAttrs.name === "enableComments"
+                        ? "Failed to enable comments."
+                        : "Failed to enable search.",
                   );
                 })
                 .finally(() => {
