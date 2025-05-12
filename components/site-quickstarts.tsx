@@ -15,14 +15,14 @@ export default async function Sites({ limit }: { limit?: number }) {
             icon: () => <span className="text-xl">👋</span>,
           },
           {
-            title: "Publish your Obsidian vault",
-            href: "/obsidian-quickstart",
-            icon: ObsidianIcon,
-          },
-          {
             title: "Publish your markdown from GitHub",
             href: "/new",
             icon: MarkdownIcon,
+          },
+          {
+            title: "Publish your Obsidian vault",
+            href: "/obsidian-quickstart",
+            icon: ObsidianIcon,
           },
         ]
       : [
