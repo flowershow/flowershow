@@ -72,7 +72,7 @@ export default function ObsidianQuickstart() {
         <h3 className="mt-4 text-lg font-semibold">Step 3: View your site</h3>
         <div className="mt-2 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
           Wait a few moments until the site shows as &quot;Synced&quot; and
-          click on the "Visit site" button to see how it looks.
+          click on the &quot;Visit site&quot; button to see how it looks.
           <Image
             width="600"
             height="400"
@@ -84,8 +84,8 @@ export default function ObsidianQuickstart() {
 
         <div className="mt-8 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-900/20">
           <p className="text-green-700 dark:text-green-300">
-            Congratulations! You've just published your first Flowershow site!
-            💐
+            Congratulations! You&apos;ve just published your first Flowershow
+            site! 💐
           </p>
         </div>
       </div>
