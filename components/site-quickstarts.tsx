@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { getConfig } from "@/lib/app-config";
 import ObsidianIcon from "./icons/obsidian";
 import { MarkdownIcon } from "./icons";
@@ -10,6 +9,11 @@ export default async function Sites({ limit }: { limit?: number }) {
   const quickstarts =
     config.product === "flowershow"
       ? [
+          {
+            title: "Publish Hello World Site",
+            href: "/hello-world",
+            icon: () => <span className="text-xl">👋</span>,
+          },
           {
             title: "Publish your Obsidian vault",
             href: "/obsidian-quickstart",
