@@ -218,7 +218,9 @@ export default function Form({
         >
           {helpText}
         </p>
-        {!["autoSync", "enableComments"].includes(inputAttrs.name) &&
+        {!["autoSync", "enableComments", "enableSearch"].includes(
+          inputAttrs.name,
+        ) &&
           !disabled && <FormButton />}
       </div>
     </form>
