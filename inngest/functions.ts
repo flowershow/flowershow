@@ -82,15 +82,7 @@ export const syncSite = inngest.createFunction(
             Buffer.from(config.content, "base64").toString("utf-8"),
           );
         } catch (e: any) {
-          if (e.code == "NOT_FOUND") {
-            return {};
-          }
-          throw new NonRetriableError(
-            "Failed to fetch site's config.json file.",
-            {
-              cause: e,
-            },
-          );
+          return {};
         }
       },
     );
