@@ -53,14 +53,18 @@ export const syncSite = inngest.createFunction(
       forceSync,
     } = event.data;
 
-    const site = await step.run(
-      "fetch-site",
-      async () =>
-        await prisma.site.findUnique({
-          where: { id: siteId },
-          include: { user: true },
-        }),
-    );
+    const site = await step.run("fetch-site", async () => {
+      const site = await prisma.site.findUnique({
+        where: { id: siteId },
+        include: { user: true },
+      });
+
+      if (!site) {
+        throw Error(`Site ${siteId} not found.`);
+      }
+
+      return site;
+    });
 
     // Fetch site config to get contentInclude and contentExclude settings
     const siteConfig: SiteConfig = await step.run(
@@ -203,14 +207,23 @@ export const syncSite = inngest.createFunction(
             });
           });
         } catch (error: any) {
-          await prisma.blob.update({
+          await prisma.blob.upsert({
             where: {
               siteId_path: {
                 siteId,
                 path: contentStorePath,
               },
             },
-            data: {
+            create: {
+              siteId,
+              path: contentStorePath,
+              size: 0,
+              sha: "",
+              metadata: Prisma.JsonNull,
+              syncStatus: "ERROR",
+              syncError: error.message,
+            },
+            update: {
               syncStatus: "ERROR",
               syncError: error.message,
             },

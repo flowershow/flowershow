@@ -420,82 +420,88 @@ export const siteRouter = createTRPCRouter({
         id: z.string().min(1),
       }),
     )
-    .query(async ({ ctx, input }) => {
-      // Get all blobs for the site
-      const blobs = await ctx.db.blob.findMany({
-        where: {
-          siteId: input.id,
-        },
-        select: {
-          syncStatus: true,
-          syncError: true,
-          updatedAt: true,
-          path: true,
-        },
-      });
-
-      // Get site data for tree comparison
-      const site = await ctx.db.site.findUnique({
-        where: { id: input.id },
-      });
-
-      if (!site) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Site not found",
+    .query(
+      async ({
+        ctx,
+        input,
+      }): Promise<{
+        status: Status | "OUTDATED";
+        error?: string | null;
+        lastSyncedAt?: Date | null;
+      }> => {
+        // Get site data for tree comparison
+        const site = await ctx.db.site.findUnique({
+          where: { id: input.id },
         });
-      }
 
-      // Calculate aggregate sync status
-      let aggregateSyncStatus: Status = "SUCCESS";
-      let syncError: string | null = null;
-      let latestSyncedAt: Date | null = null;
+        if (!site) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Site not found",
+          });
+        }
 
-      // If any blob is PENDING, site is PENDING
-      if (blobs.some((b) => b.syncStatus === "PENDING")) {
-        aggregateSyncStatus = "PENDING";
-      }
-      // If any blob is ERROR, site is ERROR
-      else if (blobs.some((b) => b.syncStatus === "ERROR")) {
-        aggregateSyncStatus = "ERROR";
-        const errorMessages = blobs
-          .filter((b) => b.syncStatus === "ERROR")
-          .map((b) =>
-            b.syncError
-              ? `[${b.path}]: ${b.syncError}`
-              : `[${b.path}]: Unknown error`,
-          );
-        syncError = errorMessages.join("\n");
-      }
-
-      // Get the most recent update date
-      latestSyncedAt =
-        blobs
-          .map((b) => b.updatedAt)
-          .sort((a, b) => b.getTime() - a.getTime())[0] || null;
-
-      let isUpToDate = false;
-
-      if (aggregateSyncStatus === "SUCCESS") {
-        // get current site tree
-        let currentTree = site.tree;
-
-        // get latest tree from GitHub
-        const gitHubTree = await fetchGitHubRepoTree({
-          gh_repository: site!.gh_repository,
-          gh_branch: site!.gh_branch,
-          access_token: ctx.session.accessToken,
+        // Get all blobs for the site
+        const blobs = await ctx.db.blob.findMany({
+          where: {
+            siteId: input.id,
+          },
+          select: {
+            syncStatus: true,
+            syncError: true,
+            updatedAt: true,
+            path: true,
+          },
         });
-        isUpToDate = currentTree?.["sha"] === gitHubTree.sha;
-      }
 
-      return {
-        isUpToDate,
-        syncStatus: aggregateSyncStatus,
-        syncError,
-        syncedAt: latestSyncedAt,
-      };
-    }),
+        // Calculate aggregate sync status
+        let status: Status | "OUTDATED";
+        let error: string | null = null;
+        // Get the most recent update date
+        const lastSyncedAt =
+          blobs
+            .map((b) => b.updatedAt)
+            .sort((a, b) => b.getTime() - a.getTime())[0] || null;
+
+        // If any blob is PENDING, site sync is PENDING
+        if (blobs.some((b) => b.syncStatus === "PENDING")) {
+          status = "PENDING";
+        }
+        // If any blob is ERROR, site is ERROR
+        else if (blobs.some((b) => b.syncStatus === "ERROR")) {
+          status = "ERROR";
+          error = blobs
+            .filter((b) => b.syncStatus === "ERROR")
+            .map((b) =>
+              b.syncError
+                ? `[${b.path}]: ${b.syncError}`
+                : `[${b.path}]: Unknown error`,
+            )
+            .join("\n");
+        }
+        // Otherwise, compare trees
+        else {
+          if (!site.tree) {
+            return {
+              status: "PENDING",
+            };
+          }
+          const gitHubTree = await fetchGitHubRepoTree({
+            gh_repository: site!.gh_repository,
+            gh_branch: site!.gh_branch,
+            access_token: ctx.session.accessToken,
+          });
+          status =
+            site.tree?.["sha"] === gitHubTree.sha ? "SUCCESS" : "OUTDATED";
+        }
+
+        return {
+          status,
+          error,
+          lastSyncedAt,
+        };
+      },
+    ),
   getCustomStyles: publicProcedure
     .input(
       z.object({

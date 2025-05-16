@@ -1,7 +1,5 @@
 "use client";
-import { api } from "@/trpc/react";
-import { useParams } from "next/navigation";
-import { useSync } from "../sync-provider";
+import { useSync } from "../sync-status-provider";
 import {
   CircleArrowDownIcon,
   CalendarIcon,
@@ -9,7 +7,7 @@ import {
   CircleAlertIcon,
   InfoIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Popover,
   PopoverButton,
@@ -18,31 +16,13 @@ import {
 } from "@headlessui/react";
 
 export default function Status() {
-  const { id } = useParams() as { id: string };
-  const { refreshKey, isPending } = useSync();
+  const syncStatus = useSync();
   const [showErrorDialog, setShowErrorDialog] = useState(false);
-
-  const {
-    data: syncStatus,
-    isLoading,
-    refetch,
-  } = api.site.getSyncStatus.useQuery(
-    { id },
-    {
-      refetchInterval: 10 * 1000,
-      keepPreviousData: true,
-      refetchOnWindowFocus: "always",
-    },
-  );
-
-  useEffect(() => {
-    refetch();
-  }, [refreshKey]);
 
   return (
     <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
       <div className="mt-2 flex items-center text-sm text-gray-500">
-        {isLoading ? (
+        {syncStatus.status === "LOADING" ? (
           <div className="flex items-center">
             <CircleAlertIcon
               className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
@@ -50,7 +30,7 @@ export default function Status() {
             />
             <span>-</span>
           </div>
-        ) : syncStatus?.isUpToDate ? (
+        ) : syncStatus.status === "SUCCESS" ? (
           <div className="flex items-center">
             <CircleCheckIcon
               className="mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"
@@ -58,7 +38,7 @@ export default function Status() {
             />
             <span>Synced</span>
           </div>
-        ) : syncStatus?.syncStatus === "PENDING" || isPending ? (
+        ) : syncStatus.status === "PENDING" ? (
           <div className="flex items-center">
             <CircleArrowDownIcon
               className="mr-1.5 h-5 w-5 flex-shrink-0 text-orange-400"
@@ -66,7 +46,7 @@ export default function Status() {
             />
             <span>Syncing...</span>
           </div>
-        ) : syncStatus?.syncStatus === "ERROR" ? (
+        ) : syncStatus.status === "ERROR" ? (
           <div className="group flex items-center hover:cursor-default">
             <CircleAlertIcon
               className="mr-1.5 h-5 w-5 flex-shrink-0 text-red-400"
@@ -100,7 +80,7 @@ export default function Status() {
                     onMouseLeave={() => setShowErrorDialog(false)}
                     className="max-h-80 w-80 shrink overflow-y-auto rounded-xl bg-white p-4 text-sm leading-6 text-gray-900 shadow-lg ring-1 ring-gray-900/5"
                   >
-                    {syncStatus && syncStatus.syncError}
+                    {syncStatus && syncStatus.error}
                   </div>
                 </PopoverPanel>
               </Transition>
@@ -121,13 +101,13 @@ export default function Status() {
           className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
           aria-hidden="true"
         />
-        {isLoading ? (
+        {syncStatus.status === "LOADING" ? (
           <span>-</span>
         ) : (
           <span>
             Last synced{" "}
-            {syncStatus && syncStatus.syncedAt
-              ? new Date(syncStatus?.syncedAt)?.toLocaleString()
+            {syncStatus && syncStatus.lastSyncedAt
+              ? new Date(syncStatus?.lastSyncedAt)?.toLocaleString()
               : "—"}
           </span>
         )}

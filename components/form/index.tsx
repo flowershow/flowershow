@@ -9,7 +9,7 @@ import { Switch } from "@headlessui/react";
 import DomainStatus from "./domain-status";
 import DomainConfiguration from "./domain-configuration";
 import Uploader from "./uploader";
-import { useSync } from "@/app/cloud/(dashboard)/site/[id]/sync-provider";
+import { useSync } from "@/app/cloud/(dashboard)/site/[id]/sync-status-provider";
 import clsx from "clsx";
 
 export default function Form({
@@ -47,7 +47,6 @@ export default function Form({
   const { id } = useParams() as { id: string };
   const router = useRouter();
   const { update } = useSession();
-  const { setRefreshKey } = useSync();
 
   const required = inputAttrs.required ?? true;
 
@@ -102,9 +101,6 @@ export default function Form({
           })
           .catch((error) => {
             toast.error(`Error: ${error.message}`);
-          })
-          .finally(() => {
-            setRefreshKey((prev) => prev + 1);
           });
       }}
       className={cn(
@@ -148,9 +144,6 @@ export default function Form({
                         ? "Failed to enable comments."
                         : "Failed to enable search.",
                   );
-                })
-                .finally(() => {
-                  setRefreshKey((prev) => prev + 1);
                 });
             }}
             className={clsx(
