@@ -1,4 +1,9 @@
-import { getServerSession, type NextAuthOptions } from "next-auth";
+import {
+  Account,
+  getServerSession,
+  User,
+  type NextAuthOptions,
+} from "next-auth";
 import GitHubProvider from "next-auth/providers/github";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/server/db";
@@ -84,15 +89,26 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
-    signIn: async ({ user, account }) => {
-      if (user && account) {
+    signIn: async ({
+      user,
+      account,
+      profile,
+    }: {
+      user: User; //
+      account: Account | null;
+      // profile?: GithubProfile,
+      profile?: any; // why GithubProfile type doesn't work?!
+    }) => {
+      console.log({ user, account, profile });
+
+      if (account) {
         try {
-          const dbUser = await prisma.user.findFirst({
+          const existingUser = await prisma.user.findFirst({
             where: {
               id: user.id,
             },
           });
-          if (dbUser) {
+          if (existingUser) {
             await prisma.account.update({
               where: {
                 provider_providerAccountId: {
@@ -109,11 +125,21 @@ export const authOptions: NextAuthOptions = {
                 scope: account.scope,
               },
             });
+
+            await prisma.user.update({
+              where: { id: user.id },
+              data: {
+                gh_username: profile.login,
+                username: profile.login,
+                name: profile.name || profile.login,
+              },
+            });
           }
         } catch (err) {
           if (err instanceof Error) {
             // Keep console.error for auth issues as they are critical
             console.error("Critical: Auth token update failed:", err.message);
+            return false;
           }
         }
       }
