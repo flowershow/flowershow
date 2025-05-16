@@ -42,7 +42,6 @@ export function SyncStatusProvider({
     {
       refetchInterval: 10 * 1000,
       keepPreviousData: true,
-      refetchOnWindowFocus: "always",
     },
   );
 
