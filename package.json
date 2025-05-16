@@ -44,6 +44,7 @@
     "@trpc/next": "^10.37.1",
     "@trpc/react-query": "^10.37.1",
     "@trpc/server": "^10.37.1",
+    "@unocss/core": "^66.1.2",
     "@upstash/ratelimit": "^0.4.4",
     "@vercel/blob": "^0.15.0",
     "@vercel/kv": "^1.0.0",
@@ -121,6 +122,7 @@
     "@types/react-dom": "^18.2.15",
     "@types/three": "^0.163.0",
     "@typescript-eslint/parser": "^7.5.0",
+    "@unocss/preset-wind3": "^66.1.2",
     "autoprefixer": "^10.4.16",
     "dotenv": "^16.4.5",
     "eslint": "^8.57.0",
@@ -140,6 +142,7 @@
     "tailwindcss-animate": "^1.0.7",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.2.2"
+    "typescript": "^5.2.2",
+    "unocss": "^66.1.2"
   }
 }

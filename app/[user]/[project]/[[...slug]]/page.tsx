@@ -15,6 +15,7 @@ import { getConfig } from "@/lib/app-config";
 import { getMdxOptions } from "@/lib/markdown";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 import { resolveLink } from "@/lib/resolve-link";
+import { uno } from "@/lib/uno";
 
 import { api } from "@/trpc/server";
 import { PageMetadata } from "@/server/api/types";
@@ -251,6 +252,9 @@ export default async function SitePage({ params }: { params: RouteParams }) {
 
   let compiledMDX: any;
 
+  const unoGenerator = await uno;
+  const { css } = await unoGenerator.generate(page.content, { minify: true });
+
   try {
     const { content } = await compileMDX({
       source: page.content,
@@ -322,6 +326,11 @@ export default async function SitePage({ params }: { params: RouteParams }) {
 
   return (
     <>
+      <style
+        key="unocss-mdx"
+        id="unocss-mdx"
+        dangerouslySetInnerHTML={{ __html: css }}
+      />
       <UrlNormalizer />
 
       <div id="mdxpage">
