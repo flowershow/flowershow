@@ -27,7 +27,7 @@ export const syncSite = inngest.createFunction(
     concurrency: [
       {
         scope: "account",
-        limit: 10,
+        limit: 5,
         key: "event.data.access_token",
       },
     ],
@@ -286,7 +286,7 @@ export const deleteSite = inngest.createFunction(
     concurrency: [
       {
         scope: "account",
-        limit: 10,
+        limit: 5,
         key: "event.data.access_token",
       },
     ],
