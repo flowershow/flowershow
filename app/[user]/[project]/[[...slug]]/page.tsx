@@ -312,6 +312,8 @@ export default async function SitePage({ params }: { params: RouteParams }) {
             </DataPackageLayout>
           </>
         );
+      case "plain":
+        return <>{children}</>;
       default:
         return (
           <WikiLayout

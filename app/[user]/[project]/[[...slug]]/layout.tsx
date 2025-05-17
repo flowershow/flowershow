@@ -85,10 +85,13 @@ export default async function Layout({
   }
 
   const pageMetadata = blob.metadata as PageMetadata;
+  const isPlainLayout = pageMetadata.layout === "plain";
 
   const showSidebar =
-    pageMetadata.showSidebar ?? siteConfig?.showSidebar ?? false;
-  const showToc = pageMetadata.showToc ?? siteConfig?.showToc ?? true;
+    !isPlainLayout &&
+    (pageMetadata.showSidebar ?? siteConfig?.showSidebar ?? false);
+  const showToc =
+    !isPlainLayout && (pageMetadata.showToc ?? siteConfig?.showToc ?? true);
   const showDataRequestBanner = isFeatureEnabled(Feature.DataRequest, site);
   const showBuiltWithButton =
     !isFeatureEnabled(Feature.NoBranding, site) && !showDataRequestBanner;
@@ -152,7 +155,7 @@ export default async function Layout({
                   : "max-w-3xl text-center",
               )}
             >
-              <div className="pb-16 pt-10 sm:pb-20 lg:col-span-6 lg:px-0 lg:pb-32 lg:pt-28">
+              <div className="pb-16 pt-10 sm:pb-20 lg:col-span-6 lg:px-0 lg:pb-32 lg:pt-28 xl:col-span-6">
                 <div className="mx-auto px-8 sm:px-10 lg:mx-0 lg:px-12">
                   <h1 className="text-pretty mt-24 font-title text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl">
                     {pageMetadata.title}
@@ -191,11 +194,11 @@ export default async function Layout({
                 </div>
               </div>
               {pageMetadata.image && (
-                <div className="relative lg:col-span-6">
+                <div className="relative lg:col-span-5 lg:-mr-8 xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0">
                   <img
                     alt=""
                     src={resolveHeroImageSrc(pageMetadata.image)}
-                    className="aspect-[3/2] w-full bg-gray-50 object-contain p-4 lg:absolute lg:inset-0 lg:aspect-auto lg:h-full lg:p-8"
+                    className="aspect-[3/2] w-full bg-gray-50 object-cover lg:absolute lg:inset-0 lg:aspect-auto lg:h-full"
                   />
                 </div>
               )}
@@ -206,17 +209,19 @@ export default async function Layout({
         <div className="relative">
           <div
             className={clsx(
-              "mx-auto mt-16 grid w-full px-8 sm:px-10 lg:px-12",
-              showSidebar &&
-                showToc &&
-                "max-w-screen-2xl grid-cols-[minmax(0,1fr)] gap-x-12 lg:grid-cols-[16rem,minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_12rem]",
-              !showSidebar &&
-                showToc &&
-                "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[minmax(0,1fr),12rem]",
-              showSidebar &&
-                !showToc &&
-                "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[12rem,minmax(0,1fr)]",
-              !showSidebar && !showToc && "max-w-5xl",
+              !isPlainLayout && [
+                "mx-auto mt-16 grid w-full px-8 sm:px-10 lg:px-12",
+                showSidebar &&
+                  showToc &&
+                  "max-w-screen-2xl grid-cols-[minmax(0,1fr)] gap-x-12 lg:grid-cols-[16rem,minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_12rem]",
+                !showSidebar &&
+                  showToc &&
+                  "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[minmax(0,1fr),12rem]",
+                showSidebar &&
+                  !showToc &&
+                  "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[12rem,minmax(0,1fr)]",
+                !showSidebar && !showToc && "max-w-5xl",
+              ],
             )}
           >
             {showSidebar && (
