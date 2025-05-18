@@ -41,9 +41,6 @@ importers:
       '@portaljs/core':
         specifier: ^1.0.8
         version: 1.0.8(@algolia/client-search@4.21.1)(@types/react-dom@18.2.15)(@types/react@18.2.37)(mdx-mermaid@2.0.0(bufferutil@4.0.8)(mermaid@10.6.1)(react@18.2.0)(unist-util-visit@5.0.0)(utf-8-validate@6.0.3))(next-themes@0.2.1(next@14.2.5(@babel/core@7.24.4)(@playwright/test@1.43.1)(babel-plugin-macros@3.1.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(next@14.2.5(@babel/core@7.24.4)(@playwright/test@1.43.1)(babel-plugin-macros@3.1.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0))(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(search-insights@2.17.3)
-      '@portaljs/remark-callouts':
-        specifier: ^1.0.5
-        version: 1.0.5
       '@portaljs/remark-embed':
         specifier: ^1.0.5
         version: 1.0.5
@@ -53,6 +50,9 @@ importers:
       '@prisma/client':
         specifier: ^5.5.2
         version: 5.5.2(prisma@5.5.2)
+      '@r4ai/remark-callout':
+        specifier: ^0.6.2
+        version: 0.6.2
       '@stripe/react-stripe-js':
         specifier: ^3.1.1
         version: 3.1.1(@stripe/stripe-js@5.5.0)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -215,6 +215,9 @@ importers:
       remark-math:
         specifier: ^5.1.1
         version: 5.1.1
+      remark-obsidian-callout:
+        specifier: ^1.5.1
+        version: 1.5.1
       remark-smartypants:
         specifier: ^2.0.0
         version: 2.0.0
@@ -1711,9 +1714,6 @@ packages:
       react: ^18.2.0
       react-dom: ^18.2.0
 
-  '@portaljs/remark-callouts@1.0.5':
-    resolution: {integrity: sha512-KMjr44isEvQzpNBBCP3s5/3TCmI/ce4xRvbOk6h9xicVZqE6BPTH9rhfOGvop9cchyAWgj9gmJXhQk+Bd+t5bg==}
-
   '@portaljs/remark-embed@1.0.5':
     resolution: {integrity: sha512-TgfGlAVSC/H+NKmolY+Gomu16Nas0g7Y/s3Thhh2CT3s0mwMSDUZR2BNCegmNdm95hUtv/AA3tdV9af9pxijXg==}
 
@@ -1744,6 +1744,10 @@ packages:
   '@quansync/fs@0.1.3':
     resolution: {integrity: sha512-G0OnZbMWEs5LhDyqy2UL17vGhSVHkQIfVojMtEWVenvj0V5S84VBgy86kJIuNsGDp2p7sTKlpSIpBUWdC35OKg==}
     engines: {node: '>=20.0.0'}
+
+  '@r4ai/remark-callout@0.6.2':
+    resolution: {integrity: sha512-yRj0dzEqdGYquJqTcr68CtAAh47AamWGMbZwiXBTeH6tf2MAh3Rc8C3xYhsRHKX91j9h5JZPTV2YLv+zL08AHQ==}
+    engines: {node: '>=16'}
 
   '@radix-ui/number@0.0.1':
     resolution: {integrity: sha512-qkg9slhy28L8YFT12LpVg8YAHgzUfDtaiIU9cyPKOAsQwerx8BzzkBxAAn8rc9lb1Zi6hMpOrpt3CtOJ+o9b4g==}
@@ -8383,6 +8387,9 @@ packages:
   remark-mdx@3.0.0:
     resolution: {integrity: sha512-O7yfjuC6ra3NHPbRVxfflafAj3LTwx3b73aBvkEFU5z4PsD6FD4vrqJAkE5iNGLz71GdjXfgRqm3SQ0h0VuE7g==}
 
+  remark-obsidian-callout@1.5.1:
+    resolution: {integrity: sha512-eLvaDujdmAGugWvIBta5FPhwbBq3X+2ZyGBSdcteoGI5pJMmrdJJoA72ustRBr/ObDqS0cB4q1ERKzwyiJhpxw==}
+
   remark-parse@10.0.2:
     resolution: {integrity: sha512-3ydxgHa/ZQzG8LvC7jTXccARYDcRld3VfcgIIFs7bI6vbRSxJJmzgLEIIoYKyrfhaY+ujuWaf/PJiMZXoiCXgw==}
 
@@ -8991,9 +8998,6 @@ packages:
 
   svg-arc-to-cubic-bezier@3.2.0:
     resolution: {integrity: sha512-djbJ/vZKZO+gPoSDThGNpKDO+o+bAeA4XQKovvkNCqnIS2t+S4qnLAGQhyyrulhCFRl1WWzAp0wUDV8PpTVU3g==}
-
-  svg-parser@2.0.4:
-    resolution: {integrity: sha512-e4hG1hRwoOdRb37cIMSgzNsxyzKfayW6VOflrwvR+/bzrkyxY/31WkbgnQpgtrNp1SdpJvpUAGTa/ZoiPNDuRQ==}
 
   svg-path-bounds@1.0.2:
     resolution: {integrity: sha512-H4/uAgLWrppIC0kHsb2/dWUYSmb4GE5UqH06uqWBcg6LBjX2fu0A8+JrO2/FJPZiSsNOKZAhyFFgsLTdYUvSqQ==}
@@ -12000,14 +12004,6 @@ snapshots:
       - search-insights
       - supports-color
 
-  '@portaljs/remark-callouts@1.0.5':
-    dependencies:
-      mdast-util-from-markdown: 1.3.1
-      svg-parser: 2.0.4
-      unist-util-visit: 4.1.2
-    transitivePeerDependencies:
-      - supports-color
-
   '@portaljs/remark-embed@1.0.5':
     dependencies:
       unist-util-visit: 4.1.2
@@ -12035,6 +12031,11 @@ snapshots:
   '@quansync/fs@0.1.3':
     dependencies:
       quansync: 0.2.10
+
+  '@r4ai/remark-callout@0.6.2':
+    dependencies:
+      defu: 6.1.4
+      unist-util-visit: 5.0.0
 
   '@radix-ui/number@0.0.1': {}
 
@@ -20819,6 +20820,11 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  remark-obsidian-callout@1.5.1:
+    dependencies:
+      mdast-util-to-string: 4.0.0
+      unist-util-visit: 5.0.0
+
   remark-parse@10.0.2:
     dependencies:
       '@types/mdast': 3.0.15
@@ -21508,8 +21514,6 @@ snapshots:
       periscopic: 3.1.0
 
   svg-arc-to-cubic-bezier@3.2.0: {}
-
-  svg-parser@2.0.4: {}
 
   svg-path-bounds@1.0.2:
     dependencies:

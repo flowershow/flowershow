@@ -1,6 +1,6 @@
 import mdxMermaid from "mdx-mermaid";
 import { h } from "hastscript";
-import remarkCallouts from "@portaljs/remark-callouts";
+import remarkCallout from "@r4ai/remark-callout";
 import remarkEmbed from "@portaljs/remark-embed";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
@@ -28,7 +28,7 @@ export const getMdxOptions = ({
         remarkGfm,
         [remarkSmartypants, { quotes: false, dashes: "oldschool" }],
         remarkMath,
-        remarkCallouts,
+        remarkCallout,
         [
           remarkToc,
           {

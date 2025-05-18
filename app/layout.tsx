@@ -4,9 +4,9 @@ import { GoogleTagManager } from "@next/third-parties/google";
 import clsx from "clsx";
 
 import "@portaljs/components/styles.css";
-import "@portaljs/remark-callouts/styles.css";
 import "@/styles/prism.css";
 import "@/styles/globals.css";
+import "@/styles/callouts.css";
 
 import { getSession } from "@/server/auth";
 import { TRPCReactProvider } from "@/trpc/react";
