@@ -181,7 +181,11 @@ export const mdxComponentsFactory = ({
       </div>
     ),
     /* Custom components */
-    pre: Pre,
+    pre: (props) => (
+      <div className="prose-pre:bg-[#fafafa]">
+        <Pre {...props} />
+      </div>
+    ),
     mermaid: Mermaid,
     code: (props) => {
       const className = props.className?.includes("language-")

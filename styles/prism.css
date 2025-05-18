@@ -6,7 +6,7 @@ pre[class*="language-"] {
   word-break: normal;
   word-wrap: normal;
   color: #90a4ae;
-  /* background: #fafafa; */
+  background: #fafafa;
   font-family:
     Roboto Mono,
     monospace;
