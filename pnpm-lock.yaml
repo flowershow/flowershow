@@ -312,7 +312,7 @@ importers:
       '@typescript-eslint/parser':
         specifier: ^7.5.0
         version: 7.18.0(eslint@8.57.0)(typescript@5.2.2)
-      '@unocss/preset-wind4':
+      '@unocss/preset-wind3':
         specifier: ^66.1.2
         version: 66.1.2
       autoprefixer:
