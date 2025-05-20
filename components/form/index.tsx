@@ -11,6 +11,7 @@ import DomainConfiguration from "./domain-configuration";
 import Uploader from "./uploader";
 import { useSync } from "@/app/cloud/(dashboard)/site/[id]/sync-status-provider";
 import clsx from "clsx";
+import { ReactNode } from "react";
 
 export default function Form({
   title,
@@ -23,7 +24,7 @@ export default function Form({
   title: string;
   description: string;
   disabled?: boolean;
-  helpText?: string;
+  helpText?: string | ReactNode;
   inputAttrs: {
     name: string;
     type: string;
@@ -201,16 +202,9 @@ export default function Form({
         <DomainConfiguration domain={inputAttrs.defaultValue} />
       )}
       <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 dark:border-stone-700 dark:bg-stone-800 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
-        <p
-          className={cn(
-            "w-full text-sm",
-            disabled
-              ? "dark:text-ambder-400 text-amber-500"
-              : "text-stone-500 dark:text-stone-400",
-          )}
-        >
+        <div className="w-full text-sm text-stone-500 dark:text-stone-400">
           {helpText}
-        </p>
+        </div>
         {!["autoSync", "enableComments", "enableSearch"].includes(
           inputAttrs.name,
         ) &&

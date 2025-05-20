@@ -7,6 +7,7 @@ import { api } from "@/trpc/server";
 import { notFound } from "next/navigation";
 import { PLANS } from "@/lib/stripe";
 import Link from "next/link";
+import { ExternalLinkIcon } from "lucide-react";
 
 export default async function SiteSettingsIndex({
   params,
@@ -45,8 +46,7 @@ export default async function SiteSettingsIndex({
       <div className="col-span-10 flex flex-col space-y-6 sm:col-span-9 lg:col-span-10">
         <Form
           title="Name"
-          description="The name of your site."
-          helpText="The project name can only consist of ASCII letters, digits, and the characters ., -, and _. Please ensure a maximum of 32 characters is used."
+          description="The name of your site. It can only consist of ASCII letters, digits, and characters ., -, and _. Maximum 32 characters can be used."
           inputAttrs={{
             name: "projectName",
             type: "text",
@@ -60,8 +60,20 @@ export default async function SiteSettingsIndex({
 
         <Form
           title="Branch"
-          description="Repository branch used to fetch content for your site."
-          helpText="This is the branch that will be used to fetch content for your site."
+          description="GitHub repository branch used to sync content for your site."
+          helpText={
+            <p>
+              Learn more about{" "}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/site-settings#branch"
+              >
+                Branch
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: "gh_branch",
             type: "text",
@@ -72,8 +84,20 @@ export default async function SiteSettingsIndex({
 
         <Form
           title="Root Directory"
-          description="The directory within your project, in which your content is located."
-          helpText="Leave this field empty if your content is not located in a subdirectory."
+          description="The directory within your repository, in which your content is located. Leave empty if you're publishing the whole repository."
+          helpText={
+            <p>
+              Learn more about{" "}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/site-settings#root-directory"
+              >
+                Root directory
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: "rootDir",
             type: "text",
@@ -86,7 +110,19 @@ export default async function SiteSettingsIndex({
         <Form
           title="Auto-sync"
           description="Automatically sync your site after each change to the GitHub repository."
-          helpText="The app will install a GitHub webhook in your repository to listen to new commits made to it."
+          helpText={
+            <p>
+              Learn more about{" "}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/site-settings#auto-sync"
+              >
+                Auto-sync
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: "autoSync",
             type: "text",
@@ -97,8 +133,20 @@ export default async function SiteSettingsIndex({
 
         <Form
           title="Comments"
-          description="Enable Giscus comments on your site pages."
-          helpText="This will add a comments section powered by GitHub Discussions to your pages. You'll need to install the Giscus app - https://github.com/apps/giscus - in your repository and enable GitHub Discussions in your repository settings."
+          description="Enable comments at the bottom of your site's pages."
+          helpText={
+            <p>
+              Learn more about{" "}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/comments"
+              >
+                Comments
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: "enableComments",
             type: "text",
@@ -142,12 +190,20 @@ export default async function SiteSettingsIndex({
         <Form
           title="Custom Domain"
           description="The custom domain for your site."
-          helpText={
-            isFeatureEnabled(Feature.CustomDomain, site)
-              ? "Enter a valid domain and configure it in your DNS provider."
-              : "Available on Premium plan only."
-          }
           disabled={!isFeatureEnabled(Feature.CustomDomain, site)}
+          helpText={
+            <p>
+              Learn more about{" "}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/site-settings#custom-domain-%EF%B8%8F-premium-feature"
+              >
+                Custom domain
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: "customDomain",
             type: "text",
@@ -165,9 +221,17 @@ export default async function SiteSettingsIndex({
           title="Full-Text Search"
           description="Enable full-text search functionality for your site."
           helpText={
-            isFeatureEnabled(Feature.Search, site)
-              ? "Enable to add a search box that allows users to search through all your site's content."
-              : "Available on Premium plan only."
+            <p>
+              Learn more about{" "}
+              <a
+                className="underline"
+                href="https://flowershow.app/blog/announcing-full-text-search"
+              >
+                Full-text search
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
           }
           disabled={!isFeatureEnabled(Feature.Search, site)}
           inputAttrs={{
