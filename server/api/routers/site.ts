@@ -708,6 +708,12 @@ export const siteRouter = createTRPCRouter({
             where: {
               AND: [{ id: input.siteId }],
             },
+            select: {
+              id: true,
+              user: true,
+              customDomain: true,
+              projectName: true,
+            },
           });
 
           if (!site) {
@@ -735,15 +741,35 @@ export const siteRouter = createTRPCRouter({
               },
             },
             select: {
+              path: true,
               appPath: true,
               metadata: true,
             },
           });
 
-          return blobs.map((b) => ({
-            _url: b.appPath,
-            metadata: b.metadata as PageMetadata,
-          }));
+          const rawFilePermalinkBase = site.customDomain
+            ? `/_r/-`
+            : resolveSiteAlias(
+                `/@${site.user!.gh_username}/${site.projectName}`,
+                "to",
+              ) + `/_r/-`;
+
+          return blobs.map((b) => {
+            const metadata = b.metadata as PageMetadata;
+
+            if (metadata.image) {
+              metadata.image = resolveLink({
+                link: metadata.image,
+                filePath: b.path,
+                prefixPath: rawFilePermalinkBase,
+              });
+            }
+
+            return {
+              _url: b.appPath,
+              metadata,
+            };
+          });
         },
         [`${input.siteId}-${input.dir}-blobs`],
         {

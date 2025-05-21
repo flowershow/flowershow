@@ -4,13 +4,15 @@ interface PageMetadataBase {
   layout: "wiki" | "blog" | "dataset" | "plain";
   title?: string;
   description?: string;
+  image?: string;
+  authors?: string[];
+  date?: string;
   publish: boolean;
   showSidebar?: boolean;
   showToc?: boolean;
   showHero?: boolean;
   showEditLink?: boolean;
   showComments?: boolean;
-  date?: string;
   cta?: Array<{
     href: string;
     label: string;
@@ -19,20 +21,14 @@ interface PageMetadataBase {
 
 export interface PlainPageMetadata extends PageMetadataBase {
   layout: "plain";
-  image?: string;
 }
 
 export interface WikiPageMetadata extends PageMetadataBase {
   layout: "wiki";
-  image?: string;
-  authors?: string[];
 }
 
 export interface BlogPageMetadata extends PageMetadataBase {
   layout: "blog";
-  authors?: string[];
-  image?: string;
-  modified?: string;
 }
 
 export interface DatasetPageMetadata extends PageMetadataBase, DataPackage {

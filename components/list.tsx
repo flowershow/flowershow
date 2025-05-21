@@ -3,9 +3,14 @@ import { api } from "@/trpc/server";
 export interface ListProps {
   siteId: string;
   dir?: string;
+  fields?: Array<"title" | "description" | "authors" | "date" | "image">;
 }
 
-export default async function List({ siteId, dir = "" }: ListProps) {
+export default async function List({
+  siteId,
+  dir = "",
+  fields = ["title"],
+}: ListProps) {
   const files = await api.site.getCatalogFiles.query({ siteId, dir });
 
   if (!files.length) {
@@ -31,65 +36,63 @@ export default async function List({ siteId, dir = "" }: ListProps) {
   });
 
   return (
-    <div className="not-prose">
-      {sortedFiles.map((file) => (
+    <div className="not-prose lg:my-18 my-12 space-y-20 lg:space-y-12">
+      {sortedFiles.map(({ _url, metadata }) => (
         <article
-          key={file._url}
-          className="relative isolate flex flex-col gap-8 border-b border-[#e5e7eb] py-8 last:border-b-0 lg:flex-row lg:py-12"
+          key={_url}
+          className="relative isolate flex flex-col gap-8 font-title lg:flex-row"
         >
-          <a href={file._url!}>
-            {/* <div className="relative aspect-video sm:aspect-[2/1] lg:aspect-square lg:w-64 lg:shrink-0">
-            <img
-              alt=""
-              src={file.image}
-              className="absolute inset-0 h-full w-full rounded-2xl bg-gray-50 object-cover"
-            />
-            <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/10" />
-          </div> */}
-            <div>
-              <div className="flex items-center gap-x-4 font-title text-xs">
-                {file.metadata.date && (
+          {fields.includes("image") && (
+            <div className="relative aspect-video overflow-hidden lg:aspect-[2/1] lg:w-64 lg:shrink-0">
+              <img
+                alt="Image"
+                src={metadata.image ?? "https://fakeimg.pl/600x400?text=Image"}
+                className="absolute inset-0 h-full w-full rounded-2xl bg-gray-50 object-cover"
+              />
+              <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/10" />
+            </div>
+          )}
+          <div>
+            {fields.includes("date") && (
+              <div className="flex items-center gap-x-4 text-xs">
+                {metadata.date && (
                   <time
-                    dateTime={file.metadata.date}
+                    dateTime={metadata.date}
                     className="text-primary-subtle"
                   >
-                    {file.metadata.date.slice(0, 10)}
+                    {metadata.date.slice(0, 10)}
                   </time>
                 )}
-                {/* <a
-                href={file.category.href}
-                className="relative z-10 rounded-full bg-gray-50 px-3 py-1.5 font-medium text-gray-600 hover:bg-gray-100"
-              >
-                {file.category.title}
-              </a> */}
               </div>
-              <div className="group relative max-w-xl">
-                <h3 className="mt-3 font-title text-lg/6 font-semibold text-primary-strong group-hover:text-primary">
-                  <span className="absolute inset-0" />
-                  {file.metadata.title}
+            )}
+            <div className="group relative max-w-xl">
+              {fields.includes("title") && (
+                <h3 className="mt-3 text-lg/6 font-semibold text-gray-900 group-hover:text-gray-600">
+                  <a href={_url!}>
+                    <span className="absolute inset-0" />
+                    {metadata.title}
+                  </a>
                 </h3>
-                <p className="mt-5 text-primary">{file.metadata.description}</p>
-              </div>
-              {/* <div className="mt-6 flex border-t border-gray-900/5 pt-6">
-              <div className="relative flex items-center gap-x-4">
-                <img
-                  alt=""
-                  src={file.author.imageUrl}
-                  className="h-10 w-10 rounded-full bg-gray-50"
-                />
-                <div className="text-sm/6">
-                  <p className="font-semibold text-gray-900">
-                    <a href={file.author.href}>
+              )}
+              {fields.includes("description") && (
+                <p className="mt-5 line-clamp-3 text-sm/6 text-gray-600">
+                  {metadata.description}
+                </p>
+              )}
+            </div>
+            {fields.includes("authors") && (
+              <div className="mt-6 flex border-t border-gray-900/5 pt-6">
+                <div className="relative flex items-center gap-x-4">
+                  <div className="text-sm/6">
+                    <p className="font-semibold text-gray-900">
                       <span className="absolute inset-0" />
-                      {file.author.name}
-                    </a>
-                  </p>
-                  <p className="text-gray-600">{file.author.role}</p>
+                      {metadata.authors?.join(", ") || ""}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div> */}
-            </div>
-          </a>
+            )}
+          </div>
         </article>
       ))}
     </div>
