@@ -9,7 +9,7 @@ export interface ListProps {
 export default async function List({
   siteId,
   dir = "",
-  fields = ["title"],
+  fields = ["title", "description"],
 }: ListProps) {
   const files = await api.site.getCatalogFiles.query({ siteId, dir });
 
