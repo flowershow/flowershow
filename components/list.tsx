@@ -36,11 +36,11 @@ export default async function List({
   });
 
   return (
-    <div className="not-prose lg:my-18 my-12 space-y-20 lg:space-y-12">
+    <div className="not-prose lg:divide-y">
       {sortedFiles.map(({ _url, metadata }) => (
         <article
           key={_url}
-          className="relative isolate flex flex-col gap-8 font-title lg:flex-row"
+          className="relative isolate flex flex-col gap-8 py-8 font-title lg:flex-row lg:py-10"
         >
           {fields.includes("image") && (
             <div className="relative aspect-video overflow-hidden lg:aspect-[2/1] lg:w-64 lg:shrink-0">
@@ -54,7 +54,7 @@ export default async function List({
           )}
           <div>
             {fields.includes("date") && (
-              <div className="flex items-center gap-x-4 text-xs">
+              <div className="flex items-center gap-x-4 text-sm">
                 {metadata.date && (
                   <time
                     dateTime={metadata.date}
@@ -65,9 +65,9 @@ export default async function List({
                 )}
               </div>
             )}
-            <div className="group relative max-w-xl">
+            <div className="group relative max-w-3xl">
               {fields.includes("title") && (
-                <h3 className="mt-3 text-lg/6 font-semibold text-gray-900 group-hover:text-gray-600">
+                <h3 className="mt-3 text-lg/6 font-semibold text-primary-strong group-hover:text-primary-emphasis">
                   <a href={_url!}>
                     <span className="absolute inset-0" />
                     {metadata.title}
@@ -75,16 +75,16 @@ export default async function List({
                 </h3>
               )}
               {fields.includes("description") && (
-                <p className="mt-5 line-clamp-3 text-sm/6 text-gray-600">
+                <p className="text-md/6 mt-5 line-clamp-3 text-primary-emphasis">
                   {metadata.description}
                 </p>
               )}
             </div>
             {fields.includes("authors") && (
-              <div className="mt-6 flex border-t border-gray-900/5 pt-6">
+              <div className="mt-6 flex border-t border-primary-faint pt-6">
                 <div className="relative flex items-center gap-x-4">
                   <div className="text-sm/6">
-                    <p className="font-semibold text-gray-900">
+                    <p className="font-semibold text-primary-strong">
                       <span className="absolute inset-0" />
                       {metadata.authors?.join(", ") || ""}
                     </p>
