@@ -6,7 +6,6 @@ const config = getConfig();
 
 export enum Feature {
   DataRequest = "DataRequest",
-  DataVisComponents = "DataVisComponents",
   CustomDomain = "CustomDomain",
   NoBranding = "NoBranding",
   Search = "Search",
@@ -36,8 +35,6 @@ export function isFeatureEnabled(feature: Feature, site: Site): boolean {
         (site?.gh_repository.startsWith("datasets/") ||
           site?.gh_repository === "datopian/postal-codes")
       );
-    case Feature.DataVisComponents:
-      return config.dataVisComponentsEnabled ?? false;
     case Feature.NoBranding:
       return site.customDomain === "flowershow.app"
         ? false
