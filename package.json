@@ -110,6 +110,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@iconify-json/mdi": "^1.2.3",
     "@next/eslint-plugin-next": "^14.1.4",
     "@playwright/test": "^1.43.1",
     "@tailwindcss/forms": "^0.5.7",
@@ -123,6 +124,7 @@
     "@types/react-dom": "^18.2.15",
     "@types/three": "^0.163.0",
     "@typescript-eslint/parser": "^7.5.0",
+    "@unocss/preset-icons": "^66.1.2",
     "@unocss/preset-wind3": "^66.1.2",
     "autoprefixer": "^10.4.16",
     "dotenv": "^16.4.5",
