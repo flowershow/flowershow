@@ -18,6 +18,7 @@ import TableOfContents from "@/components/table-of-contents";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { PageMetadata } from "@/server/api/types";
 import { Blob } from "@prisma/client";
+import Script from "next/script";
 
 const config = getConfig();
 
@@ -129,6 +130,8 @@ export default async function Layout({
     <>
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
       {siteConfig?.analytics && <GoogleAnalytics gaId={siteConfig.analytics} />}
+      {/* Inject this dynamically only if needed on a user page */}
+      <Script async src="https://tally.so/widgets/embed.js" />
 
       <div className="flex w-full flex-col">
         <Nav
