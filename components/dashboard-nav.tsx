@@ -3,13 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSelectedLayoutSegments } from "next/navigation";
 import { ReactNode, useMemo } from "react";
-import {
-  BotIcon,
-  FileCodeIcon,
-  MegaphoneIcon,
-  LayoutIcon,
-  CreditCardIcon,
-} from "lucide-react";
+import { ExternalLinkIcon, HandshakeIcon } from "lucide-react";
 import {
   Disclosure,
   Menu,
@@ -23,32 +17,6 @@ import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
 
 const config = getConfig();
-
-const externalLinks = config.dashboardSidebar.links
-  .map((link) => {
-    if (!link.href) return null;
-
-    let icon;
-    switch (link.type) {
-      case "discord":
-        icon = <BotIcon width={18} />;
-        break;
-      case "demo":
-        icon = <LayoutIcon width={18} />;
-        break;
-      case "announcement":
-        icon = <MegaphoneIcon width={18} />;
-        break;
-      case "guide":
-      default:
-        icon = <FileCodeIcon width={18} />;
-    }
-    return {
-      ...link,
-      icon,
-    };
-  })
-  .filter(isDefined);
 
 export default function Nav({ children }: { children: ReactNode }) {
   const segments = useSelectedLayoutSegments();
@@ -124,6 +92,16 @@ export default function Nav({ children }: { children: ReactNode }) {
             </ol>
           </div>
           <div className="ml-6 flex items-center">
+            {config.product === "flowershow" && (
+              <Link
+                className="flex items-center text-sm hover:underline"
+                href="https://github.com/orgs/flowershow/discussions"
+                target="_blank"
+              >
+                <span>Feedback | Support</span>
+                <ExternalLinkIcon className="h-4" />
+              </Link>
+            )}
             {/* Profile dropdown */}
             <Menu as="div" className="relative ml-3">
               <div>
