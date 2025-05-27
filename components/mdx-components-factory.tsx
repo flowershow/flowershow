@@ -26,10 +26,12 @@ import {
   VegaLite,
   Pre,
   Mermaid,
+  CustomHtml,
 } from "./client-components-wrapper";
 
 import type { SiteWithUser } from "@/types";
 import type {
+  CustomHtmlProps,
   ExcelProps,
   FlatUiTableProps,
   IframeProps,
@@ -133,6 +135,9 @@ export const mdxComponentsFactory = ({
     ),
     /* Custom */
     Catalog: withErrorBoundary(Catalog, "Catalog"),
+    CustomHtml: withErrorBoundary((props: CustomHtmlProps) => {
+      return <CustomHtml {...props} />;
+    }, "CustomHtml"),
     Excel: withErrorBoundary((props: ExcelProps) => {
       props.data.url = resolveDataUrl(props.data.url);
       return <Excel {...props} />;
