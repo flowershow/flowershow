@@ -46,7 +46,10 @@ export default async function List({
             <div className="relative aspect-video overflow-hidden lg:aspect-[2/1] lg:w-64 lg:shrink-0">
               <img
                 alt="Image"
-                src={metadata.image ?? "https://fakeimg.pl/600x400?text=Image"}
+                src={
+                  metadata.image ??
+                  "https://r2-assets.flowershow.app/placeholder.png"
+                }
                 className="absolute inset-0 h-full w-full rounded-2xl bg-gray-50 object-cover"
               />
               <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/10" />
