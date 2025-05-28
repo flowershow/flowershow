@@ -92,6 +92,10 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     notFound();
   }
 
+  if (metadata.publish === false) {
+    notFound();
+  }
+
   const protocol =
     env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
     env.NEXT_PUBLIC_VERCEL_ENV === "preview"
