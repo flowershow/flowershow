@@ -1,24 +1,27 @@
+import { notFound, redirect } from "next/navigation";
+import Script from "next/script";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import { ReactNode } from "react";
+import clsx from "clsx";
+
+import { Blob } from "@prisma/client";
+import { PageMetadata } from "@/server/api/types";
 import { api } from "@/trpc/server";
 import { env } from "@/env.mjs";
+
 import { getConfig } from "@/lib/app-config";
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
-import { SiteWithUser } from "@/types";
-import { notFound, redirect } from "next/navigation";
-import { SiteConfig } from "@/components/types";
-import { isInternalSite } from "@/lib/resolve-site-alias";
 import { resolveLink } from "@/lib/resolve-link";
-import Nav, { type Props as NavProps } from "@/components/nav";
-import SiteMap from "@/components/site-map";
-import Footer from "@/components/footer";
+import { isInternalSite } from "@/lib/resolve-site-alias";
+
 import BuiltWithFloatingButton from "@/components/built-with-floating-button";
 import DataRequestBanner from "@/components/data-request-banner";
-import clsx from "clsx";
+import Footer from "@/components/footer";
+import Nav, { type Props as NavProps } from "@/components/nav";
+import SiteMap from "@/components/site-map";
 import TableOfContents from "@/components/table-of-contents";
-import { GoogleAnalytics } from "@next/third-parties/google";
-import { PageMetadata } from "@/server/api/types";
-import { Blob } from "@prisma/client";
-import Script from "next/script";
+import { SiteConfig } from "@/components/types";
+import { SiteWithUser } from "@/types";
 
 const config = getConfig();
 

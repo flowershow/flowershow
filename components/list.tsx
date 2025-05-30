@@ -1,46 +1,87 @@
-import { api } from "@/trpc/server";
+"use client";
+import { useState } from "react";
+import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
+import { api } from "@/trpc/react";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 export interface ListProps {
   siteId: string;
   dir?: string;
   fields?: Array<"title" | "description" | "authors" | "date" | "image">;
+  itemsPerPage?: number;
 }
 
-export default async function List({
+export default function List({
   siteId,
   dir = "",
   fields = ["title", "description"],
+  itemsPerPage = 10,
 }: ListProps) {
-  const files = await api.site.getCatalogFiles.query({ siteId, dir });
+  const [currentPage, setCurrentPage] = useState(1);
 
-  if (!files.length) {
+  const { data, isLoading } = api.site.getCatalogFiles.useQuery({
+    siteId,
+    dir,
+    skip: (currentPage - 1) * itemsPerPage,
+    take: itemsPerPage,
+  });
+
+  if (isLoading) {
     return (
-      <div className="text-primary">No files found in this directory.</div>
+      <div className="lg:divide-y">
+        {Array.from("abcde").map((x) => (
+          <article
+            key={x}
+            className="relative isolate flex flex-col gap-8 py-8 lg:flex-row lg:py-10"
+          >
+            {fields.includes("image") && (
+              <div className="relative aspect-video overflow-hidden lg:aspect-[2/1] lg:w-64 lg:shrink-0">
+                <Skeleton className="absolute inset-0 h-full w-full rounded-2xl bg-gray-50 object-cover" />
+              </div>
+            )}
+            <div className="flex-grow">
+              {fields.includes("date") && (
+                <div className="flex items-center gap-x-4 text-sm">
+                  <Skeleton width={100} />
+                </div>
+              )}
+              <div className="group relative max-w-3xl">
+                {fields.includes("title") && (
+                  <h3 className="mt-3 text-lg/6 font-semibold text-primary-strong group-hover:text-primary-emphasis">
+                    <Skeleton />
+                  </h3>
+                )}
+                {fields.includes("description") && (
+                  <p className="text-md/6 mt-5 line-clamp-3 text-primary-emphasis">
+                    <Skeleton count={3} />
+                  </p>
+                )}
+              </div>
+              {fields.includes("authors") && (
+                <div className="mt-6 border-t border-primary-faint pt-6">
+                  <Skeleton width={100} />
+                </div>
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
     );
   }
 
-  // Sort files by date (if available) and then by title
-  const sortedFiles = [...files].sort((a, b) => {
-    // If both have dates, compare dates first
-    if (a.metadata.date && b.metadata.date) {
-      const dateComparison =
-        new Date(b.metadata.date).getTime() -
-        new Date(a.metadata.date).getTime();
-      if (dateComparison !== 0) return dateComparison;
-    }
-    // If only one has a date, prioritize the one with date
-    if (a.metadata.date) return -1;
-    if (b.metadata.date) return 1;
-    // If no dates or dates are equal, compare titles
-    return (a.metadata.title || "").localeCompare(b.metadata.title || "");
-  });
+  if (!data?.items || !data?.count) {
+    return <div>No items found</div>;
+  }
+
+  const totalPages = Math.ceil(data.count / itemsPerPage);
 
   return (
-    <div className="not-prose lg:divide-y">
-      {sortedFiles.map(({ _url, metadata }) => (
+    <div className="not-prose font-title lg:divide-y">
+      {data.items.map(({ _url, metadata }) => (
         <article
           key={_url}
-          className="relative isolate flex flex-col gap-8 py-8 font-title lg:flex-row lg:py-10"
+          className="relative isolate flex flex-col gap-8 py-8 lg:flex-row lg:py-10"
         >
           {fields.includes("image") && (
             <div className="relative aspect-video overflow-hidden lg:aspect-[2/1] lg:w-64 lg:shrink-0">
@@ -78,7 +119,7 @@ export default async function List({
                 </h3>
               )}
               {fields.includes("description") && (
-                <p className="text-md/6 mt-5 line-clamp-3 text-primary-emphasis">
+                <p className="text-md/6 mt-5 line-clamp-2 text-primary-emphasis">
                   {metadata.description}
                 </p>
               )}
@@ -98,6 +139,73 @@ export default async function List({
           </div>
         </article>
       ))}
+      {totalPages > 1 && (
+        <nav className="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0">
+          <div className="-mt-px flex w-0 flex-1">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="inline-flex items-center border-t-2 border-transparent pr-1 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <ArrowLeftIcon
+                aria-hidden="true"
+                className="size-5 mr-3 text-gray-400"
+              />
+              Previous
+            </button>
+          </div>
+          <div className="hidden md:-mt-px md:flex">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+              if (
+                page === 1 ||
+                page === totalPages ||
+                (page >= currentPage - 1 && page <= currentPage + 1)
+              ) {
+                return (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    aria-current={currentPage === page ? "page" : undefined}
+                    className={`inline-flex items-center border-t-2 px-4 pt-4 text-sm font-medium ${
+                      currentPage === page
+                        ? "border-indigo-500 text-indigo-600"
+                        : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              } else if (
+                (page === 2 && currentPage > 4) ||
+                (page === totalPages - 1 && currentPage < totalPages - 3)
+              ) {
+                return (
+                  <span
+                    key={page}
+                    className="inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500"
+                  >
+                    ...
+                  </span>
+                );
+              }
+              return null;
+            })}
+          </div>
+          <div className="-mt-px flex w-0 flex-1 justify-end">
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="inline-flex items-center border-t-2 border-transparent pl-1 pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Next
+              <ArrowRightIcon
+                aria-hidden="true"
+                className="size-5 ml-3 text-gray-400"
+              />
+            </button>
+          </div>
+        </nav>
+      )}
     </div>
   );
 }
