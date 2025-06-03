@@ -9,14 +9,14 @@ export interface ListProps {
   siteId: string;
   dir?: string;
   fields?: Array<"title" | "description" | "authors" | "date" | "image">;
-  itemsPerPage?: number;
+  pageSize?: number;
 }
 
 export default function List({
   siteId,
   dir = "",
   fields = ["title", "description"],
-  itemsPerPage = 10,
+  pageSize = 10,
 }: ListProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const listRef = useRef<HTMLDivElement>(null);
@@ -37,10 +37,8 @@ export default function List({
   });
 
   const paginatedItems =
-    data?.items?.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage,
-    ) || [];
+    data?.items?.slice((currentPage - 1) * pageSize, currentPage * pageSize) ||
+    [];
 
   if (isLoading) {
     return (
@@ -89,7 +87,7 @@ export default function List({
     return <div>No items found</div>;
   }
 
-  const totalPages = Math.ceil(data.items.length / itemsPerPage);
+  const totalPages = Math.ceil(data.items.length / pageSize);
 
   return (
     <div ref={listRef} className="not-prose font-title lg:divide-y">
