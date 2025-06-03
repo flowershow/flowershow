@@ -704,48 +704,46 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      return await unstable_cache(
-        async () => {
-          const site = await ctx.db.site.findFirst({
-            where: {
-              AND: [{ id: input.siteId }],
-            },
-            select: {
-              id: true,
-              user: true,
-              customDomain: true,
-              projectName: true,
-            },
-          });
+      const site = await ctx.db.site.findFirst({
+        where: {
+          AND: [{ id: input.siteId }],
+        },
+        select: {
+          id: true,
+          user: true,
+          customDomain: true,
+          projectName: true,
+        },
+      });
 
-          if (!site) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
-            });
-          }
+      if (!site) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Site not found",
+        });
+      }
 
-          const dir = input.dir.replace(/^\//, "");
-          const dirReadmePath = dir + "/README.md";
-          const dirIndexPath = dir + "/index.md";
+      const dir = input.dir.replace(/^\//, "");
+      const dirReadmePath = dir + "/README.md";
+      const dirIndexPath = dir + "/index.md";
 
-          // Use raw SQL for sorting by JSON fields
-          const [count, blobs] = await Promise.all([
-            ctx.db.blob.count({
-              where: {
-                siteId: site.id,
-                path: {
-                  startsWith: dir,
-                  not: {
-                    in: [dirReadmePath, dirIndexPath],
-                  },
-                },
-                extension: {
-                  in: ["mdx", "md"],
-                },
+      // Use raw SQL for sorting by JSON fields
+      const [count, blobs] = await Promise.all([
+        ctx.db.blob.count({
+          where: {
+            siteId: site.id,
+            path: {
+              startsWith: dir,
+              not: {
+                in: [dirReadmePath, dirIndexPath],
               },
-            }),
-            ctx.db.$queryRaw<Blob[]>`
+            },
+            extension: {
+              in: ["mdx", "md"],
+            },
+          },
+        }),
+        ctx.db.$queryRaw<Blob[]>`
               SELECT "path", "appPath", "metadata"
               FROM "Blob"
               WHERE "siteId" = ${site.id}
@@ -758,43 +756,36 @@ export const siteRouter = createTRPCRouter({
               LIMIT ${input.take ?? 10}
               OFFSET ${input.skip ?? 0}
             `,
-          ]);
+      ]);
 
-          const rawFilePermalinkBase = site.customDomain
-            ? `/_r/-`
-            : resolveSiteAlias(
-                `/@${site.user!.gh_username}/${site.projectName}`,
-                "to",
-              ) + `/_r/-`;
+      const rawFilePermalinkBase = site.customDomain
+        ? `/_r/-`
+        : resolveSiteAlias(
+            `/@${site.user!.gh_username}/${site.projectName}`,
+            "to",
+          ) + `/_r/-`;
 
-          const items = blobs.map((b) => {
-            const metadata = b.metadata as PageMetadata;
+      const items = blobs.map((b) => {
+        const metadata = b.metadata as PageMetadata;
 
-            if (metadata.image) {
-              metadata.image = resolveLink({
-                link: metadata.image,
-                filePath: b.path,
-                prefixPath: rawFilePermalinkBase,
-              });
-            }
-
-            return {
-              _url: b.appPath,
-              metadata,
-            };
+        if (metadata.image) {
+          metadata.image = resolveLink({
+            link: metadata.image,
+            filePath: b.path,
+            prefixPath: rawFilePermalinkBase,
           });
+        }
 
-          return {
-            items,
-            count,
-          };
-        },
-        [`${input.siteId}-${input.dir}-blobs`],
-        {
-          revalidate: 60, // 1 minute
-          tags: [`${input.siteId}-${input.dir}-files`],
-        },
-      )();
+        return {
+          _url: b.appPath,
+          metadata,
+        };
+      });
+
+      return {
+        items,
+        count,
+      };
     }),
   getBlob: publicProcedure
     .input(
