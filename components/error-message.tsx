@@ -18,7 +18,9 @@ export const ErrorMessage: React.FC<Props> = ({ title, message, stack }) => {
         </div>
         <div className="mx-3">
           <p className="my-0 text-sm font-medium text-red-800">{title}</p>
-          <div className="mt-2 text-sm text-red-700">{message}</div>
+          <div className="mt-2 whitespace-pre-wrap text-sm text-red-700">
+            {message}
+          </div>
           {stack && (
             <div className="mt-2 rounded-md bg-white p-4 text-sm">{stack}</div>
           )}

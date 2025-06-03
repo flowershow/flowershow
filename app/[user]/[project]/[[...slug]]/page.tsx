@@ -271,7 +271,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
         data-testid="mdx-error"
         className="prose-headings:font-headings prose max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words"
       >
-        <ErrorMessage title="Error parsing MDX:" message={error.message} />
+        <ErrorMessage title="Error" message={error.message} />
       </div>
     );
   }
