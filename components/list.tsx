@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
 import { api } from "@/trpc/react";
 import Skeleton from "react-loading-skeleton";
@@ -19,6 +19,13 @@ export default function List({
   itemsPerPage = 10,
 }: ListProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [currentPage]);
 
   const { data, isLoading } = api.site.getCatalogFiles.useQuery({
     siteId,
@@ -77,7 +84,7 @@ export default function List({
   const totalPages = Math.ceil(data.count / itemsPerPage);
 
   return (
-    <div className="not-prose font-title lg:divide-y">
+    <div ref={listRef} className="not-prose font-title lg:divide-y">
       {data.items.map(({ _url, metadata }) => (
         <article
           key={_url}
