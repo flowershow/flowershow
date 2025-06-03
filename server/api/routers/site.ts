@@ -699,8 +699,6 @@ export const siteRouter = createTRPCRouter({
       z.object({
         siteId: z.string().min(1),
         dir: z.string().min(1), // absolute dir
-        skip: z.number().optional(),
-        take: z.number().optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -727,36 +725,17 @@ export const siteRouter = createTRPCRouter({
       const dirReadmePath = dir + "/README.md";
       const dirIndexPath = dir + "/index.md";
 
-      // Use raw SQL for sorting by JSON fields
-      const [count, blobs] = await Promise.all([
-        ctx.db.blob.count({
-          where: {
-            siteId: site.id,
-            path: {
-              startsWith: dir,
-              not: {
-                in: [dirReadmePath, dirIndexPath],
-              },
-            },
-            extension: {
-              in: ["mdx", "md"],
-            },
-          },
-        }),
-        ctx.db.$queryRaw<Blob[]>`
-              SELECT "path", "appPath", "metadata"
-              FROM "Blob"
-              WHERE "siteId" = ${site.id}
-                AND "path" LIKE ${dir + "%"}
-                AND "path" NOT IN (${dirReadmePath}, ${dirIndexPath})
-                AND "extension" IN ('md', 'mdx')
-              ORDER BY
-                ("metadata"->>'date')::timestamp DESC NULLS LAST,
-                "metadata"->>'title' ASC NULLS LAST
-              LIMIT ${input.take ?? 10}
-              OFFSET ${input.skip ?? 0}
-            `,
-      ]);
+      const blobs = await ctx.db.$queryRaw<Blob[]>`
+          SELECT "path", "appPath", "metadata"
+          FROM "Blob"
+          WHERE "siteId" = ${site.id}
+            AND "path" LIKE ${dir + "%"}
+            AND "path" NOT IN (${dirReadmePath}, ${dirIndexPath})
+            AND "extension" IN ('md', 'mdx')
+          ORDER BY
+            ("metadata"->>'date')::timestamp DESC NULLS LAST,
+            "metadata"->>'title' ASC NULLS LAST
+      `;
 
       const rawFilePermalinkBase = site.customDomain
         ? `/_r/-`
@@ -784,7 +763,6 @@ export const siteRouter = createTRPCRouter({
 
       return {
         items,
-        count,
       };
     }),
   getBlob: publicProcedure

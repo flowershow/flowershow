@@ -30,9 +30,13 @@ export default function List({
   const { data, isLoading } = api.site.getCatalogFiles.useQuery({
     siteId,
     dir,
-    skip: (currentPage - 1) * itemsPerPage,
-    take: itemsPerPage,
   });
+
+  const paginatedItems =
+    data?.items?.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage,
+    ) || [];
 
   if (isLoading) {
     return (
@@ -77,15 +81,15 @@ export default function List({
     );
   }
 
-  if (!data?.items || !data?.count) {
+  if (!data?.items?.length) {
     return <div>No items found</div>;
   }
 
-  const totalPages = Math.ceil(data.count / itemsPerPage);
+  const totalPages = Math.ceil(data.items.length / itemsPerPage);
 
   return (
     <div ref={listRef} className="not-prose font-title lg:divide-y">
-      {data.items.map(({ _url, metadata }) => (
+      {paginatedItems.map(({ _url, metadata }) => (
         <article
           key={_url}
           className="relative isolate flex flex-col gap-8 py-8 lg:flex-row lg:py-10"
