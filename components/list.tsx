@@ -23,7 +23,11 @@ export default function List({
 
   useEffect(() => {
     if (listRef.current) {
-      listRef.current.scrollIntoView({ behavior: "smooth" });
+      const yOffset = -100; // 100px above the element
+      const element = listRef.current;
+      const y =
+        element.getBoundingClientRect().top + window.pageYOffset + yOffset;
+      window.scrollTo({ top: y, behavior: "smooth" });
     }
   }, [currentPage]);
 
