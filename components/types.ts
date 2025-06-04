@@ -27,6 +27,7 @@ export interface NavConfig {
 export interface SiteConfig {
   title?: string;
   description?: string;
+  image?: string;
   logo?: string;
   nav?: NavConfig;
   analytics?: string;

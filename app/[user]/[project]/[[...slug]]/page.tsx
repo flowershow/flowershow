@@ -19,6 +19,7 @@ import { env } from "@/env.mjs";
 
 import UrlNormalizer from "./url-normalizer";
 import { getSite } from "./get-site";
+import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 
 const config = getConfig();
 
@@ -86,9 +87,17 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
       prefixPath: rawFilePermalinkBase,
     });
 
-  const imageUrl = metadata.image
-    ? resolveDataUrl(metadata.image)
-    : config.thumbnail;
+  let imageUrl: string | null;
+
+  if (isFeatureEnabled(Feature.NoBranding, site)) {
+    imageUrl = metadata.image
+      ? resolveDataUrl(metadata.image)
+      : siteConfig?.image
+        ? resolveDataUrl(siteConfig.image)
+        : null;
+  } else {
+    imageUrl = config.thumbnail;
+  }
 
   return {
     title: siteConfig?.title
