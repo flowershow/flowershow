@@ -122,12 +122,26 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
 
   const { title, description } = metadata;
 
+  let siteConfig: SiteConfig | null = null;
+
+  try {
+    siteConfig = await api.site.getConfig.query({
+      gh_username: site.user!.gh_username!,
+      projectName: site.projectName,
+    });
+  } catch (error) {
+    notFound();
+  }
+
+  console.log({ metadata });
+  console.log({ siteConfig });
+
   return {
-    title: title ?? projectName,
-    description,
+    title: siteConfig?.title ? `${title} - ${siteConfig.title}` : title,
+    description: description ?? siteConfig?.description,
     openGraph: {
-      title: title ?? projectName,
-      description,
+      title: siteConfig?.title ? `${title} - ${siteConfig.title}` : title,
+      description: description ?? siteConfig?.description,
       /* url: author.url, */
       images: [
         {
@@ -140,8 +154,8 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     },
     twitter: {
       card: "summary_large_image",
-      title,
-      description,
+      title: siteConfig?.title ? `${title} - ${siteConfig.title}` : title,
+      description: description ?? siteConfig?.description,
       images: [
         {
           url: imageUrl,
