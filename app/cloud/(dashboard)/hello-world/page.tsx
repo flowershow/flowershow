@@ -31,18 +31,11 @@ export default function ObsidianQuickstart() {
             className="underline"
             target="_blank"
             rel="noreferrer noopener"
-            href="https://github.com/flowershow/flowershow-cloud-template/tree/main"
+            href="https://github.com/new?template_owner=flowershow&template_name=flowershow-cloud-template"
           >
             here
           </a>{" "}
           to create a new repository from our template.
-          <Image
-            width="600"
-            height="400"
-            alt="Flowershow template"
-            src="/use-flowershow-template.png"
-            className="my-2"
-          />
         </div>
 
         <h3 className="mt-4 text-lg font-semibold">

@@ -42,7 +42,7 @@ export default function ObsidianQuickstart() {
             className="underline"
             target="_blank"
             rel="noreferrer noopener"
-            href="https://github.com/flowershow/flowershow-cloud-template/tree/main"
+            href="https://github.com/new?template_owner=flowershow&template_name=flowershow-cloud-template"
           >
             here
           </a>{" "}
@@ -51,13 +51,6 @@ export default function ObsidianQuickstart() {
             It will act as a backup and sync point between your Obsidian vault
             and Flowershow. (It can be private if you want.)
           </i>
-          <Image
-            width="600"
-            height="400"
-            alt="Flowershow template"
-            src="/use-flowershow-template.png"
-            className="my-2"
-          />
         </div>
 
         <h3 className="mt-4 text-lg font-semibold">
