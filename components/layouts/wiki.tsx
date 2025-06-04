@@ -1,9 +1,7 @@
-import { WikiPageMetadata } from "@/server/api/types";
-import { resolveLink } from "@/lib/resolve-link";
-import { SiteWithUser } from "@/types";
+import { PageMetadata } from "@/server/api/types";
 
 interface Props extends React.PropsWithChildren {
-  metadata: WikiPageMetadata;
+  metadata: PageMetadata;
   resolveAssetUrl: (url: string) => string;
 }
 

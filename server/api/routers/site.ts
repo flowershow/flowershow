@@ -26,7 +26,7 @@ import { SiteConfig } from "@/components/types";
 import { env } from "@/env.mjs";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 import { Blob, Status } from "@prisma/client";
-import { PageMetadata, DatasetPageMetadata } from "../types";
+import { PageMetadata } from "../types";
 import { resolveLink } from "@/lib/resolve-link";
 import { SiteWithUser } from "@/types";
 
@@ -745,7 +745,7 @@ export const siteRouter = createTRPCRouter({
           ) + `/_r/-`;
 
       const items = blobs.map((b) => {
-        const metadata = b.metadata as PageMetadata;
+        const metadata = b.metadata as unknown as PageMetadata;
 
         if (metadata.image) {
           metadata.image = resolveLink({
@@ -768,34 +768,17 @@ export const siteRouter = createTRPCRouter({
   getBlob: publicProcedure
     .input(
       z.object({
-        gh_username: z.string().min(1),
-        projectName: z.string().min(1),
+        siteId: z.string().min(1),
         slug: z.string().min(1),
       }),
     )
     .query(async ({ ctx, input }) => {
       return await unstable_cache(
         async () => {
-          const site = await ctx.db.site.findFirst({
-            where: {
-              AND: [
-                { projectName: input.projectName },
-                { user: { gh_username: input.gh_username } },
-              ],
-            },
-          });
-
-          if (!site) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
-            });
-          }
-
           const blob = await ctx.db.blob.findUnique({
             where: {
               siteId_appPath: {
-                siteId: site.id,
+                siteId: input.siteId,
                 appPath: input.slug,
               },
             },
@@ -810,51 +793,32 @@ export const siteRouter = createTRPCRouter({
 
           return blob;
         },
-        [`${input.gh_username} - ${input.projectName} - ${input.slug} - meta`],
+        [`${input.siteId}-${input.slug}-meta`],
         {
           revalidate: 60, // 1 minute
-          tags: [
-            `${input.gh_username} - ${input.projectName} - ${input.slug} - meta`,
-          ],
+          tags: [`${input.siteId}-${input.slug}-meta`],
         },
       )();
     }),
-  getPageContent: publicProcedure
+  getBlobWithContent: publicProcedure
     .input(
       z.object({
-        gh_username: z.string().min(1),
-        projectName: z.string().min(1),
-        slug: z.string(),
+        siteId: z.string().min(1),
+        slug: z.string().min(1),
       }),
     )
     .query(async ({ ctx, input }) => {
       return await unstable_cache(
         async () => {
-          const site = await ctx.db.site.findFirst({
-            where: {
-              AND: [
-                { projectName: input.projectName },
-                { user: { gh_username: input.gh_username } },
-              ],
-            },
-            include: {
-              user: true,
-            },
-          });
-
-          if (!site) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
-            });
-          }
-
           const blob = await ctx.db.blob.findUnique({
             where: {
               siteId_appPath: {
-                siteId: site.id,
+                siteId: input.siteId,
                 appPath: input.slug,
               },
+            },
+            include: {
+              site: true,
             },
           });
 
@@ -866,119 +830,17 @@ export const siteRouter = createTRPCRouter({
           }
 
           const content = await fetchFile({
-            projectId: site.id,
-            branch: site.gh_branch,
+            projectId: input.siteId,
+            branch: blob.site.gh_branch,
             path: blob.path,
           });
 
-          let metadata = blob.metadata as PageMetadata;
-
-          if (metadata.layout === "dataset") {
-            // Get the directory path from blob.path
-            const dirPath = blob.path.split("/").slice(0, -1).join("/");
-
-            // Look for datapackage files in the same directory
-            // For root directory files (like README.md), dirPath will be empty
-            // so we need to handle that case specially to avoid paths starting with "/"
-            const datapackagePaths = dirPath
-              ? [
-                  `${dirPath}/datapackage.json`,
-                  `${dirPath}/datapackage.yaml`,
-                  `${dirPath}/datapackage.yml`,
-                ]
-              : ["datapackage.json", "datapackage.yaml", "datapackage.yml"];
-
-            const possibleDatapackages = await ctx.db.blob.findFirst({
-              where: {
-                siteId: site.id,
-                path: {
-                  in: datapackagePaths,
-                },
-              },
-            });
-
-            if (possibleDatapackages) {
-              // Fetch and parse the datapackage file
-              const datapackageContent = await fetchFile({
-                projectId: site.id,
-                branch: site.gh_branch,
-                path: possibleDatapackages.path,
-              });
-
-              if (datapackageContent) {
-                try {
-                  // Parse JSON or YAML based on file extension
-                  const datapackage = possibleDatapackages.path.endsWith(
-                    ".json",
-                  )
-                    ? JSON.parse(datapackageContent)
-                    : parseYAML(datapackageContent);
-
-                  // Hydrate with some extra resource metadata
-                  datapackage.resources = await Promise.all(
-                    datapackage.resources.map(async (resource) => {
-                      let modifiedDate;
-
-                      if (resource.modified) {
-                        modifiedDate = new Date(
-                          resource.modified,
-                        ).toISOString();
-                      } else if (resource.path.startsWith("http")) {
-                        modifiedDate = null;
-                      } else {
-                        const resourceBlob = await ctx.db.blob.findUnique({
-                          where: {
-                            siteId_appPath: {
-                              siteId: site.id,
-                              appPath: input.slug,
-                            },
-                          },
-                        });
-                        modifiedDate = resourceBlob?.updatedAt;
-                      }
-
-                      // TODO not sure where to put it, it's duplicate already used elsewher
-                      const rawFilePermalinkBase = site.customDomain
-                        ? `/_r/-`
-                        : `/@${site.user!.gh_username}/${site.projectName}` +
-                          `/_r/-`;
-
-                      const resolveAssetUrl = (url: string) =>
-                        resolveLink({
-                          link: url,
-                          filePath: blob.path,
-                          prefixPath: rawFilePermalinkBase,
-                        });
-
-                      return {
-                        ...resource,
-                        modified: modifiedDate,
-                        path: resolveAssetUrl(resource.path),
-                      };
-                    }),
-                  );
-
-                  // Merge datapackage properties into metadata
-                  metadata = {
-                    ...metadata,
-                    ...datapackage,
-                  } as DatasetPageMetadata;
-                } catch (error) {
-                  console.error("Failed to parse datapackage:", error);
-                }
-              }
-            }
-          }
-
-          return { content, metadata };
+          return { content, blob };
         },
-        [`${input.gh_username}-${input.projectName}-${input.slug}-content`],
+        [`${input.siteId}-${input.slug}-content`],
         {
           revalidate: 60, // 1 minute
-          tags: [
-            `${input.gh_username}-${input.projectName}-${input.slug}-content`,
-            `${input.gh_username}-${input.projectName}-page-content`,
-          ],
+          tags: [`${input.siteId}-${input.slug}-content`],
         },
       )();
     }),

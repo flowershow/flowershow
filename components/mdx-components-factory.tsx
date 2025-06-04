@@ -1,14 +1,14 @@
 import { ErrorBoundary } from "react-error-boundary";
-import {
-  DatasetPageMetadata,
-  PageMetadata,
-  isDatasetPage,
-} from "@/server/api/types";
+// import {
+//   DatasetPageMetadata,
+//   PageMetadata,
+//   isDatasetPage,
+// } from "@/server/api/types";
 import { resolveLink } from "@/lib/resolve-link";
 import { customEncodeUrl } from "@/lib/url-encoder";
 import { ErrorMessage } from "@/components/error-message";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
-import { FrictionlessViewFactory } from "./frictionless-view";
+// import { FrictionlessViewFactory } from "./frictionless-view";
 import { default as List } from "./list";
 import type { ListProps } from "./list";
 import {
@@ -191,20 +191,20 @@ export const mdxComponentsFactory = ({
     }, "VegaLite"),
   };
 
-  if (isDatasetPage(blob.metadata as PageMetadata)) {
-    // TODO is this needed at all?
-    const FrictionlessView = FrictionlessViewFactory(
-      blob.metadata as DatasetPageMetadata,
-    );
-    components.FrictionlessView = ({
-      id,
-      fullWidth,
-    }: {
-      id: number;
-      fullWidth: boolean;
-    }) => <FrictionlessView viewId={id} fullWidth={fullWidth} />;
-    components.FrictionlessView.displayName = "FrictionlessView";
-  }
+  // if (isDatasetPage(blob.metadata as PageMetadata)) {
+  //   // TODO is this needed at all?
+  //   const FrictionlessView = FrictionlessViewFactory(
+  //     blob.metadata as DatasetPageMetadata,
+  //   );
+  //   components.FrictionlessView = ({
+  //     id,
+  //     fullWidth,
+  //   }: {
+  //     id: number;
+  //     fullWidth: boolean;
+  //   }) => <FrictionlessView viewId={id} fullWidth={fullWidth} />;
+  //   components.FrictionlessView.displayName = "FrictionlessView";
+  // }
 
   return components;
 };

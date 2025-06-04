@@ -1,15 +1,11 @@
 import { notFound } from "next/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
 
-import { Blob } from "@prisma/client";
-
 import EditPageButton from "@/components/edit-page-button";
 import Comments from "@/components/comments";
-import { SiteConfig } from "@/components/types";
 import { mdxComponentsFactory } from "@/components/mdx-components-factory";
 import { ErrorMessage } from "@/components/error-message";
 import { WikiLayout } from "@/components/layouts/wiki";
-import { DataPackageLayout } from "@/components/layouts/datapackage";
 
 import { getConfig } from "@/lib/app-config";
 import { getMdxOptions } from "@/lib/markdown";
@@ -20,11 +16,9 @@ import { generateUnoCSS } from "@/lib/uno";
 import { api } from "@/trpc/server";
 import { PageMetadata } from "@/server/api/types";
 import { env } from "@/env.mjs";
-import type { SiteWithUser } from "@/types";
 
 import UrlNormalizer from "./url-normalizer";
-import Script from "next/script";
-import getJsonLd from "@/components/layouts/getJsonLd";
+import { getSite } from "./get-site";
 
 const config = getConfig();
 
@@ -35,66 +29,42 @@ interface RouteParams {
 }
 
 export async function generateMetadata({ params }: { params: RouteParams }) {
-  const project = decodeURIComponent(params.project);
-  const user = decodeURIComponent(params.user);
+  const projectName = decodeURIComponent(params.project);
+  const userName = decodeURIComponent(params.user);
   const slug = params.slug ? params.slug.join("/") : "/";
   const decodedSlug = slug.replace(/%20/g, "+");
 
-  let site: SiteWithUser | null = null;
+  const site = await getSite(userName, projectName);
 
-  // NOTE: custom domains handling
-  if (user === "_domain") {
-    site = await api.site.getByDomain.query({
-      domain: project,
-    });
-  } else {
-    site = await api.site.get.query({
-      gh_username: user,
-      projectName: project,
-    });
-  }
-
-  if (!site) {
-    notFound();
-  }
-
-  const { customDomain, projectName, user: siteUser } = site;
-  const gh_username = siteUser!.gh_username!;
-
-  const canonicalUrlBase = customDomain
-    ? `https://${site.customDomain}`
-    : `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}` +
-      resolveSiteAlias(`/@${gh_username}/${projectName}`, "to");
-
-  let blob: Blob;
-
-  try {
-    blob = await api.site.getBlob.query({
-      gh_username,
-      projectName,
+  const blob = await api.site.getBlob
+    .query({
+      siteId: site.id,
       slug: decodedSlug,
-    });
-  } catch (error) {
-    notFound();
-  }
+    })
+    .catch(() => notFound());
 
-  let metadata: PageMetadata;
+  const metadata = blob.metadata as unknown as PageMetadata;
 
-  // TODO it is not optimal to query blob and metadata separately, but this is needed for datapackage page types
-  try {
-    const page = await api.site.getPageContent.query({
-      gh_username,
-      projectName,
-      slug: decodedSlug,
-    });
-    metadata = page.metadata;
-  } catch (error) {
-    notFound();
-  }
-
+  // workaround (?) to "not publish" files marked with `publish: false`
+  // it's needed atm as Inngest sync function doesn't parse frontmatter, and so it uploads to R2
+  // and creates a basic Blob record for every single file (parsing is done later in Cloudflare Queues, but not worth removing them there at least for no)
   if (metadata.publish === false) {
     notFound();
   }
+
+  const siteConfig = await api.site.getConfig
+    .query({
+      gh_username: site.user!.gh_username!,
+      projectName: site.projectName,
+    })
+    .catch(() => null);
+
+  const gh_username = site.user!.gh_username!;
+
+  const canonicalUrlBase = site.customDomain
+    ? `https://${site.customDomain}`
+    : `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}` +
+      resolveSiteAlias(`/@${gh_username}/${projectName}`, "to");
 
   const protocol =
     env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
@@ -102,7 +72,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
       ? "https"
       : "http";
 
-  const rawFilePermalinkBase = customDomain
+  const rawFilePermalinkBase = site.customDomain
     ? `${protocol}://${site.customDomain}/_r/-`
     : `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${resolveSiteAlias(
         `/@${gh_username}/${projectName}`,
@@ -120,28 +90,16 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     ? resolveDataUrl(metadata.image)
     : config.thumbnail;
 
-  const { title, description } = metadata;
-
-  let siteConfig: SiteConfig | null = null;
-
-  try {
-    siteConfig = await api.site.getConfig.query({
-      gh_username: site.user!.gh_username!,
-      projectName: site.projectName,
-    });
-  } catch (error) {
-    notFound();
-  }
-
-  console.log({ metadata });
-  console.log({ siteConfig });
-
   return {
-    title: siteConfig?.title ? `${title} - ${siteConfig.title}` : title,
-    description: description ?? siteConfig?.description,
+    title: siteConfig?.title
+      ? `${metadata.title} - ${siteConfig.title}`
+      : metadata.title,
+    description: metadata.description ?? siteConfig?.description,
     openGraph: {
-      title: siteConfig?.title ? `${title} - ${siteConfig.title}` : title,
-      description: description ?? siteConfig?.description,
+      title: siteConfig?.title
+        ? `${metadata.title} - ${siteConfig.title}`
+        : metadata.title,
+      description: metadata.description ?? siteConfig?.description,
       /* url: author.url, */
       images: [
         {
@@ -154,8 +112,10 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     },
     twitter: {
       card: "summary_large_image",
-      title: siteConfig?.title ? `${title} - ${siteConfig.title}` : title,
-      description: description ?? siteConfig?.description,
+      title: siteConfig?.title
+        ? `${metadata.title} - ${siteConfig.title}`
+        : metadata.title,
+      description: metadata.description ?? siteConfig?.description,
       images: [
         {
           url: imageUrl,
@@ -185,96 +145,52 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   };
 }
 
-/* export async function generateStaticParams() {
- *   // retrun any static params here,
- *   // e.g. all user sites index pages, or all pages for premium users
- *   return [];
- * } */
-
 export default async function SitePage({ params }: { params: RouteParams }) {
-  const project = decodeURIComponent(params.project);
-  const user = decodeURIComponent(params.user);
+  const projectName = decodeURIComponent(params.project);
+  const userName = decodeURIComponent(params.user);
   const slug = params.slug ? params.slug.join("/") : "/";
   const decodedSlug = slug.replace(/%20/g, "+");
 
-  let site: SiteWithUser | null = null;
+  const site = await getSite(userName, projectName);
 
-  if (user === "_domain") {
-    site = await api.site.getByDomain.query({
-      domain: project,
-    });
-  } else {
-    site = await api.site.get.query({
-      gh_username: user,
-      projectName: project,
-    });
-  }
-
-  if (!site) {
-    notFound();
-  }
-
-  let siteConfig: SiteConfig | null = null;
-
-  try {
-    siteConfig = await api.site.getConfig.query({
+  const siteConfig = await api.site.getConfig
+    .query({
       gh_username: site.user!.gh_username!,
       projectName: site.projectName,
-    });
-  } catch (error) {
-    notFound();
-  }
+    })
+    .catch(() => null);
 
-  let sitePermalinks: string[] = [];
-
-  try {
-    sitePermalinks = await api.site.getPermalinks.query({
+  const sitePermalinks = await api.site.getPermalinks
+    .query({
       gh_username: site.user?.gh_username!,
       projectName: site.projectName,
+    })
+    .catch(() => {
+      notFound();
     });
-  } catch (error) {
-    notFound();
-  }
 
-  let blob: Blob;
-
-  try {
-    blob = await api.site.getBlob.query({
-      gh_username: site.user?.gh_username!,
-      projectName: site.projectName,
+  const page = await api.site.getBlobWithContent
+    .query({
+      siteId: site.id,
       slug: decodedSlug,
+    })
+    .catch(() => {
+      notFound();
     });
-  } catch (error) {
-    notFound();
-  }
-
-  let page;
-
-  // TODO it's not optimal to query separate blob and metadata, but it's needed for now for datapackage pages
-  // so that datapackage file is merged into the page's metadata
-  try {
-    page = await api.site.getPageContent.query({
-      gh_username: site.user?.gh_username!,
-      projectName: site.projectName,
-      slug: decodedSlug,
-    });
-  } catch (error) {
-    notFound();
-  }
 
   const mdxComponents = mdxComponentsFactory({
-    blob,
+    blob: page.blob,
     site,
   });
   const mdxOptions = getMdxOptions({ permalinks: sitePermalinks }) as any;
 
   let compiledMDX: any;
 
-  const { css } = await generateUnoCSS(page.content, { minify: true });
+  const { css } = await generateUnoCSS(page.content ?? "", { minify: true });
 
   try {
     const { content } = await compileMDX({
-      source: page.content,
+      source: page.content ?? "",
       components: mdxComponents,
       options: mdxOptions,
     });
@@ -297,13 +213,11 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   const resolveAssetUrl = (url: string) =>
     resolveLink({
       link: url,
-      filePath: blob.path,
+      filePath: page.blob.path,
       prefixPath: rawFilePermalinkBase,
     });
 
-  const jsonLd = getJsonLd({ metadata: page.metadata, siteMetadata: site });
-
-  const metadata = (blob.metadata ?? {}) as PageMetadata;
+  const metadata = page.blob.metadata as unknown as PageMetadata;
 
   const showEditLink = metadata.showEditLink ?? siteConfig?.showEditLink;
   const showPageComments =
@@ -311,32 +225,12 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     (metadata.showComments ?? siteConfig?.showComments ?? site.enableComments);
 
   const Layout = ({ children }) => {
-    switch (page.metadata.layout) {
-      case "dataset":
-        return (
-          <>
-            <Script
-              id="json-ld-datapackage"
-              type="application/ld+json"
-              dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-            />
-            <DataPackageLayout
-              metadata={page.metadata}
-              resolveAssetUrl={resolveAssetUrl}
-              ghRepository={site!.gh_repository}
-            >
-              {children}
-            </DataPackageLayout>
-          </>
-        );
+    switch (metadata.layout) {
       case "plain":
         return <>{children}</>;
       default:
         return (
-          <WikiLayout
-            metadata={page.metadata}
-            resolveAssetUrl={resolveAssetUrl}
-          >
+          <WikiLayout metadata={metadata} resolveAssetUrl={resolveAssetUrl}>
             {children}
           </WikiLayout>
         );
@@ -358,7 +252,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
 
       {showEditLink && (
         <EditPageButton
-          url={`https://github.com/${site?.gh_repository}/edit/${site?.gh_branch}/${blob.path}`}
+          url={`https://github.com/${site?.gh_repository}/edit/${site?.gh_branch}/${page.blob.path}`}
         />
       )}
       {showPageComments && (
