@@ -23,7 +23,7 @@ import {
 } from "@/components/icons";
 import { NavLink, SocialLink } from "./types";
 import { TreeViewItem } from "./site-map";
-import { Search } from "./search";
+import { SearchModal } from "./search-modal";
 
 export interface Props {
   logo: string;
@@ -108,7 +108,7 @@ const Nav = ({
               </div>
               <div className="flex shrink-0 grow items-center justify-end">
                 {showSearch && (
-                  <Search indexId={searchId!} prefix={searchPrefix!} />
+                  <SearchModal indexId={searchId!} prefix={searchPrefix!} />
                 )}
               </div>
               <div className="hidden lg:flex lg:items-center">
