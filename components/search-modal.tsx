@@ -11,6 +11,7 @@ import {
   useInstantSearch,
   Snippet,
   InstantSearch,
+  SearchBoxProps,
 } from "react-instantsearch";
 
 import { searchClient } from "@/lib/typesense-client";
@@ -26,6 +27,7 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
   const [showHits, setShowHits] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
@@ -47,6 +49,17 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
       document.body.style.overflow = "unset";
     };
   }, [isOpen]);
+
+  const debounceQuery: SearchBoxProps["queryHook"] = useCallback(
+    async (query, search) => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+
+      timerRef.current = setTimeout(() => search(query), 300);
+    },
+    [],
+  );
 
   return (
     <>
@@ -99,15 +112,6 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
                     searchClient={searchClient}
                     indexName={indexId}
                     insights
-                    onStateChange={({ uiState, setUiState }) => {
-                      // Only update state if there's a query to prevent empty searches
-                      if (uiState[indexId]?.query?.trim()) {
-                        setUiState(uiState);
-                      } else if (!uiState[indexId]?.query) {
-                        // Clear the state when query is empty
-                        setUiState(uiState);
-                      }
-                    }}
                   >
                     <div className="flex flex-col p-4">
                       <div className="flex items-center">
@@ -123,13 +127,8 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
                             loadingIcon: "hidden",
                           }}
                           onFocus={() => setShowHits(true)}
+                          queryHook={debounceQuery}
                           autoFocus
-                          queryHook={(query, search) => {
-                            // Only execute search if the user has started typing
-                            if (query.trim().length > 0) {
-                              search(query);
-                            }
-                          }}
                         />
                         <button
                           onClick={closeModal}
@@ -158,11 +157,23 @@ function Hit({ hit }) {
     <Link href={hit.path} className="block">
       <article>
         <h1 className="font-medium">
-          <Highlight attribute="title" hit={hit} />
+          <Highlight
+            attribute="title"
+            hit={hit}
+            classNames={{
+              highlighted: "bg-orange-100 !important",
+            }}
+          />
         </h1>
         {hit.description && (
           <div className="mt-1 text-sm text-primary-muted">
-            <Snippet attribute="content" hit={hit} />
+            <Snippet
+              attribute="content"
+              hit={hit}
+              classNames={{
+                highlighted: "bg-orange-100 !important",
+              }}
+            />
           </div>
         )}
       </article>
@@ -184,8 +195,6 @@ function SearchResults({ prefix }: { prefix: string }) {
       })),
     [prefix],
   );
-
-  console.log({ results });
 
   return (
     <div className="mt-2 min-h-[200px] w-full overflow-hidden border-t border-primary-faint">
@@ -210,7 +219,7 @@ function SearchResults({ prefix }: { prefix: string }) {
         <div className="flex h-[200px] items-center justify-center text-primary-muted">
           <div className="text-center">
             <SearchIcon className="mx-auto mb-2 h-6 w-6 opacity-50" />
-            <p className="text-sm">No results found for "{query}"</p>
+            <p className="text-sm">No results found for &quot;{query}&quot;</p>
             <p className="mt-1 text-xs opacity-75">
               Try different keywords or check your spelling
             </p>
