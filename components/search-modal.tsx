@@ -56,7 +56,7 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
         clearTimeout(timerRef.current);
       }
 
-      timerRef.current = setTimeout(() => search(query), 300);
+      timerRef.current = setTimeout(() => search(query), 200);
     },
     [],
   );
