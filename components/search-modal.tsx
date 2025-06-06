@@ -93,7 +93,7 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
 
               {/* Modal Container */}
               <div
-                className="relative z-10 flex min-h-full items-start justify-center p-3 md:items-center md:p-6"
+                className="relative z-10 flex min-h-full items-start justify-center p-3 md:p-24"
                 onClick={(e) => {
                   if (e.target === e.currentTarget) {
                     closeModal();
@@ -111,6 +111,7 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
                   <InstantSearch
                     searchClient={searchClient}
                     indexName={indexId}
+                    stalledSearchDelay={300}
                     insights
                   >
                     <div className="flex flex-col p-4">
