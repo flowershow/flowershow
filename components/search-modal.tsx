@@ -111,7 +111,7 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
                   <InstantSearch
                     searchClient={searchClient}
                     indexName={indexId}
-                    stalledSearchDelay={300}
+                    stalledSearchDelay={1000}
                     insights
                   >
                     <div className="flex flex-col p-4">
@@ -227,9 +227,9 @@ function SearchResults({ prefix }: { prefix: string }) {
           </div>
         </div>
       ) : status === "error" ? (
-        <div className="flex h-[200px] items-center justify-center text-red-500">
+        <div className="flex h-[200px] items-center justify-center text-primary-muted">
           <div className="text-center">
-            <div className="mx-auto mb-2 flex h-6 w-6 items-center justify-center rounded-full border-2 border-red-500">
+            <div className="mx-auto mb-2 flex h-6 w-6 items-center justify-center text-yellow-600">
               <span className="text-xs font-bold">!</span>
             </div>
             <p className="text-sm">Search error occurred</p>
@@ -239,7 +239,7 @@ function SearchResults({ prefix }: { prefix: string }) {
           </div>
         </div>
       ) : status === "stalled" ? (
-        <div className="flex h-[200px] items-center justify-center text-yellow-600">
+        <div className="flex h-[200px] items-center justify-center text-primary-muted">
           <div className="text-center">
             <div className="mx-auto mb-2 h-6 w-6 animate-pulse rounded-full border-2 border-yellow-600 border-t-transparent"></div>
             <p className="text-sm">Search is taking longer than usual...</p>
