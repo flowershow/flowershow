@@ -27,6 +27,7 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
   const [showHits, setShowHits] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const openModal = () => setIsOpen(true);
@@ -154,6 +155,22 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
 }
 
 function Hit({ hit }) {
+  // Determine which fields have highlights/matches
+  const snippetFields = hit._snippetResult || {};
+
+  // Priority order for showing snippet content
+  const contentFields = ["description", "content"];
+
+  // Find the best field to show as snippet content
+  let snippetField: string = "description"; // Default to description
+
+  for (const field of contentFields) {
+    if (snippetFields[field] && snippetFields[field].matchLevel !== "none") {
+      snippetField = field;
+      break;
+    }
+  }
+
   return (
     <Link href={hit.path} className="block">
       <article>
@@ -166,17 +183,15 @@ function Hit({ hit }) {
             }}
           />
         </h1>
-        {hit.description && (
-          <div className="mt-1 text-sm text-primary-muted">
-            <Snippet
-              attribute="content"
-              hit={hit}
-              classNames={{
-                highlighted: "bg-orange-100 !important",
-              }}
-            />
-          </div>
-        )}
+        <div className="mt-1 text-sm text-primary-muted">
+          <Snippet
+            attribute={snippetField}
+            hit={hit}
+            classNames={{
+              highlighted: "bg-orange-100 !important",
+            }}
+          />
+        </div>
       </article>
     </Link>
   );
@@ -198,7 +213,7 @@ function SearchResults({ prefix }: { prefix: string }) {
   );
 
   return (
-    <div className="mt-2 min-h-[200px] w-full overflow-hidden border-t border-primary-faint">
+    <div className="mt-2 max-h-[60vh] min-h-[200px] w-full overflow-auto border-t border-primary-faint">
       {!hasQuery ? (
         <div className="flex h-[200px] items-center justify-center text-primary-muted">
           <div className="text-center">
@@ -209,8 +224,7 @@ function SearchResults({ prefix }: { prefix: string }) {
       ) : hasQuery && hasResults ? (
         <Hits
           classNames={{
-            root: "w-full overflow-hidden",
-            list: "max-h-[80vh] overflow-auto py-2",
+            list: "py-2",
             item: "rounded-md px-4 py-3 hover:bg-primary-faint/40",
           }}
           hitComponent={Hit}
