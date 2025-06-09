@@ -11,6 +11,7 @@ import {
 } from "@/lib/typesense";
 import {
   GitHubAPIFileContent,
+  GitHubAPIRepoTreeItem,
   fetchGitHubFileRaw,
   fetchGitHubRepoTree,
   githubJsonFetch,
@@ -20,6 +21,7 @@ import { revalidateTag } from "next/cache";
 import { isPathVisible } from "@/lib/path-validator";
 import { SiteConfig } from "@/components/types";
 import { Prisma } from "@prisma/client";
+import { BlogLayout } from "@portaljs/core";
 
 export const syncSite = inngest.createFunction(
   {
@@ -67,34 +69,32 @@ export const syncSite = inngest.createFunction(
     });
 
     // Fetch site config to get contentInclude and contentExclude settings
-    const siteConfig: SiteConfig = await step.run(
-      "fetch-site-config",
-      async () => {
-        try {
-          const config = await githubJsonFetch<GitHubAPIFileContent>({
-            url: `/repos/${gh_repository}/contents/config.json?ref=${gh_branch}`,
-            accessToken: access_token,
-            cacheOptions: {
-              cache: "no-store",
-            },
-          });
-          return JSON.parse(
-            Buffer.from(config.content, "base64").toString("utf-8"),
-          );
-        } catch (e: any) {
-          return {};
-        }
-      },
-    );
+    const {
+      contentInclude: includes = [],
+      contentExclude: excludes = [],
+    }: SiteConfig = await step.run("fetch-site-config", async () => {
+      try {
+        const config = await githubJsonFetch<GitHubAPIFileContent>({
+          url: `/repos/${gh_repository}/contents/config.json?ref=${gh_branch}`,
+          accessToken: access_token,
+          cacheOptions: {
+            cache: "no-store",
+          },
+        });
+        return JSON.parse(
+          Buffer.from(config.content, "base64").toString("utf-8"),
+        );
+      } catch (e: any) {
+        return {};
+      }
+    });
 
-    const typesenseCollectionExists = await siteCollectionExists(siteId);
-
-    if (!typesenseCollectionExists) {
-      await createSiteCollection(siteId);
-    }
-
-    const includes: string[] = siteConfig?.contentInclude || [];
-    const excludes: string[] = siteConfig?.contentExclude || [];
+    await step.run("check-typesense-collection", async () => {
+      const typesenseCollectionExists = await siteCollectionExists(siteId);
+      if (!typesenseCollectionExists) {
+        await createSiteCollection(siteId);
+      }
+    });
 
     // Fetch latest GitHub repository tree
     const gitHubTree = await step.run("fetch-github-tree", async () => {
@@ -104,55 +104,48 @@ export const syncSite = inngest.createFunction(
         access_token,
       });
 
-      if (rootDir) {
-        const normalizedRootDir = normalizeDir(rootDir);
-        const rootDirExists = repoTree.tree.some(
-          (treeItem) =>
-            treeItem.type === "tree" &&
-            treeItem.path === normalizedRootDir.slice(0, -1),
-        );
-
-        if (!rootDirExists) {
-          throw new NonRetriableError("INVALID_ROOT_DIR");
-        }
-      }
-
       return repoTree;
     });
 
     const normalizedRootDir = normalizeDir(rootDir || null);
-    const targetSiteItems = gitHubTree.tree
-      .filter(
-        (file) =>
-          file.type !== "tree" &&
-          file.path.startsWith(normalizedRootDir) &&
-          isPathVisible(file.path, includes, excludes),
-      )
-      .map((ghTreeItem) => {
-        const contentStorePath = ghTreeItem.path.replace(normalizedRootDir, "");
-        return { ghTreeItem, contentStorePath };
-      });
 
-    // Process files in GitHub tree
-    const promises = targetSiteItems.map(
-      async ({ ghTreeItem, contentStorePath }, index) => {
-        try {
-          const blob = await prisma.blob.findUnique({
-            where: {
-              siteId_path: {
-                siteId,
-                path: contentStorePath,
+    const targetSiteItems = await step.run("prepare-github-tree", () => {
+      return gitHubTree.tree
+        .filter(
+          (file) =>
+            file.type !== "tree" &&
+            file.path.startsWith(normalizedRootDir) &&
+            isPathVisible(file.path, includes, excludes),
+        )
+        .map((ghTreeItem) => {
+          const contentStorePath = ghTreeItem.path.replace(
+            normalizedRootDir,
+            "",
+          );
+          return { ghTreeItem, contentStorePath } as {
+            ghTreeItem: GitHubAPIRepoTreeItem;
+            contentStorePath: string;
+          };
+        });
+    });
+
+    const updateFilesPromises = targetSiteItems.map(
+      ({ ghTreeItem, contentStorePath }) => {
+        return step.run(`sync-blob-${ghTreeItem.path}`, async () => {
+          try {
+            const blob = await prisma.blob.findUnique({
+              where: {
+                siteId_path: {
+                  siteId,
+                  path: contentStorePath,
+                },
               },
-            },
-          });
+            });
 
-          // Skip if SHA matches and force sync is not enabled
-          if (!forceSync && blob && blob.sha === ghTreeItem.sha) {
-            return;
-          }
-
-          // Only create a step for files that need processing
-          await step.run(`sync-blob-${ghTreeItem.path}`, async () => {
+            // Skip if SHA matches and force sync is not enabled
+            if (!forceSync && blob && blob.sha === ghTreeItem.sha) {
+              return;
+            }
             const extension = ghTreeItem.path.split(".").pop() || "";
 
             const gitHubFile = await fetchGitHubFileRaw({
@@ -197,34 +190,34 @@ export const syncSite = inngest.createFunction(
                 sha: ghTreeItem.sha,
               },
             });
-          });
-        } catch (error: any) {
-          await prisma.blob.upsert({
-            where: {
-              siteId_path: {
+          } catch (error: any) {
+            await prisma.blob.upsert({
+              where: {
+                siteId_path: {
+                  siteId,
+                  path: contentStorePath,
+                },
+              },
+              create: {
                 siteId,
                 path: contentStorePath,
+                size: 0,
+                sha: "",
+                metadata: Prisma.JsonNull,
+                syncStatus: "ERROR",
+                syncError: error.message,
               },
-            },
-            create: {
-              siteId,
-              path: contentStorePath,
-              size: 0,
-              sha: "",
-              metadata: Prisma.JsonNull,
-              syncStatus: "ERROR",
-              syncError: error.message,
-            },
-            update: {
-              syncStatus: "ERROR",
-              syncError: error.message,
-            },
-          });
-        }
+              update: {
+                syncStatus: "ERROR",
+                syncError: error.message,
+              },
+            });
+          }
+        });
       },
     );
 
-    await Promise.all(promises);
+    await Promise.all(updateFilesPromises);
 
     const existingBlobs = await prisma.blob.findMany({
       where: { siteId },
@@ -237,15 +230,14 @@ export const syncSite = inngest.createFunction(
 
     const deletePromises = existingBlobs
       .filter((blob) => !targetSiteItemsPaths.includes(blob.path))
-      .map(async (blob, index) => {
-        await step.run(`delete-blob-${index}`, async () => {
+      .map((blob) => {
+        return step.run(`delete-blob-${blob.path}`, async () => {
           await deleteFile({
             projectId: siteId,
             branch: gh_branch,
             path: blob.path,
           });
 
-          // Delete the document from Typesense if it exists
           await deleteSiteDocument(siteId, blob.id);
 
           await prisma.blob.delete({
