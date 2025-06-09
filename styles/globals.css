@@ -102,7 +102,7 @@ html {
 }
 
 /* Hide second h1 on any page */
-#mdxpage section:first-of-type h1 {
+#mdxpage section:first-of-type h1:first-child {
   display: none;
 }
 
