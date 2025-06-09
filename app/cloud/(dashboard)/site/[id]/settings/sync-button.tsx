@@ -5,34 +5,17 @@ import { RefreshCwIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useSync } from "../sync-status-provider";
 import clsx from "clsx";
-import { sendGTMEvent } from "@next/third-parties/google";
-import { env } from "@/env.mjs";
 
-export default function SyncButton({
-  siteId,
-  userId,
-}: {
-  siteId: string;
-  userId: string;
-}) {
+export default function SyncButton({ siteId }: { siteId: string }) {
   const { setSyncTriggered, status } = useSync();
 
   const { mutate: syncSite, isLoading: isLoadingMutation } =
     api.site.sync.useMutation({
       onMutate: async () => {
-        // TODO
         setSyncTriggered!(true);
-        if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
-          sendGTMEvent({
-            event: "manual_sync",
-            site_id: siteId,
-            user_id: userId,
-          });
-        }
       },
       onError: (error) => {
         toast.error(error.message);
-        // TODO
         setSyncTriggered!(false);
         if (error.data?.code === "UNAUTHORIZED") {
           setTimeout(() => {

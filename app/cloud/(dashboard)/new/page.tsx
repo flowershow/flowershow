@@ -8,7 +8,6 @@ import { api } from "@/trpc/react";
 import { GithubIcon } from "@/components/icons";
 import { signOut } from "next-auth/react";
 import { env } from "@/env.mjs";
-import { sendGTMEvent } from "@next/third-parties/google";
 
 export default function NewSitePage() {
   const router = useRouter();
@@ -87,11 +86,6 @@ export default function NewSitePage() {
   const { isLoading: isCreatingSite, mutate: createSite } =
     api.site.create.useMutation({
       onSuccess: (res) => {
-        sendGTMEvent({
-          event: "create_site",
-          user_id: res.userId,
-          site_id: res.id,
-        });
         router.push(`/site/${res.id}/settings`);
         router.refresh();
       },
