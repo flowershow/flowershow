@@ -8,6 +8,7 @@ import { notFound } from "next/navigation";
 import { PLANS } from "@/lib/stripe";
 import Link from "next/link";
 import { ExternalLinkIcon } from "lucide-react";
+import { validDomainRegex } from "@/lib/domains";
 
 export default async function SiteSettingsIndex({
   params,
@@ -212,7 +213,7 @@ export default async function SiteSettingsIndex({
               : "",
             placeholder: "yourdomain.com",
             maxLength: 64,
-            pattern: "^[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]+$",
+            pattern: validDomainRegex.toString(),
           }}
           handleSubmit={updateSite}
         />
