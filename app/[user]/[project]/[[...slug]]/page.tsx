@@ -133,7 +133,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
           alt: "Thumbnail",
         },
       ],
-      creator: "@datopian",
+      creator: "@flowershowapp",
     },
     // Set canonical URL to custom domain if it exists
     // Maybe not needed since we redirect to a custom domain if it exists ?
