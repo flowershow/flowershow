@@ -35,6 +35,7 @@ interface Props extends React.PropsWithChildren {
     commentsConfig: CommentsConfig;
     siteMap: Array<NavItem | NavGroup>;
     editUrl?: string;
+    favicon?: string;
 }
 
 export const Layout: React.FC<Props> = ({
@@ -50,6 +51,7 @@ export const Layout: React.FC<Props> = ({
     commentsConfig,
     editUrl,
     siteMap,
+    favicon
 }) => {
     const [isScrolled, setIsScrolled] = useState(false);
     const [tableOfContents, setTableOfContents] = useState<TocSection[]>([]);
@@ -80,7 +82,7 @@ export const Layout: React.FC<Props> = ({
             <Head>
                 <link
                     rel="icon"
-                    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💐</text></svg>"
+                    href={favicon || "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💐</text></svg>"}
                 />
                 <meta charSet="utf-8" />
                 <meta name="viewport" content="initial-scale=1.0, width=device-width" />

@@ -57,6 +57,7 @@ const MyApp = ({ Component, pageProps }: AppProps<CustomAppProps>) => {
             defaultTheme: siteConfig.theme.default,
             themeToggleIcon: siteConfig.theme.toggleIcon,
         } as ThemeConfig,
+        favicon: siteConfig.favicon,
         siteMap,
     };
 

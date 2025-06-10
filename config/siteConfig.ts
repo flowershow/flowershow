@@ -41,6 +41,7 @@ export type UserConfig = {
   title?: string;
   author: string;
   domain: string;
+  favicon?: string;
 } & Partial<typeof defaultConfig>;
 
 export type SiteConfig = typeof defaultConfig & typeof userConfig;
