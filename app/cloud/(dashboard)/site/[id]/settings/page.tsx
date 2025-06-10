@@ -212,7 +212,7 @@ export default async function SiteSettingsIndex({
               : "",
             placeholder: "yourdomain.com",
             maxLength: 64,
-            pattern: "^[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]{2,5}$",
+            pattern: "^[a-z0-9]+([\\-\\.]{1}[a-z0-9]+)*\\.[a-z]+$",
           }}
           handleSubmit={updateSite}
         />
