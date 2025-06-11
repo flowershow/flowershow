@@ -249,6 +249,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
           title={metadata.title}
           description={metadata.description}
           date={metadata.date}
+          showHero={metadata.showHero}
           authors={authors}
           image={image}
         >
