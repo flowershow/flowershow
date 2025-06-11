@@ -884,7 +884,10 @@ export const siteRouter = createTRPCRouter({
           const blob = await ctx.db.blob.findFirst({
             where: {
               siteId: input.siteId,
-              appPath: { endsWith: author },
+              OR: [
+                { path: { endsWith: author + ".md" } },
+                { path: { endsWith: author + ".mdx" } },
+              ],
             },
           });
 
