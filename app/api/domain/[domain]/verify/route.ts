@@ -44,7 +44,6 @@ export async function GET(
   const response = NextResponse.json({
     status,
     domainJson,
-    configJson,
   });
 
   // Prevent caching at all levels - CDN, Vercel, and browser
