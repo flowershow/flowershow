@@ -7,10 +7,7 @@ import { env } from "@/env.mjs";
 const protocol =
   process.env.NODE_ENV === "development" ? "http://" : "https://";
 
-const subdomain =
-  env.NEXT_PUBLIC_VERCEL_ENV === "preview" ? "staging-cloud" : "cloud";
-
-const returnURLBase = `${protocol}${subdomain}.${env.NEXT_PUBLIC_ROOT_DOMAIN}/site`;
+const returnURLBase = `${protocol}${env.NEXT_PUBLIC_CLOUD_DOMAIN}/site`;
 
 export const stripeRouter = createTRPCRouter({
   cancelSubscription: protectedProcedure
