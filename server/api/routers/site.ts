@@ -894,10 +894,10 @@ export const siteRouter = createTRPCRouter({
             ? null
             : site.customDomain &&
                 isFeatureEnabled(Feature.CustomDomain, site as any)
-              ? blob?.appPath!
-              : `/@${site.user!.gh_username}/${
-                  site.projectName
-                }/${blob?.appPath}`;
+              ? `/${blob.appPath}`
+              : `/@${site.user!.gh_username}/${site.projectName}/${
+                  blob.appPath
+                }`;
 
           return {
             key: author,
