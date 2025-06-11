@@ -25,10 +25,11 @@ import { buildSiteMapFromSiteBlobs } from "@/lib/build-site-map";
 import { SiteConfig } from "@/components/types";
 import { env } from "@/env.mjs";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
-import { Blob, Status } from "@prisma/client";
+import { Blob, Site, Status } from "@prisma/client";
 import { PageMetadata } from "../types";
 import { resolveLink } from "@/lib/resolve-link";
 import { SiteWithUser } from "@/types";
+import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -844,4 +845,69 @@ export const siteRouter = createTRPCRouter({
         },
       )();
     }),
+  getAuthors: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+        authors: z.array(z.string().min(1)),
+      }),
+    )
+    .query(
+      async ({
+        ctx,
+        input,
+      }): Promise<
+        Array<{
+          key: string;
+          name: string;
+          url: string | null;
+          avatar?: string;
+        }>
+      > => {
+        const site = await ctx.db.site.findUnique({
+          where: { id: input.siteId },
+          select: {
+            user: true,
+            projectName: true,
+            customDomain: true,
+          },
+        });
+
+        if (!site) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Site not found",
+          });
+        }
+
+        const authorsPromises = input.authors.map(async (author) => {
+          const blob = await ctx.db.blob.findFirst({
+            where: {
+              siteId: input.siteId,
+              appPath: { endsWith: author },
+            },
+          });
+
+          const metadata = blob?.metadata as PageMetadata | null | undefined;
+
+          const url = !blob?.appPath
+            ? null
+            : site.customDomain &&
+                isFeatureEnabled(Feature.CustomDomain, site as any)
+              ? blob?.appPath!
+              : `/@${site.user!.gh_username}/${
+                  site.projectName
+                }/${blob?.appPath}`;
+
+          return {
+            key: author,
+            name: metadata?.title ?? author,
+            avatar: metadata?.avatar,
+            url,
+          };
+        });
+
+        return await Promise.all(authorsPromises);
+      },
+    ),
 });

@@ -21,7 +21,6 @@ import { revalidateTag } from "next/cache";
 import { isPathVisible } from "@/lib/path-validator";
 import { SiteConfig } from "@/components/types";
 import { Prisma } from "@prisma/client";
-import { BlogLayout } from "@portaljs/core";
 
 export const syncSite = inngest.createFunction(
   {

@@ -5,7 +5,7 @@ import EditPageButton from "@/components/edit-page-button";
 import Comments from "@/components/comments";
 import { mdxComponentsFactory } from "@/components/mdx-components-factory";
 import { ErrorMessage } from "@/components/error-message";
-import { WikiLayout } from "@/components/layouts/wiki";
+import { BlogLayout } from "@/components/layouts/blog";
 
 import { getConfig } from "@/lib/app-config";
 import { getMdxOptions } from "@/lib/markdown";
@@ -233,16 +233,28 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     site.enableComments &&
     (metadata.showComments ?? siteConfig?.showComments ?? site.enableComments);
 
-  const Layout = ({ children }) => {
-    switch (metadata.layout) {
-      case "plain":
-        return <>{children}</>;
-      default:
-        return (
-          <WikiLayout metadata={metadata} resolveAssetUrl={resolveAssetUrl}>
-            {children}
-          </WikiLayout>
-        );
+  const Layout = async ({ children }) => {
+    if (metadata.layout === "plain") {
+      return <>{children}</>;
+    } else {
+      const authors =
+        metadata.authors &&
+        (await api.site.getAuthors.query({
+          siteId: site.id,
+          authors: metadata.authors,
+        }));
+      const image = metadata.image && resolveAssetUrl(metadata.image);
+      return (
+        <BlogLayout
+          title={metadata.title}
+          description={metadata.description}
+          date={metadata.date}
+          authors={authors}
+          image={image}
+        >
+          {children}
+        </BlogLayout>
+      );
     }
   };
 

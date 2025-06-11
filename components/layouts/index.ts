@@ -1,7 +1,5 @@
-import { WikiLayout } from "./wiki";
-import { PlainLayout } from "./plain";
+import { BlogLayout } from "./blog";
 
 export default {
-  wiki: WikiLayout,
-  plain: PlainLayout,
+  blog: BlogLayout,
 };
