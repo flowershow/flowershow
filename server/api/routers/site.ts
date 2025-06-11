@@ -25,7 +25,7 @@ import { buildSiteMapFromSiteBlobs } from "@/lib/build-site-map";
 import { SiteConfig } from "@/components/types";
 import { env } from "@/env.mjs";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
-import { Blob, Site, Status } from "@prisma/client";
+import { Blob, Status } from "@prisma/client";
 import { PageMetadata } from "../types";
 import { resolveLink } from "@/lib/resolve-link";
 import { SiteWithUser } from "@/types";
@@ -892,8 +892,7 @@ export const siteRouter = createTRPCRouter({
 
           const url = !blob?.appPath
             ? null
-            : site.customDomain &&
-                isFeatureEnabled(Feature.CustomDomain, site as any)
+            : site.customDomain
               ? `/${blob.appPath}`
               : `/@${site.user!.gh_username}/${site.projectName}/${
                   blob.appPath
