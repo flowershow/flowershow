@@ -41,9 +41,16 @@ export async function GET(
     status = "Valid Configuration";
   }
 
-  return NextResponse.json({
+  const response = NextResponse.json({
     status,
     domainJson,
     configJson,
   });
+
+  // Prevent caching at all levels - CDN, Vercel, and browser
+  response.headers.set("Cache-Control", "no-store, max-age=0");
+  response.headers.set("CDN-Cache-Control", "no-store, max-age=0");
+  response.headers.set("Vercel-CDN-Cache-Control", "no-store, max-age=0");
+
+  return response;
 }
