@@ -109,12 +109,27 @@ export const syncSite = inngest.createFunction(
 
     const normalizedRootDir = normalizeDir(rootDir || null);
 
-    const targetSiteItems = await step.run("prepare-github-tree", () => {
-      return gitHubTree.tree
+    const filesToUpdate = await step.run("get-files-to-update", async () => {
+      // Get all existing blobs for this site
+      const existingBlobs = await prisma.blob.findMany({
+        where: { siteId },
+        select: { path: true, sha: true },
+      });
+
+      // Create a map of path -> sha for quick lookup
+      const blobMap = new Map(
+        existingBlobs.map((blob) => [blob.path, blob.sha]),
+      );
+
+      // Filter and map tree items that need updating
+      const items = gitHubTree.tree
         .filter(
           (file) =>
+            // Keep only files (not directories)
             file.type !== "tree" &&
+            // Check if file is in the root directory
             file.path.startsWith(normalizedRootDir) &&
+            // Validate against includes/excludes
             isPathVisible(file.path, includes, excludes),
         )
         .map((ghTreeItem) => {
@@ -122,14 +137,27 @@ export const syncSite = inngest.createFunction(
             normalizedRootDir,
             "",
           );
-          return { ghTreeItem, contentStorePath } as {
-            ghTreeItem: GitHubAPIRepoTreeItem;
-            contentStorePath: string;
-          };
+          return { ghTreeItem, contentStorePath };
+        })
+        .filter(({ ghTreeItem, contentStorePath }) => {
+          // Include file if:
+          // 1. It's not in the blob map (new file)
+          // 2. SHA doesn't match (modified file)
+          // 3. Force sync is enabled
+          return (
+            forceSync ||
+            !blobMap.has(contentStorePath) ||
+            blobMap.get(contentStorePath) !== ghTreeItem.sha
+          );
         });
+
+      return items as {
+        ghTreeItem: GitHubAPIRepoTreeItem;
+        contentStorePath: string;
+      }[];
     });
 
-    const updateFilesPromises = targetSiteItems.map(
+    const updateFilesPromises = filesToUpdate.map(
       ({ ghTreeItem, contentStorePath }) => {
         return step.run(`sync-blob-${ghTreeItem.path}`, async () => {
           try {
@@ -219,34 +247,46 @@ export const syncSite = inngest.createFunction(
 
     await Promise.all(updateFilesPromises);
 
-    const existingBlobs = await prisma.blob.findMany({
-      where: { siteId },
-      select: { path: true, id: true },
+    const filesToDelete = await step.run("get-files-to-delete", async () => {
+      // Get all valid files from GitHub tree
+      const validGitHubPaths = gitHubTree.tree
+        .filter(
+          (file) =>
+            file.type !== "tree" &&
+            file.path.startsWith(normalizedRootDir) &&
+            isPathVisible(file.path, includes, excludes),
+        )
+        .map((file) => file.path.replace(normalizedRootDir, ""));
+
+      // Get all files from database
+      const existingBlobs = await prisma.blob.findMany({
+        where: { siteId },
+        select: { path: true, id: true },
+      });
+
+      // Return blobs that don't exist in GitHub tree anymore
+      return existingBlobs.filter(
+        (blob) => !validGitHubPaths.includes(blob.path),
+      );
     });
 
-    const targetSiteItemsPaths = targetSiteItems.map(
-      (item) => item.contentStorePath,
-    );
+    const deletePromises = filesToDelete.map((blob) => {
+      return step.run(`delete-blob-${blob.path}`, async () => {
+        await deleteFile({
+          projectId: siteId,
+          branch: gh_branch,
+          path: blob.path,
+        });
 
-    const deletePromises = existingBlobs
-      .filter((blob) => !targetSiteItemsPaths.includes(blob.path))
-      .map((blob) => {
-        return step.run(`delete-blob-${blob.path}`, async () => {
-          await deleteFile({
-            projectId: siteId,
-            branch: gh_branch,
-            path: blob.path,
-          });
+        await deleteSiteDocument(siteId, blob.id);
 
-          await deleteSiteDocument(siteId, blob.id);
-
-          await prisma.blob.delete({
-            where: {
-              id: blob.id,
-            },
-          });
+        await prisma.blob.delete({
+          where: {
+            id: blob.id,
+          },
         });
       });
+    });
 
     await Promise.all(deletePromises);
 
