@@ -1,7 +1,7 @@
 import mdxMermaid from "mdx-mermaid";
 import { h } from "hastscript";
 import remarkCallout from "@r4ai/remark-callout";
-import remarkEmbed from "@portaljs/remark-embed";
+import remarkEmbed from "@/lib/remark-embed";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkSmartypants from "remark-smartypants";
