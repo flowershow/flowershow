@@ -29,6 +29,7 @@ export interface SiteConfig {
   description?: string;
   image?: string;
   logo?: string;
+  favicon?: string;
   nav?: NavConfig;
   analytics?: string;
   contentInclude?: string[];

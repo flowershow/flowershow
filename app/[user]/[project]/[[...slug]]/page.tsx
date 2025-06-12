@@ -99,11 +99,17 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     imageUrl = config.thumbnail;
   }
 
+  let faviconUrl = config.favicon;
+  if (isFeatureEnabled(Feature.NoBranding, site) && siteConfig?.favicon) {
+    faviconUrl = resolveDataUrl(siteConfig.favicon);
+  }
+
   return {
     title: siteConfig?.title
       ? `${metadata.title} - ${siteConfig.title}`
       : metadata.title,
     description: metadata.description ?? siteConfig?.description,
+    icons: faviconUrl ? [{ url: faviconUrl }] : undefined,
     openGraph: {
       title: siteConfig?.title
         ? `${metadata.title} - ${siteConfig.title}`
