@@ -22,6 +22,9 @@ import { isPathVisible } from "@/lib/path-validator";
 import { SiteConfig } from "@/components/types";
 import { Prisma } from "@prisma/client";
 
+// Number of files to process in each batch
+const BATCH_SIZE = 20;
+
 export const syncSite = inngest.createFunction(
   {
     id: "sync",
@@ -106,188 +109,201 @@ export const syncSite = inngest.createFunction(
       return repoTree;
     });
 
-    const normalizedRootDir = normalizeDir(rootDir || null);
+    const normalizedRootDir = normalizeDir(rootDir);
 
-    const filesToUpdate = await step.run("get-files-to-update", async () => {
-      // Get all existing blobs for this site
-      const existingBlobs = await prisma.blob.findMany({
-        where: { siteId },
-        select: { path: true, sha: true },
-      });
-
-      // Create a map of path -> sha for quick lookup
-      const blobMap = new Map(
-        existingBlobs.map((blob) => [blob.path, blob.sha]),
-      );
-
-      // Filter and map tree items that need updating
-      const items = gitHubTree.tree
-        .filter(
-          (file) =>
-            // Keep only files (not directories)
-            file.type !== "tree" &&
-            // Check if file is in the root directory
-            file.path.startsWith(normalizedRootDir) &&
-            // Validate against includes/excludes
-            isPathVisible(file.path, includes, excludes),
-        )
-        .map((ghTreeItem) => {
-          const contentStorePath = ghTreeItem.path.replace(
-            normalizedRootDir,
-            "",
-          );
-          return { ghTreeItem, contentStorePath };
-        })
-        .filter(({ ghTreeItem, contentStorePath }) => {
-          // Include file if:
-          // 1. It's not in the blob map (new file)
-          // 2. SHA doesn't match (modified file)
-          // 3. Force sync is enabled
-          return (
-            forceSync ||
-            !blobMap.has(contentStorePath) ||
-            blobMap.get(contentStorePath) !== ghTreeItem.sha
-          );
+    const fileBatchesToUpsert = await step.run(
+      "get-file-batches-to-upsert",
+      async () => {
+        const existingBlobs = await prisma.blob.findMany({
+          where: { siteId },
+          select: { path: true, sha: true },
         });
 
-      return items as {
-        ghTreeItem: GitHubAPIRepoTreeItem;
-        contentStorePath: string;
-      }[];
-    });
+        const blobShaMap = new Map(
+          existingBlobs.map((blob) => [blob.path, blob.sha]),
+        );
 
-    const updateFilesPromises = filesToUpdate.map(
-      ({ ghTreeItem, contentStorePath }) => {
-        return step.run(`sync-blob-${ghTreeItem.path}`, async () => {
-          try {
-            const blob = await prisma.blob.findUnique({
-              where: {
-                siteId_path: {
-                  siteId,
-                  path: contentStorePath,
-                },
-              },
-            });
+        const items = gitHubTree.tree
+          .filter(
+            (ghTreeItem) =>
+              // Keep only files (not directories)
+              ghTreeItem.type !== "tree" &&
+              // Check if file is in the root directory
+              ghTreeItem.path.startsWith(normalizedRootDir) &&
+              // Validate against includes/excludes
+              isPathVisible(ghTreeItem.path, includes, excludes),
+          )
+          .map((ghTreeItem) => {
+            const filePath = ghTreeItem.path.replace(normalizedRootDir, "");
+            return { ghTreeItem, filePath };
+          })
+          .filter(({ ghTreeItem, filePath }) => {
+            // Include file if:
+            // 1. It's not in the blob map (new file)
+            // 2. SHA doesn't match (modified file)
+            // 3. Force sync is enabled
+            return (
+              forceSync ||
+              !blobShaMap.has(filePath) ||
+              blobShaMap.get(filePath) !== ghTreeItem.sha
+            );
+          });
 
-            // Skip if SHA matches and force sync is not enabled
-            if (!forceSync && blob && blob.sha === ghTreeItem.sha) {
-              return;
-            }
-            const extension = ghTreeItem.path.split(".").pop() || "";
+        type FileToUpsert = {
+          ghTreeItem: GitHubAPIRepoTreeItem;
+          filePath: string;
+        };
 
-            const gitHubFile = await fetchGitHubFileRaw({
-              gh_repository,
-              file_sha: ghTreeItem.sha,
-              access_token,
-            });
+        const fileBatches: FileToUpsert[][] = [];
+        for (let i = 0; i < items.length; i += BATCH_SIZE) {
+          fileBatches.push(items.slice(i, i + BATCH_SIZE));
+        }
 
-            const content = Buffer.from(await gitHubFile.arrayBuffer());
-
-            await uploadFile({
-              projectId: siteId,
-              branch: gh_branch,
-              path: contentStorePath,
-              content,
-              extension,
-            });
-
-            await prisma.blob.upsert({
-              where: {
-                siteId_path: {
-                  siteId,
-                  path: contentStorePath,
-                },
-              },
-              create: {
-                siteId,
-                path: contentStorePath,
-                appPath: ["md", "mdx"].includes(extension)
-                  ? resolveFilePathToUrl(contentStorePath)
-                  : null,
-                size: ghTreeItem.size || 0,
-                sha: ghTreeItem.sha,
-                metadata: Prisma.JsonNull,
-                extension,
-                syncStatus: ["md", "mdx"].includes(extension)
-                  ? "PENDING"
-                  : "SUCCESS",
-              },
-              update: {
-                size: ghTreeItem.size || 0,
-                sha: ghTreeItem.sha,
-              },
-            });
-          } catch (error: any) {
-            await prisma.blob.upsert({
-              where: {
-                siteId_path: {
-                  siteId,
-                  path: contentStorePath,
-                },
-              },
-              create: {
-                siteId,
-                path: contentStorePath,
-                size: 0,
-                sha: "",
-                metadata: Prisma.JsonNull,
-                syncStatus: "ERROR",
-                syncError: error.message,
-              },
-              update: {
-                syncStatus: "ERROR",
-                syncError: error.message,
-              },
-            });
-          }
-        });
+        return fileBatches;
       },
     );
 
-    await Promise.all(updateFilesPromises);
+    await Promise.all(
+      fileBatchesToUpsert.map((batch, index) => {
+        return step.run(`process-files-to-upsert-batch-${index}`, async () => {
+          const processedFiles = await Promise.all(
+            batch.map(async ({ ghTreeItem, filePath }) => {
+              try {
+                const extension = ghTreeItem.path.split(".").pop() || "";
 
-    const filesToDelete = await step.run("get-files-to-delete", async () => {
-      // Get all valid files from GitHub tree
-      const validGitHubPaths = gitHubTree.tree
-        .filter(
-          (file) =>
-            file.type !== "tree" &&
-            file.path.startsWith(normalizedRootDir) &&
-            isPathVisible(file.path, includes, excludes),
-        )
-        .map((file) => file.path.replace(normalizedRootDir, ""));
+                const gitHubFile = await fetchGitHubFileRaw({
+                  gh_repository,
+                  file_sha: ghTreeItem.sha,
+                  access_token,
+                });
 
-      // Get all files from database
-      const existingBlobs = await prisma.blob.findMany({
-        where: { siteId },
-        select: { path: true, id: true },
-      });
+                await uploadFile({
+                  projectId: siteId,
+                  branch: gh_branch,
+                  path: filePath,
+                  content: Buffer.from(await gitHubFile.arrayBuffer()),
+                  extension,
+                });
 
-      // Return blobs that don't exist in GitHub tree anymore
-      return existingBlobs.filter(
-        (blob) => !validGitHubPaths.includes(blob.path),
-      );
-    });
+                await prisma.blob.upsert({
+                  where: {
+                    siteId_path: {
+                      siteId,
+                      path: filePath,
+                    },
+                  },
+                  create: {
+                    siteId,
+                    path: filePath,
+                    appPath: ["md", "mdx"].includes(extension)
+                      ? resolveFilePathToUrl(filePath)
+                      : null,
+                    size: ghTreeItem.size || 0,
+                    sha: ghTreeItem.sha,
+                    metadata: Prisma.JsonNull,
+                    extension,
+                    syncStatus: ["md", "mdx"].includes(extension)
+                      ? "PENDING"
+                      : "SUCCESS",
+                  },
+                  update: {
+                    size: ghTreeItem.size || 0,
+                    sha: ghTreeItem.sha,
+                  },
+                });
+                return { filePath, status: "SUCCESS", message: "" }; // Return path of successfully processed file
+              } catch (error: any) {
+                await prisma.blob.upsert({
+                  where: {
+                    siteId_path: {
+                      siteId,
+                      path: filePath,
+                    },
+                  },
+                  create: {
+                    siteId,
+                    path: filePath,
+                    size: 0,
+                    sha: "",
+                    metadata: Prisma.JsonNull,
+                    syncStatus: "ERROR",
+                    syncError: error.message,
+                  },
+                  update: {
+                    syncStatus: "ERROR",
+                    syncError: error.message,
+                  },
+                });
+                return { filePath, status: "ERROR", message: error };
+              }
+            }),
+          );
+          return processedFiles;
+        });
+      }),
+    );
 
-    const deletePromises = filesToDelete.map((blob) => {
-      return step.run(`delete-blob-${blob.path}`, async () => {
-        await deleteFile({
-          projectId: siteId,
-          branch: gh_branch,
-          path: blob.path,
+    const fileBatchesToDelete = await step.run(
+      "get-file-batches-to-delete",
+      async () => {
+        // existing site files
+        const existingBlobs = await prisma.blob.findMany({
+          where: { siteId },
+          select: { path: true, id: true },
         });
 
-        await deleteSiteDocument(siteId, blob.id);
+        // files that should be included in the site after sync
+        const items = gitHubTree.tree
+          .filter(
+            (ghTreeItem) =>
+              // Keep only files (not directories)
+              ghTreeItem.type !== "tree" &&
+              // Check if file is in the root directory
+              ghTreeItem.path.startsWith(normalizedRootDir) &&
+              // Validate against includes/excludes
+              isPathVisible(ghTreeItem.path, includes, excludes),
+          )
+          .map((ghTreeItem) => ghTreeItem.path.replace(normalizedRootDir, ""));
 
-        await prisma.blob.delete({
-          where: {
-            id: blob.id,
-          },
+        const filesToDelete = existingBlobs.filter(
+          (blob) => !items.includes(blob.path),
+        );
+
+        const deleteBatches: (typeof filesToDelete)[] = [];
+        for (let i = 0; i < filesToDelete.length; i += BATCH_SIZE) {
+          deleteBatches.push(filesToDelete.slice(i, i + BATCH_SIZE));
+        }
+
+        return deleteBatches;
+      },
+    );
+
+    await Promise.all(
+      fileBatchesToDelete.map((batch, index) => {
+        return step.run(`delete-files-batch-${index}`, async () => {
+          const deletedFiles = await Promise.all(
+            batch.map(async (blob) => {
+              await deleteFile({
+                projectId: siteId,
+                branch: gh_branch,
+                path: blob.path,
+              });
+
+              await deleteSiteDocument(siteId, blob.id);
+
+              await prisma.blob.delete({
+                where: {
+                  id: blob.id,
+                },
+              });
+
+              return blob.path;
+            }),
+          );
+          return deletedFiles;
         });
-      });
-    });
-
-    await Promise.all(deletePromises);
+      }),
+    );
 
     await step.run("update-tree", async () =>
       prisma.site.update({
@@ -325,7 +341,6 @@ export const deleteSite = inngest.createFunction(
   { event: "site/delete" },
   async ({ event }) => {
     const { siteId } = event.data;
-    // Delete from content store first
     await deleteProject(siteId);
     await deleteSiteCollection(siteId);
   },

@@ -62,6 +62,5 @@ export const normalizeDir = (dir: string | null) => {
   // remove leading and trailing slashes
   // remove leading ./
   if (!dir) return "";
-  const normalizedDir = dir.replace(/^(.?\/)+|\/+$/g, "");
-  return normalizedDir && `${normalizedDir}/`;
+  return dir.replace(/^(.?\/)+|\/+$/g, "");
 };
