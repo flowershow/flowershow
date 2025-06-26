@@ -1,4 +1,3 @@
-import { NonRetriableError } from "inngest";
 import { inngest } from "./client";
 import prisma from "@/server/db";
 import { normalizeDir } from "@/lib/utils";
@@ -103,7 +102,11 @@ export const syncSite = inngest.createFunction(
       return repoTree;
     });
 
-    const normalizedRootDir = normalizeDir(rootDir);
+    const normalizedRootDir = rootDir
+      ? rootDir.replace(/^(.?\/)+|\/+$/g, "") + "/"
+      : "";
+
+    console.log({ normalizedRootDir });
 
     const fileBatchesToUpsert = await step.run(
       "get-file-batches-to-upsert",
@@ -116,6 +119,8 @@ export const syncSite = inngest.createFunction(
         const blobShaMap = new Map(
           existingBlobs.map((blob) => [blob.path, blob.sha]),
         );
+
+        console.log({ blobShaMap });
 
         const items = gitHubTree.tree
           .filter(
@@ -309,13 +314,13 @@ export const syncSite = inngest.createFunction(
     );
 
     await step.run("revalidate-tags", async () => {
-      revalidateTag(`${site!.user?.ghUsername}-${site!.projectName}-metadata`);
+      revalidateTag(`${site!.user?.ghUsername}-${site!.projectName}-site`);
       revalidateTag(
         `${site!.user?.ghUsername}-${site!.projectName}-permalinks`,
       );
       revalidateTag(`${site?.user?.ghUsername}-${site?.projectName}-tree`);
       revalidateTag(
-        `${site!.user?.ghUsername}-${site!.projectName}-page-content`,
+        `${site!.user?.ghUsername}-${site!.projectName}-blob-content`,
       );
     });
   },
