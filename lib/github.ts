@@ -206,17 +206,17 @@ export const fetchGitHubScopeRepositories = async ({
 };
 
 export const fetchGitHubRepoTree = async ({
-  gh_repository,
-  gh_branch,
-  access_token,
+  ghRepository,
+  ghBranch,
+  accessToken,
 }: {
-  gh_repository: string;
-  gh_branch: string;
-  access_token: string;
+  ghRepository: string;
+  ghBranch: string;
+  accessToken: string;
 }) => {
   return await githubJsonFetch<GitHubAPIRepoTree>({
-    url: `/repos/${gh_repository}/git/trees/${gh_branch}?recursive=1`,
-    accessToken: access_token,
+    url: `/repos/${ghRepository}/git/trees/${ghBranch}?recursive=1`,
+    accessToken: accessToken,
     cacheOptions: {
       cache: "no-store",
     },
@@ -224,45 +224,45 @@ export const fetchGitHubRepoTree = async ({
 };
 
 export const fetchGitHubFile = async ({
-  gh_repository,
-  gh_branch,
+  ghRepository,
+  ghBranch,
   path,
-  access_token,
+  accessToken,
 }: {
-  gh_repository: string;
-  gh_branch: string;
+  ghRepository: string;
+  ghBranch: string;
   path: string;
-  access_token: string;
+  accessToken: string;
 }) => {
   try {
     return await githubJsonFetch<GitHubAPIFileContent>({
       // https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content
-      url: `/repos/${gh_repository}/contents/${path}?ref=${gh_branch}`,
-      accessToken: access_token,
+      url: `/repos/${ghRepository}/contents/${path}?ref=${ghBranch}`,
+      accessToken: accessToken,
       cacheOptions: {
         cache: "no-store",
       },
     });
   } catch (error) {
     throw new Error(
-      `Could not read ${gh_repository}/${path} from GitHub: ${error}`,
+      `Could not read ${ghRepository}/${path} from GitHub: ${error}`,
     );
   }
 };
 
 export const fetchGitHubFileRaw = async ({
-  gh_repository,
+  ghRepository,
   file_sha,
-  access_token,
+  accessToken,
 }: {
-  gh_repository: string;
+  ghRepository: string;
   file_sha: string;
-  access_token: string;
+  accessToken: string;
 }) => {
   return await githubRawFetch({
     // https://docs.github.com/en/rest/git/blobs?apiVersion=2022-11-28#get-a-blob
-    url: `/repos/${gh_repository}/git/blobs/${file_sha}`,
-    accessToken: access_token,
+    url: `/repos/${ghRepository}/git/blobs/${file_sha}`,
+    accessToken: accessToken,
     cacheOptions: {
       cache: "no-store",
     },
@@ -270,19 +270,19 @@ export const fetchGitHubFileRaw = async ({
 };
 
 export const checkIfBranchExists = async ({
-  gh_repository,
-  gh_branch,
-  access_token,
+  ghRepository,
+  ghBranch,
+  accessToken,
 }: {
-  gh_repository: string;
-  gh_branch: string;
-  access_token: string;
+  ghRepository: string;
+  ghBranch: string;
+  accessToken: string;
 }) => {
   try {
     return await githubFetch({
       // https://docs.github.com/en/rest/branches/branches?apiVersion=2022-11-28#get-a-branch
-      url: `/repos/${gh_repository}/branches/${gh_branch}`,
-      accessToken: access_token,
+      url: `/repos/${ghRepository}/branches/${ghBranch}`,
+      accessToken: accessToken,
       cacheOptions: {
         cache: "no-store",
       },
@@ -298,58 +298,58 @@ export const checkIfBranchExists = async ({
 };
 
 export const fetchGitHubRepo = async ({
-  gh_repository,
-  access_token,
+  ghRepository,
+  accessToken,
 }: {
-  gh_repository: string;
-  access_token?: string;
+  ghRepository: string;
+  accessToken?: string;
 }) => {
   try {
     return await githubJsonFetch<GitHubAPIRepository>({
       // https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#get-a-repository
-      url: `/repos/${gh_repository}`,
-      accessToken: access_token,
+      url: `/repos/${ghRepository}`,
+      accessToken: accessToken,
     });
   } catch (error) {
-    throw new Error(`Could not read ${gh_repository} from GitHub: ${error}`);
+    throw new Error(`Could not read ${ghRepository} from GitHub: ${error}`);
   }
 };
 
 export const fetchGitHubRepoContributors = async ({
-  gh_repository,
-  access_token,
+  ghRepository,
+  accessToken,
 }: {
-  gh_repository: string;
-  access_token?: string;
+  ghRepository: string;
+  accessToken?: string;
 }) => {
   try {
     return await githubJsonFetch<GitHubAPIContributor[]>({
       // https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-repository-contributors
-      url: `/repos/${gh_repository}/contributors`,
-      accessToken: access_token,
+      url: `/repos/${ghRepository}/contributors`,
+      accessToken: accessToken,
     });
   } catch (error) {
     throw new Error(
-      `Could not read contributors for ${gh_repository} from GitHub: ${error}`,
+      `Could not read contributors for ${ghRepository} from GitHub: ${error}`,
     );
   }
 };
 
 export const createGitHubRepoWebhook = async ({
-  gh_repository,
-  access_token,
+  ghRepository,
+  accessToken,
   webhookUrl,
 }: {
-  gh_repository: string;
-  access_token: string;
+  ghRepository: string;
+  accessToken: string;
   webhookUrl?: string;
 }) => {
   // Note: If you're getting "Unprocessable entity" error from GitHub,
   // there is a chance that the webhook with the same URL already exists.
   return await githubJsonFetch<GitHubAPIWebhook>({
     // https://docs.github.com/en/rest/repos/webhooks?apiVersion=2022-11-28#create-a-repository-webhook
-    url: `/repos/${gh_repository}/hooks`,
-    accessToken: access_token,
+    url: `/repos/${ghRepository}/hooks`,
+    accessToken: accessToken,
     method: "POST",
     body: {
       name: "web",
@@ -365,18 +365,18 @@ export const createGitHubRepoWebhook = async ({
 };
 
 export const deleteGitHubRepoWebhook = async ({
-  gh_repository,
+  ghRepository,
   webhook_id,
-  access_token,
+  accessToken,
 }: {
-  gh_repository: string;
+  ghRepository: string;
   webhook_id: number;
-  access_token: string;
+  accessToken: string;
 }) => {
   return await githubFetch({
     // https://docs.github.com/en/rest/repos/webhooks?apiVersion=2022-11-28#delete-a-repository-webhook
-    url: `/repos/${gh_repository}/hooks/${webhook_id}`,
-    accessToken: access_token,
+    url: `/repos/${ghRepository}/hooks/${webhook_id}`,
+    accessToken: accessToken,
     method: "DELETE",
   });
 };
@@ -387,22 +387,22 @@ export const deleteGitHubRepoWebhook = async ({
 // }
 
 export const submitGitHubIssue = async ({
-  gh_repository,
+  ghRepository,
   title,
   body,
   labels,
-  access_token,
+  accessToken,
 }: {
-  gh_repository: string;
+  ghRepository: string;
   title: string;
   body: string;
   labels?: string[];
-  access_token: string;
+  accessToken: string;
 }) => {
   return await githubJsonFetch<GitHubAPIIssue>({
     // https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28#create-an-issue
-    url: `/repos/${gh_repository}/issues`,
-    accessToken: access_token,
+    url: `/repos/${ghRepository}/issues`,
+    accessToken: accessToken,
     method: "POST",
     body: {
       title,
@@ -413,15 +413,15 @@ export const submitGitHubIssue = async ({
 };
 
 export const getFileLastCommitTimestamp = async ({
-  gh_repository,
+  ghRepository,
   branch,
   file_path,
-  access_token,
+  accessToken,
 }: {
-  gh_repository: string;
+  ghRepository: string;
   branch: string;
   file_path: string;
-  access_token: string;
+  accessToken: string;
 }) => {
   const queryParams = new URLSearchParams({
     sha: branch,
@@ -430,8 +430,8 @@ export const getFileLastCommitTimestamp = async ({
   });
   const commits = await githubJsonFetch<GitHubAPICommit[]>({
     // https://docs.github.com/en/rest/commits/commits?apiVersion=2022-11-28#list-commits
-    url: `/repos/${gh_repository}/commits?${queryParams.toString()}`,
-    accessToken: access_token,
+    url: `/repos/${ghRepository}/commits?${queryParams.toString()}`,
+    accessToken: accessToken,
   });
 
   if (commits.length === 0) {

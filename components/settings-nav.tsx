@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 const navItems = [
   { name: "Name", href: "#projectName" },
-  { name: "Branch", href: "#gh_branch" },
+  { name: "Branch", href: "#ghBranch" },
   { name: "Root Directory", href: "#rootDir" },
   { name: "Auto-Sync", href: "#autoSync" },
   { name: "Comments", href: "#enableComments" },

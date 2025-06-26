@@ -55,17 +55,17 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
 
   const siteConfig = await api.site.getConfig
     .query({
-      gh_username: site.user!.gh_username!,
+      ghUsername: site.user!.ghUsername!,
       projectName: site.projectName,
     })
     .catch(() => null);
 
-  const gh_username = site.user!.gh_username!;
+  const ghUsername = site.user!.ghUsername!;
 
   const canonicalUrlBase = site.customDomain
     ? `https://${site.customDomain}`
     : `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}` +
-      resolveSiteAlias(`/@${gh_username}/${projectName}`, "to");
+      resolveSiteAlias(`/@${ghUsername}/${projectName}`, "to");
 
   const protocol =
     env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
@@ -76,7 +76,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   const rawFilePermalinkBase = site.customDomain
     ? `${protocol}://${site.customDomain}/_r/-`
     : `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${resolveSiteAlias(
-        `/@${gh_username}/${projectName}`,
+        `/@${ghUsername}/${projectName}`,
         "to",
       )}/_r/-`;
 
@@ -170,14 +170,14 @@ export default async function SitePage({ params }: { params: RouteParams }) {
 
   const siteConfig = await api.site.getConfig
     .query({
-      gh_username: site.user!.gh_username!,
+      ghUsername: site.user!.ghUsername!,
       projectName: site.projectName,
     })
     .catch(() => null);
 
   const sitePermalinks = await api.site.getPermalinks
     .query({
-      gh_username: site.user?.gh_username!,
+      ghUsername: site.user?.ghUsername!,
       projectName: site.projectName,
     })
     .catch(() => {
@@ -223,7 +223,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
 
   const rawFilePermalinkBase = site.customDomain
     ? `/_r/-`
-    : `/@${site.user!.gh_username}/${site.projectName}` + `/_r/-`;
+    : `/@${site.user!.ghUsername}/${site.projectName}` + `/_r/-`;
 
   const resolveAssetUrl = (url: string) =>
     resolveLink({
@@ -280,12 +280,12 @@ export default async function SitePage({ params }: { params: RouteParams }) {
 
       {showEditLink && (
         <EditPageButton
-          url={`https://github.com/${site?.gh_repository}/edit/${site?.gh_branch}/${page.blob.path}`}
+          url={`https://github.com/${site?.ghRepository}/edit/${site?.ghBranch}/${page.blob.path}`}
         />
       )}
       {showPageComments && (
         <Comments
-          repo={site.gh_repository}
+          repo={site.ghRepository}
           enabled={Boolean(site.enableComments)}
           repoId={site.giscusRepoId}
           categoryId={site.giscusCategoryId}

@@ -199,13 +199,13 @@ export default function SitesAdminTable() {
                           {site.projectName}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {site.user!.gh_username}
+                          {site.user!.ghUsername}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {site.gh_repository}
+                          {site.ghRepository}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {site.gh_branch}
+                          {site.ghBranch}
                         </td>
                         <td className="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-3">
                           <button

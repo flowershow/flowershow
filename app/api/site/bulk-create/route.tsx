@@ -44,8 +44,8 @@ export async function POST(req: NextRequest) {
     }
     try {
       await caller.site.create({
-        gh_repository: repo,
-        gh_branch: site.branch,
+        ghRepository: repo,
+        ghBranch: site.branch,
       });
     } catch (e) {
       /* if (e instanceof TRPCError) {

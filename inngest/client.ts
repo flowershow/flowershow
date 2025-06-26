@@ -5,10 +5,10 @@ import { EventSchemas, Inngest } from "inngest";
 interface SiteSync {
   data: {
     siteId: string;
-    gh_repository: string;
-    gh_branch: string;
+    ghRepository: string;
+    ghBranch: string;
     rootDir: string | null;
-    access_token: string;
+    accessToken: string;
     initialSync?: boolean;
     forceSync?: boolean;
   };
@@ -19,7 +19,7 @@ interface SiteCreate extends SiteSync {}
 interface SiteDelete {
   data: {
     siteId: string;
-    access_token: string;
+    accessToken: string;
   };
 }
 

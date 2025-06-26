@@ -76,9 +76,9 @@ export default async function SiteSettingsIndex({
             </p>
           }
           inputAttrs={{
-            name: "gh_branch",
+            name: "ghBranch",
             type: "text",
-            defaultValue: site?.gh_branch!,
+            defaultValue: site?.ghBranch!,
           }}
           handleSubmit={updateSite}
         />

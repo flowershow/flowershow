@@ -36,7 +36,7 @@ export const siteRouter = createTRPCRouter({
   get: publicProcedure
     .input(
       z.object({
-        gh_username: z.string().min(1),
+        ghUsername: z.string().min(1),
         projectName: z.string().min(1),
       }),
     )
@@ -47,22 +47,22 @@ export const siteRouter = createTRPCRouter({
             where: {
               AND: [
                 { projectName: input.projectName },
-                { user: { gh_username: input.gh_username } },
+                { user: { ghUsername: input.ghUsername } },
               ],
             },
             include: {
               user: {
                 select: {
-                  gh_username: true,
+                  ghUsername: true,
                 },
               },
             },
           });
         },
-        [`${input.gh_username} - ${input.projectName} - metadata`],
+        [`${input.ghUsername} - ${input.projectName} - metadata`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.gh_username} - ${input.projectName} - metadata`],
+          tags: [`${input.ghUsername} - ${input.projectName} - metadata`],
         },
       )();
     }),
@@ -89,7 +89,7 @@ export const siteRouter = createTRPCRouter({
             include: {
               user: {
                 select: {
-                  gh_username: true,
+                  ghUsername: true,
                 },
               },
             },
@@ -111,33 +111,33 @@ export const siteRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
       z.object({
-        gh_repository: z.string().min(1),
-        gh_branch: z.string().min(1),
+        ghRepository: z.string().min(1),
+        ghBranch: z.string().min(1),
         rootDir: z.string().optional(),
         projectName: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { gh_repository, gh_branch, rootDir } = input;
-      const access_token = ctx.session.accessToken;
+      const { ghRepository, ghBranch, rootDir } = input;
+      const accessToken = ctx.session.accessToken;
 
       // check if branch exists
       const branchExists = await checkIfBranchExists({
-        gh_repository,
-        gh_branch,
-        access_token,
+        ghRepository,
+        ghBranch,
+        accessToken,
       });
 
       if (!branchExists) {
         throw new Error(
-          `Branch ${input.gh_branch} does not exist in repository ${input.gh_repository}`,
+          `Branch ${input.ghBranch} does not exist in repository ${input.ghRepository}`,
         );
       }
 
       //use repository name as an initial project name
       //and append a number if the name is already taken
       let projectName =
-        input.projectName ?? (gh_repository.split("/")[1] as string);
+        input.projectName ?? (ghRepository.split("/")[1] as string);
       let num = 2;
 
       while (
@@ -147,7 +147,7 @@ export const siteRouter = createTRPCRouter({
           },
         })
       ) {
-        projectName = `${input.gh_repository.split("/")[1]}-${num}`;
+        projectName = `${input.ghRepository.split("/")[1]}-${num}`;
         num++;
       }
 
@@ -155,8 +155,8 @@ export const siteRouter = createTRPCRouter({
       const site = await ctx.db.site.create({
         data: {
           projectName,
-          gh_repository,
-          gh_branch,
+          ghRepository,
+          ghBranch,
           rootDir,
           autoSync: false,
           webhookId: null,
@@ -168,8 +168,8 @@ export const siteRouter = createTRPCRouter({
       let webhookId: string | null = null;
       try {
         const response = await createGitHubRepoWebhook({
-          gh_repository,
-          access_token,
+          ghRepository,
+          accessToken,
           webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${site.id}`,
         });
         webhookId = response.id.toString();
@@ -190,10 +190,10 @@ export const siteRouter = createTRPCRouter({
         name: "site/sync",
         data: {
           siteId: site.id,
-          gh_repository,
-          gh_branch,
+          ghRepository,
+          ghBranch,
           rootDir: site.rootDir,
-          access_token,
+          accessToken,
           initialSync: true,
         },
       });
@@ -258,10 +258,10 @@ export const siteRouter = createTRPCRouter({
           name: "site/sync",
           data: {
             siteId: id,
-            gh_repository: site.gh_repository,
-            gh_branch: site.gh_branch,
+            ghRepository: site.ghRepository,
+            ghBranch: site.ghBranch,
             rootDir: value,
-            access_token: ctx.session.accessToken,
+            accessToken: ctx.session.accessToken,
             initialSync: true,
           },
         });
@@ -269,8 +269,8 @@ export const siteRouter = createTRPCRouter({
         if (value === "true") {
           try {
             const { id: webhookId } = await createGitHubRepoWebhook({
-              gh_repository: site.gh_repository,
-              access_token: ctx.session.accessToken,
+              ghRepository: site.ghRepository,
+              accessToken: ctx.session.accessToken,
               webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${site.id}`, // Add site ID to webhook URL
             });
             result = await ctx.db.site.update({
@@ -285,8 +285,8 @@ export const siteRouter = createTRPCRouter({
         } else {
           try {
             await deleteGitHubRepoWebhook({
-              gh_repository: site.gh_repository,
-              access_token: ctx.session.accessToken,
+              ghRepository: site.ghRepository,
+              accessToken: ctx.session.accessToken,
               webhook_id: Number(site.webhookId),
             });
             result = await ctx.db.site.update({
@@ -320,10 +320,10 @@ export const siteRouter = createTRPCRouter({
             name: "site/sync",
             data: {
               siteId: id,
-              gh_repository: site.gh_repository,
-              gh_branch: site.gh_branch,
+              ghRepository: site.ghRepository,
+              ghBranch: site.ghBranch,
               rootDir: site.rootDir,
-              access_token: ctx.session.accessToken,
+              accessToken: ctx.session.accessToken,
               forceSync: true,
             },
           });
@@ -331,16 +331,16 @@ export const siteRouter = createTRPCRouter({
       }
 
       // revalidate the site metadata
-      revalidateTag(`${site?.user?.gh_username}-${site?.projectName}-metadata`);
+      revalidateTag(`${site?.user?.ghUsername}-${site?.projectName}-metadata`);
 
-      if (key === "gh_branch") {
+      if (key === "ghBranch") {
         // revalidate the site's permalinks
         revalidateTag(
-          `${site?.user?.gh_username}-${site?.projectName}-permalinks`,
+          `${site?.user?.ghUsername}-${site?.projectName}-permalinks`,
         );
         // revalidate all the pages' content
         revalidateTag(
-          `${site?.user?.gh_username}-${site?.projectName}-page-content`,
+          `${site?.user?.ghUsername}-${site?.projectName}-page-content`,
         );
       }
       return result;
@@ -355,9 +355,9 @@ export const siteRouter = createTRPCRouter({
       if (site?.webhookId) {
         try {
           await deleteGitHubRepoWebhook({
-            gh_repository: site!.gh_repository,
+            ghRepository: site!.ghRepository,
             webhook_id: Number(site!.webhookId),
-            access_token: ctx.session.accessToken,
+            accessToken: ctx.session.accessToken,
           });
         } catch (error) {
           console.error("Failed to delete webhook", error);
@@ -372,7 +372,7 @@ export const siteRouter = createTRPCRouter({
         name: "site/delete",
         data: {
           siteId: input.id,
-          access_token: ctx.session.accessToken,
+          accessToken: ctx.session.accessToken,
         },
       });
 
@@ -399,17 +399,17 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      const { id, gh_repository, gh_branch } = site!;
-      const access_token = ctx.session.accessToken;
+      const { id, ghRepository, ghBranch } = site!;
+      const accessToken = ctx.session.accessToken;
 
       await inngest.send({
         name: "site/sync",
         data: {
           siteId: id,
-          gh_repository,
-          gh_branch,
+          ghRepository,
+          ghBranch,
           rootDir: site!.rootDir,
-          access_token,
+          accessToken,
           forceSync: input.force,
         },
       });
@@ -488,9 +488,9 @@ export const siteRouter = createTRPCRouter({
             };
           }
           const gitHubTree = await fetchGitHubRepoTree({
-            gh_repository: site!.gh_repository,
-            gh_branch: site!.gh_branch,
-            access_token: ctx.session.accessToken,
+            ghRepository: site!.ghRepository,
+            ghBranch: site!.ghBranch,
+            accessToken: ctx.session.accessToken,
           });
           status =
             site.tree?.["sha"] === gitHubTree.sha ? "SUCCESS" : "OUTDATED";
@@ -506,7 +506,7 @@ export const siteRouter = createTRPCRouter({
   getCustomStyles: publicProcedure
     .input(
       z.object({
-        gh_username: z.string().min(1),
+        ghUsername: z.string().min(1),
         projectName: z.string().min(1),
       }),
     )
@@ -517,7 +517,7 @@ export const siteRouter = createTRPCRouter({
             where: {
               AND: [
                 { projectName: input.projectName },
-                { user: { gh_username: input.gh_username } },
+                { user: { ghUsername: input.ghUsername } },
               ],
             },
           });
@@ -532,17 +532,17 @@ export const siteRouter = createTRPCRouter({
           try {
             return await fetchFile({
               projectId: site.id,
-              branch: site.gh_branch,
+              branch: site.ghBranch,
               path: "custom.css",
             });
           } catch {
             return null;
           }
         },
-        [`${input.gh_username} - ${input.projectName} - customStyles`],
+        [`${input.ghUsername} - ${input.projectName} - customStyles`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.gh_username} - ${input.projectName} - customStyles`],
+          tags: [`${input.ghUsername} - ${input.projectName} - customStyles`],
         },
       )();
     }),
@@ -550,7 +550,7 @@ export const siteRouter = createTRPCRouter({
   getConfig: publicProcedure
     .input(
       z.object({
-        gh_username: z.string().min(1),
+        ghUsername: z.string().min(1),
         projectName: z.string().min(1),
       }),
     )
@@ -561,7 +561,7 @@ export const siteRouter = createTRPCRouter({
             where: {
               AND: [
                 { projectName: input.projectName },
-                { user: { gh_username: input.gh_username } },
+                { user: { ghUsername: input.ghUsername } },
               ],
             },
           });
@@ -576,7 +576,7 @@ export const siteRouter = createTRPCRouter({
           try {
             const config = await fetchFile({
               projectId: site.id,
-              branch: site.gh_branch,
+              branch: site.ghBranch,
               path: "config.json",
             });
             // TODO is casting to SiteConfig safe?
@@ -585,10 +585,10 @@ export const siteRouter = createTRPCRouter({
             return null;
           }
         },
-        [`${input.gh_username} - ${input.projectName} - customStyles`],
+        [`${input.ghUsername} - ${input.projectName} - customStyles`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.gh_username} - ${input.projectName} - customStyles`],
+          tags: [`${input.ghUsername} - ${input.projectName} - customStyles`],
         },
       )();
     }),
@@ -596,7 +596,7 @@ export const siteRouter = createTRPCRouter({
   getSiteMap: publicProcedure
     .input(
       z.object({
-        gh_username: z.string().min(1),
+        ghUsername: z.string().min(1),
         projectName: z.string().min(1),
       }),
     )
@@ -607,7 +607,7 @@ export const siteRouter = createTRPCRouter({
             where: {
               AND: [
                 { projectName: input.projectName },
-                { user: { gh_username: input.gh_username } },
+                { user: { ghUsername: input.ghUsername } },
               ],
             },
           });
@@ -619,12 +619,12 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          const { gh_username, projectName } = input;
+          const { ghUsername, projectName } = input;
           const { customDomain } = site;
 
           const prefix = customDomain
             ? ""
-            : resolveSiteAlias(`/@${gh_username}/${projectName}`, "to");
+            : resolveSiteAlias(`/@${ghUsername}/${projectName}`, "to");
 
           // Get all blobs for the site
           const blobs = (await ctx.db.blob.findMany({
@@ -643,10 +643,10 @@ export const siteRouter = createTRPCRouter({
 
           return buildSiteMapFromSiteBlobs(blobs, prefix);
         },
-        [`${input.gh_username}-${input.projectName}-tree`],
+        [`${input.ghUsername}-${input.projectName}-tree`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.gh_username}-${input.projectName}-tree`],
+          tags: [`${input.ghUsername}-${input.projectName}-tree`],
         },
       )();
     }),
@@ -654,7 +654,7 @@ export const siteRouter = createTRPCRouter({
   getPermalinks: publicProcedure
     .input(
       z.object({
-        gh_username: z.string().min(1),
+        ghUsername: z.string().min(1),
         projectName: z.string().min(1),
       }),
     )
@@ -665,7 +665,7 @@ export const siteRouter = createTRPCRouter({
             where: {
               AND: [
                 { projectName: input.projectName },
-                { user: { gh_username: input.gh_username } },
+                { user: { ghUsername: input.ghUsername } },
               ],
             },
           });
@@ -688,10 +688,10 @@ export const siteRouter = createTRPCRouter({
 
           return blobs.map((blob) => "/" + blob.path.replace(/\.mdx?$/, ""));
         },
-        [`${input.gh_username}-${input.projectName}-permalinks`],
+        [`${input.ghUsername}-${input.projectName}-permalinks`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.gh_username}-${input.projectName}-permalinks`],
+          tags: [`${input.ghUsername}-${input.projectName}-permalinks`],
         },
       )();
     }),
@@ -741,7 +741,7 @@ export const siteRouter = createTRPCRouter({
       const rawFilePermalinkBase = site.customDomain
         ? `/_r/-`
         : resolveSiteAlias(
-            `/@${site.user!.gh_username}/${site.projectName}`,
+            `/@${site.user!.ghUsername}/${site.projectName}`,
             "to",
           ) + `/_r/-`;
 
@@ -832,7 +832,7 @@ export const siteRouter = createTRPCRouter({
 
           const content = await fetchFile({
             projectId: input.siteId,
-            branch: blob.site.gh_branch,
+            branch: blob.site.ghBranch,
             path: blob.path,
           });
 
@@ -897,7 +897,7 @@ export const siteRouter = createTRPCRouter({
             ? null
             : site.customDomain
               ? `/${blob.appPath}`
-              : `/@${site.user!.gh_username}/${site.projectName}/${
+              : `/@${site.user!.ghUsername}/${site.projectName}/${
                   blob.appPath
                 }`;
 

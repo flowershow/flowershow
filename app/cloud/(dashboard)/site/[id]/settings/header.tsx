@@ -20,16 +20,16 @@ export default async function SiteSettingsHeader({
     if (site.customDomain) {
       url = `https://${site.customDomain}`;
     } else {
-      url = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
-        site.user!.gh_username
-      }/${site.projectName}`;
+      url = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user!.ghUsername}/${
+        site.projectName
+      }`;
     }
   } else if (env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
     url = `https://staging-${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
-      site.user!.gh_username
+      site.user!.ghUsername
     }/${site.projectName}`;
   } else {
-    url = `http://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user!.gh_username}/${
+    url = `http://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user!.ghUsername}/${
       site.projectName
     }`;
   }
@@ -52,7 +52,7 @@ export default async function SiteSettingsHeader({
             <Status />
           </Suspense>
           <Link
-            href={`https://github.com/${site.gh_repository}`}
+            href={`https://github.com/${site.ghRepository}`}
             target="_blank"
             rel="noreferrer"
             className="mt-2 inline-flex items-center text-sm text-gray-500 hover:underline"
@@ -61,13 +61,13 @@ export default async function SiteSettingsHeader({
               className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400"
               aria-hidden="true"
             />
-            <span>{site.gh_repository}</span>
+            <span>{site.ghRepository}</span>
           </Link>
         </div>
         <div className="mt-5 flex lg:ml-4 lg:mt-0">
           <span className="block">
             <a
-              href={`https://github.com/${site.gh_repository}`}
+              href={`https://github.com/${site.ghRepository}`}
               target="_blank"
               rel="noreferrer"
             >

@@ -41,8 +41,8 @@ async function createAndSyncSite(
     create: {
       userId,
       projectName,
-      gh_repository: repository,
-      gh_branch: branch,
+      ghRepository: repository,
+      ghBranch: branch,
       plan,
     },
   });
@@ -62,10 +62,10 @@ async function createAndSyncSite(
     name: "site/sync",
     data: {
       siteId: site.id,
-      gh_repository: site.gh_repository,
-      gh_branch: site.gh_branch,
+      ghRepository: site.ghRepository,
+      ghBranch: site.ghBranch,
       rootDir: site.rootDir,
-      access_token: account.access_token!,
+      accessToken: account.access_token!,
       forceSync: true,
     },
   });
@@ -121,7 +121,7 @@ setup("Setup test sites", async () => {
     create: {
       email: testUser.email,
       name: testUser.name,
-      gh_username: testUser.username,
+      ghUsername: testUser.username,
     },
   });
 

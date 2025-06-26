@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  if (payload.ref !== `refs/heads/${site.gh_branch}` || event !== "push") {
+  if (payload.ref !== `refs/heads/${site.ghBranch}` || event !== "push") {
     return new Response("Incorrect branch", { status: 404 });
   }
 
@@ -93,10 +93,10 @@ export async function POST(req: NextRequest) {
     name: "site/sync",
     data: {
       siteId: site.id,
-      gh_repository: site.gh_repository,
-      gh_branch: site.gh_branch,
+      ghRepository: site.ghRepository,
+      ghBranch: site.ghBranch,
       rootDir: site.rootDir,
-      access_token: account!.access_token!,
+      accessToken: account!.access_token!,
     },
   });
 

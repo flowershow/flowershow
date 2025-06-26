@@ -27,7 +27,7 @@ export const authOptions: NextAuthOptions = {
         return {
           id: profile.id.toString(),
           name: profile.name || profile.login,
-          gh_username: profile.login,
+          ghUsername: profile.login,
           email: profile.email,
           image: profile.avatar_url,
         };
@@ -129,7 +129,7 @@ export const authOptions: NextAuthOptions = {
             await prisma.user.update({
               where: { id: user.id },
               data: {
-                gh_username: profile.login,
+                ghUsername: profile.login,
                 username: profile.login,
                 name: profile.name || profile.login,
               },
@@ -162,7 +162,7 @@ export const authOptions: NextAuthOptions = {
         // @ts-expect-error
         id: token.sub,
         // @ts-expect-error
-        username: token?.user?.username || token?.user?.gh_username,
+        username: token?.user?.username || token?.user?.ghUsername,
         // @ts-expect-error
         role: token.user.role,
       };

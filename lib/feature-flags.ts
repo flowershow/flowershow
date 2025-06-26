@@ -32,8 +32,8 @@ export function isFeatureEnabled(feature: Feature, site: Site): boolean {
     case Feature.DataRequest:
       return (
         env.NEXT_PUBLIC_ROOT_DOMAIN === "datahub.io" &&
-        (site?.gh_repository.startsWith("datasets/") ||
-          site?.gh_repository === "datopian/postal-codes")
+        (site?.ghRepository.startsWith("datasets/") ||
+          site?.ghRepository === "datopian/postal-codes")
       );
     case Feature.NoBranding:
       return site.customDomain === "flowershow.app"

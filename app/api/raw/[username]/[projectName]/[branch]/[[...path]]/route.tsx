@@ -43,7 +43,7 @@ export async function GET(
     });
   } else {
     site = await caller.site.get({
-      gh_username: username!,
+      ghUsername: username!,
       projectName: projectName!,
     });
   }
@@ -57,7 +57,7 @@ export async function GET(
     process.env.NODE_ENV === "development" ? "http://" : "https://";
   const R2FileUrl = `${protocol}${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${
     site.id
-  }/${site.gh_branch}/raw/${path.join("/")}`;
+  }/${site.ghBranch}/raw/${path.join("/")}`;
 
   return NextResponse.redirect(R2FileUrl, { status: 302 });
 }

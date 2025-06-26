@@ -48,14 +48,14 @@ export default async function Layout({
 
   const customCss = await api.site.getCustomStyles
     .query({
-      gh_username: site.user!.gh_username!,
+      ghUsername: site.user!.ghUsername!,
       projectName: site.projectName,
     })
     .catch(() => null);
 
   const siteConfig = await api.site.getConfig
     .query({
-      gh_username: site.user!.gh_username!,
+      ghUsername: site.user!.ghUsername!,
       projectName: site.projectName,
     })
     .catch(() => null);
@@ -65,7 +65,7 @@ export default async function Layout({
   if (siteConfig?.showSidebar) {
     siteMap = await api.site.getSiteMap
       .query({
-        gh_username: site.user!.gh_username!,
+        ghUsername: site.user!.ghUsername!,
         projectName: site.projectName,
       })
       .catch(() => []);
@@ -108,14 +108,14 @@ export default async function Layout({
       filePath: blob.path,
       prefixPath: site.customDomain
         ? ""
-        : `/@${site.user?.gh_username}/${site.projectName}`,
+        : `/@${site.user?.ghUsername}/${site.projectName}`,
     });
   };
 
   const resolveHeroImageSrc = (src: string) => {
     const rawFilePermalinkBase = site.customDomain
       ? `/_r/-`
-      : `/@${site.user!.gh_username}/${site.projectName}` + `/_r/-`;
+      : `/@${site.user!.ghUsername}/${site.projectName}` + `/_r/-`;
 
     return resolveLink({
       link: src,
@@ -126,7 +126,7 @@ export default async function Layout({
 
   const searchResultPrefix = site.customDomain
     ? "/"
-    : `/@${site.user!.gh_username}/${site.projectName}/`;
+    : `/@${site.user!.ghUsername}/${site.projectName}/`;
 
   return (
     <>
@@ -285,13 +285,13 @@ function getNavConfig({
       navConfig.logo = resolveLink({
         link: customLogo,
         filePath: "config.json",
-        prefixPath: `${protocol}${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${site.id}/${site.gh_branch}/raw`,
+        prefixPath: `${protocol}${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${site.id}/${site.ghBranch}/raw`,
       });
     }
 
     navConfig.url = site.customDomain
       ? `https://${site.customDomain}`
-      : `/@${site.user!.gh_username}/${site.projectName}`;
+      : `/@${site.user!.ghUsername}/${site.projectName}`;
 
     navConfig.title = siteConfig?.nav?.title;
 
@@ -303,7 +303,7 @@ function getNavConfig({
           filePath: "config.json",
           prefixPath: site.customDomain
             ? ""
-            : `/@${site.user?.gh_username}/${site.projectName}`,
+            : `/@${site.user?.ghUsername}/${site.projectName}`,
         }),
       }));
     }
@@ -316,7 +316,7 @@ function getNavConfig({
           filePath: "config.json",
           prefixPath: site.customDomain
             ? ""
-            : `/@${site.user?.gh_username}/${site.projectName}`,
+            : `/@${site.user?.ghUsername}/${site.projectName}`,
         }),
       }));
     }

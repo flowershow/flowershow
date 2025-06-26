@@ -31,6 +31,6 @@ export const resolveSiteAlias = (
 export const isInternalSite = (site: SiteWithUser) => {
   const aliases = config.siteAliases || [];
   return aliases.some((alias) =>
-    `/@${site.user!.gh_username}/${site}`.startsWith(alias.origin),
+    `/@${site.user!.ghUsername}/${site}`.startsWith(alias.origin),
   );
 };

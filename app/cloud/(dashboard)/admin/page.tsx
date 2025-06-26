@@ -41,12 +41,12 @@ export default async function AdminPanel() {
         });
         continue;
       }
-      const { gh_repository, gh_branch, rootDir, projectName } = site;
+      const { ghRepository, ghBranch, rootDir, projectName } = site;
 
       try {
         await api.site.create.mutate({
-          gh_repository,
-          gh_branch,
+          ghRepository,
+          ghBranch,
           rootDir,
           projectName,
         });
@@ -85,16 +85,16 @@ export default async function AdminPanel() {
 }
 
 interface SiteData {
-  gh_repository: string; // e.g. "octocat/Hello-World"
-  gh_branch: string; // e.g. "main"
+  ghRepository: string; // e.g. "octocat/Hello-World"
+  ghBranch: string; // e.g. "main"
   rootDir: string;
   projectName: string;
 }
 
 const isValidSiteData = (x: any): x is SiteData => {
   return (
-    typeof x.gh_repository === "string" &&
-    typeof x.gh_branch === "string" &&
+    typeof x.ghRepository === "string" &&
+    typeof x.ghBranch === "string" &&
     typeof x.rootDir === "string" &&
     typeof x.projectName === "string"
   );

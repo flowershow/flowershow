@@ -21,8 +21,8 @@ export default function BulkCreateForm({
 
   const placeholder = `[
   {
-    "gh_repository": "johndoe/some-repo",
-    "gh_branch": "main",
+    "ghRepository": "johndoe/some-repo",
+    "ghBranch": "main",
     "rootDir": "/",
     "projectName": "abc"
   }

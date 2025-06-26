@@ -29,12 +29,12 @@ async function Sitemap() {
   const userSiteUrls = sites.flatMap((site) => {
     const { customDomain, projectName, user: siteUser, blobs } = site;
 
-    const gh_username = siteUser!.gh_username!;
+    const ghUsername = siteUser!.ghUsername!;
 
     // NOTE: don't include custom domain paths
     if (customDomain) return [];
 
-    const sitePath = resolveSiteAlias(`/@${gh_username}/${projectName}`, "to");
+    const sitePath = resolveSiteAlias(`/@${ghUsername}/${projectName}`, "to");
     const baseUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}${sitePath}`;
 
     // Add the base site URL

@@ -14,8 +14,8 @@ export default function NewSitePage() {
 
   const [data, setData] = useState({
     gh_scope: "",
-    gh_repository: "",
-    gh_branch: "main",
+    ghRepository: "",
+    ghBranch: "main",
     rootDir: "",
   });
 
@@ -77,7 +77,7 @@ export default function NewSitePage() {
       if (repositories.length > 0) {
         setData({
           ...data,
-          gh_repository: repositories[0] || "",
+          ghRepository: repositories[0] || "",
         });
       }
     }
@@ -104,13 +104,13 @@ export default function NewSitePage() {
       <form
         data-testid="create-site-form"
         action={async (data: FormData) => {
-          const gh_repository = data.get("gh_repository") as string;
-          const gh_branch = data.get("gh_branch") as string;
+          const ghRepository = data.get("ghRepository") as string;
+          const ghBranch = data.get("ghBranch") as string;
           const rootDir = data.get("rootDir") as string;
 
           createSite({
-            gh_repository,
-            gh_branch,
+            ghRepository,
+            ghBranch,
             rootDir,
           });
         }}
@@ -143,7 +143,7 @@ export default function NewSitePage() {
                 setData({
                   ...data,
                   gh_scope: e.target.value,
-                  gh_repository: "",
+                  ghRepository: "",
                 })
               }
             >
@@ -172,21 +172,21 @@ export default function NewSitePage() {
 
           <div className="flex flex-col space-y-2">
             <label
-              htmlFor="gh_repository"
+              htmlFor="ghRepository"
               className="text-sm font-medium text-stone-500 dark:text-stone-400"
             >
               <span>Repository</span>
             </label>
             <select
               aria-label="Repository"
-              name="gh_repository"
+              name="ghRepository"
               className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
-              value={data.gh_repository}
+              value={data.ghRepository}
               required
               placeholder="Select a repository"
               disabled={!data.gh_scope || !repos}
               onChange={(e) =>
-                setData({ ...data, gh_repository: e.target.value })
+                setData({ ...data, ghRepository: e.target.value })
               }
             >
               {(!scopes || !repos) && (
@@ -206,16 +206,16 @@ export default function NewSitePage() {
 
           <div className="flex flex-col space-y-2">
             <label
-              htmlFor="gh_branch"
+              htmlFor="ghBranch"
               className="text-sm font-medium text-stone-500 dark:text-stone-400"
             >
               <span>Branch</span>
             </label>
             <input
-              name="gh_branch"
+              name="ghBranch"
               type="text"
-              value={data.gh_branch}
-              onChange={(e) => setData({ ...data, gh_branch: e.target.value })}
+              value={data.ghBranch}
+              onChange={(e) => setData({ ...data, ghBranch: e.target.value })}
               maxLength={32}
               required
               className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"

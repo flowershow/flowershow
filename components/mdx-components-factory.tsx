@@ -52,11 +52,11 @@ export const mdxComponentsFactory = ({
 }) => {
   const { projectName, customDomain, user: siteUser } = site;
 
-  const gh_username = siteUser!.gh_username!;
+  const ghUsername = siteUser!.ghUsername!;
 
   const rawFilePermalinkBase = customDomain
     ? `/_r/-`
-    : resolveSiteAlias(`/@${gh_username}/${projectName}`, "to") + `/_r/-`;
+    : resolveSiteAlias(`/@${ghUsername}/${projectName}`, "to") + `/_r/-`;
 
   const resolveDataUrl = (url: string) =>
     resolveLink({
@@ -92,7 +92,7 @@ export const mdxComponentsFactory = ({
             filePath: blob.path,
             prefixPath: site.customDomain
               ? ""
-              : `/@${gh_username}/${projectName}`,
+              : `/@${ghUsername}/${projectName}`,
           });
 
       return (

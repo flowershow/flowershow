@@ -32,7 +32,7 @@ export const syncSite = inngest.createFunction(
       {
         scope: "account",
         limit: 5,
-        key: "event.data.access_token",
+        key: "event.data.accessToken",
       },
     ],
     cancelOn: [
@@ -48,14 +48,8 @@ export const syncSite = inngest.createFunction(
   },
   { event: "site/sync" },
   async ({ event, step }) => {
-    const {
-      siteId,
-      gh_repository,
-      gh_branch,
-      rootDir,
-      access_token,
-      forceSync,
-    } = event.data;
+    const { siteId, ghRepository, ghBranch, rootDir, accessToken, forceSync } =
+      event.data;
 
     const site = await step.run("fetch-site", async () => {
       const site = await prisma.site.findUnique({
@@ -77,8 +71,8 @@ export const syncSite = inngest.createFunction(
     }: SiteConfig = await step.run("fetch-site-config", async () => {
       try {
         const config = await githubJsonFetch<GitHubAPIFileContent>({
-          url: `/repos/${gh_repository}/contents/config.json?ref=${gh_branch}`,
-          accessToken: access_token,
+          url: `/repos/${ghRepository}/contents/config.json?ref=${ghBranch}`,
+          accessToken: accessToken,
           cacheOptions: {
             cache: "no-store",
           },
@@ -101,9 +95,9 @@ export const syncSite = inngest.createFunction(
     // Fetch latest GitHub repository tree
     const gitHubTree = await step.run("fetch-github-tree", async () => {
       const repoTree = await fetchGitHubRepoTree({
-        gh_repository,
-        gh_branch,
-        access_token,
+        ghRepository,
+        ghBranch,
+        accessToken,
       });
 
       return repoTree;
@@ -172,14 +166,14 @@ export const syncSite = inngest.createFunction(
                 const extension = ghTreeItem.path.split(".").pop() || "";
 
                 const gitHubFile = await fetchGitHubFileRaw({
-                  gh_repository,
+                  ghRepository,
                   file_sha: ghTreeItem.sha,
-                  access_token,
+                  accessToken,
                 });
 
                 await uploadFile({
                   projectId: siteId,
-                  branch: gh_branch,
+                  branch: ghBranch,
                   path: filePath,
                   content: Buffer.from(await gitHubFile.arrayBuffer()),
                   extension,
@@ -285,7 +279,7 @@ export const syncSite = inngest.createFunction(
             batch.map(async (blob) => {
               await deleteFile({
                 projectId: siteId,
-                branch: gh_branch,
+                branch: ghBranch,
                 path: blob.path,
               });
 
@@ -315,13 +309,13 @@ export const syncSite = inngest.createFunction(
     );
 
     await step.run("revalidate-tags", async () => {
-      revalidateTag(`${site!.user?.gh_username}-${site!.projectName}-metadata`);
+      revalidateTag(`${site!.user?.ghUsername}-${site!.projectName}-metadata`);
       revalidateTag(
-        `${site!.user?.gh_username}-${site!.projectName}-permalinks`,
+        `${site!.user?.ghUsername}-${site!.projectName}-permalinks`,
       );
-      revalidateTag(`${site?.user?.gh_username}-${site?.projectName}-tree`);
+      revalidateTag(`${site?.user?.ghUsername}-${site?.projectName}-tree`);
       revalidateTag(
-        `${site!.user?.gh_username}-${site!.projectName}-page-content`,
+        `${site!.user?.ghUsername}-${site!.projectName}-page-content`,
       );
     });
   },
@@ -334,7 +328,7 @@ export const deleteSite = inngest.createFunction(
       {
         scope: "account",
         limit: 5,
-        key: "event.data.access_token",
+        key: "event.data.accessToken",
       },
     ],
   },

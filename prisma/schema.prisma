@@ -17,40 +17,42 @@ enum Role {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  name            String?
+  id            String    @id @default(cuid())
+  name          String?
   // if you are using Github OAuth, you can get rid of the username attribute (that is for Twitter OAuth)
-  username        String?
-  gh_username     String?
-  email           String?   @unique
-  emailVerified   DateTime?
-  image           String?
-  role            Role      @default(USER)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  accounts        Account[]
-  sessions        Session[]
-  sites           Site[]
+  username      String?
+  ghUsername   String?   @map("gh_username")
+  email         String?   @unique
+  emailVerified DateTime? @map("email_verified")
+  image         String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  accounts      Account[]
+  sessions      Session[]
+  sites         Site[]
 }
 
 model Subscription {
   id                   String    @id @default(cuid())
-  siteId               String    @unique
-  stripeCustomerId     String    @unique
-  stripeSubscriptionId String    @unique
-  stripePriceId        String    // to track which price/plan the subscription is for
+  siteId               String    @unique @map("site_id")
+  stripeCustomerId     String    @unique @map("stripe_customer_id")
+  stripeSubscriptionId String    @unique @map("stripe_subscription_id")
+  stripePriceId        String    @map("stripe_price_id") // to track which price/plan the subscription is for
   status               SubscriptionStatus
   interval             String    // month, year
-  currentPeriodStart   DateTime  @default(now())
-  currentPeriodEnd     DateTime
-  cancelAtPeriodEnd    Boolean   @default(false)
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  currentPeriodStart   DateTime  @default(now()) @map("current_period_start")
+  currentPeriodEnd     DateTime  @map("current_period_end")
+  cancelAtPeriodEnd    Boolean   @default(false) @map("cancel_at_period_end")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
   site                 Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
 
   @@index([siteId])
 }
 
+// NextAuth.js model - DO NOT modify this model's structure unless specified in NextAuth.js documentation
+// See: https://next-auth.js.org/adapters/prisma
 model Account {
   id                       String  @id @default(cuid())
   userId                   String
@@ -74,6 +76,8 @@ model Account {
   @@index([userId])
 }
 
+// NextAuth.js model - DO NOT modify this model's structure unless specified in NextAuth.js documentation
+// See: https://next-auth.js.org/adapters/prisma
 model Session {
   id           String   @id @default(cuid())
   sessionToken String   @unique
@@ -84,6 +88,8 @@ model Session {
   @@index([userId])
 }
 
+// NextAuth.js model - DO NOT modify this model's structure unless specified in NextAuth.js documentation
+// See: https://next-auth.js.org/adapters/prisma
 model VerificationToken {
   identifier String
   token      String   @unique
@@ -93,46 +99,46 @@ model VerificationToken {
 }
 
 model Site {
-  id            String   @id @default(cuid())
-  gh_repository String
-  gh_branch     String
-  subdomain     String?  @unique
-  customDomain  String?  @unique
-  rootDir       String?
-  projectName   String
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  user          User?    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId        String?
-  autoSync      Boolean  @default(false)
-  webhookId     String?  @unique
-  enableComments Boolean  @default(false)
-  giscusRepoId  String?
-  giscusCategoryId String?
-  enableSearch  Boolean  @default(false)
-  plan          Plan     @default(FREE)
-  subscription  Subscription?
-  blobs         Blob[]
-  tree          Json?    @db.JsonB // GitHub tree data
+  id                String   @id @default(cuid())
+  ghRepository      String   @map("gh_repository")
+  ghBranch          String   @map("gh_branch")
+  subdomain         String?  @unique
+  customDomain      String?  @unique @map("custom_domain")
+  rootDir           String?  @map("root_dir")
+  projectName       String   @map("project_name")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+  user              User?    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId            String?  @map("user_id")
+  autoSync          Boolean  @default(false) @map("auto_sync")
+  webhookId         String?  @unique @map("webhook_id")
+  enableComments    Boolean  @default(false) @map("enable_comments")
+  giscusRepoId      String?  @map("giscus_repo_id")
+  giscusCategoryId  String?  @map("giscus_category_id")
+  enableSearch      Boolean  @default(false) @map("enable_search")
+  plan              Plan     @default(FREE)
+  subscription      Subscription?
+  blobs             Blob[]
+  tree              Json?    @db.JsonB // GitHub tree data
 
   @@unique([userId, projectName])
   @@index([userId])
 }
 
 model Blob {
-  id        String   @id @default(cuid())
-  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  siteId    String
-  path      String   // Original file path
-  appPath   String?   // URL-friendly path
-  size      Int
-  sha       String
-  metadata  Json     @db.JsonB
-  extension String?  // File extension
-  syncStatus Status  @default(PENDING)
-  syncError  String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id          String   @id @default(cuid())
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  siteId      String   @map("site_id")
+  path        String   // Original file path
+  appPath     String?  @map("app_path") // URL-friendly path
+  size        Int
+  sha         String
+  metadata    Json     @db.JsonB
+  extension   String?  // File extension
+  syncStatus  Status   @default(PENDING) @map("sync_status")
+  syncError   String?  @map("sync_error")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@unique([siteId, path])
   @@unique([siteId, appPath])

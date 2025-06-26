@@ -14,7 +14,7 @@ export async function getSite(
     });
   } else {
     site = await api.site.get.query({
-      gh_username: user,
+      ghUsername: user,
       projectName: project,
     });
   }
