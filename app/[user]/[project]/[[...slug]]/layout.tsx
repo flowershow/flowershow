@@ -1,4 +1,4 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import Script from "next/script";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { ReactNode } from "react";
@@ -228,7 +228,7 @@ export default async function Layout({
           >
             {showSidebar && (
               <div className="hidden lg:block">
-                <aside className="sticky top-[8rem] h-[calc(100vh-4rem)] overflow-y-auto pb-16 pr-4">
+                <aside className="sticky top-[8rem] h-[calc(100vh-8rem)] overflow-y-auto pb-8 pr-4">
                   <SiteMap items={siteMap} />
                 </aside>
               </div>
@@ -238,7 +238,12 @@ export default async function Layout({
 
             {showToc && (
               <div className="hidden xl:block">
-                <aside className="sticky top-[8rem] h-[calc(100vh-4rem)] overflow-y-auto pb-16 pl-4">
+                <aside
+                  className={clsx(
+                    "sticky top-[8rem] h-[calc(100vh-8rem)] overflow-y-auto pl-4",
+                    showBuiltWithButton ? "pb-20" : "pb-8",
+                  )}
+                >
                   <TableOfContents />
                 </aside>
               </div>
