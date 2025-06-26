@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "dev": "pnpm fetch-config && prisma migrate dev && next dev",
-    "build": "pnpm fetch-config && prisma migrate deploy && next build",
+    "build": "pnpm fetch-config && prisma migrate deploy && prisma generate && next build",
     "format:write": "prettier --write '**/*.{css,js,json,jsx,ts,tsx}'",
     "format": "prettier '**/*.{css,js,json,jsx,ts,tsx}'",
     "start": "next start",
