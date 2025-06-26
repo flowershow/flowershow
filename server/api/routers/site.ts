@@ -1,6 +1,5 @@
 import { revalidateTag, unstable_cache } from "next/cache";
 import { z } from "zod";
-import { parse as parseYAML } from "yaml";
 
 import { inngest } from "@/inngest/client";
 import {
@@ -29,7 +28,6 @@ import { Blob, Status } from "@prisma/client";
 import { PageMetadata } from "../types";
 import { resolveLink } from "@/lib/resolve-link";
 import { SiteWithUser } from "@/types";
-import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -59,12 +57,40 @@ export const siteRouter = createTRPCRouter({
             },
           });
         },
-        [`${input.ghUsername} - ${input.projectName} - metadata`],
+        [`${input.ghUsername}-${input.projectName}-site`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.ghUsername} - ${input.projectName} - metadata`],
+          tags: [`${input.ghUsername}-${input.projectName}-site`],
         },
       )();
+    }),
+  getByDomain: publicProcedure
+    .input(z.object({ domain: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findFirst({
+        where: {
+          customDomain: input.domain,
+        },
+        include: {
+          user: {
+            select: {
+              ghUsername: true,
+            },
+          },
+        },
+      });
+
+      if (!site || !site.user) {
+        return null;
+      }
+
+      return await unstable_cache(async () => site, [`${input.domain}-site`], {
+        revalidate: 60, // 1 minute
+        tags: [
+          `${input.domain}-site`,
+          `${site.user.ghUsername}-${site.projectName}-site`,
+        ],
+      })();
     }),
   getById: publicProcedure
     .input(z.object({ id: z.string().min(1) }))
@@ -77,32 +103,8 @@ export const siteRouter = createTRPCRouter({
         },
       })) as SiteWithUser;
     }),
-  getByDomain: publicProcedure
-    .input(z.object({ domain: z.string().min(1) }))
-    .query(async ({ ctx, input }) => {
-      return await unstable_cache(
-        async () => {
-          return ctx.db.site.findFirst({
-            where: {
-              customDomain: input.domain,
-            },
-            include: {
-              user: {
-                select: {
-                  ghUsername: true,
-                },
-              },
-            },
-          });
-        },
-        [`${input.domain} - site - metadata`],
-        {
-          revalidate: 60, // 1 minute
-          tags: [`${input.domain} - site - metadata`],
-        },
-      )();
-    }),
   getAll: protectedProcedure.query(async ({ ctx }) => {
+    // don't cache this, it's used in the admin panel
     if (ctx.session.user.role !== "ADMIN") {
       throw new Error("Unauthorized");
     }
@@ -330,19 +332,13 @@ export const siteRouter = createTRPCRouter({
         }
       }
 
-      // revalidate the site metadata
-      revalidateTag(`${site?.user?.ghUsername}-${site?.projectName}-metadata`);
-
-      if (key === "ghBranch") {
-        // revalidate the site's permalinks
-        revalidateTag(
-          `${site?.user?.ghUsername}-${site?.projectName}-permalinks`,
-        );
-        // revalidate all the pages' content
-        revalidateTag(
-          `${site?.user?.ghUsername}-${site?.projectName}-page-content`,
-        );
-      }
+      revalidateTag(`${site?.user?.ghUsername}-${site?.projectName}-site`);
+      revalidateTag(
+        `${site?.user?.ghUsername}-${site?.projectName}-permalinks`,
+      );
+      revalidateTag(
+        `${site?.user?.ghUsername}-${site?.projectName}-blob-content`,
+      );
       return result;
     }),
   delete: protectedProcedure
@@ -539,10 +535,10 @@ export const siteRouter = createTRPCRouter({
             return null;
           }
         },
-        [`${input.ghUsername} - ${input.projectName} - customStyles`],
+        [`${input.ghUsername}-${input.projectName}-css`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.ghUsername} - ${input.projectName} - customStyles`],
+          tags: [`${input.ghUsername}-${input.projectName}-css`],
         },
       )();
     }),
@@ -585,10 +581,10 @@ export const siteRouter = createTRPCRouter({
             return null;
           }
         },
-        [`${input.ghUsername} - ${input.projectName} - customStyles`],
+        [`${input.ghUsername}-${input.projectName}-config`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.ghUsername} - ${input.projectName} - customStyles`],
+          tags: [`${input.ghUsername}-${input.projectName}-config`],
         },
       )();
     }),
@@ -703,68 +699,77 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const site = await ctx.db.site.findFirst({
-        where: {
-          AND: [{ id: input.siteId }],
-        },
-        select: {
-          id: true,
-          user: true,
-          customDomain: true,
-          projectName: true,
-        },
-      });
-
-      if (!site) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Site not found",
-        });
-      }
-
-      const dir = input.dir.replace(/^\//, "");
-      const dirReadmePath = dir + "/README.md";
-      const dirIndexPath = dir + "/index.md";
-
-      const blobs = await ctx.db.$queryRaw<Blob[]>`
-          SELECT "path", "app_path", "metadata"
-          FROM "Blob"
-          WHERE "site_id" = ${site.id}
-            AND "path" LIKE ${dir + "%"}
-            AND "path" NOT IN (${dirReadmePath}, ${dirIndexPath})
-            AND "extension" IN ('md', 'mdx')
-          ORDER BY
-            ("metadata"->>'date')::timestamp DESC NULLS LAST,
-            "metadata"->>'title' ASC NULLS LAST
-      `;
-
-      const rawFilePermalinkBase = site.customDomain
-        ? `/_r/-`
-        : resolveSiteAlias(
-            `/@${site.user!.ghUsername}/${site.projectName}`,
-            "to",
-          ) + `/_r/-`;
-
-      const items = blobs.map((b) => {
-        const metadata = b.metadata as unknown as PageMetadata;
-
-        if (metadata.image) {
-          metadata.image = resolveLink({
-            link: metadata.image,
-            filePath: b.path,
-            prefixPath: rawFilePermalinkBase,
+      return await unstable_cache(
+        async () => {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              AND: [{ id: input.siteId }],
+            },
+            select: {
+              id: true,
+              user: true,
+              customDomain: true,
+              projectName: true,
+            },
           });
-        }
 
-        return {
-          _url: b.appPath,
-          metadata,
-        };
-      });
+          if (!site) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
+          }
 
-      return {
-        items,
-      };
+          const dir = input.dir.replace(/^\//, "");
+          const dirReadmePath = dir + "/README.md";
+          const dirIndexPath = dir + "/index.md";
+
+          const blobs = await ctx.db.$queryRaw<Blob[]>`
+              SELECT "path", "app_path", "metadata"
+              FROM "Blob"
+              WHERE "site_id" = ${site.id}
+                AND "path" LIKE ${dir + "%"}
+                AND "path" NOT IN (${dirReadmePath}, ${dirIndexPath})
+                AND "extension" IN ('md', 'mdx')
+              ORDER BY
+                ("metadata"->>'date')::timestamp DESC NULLS LAST,
+                "metadata"->>'title' ASC NULLS LAST
+          `;
+
+          const rawFilePermalinkBase = site.customDomain
+            ? `/_r/-`
+            : resolveSiteAlias(
+                `/@${site.user!.ghUsername}/${site.projectName}`,
+                "to",
+              ) + `/_r/-`;
+
+          const items = blobs.map((b) => {
+            const metadata = b.metadata as unknown as PageMetadata;
+
+            if (metadata.image) {
+              metadata.image = resolveLink({
+                link: metadata.image,
+                filePath: b.path,
+                prefixPath: rawFilePermalinkBase,
+              });
+            }
+
+            return {
+              _url: b.appPath,
+              metadata,
+            };
+          });
+
+          return {
+            items,
+          };
+        },
+        [`${input.siteId}-${input.dir}-catalog`],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.siteId}-catalog`],
+        },
+      )();
     }),
   getBlob: publicProcedure
     .input(
@@ -794,10 +799,10 @@ export const siteRouter = createTRPCRouter({
 
           return blob;
         },
-        [`${input.siteId}-${input.slug}-meta`],
+        [`${input.siteId}-${input.slug}-blob`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.siteId}-${input.slug}-meta`],
+          tags: [`${input.siteId}-${input.slug}-blob`],
         },
       )();
     }),
@@ -838,10 +843,10 @@ export const siteRouter = createTRPCRouter({
 
           return { content, blob };
         },
-        [`${input.siteId}-${input.slug}-content`],
+        [`${input.siteId}-${input.slug}-blob-content`],
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.siteId}-${input.slug}-content`],
+          tags: [`${input.siteId}-${input.slug}-blob-content`],
         },
       )();
     }),
@@ -864,52 +869,64 @@ export const siteRouter = createTRPCRouter({
           avatar?: string;
         }>
       > => {
-        const site = await ctx.db.site.findUnique({
-          where: { id: input.siteId },
-          select: {
-            user: true,
-            projectName: true,
-            customDomain: true,
+        return await unstable_cache(
+          async () => {
+            const site = await ctx.db.site.findUnique({
+              where: { id: input.siteId },
+              select: {
+                user: true,
+                projectName: true,
+                customDomain: true,
+              },
+            });
+
+            if (!site) {
+              throw new TRPCError({
+                code: "NOT_FOUND",
+                message: "Site not found",
+              });
+            }
+
+            const authorsPromises = input.authors.map(async (author) => {
+              const blob = await ctx.db.blob.findFirst({
+                where: {
+                  siteId: input.siteId,
+                  OR: [
+                    { path: { endsWith: author + ".md" } },
+                    { path: { endsWith: author + ".mdx" } },
+                  ],
+                },
+              });
+
+              const metadata = blob?.metadata as
+                | PageMetadata
+                | null
+                | undefined;
+
+              const url = !blob?.appPath
+                ? null
+                : site.customDomain
+                  ? `/${blob.appPath}`
+                  : `/@${site.user!.ghUsername}/${site.projectName}/${
+                      blob.appPath
+                    }`;
+
+              return {
+                key: author,
+                name: metadata?.title ?? author,
+                avatar: metadata?.avatar,
+                url,
+              };
+            });
+
+            return await Promise.all(authorsPromises);
           },
-        });
-
-        if (!site) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Site not found",
-          });
-        }
-
-        const authorsPromises = input.authors.map(async (author) => {
-          const blob = await ctx.db.blob.findFirst({
-            where: {
-              siteId: input.siteId,
-              OR: [
-                { path: { endsWith: author + ".md" } },
-                { path: { endsWith: author + ".mdx" } },
-              ],
-            },
-          });
-
-          const metadata = blob?.metadata as PageMetadata | null | undefined;
-
-          const url = !blob?.appPath
-            ? null
-            : site.customDomain
-              ? `/${blob.appPath}`
-              : `/@${site.user!.ghUsername}/${site.projectName}/${
-                  blob.appPath
-                }`;
-
-          return {
-            key: author,
-            name: metadata?.title ?? author,
-            avatar: metadata?.avatar,
-            url,
-          };
-        });
-
-        return await Promise.all(authorsPromises);
+          [`${input.siteId}-authors-${input.authors.join("-")}`],
+          {
+            revalidate: 60, // 1 minute
+            tags: [`${input.siteId}-authors`],
+          },
+        )();
       },
     ),
 });
