@@ -1,7 +1,7 @@
 import mdxMermaid from "mdx-mermaid";
 import { h } from "hastscript";
 import remarkCallout from "@r4ai/remark-callout";
-import remarkEmbed from "@/lib/remark-embed";
+import remarkYouTubeAutoEmbed from "@/lib/remark-youtube-auto-embed";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkSmartypants from "remark-smartypants";
@@ -24,7 +24,7 @@ export const getMdxOptions = ({
     mdxOptions: {
       remarkPlugins: [
         [remarkWikiLink, { permalinks, pathFormat: "obsidian-short" }],
-        remarkEmbed,
+        remarkYouTubeAutoEmbed,
         remarkGfm,
         [remarkSmartypants, { quotes: false, dashes: "oldschool" }],
         remarkMath,

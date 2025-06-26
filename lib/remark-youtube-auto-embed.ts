@@ -1,6 +1,6 @@
 import { visit } from "unist-util-visit";
 
-function remarkEmbed() {
+function remarkYouTubeEmbed() {
   return (tree: any) => {
     visit(tree, "paragraph", (node) => {
       if (node.children.length !== 1) return;
@@ -59,4 +59,4 @@ function remarkEmbed() {
   };
 }
 
-export default remarkEmbed;
+export default remarkYouTubeEmbed;
