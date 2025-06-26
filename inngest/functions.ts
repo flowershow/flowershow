@@ -1,6 +1,5 @@
 import { inngest } from "./client";
 import prisma from "@/server/db";
-import { normalizeDir } from "@/lib/utils";
 import { deleteFile, deleteProject, uploadFile } from "@/lib/content-store";
 import {
   createSiteCollection,
@@ -105,8 +104,6 @@ export const syncSite = inngest.createFunction(
     const normalizedRootDir = rootDir
       ? rootDir.replace(/^(.?\/)+|\/+$/g, "") + "/"
       : "";
-
-    console.log({ normalizedRootDir });
 
     const fileBatchesToUpsert = await step.run(
       "get-file-batches-to-upsert",

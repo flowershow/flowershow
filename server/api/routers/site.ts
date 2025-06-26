@@ -727,9 +727,9 @@ export const siteRouter = createTRPCRouter({
       const dirIndexPath = dir + "/index.md";
 
       const blobs = await ctx.db.$queryRaw<Blob[]>`
-          SELECT "path", "appPath", "metadata"
+          SELECT "path", "app_path", "metadata"
           FROM "Blob"
-          WHERE "siteId" = ${site.id}
+          WHERE "site_id" = ${site.id}
             AND "path" LIKE ${dir + "%"}
             AND "path" NOT IN (${dirReadmePath}, ${dirIndexPath})
             AND "extension" IN ('md', 'mdx')
