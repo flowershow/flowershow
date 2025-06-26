@@ -698,7 +698,9 @@ export const siteRouter = createTRPCRouter({
           const dirReadmePath = dir + "/README.md";
           const dirIndexPath = dir + "/index.md";
 
-          const blobs = await ctx.db.$queryRaw<Blob[]>`
+          const blobs = await ctx.db.$queryRaw<
+            { path: string; app_path: string; metadata: PageMetadata }[]
+          >`
               SELECT "path", "app_path", "metadata"
               FROM "Blob"
               WHERE "site_id" = ${site.id}
@@ -718,7 +720,7 @@ export const siteRouter = createTRPCRouter({
               ) + `/_r/-`;
 
           const items = blobs.map((b) => {
-            const metadata = b.metadata as unknown as PageMetadata;
+            const metadata = b.metadata;
 
             if (metadata.image) {
               metadata.image = resolveLink({
@@ -729,7 +731,7 @@ export const siteRouter = createTRPCRouter({
             }
 
             return {
-              _url: b.appPath,
+              _url: b.app_path,
               metadata,
             };
           });
