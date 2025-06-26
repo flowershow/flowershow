@@ -310,15 +310,10 @@ export const syncSite = inngest.createFunction(
       }),
     );
 
+    // NOTE: this won't fully work (e.g. for getBlob) as part of the metadata is being updated in the db later, by the Cloudflare worker
+    // still works for most site related cached data
     await step.run("revalidate-tags", async () => {
-      revalidateTag(`${site!.user?.ghUsername}-${site!.projectName}-site`);
-      revalidateTag(
-        `${site!.user?.ghUsername}-${site!.projectName}-permalinks`,
-      );
-      revalidateTag(`${site?.user?.ghUsername}-${site?.projectName}-tree`);
-      revalidateTag(
-        `${site!.user?.ghUsername}-${site!.projectName}-blob-content`,
-      );
+      revalidateTag(`${site.id}`);
     });
   },
 );

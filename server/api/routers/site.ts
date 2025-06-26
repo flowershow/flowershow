@@ -40,7 +40,7 @@ export const siteRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       return await unstable_cache(
-        async () => {
+        async (input) => {
           return ctx.db.site.findFirst({
             where: {
               AND: [
@@ -57,40 +57,39 @@ export const siteRouter = createTRPCRouter({
             },
           });
         },
-        [`${input.ghUsername}-${input.projectName}-site`],
+        undefined,
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.ghUsername}-${input.projectName}-site`],
+          tags: [
+            `${input.ghUsername}-${input.projectName}`,
+            `${input.ghUsername}-${input.projectName}-site`,
+          ],
         },
-      )();
+      )(input);
     }),
   getByDomain: publicProcedure
     .input(z.object({ domain: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const site = await ctx.db.site.findFirst({
-        where: {
-          customDomain: input.domain,
-        },
-        include: {
-          user: {
-            select: {
-              ghUsername: true,
+      return await unstable_cache(
+        async (input) => {
+          return await ctx.db.site.findFirst({
+            where: {
+              customDomain: input.domain,
             },
-          },
+            include: {
+              user: {
+                select: {
+                  ghUsername: true,
+                },
+              },
+            },
+          });
         },
-      });
-
-      if (!site || !site.user) {
-        return null;
-      }
-
-      return await unstable_cache(async () => site, [`${input.domain}-site`], {
-        revalidate: 60, // 1 minute
-        tags: [
-          `${input.domain}-site`,
-          `${site.user.ghUsername}-${site.projectName}-site`,
-        ],
-      })();
+        undefined,
+        {
+          revalidate: 60, // 1 minute
+        },
+      )(input);
     }),
   getById: publicProcedure
     .input(z.object({ id: z.string().min(1) }))
@@ -332,13 +331,7 @@ export const siteRouter = createTRPCRouter({
         }
       }
 
-      revalidateTag(`${site?.user?.ghUsername}-${site?.projectName}-site`);
-      revalidateTag(
-        `${site?.user?.ghUsername}-${site?.projectName}-permalinks`,
-      );
-      revalidateTag(
-        `${site?.user?.ghUsername}-${site?.projectName}-blob-content`,
-      );
+      revalidateTag(`${site.id}`);
       return result;
     }),
   delete: protectedProcedure
@@ -502,19 +495,16 @@ export const siteRouter = createTRPCRouter({
   getCustomStyles: publicProcedure
     .input(
       z.object({
-        ghUsername: z.string().min(1),
-        projectName: z.string().min(1),
+        siteId: z.string().min(1),
       }),
     )
     .query(async ({ ctx, input }) => {
       return await unstable_cache(
-        async () => {
-          const site = await ctx.db.site.findFirst({
-            where: {
-              AND: [
-                { projectName: input.projectName },
-                { user: { ghUsername: input.ghUsername } },
-              ],
+        async (input) => {
+          const site = await ctx.db.site.findUnique({
+            where: { id: input.siteId },
+            include: {
+              user: true,
             },
           });
 
@@ -535,31 +525,25 @@ export const siteRouter = createTRPCRouter({
             return null;
           }
         },
-        [`${input.ghUsername}-${input.projectName}-css`],
+        undefined,
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.ghUsername}-${input.projectName}-css`],
+          tags: [`${input.siteId}`, `${input.siteId}-css`],
         },
-      )();
+      )(input);
     }),
 
   getConfig: publicProcedure
     .input(
       z.object({
-        ghUsername: z.string().min(1),
-        projectName: z.string().min(1),
+        siteId: z.string().min(1),
       }),
     )
     .query(async ({ ctx, input }) => {
       return await unstable_cache(
-        async () => {
-          const site = await ctx.db.site.findFirst({
-            where: {
-              AND: [
-                { projectName: input.projectName },
-                { user: { ghUsername: input.ghUsername } },
-              ],
-            },
+        async (input) => {
+          const site = await ctx.db.site.findUnique({
+            where: { id: input.siteId },
           });
 
           if (!site) {
@@ -581,30 +565,27 @@ export const siteRouter = createTRPCRouter({
             return null;
           }
         },
-        [`${input.ghUsername}-${input.projectName}-config`],
+        undefined,
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.ghUsername}-${input.projectName}-config`],
+          tags: [`${input.siteId}`, `${input.siteId}-config`],
         },
-      )();
+      )(input);
     }),
 
   getSiteMap: publicProcedure
     .input(
       z.object({
-        ghUsername: z.string().min(1),
-        projectName: z.string().min(1),
+        siteId: z.string().min(1),
       }),
     )
     .query(async ({ ctx, input }) => {
       return await unstable_cache(
-        async () => {
-          const site = await ctx.db.site.findFirst({
-            where: {
-              AND: [
-                { projectName: input.projectName },
-                { user: { ghUsername: input.ghUsername } },
-              ],
+        async (input) => {
+          const site = await ctx.db.site.findUnique({
+            where: { id: input.siteId },
+            include: {
+              user: true,
             },
           });
 
@@ -615,12 +596,12 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          const { ghUsername, projectName } = input;
-          const { customDomain } = site;
-
-          const prefix = customDomain
+          const prefix = site.customDomain
             ? ""
-            : resolveSiteAlias(`/@${ghUsername}/${projectName}`, "to");
+            : resolveSiteAlias(
+                `/@${site.user!.ghUsername}/${site.projectName}`,
+                "to",
+              );
 
           // Get all blobs for the site
           const blobs = (await ctx.db.blob.findMany({
@@ -639,31 +620,25 @@ export const siteRouter = createTRPCRouter({
 
           return buildSiteMapFromSiteBlobs(blobs, prefix);
         },
-        [`${input.ghUsername}-${input.projectName}-tree`],
+        undefined,
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.ghUsername}-${input.projectName}-tree`],
+          tags: [`${input.siteId}`, `${input.siteId}-sitemap`],
         },
-      )();
+      )(input);
     }),
 
   getPermalinks: publicProcedure
     .input(
       z.object({
-        ghUsername: z.string().min(1),
-        projectName: z.string().min(1),
+        siteId: z.string().min(1),
       }),
     )
     .query(async ({ ctx, input }) => {
       return await unstable_cache(
-        async () => {
-          const site = await ctx.db.site.findFirst({
-            where: {
-              AND: [
-                { projectName: input.projectName },
-                { user: { ghUsername: input.ghUsername } },
-              ],
-            },
+        async (input) => {
+          const site = await ctx.db.site.findUnique({
+            where: { id: input.siteId },
           });
 
           if (!site) {
@@ -684,12 +659,12 @@ export const siteRouter = createTRPCRouter({
 
           return blobs.map((blob) => "/" + blob.path.replace(/\.mdx?$/, ""));
         },
-        [`${input.ghUsername}-${input.projectName}-permalinks`],
+        undefined,
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.ghUsername}-${input.projectName}-permalinks`],
+          tags: [`${input.siteId}`, `${input.siteId}-permalinks`],
         },
-      )();
+      )(input);
     }),
   getCatalogFiles: publicProcedure
     .input(
@@ -699,27 +674,26 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findFirst({
+        where: {
+          AND: [{ id: input.siteId }],
+        },
+        select: {
+          id: true,
+          user: true,
+          customDomain: true,
+          projectName: true,
+        },
+      });
+
+      if (!site) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Site not found",
+        });
+      }
       return await unstable_cache(
-        async () => {
-          const site = await ctx.db.site.findFirst({
-            where: {
-              AND: [{ id: input.siteId }],
-            },
-            select: {
-              id: true,
-              user: true,
-              customDomain: true,
-              projectName: true,
-            },
-          });
-
-          if (!site) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
-            });
-          }
-
+        async (input) => {
           const dir = input.dir.replace(/^\//, "");
           const dirReadmePath = dir + "/README.md";
           const dirIndexPath = dir + "/index.md";
@@ -764,12 +738,12 @@ export const siteRouter = createTRPCRouter({
             items,
           };
         },
-        [`${input.siteId}-${input.dir}-catalog`],
+        undefined,
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.siteId}-catalog`],
+          tags: [`${site.id}`, `${site.id}-${input.dir}-catalog`],
         },
-      )();
+      )(input);
     }),
   getBlob: publicProcedure
     .input(
@@ -780,7 +754,7 @@ export const siteRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       return await unstable_cache(
-        async () => {
+        async (input) => {
           const blob = await ctx.db.blob.findUnique({
             where: {
               siteId_appPath: {
@@ -799,12 +773,12 @@ export const siteRouter = createTRPCRouter({
 
           return blob;
         },
-        [`${input.siteId}-${input.slug}-blob`],
+        undefined,
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.siteId}-${input.slug}-blob`],
+          tags: [`${input.siteId}`, `${input.siteId}-${input.slug}`],
         },
-      )();
+      )(input);
     }),
   getBlobWithContent: publicProcedure
     .input(
@@ -815,7 +789,7 @@ export const siteRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       return await unstable_cache(
-        async () => {
+        async (input) => {
           const blob = await ctx.db.blob.findUnique({
             where: {
               siteId_appPath: {
@@ -843,12 +817,12 @@ export const siteRouter = createTRPCRouter({
 
           return { content, blob };
         },
-        [`${input.siteId}-${input.slug}-blob-content`],
+        undefined,
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.siteId}-${input.slug}-blob-content`],
+          tags: [`${input.siteId}`, `${input.siteId}-${input.slug}`],
         },
-      )();
+      )(input);
     }),
   getAuthors: publicProcedure
     .input(
@@ -870,7 +844,7 @@ export const siteRouter = createTRPCRouter({
         }>
       > => {
         return await unstable_cache(
-          async () => {
+          async (input) => {
             const site = await ctx.db.site.findUnique({
               where: { id: input.siteId },
               select: {
@@ -921,12 +895,12 @@ export const siteRouter = createTRPCRouter({
 
             return await Promise.all(authorsPromises);
           },
-          [`${input.siteId}-authors-${input.authors.join("-")}`],
+          undefined,
           {
-            revalidate: 60, // 1 minute
-            tags: [`${input.siteId}-authors`],
+            revalidate: 60,
+            tags: [`${input.siteId}`, `${input.siteId}-authors`],
           },
-        )();
+        )(input);
       },
     ),
 });

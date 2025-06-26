@@ -55,8 +55,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
 
   const siteConfig = await api.site.getConfig
     .query({
-      ghUsername: site.user!.ghUsername!,
-      projectName: site.projectName,
+      siteId: site.id,
     })
     .catch(() => null);
 
@@ -170,15 +169,13 @@ export default async function SitePage({ params }: { params: RouteParams }) {
 
   const siteConfig = await api.site.getConfig
     .query({
-      ghUsername: site.user!.ghUsername!,
-      projectName: site.projectName,
+      siteId: site.id,
     })
     .catch(() => null);
 
   const sitePermalinks = await api.site.getPermalinks
     .query({
-      ghUsername: site.user?.ghUsername!,
-      projectName: site.projectName,
+      siteId: site.id,
     })
     .catch(() => {
       notFound();

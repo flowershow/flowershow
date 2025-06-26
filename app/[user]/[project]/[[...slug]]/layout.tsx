@@ -48,15 +48,13 @@ export default async function Layout({
 
   const customCss = await api.site.getCustomStyles
     .query({
-      ghUsername: site.user!.ghUsername!,
-      projectName: site.projectName,
+      siteId: site.id,
     })
     .catch(() => null);
 
   const siteConfig = await api.site.getConfig
     .query({
-      ghUsername: site.user!.ghUsername!,
-      projectName: site.projectName,
+      siteId: site.id,
     })
     .catch(() => null);
 
@@ -65,8 +63,7 @@ export default async function Layout({
   if (siteConfig?.showSidebar) {
     siteMap = await api.site.getSiteMap
       .query({
-        ghUsername: site.user!.ghUsername!,
-        projectName: site.projectName,
+        siteId: site.id,
       })
       .catch(() => []);
   }
