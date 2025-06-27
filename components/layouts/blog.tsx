@@ -28,7 +28,7 @@ export const BlogLayout: React.FC<Props> = ({
   return (
     <article>
       {!showHero && (
-        <header className="mb-8 space-y-6" data-testid="blog-header">
+        <header className="mb-8 space-y-6 font-inter" data-testid="blog-header">
           <div className="space-y-2">
             {date && formattedDate && (
               <div className="font-light text-primary/70">
@@ -116,7 +116,7 @@ export const BlogLayout: React.FC<Props> = ({
           <div className="border-b pb-4" />
         </header>
       )}
-      <section className="prose max-w-none font-body font-normal text-primary dark:prose-invert prose-headings:font-title prose-headings:tracking-tight prose-headings:text-primary-strong prose-a:break-words">
+      <section className="prose max-w-none font-lora font-normal text-primary dark:prose-invert prose-headings:font-inter prose-headings:tracking-tight prose-headings:text-primary-strong prose-a:break-words">
         {children}
       </section>
     </article>

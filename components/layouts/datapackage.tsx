@@ -78,7 +78,7 @@
 
 //   return (
 //     <>
-//       <article className="lg:prose-md prose max-w-none dark:prose-invert prose-headings:font-title prose-headings:font-medium prose-a:break-words">
+//       <article className="lg:prose-md prose max-w-none dark:prose-invert prose-headings:font-medium prose-a:break-words">
 //         <header className="mb-8 flex flex-col gap-y-5">
 //           <h1 className="mb-2">{title}</h1>
 //           {isPremiumDataset && (

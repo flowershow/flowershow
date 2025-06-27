@@ -77,8 +77,14 @@ export default function SiteMap({
   level?: number;
 }) {
   return (
-    <nav className="font-title text-sm font-normal text-primary-subtle">
-      <TreeView items={items} level={level} />
-    </nav>
+    <div
+      id="sidebar"
+      className="text-sm text-primary-subtle"
+      data-testid="sidebar"
+    >
+      <nav>
+        <TreeView items={items} level={level} />
+      </nav>
+    </div>
   );
 }

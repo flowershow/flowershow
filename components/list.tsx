@@ -90,7 +90,7 @@ export default function List({
   const totalPages = Math.ceil(data.items.length / pageSize);
 
   return (
-    <div ref={listRef} className="not-prose font-title lg:divide-y">
+    <div ref={listRef} className="not-prose lg:divide-y">
       {paginatedItems.map(({ _url, metadata }) => (
         <article
           key={_url}

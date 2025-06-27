@@ -16,7 +16,7 @@ export default function ObsidianQuickstart() {
       </div> */}
 
       <div className="flex items-center justify-between">
-        <h1 className="font-cal text-3xl font-bold dark:text-white">
+        <h1 className="font-calle-dashboard text-3xl font-bold dark:text-white">
           Publish a Demo Site
         </h1>
       </div>

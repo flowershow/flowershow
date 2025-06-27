@@ -1,6 +1,6 @@
 export default function DashboardNav() {
   return (
-    <footer className="bg-background" aria-labelledby="footer-heading">
+    <footer aria-labelledby="footer-heading">
       <p id="footer-heading" className="sr-only">
         Footer
       </p>

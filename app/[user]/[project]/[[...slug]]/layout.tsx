@@ -132,7 +132,7 @@ export default async function Layout({
       {/* Inject this dynamically only if needed on a user page */}
       <Script async src="https://tally.so/widgets/embed.js" />
 
-      <div className="flex w-full flex-col">
+      <div className="flex w-full flex-col bg-inherit">
         <Nav
           logo={logo}
           url={url}
@@ -159,7 +159,7 @@ export default async function Layout({
             >
               <div className="pb-16 pt-10 sm:pb-20 lg:col-span-6 lg:px-0 lg:pb-32 lg:pt-28 xl:col-span-6">
                 <div className="mx-auto px-8 sm:px-10 lg:mx-0 lg:px-12">
-                  <h1 className="text-pretty mt-24 font-title text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl">
+                  <h1 className="text-pretty mt-24 text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl">
                     {metadata.title}
                   </h1>
                   <p className="text-pretty mt-8 text-lg font-medium text-primary sm:text-xl/8">

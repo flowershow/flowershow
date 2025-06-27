@@ -24,9 +24,9 @@ function TableOfContentsSection({
       <a
         href={`#${section.id}`}
         className={clsx(
-          "block text-sm hover:font-medium hover:text-primary-strong",
+          "block hover:font-medium hover:text-primary-emphasis",
           level && `pl-${(level * 4).toString()}`,
-          isActive ? "text-primary-emphasis" : "font-light",
+          isActive && "text-primary-emphasis",
         )}
       >
         {section.title}
@@ -68,11 +68,9 @@ export default function TableOfContents({
   }
 
   return (
-    <div data-testid="toc">
-      <h3 className="mb-4 text-xs font-normal uppercase tracking-wider">
-        On this page
-      </h3>
-      <nav>
+    <div id="toc" className="text-sm" data-testid="toc">
+      <h3 className="mb-4 uppercase tracking-wider">On this page</h3>
+      <nav className="font-light">
         <ul>
           {tableOfContents.map((section) => (
             <TableOfContentsSection

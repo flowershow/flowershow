@@ -132,8 +132,8 @@ module.exports = {
         30: "7.5rem",
       },
       fontFamily: {
-        title: ["var(--font-title)", ...fontFamily.sans],
-        body: ["var(--font-body)", ...fontFamily.serif],
+        lora: ["var(--font-lora)", ...fontFamily.serif],
+        inter: ["var(--font-inter)", ...fontFamily.sans],
         cal: ["var(--font-cal)", ...fontFamily.sans],
         mono: ["Consolas", ...fontFamily.mono],
       },

@@ -69,9 +69,10 @@ const Nav = ({
     <Disclosure>
       {({ open, close }) => (
         <div
+          id="navbar"
           data-testid="navbar"
           className={clsx(
-            "z-10 bg-background font-title text-base font-normal",
+            "z-10 bg-inherit text-base font-normal",
             isScrolled && "shadow-sm",
             open ? "fixed inset-0 md:sticky" : "sticky top-0",
           )}
