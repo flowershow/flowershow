@@ -1,47 +1,56 @@
 "use client";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { getConfig } from "@/lib/app-config";
 
 const config = getConfig();
 
-export default function BuiltWithFloatingButton() {
-  const [rightPosition, setRightPosition] = useState<any>({
-    right: 32,
-  });
+const buttonStyles = {
+  position: "fixed !important" as any,
+  bottom: "16px !important",
+  right: "32px !important",
+  zIndex: "100 !important",
+  display: "flex !important",
+  alignItems: "center !important",
+  backgroundColor: "white !important",
+  padding: "0.5rem 0.75rem !important",
+  borderRadius: "40px !important",
+  fontSize: "0.875rem !important",
+  fontWeight: "500 !important",
+  fontFamily: "var(--font-inter)",
+  letterSpacing: "-0.025em !important",
+  boxShadow: "0 8px 20px 0 rgba(0,0,0,.08) !important",
+};
 
-  useEffect(() => {
-    const updatePosition = () => {
-      const container: HTMLElement | null =
-        document.querySelector(".page-content");
-      if (container) {
-        const containerWidth = container.offsetWidth;
-        const screenWidth = window.innerWidth;
-        const right =
-          screenWidth >= 1280 ? (screenWidth - containerWidth) / 2 - 92.5 : 32;
-        setRightPosition(`${right}px`);
+const logoStyles = {
+  margin: "0 0.5rem !important",
+};
+
+const mediaQuery = "@media (min-width: 640px)";
+if (typeof window !== "undefined") {
+  const styleSheet = document.createElement("style");
+  styleSheet.textContent = `
+    ${mediaQuery} {
+      [data-testid="built-with-button"] {
+        bottom: 32px !important;
       }
-    };
-    updatePosition();
-    window.addEventListener("resize", updatePosition);
-    return () => {
-      window.removeEventListener("resize", updatePosition);
-    };
-  }, []);
+    }
+  `;
+  document.head.appendChild(styleSheet);
+}
 
+export default function BuiltWithFloatingButton() {
   return (
     <Link
       data-testid="built-with-button"
       href={config.landingPageUrl}
-      className="z-100 text-md fixed bottom-[16px] right-[32px] flex items-center rounded-[40px] bg-white px-3 py-2 text-sm font-medium tracking-tight shadow-[0_8px_20px_0_rgba(0,0,0,.08)] sm:bottom-[32px] "
-      style={{ right: `${rightPosition}` }}
+      style={buttonStyles}
     >
       <span>Built with </span>
       <Image
         width={18}
         height={18}
-        className="mx-2"
+        style={logoStyles}
         src={config.logo}
         alt="Logo"
       />
