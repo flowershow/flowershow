@@ -93,7 +93,7 @@ const Nav = ({
                 {links && (
                   <div
                     data-testid="navbar-links"
-                    className="ml-6 hidden space-x-4 text-[0.95rem] font-medium tracking-tight lg:flex"
+                    className="hidden space-x-4 pl-2 text-[0.95rem] font-medium tracking-tight lg:flex"
                   >
                     {links.map((link) => (
                       <a
