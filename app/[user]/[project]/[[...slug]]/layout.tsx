@@ -148,7 +148,7 @@ export default async function Layout({
         />
 
         {showHero && (
-          <div className="relative bg-neutral-50">
+          <header className="relative bg-neutral-50">
             <div
               className={clsx(
                 "mx-auto",
@@ -205,7 +205,7 @@ export default async function Layout({
                 </div>
               )}
             </div>
-          </div>
+          </header>
         )}
 
         <div className="relative">
