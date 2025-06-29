@@ -18,6 +18,7 @@ const buttonStyles = {
   fontSize: "0.875rem !important",
   fontWeight: "500 !important",
   fontFamily: "var(--font-inter)",
+  color: "#18181B",
   letterSpacing: "-0.025em !important",
   boxShadow: "0 8px 20px 0 rgba(0,0,0,.08) !important",
 };
