@@ -1,3 +1,5 @@
+import { GiscusProps } from "@giscus/react";
+
 export interface NavLink {
   name: string;
   href: string;
@@ -39,6 +41,7 @@ export interface SiteConfig {
   showHero?: boolean;
   showEditLink?: boolean;
   showComments?: boolean;
+  giscus?: Partial<GiscusProps>;
   cta?: Array<{
     href: string;
     label: string;

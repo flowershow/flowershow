@@ -1,42 +1,45 @@
 "use client";
 
-import Giscus from "@giscus/react";
+import Giscus, { GiscusProps } from "@giscus/react";
 
-interface CommentsProps {
-  repo: string;
-  enabled: boolean;
-  repoId: string | null;
-  categoryId: string | null;
-}
+type CommentsProps = Partial<Omit<GiscusProps, "loading">>;
 
 export default function Comments({
   repo,
-  enabled,
   repoId,
+  host,
+  category = "Announcements",
   categoryId,
+  mapping = "url",
+  term,
+  theme = "light",
+  strict = "1",
+  reactionsEnabled = "1",
+  emitMetadata = "0",
+  inputPosition = "top",
+  lang = "en",
 }: CommentsProps) {
-  if (!enabled || !repoId || !categoryId) return null;
-
-  // Validate repo format (owner/repo)
-  const [owner, repoName] = repo.split("/");
-  if (!owner || !repoName) return null;
-
-  const validRepo = `${owner}/${repoName}` as const;
-
-  console.log(repoId, categoryId);
+  if (!repo || !repoId) {
+    return null;
+  }
 
   return (
     <div className="mt-10 w-full border-t pt-10">
       <Giscus
-        repo={validRepo}
+        id="comments"
+        repo={repo}
         repoId={repoId}
+        host={host}
+        category={category}
         categoryId={categoryId}
-        mapping="pathname"
-        reactionsEnabled="1"
-        emitMetadata="0"
-        inputPosition="top"
-        theme="light"
-        lang="en"
+        mapping={mapping}
+        term={term}
+        strict={strict}
+        reactionsEnabled={reactionsEnabled}
+        emitMetadata={emitMetadata}
+        inputPosition={inputPosition}
+        theme={theme}
+        lang={lang}
         loading="lazy"
       />
     </div>

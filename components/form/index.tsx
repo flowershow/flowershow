@@ -9,7 +9,6 @@ import { Switch } from "@headlessui/react";
 import DomainStatus from "./domain-status";
 import DomainConfiguration from "./domain-configuration";
 import Uploader from "./uploader";
-import { useSync } from "@/app/cloud/(dashboard)/site/[id]/sync-status-provider";
 import clsx from "clsx";
 import { ReactNode } from "react";
 

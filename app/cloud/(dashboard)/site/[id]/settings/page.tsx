@@ -6,7 +6,6 @@ import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 import { api } from "@/trpc/server";
 import { notFound } from "next/navigation";
 import { PLANS } from "@/lib/stripe";
-import Link from "next/link";
 import { ExternalLinkIcon } from "lucide-react";
 import { validDomainRegex } from "@/lib/domains";
 
@@ -166,8 +165,8 @@ export default async function SiteSettingsIndex({
                 name: "giscusRepoId",
                 type: "text",
                 defaultValue: site?.giscusRepoId || "",
-                required: true,
                 placeholder: "R_kgDOxxxxxx",
+                required: false,
               }}
               handleSubmit={updateSite}
             />
@@ -180,8 +179,8 @@ export default async function SiteSettingsIndex({
                 name: "giscusCategoryId",
                 type: "text",
                 defaultValue: site?.giscusCategoryId || "",
-                required: true,
                 placeholder: "DIC_kwDOxxxxxx",
+                required: false,
               }}
               handleSubmit={updateSite}
             />

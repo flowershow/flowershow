@@ -20,6 +20,7 @@ import { env } from "@/env.mjs";
 import UrlNormalizer from "./url-normalizer";
 import { getSite } from "./get-site";
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
+import { GiscusProps } from "@giscus/react";
 
 const config = getConfig();
 
@@ -235,6 +236,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   const showPageComments =
     site.enableComments &&
     (metadata.showComments ?? siteConfig?.showComments ?? site.enableComments);
+  const giscusConfig = siteConfig?.giscus;
 
   const Layout = async ({ children }) => {
     if (metadata.layout === "plain") {
@@ -282,10 +284,14 @@ export default async function SitePage({ params }: { params: RouteParams }) {
       )}
       {showPageComments && (
         <Comments
-          repo={site.ghRepository}
-          enabled={Boolean(site.enableComments)}
-          repoId={site.giscusRepoId}
-          categoryId={site.giscusCategoryId}
+          {...giscusConfig}
+          repo={
+            giscusConfig?.repo ?? (site.ghRepository as GiscusProps["repo"])
+          }
+          repoId={giscusConfig?.repoId ?? site.giscusCategoryId ?? undefined}
+          categoryId={
+            giscusConfig?.categoryId ?? site.giscusCategoryId ?? undefined
+          }
         />
       )}
     </>
