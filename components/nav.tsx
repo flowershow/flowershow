@@ -68,8 +68,7 @@ const Nav = ({
   return (
     <Disclosure>
       {({ open, close }) => (
-        <div
-          id="navbar"
+        <nav
           data-testid="navbar"
           className={clsx(
             "z-10 bg-inherit text-base font-normal",
@@ -77,9 +76,7 @@ const Nav = ({
             open ? "fixed inset-0 md:sticky" : "sticky top-0",
           )}
         >
-          <header
-            className={clsx("mx-auto px-4 text-sm", open && "sticky top-0")}
-          >
+          <div className={clsx("mx-auto px-4 text-sm", open && "sticky top-0")}>
             <div className="flex h-16 justify-between space-x-2">
               <div className="flex items-center space-x-2">
                 <Link
@@ -165,7 +162,7 @@ const Nav = ({
                 </div>
               )}
             </div>
-          </header>
+          </div>
 
           <DisclosurePanel
             as="nav"
@@ -218,7 +215,7 @@ const Nav = ({
               </div>
             )}
           </DisclosurePanel>
-        </div>
+        </nav>
       )}
     </Disclosure>
   );
