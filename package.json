@@ -59,6 +59,7 @@
     "hastscript": "^8.0.0",
     "inngest": "^3.19.14",
     "js-cookie": "^3.0.5",
+    "lottie-react": "^2.4.1",
     "lucide-react": "^0.453.0",
     "mdx-bundler": "^10.0.1",
     "mdx-mermaid": "^2.0.0",

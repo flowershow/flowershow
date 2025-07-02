@@ -2,7 +2,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useSelectedLayoutSegments } from "next/navigation";
-import { ReactNode, useMemo } from "react";
+import Cookies from "js-cookie";
+import { ReactNode, useEffect, useMemo } from "react";
 import { ExternalLinkIcon, HandshakeIcon } from "lucide-react";
 import {
   Disclosure,
@@ -19,6 +20,7 @@ import { useModal } from "./modal/provider";
 import FeedbackModal from "./modal/feedback";
 
 const config = getConfig();
+const FEEDBACK_DISMISSED_COOKIE = "feedback-dismissed";
 
 export default function Nav({ children }: { children: ReactNode }) {
   const modal = useModal();
@@ -45,6 +47,25 @@ export default function Nav({ children }: { children: ReactNode }) {
     return [];
   }, [segments, id]);
 
+  const { data: user, refetch } = api.user.getUser.useQuery(undefined, {
+    refetchInterval: 30000,
+  });
+
+  useEffect(() => {
+    // Check if user has submitted feedback before
+    const hasSubmittedFeedback =
+      user?.feedback || Cookies.get(FEEDBACK_DISMISSED_COOKIE);
+    const hasCreatedSite = Boolean(user?.sites.length);
+
+    if (!hasSubmittedFeedback && hasCreatedSite) {
+      const timer = setTimeout(() => {
+        modal?.show(<FeedbackModal onSubmit={refetch} />, false);
+      }, 20000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
+
   return (
     <Disclosure
       as="nav"
@@ -64,7 +85,14 @@ export default function Nav({ children }: { children: ReactNode }) {
                 alt={config.product}
               />
               {config.product === "flowershow" && (
-                <span className={cn(pages.length && "hidden")}>Flowershow</span>
+                <span
+                  className={cn(
+                    "ml-2 font-inter text-lg font-extrabold md:text-xl",
+                    pages.length && "hidden",
+                  )}
+                >
+                  Flowershow
+                </span>
               )}
             </Link>
             {pages.map((page) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import Cookies from "js-cookie";
 
@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import LoadingDots from "@/components/icons/loading-dots";
 import { api } from "@/trpc/react";
 import { useModal } from "@/components/modal/provider";
+import { useConfetti } from "@/components/confetti-provider";
 
 const FEEDBACK_COOKIE = "feedback-dismissed";
 
@@ -17,6 +18,7 @@ export default function FeedbackModal({ onSubmit }: { onSubmit?: () => void }) {
     rating: 5,
     feedback: "",
   });
+  const { showConfetti } = useConfetti();
 
   const { isLoading: isSubmitting, mutate: submitFeedback } =
     api.user.submitFeedback.useMutation({
@@ -25,7 +27,8 @@ export default function FeedbackModal({ onSubmit }: { onSubmit?: () => void }) {
         if (onSubmit) {
           onSubmit();
         }
-        toast.success("Thank you! 🎉");
+        toast.success("Thank you!");
+        showConfetti();
       },
       onError: (error) => {
         toast.error("Failed to submit feedback. Please try again.");
