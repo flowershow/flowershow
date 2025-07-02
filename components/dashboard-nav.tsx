@@ -46,53 +46,46 @@ export default function Nav({ children }: { children: ReactNode }) {
   }, [segments, id]);
 
   return (
-    <Disclosure as="nav" className="sticky top-0 z-50 bg-white shadow">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 justify-between">
-          <div className="flex">
-            <ol role="list" className="flex items-center space-x-2">
-              <li>
-                <Link href="/" className="flex items-center">
-                  <Image
-                    src={config.logo}
-                    width={24}
-                    height={24}
-                    alt={config.product}
-                  />
-                  {config.product === "flowershow" && (
-                    <span
-                      className={cn(
-                        "text-md ml-2 font-extrabold sm:text-xl",
-                        pages.length && "hidden",
-                      )}
-                    >
-                      Flowershow
-                    </span>
-                  )}
-                </Link>
-              </li>
-              {pages.map((page) => (
-                <li key={page.name}>
-                  <div className="flex items-center">
-                    <svg
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                      aria-hidden="true"
-                      className="h-6 w-6 shrink-0 text-gray-300"
-                    >
-                      <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
-                    </svg>
-                    <a
-                      href={page.href}
-                      aria-current={page.current ? "page" : undefined}
-                      className="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"
-                    >
-                      {page.name}
-                    </a>
-                  </div>
-                </li>
-              ))}
-            </ol>
+    <Disclosure
+      as="nav"
+      className="sticky top-0 z-50 bg-inherit text-base font-normal shadow"
+    >
+      <div className="mx-auto max-w-7xl px-4">
+        <div className="flex h-16 justify-between space-x-2">
+          <div className="flex items-center space-x-2">
+            <Link
+              href="/"
+              className="flex items-center space-x-3 text-lg font-semibold tracking-tight text-primary-strong md:text-xl"
+            >
+              <Image
+                src={config.logo}
+                width={32}
+                height={32}
+                alt={config.product}
+              />
+              {config.product === "flowershow" && (
+                <span className={cn(pages.length && "hidden")}>Flowershow</span>
+              )}
+            </Link>
+            {pages.map((page) => (
+              <div key={page.name} className="flex items-center">
+                <svg
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                  className="h-6 w-6 shrink-0 text-gray-300"
+                >
+                  <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+                </svg>
+                <a
+                  href={page.href}
+                  aria-current={page.current ? "page" : undefined}
+                  className="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"
+                >
+                  {page.name}
+                </a>
+              </div>
+            ))}
           </div>
           <div className="ml-6 flex items-center space-x-2">
             {config.product === "flowershow" && (
