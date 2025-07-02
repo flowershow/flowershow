@@ -50,18 +50,32 @@ export const userRouter = createTRPCRouter({
         select: { feedback: true },
       });
 
-      // Create new feedback entry with timestamp
-      const newFeedback = {
-        ...input,
-        timestamp: new Date().toISOString(),
-      };
-
       // Get existing feedback array or create new one
       const existingFeedback = user?.feedback
         ? Array.isArray(user.feedback)
           ? user.feedback
           : [user.feedback]
         : [];
+
+      // Check if user has submitted feedback in the last hour
+      const lastFeedback = existingFeedback[existingFeedback.length - 1];
+
+      if (lastFeedback) {
+        const lastSubmissionTime = new Date((lastFeedback as any).timestamp);
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+
+        if (lastSubmissionTime > fiveMinutesAgo) {
+          throw new Error(
+            "⏳ Please wait at least 5min between feedback submissions.",
+          );
+        }
+      }
+
+      // Create new feedback entry with timestamp
+      const newFeedback = {
+        ...input,
+        timestamp: new Date().toISOString(),
+      };
 
       // Update user with appended feedback
       await ctx.db.user.update({

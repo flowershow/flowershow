@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useParams, useSelectedLayoutSegments } from "next/navigation";
 import Cookies from "js-cookie";
 import { ReactNode, useEffect, useMemo } from "react";
-import { ExternalLinkIcon, HandshakeIcon } from "lucide-react";
+import { ExternalLinkIcon } from "lucide-react";
 import {
   Disclosure,
   Menu,
@@ -59,7 +59,10 @@ export default function Nav({ children }: { children: ReactNode }) {
 
     if (!hasSubmittedFeedback && hasCreatedSite) {
       const timer = setTimeout(() => {
-        modal?.show(<FeedbackModal onSubmit={refetch} />, false);
+        modal?.show(
+          <FeedbackModal dismissable={true} onSubmit={refetch} />,
+          false,
+        );
       }, 20000);
 
       return () => clearTimeout(timer);

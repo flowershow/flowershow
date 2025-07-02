@@ -12,7 +12,13 @@ import { useConfetti } from "@/components/confetti-provider";
 
 const FEEDBACK_COOKIE = "feedback-dismissed";
 
-export default function FeedbackModal({ onSubmit }: { onSubmit?: () => void }) {
+export default function FeedbackModal({
+  onSubmit,
+  dismissable = false,
+}: {
+  onSubmit?: () => void;
+  dismissable?: boolean;
+}) {
   const modal = useModal();
   const [formData, setFormData] = useState({
     rating: 5,
@@ -30,8 +36,8 @@ export default function FeedbackModal({ onSubmit }: { onSubmit?: () => void }) {
         toast.success("Thank you!");
         showConfetti();
       },
-      onError: (error) => {
-        toast.error("Failed to submit feedback. Please try again.");
+      onError: (error: any) => {
+        toast.error(error.message);
       },
     });
 
@@ -51,7 +57,9 @@ export default function FeedbackModal({ onSubmit }: { onSubmit?: () => void }) {
   };
 
   const handleDismiss = () => {
-    Cookies.set(FEEDBACK_COOKIE, "true", { expires: 1 });
+    if (dismissable) {
+      Cookies.set(FEEDBACK_COOKIE, "true", { expires: 3 });
+    }
     modal?.hide();
   };
 
@@ -122,6 +130,7 @@ export default function FeedbackModal({ onSubmit }: { onSubmit?: () => void }) {
             onChange={handleChange}
             required
             rows={3}
+            minLength={5}
             className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
           />
         </div>
