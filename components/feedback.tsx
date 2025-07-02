@@ -10,22 +10,24 @@ const FEEDBACK_DISMISSED_COOKIE = "feedback-dismissed";
 
 export default function Feedback() {
   const modal = useModal();
-  const { data: user, refetch } = api.user.getUser.useQuery();
+  const { data: user, refetch } = api.user.getUser.useQuery(undefined, {
+    refetchInterval: 30000,
+  });
 
   useEffect(() => {
     // Check if user has submitted feedback before
     const hasSubmittedFeedback =
       user?.feedback || Cookies.get(FEEDBACK_DISMISSED_COOKIE);
-    const hasCreatedSite = !user?.sites.length;
+    const hasCreatedSite = Boolean(user?.sites.length);
 
     if (!hasSubmittedFeedback && hasCreatedSite) {
       const timer = setTimeout(() => {
         modal?.show(<FeedbackModal onSubmit={refetch} />, false);
-      }, 60000);
+      }, 20000);
 
       return () => clearTimeout(timer);
     }
-  });
+  }, [user]);
 
   return null; // This component doesn't render anything
 }

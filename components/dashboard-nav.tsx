@@ -110,7 +110,7 @@ export default function Nav({ children }: { children: ReactNode }) {
                   className="rounded-md bg-pink-50 px-2.5 py-1.5 text-sm font-semibold text-pink-600 shadow-sm hover:bg-pink-100"
                   onClick={() => modal?.show(<FeedbackModal />)}
                 >
-                  Leave feedback
+                  Send feedback
                 </button>
               </>
             )}
