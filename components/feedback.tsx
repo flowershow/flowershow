@@ -11,7 +11,7 @@ const FEEDBACK_DISMISSED_COOKIE = "feedback-dismissed";
 export default function Feedback() {
   const modal = useModal();
   const { data: user, refetch } = api.user.getUser.useQuery(undefined, {
-    refetchInterval: 30,
+    refetchInterval: 30000,
   });
 
   useEffect(() => {
