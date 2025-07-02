@@ -72,7 +72,7 @@ export default function Nav({ children }: { children: ReactNode }) {
   return (
     <Disclosure
       as="nav"
-      className="sticky top-0 z-50 bg-inherit text-base font-normal shadow"
+      className="sticky top-0 z-50 bg-white text-base font-normal shadow"
     >
       <div className="mx-auto max-w-7xl px-4">
         <div className="flex h-16 justify-between space-x-2">
