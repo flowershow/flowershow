@@ -15,10 +15,13 @@ import { getConfig } from "@/lib/app-config";
 import { signOut } from "next-auth/react";
 import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
+import { useModal } from "./modal/provider";
+import FeedbackModal from "./modal/feedback";
 
 const config = getConfig();
 
 export default function Nav({ children }: { children: ReactNode }) {
+  const modal = useModal();
   const segments = useSelectedLayoutSegments();
   const { id } = useParams() as { id: string };
 
@@ -91,16 +94,25 @@ export default function Nav({ children }: { children: ReactNode }) {
               ))}
             </ol>
           </div>
-          <div className="ml-6 flex items-center">
+          <div className="ml-6 flex items-center space-x-2">
             {config.product === "flowershow" && (
-              <Link
-                className="flex items-center text-sm hover:underline"
-                href="https://github.com/orgs/flowershow/discussions"
-                target="_blank"
-              >
-                <span>Feedback | Support</span>
-                <ExternalLinkIcon className="h-4" />
-              </Link>
+              <>
+                <Link
+                  className="flex items-center text-sm hover:underline"
+                  href="https://github.com/orgs/flowershow/discussions"
+                  target="_blank"
+                >
+                  <span>Support</span>
+                  <ExternalLinkIcon className="h-4" />
+                </Link>
+                <button
+                  type="button"
+                  className="rounded-md bg-pink-50 px-2.5 py-1.5 text-sm font-semibold text-pink-600 shadow-sm hover:bg-pink-100"
+                  onClick={() => modal?.show(<FeedbackModal />)}
+                >
+                  Leave feedback
+                </button>
+              </>
             )}
             {/* Profile dropdown */}
             <Menu as="div" className="relative ml-3">

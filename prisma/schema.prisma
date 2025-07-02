@@ -28,6 +28,7 @@ model User {
   role          Role      @default(USER)
   createdAt     DateTime  @default(now()) @map("created_at")
   updatedAt     DateTime  @updatedAt @map("updated_at")
+  feedback      Json?     @db.JsonB // Store feedback data including submission status and content
   accounts      Account[]
   sessions      Session[]
   sites         Site[]

@@ -4,7 +4,7 @@ import Modal from ".";
 import { ReactNode, createContext, useContext, useState } from "react";
 
 interface ModalContextProps {
-  show: (content: ReactNode) => void;
+  show: (content: ReactNode, closableOnClickOutside?: boolean) => void;
   hide: () => void;
 }
 
@@ -13,8 +13,10 @@ const ModalContext = createContext<ModalContextProps | undefined>(undefined);
 export function ModalProvider({ children }: { children: ReactNode }) {
   const [modalContent, setModalContent] = useState<ReactNode | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [closableOnClickOutside, setClosableOnClickOutside] = useState(true);
 
-  const show = (content: ReactNode) => {
+  const show = (content: ReactNode, closableOnClickOutside: boolean = true) => {
+    setClosableOnClickOutside(closableOnClickOutside);
     setModalContent(content);
     setShowModal(true);
   };
@@ -30,7 +32,11 @@ export function ModalProvider({ children }: { children: ReactNode }) {
     <ModalContext.Provider value={{ show, hide }}>
       {children}
       {showModal && (
-        <Modal showModal={showModal} setShowModal={setShowModal}>
+        <Modal
+          showModal={showModal}
+          setShowModal={setShowModal}
+          closeOnClickOutside={closableOnClickOutside}
+        >
           {modalContent}
         </Modal>
       )}
