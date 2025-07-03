@@ -17,13 +17,15 @@ export async function POST(req: Request) {
   let event;
 
   try {
+    console.log(`📥 Incoming Stripe webhook request`);
     event = stripe.webhooks.constructEvent(
       body,
       sig!,
       env.STRIPE_WEBHOOK_SECRET,
     );
+    console.log(`✅ Webhook verified. Event type: ${event.type}`);
   } catch (err: any) {
-    console.error(`❌ Error message: ${err.message}`);
+    console.error(`❌ Webhook verification failed: ${err.message}`);
     return NextResponse.json(
       { message: `Webhook Error: ${err.message}` },
       { status: 400 },
@@ -34,6 +36,7 @@ export async function POST(req: Request) {
     try {
       switch (event.type) {
         case "checkout.session.completed": {
+          console.log(`🔄 Processing checkout.session.completed`);
           const checkoutSession = event.data.object as any;
           const subscription = await stripe.subscriptions.retrieve(
             checkoutSession.subscription,
@@ -47,6 +50,13 @@ export async function POST(req: Request) {
             throw new Error("Missing required subscription data");
           }
 
+          console.log(`📋 Subscription details:
+            - Customer: ${checkoutSession.customer}
+            - Site ID: ${checkoutSession.metadata.siteId}
+            - Price ID: ${priceId}
+            - Interval: ${interval}
+          `);
+
           // Check for existing subscription
           const existingSubscription = await prisma.subscription.findUnique({
             where: { siteId: checkoutSession.metadata.siteId },
@@ -57,12 +67,17 @@ export async function POST(req: Request) {
             existingSubscription &&
             existingSubscription.status === "canceled"
           ) {
+            console.log(
+              `🗑️ Deleting existing canceled subscription: ${existingSubscription.id}`,
+            );
             await prisma.subscription.delete({
               where: { id: existingSubscription.id },
             });
           }
 
           // Create new subscription
+          console.log(`📝 Creating new subscription record`);
+
           await prisma.subscription.create({
             data: {
               siteId: checkoutSession.metadata.siteId,
@@ -82,6 +97,7 @@ export async function POST(req: Request) {
           });
 
           // Update site's features to PREMIUM
+          console.log(`⭐ Upgrading site to PREMIUM plan`);
           await prisma.site.update({
             where: {
               id: checkoutSession.metadata.siteId,
@@ -91,11 +107,18 @@ export async function POST(req: Request) {
             },
           });
 
+          console.log(`✅ Checkout session processing completed`);
           break;
         }
         case "customer.subscription.updated":
         case "customer.subscription.deleted": {
+          console.log(`🔄 Processing ${event.type}`);
           const subscription = event.data.object as any;
+
+          console.log(`📋 Subscription details:
+            - ID: ${subscription.id}
+            - Status: ${subscription.status}
+          `);
 
           const dbSubscription = await prisma.subscription.findUnique({
             where: {
@@ -118,6 +141,7 @@ export async function POST(req: Request) {
             throw new Error("Missing required subscription data");
           }
 
+          console.log(`📝 Updating subscription record`);
           await prisma.subscription.update({
             where: {
               stripeSubscriptionId: subscription.id,
@@ -138,6 +162,7 @@ export async function POST(req: Request) {
 
           // If subscription is cancelled/deleted, downgrade site to FREE
           if (subscription.status === "canceled") {
+            console.log(`⬇️ Downgrading site to FREE plan`);
             await prisma.site.update({
               where: {
                 id: dbSubscription.siteId,
@@ -148,19 +173,23 @@ export async function POST(req: Request) {
             });
           }
 
+          console.log(`✅ Subscription update processing completed`);
           break;
         }
         default:
           throw new Error("Unhandled relevant event!");
       }
     } catch (error) {
-      console.error(error);
+      console.error(`❌ Webhook handler failed:`, error);
       return NextResponse.json(
         { message: "Webhook handler failed" },
         { status: 500 },
       );
     }
+  } else {
+    console.log(`ℹ️ Ignoring irrelevant event type: ${event.type}`);
   }
 
+  console.log(`✅ Webhook processing completed successfully`);
   return NextResponse.json({ received: true });
 }
