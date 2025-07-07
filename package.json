@@ -52,6 +52,7 @@
     "clsx": "^2.0.0",
     "crypto-hash": "^3.0.0",
     "date-fns": "^4.1.0",
+    "emoji-regex": "^10.4.0",
     "esbuild": "^0.19.9",
     "focus-trap-react": "^10.2.3",
     "framer-motion": "^10.16.4",

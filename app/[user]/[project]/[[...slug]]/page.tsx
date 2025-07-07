@@ -21,6 +21,8 @@ import UrlNormalizer from "./url-normalizer";
 import { getSite } from "./get-site";
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 import { GiscusProps } from "@giscus/react";
+import emojiRegex from "emoji-regex";
+import Head from "next/head";
 
 const config = getConfig();
 
@@ -100,8 +102,13 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   }
 
   let faviconUrl = config.favicon;
+
   if (isFeatureEnabled(Feature.NoBranding, site) && siteConfig?.favicon) {
-    faviconUrl = resolveDataUrl(siteConfig.favicon);
+    if (isEmoji(siteConfig.favicon)) {
+      faviconUrl = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${siteConfig.favicon}</text></svg>`;
+    } else {
+      faviconUrl = resolveDataUrl(siteConfig.favicon);
+    }
   }
 
   return {
@@ -182,8 +189,6 @@ export default async function SitePage({ params }: { params: RouteParams }) {
       notFound();
     });
   // const sitePermalinks = [];
-
-  console.log(sitePermalinks);
 
   const page = await api.site.getBlobWithContent
     .query({
@@ -299,4 +304,11 @@ export default async function SitePage({ params }: { params: RouteParams }) {
       )}
     </>
   );
+}
+
+const regex = emojiRegex();
+
+function isEmoji(str: string) {
+  const match = str.match(regex);
+  return match !== null && match[0] === str;
 }
