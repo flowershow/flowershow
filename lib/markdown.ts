@@ -6,11 +6,13 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkSmartypants from "remark-smartypants";
 import remarkToc from "remark-toc";
-import { remarkWikiLink } from "@portaljs/remark-wiki-link";
+import { remarkWikiLink } from "@flowershow/remark-wiki-link";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
 import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
 import rehypePrismPlus from "rehype-prism-plus";
+import { slug } from "github-slugger";
+import { customEncodeUrl } from "./url-encoder";
 
 export const getMdxOptions = ({
   permalinks,
@@ -23,7 +25,28 @@ export const getMdxOptions = ({
     parseFrontmatter,
     mdxOptions: {
       remarkPlugins: [
-        [remarkWikiLink, { permalinks, pathFormat: "obsidian-short" }],
+        [
+          remarkWikiLink,
+          {
+            permalinks,
+            format: "shortestPossible",
+            urlResolver: (wikiLinkPath) => {
+              const [, rawPath = "", rawHeading = ""] =
+                /^(.*?)(?:#(.*))?$/u.exec(wikiLinkPath) ?? [];
+
+              const normalizedPath = customEncodeUrl(
+                rawPath.replace(/\/?(index|README)$/, ""),
+              );
+
+              const headingAnchor = rawHeading ? `#${slug(rawHeading)}` : "";
+              if (headingAnchor && !normalizedPath) {
+                return headingAnchor;
+              }
+
+              return normalizedPath + headingAnchor;
+            },
+          },
+        ],
         remarkYouTubeAutoEmbed,
         remarkGfm,
         [remarkSmartypants, { quotes: false, dashes: "oldschool" }],

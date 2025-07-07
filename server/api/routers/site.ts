@@ -28,6 +28,7 @@ import { Blob, Status } from "@prisma/client";
 import { PageMetadata } from "../types";
 import { resolveLink } from "@/lib/resolve-link";
 import { SiteWithUser } from "@/types";
+import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -639,6 +640,12 @@ export const siteRouter = createTRPCRouter({
         async (input) => {
           const site = await ctx.db.site.findUnique({
             where: { id: input.siteId },
+            select: {
+              id: true,
+              projectName: true,
+              user: true,
+              customDomain: true,
+            },
           });
 
           if (!site) {
@@ -654,10 +661,24 @@ export const siteRouter = createTRPCRouter({
             },
             select: {
               path: true,
+              appPath: true,
             },
           });
 
-          return blobs.map((blob) => "/" + blob.path.replace(/\.mdx?$/, ""));
+          return blobs.map((blob) => {
+            let prefix: string;
+            if (site.customDomain) {
+              prefix = "";
+            } else {
+              prefix = `/@${site.user!.ghUsername}/${site.projectName}`;
+            }
+
+            return (
+              (blob.appPath
+                ? prefix + (blob.appPath === "/" ? "" : "/" + blob.appPath)
+                : prefix + "/_r/-/" + blob.path) || "/"
+            );
+          });
         },
         undefined,
         {

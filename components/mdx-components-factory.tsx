@@ -42,6 +42,7 @@ import type {
   PlotlyLineChartProps,
 } from "./client-components-wrapper";
 import { Blob } from "@prisma/client";
+import { cn } from "@/lib/utils";
 
 export const mdxComponentsFactory = ({
   blob,
@@ -74,32 +75,13 @@ export const mdxComponentsFactory = ({
     }: React.LinkHTMLAttributes<HTMLAnchorElement>) => {
       if (!href) return <a {...rest}>{children}</a>;
 
-      if (href.startsWith("mailto:")) {
-        return (
-          <a className="break-words" href={href} {...rest}>
-            {children}
-          </a>
-        );
-      }
-
-      const isExternal = href.startsWith("http");
-      const isHeading = href.startsWith("#");
-
-      const _href = isHeading
-        ? href
-        : resolveLink({
-            link: isExternal ? href : customEncodeUrl(href),
-            filePath: blob.path,
-            prefixPath: site.customDomain
-              ? ""
-              : `/@${ghUsername}/${projectName}`,
-          });
+      const isExternal = href?.startsWith("http");
 
       return (
         <a
           target={isExternal ? "_blank" : undefined}
           rel={isExternal ? "noopener noreferrer" : undefined}
-          href={_href}
+          href={href}
           {...rest}
         >
           {children}
@@ -114,14 +96,7 @@ export const mdxComponentsFactory = ({
     },
     img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
       if (!props.src) return <img {...props} />;
-
-      const normalizedSrc = resolveLink({
-        link: props.src,
-        filePath: blob.path,
-        prefixPath: rawFilePermalinkBase,
-      });
-
-      return <img {...props} className="rounded-md" src={normalizedSrc} />;
+      return <img {...props} className="rounded-md" />;
     },
     pre: (props) => (
       <div className="prose-pre:bg-[#fafafa]">
