@@ -127,6 +127,7 @@ export default async function Layout({
 
   return (
     <>
+      {/* it should be in the head */}
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
       {siteConfig?.analytics && <GoogleAnalytics gaId={siteConfig.analytics} />}
       {/* Inject this dynamically only if needed on a user page */}

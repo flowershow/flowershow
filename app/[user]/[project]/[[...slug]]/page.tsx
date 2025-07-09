@@ -22,7 +22,8 @@ import { getSite } from "./get-site";
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 import { GiscusProps } from "@giscus/react";
 import emojiRegex from "emoji-regex";
-import Head from "next/head";
+import postcss from "postcss";
+import prefixWrap from "postcss-prefixwrap";
 
 const config = getConfig();
 
@@ -208,6 +209,9 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   let compiledMDX: any;
 
   const { css } = await generateUnoCSS(page.content ?? "", { minify: true });
+  const scopedCss = await postcss([prefixWrap("#mdxpage")]).process(css, {
+    from: undefined,
+  });
 
   try {
     const { content } = await compileMDX({
@@ -274,10 +278,12 @@ export default async function SitePage({ params }: { params: RouteParams }) {
 
   return (
     <>
+      {/* it should be in the head */}
       <style
-        key="unocss-mdx"
         id="unocss-mdx"
-        dangerouslySetInnerHTML={{ __html: css }}
+        dangerouslySetInnerHTML={{
+          __html: scopedCss.css,
+        }}
       />
       <UrlNormalizer />
 

@@ -1,5 +1,5 @@
 // lib/uno.ts
-import { createGenerator } from "unocss";
+import { createGenerator } from "@unocss/core";
 import presetWind3 from "@unocss/preset-wind3";
 import presetIcons from "@unocss/preset-icons";
 
@@ -23,22 +23,6 @@ function extractClassNames(content: string): string {
   return Array.from(extractedClasses).join(" ");
 }
 
-export const uno = createGenerator({
-  presets: [
-    presetWind3(),
-    presetIcons({
-      collections: {
-        mdi: () =>
-          import("@iconify-json/mdi/icons.json").then((i) => i.default),
-      },
-      extraProperties: {
-        display: "inline-block",
-        "vertical-align": "middle",
-      },
-    }),
-  ],
-});
-
 /**
  * Generate CSS only for actual class names in the content
  */
@@ -47,6 +31,20 @@ export async function generateUnoCSS(
   options?: { minify?: boolean },
 ) {
   const classNames = extractClassNames(content);
-  const unoGenerator = await uno;
+  const unoGenerator = await createGenerator({
+    presets: [
+      presetWind3(),
+      presetIcons({
+        collections: {
+          mdi: () =>
+            import("@iconify-json/mdi/icons.json").then((i) => i.default),
+        },
+        // extraProperties: {
+        //   display: "inline-block",
+        //   "vertical-align": "middle",
+        // },
+      }),
+    ],
+  });
   return unoGenerator.generate(classNames, options);
 }
