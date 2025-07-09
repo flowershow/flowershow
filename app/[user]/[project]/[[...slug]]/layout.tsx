@@ -130,8 +130,6 @@ export default async function Layout({
       {/* it should be in the head */}
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
       {siteConfig?.analytics && <GoogleAnalytics gaId={siteConfig.analytics} />}
-      {/* Inject this dynamically only if needed on a user page */}
-      <Script async src="https://tally.so/widgets/embed.js" />
 
       <div className="flex w-full flex-col bg-inherit">
         <Nav
