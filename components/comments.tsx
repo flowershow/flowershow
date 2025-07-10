@@ -10,7 +10,7 @@ export default function Comments({
   host,
   category = "Announcements",
   categoryId,
-  mapping = "url",
+  mapping = "pathname",
   term,
   theme = "light",
   strict = "1",
