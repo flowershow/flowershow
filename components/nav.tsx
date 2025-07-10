@@ -10,20 +10,12 @@ import {
   DisclosureButton,
   DisclosurePanel,
 } from "@headlessui/react";
-import { ChevronRightIcon, MenuIcon, XIcon } from "lucide-react";
+import { ChevronRightIcon, GlobeIcon, MenuIcon, XIcon } from "lucide-react";
 
-import {
-  DiscordIcon,
-  FacebookIcon,
-  GithubIcon,
-  InstagramIcon,
-  LinkedInIcon,
-  TwitterIcon,
-  YouTubeIcon,
-} from "@/components/icons";
 import { NavLink, SocialLink } from "./types";
 import { TreeViewItem } from "./site-map";
 import { SearchModal } from "./search-modal";
+import { socialIcons } from "./social-icons";
 
 export interface Props {
   logo: string;
@@ -117,7 +109,7 @@ const Nav = ({
                   >
                     {social &&
                       social.map(({ label, href, name }) => {
-                        const Icon = socialIcons[label];
+                        const Icon = (label && socialIcons[label]) ?? GlobeIcon;
                         return (
                           <a
                             key={label}
@@ -285,27 +277,5 @@ function TreeView({
     </ul>
   );
 }
-
-type SocialPlatform =
-  | "github"
-  | "discord"
-  | "linkedin"
-  | "twitter"
-  | "x"
-  | "facebook"
-  | "instagram"
-  | "youtube";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const socialIcons: { [K in SocialPlatform]: any } = {
-  discord: DiscordIcon,
-  facebook: FacebookIcon,
-  github: GithubIcon,
-  instagram: InstagramIcon,
-  linkedin: LinkedInIcon,
-  twitter: TwitterIcon,
-  x: TwitterIcon,
-  youtube: YouTubeIcon,
-};
 
 export default Nav;

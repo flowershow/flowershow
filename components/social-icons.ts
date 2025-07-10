@@ -8,7 +8,10 @@ import {
   LinkedInIcon,
   TwitterIcon,
   YouTubeIcon,
+  MastodonIcon,
+  BlueskyIcon,
 } from "@/components/icons";
+import { GlobeIcon } from "lucide-react";
 
 export const socialIcons: { [K in SocialPlatform]: React.FC<any> } = {
   discord: DiscordIcon,
@@ -19,4 +22,7 @@ export const socialIcons: { [K in SocialPlatform]: React.FC<any> } = {
   twitter: TwitterIcon,
   x: TwitterIcon,
   youtube: YouTubeIcon,
+  mastodon: MastodonIcon,
+  bluesky: BlueskyIcon,
+  bsky: BlueskyIcon,
 };

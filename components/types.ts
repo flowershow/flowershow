@@ -6,7 +6,7 @@ export interface NavLink {
 }
 
 export interface SocialLink extends NavLink {
-  label: SocialPlatform;
+  label?: SocialPlatform;
 }
 
 export type SocialPlatform =
@@ -17,7 +17,10 @@ export type SocialPlatform =
   | "x"
   | "facebook"
   | "instagram"
-  | "youtube";
+  | "youtube"
+  | "mastodon"
+  | "bsky"
+  | "bluesky";
 
 export interface NavConfig {
   logo?: string;

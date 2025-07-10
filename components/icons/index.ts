@@ -9,3 +9,5 @@ export { default as LoadingDots } from "./loading-dots";
 export { default as MarkdownIcon } from "./markdown";
 export { default as TwitterIcon } from "./twitter";
 export { default as YouTubeIcon } from "./youtube";
+export { default as BlueskyIcon } from "./bluesky";
+export { default as MastodonIcon } from "./mastodon";
