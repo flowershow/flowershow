@@ -1,10 +1,5 @@
-import {
-  Account,
-  getServerSession,
-  User,
-  type NextAuthOptions,
-} from "next-auth";
-import GitHubProvider from "next-auth/providers/github";
+import { getServerSession, type NextAuthOptions } from "next-auth";
+import GitHubProvider, { GithubProfile } from "next-auth/providers/github";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/server/db";
 import { env } from "@/env.mjs";
@@ -15,22 +10,13 @@ const VERCEL_DEPLOYMENT = !!env.VERCEL_URL;
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    GitHubProvider({
+    GitHubProvider<GithubProfile>({
       clientId: env.NEXT_PUBLIC_AUTH_GITHUB_ID as string,
       clientSecret: env.AUTH_GITHUB_SECRET as string,
       authorization: {
         params: {
           scope: "read:user user:email repo read:org",
         },
-      },
-      profile(profile) {
-        return {
-          id: profile.id.toString(),
-          name: profile.name || profile.login,
-          ghUsername: profile.login,
-          email: profile.email,
-          image: profile.avatar_url,
-        };
       },
     }),
   ],
@@ -40,7 +26,10 @@ export const authOptions: NextAuthOptions = {
     error: "/login", // Error code passed in query string as ?error=
   },
   adapter: PrismaAdapter(prisma),
-  session: { strategy: "jwt" },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
   cookies: {
     sessionToken: {
       name: `${VERCEL_DEPLOYMENT ? "__Secure-" : ""}next-auth.session-token`,
@@ -56,118 +45,105 @@ export const authOptions: NextAuthOptions = {
       },
     },
   },
-  events: {
-    createUser: async (message: any) => {
-      // Add user to Brevo contact list
-      try {
-        await axios.post(
-          `${env.BREVO_API_URL}`,
-          {
-            email: message.user.email,
-            listIds: [env.BREVO_CONTACT_LISTID],
-          },
-          {
-            headers: {
-              "api-key": `${env.BREVO_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-          },
-        );
-      } catch (error: any) {
-        // Ignore duplicate contact error
-        if (error.response?.data?.code !== "duplicate_parameter") {
-          console.error("Issue adding contact to Brevo:", error.message);
-        }
-      }
+  // events: {
+  //   createUser: async (message: any) => {
+  //     // Add user to Brevo contact list
+  //     try {
+  //       await axios.post(
+  //         `${env.BREVO_API_URL}`,
+  //         {
+  //           email: message.user.email,
+  //           listIds: [env.BREVO_CONTACT_LISTID],
+  //         },
+  //         {
+  //           headers: {
+  //             "api-key": `${env.BREVO_API_KEY}`,
+  //             "Content-Type": "application/json",
+  //           },
+  //         },
+  //       );
+  //     } catch (error: any) {
+  //       // Ignore duplicate contact error
+  //       if (error.response?.data?.code !== "duplicate_parameter") {
+  //         console.error("Issue adding contact to Brevo:", error.message);
+  //       }
+  //     }
 
-      // Send welcome email
-      try {
-        await sendWelcomeEmail(message.user.email, message.user.name);
-      } catch (error: any) {
-        console.error("Issue sending welcome email:", error.message);
-      }
-    },
-  },
+  //     // Send welcome email
+  //     try {
+  //       await sendWelcomeEmail(message.user.email, message.user.name);
+  //     } catch (error: any) {
+  //       console.error("Issue sending welcome email:", error.message);
+  //     }
+  //   },
+  // },
   callbacks: {
-    signIn: async ({
-      user,
-      account,
-      profile,
-    }: {
-      user: User; //
-      account: Account | null;
-      // profile?: GithubProfile,
-      profile?: any; // why GithubProfile type doesn't work?!
-    }) => {
-      console.log({ user, account, profile });
+    signIn: async ({ user, account, profile }) => {
+      // console.log("signIn", { user, account, profile });
+      if (!account || !profile) return false;
 
-      if (account) {
+      const existingAccount = await prisma.account.findFirst({
+        where: {
+          providerAccountId: account.providerAccountId, // same as profile.id
+        },
+      });
+
+      if (existingAccount) {
         try {
-          const existingUser = await prisma.user.findFirst({
+          await prisma.account.update({
             where: {
-              id: user.id,
+              provider_providerAccountId: {
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+              },
+            },
+            data: {
+              access_token: account.access_token,
+              expires_at: account.expires_at,
+              id_token: account.id_token,
+              refresh_token: account.refresh_token,
+              session_state: account.session_state,
+              scope: account.scope,
             },
           });
-          if (existingUser) {
-            await prisma.account.update({
-              where: {
-                provider_providerAccountId: {
-                  provider: account.provider,
-                  providerAccountId: account.providerAccountId,
-                },
-              },
-              data: {
-                access_token: account.access_token,
-                expires_at: account.expires_at,
-                id_token: account.id_token,
-                refresh_token: account.refresh_token,
-                session_state: account.session_state,
-                scope: account.scope,
-              },
-            });
-
-            await prisma.user.update({
-              where: { id: user.id },
-              data: {
-                ghUsername: profile.login,
-                username: profile.login,
-                name: profile.name || profile.login,
-              },
-            });
-          }
-        } catch (err) {
-          if (err instanceof Error) {
-            // Keep console.error for auth issues as they are critical
-            console.error("Critical: Auth token update failed:", err.message);
-            return false;
-          }
+          await prisma.user.update({
+            where: { id: user.id },
+            data: {
+              ghUsername: profile.login,
+              username: profile.login,
+              name: profile.name || profile.login,
+            },
+          });
+        } catch (error) {
+          console.error("SignIn error:", error);
+          return false;
         }
       }
       return true;
     },
-    jwt: async ({ token, user, account }) => {
+    jwt: async ({ token, user, account, profile }) => {
+      // console.log("jwt", { token, user, account, profile });
       if (account) {
-        token.id = user.id;
-        token.accessToken = account.access_token;
+        token.accessToken = account.access_token!;
       }
       if (user) {
+        token.id = user.id;
         token.user = user;
       }
-
       return token;
     },
     session: async ({ session, token }) => {
+      // console.log("session", { session, token });
       session.user = {
         ...session.user,
-        // @ts-expect-error
-        id: token.sub,
-        // @ts-expect-error
-        username: token?.user?.username || token?.user?.ghUsername,
-        // @ts-expect-error
+        id: token.user.id,
+        name: token.user.name,
+        username: token.user.username ?? token.user.ghUsername,
+        email: token.user.email,
+        image: token.user.image,
         role: token.user.role,
       };
-      // @ts-expect-error
-      session.accessToken = token.accessToken;
+      session.accessToken = token.accessToken!;
 
       return session;
     },
@@ -175,17 +151,7 @@ export const authOptions: NextAuthOptions = {
 };
 
 export function getSession() {
-  return getServerSession(authOptions) as Promise<{
-    user: {
-      id: string;
-      name: string;
-      username: string;
-      email: string;
-      image: string;
-      role: string;
-    };
-    accessToken: string;
-  } | null>;
+  return getServerSession(authOptions);
 }
 
 export function withSiteAuth(action: any) {
