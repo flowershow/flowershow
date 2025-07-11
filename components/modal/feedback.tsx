@@ -33,7 +33,9 @@ export default function FeedbackModal({
         if (onSubmit) {
           onSubmit();
         }
-        toast.success("Thank you!");
+        toast.success(
+          "Thank you for taking the time to share your thoughts! 🎉",
+        );
         showConfetti();
       },
       onError: (error: any) => {

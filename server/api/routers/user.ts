@@ -66,7 +66,7 @@ export const userRouter = createTRPCRouter({
 
         if (lastSubmissionTime > fiveMinutesAgo) {
           throw new Error(
-            "⏳ Please wait at least 5min between feedback submissions.",
+            "⏳ Please wait at least 5min between feedback submissions, or click Support and create an issue or start a discussion.",
           );
         }
       }
