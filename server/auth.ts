@@ -4,7 +4,6 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/server/db";
 import { env } from "@/env.mjs";
 import axios from "axios";
-import { sendWelcomeEmail } from "@/lib/email";
 
 const VERCEL_DEPLOYMENT = !!env.VERCEL_URL;
 
@@ -45,38 +44,33 @@ export const authOptions: NextAuthOptions = {
       },
     },
   },
-  // events: {
-  //   createUser: async (message: any) => {
-  //     // Add user to Brevo contact list
-  //     try {
-  //       await axios.post(
-  //         `${env.BREVO_API_URL}`,
-  //         {
-  //           email: message.user.email,
-  //           listIds: [env.BREVO_CONTACT_LISTID],
-  //         },
-  //         {
-  //           headers: {
-  //             "api-key": `${env.BREVO_API_KEY}`,
-  //             "Content-Type": "application/json",
-  //           },
-  //         },
-  //       );
-  //     } catch (error: any) {
-  //       // Ignore duplicate contact error
-  //       if (error.response?.data?.code !== "duplicate_parameter") {
-  //         console.error("Issue adding contact to Brevo:", error.message);
-  //       }
-  //     }
-
-  //     // Send welcome email
-  //     try {
-  //       await sendWelcomeEmail(message.user.email, message.user.name);
-  //     } catch (error: any) {
-  //       console.error("Issue sending welcome email:", error.message);
-  //     }
-  //   },
-  // },
+  events: {
+    createUser: async (message) => {
+      // Add user to Brevo contact list
+      try {
+        await axios.post(
+          "https://api.brevo.com/v3/contacts",
+          {
+            email: message.user.email,
+            listIds: [parseInt(env.BREVO_CONTACT_LISTID)],
+            updateEnabled: true,
+            attributes: { NAME: message.user.name },
+          },
+          {
+            headers: {
+              "api-key": `${env.BREVO_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+      } catch (error: any) {
+        // Ignore duplicate contact error
+        if (error.response?.data?.code !== "duplicate_parameter") {
+          console.error("Issue adding contact to Brevo:", error.message);
+        }
+      }
+    },
+  },
   callbacks: {
     signIn: async ({ user, account, profile }) => {
       // console.log("signIn", { user, account, profile });

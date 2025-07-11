@@ -52,23 +52,4 @@ ${input.description}`,
         });
       }
     }),
-  subscribeToNewsletter: publicProcedure
-    .input(
-      z.object({
-        email: z.string().email(),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      return await fetch(`${env.BREVO_API_URL}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "api-key": `${env.BREVO_API_KEY}`,
-        },
-        body: JSON.stringify({
-          email: input.email,
-          listIds: [env.BREVO_CONTACT_LISTID],
-        }),
-      });
-    }),
 });
