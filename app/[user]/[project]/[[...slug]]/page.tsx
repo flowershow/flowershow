@@ -302,7 +302,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
           repo={
             giscusConfig?.repo ?? (site.ghRepository as GiscusProps["repo"])
           }
-          repoId={giscusConfig?.repoId ?? site.giscusCategoryId ?? undefined}
+          repoId={giscusConfig?.repoId ?? site.giscusRepoId ?? undefined}
           categoryId={
             giscusConfig?.categoryId ?? site.giscusCategoryId ?? undefined
           }

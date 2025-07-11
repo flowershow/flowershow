@@ -8,7 +8,7 @@ export default function Comments({
   repo,
   repoId,
   host,
-  category = "Announcements",
+  category,
   categoryId,
   mapping = "pathname",
   term,
@@ -19,7 +19,7 @@ export default function Comments({
   inputPosition = "top",
   lang = "en",
 }: CommentsProps) {
-  if (!repo || !repoId) {
+  if (!repo || !repoId || !categoryId) {
     return null;
   }
 
