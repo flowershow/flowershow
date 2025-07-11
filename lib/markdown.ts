@@ -13,11 +13,16 @@ import rehypeSlug from "rehype-slug";
 import rehypePrismPlus from "rehype-prism-plus";
 import { slug } from "github-slugger";
 import { customEncodeUrl } from "./url-encoder";
+import remarkCommonMarkLinkResolver from "./remark-commonmark-link-resolver";
 
 export const getMdxOptions = ({
+  filePath,
   permalinks,
+  siteSubpath = "",
   parseFrontmatter = true,
 }: {
+  filePath: string;
+  siteSubpath: string;
   permalinks: string[];
   parseFrontmatter?: boolean;
 }) => {
@@ -25,6 +30,7 @@ export const getMdxOptions = ({
     parseFrontmatter,
     mdxOptions: {
       remarkPlugins: [
+        [remarkCommonMarkLinkResolver, { filePath, siteSubpath }],
         [
           remarkWikiLink,
           {

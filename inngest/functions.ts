@@ -14,7 +14,7 @@ import {
   fetchGitHubRepoTree,
   githubJsonFetch,
 } from "@/lib/github";
-import { resolveFilePathToUrl } from "@/lib/resolve-file-path-to-url";
+import { resolveFilePathToUrlPath } from "@/lib/resolve-file-path-to-url";
 import { revalidateTag } from "next/cache";
 import { isPathVisible } from "@/lib/path-validator";
 import { SiteConfig } from "@/components/types";
@@ -192,7 +192,7 @@ export const syncSite = inngest.createFunction(
                     siteId,
                     path: filePath,
                     appPath: ["md", "mdx"].includes(extension)
-                      ? resolveFilePathToUrl(filePath)
+                      ? resolveFilePathToUrlPath(filePath)
                       : null,
                     size: ghTreeItem.size || 0,
                     sha: ghTreeItem.sha,

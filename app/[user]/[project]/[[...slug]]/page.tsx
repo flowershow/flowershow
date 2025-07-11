@@ -204,7 +204,13 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     blob: page.blob,
     site,
   });
-  const mdxOptions = getMdxOptions({ permalinks: sitePermalinks }) as any;
+  const mdxOptions = getMdxOptions({
+    permalinks: sitePermalinks,
+    filePath: page.blob.path,
+    siteSubpath: site.customDomain
+      ? ""
+      : `/@${site.user?.ghUsername}/${site.projectName}`,
+  }) as any;
 
   let compiledMDX: any;
 

@@ -15,7 +15,7 @@ import {
 } from "react-instantsearch";
 
 import { searchClient } from "@/lib/typesense-client";
-import { resolveFilePathToUrl } from "@/lib/resolve-file-path-to-url";
+import { resolveFilePathToUrlPath } from "@/lib/resolve-file-path-to-url";
 
 interface SearchModalProps {
   indexId: string;
@@ -207,7 +207,7 @@ function SearchResults({ prefix }: { prefix: string }) {
     (items) =>
       items.map((item) => ({
         ...item,
-        path: prefix + resolveFilePathToUrl(item.path),
+        path: prefix + resolveFilePathToUrlPath(item.path),
       })),
     [prefix],
   );

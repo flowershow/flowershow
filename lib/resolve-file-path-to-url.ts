@@ -1,6 +1,6 @@
 import { customEncodeUrl } from "./url-encoder";
 
-export const resolveFilePathToUrl = (filePath: string) => {
+export const resolveFilePathToUrlPath = (filePath: string) => {
   let url = filePath
     .replace(/\.(mdx|md)/, "")
     .replace(/(\/)?(index|README)$/, ""); // remove index or README from the end of the permalink
