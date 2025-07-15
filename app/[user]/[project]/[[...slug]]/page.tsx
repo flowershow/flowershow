@@ -11,7 +11,6 @@ import { getConfig } from "@/lib/app-config";
 import { getMdxOptions } from "@/lib/markdown";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 import { resolveLink } from "@/lib/resolve-link";
-import { generateUnoCSS } from "@/lib/uno";
 
 import { api } from "@/trpc/server";
 import { PageMetadata } from "@/server/api/types";
@@ -22,8 +21,7 @@ import { getSite } from "./get-site";
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 import { GiscusProps } from "@giscus/react";
 import emojiRegex from "emoji-regex";
-import postcss from "postcss";
-import prefixWrap from "postcss-prefixwrap";
+import { generateScopedCss } from "@/lib/generate-scoped-css";
 
 const config = getConfig();
 
@@ -214,10 +212,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
 
   let compiledMDX: any;
 
-  const { css } = await generateUnoCSS(page.content ?? "", { minify: true });
-  const scopedCss = await postcss([prefixWrap("#mdxpage")]).process(css, {
-    from: undefined,
-  });
+  const scopedCss = await generateScopedCss(page.content ?? "");
 
   try {
     const { content } = await compileMDX({

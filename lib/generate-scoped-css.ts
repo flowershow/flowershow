@@ -1,7 +1,20 @@
-// lib/uno.ts
 import { createGenerator } from "@unocss/core";
 import presetWind3 from "@unocss/preset-wind3";
 import presetIcons from "@unocss/preset-icons";
+import postcss from "postcss";
+import prefixWrap from "postcss-prefixwrap";
+
+/**
+ * Extract CSS classes from markdown string,
+ * compile them to CSS (Tailwind classes only)
+ * and prefix with #mdx to make the rules scoped to the markdown content
+ */
+export async function generateScopedCss(content: string) {
+  const { css } = await generateUnoCSS(content, { minify: true });
+  return postcss([prefixWrap("#mdxpage")]).process(css, {
+    from: undefined,
+  });
+}
 
 /**
  * Extract CSS class names from content using regex
@@ -26,10 +39,7 @@ function extractClassNames(content: string): string {
 /**
  * Generate CSS only for actual class names in the content
  */
-export async function generateUnoCSS(
-  content: string,
-  options?: { minify?: boolean },
-) {
+async function generateUnoCSS(content: string, options?: { minify?: boolean }) {
   const classNames = extractClassNames(content);
   const unoGenerator = await createGenerator({
     presets: [
