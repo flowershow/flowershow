@@ -908,10 +908,24 @@ export const siteRouter = createTRPCRouter({
                       blob.appPath
                     }`;
 
+              let avatar;
+
+              if (metadata?.avatar) {
+                if (metadata.avatar.startsWith("http")) {
+                  avatar = metadata.avatar;
+                } else {
+                  // TODO make it work for relative paths too
+                  avatar = site.customDomain
+                    ? `/_r/-${metadata.avatar}`
+                    : `/@${site.user!.ghUsername}/${site.projectName}` +
+                      `/_r/-${metadata.avatar}`;
+                }
+              }
+
               return {
                 key: author,
                 name: metadata?.title ?? author,
-                avatar: metadata?.avatar,
+                avatar,
                 url,
               };
             });
