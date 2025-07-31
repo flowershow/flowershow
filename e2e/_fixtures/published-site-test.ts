@@ -29,16 +29,14 @@ export const test = baseTest.extend<MyFixtures, { workerStorageState: string }>(
             : "freeSite";
 
         siteName = env[testSiteKey].siteName;
-
-        if (testProject.startsWith("premium-site")) {
-          await use(
-            new PublishedSitePage(page, siteName, "test.localhost:3000"),
-          );
-        } else {
-          await use(new PublishedSitePage(page, siteName));
-        }
       } catch {
-        // test-env.json is only created after global setup, this this try catch
+        siteName = "";
+      }
+
+      if (testInfo.project.name.startsWith("premium-site")) {
+        await use(new PublishedSitePage(page, siteName, "test.localhost:3000"));
+      } else {
+        await use(new PublishedSitePage(page, siteName));
       }
     },
   },

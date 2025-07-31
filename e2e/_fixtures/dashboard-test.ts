@@ -5,6 +5,7 @@ import { SiteSettingsPage } from "./site-settings-page";
 const randomWord = async () => (await import("random-word")).default();
 
 import "dotenv/config";
+import path from "path";
 
 type MyFixtures = {
   siteSettingsPage: SiteSettingsPage;
@@ -109,16 +110,34 @@ export const test = baseTest.extend<MyFixtures, { workerStorageState: string }>(
           ? "dashboard"
           : testProject.startsWith("premium-site")
             ? "premiumSite"
-            : "freeSite";
+            : "freesite";
 
         if (match?.[1]) {
           const siteId = match[1];
-          fs.writeFileSync(
-            "playwright/test-env.json",
-            JSON.stringify({
-              [testSiteKey]: { siteId, siteName: name },
-            }),
+
+          const filePath = path.resolve(
+            __dirname,
+            "../../playwright/",
+            "test-env.json",
           );
+
+          let env = {};
+          if (fs.existsSync(filePath)) {
+            const raw = fs.readFileSync(filePath, "utf8");
+            try {
+              env = JSON.parse(raw);
+            } catch (e) {
+              console.error("Could not parse JSON, starting fresh:", e);
+              env = {};
+            }
+          }
+
+          env[testSiteKey] = {
+            siteId,
+            siteName: name,
+          };
+
+          fs.writeFileSync(filePath, JSON.stringify(env, null, 2), "utf8");
         } else {
           throw new Error("Failed to extract site ID from URL");
         }
