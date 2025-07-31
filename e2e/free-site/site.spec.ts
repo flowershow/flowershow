@@ -31,6 +31,28 @@ test.describe("Site configuration in `config.json`", () => {
     expect(response!.status()).toBe(404);
     await expect(publishedSitePage.page.getByText("404")).toBeVisible();
   });
+
+  test("Should handle permanent redirects", async ({ publishedSitePage }) => {
+    const [redirectResponse] = await Promise.all([
+      publishedSitePage.page.waitForResponse(
+        (res) => res.url().endsWith("/old-page") && res.status() === 308,
+      ),
+      publishedSitePage.goto("/old-page"),
+    ]);
+    expect(redirectResponse.status()).toBe(308);
+    expect(redirectResponse.headers()["location"]).toMatch(/\/new-page$/);
+  });
+
+  test("Should handle temporary redirects", async ({ publishedSitePage }) => {
+    const [redirectResponse] = await Promise.all([
+      publishedSitePage.page.waitForResponse(
+        (res) => res.url().endsWith("/temp-old") && res.status() === 307,
+      ),
+      publishedSitePage.goto("/temp-old"),
+    ]);
+    expect(redirectResponse.status()).toBe(307);
+    expect(redirectResponse.headers()["location"]).toMatch(/\/temp-new$/);
+  });
 });
 
 test.describe("Raw resource endpoints", () => {

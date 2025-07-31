@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound, permanentRedirect, redirect } from "next/navigation";
 import Script from "next/script";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { ReactNode } from "react";
@@ -12,7 +12,7 @@ import { env } from "@/env.mjs";
 import { getConfig } from "@/lib/app-config";
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 import { resolveLink } from "@/lib/resolve-link";
-import { isInternalSite } from "@/lib/resolve-site-alias";
+import { isInternalSite, resolveSiteAlias } from "@/lib/resolve-site-alias";
 
 import BuiltWithFloatingButton from "@/components/built-with-floating-button";
 import DataRequestBanner from "@/components/data-request-banner";
@@ -57,6 +57,26 @@ export default async function Layout({
       siteId: site.id,
     })
     .catch(() => null);
+
+  // Handle redirects if configured
+  if (siteConfig?.redirects) {
+    for (const r of siteConfig.redirects) {
+      console.log({ r, slug: "/" + decodedSlug });
+      // Simple string comparison for exact path matching
+      if ("/" + decodedSlug === r.from) {
+        const redirectUrl = site.customDomain
+          ? r.to
+          : `${resolveSiteAlias(
+              `/@${site.user?.ghUsername}/${site.projectName}`,
+              "to",
+            )}${r.to}`;
+
+        return r.permanent
+          ? permanentRedirect(redirectUrl)
+          : redirect(redirectUrl);
+      }
+    }
+  }
 
   let siteMap;
 

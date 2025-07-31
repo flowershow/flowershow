@@ -49,8 +49,8 @@ export const test = baseTest.extend<MyFixtures, { workerStorageState: string }>(
         const testSiteKey = testProject.startsWith("dashboard")
           ? "dashboard"
           : testProject.startsWith("premium-site")
-            ? "premiumSite"
-            : "freeSite";
+            ? "premiumsite"
+            : "freesite";
 
         siteId = env[testSiteKey].siteId;
       } catch {
@@ -109,7 +109,7 @@ export const test = baseTest.extend<MyFixtures, { workerStorageState: string }>(
         const testSiteKey = testProject.startsWith("dashboard")
           ? "dashboard"
           : testProject.startsWith("premium-site")
-            ? "premiumSite"
+            ? "premiumsite"
             : "freesite";
 
         if (match?.[1]) {

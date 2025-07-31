@@ -49,6 +49,11 @@ export interface SiteConfig {
     href: string;
     label: string;
   }>; // CTAs used if hero is enabled (only 2 supported)
+  redirects?: Array<{
+    from: string; // Exact path to match (e.g. "/old-page")
+    to: string; // Path to redirect to (e.g. "/new-page")
+    permanent?: boolean; // Whether to use 301 (true) or 302 (false) redirect
+  }>;
 }
 
 export interface SiteAlias {

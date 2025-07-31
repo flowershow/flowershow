@@ -22,7 +22,7 @@ export class PublishedSitePage {
     }
 
     return await this.page.goto(
-      `http://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/${this.siteUrlPath}${
+      `http://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}${this.siteUrlPath}${
         path ?? ""
       }`,
     );
