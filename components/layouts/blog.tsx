@@ -59,7 +59,11 @@ export const BlogLayout: React.FC<Props> = ({
                       href: string | null;
                       className?: string;
                     }) => (
-                      <a href={href || "#"} className={className}>
+                      <a
+                        href={href || "#"}
+                        className={className}
+                        data-testid="blog-author"
+                      >
                         {children}
                       </a>
                     )
@@ -69,7 +73,11 @@ export const BlogLayout: React.FC<Props> = ({
                     }: {
                       children: React.ReactNode;
                       className?: string;
-                    }) => <div className={className}>{children}</div>;
+                    }) => (
+                      <div className={className} data-testid="blog-author">
+                        {children}
+                      </div>
+                    );
 
                 return (
                   <AuthorWrapper

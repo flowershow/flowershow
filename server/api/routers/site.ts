@@ -228,27 +228,34 @@ export const siteRouter = createTRPCRouter({
 
       // Handling custom domain changes
       if (key === "customDomain") {
-        if (validDomainRegex.test(value)) {
-          // Handle adding/updating custom domain
+        if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
+          if (validDomainRegex.test(value)) {
+            // Handle adding/updating custom domain
+            result = await ctx.db.site.update({
+              where: { id },
+              data: { customDomain: value },
+            });
+            await Promise.all([
+              addDomainToVercel(value),
+              // Optional: add www subdomain as well and redirect to apex domain
+              addDomainToVercel(`www.${value} `),
+            ]);
+          } else if (value === "") {
+            // Handle removing custom domain
+            result = await ctx.db.site.update({
+              where: { id },
+              data: { customDomain: null },
+            });
+          }
+          // If the site had a different customDomain before, we need to remove it from Vercel
+          if (site && site.customDomain && site.customDomain !== value) {
+            await removeDomainFromVercelProject(site.customDomain);
+          }
+        } else {
           result = await ctx.db.site.update({
             where: { id },
             data: { customDomain: value },
           });
-          await Promise.all([
-            addDomainToVercel(value),
-            // Optional: add www subdomain as well and redirect to apex domain
-            addDomainToVercel(`www.${value} `),
-          ]);
-        } else if (value === "") {
-          // Handle removing custom domain
-          result = await ctx.db.site.update({
-            where: { id },
-            data: { customDomain: null },
-          });
-        }
-        // If the site had a different customDomain before, we need to remove it from Vercel
-        if (site && site.customDomain && site.customDomain !== value) {
-          await removeDomainFromVercelProject(site.customDomain);
         }
       } else if (key === "rootDir") {
         result = await ctx.db.site.update({

@@ -84,7 +84,10 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
   };
 
   return (
-    <div className="rounded-lg border border-stone-200 bg-white">
+    <div
+      data-testid="billing"
+      className="rounded-lg border border-stone-200 bg-white"
+    >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
         <h2 id="billing" className="font-cal text-xl">
           Billing

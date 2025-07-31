@@ -1,10 +1,5 @@
 name: E2E Tests
 
-# Required secrets:
-# - GH_ACCESS_TOKEN: GitHub Personal Access Token with repo scope
-#   Used for GitHub API operations during E2E tests
-#   Must have access to the e2e test repository
-
 on:
   push:
     branches: [main, staging]
@@ -15,110 +10,140 @@ jobs:
   test:
     name: Run E2E Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    services:
-      postgres:
-        image: postgres
-        env:
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+    timeout-minutes: 10
+    env:
+      GH_TEST_ACCOUNT_ID: ${{secrets.GH_TEST_ACCOUNT_ID}}
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
+      - uses: pnpm/action-setup@v4
         with:
-          version: 8
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+          version: 10
+      - uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: pnpm
 
+      - name: Next.js build cache
+        uses: actions/cache@v4
+        with:
+          path: ${{github.workspace}}/.next/cache
+          # Generate a new cache whenever packages or source files change.
+          key: ${{runner.os}}-nextjs-${{hashFiles('**/package-lock.json')}}-${{hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx')}}
+          # If source files changed but packages didn't, rebuild from a prior cache.
+          restore-keys: |
+            ${{runner.os}}-nextjs-${{hashFiles('**/package-lock.json')}}-
+
       - name: Install dependencies
         run: pnpm install
+
+      - name: Create .env from example
+        shell: bash
+        env:
+          POSTGRES_PRISMA_URL: ${{ secrets.POSTGRES_PRISMA_URL }}
+          POSTGRES_URL_NON_POOLING: ${{ secrets.POSTGRES_URL_NON_POOLING }}
+          S3_ENDPOINT: ${{ secrets.S3_ENDPOINT }}
+          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+          S3_BUCKET_NAME: ${{ secrets.S3_BUCKET_NAME }}
+          S3_REGION: ${{ secrets.S3_REGION }}
+          S3_FORCE_PATH_STYLE: ${{ secrets.S3_FORCE_PATH_STYLE }}
+          NEXT_PUBLIC_S3_BUCKET_DOMAIN: ${{ secrets.NEXT_PUBLIC_S3_BUCKET_DOMAIN }}
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          NEXT_PUBLIC_AUTH_GITHUB_ID: ${{ secrets.NEXT_PUBLIC_AUTH_GITHUB_ID }}
+          AUTH_GITHUB_SECRET: ${{ secrets.AUTH_GITHUB_SECRET }}
+          STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+          STRIPE_WEBHOOK_SECRET: ${{ secrets.STRIPE_WEBHOOK_SECRET }}
+          STRIPE_PREMIUM_MONTHLY_PRICE_ID: ${{ secrets.STRIPE_PREMIUM_MONTHLY_PRICE_ID }}
+          STRIPE_PREMIUM_YEARLY_PRICE_ID: ${{ secrets.STRIPE_PREMIUM_YEARLY_PRICE_ID }}
+        run: |
+          cp .env.example .env.tmp
+
+          # For each line, if KEY= exists as an env var, replace it; otherwise leave it alone.
+          {
+            while IFS= read -r line; do
+              if [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)= ]]; then
+                key=${BASH_REMATCH[1]}
+                if [[ -n "${!key+x}" ]]; then
+                  # Quote the new value safely
+                  printf "%s='%s'\n" "$key" "${!key}"
+                else
+                  echo "$line"
+                fi
+              else
+                echo "$line"
+              fi
+            done < .env.tmp
+          } > .env
+
+          rm .env.tmp
+
+      - name: Start Next.js app
+        run: |
+          pnpm fetch-config
+          npx prisma migrate deploy   # applies all pending migrations, no prompts
+          npx prisma generate         # regenerates the Prisma client
+          npx next dev &
+          # npx next dev 2>&1 | tee next.log &
+          timeout 60s bash -c 'until curl -sf http://cloud.localhost:3000/login; do sleep 1; done' || (echo "Failed to access /login page" && curl -v http://cloud.localhost:3000/login 2>&1 && exit 1)
+
+      - name: Start Inngest Dev Server
+        id: inngest
+        run: |
+          CID=$(docker run -d \
+            --network host \
+            -v $PWD:/app \
+            -w /app \
+            -e INNGEST_LOG_LEVEL=debug \
+            inngest/inngest \
+            inngest dev -u http://localhost:3000/api/inngest --log-level debug --verbose)
+          echo "cid=$CID" >> $GITHUB_OUTPUT
+
+      - name: Start Typesense Dev Server
+        env:
+          TYPESENSE_API_KEY: xyz
+        run: |
+          mkdir "$(pwd)"/typesense-data
+          docker run -d -p 8108:8108 \
+                      --name typesense \
+                      -v "$(pwd)"/typesense-data:/data \
+                      typesense/typesense:29.0 \
+                      --data-dir /data \
+                      --api-key=$TYPESENSE_API_KEY
+          timeout 30s bash -c 'until curl -sf http://localhost:8108/health; do sleep 1; done'
+
+      - name: Install Stripe CLI
+        run: |
+          curl -L https://github.com/stripe/stripe-cli/releases/download/v1.16.0/stripe_1.16.0_linux_x86_64.tar.gz | tar xvz
+          sudo mv stripe /usr/local/bin/
+
+      - name: Start Stripe Webhook forwarding
+        env:
+          STRIPE_API_KEY: ${{secrets.STRIPE_API_KEY}}
+        run: |
+          stripe listen --forward-to http://cloud.localhost:3000/api/stripe/webhook --api-key $STRIPE_API_KEY &
+
+      - name: Restore user authentication state from secret
+        run: |
+          mkdir -p playwright/.auth
+          echo '${{secrets.GH_TEST_ACCOUNT_AUTH_COOKIES}}' > playwright/.auth/user.json
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Start MinIO Server
-        run: |
-          mkdir -p ~/minio/data
-          docker run \
-            -d \
-            -p 9000:9000 \
-            -p 9001:9001 \
-            --name minio1 \
-            -v ~/minio/data:/data \
-            -e "MINIO_ROOT_USER=minioadmin" \
-            -e "MINIO_ROOT_PASSWORD=minioadmin" \
-            quay.io/minio/minio server /data --console-address ":9001"
-          # Wait for MinIO to be ready
-          timeout 60s bash -c 'until curl -sf http://localhost:9000/minio/health/live; do sleep 1; done'
-
-      - name: Configure MinIO bucket
-        run: |
-          pip install minio
-          python3 - <<EOF
-          from minio import Minio
-          client = Minio(
-              "localhost:9000",
-              access_key="minioadmin",
-              secret_key="minioadmin",
-              secure=False
-          )
-          if not client.bucket_exists("datahub"):
-              client.make_bucket("datahub")
-              client.set_bucket_policy(
-                  "datahub",
-                  '{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"AWS":["*"]},"Action":["s3:GetObject"],"Resource":["arn:aws:s3:::datahub/*"]}]}'
-              )
-          EOF
-
-      - name: Create env file from example
-        run: |
-          cp .env.example .env
-          # Update required values for e2e testing
-          sed -i 's|postgresql://postgres@localhost:5432/<database-name>?schema=public|postgresql://postgres:postgres@localhost:5432/datahub_test?schema=public|g' .env
-          sed -i 's|^NEXT_PUBLIC_AUTH_GITHUB_ID=.*|NEXT_PUBLIC_AUTH_GITHUB_ID=test-github-id|' .env
-          sed -i 's|^AUTH_GITHUB_SECRET=.*|AUTH_GITHUB_SECRET=test-github-secret|' .env
-          sed -i 's|^GH_ACCESS_TOKEN=.*|GH_ACCESS_TOKEN=\${{ secrets.GH_ACCESS_TOKEN }}|' .env
-
-      - name: Generate Prisma Client
-        run: npx prisma generate
-
-      - name: Push database schema
-        run: npx prisma db push
-
-      - name: Configure hosts
-        run: |
-          echo "127.0.0.1 cloud.localhost" | sudo tee -a /etc/hosts
-
-      - name: Fetch app config
-        run: node scripts/fetch-app-config.mjs
-
-      - name: Start Next.js app
-        run: |
-          pnpm dev &
-          # Wait for Next.js to be ready by polling the health endpoint
-          timeout 60s bash -c 'until curl -sf http://cloud.localhost:3000; do sleep 2; done'
-
-      - name: Start Inngest
-        run: |
-          npx -y inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest &
-          sleep 7
-
       - name: Run Playwright tests
+        id: playwright
+        env:
+          GH_E2E_TEST_ACCOUNT: flowershow-test-account
         run: npx playwright test
+
+      # - name: Dump Next.js logs
+      #   if: always()
+      #   run: cat next.log
+
+      - name: Dump Inngest logs
+        if: always()
+        run: docker logs ${{ steps.inngest.outputs.cid }} || true
 
       - name: Upload test results
         if: always()

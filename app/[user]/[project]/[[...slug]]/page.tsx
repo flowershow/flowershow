@@ -236,6 +236,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     ? `/_r/-`
     : `/@${site.user!.ghUsername}/${site.projectName}` + `/_r/-`;
 
+  // TODO create a single lib for this kind of stuff (currently we have patches like this in many different places)
   const resolveAssetUrl = (url: string) =>
     resolveLink({
       link: url,

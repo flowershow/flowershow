@@ -5,7 +5,6 @@ import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { api } from "@/trpc/react";
 import { signOut } from "next-auth/react";
-import { env } from "@/env.mjs";
 import { useState } from "react";
 import type { Subscription } from "@prisma/client";
 import LoadingDots from "@/components/icons/loading-dots";
@@ -15,6 +14,7 @@ type SubscriptionWithInterval = Subscription & {
   cancelAtPeriodEnd?: boolean;
 };
 
+// TODO refactor this
 export default function DeleteSiteForm({ siteName }: { siteName: string }) {
   const { id } = useParams() as { id: string };
   const router = useRouter();
@@ -22,13 +22,14 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
   const [showSubscriptionWarning, setShowSubscriptionWarning] = useState(false);
 
   // Query subscription details
-  const { data: subscription } = api.stripe.getSiteSubscription.useQuery(
-    { siteId: id },
-    {
-      retry: false,
-      refetchOnWindowFocus: false,
-    },
-  );
+  const { data: subscription, refetch } =
+    api.stripe.getSiteSubscription.useQuery(
+      { siteId: id },
+      {
+        retry: false,
+        refetchOnWindowFocus: false,
+      },
+    );
 
   const { isLoading: isDeletingSite, mutate: deleteSite } =
     api.site.delete.useMutation({
@@ -58,8 +59,9 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
       },
     });
 
-  const handleDelete = () => {
-    if (subscription && subscription.status === "active") {
+  const handleDelete = async () => {
+    const { data: latestSubscription } = await refetch();
+    if (latestSubscription && latestSubscription.status === "active") {
       setShowSubscriptionWarning(true);
     } else {
       deleteSite({ id });

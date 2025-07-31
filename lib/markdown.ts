@@ -14,6 +14,7 @@ import rehypePrismPlus from "rehype-prism-plus";
 import { slug } from "github-slugger";
 import { customEncodeUrl } from "./url-encoder";
 import remarkCommonMarkLinkResolver from "./remark-commonmark-link-resolver";
+import rehypeResolveExplicitJsxUrls from "./rehype-resolve-explicit-jsx-urls";
 
 export const getMdxOptions = ({
   filePath,
@@ -68,6 +69,7 @@ export const getMdxOptions = ({
         [mdxMermaid, {}],
       ],
       rehypePlugins: [
+        [rehypeResolveExplicitJsxUrls, { filePath, siteSubpath }],
         rehypeSlug,
         [
           rehypeAutolinkHeadings,

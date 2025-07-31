@@ -14,25 +14,16 @@ export default async function SiteSettingsHeader({
 }: {
   site: SiteWithUser;
 }) {
-  let url: string;
+  const isSecure =
+    env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
+    env.NEXT_PUBLIC_VERCEL_ENV === "preview";
+  const protocol = isSecure ? "https" : "http";
 
-  if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
-    if (site.customDomain) {
-      url = `https://${site.customDomain}`;
-    } else {
-      url = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user!.ghUsername}/${
+  const url = site.customDomain
+    ? `${protocol}://${site.customDomain}`
+    : `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user!.ghUsername}/${
         site.projectName
       }`;
-    }
-  } else if (env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
-    url = `https://staging-${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${
-      site.user!.ghUsername
-    }/${site.projectName}`;
-  } else {
-    url = `http://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user!.ghUsername}/${
-      site.projectName
-    }`;
-  }
 
   return (
     <>
@@ -89,7 +80,12 @@ export default async function SiteSettingsHeader({
             <SyncSiteButton siteId={site.id} />
           </span>
           <span className="ml-3 block">
-            <a href={url} target="_blank" rel="noreferrer">
+            <a
+              href={url}
+              data-testid="visit-button"
+              target="_blank"
+              rel="noreferrer"
+            >
               <button
                 type="button"
                 className="inline-flex items-center rounded-md bg-green-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"

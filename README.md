@@ -1,6 +1,6 @@
-# DataHub Cloud
+# Flowershow Cloud
 
-DataHub Cloud is a NextJS multitenant application designed for seamlessly publishing markdown content from GitHub repositories.
+Flowershow Cloud is a NextJS multitenant application designed for seamlessly publishing markdown content from GitHub repositories.
 
 ## Project Overview
 
@@ -9,7 +9,6 @@ The application provides:
 - Multi-tenant architecture supporting multiple users and sites
 - Built-in authentication via GitHub
 - Markdown content publishing from GitHub repositories
-- Custom domain support
 - Automatic content synchronization
 
 ## Architecture
@@ -21,7 +20,9 @@ The application is built with:
 - **Storage**: R2 Cloudflare buckets for content storage
 - **Authentication**: NextAuth with GitHub OAuth
 - **Deployment**: Vercel
-- **Background Jobs**: Inngest
+- **Background Jobs**: Inngest + Cloudflare worker
+- **Content indexing**: Typesense
+- **Subscriptions**: Stripe
 
 ## Site Creation and Data Flow
 
@@ -31,12 +32,10 @@ The site creation process follows these steps:
 
 - Users authenticate with GitHub OAuth
 - Application requests necessary repository access permissions
-- User can manage app access through GitHub settings
 
 2. **Site Configuration**
 
 - User selects:
-  - GitHub account
   - Repository to publish from
   - Branch to track (defaults to 'main')
   - Root directory (optional, for publishing specific folder)
@@ -45,13 +44,8 @@ The site creation process follows these steps:
 3. **Site Content Processing**
 
 - Initial site synchronization triggered
-  - Content filtered by supported file types (.md, .json, .yaml)
-  - Markdown files processed for:
-    - YAML frontmatter
-    - Associated datapackage metadata
-    - Computed fields (URL, title, description)
-  - Files uploaded to R2 Cloudflare buckets
-  - Metadata stored in PostgreSQL
+  - Inngest sync function fetches files from GitHub, creates Blob records in the database and uploads the files to R2 storage
+  - Each markdown file uploaded to R2 triggers the Cloudflare worker, which processes it and updates associated Blob records in the db with the extracted data (e.g. frontmatter fields)
 
 4. **Consecutive Site Content Synchronization**
 
@@ -413,17 +407,56 @@ We use a squash-based system:
 
 ### Prerequisites
 
-Access to https://github.com/datopian/datahub-cloud-test-repo
+Access to https://github.com/flowershow/flowershow-test-repo
 
 ### Running Tests
 
-Start the application:
+#### Locally
+
+1. Authenticate user
+
+Log in manually and save authentication cookies to a JSON file:
+
+```bash
+npx playwright codegen 'http://cloud.localhost:3000/api/auth/signin/github?callbackUrl=http://cloud.localhost:3000' \
+  --save-storage=playwright/.auth/user.json
+```
+
+Note: after you log in to the dashboard, you can close the Playwright browser window.
+
+2. Start the application
+
+Start minio:
+
+```bash
+minio server ~/minio
+```
+
+Start inngest:
+
+```bash
+npx inngest-cli@latest dev
+```
+
+Start stripe:
+
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+
+Start Cloudflare worker (datopian/datahub-next-workers repo):
+
+```bash
+npm run dev
+```
+
+Start the app:
 
 ```bash
 pnpm dev
 ```
 
-Run tests:
+Run the tests:
 
 ```bash
 # Run all non-authenticated tests
@@ -546,16 +579,18 @@ DataHub Cloud manages several aliased pages:
    - Verify correct OAuth app configuration
    - Check callback URLs
    - Ensure environment variables are set
+
 4. Stripe Integration
-    - Ensure Stripe CLI is running with webhook forwarding
-    - Verify STRIPE_WEBHOOK_SECRET matches Stripe CLI output
-    - Check Stripe CLI logs for webhook delivery status
-    - Confirm subscription events in Stripe Dashboard
-    - Verify database updates after subscription events
+
+   - Ensure Stripe CLI is running with webhook forwarding
+   - Verify STRIPE_WEBHOOK_SECRET matches Stripe CLI output
+   - Check Stripe CLI logs for webhook delivery status
+   - Confirm subscription events in Stripe Dashboard
+   - Verify database updates after subscription events
 
 5. Typesense Search
-    - Check Typesense health status: `curl http://localhost:8108/health`
-    - Verify environment variables in `.env`
-    - Check browser console for connection errors
+   - Check Typesense health status: `curl http://localhost:8108/health`
+   - Verify environment variables in `.env`
+   - Check browser console for connection errors
 
 For additional support, please create an issue in the GitHub repository.

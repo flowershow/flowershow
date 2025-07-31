@@ -40,6 +40,7 @@ yarn-error.log*
 /blob-report/
 /playwright/.cache/
 /playwright/.auth/
+/playwright/test-env.json
 
 # cloud app config
 config.json

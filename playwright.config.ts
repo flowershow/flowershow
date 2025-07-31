@@ -20,7 +20,7 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: "html",
+  reporter: [["list", { printSteps: true }], ["html"]],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -30,41 +30,59 @@ export default defineConfig({
     trace: "on-first-retry",
   },
   /* Configure projects for major browsers */
+  /** Note: Test fixtures rely on the names, so remember to update them as well if renaming the projects below.*/
   projects: [
     {
-      name: "global-setup",
-      testMatch: /global\.setup\.ts/,
+      name: "dashboard-setup",
+      testMatch: /dashboard\/global\.setup\.ts/,
+      teardown: "dashboard-teardown",
     },
     {
-      name: "chromium",
+      name: "dashboard-teardown",
+      testMatch: /dashboard\/global\.teardown\.ts/,
+    },
+    {
+      name: "dashboard-chromium",
       use: {
         ...devices["Desktop Chrome"],
       },
-      dependencies: ["global-setup"],
-      testIgnore: /(dashboard|subscription)\.spec\.ts/,
+      testMatch: /dashboard\/.+\.spec\.ts/,
+      dependencies: ["dashboard-setup"],
     },
-    // Only include dashboard tests when not running in CI
-    ...(!process.env.CI
-      ? [
-          {
-            name: "auth-setup",
-            testMatch: /auth\.setup\.ts/,
-            use: {
-              baseURL: "http://cloud.localhost:3000",
-            },
-          },
-          {
-            name: "chromium-dashboard",
-            use: {
-              ...devices["Desktop Chrome"],
-              storageState: "playwright/.auth/user.json",
-              baseURL: "http://cloud.localhost:3000",
-            },
-            dependencies: ["auth-setup"],
-            testMatch: /(dashboard|subscription)\.spec\.ts/,
-          },
-        ]
-      : []),
+    {
+      name: "free-site-setup",
+      testMatch: /free-site\/global\.setup\.ts/,
+      teardown: "free-site-teardown",
+    },
+    {
+      name: "free-site-teardown",
+      testMatch: /free-site\/global\.teardown\.ts/,
+    },
+    {
+      name: "free-site-chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+      },
+      dependencies: ["free-site-setup"],
+      testMatch: /free-site\/.+\.spec\.ts/,
+    },
+    {
+      name: "premium-site-setup",
+      testMatch: /premium-site\/global\.setup\.ts/,
+      teardown: "premium-site-teardown",
+    },
+    {
+      name: "premium-site-teardown",
+      testMatch: /premium-site\/global\.teardown\.ts/,
+    },
+    {
+      name: "premium-site-chromium",
+      use: {
+        ...devices["Desktop Chrome"],
+      },
+      dependencies: ["premium-site-setup"],
+      testMatch: /premium-site\/.+\.spec\.ts/,
+    },
     // {
     //   name: 'firefox',
     //   use: { ...devices['Desktop Firefox'] },

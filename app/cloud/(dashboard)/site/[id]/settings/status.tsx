@@ -21,7 +21,10 @@ export default function Status() {
 
   return (
     <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
-      <div className="mt-2 flex items-center text-sm text-gray-500">
+      <div
+        data-testid="sync-status"
+        className="mt-2 flex items-center text-sm text-gray-500"
+      >
         {syncStatus.status === "LOADING" ? (
           <div className="flex items-center">
             <CircleAlertIcon

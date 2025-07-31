@@ -52,6 +52,7 @@ export default function Form({
 
   return (
     <form
+      data-testid={`config-${inputAttrs.name}`}
       action={async (data: FormData) => {
         if (inputAttrs.name === "projectName") {
           {
@@ -109,9 +110,16 @@ export default function Form({
       )}
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
-        <h2 id={inputAttrs.name} className="font-cal text-xl dark:text-white">
-          {title}
-        </h2>
+        <div className="flex justify-between gap-2">
+          <h2 id={inputAttrs.name} className="font-cal text-xl dark:text-white">
+            {title}
+          </h2>
+          {disabled && (
+            <div className="flex flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-400">
+              <span>Available on premium plan</span>
+            </div>
+          )}
+        </div>
         <p className="text-sm text-stone-500 dark:text-stone-400">
           {description}
         </p>
@@ -207,13 +215,13 @@ export default function Form({
         {!["autoSync", "enableComments", "enableSearch"].includes(
           inputAttrs.name,
         ) &&
-          !disabled && <FormButton />}
+          !disabled && <FormButton name={inputAttrs.name} />}
       </div>
     </form>
   );
 }
 
-function FormButton() {
+function FormButton({ name }: { name: string }) {
   const { pending } = useFormStatus();
   return (
     <button
@@ -224,6 +232,7 @@ function FormButton() {
           : "border-black bg-black text-white hover:bg-white hover:text-black dark:border-stone-700 dark:hover:border-stone-200 dark:hover:bg-black dark:hover:text-white dark:active:bg-stone-800",
       )}
       disabled={pending}
+      data-testid={`save-${name}`}
     >
       {pending ? <LoadingDots color="#808080" /> : <p>Save Changes</p>}
     </button>

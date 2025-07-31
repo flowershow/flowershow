@@ -1,14 +1,7 @@
 import { ErrorBoundary } from "react-error-boundary";
-// import {
-//   DatasetPageMetadata,
-//   PageMetadata,
-//   isDatasetPage,
-// } from "@/server/api/types";
 import { resolveLink } from "@/lib/resolve-link";
-import { customEncodeUrl } from "@/lib/url-encoder";
 import { ErrorMessage } from "@/components/error-message";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
-// import { FrictionlessViewFactory } from "./frictionless-view";
 import { default as List } from "./list";
 import type { ListProps } from "./list";
 import {
