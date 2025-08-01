@@ -51,6 +51,11 @@ export default function BuiltWithFloatingButton() {
       s.setProperty("box-shadow", "0 8px 20px 0 rgba(0,0,0,.08)", "important");
       const spans = btn.getElementsByTagName("span");
       for (const spanEl of spans) {
+        spanEl.style.setProperty(
+          "font-family",
+          "var(--font-inter)",
+          "important",
+        );
         spanEl.style.setProperty("font-size", "0.875rem", "important");
         spanEl.style.setProperty("font-weight", "500", "important");
         spanEl.style.setProperty("color", "#18181B", "important");

@@ -167,7 +167,7 @@ export default async function Layout({
         />
 
         {showHero && (
-          <header className="relative bg-neutral-50">
+          <header id="hero" className="relative bg-neutral-50">
             <div
               className={clsx(
                 "mx-auto",
@@ -229,6 +229,7 @@ export default async function Layout({
 
         <div className="relative">
           <div
+            id="inner-layout"
             className={clsx(
               !isPlainLayout && [
                 "mx-auto mt-16 grid w-full px-8 sm:px-10 lg:px-12",
