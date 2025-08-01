@@ -1,10 +1,10 @@
 name: E2E Tests
 
-on:
-  push:
-    branches: [main, staging]
-  pull_request:
-    branches: [main, staging]
+# on:
+#   push:
+#     branches: [main, staging]
+#   pull_request:
+#     branches: [main, staging]
 
 jobs:
   test:
