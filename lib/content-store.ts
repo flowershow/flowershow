@@ -41,7 +41,9 @@ type ContentType =
   | "image/gif"
   | "image/svg+xml"
   | "video/mp4"
-  | "image/x-icon";
+  | "image/x-icon"
+  | "image/webp"
+  | "image/avif";
 
 const uploadS3Object = async ({
   key,
@@ -141,6 +143,10 @@ const getContentType = (extension: string): ContentType => {
       return "video/mp4";
     case "ico":
       return "image/x-icon";
+    case "webp":
+      return "image/webp";
+    case "avif":
+      return "image/avif";
     default:
       return "application/json"; // Fallback to JSON for any new extensions
   }
