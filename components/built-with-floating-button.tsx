@@ -6,27 +6,27 @@ const config = getConfig();
 
 const buttonStyles: React.CSSProperties = {
   position: "fixed",
-  bottom: "24 !important",
-  right: "32 !important",
-  zIndex: "100 !important",
-  display: "flex !important",
-  alignItems: "center !important",
-  backgroundColor: "white !important",
-  padding: "0.5rem 0.75rem !important",
-  borderRadius: "40 !important",
-  boxShadow: "0 8px 20px 0 rgba(0,0,0,.08) !important",
+  bottom: 24,
+  right: 32,
+  zIndex: 100,
+  display: "flex",
+  alignItems: "center",
+  backgroundColor: "white",
+  padding: "0.5rem 0.75rem",
+  borderRadius: 40,
+  boxShadow: "0 8px 20px 0 rgba(0,0,0,.08)",
 };
 
 const spanStyles: React.CSSProperties = {
-  fontSize: "0.875rem !important",
-  fontWeight: "500 !important",
-  fontFamily: "var(--font-inter) !important",
-  color: "#18181B !important",
-  letterSpacing: "-0.025em !important",
+  fontSize: "0.875rem",
+  fontWeight: 500,
+  fontFamily: "var(--font-inter)",
+  color: "#18181B",
+  letterSpacing: "-0.025em",
 };
 
 const logoStyles = {
-  margin: "0 0.5rem !important",
+  margin: "0 0.5rem",
 };
 
 export default function BuiltWithFloatingButton() {
