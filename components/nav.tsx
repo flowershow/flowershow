@@ -61,6 +61,7 @@ const Nav = ({
     <Disclosure>
       {({ open, close }) => (
         <nav
+          id="navbar"
           data-testid="navbar"
           className={clsx(
             "z-10 bg-inherit text-base font-normal",

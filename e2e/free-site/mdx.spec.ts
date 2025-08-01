@@ -29,7 +29,7 @@
 //     .getByTestId("obsidian-wiki-links-special-signs")
 //     .getByRole("link");
 
-//   await expect(wikiLink).toHaveText("Post With Special Signs %&(1)+");
+//   await expect(wikiLink).toHaveText("File With Special Chars %&(1)+");
 //   await expect(wikiLink).toHaveAttribute(
 //     "href",
 //     `/${testSite}/blog/Post+With+Special+Signs+%25%26(1)%2B`,

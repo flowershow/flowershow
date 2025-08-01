@@ -71,7 +71,7 @@ test.describe("MDX", () => {
   test("Should resolve JSX href and src attributes", async ({
     publishedSitePage,
   }) => {
-    await publishedSitePage.goto("/syntax");
+    await publishedSitePage.goto("/syntax/jsx");
     await expect(
       publishedSitePage.page.getByTestId("jsx-img").locator("img"),
     ).toHaveAttribute("src", /\/@.+\/.+\/_r\/-\/.+/);
@@ -97,5 +97,18 @@ test("Should display frontmatter metadata in the header", async ({
   await expect(author.locator("img")).toHaveAttribute(
     "src",
     `${publishedSitePage.siteUrlPath}/_r/-/team/john.jpg`,
+  );
+});
+
+test("Should render List component correctly", async ({
+  publishedSitePage,
+}) => {
+  await publishedSitePage.goto("/blog");
+  const list = publishedSitePage.page.locator("#list-component");
+  await expect(list).toBeVisible();
+  const blogPost1 = list.locator("article").first();
+  await expect(blogPost1.locator("a")).toHaveAttribute(
+    "href",
+    `${publishedSitePage.siteUrlPath}/blog/article-with-metadata`,
   );
 });

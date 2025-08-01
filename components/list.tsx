@@ -90,10 +90,14 @@ export default function List({
   const totalPages = Math.ceil(data.items.length / pageSize);
 
   return (
-    <div ref={listRef} className="not-prose font-inter lg:divide-y">
-      {paginatedItems.map(({ _url, metadata }) => (
+    <div
+      ref={listRef}
+      id="list-component"
+      className="not-prose font-inter lg:divide-y"
+    >
+      {paginatedItems.map(({ url, metadata }) => (
         <article
-          key={_url}
+          key={url}
           className="relative isolate flex flex-col gap-8 py-8 lg:flex-row lg:py-10"
         >
           {fields.includes("image") && (
@@ -125,7 +129,7 @@ export default function List({
             <div className="group relative max-w-3xl">
               {fields.includes("title") && (
                 <h3 className="mt-3 text-lg/6 font-semibold text-primary-strong group-hover:text-primary-emphasis">
-                  <a href={_url!}>
+                  <a href={url!}>
                     <span className="absolute inset-0" />
                     {metadata.title}
                   </a>

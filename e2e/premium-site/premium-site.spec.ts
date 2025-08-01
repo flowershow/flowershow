@@ -38,3 +38,16 @@ test.describe("Site configuration in `config.json`", () => {
     );
   });
 });
+
+test("Should render List component correctly", async ({
+  publishedSitePage,
+}) => {
+  await publishedSitePage.goto("/blog");
+  const list = publishedSitePage.page.locator("#list-component");
+  await expect(list).toBeVisible();
+  const blogPost1 = list.locator("article").first();
+  await expect(blogPost1.locator("a")).toHaveAttribute(
+    "href",
+    `${publishedSitePage.siteUrlPath}/blog/article-with-metadata`,
+  );
+});

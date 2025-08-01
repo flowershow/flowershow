@@ -740,12 +740,12 @@ export const siteRouter = createTRPCRouter({
                 "metadata"->>'title' ASC NULLS LAST
           `;
 
-          const rawFilePermalinkBase = site.customDomain
-            ? `/_r/-`
+          const urlPrefix = site.customDomain
+            ? "/"
             : resolveSiteAlias(
-                `/@${site.user!.ghUsername}/${site.projectName}`,
+                `/@${site.user!.ghUsername}/${site.projectName}/`,
                 "to",
-              ) + `/_r/-`;
+              );
 
           const items = blobs.map((b) => {
             const metadata = b.metadata;
@@ -754,12 +754,12 @@ export const siteRouter = createTRPCRouter({
               metadata.image = resolveLink({
                 link: metadata.image,
                 filePath: b.path,
-                prefixPath: rawFilePermalinkBase,
+                prefixPath: urlPrefix + "/_r/-/",
               });
             }
 
             return {
-              _url: b.app_path,
+              url: urlPrefix + b.app_path,
               metadata,
             };
           });
