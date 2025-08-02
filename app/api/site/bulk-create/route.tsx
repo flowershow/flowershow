@@ -21,7 +21,6 @@ const createContext = async (req: NextRequest) => {
 export async function POST(req: NextRequest) {
   // Create context and caller
   const ctx = await createContext(req);
-  console.log({ ctx });
   const caller = appRouter.createCaller(ctx);
   const sitesToInsert = (await req.json()) as GhRepo[];
 

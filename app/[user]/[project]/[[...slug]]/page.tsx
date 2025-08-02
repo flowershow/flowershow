@@ -188,6 +188,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
       notFound();
     });
   // const sitePermalinks = [];
+  console.log({ sitePermalinks });
 
   const page = await api.site.getBlobWithContent
     .query({

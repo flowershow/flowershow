@@ -17,8 +17,6 @@ export default function rehypeResolveExplicitJsxUrls(options: Options) {
 
   return (tree) => {
     visit(tree, "mdxJsxFlowElement", (node) => {
-      console.log({ node });
-      console.log(node.attributes);
       if (node.data?._mdxExplicitJsx && node.attributes) {
         (node.attributes as Array<Record<string, any>>).forEach((a) => {
           if (a.name === "src") {

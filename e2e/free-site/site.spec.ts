@@ -5,7 +5,7 @@ test.describe("Site configuration in `config.json`", () => {
     publishedSitePage,
   }) => {
     const response = await publishedSitePage.goto(
-      "/blog/archive/archived-article",
+      "/blog/archive/archived-post",
     );
     expect(response).not.toBeNull();
     expect(response!.status()).toBe(404);
@@ -15,7 +15,7 @@ test.describe("Site configuration in `config.json`", () => {
   test("Files in `contentExclude` are not published", async ({
     publishedSitePage,
   }) => {
-    const response = await publishedSitePage.goto("/blog/draft-article");
+    const response = await publishedSitePage.goto("/blog/draft-post");
     expect(response).not.toBeNull();
     expect(response!.status()).toBe(404);
     await expect(publishedSitePage.page.getByText("404")).toBeVisible();
@@ -25,7 +25,7 @@ test.describe("Site configuration in `config.json`", () => {
     publishedSitePage,
   }) => {
     const response = await publishedSitePage.goto(
-      "/blog/draft-article-with-publish-false",
+      "/blog/draft-post-with-publish-false",
     );
     expect(response).not.toBeNull();
     expect(response!.status()).toBe(404);
@@ -71,7 +71,7 @@ test.describe("MDX", () => {
   test("Should resolve JSX href and src attributes", async ({
     publishedSitePage,
   }) => {
-    await publishedSitePage.goto("/syntax/jsx");
+    await publishedSitePage.goto("/syntax/syntax");
     await expect(
       publishedSitePage.page.getByTestId("jsx-img").locator("img"),
     ).toHaveAttribute("src", /\/@.+\/.+\/_r\/-\/.+/);
@@ -81,7 +81,7 @@ test.describe("MDX", () => {
 test("Should display frontmatter metadata in the header", async ({
   publishedSitePage,
 }) => {
-  await publishedSitePage.goto("/blog/article-with-metadata");
+  await publishedSitePage.goto("/blog/post-with-metadata");
 
   const header = publishedSitePage.page.getByTestId("blog-header");
   await expect(header.locator("time").first()).toHaveText("June 6, 2024");
@@ -109,6 +109,6 @@ test("Should render List component correctly", async ({
   const blogPost1 = list.locator("article").first();
   await expect(blogPost1.locator("a")).toHaveAttribute(
     "href",
-    `${publishedSitePage.siteUrlPath}/blog/article-with-metadata`,
+    `${publishedSitePage.siteUrlPath}/blog/post-with-metadata`,
   );
 });

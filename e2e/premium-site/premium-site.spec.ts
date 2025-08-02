@@ -4,7 +4,7 @@ test.describe("MDX", () => {
   test("Should resolve JSX href and src attributes", async ({
     publishedSitePage,
   }) => {
-    await publishedSitePage.goto("/syntax");
+    await publishedSitePage.goto("/syntax/syntax");
     await expect(
       publishedSitePage.page.getByTestId("jsx-img").locator("img"),
     ).toHaveAttribute("src", /^\/_r\/-\/.+/); // the test site it on custom domain
@@ -48,6 +48,6 @@ test("Should render List component correctly", async ({
   const blogPost1 = list.locator("article").first();
   await expect(blogPost1.locator("a")).toHaveAttribute(
     "href",
-    `${publishedSitePage.siteUrlPath}/blog/article-with-metadata`,
+    `${publishedSitePage.siteUrlPath}/blog/post-with-metadata`,
   );
 });

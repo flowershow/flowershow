@@ -55,9 +55,10 @@ export async function GET(
   // In development with MinIO, use http://. In production with R2, use https://
   const protocol =
     process.env.NODE_ENV === "development" ? "http://" : "https://";
-  const R2FileUrl = `${protocol}${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${
-    site.id
-  }/${site.ghBranch}/raw/${path.join("/")}`;
+  const encodedPath = path
+    .map((segment) => encodeURIComponent(segment))
+    .join("/");
+  const R2FileUrl = `${protocol}${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${site.id}/${site.ghBranch}/raw/${encodedPath}`;
 
   return NextResponse.redirect(R2FileUrl, { status: 302 });
 }

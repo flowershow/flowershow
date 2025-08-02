@@ -11,7 +11,7 @@ export class PublishedSitePage {
     this.siteName = siteName;
     this.customDomain = customDomain;
     this.siteUrlPath = customDomain
-      ? "/"
+      ? ""
       : `/@${process.env.GH_E2E_TEST_ACCOUNT}/${siteName}`;
   }
 

@@ -78,16 +78,21 @@ export default async function middleware(req: NextRequest) {
       const projectName = userProjectMatch[2];
       const restOfPath = userProjectMatch[3];
 
-      const rawPathMatch = restOfPath?.match(/^\/_r\/(-)\/(.*)/);
+      const rawPathMatch = restOfPath?.match(/^\/_r\/(-)\/(.+)/);
 
       // raw file paths (e.g. /_r/-/data/some.csv)
       if (rawPathMatch) {
-        const branch = rawPathMatch[1];
-        const filePath = rawPathMatch[2];
+        const branch = rawPathMatch[1]!;
+        const filePath = rawPathMatch[2]!;
+
+        const encodedFilePath = filePath
+          .split("/") // keep real “/” separators intact
+          .map(normaliseSegment)
+          .join("/");
 
         return NextResponse.rewrite(
           new URL(
-            `/api/raw/${username}/${projectName}/${branch}/${filePath}`,
+            `/api/raw/${username}/${projectName}/${branch}/${encodedFilePath}`,
             req.url,
           ),
         );
@@ -138,11 +143,19 @@ export default async function middleware(req: NextRequest) {
 
   // raw file paths (e.g. /_r/-/data/some.csv)
   if (rawPathMatch) {
-    const branch = rawPathMatch[1];
-    const filePath = rawPathMatch[2];
+    const branch = rawPathMatch[1]!;
+    const filePath = rawPathMatch[2]!;
+
+    const encodedFilePath = filePath
+      .split("/") // keep real “/” separators intact
+      .map(normaliseSegment)
+      .join("/");
 
     return NextResponse.rewrite(
-      new URL(`/api/raw/_domain/${hostname}/${branch}/${filePath}`, req.url),
+      new URL(
+        `/api/raw/_domain/${hostname}/${branch}/${encodedFilePath}`,
+        req.url,
+      ),
     );
   }
 
@@ -176,4 +189,21 @@ export default async function middleware(req: NextRequest) {
 
   // rewrite all other domains and subdomains to /domain/{hostname}/{path}
   return NextResponse.rewrite(new URL(`/_domain/${hostname}${path}`, req.url));
+}
+
+function normaliseSegment(raw: string) {
+  // 1. Turn every stray % into %25 so decodeURIComponent won’t crash
+  const fixed = raw.replace(/%(?![0-9A-Fa-f]{2})/g, "%25");
+
+  // 2. Decode whatever *was* validly encoded, e.g. %20 → space
+  //    (wrapped in try/catch just in case)
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(fixed);
+  } catch {
+    decoded = fixed; // fall back – very unlikely now
+  }
+
+  // 3. Re-encode so the segment is fully, correctly escaped
+  return encodeURIComponent(decoded);
 }

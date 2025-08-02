@@ -61,7 +61,6 @@ export default async function Layout({
   // Handle redirects if configured
   if (siteConfig?.redirects) {
     for (const r of siteConfig.redirects) {
-      console.log({ r, slug: "/" + decodedSlug });
       // Simple string comparison for exact path matching
       if ("/" + decodedSlug === r.from) {
         const redirectUrl = site.customDomain

@@ -22,7 +22,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.515.0",
     "@aws-sdk/s3-request-presigner": "^3.515.0",
-    "@flowershow/remark-wiki-link": "^2.0.2",
+    "@flowershow/remark-wiki-link": "^2.0.3",
     "@giscus/react": "^3.1.0",
     "@headlessui/react": "^2.2.0",
     "@next-auth/prisma-adapter": "^1.0.7",
