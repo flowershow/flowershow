@@ -48,6 +48,7 @@ export const mdxComponentsFactory = ({
 
   const ghUsername = siteUser!.ghUsername!;
 
+  // TODO create a single lib for this kind of stuff (currently we have patches like this in many different places)
   const rawFilePermalinkBase = customDomain
     ? `/_r/-`
     : resolveSiteAlias(`/@${ghUsername}/${projectName}`, "to") + `/_r/-`;
@@ -89,7 +90,22 @@ export const mdxComponentsFactory = ({
     },
     img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
       if (!props.src) return <img {...props} />;
-      return <img {...props} className="rounded-md" />;
+      // TODO temporary quick patch to support special signs in file names
+      const [sitePath, assetPath] = props.src.split("/_r/-/");
+      if (!sitePath || !assetPath) {
+        return <img {...props} />;
+      }
+      const encodedAssetPath = assetPath!
+        .split("/")
+        .map((f) => encodeURIComponent(f))
+        .join("/");
+      return (
+        <img
+          {...props}
+          src={`${sitePath}/_r/-/${encodedAssetPath}`}
+          className="rounded-md"
+        />
+      );
     },
     pre: (props) => (
       <div className="prose-pre:bg-[#fafafa]">

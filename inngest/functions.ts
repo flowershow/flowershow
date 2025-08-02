@@ -117,8 +117,6 @@ export const syncSite = inngest.createFunction(
           existingBlobs.map((blob) => [blob.path, blob.sha]),
         );
 
-        console.log({ blobShaMap });
-
         const items = gitHubTree.tree
           .filter(
             (ghTreeItem) =>
