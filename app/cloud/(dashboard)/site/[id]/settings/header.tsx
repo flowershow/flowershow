@@ -14,6 +14,7 @@ export default async function SiteSettingsHeader({
 }: {
   site: SiteWithUser;
 }) {
+  // TODO move this to some lib; we have solutions like this scattered in many places
   const isSecure =
     env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
     env.NEXT_PUBLIC_VERCEL_ENV === "preview";

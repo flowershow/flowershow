@@ -12,7 +12,7 @@ export const config = {
      * 3. /_static (inside /public)
      * 4. all root files inside /public (e.g. /favicon.ico)
      */
-    "/((?!api/|_next/|_static/|_vercel|[\\w-]+\\.\\w+).*)",
+    "/((?!api/|_next/|_static/|_vercel|(?!sitemap\\.xml)[\\w-]+\\.\\w+).*)",
   ],
 };
 
@@ -22,6 +22,7 @@ export default async function middleware(req: NextRequest) {
 
   // Get hostname of request
   let hostname = req.headers.get("host")!;
+  console.log({ hostname });
 
   // special case for Vercel preview deployment URLs
   if (hostname.endsWith(`.${env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`)) {
@@ -66,6 +67,11 @@ export default async function middleware(req: NextRequest) {
     hostname === env.NEXT_PUBLIC_ROOT_DOMAIN ||
     hostname === `staging-${env.NEXT_PUBLIC_ROOT_DOMAIN}`
   ) {
+    // Handle root sitemap.xml
+    if (path === "/sitemap.xml") {
+      return NextResponse.rewrite(new URL("/sitemap.xml", req.url));
+    }
+
     const aliasResolvedPath = resolveSiteAlias(path, "from");
 
     // if resolved path matches /@{username}/{project}/{restofpath}
@@ -77,6 +83,12 @@ export default async function middleware(req: NextRequest) {
       const username = userProjectMatch[1];
       const projectName = userProjectMatch[2];
       const restOfPath = userProjectMatch[3];
+
+      if (restOfPath === "/sitemap.xml") {
+        return NextResponse.rewrite(
+          new URL(`/api/sitemap/${username}/${projectName}`, req.url),
+        );
+      }
 
       const rawPathMatch = restOfPath?.match(/^\/_r\/(-)\/(.+)/);
 
@@ -98,37 +110,6 @@ export default async function middleware(req: NextRequest) {
         );
       }
 
-      // datapackage paths (e.g. /datapackage.json)
-      if (restOfPath?.match(/\/datapackage\.(json|yaml|yml)$/)) {
-        // TODO: make this a redirect (permanent) so that people use raw path instead?
-        return NextResponse.rewrite(
-          new URL(
-            `/api/raw/${username}/${projectName}/-${restOfPath}`,
-            req.url,
-          ),
-        );
-      }
-
-      // OLD - to be removed in the future
-
-      // NOTE: doesn't support nested paths
-      if (restOfPath?.match(/^\/view\/.+$/)) {
-        return NextResponse.redirect(
-          new URL(path.replace(/\/view\/.+$/, ""), req.url),
-        );
-      }
-
-      // NOTE: doesn't support nested paths
-      if (restOfPath?.match(/^\/r\/.+$/)) {
-        const resourceWithExtension = restOfPath.replace(/^\/r\//, "");
-        return NextResponse.rewrite(
-          new URL(
-            `/api/raw-old/${username}/${projectName}/${resourceWithExtension}`,
-            req.url,
-          ),
-        );
-      }
-
       return NextResponse.rewrite(
         new URL(`/${username}/${projectName}${restOfPath}`, req.url),
       );
@@ -139,6 +120,14 @@ export default async function middleware(req: NextRequest) {
   }
 
   // CUSTOM DOMAIN
+  if (path === "/sitemap.xml") {
+    // For custom domains, we use _domain as the username and hostname as the project name
+    // This matches the site lookup in the sitemap API that checks customDomain field
+    return NextResponse.rewrite(
+      new URL(`/api/sitemap/_domain/${hostname}`, req.url),
+    );
+  }
+
   const rawPathMatch = path?.match(/^\/_r\/(-)\/(.*)/);
 
   // raw file paths (e.g. /_r/-/data/some.csv)
@@ -154,34 +143,6 @@ export default async function middleware(req: NextRequest) {
     return NextResponse.rewrite(
       new URL(
         `/api/raw/_domain/${hostname}/${branch}/${encodedFilePath}`,
-        req.url,
-      ),
-    );
-  }
-
-  // datapackage paths (e.g. /datapackage.json)
-  if (path?.match(/\/datapackage\.(json|yaml|yml)$/)) {
-    // TODO: make this a redirect (permanent) so that people use raw path instead?
-    return NextResponse.rewrite(
-      new URL(`/api/raw/_domain/${hostname}/-${path}`, req.url),
-    );
-  }
-
-  // OLD - to be removed in the future
-
-  // NOTE: doesn't support nested paths
-  if (path?.match(/^\/view\/.+$/)) {
-    return NextResponse.redirect(
-      new URL(path.replace(/\/view\/.+$/, ""), req.url),
-    );
-  }
-
-  // NOTE: doesn't support nested paths
-  if (path?.match(/^\/r\/.+$/)) {
-    const resourceWithExtension = path.replace(/^\/r\//, "");
-    return NextResponse.rewrite(
-      new URL(
-        `/api/raw-old/_domain/${hostname}/${resourceWithExtension}`,
         req.url,
       ),
     );
