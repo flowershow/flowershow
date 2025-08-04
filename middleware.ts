@@ -12,7 +12,7 @@ export const config = {
      * 3. /_static (inside /public)
      * 4. all root files inside /public (e.g. /favicon.ico)
      */
-    "/((?!api/|_next/|_static/|_vercel|(?!sitemap\\.xml)[\\w-]+\\.\\w+).*)",
+    "/((?!api/|_next/|_static/|_vercel|(?!sitemap\\.xml|robots\\.txt)[\\w-]+\\.\\w+).*)",
   ],
 };
 
@@ -67,9 +67,12 @@ export default async function middleware(req: NextRequest) {
     hostname === env.NEXT_PUBLIC_ROOT_DOMAIN ||
     hostname === `staging-${env.NEXT_PUBLIC_ROOT_DOMAIN}`
   ) {
-    // Handle root sitemap.xml
     if (path === "/sitemap.xml") {
       return NextResponse.rewrite(new URL("/sitemap.xml", req.url));
+    }
+
+    if (path === "/robots.txt") {
+      return NextResponse.rewrite(new URL(`/robots.txt`, req.url));
     }
 
     const aliasResolvedPath = resolveSiteAlias(path, "from");
@@ -120,6 +123,10 @@ export default async function middleware(req: NextRequest) {
   }
 
   // CUSTOM DOMAIN
+  if (path === "/robots.txt") {
+    return NextResponse.rewrite(new URL(`/api/robots/${hostname}`, req.url));
+  }
+
   if (path === "/sitemap.xml") {
     // For custom domains, we use _domain as the username and hostname as the project name
     // This matches the site lookup in the sitemap API that checks customDomain field

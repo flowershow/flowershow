@@ -49,4 +49,22 @@ test.describe("Premium site sitemap", () => {
     const siteUrl = `http://${publishedSitePage.customDomain}`;
     expect(text).not.toContain(`<loc>${siteUrl}/sitemap.xml</loc>`);
   });
+
+  test("robots.txt should return valid content with custom domain", async ({
+    publishedSitePage,
+  }) => {
+    const response = await publishedSitePage.goto("/robots.txt");
+    expect(response).not.toBeNull();
+    expect(response!.status()).toBe(200);
+    expect(response!.headers()["content-type"]).toBe("text/plain");
+
+    const text = await response!.text();
+    expect(text).toContain(`# http://${publishedSitePage.customDomain}`);
+    expect(text).toContain("User-agent: *");
+    expect(text).toContain("Allow: /");
+    expect(text).toContain("Disallow: /api/");
+    expect(text).toContain(
+      `Sitemap: http://${publishedSitePage.customDomain}/sitemap.xml`,
+    );
+  });
 });
