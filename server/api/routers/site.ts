@@ -28,7 +28,7 @@ import { Blob, Status } from "@prisma/client";
 import { PageMetadata } from "../types";
 import { resolveLink } from "@/lib/resolve-link";
 import { SiteWithUser } from "@/types";
-import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
+import { getSiteUrlPath } from "@/lib/get-site-url";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -702,7 +702,7 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const site = await ctx.db.site.findFirst({
+      const site = (await ctx.db.site.findFirst({
         where: {
           AND: [{ id: input.siteId }],
         },
@@ -712,7 +712,7 @@ export const siteRouter = createTRPCRouter({
           customDomain: true,
           projectName: true,
         },
-      });
+      })) as SiteWithUser;
 
       if (!site) {
         throw new TRPCError({
@@ -720,8 +720,11 @@ export const siteRouter = createTRPCRouter({
           message: "Site not found",
         });
       }
+
       return await unstable_cache(
         async (input) => {
+          const siteUrlPath = getSiteUrlPath(site);
+
           const dir = input.dir.replace(/^\//, "");
           const dirReadmePath = dir + "/README.md";
           const dirIndexPath = dir + "/index.md";
@@ -740,13 +743,6 @@ export const siteRouter = createTRPCRouter({
                 "metadata"->>'title' ASC NULLS LAST
           `;
 
-          const urlPrefix = site.customDomain
-            ? "/"
-            : resolveSiteAlias(
-                `/@${site.user!.ghUsername}/${site.projectName}/`,
-                "to",
-              );
-
           const items = blobs.map((b) => {
             const metadata = b.metadata;
 
@@ -754,12 +750,12 @@ export const siteRouter = createTRPCRouter({
               metadata.image = resolveLink({
                 link: metadata.image,
                 filePath: b.path,
-                prefixPath: urlPrefix + "/_r/-/",
+                prefixPath: siteUrlPath + "/_r/-",
               });
             }
 
             return {
-              url: urlPrefix + b.app_path,
+              url: siteUrlPath + "/" + b.app_path,
               metadata,
             };
           });

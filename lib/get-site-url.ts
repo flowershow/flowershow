@@ -18,3 +18,14 @@ export default function getSiteUrl(site: SiteWithUser) {
     return `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${sitePath}`;
   }
 }
+
+export function getSiteUrlPath(site: SiteWithUser) {
+  const { projectName, user, customDomain } = site;
+
+  if (customDomain) {
+    return "";
+  } else {
+    const ghUsername = user!.ghUsername!;
+    return resolveSiteAlias(`/@${ghUsername}/${projectName}`, "to");
+  }
+}
