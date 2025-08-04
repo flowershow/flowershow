@@ -78,7 +78,7 @@ test("Obsidian embeds", async ({ publishedSitePage }) => {
     .getByRole("img");
   await expect(obsidianEmbedSpecialChars).toHaveAttribute(
     "src",
-    `${publishedSitePage.siteUrlPath}/_r/-/assets/Image With Special Chars %&(1).jpg`,
+    `${publishedSitePage.siteUrlPath}/_r/-/assets/Image%20With%20Special%20Chars%20%25%26(1).jpg`,
   );
 });
 

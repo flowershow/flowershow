@@ -3,6 +3,7 @@ import Script from "next/script";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { ReactNode } from "react";
 import clsx from "clsx";
+import { Metadata } from "next";
 
 import { Blob } from "@prisma/client";
 import { PageMetadata } from "@/server/api/types";

@@ -22,7 +22,6 @@ export default async function middleware(req: NextRequest) {
 
   // Get hostname of request
   let hostname = req.headers.get("host")!;
-  console.log({ hostname });
 
   // special case for Vercel preview deployment URLs
   if (hostname.endsWith(`.${env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`)) {

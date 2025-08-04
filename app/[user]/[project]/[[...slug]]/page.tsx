@@ -9,12 +9,10 @@ import { BlogLayout } from "@/components/layouts/blog";
 
 import { getConfig } from "@/lib/app-config";
 import { getMdxOptions } from "@/lib/markdown";
-import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 import { resolveLink } from "@/lib/resolve-link";
 
 import { api } from "@/trpc/server";
 import { PageMetadata } from "@/server/api/types";
-import { env } from "@/env.mjs";
 
 import UrlNormalizer from "./url-normalizer";
 import { getSite } from "./get-site";
@@ -22,6 +20,7 @@ import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 import { GiscusProps } from "@giscus/react";
 import emojiRegex from "emoji-regex";
 import { generateScopedCss } from "@/lib/generate-scoped-css";
+import getSiteUrl, { getSiteUrlPath } from "@/lib/get-site-url";
 
 const config = getConfig();
 
@@ -61,40 +60,22 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     })
     .catch(() => null);
 
-  const ghUsername = site.user!.ghUsername!;
+  const siteUrl = getSiteUrl(site);
 
-  const canonicalUrlBase = site.customDomain
-    ? `https://${site.customDomain}`
-    : `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}` +
-      resolveSiteAlias(`/@${ghUsername}/${projectName}`, "to");
-
-  const protocol =
-    env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
-    env.NEXT_PUBLIC_VERCEL_ENV === "preview"
-      ? "https"
-      : "http";
-
-  const rawFilePermalinkBase = site.customDomain
-    ? `${protocol}://${site.customDomain}/_r/-`
-    : `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${resolveSiteAlias(
-        `/@${ghUsername}/${projectName}`,
-        "to",
-      )}/_r/-`;
-
-  const resolveDataUrl = (url: string) =>
+  const getRawAssetUrl = (url: string) =>
     resolveLink({
       link: url,
       filePath: blob.path,
-      prefixPath: rawFilePermalinkBase,
+      prefixPath: siteUrl + "/_r/-",
     });
 
   let imageUrl: string | null;
 
   if (isFeatureEnabled(Feature.NoBranding, site)) {
     imageUrl = metadata.image
-      ? resolveDataUrl(metadata.image)
+      ? getRawAssetUrl(metadata.image)
       : siteConfig?.image
-        ? resolveDataUrl(siteConfig.image)
+        ? getRawAssetUrl(siteConfig.image)
         : null;
   } else {
     imageUrl = config.thumbnail;
@@ -106,7 +87,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     if (isEmoji(siteConfig.favicon)) {
       faviconUrl = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${siteConfig.favicon}</text></svg>`;
     } else {
-      faviconUrl = resolveDataUrl(siteConfig.favicon);
+      faviconUrl = getRawAssetUrl(siteConfig.favicon);
     }
   }
 
@@ -121,7 +102,8 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
         ? `${metadata.title} - ${siteConfig.title}`
         : metadata.title,
       description: metadata.description ?? siteConfig?.description,
-      /* url: author.url, */
+      type: "website",
+      url: `${siteUrl}/${decodedSlug}`,
       images: [
         {
           url: imageUrl,
@@ -149,20 +131,10 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     },
     // Set canonical URL to custom domain if it exists
     // Maybe not needed since we redirect to a custom domain if it exists ?
-    ...(canonicalUrlBase && {
-      alternates: {
-        canonical:
-          decodedSlug === "/"
-            ? `${canonicalUrlBase}`
-            : `${canonicalUrlBase}/${decodedSlug}`,
-      },
-    }),
-    metadataBase: new URL(
-      env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
-      env.NEXT_PUBLIC_VERCEL_ENV === "preview"
-        ? `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}`
-        : `http://localhost:3000`,
-    ),
+    alternates: {
+      canonical: `${siteUrl}/${decodedSlug}`,
+    },
+    metadataBase: new URL(getSiteUrl(site)),
   };
 }
 
@@ -204,9 +176,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   const mdxOptions = getMdxOptions({
     permalinks: sitePermalinks,
     filePath: page.blob.path,
-    siteSubpath: site.customDomain
-      ? ""
-      : `/@${site.user?.ghUsername}/${site.projectName}`,
+    siteSubpath: getSiteUrlPath(site),
   }) as any;
 
   let compiledMDX: any;
@@ -231,16 +201,12 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     );
   }
 
-  const rawFilePermalinkBase = site.customDomain
-    ? `/_r/-`
-    : `/@${site.user!.ghUsername}/${site.projectName}` + `/_r/-`;
-
   // TODO create a single lib for this kind of stuff (currently we have patches like this in many different places)
-  const resolveAssetUrl = (url: string) =>
+  const getRawAssetUrl = (url: string) =>
     resolveLink({
       link: url,
       filePath: page.blob.path,
-      prefixPath: rawFilePermalinkBase,
+      prefixPath: getSiteUrlPath(site) + `/_r/-`,
     });
 
   const metadata = page.blob.metadata as unknown as PageMetadata;
@@ -261,7 +227,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
           siteId: site.id,
           authors: metadata.authors,
         }));
-      const image = metadata.image && resolveAssetUrl(metadata.image);
+      const image = metadata.image && getRawAssetUrl(metadata.image);
       return (
         <BlogLayout
           title={metadata.title}
