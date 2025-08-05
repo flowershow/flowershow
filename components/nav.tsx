@@ -61,10 +61,9 @@ const Nav = ({
     <Disclosure>
       {({ open, close }) => (
         <nav
-          id="navbar"
           data-testid="navbar"
           className={clsx(
-            "z-10 bg-inherit text-base font-normal",
+            "navbar z-10 bg-inherit text-base font-normal",
             isScrolled && "shadow-sm",
             open ? "fixed inset-0 md:sticky" : "sticky top-0",
           )}
@@ -73,12 +72,17 @@ const Nav = ({
             <div className="flex h-16 justify-between space-x-2">
               <div className="flex items-center space-x-2">
                 <Link
-                  id="navbar-title"
                   href={url}
-                  className="flex items-center space-x-3 text-lg font-semibold tracking-tight text-primary-strong md:text-xl"
+                  className="navbar-site-link flex items-center space-x-3 text-lg font-semibold tracking-tight text-primary-strong md:text-xl"
                 >
-                  <Image alt="Logo" src={logo} width={32} height={32} />
-                  {title && <span>{title}</span>}
+                  <Image
+                    className="navbar-site-logo"
+                    alt="Logo"
+                    src={logo}
+                    width={32}
+                    height={32}
+                  />
+                  {title && <span className="navbar-site-title">{title}</span>}
                 </Link>
                 {links && (
                   <div
@@ -89,7 +93,7 @@ const Nav = ({
                       <a
                         key={link.name}
                         href={link.href}
-                        className="inline-flex items-center px-1"
+                        className="navbar-link inline-flex items-center px-1"
                       >
                         {link.name}
                       </a>

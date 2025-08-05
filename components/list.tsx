@@ -90,21 +90,21 @@ export default function List({
   const totalPages = Math.ceil(data.items.length / pageSize);
 
   return (
-    <div ref={listRef} id="list-component" className="not-prose font-inter">
+    <div ref={listRef} className="list-component not-prose font-inter">
       {paginatedItems.map(({ url, metadata }) => (
         <article
           key={url}
-          className="relative isolate flex flex-col gap-8 py-8 lg:flex-row lg:border-t lg:py-10"
+          className="list-component-item relative isolate flex flex-col gap-8 py-8 lg:flex-row lg:border-t lg:py-10"
         >
           {fields.includes("image") && (
-            <div className="relative aspect-video overflow-hidden lg:aspect-[2/1] lg:w-64 lg:shrink-0">
+            <div className="list-component-item-image-wrapper relative aspect-video overflow-hidden lg:aspect-[2/1] lg:w-64 lg:shrink-0">
               <img
                 alt="Image"
                 src={
                   metadata.image ??
                   "https://r2-assets.flowershow.app/placeholder.png"
                 }
-                className="absolute inset-0 h-full w-full rounded-2xl bg-gray-50 object-cover"
+                className="list-component-item-image absolute inset-0 h-full w-full rounded-2xl bg-gray-50 object-cover"
               />
               <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/10" />
             </div>
@@ -115,7 +115,7 @@ export default function List({
                 {metadata.date && (
                   <time
                     dateTime={metadata.date}
-                    className="text-primary-subtle"
+                    className="list-component-item-date text-primary-subtle"
                   >
                     {metadata.date.slice(0, 10)}
                   </time>
@@ -124,7 +124,7 @@ export default function List({
             )}
             <div className="group relative max-w-3xl">
               {fields.includes("title") && (
-                <h3 className="mt-3 text-lg/6 font-semibold text-primary-strong group-hover:text-primary-emphasis">
+                <h3 className="list-component-item-title mt-3 text-lg/6 font-semibold text-primary-strong group-hover:text-primary-emphasis">
                   <a href={url!}>
                     <span className="absolute inset-0" />
                     {metadata.title}
@@ -132,28 +132,23 @@ export default function List({
                 </h3>
               )}
               {fields.includes("description") && (
-                <p className="text-md/6 mt-5 line-clamp-2 text-primary-emphasis">
+                <p className="list-component-item-description text-md/6 mt-5 line-clamp-2 text-primary-emphasis">
                   {metadata.description}
                 </p>
               )}
             </div>
             {fields.includes("authors") && (
               <div className="mt-6 flex border-t border-primary-faint pt-6">
-                <div className="relative flex items-center gap-x-4">
-                  <div className="text-sm/6">
-                    <p className="font-semibold text-primary-strong">
-                      <span className="absolute inset-0" />
-                      {metadata.authors?.join(", ") || ""}
-                    </p>
-                  </div>
-                </div>
+                <p className="text-sm/6 font-semibold text-primary-strong">
+                  {metadata.authors?.join(", ") || ""}
+                </p>
               </div>
             )}
           </div>
         </article>
       ))}
       {totalPages > 1 && (
-        <nav className="flex items-center justify-between border-t border-gray-200 px-4 sm:px-0">
+        <nav className="list-component-pagination flex items-center justify-between border-t border-gray-200 px-4 sm:px-0">
           <div className="-mt-px flex w-0 flex-1">
             <button
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}

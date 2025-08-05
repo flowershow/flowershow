@@ -68,7 +68,7 @@ export default function TableOfContents({
   }
 
   return (
-    <div id="toc" className="text-sm" data-testid="toc">
+    <div className="text-sm" data-testid="toc">
       <h3 className="mb-4 uppercase tracking-wider">On this page</h3>
       <nav className="font-light">
         <ul>

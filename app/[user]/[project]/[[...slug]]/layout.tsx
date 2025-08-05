@@ -1,9 +1,7 @@
 import { notFound, permanentRedirect, redirect } from "next/navigation";
-import Script from "next/script";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { ReactNode } from "react";
 import clsx from "clsx";
-import { Metadata } from "next";
 
 import { Blob } from "@prisma/client";
 import { PageMetadata } from "@/server/api/types";
@@ -167,16 +165,16 @@ export default async function Layout({
         />
 
         {showHero && (
-          <header id="hero" className="relative bg-neutral-50">
+          <header className="hero relative bg-neutral-50">
             <div
               className={clsx(
-                "mx-auto",
+                "hero-inner mx-auto",
                 metadata.image
                   ? "max-w-screen-2xl lg:grid lg:grid-cols-12 lg:gap-x-8"
                   : "max-w-3xl text-center",
               )}
             >
-              <div className="pb-16 pt-10 sm:pb-20 lg:col-span-6 lg:px-0 lg:pb-32 lg:pt-28">
+              <div className="hero-text-wrapper pb-16 pt-10 sm:pb-20 lg:col-span-6 lg:px-0 lg:pb-32 lg:pt-28">
                 <div className="mx-auto px-8 sm:px-10 lg:mx-0 lg:px-12">
                   <h1 className="text-pretty mt-24 text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl">
                     {metadata.title}
@@ -215,11 +213,11 @@ export default async function Layout({
                 </div>
               </div>
               {metadata.image && (
-                <div className="relative lg:col-span-6 lg:-mr-8 xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0">
+                <div className="hero-image-wrapper relative lg:col-span-6 lg:-mr-8 xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0">
                   <img
-                    alt=""
+                    alt="Hero Image"
                     src={resolveHeroImageSrc(metadata.image)}
-                    className="aspect-[3/2] w-full bg-gray-50 object-cover lg:absolute lg:inset-0 lg:aspect-auto lg:h-full"
+                    className="hero-image aspect-[3/2] w-full bg-gray-50 object-cover lg:absolute lg:inset-0 lg:aspect-auto lg:h-full"
                   />
                 </div>
               )}
@@ -229,7 +227,6 @@ export default async function Layout({
 
         <div className="relative">
           <div
-            id="inner-layout"
             className={clsx(
               !isPlainLayout && [
                 "mx-auto mt-16 grid w-full px-8 sm:px-10 lg:px-12",
