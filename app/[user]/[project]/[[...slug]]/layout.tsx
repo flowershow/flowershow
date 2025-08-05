@@ -176,7 +176,7 @@ export default async function Layout({
                   : "max-w-3xl text-center",
               )}
             >
-              <div className="pb-16 pt-10 sm:pb-20 lg:col-span-6 lg:px-0 lg:pb-32 lg:pt-28 xl:col-span-6">
+              <div className="pb-16 pt-10 sm:pb-20 lg:col-span-6 lg:px-0 lg:pb-32 lg:pt-28">
                 <div className="mx-auto px-8 sm:px-10 lg:mx-0 lg:px-12">
                   <h1 className="text-pretty mt-24 text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl">
                     {metadata.title}
@@ -215,7 +215,7 @@ export default async function Layout({
                 </div>
               </div>
               {metadata.image && (
-                <div className="relative lg:col-span-5 lg:-mr-8 xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0">
+                <div className="relative lg:col-span-6 lg:-mr-8 xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0">
                   <img
                     alt=""
                     src={resolveHeroImageSrc(metadata.image)}
@@ -242,7 +242,7 @@ export default async function Layout({
                 showSidebar &&
                   !showToc &&
                   "max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[12rem,minmax(0,1fr)]",
-                !showSidebar && !showToc && "max-w-5xl",
+                !showSidebar && !showToc && "max-w-7xl",
               ],
             )}
           >

@@ -73,7 +73,7 @@ const Nav = ({
             <div className="flex h-16 justify-between space-x-2">
               <div className="flex items-center space-x-2">
                 <Link
-                  data-testid="navbar-logo-link"
+                  id="navbar-title"
                   href={url}
                   className="flex items-center space-x-3 text-lg font-semibold tracking-tight text-primary-strong md:text-xl"
                 >
