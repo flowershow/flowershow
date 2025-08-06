@@ -42,11 +42,11 @@ export default function List({
 
   if (isLoading) {
     return (
-      <div>
+      <div className="divide-y">
         {Array.from("abcde").map((x) => (
           <article
             key={x}
-            className="relative isolate flex flex-col gap-8 py-8 lg:flex-row lg:border-t lg:py-10"
+            className="relative isolate flex flex-col gap-8 py-8 lg:flex-row lg:py-10"
           >
             {fields.includes("image") && (
               <div className="relative aspect-video overflow-hidden lg:aspect-[2/1] lg:w-64 lg:shrink-0">
@@ -90,11 +90,11 @@ export default function List({
   const totalPages = Math.ceil(data.items.length / pageSize);
 
   return (
-    <div ref={listRef} className="list-component not-prose font-inter">
+    <div ref={listRef} className="list-component not-prose divide-y font-inter">
       {paginatedItems.map(({ url, metadata }) => (
         <article
           key={url}
-          className="list-component-item relative isolate flex flex-col gap-8 py-8 lg:flex-row lg:border-t lg:py-10"
+          className="list-component-item relative isolate flex flex-col gap-8 py-8 lg:flex-row lg:py-10"
         >
           {fields.includes("image") && (
             <div className="list-component-item-image-wrapper relative aspect-video overflow-hidden lg:aspect-[2/1] lg:w-64 lg:shrink-0">
@@ -109,7 +109,7 @@ export default function List({
               <div className="absolute inset-0 rounded-2xl ring-1 ring-inset ring-gray-900/10" />
             </div>
           )}
-          <div>
+          <div className="list-component-item-metadata-wrapper">
             {fields.includes("date") && (
               <div className="flex items-center gap-x-4 text-sm">
                 {metadata.date && (

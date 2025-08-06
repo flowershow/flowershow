@@ -28,26 +28,27 @@ export const BlogLayout: React.FC<Props> = ({
   return (
     <article>
       {!showHero && (
-        <header className="mb-8 space-y-6 font-inter" data-testid="blog-header">
-          <div className="space-y-2">
-            {date && formattedDate && (
-              <div className="font-light text-primary/70">
-                Published{" "}
-                <time dateTime={new Date(date).toISOString()}>
-                  {formattedDate}
-                </time>
-              </div>
-            )}
+        <header
+          className="blog-header mb-8 space-y-2 border-b pb-8 font-inter"
+          data-testid="blog-header"
+        >
+          {date && formattedDate && (
+            <div className="blog-date font-light text-primary/70">
+              Published{" "}
+              <time dateTime={new Date(date).toISOString()}>
+                {formattedDate}
+              </time>
+            </div>
+          )}
 
-            {title && (
-              <h1 className="text-[3rem] font-semibold leading-[3.25rem] tracking-tight text-primary-emphasis text-primary-strong sm:text-[3.5rem] sm:leading-[3.75rem]">
-                {title}
-              </h1>
-            )}
-          </div>
+          {title && (
+            <h1 className="blog-title text-[3rem] font-semibold leading-[3.25rem] tracking-tight text-primary-emphasis text-primary-strong sm:text-[3.5rem] sm:leading-[3.75rem]">
+              {title}
+            </h1>
+          )}
 
           {authors && (
-            <div className="flex space-x-3">
+            <div className="blog-authors flex space-x-3 py-2">
               {authors.map((author) => {
                 const AuthorWrapper = author.url
                   ? ({
@@ -59,13 +60,11 @@ export const BlogLayout: React.FC<Props> = ({
                       href: string | null;
                       className?: string;
                     }) => (
-                      <a
-                        href={href || "#"}
-                        className={className}
-                        data-testid="blog-author"
-                      >
-                        {children}
-                      </a>
+                      <div className={className} data-testid="blog-author">
+                        <a href={href || "#"} data-testid="blog-author">
+                          {children}
+                        </a>
+                      </div>
                     )
                   : ({
                       children,
@@ -83,24 +82,18 @@ export const BlogLayout: React.FC<Props> = ({
                   <AuthorWrapper
                     key={author.key}
                     href={author.url}
-                    className="group inline-block shrink-0"
+                    className="blog-author group inline-block flex shrink-0 items-center"
                   >
-                    <div className="flex items-center">
-                      {author.avatar && (
-                        <div>
-                          <img
-                            alt={author.name}
-                            src={author.avatar}
-                            className="inline-block h-8 w-8 rounded-full"
-                          />
-                        </div>
-                      )}
-                      <div className="ml-2">
-                        <p className="text-sm font-medium text-gray-700 group-hover:text-gray-900">
-                          {author.name}
-                        </p>
-                      </div>
-                    </div>
+                    {author.avatar && (
+                      <img
+                        alt={author.name}
+                        src={author.avatar}
+                        className="blog-author-avatar inline-block h-8 w-8 rounded-full"
+                      />
+                    )}
+                    <span className="blog-author-name ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900">
+                      {author.name}
+                    </span>
                   </AuthorWrapper>
                 );
               })}
@@ -108,25 +101,25 @@ export const BlogLayout: React.FC<Props> = ({
           )}
 
           {description && (
-            <p className="text-lg font-light text-primary-subtle sm:text-xl">
+            <p className="blog-description text-lg font-light text-primary-subtle sm:text-xl">
               {description}
             </p>
           )}
 
           {image && (
-            <img
-              alt="Featured image"
-              src={image}
-              className="w-full rounded-md object-cover"
-            />
+            <div className="blog-image-wrapper w-full py-3">
+              <img
+                alt="Featured image"
+                src={image}
+                className="blog-image rounded-md object-cover"
+              />
+            </div>
           )}
-
-          <div className="border-b pb-4" />
         </header>
       )}
-      <section className="prose max-w-none font-lora font-normal text-primary dark:prose-invert prose-headings:font-inter prose-headings:tracking-tight prose-headings:text-primary-strong prose-a:break-words">
+      <div className="prose max-w-none font-lora font-normal text-primary dark:prose-invert prose-headings:font-inter prose-headings:tracking-tight prose-headings:text-primary-strong prose-a:break-words">
         {children}
-      </section>
+      </div>
     </article>
   );
 };

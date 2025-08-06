@@ -176,10 +176,10 @@ export default async function Layout({
             >
               <div className="hero-text-wrapper pb-16 pt-10 sm:pb-20 lg:col-span-6 lg:px-0 lg:pb-32 lg:pt-28">
                 <div className="mx-auto px-8 sm:px-10 lg:mx-0 lg:px-12">
-                  <h1 className="text-pretty mt-24 text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl">
+                  <h1 className="hero-title text-pretty mt-24 text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl">
                     {metadata.title}
                   </h1>
-                  <p className="text-pretty mt-8 text-lg font-medium text-primary sm:text-xl/8">
+                  <p className="hero-description text-pretty mt-8 text-lg font-medium text-primary sm:text-xl/8">
                     {metadata.description}
                   </p>
                   {metadata.cta && (
