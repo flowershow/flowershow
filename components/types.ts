@@ -54,6 +54,7 @@ export interface SiteConfig {
     to: string; // Path to redirect to (e.g. "/new-page")
     permanent?: boolean; // Whether to use 301 (true) or 302 (false) redirect
   }>;
+  theme?: string;
 }
 
 export interface SiteAlias {

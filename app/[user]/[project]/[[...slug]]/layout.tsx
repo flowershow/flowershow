@@ -22,6 +22,7 @@ import TableOfContents from "@/components/table-of-contents";
 import { SiteConfig } from "@/components/types";
 import { SiteWithUser } from "@/types";
 import { getSite } from "./get-site";
+import { getThemeUrl } from "@/lib/get-theme";
 
 const config = getConfig();
 
@@ -56,6 +57,10 @@ export default async function Layout({
       siteId: site.id,
     })
     .catch(() => null);
+
+  console.log({ theme: siteConfig?.theme });
+  const theme = siteConfig?.theme ? getThemeUrl(siteConfig.theme) : null;
+  console.log({ themeUrl: theme });
 
   // Handle redirects if configured
   if (siteConfig?.redirects) {
@@ -146,6 +151,7 @@ export default async function Layout({
   return (
     <>
       {/* it should be in the head */}
+      {theme && <link rel="stylesheet" href={theme} />}
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
       {siteConfig?.analytics && <GoogleAnalytics gaId={siteConfig.analytics} />}
 
