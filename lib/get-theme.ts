@@ -8,13 +8,11 @@ export function getThemeUrl(theme: string): string | null {
     return theme;
   }
 
-  // const [name, version] = theme.split("@");
+  const [name, version] = theme.split("@");
 
-  // if (version) {
-  //   return `https://cdn.jsdelivr.net/gh/flowershow/themes${version}/${name}/theme.css`;
-  // } else {
-  //   return `https://cdn.jsdelivr.net/gh/flowershow/themes/${name}/theme.css`;
-  // }
-
-  return `https://cdn.jsdelivr.net/gh/flowershow/themes@latest/${theme}/theme.css`;
+  if (version) {
+    return `https://cdn.jsdelivr.net/gh/flowershow/themes@${version}/${name}/theme.css`;
+  } else {
+    return `https://cdn.jsdelivr.net/gh/flowershow/themes/${name}/theme.css`;
+  }
 }
