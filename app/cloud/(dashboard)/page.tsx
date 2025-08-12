@@ -1,7 +1,7 @@
 import { Suspense } from "react";
-import Sites from "@/components/sites";
-import PlaceholderCard from "@/components/placeholder-card";
-import SiteQuickstarts from "@/components/site-quickstarts";
+import Sites from "@/components/dashboard/sites";
+import PlaceholderCard from "@/components/dashboard/placeholder-card";
+import SiteQuickstarts from "@/components/dashboard/site-quickstarts";
 
 export default function AllSites() {
   return (

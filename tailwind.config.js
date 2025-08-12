@@ -20,18 +20,18 @@ module.exports = {
     extend: {
       colors: {
         background: {
-          DEFAULT: colors.white,
+          DEFAULT: "rgb(var(--color-background) / <alpha-value>)",
         },
         primary: {
-          faint: colors.zinc[200],
-          muted: colors.zinc[400],
-          subtle: colors.zinc[500],
-          DEFAULT: colors.zinc[700],
-          emphasis: colors.zinc[800],
-          strong: colors.zinc[900],
+          faint: "rgb(var(--color-primary-faint) / <alpha-value>)",
+          muted: "rgb(var(--color-primary-muted) / <alpha-value>)",
+          subtle: "rgb(var(--color-primary-subtle) / <alpha-value>)",
+          DEFAULT: "rgb(var(--color-primary) / <alpha-value>)",
+          emphasis: "rgb(var(--color-primary-emphasis) / <alpha-value>)",
+          strong: "rgb(var(--color-primary-strong) / <alpha-value>)",
         },
         secondary: {
-          DEFAULT: colors.orange[400],
+          DEFAULT: "rgb(var(--color-secondary) / <alpha-value>)",
         },
         // light mode
         tremor: {

@@ -1,13 +1,14 @@
-import Billing from "@/components/billing";
-import SettingsNav from "@/components/settings-nav";
-import Form from "@/components/form";
-import DeleteSiteForm from "@/components/form/delete-site-form";
-import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
-import { api } from "@/trpc/server";
 import { notFound } from "next/navigation";
-import { PLANS } from "@/lib/stripe";
 import { ExternalLinkIcon } from "lucide-react";
+
+import { api } from "@/trpc/server";
+import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
+import { PLANS } from "@/lib/stripe";
 import { validDomainRegex } from "@/lib/domains";
+import Billing from "@/components/dashboard/billing";
+import SettingsNav from "@/components/dashboard/settings-nav";
+import Form from "@/components/dashboard/form";
+import DeleteSiteForm from "@/components/dashboard/form/delete-site-form";
 
 export default async function SiteSettingsIndex({
   params,

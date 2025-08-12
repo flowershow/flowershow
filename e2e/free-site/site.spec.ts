@@ -83,14 +83,14 @@ test("Should display frontmatter metadata in the header", async ({
 }) => {
   await publishedSitePage.goto("/blog/post-with-metadata");
 
-  const header = publishedSitePage.page.getByTestId("blog-header");
+  const header = publishedSitePage.page.locator("header");
   await expect(header.locator("time").first()).toHaveText("June 6, 2024");
   await expect(header.locator("h1").first()).toHaveText("Blog Post 1");
   await expect(header).toContainText("Blog Post 1 Description");
 
-  const author = header.getByTestId("blog-author").first();
+  const author = header.locator(".page-header-author").first();
   await expect(author).toContainText("John Doe");
-  await expect(author).toHaveAttribute(
+  await expect(author.getByRole("link")).toHaveAttribute(
     "href",
     `${publishedSitePage.siteUrlPath}/team/john-doe`,
   );
@@ -104,7 +104,7 @@ test("Should render List component correctly", async ({
   publishedSitePage,
 }) => {
   await publishedSitePage.goto("/blog");
-  const list = publishedSitePage.page.locator("#list-component");
+  const list = publishedSitePage.page.locator(".list-component");
   await expect(list).toBeVisible();
   const blogPost1 = list.locator("article").first();
   await expect(blogPost1.locator("a")).toHaveAttribute(

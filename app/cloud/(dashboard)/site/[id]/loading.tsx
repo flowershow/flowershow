@@ -1,6 +1,4 @@
-// a bunch of loading divs
-
-import PlaceholderCard from "@/components/placeholder-card";
+import PlaceholderCard from "@/components/dashboard/placeholder-card";
 
 export default function Loading() {
   return (

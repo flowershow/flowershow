@@ -1,0 +1,517 @@
+/* ----------------------------------------------------------------------
+   Default Flowershow Theme
+   ----------------------------------------------------------------------
+   ▸ Because the file is emitted *after* Tailwind’s own layers, no
+     `!important` flags are necessary – the selectors win on cascade order.
+   ▸ Theme authors can override any rule simply by defining the same
+     selector in their own CSS (loaded later) or by tweaking the CSS
+     Custom Properties in `:root` below.
+------------------------------------------------------------------------ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------
+   Declare explicit cascade-layer order so every file that imports this
+   sheet shares the same stacking context. 
+   ------------------------------------------------------------------ */
+@layer reset, base, components, utilities, overrides;
+
+/* ────────────────────────────────────────────────────
+   Design‑tokens (CSS custom properties)
+   ──────────────────────────────────────────────────── */
+@layer components {
+  :root {
+    /* Brand colours – override these in a custom theme for a quick re‑skin */
+    --color-background: 255 255 255; /* white */
+    --color-primary-faint: 228 228 231; /* zinc-200 */
+    --color-primary-muted: 161 161 170; /* zinc-400 */
+    --color-primary-subtle: 113 113 122; /* zinc-500 */
+    --color-primary: 63 63 70; /* zinc-700 */
+    --color-primary-emphasis: 39 39 42; /* zinc-800 */
+    --color-primary-strong: 24 24 27; /* zinc-900 */
+    --color-secondary: 251 146 60; /* orange-400 */
+  }
+}
+
+@layer components {
+  .site-layout {
+    @apply flex w-full flex-col bg-inherit;
+  }
+
+  /* ────────────────────────────────────────────────────
+   Navbar
+   ──────────────────────────────────────────────────── */
+  .site-navbar {
+    @apply sticky top-0 z-10 bg-background;
+  }
+  .site-navbar.is-scrolled {
+    @apply shadow-sm;
+  }
+  .site-navbar-inner {
+    @apply mx-auto flex h-16 justify-between space-x-4 px-4;
+  }
+
+  /* Brand link */
+  .site-navbar-site-title {
+    @apply flex items-center space-x-2;
+  }
+  .site-navbar-site-logo {
+    @apply size-8;
+  }
+  .site-navbar-site-name {
+    @apply text-lg font-semibold tracking-tight text-primary-strong md:text-xl;
+  }
+
+  /* Desktop navigation links */
+  .site-navbar-links-container {
+    @apply hidden space-x-4 lg:flex lg:items-center;
+  }
+  .site-navbar-link {
+    @apply text-[0.95rem] text-base text-sm font-medium font-normal tracking-tight;
+  }
+
+  /* Search */
+  .site-navbar-search-container {
+    @apply flex shrink-0 grow items-center justify-end;
+  }
+
+  /* Social links */
+  .site-navbar-social-links-container {
+    @apply hidden space-x-1 lg:flex lg:items-center;
+  }
+  .site-navbar-social-link-icon {
+    @apply size-6;
+  }
+  .site-navbar-mobile-nav-button {
+    @apply relative inline-flex items-center justify-center rounded-md text-primary-muted hover:text-primary focus:outline-none lg:hidden;
+  }
+  .site-navbar-mobile-nav-icon {
+    @apply size-6;
+  }
+
+  /* Mobile navigation */
+  .mobile-nav {
+    @apply fixed left-0 right-0 top-[4rem] h-[calc(100vh-4rem)] divide-y overflow-scroll overscroll-none bg-background lg:hidden;
+  }
+  .mobile-nav-links-container,
+  .mobile-nav-social-links-container {
+    @apply space-y-1 px-4 py-3;
+  }
+  .mobile-nav-link,
+  .mobile-nav-social-link {
+    @apply block py-1 font-medium hover:font-semibold hover:text-primary-emphasis;
+  }
+  .mobile-nav-tree-container {
+    @apply px-4 py-3;
+  }
+  .mobile-nav-tree {
+    @apply space-y-2 py-2;
+  }
+  .mobile-nav-tree-item-children {
+    @apply space-y-2 py-2 pl-5;
+  }
+  .mobile-nav-tree-item-self {
+    @apply flex w-full items-center text-left hover:font-semibold hover:text-primary-emphasis;
+    &.is-current {
+      @apply text-primary-emphasis;
+    }
+    &.is-collapsible.is-open {
+      .mobile-nav-tree-item-icon {
+        @apply rotate-90 transform;
+      }
+    }
+  }
+  .mobile-nav-tree-item-icon {
+    @apply mr-1 h-4 w-4;
+  }
+
+  /* ────────────────────────────────────────────────────
+   Hero section
+   ──────────────────────────────────────────────────── */
+  .page-hero-container {
+    @apply relative bg-neutral-50;
+  }
+
+  .page-hero {
+    @apply mx-auto max-w-3xl text-center;
+    &.has-image {
+      @apply max-w-screen-2xl text-left lg:grid lg:grid-cols-12 lg:gap-x-8;
+      .page-hero-ctas-container {
+        @apply justify-start;
+      }
+    }
+  }
+
+  .page-hero-content-container {
+    @apply pb-16 pt-10 sm:pb-20 lg:col-span-6 lg:px-0 lg:pb-32 lg:pt-28;
+  }
+
+  .page-hero-content {
+    @apply mx-auto px-8 sm:px-10 lg:mx-0 lg:px-12;
+  }
+
+  .page-hero-title {
+    @apply mt-24 text-pretty font-inter text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl;
+  }
+
+  .page-hero-description {
+    @apply mt-8 text-pretty text-lg font-medium text-primary sm:text-xl/8;
+  }
+
+  .page-hero-image-container {
+    @apply relative lg:col-span-6 lg:-mr-8 xl:absolute xl:inset-0 xl:left-1/2 xl:mr-0;
+  }
+
+  .page-hero-image {
+    @apply aspect-[3/2] w-full bg-gray-50 object-cover lg:absolute lg:inset-0 lg:aspect-auto lg:h-full;
+  }
+
+  .page-hero-ctas-container {
+    @apply mt-10 flex items-center justify-center gap-x-6;
+  }
+
+  .page-hero-cta:nth-of-type(1) {
+    @apply rounded-md bg-secondary px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-secondary/90;
+  }
+
+  .page-hero-cta:nth-of-type(2) {
+    @apply text-sm/6 font-semibold text-primary-strong;
+  }
+
+  /* ────────────────────────────────────────────────────
+   Inner layout (sidebar, main content and TOC positioning)
+   ──────────────────────────────────────────────────── */
+  .layout-inner {
+    @apply relative mx-auto mt-16 grid w-full max-w-7xl px-8 sm:px-10 lg:px-12;
+    &.has-sidebar-and-toc {
+      @apply max-w-screen-2xl grid-cols-[minmax(0,1fr)] gap-x-12 lg:grid-cols-[16rem,minmax(0,1fr)] xl:grid-cols-[16rem_minmax(0,1fr)_12rem];
+    }
+    &.has-toc {
+      @apply max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[minmax(0,1fr),12rem];
+    }
+    &.has-sidebar {
+      @apply max-w-screen-xl grid-cols-[minmax(0,1fr)] gap-x-16 xl:grid-cols-[12rem,minmax(0,1fr)];
+    }
+  }
+  .layout-inner-left {
+    @apply hidden lg:block;
+  }
+  .layout-inner-right {
+    @apply hidden xl:block;
+  }
+
+  .site-sidebar {
+    @apply sticky top-[8rem] h-[calc(100vh-8rem)] overflow-y-auto pb-8 pr-4;
+  }
+  .page-toc {
+    @apply sticky top-[8rem] h-[calc(100vh-8rem)] overflow-y-auto pb-8 pl-4;
+  }
+
+  /* ────────────────────────────────────────────────────
+   Footer
+   ──────────────────────────────────────────────────── */
+  .site-footer {
+    @apply mx-auto w-full max-w-8xl px-8 sm:px-10 lg:px-12;
+  }
+
+  .site-footer-inner {
+    @apply mt-12 border-t border-gray-900/10 bg-inherit py-6 sm:mt-16 sm:py-8 lg:mt-24;
+  }
+
+  .site-footer-copyright {
+    @apply text-xs leading-5 text-primary-muted;
+  }
+
+  .site-footer-copyright-icon {
+    @apply mx-2 inline h-0.5 w-0.5 fill-current;
+  }
+
+  /* ────────────────────────────────────────────────────
+   ToC
+   ──────────────────────────────────────────────────── */
+  .page-toc {
+    @apply text-sm;
+  }
+  .page-toc-heading {
+    @apply mb-4 uppercase tracking-wider;
+  }
+  .page-toc-tree {
+    @apply font-light;
+  }
+
+  /* ────────────────────────────────────────────────────
+   Errors
+   ──────────────────────────────────────────────────── */
+  .error-card {
+    @apply flex space-x-3 overflow-scroll rounded-md bg-red-50 p-4 text-left;
+  }
+  .error-card-icon {
+    @apply h-5 w-5 text-red-400;
+  }
+  .error-card-title {
+    @apply my-0 text-sm font-medium text-red-800;
+  }
+  .error-card-message {
+    @apply mt-2 whitespace-pre-wrap text-sm text-red-700;
+  }
+  .error-card-stack {
+    @apply mt-2 rounded-md bg-white p-4 text-sm;
+  }
+
+  /* ────────────────────────────────────────────────────
+   List component
+   ──────────────────────────────────────────────────── */
+  .list-component {
+    @apply divide-y font-inter;
+  }
+  .list-component-item {
+    @apply relative isolate flex flex-col gap-8 py-8 lg:flex-row lg:py-10;
+  }
+  .list-component-item-image-container {
+    @apply relative aspect-video overflow-hidden lg:aspect-[2/1] lg:w-64 lg:shrink-0;
+  }
+  .list-component-item-image {
+    @apply absolute inset-0 h-full w-full rounded-2xl bg-gray-50 object-cover;
+  }
+  .list-component-item-eyebrow {
+    @apply flex items-center gap-x-4 text-sm  text-primary-subtle;
+  }
+  .list-component-item-title {
+    @apply mt-3 max-w-3xl text-lg font-semibold text-primary-strong group-hover:text-primary-emphasis;
+  }
+  .list-component-item-authors {
+    @apply mt-6 flex border-t border-primary-faint pt-6 text-sm/6 font-semibold text-primary-strong;
+  }
+  .list-component-item-text {
+    @apply mt-5 line-clamp-2 text-primary-emphasis;
+  }
+  .list-component-pagination {
+    @apply flex items-center justify-between border-t border-gray-200 px-4 sm:px-0;
+  }
+
+  .list-component-pagination-nav {
+    @apply -mt-px flex w-0 flex-1;
+  }
+
+  .list-component-pagination-nav--end {
+    @apply justify-end;
+  }
+
+  .list-component-pagination-button {
+    @apply inline-flex items-center border-t-2 border-transparent pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .list-component-pagination-button--prev {
+    @apply pr-1;
+  }
+
+  .list-component-pagination-button--next {
+    @apply pl-1;
+  }
+
+  .list-component-pagination-button-icon {
+    @apply size-5 text-gray-400;
+  }
+
+  .list-component-pagination-button-icon--prev {
+    @apply mr-3;
+  }
+
+  .list-component-pagination-button-icon--next {
+    @apply ml-3;
+  }
+
+  .list-component-pagination-pages {
+    @apply hidden md:-mt-px md:flex;
+  }
+
+  .list-component-pagination-page-button {
+    @apply inline-flex items-center border-t-2 px-4 pt-4 text-sm font-medium;
+  }
+
+  .list-component-pagination-page-button--current {
+    @apply border-indigo-500 text-indigo-600;
+  }
+
+  .list-component-pagination-page-button--other {
+    @apply border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700;
+  }
+
+  .list-component-pagination-ellipsis {
+    @apply inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500;
+  }
+
+  /* ────────────────────────────────────────────────────
+   Page layout
+   ──────────────────────────────────────────────────── */
+  .page-header {
+    @apply mb-8 space-y-2 border-b pb-8 font-inter;
+  }
+  .page-header-date {
+    @apply font-light text-primary/70;
+  }
+  .page-header-title {
+    @apply text-[3rem] font-semibold leading-[3.25rem] tracking-tight text-primary-emphasis text-primary-strong sm:text-[3.5rem] sm:leading-[3.75rem];
+  }
+  .page-header-authors-container {
+    @apply flex space-x-3 py-2;
+  }
+  .page-header-author {
+    @apply inline-block flex shrink-0 items-center;
+  }
+  .page-header-author-avatar {
+    @apply inline-block h-8 w-8 rounded-full;
+  }
+  .page-header-author-name {
+    @apply ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900;
+  }
+  .page-header-description {
+    @apply text-lg font-light text-primary-subtle sm:text-xl;
+  }
+  .page-header-image-container {
+    @apply w-full py-3;
+  }
+  .page-header-image {
+    @apply rounded-md object-cover;
+  }
+  .page-body {
+    @apply max-w-none font-lora font-normal text-primary;
+  }
+
+  /* ────────────────────────────────────────────────────
+   Sidebar
+   ──────────────────────────────────────────────────── */
+  .site-tree-container {
+    @apply text-sm text-primary-subtle;
+  }
+  .site-tree {
+    @apply mb-4;
+  }
+  .site-tree-item-children {
+    @apply pl-5;
+  }
+  .site-tree-item {
+    @apply my-2;
+  }
+  .site-tree-item-self {
+    @apply transition hover:font-semibold hover:text-primary-emphasis;
+    &.is-collapsible {
+      @apply flex w-full items-center text-left hover:font-semibold hover:text-primary-emphasis;
+      &.is-open .site-tree-item-icon {
+        @apply rotate-90 transform;
+      }
+    }
+    &.is-current {
+      @apply text-primary-emphasis;
+    }
+  }
+  .site-tree-item-icon {
+    @apply mr-1 h-4 w-4;
+  }
+
+  /* ────────────────────────────────────────────────────
+   Search modal
+   ──────────────────────────────────────────────────── */
+  .search-button {
+    @apply text-primary-muted hover:text-primary focus:outline-none focus:ring-0;
+  }
+  .search-icon {
+    @apply size-6;
+  }
+  .search-modal-container {
+    @apply fixed inset-0 z-50;
+  }
+  .search-modal-backdrop {
+    @apply absolute inset-0 bg-gray-100/50 backdrop-blur-sm;
+  }
+  .search-modal-container {
+    @apply relative z-10 flex min-h-full items-start justify-center p-3 md:p-24;
+  }
+  .search-modal {
+    @apply flex w-full max-w-2xl flex-col rounded-lg border border-primary-faint bg-background p-4 shadow-xl;
+  }
+  .search-modal-input-container {
+    @apply flex items-center;
+  }
+
+  /* ────────────────────────────────────────────────────
+   404 and 500 pages
+   ──────────────────────────────────────────────────── */
+  .not-found {
+    @apply flex min-h-screen items-center justify-center bg-gray-100;
+  }
+  .not-found-inner {
+    @apply text-center;
+  }
+  .not-found-title {
+    @apply mb-4 text-6xl font-bold text-gray-800;
+  }
+  .not-found-subtitle {
+    @apply mb-8 text-xl text-gray-600;
+  }
+  .not-found-description {
+    @apply text-gray-500;
+  }
+  .not-found-hint {
+    @apply mt-4 text-sm text-gray-400;
+  }
+  .not-found-hint a {
+    @apply underline;
+  }
+
+  .error-page {
+    @apply flex min-h-screen items-center justify-center bg-gray-100;
+  }
+  .error-page-inner {
+    @apply max-w-4xl text-center;
+  }
+  .error-page-title {
+    @apply mb-4 text-6xl font-bold text-gray-800;
+  }
+  .error-page-subtitle {
+    @apply mb-8 text-xl text-gray-600;
+  }
+  .error-page-description {
+    @apply text-gray-500;
+  }
+
+  /* ────────────────────────────────────────────────────
+   Other
+   ──────────────────────────────────────────────────── */
+  .page-edit-button-container {
+    @apply py-2 md:py-4;
+  }
+  .page-edit-button {
+    @apply mt-4 flex w-fit items-center gap-1 font-normal no-underline hover:underline;
+  }
+  .page-comments-container {
+    @apply mt-10 w-full border-t pt-10;
+  }
+}
+
+/* ────────────────────────────────────────────────────
+   Buttons & links reused in Hero CTA
+   ──────────────────────────────────────────────────── */
+@layer components {
+  .btn-primary {
+    @apply rounded-md bg-secondary px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-secondary/90;
+  }
+
+  .link-primary {
+    @apply text-sm/6 font-semibold text-primary-strong;
+  }
+}
+
+/* ────────────────────────────────────────────────────
+   Utility replacements (optional)
+   Add more here if you find yourself repeating Tailwind utilities in
+   other components – keep markup clean & semantic.
+   ──────────────────────────────────────────────────── */
+@layer components {
+  /* Example: generic centred container */
+  .container {
+    @apply mx-auto max-w-7xl px-8 sm:px-10 lg:px-12;
+  }
+}

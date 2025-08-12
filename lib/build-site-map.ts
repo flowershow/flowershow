@@ -1,5 +1,5 @@
 import type { Blob } from "@prisma/client";
-import type { TreeViewItem } from "@/components/site-map";
+import type { TreeViewItem } from "@/components/public/site-tree";
 import { customEncodeUrl } from "./url-encoder";
 
 export type SiteMap = TreeViewItem[];

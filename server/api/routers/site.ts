@@ -581,7 +581,7 @@ export const siteRouter = createTRPCRouter({
       )(input);
     }),
 
-  getSiteMap: publicProcedure
+  getSiteTree: publicProcedure
     .input(
       z.object({
         siteId: z.string().min(1),

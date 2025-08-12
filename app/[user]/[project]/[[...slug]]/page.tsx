@@ -1,11 +1,11 @@
 import { notFound } from "next/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
+import { EditIcon } from "lucide-react";
 
-import EditPageButton from "@/components/edit-page-button";
-import Comments from "@/components/comments";
-import { mdxComponentsFactory } from "@/components/mdx-components-factory";
-import { ErrorMessage } from "@/components/error-message";
-import { BlogLayout } from "@/components/layouts/blog";
+import Comments from "@/components/public/comments";
+import { mdxComponentsFactory } from "@/components/public/mdx-components-factory";
+import { ErrorMessage } from "@/components/public/error-message";
+import { BlogLayout } from "@/components/public/layouts/blog";
 
 import { getConfig } from "@/lib/app-config";
 import { getMdxOptions } from "@/lib/markdown";
@@ -15,12 +15,13 @@ import { api } from "@/trpc/server";
 import { PageMetadata } from "@/server/api/types";
 
 import UrlNormalizer from "./url-normalizer";
-import { getSite } from "./get-site";
+import { getSite } from "@/lib/get-site";
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 import { GiscusProps } from "@giscus/react";
 import emojiRegex from "emoji-regex";
 import { generateScopedCss } from "@/lib/generate-scoped-css";
 import getSiteUrl, { getSiteUrlPath } from "@/lib/get-site-url";
+import Link from "next/link";
 
 const config = getConfig();
 
@@ -191,14 +192,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     });
     compiledMDX = content;
   } catch (error: any) {
-    compiledMDX = (
-      <div
-        data-testid="mdx-error"
-        className="prose-headings:font-headings prose max-w-full px-6 pt-12 dark:prose-invert lg:prose-lg prose-headings:font-medium prose-a:break-words"
-      >
-        <ErrorMessage title="Error" message={error.message} />
-      </div>
-    );
+    compiledMDX = <ErrorMessage title="Error" message={error.message} />;
   }
 
   // TODO create a single lib for this kind of stuff (currently we have patches like this in many different places)
@@ -254,26 +248,38 @@ export default async function SitePage({ params }: { params: RouteParams }) {
       />
       <UrlNormalizer />
 
-      <div id="mdxpage">
-        <Layout>{compiledMDX}</Layout>
-      </div>
+      <main className="page-main">
+        <Layout>
+          <div className="rendered-mdx" id="mdxpage">
+            {compiledMDX}
+          </div>
+        </Layout>
+      </main>
 
       {showEditLink && (
-        <EditPageButton
-          url={`https://github.com/${site?.ghRepository}/edit/${site?.ghBranch}/${page.blob.path}`}
-        />
+        <div className="page-edit-button-container">
+          <Link
+            href={`https://github.com/${site?.ghRepository}/edit/${site?.ghBranch}/${page.blob.path}`}
+            className="page-edit-button"
+            target="_blank"
+          >
+            Edit this page <EditIcon width={16} />
+          </Link>
+        </div>
       )}
       {showPageComments && (
-        <Comments
-          {...giscusConfig}
-          repo={
-            giscusConfig?.repo ?? (site.ghRepository as GiscusProps["repo"])
-          }
-          repoId={giscusConfig?.repoId ?? site.giscusRepoId ?? undefined}
-          categoryId={
-            giscusConfig?.categoryId ?? site.giscusCategoryId ?? undefined
-          }
-        />
+        <div className="page-comments-container">
+          <Comments
+            {...giscusConfig}
+            repo={
+              giscusConfig?.repo ?? (site.ghRepository as GiscusProps["repo"])
+            }
+            repoId={giscusConfig?.repoId ?? site.giscusRepoId ?? undefined}
+            categoryId={
+              giscusConfig?.categoryId ?? site.giscusCategoryId ?? undefined
+            }
+          />
+        </div>
       )}
     </>
   );

@@ -1,0 +1,26 @@
+import { getConfig } from "@/lib/app-config";
+
+const config = getConfig();
+
+export default function Footer() {
+  return (
+    <footer className="site-footer" aria-labelledby="footer">
+      <div className="site-footer-inner">
+        <p id="footer" className="sr-only">
+          Footer
+        </p>
+        <p className="site-footer-copyright">
+          <span>&copy; 2025 All rights reserved</span>
+          <svg
+            viewBox="0 0 2 2"
+            aria-hidden="true"
+            className="site-footer-copyright-icon"
+          >
+            <circle r={1} cx={1} cy={1} />
+          </svg>
+          Built with <strong>{config.title}</strong>
+        </p>
+      </div>
+    </footer>
+  );
+}
