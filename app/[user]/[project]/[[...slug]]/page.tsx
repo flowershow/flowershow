@@ -1,27 +1,31 @@
-import { notFound } from "next/navigation";
+import Link from "next/link";
+import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
 import { EditIcon } from "lucide-react";
+import { GiscusProps } from "@giscus/react";
+import emojiRegex from "emoji-regex";
 
 import Comments from "@/components/public/comments";
 import { mdxComponentsFactory } from "@/components/public/mdx-components-factory";
 import { ErrorMessage } from "@/components/public/error-message";
 import { BlogLayout } from "@/components/public/layouts/blog";
+import SiteTree from "@/components/public/site-tree";
+import TableOfContents from "@/components/public/table-of-contents";
 
 import { getConfig } from "@/lib/app-config";
 import { getMdxOptions } from "@/lib/markdown";
 import { resolveLink } from "@/lib/resolve-link";
+import { resolveSiteAlias } from "@/lib/resolve-site-alias";
+import { getSite } from "@/lib/get-site";
+import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
+import { generateScopedCss } from "@/lib/generate-scoped-css";
+import getSiteUrl, { getSiteUrlPath } from "@/lib/get-site-url";
 
 import { api } from "@/trpc/server";
 import { PageMetadata } from "@/server/api/types";
 
-import UrlNormalizer from "./url-normalizer";
-import { getSite } from "@/lib/get-site";
-import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
-import { GiscusProps } from "@giscus/react";
-import emojiRegex from "emoji-regex";
-import { generateScopedCss } from "@/lib/generate-scoped-css";
-import getSiteUrl, { getSiteUrlPath } from "@/lib/get-site-url";
-import Link from "next/link";
+import UrlNormalizer from "./url-normalizer"; // TODO
+import clsx from "clsx";
 
 const config = getConfig();
 
@@ -153,6 +157,25 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     })
     .catch(() => null);
 
+  // Handle redirects if configured
+  if (siteConfig?.redirects) {
+    for (const r of siteConfig.redirects) {
+      // Simple string comparison for exact path matching
+      if ("/" + decodedSlug === r.from) {
+        const redirectUrl = site.customDomain
+          ? r.to
+          : `${resolveSiteAlias(
+              `/@${site.user?.ghUsername}/${site.projectName}`,
+              "to",
+            )}${r.to}`;
+
+        return r.permanent
+          ? permanentRedirect(redirectUrl)
+          : redirect(redirectUrl);
+      }
+    }
+  }
+
   const sitePermalinks = await api.site.getPermalinks
     .query({
       siteId: site.id,
@@ -183,6 +206,16 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   let compiledMDX: any;
 
   const scopedCss = await generateScopedCss(page.content ?? "");
+
+  let siteTree;
+
+  if (siteConfig?.showSidebar) {
+    siteTree = await api.site.getSiteTree
+      .query({
+        siteId: site.id,
+      })
+      .catch(() => []);
+  }
 
   try {
     const { content } = await compileMDX({
@@ -237,6 +270,41 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     }
   };
 
+  const isPlainLayout = metadata.layout === "plain";
+
+  const showSidebar =
+    !isPlainLayout &&
+    (metadata.showSidebar ?? siteConfig?.showSidebar ?? false);
+  const showToc =
+    !isPlainLayout && (metadata.showToc ?? siteConfig?.showToc ?? true);
+  const showHero = metadata.showHero ?? siteConfig?.showHero;
+
+  const resolveHeroCtaHref = (href: string) => {
+    return resolveLink({
+      link: href ?? "",
+      filePath: page.blob.path,
+      prefixPath: site.customDomain
+        ? ""
+        : `/@${site.user?.ghUsername}/${site.projectName}`,
+    });
+  };
+
+  const resolveHeroImageSrc = (src: string) => {
+    const rawFilePermalinkBase = site.customDomain
+      ? `/_r/-`
+      : `/@${site.user!.ghUsername}/${site.projectName}` + `/_r/-`;
+
+    return resolveLink({
+      link: src,
+      filePath: page.blob.path,
+      prefixPath: rawFilePermalinkBase,
+    });
+  };
+
+  // if (metadata.layout === "plain") {
+  //   return <>{compiledMDX}</>;
+  // }
+
   return (
     <>
       {/* it should be in the head */}
@@ -248,39 +316,102 @@ export default async function SitePage({ params }: { params: RouteParams }) {
       />
       <UrlNormalizer />
 
-      <main className="page-main">
-        <Layout>
-          <div className="rendered-mdx" id="mdxpage">
-            {compiledMDX}
+      {showHero && (
+        <header className="page-hero-container">
+          <div className={clsx("page-hero", metadata.image && "has-image")}>
+            <div className="page-hero-content-container">
+              <div className="page-hero-content">
+                <h1 className="page-hero-title">{metadata.title}</h1>
+                <p className="page-hero-description">{metadata.description}</p>
+                {metadata.cta && (
+                  <div className="page-hero-ctas-container">
+                    {metadata.cta.map((cta) => (
+                      <a
+                        key={cta.label}
+                        href={resolveHeroCtaHref(cta.href)}
+                        className="page-hero-cta"
+                      >
+                        {cta.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            {metadata.image && (
+              <div className="page-hero-image-container">
+                <img
+                  alt="Hero Image"
+                  src={resolveHeroImageSrc(metadata.image)}
+                  className="page-hero-image"
+                />
+              </div>
+            )}
           </div>
-        </Layout>
-      </main>
+        </header>
+      )}
 
-      {showEditLink && (
-        <div className="page-edit-button-container">
-          <Link
-            href={`https://github.com/${site?.ghRepository}/edit/${site?.ghBranch}/${page.blob.path}`}
-            className="page-edit-button"
-            target="_blank"
-          >
-            Edit this page <EditIcon width={16} />
-          </Link>
+      <div
+        className={clsx(
+          "layout-inner",
+          showSidebar && showToc && "has-sidebar-and-toc",
+          !showSidebar && showToc && "has-toc",
+          showSidebar && !showToc && "has-sidebar",
+        )}
+      >
+        {showSidebar && (
+          <div className="layout-inner-left">
+            <aside className="site-sidebar">
+              <SiteTree items={siteTree} />
+            </aside>
+          </div>
+        )}
+
+        <div className="layout-inner-center">
+          <main className="page-main">
+            <Layout>
+              <div className="rendered-mdx" id="mdxpage">
+                {compiledMDX}
+              </div>
+            </Layout>
+          </main>
+
+          {showEditLink && (
+            <div className="page-edit-button-container">
+              <Link
+                href={`https://github.com/${site?.ghRepository}/edit/${site?.ghBranch}/${page.blob.path}`}
+                className="page-edit-button"
+                target="_blank"
+              >
+                Edit this page <EditIcon width={16} />
+              </Link>
+            </div>
+          )}
+          {showPageComments && (
+            <div className="page-comments-container">
+              <Comments
+                {...giscusConfig}
+                repo={
+                  giscusConfig?.repo ??
+                  (site.ghRepository as GiscusProps["repo"])
+                }
+                repoId={giscusConfig?.repoId ?? site.giscusRepoId ?? undefined}
+                categoryId={
+                  giscusConfig?.categoryId ?? site.giscusCategoryId ?? undefined
+                }
+              />
+            </div>
+          )}
         </div>
-      )}
-      {showPageComments && (
-        <div className="page-comments-container">
-          <Comments
-            {...giscusConfig}
-            repo={
-              giscusConfig?.repo ?? (site.ghRepository as GiscusProps["repo"])
-            }
-            repoId={giscusConfig?.repoId ?? site.giscusRepoId ?? undefined}
-            categoryId={
-              giscusConfig?.categoryId ?? site.giscusCategoryId ?? undefined
-            }
-          />
-        </div>
-      )}
+
+        {showToc && (
+          <div className="layout-inner-right">
+            <aside className="page-toc">
+              <TableOfContents />
+            </aside>
+          </div>
+        )}
+      </div>
     </>
   );
 }

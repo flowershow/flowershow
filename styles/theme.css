@@ -66,7 +66,7 @@
 
   /* Desktop navigation links */
   .site-navbar-links-container {
-    @apply hidden space-x-4 lg:flex lg:items-center;
+    @apply hidden grow space-x-4 lg:flex lg:items-center;
   }
   .site-navbar-link {
     @apply text-[0.95rem] text-base text-sm font-medium font-normal tracking-tight;
@@ -74,7 +74,7 @@
 
   /* Search */
   .site-navbar-search-container {
-    @apply flex shrink-0 grow items-center justify-end;
+    @apply flex grow items-center justify-end;
   }
 
   /* Social links */
