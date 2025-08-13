@@ -304,7 +304,7 @@
     @apply mt-5 line-clamp-2 text-primary-emphasis;
   }
   .list-component-pagination {
-    @apply flex items-center justify-between border-t border-gray-200 px-4 sm:px-0;
+    @apply font-body flex items-center justify-between border-t border-gray-200 px-4 sm:px-0;
   }
 
   .list-component-pagination-nav {
