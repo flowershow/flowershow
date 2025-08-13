@@ -5,12 +5,12 @@ import clsx from "clsx";
 
 import "@portaljs/components/styles.css";
 import "@/styles/prism.css";
-import "@/styles/globals.css";
 import "@/styles/callouts.css";
+import "@/styles/global.css";
 
 import { getSession } from "@/server/auth";
 import { TRPCReactProvider } from "@/trpc/react";
-import { lora, inter, cal } from "@/styles/fonts";
+import { fontBody, fontHeading, fontDashboardHeading } from "@/styles/fonts";
 import { env } from "@/env.mjs";
 import { Providers } from "./providers";
 import { getConfig } from "@/lib/app-config";
@@ -59,7 +59,15 @@ export default async function RootLayout({
   const session = await getSession();
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      className={clsx(
+        fontBody.variable,
+        fontHeading.variable,
+        fontDashboardHeading.variable,
+      )}
+      lang="en"
+      suppressHydrationWarning
+    >
       <head>
         <link
           rel="stylesheet"
@@ -68,14 +76,7 @@ export default async function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body
-        className={clsx(
-          lora.variable,
-          inter.variable,
-          cal.variable,
-          "bg-background font-inter text-primary",
-        )}
-      >
+      <body>
         <TRPCReactProvider headers={headers()}>
           <Providers>
             {children}

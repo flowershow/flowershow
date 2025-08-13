@@ -16,7 +16,9 @@ export default function LoginPage() {
         className="relative mx-auto h-12 w-auto"
         src={config.logo}
       />
-      <h1 className="mt-6 text-center font-cal text-3xl">{config.title}</h1>
+      <h1 className="mt-6 text-center font-dashboard-heading text-3xl">
+        {config.title}
+      </h1>
       <p className="mt-2 text-center text-sm">
         Turn your markdown into a website in a couple of clicks. <br />
       </p>

@@ -45,7 +45,9 @@ export default function BulkCreateForm({
       className="isolate rounded-lg border border-stone-200 bg-white dark:border-stone-700 dark:bg-black"
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
-        <h2 className="font-cal text-xl dark:text-white">Bulk Create Sites</h2>
+        <h2 className="font-dashboard-heading text-xl dark:text-white">
+          Bulk Create Sites
+        </h2>
         <p className="text-sm text-stone-500 dark:text-stone-400">
           Bulk creates sites from a list of repositories.
         </p>

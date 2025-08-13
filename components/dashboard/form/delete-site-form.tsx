@@ -78,7 +78,10 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
         className="rounded-lg border border-red-600 bg-white dark:bg-black"
       >
         <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
-          <h2 id="deleteSite" className="font-cal text-xl dark:text-white">
+          <h2
+            id="deleteSite"
+            className="font-dashboard-heading text-xl dark:text-white"
+          >
             Delete Site
           </h2>
           <p className="text-sm text-stone-500 dark:text-stone-400">

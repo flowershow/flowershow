@@ -72,7 +72,7 @@ export default function FeedbackModal({
       className="w-full rounded-md bg-white dark:bg-black md:max-w-md md:border md:border-stone-200 md:shadow dark:md:border-stone-700"
     >
       <div className="relative flex flex-col space-y-4 p-5 md:p-10">
-        <h2 className="font-cal text-2xl dark:text-white">
+        <h2 className="font-dashboard-heading text-2xl dark:text-white">
           Help us make Flowershow better for you!
         </h2>
         <p className="text-sm text-stone-500 dark:text-stone-400">

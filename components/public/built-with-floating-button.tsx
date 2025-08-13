@@ -22,7 +22,7 @@ const buttonStyles: React.CSSProperties = {
 const spanStyles: React.CSSProperties = {
   fontSize: "0.875rem",
   fontWeight: 500,
-  fontFamily: "var(--font-inter)",
+  fontFamily: "var(--font-body)",
   color: "#18181B",
   letterSpacing: "-0.025em",
 };
@@ -53,7 +53,7 @@ export default function BuiltWithFloatingButton() {
       for (const spanEl of spans) {
         spanEl.style.setProperty(
           "font-family",
-          "var(--font-inter)",
+          "var(--next-font-brand)",
           "important",
         );
         spanEl.style.setProperty("font-size", "0.875rem", "important");

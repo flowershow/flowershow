@@ -18,8 +18,6 @@ import Nav, { type Props as NavProps } from "@/components/public/nav";
 import type { SiteConfig } from "@/components/types";
 import type { SiteWithUser } from "@/types";
 
-import "@/styles/theme.css";
-
 const config = getConfig();
 
 interface RouteParams {

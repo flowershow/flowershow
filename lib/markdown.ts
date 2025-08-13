@@ -77,7 +77,9 @@ export const getMdxOptions = ({
             properties: { className: "heading-link" },
             test(element: any) {
               return (
-                ["h2", "h3", "h4", "h5", "h6"].includes(element.tagName) &&
+                ["h1", "h2", "h3", "h4", "h5", "h6"].includes(
+                  element.tagName,
+                ) &&
                 element.properties?.id !== "table-of-contents" &&
                 element.properties?.className !== "blockquote-heading"
               );

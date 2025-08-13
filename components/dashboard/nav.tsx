@@ -79,7 +79,7 @@ export default function Nav({ children }: { children: ReactNode }) {
           <div className="flex items-center space-x-2">
             <Link
               href="/"
-              className="flex items-center space-x-3 text-lg font-semibold tracking-tight text-primary-strong md:text-xl"
+              className="flex items-center space-x-2 text-lg font-semibold tracking-tight text-primary-strong md:text-xl"
             >
               <Image
                 src={config.logo}
@@ -90,7 +90,7 @@ export default function Nav({ children }: { children: ReactNode }) {
               {config.product === "flowershow" && (
                 <span
                   className={cn(
-                    "ml-2 font-inter text-lg font-extrabold md:text-xl",
+                    "ml-2 font-brand text-lg font-extrabold md:text-xl",
                     pages.length && "hidden",
                   )}
                 >

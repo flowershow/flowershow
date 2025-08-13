@@ -32,7 +32,7 @@ export default async function SiteSettingsHeader({
         <div className="min-w-0 flex-1">
           <h2 className="mb-2 text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
             <div className="flex items-center gap-2">
-              <span data-testid="site-name" className="font-cal">
+              <span data-testid="site-name" className="font-dashboard-heading">
                 {site.projectName}
               </span>
               {site.plan === "PREMIUM" && (

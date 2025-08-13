@@ -102,7 +102,7 @@ export const BlogLayout: React.FC<Props> = ({
           )}
         </header>
       )}
-      <div className="page-body prose dark:prose-invert prose-headings:font-inter prose-headings:tracking-tight prose-headings:text-primary-strong prose-a:break-words">
+      <div className="page-body prose dark:prose-invert prose-headings:font-heading prose-headings:tracking-tight prose-headings:text-primary-strong prose-a:break-words">
         {children}
       </div>
     </>

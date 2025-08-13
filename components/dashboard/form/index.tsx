@@ -111,7 +111,10 @@ export default function Form({
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
         <div className="flex justify-between gap-2">
-          <h2 id={inputAttrs.name} className="font-cal text-xl dark:text-white">
+          <h2
+            id={inputAttrs.name}
+            className="font-dashboard-heading text-xl dark:text-white"
+          >
             {title}
           </h2>
           {disabled && (

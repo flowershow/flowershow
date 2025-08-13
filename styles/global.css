@@ -21,8 +21,10 @@
 /* ────────────────────────────────────────────────────
    Design‑tokens (CSS custom properties)
    ──────────────────────────────────────────────────── */
-@layer components {
+@layer base {
   :root {
+    scroll-behavior: smooth;
+
     /* Brand colours – override these in a custom theme for a quick re‑skin */
     --color-background: 255 255 255; /* white */
     --color-primary-faint: 228 228 231; /* zinc-200 */
@@ -32,12 +34,20 @@
     --color-primary-emphasis: 39 39 42; /* zinc-800 */
     --color-primary-strong: 24 24 27; /* zinc-900 */
     --color-secondary: 251 146 60; /* orange-400 */
+
+    /* Brand fonts – override these in a custom theme for a quick re‑skin */
+    --font-heading: var(--next-font-heading);
+    --font-body: var(--next-font-body);
   }
 }
 
 @layer components {
+  body {
+    @apply bg-background;
+  }
+
   .site-layout {
-    @apply flex w-full flex-col bg-inherit;
+    @apply flex w-full flex-col;
   }
 
   /* ────────────────────────────────────────────────────
@@ -61,7 +71,7 @@
     @apply size-8;
   }
   .site-navbar-site-name {
-    @apply text-lg font-semibold tracking-tight text-primary-strong md:text-xl;
+    @apply font-heading text-lg font-semibold tracking-tight text-primary-strong md:text-xl;
   }
 
   /* Desktop navigation links */
@@ -93,7 +103,7 @@
 
   /* Mobile navigation */
   .mobile-nav {
-    @apply fixed left-0 right-0 top-[4rem] h-[calc(100vh-4rem)] divide-y overflow-scroll overscroll-none bg-background lg:hidden;
+    @apply fixed left-0 right-0 top-[4rem] h-[calc(100vh-4rem)] divide-y overflow-scroll overscroll-none bg-inherit lg:hidden;
   }
   .mobile-nav-links-container,
   .mobile-nav-social-links-container {
@@ -153,7 +163,7 @@
   }
 
   .page-hero-title {
-    @apply mt-24 text-pretty font-inter text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl;
+    @apply font-heading mt-24 text-pretty text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl;
   }
 
   .page-hero-description {
@@ -264,7 +274,7 @@
    List component
    ──────────────────────────────────────────────────── */
   .list-component {
-    @apply divide-y font-inter;
+    @apply font-heading divide-y;
   }
   .list-component-item {
     @apply relative isolate flex flex-col gap-8 py-8 lg:flex-row lg:py-10;
@@ -347,7 +357,7 @@
    Page layout
    ──────────────────────────────────────────────────── */
   .page-header {
-    @apply mb-8 space-y-2 border-b pb-8 font-inter;
+    @apply font-heading mb-8 space-y-2 border-b pb-8;
   }
   .page-header-date {
     @apply font-light text-primary/70;
@@ -377,7 +387,7 @@
     @apply rounded-md object-cover;
   }
   .page-body {
-    @apply max-w-none font-lora font-normal text-primary;
+    @apply max-w-none;
   }
 
   /* ────────────────────────────────────────────────────
@@ -430,7 +440,7 @@
     @apply relative z-10 flex min-h-full items-start justify-center p-3 md:p-24;
   }
   .search-modal {
-    @apply flex w-full max-w-2xl flex-col rounded-lg border border-primary-faint bg-background p-4 shadow-xl;
+    @apply flex w-full max-w-2xl flex-col rounded-lg border border-primary-faint bg-inherit p-4 shadow-xl;
   }
   .search-modal-input-container {
     @apply flex items-center;
@@ -478,6 +488,65 @@
   }
 
   /* ────────────────────────────────────────────────────
+   Rendered MDX
+   ──────────────────────────────────────────────────── */
+  .rendered-mdx {
+    min-height: 55vh;
+  }
+
+  .rendered-mdx .heading-link {
+    padding: 1px;
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    margin: auto 0;
+    border-radius: 5px;
+    background: #e2e8f0;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .rendered-mdx :is(h1, h2, h3, h4, h5, h6) {
+    margin-left: -2rem !important;
+    padding-left: 2rem !important;
+    scroll-margin-top: 4.5rem;
+    position: relative;
+    &:hover .heading-link {
+      opacity: 100;
+    }
+  }
+
+  .rendered-mdx .heading-link svg {
+    transform: scale(0.75);
+  }
+
+  @media screen and (max-width: 640px) {
+    .rendered-mdx .heading-link {
+      visibility: hidden;
+    }
+  }
+
+  /* Hide second h1 on any page */
+  .rendered-mdx section:first-of-type h1:first-child {
+    display: none;
+  }
+
+  .rendered-mdx ul.contains-task-list {
+    list-style-type: none;
+  }
+
+  .rendered-mdx input[type="checkbox"] {
+    margin: 0 0.2em 0.25em -1.6em;
+    vertical-align: middle;
+  }
+
+  /* Heading links with # icons on hover */
+  /* .unstyled .heading-link {
+    visibility: hidden;
+  } */
+
+  /* ────────────────────────────────────────────────────
    Other
    ──────────────────────────────────────────────────── */
   .page-edit-button-container {
@@ -491,27 +560,8 @@
   }
 }
 
-/* ────────────────────────────────────────────────────
-   Buttons & links reused in Hero CTA
-   ──────────────────────────────────────────────────── */
-@layer components {
-  .btn-primary {
-    @apply rounded-md bg-secondary px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-secondary/90;
-  }
-
-  .link-primary {
-    @apply text-sm/6 font-semibold text-primary-strong;
-  }
-}
-
-/* ────────────────────────────────────────────────────
-   Utility replacements (optional)
-   Add more here if you find yourself repeating Tailwind utilities in
-   other components – keep markup clean & semantic.
-   ──────────────────────────────────────────────────── */
-@layer components {
-  /* Example: generic centred container */
-  .container {
-    @apply mx-auto max-w-7xl px-8 sm:px-10 lg:px-12;
+@layer utilities {
+  .overflow-hidden {
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
   }
 }

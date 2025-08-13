@@ -39,7 +39,7 @@ export default function SiteCard({
         className="flex flex-col overflow-hidden rounded-lg"
       >
         <div className="p-4">
-          <h3 className="my-0 truncate font-cal text-xl font-bold tracking-wide dark:text-white">
+          <h3 className="my-0 truncate font-dashboard-heading text-xl font-bold tracking-wide dark:text-white">
             {site.projectName}
           </h3>
         </div>
