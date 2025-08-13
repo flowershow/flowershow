@@ -43,7 +43,16 @@
 
 @layer components {
   body {
-    @apply bg-background;
+    @apply font-body bg-background;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-heading;
   }
 
   .site-layout {
@@ -54,7 +63,7 @@
    Navbar
    ──────────────────────────────────────────────────── */
   .site-navbar {
-    @apply sticky top-0 z-10 bg-background;
+    @apply font-heading sticky top-0 z-10 bg-background;
   }
   .site-navbar.is-scrolled {
     @apply shadow-sm;
@@ -71,7 +80,7 @@
     @apply size-8;
   }
   .site-navbar-site-name {
-    @apply font-heading text-lg font-semibold tracking-tight text-primary-strong md:text-xl;
+    @apply text-lg font-semibold tracking-tight text-primary-strong md:text-xl;
   }
 
   /* Desktop navigation links */
@@ -103,18 +112,18 @@
 
   /* Mobile navigation */
   .mobile-nav {
-    @apply fixed left-0 right-0 top-[4rem] h-[calc(100vh-4rem)] divide-y overflow-scroll overscroll-none bg-inherit lg:hidden;
+    @apply font-heading fixed left-0 right-0 top-[4rem] h-[calc(100vh-4rem)] overflow-scroll overscroll-none bg-inherit lg:hidden;
   }
   .mobile-nav-links-container,
   .mobile-nav-social-links-container {
-    @apply space-y-1 px-4 py-3;
+    @apply space-y-1 border-t border-primary-faint px-4 py-3;
   }
   .mobile-nav-link,
   .mobile-nav-social-link {
     @apply block py-1 font-medium hover:font-semibold hover:text-primary-emphasis;
   }
   .mobile-nav-tree-container {
-    @apply px-4 py-3;
+    @apply border-t border-primary-faint px-4 py-3;
   }
   .mobile-nav-tree {
     @apply space-y-2 py-2;
@@ -145,7 +154,7 @@
   }
 
   .page-hero {
-    @apply mx-auto max-w-3xl text-center;
+    @apply font-heading mx-auto max-w-3xl text-center;
     &.has-image {
       @apply max-w-screen-2xl text-left lg:grid lg:grid-cols-12 lg:gap-x-8;
       .page-hero-ctas-container {
@@ -163,7 +172,7 @@
   }
 
   .page-hero-title {
-    @apply font-heading mt-24 text-pretty text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl;
+    @apply mt-24 text-pretty text-5xl font-semibold tracking-tight text-primary-strong sm:mt-10 sm:text-6xl;
   }
 
   .page-hero-description {
@@ -213,17 +222,13 @@
   }
 
   .site-sidebar {
-    @apply sticky top-[8rem] h-[calc(100vh-8rem)] overflow-y-auto pb-8 pr-4;
+    @apply font-heading sticky top-[8rem] h-[calc(100vh-8rem)] overflow-y-auto pb-8 pr-4;
   }
-  .page-toc {
-    @apply sticky top-[8rem] h-[calc(100vh-8rem)] overflow-y-auto pb-8 pl-4;
-  }
-
   /* ────────────────────────────────────────────────────
    Footer
    ──────────────────────────────────────────────────── */
   .site-footer {
-    @apply mx-auto w-full max-w-8xl px-8 sm:px-10 lg:px-12;
+    @apply font-heading mx-auto w-full max-w-8xl px-8 sm:px-10 lg:px-12;
   }
 
   .site-footer-inner {
@@ -242,8 +247,9 @@
    ToC
    ──────────────────────────────────────────────────── */
   .page-toc {
-    @apply text-sm;
+    @apply font-heading sticky top-[8rem] h-[calc(100vh-8rem)] overflow-y-auto pb-8 pl-4 text-sm;
   }
+
   .page-toc-heading {
     @apply mb-4 uppercase tracking-wider;
   }
@@ -274,10 +280,10 @@
    List component
    ──────────────────────────────────────────────────── */
   .list-component {
-    @apply font-heading divide-y;
+    @apply font-heading flex flex-col gap-y-4;
   }
   .list-component-item {
-    @apply relative isolate flex flex-col gap-8 py-8 lg:flex-row lg:py-10;
+    @apply relative isolate flex flex-col gap-8 border-b py-8 lg:flex-row lg:py-10;
   }
   .list-component-item-image-container {
     @apply relative aspect-video overflow-hidden lg:aspect-[2/1] lg:w-64 lg:shrink-0;
@@ -553,7 +559,7 @@
     @apply py-2 md:py-4;
   }
   .page-edit-button {
-    @apply mt-4 flex w-fit items-center gap-1 font-normal no-underline hover:underline;
+    @apply font-heading mt-4 flex w-fit items-center gap-1 font-normal no-underline hover:underline;
   }
   .page-comments-container {
     @apply mt-10 w-full border-t pt-10;
