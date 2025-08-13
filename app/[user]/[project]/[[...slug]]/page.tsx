@@ -74,7 +74,8 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
       prefixPath: siteUrl + "/_r/-",
     });
 
-  let imageUrl: string | null;
+  let imageUrl: string | null = config.thumbnail;
+  let faviconUrl: string = config.favicon;
 
   if (isFeatureEnabled(Feature.NoBranding, site)) {
     imageUrl = metadata.image
@@ -82,17 +83,12 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
       : siteConfig?.image
         ? getRawAssetUrl(siteConfig.image)
         : null;
-  } else {
-    imageUrl = config.thumbnail;
-  }
-
-  let faviconUrl = config.favicon;
-
-  if (isFeatureEnabled(Feature.NoBranding, site) && siteConfig?.favicon) {
-    if (isEmoji(siteConfig.favicon)) {
-      faviconUrl = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${siteConfig.favicon}</text></svg>`;
-    } else {
-      faviconUrl = getRawAssetUrl(siteConfig.favicon);
+    if (siteConfig?.favicon) {
+      if (isEmoji(siteConfig.favicon)) {
+        faviconUrl = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${siteConfig.favicon}</text></svg>`;
+      } else {
+        faviconUrl = getRawAssetUrl(siteConfig.favicon);
+      }
     }
   }
 
@@ -139,7 +135,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     alternates: {
       canonical: `${siteUrl}/${decodedSlug}`,
     },
-    metadataBase: new URL(getSiteUrl(site)),
+    metadataBase: new URL(siteUrl),
   };
 }
 
@@ -150,6 +146,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   const decodedSlug = slug.replace(/%20/g, "+");
 
   const site = await getSite(userName, projectName);
+  const siteUrlPath = getSiteUrlPath(site);
 
   const siteConfig = await api.site.getConfig
     .query({
@@ -193,6 +190,10 @@ export default async function SitePage({ params }: { params: RouteParams }) {
       notFound();
     });
 
+  const metadata = page.blob.metadata as unknown as PageMetadata; // TODO types
+
+  let compiledMDX: any;
+
   const mdxComponents = mdxComponentsFactory({
     blob: page.blob,
     site,
@@ -200,22 +201,8 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   const mdxOptions = getMdxOptions({
     permalinks: sitePermalinks,
     filePath: page.blob.path,
-    siteSubpath: getSiteUrlPath(site),
+    siteSubpath: siteUrlPath,
   }) as any;
-
-  let compiledMDX: any;
-
-  const scopedCss = await generateScopedCss(page.content ?? "");
-
-  let siteTree;
-
-  if (siteConfig?.showSidebar) {
-    siteTree = await api.site.getSiteTree
-      .query({
-        siteId: site.id,
-      })
-      .catch(() => []);
-  }
 
   try {
     const { content } = await compileMDX({
@@ -228,82 +215,82 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     compiledMDX = <ErrorMessage title="Error" message={error.message} />;
   }
 
-  // TODO create a single lib for this kind of stuff (currently we have patches like this in many different places)
-  const getRawAssetUrl = (url: string) =>
-    resolveLink({
-      link: url,
-      filePath: page.blob.path,
-      prefixPath: getSiteUrlPath(site) + `/_r/-`,
-    });
+  const scopedCss = await generateScopedCss(page.content ?? "");
 
-  const metadata = page.blob.metadata as unknown as PageMetadata;
+  if (metadata.layout === "plain") {
+    return (
+      <>
+        <style
+          id="unocss-mdx"
+          dangerouslySetInnerHTML={{
+            __html: scopedCss.css,
+          }}
+        />
+        <UrlNormalizer />
+        <div className="rendered-mdx" id="mdxpage">
+          {compiledMDX}
+        </div>
+      </>
+    );
+  }
+
+  const resolveSrc = (src: string) => {
+    return resolveLink({
+      link: src,
+      filePath: page.blob.path,
+      prefixPath: siteUrlPath + "/_r/-",
+    });
+  };
+
+  const resolveHref = (src: string) => {
+    return resolveLink({
+      link: src,
+      filePath: page.blob.path,
+      prefixPath: siteUrlPath,
+    });
+  };
+
+  const Layout = async ({ children }) => {
+    const authors =
+      metadata.authors &&
+      (await api.site.getAuthors.query({
+        siteId: site.id,
+        authors: metadata.authors,
+      }));
+    const image = metadata.image && resolveSrc(metadata.image);
+    return (
+      <BlogLayout
+        title={metadata.title}
+        description={metadata.description}
+        date={metadata.date}
+        showHero={metadata.showHero}
+        authors={authors}
+        image={image}
+      >
+        {children}
+      </BlogLayout>
+    );
+  };
 
   const showEditLink = metadata.showEditLink ?? siteConfig?.showEditLink;
   const showPageComments =
     site.enableComments &&
     (metadata.showComments ?? siteConfig?.showComments ?? site.enableComments);
   const giscusConfig = siteConfig?.giscus;
-
-  const Layout = async ({ children }) => {
-    if (metadata.layout === "plain") {
-      return <>{children}</>;
-    } else {
-      const authors =
-        metadata.authors &&
-        (await api.site.getAuthors.query({
-          siteId: site.id,
-          authors: metadata.authors,
-        }));
-      const image = metadata.image && getRawAssetUrl(metadata.image);
-      return (
-        <BlogLayout
-          title={metadata.title}
-          description={metadata.description}
-          date={metadata.date}
-          showHero={metadata.showHero}
-          authors={authors}
-          image={image}
-        >
-          {children}
-        </BlogLayout>
-      );
-    }
-  };
-
-  const isPlainLayout = metadata.layout === "plain";
-
-  const showSidebar =
-    !isPlainLayout &&
-    (metadata.showSidebar ?? siteConfig?.showSidebar ?? false);
-  const showToc =
-    !isPlainLayout && (metadata.showToc ?? siteConfig?.showToc ?? true);
+  const showSidebar = metadata.showSidebar ?? siteConfig?.showSidebar ?? false;
+  const showToc = metadata.showToc ?? siteConfig?.showToc ?? true;
   const showHero = metadata.showHero ?? siteConfig?.showHero;
 
-  const resolveHeroCtaHref = (href: string) => {
-    return resolveLink({
-      link: href ?? "",
-      filePath: page.blob.path,
-      prefixPath: site.customDomain
-        ? ""
-        : `/@${site.user?.ghUsername}/${site.projectName}`,
-    });
-  };
+  let siteTree;
 
-  const resolveHeroImageSrc = (src: string) => {
-    const rawFilePermalinkBase = site.customDomain
-      ? `/_r/-`
-      : `/@${site.user!.ghUsername}/${site.projectName}` + `/_r/-`;
-
-    return resolveLink({
-      link: src,
-      filePath: page.blob.path,
-      prefixPath: rawFilePermalinkBase,
-    });
-  };
-
-  // if (metadata.layout === "plain") {
-  //   return <>{compiledMDX}</>;
-  // }
+  // TODO this should be part off the project layout so that it's not computed for each page
+  if (showSidebar) {
+    siteTree = await api.site.getSiteTree
+      .query({
+        siteId: site.id,
+      })
+      .catch(() => []);
+  }
 
   return (
     <>
@@ -328,7 +315,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
                     {metadata.cta.map((cta) => (
                       <a
                         key={cta.label}
-                        href={resolveHeroCtaHref(cta.href)}
+                        href={resolveHref(cta.href)}
                         className="page-hero-cta"
                       >
                         {cta.label}
@@ -342,7 +329,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
               <div className="page-hero-image-container">
                 <img
                   alt="Hero Image"
-                  src={resolveHeroImageSrc(metadata.image)}
+                  src={resolveSrc(metadata.image)}
                   className="page-hero-image"
                 />
               </div>
