@@ -27,12 +27,14 @@
 
     /* Brand colours – override these in a custom theme for a quick re‑skin */
     --color-background: 255 255 255; /* white */
+
     --color-primary-faint: 228 228 231; /* zinc-200 */
     --color-primary-muted: 161 161 170; /* zinc-400 */
     --color-primary-subtle: 113 113 122; /* zinc-500 */
     --color-primary: 63 63 70; /* zinc-700 */
     --color-primary-emphasis: 39 39 42; /* zinc-800 */
     --color-primary-strong: 24 24 27; /* zinc-900 */
+
     --color-secondary: 251 146 60; /* orange-400 */
 
     /* Brand fonts – override these in a custom theme for a quick re‑skin */
@@ -43,7 +45,7 @@
 
 @layer components {
   body {
-    @apply font-body bg-background;
+    @apply bg-background font-body;
   }
 
   h1,
@@ -63,7 +65,7 @@
    Navbar
    ──────────────────────────────────────────────────── */
   .site-navbar {
-    @apply font-heading sticky top-0 z-10 bg-background;
+    @apply sticky top-0 z-10 bg-background font-heading;
   }
   .site-navbar.is-scrolled {
     @apply shadow-sm;
@@ -112,7 +114,7 @@
 
   /* Mobile navigation */
   .mobile-nav {
-    @apply font-heading fixed left-0 right-0 top-[4rem] h-[calc(100vh-4rem)] overflow-scroll overscroll-none bg-inherit lg:hidden;
+    @apply fixed left-0 right-0 top-[4rem] h-[calc(100vh-4rem)] overflow-scroll overscroll-none bg-inherit font-heading lg:hidden;
   }
   .mobile-nav-links-container,
   .mobile-nav-social-links-container {
@@ -154,7 +156,7 @@
   }
 
   .page-hero {
-    @apply font-heading mx-auto max-w-3xl text-center;
+    @apply mx-auto max-w-3xl text-center font-heading;
     &.has-image {
       @apply max-w-screen-2xl text-left lg:grid lg:grid-cols-12 lg:gap-x-8;
       .page-hero-ctas-container {
@@ -222,13 +224,13 @@
   }
 
   .site-sidebar {
-    @apply font-heading sticky top-[8rem] h-[calc(100vh-8rem)] overflow-y-auto pb-8 pr-4;
+    @apply sticky top-[8rem] h-[calc(100vh-8rem)] overflow-y-auto pb-8 pr-4 font-heading;
   }
   /* ────────────────────────────────────────────────────
    Footer
    ──────────────────────────────────────────────────── */
   .site-footer {
-    @apply font-heading mx-auto w-full max-w-8xl px-8 sm:px-10 lg:px-12;
+    @apply mx-auto w-full max-w-8xl px-8 font-heading sm:px-10 lg:px-12;
   }
 
   .site-footer-inner {
@@ -247,7 +249,7 @@
    ToC
    ──────────────────────────────────────────────────── */
   .page-toc {
-    @apply font-heading sticky top-[8rem] h-[calc(100vh-8rem)] overflow-y-auto pb-8 pl-4 text-sm;
+    @apply sticky top-[8rem] h-[calc(100vh-8rem)] overflow-y-auto pb-8 pl-4 font-heading text-sm;
   }
 
   .page-toc-heading {
@@ -280,7 +282,7 @@
    List component
    ──────────────────────────────────────────────────── */
   .list-component {
-    @apply font-heading flex flex-col gap-y-4;
+    @apply flex flex-col gap-y-4 font-heading;
   }
   .list-component-item {
     @apply relative isolate flex flex-col gap-8 border-b py-8 lg:flex-row lg:py-10;
@@ -304,7 +306,7 @@
     @apply mt-5 line-clamp-2 text-primary-emphasis;
   }
   .list-component-pagination {
-    @apply font-body flex items-center justify-between border-t border-gray-200 px-4 sm:px-0;
+    @apply flex items-center justify-between border-t border-gray-200 px-4 font-body sm:px-0;
   }
 
   .list-component-pagination-nav {
@@ -363,7 +365,7 @@
    Page layout
    ──────────────────────────────────────────────────── */
   .page-header {
-    @apply font-heading mb-8 space-y-2 border-b pb-8;
+    @apply mb-8 space-y-2 border-b pb-8 font-heading;
   }
   .page-header-date {
     @apply font-light text-primary/70;
@@ -436,20 +438,99 @@
   .search-icon {
     @apply size-6;
   }
-  .search-modal-container {
+  .search-modal {
     @apply fixed inset-0 z-50;
   }
   .search-modal-backdrop {
     @apply absolute inset-0 bg-gray-100/50 backdrop-blur-sm;
   }
-  .search-modal-container {
+  .search-modal-card-container {
     @apply relative z-10 flex min-h-full items-start justify-center p-3 md:p-24;
   }
-  .search-modal {
-    @apply flex w-full max-w-2xl flex-col rounded-lg border border-primary-faint bg-inherit p-4 shadow-xl;
+  .search-modal-card {
+    @apply flex w-full max-w-2xl flex-col rounded-lg border border-primary-faint bg-background p-4 shadow-xl;
   }
   .search-modal-input-container {
     @apply flex items-center;
+  }
+  .search-modal-results-container {
+    @apply relative;
+  }
+
+  .search-modal-input {
+    @apply text-sm border-none outline-none focus:outline-none focus:ring-0 bg-transparent [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-ms-clear]:hidden [&::-ms-reveal]:hidden;
+  }
+
+  .search-modal-close-button {
+    @apply p-1 text-primary-muted hover:text-primary;
+  }
+
+  .search-modal-close-icon {
+    @apply h-5 w-5;
+  }
+
+  .search-modal-results {
+    @apply mt-2 max-h-[60vh] min-h-[200px] w-full overflow-auto border-t border-primary-faint;
+  }
+
+  .search-modal-status-container {
+    @apply flex h-[200px] items-center justify-center text-primary-muted;
+  }
+
+  .search-modal-status-content {
+    @apply text-center;
+  }
+
+  .search-modal-status-icon {
+    @apply mx-auto mb-2 h-6 w-6 opacity-50;
+  }
+
+  .search-modal-status-message {
+    @apply text-sm;
+  }
+
+  .search-modal-status-submessage {
+    @apply mt-1 text-xs opacity-75;
+  }
+
+  .search-modal-loading-spinner {
+    @apply mx-auto mb-2 h-6 w-6 animate-spin rounded-full border-2 border-primary-muted border-t-transparent;
+  }
+
+  .search-modal-stalled-spinner {
+    @apply mx-auto mb-2 h-6 w-6 animate-pulse rounded-full border-2 border-yellow-600 border-t-transparent;
+  }
+
+  .search-modal-hits-list {
+    @apply py-2;
+  }
+
+  .search-modal-hits-item {
+    @apply rounded-md px-4 py-3 hover:bg-primary-faint/40;
+  }
+
+  .search-modal-error-icon {
+    @apply mx-auto mb-2 flex h-6 w-6 items-center justify-center text-yellow-600;
+  }
+
+  .search-modal-error-icon-text {
+    @apply text-xs font-bold;
+  }
+
+  .search-modal-highlight {
+    @apply bg-orange-100 !important;
+  }
+
+  .search-modal-hit-link {
+    @apply block;
+  }
+
+  .search-modal-hit-title {
+    @apply font-medium;
+  }
+
+  .search-modal-hit-content {
+    @apply mt-1 text-sm text-primary-muted;
   }
 
   /* ────────────────────────────────────────────────────
@@ -559,7 +640,7 @@
     @apply py-2 md:py-4;
   }
   .page-edit-button {
-    @apply font-heading mt-4 flex w-fit items-center gap-1 font-normal no-underline hover:underline;
+    @apply mt-4 flex w-fit items-center gap-1 font-heading font-normal no-underline hover:underline;
   }
   .page-comments-container {
     @apply mt-10 w-full border-t pt-10;

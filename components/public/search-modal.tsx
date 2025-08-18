@@ -33,6 +33,18 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
 
+  // Close when a result is clicked (but ignore new-tab/middle/modified clicks)
+  const handleHitClick = (e?: React.MouseEvent) => {
+    if (
+      e &&
+      (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button === 1)
+    ) {
+      return; // let the browser open a new tab/window without closing
+    }
+    closeModal();
+    setShowHits(false);
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -82,7 +94,7 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
               fallbackFocus: () => modalRef.current || document.body,
             }}
           >
-            <div className="search-modal-container">
+            <div className="search-modal">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -92,7 +104,7 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
               />
 
               <div
-                className="search-modal-container"
+                className="search-modal-card-container"
                 onClick={(e) => {
                   if (e.target === e.currentTarget) {
                     closeModal();
@@ -104,7 +116,7 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
                   initial={{ scale: 0.95, opacity: 0, y: -20 }}
                   animate={{ scale: 1, opacity: 1, y: 0 }}
                   exit={{ scale: 0.95, opacity: 0, y: -20 }}
-                  className="search-modal"
+                  className="search-modal-card"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <InstantSearch
@@ -119,8 +131,7 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
                         placeholder="Search..."
                         classNames={{
                           root: "flex-grow",
-                          input:
-                            "text-sm border-none outline-none focus:outline-none focus:ring-0 bg-transparent [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-ms-clear]:hidden [&::-ms-reveal]:hidden",
+                          input: "search-modal-input",
                           submitIcon: "hidden",
                           resetIcon: "hidden",
                           loadingIcon: "hidden",
@@ -131,13 +142,18 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
                       />
                       <button
                         onClick={closeModal}
-                        className="p-1 text-primary-muted hover:text-primary"
+                        className="search-modal-close-button"
                       >
-                        <XIcon className="h-5 w-5" />
+                        <XIcon className="search-modal-close-icon" />
                       </button>
                     </div>
-                    <div className="relative">
-                      {showHits && <SearchResults prefix={prefix} />}
+                    <div className="search-modal-results-container">
+                      {showHits && (
+                        <SearchResults
+                          prefix={prefix}
+                          onHitClick={handleHitClick}
+                        />
+                      )}
                     </div>
                   </InstantSearch>
                 </motion.div>
@@ -150,7 +166,13 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
   );
 }
 
-function Hit({ hit }) {
+function Hit({
+  hit,
+  onHitClick,
+}: {
+  hit: any;
+  onHitClick?: (e?: React.MouseEvent) => void;
+}) {
   // Determine which fields have highlights/matches
   const snippetFields = hit._snippetResult || {};
 
@@ -168,23 +190,27 @@ function Hit({ hit }) {
   }
 
   return (
-    <Link href={hit.path} className="block">
+    <Link
+      onClick={onHitClick}
+      href={hit.path}
+      className="search-modal-hit-link"
+    >
       <article>
-        <h1 className="font-medium">
+        <h1 className="search-modal-hit-title">
           <Highlight
             attribute="title"
             hit={hit}
             classNames={{
-              highlighted: "bg-orange-100 !important",
+              highlighted: "search-modal-highlight",
             }}
           />
         </h1>
-        <div className="mt-1 text-sm text-primary-muted">
+        <div className="search-modal-hit-content">
           <Snippet
             attribute={snippetField}
             hit={hit}
             classNames={{
-              highlighted: "bg-orange-100 !important",
+              highlighted: "search-modal-highlight",
             }}
           />
         </div>
@@ -193,7 +219,13 @@ function Hit({ hit }) {
   );
 }
 
-function SearchResults({ prefix }: { prefix: string }) {
+function SearchResults({
+  prefix,
+  onHitClick,
+}: {
+  prefix: string;
+  onHitClick: (e?: React.MouseEvent) => void;
+}) {
   const { results, status, indexUiState } = useInstantSearch();
   const hasResults = results?.nbHits > 0;
   const query = indexUiState.query || "";
@@ -209,60 +241,66 @@ function SearchResults({ prefix }: { prefix: string }) {
   );
 
   return (
-    <div className="mt-2 max-h-[60vh] min-h-[200px] w-full overflow-auto border-t border-primary-faint">
+    <div className="search-modal-results">
       {!hasQuery ? (
-        <div className="flex h-[200px] items-center justify-center text-primary-muted">
-          <div className="text-center">
-            <SearchIcon className="mx-auto mb-2 h-6 w-6 opacity-50" />
-            <p className="text-sm">Start typing to search...</p>
+        <div className="search-modal-status-container">
+          <div className="search-modal-status-content">
+            <SearchIcon className="search-modal-status-icon" />
+            <p className="search-modal-status-message">
+              Start typing to search...
+            </p>
           </div>
         </div>
       ) : hasQuery && hasResults ? (
         <Hits
           classNames={{
-            list: "py-2",
-            item: "rounded-md px-4 py-3 hover:bg-primary-faint/40",
+            list: "search-modal-hits-list",
+            item: "search-modal-hits-item",
           }}
-          hitComponent={Hit}
+          hitComponent={(props) => <Hit {...props} onHitClick={onHitClick} />}
           transformItems={transformItems}
         />
       ) : hasQuery && !hasResults && status === "idle" ? (
-        <div className="flex h-[200px] items-center justify-center text-primary-muted">
-          <div className="text-center">
-            <SearchIcon className="mx-auto mb-2 h-6 w-6 opacity-50" />
-            <p className="text-sm">No results found for &quot;{query}&quot;</p>
-            <p className="mt-1 text-xs opacity-75">
+        <div className="search-modal-status-container">
+          <div className="search-modal-status-content">
+            <SearchIcon className="search-modal-status-icon" />
+            <p className="search-modal-status-message">
+              No results found for &quot;{query}&quot;
+            </p>
+            <p className="search-modal-status-submessage">
               Try different keywords or check your spelling
             </p>
           </div>
         </div>
       ) : status === "error" ? (
-        <div className="flex h-[200px] items-center justify-center text-primary-muted">
-          <div className="text-center">
-            <div className="mx-auto mb-2 flex h-6 w-6 items-center justify-center text-yellow-600">
-              <span className="text-xs font-bold">!</span>
+        <div className="search-modal-status-container">
+          <div className="search-modal-status-content">
+            <div className="search-modal-error-icon">
+              <span className="search-modal-error-icon-text">!</span>
             </div>
-            <p className="text-sm">Search error occurred</p>
-            <p className="mt-1 text-xs opacity-75">
+            <p className="search-modal-status-message">Search error occurred</p>
+            <p className="search-modal-status-submessage">
               Please try again or check your connection
             </p>
           </div>
         </div>
       ) : status === "stalled" ? (
-        <div className="flex h-[200px] items-center justify-center text-primary-muted">
-          <div className="text-center">
-            <div className="mx-auto mb-2 h-6 w-6 animate-pulse rounded-full border-2 border-yellow-600 border-t-transparent"></div>
-            <p className="text-sm">Search is taking longer than usual...</p>
-            <p className="mt-1 text-xs opacity-75">
+        <div className="search-modal-status-container">
+          <div className="search-modal-status-content">
+            <div className="search-modal-stalled-spinner"></div>
+            <p className="search-modal-status-message">
+              Search is taking longer than usual...
+            </p>
+            <p className="search-modal-status-submessage">
               Please wait while we search
             </p>
           </div>
         </div>
       ) : (
-        <div className="flex h-[200px] items-center justify-center text-primary-muted">
-          <div className="text-center">
-            <div className="mx-auto mb-2 h-6 w-6 animate-spin rounded-full border-2 border-primary-muted border-t-transparent"></div>
-            <p className="text-sm">Searching...</p>
+        <div className="search-modal-status-container">
+          <div className="search-modal-status-content">
+            <div className="search-modal-loading-spinner"></div>
+            <p className="search-modal-status-message">Searching...</p>
           </div>
         </div>
       )}
