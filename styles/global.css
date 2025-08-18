@@ -458,7 +458,7 @@
   }
 
   .search-modal-input {
-    @apply text-sm border-none outline-none focus:outline-none focus:ring-0 bg-transparent [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none [&::-ms-clear]:hidden [&::-ms-reveal]:hidden;
+    @apply border-none bg-transparent text-sm outline-none focus:outline-none focus:ring-0 [&::-ms-clear]:hidden [&::-ms-reveal]:hidden [&::-webkit-search-cancel-button]:appearance-none [&::-webkit-search-decoration]:appearance-none;
   }
 
   .search-modal-close-button {
@@ -579,6 +579,10 @@
    ──────────────────────────────────────────────────── */
   .rendered-mdx {
     min-height: 55vh;
+  }
+
+  .rendered-mdx > h1:first-child {
+    display: none;
   }
 
   .rendered-mdx .heading-link {

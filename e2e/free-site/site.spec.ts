@@ -100,6 +100,17 @@ test("Should display frontmatter metadata in the header", async ({
   );
 });
 
+test("Should use first h1 as title and display it in the header", async ({
+  publishedSitePage,
+}) => {
+  await publishedSitePage.goto("/blog/post-without-metadata");
+
+  const header = publishedSitePage.page.locator(".page-header");
+  await expect(header.locator("h1").first()).toHaveText("Blog Post 2");
+  const body = publishedSitePage.page.locator(".page-body");
+  await expect(body.locator("h1").getByText("Blog Post 2")).toBeHidden();
+});
+
 test("Should render List component correctly", async ({
   publishedSitePage,
 }) => {

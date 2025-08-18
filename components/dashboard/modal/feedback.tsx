@@ -71,7 +71,7 @@ export default function FeedbackModal({
       onSubmit={handleSubmit}
       className="w-full rounded-md bg-white dark:bg-black md:max-w-md md:border md:border-stone-200 md:shadow dark:md:border-stone-700"
     >
-      <div className="relative flex flex-col space-y-4 p-5 md:p-10">
+      <div className="relative flex flex-col space-y-4 p-5 font-dashboard-body md:p-10">
         <h2 className="font-dashboard-heading text-2xl dark:text-white">
           Help us make Flowershow better for you!
         </h2>
@@ -138,7 +138,7 @@ export default function FeedbackModal({
         </div>
       </div>
 
-      <div className="flex items-center justify-between rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800 md:px-10">
+      <div className="flex items-center justify-between rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 font-dashboard-body dark:border-stone-700 dark:bg-stone-800 md:px-10">
         <button
           type="button"
           onClick={handleDismiss}
