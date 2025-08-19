@@ -123,7 +123,7 @@ export default function Nav({ children }: { children: ReactNode }) {
               <>
                 <Link
                   className="flex items-center text-sm hover:underline"
-                  href="https://github.com/orgs/flowershow/discussions"
+                  href="https://discord.gg/JChzM5VdFn"
                   target="_blank"
                 >
                   <span>Support</span>
