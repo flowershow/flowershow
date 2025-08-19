@@ -9,6 +9,7 @@
 import { TRPCError, initTRPC } from "@trpc/server";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import * as Sentry from "@sentry/nextjs";
 
 import { getSession } from "@/server/auth";
 import { db } from "@/server/db";
@@ -77,7 +78,13 @@ export const createTRPCRouter = t.router;
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
-export const publicProcedure = t.procedure;
+const sentryMw = t.middleware(
+  Sentry.trpcMiddleware({
+    // includes validated input in Sentry event context (watch PII!)
+    attachRpcInput: true,
+  }),
+);
+export const publicProcedure = t.procedure.use(sentryMw);
 
 /** Reusable middleware that enforces users are logged in before running the procedure. */
 const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
@@ -100,4 +107,6 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
  *
  * @see https://trpc.io/docs/procedures
  */
-export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
+export const protectedProcedure = t.procedure
+  .use(enforceUserIsAuthed)
+  .use(sentryMw);

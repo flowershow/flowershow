@@ -63,10 +63,7 @@ export default function NewSitePage() {
   useEffect(() => {
     if (scopes) {
       if (scopes.length > 0) {
-        setData({
-          ...data,
-          gh_scope: scopes[0]!.login || "",
-        });
+        setData((prev) => ({ ...prev, gh_scope: scopes[0]?.login ?? "" }));
       }
     }
   }, [scopes]);
@@ -75,10 +72,7 @@ export default function NewSitePage() {
     if (repos) {
       const repositories = repos.map(({ name }) => name);
       if (repositories.length > 0) {
-        setData({
-          ...data,
-          ghRepository: repositories[0] || "",
-        });
+        setData((prev) => ({ ...prev, ghRepository: repositories[0] ?? "" }));
       }
     }
   }, [repos]);

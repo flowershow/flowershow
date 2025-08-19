@@ -44,3 +44,6 @@ yarn-error.log*
 
 # cloud app config
 config.json
+
+# Sentry Config File
+.env.sentry-build-plugin

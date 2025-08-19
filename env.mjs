@@ -50,6 +50,8 @@ export const env = createEnv({
     E2E_GH_USERNAME: z.string().optional(),
     E2E_GH_PASSWORD: z.string().optional(),
     TYPESENSE_ADMIN_API_KEY: z.string(),
+    SENTRY_ORG: z.string(),
+    SENTRY_PROJECT: z.string(),
   },
 
   /**
@@ -70,6 +72,7 @@ export const env = createEnv({
     NEXT_PUBLIC_TYPESENSE_HOST: z.string(),
     NEXT_PUBLIC_TYPESENSE_PORT: z.string(),
     NEXT_PUBLIC_TYPESENSE_PROTOCOL: z.string(),
+    NEXT_PUBLIC_SENTRY_DSN: z.string(),
   },
 
   /**
@@ -123,6 +126,9 @@ export const env = createEnv({
     NEXT_PUBLIC_TYPESENSE_HOST: process.env.NEXT_PUBLIC_TYPESENSE_HOST,
     NEXT_PUBLIC_TYPESENSE_PORT: process.env.NEXT_PUBLIC_TYPESENSE_PORT,
     NEXT_PUBLIC_TYPESENSE_PROTOCOL: process.env.NEXT_PUBLIC_TYPESENSE_PROTOCOL,
+    SENTRY_ORG: process.env.SENTRY_ORG,
+    SENTRY_PROJECT: process.env.SENTRY_PROJECT,
+    NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,
