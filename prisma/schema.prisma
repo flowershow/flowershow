@@ -24,6 +24,7 @@ model User {
   ghUsername   String?   @map("gh_username")
   email         String?   @unique
   emailVerified DateTime? @map("email_verified")
+  discordId    String?   @unique @map("discord_id")
   image         String?
   role          Role      @default(USER)
   createdAt     DateTime  @default(now()) @map("created_at")
