@@ -11,3 +11,4 @@ export { default as TwitterIcon } from "./twitter";
 export { default as YouTubeIcon } from "./youtube";
 export { default as BlueskyIcon } from "./bluesky";
 export { default as MastodonIcon } from "./mastodon";
+export { default as RedditIcon } from "./reddit";

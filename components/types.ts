@@ -20,7 +20,8 @@ export type SocialPlatform =
   | "youtube"
   | "mastodon"
   | "bsky"
-  | "bluesky";
+  | "bluesky"
+  | "reddit";
 
 export interface NavConfig {
   logo?: string;

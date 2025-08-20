@@ -10,6 +10,7 @@ import {
   YouTubeIcon,
   MastodonIcon,
   BlueskyIcon,
+  RedditIcon,
 } from "@/components/icons";
 
 export const socialIcons: { [K in SocialPlatform]: React.FC<any> } = {
@@ -24,4 +25,5 @@ export const socialIcons: { [K in SocialPlatform]: React.FC<any> } = {
   mastodon: MastodonIcon,
   bluesky: BlueskyIcon,
   bsky: BlueskyIcon,
+  reddit: RedditIcon,
 };
