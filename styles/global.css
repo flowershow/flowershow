@@ -234,15 +234,19 @@
   }
 
   .site-footer-inner {
-    @apply mt-12 border-t border-gray-900/10 bg-inherit py-6 sm:mt-16 sm:py-8 lg:mt-24;
+    @apply mt-12 border-t border-gray-900/10 bg-inherit py-6 text-xs leading-5 text-primary-muted sm:mt-16 sm:py-8 lg:mt-24;
   }
 
   .site-footer-copyright {
-    @apply text-xs leading-5 text-primary-muted;
+    @apply inline-block;
   }
 
   .site-footer-copyright-icon {
     @apply mx-2 inline h-0.5 w-0.5 fill-current;
+  }
+
+  .site-footer-built-with {
+    @apply inline-block;
   }
 
   /* ────────────────────────────────────────────────────

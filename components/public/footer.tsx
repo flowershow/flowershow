@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getConfig } from "@/lib/app-config";
 
 const config = getConfig();
@@ -9,7 +10,7 @@ export default function Footer() {
         <p id="footer" className="sr-only">
           Footer
         </p>
-        <p className="site-footer-copyright">
+        <div className="site-footer-copyright">
           <span>&copy; 2025 All rights reserved</span>
           <svg
             viewBox="0 0 2 2"
@@ -18,8 +19,10 @@ export default function Footer() {
           >
             <circle r={1} cx={1} cy={1} />
           </svg>
-          Built with <strong>{config.title}</strong>
-        </p>
+        </div>
+        <div className="site-footer-built-with">
+          Built with <Link href={config.landingPageUrl}>{config.title}</Link>
+        </div>
       </div>
     </footer>
   );
