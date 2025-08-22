@@ -16,7 +16,7 @@ test.describe("Premium site sitemap", () => {
     );
 
     // Should contain the site root URL with custom domain
-    const siteUrl = `http://${publishedSitePage.customDomain}`;
+    const siteUrl = `http://${publishedSitePage.domain}`;
     expect(text).toContain(`<loc>${siteUrl}</loc>`);
 
     // Should contain blog posts with custom domain URLs
@@ -46,7 +46,7 @@ test.describe("Premium site sitemap", () => {
     );
 
     // Should not contain the premium site's sitemap URL since it has a custom domain
-    const siteUrl = `http://${publishedSitePage.customDomain}`;
+    const siteUrl = `http://${publishedSitePage.domain}`;
     expect(text).not.toContain(`<loc>${siteUrl}/sitemap.xml</loc>`);
   });
 
@@ -59,12 +59,12 @@ test.describe("Premium site sitemap", () => {
     expect(response!.headers()["content-type"]).toBe("text/plain");
 
     const text = await response!.text();
-    expect(text).toContain(`# http://${publishedSitePage.customDomain}`);
+    expect(text).toContain(`# http://${publishedSitePage.domain}`);
     expect(text).toContain("User-agent: *");
     expect(text).toContain("Allow: /");
     expect(text).toContain("Disallow: /api/");
     expect(text).toContain(
-      `Sitemap: http://${publishedSitePage.customDomain}/sitemap.xml`,
+      `Sitemap: http://${publishedSitePage.domain}/sitemap.xml`,
     );
   });
 });

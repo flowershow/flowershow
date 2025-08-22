@@ -1,8 +1,5 @@
 import { env } from "@/env.mjs";
 import { Site, Plan } from "@prisma/client";
-import { getConfig } from "./app-config";
-
-const config = getConfig();
 
 export enum Feature {
   DataRequest = "DataRequest",

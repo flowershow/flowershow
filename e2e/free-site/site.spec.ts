@@ -67,17 +67,6 @@ test.describe("Raw resource endpoints", () => {
   });
 });
 
-test.describe("MDX", () => {
-  test("Should resolve JSX href and src attributes", async ({
-    publishedSitePage,
-  }) => {
-    await publishedSitePage.goto("/syntax/syntax");
-    await expect(
-      publishedSitePage.page.getByTestId("jsx-img").locator("img"),
-    ).toHaveAttribute("src", /\/@.+\/.+\/_r\/-\/.+/);
-  });
-});
-
 test("Should display frontmatter metadata in the header", async ({
   publishedSitePage,
 }) => {

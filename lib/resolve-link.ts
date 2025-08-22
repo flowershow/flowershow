@@ -1,55 +1,72 @@
 import * as path from "path";
-import { resolveSiteAlias } from "./resolve-site-alias";
+import { env } from "@/env.mjs";
 
-export const resolveLink = ({
-  link,
-  filePath,
-  // if site is deployed at default single-site url path, pass /@{username}/@{siteId}
-  // if it's a link to an asset hosted on a different domain, pass the URL with path to it's root location
-  prefixPath = "",
+/**
+ * Resolve href (page link) or src (asset link) path to URL path (or full URL for assets)
+ * @param opts.target  - Value of the href or src (relative or absolute)
+ * @param opts.originFilePath  - Absolute path to the file where the link is (you can skip it if it's a root level file (e.g. top config.json))
+ * @param opts.prefix  - User site prefix (/@username/sitename) if not hosted on a custom domain.
+ * @param opts.isSrc  - Whether it's an asset link (src)
+ * @param opts.domain  - User site custom domain (only needed if isSrc==true)
+ * @example
+ * resolveLinkToUrl({ target: "blog/post-abc", originFilePath: "/README.md", prefix: "/@john/acme" })
+ * resolveLinkToUrl({ target: "assets/image.jpg", originFilePath: "config.json", isSrc: true, domain: "john.com" })
+ */
+export const resolveLinkToUrl = ({
+  target,
+  originFilePath = "/",
+  prefix = "",
+  isSrcLink = false,
+  domain,
 }: {
-  link: string;
-  filePath: string;
-  prefixPath?: string;
+  target: string;
+  originFilePath?: string;
+  prefix?: string;
+  isSrcLink?: boolean;
+  domain?: string | null;
 }) => {
-  if (link.startsWith("http")) {
-    return link;
+  if (target.startsWith("http")) {
+    return target;
   }
 
-  if (link.startsWith("#")) {
-    return link;
+  if (target.startsWith("#")) {
+    return target;
   }
 
-  let resolvedLink = link;
+  let resolvedLink = target;
 
-  // if filePath doesn't start with `/`, prefix it with `/`
-  if (!filePath.startsWith("/")) {
-    filePath = `/${filePath}`;
+  resolvedLink = resolvedLink
+    .replace(/\.mdx?$/, "")
+    .replace(/\/(README|index)$/, "");
+
+  // normalize origin file path so that it always has a leading slash
+  if (!originFilePath.startsWith("/")) {
+    originFilePath = `/${originFilePath}`;
   }
-
-  const isAbsolute = link.startsWith("/");
 
   // convert relative link to absolute
-  if (!isAbsolute) {
-    resolvedLink = path.resolve(path.dirname(filePath), link);
+  if (!resolvedLink.startsWith("/")) {
+    resolvedLink = path.resolve(path.dirname(originFilePath), resolvedLink);
   }
 
-  if (prefixPath) {
-    resolvedLink = resolveSiteAlias(prefixPath, "to") + resolvedLink;
-  }
-
-  // if the link ends with `.md` or `.mdx` remove it
-  resolvedLink = resolvedLink.replace(/\.mdx?$/, "");
-
-  // if the link ends with `README` or `index` remove it
-  resolvedLink = resolvedLink.replace(/\/(README|index)$/, "");
+  // const prefix = prefix && resolveSiteAlias(prefix, "to");
 
   // remove trailing slash unless it's the root
   if (resolvedLink !== "/") {
     resolvedLink = resolvedLink.replace(/\/$/, "");
   }
 
-  // TODO links to headings
+  // For src need to use full path so that it works with Next.js Image
+  // otherwise Next.js will expect the file to be located in /public folder
+  if (isSrcLink) {
+    const isSecure =
+      env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
+      env.NEXT_PUBLIC_VERCEL_ENV === "preview";
+    const protocol = isSecure ? "https" : "http";
+    return `${protocol}://${
+      domain || env.NEXT_PUBLIC_ROOT_DOMAIN
+    }${prefix}/_r/-${resolvedLink}`;
+  }
 
-  return resolvedLink;
+  return `${prefix}${resolvedLink}`;
 };

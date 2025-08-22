@@ -1,6 +1,4 @@
-import { env } from "@/env.mjs";
-import getSiteUrl from "@/lib/get-site-url";
-import { resolveSiteAlias } from "@/lib/resolve-site-alias";
+import { getSiteUrl } from "@/lib/get-site-url";
 import prisma from "@/server/db";
 import { NextRequest } from "next/server";
 

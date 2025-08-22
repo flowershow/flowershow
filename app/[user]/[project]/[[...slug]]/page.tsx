@@ -2,8 +2,21 @@ import Link from "next/link";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
 import { compileMDX } from "next-mdx-remote/rsc";
 import { EditIcon } from "lucide-react";
-import { GiscusProps } from "@giscus/react";
+import clsx from "clsx";
 import emojiRegex from "emoji-regex";
+import { GiscusProps } from "@giscus/react";
+
+import { api } from "@/trpc/server";
+import { PageMetadata } from "@/server/api/types";
+
+import { getConfig } from "@/lib/app-config";
+import { getMdxOptions } from "@/lib/markdown";
+import { resolveLinkToUrl } from "@/lib/resolve-link";
+import { resolveSiteAlias } from "@/lib/resolve-site-alias";
+import { getSite } from "@/lib/get-site";
+import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
+import { generateScopedCss } from "@/lib/generate-scoped-css";
+import { getSiteUrl, getSiteUrlPath } from "@/lib/get-site-url";
 
 import Comments from "@/components/public/comments";
 import { mdxComponentsFactory } from "@/components/public/mdx-components-factory";
@@ -12,20 +25,7 @@ import { BlogLayout } from "@/components/public/layouts/blog";
 import SiteTree from "@/components/public/site-tree";
 import TableOfContents from "@/components/public/table-of-contents";
 
-import { getConfig } from "@/lib/app-config";
-import { getMdxOptions } from "@/lib/markdown";
-import { resolveLink } from "@/lib/resolve-link";
-import { resolveSiteAlias } from "@/lib/resolve-site-alias";
-import { getSite } from "@/lib/get-site";
-import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
-import { generateScopedCss } from "@/lib/generate-scoped-css";
-import getSiteUrl, { getSiteUrlPath } from "@/lib/get-site-url";
-
-import { api } from "@/trpc/server";
-import { PageMetadata } from "@/server/api/types";
-
-import UrlNormalizer from "./url-normalizer"; // TODO
-import clsx from "clsx";
+import UrlNormalizer from "./url-normalizer";
 
 const config = getConfig();
 
@@ -42,6 +42,8 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   const decodedSlug = slug.replace(/%20/g, "+");
 
   const site = await getSite(userName, projectName);
+  const siteUrl = getSiteUrl(site);
+  const sitePrefix = getSiteUrlPath(site);
 
   const blob = await api.site.getBlob
     .query({
@@ -65,13 +67,13 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     })
     .catch(() => null);
 
-  const siteUrl = getSiteUrl(site);
-
-  const getRawAssetUrl = (url: string) =>
-    resolveLink({
-      link: url,
-      filePath: blob.path,
-      prefixPath: siteUrl + "/_r/-",
+  const getSrcUrl = (url: string) =>
+    resolveLinkToUrl({
+      target: url,
+      originFilePath: blob.path,
+      prefix: sitePrefix,
+      isSrcLink: true,
+      domain: site.customDomain,
     });
 
   let imageUrl: string | null = config.thumbnail;
@@ -79,15 +81,15 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
 
   if (isFeatureEnabled(Feature.NoBranding, site)) {
     imageUrl = metadata.image
-      ? getRawAssetUrl(metadata.image)
+      ? getSrcUrl(metadata.image)
       : siteConfig?.image
-        ? getRawAssetUrl(siteConfig.image)
+        ? getSrcUrl(siteConfig.image)
         : null;
     if (siteConfig?.favicon) {
       if (isEmoji(siteConfig.favicon)) {
         faviconUrl = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${siteConfig.favicon}</text></svg>`;
       } else {
-        faviconUrl = getRawAssetUrl(siteConfig.favicon);
+        faviconUrl = getSrcUrl(siteConfig.favicon);
       }
     }
   }
@@ -135,7 +137,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     alternates: {
       canonical: `${siteUrl}/${decodedSlug}`,
     },
-    metadataBase: new URL(siteUrl),
+    // metadataBase: new URL(siteUrl),
   };
 }
 
@@ -146,7 +148,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   const decodedSlug = slug.replace(/%20/g, "+");
 
   const site = await getSite(userName, projectName);
-  const siteUrlPath = getSiteUrlPath(site);
+  const sitePrefix = getSiteUrlPath(site);
 
   const siteConfig = await api.site.getConfig
     .query({
@@ -201,7 +203,8 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   const mdxOptions = getMdxOptions({
     permalinks: sitePermalinks,
     filePath: page.blob.path,
-    siteSubpath: siteUrlPath,
+    sitePrefix,
+    customDomain: site.customDomain ?? undefined,
   }) as any;
 
   try {
@@ -234,19 +237,13 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     );
   }
 
-  const resolveSrc = (src: string) => {
-    return resolveLink({
-      link: src,
-      filePath: page.blob.path,
-      prefixPath: siteUrlPath + "/_r/-",
-    });
-  };
-
-  const resolveHref = (src: string) => {
-    return resolveLink({
-      link: src,
-      filePath: page.blob.path,
-      prefixPath: siteUrlPath,
+  const resolveLink = (src: string, isSrc: boolean = false) => {
+    return resolveLinkToUrl({
+      target: src,
+      originFilePath: page.blob.path,
+      prefix: sitePrefix,
+      isSrcLink: isSrc,
+      domain: site.customDomain,
     });
   };
 
@@ -257,7 +254,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
         siteId: site.id,
         authors: metadata.authors,
       }));
-    const image = metadata.image && resolveSrc(metadata.image);
+    const image = metadata.image && resolveLink(metadata.image, true);
     return (
       <BlogLayout
         title={metadata.title}
@@ -288,6 +285,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     siteTree = await api.site.getSiteTree
       .query({
         siteId: site.id,
+        orderBy: siteConfig?.sidebar?.orderBy,
       })
       .catch(() => []);
   }
@@ -315,7 +313,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
                     {metadata.cta.map((cta) => (
                       <a
                         key={cta.label}
-                        href={resolveHref(cta.href)}
+                        href={resolveLink(cta.href)}
                         className="page-hero-cta"
                       >
                         {cta.label}
@@ -329,7 +327,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
               <div className="page-hero-image-container">
                 <img
                   alt="Hero Image"
-                  src={resolveSrc(metadata.image)}
+                  src={resolveLink(metadata.image, true)}
                   className="page-hero-image"
                 />
               </div>

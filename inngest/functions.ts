@@ -179,6 +179,18 @@ export const syncSite = inngest.createFunction(
                   extension,
                 });
 
+                const urlPath = (() => {
+                  if (["md", "mdx"].includes(extension)) {
+                    // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / 🤦‍♀️)
+                    const _urlPath = resolveFilePathToUrlPath({ filePath });
+                    return _urlPath === "/"
+                      ? _urlPath
+                      : _urlPath.replace(/^\//, "");
+                  } else {
+                    return null;
+                  }
+                })();
+
                 await prisma.blob.upsert({
                   where: {
                     siteId_path: {
@@ -189,9 +201,7 @@ export const syncSite = inngest.createFunction(
                   create: {
                     siteId,
                     path: filePath,
-                    appPath: ["md", "mdx"].includes(extension)
-                      ? resolveFilePathToUrlPath(filePath)
-                      : null,
+                    appPath: urlPath,
                     size: ghTreeItem.size || 0,
                     sha: ghTreeItem.sha,
                     metadata: Prisma.JsonNull,

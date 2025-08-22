@@ -20,15 +20,15 @@ import {
   validDomainRegex,
 } from "@/lib/domains";
 import { TRPCError } from "@trpc/server";
-import { buildSiteMapFromSiteBlobs } from "@/lib/build-site-map";
+import { buildSiteTree } from "@/lib/build-site-tree";
 import { SiteConfig } from "@/components/types";
 import { env } from "@/env.mjs";
-import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 import { Blob, Status } from "@prisma/client";
 import { PageMetadata } from "../types";
-import { resolveLink } from "@/lib/resolve-link";
+import { resolveLinkToUrl } from "@/lib/resolve-link";
 import { SiteWithUser } from "@/types";
 import { getSiteUrlPath } from "@/lib/get-site-url";
+import { Prisma } from "@prisma/client";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -585,6 +585,7 @@ export const siteRouter = createTRPCRouter({
     .input(
       z.object({
         siteId: z.string().min(1),
+        orderBy: z.enum(["path", "title"]).default("title"),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -604,20 +605,18 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          const prefix = site.customDomain
-            ? ""
-            : resolveSiteAlias(
-                `/@${site.user!.ghUsername}/${site.projectName}`,
-                "to",
-              );
+          const sitePrefix = getSiteUrlPath(site);
 
           // Get all blobs for the site
           const blobs = (await ctx.db.blob.findMany({
             where: {
               siteId: site.id,
-              extension: {
-                in: ["md", "mdx"],
-              },
+              extension: { in: ["md", "mdx"] },
+              metadata: { not: Prisma.AnyNull }, // metadata must exist
+              OR: [
+                { metadata: { path: ["publish"], equals: true } }, // explicitly published
+                { metadata: { path: ["publish"], equals: Prisma.AnyNull } }, // no publish field
+              ],
             },
             select: {
               path: true,
@@ -626,7 +625,10 @@ export const siteRouter = createTRPCRouter({
             },
           })) as Blob[];
 
-          return buildSiteMapFromSiteBlobs(blobs, prefix);
+          return buildSiteTree(blobs, {
+            orderBy: input.orderBy,
+            prefix: sitePrefix,
+          }).children;
         },
         undefined,
         {
@@ -702,17 +704,14 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
-      const site = (await ctx.db.site.findFirst({
+      const site = await ctx.db.site.findFirst({
         where: {
           AND: [{ id: input.siteId }],
         },
-        select: {
-          id: true,
+        include: {
           user: true,
-          customDomain: true,
-          projectName: true,
         },
-      })) as SiteWithUser;
+      });
 
       if (!site) {
         throw new TRPCError({
@@ -723,14 +722,12 @@ export const siteRouter = createTRPCRouter({
 
       return await unstable_cache(
         async (input) => {
-          const siteUrlPath = getSiteUrlPath(site);
-
           const dir = input.dir.replace(/^\//, "");
           const dirReadmePath = dir + "/README.md";
           const dirIndexPath = dir + "/index.md";
 
           const blobs = await ctx.db.$queryRaw<
-            { path: string; app_path: string; metadata: PageMetadata }[]
+            { path: string; app_path: string; metadata?: PageMetadata }[]
           >`
               SELECT "path", "app_path", "metadata"
               FROM "Blob"
@@ -743,19 +740,26 @@ export const siteRouter = createTRPCRouter({
                 "metadata"->>'title' ASC NULLS LAST
           `;
 
+          const sitePrefix = getSiteUrlPath(site);
+
           const items = blobs.map((b) => {
             const metadata = b.metadata;
 
-            if (metadata.image) {
-              metadata.image = resolveLink({
-                link: metadata.image,
-                filePath: b.path,
-                prefixPath: siteUrlPath + "/_r/-",
+            if (metadata?.image) {
+              metadata.image = resolveLinkToUrl({
+                target: metadata.image,
+                originFilePath: b.path,
+                prefix: sitePrefix,
+                isSrcLink: true,
+                domain: site.customDomain,
               });
             }
 
             return {
-              url: siteUrlPath + "/" + b.app_path,
+              url: resolveLinkToUrl({
+                target: b.app_path,
+                prefix: sitePrefix,
+              }),
               metadata,
             };
           });

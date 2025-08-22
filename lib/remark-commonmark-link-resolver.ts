@@ -1,20 +1,36 @@
 import { visit } from "unist-util-visit";
-import { resolveLink } from "./resolve-link";
+import { resolveLinkToUrl } from "./resolve-link";
+
+export interface Options {
+  /** path to file where the link was used */
+  filePath: string;
+  /** site prefix (@username/sitename or none if on custom domain) */
+  sitePrefix: string;
+  customDomain?: string;
+}
 
 function remarkCommonMarkLinkResolver({
   filePath,
-  siteSubpath,
-}: {
-  filePath: string;
-  siteSubpath: string;
-}) {
+  sitePrefix,
+  customDomain,
+}: Options) {
   return (tree: any) => {
     visit(tree, "link", (node) => {
       if (typeof node.url !== "string") return;
-      node.url = resolveLink({
-        link: node.url,
-        filePath,
-        prefixPath: siteSubpath,
+      node.url = resolveLinkToUrl({
+        target: node.url,
+        originFilePath: filePath,
+        prefix: sitePrefix,
+      });
+    });
+    visit(tree, "image", (node) => {
+      if (typeof node.url !== "string") return;
+      node.url = resolveLinkToUrl({
+        target: node.url,
+        originFilePath: filePath,
+        prefix: sitePrefix,
+        isSrcLink: true,
+        domain: customDomain,
       });
     });
   };

@@ -1,4 +1,3 @@
-import { SiteWithUser } from "@/types";
 import { getConfig } from "./app-config";
 
 const config = getConfig();
@@ -26,11 +25,4 @@ export const resolveSiteAlias = (
   }
 
   return s;
-};
-
-export const isInternalSite = (site: SiteWithUser) => {
-  const aliases = config.siteAliases || [];
-  return aliases.some((alias) =>
-    `/@${site.user!.ghUsername}/${site}`.startsWith(alias.origin),
-  );
 };

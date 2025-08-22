@@ -98,7 +98,7 @@ export default function List({
               <img
                 alt="Image"
                 src={
-                  metadata.image ??
+                  metadata!.image ??
                   "https://r2-assets.flowershow.app/placeholder.png"
                 }
                 className="list-component-item-image"
@@ -108,24 +108,26 @@ export default function List({
           <div className="list-component-item-metadata-container">
             {fields.includes("date") && (
               <div className="list-component-item-eyebrow">
-                {metadata.date && (
-                  <time dateTime={metadata.date}>
-                    {metadata.date.slice(0, 10)}
+                {metadata!.date && (
+                  <time dateTime={metadata!.date}>
+                    {metadata!.date.slice(0, 10)}
                   </time>
                 )}
               </div>
             )}
             {fields.includes("title") && (
               <h3 className="list-component-item-title">
-                <a href={url!}>{metadata.title}</a>
+                <a href={url!}>{metadata!.title}</a>
               </h3>
             )}
             {fields.includes("description") && (
-              <p className="list-component-item-text">{metadata.description}</p>
+              <p className="list-component-item-text">
+                {metadata!.description}
+              </p>
             )}
             {fields.includes("authors") && (
               <p className="list-component-item-authors">
-                {metadata.authors?.join(", ") || ""}
+                {metadata!.authors?.join(", ") || ""}
               </p>
             )}
           </div>

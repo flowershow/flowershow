@@ -41,6 +41,9 @@ export interface SiteConfig {
   contentInclude?: string[];
   contentExclude?: string[];
   showSidebar?: boolean;
+  sidebar?: {
+    orderBy?: "title" | "path";
+  };
   showToc?: boolean;
   showHero?: boolean;
   showEditLink?: boolean;

@@ -18,14 +18,14 @@ test.describe("Meta tags", () => {
       .locator("meta[property='og:url']")
       .getAttribute("content");
     await expect(ogUrl).toBe(
-      `http://${publishedSitePage.customDomain}/blog/post-with-metadata`,
+      `http://${publishedSitePage.domain}/blog/post-with-metadata`,
     );
 
     const ogImage = await publishedSitePage.page
       .locator("meta[property='og:image']")
       .getAttribute("content");
     await expect(ogImage).toBe(
-      `http://${publishedSitePage.customDomain}/_r/-/assets/image.jpg`,
+      `http://${publishedSitePage.domain}/_r/-/assets/image.jpg`,
     );
 
     const ogType = await publishedSitePage.page
@@ -53,7 +53,7 @@ test.describe("Meta tags", () => {
       .locator("meta[property='og:url']")
       .getAttribute("content");
     await expect(ogUrl).toBe(
-      `http://${publishedSitePage.customDomain}/blog/post-without-metadata`,
+      `http://${publishedSitePage.domain}/blog/post-without-metadata`,
     );
 
     // TODO this in theory is required but we don't set it to default on premium sites

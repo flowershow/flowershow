@@ -1,5 +1,3 @@
-import { Blob } from "@prisma/client";
-
 interface Props extends React.PropsWithChildren {
   title: string;
   description?: string;

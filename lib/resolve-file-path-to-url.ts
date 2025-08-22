@@ -1,9 +1,23 @@
 import { customEncodeUrl } from "./url-encoder";
 
-export const resolveFilePathToUrlPath = (filePath: string) => {
-  let url = filePath
+/**
+ * Resolve markdown file path to it's URL path
+ */
+export const resolveFilePathToUrlPath = ({
+  filePath,
+  prefix = "", // "/@<username>/<sitename>" or none if on custom domain
+}: {
+  filePath: string;
+  prefix?: string;
+  isSrcLink?: boolean;
+}) => {
+  let path = filePath
     .replace(/\.(mdx|md)/, "")
     .replace(/(\/)?(index|README)$/, ""); // remove index or README from the end of the permalink
-  url = url.length > 0 ? url : "/"; // for home page
-  return customEncodeUrl(url);
+
+  if (!path.startsWith("/")) {
+    path = "/" + path;
+  }
+
+  return `${prefix}${customEncodeUrl(path)}`;
 };

@@ -2,8 +2,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-
 import clsx from "clsx";
 import {
   Disclosure,
@@ -12,35 +10,34 @@ import {
 } from "@headlessui/react";
 import { ChevronRightIcon, GlobeIcon, MenuIcon, XIcon } from "lucide-react";
 
+import { isDir } from "@/lib/build-site-tree";
+import type { Node } from "@/lib/build-site-tree";
+
 import { NavLink, SocialLink } from "@/components/types";
-import { TreeViewItem } from "@/components/public/site-tree";
 import { SearchModal } from "@/components/public/search-modal";
 import { socialIcons } from "@/components/public/social-icons";
+import { usePathname } from "next/navigation";
 
 export interface Props {
   logo: string;
-  url?: string;
+  url: string;
   title?: string;
   links?: NavLink[];
-  siteTree?: TreeViewItem[];
+  siteTree?: Node[];
   social?: SocialLink[];
-  // cta?: NavLink;
   showSearch?: boolean;
   searchId?: string; // ID of a collection to search in (site ID)
-  searchPrefix?: string;
 }
 
 const Nav = ({
   logo,
-  url = "/",
+  url,
   title,
   links,
   siteTree,
   social,
-  // cta,
   showSearch = false,
   searchId,
-  searchPrefix,
 }: Props) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -61,7 +58,7 @@ const Nav = ({
         <nav className={clsx("site-navbar", isScrolled && "is-scrolled")}>
           <div className="site-navbar-inner">
             <Link href={url} className="site-navbar-site-title">
-              <Image
+              <img
                 className="site-navbar-site-logo"
                 alt="Logo"
                 src={logo}
@@ -85,7 +82,7 @@ const Nav = ({
             )}
             {showSearch && (
               <div className="site-navbar-search-container">
-                <SearchModal indexId={searchId!} prefix={searchPrefix!} />
+                <SearchModal indexId={searchId!} />
               </div>
             )}
             {social && (
@@ -174,7 +171,7 @@ function TreeView({
   level = 0,
   onLinkClick,
 }: {
-  items: TreeViewItem[];
+  items: Node[];
   level?: number;
   onLinkClick?: () => void;
 }) {
@@ -190,8 +187,8 @@ function TreeView({
     >
       {items.map((item) => (
         <li className="mobile-nav-tree-item" key={item.label}>
-          {item.children ? (
-            <Disclosure defaultOpen={isCurrentParent(item.path!)}>
+          {isDir(item) ? (
+            <Disclosure defaultOpen={isCurrentParent(item.urlPath)}>
               {({ open }) => (
                 <>
                   <DisclosureButton
@@ -202,7 +199,7 @@ function TreeView({
                   >
                     <ChevronRightIcon className="mobile-nav-tree-item-icon" />
                     <span className="mobile-nav-tree-item-text">
-                      {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
+                      {item.label}
                     </span>
                   </DisclosureButton>
                   <DisclosurePanel>
@@ -217,10 +214,10 @@ function TreeView({
             </Disclosure>
           ) : (
             <Link
-              href={item.path!}
+              href={item.urlPath}
               className={clsx(
                 "mobile-nav-tree-item-self",
-                isCurrent(item.path) && "is-current",
+                isCurrent(item.urlPath) && "is-current",
               )}
               onClick={onLinkClick}
             >

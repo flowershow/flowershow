@@ -171,3 +171,25 @@ test("Obsidian embeds", async ({ publishedSitePage }) => {
 //   const error = page.getByTestId("mdx-error");
 //   await expect(error).toHaveText(/\[next-mdx-remote\] error compiling MDX/);
 // });
+
+test.describe("MDX", () => {
+  test("Should resolve JSX href and src attributes", async ({
+    publishedSitePage,
+  }) => {
+    await publishedSitePage.goto("/syntax/syntax");
+    await expect(
+      publishedSitePage.page.getByTestId("jsx-img").locator("img"),
+    ).toHaveAttribute("src", /\/@.+\/.+\/_r\/-\/.+/);
+  });
+
+  test("List component", async ({ publishedSitePage }) => {
+    await publishedSitePage.goto("/blog");
+    const listItemLink = publishedSitePage.page
+      .locator(".list-component-item")
+      .getByRole("link", { name: "Blog Post 1" });
+    await expect(listItemLink).toHaveAttribute(
+      "href",
+      publishedSitePage.siteUrlPath + "/blog/post-with-metadata",
+    );
+  });
+});

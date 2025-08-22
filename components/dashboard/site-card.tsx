@@ -25,7 +25,7 @@ export default function SiteCard({
   }
 
   const displayedUrl =
-    site.customDomain ?? new URL(url).pathname.replace(/^\/+/, "");
+    site.customDomain || new URL(url).pathname.replace(/^\/+/, "");
 
   return (
     <div className="relative rounded-lg border border-stone-200 pb-10 shadow-md transition-all hover:shadow-xl dark:border-stone-700 dark:hover:border-white">

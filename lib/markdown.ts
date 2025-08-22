@@ -16,22 +16,25 @@ import { customEncodeUrl } from "./url-encoder";
 import remarkCommonMarkLinkResolver from "./remark-commonmark-link-resolver";
 import rehypeResolveExplicitJsxUrls from "./rehype-resolve-explicit-jsx-urls";
 
+// TODO this is ugly
 export const getMdxOptions = ({
   filePath,
   permalinks,
-  siteSubpath = "",
+  sitePrefix = "",
   parseFrontmatter = true,
+  customDomain,
 }: {
   filePath: string;
-  siteSubpath: string;
   permalinks: string[];
+  sitePrefix: string;
   parseFrontmatter?: boolean;
+  customDomain?: string;
 }) => {
   return {
     parseFrontmatter,
     mdxOptions: {
       remarkPlugins: [
-        [remarkCommonMarkLinkResolver, { filePath, siteSubpath }],
+        [remarkCommonMarkLinkResolver, { filePath, sitePrefix, customDomain }],
         [
           remarkWikiLink,
           {
@@ -69,7 +72,7 @@ export const getMdxOptions = ({
         [mdxMermaid, {}],
       ],
       rehypePlugins: [
-        [rehypeResolveExplicitJsxUrls, { filePath, siteSubpath }],
+        [rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain }],
         rehypeSlug,
         [
           rehypeAutolinkHeadings,

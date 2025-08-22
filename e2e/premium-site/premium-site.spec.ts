@@ -7,7 +7,7 @@ test.describe("MDX", () => {
     await publishedSitePage.goto("/syntax/syntax");
     await expect(
       publishedSitePage.page.getByTestId("jsx-img").locator("img"),
-    ).toHaveAttribute("src", /^\/_r\/-\/.+/); // the test site it on custom domain
+    ).toHaveAttribute("src", "http://test.localhost:3000/_r/-/");
   });
 });
 
@@ -49,5 +49,23 @@ test("Should render List component correctly", async ({
   await expect(blogPost1.locator("a")).toHaveAttribute(
     "href",
     `${publishedSitePage.siteUrlPath}/blog/post-with-metadata`,
+  );
+});
+
+test("Should display frontmatter metadata in the header correctly", async ({
+  publishedSitePage,
+}) => {
+  await publishedSitePage.goto("/blog/post-with-metadata");
+
+  const header = publishedSitePage.page.locator("header");
+  const author = header.locator(".page-header-author").first();
+  await expect(author).toContainText("John Doe");
+  await expect(author.getByRole("link")).toHaveAttribute(
+    "href",
+    `${publishedSitePage.siteUrlPath}/team/john-doe`,
+  );
+  await expect(author.locator("img")).toHaveAttribute(
+    "src",
+    `${publishedSitePage.siteUrlPath}/_r/-/team/john.jpg`,
   );
 });

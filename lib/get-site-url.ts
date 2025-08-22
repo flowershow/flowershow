@@ -1,8 +1,9 @@
 import { env } from "@/env.mjs";
 import { SiteWithUser } from "@/types";
 import { resolveSiteAlias } from "./resolve-site-alias";
+import { Feature, isFeatureEnabled } from "./feature-flags";
 
-export default function getSiteUrl(site: SiteWithUser) {
+export function getSiteUrl(site: SiteWithUser) {
   const { projectName, user, customDomain } = site;
 
   const isSecure =
@@ -10,7 +11,7 @@ export default function getSiteUrl(site: SiteWithUser) {
     env.NEXT_PUBLIC_VERCEL_ENV === "preview";
   const protocol = isSecure ? "https" : "http";
 
-  if (customDomain) {
+  if (isFeatureEnabled(Feature.CustomDomain, site) && customDomain) {
     return `${protocol}://${site.customDomain}`;
   } else {
     const ghUsername = user!.ghUsername!;
@@ -22,7 +23,7 @@ export default function getSiteUrl(site: SiteWithUser) {
 export function getSiteUrlPath(site: SiteWithUser) {
   const { projectName, user, customDomain } = site;
 
-  if (customDomain) {
+  if (isFeatureEnabled(Feature.CustomDomain, site) && customDomain) {
     return "";
   } else {
     const ghUsername = user!.ghUsername!;

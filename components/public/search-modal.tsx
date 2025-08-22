@@ -16,13 +16,13 @@ import {
 
 import { searchClient } from "@/lib/typesense-client";
 import { resolveFilePathToUrlPath } from "@/lib/resolve-file-path-to-url";
+import { useSite } from "./site-context";
 
 interface SearchModalProps {
   indexId: string;
-  prefix: string;
 }
 
-export function SearchModal({ indexId, prefix }: SearchModalProps) {
+export function SearchModal({ indexId }: SearchModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showHits, setShowHits] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -149,10 +149,7 @@ export function SearchModal({ indexId, prefix }: SearchModalProps) {
                     </div>
                     <div className="search-modal-results-container">
                       {showHits && (
-                        <SearchResults
-                          prefix={prefix}
-                          onHitClick={handleHitClick}
-                        />
+                        <SearchResults onHitClick={handleHitClick} />
                       )}
                     </div>
                   </InstantSearch>
@@ -220,24 +217,26 @@ function Hit({
 }
 
 function SearchResults({
-  prefix,
   onHitClick,
 }: {
-  prefix: string;
   onHitClick: (e?: React.MouseEvent) => void;
 }) {
   const { results, status, indexUiState } = useInstantSearch();
   const hasResults = results?.nbHits > 0;
   const query = indexUiState.query || "";
   const hasQuery = query.length > 0;
+  const site = useSite();
 
   const transformItems = useCallback(
     (items) =>
       items.map((item) => ({
         ...item,
-        path: prefix + resolveFilePathToUrlPath(item.path),
+        path: resolveFilePathToUrlPath({
+          filePath: item.path,
+          prefix: site?.prefix,
+        }),
       })),
-    [prefix],
+    [site],
   );
 
   return (

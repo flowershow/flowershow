@@ -8,31 +8,20 @@ import { ChevronRightIcon } from "lucide-react";
 import clsx from "clsx";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { isDir, Node } from "@/lib/build-site-tree";
 
-export interface TreeViewItem {
-  id: string;
-  label: string;
-  path: string;
-  children?: TreeViewItem[];
-}
-
-function TreeView({
-  items,
-  level = 0,
-}: {
-  items: TreeViewItem[];
-  level?: number;
-}) {
+function TreeView({ items, level = 0 }: { items: Node[]; level?: number }) {
   const currentPath = usePathname();
-  const isCurrent = (path: string) => currentPath === path;
+  const isCurrent = (path: string) =>
+    currentPath === path || currentPath === path + "/";
   const isCurrentParent = (path: string) => currentPath?.startsWith(path);
 
   return (
     <ul className={clsx(level ? "site-tree-item-children" : "site-tree")}>
       {items.map((item) => (
         <li key={item.label} className="site-tree-item">
-          {item.children ? (
-            <Disclosure defaultOpen={isCurrentParent(item.path!)}>
+          {isDir(item) ? (
+            <Disclosure defaultOpen={isCurrentParent(item.urlPath)}>
               {({ open }) => (
                 <>
                   <DisclosureButton
@@ -42,22 +31,20 @@ function TreeView({
                     )}
                   >
                     <ChevronRightIcon className="site-tree-item-icon" />
-                    <span className="site-tree-item-text">
-                      {item.label.charAt(0).toUpperCase() + item.label.slice(1)}
-                    </span>
+                    <span className="site-tree-item-text">{item.label}</span>
                   </DisclosureButton>
                   <DisclosurePanel>
-                    <TreeView items={item.children!} level={level + 1} />
+                    <TreeView items={item.children} level={level + 1} />
                   </DisclosurePanel>
                 </>
               )}
             </Disclosure>
           ) : (
             <Link
-              href={item.path!}
+              href={item.urlPath}
               className={clsx(
                 "site-tree-item-self",
-                isCurrent(item.path) && "is-current",
+                isCurrent(item.urlPath) && "is-current",
               )}
             >
               {item.label}
@@ -69,16 +56,10 @@ function TreeView({
   );
 }
 
-export default function SiteTree({
-  items,
-  level = 0,
-}: {
-  items: TreeViewItem[];
-  level?: number;
-}) {
+export default function SiteTree({ items }: { items: Node[] }) {
   return (
     <nav className="site-tree-container">
-      <TreeView items={items} level={level} />
+      <TreeView items={items} level={0} />
     </nav>
   );
 }

@@ -1,11 +1,12 @@
 import { visit } from "unist-util-visit";
-import { resolveLink } from "./resolve-link";
+import { resolveLinkToUrl } from "./resolve-link";
 
 export interface Options {
   /** path to file where the link was used */
   filePath: string;
   /** site prefix (@username/sitename or none if on custom domain) */
-  siteSubpath: string;
+  sitePrefix: string;
+  customDomain?: string;
 }
 
 /**
@@ -13,31 +14,30 @@ export interface Options {
  * and prefixes their src/href URLs.
  */
 export default function rehypeResolveExplicitJsxUrls(options: Options) {
-  const { filePath, siteSubpath } = options;
+  const { filePath, sitePrefix, customDomain } = options;
 
   return (tree) => {
     visit(tree, "mdxJsxFlowElement", (node) => {
       if (node.data?._mdxExplicitJsx && node.attributes) {
         (node.attributes as Array<Record<string, any>>).forEach((a) => {
           if (a.name === "src") {
-            // TODO create a single lib for this kind of stuff (currently we have patches like this in many different places)
-            a.value = resolveLink({
-              link: a.value,
-              filePath,
-              prefixPath: siteSubpath ? siteSubpath + "/_r/-" : "/_r/-",
+            a.value = resolveLinkToUrl({
+              target: a.value,
+              originFilePath: filePath,
+              prefix: sitePrefix,
+              isSrcLink: true,
+              domain: customDomain,
             });
           } else if (a.name === "href") {
-            // TODO create a single lib for this kind of stuff (currently we have patches like this in many different places)
-            a.value = resolveLink({
-              link: a.value,
-              filePath,
-              prefixPath: siteSubpath,
+            a.value = resolveLinkToUrl({
+              target: a.value,
+              originFilePath: filePath,
+              prefix: sitePrefix,
             });
           }
         });
 
-        // Optionally clear the flag so downstream plugins
-        // treat it like a normal element
+        // Clear the flag so downstream plugins treat it like a normal element
         // delete node.data._mdxExplicitJsx;
       }
     });

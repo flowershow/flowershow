@@ -1,4 +1,4 @@
-import getSiteUrl from "@/lib/get-site-url";
+import { getSiteUrl } from "@/lib/get-site-url";
 import prisma from "@/server/db";
 import { unstable_noStore as noStore } from "next/cache";
 

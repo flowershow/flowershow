@@ -1,11 +1,14 @@
 import { ErrorBoundary } from "react-error-boundary";
 
-import { resolveLink } from "@/lib/resolve-link";
-import { resolveSiteAlias } from "@/lib/resolve-site-alias";
+import type { SiteWithUser } from "@/types";
+import type { Blob } from "@prisma/client";
+import { resolveLinkToUrl } from "@/lib/resolve-link";
+import { getSiteUrlPath } from "@/lib/get-site-url";
 
 import { ErrorMessage } from "@/components/public/error-message";
 import { default as List } from "./list";
 import type { ListProps } from "./list";
+
 import {
   Catalog,
   Excel,
@@ -24,7 +27,6 @@ import {
   CustomHtml,
 } from "./client-components-wrapper";
 
-import type { SiteWithUser } from "@/types";
 import type {
   CustomHtmlProps,
   ExcelProps,
@@ -36,8 +38,6 @@ import type {
   PlotlyBarChartProps,
   PlotlyLineChartProps,
 } from "./client-components-wrapper";
-import { Blob } from "@prisma/client";
-import { cn } from "@/lib/utils";
 
 export const mdxComponentsFactory = ({
   blob,
@@ -46,20 +46,13 @@ export const mdxComponentsFactory = ({
   blob: Blob;
   site: SiteWithUser;
 }) => {
-  const { projectName, customDomain, user: siteUser } = site;
+  const sitePrefix = getSiteUrlPath(site);
 
-  const ghUsername = siteUser!.ghUsername!;
-
-  // TODO create a single lib for this kind of stuff (currently we have patches like this in many different places)
-  const rawFilePermalinkBase = customDomain
-    ? `/_r/-`
-    : resolveSiteAlias(`/@${ghUsername}/${projectName}`, "to") + `/_r/-`;
-
-  const resolveDataUrl = (url: string) =>
-    resolveLink({
-      link: url,
-      filePath: blob.path,
-      prefixPath: rawFilePermalinkBase,
+  const resolveLink = (url: string) =>
+    resolveLinkToUrl({
+      target: url,
+      originFilePath: blob.path,
+      prefix: sitePrefix,
     });
 
   const components: any = {
@@ -120,66 +113,66 @@ export const mdxComponentsFactory = ({
       </div>
     ),
     /* Custom */
-    Catalog: withErrorBoundary(Catalog, "Catalog"),
     CustomHtml: withErrorBoundary((props: CustomHtmlProps) => {
       return <CustomHtml {...props} />;
     }, "CustomHtml"),
-    Excel: withErrorBoundary((props: ExcelProps) => {
-      props.data.url = resolveDataUrl(props.data.url);
-      return <Excel {...props} />;
-    }, "Excel"),
-    FlatUiTable: withErrorBoundary((props: FlatUiTableProps) => {
-      if (props.data?.url) props.data.url = resolveDataUrl(props.data.url);
-      return <FlatUiTable {...props} />;
-    }, "FlatUiTable"),
-    Iframe: withErrorBoundary((props: IframeProps) => {
-      props.data.url = resolveDataUrl(props.data.url);
-      return <Iframe {...props} />;
-    }, "Iframe"),
-    LineChart: withErrorBoundary((props: LineChartProps) => {
-      if (props.data?.url) props.data.url = resolveDataUrl(props.data.url);
-      return <LineChart {...props} />;
-    }, "LineChart"),
     List: withErrorBoundary((props: ListProps) => {
       return <List {...props} siteId={site.id} />;
     }, "List"),
-    Map: withErrorBoundary((props: MapProps) => {
-      const layers = props.layers.map((layer) => {
-        if (layer.data.url) layer.data.url = resolveDataUrl(layer.data.url);
-        return layer;
-      });
-      return <Map {...props} layers={layers} />;
-    }, "Map"),
     mermaid: Mermaid,
-    PdfViewer: withErrorBoundary((props: PdfViewerProps) => {
-      props.data.url = resolveDataUrl(props.data.url);
-      return <PdfViewer {...props} />;
-    }, "PdfViewer"),
-    Plotly: withErrorBoundary((props) => {
-      const data =
-        typeof props.data === "string"
-          ? resolveDataUrl(props.data)
-          : props.data;
-      return <Plotly {...props} data={data} />;
-    }, "Plotly"),
-    PlotlyBarChart: withErrorBoundary((props: PlotlyBarChartProps) => {
-      if (props.data.url) props.data.url = resolveDataUrl(props.data.url);
-      return <PlotlyBarChart {...props} />;
-    }, "PlotlyBarChart"),
-    PlotlyLineChart: withErrorBoundary((props: PlotlyLineChartProps) => {
-      if (props.data.url) props.data.url = resolveDataUrl(props.data.url);
-      return <PlotlyLineChart {...props} />;
-    }, "PlotlyLineChart"),
-    Vega: withErrorBoundary((props) => {
-      if (props.spec.data.url)
-        props.spec.data.url = resolveDataUrl(props.spec.data.url);
-      return <Vega {...props} />;
-    }, "Vega"),
-    VegaLite: withErrorBoundary((props) => {
-      if (props.spec.data.url)
-        props.spec.data.url = resolveDataUrl(props.spec.data.url);
-      return <VegaLite {...props} />;
-    }, "VegaLite"),
+    // Catalog: withErrorBoundary(Catalog, "Catalog"),
+    // Excel: withErrorBoundary((props: ExcelProps) => {
+    //   props.data.url = resolveDataUrl(props.data.url);
+    //   return <Excel {...props} />;
+    // }, "Excel"),
+    // FlatUiTable: withErrorBoundary((props: FlatUiTableProps) => {
+    //   if (props.data?.url) props.data.url = resolveDataUrl(props.data.url);
+    //   return <FlatUiTable {...props} />;
+    // }, "FlatUiTable"),
+    // Iframe: withErrorBoundary((props: IframeProps) => {
+    //   props.data.url = resolveDataUrl(props.data.url);
+    //   return <Iframe {...props} />;
+    // }, "Iframe"),
+    // LineChart: withErrorBoundary((props: LineChartProps) => {
+    //   if (props.data?.url) props.data.url = resolveDataUrl(props.data.url);
+    //   return <LineChart {...props} />;
+    // }, "LineChart"),
+    // Map: withErrorBoundary((props: MapProps) => {
+    //   const layers = props.layers.map((layer) => {
+    //     if (layer.data.url) layer.data.url = resolveDataUrl(layer.data.url);
+    //     return layer;
+    //   });
+    //   return <Map {...props} layers={layers} />;
+    // }, "Map"),
+    // PdfViewer: withErrorBoundary((props: PdfViewerProps) => {
+    //   props.data.url = resolveDataUrl(props.data.url);
+    //   return <PdfViewer {...props} />;
+    // }, "PdfViewer"),
+    // Plotly: withErrorBoundary((props) => {
+    //   const data =
+    //     typeof props.data === "string"
+    //       ? resolveDataUrl(props.data)
+    //       : props.data;
+    //   return <Plotly {...props} data={data} />;
+    // }, "Plotly"),
+    // PlotlyBarChart: withErrorBoundary((props: PlotlyBarChartProps) => {
+    //   if (props.data.url) props.data.url = resolveDataUrl(props.data.url);
+    //   return <PlotlyBarChart {...props} />;
+    // }, "PlotlyBarChart"),
+    // PlotlyLineChart: withErrorBoundary((props: PlotlyLineChartProps) => {
+    //   if (props.data.url) props.data.url = resolveDataUrl(props.data.url);
+    //   return <PlotlyLineChart {...props} />;
+    // }, "PlotlyLineChart"),
+    // Vega: withErrorBoundary((props) => {
+    //   if (props.spec.data.url)
+    //     props.spec.data.url = resolveDataUrl(props.spec.data.url);
+    //   return <Vega {...props} />;
+    // }, "Vega"),
+    // VegaLite: withErrorBoundary((props) => {
+    //   if (props.spec.data.url)
+    //     props.spec.data.url = resolveDataUrl(props.spec.data.url);
+    //   return <VegaLite {...props} />;
+    // }, "VegaLite"),
   };
 
   // if (isDatasetPage(blob.metadata as PageMetadata)) {
