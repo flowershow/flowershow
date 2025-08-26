@@ -369,29 +369,37 @@
    Page layout
    ──────────────────────────────────────────────────── */
   .page-header {
-    @apply mb-8 space-y-2 border-b pb-8 font-heading;
-  }
-  .page-header-date {
-    @apply font-light text-primary/70;
+    @apply mb-8 space-y-4 border-b pb-8 font-heading;
   }
   .page-header-title {
     @apply text-[3rem] font-semibold leading-[3.25rem] tracking-tight text-primary-emphasis text-primary-strong sm:text-[3.5rem] sm:leading-[3.75rem];
   }
-  .page-header-authors-container {
-    @apply flex space-x-3 py-2;
-  }
-  .page-header-author {
-    @apply inline-block flex shrink-0 items-center;
-  }
-  .page-header-author-avatar {
-    @apply inline-block h-8 w-8 rounded-full;
-  }
-  .page-header-author-name {
-    @apply ml-2 text-sm font-medium text-gray-700 group-hover:text-gray-900;
-  }
   .page-header-description {
     @apply text-lg font-light text-primary-subtle sm:text-xl;
   }
+  .page-header-metadata-container {
+    @apply flex items-center space-x-4 text-xs uppercase text-primary-subtle;
+  }
+  .page-header-date {
+    @apply flex items-center text-primary-muted;
+  }
+  .page-header-date-icon {
+    @apply mr-1 size-4;
+  }
+  .page-header-authors-container {
+    @apply flex items-center space-x-2;
+  }
+  .page-header-authors-avatars-container {
+    @apply isolate flex -space-x-1 overflow-hidden;
+  }
+  .page-header-author-avatar {
+    @apply relative z-30 inline-block size-6 rounded-full outline outline-1 -outline-offset-1 outline-black/5 ring-2 ring-white dark:outline-white/10 dark:ring-gray-900;
+  }
+  /* .page-header-author {
+    @apply inline-block flex shrink-0 items-center;
+  } */
+  /* .page-header-author-name {
+  } */
   .page-header-image-container {
     @apply w-full py-3;
   }

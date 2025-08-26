@@ -1,3 +1,6 @@
+import Link from "next/link";
+import { CalendarIcon } from "lucide-react";
+
 interface Props extends React.PropsWithChildren {
   title: string;
   description?: string;
@@ -27,67 +30,63 @@ export const BlogLayout: React.FC<Props> = ({
     <>
       {!showHero && (
         <header className="page-header">
-          {date && formattedDate && (
-            <div className="page-header-date">
-              Published{" "}
-              <time dateTime={new Date(date).toISOString()}>
-                {formattedDate}
-              </time>
-            </div>
-          )}
-
           {title && <h1 className="page-header-title">{title}</h1>}
-
-          {authors && (
-            <div className="page-header-authors-container">
-              {authors.map((author) => {
-                const AuthorWrapper = author.url
-                  ? ({
-                      children,
-                      href,
-                      className,
-                    }: {
-                      children: React.ReactNode;
-                      href: string | null;
-                      className?: string;
-                    }) => (
-                      <div className={className}>
-                        <a href={href || "#"}>{children}</a>
-                      </div>
-                    )
-                  : ({
-                      children,
-                      className,
-                    }: {
-                      children: React.ReactNode;
-                      className?: string;
-                    }) => <div className={className}>{children}</div>;
-
-                return (
-                  <AuthorWrapper
-                    key={author.key}
-                    href={author.url}
-                    className="page-header-author"
-                  >
-                    {author.avatar && (
-                      <img
-                        alt={author.name}
-                        src={author.avatar}
-                        className="page-header-author-avatar"
-                      />
-                    )}
-                    <span className="page-header-author-name">
-                      {author.name}
-                    </span>
-                  </AuthorWrapper>
-                );
-              })}
-            </div>
-          )}
 
           {description && (
             <p className="page-header-description">{description}</p>
           )}
+
+          <div className="page-header-metadata-container">
+            {authors && (
+              <div className="page-header-authors-container">
+                <div className="page-header-authors-avatars-container">
+                  {authors.map(
+                    (author) =>
+                      author.avatar && (
+                        <img
+                          key={author.key}
+                          alt={author.name}
+                          src={author.avatar}
+                          className="page-header-author-avatar"
+                        />
+                      ),
+                  )}
+                </div>
+                <div className="page-header-authors-names-container">
+                  {authors.map((author, index) => (
+                    <>
+                      {index > 0 && <span className="mr-1">,</span>}
+                      {author.url ? (
+                        <Link
+                          className="page-header-author-name"
+                          key={author.key}
+                          href={author.url}
+                        >
+                          {author.name}
+                        </Link>
+                      ) : (
+                        <span
+                          className="page-header-author-name"
+                          key={author.key}
+                        >
+                          {author.name}
+                        </span>
+                      )}
+                    </>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {date && formattedDate && (
+              <div className="page-header-date">
+                <CalendarIcon className="page-header-date-icon" />
+                <time dateTime={new Date(date).toISOString()}>
+                  {formattedDate}
+                </time>
+              </div>
+            )}
+          </div>
 
           {image && (
             <div className="page-header-image-container">
