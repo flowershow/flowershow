@@ -10,7 +10,6 @@ import { api } from "@/trpc/react";
 import { GithubIcon } from "@/components/icons";
 import { signOut } from "next-auth/react";
 import { env } from "@/env.mjs";
-import posthog from "posthog-js";
 
 export default function CreateSiteModal() {
   const router = useRouter();
@@ -103,8 +102,6 @@ export default function CreateSiteModal() {
         modal?.hide();
         router.push(`/site/${res.id}/settings`);
         router.refresh();
-
-        posthog.capture("site_create");
       },
       onError: (error) => {
         toast.error(error.message);
