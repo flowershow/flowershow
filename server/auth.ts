@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/server/db";
 import { env } from "@/env.mjs";
 import axios from "axios";
+import PostHogClient from "@/lib/server-posthog";
 
 const VERCEL_DEPLOYMENT = !!env.VERCEL_URL;
 
@@ -69,6 +70,11 @@ export const authOptions: NextAuthOptions = {
           console.error("Issue adding contact to Brevo:", error.message);
         }
       }
+
+      await PostHogClient().capture({
+        distinctId: message.user.id,
+        event: "sign_up",
+      });
     },
   },
   callbacks: {
