@@ -16,8 +16,8 @@ import { getConfig } from "@/lib/app-config";
 import { signOut } from "next-auth/react";
 import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
-import { useModal } from "./modal/provider";
-import FeedbackModal from "./modal/feedback";
+import { useModal } from "@/providers/modal-provider";
+import FeedbackModal from "@/components/dashboard/feedback";
 
 const config = getConfig();
 const FEEDBACK_DISMISSED_COOKIE = "feedback-dismissed";

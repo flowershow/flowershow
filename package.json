@@ -72,6 +72,8 @@
     "novel": "^0.1.22",
     "openai-edge": "^1.2.2",
     "postcss-prefixwrap": "^1.56.0",
+    "posthog-js": "^1.261.0",
+    "posthog-node": "^5.8.1",
     "pretty-bytes": "^6.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

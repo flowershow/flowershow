@@ -1,6 +1,6 @@
 "use client";
 
-import Modal from ".";
+import Modal from "./modal";
 import { ReactNode, createContext, useContext, useState } from "react";
 
 interface ModalContextProps {

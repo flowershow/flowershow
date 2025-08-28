@@ -22,9 +22,7 @@ export default async function SiteSettingsHeader({
 
   const url = site.customDomain
     ? `${protocol}://${site.customDomain}`
-    : `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user!.ghUsername}/${
-        site.projectName
-      }`;
+    : `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user.ghUsername}/${site.projectName}`;
 
   return (
     <>

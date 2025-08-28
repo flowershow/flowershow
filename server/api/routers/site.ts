@@ -29,6 +29,7 @@ import { resolveLinkToUrl } from "@/lib/resolve-link";
 import { SiteWithUser } from "@/types";
 import { getSiteUrlPath } from "@/lib/get-site-url";
 import { Prisma } from "@prisma/client";
+import PostHogClient from "@/lib/server-posthog";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -200,6 +201,12 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
+      await PostHogClient().capture({
+        distinctId: site.userId,
+        event: "site_created",
+        properties: { id: site.id },
+      });
+
       return site;
     }),
   update: protectedProcedure
@@ -339,6 +346,12 @@ export const siteRouter = createTRPCRouter({
         }
       }
 
+      await PostHogClient().capture({
+        distinctId: site.userId,
+        event: "site_settings_changed",
+        properties: { id: site.id, config: input.key },
+      });
+
       revalidateTag(`${site.id}`);
       return result;
     }),
@@ -349,11 +362,18 @@ export const siteRouter = createTRPCRouter({
         where: { id: input.id },
       });
 
-      if (site?.webhookId) {
+      if (!site) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Site not found",
+        });
+      }
+
+      if (site.webhookId) {
         try {
           await deleteGitHubRepoWebhook({
-            ghRepository: site!.ghRepository,
-            webhook_id: Number(site!.webhookId),
+            ghRepository: site.ghRepository,
+            webhook_id: Number(site.webhookId),
             accessToken: ctx.session.accessToken,
           });
         } catch (error) {
@@ -362,15 +382,21 @@ export const siteRouter = createTRPCRouter({
       }
 
       await ctx.db.site.delete({
-        where: { id: input.id },
+        where: { id: site.id },
       });
 
       await inngest.send({
         name: "site/delete",
         data: {
-          siteId: input.id,
+          siteId: site.id,
           accessToken: ctx.session.accessToken,
         },
+      });
+
+      await PostHogClient().capture({
+        distinctId: site.userId,
+        event: "site_deleted",
+        properties: { id: site.id },
       });
 
       return site;
@@ -396,7 +422,7 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      const { id, ghRepository, ghBranch } = site!;
+      const { id, ghRepository, ghBranch } = site;
       const accessToken = ctx.session.accessToken;
 
       await inngest.send({
@@ -405,7 +431,7 @@ export const siteRouter = createTRPCRouter({
           siteId: id,
           ghRepository,
           ghBranch,
-          rootDir: site!.rootDir,
+          rootDir: site.rootDir,
           accessToken,
           forceSync: input.force,
         },
@@ -442,7 +468,7 @@ export const siteRouter = createTRPCRouter({
         // Get all blobs for the site
         const blobs = await ctx.db.blob.findMany({
           where: {
-            siteId: input.id,
+            siteId: site.id,
           },
           select: {
             syncStatus: true,
@@ -485,8 +511,8 @@ export const siteRouter = createTRPCRouter({
             };
           }
           const gitHubTree = await fetchGitHubRepoTree({
-            ghRepository: site!.ghRepository,
-            ghBranch: site!.ghBranch,
+            ghRepository: site.ghRepository,
+            ghBranch: site.ghBranch,
             accessToken: ctx.session.accessToken,
           });
           status =
@@ -679,7 +705,7 @@ export const siteRouter = createTRPCRouter({
             if (site.customDomain) {
               prefix = "";
             } else {
-              prefix = `/@${site.user!.ghUsername}/${site.projectName}`;
+              prefix = `/@${site.user.ghUsername}/${site.projectName}`;
             }
 
             return (
@@ -911,9 +937,7 @@ export const siteRouter = createTRPCRouter({
                 ? null
                 : site.customDomain
                   ? `/${blob.appPath}`
-                  : `/@${site.user!.ghUsername}/${site.projectName}/${
-                      blob.appPath
-                    }`;
+                  : `/@${site.user.ghUsername}/${site.projectName}/${blob.appPath}`;
 
               let avatar;
 
@@ -924,7 +948,7 @@ export const siteRouter = createTRPCRouter({
                   // TODO make it work for relative paths too
                   avatar = site.customDomain
                     ? `/_r/-${metadata.avatar}`
-                    : `/@${site.user!.ghUsername}/${site.projectName}` +
+                    : `/@${site.user.ghUsername}/${site.projectName}` +
                       `/_r/-${metadata.avatar}`;
                 }
               }

@@ -7,8 +7,8 @@ import Cookies from "js-cookie";
 import { cn } from "@/lib/utils";
 import { api } from "@/trpc/react";
 import LoadingDots from "@/components/icons/loading-dots";
-import { useModal } from "@/components/dashboard/modal/provider";
-import { useConfetti } from "@/components/dashboard/confetti-provider";
+import { useModal } from "@/providers/modal-provider";
+import { useConfetti } from "@/providers/confetti-provider";
 
 const FEEDBACK_COOKIE = "feedback-dismissed";
 

@@ -199,7 +199,7 @@ export default function SitesAdminTable() {
                           {site.projectName}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {site.user!.ghUsername}
+                          {site.user.ghUsername}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {site.ghRepository}

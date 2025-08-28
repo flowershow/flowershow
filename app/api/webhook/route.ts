@@ -3,6 +3,7 @@ import prisma from "@/server/db";
 import { env } from "@/env.mjs";
 import { inngest } from "@/inngest/client";
 import axios from "axios";
+import PostHogClient from "@/lib/server-posthog";
 
 // TODO https://www.inngest.com/docs/platform/webhooks
 export async function POST(req: NextRequest) {
@@ -33,11 +34,9 @@ export async function POST(req: NextRequest) {
         user: true,
       },
     });
-  }
-
-  // DON'T REMOVE
-  // this is for backwards compatibility for sites that had webhooks created without the siteid query param
-  if (!site && webhookId) {
+  } else if (webhookId) {
+    // DON'T REMOVE
+    // this is for backwards compatibility for sites that had webhooks created without the siteid query param (allowed only one webhook per repo)
     site = await prisma.site.findUnique({
       where: {
         webhookId,
@@ -58,7 +57,7 @@ export async function POST(req: NextRequest) {
 
   const account = await prisma.account.findFirst({
     where: {
-      userId: site.userId!,
+      userId: site.userId,
     },
   });
 
@@ -71,6 +70,12 @@ export async function POST(req: NextRequest) {
       rootDir: site.rootDir,
       accessToken: account!.access_token!,
     },
+  });
+
+  await PostHogClient().capture({
+    distinctId: site.userId,
+    event: "site_sync_triggered",
+    properties: { id: site.id, source: "auto" },
   });
 
   return new Response("Event processed", { status: 200 });

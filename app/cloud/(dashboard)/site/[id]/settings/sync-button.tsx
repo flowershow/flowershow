@@ -5,6 +5,7 @@ import { RefreshCwIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useSync } from "../sync-status-provider";
 import clsx from "clsx";
+import posthog from "posthog-js";
 
 export default function SyncButton({ siteId }: { siteId: string }) {
   const { setSyncTriggered, status } = useSync();
@@ -13,6 +14,10 @@ export default function SyncButton({ siteId }: { siteId: string }) {
     api.site.sync.useMutation({
       onMutate: async () => {
         setSyncTriggered!(true);
+        posthog.capture("site_sync_triggered", {
+          id: siteId,
+          source: "dashboard",
+        });
       },
       onError: (error) => {
         toast.error(error.message);
