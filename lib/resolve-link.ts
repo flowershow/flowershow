@@ -35,9 +35,8 @@ export const resolveLinkToUrl = ({
 
   let resolvedLink = target;
 
-  resolvedLink = resolvedLink
-    .replace(/\.mdx?$/, "")
-    .replace(/\/(README|index)$/, "");
+  resolvedLink =
+    resolvedLink.replace(/\.mdx?$/, "").replace(/\/(README|index)$/, "") || "/";
 
   // normalize origin file path so that it always has a leading slash
   if (!originFilePath.startsWith("/")) {
@@ -52,7 +51,7 @@ export const resolveLinkToUrl = ({
   // const prefix = prefix && resolveSiteAlias(prefix, "to");
 
   // remove trailing slash unless it's the root
-  if (resolvedLink !== "/") {
+  if (resolvedLink !== "/" || prefix) {
     resolvedLink = resolvedLink.replace(/\/$/, "");
   }
 

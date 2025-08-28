@@ -102,9 +102,9 @@ export function buildSiteTree(
     // create file node (leaf)
     const filename = parts[parts.length - 1]!;
     const label = (blob.metadata as any).title;
-    // TODO this is ugly, make all app paths in the db start with / and there won't be problems
+    // TODO this is ugly
     const urlPath = `${prefix}${
-      blob.appPath === "/" ? "" : "/" + blob.appPath
+      blob.appPath === "/" ? blob.appPath : "/" + blob.appPath
     }`;
 
     parent.children.push({

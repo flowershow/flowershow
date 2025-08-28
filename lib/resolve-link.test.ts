@@ -31,76 +31,76 @@ import { resolveLinkToUrl } from "./resolve-link";
  * */
 
 describe("resolve links", () => {
-  const prefixPath = "/@username/abc"; // this could also be url to R2 bucket site folder
-  const filePath = "/blog/README.md";
+  const prefix = "/@username/abc"; // this could also be url to R2 bucket site folder
+  const originFilePath = "/blog/README.md";
 
   test("external link", () => {
-    const link = "https://example.com";
-    const resolved = resolveLinkToUrl({ link, filePath });
-    expect(resolved).toBe(link);
+    const target = "https://example.com";
+    const resolved = resolveLinkToUrl({ target, originFilePath });
+    expect(resolved).toBe(target);
   });
 
   test("absolute link", () => {
-    const link = "/blog/post-1";
-    const expected = `${prefixPath}/blog/post-1`;
-    const resolved = resolveLinkToUrl({ link, filePath, prefixPath });
+    const target = "/blog/post-1";
+    const expected = `${prefix}/blog/post-1`;
+    const resolved = resolveLinkToUrl({ target, originFilePath, prefix });
     expect(resolved).toBe(expected);
   });
 
   test("link to home page", () => {
-    const link = "/";
-    const expected = `${prefixPath}`;
-    const resolved = resolveLinkToUrl({ link, filePath, prefixPath });
+    const target = "/";
+    const expected = `${prefix}`;
+    const resolved = resolveLinkToUrl({ target, originFilePath, prefix });
     expect(resolved).toBe(expected);
   });
 
   test("link ending with README", () => {
-    const link = "/README";
-    const expected = `${prefixPath}`;
-    const resolved = resolveLinkToUrl({ link, filePath, prefixPath });
+    const target = "/README";
+    const expected = `${prefix}`;
+    const resolved = resolveLinkToUrl({ target, originFilePath, prefix });
     expect(resolved).toBe(expected);
   });
 
   test("link ending with .md extension", () => {
-    const link = "post-2.md";
-    const expected = `${prefixPath}/blog/post-2`;
-    const resolved = resolveLinkToUrl({ link, filePath, prefixPath });
+    const target = "post-2.md";
+    const expected = `${prefix}/blog/post-2`;
+    const resolved = resolveLinkToUrl({ target, originFilePath, prefix });
     expect(resolved).toBe(expected);
   });
 
   test("link with no prefix", () => {
-    const link = "post-2";
+    const target = "post-2";
     const expected = `/blog/post-2`;
-    const resolved = resolveLinkToUrl({ link, filePath });
+    const resolved = resolveLinkToUrl({ target, originFilePath });
     expect(resolved).toBe(expected);
   });
 
   describe("relative links", () => {
     test("same directory, no dot", () => {
-      const link = "post-1";
-      const expected = `${prefixPath}/blog/post-1`;
-      const resolved = resolveLinkToUrl({ link, filePath, prefixPath });
+      const target = "post-1";
+      const expected = `${prefix}/blog/post-1`;
+      const resolved = resolveLinkToUrl({ target, originFilePath, prefix });
       expect(resolved).toBe(expected);
     });
 
     test("same directory, with dot", () => {
-      const link = "./post-1";
-      const expected = `${prefixPath}/blog/post-1`;
-      const resolved = resolveLinkToUrl({ link, filePath, prefixPath });
+      const target = "./post-1";
+      const expected = `${prefix}/blog/post-1`;
+      const resolved = resolveLinkToUrl({ target, originFilePath, prefix });
       expect(resolved).toBe(expected);
     });
 
     test("up a directory", () => {
-      const link = "../about";
-      const expected = `${prefixPath}/about`;
-      const resolved = resolveLinkToUrl({ link, filePath, prefixPath });
+      const target = "../about";
+      const expected = `${prefix}/about`;
+      const resolved = resolveLinkToUrl({ target, originFilePath, prefix });
       expect(resolved).toBe(expected);
     });
 
     test("to sibling directory", () => {
-      const link = "../projects/project-1";
-      const expected = `${prefixPath}/projects/project-1`;
-      const resolved = resolveLinkToUrl({ link, filePath, prefixPath });
+      const target = "../projects/project-1";
+      const expected = `${prefix}/projects/project-1`;
+      const resolved = resolveLinkToUrl({ target, originFilePath, prefix });
       expect(resolved).toBe(expected);
     });
   });
