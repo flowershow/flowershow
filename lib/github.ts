@@ -57,17 +57,17 @@ const githubFetch = async ({
       case 403:
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Access to the GitHub resource is forbidden.",
+          message: `Access to the GitHub resource is forbidden: ${url} ${response.statusText}`,
         });
       case 404:
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: `GitHub resource not found: ${response.statusText}`,
+          message: `GitHub resource not found: ${url} ${response.statusText}`,
         });
       default:
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to fetch from GitHub: ${response.statusText}`,
+          message: `Failed to fetch from GitHub: ${url} ${response.statusText}`,
         });
     }
   }
