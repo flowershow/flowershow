@@ -53,21 +53,25 @@ const githubFetch = async ({
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: "Invalid GitHub access token. Signing out...",
+          cause: `${response.json()}`,
         });
       case 403:
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: `Access to the GitHub resource is forbidden: ${url} ${response.statusText}`,
+          message: "Access to the GitHub resource is forbidden",
+          cause: `${response.json()}`,
         });
       case 404:
         throw new TRPCError({
           code: "NOT_FOUND",
-          message: `GitHub resource not found: ${url} ${response.statusText}`,
+          message: "GitHub resource not found",
+          cause: `${response.json()}`,
         });
       default:
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
-          message: `Failed to fetch from GitHub: ${url} ${response.statusText}`,
+          message: "Failed to fetch from GitHub",
+          cause: `${response.json()}`,
         });
     }
   }

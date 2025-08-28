@@ -1,4 +1,4 @@
-import { getServerSession, type NextAuthOptions } from "next-auth";
+import { getServerSession, User, type NextAuthOptions } from "next-auth";
 import GitHubProvider, { GithubProfile } from "next-auth/providers/github";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/server/db";
@@ -10,9 +10,22 @@ const VERCEL_DEPLOYMENT = !!env.VERCEL_URL;
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    GitHubProvider<GithubProfile>({
+    GitHubProvider({
       clientId: env.NEXT_PUBLIC_AUTH_GITHUB_ID as string,
       clientSecret: env.AUTH_GITHUB_SECRET as string,
+      // this will be passed to signIn callback as user
+      // important: the object returned will be used by prisma adapter to create the user
+      // so it should include required data
+      profile(profile: GithubProfile) {
+        return {
+          id: profile.id.toString(),
+          name: profile.name || profile.login,
+          ghUsername: profile.login,
+          username: profile.login,
+          email: profile.email,
+          image: profile.avatar_url,
+        };
+      },
       authorization: {
         params: {
           scope: "read:user user:email repo read:org",
@@ -46,16 +59,19 @@ export const authOptions: NextAuthOptions = {
     },
   },
   events: {
-    createUser: async (message) => {
+    createUser: async ({ user }) => {
+      // console.log("createUser", { user: message.user });
+      // Called AFTER user is created in the DB
+      // user: prisma user
       // Add user to Brevo contact list
       try {
         await axios.post(
           "https://api.brevo.com/v3/contacts",
           {
-            email: message.user.email,
+            email: user.email,
             listIds: [parseInt(env.BREVO_CONTACT_LISTID)],
             updateEnabled: true,
-            attributes: { NAME: message.user.name },
+            attributes: { NAME: user.name },
           },
           {
             headers: {
@@ -72,7 +88,7 @@ export const authOptions: NextAuthOptions = {
       }
 
       await PostHogClient().capture({
-        distinctId: message.user.id,
+        distinctId: user.id,
         event: "sign_up",
       });
     },
@@ -80,6 +96,12 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     signIn: async ({ user, account, profile }) => {
       // console.log("signIn", { user, account, profile });
+      // This is called only once
+      // user:
+      //   on first sign up - value returned from profile method above
+      //   on subsequent sign in - prisma user
+      // account: prisma account
+      // profile: full GitHub profile
       if (!account || !profile) return false;
 
       const existingAccount = await prisma.account.findFirst({
@@ -123,25 +145,35 @@ export const authOptions: NextAuthOptions = {
     },
     jwt: async ({ token, user, account, profile }) => {
       // console.log("jwt", { token, user, account, profile });
+      // token:
+      //   first time it's called (sign up): minimal token with name, email, picture and sub (user ID)
+      //   subsequent calls (get session): token with validity properties + any extra ones that we set up in session callback
+      // (available only on first call) account: prisma account
+      // (available only on first call) user: user account
+      // (available only on first call) profile: full GitHub profile
       if (account) {
         token.accessToken = account.access_token!;
       }
+
       if (user) {
         token.id = user.id;
-        token.user = user;
+        token.name = user.name;
+        token.username = user.ghUsername;
+        token.email = user.email;
+        token.image = user.image;
+        token.role = user.role!;
       }
       return token;
     },
     session: async ({ session, token }) => {
       // console.log("session", { session, token });
       session.user = {
-        ...session.user,
-        id: token.user.id,
-        name: token.user.name,
-        username: token.user.username ?? token.user.ghUsername,
-        email: token.user.email,
-        image: token.user.image,
-        role: token.user.role,
+        id: token.id,
+        name: token.name,
+        username: token.username,
+        email: token.email,
+        image: token.image,
+        role: token.role,
       };
       session.accessToken = token.accessToken!;
 

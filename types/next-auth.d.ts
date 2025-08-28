@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { DefaultUser } from "next-auth";
 import { GithubProfile } from "next-auth/providers/github";
 import { User as PrismaUser } from "@prisma/client";
 
@@ -11,7 +11,7 @@ declare module "next-auth" {
       id: string;
       name: string;
       username: string;
-      email: string;
+      email: string | null;
       image: string;
       role: "USER" | "ADMIN";
     };
@@ -19,14 +19,25 @@ declare module "next-auth" {
   }
 
   interface Profile extends GithubProfile {}
-
-  interface AdapterUser extends PrismaUser {}
+  interface User extends DefaultUser {
+    id: string;
+    name: string;
+    email: string | null;
+    image: string;
+    ghUsername: string;
+    role?: PrismaUser["role"];
+  }
 }
 
 declare module "next-auth/jwt" {
   /** Returned by the `jwt` callback and `getToken`, when using JWT sessions */
   interface JWT {
-    user: User;
+    id: string; // user ID
+    name: string;
+    username: string;
+    email: string | null;
+    image: string;
+    role: "USER" | "ADMIN";
     accessToken: string;
   }
 }
