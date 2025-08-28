@@ -18,7 +18,12 @@ Sentry.init({
   enabled: isProd || isPreview,
   environment: env,
   // Add optional integrations for additional features
-  integrations: [Sentry.replayIntegration()],
+  integrations: [
+    Sentry.replayIntegration({
+      maskAllText: false,
+      blockAllMedia: false,
+    }),
+  ],
   // Adjust sampling rates based on environment
   tracesSampleRate: isProd ? 0.1 : 1.0,
   enableLogs: true,
