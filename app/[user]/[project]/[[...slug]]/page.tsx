@@ -52,12 +52,12 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     })
     .catch(() => notFound());
 
-  const metadata = blob.metadata as unknown as PageMetadata;
+  const metadata = blob.metadata as PageMetadata | null;
 
   // workaround (?) to "not publish" files marked with `publish: false`
   // it's needed atm as Inngest sync function doesn't parse frontmatter, and so it uploads to R2
   // and creates a basic Blob record for every single file (parsing is done later in Cloudflare Queues, but not worth removing them there at least for no)
-  if (metadata.publish === false) {
+  if (metadata?.publish === false) {
     notFound();
   }
 
@@ -76,12 +76,19 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
       domain: site.customDomain,
     });
 
+  const title =
+    siteConfig?.title && metadata?.title
+      ? `${metadata?.title} - ${siteConfig.title}`
+      : metadata?.title ?? siteConfig?.title ?? "";
+  const description = metadata?.description ?? siteConfig?.description;
+  const url = `${siteUrl}/${decodedSlug}`;
+
   let imageUrl: string | null = config.thumbnail;
   let faviconUrl: string = config.favicon;
 
   if (isFeatureEnabled(Feature.NoBranding, site)) {
-    imageUrl = metadata.image
-      ? getSrcUrl(metadata.image)
+    imageUrl = metadata?.image
+      ? getSrcUrl(metadata?.image)
       : siteConfig?.image
         ? getSrcUrl(siteConfig.image)
         : null;
@@ -95,18 +102,14 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   }
 
   return {
-    title: siteConfig?.title
-      ? `${metadata.title} - ${siteConfig.title}`
-      : metadata.title,
-    description: metadata.description ?? siteConfig?.description,
+    title,
+    description,
     icons: faviconUrl ? [{ url: faviconUrl }] : undefined,
     openGraph: {
-      title: siteConfig?.title
-        ? `${metadata.title} - ${siteConfig.title}`
-        : metadata.title,
-      description: metadata.description ?? siteConfig?.description,
+      title,
+      description,
       type: "website",
-      url: `${siteUrl}/${decodedSlug}`,
+      url,
       images: [
         {
           url: imageUrl,
@@ -118,10 +121,8 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     },
     twitter: {
       card: "summary_large_image",
-      title: siteConfig?.title
-        ? `${metadata.title} - ${siteConfig.title}`
-        : metadata.title,
-      description: metadata.description ?? siteConfig?.description,
+      title,
+      description,
       images: [
         {
           url: imageUrl,
@@ -135,7 +136,7 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     // Set canonical URL to custom domain if it exists
     // Maybe not needed since we redirect to a custom domain if it exists ?
     alternates: {
-      canonical: `${siteUrl}/${decodedSlug}`,
+      canonical: url,
     },
     // metadataBase: new URL(siteUrl),
   };
@@ -192,7 +193,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
       notFound();
     });
 
-  const metadata = page.blob.metadata as unknown as PageMetadata; // TODO types
+  const metadata = page.blob.metadata as PageMetadata | null; // TODO types
 
   let compiledMDX: any;
 
@@ -220,7 +221,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
 
   const scopedCss = await generateScopedCss(page.content ?? "");
 
-  if (metadata.layout === "plain") {
+  if (metadata?.layout === "plain") {
     return (
       <>
         <style
@@ -249,18 +250,18 @@ export default async function SitePage({ params }: { params: RouteParams }) {
 
   const Layout = async ({ children }) => {
     const authors =
-      metadata.authors &&
+      metadata?.authors &&
       (await api.site.getAuthors.query({
         siteId: site.id,
         authors: metadata.authors,
       }));
-    const image = metadata.image && resolveLink(metadata.image, true);
+    const image = metadata?.image && resolveLink(metadata.image, true);
     return (
       <BlogLayout
-        title={metadata.title}
-        description={metadata.description}
-        date={metadata.date}
-        showHero={metadata.showHero}
+        title={metadata?.title ?? ""}
+        description={metadata?.description ?? ""}
+        date={metadata?.date}
+        showHero={metadata?.showHero}
         authors={authors}
         image={image}
       >
@@ -269,14 +270,14 @@ export default async function SitePage({ params }: { params: RouteParams }) {
     );
   };
 
-  const showEditLink = metadata.showEditLink ?? siteConfig?.showEditLink;
+  const showEditLink = metadata?.showEditLink ?? siteConfig?.showEditLink;
   const showPageComments =
     site.enableComments &&
-    (metadata.showComments ?? siteConfig?.showComments ?? site.enableComments);
+    (metadata?.showComments ?? siteConfig?.showComments ?? site.enableComments);
   const giscusConfig = siteConfig?.giscus;
-  const showSidebar = metadata.showSidebar ?? siteConfig?.showSidebar ?? false;
-  const showToc = metadata.showToc ?? siteConfig?.showToc ?? true;
-  const showHero = metadata.showHero ?? siteConfig?.showHero;
+  const showSidebar = metadata?.showSidebar ?? siteConfig?.showSidebar ?? false;
+  const showToc = metadata?.showToc ?? siteConfig?.showToc ?? true;
+  const showHero = metadata?.showHero ?? siteConfig?.showHero;
 
   let siteTree;
 
@@ -303,12 +304,14 @@ export default async function SitePage({ params }: { params: RouteParams }) {
 
       {showHero && (
         <header className="page-hero-container">
-          <div className={clsx("page-hero", metadata.image && "has-image")}>
+          <div className={clsx("page-hero", metadata?.image && "has-image")}>
             <div className="page-hero-content-container">
               <div className="page-hero-content">
-                <h1 className="page-hero-title">{metadata.title}</h1>
-                <p className="page-hero-description">{metadata.description}</p>
-                {metadata.cta && (
+                <h1 className="page-hero-title">{metadata?.title ?? ""}</h1>
+                <p className="page-hero-description">
+                  {metadata?.description ?? ""}
+                </p>
+                {metadata?.cta && (
                   <div className="page-hero-ctas-container">
                     {metadata.cta.map((cta) => (
                       <a
@@ -323,7 +326,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
                 )}
               </div>
             </div>
-            {metadata.image && (
+            {metadata?.image && (
               <div className="page-hero-image-container">
                 <img
                   alt="Hero Image"

@@ -2,7 +2,7 @@ import { PageMetadata } from "@/server/api/types";
 import type { Blob as DbBlob } from "@prisma/client";
 import { customEncodeUrl } from "./url-encoder";
 
-type Meta = { title: string };
+type Meta = PageMetadata | null;
 
 export interface FileNode<M = Meta> {
   kind: "file";
@@ -101,7 +101,7 @@ export function buildSiteTree(
 
     // create file node (leaf)
     const filename = parts[parts.length - 1]!;
-    const label = (blob.metadata as any).title;
+    const label = (blob.metadata as PageMetadata | null)?.title || filename;
     // TODO this is ugly
     const urlPath = `${prefix}${
       blob.appPath === "/" ? blob.appPath : "/" + blob.appPath
@@ -113,7 +113,7 @@ export function buildSiteTree(
       name: filename,
       path: blob.path,
       urlPath,
-      metadata: blob.metadata as Meta,
+      metadata: blob.metadata as PageMetadata | null,
     });
   }
 
@@ -158,7 +158,6 @@ function compareNodes<M>(
     return ka.localeCompare(kb, undefined, opts);
   }
   if (isDir(a) && isDir(b)) {
-    // dirs: label compare feels nicer than full path inside a single parent
     return a.label.localeCompare(b.label, undefined, opts);
   }
 
