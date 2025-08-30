@@ -15,6 +15,7 @@ const isPreview = env === "preview";
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  sendDefaultPii: true,
   enabled: isProd || isPreview,
   environment: env,
   // Add optional integrations for additional features

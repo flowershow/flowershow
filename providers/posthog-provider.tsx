@@ -7,7 +7,7 @@ import { PostHogProvider as PHProvider } from "posthog-js/react";
 import { useEffect } from "react";
 
 export function PostHogProvider({ children }) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   useEffect(() => {
     posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
@@ -19,11 +19,14 @@ export function PostHogProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (session?.user) {
+    if (status === "authenticated" && session?.user) {
       posthog.identify(session.user.id, {
         name: session.user.username,
         email: session.user.email,
       });
+    } else if (status === "unauthenticated") {
+      // Clear user so future anon events aren’t attributed
+      posthog.reset();
     }
   }, [session]);
 
