@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import clsx from "clsx";
 import {
@@ -87,12 +86,14 @@ const Nav = ({
             )}
             {social && (
               <div className="site-navbar-social-links-container">
-                {social.map(({ label, href, name }) => {
+                {social.map(({ label, href }) => {
                   const Icon = (label && socialIcons[label]) ?? GlobeIcon;
                   return (
                     <a
                       key={label}
                       href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="site-navbar-social-link"
                     >
                       <Icon className="site-navbar-social-link-icon" />
@@ -134,14 +135,15 @@ const Nav = ({
               <div className="mobile-nav-social-links-container">
                 {social &&
                   social.map(({ label, name, href }) => (
-                    <DisclosureButton
+                    <a
                       key={label}
-                      as="a"
                       href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="mobile-nav-social-link"
                     >
-                      <span>{name}</span>
-                    </DisclosureButton>
+                      {name}
+                    </a>
                   ))}
               </div>
             )}
