@@ -17,13 +17,13 @@ import { signOut } from "next-auth/react";
 import { api } from "@/trpc/react";
 import { cn } from "@/lib/utils";
 import { useModal } from "@/providers/modal-provider";
-// import FeedbackModal from "@/components/dashboard/feedback";
+import FeedbackModal from "@/components/dashboard/feedback";
 
 const config = getConfig();
-// const FEEDBACK_DISMISSED_COOKIE = "feedback-dismissed";
+const FEEDBACK_DISMISSED_COOKIE = "feedback-dismissed";
 
 export default function Nav({ children }: { children: ReactNode }) {
-  // const modal = useModal();
+  const modal = useModal();
   const segments = useSelectedLayoutSegments();
   const { id } = useParams() as { id: string };
 
@@ -51,23 +51,23 @@ export default function Nav({ children }: { children: ReactNode }) {
     refetchInterval: 30000,
   });
 
-  // useEffect(() => {
-  //   // Check if user has submitted feedback before
-  //   const hasSubmittedFeedback =
-  //     user?.feedback || Cookies.get(FEEDBACK_DISMISSED_COOKIE);
-  //   const hasCreatedSite = Boolean(user?.sites.length);
+  useEffect(() => {
+    // Check if user has submitted feedback before
+    const hasSubmittedFeedback =
+      user?.feedback || Cookies.get(FEEDBACK_DISMISSED_COOKIE);
+    const hasCreatedSite = Boolean(user?.sites.length);
 
-  //   if (!hasSubmittedFeedback && hasCreatedSite) {
-  //     const timer = setTimeout(() => {
-  //       modal?.show(
-  //         <FeedbackModal dismissable={true} onSubmit={refetch} />,
-  //         false,
-  //       );
-  //     }, 20000);
+    if (!hasSubmittedFeedback && hasCreatedSite) {
+      const timer = setTimeout(() => {
+        modal?.show(
+          <FeedbackModal dismissable={true} onSubmit={refetch} />,
+          false,
+        );
+      }, 20000);
 
-  //     return () => clearTimeout(timer);
-  //   }
-  // }, [user]);
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
 
   return (
     <Disclosure
@@ -129,7 +129,7 @@ export default function Nav({ children }: { children: ReactNode }) {
                   <span>Support</span>
                   <ExternalLinkIcon className="h-4" />
                 </Link>
-                {/* <button
+                <button
                   type="button"
                   className="rounded-md bg-pink-50 px-2.5 py-1.5 text-sm font-semibold text-pink-600 shadow-sm hover:bg-pink-100"
                   onClick={() =>
@@ -137,7 +137,7 @@ export default function Nav({ children }: { children: ReactNode }) {
                   }
                 >
                   Send feedback
-                </button> */}
+                </button>
               </>
             )}
             {/* Profile dropdown */}

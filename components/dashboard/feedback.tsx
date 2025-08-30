@@ -81,12 +81,9 @@ export default function FeedbackModal({
         </p>
 
         <div className="flex flex-col space-y-2">
-          <label
-            htmlFor="rating"
-            className="text-sm font-medium text-stone-500 dark:text-stone-400"
-          >
+          <p className="text-sm font-medium text-stone-500 dark:text-stone-400">
             How was your experience?
-          </label>
+          </p>
           <div className="flex space-x-2">
             {[
               { value: 1, emoji: "😢" },

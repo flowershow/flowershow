@@ -54,7 +54,7 @@
     "date-fns": "^4.1.0",
     "emoji-regex": "^10.4.0",
     "esbuild": "^0.19.9",
-    "focus-trap-react": "^10.2.3",
+    "focus-trap-react": "^11.0.4",
     "framer-motion": "^10.16.4",
     "github-slugger": "^2.0.0",
     "gray-matter": "^4.0.3",
