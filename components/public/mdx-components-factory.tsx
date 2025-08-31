@@ -102,11 +102,7 @@ export const mdxComponentsFactory = ({
         />
       );
     },
-    pre: (props) => (
-      <div className="prose-pre:bg-[#fafafa]">
-        <Pre {...props} />
-      </div>
-    ),
+    pre: (props) => <Pre {...props} />,
     table: (props: React.TableHTMLAttributes<HTMLTableElement>) => (
       <div className="overflow-x-auto">
         <table {...props} />

@@ -590,7 +590,7 @@
    Rendered MDX
    ──────────────────────────────────────────────────── */
   .rendered-mdx {
-    min-height: 55vh;
+    @apply prose min-h-[55vh] dark:prose-invert prose-headings:font-heading prose-headings:tracking-tight prose-headings:text-primary-strong prose-a:break-words prose-pre:bg-[#fafafa];
   }
 
   .rendered-mdx > h1:first-child {
