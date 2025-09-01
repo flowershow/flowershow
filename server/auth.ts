@@ -87,10 +87,12 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      await PostHogClient().capture({
+      const posthog = PostHogClient();
+      posthog.capture({
         distinctId: user.id,
         event: "sign_up",
       });
+      await posthog.shutdown();
     },
   },
   callbacks: {

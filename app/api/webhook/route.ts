@@ -72,11 +72,13 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  await PostHogClient().capture({
+  const posthog = PostHogClient();
+  posthog.capture({
     distinctId: site.userId,
     event: "site_sync_triggered",
     properties: { id: site.id, source: "auto" },
   });
+  await posthog.shutdown();
 
   return new Response("Event processed", { status: 200 });
 }

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
 import prisma from "@/server/db";
 import { env } from "@/env.mjs";
+import PostHogClient from "@/lib/server-posthog";
 
 const relevantEvents = new Set([
   "checkout.session.completed",
@@ -98,14 +99,29 @@ export async function POST(req: Request) {
 
           // Update site's features to PREMIUM
           console.log(`⭐ Upgrading site to PREMIUM plan`);
-          await prisma.site.update({
+          const updatedSite = await prisma.site.update({
             where: {
               id: checkoutSession.metadata.siteId,
             },
             data: {
               plan: "PREMIUM",
             },
+            include: {
+              user: true,
+            },
           });
+
+          const posthog = PostHogClient();
+          posthog.capture({
+            distinctId: updatedSite.userId,
+            event: "site_upgraded",
+            properties: {
+              siteId: checkoutSession.metadata.siteId,
+              interval: interval,
+              priceId: priceId,
+            },
+          });
+          await posthog.shutdown();
 
           console.log(`✅ Checkout session processing completed`);
           break;

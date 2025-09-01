@@ -201,11 +201,13 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      await PostHogClient().capture({
+      const posthog = await PostHogClient();
+      posthog.capture({
         distinctId: site.userId,
         event: "site_created",
         properties: { id: site.id },
       });
+      await posthog.shutdown();
 
       return site;
     }),
@@ -346,11 +348,13 @@ export const siteRouter = createTRPCRouter({
         }
       }
 
-      await PostHogClient().capture({
+      const posthog = PostHogClient();
+      posthog.capture({
         distinctId: site.userId,
         event: "site_settings_changed",
         properties: { id: site.id, config: input.key },
       });
+      await posthog.shutdown();
 
       revalidateTag(`${site.id}`);
       return result;
@@ -393,11 +397,13 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      await PostHogClient().capture({
+      const posthog = PostHogClient();
+      posthog.capture({
         distinctId: site.userId,
         event: "site_deleted",
         properties: { id: site.id },
       });
+      await posthog.shutdown();
 
       return site;
     }),
