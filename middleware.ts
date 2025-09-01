@@ -20,6 +20,27 @@ export const config = {
 export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;
 
+  // Handle PostHog proxy
+  if (url.pathname.startsWith("/relay-qYYb/")) {
+    const _url = url.clone();
+    const hostname = url.pathname.startsWith("/relay-qYYb/static/")
+      ? "eu-assets.i.posthog.com"
+      : "eu.i.posthog.com";
+    const targetPath = url.pathname.replace("/relay-qYYb/", "");
+
+    const requestHeaders = new Headers(req.headers);
+    requestHeaders.set("host", hostname);
+
+    _url.protocol = "https";
+    _url.hostname = hostname;
+    _url.port = "443";
+    _url.pathname = url.pathname.replace(/^\/relay-qYYb/, "");
+
+    return NextResponse.rewrite(_url, {
+      headers: requestHeaders,
+    });
+  }
+
   // Get hostname of request
   let hostname = req.headers.get("host")!;
 

@@ -11,7 +11,8 @@ export function PostHogProvider({ children }) {
 
   useEffect(() => {
     posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
-      api_host: env.NEXT_PUBLIC_POSTHOG_HOST,
+      api_host: "/relay-qYYb",
+      ui_host: env.NEXT_PUBLIC_POSTHOG_HOST,
       defaults: "2025-05-24",
       persistence: "localStorage+cookie",
       cross_subdomain_cookie: true,

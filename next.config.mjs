@@ -1,7 +1,11 @@
+// @ts-check
+import { env } from "./env.mjs";
+import { withSentryConfig } from "@sentry/nextjs";
+
 /**
  * @type {import('next').NextConfig}
  */
-module.exports = {
+const nextConfig = {
   async redirects() {
     return [
       {
@@ -19,13 +23,10 @@ module.exports = {
   images: {
     remotePatterns: [{ hostname: "*" }],
   },
+  skipTrailingSlashRedirect: true,
 };
 
-// Injected content via Sentry wizard below
-
-const { withSentryConfig } = require("@sentry/nextjs");
-
-module.exports = withSentryConfig(module.exports, {
+export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
   org: process.env.SENTRY_ORG,
