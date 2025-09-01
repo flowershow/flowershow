@@ -13,23 +13,28 @@ export function PostHogProvider({ children }) {
     posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
       api_host: "/relay-qYYb",
       ui_host: env.NEXT_PUBLIC_POSTHOG_HOST,
-      defaults: "2025-05-24",
       persistence: "localStorage+cookie",
       cross_subdomain_cookie: true,
     });
   }, []);
 
   useEffect(() => {
-    if (status === "authenticated" && session?.user) {
-      posthog.identify(session.user.id, {
+    const userId = session?.user?.id;
+
+    if (status === "authenticated" && userId) {
+      posthog.identify(userId, {
         name: session.user.username,
         email: session.user.email,
       });
     } else if (status === "unauthenticated") {
-      // Clear user so future anon events aren’t attributed
-      posthog.reset();
+      const isIdentified = posthog.get_property("$user_state") === "identified";
+      // Note: not sure if this is the right way to do this, but we need to make sure we call reset only once!
+      // Otherwise many different anonymous sessions will be recorded in posthog for the same actual user
+      if (isIdentified) {
+        posthog.reset();
+      }
     }
-  }, [session]);
+  }, [session, status]);
 
   return <PHProvider client={posthog}>{children}</PHProvider>;
 }
