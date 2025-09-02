@@ -13,7 +13,7 @@ export function PostHogProvider({ children }) {
     posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
       api_host: "/relay-qYYb",
       ui_host: env.NEXT_PUBLIC_POSTHOG_HOST,
-      persistence: "localStorage+cookie",
+      persistence: "cookie", // localStorage+cookie won't work across subdomains
       cross_subdomain_cookie: true,
     });
   }, []);
