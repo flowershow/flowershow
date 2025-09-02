@@ -30,6 +30,7 @@ export function PostHogProvider({ children }) {
       const isIdentified = posthog.get_property("$user_state") === "identified";
       // Note: not sure if this is the right way to do this, but we need to make sure we call reset only once!
       // Otherwise many different anonymous sessions will be recorded in posthog for the same actual user
+      // https://github.com/PostHog/posthog/issues/37462?reload=1
       if (isIdentified) {
         posthog.reset();
       }

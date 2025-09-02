@@ -1,4 +1,4 @@
-import { getServerSession, User, type NextAuthOptions } from "next-auth";
+import { getServerSession, type NextAuthOptions } from "next-auth";
 import GitHubProvider, { GithubProfile } from "next-auth/providers/github";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import prisma from "@/server/db";
@@ -51,9 +51,7 @@ export const authOptions: NextAuthOptions = {
         sameSite: "lax",
         path: "/",
         // When working on localhost, the cookie domain must be omitted entirely (https://stackoverflow.com/a/1188145)
-        domain: VERCEL_DEPLOYMENT
-          ? `.${env.NEXT_PUBLIC_CLOUD_DOMAIN}`
-          : undefined,
+        domain: VERCEL_DEPLOYMENT ? ".flowershow.app" : undefined, // set to apex domain to make posthog identify/reset work (and to allow some UI indicators that you're logged in and previewing your own site)
         secure: VERCEL_DEPLOYMENT,
       },
     },
