@@ -231,7 +231,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
           }}
         />
         <UrlNormalizer />
-        <div className="rendered-mdx" id="mdxpage">
+        <div className="rendered-mdx is-plain" id="mdxpage">
           {compiledMDX}
         </div>
       </>
