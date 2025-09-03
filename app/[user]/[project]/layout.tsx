@@ -46,7 +46,19 @@ export default async function Layout({
     })
     .catch(() => null);
 
-  const theme = siteConfig?.theme ? getThemeUrl(siteConfig.theme) : null;
+  // backward compatibility for theme of type string
+  const themeName =
+    typeof siteConfig?.theme === "string"
+      ? siteConfig.theme
+      : siteConfig?.theme?.theme;
+  const theme = themeName ? getThemeUrl(themeName) : null;
+  const themeVariant =
+    (typeof siteConfig?.theme !== "string" && siteConfig?.theme?.variant) ??
+    "light";
+  const showThemeVariantSwitch =
+    (typeof siteConfig?.theme !== "string" &&
+      siteConfig?.theme?.showVariantSwitch) ??
+    false;
 
   let siteTree;
 
@@ -112,6 +124,7 @@ export default async function Layout({
             siteTree={siteTree}
             showSearch={showSearch}
             searchId={site.id}
+            showThemeSwitch={showThemeVariantSwitch}
           />
           <div className="site-body">{children}</div>
           <Footer />

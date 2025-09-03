@@ -9,8 +9,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <PostHogProvider>
-        <Toaster className="dark:hidden" />
-        <Toaster theme="dark" className="hidden dark:block" />
+        <Toaster />
         <ConfettiProvider>
           <ModalProvider>{children}</ModalProvider>
         </ConfettiProvider>

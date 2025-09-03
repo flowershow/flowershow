@@ -16,6 +16,7 @@ import { NavLink, SocialLink } from "@/components/types";
 import { SearchModal } from "@/components/public/search-modal";
 import { socialIcons } from "@/components/public/social-icons";
 import { usePathname } from "next/navigation";
+import ThemeSwitch from "./theme-switch";
 
 export interface Props {
   logo: string;
@@ -24,6 +25,7 @@ export interface Props {
   links?: NavLink[];
   siteTree?: Node[];
   social?: SocialLink[];
+  showThemeSwitch?: boolean;
   showSearch?: boolean;
   searchId?: string; // ID of a collection to search in (site ID)
 }
@@ -35,6 +37,7 @@ const Nav = ({
   links,
   siteTree,
   social,
+  showThemeSwitch = true,
   showSearch = false,
   searchId,
 }: Props) => {
@@ -66,9 +69,9 @@ const Nav = ({
               />
               {title && <span className="site-navbar-site-name">{title}</span>}
             </Link>
-            {links && (
-              <div className="site-navbar-links-container">
-                {links.map((link) => (
+            <div className="site-navbar-links-container">
+              {links &&
+                links.map((link) => (
                   <Link
                     key={link.name}
                     href={link.href}
@@ -77,11 +80,15 @@ const Nav = ({
                     {link.name}
                   </Link>
                 ))}
-              </div>
-            )}
+            </div>
             {showSearch && (
               <div className="site-navbar-search-container">
                 <SearchModal indexId={searchId!} />
+              </div>
+            )}
+            {showThemeSwitch && (
+              <div className="site-navbar-theme-switch-container">
+                <ThemeSwitch />
               </div>
             )}
             {social && (

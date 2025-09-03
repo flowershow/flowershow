@@ -127,17 +127,15 @@ export default function CreateSiteModal() {
           rootDir,
         });
       }}
-      className="w-full rounded-md bg-white dark:bg-black md:max-w-md md:border md:border-stone-200 md:shadow dark:md:border-stone-700"
+      className="w-full rounded-md bg-white  md:max-w-md md:border md:border-stone-200 md:shadow "
     >
       <div className="relative flex flex-col space-y-4 p-5 md:p-10">
-        <h2 className="font-dashboard-heading text-2xl dark:text-white">
-          Create a new site
-        </h2>
+        <h2 className="font-dashboard-heading text-2xl ">Create a new site</h2>
 
         <div className="flex flex-col space-y-2">
           <label
             htmlFor="gh_scope"
-            className="text-sm font-medium text-stone-500 dark:text-stone-400"
+            className="text-sm font-medium text-stone-500 "
           >
             <span className="flex items-center space-x-1">
               <GithubIcon className="h-4 w-4" />
@@ -147,7 +145,7 @@ export default function CreateSiteModal() {
           <select
             aria-label="GitHub Account"
             name="gh_scope"
-            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
+            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black     "
             value={data.gh_scope}
             required
             placeholder="Select a GitHub account"
@@ -182,14 +180,14 @@ export default function CreateSiteModal() {
         <div className="flex flex-col space-y-2">
           <label
             htmlFor="ghRepository"
-            className="text-sm font-medium text-stone-500 dark:text-stone-400"
+            className="text-sm font-medium text-stone-500 "
           >
             <span>Repository</span>
           </label>
           <select
             aria-label="Repository"
             name="ghRepository"
-            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
+            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black     "
             value={data.ghRepository}
             required
             placeholder="Select a repository"
@@ -214,7 +212,7 @@ export default function CreateSiteModal() {
         <div className="flex flex-col space-y-2">
           <label
             htmlFor="ghBranch"
-            className="text-sm font-medium text-stone-500 dark:text-stone-400"
+            className="text-sm font-medium text-stone-500 "
           >
             <span>Branch</span>
           </label>
@@ -225,14 +223,14 @@ export default function CreateSiteModal() {
             onChange={(e) => setData({ ...data, ghBranch: e.target.value })}
             maxLength={32}
             required
-            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
+            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black     "
           />
         </div>
 
         <div className="flex flex-col space-y-2">
           <label
             htmlFor="rootDir"
-            className="text-sm font-medium text-stone-500 dark:text-stone-400"
+            className="text-sm font-medium text-stone-500 "
           >
             <span>Root Dir</span>
           </label>
@@ -242,7 +240,7 @@ export default function CreateSiteModal() {
             value={data.rootDir}
             onChange={(e) => setData({ ...data, rootDir: e.target.value })}
             maxLength={32}
-            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
+            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black     "
           />
 
           <span className="flex items-center space-x-1 text-xs">
@@ -269,9 +267,9 @@ export default function CreateSiteModal() {
                             pattern="[a-zA-Z0-9\-]+" // only allow lowercase letters, numbers, and dashes
                             maxLength={32}
                             required
-                            className="w-full rounded-l-lg border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
+                            className="w-full rounded-l-lg border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black     "
                         />
-                        <div className="flex items-center rounded-r-lg border border-l-0 border-stone-200 bg-stone-100 px-3 text-sm dark:border-stone-600 dark:bg-stone-800 dark:text-stone-400">
+                        <div className="flex items-center rounded-r-lg border border-l-0 border-stone-200 bg-stone-100 px-3 text-sm   ">
                             .{env.NEXT_PUBLIC_ROOT_DOMAIN}
                         </div>
                     </div>
@@ -291,11 +289,11 @@ export default function CreateSiteModal() {
                         onChange={(e) => setData({ ...data, description: e.target.value })}
                         maxLength={140}
                         rows={3}
-                        className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black  focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
+                        className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black  focus:outline-none focus:ring-black     "
                     />
                 </div> */}
       </div>
-      <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-stone-700 dark:bg-stone-800 md:px-10">
+      <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3   md:px-10">
         <CreateSiteFormButton
           disabled={
             isLoadingScopes ||
@@ -316,8 +314,8 @@ function CreateSiteFormButton({ disabled = false, pending = false }) {
       className={cn(
         "flex h-10 w-full items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none",
         pending || disabled
-          ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
-          : "border-black bg-black text-white hover:bg-white hover:text-black dark:border-stone-700 dark:hover:border-stone-200 dark:hover:bg-black dark:hover:text-white dark:active:bg-stone-800",
+          ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   "
+          : "border-black bg-black text-white hover:bg-white hover:text-black     ",
       )}
       disabled={pending || disabled}
     >

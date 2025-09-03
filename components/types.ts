@@ -58,7 +58,13 @@ export interface SiteConfig {
     to: string; // Path to redirect to (e.g. "/new-page")
     permanent?: boolean; // Whether to use 301 (true) or 302 (false) redirect
   }>;
-  theme?: string;
+  theme?: string | ThemeConfig;
+}
+
+export interface ThemeConfig {
+  theme?: string; // name of the theme to use
+  variant?: "light" | "dark" | "system"; // theme variant to use by default
+  showVariantSwitch?: boolean; // show theme variant toggle
 }
 
 export interface SiteAlias {

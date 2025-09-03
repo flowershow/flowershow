@@ -16,7 +16,7 @@ export default function ObsidianQuickstart() {
       </div> */}
 
       <div className="flex items-center justify-between">
-        <h1 className="font-dashboard-headingle-dashboard text-3xl font-bold dark:text-white">
+        <h1 className="font-dashboard-headingle-dashboard text-3xl font-bold ">
           Publish a Demo Site
         </h1>
       </div>
@@ -25,7 +25,7 @@ export default function ObsidianQuickstart() {
         <h3 className="mt-4 text-lg font-semibold">
           Step 1: Create a GitHub Repository
         </h3>
-        <div className="mt-2 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
           Click{" "}
           <a
             className="underline"
@@ -41,7 +41,7 @@ export default function ObsidianQuickstart() {
         <h3 className="mt-4 text-lg font-semibold">
           Step 2: Publish it with Flowershow
         </h3>
-        <div className="mt-2 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
           Click{" "}
           <a
             className="underline"
@@ -63,7 +63,7 @@ export default function ObsidianQuickstart() {
         </div>
 
         <h3 className="mt-4 text-lg font-semibold">Step 3: View your site</h3>
-        <div className="mt-2 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
           Wait a few moments until the site shows as &quot;Synced&quot; and
           click on the &quot;Visit site&quot; button to see how it looks.
           <Image
@@ -75,8 +75,8 @@ export default function ObsidianQuickstart() {
           />
         </div>
 
-        <div className="mt-8 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-900/20">
-          <p className="text-green-700 dark:text-green-300">
+        <div className="/20 mt-8 rounded-lg border border-green-200 bg-green-50  p-4">
+          <p className="text-green-700 ">
             Congratulations! You&apos;ve just published your first Flowershow
             site! 💐
           </p>

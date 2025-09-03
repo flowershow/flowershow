@@ -105,27 +105,22 @@ export default function Form({
           });
       }}
       className={cn(
-        "isolate rounded-lg border border-stone-200 dark:border-stone-700 dark:bg-black",
+        "isolate rounded-lg border border-stone-200  ",
         disabled ? "bg-stone-50" : "bg-white",
       )}
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
         <div className="flex justify-between gap-2">
-          <h2
-            id={inputAttrs.name}
-            className="font-dashboard-heading text-xl dark:text-white"
-          >
+          <h2 id={inputAttrs.name} className="font-dashboard-heading text-xl ">
             {title}
           </h2>
           {disabled && (
-            <div className="flex flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600 dark:bg-stone-800 dark:text-stone-400">
+            <div className="flex flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600  ">
               <span>Available on premium plan</span>
             </div>
           )}
         </div>
-        <p className="text-sm text-stone-500 dark:text-stone-400">
-          {description}
-        </p>
+        <p className="text-sm text-stone-500 ">{description}</p>
         {["autoSync", "enableComments", "enableSearch"].includes(
           inputAttrs.name,
         ) ? (
@@ -185,7 +180,7 @@ export default function Form({
             <input
               {...inputAttrs}
               disabled={disabled}
-              className="z-10 flex-1 rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
+              className="z-10 flex-1 rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500    "
             />
             {!disabled && inputAttrs.defaultValue && (
               <div className="absolute right-3 z-10 flex h-full items-center">
@@ -198,23 +193,21 @@ export default function Form({
             {...inputAttrs}
             required={required}
             rows={3}
-            className="w-full max-w-xl rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
+            className="w-full max-w-xl rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500    "
           />
         ) : (
           <input
             {...inputAttrs}
             required={required}
-            className="w-full max-w-md rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700"
+            className="w-full max-w-md rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500    "
           />
         )}
       </div>
       {inputAttrs.name === "customDomain" && inputAttrs.defaultValue && (
         <DomainConfiguration domain={inputAttrs.defaultValue} />
       )}
-      <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 dark:border-stone-700 dark:bg-stone-800 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
-        <div className="w-full text-sm text-stone-500 dark:text-stone-400">
-          {helpText}
-        </div>
+      <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3   sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
+        <div className="w-full text-sm text-stone-500 ">{helpText}</div>
         {!["autoSync", "enableComments", "enableSearch"].includes(
           inputAttrs.name,
         ) &&
@@ -231,8 +224,8 @@ function FormButton({ name }: { name: string }) {
       className={cn(
         "flex h-8 w-32 shrink-0 items-center justify-center space-x-2 rounded-md border px-2 py-1 text-sm transition-all focus:outline-none sm:h-10",
         pending
-          ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
-          : "border-black bg-black text-white hover:bg-white hover:text-black dark:border-stone-700 dark:hover:border-stone-200 dark:hover:bg-black dark:hover:text-white dark:active:bg-stone-800",
+          ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   "
+          : "border-black bg-black text-white hover:bg-white hover:text-black     ",
       )}
       disabled={pending}
       data-testid={`save-${name}`}

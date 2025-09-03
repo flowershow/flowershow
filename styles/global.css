@@ -23,6 +23,8 @@
    ──────────────────────────────────────────────────── */
 @layer base {
   :root {
+    color-scheme: light dark;
+
     scroll-behavior: smooth;
 
     /* Brand colours – override these in a custom theme for a quick re‑skin */
@@ -40,6 +42,13 @@
     /* Brand fonts – override these in a custom theme for a quick re‑skin */
     --font-heading: var(--next-font-heading);
     --font-body: var(--next-font-body);
+  }
+
+  :root[data-theme="light"] {
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
   }
 }
 
@@ -65,7 +74,7 @@
    Navbar
    ──────────────────────────────────────────────────── */
   .site-navbar {
-    @apply sticky top-0 z-10 bg-background font-heading;
+    @apply sticky top-0 z-10 bg-background font-heading text-primary;
   }
   .site-navbar.is-scrolled {
     @apply shadow-sm;
@@ -110,6 +119,25 @@
   }
   .site-navbar-mobile-nav-icon {
     @apply size-6;
+  }
+
+  /* Theme switch */
+  .site-navbar-theme-switch-container {
+    @apply flex items-center;
+  }
+  .theme-switch {
+    @apply flex items-center justify-center rounded-full p-1;
+    background-color: light-dark(
+      rgb(var(--color-primary-faint)),
+      rgb(var(--color-primary))
+    );
+  }
+  .theme-switch-icon {
+    @apply size-4;
+    color: light-dark(
+      rgb(var(--color-primary-muted)),
+      rgb(var(--color-primary-faint))
+    );
   }
 
   /* Mobile navigation */
@@ -393,7 +421,7 @@
     @apply isolate flex -space-x-1 overflow-hidden;
   }
   .page-header-author-avatar {
-    @apply relative z-30 inline-block size-6 rounded-full outline outline-1 -outline-offset-1 outline-black/5 ring-2 ring-white dark:outline-white/10 dark:ring-gray-900;
+    @apply relative z-30 inline-block size-6 rounded-full outline outline-1 -outline-offset-1 outline-black/5 ring-2 ring-white;
   }
   /* .page-header-author {
     @apply inline-block flex shrink-0 items-center;
@@ -587,7 +615,7 @@
    Rendered MDX
    ──────────────────────────────────────────────────── */
   .rendered-mdx:not(.is-plain) {
-    @apply prose min-h-[55vh] max-w-none dark:prose-invert prose-headings:font-heading prose-headings:tracking-tight prose-headings:text-primary-strong prose-a:break-words prose-pre:bg-[#fafafa];
+    @apply prose min-h-[55vh] max-w-none prose-headings:font-heading prose-headings:tracking-tight prose-headings:text-primary-strong prose-a:break-words prose-pre:bg-[#fafafa];
   }
 
   .rendered-mdx > h1:first-child {

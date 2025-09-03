@@ -1,8 +1,4 @@
 export function getThemeUrl(theme: string): string | null {
-  if (!theme) {
-    return null;
-  }
-
   // for self-hosted community themes?
   if (theme.startsWith("http")) {
     return theme;

@@ -21,7 +21,7 @@ export default function OverviewStats() {
 
   return (
     <div className="grid gap-6 sm:grid-cols-2">
-      <Card className="dark:!bg-stone-900">
+      <Card>
         <Text>Total Visitors</Text>
         <Flex
           className="space-x-3 truncate"
@@ -29,10 +29,7 @@ export default function OverviewStats() {
           alignItems="baseline"
         >
           <Metric className="font-dashboard-heading">170,418</Metric>
-          <BadgeDelta
-            deltaType="moderateIncrease"
-            className="dark:bg-green-900 dark:bg-opacity-50 dark:text-green-400"
-          >
+          <BadgeDelta deltaType="moderateIncrease" className="  ">
             34.3%
           </BadgeDelta>
         </Flex>

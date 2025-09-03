@@ -10,7 +10,7 @@ export default async function Profile() {
 
   return (
     <div className="flex w-full items-center justify-between">
-      <div className="flex w-full flex-1 items-center space-x-3 rounded-lg px-2 py-1.5 dark:text-white">
+      <div className="flex w-full flex-1 items-center space-x-3 rounded-lg px-2 py-1.5 ">
         <Image
           src={
             session.user.image ??

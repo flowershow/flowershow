@@ -69,19 +69,19 @@ export default function FeedbackModal({
     <form
       data-testid="feedback-form"
       onSubmit={handleSubmit}
-      className="w-full rounded-md bg-white dark:bg-black md:max-w-md md:border md:border-stone-200 md:shadow dark:md:border-stone-700"
+      className="w-full rounded-md bg-white  md:max-w-md md:border md:border-stone-200 md:shadow "
     >
       <div className="relative flex flex-col space-y-4 p-5 font-dashboard-body md:p-10">
-        <h2 className="font-dashboard-heading text-2xl dark:text-white">
+        <h2 className="font-dashboard-heading text-2xl ">
           Help us make Flowershow better for you!
         </h2>
-        <p className="text-sm text-stone-500 dark:text-stone-400">
+        <p className="text-sm text-stone-500 ">
           We personally review every feedback submitted and use it to improve
           your experience.
         </p>
 
         <div className="flex flex-col space-y-2">
-          <p className="text-sm font-medium text-stone-500 dark:text-stone-400">
+          <p className="text-sm font-medium text-stone-500 ">
             How was your experience?
           </p>
           <div className="flex space-x-2">
@@ -96,7 +96,7 @@ export default function FeedbackModal({
                 key={value}
                 className={`cursor-pointer px-2 py-1 text-2xl transition-all ${
                   formData.rating === value
-                    ? "rounded-full bg-blue-100 dark:bg-blue-900"
+                    ? "rounded-full bg-blue-100 "
                     : "hover:opacity-80"
                 }`}
               >
@@ -117,7 +117,7 @@ export default function FeedbackModal({
         <div className="flex flex-col space-y-2">
           <label
             htmlFor="feedback"
-            className="text-sm font-medium text-stone-500 dark:text-stone-400"
+            className="text-sm font-medium text-stone-500 "
           >
             Your feedback
           </label>
@@ -130,16 +130,16 @@ export default function FeedbackModal({
             required
             rows={3}
             minLength={5}
-            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-stone-600 dark:bg-black dark:text-white dark:placeholder-stone-700 dark:focus:ring-white"
+            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black     "
           />
         </div>
       </div>
 
-      <div className="flex items-center justify-between rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 font-dashboard-body dark:border-stone-700 dark:bg-stone-800 md:px-10">
+      <div className="flex items-center justify-between rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 font-dashboard-body   md:px-10">
         <button
           type="button"
           onClick={handleDismiss}
-          className="text-sm text-stone-500 hover:text-stone-600 dark:text-stone-400 dark:hover:text-stone-300"
+          className="text-sm text-stone-500 hover:text-stone-600  "
         >
           Not right now
         </button>
@@ -156,8 +156,8 @@ function SubmitButton({ disabled = false, pending = false }) {
       className={cn(
         "flex h-10 items-center justify-center space-x-2 rounded-md border px-4 text-sm transition-all focus:outline-none",
         pending || disabled
-          ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 dark:border-stone-700 dark:bg-stone-800 dark:text-stone-300"
-          : "border-black bg-black text-white hover:bg-white hover:text-black dark:border-stone-700 dark:hover:border-stone-200 dark:hover:bg-black dark:hover:text-white dark:active:bg-stone-800",
+          ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   "
+          : "border-black bg-black text-white hover:bg-white hover:text-black     ",
       )}
       disabled={pending || disabled}
     >

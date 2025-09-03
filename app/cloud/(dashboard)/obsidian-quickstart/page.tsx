@@ -16,7 +16,7 @@ export default function ObsidianQuickstart() {
       </div>
 
       <div className="flex items-center justify-between">
-        <h1 className="font-dashboard-heading text-3xl font-bold dark:text-white">
+        <h1 className="font-dashboard-heading text-3xl font-bold ">
           Publish Your Obsidian Vault (in 2 minutes)
         </h1>
       </div>
@@ -25,7 +25,7 @@ export default function ObsidianQuickstart() {
         <h3 className="mt-4 text-lg font-semibold">
           Step 1: Install the Flowershow Plugin
         </h3>
-        <div className="mt-2 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
           Install and enable the{" "}
           <a className="underline" href="obsidian://show-plugin?id=flowershow">
             Flowershow Obsidian plugin
@@ -36,7 +36,7 @@ export default function ObsidianQuickstart() {
         <h3 className="mt-4 text-lg font-semibold">
           Step 2: Create a GitHub Repository for Syncing
         </h3>
-        <div className="mt-2 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
           Click{" "}
           <a
             className="underline"
@@ -56,7 +56,7 @@ export default function ObsidianQuickstart() {
         <h3 className="mt-4 text-lg font-semibold">
           Step 3: Connect Flowershow to Your GitHub Repository
         </h3>
-        <div className="mt-2 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
           Click{" "}
           <a
             className="underline"
@@ -83,7 +83,7 @@ export default function ObsidianQuickstart() {
         <h3 className="mt-4 text-lg font-semibold">
           Step 4: Configure Flowershow Plugin & Publish Your Vault
         </h3>
-        <div className="mt-2 rounded-lg border border-gray-200 p-4 dark:border-gray-800">
+        <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
           Go to Flowershow plugin options in your Obsidian vault and input your
           GitHub username, name of your repository, and your GitHub Personal
           Access Token (
@@ -105,8 +105,8 @@ export default function ObsidianQuickstart() {
           the notes to publish — and that&apos;s it!
         </div>
 
-        <div className="mt-8 rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-900 dark:bg-green-900/20">
-          <p className="text-green-700 dark:text-green-300">
+        <div className="/20 mt-8 rounded-lg border border-green-200 bg-green-50  p-4">
+          <p className="text-green-700 ">
             Congratulations! Your Obsidian Vault is now published with
             Flowershow. 💐
           </p>
