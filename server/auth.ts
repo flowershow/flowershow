@@ -146,8 +146,8 @@ export const authOptions: NextAuthOptions = {
     jwt: async ({ token, user, account, profile }) => {
       // console.log("jwt", { token, user, account, profile });
       // token:
-      //   first time it's called (sign up): minimal token with name, email, picture and sub (user ID)
-      //   subsequent calls (get session): token with validity properties + any extra ones that we set up in session callback
+      //   first time it's called (sign in): minimal token with name, email, picture and sub (user ID)
+      //   subsequent calls (get session): token with validity properties + any extra ones that we added first time in this callback
       // (available only on first call) account: prisma account
       // (available only on first call) user: user account
       // (available only on first call) profile: full GitHub profile
