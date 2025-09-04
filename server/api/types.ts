@@ -17,6 +17,7 @@ export interface PageMetadata {
   }>; // CTAs used if hero is enabled (only 2 supported)
   // authors pages
   avatar?: string;
+  [key: string]: any;
 }
 
 export enum OrganizationType {

@@ -326,81 +326,75 @@
    List component
    ──────────────────────────────────────────────────── */
   .list-component {
-    @apply flex flex-col gap-y-4 font-heading;
+    @apply flex flex-col font-heading;
   }
   .list-component-item {
-    @apply relative isolate flex flex-col gap-8 border-b py-8 lg:flex-row lg:py-10;
+    @apply relative isolate flex flex-col gap-6 border-b py-8 lg:flex-row lg:py-10;
   }
-  .list-component-item-image-container {
+  .list-component-item-media {
     @apply relative aspect-video overflow-hidden lg:aspect-[2/1] lg:w-64 lg:shrink-0;
   }
-  .list-component-item-image {
+  .list-component-item-media-img {
     @apply absolute inset-0 h-full w-full rounded-2xl bg-gray-50 object-cover;
   }
+  .list-component-item-content {
+    @apply flex flex-col;
+  }
   .list-component-item-eyebrow {
-    @apply flex items-center gap-x-4 text-sm  text-primary-subtle;
+    @apply mb-2 flex items-center gap-x-4 text-sm text-primary-subtle;
   }
-  .list-component-item-title {
-    @apply mt-3 max-w-3xl text-lg font-semibold text-primary-strong group-hover:text-primary-emphasis;
+  .list-component-item-headline {
+    @apply mb-2 max-w-3xl text-lg font-semibold text-primary-strong group-hover:text-primary-emphasis;
   }
-  .list-component-item-authors {
-    @apply mt-6 flex border-t border-primary-faint pt-6 text-sm/6 font-semibold text-primary-strong;
+  .list-component-item-summary {
+    @apply line-clamp-2 grow text-primary-emphasis;
   }
-  .list-component-item-text {
-    @apply mt-5 line-clamp-2 text-primary-emphasis;
+  .list-component-item-footnote {
+    @apply mt-4 flex border-t border-primary-faint pt-2 text-sm/6 font-semibold text-primary-strong;
   }
+
+  /* ────────────────────────────────────────────────────
+   List component pagination
+   ──────────────────────────────────────────────────── */
   .list-component-pagination {
     @apply flex items-center justify-between border-t border-gray-200 px-4 sm:px-0;
   }
-
   .list-component-pagination-nav {
     @apply -mt-px flex w-0 flex-1;
   }
-
   .list-component-pagination-nav--end {
     @apply justify-end;
   }
-
   .list-component-pagination-button {
     @apply inline-flex items-center border-t-2 border-transparent pt-4 text-sm font-medium text-gray-500 hover:border-gray-300 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50;
   }
-
   .list-component-pagination-button--prev {
     @apply pr-1;
   }
-
   .list-component-pagination-button--next {
     @apply pl-1;
   }
-
   .list-component-pagination-button-icon {
     @apply size-5 text-gray-400;
   }
-
   .list-component-pagination-button-icon--prev {
     @apply mr-3;
   }
-
   .list-component-pagination-button-icon--next {
     @apply ml-3;
   }
-
   .list-component-pagination-pages {
     @apply hidden md:-mt-px md:flex;
   }
-
   .list-component-pagination-page-button {
     @apply inline-flex items-center border-t-2 px-4 pt-4 text-sm font-medium;
   }
-
   .list-component-pagination-page-button--current {
     @apply border-indigo-500 text-indigo-600;
   }
-
   .list-component-pagination-page-button--other {
     @apply border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700;
   }
-
   .list-component-pagination-ellipsis {
     @apply inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500;
   }

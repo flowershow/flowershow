@@ -759,7 +759,7 @@ export const siteRouter = createTRPCRouter({
           const dirIndexPath = dir + "/index.md";
 
           const blobs = await ctx.db.$queryRaw<
-            { path: string; app_path: string; metadata?: PageMetadata }[]
+            { path: string; app_path: string; metadata: PageMetadata | null }[]
           >`
               SELECT "path", "app_path", "metadata"
               FROM "Blob"

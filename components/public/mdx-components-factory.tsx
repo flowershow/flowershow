@@ -42,19 +42,12 @@ import type {
 export const mdxComponentsFactory = ({
   blob,
   site,
+  pageNumber,
 }: {
   blob: Blob;
   site: SiteWithUser;
+  pageNumber?: number;
 }) => {
-  const sitePrefix = getSiteUrlPath(site);
-
-  const resolveLink = (url: string) =>
-    resolveLinkToUrl({
-      target: url,
-      originFilePath: blob.path,
-      prefix: sitePrefix,
-    });
-
   const components: any = {
     /* HTML tags */
     a: ({
@@ -113,7 +106,7 @@ export const mdxComponentsFactory = ({
       return <CustomHtml {...props} />;
     }, "CustomHtml"),
     List: withErrorBoundary((props: ListProps) => {
-      return <List {...props} siteId={site.id} />;
+      return <List {...props} siteId={site.id} pageNumber={pageNumber} />;
     }, "List"),
     mermaid: Mermaid,
     // Catalog: withErrorBoundary(Catalog, "Catalog"),

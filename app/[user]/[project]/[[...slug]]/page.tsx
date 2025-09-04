@@ -35,6 +35,8 @@ interface RouteParams {
   slug?: string[];
 }
 
+type SearchParams = Promise<{ [key: string]: string | undefined }>;
+
 export async function generateMetadata({ params }: { params: RouteParams }) {
   const projectName = decodeURIComponent(params.project);
   const userName = decodeURIComponent(params.user);
@@ -142,11 +144,19 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   };
 }
 
-export default async function SitePage({ params }: { params: RouteParams }) {
+export default async function SitePage({
+  params,
+  searchParams,
+}: {
+  params: RouteParams;
+  searchParams: SearchParams;
+}) {
   const projectName = decodeURIComponent(params.project);
   const userName = decodeURIComponent(params.user);
   const slug = params.slug ? params.slug.join("/") : "/";
   const decodedSlug = slug.replace(/%20/g, "+");
+  const pageParam = (await searchParams).page;
+  const pageNumber = pageParam ? Number(pageParam) : 1;
 
   const site = await getSite(userName, projectName);
   const sitePrefix = getSiteUrlPath(site);
@@ -200,6 +210,7 @@ export default async function SitePage({ params }: { params: RouteParams }) {
   const mdxComponents = mdxComponentsFactory({
     blob: page.blob,
     site,
+    pageNumber,
   });
   const mdxOptions = getMdxOptions({
     permalinks: sitePermalinks,
