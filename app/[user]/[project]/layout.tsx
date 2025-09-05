@@ -99,6 +99,7 @@ export default async function Layout({
   const showBuiltWithButton = !isFeatureEnabled(Feature.NoBranding, site);
   const showSearch =
     isFeatureEnabled(Feature.Search, site) && site.enableSearch;
+  const cta = siteConfig?.nav?.cta;
 
   return (
     <>
@@ -125,6 +126,7 @@ export default async function Layout({
             showSearch={showSearch}
             searchId={site.id}
             showThemeSwitch={showThemeVariantSwitch}
+            cta={cta}
           />
           <div className="site-body">{children}</div>
           <Footer />

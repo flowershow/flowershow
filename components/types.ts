@@ -28,6 +28,7 @@ export interface NavConfig {
   title?: string;
   links?: NavLink[];
   social?: SocialLink[];
+  cta?: NavLink;
 }
 
 export interface SiteConfig {

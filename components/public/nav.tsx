@@ -28,6 +28,7 @@ export interface Props {
   showThemeSwitch?: boolean;
   showSearch?: boolean;
   searchId?: string; // ID of a collection to search in (site ID)
+  cta?: NavLink;
 }
 
 const Nav = ({
@@ -40,6 +41,7 @@ const Nav = ({
   showThemeSwitch = true,
   showSearch = false,
   searchId,
+  cta,
 }: Props) => {
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -58,6 +60,7 @@ const Nav = ({
     <Disclosure>
       {({ open, close }) => (
         <nav className={clsx("site-navbar", isScrolled && "is-scrolled")}>
+          {/* Desktop Navigation */}
           <div className="site-navbar-inner">
             <Link href={url} className="site-navbar-site-title">
               <img
@@ -109,7 +112,13 @@ const Nav = ({
                 })}
               </div>
             )}
+            {cta && (
+              <Link href={cta.href} className="site-navbar-cta-button">
+                {cta.name}
+              </Link>
+            )}
 
+            {/* Mobile Navigation Button */}
             <DisclosureButton className="site-navbar-mobile-nav-button group">
               <span className="sr-only">Open main menu</span>
               <MenuIcon
@@ -123,6 +132,7 @@ const Nav = ({
             </DisclosureButton>
           </div>
 
+          {/* Mobile Navigation */}
           <DisclosurePanel transition className="mobile-nav">
             {links && (
               <div className="mobile-nav-links-container">
@@ -154,19 +164,15 @@ const Nav = ({
                   ))}
               </div>
             )}
-            {/* {cta && (
-              <DisclosureButton
-                as="a"
-                href={cta.href}
-                className="block py-1 hover:font-semibold hover:text-primary-emphasis"
-              >
-                {cta.name}
-              </DisclosureButton>
-            )} */}
             {siteTree && (
               <div className="mobile-nav-tree-container">
                 <TreeView items={siteTree} onLinkClick={close} />
               </div>
+            )}
+            {cta && (
+              <Link href={cta.href} className="mobile-nav-cta-button">
+                {cta.name}
+              </Link>
             )}
           </DisclosurePanel>
         </nav>
