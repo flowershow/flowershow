@@ -76,14 +76,10 @@ export function SearchModal({ indexId }: SearchModalProps) {
 
   return (
     <>
-      <button
-        onClick={openModal}
-        className="search-button"
-        aria-label="Open search"
-      >
+      <button onClick={openModal} name="search" className="search-button">
         <SearchIcon className="search-icon" />
+        <span className="search-placeholder">Search...</span>
       </button>
-
       <AnimatePresence>
         {isOpen && (
           <FocusTrap

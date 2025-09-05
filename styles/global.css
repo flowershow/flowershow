@@ -475,10 +475,13 @@
    Search modal
    ──────────────────────────────────────────────────── */
   .search-button {
-    @apply text-primary-muted hover:text-primary focus:outline-none focus:ring-0;
+    @apply flex cursor-text items-center space-x-2 rounded-md bg-white px-2 py-1.5 text-base text-primary-muted outline outline-1 -outline-offset-1 outline-gray-300 sm:text-sm/5 lg:w-full lg:max-w-[12rem];
   }
   .search-icon {
-    @apply size-6;
+    @apply size-4;
+  }
+  .search-placeholder {
+    @apply hidden lg:inline-block;
   }
   .search-modal {
     @apply fixed inset-0 z-50;
