@@ -1,3 +1,5 @@
+// @ts-nocheck
+// // https://github.com/storybookjs/storybook/issues/32127
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 

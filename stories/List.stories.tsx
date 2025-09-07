@@ -1,3 +1,5 @@
+// @ts-nocheck
+// // https://github.com/storybookjs/storybook/issues/32127
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { mocked } from "storybook/test";
 import List from "@/components/public/list";
