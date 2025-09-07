@@ -118,7 +118,7 @@ export default async function List({
 const keyForSlot = (s: Slot, slotsMap: SlotsMap) => slotsMap[s] ?? s;
 
 const getValue = (s: Slot, meta: PageMetadata | null, slotsMap: SlotsMap) =>
-  slotsMap[s] && meta?.[slotsMap[s]];
+  slotsMap[s] && meta?.[slotsMap[s]!];
 
 function applyFormat(spec: string, value: any, locale?: string) {
   if (value == null) return "";
