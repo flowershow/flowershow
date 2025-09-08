@@ -3,7 +3,7 @@ import { ErrorBoundary } from "react-error-boundary";
 import type { SiteWithUser } from "@/types";
 import type { Blob } from "@prisma/client";
 import { resolveLinkToUrl } from "@/lib/resolve-link";
-import { getSiteUrlPath } from "@/lib/get-site-url";
+import { getSiteUrl, getSiteUrlPath } from "@/lib/get-site-url";
 
 import { ErrorMessage } from "@/components/public/error-message";
 import { default as List } from "./list";
@@ -114,6 +114,7 @@ export const mdxComponentsFactory = ({
         originFilePath: blob.path,
         isSrcLink: true,
         prefix: getSiteUrlPath(site),
+        domain: site.customDomain,
       });
       return <Excel {...props} />;
     }, "Excel"),
@@ -124,7 +125,10 @@ export const mdxComponentsFactory = ({
           originFilePath: blob.path,
           isSrcLink: true,
           prefix: getSiteUrlPath(site),
+          domain: site.customDomain,
         });
+
+      console.log("PROPS FLATUI", props.data.url);
 
       return <FlatUiTable {...props} />;
     }, "FlatUiTable"),
@@ -134,6 +138,7 @@ export const mdxComponentsFactory = ({
         originFilePath: blob.path,
         isSrcLink: true,
         prefix: getSiteUrlPath(site),
+        domain: site.customDomain,
       });
       return <Iframe {...props} />;
     }, "Iframe"),
@@ -144,6 +149,7 @@ export const mdxComponentsFactory = ({
           originFilePath: blob.path,
           isSrcLink: true,
           prefix: getSiteUrlPath(site),
+          domain: site.customDomain,
         });
       }
       return <LineChart {...props} />;
@@ -156,6 +162,7 @@ export const mdxComponentsFactory = ({
             originFilePath: blob.path,
             isSrcLink: true,
             prefix: getSiteUrlPath(site),
+            domain: site.customDomain,
           });
         }
         return layer;
@@ -179,6 +186,7 @@ export const mdxComponentsFactory = ({
               originFilePath: blob.path,
               isSrcLink: true,
               prefix: getSiteUrlPath(site),
+              domain: site.customDomain,
             })
           : props.data;
       return <Plotly {...props} data={data} />;
@@ -190,6 +198,7 @@ export const mdxComponentsFactory = ({
           originFilePath: blob.path,
           isSrcLink: true,
           prefix: getSiteUrlPath(site),
+          domain: site.customDomain,
         });
       }
       return <PlotlyBarChart {...props} />;
@@ -201,6 +210,7 @@ export const mdxComponentsFactory = ({
           originFilePath: blob.path,
           isSrcLink: true,
           prefix: getSiteUrlPath(site),
+          domain: site.customDomain,
         });
       }
       return <PlotlyLineChart {...props} />;
@@ -212,6 +222,7 @@ export const mdxComponentsFactory = ({
           originFilePath: blob.path,
           isSrcLink: true,
           prefix: getSiteUrlPath(site),
+          domain: site.customDomain,
         });
       return <Vega {...props} />;
     }, "Vega"),
@@ -222,6 +233,7 @@ export const mdxComponentsFactory = ({
           originFilePath: blob.path,
           isSrcLink: true,
           prefix: getSiteUrlPath(site),
+          domain: site.customDomain,
         });
       return <VegaLite {...props} />;
     }, "VegaLite"),
