@@ -1,5 +1,3 @@
-// @ts-nocheck
-// // https://github.com/storybookjs/storybook/issues/32127
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { mocked } from "storybook/test";
 import List from "@/components/public/list";
@@ -8,12 +6,19 @@ import { manyItems } from "@/stories/__fixtures__/catalog";
 import "@/styles/global.css";
 
 const meta: Meta<typeof List> = {
-  title: "MDX/List",
+  title: "Other/List",
   component: List,
   args: {
     siteId: "site_123",
     dir: "",
-    pageSize: 10,
+  },
+  parameters: {
+    controls: { exclude: ["siteId", "pageNumber"] },
+  },
+  argTypes: {
+    dir: {
+      control: false,
+    },
   },
 };
 export default meta;

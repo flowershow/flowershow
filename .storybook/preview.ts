@@ -1,5 +1,3 @@
-// @ts-nocheck
-// // https://github.com/storybookjs/storybook/issues/32127
 import type { Preview } from "@storybook/nextjs-vite";
 import { sb } from "storybook/test";
 
@@ -8,6 +6,7 @@ sb.mock(import("next-auth"));
 sb.mock(import("next-auth/react"));
 
 const preview: Preview = {
+  tags: ["autodocs"],
   parameters: {
     nextjs: {
       appDirectory: true,

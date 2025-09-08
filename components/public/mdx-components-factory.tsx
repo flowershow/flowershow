@@ -16,7 +16,6 @@ import {
   Iframe,
   LineChart,
   Map,
-  PdfViewer,
   Plotly,
   PlotlyBarChart,
   PlotlyLineChart,
@@ -34,7 +33,6 @@ import type {
   IframeProps,
   LineChartProps,
   MapProps,
-  PdfViewerProps,
   PlotlyBarChartProps,
   PlotlyLineChartProps,
 } from "./client-components-wrapper";
@@ -164,15 +162,15 @@ export const mdxComponentsFactory = ({
       });
       return <Map {...props} layers={layers} />;
     }, "Map"),
-    PdfViewer: withErrorBoundary((props: PdfViewerProps) => {
-      props.data.url = resolveLinkToUrl({
-        target: props.data.url,
-        originFilePath: blob.path,
-        isSrcLink: true,
-        prefix: getSiteUrlPath(site),
-      });
-      return <PdfViewer {...props} />;
-    }, "PdfViewer"),
+    // PdfViewer: withErrorBoundary((props: PdfViewerProps) => {
+    //   props.data.url = resolveLinkToUrl({
+    //     target: props.data.url,
+    //     originFilePath: blob.path,
+    //     isSrcLink: true,
+    //     prefix: getSiteUrlPath(site),
+    //   });
+    //   return <PdfViewer {...props} />;
+    // }, "PdfViewer"),
     Plotly: withErrorBoundary((props) => {
       const data =
         typeof props.data === "string"

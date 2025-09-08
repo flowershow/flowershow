@@ -34,13 +34,14 @@ const _convertFieldsToSlotsMap = (fields: Field[]) => {
 
 export interface ListProps {
   siteId: string;
+  pageNumber?: number;
+  /** Optional: Directory (relative to site root) to list items from. Default: "" (root folder). */
   dir?: string;
+  /** Optional: Page frontmatter fields to display. `Array<"title" | "description" | "authors" | "date" | "image">`<br/>⚠️ NOTE This prop is going to be deprecated in favor of the new `slots` prop.*/
   fields?: Array<Field>; // TODO TB deprecated
   slots?: SlotsMap; // map slot -> metadata key
-  // slotsFormat?: SlotsFormatMap; // key -> "currency:PLN", "date:yyyy-mm-dd", "join: • ", etc.
-  // locale?: string; // e.g. "pl-PL"
-  pageNumber?: number; // pagination, current page number
-  pageSize?: number; // pagination, items per page
+  /** Items per page. */
+  pageSize?: number;
 }
 
 export default async function List({

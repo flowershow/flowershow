@@ -14,6 +14,7 @@ import Footer from "@/components/public/footer";
 import Nav, { type Props as NavProps } from "@/components/public/nav";
 import { SiteProvider } from "@/components/public/site-context";
 import { getSiteUrlPath } from "@/lib/get-site-url";
+import "@portaljs/components/styles.css";
 
 interface RouteParams {
   user: string;

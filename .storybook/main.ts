@@ -1,5 +1,3 @@
-// @ts-nocheck
-// // https://github.com/storybookjs/storybook/issues/32127
 import type { StorybookConfig } from "@storybook/nextjs-vite";
 import path from "node:path";
 
