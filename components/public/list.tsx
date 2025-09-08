@@ -177,8 +177,23 @@ const fmt = (
   const v = getValue(s, meta, slotsMap);
   // const spec = k && formatMap?.[k];
   // if (spec) return applyFormat(spec, v, locale);
+  if (isDateInput(v)) {
+    return new Date(v).toLocaleDateString();
+  }
 
   // if (s === "eyebrow" && typeof v === "string") return v.slice(0, 10);
   if (Array.isArray(v)) return v.join(", ");
   return v ?? "";
+};
+
+const isoish =
+  /^\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})?)?$/;
+
+export const isDateInput = (v) => {
+  if (v instanceof Date) return !Number.isNaN(v.getTime());
+  if (typeof v === "number" && Number.isFinite(v))
+    return !Number.isNaN(new Date(v).getTime());
+  if (typeof v === "string" && isoish.test(v))
+    return !Number.isNaN(new Date(v).getTime());
+  return false;
 };
