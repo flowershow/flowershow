@@ -10,7 +10,7 @@ import { default as List } from "./list";
 import type { ListProps } from "./list";
 
 import {
-  Catalog,
+  // Catalog,
   Excel,
   FlatUiTable,
   Iframe,
@@ -110,58 +110,123 @@ export const mdxComponentsFactory = ({
     }, "List"),
     mermaid: Mermaid,
     // Catalog: withErrorBoundary(Catalog, "Catalog"),
-    // Excel: withErrorBoundary((props: ExcelProps) => {
-    //   props.data.url = resolveDataUrl(props.data.url);
-    //   return <Excel {...props} />;
-    // }, "Excel"),
-    // FlatUiTable: withErrorBoundary((props: FlatUiTableProps) => {
-    //   if (props.data?.url) props.data.url = resolveDataUrl(props.data.url);
-    //   return <FlatUiTable {...props} />;
-    // }, "FlatUiTable"),
-    // Iframe: withErrorBoundary((props: IframeProps) => {
-    //   props.data.url = resolveDataUrl(props.data.url);
-    //   return <Iframe {...props} />;
-    // }, "Iframe"),
-    // LineChart: withErrorBoundary((props: LineChartProps) => {
-    //   if (props.data?.url) props.data.url = resolveDataUrl(props.data.url);
-    //   return <LineChart {...props} />;
-    // }, "LineChart"),
-    // Map: withErrorBoundary((props: MapProps) => {
-    //   const layers = props.layers.map((layer) => {
-    //     if (layer.data.url) layer.data.url = resolveDataUrl(layer.data.url);
-    //     return layer;
-    //   });
-    //   return <Map {...props} layers={layers} />;
-    // }, "Map"),
-    // PdfViewer: withErrorBoundary((props: PdfViewerProps) => {
-    //   props.data.url = resolveDataUrl(props.data.url);
-    //   return <PdfViewer {...props} />;
-    // }, "PdfViewer"),
-    // Plotly: withErrorBoundary((props) => {
-    //   const data =
-    //     typeof props.data === "string"
-    //       ? resolveDataUrl(props.data)
-    //       : props.data;
-    //   return <Plotly {...props} data={data} />;
-    // }, "Plotly"),
-    // PlotlyBarChart: withErrorBoundary((props: PlotlyBarChartProps) => {
-    //   if (props.data.url) props.data.url = resolveDataUrl(props.data.url);
-    //   return <PlotlyBarChart {...props} />;
-    // }, "PlotlyBarChart"),
-    // PlotlyLineChart: withErrorBoundary((props: PlotlyLineChartProps) => {
-    //   if (props.data.url) props.data.url = resolveDataUrl(props.data.url);
-    //   return <PlotlyLineChart {...props} />;
-    // }, "PlotlyLineChart"),
-    // Vega: withErrorBoundary((props) => {
-    //   if (props.spec.data.url)
-    //     props.spec.data.url = resolveDataUrl(props.spec.data.url);
-    //   return <Vega {...props} />;
-    // }, "Vega"),
-    // VegaLite: withErrorBoundary((props) => {
-    //   if (props.spec.data.url)
-    //     props.spec.data.url = resolveDataUrl(props.spec.data.url);
-    //   return <VegaLite {...props} />;
-    // }, "VegaLite"),
+    Excel: withErrorBoundary((props: ExcelProps) => {
+      props.data.url = resolveLinkToUrl({
+        target: props.data.url,
+        originFilePath: blob.path,
+        isSrcLink: true,
+        prefix: getSiteUrlPath(site),
+      });
+      return <Excel {...props} />;
+    }, "Excel"),
+    FlatUiTable: withErrorBoundary((props: FlatUiTableProps) => {
+      if (props.data?.url)
+        props.data.url = resolveLinkToUrl({
+          target: props.data.url,
+          originFilePath: blob.path,
+          isSrcLink: true,
+          prefix: getSiteUrlPath(site),
+        });
+
+      return <FlatUiTable {...props} />;
+    }, "FlatUiTable"),
+    Iframe: withErrorBoundary((props: IframeProps) => {
+      props.data.url = resolveLinkToUrl({
+        target: props.data.url,
+        originFilePath: blob.path,
+        isSrcLink: true,
+        prefix: getSiteUrlPath(site),
+      });
+      return <Iframe {...props} />;
+    }, "Iframe"),
+    LineChart: withErrorBoundary((props: LineChartProps) => {
+      if (props.data?.url) {
+        props.data.url = resolveLinkToUrl({
+          target: props.data.url,
+          originFilePath: blob.path,
+          isSrcLink: true,
+          prefix: getSiteUrlPath(site),
+        });
+      }
+      return <LineChart {...props} />;
+    }, "LineChart"),
+    Map: withErrorBoundary((props: MapProps) => {
+      const layers = props.layers.map((layer) => {
+        if (layer.data.url) {
+          layer.data.url = resolveLinkToUrl({
+            target: layer.data.url,
+            originFilePath: blob.path,
+            isSrcLink: true,
+            prefix: getSiteUrlPath(site),
+          });
+        }
+        return layer;
+      });
+      return <Map {...props} layers={layers} />;
+    }, "Map"),
+    PdfViewer: withErrorBoundary((props: PdfViewerProps) => {
+      props.data.url = resolveLinkToUrl({
+        target: props.data.url,
+        originFilePath: blob.path,
+        isSrcLink: true,
+        prefix: getSiteUrlPath(site),
+      });
+      return <PdfViewer {...props} />;
+    }, "PdfViewer"),
+    Plotly: withErrorBoundary((props) => {
+      const data =
+        typeof props.data === "string"
+          ? resolveLinkToUrl({
+              target: props.data,
+              originFilePath: blob.path,
+              isSrcLink: true,
+              prefix: getSiteUrlPath(site),
+            })
+          : props.data;
+      return <Plotly {...props} data={data} />;
+    }, "Plotly"),
+    PlotlyBarChart: withErrorBoundary((props: PlotlyBarChartProps) => {
+      if (props.data.url) {
+        props.data.url = resolveLinkToUrl({
+          target: props.data.url,
+          originFilePath: blob.path,
+          isSrcLink: true,
+          prefix: getSiteUrlPath(site),
+        });
+      }
+      return <PlotlyBarChart {...props} />;
+    }, "PlotlyBarChart"),
+    PlotlyLineChart: withErrorBoundary((props: PlotlyLineChartProps) => {
+      if (props.data.url) {
+        props.data.url = resolveLinkToUrl({
+          target: props.data.url,
+          originFilePath: blob.path,
+          isSrcLink: true,
+          prefix: getSiteUrlPath(site),
+        });
+      }
+      return <PlotlyLineChart {...props} />;
+    }, "PlotlyLineChart"),
+    Vega: withErrorBoundary((props) => {
+      if (props.spec.data.url)
+        props.spec.data.url = resolveLinkToUrl({
+          target: props.spec.data.url,
+          originFilePath: blob.path,
+          isSrcLink: true,
+          prefix: getSiteUrlPath(site),
+        });
+      return <Vega {...props} />;
+    }, "Vega"),
+    VegaLite: withErrorBoundary((props) => {
+      if (props.spec.data.url)
+        props.spec.data.url = resolveLinkToUrl({
+          target: props.spec.data.url,
+          originFilePath: blob.path,
+          isSrcLink: true,
+          prefix: getSiteUrlPath(site),
+        });
+      return <VegaLite {...props} />;
+    }, "VegaLite"),
   };
 
   // if (isDatasetPage(blob.metadata as PageMetadata)) {
