@@ -3,7 +3,7 @@ import { PageMetadata } from "@/server/api/types";
 import ListComponentPagination from "./list-pagination";
 
 type Slot = "media" | "eyebrow" | "headline" | "summary" | "footnote";
-type SlotsMap = Partial<Record<Slot, keyof PageMetadata>>;
+export type SlotsMap = Partial<Record<Slot, keyof PageMetadata>>;
 type SlotsFormatMap = Partial<Record<Slot, string>>;
 
 type Field = "title" | "description" | "authors" | "date" | "image"; // TODO TB deprecated
@@ -57,6 +57,7 @@ export default async function List({
   const data = await api.site.getCatalogFiles.query({
     siteId,
     dir,
+    slots,
   });
   const pageItems = data.items.slice(
     (pageNumber - 1) * pageSize,

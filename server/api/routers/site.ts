@@ -30,6 +30,7 @@ import { SiteWithUser } from "@/types";
 import { getSiteUrlPath } from "@/lib/get-site-url";
 import { Prisma } from "@prisma/client";
 import PostHogClient from "@/lib/server-posthog";
+import { SlotsMap } from "@/components/public/list";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -733,6 +734,7 @@ export const siteRouter = createTRPCRouter({
       z.object({
         siteId: z.string().min(1),
         dir: z.string().min(1), // absolute dir
+        slots: z.looseObject({ media: z.any().optional() }).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -777,9 +779,11 @@ export const siteRouter = createTRPCRouter({
           const items = blobs.map((b) => {
             const metadata = b.metadata;
 
-            if (metadata?.image) {
-              metadata.image = resolveLinkToUrl({
-                target: metadata.image,
+            const mediaFrontmatterField = input.slots.media ?? "image";
+
+            if (metadata?.[mediaFrontmatterField]) {
+              metadata[mediaFrontmatterField] = resolveLinkToUrl({
+                target: metadata[mediaFrontmatterField],
                 originFilePath: b.path,
                 prefix: sitePrefix,
                 isSrcLink: true,

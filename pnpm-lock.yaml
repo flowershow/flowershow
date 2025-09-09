@@ -55,7 +55,7 @@ importers:
         version: 5.5.0
       '@t3-oss/env-nextjs':
         specifier: ^0.7.1
-        version: 0.7.1(typescript@5.2.2)(zod@3.22.4)
+        version: 0.7.1(typescript@5.2.2)(zod@4.1.5)
       '@tanstack/react-query':
         specifier: ^4.32.6
         version: 4.32.6(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -285,8 +285,8 @@ importers:
         specifier: ^2.4.0
         version: 2.4.0
       zod:
-        specifier: ^3.22.4
-        version: 3.22.4
+        specifier: ^4.1.5
+        version: 4.1.5
     devDependencies:
       '@chromatic-com/storybook':
         specifier: ^4.1.1
@@ -11617,6 +11617,9 @@ packages:
   zod@3.22.4:
     resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
 
+  zod@4.1.5:
+    resolution: {integrity: sha512-rcUUZqlLJgBC33IT3PNMgsCq6TzLQEG/Ei/KTCU0PedSWRMAXoOUN+4t/0H+Q8bdnLPdqUYnvboJT0bn/229qg==}
+
   zstddec@0.1.0:
     resolution: {integrity: sha512-w2NTI8+3l3eeltKAdK8QpiLo/flRAr2p8AGeakfMZOXBxOg9HIu4LVDxBi81sYgVhFhdJjv1OrB5ssI8uFPoLg==}
 
@@ -15493,16 +15496,16 @@ snapshots:
       '@swc/counter': 0.1.3
       tslib: 2.6.2
 
-  '@t3-oss/env-core@0.7.1(typescript@5.2.2)(zod@3.22.4)':
+  '@t3-oss/env-core@0.7.1(typescript@5.2.2)(zod@4.1.5)':
     dependencies:
-      zod: 3.22.4
+      zod: 4.1.5
     optionalDependencies:
       typescript: 5.2.2
 
-  '@t3-oss/env-nextjs@0.7.1(typescript@5.2.2)(zod@3.22.4)':
+  '@t3-oss/env-nextjs@0.7.1(typescript@5.2.2)(zod@4.1.5)':
     dependencies:
-      '@t3-oss/env-core': 0.7.1(typescript@5.2.2)(zod@3.22.4)
-      zod: 3.22.4
+      '@t3-oss/env-core': 0.7.1(typescript@5.2.2)(zod@4.1.5)
+      zod: 4.1.5
     optionalDependencies:
       typescript: 5.2.2
 
@@ -26240,6 +26243,8 @@ snapshots:
   zod@3.21.4: {}
 
   zod@3.22.4: {}
+
+  zod@4.1.5: {}
 
   zstddec@0.1.0: {}
 
