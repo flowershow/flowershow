@@ -1,19 +1,15 @@
 "use client";
 import { SessionProvider } from "next-auth/react";
-import { Toaster } from "sonner";
-import { ModalProvider } from "@/providers/modal-provider";
-import { ConfettiProvider } from "@/providers/confetti-provider";
 import { PostHogProvider } from "@/providers/posthog-provider";
 
-export function Providers({ children }: { children: React.ReactNode }) {
+export default function RootProviders({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <SessionProvider>
-      <PostHogProvider>
-        <Toaster />
-        <ConfettiProvider>
-          <ModalProvider>{children}</ModalProvider>
-        </ConfettiProvider>
-      </PostHogProvider>
+      <PostHogProvider>{children}</PostHogProvider>
     </SessionProvider>
   );
 }

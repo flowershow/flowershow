@@ -1,5 +1,6 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { ReactNode } from "react";
+import clsx from "clsx";
 
 import { api } from "@/trpc/server";
 
@@ -8,20 +9,25 @@ import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 import { resolveLinkToUrl } from "@/lib/resolve-link";
 import { getThemeUrl } from "@/lib/get-theme";
 import { getSite } from "@/lib/get-site";
+import { getSiteUrlPath } from "@/lib/get-site-url";
 
 import BuiltWithFloatingButton from "@/components/public/built-with-floating-button";
 import Footer from "@/components/public/footer";
 import Nav, { type Props as NavProps } from "@/components/public/nav";
 import { SiteProvider } from "@/components/public/site-context";
-import { getSiteUrlPath } from "@/lib/get-site-url";
+
 import "@portaljs/components/styles.css";
+import "@/styles/prism.css";
+import "@/styles/callouts.css";
+import "@/styles/default-theme.css";
+import { fontBody, fontHeading } from "@/styles/fonts";
 
 interface RouteParams {
   user: string;
   project: string;
 }
 
-export default async function Layout({
+export default async function PublicLayout({
   params,
   children,
 }: {
@@ -103,7 +109,7 @@ export default async function Layout({
   const cta = siteConfig?.nav?.cta;
 
   return (
-    <>
+    <div className={clsx(fontHeading.variable, fontBody.variable)}>
       {/* it should be in the head */}
       {theme && <link rel="stylesheet" href={theme} />}
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
@@ -134,6 +140,6 @@ export default async function Layout({
           {showBuiltWithButton && <BuiltWithFloatingButton />}
         </div>
       </SiteProvider>
-    </>
+    </div>
   );
 }

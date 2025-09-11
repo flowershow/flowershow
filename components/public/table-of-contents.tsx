@@ -24,7 +24,7 @@ function TableOfContentsSection({
       <a
         href={`#${section.id}`}
         className={clsx(
-          "block hover:font-medium hover:text-primary-emphasis",
+          "block text-primary hover:font-medium hover:text-primary-emphasis",
           level && `pl-${(level * 4).toString()}`,
           isActive && "text-primary-emphasis",
         )}
@@ -68,7 +68,7 @@ export default function TableOfContents({
   }
 
   return (
-    <div className="page-toc">
+    <div className="page-toc not-prose">
       <h3 className="page-toc-heading">On this page</h3>
       <nav className="page-toc-tree">
         <ul>

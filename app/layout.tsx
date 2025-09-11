@@ -1,18 +1,11 @@
-import { Metadata } from "next";
 import { headers } from "next/headers";
+import { Metadata } from "next";
 import { GoogleTagManager } from "@next/third-parties/google";
-import clsx from "clsx";
-
-import "@portaljs/components/styles.css";
-import "@/styles/prism.css";
-import "@/styles/callouts.css";
-import "@/styles/global.css";
 
 import { getSession } from "@/server/auth";
 import { TRPCReactProvider } from "@/trpc/react";
-import { fontBody, fontHeading, fontDashboardHeading } from "@/styles/fonts";
+import Providers from "./providers";
 import { env } from "@/env.mjs";
-import { Providers } from "./providers";
 import { getConfig } from "@/lib/app-config";
 
 const { title, description, favicon, thumbnail } = getConfig();
@@ -47,7 +40,7 @@ export const metadata: Metadata = {
         alt: "Thumbnail",
       },
     ],
-    creator: "@datopian",
+    creator: "@flowershowapp",
   },
 };
 
@@ -59,15 +52,7 @@ export default async function RootLayout({
   const session = await getSession();
 
   return (
-    <html
-      className={clsx(
-        fontBody.variable,
-        fontHeading.variable,
-        fontDashboardHeading.variable,
-      )}
-      lang="en"
-      suppressHydrationWarning
-    >
+    <html lang="en" suppressHydrationWarning>
       <head>
         <link
           rel="stylesheet"

@@ -405,7 +405,7 @@ export default async function SitePage({
 
         {showToc && (
           <div className="layout-inner-right">
-            <aside className="page-toc">
+            <aside className="page-toc-container">
               <TableOfContents />
             </aside>
           </div>

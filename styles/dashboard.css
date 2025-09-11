@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ------------------------------------------------------------------
+   Declare explicit cascade-layer order so every file that imports this
+   sheet shares the same stacking context. 
+   ------------------------------------------------------------------ */
+@layer reset, base, components, utilities, overrides;
+
+/* ────────────────────────────────────────────────────
+   Design‑tokens (CSS custom properties)
+   ──────────────────────────────────────────────────── */
+@layer base {
+  :root {
+    /* color-scheme: light dark; */
+
+    scroll-behavior: smooth;
+
+    --color-background: 255 255 255; /* white */
+    --color-primary-faint: 228 228 231; /* zinc-200 */
+    --color-primary-muted: 161 161 170; /* zinc-400 */
+    --color-primary-subtle: 113 113 122; /* zinc-500 */
+    --color-primary: 63 63 70; /* zinc-700 */
+    --color-primary-emphasis: 39 39 42; /* zinc-800 */
+    --color-primary-strong: 24 24 27; /* zinc-900 */
+    --color-secondary: 251 146 60; /* orange-400 */
+  }
+
+  /* :root[data-theme="light"] {
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+  } */
+}
+
+@layer components {
+  body {
+    @apply bg-background font-dashboard-body;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-dashboard-heading;
+  }
+}
+
+/* @layer utilities {
+  .overflow-hidden {
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+  }
+} */

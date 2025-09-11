@@ -292,15 +292,24 @@
   /* ────────────────────────────────────────────────────
    ToC
    ──────────────────────────────────────────────────── */
-  .page-toc {
+
+          /* "block hover:font-medium hover:text-primary-emphasis",
+          level && `pl-${(level * 4).toString()}`,
+          isActive && "text-primary-emphasis", */
+  .page-toc-container {
     @apply sticky top-[8rem] h-[calc(100vh-8rem)] overflow-y-auto pb-8 pl-4 font-heading text-sm;
+  }
+
+  .page-toc-tree {
+    @apply font-light;
+  }
+
+  .page-toc-item-self {
+
   }
 
   .page-toc-heading {
     @apply mb-4 uppercase tracking-wider;
-  }
-  .page-toc-tree {
-    @apply font-light;
   }
 
   /* ────────────────────────────────────────────────────
