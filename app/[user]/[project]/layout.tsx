@@ -125,7 +125,7 @@ export default async function PublicLayout({
         <div className="site-layout">
           <Nav
             logo={logo}
-            url={sitePrefix ?? "/"}
+            url={sitePrefix || "/"}
             title={title}
             links={links}
             social={social}
