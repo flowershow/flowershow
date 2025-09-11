@@ -30,7 +30,7 @@ import { SiteWithUser } from "@/types";
 import { getSiteUrlPath } from "@/lib/get-site-url";
 import { Prisma } from "@prisma/client";
 import PostHogClient from "@/lib/server-posthog";
-import { SlotsMap } from "@/components/public/list";
+import { SlotsMap } from "@/components/public/mdx/list";
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({

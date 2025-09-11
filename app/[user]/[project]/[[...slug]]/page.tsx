@@ -19,7 +19,7 @@ import { generateScopedCss } from "@/lib/generate-scoped-css";
 import { getSiteUrl, getSiteUrlPath } from "@/lib/get-site-url";
 
 import Comments from "@/components/public/comments";
-import { mdxComponentsFactory } from "@/components/public/mdx-components-factory";
+import { mdxComponentsFactory } from "@/components/public/mdx/mdx-components-factory";
 import { ErrorMessage } from "@/components/public/error-message";
 import { BlogLayout } from "@/components/public/layouts/blog";
 import SiteTree from "@/components/public/site-tree";

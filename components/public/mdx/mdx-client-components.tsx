@@ -13,7 +13,6 @@ import {
   PlotlyLineChartProps,
 } from "@portaljs/components";
 
-import { Pre } from "@portaljs/core";
 import { useEffect, useRef } from "react";
 
 // use dynamic import to disable server side rendering for these components
@@ -125,7 +124,6 @@ export {
   PlotlyLineChart,
   Vega,
   VegaLite,
-  Pre,
   Mermaid,
 };
 

@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import { mocked } from "storybook/test";
-import List from "@/components/public/list";
+import List from "@/components/public/mdx/list";
 import { api } from "@/trpc/server";
 import { manyItems } from "@/stories/__fixtures__/catalog";
 import "@/styles/global.css";

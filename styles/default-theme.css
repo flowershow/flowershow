@@ -293,7 +293,7 @@
    ToC
    ──────────────────────────────────────────────────── */
 
-          /* "block hover:font-medium hover:text-primary-emphasis",
+  /* "block hover:font-medium hover:text-primary-emphasis",
           level && `pl-${(level * 4).toString()}`,
           isActive && "text-primary-emphasis", */
   .page-toc-container {
@@ -305,7 +305,6 @@
   }
 
   .page-toc-item-self {
-
   }
 
   .page-toc-heading {
@@ -406,6 +405,41 @@
   }
   .list-component-pagination-ellipsis {
     @apply inline-flex items-center border-t-2 border-transparent px-4 pt-4 text-sm font-medium text-gray-500;
+  }
+
+  /* ────────────────────────────────────────────────────
+   Other MDX components
+   ──────────────────────────────────────────────────── */
+  .pre-container {
+    @apply relative; /* positioning context for the button */
+  }
+
+  /* Reveal on hover/focus-within; keep tabbable. */
+  .pre-copy-button {
+    @apply absolute right-2 top-2 h-7 w-7 rounded border border-gray-300 bg-gray-200
+           p-1 opacity-0 transition-opacity duration-150
+           ease-in-out;
+  }
+  .pre-container:hover .pre-copy-button,
+  .pre-container:focus-within .pre-copy-button {
+    @apply opacity-100;
+  }
+
+  /* Copied state via data attribute */
+  .pre-copy-button[data-copied="true"] {
+    @apply border-green-400 outline-none;
+  }
+
+  .pre-icon {
+    @apply text-gray-500;
+  }
+  .pre-copy-button[data-copied="true"] .pre-icon {
+    @apply text-green-400;
+  }
+
+  /* Screen-reader only utility, but exposed as a semantic class */
+  .pre-sr {
+    @apply sr-only;
   }
 
   /* ────────────────────────────────────────────────────

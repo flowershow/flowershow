@@ -1,13 +1,14 @@
 import { ErrorBoundary } from "react-error-boundary";
 
-import type { SiteWithUser } from "@/types";
 import type { Blob } from "@prisma/client";
 import { resolveLinkToUrl } from "@/lib/resolve-link";
-import { getSiteUrl, getSiteUrlPath } from "@/lib/get-site-url";
+import { getSiteUrlPath } from "@/lib/get-site-url";
+import type { SiteWithUser } from "@/types";
 
 import { ErrorMessage } from "@/components/public/error-message";
-import { default as List } from "./list";
+import List from "./list";
 import type { ListProps } from "./list";
+import Pre from "./pre";
 
 import {
   // Catalog,
@@ -21,10 +22,9 @@ import {
   PlotlyLineChart,
   Vega,
   VegaLite,
-  Pre,
   Mermaid,
   CustomHtml,
-} from "./client-components-wrapper";
+} from "./mdx-client-components";
 
 import type {
   CustomHtmlProps,
@@ -35,7 +35,7 @@ import type {
   MapProps,
   PlotlyBarChartProps,
   PlotlyLineChartProps,
-} from "./client-components-wrapper";
+} from "./mdx-client-components";
 
 export const mdxComponentsFactory = ({
   blob,
@@ -74,6 +74,7 @@ export const mdxComponentsFactory = ({
         : `${props.className || ""} language-auto`;
       return <code {...props} className={className}></code>;
     },
+    pre: (props) => <Pre {...props} />,
     img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
       if (!props.src) return <img {...props} />;
       // TODO temporary quick patch to support special signs in file names
@@ -93,7 +94,7 @@ export const mdxComponentsFactory = ({
         />
       );
     },
-    pre: (props) => <Pre {...props} />,
+    // pre: (props) => <Pre {...props} className="not-prose" />,
     table: (props: React.TableHTMLAttributes<HTMLTableElement>) => (
       <div className="overflow-x-auto">
         <table {...props} />
