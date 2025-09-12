@@ -23,7 +23,8 @@
    ──────────────────────────────────────────────────── */
 @layer base {
   :root {
-    color-scheme: light dark;
+    color-scheme: light;
+    /* color-scheme: light dark;  // use this once our dark theme variant is ready */
 
     scroll-behavior: smooth;
 
