@@ -37,7 +37,7 @@
 
 @layer components {
   body {
-    @apply bg-background font-dashboard-body;
+    @apply bg-background font-dashboard-body text-primary;
   }
 
   h1,

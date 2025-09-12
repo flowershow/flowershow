@@ -1,8 +1,5 @@
-import clsx from "clsx";
-
 import CloudProviders from "./providers";
 
-import { fontDashboardHeading, fontDashboardBody } from "@/styles/fonts";
 import "@/styles/dashboard.css";
 
 export default async function CloudLayout({
@@ -10,14 +7,5 @@ export default async function CloudLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div
-      className={clsx(
-        fontDashboardHeading.variable,
-        fontDashboardBody.variable,
-      )}
-    >
-      <CloudProviders>{children}</CloudProviders>
-    </div>
-  );
+  return <CloudProviders>{children}</CloudProviders>;
 }

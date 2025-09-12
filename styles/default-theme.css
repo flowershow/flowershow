@@ -54,7 +54,7 @@
 
 @layer components {
   body {
-    @apply bg-background font-body;
+    @apply bg-background font-body text-primary;
   }
 
   h1,
@@ -292,23 +292,32 @@
   /* ────────────────────────────────────────────────────
    ToC
    ──────────────────────────────────────────────────── */
-
-  /* "block hover:font-medium hover:text-primary-emphasis",
-          level && `pl-${(level * 4).toString()}`,
-          isActive && "text-primary-emphasis", */
   .page-toc-container {
     @apply sticky top-[8rem] h-[calc(100vh-8rem)] overflow-y-auto pb-8 pl-4 font-heading text-sm;
   }
 
-  .page-toc-tree {
+  .toc {
     @apply font-light;
   }
 
-  .page-toc-item-self {
+  .toc-title {
+    @apply mb-4 uppercase tracking-wider;
   }
 
-  .page-toc-heading {
-    @apply mb-4 uppercase tracking-wider;
+  .toc-item {
+    @apply my-2;
+  }
+
+  .toc-item-self {
+    @apply block hover:font-medium hover:text-primary-emphasis;
+  }
+
+  .toc-item-self[aria-current="true"] {
+    @apply font-medium;
+  }
+
+  .toc-item-children {
+    @apply pl-4;
   }
 
   /* ────────────────────────────────────────────────────

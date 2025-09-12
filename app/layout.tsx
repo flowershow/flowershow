@@ -7,6 +7,13 @@ import { TRPCReactProvider } from "@/trpc/react";
 import Providers from "./providers";
 import { env } from "@/env.mjs";
 import { getConfig } from "@/lib/app-config";
+import clsx from "clsx";
+import {
+  fontBody,
+  fontDashboardBody,
+  fontDashboardHeading,
+  fontHeading,
+} from "@/styles/fonts";
 
 const { title, description, favicon, thumbnail } = getConfig();
 
@@ -52,7 +59,16 @@ export default async function RootLayout({
   const session = await getSession();
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html
+      className={clsx(
+        fontBody.variable,
+        fontHeading.variable,
+        fontDashboardHeading.variable,
+        fontDashboardBody.variable,
+      )}
+      lang="en"
+      suppressHydrationWarning
+    >
       <head>
         <link
           rel="stylesheet"

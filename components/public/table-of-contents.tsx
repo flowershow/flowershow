@@ -6,9 +6,9 @@ import {
 } from "@portaljs/core";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import clsx from "clsx";
+import Link from "next/link";
 
-function TableOfContentsSection({
+function TocItems({
   section,
   currentSection,
   level = 0,
@@ -20,28 +20,25 @@ function TableOfContentsSection({
   const isActive = currentSection === section.id;
 
   return (
-    <li className="mt-2">
-      <a
+    <li className="toc-item">
+      <Link
         href={`#${section.id}`}
-        className={clsx(
-          "block text-primary hover:font-medium hover:text-primary-emphasis",
-          level && `pl-${(level * 4).toString()}`,
-          isActive && "text-primary-emphasis",
-        )}
+        className="toc-item-self"
+        aria-current={isActive}
       >
         {section.title}
-      </a>
+      </Link>
       {section.children?.length > 0 && (
-        <ul>
+        <ol className="toc-item-children">
           {section.children.map((child) => (
-            <TableOfContentsSection
+            <TocItems
               key={child.id}
               section={child}
               currentSection={currentSection}
               level={level + 1}
             />
           ))}
-        </ul>
+        </ol>
       )}
     </li>
   );
@@ -68,19 +65,17 @@ export default function TableOfContents({
   }
 
   return (
-    <div className="page-toc not-prose">
-      <h3 className="page-toc-heading">On this page</h3>
-      <nav className="page-toc-tree">
-        <ul>
-          {tableOfContents.map((section) => (
-            <TableOfContentsSection
-              key={section.id}
-              section={section}
-              currentSection={currentSection}
-            />
-          ))}
-        </ul>
-      </nav>
-    </div>
+    <nav className="toc">
+      <h3 className="toc-title">On this page</h3>
+      <ol className="toc-list">
+        {tableOfContents.map((section) => (
+          <TocItems
+            key={section.id}
+            section={section}
+            currentSection={currentSection}
+          />
+        ))}
+      </ol>
+    </nav>
   );
 }

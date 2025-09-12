@@ -1,6 +1,5 @@
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { ReactNode } from "react";
-import clsx from "clsx";
 
 import { api } from "@/trpc/server";
 
@@ -20,7 +19,6 @@ import "@portaljs/components/styles.css";
 import "@/styles/prism.css";
 import "@/styles/callouts.css";
 import "@/styles/default-theme.css";
-import { fontBody, fontHeading } from "@/styles/fonts";
 
 interface RouteParams {
   user: string;
@@ -109,7 +107,7 @@ export default async function PublicLayout({
   const cta = siteConfig?.nav?.cta;
 
   return (
-    <div className={clsx(fontHeading.variable, fontBody.variable)}>
+    <>
       {/* it should be in the head */}
       {theme && <link rel="stylesheet" href={theme} />}
       {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
@@ -140,6 +138,6 @@ export default async function PublicLayout({
           {showBuiltWithButton && <BuiltWithFloatingButton />}
         </div>
       </SiteProvider>
-    </div>
+    </>
   );
 }
