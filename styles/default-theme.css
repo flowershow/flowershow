@@ -598,7 +598,7 @@
   .site-sidebar {
     position: sticky;
     top: 8rem;
-    height: calc(100vh - 8rem);
+    max-height: calc(100vh - 8rem);
     overflow-y: auto;
     padding-right: 1rem;
     padding-bottom: 2rem;
@@ -666,7 +666,7 @@
   .page-toc-container {
     position: sticky;
     top: 8rem;
-    height: calc(100vh - 8rem);
+    max-height: calc(100vh - 8rem);
     overflow-y: auto;
     padding-left: 1rem;
     padding-bottom: 2rem;
