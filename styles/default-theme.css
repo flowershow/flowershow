@@ -129,6 +129,7 @@
     padding: 0 1rem;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     > * + * {
       margin-left: 1rem;
     }
@@ -252,7 +253,7 @@
   .mobile-nav-cta-button {
     border-radius: 0.375rem;
     background-color: var(--color-foreground-strong);
-    padding-top: 0.375rem 0.625rem;
+    padding: 0.375rem 0.625rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
     font-weight: 600;
@@ -597,7 +598,7 @@
   .site-sidebar {
     position: sticky;
     top: 8rem;
-    height: calc(100vh-8rem);
+    height: calc(100vh - 8rem);
     overflow-y: auto;
     padding-right: 1rem;
     padding-bottom: 2rem;
@@ -665,7 +666,7 @@
   .page-toc-container {
     position: sticky;
     top: 8rem;
-    height: calc(100vh-8rem);
+    height: calc(100vh - 8rem);
     overflow-y: auto;
     padding-left: 1rem;
     padding-bottom: 2rem;
@@ -768,7 +769,6 @@
     @media (min-width: 1024px) {
       padding: 2.5rem 0;
       flex-direction: row;
-
     }
 
     &:hover {
@@ -838,7 +838,7 @@
     border-color: var(--color-foreground-faint);
     padding-top: 0.5rem;
     font-size: 0.875rem; /* 14px */
-  line-height: 1.5rem; /* 24px */
+    line-height: 1.5rem; /* 24px */
     color: var(--color-foreground-strong);
     border-top-width: 1px;
     font-weight: 600;
@@ -1088,7 +1088,7 @@
     border-radius: 9999px;
     outline-style: solid;
     outline-width: 2px;
-    outline-color: white
+    outline-color: white;
   }
   .page-header-image-container {
     width: 100%;
