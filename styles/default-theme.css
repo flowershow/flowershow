@@ -597,8 +597,8 @@
 
   .site-sidebar {
     position: sticky;
-    top: 8rem;
-    max-height: calc(100vh - 8rem);
+    top: 6rem;
+    max-height: calc(100vh - 6rem);
     overflow-y: auto;
     padding-right: 1rem;
     padding-bottom: 2rem;
@@ -665,14 +665,18 @@
    ──────────────────────────────────────────────────── */
   .page-toc-container {
     position: sticky;
-    top: 8rem;
-    max-height: calc(100vh - 8rem);
+    top: 6rem;
+    max-height: calc(100vh - 6rem);
     overflow-y: auto;
     padding-left: 1rem;
-    padding-bottom: 2rem;
+    padding-bottom: 4.25rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
     font-family: var(--font-heading);
+  }
+
+  [data-plan="premium"] .page-toc-container {
+    padding-bottom: 2rem;
   }
 
   .toc {

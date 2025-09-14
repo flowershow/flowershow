@@ -19,6 +19,7 @@ import "@portaljs/components/styles.css";
 import "@/styles/prism.css";
 import "@/styles/callouts.css";
 import "@/styles/default-theme.css";
+import Script from "next/script";
 
 interface RouteParams {
   user: string;
@@ -120,7 +121,12 @@ export default async function PublicLayout({
           prefix: sitePrefix,
         }}
       >
-        <div className="site-layout">
+        {/* TODO hacky, temp; move data-plan to root level layout (create separate one for user sites)
+          and don't decide based on that button */}
+        <div
+          data-plan={!showBuiltWithButton && "premium"}
+          className="site-layout"
+        >
           <Nav
             logo={logo}
             url={sitePrefix || "/"}
