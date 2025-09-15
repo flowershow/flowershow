@@ -132,7 +132,7 @@ model Blob {
   site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
   siteId      String   @map("site_id")
   path        String   // Original file path
-  appPath     String?  @map("app_path") // URL-friendly path
+  appPath     String?  @map("app_path") // URL slug
   size        Int
   sha         String
   metadata    Json     @db.JsonB
@@ -143,9 +143,7 @@ model Blob {
   updatedAt   DateTime @updatedAt @map("updated_at")
 
   @@unique([siteId, path])
-  @@unique([siteId, appPath])
   @@index([siteId])
-  @@index([appPath])
 }
 
 enum Status {

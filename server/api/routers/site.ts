@@ -821,13 +821,12 @@ export const siteRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return await unstable_cache(
         async (input) => {
-          const blob = await ctx.db.blob.findUnique({
+          const blob = await ctx.db.blob.findFirst({
             where: {
-              siteId_appPath: {
-                siteId: input.siteId,
-                appPath: input.slug,
-              },
+              siteId: input.siteId,
+              appPath: input.slug,
             },
+            orderBy: { path: "desc" },
           });
 
           if (!blob) {
@@ -856,13 +855,12 @@ export const siteRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return await unstable_cache(
         async (input) => {
-          const blob = await ctx.db.blob.findUnique({
+          const blob = await ctx.db.blob.findFirst({
             where: {
-              siteId_appPath: {
-                siteId: input.siteId,
-                appPath: input.slug,
-              },
+              siteId: input.siteId,
+              appPath: input.slug,
             },
+            orderBy: { path: "desc" },
             include: {
               site: true,
             },
