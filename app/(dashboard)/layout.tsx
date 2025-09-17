@@ -8,12 +8,9 @@ import Providers from "./providers";
 import { env } from "@/env.mjs";
 import { getConfig } from "@/lib/app-config";
 import clsx from "clsx";
-import {
-  fontBody,
-  fontDashboardBody,
-  fontDashboardHeading,
-  fontHeading,
-} from "@/styles/fonts";
+import { fontDashboardBody, fontDashboardHeading } from "@/styles/fonts";
+
+import "@/styles/dashboard.css";
 
 const { title, description, favicon, thumbnail } = getConfig();
 
@@ -61,8 +58,6 @@ export default async function RootLayout({
   return (
     <html
       className={clsx(
-        fontBody.variable,
-        fontHeading.variable,
         fontDashboardHeading.variable,
         fontDashboardBody.variable,
       )}

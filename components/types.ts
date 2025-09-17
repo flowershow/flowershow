@@ -63,9 +63,9 @@ export interface SiteConfig {
 }
 
 export interface ThemeConfig {
-  theme?: string; // name of the theme to use
-  variant?: "light" | "dark" | "system"; // theme variant to use by default
-  showVariantSwitch?: boolean; // show theme variant toggle
+  theme?: string; // name of the official theme to use
+  defaultMode?: "light" | "dark" | "system";
+  showModeSwitch?: boolean;
 }
 
 export interface SiteAlias {

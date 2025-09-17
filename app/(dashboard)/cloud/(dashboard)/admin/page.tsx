@@ -1,8 +1,8 @@
 import { notFound, redirect } from "next/navigation";
 import { api } from "@/trpc/server";
 import { getSession } from "@/server/auth";
-import BulkCreateForm from "@/app/cloud/(dashboard)/admin/_components/bulk-create";
-import SitesAdminTable from "@/app/cloud/(dashboard)/admin/_components/sites-table";
+import BulkCreateForm from "./_components/bulk-create";
+import SitesAdminTable from "./_components/sites-table";
 
 export default async function AdminPanel() {
   const session = await getSession();

@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { MonitorIcon, SunIcon, MoonIcon } from "lucide-react";
+import { THEME_PREFERENCE_STORAGE_KEY } from "@/lib/const";
 
 type Theme = "light" | "dark" | "system";
 const themes: Theme[] = ["light", "dark", "system"];
-const STORAGE_KEY = "theme-preference";
 
 function resolve(theme: Theme): "light" | "dark" {
   const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -24,15 +24,12 @@ export default function ThemeSwitch() {
   useEffect(() => {
     setMounted(true);
     try {
-      const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-      const initial: Theme =
-        stored === "light" || stored === "dark" || stored === "system"
-          ? stored
-          : "system";
-      setTheme(initial);
-      applyTheme(initial);
-    } catch {
-      applyTheme("system");
+      const initial = document.documentElement.getAttribute(
+        "data-theme",
+      ) as Theme | null;
+      setTheme(initial || "light");
+    } catch (_) {
+      // ok
     }
   }, []);
 
@@ -40,7 +37,7 @@ export default function ThemeSwitch() {
     // Make sure it runs ONLY if theme changes (and not on mount)
     if (!mounted) return;
     try {
-      localStorage.setItem(STORAGE_KEY, theme);
+      localStorage.setItem(THEME_PREFERENCE_STORAGE_KEY, theme);
     } catch {
       console.error("Couldn't save theme variant preference to local storage.");
     }

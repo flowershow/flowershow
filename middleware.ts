@@ -134,11 +134,10 @@ export default async function middleware(req: NextRequest) {
       }
 
       return NextResponse.rewrite(
-        new URL(`/${username}/${projectName}${restOfPath}`, req.url),
+        new URL(`/site/${username}/${projectName}${restOfPath}`, req.url),
       );
     } else {
-      // otherwise it's a normal JSX page in /home folder
-      return NextResponse.rewrite(new URL(`/home${path}`, req.url));
+      return NextResponse.rewrite(new URL(`/not-found`, req.url));
     }
   }
 
@@ -176,7 +175,9 @@ export default async function middleware(req: NextRequest) {
   }
 
   // rewrite all other domains and subdomains to /domain/{hostname}/{path}
-  return NextResponse.rewrite(new URL(`/_domain/${hostname}${path}`, req.url));
+  return NextResponse.rewrite(
+    new URL(`/site/_domain/${hostname}${path}`, req.url),
+  );
 }
 
 function normaliseSegment(raw: string) {

@@ -19,80 +19,160 @@
    Design‑tokens (CSS custom properties)
    ──────────────────────────────────────────────────── */
 @layer base {
+  /* COLOR SCHEME */
   :root {
-    scroll-behavior: smooth;
+    color-scheme: light dark;
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+  }
 
+  :root {
+    /* FONT FAMILIES */
+    --font-heading: var(--next-font-heading);
+    --font-body: var(--next-font-body);
+
+    /* FONT WEIGHTS */
+    --font-weight-thin: 100;
+    --font-weight-extralight: 200;
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --font-weight-extrabold: 800;
+    --font-weight-black: 900;
+
+    /* FONT SIZES */
+    --font-size-base: 1rem;
+    --font-size-xxs: calc(var(--font-size-base) * 0.5);
+    --font-size-xs: calc(var(--font-size-base) * 0.75);
+    --font-size-sm: calc(var(--font-size-base) * 0.85);
+    --font-size-h5: calc(var(--font-size-base) * 1.125);
+    --font-size-h4: calc(var(--font-size-base) * 1.25);
+    --font-size-h3: calc(var(--font-size-base) * 1.5);
+    --font-size-h2: calc(var(--font-size-base) * 1.75);
+    --font-size-h1: calc(var(--font-size-base) * 2.25);
+    --font-size-xl: calc(var(--font-size-base) * 2.6);
+    --font-size-xxl: calc(var(--font-size-base) * 3.1);
+
+    /* FONT LINE HEIGHTS */
+    --line-height-none: 1;
+    --line-height-tight: 1.25;
+    --line-height-snug: 1.375;
+    --line-height-normal: 1.5;
+    --line-height-relaxed: 1.625;
+    --line-height-loose: 2;
+  }
+
+  :root {
     /*  LIGHT THEME */
     --color-l-background: #ffffff;
-    --color-l-foreground: #3f3f46;
+    --color-l-foreground: #525252;
     --color-l-accent: #fb923c;
 
     /*  DARK THEME */
-    --color-d-background: #171717;
-    --color-d-foreground: #eeeeee;
+    --color-d-background: #0c0a09;
+    --color-d-foreground: #d6d3d1;
     --color-d-accent: #fb923c;
-
-    --font-heading: var(--next-font-heading);
-    --font-body: var(--next-font-body);
   }
 
   :root,
   :root[data-theme="light"] {
+    --color-foreground-base: var(--color-l-foreground);
     --color-background: var(--color-l-background);
-
-    --color-foreground: var(--color-l-foreground);
-    --color-foreground-strong: oklch(
-      from var(--color-foreground) calc(l - 0.1684) c h
-    );
-    --color-foreground-emphasis: oklch(
-      from var(--color-foreground) calc(l - 0.1018) c h
-    );
-    --color-foreground-subtle: oklch(
-      from var(--color-foreground) calc(l + 0.2118) c h
-    );
-    --color-foreground-muted: oklch(
-      from var(--color-foreground) calc(l + 0.3722) c h
-    );
-    --color-foreground-faint: oklch(
-      from var(--color-foreground) calc(l + 0.5881) c h
-    );
-
     --color-accent: var(--color-l-accent);
+
+    --color-foreground-50: oklch(
+      from var(--color-foreground-base) calc(l + 0.55) c h
+    );
+    --color-foreground-100: oklch(
+      from var(--color-foreground-base) calc(l + 0.5) c h
+    );
+    --color-foreground-200: oklch(
+      from var(--color-foreground-base) calc(l + 0.4) c h
+    );
+    --color-foreground-300: oklch(
+      from var(--color-foreground-base) calc(l + 0.3) c h
+    );
+    --color-foreground-400: oklch(
+      from var(--color-foreground-base) calc(l + 0.2) c h
+    );
+    --color-foreground-500: oklch(
+      from var(--color-foreground-base) calc(l + 0.1) c h
+    );
+    --color-foreground-600: oklch(
+      from var(--color-foreground-base) l c h
+    ); /* base */
+    --color-foreground-700: oklch(
+      from var(--color-foreground-base) calc(l - 0.1) c h
+    );
+    --color-foreground-800: oklch(
+      from var(--color-foreground-base) calc(l - 0.2) c h
+    );
+    --color-foreground-900: oklch(
+      from var(--color-foreground-base) calc(l - 0.3) c h
+    );
+
     --color-accent-lighter: oklch(from var(--color-accent) calc(l + 0.15) c h);
     --color-accent-darker: oklch(from var(--color-accent) calc(l - 0.1) c h);
   }
 
   :root[data-theme="dark"] {
+    --color-foreground-base: var(--color-d-foreground);
     --color-background: var(--color-d-background);
-
-    --color-foreground: var(--color-d-foreground);
-    --color-foreground-strong: oklch(
-      from var(--color-foreground) calc(l + 0.1684) c h
-    );
-    --color-foreground-emphasis: oklch(
-      from var(--color-foreground) calc(l + 0.1018) c h
-    );
-    --color-foreground-subtle: oklch(
-      from var(--color-foreground) calc(l - 0.2118) c h
-    );
-    --color-foreground-muted: oklch(
-      from var(--color-foreground) calc(l - 0.3722) c h
-    );
-    --color-foreground-faint: oklch(
-      from var(--color-foreground) calc(l - 0.5881) c h
-    );
-
     --color-accent: var(--color-d-accent);
-    --color-accent-lighter: oklch(from var(--color-accent) calc(l + 0.15) c h);
-    --color-accent-darker: oklch(from var(--color-accent) calc(l - 0.1) c h);
-  }
-}
 
-@layer components {
-  body {
-    color: var(var(--color-foreground));
-    background-color: var(--color-background);
+    --color-foreground-50: oklch(
+      from var(--color-foreground-base) calc(l - 0.55) c h
+    );
+    --color-foreground-100: oklch(
+      from var(--color-foreground-base) calc(l - 0.5) c h
+    );
+    --color-foreground-200: oklch(
+      from var(--color-foreground-base) calc(l - 0.4) c h
+    );
+    --color-foreground-300: oklch(
+      from var(--color-foreground-base) calc(l - 0.3) c h
+    );
+    --color-foreground-400: oklch(
+      from var(--color-foreground-base) calc(l - 0.2) c h
+    );
+    --color-foreground-500: oklch(
+      from var(--color-foreground-base) calc(l - 0.1) c h
+    );
+    --color-foreground-600: oklch(
+      from var(--color-foreground-base) l c h
+    ); /* base */
+    --color-foreground-700: oklch(
+      from var(--color-foreground-base) calc(l + 0.1) c h
+    );
+    --color-foreground-800: oklch(
+      from var(--color-foreground-base) calc(l + 0.2) c h
+    );
+    --color-foreground-900: oklch(
+      from var(--color-foreground-base) calc(l + 0.3) c h
+    );
+
+    --color-accent-lighter: oklch(from var(--color-accent) calc(l - 0.1) c h);
+    --color-accent-darker: oklch(from var(--color-accent) calc(l + 0.15) c h);
+  }
+
+  html {
+    scroll-behavior: smooth;
     font-family: var(--font-body);
+    line-height: var(--line-height-normal);
+    font-size: 100%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    color: var(--color-foreground-600);
+    background-color: var(--color-background);
   }
 
   h1,
@@ -103,7 +183,9 @@
   h6 {
     font-family: var(--font-heading);
   }
+}
 
+@layer components {
   .site-layout {
     display: flex;
     flex-direction: column;
@@ -129,7 +211,6 @@
     padding: 0 1rem;
     display: flex;
     align-items: center;
-    justify-content: space-between;
     > * + * {
       margin-left: 1rem;
     }
@@ -142,21 +223,24 @@
     > * + * {
       margin-left: 0.5rem;
     }
+
+    @media (max-width: 1024px) {
+      flex-grow: 1;
+    }
   }
   .site-navbar-site-logo {
     width: 2rem;
     height: 2rem;
   }
   .site-navbar-site-name {
-    color: var(--color-foreground-strong);
-    font-size: 1.125rem;
-    line-height: 1.75rem;
-    font-weight: 600;
+    color: var(--color-foreground-900);
+    font-size: var(--font-size-h5);
+    line-height: var(--line-height-none);
+    font-weight: var(--font-weight-bold);
     letter-spacing: -0.025em;
 
     @media (min-width: 768px) {
-      font-size: 1.25rem;
-      line-height: 1.75rem;
+      font-size: var(--font-size-h4);
     }
   }
 
@@ -175,8 +259,8 @@
     }
   }
   .site-navbar-link {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-none);
     font-weight: 400;
     letter-spacing: -0.025em;
   }
@@ -213,10 +297,10 @@
     align-items: center;
     position: relative;
     border-radius: 0.375rem;
-    color: var(--color-foreground-muted);
+    color: var(--color-foreground-200);
 
     &:hover {
-      color: var(--color-foreground);
+      color: var(--color-foreground-300);
     }
 
     @media (min-width: 1024px) {
@@ -241,18 +325,23 @@
     padding: 0.25rem;
     border-radius: 9999px;
     background-color: var(--color-background);
+    color: var(--color-foreground-300);
+
+    &:hover {
+      color: var(--color-foreground-500);
+      background-color: var(--color-foreground-100);
+    }
   }
   .theme-switch-icon {
     width: 1rem;
     height: 1rem;
-    color: var(--color-foreground-muted);
   }
 
   /* CTA button */
   .site-navbar-cta-button,
   .mobile-nav-cta-button {
     border-radius: 0.375rem;
-    background-color: var(--color-foreground-strong);
+    background-color: var(--color-foreground-700);
     padding: 0.375rem 0.625rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
@@ -261,7 +350,7 @@
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
     &:hover {
-      background-color: var(--color-foreground);
+      background-color: var(--color-foreground-500);
     }
   }
   .site-navbar-cta-button {
@@ -291,7 +380,7 @@
   .mobile-nav-links-container,
   .mobile-nav-social-links-container {
     border-top-width: 1px;
-    border-color: var(--color-foreground-faint);
+    border-color: var(--color-foreground-100);
     padding: 1rem;
 
     > * + * {
@@ -306,12 +395,12 @@
 
     &:hover {
       font-weight: 600;
-      color: var(--color-foreground-emphasis);
+      color: var(--color-foreground-600);
     }
   }
   .mobile-nav-tree-container {
     border-top-width: 1px;
-    border-color: var(--color-foreground-faint);
+    border-color: var(--color-foreground-100);
     padding: 0.75rem 1rem;
   }
   .mobile-nav-cta-button {
@@ -344,11 +433,11 @@
 
     &:hover {
       font-weight: 600;
-      color: var(--color-foreground-emphasis);
+      color: var(--color-foreground-700);
     }
 
     &.is-current {
-      color: var(--color-foreground-emphasis);
+      color: var(--color-foreground-700);
     }
     &.is-collapsible.is-open {
       .mobile-nav-tree-item-icon {
@@ -367,7 +456,7 @@
    ──────────────────────────────────────────────────── */
   .page-hero-container {
     position: relative;
-    background-color: #fafafa;
+    background-color: var(--color-foreground-50);
   }
 
   .page-hero {
@@ -424,11 +513,11 @@
   .page-hero-title {
     margin-top: 6rem;
     text-wrap: pretty;
-    font-size: 3rem;
-    line-height: 1;
-    font-weight: 600;
+    font-size: var(--font-size-xxl);
+    line-height: var(--line-height-none);
+    font-weight: var(--font-weight-semibold);
     letter-spacing: -0.025em;
-    color: var(--color-foreground-strong);
+    color: var(--color-foreground-900);
 
     @media (min-width: 640px) {
       margin-top: 2.5rem;
@@ -439,13 +528,12 @@
   .page-hero-description {
     margin-top: 2rem;
     text-wrap: pretty;
-    font-size: 1.125rem;
-    line-height: 1.75rem;
-    font-weight: 500;
+    font-size: var(--font-size-h5);
+    line-height: var(--line-height-relaxed);
+    font-weight: var(--font-weight-medium);
 
     @media (min-width: 640px) {
-      font-size: 1.25rem;
-      line-height: 2rem;
+      font-size: var(--font-size-h4);
     }
   }
 
@@ -467,7 +555,7 @@
     aspect-ratio: 3/2;
     width: 100%;
     object-fit: cover;
-    background-color: #f9fafb;
+    background-color: var(--color-foreground-50);
 
     @media (min-width: 1024px) {
       position: absolute;
@@ -491,10 +579,10 @@
     border-radius: 0.375rem;
     background-color: var(--color-accent);
     padding: 0.625rem 0.875rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    font-weight: 600;
-    color: #ffffff;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-none);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-background);
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
     &:hover {
@@ -503,10 +591,10 @@
   }
 
   .page-hero-cta:nth-of-type(2) {
-    color: var(--color-foreground-strong);
-    font-size: 0.875rem;
-    line-height: 1.5rem;
-    font-weight: 600;
+    color: var(--color-foreground-900);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-none);
+    font-weight: var(--font-weight-semibold);
   }
 
   /* ────────────────────────────────────────────────────
@@ -626,13 +714,11 @@
   .site-footer-inner {
     margin-top: 3rem;
     border-top-width: 1px;
-    border-color: var(--color-foreground-faint);
+    border-color: var(--color-foreground-300);
     padding-top: 1.5rem;
     padding: 1.5rem 0;
-    font-size: 0.75rem;
-    line-height: 1rem;
-    line-height: 1.25rem;
-    color: var(--color-foreground-muted);
+    font-size: var(--font-size-xs);
+    color: var(--color-foreground-400);
 
     @media (min-width: 640px) {
       margin-top: 4rem;
@@ -670,8 +756,8 @@
     overflow-y: auto;
     padding-left: 1rem;
     padding-bottom: 4.25rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-tight);
     font-family: var(--font-heading);
   }
 
@@ -680,7 +766,7 @@
   }
 
   .toc {
-    font-weight: 300;
+    font-weight: var(--font-weight-light);
   }
 
   .toc-title {
@@ -697,13 +783,13 @@
     display: block;
 
     &:hover {
-      font-weight: 500;
-      color: var(--color-foreground-emphasis);
+      font-weight: var(--font-weight-medium);
+      color: var(--color-foreground-700);
     }
   }
 
   .toc-item-self[aria-current="true"] {
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
   }
 
   .toc-item-children {
@@ -732,16 +818,16 @@
   }
   .error-card-title {
     margin: 0;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    font-weight: 500;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    font-weight: var(--font-weight-medium);
     color: #991b1b;
   }
   .error-card-message {
     margin-top: 0.5rem;
     white-space: pre-wrap;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
     color: #b91c1c;
   }
   .error-card-stack {
@@ -749,8 +835,8 @@
     border-radius: 0.375rem;
     background-color: #ffffff;
     padding: 1rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
   }
 
   /* ────────────────────────────────────────────────────
@@ -777,7 +863,7 @@
 
     &:hover {
       .list-component-item-headline {
-        color: var(--color-foreground-emphasis);
+        color: var(--color-foreground-800);
       }
     }
   }
@@ -798,7 +884,7 @@
     height: 100%;
     width: 100%;
     border-radius: 1rem;
-    background-color: #f9fafb;
+    background-color: var(--color-foreground-100);
     object-fit: cover;
   }
   .list-component-item-content {
@@ -809,9 +895,9 @@
     margin-bottom: 0.5rem;
     display: flex;
     align-items: center;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    color: var(--color-foreground-subtle);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    color: var(--color-foreground-400);
 
     > * + * {
       margin-left: 1rem;
@@ -822,9 +908,9 @@
     margin-bottom: 0.5rem;
     max-width: 48rem;
     line-height: 1.75rem;
-    font-weight: 600;
-    color: var(--color-foreground-strong);
-    font-size: 1.125rem;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-foreground-900);
+    font-size: var(--font-size-h5);
   }
 
   .list-component-item-summary {
@@ -833,17 +919,16 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
-    color: var(--color-foreground-emphasis);
+    color: var(--color-foreground-700);
   }
   .list-component-item-footnote {
     margin-top: 1rem;
     display: flex;
     border-top-width: 1px;
-    border-color: var(--color-foreground-faint);
+    border-color: var(--color-foreground-100);
     padding-top: 0.5rem;
-    font-size: 0.875rem; /* 14px */
-    line-height: 1.5rem; /* 24px */
-    color: var(--color-foreground-strong);
+    font-size: var(--font-size-sm);
+    color: var(--color-foreground-900);
     border-top-width: 1px;
     font-weight: 600;
   }
@@ -856,7 +941,7 @@
     align-items: center;
     justify-content: space-between;
     border-top-width: 1px;
-    border-color: #e5e7eb;
+    border-color: var(--color-foreground-200);
     padding: 0 1rem;
 
     @media (min-width: 640px) {
@@ -878,14 +963,14 @@
     border-top-width: 2px;
     border-color: transparent;
     padding-top: 1rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    font-weight: 500;
-    color: #6b7280;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-foreground-400);
 
     &:hover {
-      border-color: #d1d5db;
-      color: #374151;
+      border-color: var(--color-foreground-200);
+      color: var(--color-foreground-400);
     }
     &:disabled {
       cursor: not-allowed;
@@ -901,7 +986,7 @@
   .list-component-pagination-button-icon {
     width: 1.25rem;
     height: 1.25rem;
-    color: #9ca3af;
+    color: var(--color-foreground-300);
   }
   .list-component-pagination-button-icon--prev {
     margin-right: 0.75rem;
@@ -922,9 +1007,9 @@
     align-items: center;
     padding: 1rem 1rem 0 1rem;
     border-top-width: 2px;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    font-weight: 500;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-tight);
+    font-weight: var(--font-weight-medium);
   }
   .list-component-pagination-page-button--current {
     border-color: var(--color-accent-lighter);
@@ -932,11 +1017,11 @@
   }
   .list-component-pagination-page-button--other {
     border-color: transparent;
-    color: #6b7280;
+    color: var(--color-foreground-300);
 
     &:hover {
       border-color: #d1d5db;
-      color: #374151;
+      color: var(--color-foreground-400);
     }
   }
   .list-component-pagination-ellipsis {
@@ -945,10 +1030,10 @@
     padding: 1rem 1rem 0 1rem;
     border-top-width: 2px;
     border-color: transparent;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    font-weight: 500;
-    color: #6b7280;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-tight);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-foreground-300);
   }
 
   /* ────────────────────────────────────────────────────
@@ -1022,35 +1107,31 @@
     }
   }
   .page-header-title {
-    font-size: 3rem;
-    line-height: 3.25rem;
-    font-weight: 600;
+    font-size: var(--font-size-xxl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-none);
     letter-spacing: -0.025em;
-    color: var(--color-foreground-strong);
+    color: var(--color-foreground-900);
 
     @media (min-width: 640px) {
-      font-size: 3.5rem;
-      line-height: 3.75rem;
+      font-size: calc(var(--font-size-xxl) * 1.2);
     }
   }
   .page-header-description {
-    font-size: 1.125rem;
-    line-height: 1.75rem;
-    font-weight: 300;
-    color: var(--color-foreground-subtle);
+    font-size: var(--font-size-h5);
+    line-height: var(--line-height-tight);
+    font-weight: var(--font-weight-light);
+    color: var(--color-foreground-500);
 
     @media (min-width: 640px) {
-      font-size: 1.25rem;
-      line-height: 1.75rem;
+      font-size: var(--font-size-h4);
     }
   }
   .page-header-metadata-container {
     display: flex;
     align-items: center;
-    font-size: 0.75rem;
-    line-height: 1rem;
+    font-size: var(--font-size-xs);
     text-transform: uppercase;
-    color: var(--color-foreground-subtle);
 
     > * + * {
       margin-left: 1rem;
@@ -1059,7 +1140,7 @@
   .page-header-date {
     display: flex;
     align-items: center;
-    color: var(--color-foreground-muted);
+    color: var(--color-foreground-300);
   }
   .page-header-date-icon {
     margin-right: 0.25rem;
@@ -1069,6 +1150,7 @@
   .page-header-authors-container {
     display: flex;
     align-items: center;
+    color: var(--color-foreground-400);
 
     > * + * {
       margin-left: 0.5rem;
@@ -1092,7 +1174,7 @@
     border-radius: 9999px;
     outline-style: solid;
     outline-width: 2px;
-    outline-color: white;
+    outline-color: var(--color-background);
   }
   .page-header-image-container {
     width: 100%;
@@ -1106,11 +1188,8 @@
   /* ────────────────────────────────────────────────────
    Sidebar
    ──────────────────────────────────────────────────── */
-  .site-tree-container {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    color: var(--color-foreground-subtle);
-  }
+  /* .site-tree-container {
+  } */
   .site-tree {
     margin-bottom: 1rem;
   }
@@ -1119,6 +1198,9 @@
   }
   .site-tree-item {
     margin: 0.5rem 0;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-tight);
+    color: var(--color-foreground-500);
   }
   .site-tree-item-self {
     width: 100%;
@@ -1128,12 +1210,12 @@
     transition-duration: 150ms;
 
     &:hover {
-      font-weight: 600;
-      color: var(--color-foreground-strong);
+      font-weight: var(--font-weight-semibold);
+      color: var(--color-foreground-900);
     }
 
     &.is-current {
-      color: var(--color-foreground-emphasis);
+      color: var(--color-foreground-700);
     }
 
     &.is-collapsible {
@@ -1159,23 +1241,17 @@
     cursor: text;
     align-items: center;
     border-radius: 0.375rem;
-    background-color: #ffffff;
-    color: var(--color-foreground-muted);
+    background-color: var(--color-background);
+    color: var(--color-foreground-300);
     padding: 0.375rem 0.5rem;
-    font-size: 1rem;
-    line-height: 1.5rem;
     outline-style: solid;
     outline-width: 1px;
     outline-offset: -1px;
-    outline-color: #d1d5db;
+    outline-color: var(--color-foreground-100);
+    font-size: var(--font-size-sm);
 
     > * + * {
       margin-left: 0.5rem;
-    }
-
-    @media (min-width: 640px) {
-      font-size: 0.875rem;
-      line-height: 1.25rem;
     }
 
     @media (min-width: 1024px) {
@@ -1202,7 +1278,7 @@
   .search-modal-backdrop {
     position: absolute;
     inset: 0;
-    background-color: rgba(243, 244, 246, 0.6); /* instead of opacity */
+    background-color: oklch(from var(--color-foreground-100) l c h / 0.5);
     -webkit-backdrop-filter: blur(4px); /* Safari */
     backdrop-filter: blur(4px);
   }
@@ -1226,7 +1302,7 @@
     flex-direction: column;
     border-radius: 0.5rem;
     border-width: 1px;
-    border-color: var(--color-foreground-faint);
+    border-color: var(--color-foreground-100);
     background-color: var(--color-background);
     padding: 1rem;
     box-shadow:
@@ -1244,8 +1320,8 @@
   .search-modal-input {
     border-style: none;
     background-color: transparent;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-tight);
     outline: none;
     &:focus {
       outline: none;
@@ -1268,10 +1344,10 @@
 
   .search-modal-close-button {
     padding: 0.25rem;
-    color: var(--color-foreground-muted);
+    color: var(--color-foreground-300);
 
     &:hover {
-      color: var(--color-foreground);
+      color: var(--color-foreground-400);
     }
   }
 
@@ -1287,7 +1363,7 @@
     width: 100%;
     overflow: auto;
     border-top-width: 1px;
-    border-color: var(--color-foreground-faint);
+    border-color: var(--color-foreground-100);
   }
 
   .search-modal-status-container {
@@ -1295,7 +1371,7 @@
     height: 200px;
     align-items: center;
     justify-content: center;
-    color: var(--color-foreground-muted);
+    color: var(--color-foreground-300);
   }
 
   .search-modal-status-content {
@@ -1311,14 +1387,14 @@
   }
 
   .search-modal-status-message {
-    font-size: 0.875rem;
-    line-height: 1.25rem;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-tight);
   }
 
   .search-modal-status-submessage {
     margin-top: 0.25rem;
-    font-size: 0.75rem;
-    line-height: 1rem;
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-none);
     opacity: 0.75;
   }
 
@@ -1331,7 +1407,7 @@
     animation: spin 1s linear infinite;
     border-radius: 9999px;
     border-width: 2px;
-    border-color: var(--color-foreground-muted);
+    border-color: var(--color-foreground-400);
     border-top: transparent;
 
     @keyframes spin {
@@ -1376,7 +1452,7 @@
     border-radius: 0.375rem;
 
     &:hover {
-      background-color: var(--color-foreground-faint);
+      background-color: var(--color-foreground-100);
     }
   }
 
@@ -1393,9 +1469,9 @@
   }
 
   .search-modal-error-icon-text {
-    font-size: 0.75rem;
-    line-height: 1rem;
-    font-weight: 700;
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-none);
+    font-weight: var(--font-weight-bold);
   }
 
   .search-modal-highlight {
@@ -1407,50 +1483,51 @@
   }
 
   .search-modal-hit-title {
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
   }
 
   .search-modal-hit-content {
     margin-top: 0.25rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    color: var(--color-foreground-muted);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-tight);
+    color: var(--color-foreground-400);
   }
 
   /* ────────────────────────────────────────────────────
    404 and 500 pages
    ──────────────────────────────────────────────────── */
   .not-found {
+    font-family: var(--font-heading);
     display: flex;
     min-height: 100vh;
     align-items: center;
     justify-content: center;
-    background-color: #f3f4f6;
+    background-color: var(--color-foreground-100);
   }
   .not-found-inner {
     text-align: center;
   }
   .not-found-title {
     margin-bottom: 1rem;
-    font-size: 3.75rem;
-    line-height: 1;
-    font-weight: 700;
-    color: #1f2937;
+    font-size: var(--font-size-xxl);
+    line-height: var(--line-height-none);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-foreground-700);
   }
   .not-found-subtitle {
     margin-bottom: 2rem;
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-    color: #4b5563;
+    font-size: var(--font-size-h4);
+    line-height: var(--line-height-tight);
+    color: var(--color-foreground-500);
   }
   .not-found-description {
-    color: #6b7280;
+    color: var(--color-foreground-400);
   }
   .not-found-hint {
     margin-top: 1rem;
-    font-size: 0.875rem;
-    line-height: 1.25rem;
-    color: #9ca3af;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-tight);
+    color: var(--color-foreground-300);
   }
   .not-found-hint a {
     text-decoration: underline;
@@ -1461,7 +1538,7 @@
     min-height: 100vh;
     justify-content: center;
     align-items: center;
-    background-color: #f3f4f6;
+    background-color: var(--color-foreground-100);
   }
   .error-page-inner {
     max-width: 56rem;
@@ -1469,27 +1546,28 @@
   }
   .error-page-title {
     margin-bottom: 1rem;
-    font-size: 3.75rem;
-    line-height: 1;
-    font-weight: 700;
-    color: #1f2937;
+    font-size: var(--font-size-xxl);
+    font-weight: var(--font-weight-bold);
+    color: var(--color-foreground-800);
   }
   .error-page-subtitle {
     margin-bottom: 2rem;
-    font-size: 1.25rem;
-    line-height: 1.75rem;
-    color: #4b5563;
+    font-size: var(--font-size-h4);
+    line-height: var(--line-height-relaxed);
+    color: var(--color-foreground-500);
   }
   .error-page-description {
-    color: #6b7280;
+    color: var(--color-foreground-400);
   }
 
   /* ────────────────────────────────────────────────────
    Rendered MDX
    ──────────────────────────────────────────────────── */
+
   .rendered-mdx:not(.is-plain) {
-    @apply prose min-h-[55vh] max-w-none prose-headings:font-heading prose-headings:tracking-tight prose-headings:text-primary-strong prose-a:break-words prose-pre:bg-[#fafafa];
+    @apply prose min-h-[55vh] max-w-none dark:prose-invert prose-headings:font-heading prose-headings:tracking-tight prose-a:break-words;
   }
+
   .rendered-mdx.is-plain {
     font-family: var(--font-heading);
   }
@@ -1566,7 +1644,7 @@
     width: fit-content;
     align-items: center;
     font-family: var(--font-heading);
-    font-weight: 400;
+    font-weight: var(--font-weight-normal);
     text-decoration: none;
     gap: 0.25rem;
 
@@ -1584,6 +1662,45 @@
 }
 
 @layer utilities {
+  .prose {
+    --tw-prose-body: var(--color-foreground-600);
+    --tw-prose-headings: var(--color-foreground-800);
+    --tw-prose-lead: var(--color-foreground-600);
+    --tw-prose-links: var(--color-foreground-600);
+    --tw-prose-bold: var(--color-foreground-800);
+    --tw-prose-counters: var(--color-foreground-400);
+    --tw-prose-bullets: var(--color-foreground-300);
+    --tw-prose-hr: var(--color-foreground-100);
+    --tw-prose-quotes: var(--color-foreground-500);
+    --tw-prose-quote-borders: var(--color-foreground-100);
+    --tw-prose-captions: var(--color-foreground-300);
+    --tw-prose-kbd: var(--color-foreground-800);
+    --tw-prose-kbd-shadows: var(--color-foreground-800);
+    --tw-prose-code: var(--color-foreground-800);
+    --tw-prose-pre-code: var(--color-foreground-300);
+    --tw-prose-pre-bg: var(--color-foreground-50);
+    --tw-prose-th-borders: var(--color-foreground-100);
+    --tw-prose-td-borders: var(--color-foreground-100);
+
+    --tw-prose-invert-body: var(--color-foreground-600);
+    --tw-prose-invert-headings: var(--color-foreground-800);
+    --tw-prose-invert-lead: var(--color-foreground-600);
+    --tw-prose-invert-links: var(--color-foreground-600);
+    --tw-prose-invert-bold: var(--color-foreground-800);
+    --tw-prose-invert-counters: var(--color-foreground-400);
+    --tw-prose-invert-bullets: var(--color-foreground-300);
+    --tw-prose-invert-hr: var(--color-foreground-100);
+    --tw-prose-invert-quotes: var(--color-foreground-500);
+    --tw-prose-invert-quote-borders: var(--color-foreground-100);
+    --tw-prose-invert-captions: var(--color-foreground-300);
+    --tw-prose-invert-kbd: var(--color-foreground-800);
+    --tw-prose-invert-kbd-shadows: var(--color-foreground-800);
+    --tw-prose-invert-code: var(--color-foreground-800);
+    --tw-prose-invert-pre-code: var(--color-foreground-300);
+    --tw-prose-invert-pre-bg: var(--color-foreground-50);
+    --tw-prose-invert-th-borders: var(--color-foreground-100);
+    --tw-prose-invert-td-borders: var(--color-foreground-100);
+  }
   .overflow-hidden {
     -webkit-mask-image: -webkit-radial-gradient(white, black);
   }
