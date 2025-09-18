@@ -82,80 +82,44 @@
 
   :root,
   :root[data-theme="light"] {
-    --color-foreground-base: var(--color-l-foreground);
+    --color-foreground: var(--color-l-foreground);
     --color-background: var(--color-l-background);
     --color-accent: var(--color-l-accent);
 
-    --color-foreground-50: oklch(
-      from var(--color-foreground-base) calc(l + 0.55) c h
-    );
-    --color-foreground-100: oklch(
-      from var(--color-foreground-base) calc(l + 0.5) c h
-    );
-    --color-foreground-200: oklch(
-      from var(--color-foreground-base) calc(l + 0.4) c h
-    );
-    --color-foreground-300: oklch(
-      from var(--color-foreground-base) calc(l + 0.3) c h
-    );
-    --color-foreground-400: oklch(
-      from var(--color-foreground-base) calc(l + 0.2) c h
-    );
-    --color-foreground-500: oklch(
-      from var(--color-foreground-base) calc(l + 0.1) c h
-    );
-    --color-foreground-600: oklch(
-      from var(--color-foreground-base) l c h
-    ); /* base */
-    --color-foreground-700: oklch(
-      from var(--color-foreground-base) calc(l - 0.1) c h
-    );
-    --color-foreground-800: oklch(
-      from var(--color-foreground-base) calc(l - 0.2) c h
-    );
-    --color-foreground-900: oklch(
-      from var(--color-foreground-base) calc(l - 0.3) c h
-    );
+    /* Start from 90% lightness to make it less likely to go lower than the light background */
+    /* Advise people to pick something between 0-20% darkness */
+    --color-foreground-50: oklch(from var(--color-foreground) 0.9 c h);
+    --color-foreground-100: oklch(from var(--color-foreground) 0.825 c h);
+    --color-foreground-200: oklch(from var(--color-foreground) 0.75 c h);
+    --color-foreground-300: oklch(from var(--color-foreground) 0.675 c h);
+    --color-foreground-400: oklch(from var(--color-foreground) 0.5 c h);
+    --color-foreground-500: oklch(from var(--color-foreground) 0.425 c h);
+    --color-foreground-600: oklch(from var(--color-foreground) 0.35 c h);
+    --color-foreground-700: oklch(from var(--color-foreground) 0.275 c h);
+    --color-foreground-800: oklch(from var(--color-foreground) 0.2 c h);
+    --color-foreground-900: oklch(from var(--color-foreground) 0.125 c h);
 
     --color-accent-lighter: oklch(from var(--color-accent) calc(l + 0.15) c h);
     --color-accent-darker: oklch(from var(--color-accent) calc(l - 0.1) c h);
   }
 
   :root[data-theme="dark"] {
-    --color-foreground-base: var(--color-d-foreground);
+    --color-foreground: var(--color-d-foreground);
     --color-background: var(--color-d-background);
     --color-accent: var(--color-d-accent);
 
-    --color-foreground-50: oklch(
-      from var(--color-foreground-base) calc(l - 0.55) c h
-    );
-    --color-foreground-100: oklch(
-      from var(--color-foreground-base) calc(l - 0.5) c h
-    );
-    --color-foreground-200: oklch(
-      from var(--color-foreground-base) calc(l - 0.4) c h
-    );
-    --color-foreground-300: oklch(
-      from var(--color-foreground-base) calc(l - 0.3) c h
-    );
-    --color-foreground-400: oklch(
-      from var(--color-foreground-base) calc(l - 0.2) c h
-    );
-    --color-foreground-500: oklch(
-      from var(--color-foreground-base) calc(l - 0.1) c h
-    );
-    --color-foreground-600: oklch(
-      from var(--color-foreground-base) l c h
-    ); /* base */
-    --color-foreground-700: oklch(
-      from var(--color-foreground-base) calc(l + 0.1) c h
-    );
-    --color-foreground-800: oklch(
-      from var(--color-foreground-base) calc(l + 0.2) c h
-    );
-    --color-foreground-900: oklch(
-      from var(--color-foreground-base) calc(l + 0.3) c h
-    );
+    /* Start from 20% lightness to make it less likely to go lower than the dark background */
+    /* Advise people to pick something between 0-20% darkness */
+    --color-foreground-50: oklch(from var(--color-foreground) 0.2 c h);
+    --color-foreground-100: oklch(from var(--color-foreground) 0.275 c h);
+    --color-foreground-200: oklch(from var(--color-foreground) 0.35 c h);
+    --color-foreground-300: oklch(from var(--color-foreground) 0.425 c h);
+    --color-foreground-400: oklch(from var(--color-foreground) 0.5 c h);
+    --color-foreground-500: oklch(from var(--color-foreground) 0.675 c h);
+    --color-foreground-600: oklch(from var(--color-foreground) 0.75 c h);
+    --color-foreground-700: oklch(from var(--color-foreground) 0.825 c h);
+    --color-foreground-800: oklch(from var(--color-foreground) 0.9 c h);
+    --color-foreground-900: oklch(from var(--color-foreground) 0.975 c h);
 
     --color-accent-lighter: oklch(from var(--color-accent) calc(l - 0.1) c h);
     --color-accent-darker: oklch(from var(--color-accent) calc(l + 0.15) c h);
@@ -329,7 +293,7 @@
 
     &:hover {
       color: var(--color-foreground-500);
-      background-color: var(--color-foreground-100);
+      background-color: oklch(from var(--color-background) calc(l - 0.025) c h);
     }
   }
   .theme-switch-icon {
@@ -456,7 +420,10 @@
    ──────────────────────────────────────────────────── */
   .page-hero-container {
     position: relative;
-    background-color: var(--color-foreground-50);
+    background-color: oklch(from var(--color-background) calc(l - 0.025) c h);
+  }
+  :root[data-theme="dark"] .page-hero-container {
+    background-color: oklch(from var(--color-background) calc(l + 0.025) c h);
   }
 
   .page-hero {
@@ -555,7 +522,7 @@
     aspect-ratio: 3/2;
     width: 100%;
     object-fit: cover;
-    background-color: var(--color-foreground-50);
+    background-color: oklch(from var(--color-background) calc(l - 0.025) c h);
 
     @media (min-width: 1024px) {
       position: absolute;
@@ -563,6 +530,10 @@
       aspect-ratio: auto;
       height: 100%;
     }
+  }
+
+  :root[data-theme="dark"] .page-hero-image {
+    background-color: oklch(from var(--color-background) calc(l + 0.025) c h);
   }
 
   .page-hero-ctas-container {
@@ -853,18 +824,13 @@
     display: flex;
     flex-direction: column;
     border-bottom-width: 1px;
+    border-color: var(--color-foreground-100);
     padding: 2rem 0;
     gap: 1.5rem;
 
     @media (min-width: 1024px) {
       padding: 2.5rem 0;
       flex-direction: row;
-    }
-
-    &:hover {
-      .list-component-item-headline {
-        color: var(--color-foreground-800);
-      }
     }
   }
   .list-component-item-media {
@@ -884,9 +850,14 @@
     height: 100%;
     width: 100%;
     border-radius: 1rem;
-    background-color: var(--color-foreground-100);
+    background-color: oklch(from var(--color-background) calc(l - 0.025) c h);
     object-fit: cover;
   }
+
+  :root[data-theme="dark"] .list-component-item-media-img {
+    background-color: oklch(from var(--color-background) calc(l + 0.025) c h);
+  }
+
   .list-component-item-content {
     display: flex;
     flex-direction: column;
@@ -911,6 +882,10 @@
     font-weight: var(--font-weight-semibold);
     color: var(--color-foreground-900);
     font-size: var(--font-size-h5);
+
+    &:hover {
+      color: var(--color-foreground-800);
+    }
   }
 
   .list-component-item-summary {
@@ -925,7 +900,7 @@
     margin-top: 1rem;
     display: flex;
     border-top-width: 1px;
-    border-color: var(--color-foreground-100);
+    border-color: var(--color-foreground-200);
     padding-top: 0.5rem;
     font-size: var(--font-size-sm);
     color: var(--color-foreground-900);
@@ -1099,6 +1074,7 @@
   .page-header {
     margin-bottom: 2rem;
     border-bottom-width: 1px;
+    border-color: var(--color-foreground-200);
     padding-bottom: 2rem;
     font-family: var(--font-heading);
 
@@ -1278,10 +1254,11 @@
   .search-modal-backdrop {
     position: absolute;
     inset: 0;
-    background-color: oklch(from var(--color-foreground-100) l c h / 0.5);
+    background-color: oklch(from var(--color-background) l c h / 0.5);
     -webkit-backdrop-filter: blur(4px); /* Safari */
     backdrop-filter: blur(4px);
   }
+
   .search-modal-card-container {
     position: relative;
     z-index: 10;
@@ -1452,7 +1429,13 @@
     border-radius: 0.375rem;
 
     &:hover {
-      background-color: var(--color-foreground-100);
+      background-color: oklch(from var(--color-background) calc(l - 0.025) c h);
+    }
+  }
+
+  :root[data-theme="dark"] .search-modal-hits-item {
+    &:hover {
+      background-color: oklch(from var(--color-background) calc(l + 0.025) c h);
     }
   }
 
@@ -1502,7 +1485,10 @@
     min-height: 100vh;
     align-items: center;
     justify-content: center;
-    background-color: var(--color-foreground-100);
+    background-color: oklch(from var(--color-background) calc(l - 0.025) c h);
+  }
+  :root[data-theme="dark"] .not-found {
+    background-color: oklch(from var(--color-background) calc(l + 0.025) c h);
   }
   .not-found-inner {
     text-align: center;
@@ -1538,7 +1524,10 @@
     min-height: 100vh;
     justify-content: center;
     align-items: center;
-    background-color: var(--color-foreground-100);
+    background-color: oklch(from var(--color-background) calc(l - 0.025) c h);
+  }
+  :root[data-theme="dark"] .error-page {
+    background-color: oklch(from var(--color-background) calc(l + 0.025) c h);
   }
   .error-page-inner {
     max-width: 56rem;
@@ -1678,7 +1667,7 @@
     --tw-prose-kbd-shadows: var(--color-foreground-800);
     --tw-prose-code: var(--color-foreground-800);
     --tw-prose-pre-code: var(--color-foreground-300);
-    --tw-prose-pre-bg: var(--color-foreground-50);
+    --tw-prose-pre-bg: #fafafa; /* Same as in prism theme */
     --tw-prose-th-borders: var(--color-foreground-100);
     --tw-prose-td-borders: var(--color-foreground-100);
 
@@ -1697,7 +1686,7 @@
     --tw-prose-invert-kbd-shadows: var(--color-foreground-800);
     --tw-prose-invert-code: var(--color-foreground-800);
     --tw-prose-invert-pre-code: var(--color-foreground-300);
-    --tw-prose-invert-pre-bg: var(--color-foreground-50);
+    --tw-prose-invert-pre-bg: #2f2f2f; /* Same as in dark prism theme */
     --tw-prose-invert-th-borders: var(--color-foreground-100);
     --tw-prose-invert-td-borders: var(--color-foreground-100);
   }
