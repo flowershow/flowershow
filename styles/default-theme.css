@@ -1660,8 +1660,8 @@
     --tw-prose-counters: var(--color-foreground-400);
     --tw-prose-bullets: var(--color-foreground-300);
     --tw-prose-hr: var(--color-foreground-100);
-    --tw-prose-quotes: var(--color-foreground-500);
-    --tw-prose-quote-borders: var(--color-foreground-100);
+    --tw-prose-quotes: var(--color-foreground-400);
+    --tw-prose-quote-borders: var(--color-foreground-50);
     --tw-prose-captions: var(--color-foreground-300);
     --tw-prose-kbd: var(--color-foreground-800);
     --tw-prose-kbd-shadows: var(--color-foreground-800);
@@ -1679,8 +1679,8 @@
     --tw-prose-invert-counters: var(--color-foreground-400);
     --tw-prose-invert-bullets: var(--color-foreground-300);
     --tw-prose-invert-hr: var(--color-foreground-100);
-    --tw-prose-invert-quotes: var(--color-foreground-500);
-    --tw-prose-invert-quote-borders: var(--color-foreground-100);
+    --tw-prose-invert-quotes: var(--color-foreground-400);
+    --tw-prose-invert-quote-borders: var(--color-foreground-50);
     --tw-prose-invert-captions: var(--color-foreground-300);
     --tw-prose-invert-kbd: var(--color-foreground-800);
     --tw-prose-invert-kbd-shadows: var(--color-foreground-800);
