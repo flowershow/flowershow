@@ -86,8 +86,8 @@
     --color-background: var(--color-l-background);
     --color-accent: var(--color-l-accent);
 
-    /* Start from 90% lightness to make it less likely to go lower than the light background */
-    /* Advise people to pick something between 0-20% darkness */
+    /* Start from 90% lightness to make it less likely to go lower (lighter) than the light background */
+    /* Advise people to pick light background between 0-10% lightness */
     --color-foreground-50: oklch(from var(--color-foreground) 0.9 c h);
     --color-foreground-100: oklch(from var(--color-foreground) 0.825 c h);
     --color-foreground-200: oklch(from var(--color-foreground) 0.75 c h);
@@ -108,8 +108,8 @@
     --color-background: var(--color-d-background);
     --color-accent: var(--color-d-accent);
 
-    /* Start from 20% lightness to make it less likely to go lower than the dark background */
-    /* Advise people to pick something between 0-20% darkness */
+    /* Start from 20% lightness to make it less likely to go lower (darker) than the dark background */
+    /* Advise people to pick dark backgound between 0-20% lightness */
     --color-foreground-50: oklch(from var(--color-foreground) 0.2 c h);
     --color-foreground-100: oklch(from var(--color-foreground) 0.275 c h);
     --color-foreground-200: oklch(from var(--color-foreground) 0.35 c h);
