@@ -18,8 +18,6 @@ export default function SiteCard({
     } else {
       url = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`;
     }
-  } else if (env.NEXT_PUBLIC_VERCEL_ENV === "preview") {
-    url = `https://staging-${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`;
   } else {
     url = `http://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`;
   }

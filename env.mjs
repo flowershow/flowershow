@@ -52,6 +52,7 @@ export const env = createEnv({
     TYPESENSE_ADMIN_API_KEY: z.string(),
     SENTRY_ORG: z.string(),
     SENTRY_PROJECT: z.string(),
+    SITE_ACCESS_JWT_SECRET: z.string(),
   },
 
   /**
@@ -133,6 +134,7 @@ export const env = createEnv({
     NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+    SITE_ACCESS_JWT_SECRET: process.env.SITE_ACCESS_JWT_SECRET,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,

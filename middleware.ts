@@ -2,197 +2,239 @@ import { NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { env } from "@/env.mjs";
 import { resolveSiteAlias } from "./lib/resolve-site-alias";
+import { SITE_ACCESS_COOKIE_NAME } from "./lib/const";
+import { siteKeyBytes } from "./lib/site-hmac-key";
+import { jwtVerify } from "jose";
+import { getSiteUrl } from "./lib/get-site-url";
+import { InternalSite } from "./lib/db/internal";
 
 export const config = {
   matcher: [
-    /*
-     * Match all paths except for:
-     * 1. /api routes
-     * 2. /_next (Next.js internals)
-     * 3. /_static (inside /public)
-     * 4. all root files inside /public (e.g. /favicon.ico)
-     */
+    // Match everything except:
+    // - /api
+    // - Next internals
+    // - /_static (public)
+    // - root files in /public (favicon, etc) — BUT still include sitemap.xml & robots.txt
     "/((?!api/|_next/|_static/|_vercel|(?!sitemap\\.xml|robots\\.txt)[\\w-]+\\.\\w+).*)",
   ],
 };
 
-// TODO this is getting out of hand, we need to refactor this
 export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;
 
-  // Handle PostHog proxy
+  // 0) PostHog proxy
   if (url.pathname.startsWith("/relay-qYYb/")) {
-    const _url = url.clone();
-    const hostname = url.pathname.startsWith("/relay-qYYb/static/")
-      ? "eu-assets.i.posthog.com"
-      : "eu.i.posthog.com";
-    const targetPath = url.pathname.replace("/relay-qYYb/", "");
-
-    const requestHeaders = new Headers(req.headers);
-    requestHeaders.set("host", hostname);
-
-    _url.protocol = "https";
-    _url.hostname = hostname;
-    _url.port = "443";
-    _url.pathname = url.pathname.replace(/^\/relay-qYYb/, "");
-
-    return NextResponse.rewrite(_url, {
-      headers: requestHeaders,
-    });
+    return proxyPostHog(req);
   }
 
-  // Get hostname of request
+  // 1) Normalize hostname (handle Vercel preview)
   let hostname = req.headers.get("host")!;
-
-  // special case for Vercel preview deployment URLs
   if (hostname.endsWith(`.${env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`)) {
     hostname = env.NEXT_PUBLIC_ROOT_DOMAIN;
   }
 
-  const searchParams = req.nextUrl.searchParams.toString();
-  // Translate + to %20 (our custom space encoding for better UX),
-  // otherwise it will get encoded as %2B
-  // https://github.com/datopian/datahub/issues/1172
-  const pathname = url.pathname.replace(/\+/g, "%20");
-  const path = `${pathname}${
-    searchParams.length > 0 ? `?${searchParams}` : ""
-  }`;
+  // 2) Normalize path + query (translate + → %20 for UX)
+  const normalizedPath = normalizePath(url);
+  const { pathname, search } = normalizedPath;
+  const path = pathname + search;
 
-  // Handle legacy Flowershow user site URLs
-  if (hostname === "flowershow.app" && path.startsWith("/@")) {
+  // 3) Legacy redirect: flowershow.app/@... → my.flowershow.app/@...
+  if (hostname === "flowershow.app" && pathname.startsWith("/@")) {
     return NextResponse.redirect(
       new URL(`https://my.flowershow.app${path}`, req.url),
       { status: 301 },
     );
   }
 
-  // CLOUD DOMAIN
-  if (
-    hostname === env.NEXT_PUBLIC_CLOUD_DOMAIN ||
-    hostname === `staging-${env.NEXT_PUBLIC_CLOUD_DOMAIN}`
-  ) {
+  // 4) Cloud app (dashboard)
+  if (hostname === env.NEXT_PUBLIC_CLOUD_DOMAIN) {
     const session = await getToken({ req });
 
-    if (!session && path !== "/login") {
+    if (!session && pathname !== "/login") {
       return NextResponse.redirect(new URL("/login", req.url));
     }
-    if (session && path == "/login") {
+    if (session && pathname === "/login") {
       return NextResponse.redirect(new URL("/", req.url));
     }
     return NextResponse.rewrite(new URL(`/cloud${path}`, req.url));
   }
 
-  // ROOT DOMAIN
-  if (
-    hostname === env.NEXT_PUBLIC_ROOT_DOMAIN ||
-    hostname === `staging-${env.NEXT_PUBLIC_ROOT_DOMAIN}`
-  ) {
-    if (path === "/sitemap.xml") {
-      return NextResponse.rewrite(new URL("/sitemap.xml", req.url));
+  // 5) Root domain (my.flowershow.app) — user sites at /@<user>/<project>
+  if (hostname === env.NEXT_PUBLIC_ROOT_DOMAIN) {
+    if (pathname === "/sitemap.xml") return rewrite(`/sitemap.xml`, req);
+    if (pathname === "/robots.txt") return rewrite(`/robots.txt`, req);
+
+    // Resolve alias to canonical /@user/project path
+    const aliasResolved = resolveSiteAlias(pathname, "from");
+    const match = aliasResolved.match(/^\/@([^/]+)\/([^/]+)(.*)/);
+
+    if (!match) return rewrite(`/not-found`, req);
+
+    const [, username, projectname, slug = ""] = match;
+
+    // Look up site
+    const site = await fetchSite(req, `/api/site/${username}/${projectname}`);
+    if (!site) return rewrite(`/not-found`, req);
+
+    // Per-site login page
+    if (slug === "/_login") {
+      return rewrite(`/site-access/${username}/${projectname}`, req);
     }
 
-    if (path === "/robots.txt") {
-      return NextResponse.rewrite(new URL(`/robots.txt`, req.url));
+    // Password gate
+    const guard = await ensureSiteAccess(req, site);
+    if (guard) return guard;
+
+    // Per-site sitemap
+    if (slug === "/sitemap.xml") {
+      return rewrite(`/api/sitemap/${username}/${projectname}`, req);
     }
 
-    const aliasResolvedPath = resolveSiteAlias(path, "from");
-
-    // if resolved path matches /@{username}/{project}/{restofpath}
-    const userProjectMatch = aliasResolvedPath.match(
-      /^\/@([^/]+)\/([^/]+)(.*)/,
+    // Raw files: /_r/-/<path>
+    const raw = rewriteRawIfNeeded(
+      slug,
+      `/api/raw/${username}/${projectname}`,
+      req,
     );
+    if (raw) return raw;
 
-    if (userProjectMatch) {
-      const username = userProjectMatch[1];
-      const projectName = userProjectMatch[2];
-      const restOfPath = userProjectMatch[3];
-
-      if (restOfPath === "/sitemap.xml") {
-        return NextResponse.rewrite(
-          new URL(`/api/sitemap/${username}/${projectName}`, req.url),
-        );
-      }
-
-      const rawPathMatch = restOfPath?.match(/^\/_r\/(-)\/(.+)/);
-
-      // raw file paths (e.g. /_r/-/data/some.csv)
-      if (rawPathMatch) {
-        const branch = rawPathMatch[1]!;
-        const filePath = rawPathMatch[2]!;
-
-        const encodedFilePath = filePath
-          .split("/") // keep real “/” separators intact
-          .map(normaliseSegment)
-          .join("/");
-
-        return NextResponse.rewrite(
-          new URL(
-            `/api/raw/${username}/${projectName}/${branch}/${encodedFilePath}`,
-            req.url,
-          ),
-        );
-      }
-
-      return NextResponse.rewrite(
-        new URL(`/site/${username}/${projectName}${restOfPath}`, req.url),
-      );
-    } else {
-      return NextResponse.rewrite(new URL(`/not-found`, req.url));
-    }
+    // All other: render the site
+    return rewrite(`/site/${username}/${projectname}${slug}`, req);
   }
 
-  // CUSTOM DOMAIN
-  if (path === "/robots.txt") {
-    return NextResponse.rewrite(new URL(`/api/robots/${hostname}`, req.url));
+  // 6) Custom domains
+  if (pathname === "/robots.txt") {
+    return rewrite(`/api/robots/${hostname}`, req);
   }
 
-  if (path === "/sitemap.xml") {
-    // For custom domains, we use _domain as the username and hostname as the project name
-    // This matches the site lookup in the sitemap API that checks customDomain field
-    return NextResponse.rewrite(
-      new URL(`/api/sitemap/_domain/${hostname}`, req.url),
-    );
+  // Look up site
+  const site = await fetchSite(req, `/api/site/_domain/${hostname}`);
+  if (!site) return rewrite(`/not-found`, req);
+
+  // Per-site login page
+  if (pathname === "/_login") {
+    return rewrite(`/site-access/_domain/${hostname}`, req);
   }
 
-  const rawPathMatch = path?.match(/^\/_r\/(-)\/(.*)/);
+  // Password gate
+  const guard = await ensureSiteAccess(req, site);
+  if (guard) return guard;
 
-  // raw file paths (e.g. /_r/-/data/some.csv)
-  if (rawPathMatch) {
-    const branch = rawPathMatch[1]!;
-    const filePath = rawPathMatch[2]!;
-
-    const encodedFilePath = filePath
-      .split("/") // keep real “/” separators intact
-      .map(normaliseSegment)
-      .join("/");
-
-    return NextResponse.rewrite(
-      new URL(
-        `/api/raw/_domain/${hostname}/${branch}/${encodedFilePath}`,
-        req.url,
-      ),
-    );
+  // Per-site sitemap
+  if (pathname === "/sitemap.xml") {
+    // For custom domains: username "_domain", project = hostname
+    return rewrite(`/api/sitemap/_domain/${hostname}`, req);
   }
 
-  // rewrite all other domains and subdomains to /domain/{hostname}/{path}
+  // Raw files: /_r/-/<path>
+  const raw = rewriteRawIfNeeded(path, `/api/raw/_domain/${hostname}`, req);
+  if (raw) return raw;
+
+  // Render custom-domain site
   return NextResponse.rewrite(
     new URL(`/site/_domain/${hostname}${path}`, req.url),
   );
 }
 
-function normaliseSegment(raw: string) {
-  // 1. Turn every stray % into %25 so decodeURIComponent won’t crash
-  const fixed = raw.replace(/%(?![0-9A-Fa-f]{2})/g, "%25");
+/* ───────────────────────────── Helpers ───────────────────────────── */
 
-  // 2. Decode whatever *was* validly encoded, e.g. %20 → space
-  //    (wrapped in try/catch just in case)
+function rewrite(targetPath: string, req: NextRequest) {
+  return NextResponse.rewrite(new URL(targetPath, req.url));
+}
+
+function normalizePath(url: URL) {
+  const pathname = url.pathname.replace(/\+/g, "%20");
+  const search = url.search; // already encoded
+  return { pathname, search };
+}
+
+// TODO types
+async function fetchSite(req: NextRequest, apiPath: string) {
+  try {
+    const res = await fetch(new URL(apiPath, req.nextUrl.origin), {
+      cache: "no-store",
+    });
+    if (!res.ok) throw new Error("Site fetch failed");
+    const site = await res.json();
+    return (site as InternalSite) ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function ensureSiteAccess(req: NextRequest, site: InternalSite) {
+  if (site.privacyMode !== "PASSWORD") return null;
+
+  const cookie = req.cookies.get(SITE_ACCESS_COOKIE_NAME(site.id));
+  if (!cookie) {
+    return redirectToSiteLogin(req, site);
+  }
+
+  try {
+    const secret = await siteKeyBytes(site.id, site.tokenVersion);
+    await jwtVerify(cookie.value, secret, { audience: site.id });
+    return null; // verified
+  } catch {
+    return redirectToSiteLogin(req, site);
+  }
+}
+
+function redirectToSiteLogin(req: NextRequest, site: InternalSite) {
+  const returnTo = encodeURIComponent(
+    req.nextUrl.pathname + req.nextUrl.search,
+  );
+  const loginUrl = `${getSiteUrl(site)}/_login?returnTo=${returnTo}`;
+  return NextResponse.redirect(new URL(loginUrl, req.url), 307);
+}
+
+function rewriteRawIfNeeded(
+  inputPath: string,
+  apiBase: string,
+  req: NextRequest,
+) {
+  const rawMatch = inputPath?.match(/^\/_r\/(-)\/(.+)/);
+  if (!rawMatch) return null;
+
+  const branch = rawMatch[1]!;
+  const filePath = rawMatch[2]!;
+
+  const encoded = filePath.split("/").map(normaliseSegment).join("/");
+
+  return NextResponse.rewrite(
+    new URL(`${apiBase}/${branch}/${encoded}`, req.url),
+  );
+}
+
+/**
+ * Normalise a single path segment:
+ * 1. Escape stray % so decodeURIComponent won't throw
+ * 2. Decode valid encodings
+ * 3. Re-encode cleanly
+ */
+function normaliseSegment(raw: string) {
+  const fixed = raw.replace(/%(?![0-9A-Fa-f]{2})/g, "%25");
   let decoded: string;
   try {
     decoded = decodeURIComponent(fixed);
   } catch {
-    decoded = fixed; // fall back – very unlikely now
+    decoded = fixed;
   }
-
-  // 3. Re-encode so the segment is fully, correctly escaped
   return encodeURIComponent(decoded);
+}
+
+function proxyPostHog(req: NextRequest) {
+  const url = req.nextUrl;
+  const isStatic = url.pathname.startsWith("/relay-qYYb/static/");
+  const hostname = isStatic ? "eu-assets.i.posthog.com" : "eu.i.posthog.com";
+
+  const proxied = url.clone();
+  proxied.protocol = "https:";
+  proxied.hostname = hostname;
+  proxied.port = "443";
+  proxied.pathname = url.pathname.replace(/^\/relay-qYYb/, ""); // strip prefix
+
+  const headers = new Headers(req.headers);
+  headers.set("host", hostname);
+
+  return NextResponse.rewrite(proxied, { headers });
 }

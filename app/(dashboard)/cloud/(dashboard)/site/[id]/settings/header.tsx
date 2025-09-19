@@ -7,12 +7,12 @@ import LoadingDots from "@/components/icons/loading-dots";
 import Status from "./status";
 import SyncSiteButton from "./sync-button";
 import { env } from "@/env.mjs";
-import type { SiteWithUser } from "@/types";
+import { PublicSite } from "@/server/api/routers/site";
 
 export default async function SiteSettingsHeader({
   site,
 }: {
-  site: SiteWithUser;
+  site: PublicSite;
 }) {
   // TODO move this to some lib; we have solutions like this scattered in many places
   const isSecure =

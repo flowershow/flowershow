@@ -1,12 +1,12 @@
-import { SiteWithUser } from "@/types";
+import { PublicSite } from "@/server/api/routers/site";
 import { api } from "@/trpc/server";
 import { notFound, redirect } from "next/navigation";
 
 export async function getSite(
   user: string,
   project: string,
-): Promise<SiteWithUser> {
-  let site: SiteWithUser | null = null;
+): Promise<PublicSite> {
+  let site: PublicSite | null = null;
 
   if (user === "_domain") {
     site = await api.site.getByDomain.query({

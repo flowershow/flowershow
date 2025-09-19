@@ -1648,6 +1648,28 @@
     border-top-width: 1px;
     padding-top: 2.5rem;
   }
+
+  .visitor-logout-button {
+    position: fixed;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 100;
+    padding: 0.5rem;
+    border-radius: 9999px;
+    background-color: var(--color-foreground-800);
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+
+    &:hover {
+      background-color: var(--color-foreground-600);
+    }
+  }
+
+  .visitor-logout-button-icon {
+    height: 1.2rem;
+    width: 1.2rem;
+    transform: rotate(180deg);
+    color: var(--color-foreground-100);
+  }
 }
 
 @layer utilities {

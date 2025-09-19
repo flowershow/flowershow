@@ -1,9 +1,10 @@
 import { env } from "@/env.mjs";
-import { SiteWithUser } from "@/types";
 import { resolveSiteAlias } from "./resolve-site-alias";
 import { Feature, isFeatureEnabled } from "./feature-flags";
+import { PublicSite } from "@/server/api/routers/site";
+import { InternalSite } from "./db/internal";
 
-export function getSiteUrl(site: SiteWithUser) {
+export function getSiteUrl(site: PublicSite | InternalSite) {
   const { projectName, user, customDomain } = site;
 
   const isSecure =
@@ -20,7 +21,7 @@ export function getSiteUrl(site: SiteWithUser) {
   }
 }
 
-export function getSiteUrlPath(site: SiteWithUser) {
+export function getSiteUrlPath(site: PublicSite) {
   const { projectName, user, customDomain } = site;
 
   if (isFeatureEnabled(Feature.CustomDomain, site) && customDomain) {

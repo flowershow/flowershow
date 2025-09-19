@@ -1,5 +1,6 @@
 import { revalidateTag, unstable_cache } from "next/cache";
 import { z } from "zod";
+import bcrypt from "bcryptjs";
 
 import { inngest } from "@/inngest/client";
 import {
@@ -23,14 +24,68 @@ import { TRPCError } from "@trpc/server";
 import { buildSiteTree } from "@/lib/build-site-tree";
 import { SiteConfig } from "@/components/types";
 import { env } from "@/env.mjs";
-import { Blob, Status } from "@prisma/client";
+import { Blob, Plan, PrismaClient, PrivacyMode, Status } from "@prisma/client";
 import { PageMetadata } from "../types";
 import { resolveLinkToUrl } from "@/lib/resolve-link";
-import { SiteWithUser } from "@/types";
 import { getSiteUrlPath } from "@/lib/get-site-url";
 import { Prisma } from "@prisma/client";
 import PostHogClient from "@/lib/server-posthog";
-import { SlotsMap } from "@/components/public/mdx/list";
+
+const asciiPrintableNoEdgeSpaces = new RegExp(
+  "^(?=.{8,128}$)[!-~](?:[ -~]*[!-~])?$",
+);
+
+const publicSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
+  id: true,
+  ghRepository: true,
+  ghBranch: true,
+  projectName: true,
+  customDomain: true,
+  rootDir: true,
+  plan: true,
+  enableComments: true,
+  giscusRepoId: true,
+  giscusCategoryId: true,
+  enableSearch: true,
+  privacyMode: true,
+  autoSync: true,
+  createdAt: true,
+  updatedAt: true,
+  user: { select: { ghUsername: true } },
+});
+
+export type PublicSite = Prisma.SiteGetPayload<{
+  select: typeof publicSiteSelect;
+}>;
+
+const publicSiteSchema: z.ZodType<PublicSite> = z.object({
+  id: z.string(),
+  ghRepository: z.string(),
+  ghBranch: z.string(),
+  projectName: z.string(),
+  customDomain: z.string().nullable(),
+  rootDir: z.string().nullable(),
+  plan: z.enum(Plan),
+  enableComments: z.boolean(),
+  giscusRepoId: z.string().nullable(),
+  giscusCategoryId: z.string().nullable(),
+  enableSearch: z.boolean(),
+  privacyMode: z.enum(PrivacyMode),
+  autoSync: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  user: z.object({ ghUsername: z.string() }),
+});
+
+export enum SiteUpdateKey {
+  customDomain = "customDomain",
+  rootDir = "rootDir",
+  autoSync = "autoSync",
+  enableComments = "enableComments",
+  enableSearch = "enableSearch",
+  subdomain = "subdomain",
+  projectName = "projectName",
+}
 
 /* eslint-disable */
 export const siteRouter = createTRPCRouter({
@@ -41,77 +96,46 @@ export const siteRouter = createTRPCRouter({
         projectName: z.string().min(1),
       }),
     )
-    .query(async ({ ctx, input }) => {
-      return await unstable_cache(
-        async (input) => {
-          return ctx.db.site.findFirst({
-            where: {
-              AND: [
-                { projectName: input.projectName },
-                { user: { ghUsername: input.ghUsername } },
-              ],
-            },
-            include: {
-              user: {
-                select: {
-                  ghUsername: true,
-                },
-              },
-            },
-          });
-        },
-        undefined,
-        {
-          revalidate: 60, // 1 minute
-          tags: [
-            `${input.ghUsername}-${input.projectName}`,
-            `${input.ghUsername}-${input.projectName}-site`,
+    .output(publicSiteSchema.nullable())
+    .query(async ({ ctx, input }): Promise<PublicSite | null> => {
+      return ctx.db.site.findFirst({
+        where: {
+          AND: [
+            { projectName: input.projectName },
+            { user: { ghUsername: input.ghUsername } },
           ],
         },
-      )(input);
+        select: publicSiteSelect,
+      });
     }),
   getByDomain: publicProcedure
     .input(z.object({ domain: z.string().min(1) }))
-    .query(async ({ ctx, input }) => {
-      return await unstable_cache(
-        async (input) => {
-          return await ctx.db.site.findFirst({
-            where: {
-              customDomain: input.domain,
-            },
-            include: {
-              user: {
-                select: {
-                  ghUsername: true,
-                },
-              },
-            },
-          });
+    .output(publicSiteSchema.nullable())
+    .query(async ({ ctx, input }): Promise<PublicSite | null> => {
+      return await ctx.db.site.findFirst({
+        where: {
+          customDomain: input.domain,
         },
-        undefined,
-        {
-          revalidate: 60, // 1 minute
-        },
-      )(input);
+        select: publicSiteSelect,
+      });
     }),
   getById: publicProcedure
     .input(z.object({ id: z.string().min(1) }))
-    .query(async ({ ctx, input }) => {
-      // don't cache this, it's used in the user dashboard
-      return (await ctx.db.site.findFirst({
+    .output(publicSiteSchema.nullable())
+    .query(async ({ ctx, input }): Promise<PublicSite | null> => {
+      return await ctx.db.site.findFirst({
         where: { id: input.id },
-        include: {
-          user: true,
-        },
-      })) as SiteWithUser;
+        select: publicSiteSelect,
+      });
     }),
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    // don't cache this, it's used in the admin panel
-    if (ctx.session.user.role !== "ADMIN") {
-      throw new Error("Unauthorized");
-    }
-    return await ctx.db.site.findMany({ include: { user: true } });
-  }),
+  getAll: protectedProcedure
+    .output(z.array(publicSiteSchema))
+    .query(async ({ ctx }): Promise<PublicSite[]> => {
+      if (ctx.session.user.role !== "ADMIN") {
+        throw new Error("Unauthorized");
+      }
+      return await ctx.db.site.findMany({ select: publicSiteSelect });
+    }),
   create: protectedProcedure
     .input(
       z.object({
@@ -121,11 +145,12 @@ export const siteRouter = createTRPCRouter({
         projectName: z.string().optional(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .output(publicSiteSchema)
+    .mutation(async ({ ctx, input }): Promise<PublicSite> => {
       const { ghRepository, ghBranch, rootDir } = input;
       const accessToken = ctx.session.accessToken;
 
-      // check if branch exists
+      // 1) Validate remote branch exists
       const branchExists = await checkIfBranchExists({
         ghRepository,
         ghBranch,
@@ -134,29 +159,21 @@ export const siteRouter = createTRPCRouter({
 
       if (!branchExists) {
         throw new Error(
-          `Branch ${input.ghBranch} does not exist in repository ${input.ghRepository}`,
+          `Branch ${ghBranch} does not exist in repository ${ghRepository}`,
         );
       }
 
-      //use repository name as an initial project name
-      //and append a number if the name is already taken
-      let projectName =
-        input.projectName ?? (ghRepository.split("/")[1] as string);
-      let num = 2;
+      // 2) Decide projectName (unique per user)
+      const repoName = ghRepository.split("/")[1]!;
+      const baseName = input.projectName?.trim() || repoName;
+      const projectName = await ensureUniqueProjectName(
+        ctx.db,
+        ctx.session.user.id,
+        baseName,
+      );
 
-      while (
-        await ctx.db.site.findFirst({
-          where: {
-            AND: [{ projectName }, { user: { id: ctx.session.user.id } }],
-          },
-        })
-      ) {
-        projectName = `${input.ghRepository.split("/")[1]}-${num}`;
-        num++;
-      }
-
-      // First create site without webhook
-      const site = await ctx.db.site.create({
+      // 3) Create site
+      const created = await ctx.db.site.create({
         data: {
           projectName,
           ghRepository,
@@ -168,173 +185,203 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      // Then create a webhook that includes site ID in the URL
+      // 4) Try to create webhook; if it works, mark autoSync on
       let webhookId: string | null = null;
       try {
         const response = await createGitHubRepoWebhook({
           ghRepository,
           accessToken,
-          webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${site.id}`,
+          webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${created.id}`,
         });
         webhookId = response.id.toString();
 
-        // Update site with webhook ID
+        // update site to enable autoSync
         await ctx.db.site.update({
-          where: { id: site.id },
-          data: {
-            autoSync: true,
-            webhookId,
-          },
+          where: { id: created.id },
+          data: { autoSync: true, webhookId },
         });
       } catch (e) {
         console.error("Failed to create webhook", e);
       }
 
+      // 5) Kick off initial sync
       await inngest.send({
         name: "site/sync",
         data: {
-          siteId: site.id,
+          siteId: created.id,
           ghRepository,
           ghBranch,
-          rootDir: site.rootDir,
+          rootDir: created.rootDir,
           accessToken,
           initialSync: true,
         },
       });
 
+      // 6) Analytics (best-effort)
       const posthog = await PostHogClient();
       posthog.capture({
-        distinctId: site.userId,
+        distinctId: created.userId,
         event: "site_created",
-        properties: { id: site.id },
+        properties: { id: created.id },
       });
       await posthog.shutdown();
 
-      return site;
+      // 7) Return canonical public shape
+      const fresh = await ctx.db.site.findUnique({
+        where: { id: created.id },
+        select: publicSiteSelect,
+      });
+      if (!fresh) {
+        // extremely unlikely; handle defensively
+        throw new Error("Site not found after creation");
+      }
+
+      console.log({ fresh });
+
+      return fresh;
     }),
   update: protectedProcedure
     .input(
       z.object({
         id: z.string().min(1),
-        key: z.string().min(1),
+        key: z.enum(SiteUpdateKey),
         value: z.string(),
       }),
     )
-    .mutation(async ({ ctx, input }) => {
+    .output(publicSiteSchema)
+    .mutation(async ({ ctx, input }): Promise<PublicSite> => {
       const { id, key, value } = input;
-      let result;
 
       const site = await ctx.db.site.findUnique({
         where: { id },
         include: { user: true },
       });
 
-      if (!site) {
+      if (!site || site.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Site not found",
         });
       }
 
-      // Handling custom domain changes
+      // Utils
+      const parseIfBoolString = (v: string) =>
+        v === "true" ? true : v === "false" ? false : v;
+      const toNullIfEmpty = (v: string) => (v.trim() === "" ? null : v.trim());
+
       if (key === "customDomain") {
-        if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
-          if (validDomainRegex.test(value)) {
-            // Handle adding/updating custom domain
-            result = await ctx.db.site.update({
+        const newDomain = toNullIfEmpty(value);
+        if (!newDomain) {
+          await ctx.db.site.update({
+            where: { id },
+            data: { customDomain: null },
+            select: publicSiteSelect,
+          });
+        } else {
+          if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
+            if (!validDomainRegex.test(newDomain)) {
+              throw new TRPCError({
+                code: "BAD_REQUEST",
+                message: "Invalid domain",
+              });
+            }
+
+            await ctx.db.site.update({
+              where: { id },
+              data: { customDomain: newDomain },
+              select: publicSiteSelect,
+            });
+
+            // Provision domain(s) in Vercel (best-effort)
+            await Promise.all([
+              addDomainToVercel(newDomain),
+              // Optional: add www subdomain as well and redirect to apex domain
+              addDomainToVercel(`www.${newDomain} `),
+            ]);
+
+            // If the site had a different customDomain before, we need to remove it from Vercel
+            if (site.customDomain && site.customDomain !== newDomain) {
+              await removeDomainFromVercelProject(site.customDomain);
+            }
+          } else {
+            // Non-production: only update DB
+            await ctx.db.site.update({
               where: { id },
               data: { customDomain: value },
             });
-            await Promise.all([
-              addDomainToVercel(value),
-              // Optional: add www subdomain as well and redirect to apex domain
-              addDomainToVercel(`www.${value} `),
-            ]);
-          } else if (value === "") {
-            // Handle removing custom domain
-            result = await ctx.db.site.update({
-              where: { id },
-              data: { customDomain: null },
-            });
           }
-          // If the site had a different customDomain before, we need to remove it from Vercel
-          if (site && site.customDomain && site.customDomain !== value) {
-            await removeDomainFromVercelProject(site.customDomain);
-          }
-        } else {
-          result = await ctx.db.site.update({
-            where: { id },
-            data: { customDomain: value },
-          });
         }
       } else if (key === "rootDir") {
-        result = await ctx.db.site.update({
+        const newRoot = toNullIfEmpty(value);
+
+        await ctx.db.site.update({
           where: { id },
-          data: { rootDir: value },
+          data: { rootDir: newRoot },
         });
-        await deleteProject(id); // TODO move to inngest workflow as well ?
+        await deleteProject(id).catch(() => {}); // TODO handle it in a better way
         await inngest.send({
           name: "site/sync",
           data: {
             siteId: id,
             ghRepository: site.ghRepository,
             ghBranch: site.ghBranch,
-            rootDir: value,
+            rootDir: newRoot,
             accessToken: ctx.session.accessToken,
             initialSync: true,
           },
         });
       } else if (key === "autoSync") {
-        if (value === "true") {
+        const enable = value === "true";
+
+        if (enable) {
           try {
             const { id: webhookId } = await createGitHubRepoWebhook({
               ghRepository: site.ghRepository,
               accessToken: ctx.session.accessToken,
               webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${site.id}`, // Add site ID to webhook URL
             });
-            result = await ctx.db.site.update({
+            await ctx.db.site.update({
               where: { id },
               data: { autoSync: true, webhookId: webhookId.toString() },
             });
-          } catch (error) {
-            throw new Error(
-              "Failed to create webhook. Check if the repository has a webhook already installed.",
-            );
+          } catch {
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message:
+                "Failed to create webhook. Check if the repository already has a webhook installed.",
+            });
           }
         } else {
           try {
-            await deleteGitHubRepoWebhook({
-              ghRepository: site.ghRepository,
-              accessToken: ctx.session.accessToken,
-              webhook_id: Number(site.webhookId),
-            });
-            result = await ctx.db.site.update({
+            if (site.webhookId) {
+              await deleteGitHubRepoWebhook({
+                ghRepository: site.ghRepository,
+                accessToken: ctx.session.accessToken,
+                webhook_id: Number(site.webhookId),
+              }).catch(() => {});
+            }
+            await ctx.db.site.update({
               where: { id },
               data: { autoSync: false, webhookId: null },
             });
           } catch (error) {
-            throw new Error(`Failed to delete webhook: ${error}`);
-            // TODO if the webhook doesn't exist, we should still update the site
+            throw new TRPCError({
+              code: "BAD_REQUEST",
+              message: `Failed to delete webhook: ${String(error)}`,
+            });
           }
         }
       } else {
-        // Convert string values to proper types (e.g. "true"/"false" to boolean)
-        const convertValue = (val: string) => {
-          if (val === "true") return true;
-          if (val === "false") return false;
-          return val;
-        };
-
-        const convertedValue = convertValue(value);
-        result = await ctx.db.site.update({
+        const converted = parseIfBoolString(value);
+        await ctx.db.site.update({
           where: { id },
-          data: { [key]: convertedValue },
+          data: { [key]: converted },
         });
 
         // If enableSearch is being turned on, trigger a force sync to index all files
         // Note: this is a temporary solution, to make sure people who upgrade now have their
         // site's indexes updated (but we index all documents, even for non-premium users atm, which we shouldn't)
-        if (key === "enableSearch" && convertedValue === true) {
+        if (key === "enableSearch" && converted === true) {
           await inngest.send({
             name: "site/sync",
             data: {
@@ -349,16 +396,98 @@ export const siteRouter = createTRPCRouter({
         }
       }
 
+      // Analytics (best-effort)
       const posthog = PostHogClient();
       posthog.capture({
         distinctId: site.userId,
         event: "site_settings_changed",
-        properties: { id: site.id, config: input.key },
+        properties: { id: site.id, config: key },
       });
       await posthog.shutdown();
+      // Return canonical public shape
+      const fresh = await ctx.db.site.findUnique({
+        where: { id },
+        select: publicSiteSelect,
+      });
+      if (!fresh) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Site not found after update",
+        });
+      }
 
       revalidateTag(`${site.id}`);
-      return result;
+      return fresh;
+    }),
+  setPasswordProtection: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        enabled: z.boolean().optional(),
+        password: z
+          .string()
+          .refine((s) => asciiPrintableNoEdgeSpaces.test(s), {
+            message:
+              "Password must be 8–128 printable characters with no leading/trailing spaces.",
+          })
+          .optional(),
+      }),
+    )
+    .output(publicSiteSchema)
+    .mutation(async ({ ctx, input }): Promise<PublicSite> => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.id },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Site not found",
+        });
+      }
+
+      if (input.enabled) {
+        if (!input.password) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "You need to provide a password to set",
+          });
+        } else {
+          const hash = await bcrypt.hash(input.password, 12);
+          await ctx.db.site.update({
+            where: { id: input.id },
+            data: {
+              privacyMode: "PASSWORD",
+              accessPasswordHash: hash,
+              accessPasswordUpdatedAt: new Date(),
+              tokenVersion: {
+                increment: 1,
+              },
+            },
+          });
+        }
+      } else {
+        await ctx.db.site.update({
+          where: { id: input.id },
+          data: {
+            privacyMode: "PUBLIC",
+            accessPasswordHash: null,
+            accessPasswordUpdatedAt: new Date(),
+          },
+        });
+      }
+      const fresh = await ctx.db.site.findUnique({
+        where: { id: input.id },
+        select: publicSiteSelect,
+      });
+      if (!fresh) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Site not found after update",
+        });
+      }
+
+      return fresh;
     }),
   delete: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
@@ -367,7 +496,7 @@ export const siteRouter = createTRPCRouter({
         where: { id: input.id },
       });
 
-      if (!site) {
+      if (!site || site.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Site not found",
@@ -406,7 +535,7 @@ export const siteRouter = createTRPCRouter({
       });
       await posthog.shutdown();
 
-      return site;
+      return { id: site.id };
     }),
   sync: protectedProcedure
     .input(
@@ -422,7 +551,7 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      if (!site) {
+      if (!site || site.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Site not found",
@@ -465,7 +594,7 @@ export const siteRouter = createTRPCRouter({
           where: { id: input.id },
         });
 
-        if (!site) {
+        if (!site || site.userId !== ctx.session.user.id) {
           throw new TRPCError({
             code: "NOT_FOUND",
             message: "Site not found",
@@ -980,3 +1109,24 @@ export const siteRouter = createTRPCRouter({
       },
     ),
 });
+
+// ---- Util: ensure unique project name per user ----
+async function ensureUniqueProjectName(
+  prisma: PrismaClient,
+  userId: string,
+  base: string,
+) {
+  let name = base;
+  let n = 2;
+  // Small cap to avoid pathological loops; unique constraint is the real backstop.
+  while (
+    await prisma.site.findFirst({
+      where: { projectName: name, userId },
+      select: { id: true },
+    })
+  ) {
+    name = `${base}-${n}`;
+    n++;
+  }
+  return name;
+}

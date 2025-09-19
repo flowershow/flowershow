@@ -11,6 +11,7 @@ import DomainConfiguration from "./domain-configuration";
 import Uploader from "./uploader";
 import clsx from "clsx";
 import { ReactNode } from "react";
+import { SiteUpdateKey } from "@/server/api/routers/site";
 
 export default function Form({
   title,
@@ -40,7 +41,7 @@ export default function Form({
     value,
   }: {
     id: string;
-    key: string;
+    key: SiteUpdateKey;
     value: string;
   }) => Promise<void>;
 }) {
@@ -85,10 +86,10 @@ export default function Form({
         ) {
           //
         }
-        // TODO should be a better way to handle the type of the value
+        // TODO should be a better way to handle types here
         handleSubmit({
           id,
-          key: inputAttrs.name,
+          key: inputAttrs.name as SiteUpdateKey,
           value: data.get(inputAttrs.name)!.toString(),
         })
           .then(async () => {
@@ -130,7 +131,7 @@ export default function Form({
             onChange={() => {
               handleSubmit({
                 id,
-                key: inputAttrs.name,
+                key: inputAttrs.name as SiteUpdateKey,
                 value: inputAttrs.defaultValue === "true" ? "false" : "true",
               })
                 .then(async () => {
@@ -157,6 +158,7 @@ export default function Form({
                 ? "bg-indigo-600"
                 : "bg-gray-200",
               "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
+              disabled && "cursor-auto",
             )}
           >
             <span className="sr-only">Use setting</span>

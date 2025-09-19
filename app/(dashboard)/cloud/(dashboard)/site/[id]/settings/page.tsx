@@ -9,6 +9,8 @@ import Billing from "@/components/dashboard/billing";
 import SettingsNav from "@/components/dashboard/settings-nav";
 import Form from "@/components/dashboard/form";
 import DeleteSiteForm from "@/components/dashboard/form/delete-site-form";
+import SitePasswordProtectionForm from "@/components/dashboard/form/site-password-form";
+import { SiteUpdateKey } from "@/server/api/routers/site";
 
 export default async function SiteSettingsIndex({
   params,
@@ -33,7 +35,7 @@ export default async function SiteSettingsIndex({
     value,
   }: {
     id: string;
-    key: string;
+    key: SiteUpdateKey;
     value: string;
   }) => {
     "use server";
@@ -244,6 +246,11 @@ export default async function SiteSettingsIndex({
                 : "false",
             }}
             handleSubmit={updateSite}
+          />
+
+          <SitePasswordProtectionForm
+            disabled={!isFeatureEnabled(Feature.PasswordProtection, site)}
+            siteId={site.id}
           />
 
           <Billing siteId={site.id} subscription={subscription} plans={PLANS} />

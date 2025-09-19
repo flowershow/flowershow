@@ -3,7 +3,6 @@ import { ErrorBoundary } from "react-error-boundary";
 import type { Blob } from "@prisma/client";
 import { resolveLinkToUrl } from "@/lib/resolve-link";
 import { getSiteUrlPath } from "@/lib/get-site-url";
-import type { SiteWithUser } from "@/types";
 
 import { ErrorMessage } from "@/components/public/error-message";
 import List from "./list";
@@ -36,6 +35,7 @@ import type {
   PlotlyBarChartProps,
   PlotlyLineChartProps,
 } from "./mdx-client-components";
+import { PublicSite } from "@/server/api/routers/site";
 
 export const mdxComponentsFactory = ({
   blob,
@@ -43,7 +43,7 @@ export const mdxComponentsFactory = ({
   pageNumber,
 }: {
   blob: Blob;
-  site: SiteWithUser;
+  site: PublicSite;
   pageNumber?: number;
 }) => {
   const components: any = {

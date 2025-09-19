@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Metadata } from "next";
 import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { GoogleTagManager } from "@next/third-parties/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import clsx from "clsx";
@@ -27,8 +28,9 @@ import "@portaljs/components/styles.css";
 import "@/styles/prism.css";
 import "@/styles/callouts.css";
 import "@/styles/default-theme.css";
-import { redirect } from "next/navigation";
 import { THEME_PREFERENCE_STORAGE_KEY } from "@/lib/const";
+import SiteLogoutButton from "./site-logout-button";
+import { PublicSite } from "@/server/api/routers/site";
 
 const { title, description, favicon, thumbnail } = getConfig();
 
@@ -82,9 +84,7 @@ export default async function PublicLayout({
   const userName = decodeURIComponent(params.user); // user's github username or "_domain" if on custom domain (see middleware)
   const projectName = decodeURIComponent(params.project);
 
-  // const site = await getSite(userName, projectName);
-
-  let site;
+  let site: PublicSite | null;
   if (userName === "_domain") {
     site = await api.site.getByDomain.query({
       domain: projectName,
@@ -199,6 +199,8 @@ export default async function PublicLayout({
     isFeatureEnabled(Feature.Search, site) && site.enableSearch;
   const cta = siteConfig?.nav?.cta;
 
+  const handleSignOutFromSite = () => {};
+
   return (
     <html
       className={clsx(fontBody.variable, fontHeading.variable)}
@@ -273,6 +275,12 @@ export default async function PublicLayout({
                 <div className="site-body">{children}</div>
                 <Footer />
                 {showBuiltWithButton && <BuiltWithFloatingButton />}
+                {site.privacyMode === "PASSWORD" && (
+                  <SiteLogoutButton
+                    siteId={site.id}
+                    sitename={site.projectName}
+                  />
+                )}
               </div>
             </SiteProvider>
 

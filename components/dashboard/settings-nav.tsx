@@ -12,6 +12,7 @@ const navItems = [
   { name: "Comments", href: "#enableComments" },
   { name: "Custom Domain", href: "#customDomain" },
   { name: "Full-Text Search", href: "#enableSearch" },
+  { name: "Password Protection", href: "#passwordProtection" },
   { name: "Billing", href: "#billing" },
   { name: "Delete Site", href: "#deleteSite" },
 ];

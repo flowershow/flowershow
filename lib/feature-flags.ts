@@ -1,11 +1,13 @@
 import { env } from "@/env.mjs";
-import { Site, Plan } from "@prisma/client";
+import { PublicSite } from "@/server/api/routers/site";
+import { Plan } from "@prisma/client";
 
 export enum Feature {
   DataRequest = "DataRequest",
   CustomDomain = "CustomDomain",
   NoBranding = "NoBranding",
   Search = "Search",
+  PasswordProtection = "PasswordProtection",
   // AutoSync = "AutoSync",
   // Comments = "Comments",
   // Analytics = "Analytics",
@@ -16,6 +18,7 @@ const PREMIUM_FEATURES: Feature[] = [
   Feature.CustomDomain,
   Feature.NoBranding,
   Feature.Search,
+  Feature.PasswordProtection,
   // Feature.AutoSync,
   // Feature.Comments,
   // Feature.Analytics,
@@ -24,7 +27,7 @@ const PREMIUM_FEATURES: Feature[] = [
 /**
  * Check if a feature is enabled for a site
  */
-export function isFeatureEnabled(feature: Feature, site: Site): boolean {
+export function isFeatureEnabled(feature: Feature, site: PublicSite): boolean {
   switch (feature) {
     case Feature.DataRequest:
       return (

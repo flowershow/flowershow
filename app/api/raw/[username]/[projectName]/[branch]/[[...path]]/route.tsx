@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createTRPCContext } from "@/server/api/trpc";
 import { appRouter } from "@/server/api/root";
 import { env } from "@/env.mjs";
-import type { SiteWithUser } from "@/types";
+import { PublicSite } from "@/server/api/routers/site";
 
 /**
  * Creates the tRPC context required for API calls.
@@ -35,7 +35,7 @@ export async function GET(
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
   }
 
-  let site: SiteWithUser | null = null;
+  let site: PublicSite | null = null;
 
   if (username === "_domain") {
     site = await caller.site.getByDomain({
