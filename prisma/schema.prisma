@@ -20,8 +20,8 @@ model User {
   id            String    @id @default(cuid())
   name          String?
   // if you are using Github OAuth, you can get rid of the username attribute (that is for Twitter OAuth)
-  username      String?  @unique
-  ghUsername   String?   @map("gh_username") @unique
+  username      String?  // TODO @unique
+  ghUsername   String?   @map("gh_username") // TODO @unique
   email         String?   @unique
   emailVerified DateTime? @map("email_verified")
   discordId    String?   @unique @map("discord_id")
