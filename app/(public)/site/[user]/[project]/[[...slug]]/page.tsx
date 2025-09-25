@@ -12,6 +12,11 @@ import { PageMetadata } from "@/server/api/types";
 import { getConfig } from "@/lib/app-config";
 import { getMdxOptions } from "@/lib/markdown";
 import { resolveLinkToUrl } from "@/lib/resolve-link";
+import {
+  isWikiLink,
+  getWikiLinkValue,
+  findMatchingPermalink,
+} from "@/lib/wiki-link";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 import { getSite } from "@/lib/get-site";
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
@@ -69,14 +74,36 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
     })
     .catch(() => null);
 
-  const getSrcUrl = (url: string) =>
-    resolveLinkToUrl({
+  const sitePermalinks = await api.site.getPermalinks
+    .query({
+      siteId: site.id,
+    })
+    .catch(() => {
+      notFound();
+    });
+
+  const getSrcUrl = (url: string) => {
+    // TODO temporary patch to support `image: "[[image.png]]"`
+    // Should probably be moved to the remark-wiki-link plugin
+    // Check if it's a wiki link
+    if (isWikiLink(url)) {
+      // Get the raw value and try to find a matching permalink
+      const value = getWikiLinkValue(url);
+      const match = findMatchingPermalink(sitePermalinks, value);
+      if (match) {
+        return match;
+      }
+    }
+
+    // Fall back to regular link resolution
+    return resolveLinkToUrl({
       target: url,
       originFilePath: blob.path,
       prefix: sitePrefix,
       isSrcLink: true,
       domain: site.customDomain,
     });
+  };
 
   const title =
     siteConfig?.title && metadata?.title
@@ -250,6 +277,19 @@ export default async function SitePage({
   }
 
   const resolveLink = (src: string, isSrc: boolean = false) => {
+    // TODO temporary patch to support `image: "[[image.png]]"`
+    // Should probably be moved to the remark-wiki-link plugin
+    // Check if it's a wiki link
+    if (isWikiLink(src)) {
+      // Get the raw value and try to find a matching permalink
+      const value = getWikiLinkValue(src);
+      const match = findMatchingPermalink(sitePermalinks, value);
+      if (match) {
+        return match;
+      }
+    }
+
+    // If not a wiki link or no match found, use regular link resolution
     return resolveLinkToUrl({
       target: src,
       originFilePath: page.blob.path,

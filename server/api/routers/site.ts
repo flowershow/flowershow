@@ -27,6 +27,11 @@ import { env } from "@/env.mjs";
 import { Blob, Plan, PrismaClient, PrivacyMode, Status } from "@prisma/client";
 import { PageMetadata } from "../types";
 import { resolveLinkToUrl } from "@/lib/resolve-link";
+import {
+  isWikiLink,
+  getWikiLinkValue,
+  findMatchingPermalink,
+} from "@/lib/wiki-link";
 import { getSiteUrlPath } from "@/lib/get-site-url";
 import { Prisma } from "@prisma/client";
 import PostHogClient from "@/lib/server-posthog";
@@ -903,7 +908,58 @@ export const siteRouter = createTRPCRouter({
                 "metadata"->>'title' ASC NULLS LAST
           `;
 
+          const _blobs = await ctx.db.blob.findMany({
+            where: {
+              siteId: site.id,
+            },
+            select: {
+              path: true,
+              appPath: true,
+            },
+          });
+
+          const permalinks = _blobs.map((blob) => {
+            let prefix: string;
+            if (site.customDomain) {
+              prefix = "";
+            } else {
+              prefix = `/@${site.user.ghUsername}/${site.projectName}`;
+            }
+
+            return (
+              (blob.appPath
+                ? prefix + (blob.appPath === "/" ? "" : "/" + blob.appPath)
+                : prefix + "/_r/-/" + blob.path) || "/"
+            );
+          });
+
           const sitePrefix = getSiteUrlPath(site);
+
+          // TODO ugly quick patch, should be resolved in the wiki-link plugin probably
+          const resolveMediaValueToUrl = (
+            value: string,
+            originFilePath: string,
+          ) => {
+            // Check if it's a wiki link
+            if (isWikiLink(value)) {
+              // Get the raw value and try to find a matching permalink
+              const rawValue = getWikiLinkValue(value);
+              console.log({ rawValue });
+              const match = findMatchingPermalink(permalinks, rawValue);
+              if (match) {
+                return match;
+              }
+            }
+
+            // If not a wiki link or no match found, use regular link resolution
+            return resolveLinkToUrl({
+              target: value,
+              originFilePath,
+              prefix: sitePrefix,
+              isSrcLink: true,
+              domain: site.customDomain,
+            });
+          };
 
           const items = blobs.map((b) => {
             const metadata = b.metadata;
@@ -911,13 +967,9 @@ export const siteRouter = createTRPCRouter({
             const mediaFrontmatterField = input.slots.media ?? "image";
 
             if (metadata?.[mediaFrontmatterField]) {
-              metadata[mediaFrontmatterField] = resolveLinkToUrl({
-                target: metadata[mediaFrontmatterField],
-                originFilePath: b.path,
-                prefix: sitePrefix,
-                isSrcLink: true,
-                domain: site.customDomain,
-              });
+              const mediaValue = metadata[mediaFrontmatterField];
+              const mediaUrl = resolveMediaValueToUrl(mediaValue, b.path);
+              metadata[mediaFrontmatterField] = mediaUrl;
             }
 
             return {
@@ -1040,11 +1092,7 @@ export const siteRouter = createTRPCRouter({
           async (input) => {
             const site = await ctx.db.site.findUnique({
               where: { id: input.siteId },
-              select: {
-                user: true,
-                projectName: true,
-                customDomain: true,
-              },
+              include: { user: true },
             });
 
             if (!site) {
@@ -1054,8 +1102,61 @@ export const siteRouter = createTRPCRouter({
               });
             }
 
+            const _blobs = await ctx.db.blob.findMany({
+              where: {
+                siteId: site.id,
+              },
+              select: {
+                path: true,
+                appPath: true,
+              },
+            });
+
+            const permalinks = _blobs.map((blob) => {
+              let prefix: string;
+              if (site.customDomain) {
+                prefix = "";
+              } else {
+                prefix = `/@${site.user.ghUsername}/${site.projectName}`;
+              }
+
+              return (
+                (blob.appPath
+                  ? prefix + (blob.appPath === "/" ? "" : "/" + blob.appPath)
+                  : prefix + "/_r/-/" + blob.path) || "/"
+              );
+            });
+
+            const sitePrefix = getSiteUrlPath(site);
+
+            // TODO ugly quick patch, should be resolved in the wiki-link plugin probably
+            const resolveMediaValueToUrl = (
+              value: string,
+              originFilePath: string,
+            ) => {
+              // Check if it's a wiki link
+              if (isWikiLink(value)) {
+                // Get the raw value and try to find a matching permalink
+                const rawValue = getWikiLinkValue(value);
+                console.log({ rawValue });
+                const match = findMatchingPermalink(permalinks, rawValue);
+                if (match) {
+                  return match;
+                }
+              }
+
+              // If not a wiki link or no match found, use regular link resolution
+              return resolveLinkToUrl({
+                target: value,
+                originFilePath,
+                prefix: sitePrefix,
+                isSrcLink: true,
+                domain: site.customDomain,
+              });
+            };
+
             const authorsPromises = input.authors.map(async (author) => {
-              const blob = await ctx.db.blob.findFirst({
+              const authorBlob = await ctx.db.blob.findFirst({
                 where: {
                   siteId: input.siteId,
                   OR: [
@@ -1065,16 +1166,20 @@ export const siteRouter = createTRPCRouter({
                 },
               });
 
-              const metadata = blob?.metadata as
+              if (!authorBlob) {
+                return null;
+              }
+
+              const metadata = authorBlob.metadata as
                 | PageMetadata
                 | null
                 | undefined;
 
-              const url = !blob?.appPath
+              const url = !authorBlob.appPath
                 ? null
                 : site.customDomain
-                  ? `/${blob.appPath}`
-                  : `/@${site.user.ghUsername}/${site.projectName}/${blob.appPath}`;
+                  ? `/${authorBlob.appPath}`
+                  : `/@${site.user.ghUsername}/${site.projectName}/${authorBlob.appPath}`;
 
               let avatar;
 
@@ -1083,10 +1188,15 @@ export const siteRouter = createTRPCRouter({
                   avatar = metadata.avatar;
                 } else {
                   // TODO make it work for relative paths too
-                  avatar = site.customDomain
-                    ? `/_r/-${metadata.avatar}`
-                    : `/@${site.user.ghUsername}/${site.projectName}` +
-                      `/_r/-${metadata.avatar}`;
+
+                  avatar = resolveMediaValueToUrl(
+                    metadata.avatar,
+                    authorBlob.path,
+                  );
+                  // avatar = site.customDomain
+                  //   ? `/_r/-${metadata.avatar}`
+                  //   : `/@${site.user.ghUsername}/${site.projectName}` +
+                  //     `/_r/-${metadata.avatar}`;
                 }
               }
 
