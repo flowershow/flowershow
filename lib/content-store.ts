@@ -41,6 +41,10 @@ type ContentType =
   | "image/gif"
   | "image/svg+xml"
   | "video/mp4"
+  | "video/webm"
+  | "audio/aac"
+  | "audio/mpeg" // mp3
+  | "audio/opus"
   | "image/x-icon"
   | "image/webp"
   | "image/avif";
@@ -139,14 +143,27 @@ const getContentType = (extension: string): ContentType => {
       return "image/gif";
     case "svg":
       return "image/svg+xml";
-    case "mp4":
-      return "video/mp4";
     case "ico":
       return "image/x-icon";
     case "webp":
       return "image/webp";
     case "avif":
       return "image/avif";
+
+    // Video
+    case "mp4":
+      return "video/mp4";
+    case "webm":
+      return "video/webm";
+
+    // Audio
+    case "aac":
+      return "audio/aac";
+    case "mp3":
+      return "audio/mpeg";
+    case "opus":
+      return "audio/opus";
+
     default:
       return "application/json"; // Fallback to JSON for any new extensions
   }
