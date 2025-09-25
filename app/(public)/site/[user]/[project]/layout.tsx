@@ -230,7 +230,6 @@ export default async function PublicLayout({
       var el = document.documentElement;
       el.classList.add('disable-theme-transitions');
       if (el.getAttribute('data-theme') !== t) el.setAttribute('data-theme', t);
-      el.style.colorScheme = t;
       setTimeout(function(){ el.classList.remove('disable-theme-transitions'); }, 0);
     } 
   } catch(_) {}
