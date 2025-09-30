@@ -13,7 +13,7 @@ const meta: Meta<typeof List> = {
     dir: "",
   },
   parameters: {
-    controls: { exclude: ["siteId", "pageNumber"] },
+    controls: { exclude: ["fields", "siteId", "pageNumber"] },
   },
   argTypes: {
     dir: {
@@ -33,35 +33,35 @@ export const Default: Story = {
   },
 };
 
-export const WithOldFieldsProp: Story = {
-  args: {
-    fields: ["title", "description", "date", "authors", "image"],
-  },
-  async beforeEach() {
-    mocked(api.site.getCatalogFiles.query).mockResolvedValue({
-      items: manyItems(3),
-    });
-  },
-};
-
-// export const WithPagination: Story = {
-//   parameters: {
-//     nextjs: {
-//       router: {
-//         pathname: "/blog",
-//         query: {
-//           page: 1,
-//         },
-//       },
-//     },
+// export const WithOldFieldsProp: Story = {
+//   args: {
+//     fields: ["title", "description", "date", "authors", "image"],
 //   },
-//   args: { pageNumber: 2, pageSize: 10 },
 //   async beforeEach() {
 //     mocked(api.site.getCatalogFiles.query).mockResolvedValue({
-//       items: manyItems(23),
+//       items: manyItems(3),
 //     });
 //   },
 // };
+
+export const WithPagination: Story = {
+  parameters: {
+    nextjs: {
+      router: {
+        pathname: "/blog",
+        query: {
+          page: 1,
+        },
+      },
+    },
+  },
+  args: { pageNumber: 2, pageSize: 10 },
+  async beforeEach() {
+    mocked(api.site.getCatalogFiles.query).mockResolvedValue({
+      items: manyItems(23),
+    });
+  },
+};
 
 export const CustomSlots: Story = {
   args: {
