@@ -561,7 +561,7 @@
     }
   }
 
-  .page-hero-cta:nth-of-type(2) {
+  .page-hero-cta + .page-hero-cta {
     color: var(--color-foreground-900);
     font-size: var(--font-size-sm);
     line-height: var(--line-height-none);
