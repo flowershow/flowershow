@@ -3,7 +3,7 @@ import { mocked } from "storybook/test";
 import List from "@/components/public/mdx/list";
 import { api } from "@/trpc/server";
 import { manyItems } from "@/stories/__fixtures__/catalog";
-import "@/styles/global.css";
+import "@/styles/default-theme.css";
 
 const meta: Meta<typeof List> = {
   title: "Other/List",

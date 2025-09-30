@@ -38,9 +38,18 @@ export interface ListProps {
   /** Optional: Directory (relative to site root) to list items from. Default: "" (root folder). */
   dir?: string;
   /** Optional: Page frontmatter fields to display. `Array<"title" | "description" | "authors" | "date" | "image">`<br/>⚠️ NOTE This prop is going to be deprecated in favor of the new `slots` prop.*/
-  fields?: Array<Field>; // TODO TB deprecated
-  slots?: SlotsMap; // map slot -> metadata key
-  /** Items per page. */
+  fields?: Array<Field>;
+  /** Map of display slots to metadata fields. Available slots are:
+   * - "media" (image)
+   * - "eyebrow" (small text above headline)
+   * - "headline" (main title)
+   * - "summary" (description)
+   * - "footnote" (small text below)
+   *
+   * Each slot can be mapped to any metadata field from the page frontmatter.
+   */
+  slots?: SlotsMap;
+  /** Items per page for pagination. If not provided, items won't be paginated.*/
   pageSize?: number;
 }
 
@@ -52,28 +61,30 @@ export default async function List({
   // slotsFormat = { eyebrow: "date", footnote: "join: , " },
   // locale,
   pageNumber = 1,
-  pageSize = 10,
+  pageSize,
 }: ListProps) {
   const data = await api.site.getCatalogFiles.query({
     siteId,
     dir,
     slots,
   });
-  const pageItems = data.items.slice(
-    (pageNumber - 1) * pageSize,
-    pageNumber * pageSize,
-  );
 
   if (!data?.items?.length) {
     return <div>No items found</div>;
   }
-  const totalPages = Math.ceil(data.items.length / pageSize);
+
+  // Only paginate if pageSize is provided
+  const items = pageSize
+    ? data.items.slice((pageNumber - 1) * pageSize, pageNumber * pageSize)
+    : data.items;
+
+  const totalPages = pageSize ? Math.ceil(data.items.length / pageSize) : 1;
 
   const slotsMap = fields ? _convertFieldsToSlotsMap(fields) : slots;
 
   return (
     <div className="list-component not-prose">
-      {pageItems.map(({ url, metadata }) => (
+      {items.map(({ url, metadata }) => (
         <article key={url} className="list-component-item">
           {slotsMap.media && (
             <div className="list-component-item-media">
@@ -112,7 +123,9 @@ export default async function List({
           </div>
         </article>
       ))}
-      {totalPages > 1 && <ListComponentPagination totalPages={totalPages} />}
+      {pageSize && pageSize < data.items.length && (
+        <ListComponentPagination totalPages={totalPages} />
+      )}
     </div>
   );
 }
