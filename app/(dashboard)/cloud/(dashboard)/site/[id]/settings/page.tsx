@@ -65,19 +65,6 @@ export default async function SiteSettingsIndex({
           <Form
             title="Branch"
             description="GitHub repository branch used to sync content for your site."
-            helpText={
-              <p>
-                Learn more about{" "}
-                <a
-                  className="underline"
-                  href="https://flowershow.app/docs/site-settings#branch"
-                >
-                  Branch
-                  <ExternalLinkIcon className="inline h-4" />
-                </a>
-                .
-              </p>
-            }
             inputAttrs={{
               name: "ghBranch",
               type: "text",
