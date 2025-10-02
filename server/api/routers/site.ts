@@ -1208,7 +1208,9 @@ export const siteRouter = createTRPCRouter({
               };
             });
 
-            return await Promise.all(authorsPromises);
+            const authors = await Promise.all(authorsPromises);
+
+            return authors.filter(Boolean);
           },
           undefined,
           {
