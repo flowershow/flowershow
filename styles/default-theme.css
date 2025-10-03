@@ -839,7 +839,8 @@
     aspect-ratio: 16 / 9;
 
     @media (min-width: 1024px) {
-      aspect-ratio: 2/1;
+      /* align-self: flex-start; */
+      aspect-ratio: 3 / 2;
       flex-shrink: 0;
       width: 16rem;
     }
@@ -859,6 +860,7 @@
   }
 
   .list-component-item-content {
+    width: 100%;
     display: flex;
     flex-direction: column;
   }
@@ -889,6 +891,7 @@
   }
 
   .list-component-item-summary {
+    margin-bottom: 0.5rem;
     flex-grow: 1;
     overflow: hidden;
     display: -webkit-box;
@@ -897,6 +900,7 @@
     color: var(--color-foreground-700);
   }
   .list-component-item-footnote {
+    width: 100%;
     margin-top: 1rem;
     display: flex;
     border-top-width: 1px;

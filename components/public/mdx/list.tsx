@@ -100,22 +100,22 @@ export default async function List({
           )}
 
           <div className="list-component-item-content">
-            {slotsMap.eyebrow && (
+            {slotsMap.eyebrow && getValue("eyebrow", metadata, slotsMap) && (
               <div className="list-component-item-eyebrow">
                 {fmt("eyebrow", metadata, slotsMap)}
               </div>
             )}
-            {slotsMap.headline && (
+            {slotsMap.headline && getValue("headline", metadata, slotsMap) && (
               <h3 className="list-component-item-headline">
                 <a href={url!}>{fmt("headline", metadata, slotsMap)}</a>
               </h3>
             )}
-            {slotsMap.summary && (
+            {slotsMap.summary && getValue("summary", metadata, slotsMap) && (
               <p className="list-component-item-summary">
                 {fmt("summary", metadata, slotsMap)}
               </p>
             )}
-            {slotsMap.footnote && (
+            {slotsMap.footnote && getValue("footnote", metadata, slotsMap) && (
               <p className="list-component-item-footnote">
                 {fmt("footnote", metadata, slotsMap)}
               </p>

@@ -108,7 +108,7 @@ export default async function SiteSettingsIndex({
                   className="underline"
                   href="https://flowershow.app/docs/site-settings#auto-sync"
                 >
-                  Auto-sync
+                  Auto-Sync
                   <ExternalLinkIcon className="inline h-4" />
                 </a>
                 .
