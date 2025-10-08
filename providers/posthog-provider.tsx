@@ -15,6 +15,7 @@ export function PostHogProvider({ children }) {
       ui_host: env.NEXT_PUBLIC_POSTHOG_HOST,
       persistence: "cookie", // localStorage+cookie won't work across subdomains
       cross_subdomain_cookie: true,
+      disable_web_experiments: false, // https://posthog.com/docs/experiments/no-code-web-experiments
     });
   }, []);
 
