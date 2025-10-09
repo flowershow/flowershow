@@ -7,7 +7,6 @@ import { siteKeyBytes } from "./lib/site-hmac-key";
 import { jwtVerify } from "jose";
 import { getSiteUrl } from "./lib/get-site-url";
 import { InternalSite } from "./lib/db/internal";
-import { PostHogFeatureFlag } from "posthog-node";
 
 export const config = {
   matcher: [
@@ -27,9 +26,6 @@ export default async function middleware(req: NextRequest) {
   if (url.pathname.startsWith("/relay-qYYb/")) {
     return proxyPostHog(req);
   }
-  // Prepare PH bootstrap once per request
-  const phBootstrap = await buildPHBootstrapCookie(req);
-  console.log(phBootstrap);
 
   // 1) Normalize hostname (handle Vercel preview)
   let hostname = req.headers.get("host")!;
@@ -52,6 +48,8 @@ export default async function middleware(req: NextRequest) {
 
   // 4) Cloud app (dashboard)
   if (hostname === env.NEXT_PUBLIC_CLOUD_DOMAIN) {
+    const phBootstrap = await buildPHBootstrapCookie(req);
+
     const session = await getToken({ req });
 
     if (!session && pathname !== "/login") {
@@ -144,48 +142,52 @@ export default async function middleware(req: NextRequest) {
   if (raw) return raw;
 
   // Posthog experiments for flowershow.app site pages
-  // Local testing
-  // if (
-  //   (hostname === "flowershow.app" || hostname === "test.localhost:3000") &&
-  //   phBootstrap
-  // ) {
-  if (hostname === "flowershow.app" && phBootstrap) {
-    const parsed = JSON.parse(phBootstrap.value) as {
-      featureFlags: {
-        [key: string]: {
-          enabled: boolean;
-          variant: "control" | "test";
+  // if (hostname === "flowershow.app" || hostname === "test.localhost:3000") {
+  if (hostname === "flowershow.app" && pathname === "/") {
+    const phBootstrap = await buildPHBootstrapCookie(req);
+    if (phBootstrap) {
+      try {
+        const parsed = JSON.parse(phBootstrap.value) as {
+          featureFlags: {
+            [key: string]: {
+              enabled: boolean;
+              variant: "control" | "test";
+            };
+          };
         };
-      };
-    };
 
-    const flags = parsed.featureFlags;
+        const flags = parsed.featureFlags;
 
-    console.log({ flags, pathname });
+        const landingPageFlag = flags["landing-page-a-b"];
+        const isVariantB =
+          landingPageFlag &&
+          landingPageFlag.enabled &&
+          landingPageFlag.variant === "test";
 
-    if (pathname === "/") {
-      const landingPageFlag = flags["landing-page-a-b"];
-      const isVariantB =
-        landingPageFlag &&
-        landingPageFlag.enabled &&
-        landingPageFlag.variant === "test";
-
-      console.log({ isVariantB, pathname });
-      if (isVariantB) {
-        return withPHBootstrapCookie(
-          NextResponse.rewrite(
-            new URL(`/site/_domain/${hostname}/README-B`, req.url),
-          ),
-          phBootstrap,
+        if (isVariantB) {
+          return withPHBootstrapCookie(
+            NextResponse.rewrite(
+              new URL(`/site/_domain/${hostname}/README-B`, req.url),
+            ),
+            phBootstrap,
+          );
+        } else {
+          return withPHBootstrapCookie(
+            NextResponse.rewrite(new URL(`/site/_domain/${hostname}`, req.url)),
+            phBootstrap,
+          );
+        }
+      } catch {
+        return NextResponse.rewrite(
+          new URL(`/site/_domain/${hostname}${path}`, req.url),
         );
       }
     }
   }
 
   // Render custom-domain site
-  return withPHBootstrapCookie(
-    NextResponse.rewrite(new URL(`/site/_domain/${hostname}${path}`, req.url)),
-    phBootstrap,
+  return NextResponse.rewrite(
+    new URL(`/site/_domain/${hostname}${path}`, req.url),
   );
 }
 
