@@ -7,6 +7,7 @@ import { siteKeyBytes } from "./lib/site-hmac-key";
 import { jwtVerify } from "jose";
 import { getSiteUrl } from "./lib/get-site-url";
 import { InternalSite } from "./lib/db/internal";
+import { PostHogFeatureFlag } from "posthog-node";
 
 export const config = {
   matcher: [
@@ -26,6 +27,9 @@ export default async function middleware(req: NextRequest) {
   if (url.pathname.startsWith("/relay-qYYb/")) {
     return proxyPostHog(req);
   }
+  // Prepare PH bootstrap once per request
+  const phBootstrap = await buildPHBootstrapCookie(req);
+  console.log(phBootstrap);
 
   // 1) Normalize hostname (handle Vercel preview)
   let hostname = req.headers.get("host")!;
@@ -51,12 +55,21 @@ export default async function middleware(req: NextRequest) {
     const session = await getToken({ req });
 
     if (!session && pathname !== "/login") {
-      return NextResponse.redirect(new URL("/login", req.url));
+      return withPHBootstrapCookie(
+        NextResponse.redirect(new URL("/login", req.url)),
+        phBootstrap,
+      );
     }
     if (session && pathname === "/login") {
-      return NextResponse.redirect(new URL("/", req.url));
+      return withPHBootstrapCookie(
+        NextResponse.redirect(new URL("/", req.url)),
+        phBootstrap,
+      );
     }
-    return NextResponse.rewrite(new URL(`/cloud${path}`, req.url));
+    return withPHBootstrapCookie(
+      NextResponse.rewrite(new URL(`/cloud${path}`, req.url)),
+      phBootstrap,
+    );
   }
 
   // 5) Root domain (my.flowershow.app) — user sites at /@<user>/<project>
@@ -130,16 +143,59 @@ export default async function middleware(req: NextRequest) {
   const raw = rewriteRawIfNeeded(path, `/api/raw/_domain/${hostname}`, req);
   if (raw) return raw;
 
+  // Posthog experiments for flowershow.app site pages
+  // Local testing
+  // if (
+  //   (hostname === "flowershow.app" || hostname === "test.localhost:3000") &&
+  //   phBootstrap
+  // ) {
+  if (hostname === "flowershow.app" && phBootstrap) {
+    const parsed = JSON.parse(phBootstrap.value) as {
+      featureFlags: {
+        [key: string]: {
+          enabled: boolean;
+          variant: "control" | "test";
+        };
+      };
+    };
+
+    const flags = parsed.featureFlags;
+
+    console.log({ flags, pathname });
+
+    if (pathname === "/") {
+      const landingPageFlag = flags["landing-page-a-b"];
+      const isVariantB =
+        landingPageFlag &&
+        landingPageFlag.enabled &&
+        landingPageFlag.variant === "test";
+
+      console.log({ isVariantB, pathname });
+      if (isVariantB) {
+        return withPHBootstrapCookie(
+          NextResponse.rewrite(
+            new URL(`/site/_domain/${hostname}/README-B`, req.url),
+          ),
+          phBootstrap,
+        );
+      }
+    }
+  }
+
   // Render custom-domain site
-  return NextResponse.rewrite(
-    new URL(`/site/_domain/${hostname}${path}`, req.url),
+  return withPHBootstrapCookie(
+    NextResponse.rewrite(new URL(`/site/_domain/${hostname}${path}`, req.url)),
+    phBootstrap,
   );
 }
 
 /* ───────────────────────────── Helpers ───────────────────────────── */
 
-function rewrite(targetPath: string, req: NextRequest) {
-  return NextResponse.rewrite(new URL(targetPath, req.url));
+function rewrite(targetPath: string, req: NextRequest, ph?: PHBootstrap) {
+  return withPHBootstrapCookie(
+    NextResponse.rewrite(new URL(targetPath, req.url)),
+    ph ?? null,
+  );
 }
 
 function normalizePath(url: URL) {
@@ -237,4 +293,74 @@ function proxyPostHog(req: NextRequest) {
   headers.set("host", hostname);
 
   return NextResponse.rewrite(proxied, { headers });
+}
+
+type PHBootstrap = { name: string; value: string } | null;
+
+async function buildPHBootstrapCookie(req: NextRequest): Promise<PHBootstrap> {
+  // Only for real HTML page views
+  const isGet = req.method === "GET";
+  const accept = req.headers.get("accept") || "";
+  const isHtml = accept.includes("text/html");
+  if (!isGet || !isHtml) return null;
+
+  const apiKey = env.NEXT_PUBLIC_POSTHOG_KEY;
+  if (!apiKey) return null;
+
+  // Try to reuse PH’s own cookie if it exists (so the user keeps the same distinct_id)
+  const phCookieName = `ph_${apiKey}_posthog`;
+  const phCookie = req.cookies.get(phCookieName);
+
+  let distinctId: string;
+  try {
+    distinctId = phCookie
+      ? JSON.parse(phCookie.value)?.distinct_id
+      : crypto.randomUUID();
+  } catch {
+    distinctId = crypto.randomUUID();
+  }
+
+  // Call the flags endpoint via proxy to reduce ad-block/CORS issues
+  const flagsUrl = new URL("/relay-qYYb/flags?v=2", req.nextUrl.origin);
+
+  try {
+    const res = await fetch(flagsUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ api_key: apiKey, distinct_id: distinctId }),
+      cache: "no-store",
+    });
+
+    if (!res.ok) throw new Error("PH flags fetch failed");
+
+    const data = await res.json();
+
+    const bootstrapData = {
+      distinctID: distinctId,
+      featureFlags: data?.flags ?? [],
+      // featureFlagPayloads: data?.featureFlagPayloads ?? {}
+    };
+
+    return {
+      name: "ph_bootstrap",
+      value: JSON.stringify(bootstrapData),
+    };
+  } catch {
+    return null;
+  }
+}
+
+function withPHBootstrapCookie(res: NextResponse, ph: PHBootstrap) {
+  if (!ph) return res;
+  res.cookies.set(ph.name, ph.value, {
+    httpOnly: false,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 10,
+  });
+  res.headers.set(
+    "Vary",
+    [res.headers.get("Vary"), "Cookie"].filter(Boolean).join(", "),
+  );
+  return res;
 }

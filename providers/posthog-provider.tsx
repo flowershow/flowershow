@@ -10,12 +10,22 @@ export function PostHogProvider({ children }) {
   const { data: session, status } = useSession();
 
   useEffect(() => {
+    const rawCookie = document.cookie.match(
+      /(?:^|;\s*)ph_bootstrap=([^;]+)/,
+    )?.[1];
+    const bootstrapData = rawCookie
+      ? JSON.parse(decodeURIComponent(rawCookie))
+      : undefined;
+
+    console.log();
+
     posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
       api_host: "/relay-qYYb",
       ui_host: env.NEXT_PUBLIC_POSTHOG_HOST,
       persistence: "cookie", // localStorage+cookie won't work across subdomains
       cross_subdomain_cookie: true,
       disable_web_experiments: false, // https://posthog.com/docs/experiments/no-code-web-experiments
+      bootstrap: bootstrapData,
     });
   }, []);
 
