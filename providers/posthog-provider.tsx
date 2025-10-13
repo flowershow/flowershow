@@ -17,8 +17,6 @@ export function PostHogProvider({ children }) {
       ? JSON.parse(decodeURIComponent(rawCookie))
       : undefined;
 
-    console.log();
-
     posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
       api_host: "/relay-qYYb",
       ui_host: env.NEXT_PUBLIC_POSTHOG_HOST,

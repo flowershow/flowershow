@@ -7,6 +7,8 @@ import { siteKeyBytes } from "./lib/site-hmac-key";
 import { jwtVerify } from "jose";
 import { getSiteUrl } from "./lib/get-site-url";
 import { InternalSite } from "./lib/db/internal";
+import PostHogClient from "./lib/server-posthog";
+import { PostHog } from "posthog-node";
 
 export const config = {
   matcher: [
@@ -21,6 +23,8 @@ export const config = {
 
 export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;
+
+  const posthog = PostHogClient();
 
   // 0) PostHog proxy
   if (url.pathname.startsWith("/relay-qYYb/")) {
@@ -48,7 +52,7 @@ export default async function middleware(req: NextRequest) {
 
   // 4) Cloud app (dashboard)
   if (hostname === env.NEXT_PUBLIC_CLOUD_DOMAIN) {
-    const phBootstrap = await buildPHBootstrapCookie(req);
+    const phBootstrap = await buildPHBootstrapCookie(req, posthog);
 
     const session = await getToken({ req });
 
@@ -142,27 +146,27 @@ export default async function middleware(req: NextRequest) {
   if (raw) return raw;
 
   // Posthog experiments for flowershow.app site pages
-  // if (hostname === "flowershow.app" || hostname === "test.localhost:3000") {
-  if (hostname === "flowershow.app" && pathname === "/") {
-    const phBootstrap = await buildPHBootstrapCookie(req);
+  if (
+    (hostname === "flowershow.app" || hostname === "test.localhost:3000") &&
+    pathname === "/"
+  ) {
+    const phBootstrap = await buildPHBootstrapCookie(req, posthog);
+    // console.log({ phBootstrap });
     if (phBootstrap) {
       try {
-        const parsed = JSON.parse(phBootstrap.value) as {
-          featureFlags: {
-            [key: string]: {
-              enabled: boolean;
-              variant: "control" | "test";
-            };
-          };
-        };
+        const flags = phBootstrap.value.featureFlags;
 
-        const flags = parsed.featureFlags;
+        const landingPageFlagName = "landing-page-a-b";
+        const landingPageFlag = flags[landingPageFlagName];
+        const isVariantB = landingPageFlag === "test";
 
-        const landingPageFlag = flags["landing-page-a-b"];
-        const isVariantB =
-          landingPageFlag &&
-          landingPageFlag.enabled &&
-          landingPageFlag.variant === "test";
+        // This is only to send "Feature flag called event" for this flag
+        await posthog.getFeatureFlag(
+          landingPageFlagName,
+          phBootstrap.value.distinctID,
+        );
+
+        // console.log({ isVariantB });
 
         if (isVariantB) {
           return withPHBootstrapCookie(
@@ -297,9 +301,16 @@ function proxyPostHog(req: NextRequest) {
   return NextResponse.rewrite(proxied, { headers });
 }
 
-type PHBootstrap = { name: string; value: string } | null;
+type PHBootstrap = {
+  name: string;
+  value: {
+    distinctID: string;
+    featureFlags: Record<string, string | boolean>;
+    featureFlagsPayloads: Record<string, any>;
+  };
+} | null;
 
-async function buildPHBootstrapCookie(req: NextRequest): Promise<PHBootstrap> {
+async function buildPHBootstrapCookie(req: NextRequest, posthog: PostHog) {
   // Only for real HTML page views
   const isGet = req.method === "GET";
   const accept = req.headers.get("accept") || "";
@@ -322,30 +333,17 @@ async function buildPHBootstrapCookie(req: NextRequest): Promise<PHBootstrap> {
     distinctId = crypto.randomUUID();
   }
 
-  // Call the flags endpoint via proxy to reduce ad-block/CORS issues
-  const flagsUrl = new URL("/relay-qYYb/flags?v=2", req.nextUrl.origin);
-
   try {
-    const res = await fetch(flagsUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ api_key: apiKey, distinct_id: distinctId }),
-      cache: "no-store",
-    });
-
-    if (!res.ok) throw new Error("PH flags fetch failed");
-
-    const data = await res.json();
-
+    const data = await posthog.getAllFlagsAndPayloads(distinctId);
     const bootstrapData = {
       distinctID: distinctId,
-      featureFlags: data?.flags ?? [],
-      // featureFlagPayloads: data?.featureFlagPayloads ?? {}
+      featureFlags: data.featureFlags ?? {},
+      featureFlagsPayloads: data.featureFlagPayloads ?? {},
     };
 
     return {
       name: "ph_bootstrap",
-      value: JSON.stringify(bootstrapData),
+      value: bootstrapData,
     };
   } catch {
     return null;
@@ -354,7 +352,9 @@ async function buildPHBootstrapCookie(req: NextRequest): Promise<PHBootstrap> {
 
 function withPHBootstrapCookie(res: NextResponse, ph: PHBootstrap) {
   if (!ph) return res;
-  res.cookies.set(ph.name, ph.value, {
+  const cookieName = ph.name;
+  const cookieValue = JSON.stringify(ph.value);
+  res.cookies.set(cookieName, cookieValue, {
     httpOnly: false,
     sameSite: "lax",
     path: "/",
