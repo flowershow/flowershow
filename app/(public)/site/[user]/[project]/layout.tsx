@@ -23,7 +23,7 @@ import Nav from "@/components/public/nav";
 import { SiteProvider } from "@/components/public/site-context";
 import Providers from "./providers";
 
-import { fontBody, fontHeading } from "@/styles/fonts";
+import { fontBody, fontBrand, fontHeading } from "@/styles/fonts";
 import "@portaljs/components/styles.css";
 import "@/styles/prism.css";
 import "@/styles/callouts.css";
@@ -73,13 +73,14 @@ interface RouteParams {
   project: string;
 }
 
-export default async function PublicLayout({
-  params,
-  children,
-}: {
-  params: RouteParams;
+export default async function PublicLayout(props: {
+  params: Promise<RouteParams>;
   children: ReactNode;
 }) {
+  const params = await props.params;
+
+  const { children } = props;
+
   const session = await getSession();
   const userName = decodeURIComponent(params.user); // user's github username or "_domain" if on custom domain (see middleware)
   const projectName = decodeURIComponent(params.project);
@@ -203,7 +204,11 @@ export default async function PublicLayout({
 
   return (
     <html
-      className={clsx(fontBody.variable, fontHeading.variable)}
+      className={clsx(
+        fontBody.variable,
+        fontHeading.variable,
+        fontBrand.variable,
+      )}
       lang="en"
       suppressHydrationWarning
       data-theme={defaultMode}
@@ -239,7 +244,7 @@ export default async function PublicLayout({
         )}
       </head>
       <body>
-        <TRPCReactProvider headers={headers()}>
+        <TRPCReactProvider headers={await headers()}>
           <Providers>
             {/* it should be in the head */}
             {siteConfig?.analytics && (

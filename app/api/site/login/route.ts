@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     .setExpirationTime(`${MAX_AGE}s`)
     .sign(secret);
 
-  cookies().set({
+  (await cookies()).set({
     name: SITE_ACCESS_COOKIE_NAME(site.id),
     value: token,
     httpOnly: true,

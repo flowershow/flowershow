@@ -42,7 +42,8 @@ interface RouteParams {
 
 type SearchParams = Promise<{ [key: string]: string | undefined }>;
 
-export async function generateMetadata({ params }: { params: RouteParams }) {
+export async function generateMetadata(props: { params: Promise<RouteParams> }) {
+  const params = await props.params;
   const projectName = decodeURIComponent(params.project);
   const userName = decodeURIComponent(params.user);
   const slug = params.slug ? params.slug.join("/") : "/";
@@ -171,18 +172,18 @@ export async function generateMetadata({ params }: { params: RouteParams }) {
   };
 }
 
-export default async function SitePage({
-  params,
-  searchParams,
-}: {
-  params: RouteParams;
-  searchParams: SearchParams;
-}) {
+export default async function SitePage(
+  props: {
+    params: Promise<RouteParams>;
+    searchParams: Promise<SearchParams>;
+  }
+) {
+  const params = await props.params;
   const projectName = decodeURIComponent(params.project);
   const userName = decodeURIComponent(params.user);
   const slug = params.slug ? params.slug.join("/") : "/";
   const decodedSlug = slug.replace(/%20/g, "+");
-  const pageParam = (await searchParams).page;
+  const pageParam = (await props.searchParams).page;
   const pageNumber = pageParam ? Number(pageParam) : 1;
 
   const site = await getSite(userName, projectName);

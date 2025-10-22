@@ -4,15 +4,14 @@ import prisma from "@/server/db";
 
 export async function GET(
   req: NextRequest,
-  {
-    params,
-  }: {
-    params: {
+  props: {
+    params: Promise<{
       username: string;
       projectname: string;
-    };
-  },
+    }>;
+  }
 ) {
+  const params = await props.params;
   const { username, projectname } = params;
   let site: InternalSite | null = null;
 

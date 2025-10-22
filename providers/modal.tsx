@@ -7,8 +7,8 @@ import {
   useEffect,
   useRef,
 } from "react";
-import FocusTrap from "focus-trap-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { FocusTrap } from "focus-trap-react";
+import { AnimatePresence, motion } from "motion/react";
 import Leaflet from "./leaflet";
 import useWindowSize from "@/lib/hooks/use-window-size";
 

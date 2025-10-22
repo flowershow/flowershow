@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import fs from "fs";
 import { test as baseTest } from "@playwright/test";
 import { SiteSettingsPage } from "./site-settings-page";

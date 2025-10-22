@@ -1,12 +1,14 @@
 "use client";
-import {
-  type TocSection,
-  collectHeadings,
-  useTableOfContents,
-} from "@portaljs/core";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+
+export interface TocSection {
+  id: string;
+  title: string;
+  level: string;
+  children?: any;
+}
 
 function TocItems({
   section,
@@ -79,3 +81,111 @@ export default function TableOfContents({
     </nav>
   );
 }
+
+export function collectHeadings(nodes: NodeListOf<HTMLHeadingElement>) {
+  const sections: Array<TocSection> = [];
+
+  Array.from(nodes).forEach((node) => {
+    const { id, innerText: title, tagName: level } = node;
+
+    if (!(id && title)) {
+      return;
+    }
+
+    if (level === "H1") {
+      sections.push({ id, title, level, children: [] });
+    }
+
+    const parentSection = sections[sections.length - 1];
+
+    if (level === "H2") {
+      if (parentSection && level > parentSection.level) {
+        (parentSection as TocSection).children.push({
+          id,
+          title,
+          level,
+          children: [],
+        });
+      } else {
+        sections.push({ id, title, level, children: [] });
+      }
+    }
+
+    if (level === "H3") {
+      const subSection =
+        parentSection?.children[parentSection?.children?.length - 1];
+      if (subSection && level > subSection.level) {
+        (subSection as TocSection).children.push({
+          id,
+          title,
+          level,
+          children: [],
+        });
+      } else if (parentSection && level > parentSection.level) {
+        (parentSection as TocSection).children.push({
+          id,
+          title,
+          level,
+          children: [],
+        });
+      } else {
+        sections.push({ id, title, level, children: [] });
+      }
+    }
+
+    // TODO types
+    sections.push(...collectHeadings((node.children as any) ?? []));
+  });
+
+  return sections;
+}
+
+// TODO types
+export const useTableOfContents = (tableOfContents) => {
+  const [currentSection, setCurrentSection] = useState(tableOfContents[0]?.id);
+
+  const getHeadings = useCallback((toc) => {
+    return toc
+      .flatMap((node) => [
+        node.id,
+        ...node.children.flatMap((child) => [
+          child.id,
+          ...child.children.map((subChild) => subChild.id),
+        ]),
+      ])
+      .map((id) => {
+        const el = document.getElementById(id);
+        if (!el) return null;
+
+        const style = window.getComputedStyle(el);
+        const scrollMt = parseFloat(style.scrollMarginTop);
+
+        const top = window.scrollY + el.getBoundingClientRect().top - scrollMt;
+        return { id, top };
+      })
+      .filter((el) => !!el);
+  }, []);
+
+  useEffect(() => {
+    if (tableOfContents.length === 0) return;
+    const headings = getHeadings(tableOfContents);
+    function onScroll() {
+      const top = window.scrollY + 4.5;
+      let current = headings[0].id;
+      headings.forEach((heading) => {
+        if (top >= heading.top) {
+          current = heading.id;
+        }
+        return current;
+      });
+      setCurrentSection(current);
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [getHeadings, tableOfContents]);
+
+  return currentSection;
+};

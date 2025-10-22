@@ -3,7 +3,11 @@ import { ReactNode } from "react";
 
 import "@/styles/dashboard.css";
 import clsx from "clsx";
-import { fontDashboardBody, fontDashboardHeading } from "@/styles/fonts";
+import {
+  fontBrand,
+  fontDashboardBody,
+  fontDashboardHeading,
+} from "@/styles/fonts";
 import { getConfig } from "@/lib/app-config";
 
 const { favicon } = getConfig();
@@ -19,6 +23,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       className={clsx(
         fontDashboardHeading.variable,
         fontDashboardBody.variable,
+        fontBrand.variable,
       )}
       lang="en"
       suppressHydrationWarning

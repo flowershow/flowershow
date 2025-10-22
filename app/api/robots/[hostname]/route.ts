@@ -2,10 +2,8 @@ import { env } from "@/env.mjs";
 import prisma from "@/server/db";
 import { NextRequest } from "next/server";
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { hostname: string } },
-) {
+export async function GET(request: NextRequest, props: { params: Promise<{ hostname: string }> }) {
+  const params = await props.params;
   const { hostname } = params;
 
   const site = await prisma.site.findFirst({

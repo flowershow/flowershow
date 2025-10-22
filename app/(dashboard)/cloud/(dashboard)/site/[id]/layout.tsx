@@ -1,13 +1,18 @@
 import { ReactNode } from "react";
 import { SyncStatusProvider } from "./sync-status-provider";
 
-export default function SiteLayout({
-  children,
-  params,
-}: {
-  children: ReactNode;
-  params: { id: string };
-}) {
+export default async function SiteLayout(
+  props: {
+    children: ReactNode;
+    params: Promise<{ id: string }>;
+  }
+) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   return (
     <SyncStatusProvider siteId={params.id}>
       <div className="flex flex-col space-y-12 py-8">

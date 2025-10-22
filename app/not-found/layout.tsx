@@ -1,4 +1,8 @@
-import { fontDashboardBody, fontDashboardHeading } from "@/styles/fonts";
+import {
+  fontBrand,
+  fontDashboardBody,
+  fontDashboardHeading,
+} from "@/styles/fonts";
 import clsx from "clsx";
 
 import "@/styles/dashboard.css";
@@ -23,6 +27,7 @@ export default function RootLayout({
       className={clsx(
         fontDashboardHeading.variable,
         fontDashboardBody.variable,
+        fontBrand.variable,
       )}
       lang="en"
       suppressHydrationWarning

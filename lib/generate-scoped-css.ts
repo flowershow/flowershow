@@ -44,16 +44,17 @@ async function generateUnoCSS(content: string, options?: { minify?: boolean }) {
   const unoGenerator = await createGenerator({
     presets: [
       presetWind3(),
-      presetIcons({
-        collections: {
-          mdi: () =>
-            import("@iconify-json/mdi/icons.json").then((i) => i.default),
-        },
-        // extraProperties: {
-        //   display: "inline-block",
-        //   "vertical-align": "middle",
-        // },
-      }),
+      // TODO this stopped working after upgrade to Next.js 15
+      // presetIcons({
+      //   collections: {
+      //     mdi: () =>
+      //       import("@iconify-json/mdi/icons.json").then((i) => i.default),
+      //   },
+      //   // extraProperties: {
+      //   //   display: "inline-block",
+      //   //   "vertical-align": "middle",
+      //   // },
+      // }),
     ],
   });
   return unoGenerator.generate(classNames, options);

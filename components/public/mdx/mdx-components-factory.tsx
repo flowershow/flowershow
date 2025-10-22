@@ -78,7 +78,7 @@ export const mdxComponentsFactory = ({
     img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
       if (!props.src) return <img {...props} />;
       // TODO temporary quick patch to support special signs in file names
-      const [sitePath, assetPath] = props.src.split("/_r/-/");
+      const [sitePath, assetPath] = (props.src as string).split("/_r/-/");
       if (!sitePath || !assetPath) {
         return <img {...props} />;
       }

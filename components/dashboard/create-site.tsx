@@ -148,7 +148,6 @@ export default function CreateSiteModal() {
             className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black     "
             value={data.gh_scope}
             required
-            placeholder="Select a GitHub account"
             disabled={!scopes}
             onChange={(e) =>
               setData({ ...data, gh_scope: e.target.value, ghRepository: "" })
@@ -190,7 +189,6 @@ export default function CreateSiteModal() {
             className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black     "
             value={data.ghRepository}
             required
-            placeholder="Select a repository"
             disabled={!data.gh_scope || !repos}
             onChange={(e) => setData({ ...data, ghRepository: e.target.value })}
           >

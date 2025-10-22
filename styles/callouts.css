@@ -8,7 +8,7 @@
       @apply flex flex-row items-start gap-2 p-0 font-bold text-blue-500;
     }
 
-    &:not:only-child {
+    &:not(:only-child) {
       @apply mb-2;
     }
 
@@ -122,11 +122,13 @@ details[data-callout][open] > summary[data-callout-title]::after {
   }
 }
 
-[data-callout][data-callout-type="abstract"] > [data-callout-title]:empty::after {
+[data-callout][data-callout-type="abstract"]
+  > [data-callout-title]:empty::after {
   content: "Abstract";
 }
 
-[data-callout][data-callout-type="summary"] > [data-callout-title]:empty::after {
+[data-callout][data-callout-type="summary"]
+  > [data-callout-title]:empty::after {
   content: "Summary";
 }
 
@@ -161,7 +163,8 @@ details[data-callout][open] > summary[data-callout-title]::after {
   content: "Hint";
 }
 
-[data-callout][data-callout-type="important"] > [data-callout-title]:empty::after {
+[data-callout][data-callout-type="important"]
+  > [data-callout-title]:empty::after {
   content: "Important";
 }
 
@@ -184,7 +187,8 @@ details[data-callout][open] > summary[data-callout-title]::after {
   }
 }
 
-[data-callout][data-callout-type="success"] > [data-callout-title]:empty::after {
+[data-callout][data-callout-type="success"]
+  > [data-callout-title]:empty::after {
   content: "Success";
 }
 
@@ -215,7 +219,8 @@ details[data-callout][open] > summary[data-callout-title]::after {
   }
 }
 
-[data-callout][data-callout-type="question"] > [data-callout-title]:empty::after {
+[data-callout][data-callout-type="question"]
+  > [data-callout-title]:empty::after {
   content: "Question";
 }
 
@@ -246,15 +251,18 @@ details[data-callout][open] > summary[data-callout-title]::after {
   }
 }
 
-[data-callout][data-callout-type="warning"] > [data-callout-title]:empty::after {
+[data-callout][data-callout-type="warning"]
+  > [data-callout-title]:empty::after {
   content: "Warning";
 }
 
-[data-callout][data-callout-type="caution"] > [data-callout-title]:empty::after {
+[data-callout][data-callout-type="caution"]
+  > [data-callout-title]:empty::after {
   content: "Caution";
 }
 
-[data-callout][data-callout-type="attention"] > [data-callout-title]:empty::after {
+[data-callout][data-callout-type="attention"]
+  > [data-callout-title]:empty::after {
   content: "Attention";
 }
 
@@ -277,7 +285,8 @@ details[data-callout][open] > summary[data-callout-title]::after {
   }
 }
 
-[data-callout][data-callout-type="failure"] > [data-callout-title]:empty::after {
+[data-callout][data-callout-type="failure"]
+  > [data-callout-title]:empty::after {
   content: "Failure";
 }
 
@@ -285,7 +294,8 @@ details[data-callout][open] > summary[data-callout-title]::after {
   content: "Fail";
 }
 
-[data-callout][data-callout-type="missing"] > [data-callout-title]:empty::after {
+[data-callout][data-callout-type="missing"]
+  > [data-callout-title]:empty::after {
   content: "Missing";
 }
 
@@ -353,7 +363,8 @@ details[data-callout][open] > summary[data-callout-title]::after {
   }
 }
 
-[data-callout][data-callout-type="example"] > [data-callout-title]:empty::after {
+[data-callout][data-callout-type="example"]
+  > [data-callout-title]:empty::after {
   content: "Example";
 }
 

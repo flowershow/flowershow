@@ -1,5 +1,4 @@
 // @ts-check
-import { env } from "./env.mjs";
 import { withSentryConfig } from "@sentry/nextjs";
 
 /**

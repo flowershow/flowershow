@@ -8,7 +8,11 @@ import Providers from "./providers";
 import { env } from "@/env.mjs";
 import { getConfig } from "@/lib/app-config";
 import clsx from "clsx";
-import { fontDashboardBody, fontDashboardHeading } from "@/styles/fonts";
+import {
+  fontDashboardBody,
+  fontDashboardHeading,
+  fontBrand,
+} from "@/styles/fonts";
 
 import "@/styles/dashboard.css";
 
@@ -60,6 +64,7 @@ export default async function RootLayout({
       className={clsx(
         fontDashboardHeading.variable,
         fontDashboardBody.variable,
+        fontBrand.variable,
       )}
       lang="en"
       suppressHydrationWarning
@@ -73,7 +78,7 @@ export default async function RootLayout({
         />
       </head>
       <body>
-        <TRPCReactProvider headers={headers()}>
+        <TRPCReactProvider headers={await headers()}>
           <Providers>
             {children}
             <GoogleTagManager

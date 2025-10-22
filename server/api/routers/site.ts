@@ -92,7 +92,6 @@ export enum SiteUpdateKey {
   projectName = "projectName",
 }
 
-/* eslint-disable */
 export const siteRouter = createTRPCRouter({
   get: publicProcedure
     .input(

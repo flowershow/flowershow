@@ -15,16 +15,15 @@ const createContext = async (req: NextRequest) => {
 
 export async function GET(
   req: NextRequest,
-  {
-    params,
-  }: {
-    params: {
+  props: {
+    params: Promise<{
       username: string;
       projectName: string;
       path?: string[];
-    };
-  },
+    }>;
+  }
 ) {
+  const params = await props.params;
   const ctx = await createContext(req);
   const caller = appRouter.createCaller(ctx);
   // NOTE currently branch is not implemented and is always equal to "-"

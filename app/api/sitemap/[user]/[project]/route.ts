@@ -4,8 +4,9 @@ import { NextRequest } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { user: string; project: string } },
+  props: { params: Promise<{ user: string; project: string }> }
 ) {
+  const params = await props.params;
   const { user, project } = params;
 
   const site = await prisma.site.findFirst({

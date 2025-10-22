@@ -19,7 +19,6 @@ Sentry.init({
   sendDefaultPii: true,
   enabled: isProd || isPreview,
   environment: env,
-  tracesSampleRate: isProd ? 0.1 : 1.0,
-  enableLogs: true,
-  debug: !isProd,
+  tracesSampleRate: isProd ? 0.1 : 0.1, // Reduce sampling in dev too
+  debug: false, // Disable debug mode
 });

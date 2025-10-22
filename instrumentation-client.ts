@@ -13,25 +13,27 @@ const env =
 const isProd = env === "production";
 const isPreview = env === "preview";
 
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  sendDefaultPii: true,
-  enabled: isProd || isPreview,
-  environment: env,
-  // Add optional integrations for additional features
-  integrations: [
-    Sentry.replayIntegration({
-      maskAllText: false,
-      blockAllMedia: false,
-    }),
-  ],
-  // Adjust sampling rates based on environment
-  tracesSampleRate: isProd ? 0.1 : 1.0,
-  enableLogs: true,
-  // Higher replay sampling in development for better debugging
-  replaysSessionSampleRate: isProd ? 0.1 : 1.0,
-  replaysOnErrorSampleRate: 1.0,
-  debug: !isProd,
-});
+if (isProd || isPreview) {
+  Sentry.init({
+    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    sendDefaultPii: true,
+    enabled: isProd || isPreview,
+    environment: env,
+    // Add optional integrations for additional features
+    integrations: [
+      Sentry.replayIntegration({
+        maskAllText: false,
+        blockAllMedia: false,
+      }),
+    ],
+    // Adjust sampling rates based on environment
+    tracesSampleRate: isProd ? 0.1 : 1.0,
+    enableLogs: true,
+    // Higher replay sampling in development for better debugging
+    replaysSessionSampleRate: isProd ? 0.1 : 1.0,
+    replaysOnErrorSampleRate: 1.0,
+    debug: !isProd,
+  });
+}
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

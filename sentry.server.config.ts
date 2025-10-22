@@ -13,32 +13,35 @@ const env =
 const isProd = env === "production";
 const isPreview = env === "preview";
 
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-  sendDefaultPii: true,
-  enabled: isProd || isPreview,
-  environment: env,
-  tracesSampleRate: isProd ? 0.1 : 1.0,
-  debug: !isProd,
-  beforeSend(event, hint) {
-    const err = hint?.originalException as any;
-    const digest = err?.digest ?? (event as any)?.extra?.digest;
+if (isProd || isPreview) {
+  Sentry.init({
+    dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+    sendDefaultPii: true,
+    enabled: isProd || isPreview,
+    environment: env,
+    tracesSampleRate: isProd ? 0.1 : 1.0,
+    debug: !isProd,
+    beforeSend(event, hint) {
+      const err = hint?.originalException as any;
+      const digest = err?.digest ?? (event as any)?.extra?.digest;
 
-    // Ignore Next.js “expected” navigation errors
-    if (
-      typeof digest === "string" &&
-      (digest.startsWith("NEXT_NOT_FOUND") ||
-        digest.startsWith("NEXT_REDIRECT"))
-    ) {
-      return null;
-    }
+      // Ignore Next.js “expected” navigation errors
+      if (
+        typeof digest === "string" &&
+        (digest.startsWith("NEXT_NOT_FOUND") ||
+          digest.startsWith("NEXT_REDIRECT"))
+      ) {
+        return null;
+      }
 
-    // Optional extra guard if your messages read literally "Page not found"
-    const msg = err?.message || event.logentry?.message || event.message || "";
-    if (typeof msg === "string" && /page not found/i.test(msg)) {
-      return null;
-    }
+      // Optional extra guard if your messages read literally "Page not found"
+      const msg =
+        err?.message || event.logentry?.message || event.message || "";
+      if (typeof msg === "string" && /page not found/i.test(msg)) {
+        return null;
+      }
 
-    return event;
-  },
-});
+      return event;
+    },
+  });
+}

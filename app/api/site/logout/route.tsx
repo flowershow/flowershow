@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
   if (!site) return NextResponse.json({ success: true }); // nothing to clear
 
   // must match original attributes (path, sameSite, secure, domain if set)
-  cookies().set({
+  (await cookies()).set({
     name: SITE_ACCESS_COOKIE_NAME(site.id),
     value: "",
     httpOnly: true,

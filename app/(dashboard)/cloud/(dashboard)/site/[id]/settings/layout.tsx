@@ -4,13 +4,18 @@ import prisma from "@/server/db";
 import { notFound, redirect } from "next/navigation";
 import SiteSettingsHeader from "./header";
 
-export default async function SiteSettingsLayout({
-  params,
-  children,
-}: {
-  params: { id: string };
-  children: ReactNode;
-}) {
+export default async function SiteSettingsLayout(
+  props: {
+    params: Promise<{ id: string }>;
+    children: ReactNode;
+  }
+) {
+  const params = await props.params;
+
+  const {
+    children
+  } = props;
+
   const session = await getSession();
   if (!session) {
     redirect("/login");

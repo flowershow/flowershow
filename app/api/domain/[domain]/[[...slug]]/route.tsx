@@ -16,8 +16,9 @@ const createContext = async (req: NextRequest) => {
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { domain: string; slug?: string[] } },
+  props: { params: Promise<{ domain: string; slug?: string[] }> }
 ) {
+  const params = await props.params;
   const ctx = await createContext(req);
   const caller = appRouter.createCaller(ctx);
   const { domain, slug } = params;

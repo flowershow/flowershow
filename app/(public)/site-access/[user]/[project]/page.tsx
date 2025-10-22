@@ -19,7 +19,8 @@ interface RouteParams {
   project: string;
 }
 
-export default async function LoginPage({ params }: { params: RouteParams }) {
+export default async function LoginPage(props: { params: Promise<RouteParams> }) {
+  const params = await props.params;
   const userName = decodeURIComponent(params.user); // user's github username or "_domain" if on custom domain (see middleware)
   const projectName = decodeURIComponent(params.project);
 
@@ -30,7 +31,7 @@ export default async function LoginPage({ params }: { params: RouteParams }) {
     redirect(getSiteUrl(site));
   }
 
-  const cookie = cookies().get(SITE_ACCESS_COOKIE_NAME(site.id));
+  const cookie = (await cookies()).get(SITE_ACCESS_COOKIE_NAME(site.id));
 
   if (cookie?.value) {
     try {
