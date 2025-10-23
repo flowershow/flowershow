@@ -34,13 +34,13 @@ interface MarkdownOptions {
 
 // Process pure markdown files using unified
 export async function processMarkdown(
-  content: string,
+  _content: string,
   options: MarkdownOptions,
 ) {
   const { filePath, permalinks, sitePrefix, customDomain } = options;
 
   // this strips out frontmatter, so that it's not inlined with the rest of the markdown file
-  const { content: md } = matter(content, {});
+  const { content } = matter(_content, {});
 
   const processor = unified()
     .use(remarkParse)
@@ -112,7 +112,7 @@ export async function processMarkdown(
     .use(rehypePrismPlus, { ignoreMissing: true })
     .use(rehypeStringify);
 
-  const result = await processor.process(md);
+  const result = await processor.process(content);
   return result.toString();
 }
 

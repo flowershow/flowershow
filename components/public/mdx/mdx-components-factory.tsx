@@ -108,7 +108,7 @@ export const mdxComponentsFactory = ({
     List: withErrorBoundary((props: ListProps) => {
       return <List {...props} siteId={site.id} pageNumber={pageNumber} />;
     }, "List"),
-    // mermaid: Mermaid,
+    mermaid: Mermaid as any,
     // Catalog: withErrorBoundary(Catalog, "Catalog"),
     Excel: withErrorBoundary((props: ExcelProps) => {
       props.data.url = resolveLinkToUrl({
