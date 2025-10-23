@@ -10,7 +10,7 @@ import { api } from "@/trpc/server";
 import { PageMetadata } from "@/server/api/types";
 
 import { getConfig } from "@/lib/app-config";
-import { getMdxOptions } from "@/lib/markdown";
+import { getMdxOptions, processMarkdown } from "@/lib/markdown";
 import { resolveLinkToUrl } from "@/lib/resolve-link";
 import {
   isWikiLink,
@@ -42,7 +42,9 @@ interface RouteParams {
 
 type SearchParams = Promise<{ [key: string]: string | undefined }>;
 
-export async function generateMetadata(props: { params: Promise<RouteParams> }) {
+export async function generateMetadata(props: {
+  params: Promise<RouteParams>;
+}) {
   const params = await props.params;
   const projectName = decodeURIComponent(params.project);
   const userName = decodeURIComponent(params.user);
@@ -109,7 +111,7 @@ export async function generateMetadata(props: { params: Promise<RouteParams> }) 
   const title =
     siteConfig?.title && metadata?.title
       ? `${metadata?.title} - ${siteConfig.title}`
-      : metadata?.title ?? siteConfig?.title ?? "";
+      : (metadata?.title ?? siteConfig?.title ?? "");
   const description = metadata?.description ?? siteConfig?.description;
   const url = `${siteUrl}/${decodedSlug}`;
 
@@ -172,12 +174,10 @@ export async function generateMetadata(props: { params: Promise<RouteParams> }) 
   };
 }
 
-export default async function SitePage(
-  props: {
-    params: Promise<RouteParams>;
-    searchParams: Promise<SearchParams>;
-  }
-) {
+export default async function SitePage(props: {
+  params: Promise<RouteParams>;
+  searchParams: Promise<SearchParams>;
+}) {
   const params = await props.params;
   const projectName = decodeURIComponent(params.project);
   const userName = decodeURIComponent(params.user);
@@ -233,29 +233,55 @@ export default async function SitePage(
 
   const metadata = page.blob.metadata as PageMetadata | null; // TODO types
 
-  let compiledMDX: any;
+  let compiledContent: React.JSX.Element;
 
-  const mdxComponents = mdxComponentsFactory({
-    blob: page.blob,
-    site,
-    pageNumber,
-  });
-  const mdxOptions = getMdxOptions({
-    permalinks: sitePermalinks,
-    filePath: page.blob.path,
-    sitePrefix,
-    customDomain: site.customDomain ?? undefined,
-  }) as any;
+  const isMarkdown = page.blob.path.endsWith(".md");
+  const isMdx = page.blob.path.endsWith(".mdx");
+  const renderMode = siteConfig?.markdownRenderer ?? "mdx"; // Default to MDX if not specified
 
-  try {
-    const { content } = await compileMDX({
-      source: page.content ?? "",
-      components: mdxComponents,
-      options: mdxOptions,
-    });
-    compiledMDX = content;
-  } catch (error: any) {
-    compiledMDX = <ErrorMessage title="Error" message={error.message} />;
+  if (!isMarkdown && !isMdx) {
+    compiledContent = (
+      <ErrorMessage title="Error" message="Unsupported file type" />
+    );
+  } else {
+    try {
+      // Determine whether to use MD or MDX rendering based on config and file extension
+      const useMdRendering =
+        renderMode === "md" || (renderMode === "auto" && isMarkdown);
+
+      if (useMdRendering) {
+        // Process using unified (MD renderer)
+        const html = await processMarkdown(page.content ?? "", {
+          permalinks: sitePermalinks,
+          filePath: page.blob.path,
+          sitePrefix,
+          customDomain: site.customDomain ?? undefined,
+        });
+        compiledContent = <div dangerouslySetInnerHTML={{ __html: html }} />;
+      } else {
+        // Process using next-mdx-remote-client (MDX renderer)
+        const mdxComponents = mdxComponentsFactory({
+          blob: page.blob,
+          site,
+          pageNumber,
+        });
+        const mdxOptions = getMdxOptions({
+          permalinks: sitePermalinks,
+          filePath: page.blob.path,
+          sitePrefix,
+          customDomain: site.customDomain ?? undefined,
+        }) as any;
+
+        const { content } = await compileMDX({
+          source: page.content ?? "",
+          components: mdxComponents,
+          options: mdxOptions,
+        });
+        compiledContent = content;
+      }
+    } catch (error: any) {
+      compiledContent = <ErrorMessage title="Error" message={error.message} />;
+    }
   }
 
   const scopedCss = await generateScopedCss(page.content ?? "");
@@ -271,7 +297,7 @@ export default async function SitePage(
         />
         <UrlNormalizer />
         <div className="rendered-mdx is-plain" id="mdxpage">
-          {compiledMDX}
+          {compiledContent}
         </div>
       </>
     );
@@ -411,7 +437,7 @@ export default async function SitePage(
           <main className="page-main">
             <Layout>
               <div className="rendered-mdx" id="mdxpage">
-                {compiledMDX}
+                {compiledContent}
               </div>
             </Layout>
           </main>

@@ -1565,7 +1565,7 @@
     font-family: var(--font-heading);
   }
 
-  .rendered-mdx > h1:first-child {
+  .rendered-mdx h1:first-of-type {
     display: none;
   }
 

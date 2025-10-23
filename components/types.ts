@@ -38,6 +38,7 @@ export interface SiteConfig {
   logo?: string;
   favicon?: string;
   nav?: NavConfig;
+  markdownRenderer?: "mdx" | "md" | "auto";
   analytics?: string;
   contentInclude?: string[];
   contentExclude?: string[];
