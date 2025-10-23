@@ -36,6 +36,7 @@ import type {
   PlotlyLineChartProps,
 } from "./mdx-client-components";
 import { PublicSite } from "@/server/api/routers/site";
+import type { MDXComponents } from "next-mdx-remote-client/rsc";
 
 export const mdxComponentsFactory = ({
   blob,
@@ -46,7 +47,7 @@ export const mdxComponentsFactory = ({
   site: PublicSite;
   pageNumber?: number;
 }) => {
-  const components: any = {
+  const components: MDXComponents = {
     /* HTML tags */
     a: ({
       href,
@@ -107,7 +108,7 @@ export const mdxComponentsFactory = ({
     List: withErrorBoundary((props: ListProps) => {
       return <List {...props} siteId={site.id} pageNumber={pageNumber} />;
     }, "List"),
-    mermaid: Mermaid,
+    // mermaid: Mermaid,
     // Catalog: withErrorBoundary(Catalog, "Catalog"),
     Excel: withErrorBoundary((props: ExcelProps) => {
       props.data.url = resolveLinkToUrl({

@@ -20,6 +20,9 @@ import rehypeRaw from "rehype-raw";
 import { slug } from "github-slugger";
 import { customEncodeUrl } from "./url-encoder";
 import { unified } from "unified";
+import matter from "gray-matter";
+
+import type { MDXRemoteOptions } from "next-mdx-remote-client/rsc";
 
 interface MarkdownOptions {
   filePath: string;
@@ -36,29 +39,32 @@ export async function processMarkdown(
 ) {
   const { filePath, permalinks, sitePrefix, customDomain } = options;
 
+  // this strips out frontmatter, so that it's not inlined with the rest of the markdown file
+  const { content: md } = matter(content, {});
+
   const processor = unified()
     .use(remarkParse)
     // Add all remark plugins
     .use(remarkCommonMarkLinkResolver, { filePath, sitePrefix, customDomain })
-    // .use(remarkWikiLink, {
-    //   permalinks,
-    //   format: "shortestPossible",
-    //   urlResolver: (wikiLinkPath) => {
-    //     const [, rawPath = "", rawHeading = ""] =
-    //       /^(.*?)(?:#(.*))?$/u.exec(wikiLinkPath) ?? [];
+    .use(remarkWikiLink, {
+      permalinks,
+      format: "shortestPossible",
+      urlResolver: (wikiLinkPath) => {
+        const [, rawPath = "", rawHeading = ""] =
+          /^(.*?)(?:#(.*))?$/u.exec(wikiLinkPath) ?? [];
 
-    //     const normalizedPath = customEncodeUrl(
-    //       rawPath.replace(/\/?(index|README)$/, ""),
-    //     );
+        const normalizedPath = customEncodeUrl(
+          rawPath.replace(/\/?(index|README)$/, ""),
+        );
 
-    //     const headingAnchor = rawHeading ? `#${slug(rawHeading)}` : "";
-    //     if (headingAnchor && !normalizedPath) {
-    //       return headingAnchor;
-    //     }
+        const headingAnchor = rawHeading ? `#${slug(rawHeading)}` : "";
+        if (headingAnchor && !normalizedPath) {
+          return headingAnchor;
+        }
 
-    //     return normalizedPath + headingAnchor;
-    //   },
-    // })
+        return normalizedPath + headingAnchor;
+      },
+    })
     .use(remarkYouTubeAutoEmbed)
     .use(remarkGfm)
     .use(remarkSmartypants, { quotes: false, dashes: "oldschool" })
@@ -68,9 +74,8 @@ export async function processMarkdown(
       heading: "Table of contents",
       tight: true,
     })
-    .use(remarkRehype, { allowDangerousHtml: true }) // pass HTML through to rehype
+    .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
-    // Add all rehype plugins
     .use(rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain })
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, {
@@ -107,7 +112,7 @@ export async function processMarkdown(
     .use(rehypePrismPlus, { ignoreMissing: true })
     .use(rehypeStringify);
 
-  const result = await processor.process(content);
+  const result = await processor.process(md);
   return result.toString();
 }
 
@@ -124,7 +129,7 @@ export const getMdxOptions = ({
   sitePrefix: string;
   parseFrontmatter?: boolean;
   customDomain?: string;
-}) => {
+}): MDXRemoteOptions => {
   return {
     parseFrontmatter,
     mdxOptions: {
