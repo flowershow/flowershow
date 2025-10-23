@@ -23,7 +23,8 @@ export async function generateScopedCss(content: string) {
  * - Tailwind/UnoCSS class strings
  */
 function extractClassNames(content: string): string {
-  const classMatches = content.match(/className=["']([^"']+)["']/g) || [];
+  const classMatches =
+    content.match(/(?:className|class)=["']([^"']+)["']/g) || [];
   const extractedClasses = new Set<string>();
 
   for (const match of classMatches) {
