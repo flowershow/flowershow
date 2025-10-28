@@ -10,12 +10,12 @@ import type { ListProps } from "./list";
 import Pre from "./pre";
 
 import {
-  // Catalog,
   Excel,
   FlatUiTable,
   Iframe,
   LineChart,
   Map,
+  PdfViewer,
   Plotly,
   PlotlyBarChart,
   PlotlyLineChart,
@@ -76,6 +76,20 @@ export const mdxComponentsFactory = ({
       return <code {...props} className={className}></code>;
     },
     pre: (props) => <Pre {...props} />,
+    iframe: (props) => {
+      const src = props.src ?? "";
+
+      const isPdf =
+        typeof src === "string" && src.split("#")[0]?.endsWith(".pdf");
+
+      if (isPdf) {
+        console.log({ src });
+        return <PdfViewer src={src} />;
+      }
+
+      // fallback: real iframe for non-PDF embeds (YouTube etc.)
+      return <iframe {...props} />;
+    },
     img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
       if (!props.src) return <img {...props} />;
       // TODO temporary quick patch to support special signs in file names
@@ -171,15 +185,6 @@ export const mdxComponentsFactory = ({
       });
       return <Map {...props} layers={layers} />;
     }, "Map"),
-    // PdfViewer: withErrorBoundary((props: PdfViewerProps) => {
-    //   props.data.url = resolveLinkToUrl({
-    //     target: props.data.url,
-    //     originFilePath: blob.path,
-    //     isSrcLink: true,
-    //     prefix: getSiteUrlPath(site),
-    //   });
-    //   return <PdfViewer {...props} />;
-    // }, "PdfViewer"),
     Plotly: withErrorBoundary((props) => {
       const data =
         typeof props.data === "string"

@@ -8,7 +8,6 @@ import {
   IframeProps,
   LineChartProps,
   MapProps,
-  PdfViewerProps,
   PlotlyBarChartProps,
   PlotlyLineChartProps,
 } from "@portaljs/components";
@@ -47,7 +46,7 @@ const Map = dynamic(
   { ssr: false },
 );
 const PdfViewer = dynamic(
-  () => import("@portaljs/components").then((mod) => mod.PdfViewer),
+  () => import("./pdf-viewer").then((mod) => mod.PdfViewer),
   { ssr: false },
 );
 const Plotly = dynamic(
@@ -134,7 +133,6 @@ export type {
   IframeProps,
   LineChartProps,
   MapProps,
-  PdfViewerProps,
   PlotlyBarChartProps,
   PlotlyLineChartProps,
 };

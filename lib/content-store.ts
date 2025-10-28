@@ -47,7 +47,8 @@ type ContentType =
   | "audio/opus"
   | "image/x-icon"
   | "image/webp"
-  | "image/avif";
+  | "image/avif"
+  | "application/pdf";
 
 const uploadS3Object = async ({
   key,
@@ -149,6 +150,8 @@ const getContentType = (extension: string): ContentType => {
       return "image/webp";
     case "avif":
       return "image/avif";
+    case "pdf":
+      return "application/pdf";
 
     // Video
     case "mp4":

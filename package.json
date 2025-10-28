@@ -68,6 +68,7 @@
     "react-dom": "19.2.0",
     "react-error-boundary": "^6.0.0",
     "react-instantsearch": "^7.16.3",
+    "react-pdf": "^10.2.0",
     "react-query": "^3.39.3",
     "rehype-autolink-headings": "^7.1.0",
     "rehype-katex": "^7.0.1",
