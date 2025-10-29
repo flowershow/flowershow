@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { Vega } from "@portaljs/components";
-import "@portaljs/components/styles.css";
+import { Vega } from "@/components/public/mdx/vega";
 
 const meta: Meta<typeof Vega> = {
   title: "Charts/Vega",
@@ -26,7 +25,7 @@ export const Primary: Story = {
   name: "Bar chart",
   args: {
     data: {
-      table: [
+      values: [
         {
           y: -0.418,
           x: 1850,

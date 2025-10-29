@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { PlotlyBarChart, PlotlyBarChartProps } from "@portaljs/components";
-import "@portaljs/components/styles.css";
+import {
+  PlotlyBarChart,
+  PlotlyBarChartProps,
+} from "@/components/public/mdx/plotly-bar-chart";
 
 const meta: Meta<typeof PlotlyBarChart> = {
   title: "Charts/PlotlyBarChart",

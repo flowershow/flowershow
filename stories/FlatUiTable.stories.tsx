@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { FlatUiTable, FlatUiTableProps } from "@portaljs/components";
-import "@portaljs/components/styles.css";
+import {
+  FlatUiTable,
+  FlatUiTableProps,
+} from "@/components/public/mdx/flatui-table";
 
 const meta: Meta<typeof FlatUiTable> = {
   title: "Tabular/FlatUiTable",

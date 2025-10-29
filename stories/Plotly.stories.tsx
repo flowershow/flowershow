@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { Plotly } from "@portaljs/components";
-import "@portaljs/components/styles.css";
+import { Plotly } from "@/components/public/mdx/plotly";
 
 // More on how to set up stories at: https://storybook.js.org/docs/react/writing-stories/introduction
 const meta: Meta<typeof Plotly> = {

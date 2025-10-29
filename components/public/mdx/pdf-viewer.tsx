@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
 
 // Tell pdf.js where to load its worker from

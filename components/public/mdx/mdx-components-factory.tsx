@@ -10,33 +10,26 @@ import type { ListProps } from "./list";
 import Pre from "./pre";
 
 import {
-  Excel,
   FlatUiTable,
-  Iframe,
   LineChart,
-  Map,
-  PdfViewer,
+  Mermaid,
+  CustomHtml,
+  // Excel,
+  // Map,
   Plotly,
   PlotlyBarChart,
   PlotlyLineChart,
   Vega,
-  VegaLite,
-  Mermaid,
-  CustomHtml,
 } from "./mdx-client-components";
 
-import type {
-  CustomHtmlProps,
-  ExcelProps,
-  FlatUiTableProps,
-  IframeProps,
-  LineChartProps,
-  MapProps,
-  PlotlyBarChartProps,
-  PlotlyLineChartProps,
-} from "./mdx-client-components";
 import { PublicSite } from "@/server/api/routers/site";
 import type { MDXComponents } from "next-mdx-remote-client/rsc";
+import { PdfViewer } from "./pdf-viewer";
+import { CustomHtmlProps } from "./custom-html";
+import type { LineChartProps } from "./line-chart";
+import type { PlotlyBarChartProps } from "./plotly-bar-chart";
+import type { FlatUiTableProps } from "./flatui-table";
+import type { PlotlyLineChartProps } from "./plotly-line-chart";
 
 export const mdxComponentsFactory = ({
   blob,
@@ -87,7 +80,6 @@ export const mdxComponentsFactory = ({
         return <PdfViewer src={src} />;
       }
 
-      // fallback: real iframe for non-PDF embeds (YouTube etc.)
       return <iframe {...props} />;
     },
     img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
@@ -123,17 +115,6 @@ export const mdxComponentsFactory = ({
       return <List {...props} siteId={site.id} pageNumber={pageNumber} />;
     }, "List"),
     mermaid: Mermaid as any,
-    // Catalog: withErrorBoundary(Catalog, "Catalog"),
-    Excel: withErrorBoundary((props: ExcelProps) => {
-      props.data.url = resolveLinkToUrl({
-        target: props.data.url,
-        originFilePath: blob.path,
-        isSrcLink: true,
-        prefix: getSiteUrlPath(site),
-        domain: site.customDomain,
-      });
-      return <Excel {...props} />;
-    }, "Excel"),
     FlatUiTable: withErrorBoundary((props: FlatUiTableProps) => {
       if (props.data?.url)
         props.data.url = resolveLinkToUrl({
@@ -144,20 +125,8 @@ export const mdxComponentsFactory = ({
           domain: site.customDomain,
         });
 
-      console.log("PROPS FLATUI", props.data.url);
-
       return <FlatUiTable {...props} />;
     }, "FlatUiTable"),
-    Iframe: withErrorBoundary((props: IframeProps) => {
-      props.data.url = resolveLinkToUrl({
-        target: props.data.url,
-        originFilePath: blob.path,
-        isSrcLink: true,
-        prefix: getSiteUrlPath(site),
-        domain: site.customDomain,
-      });
-      return <Iframe {...props} />;
-    }, "Iframe"),
     LineChart: withErrorBoundary((props: LineChartProps) => {
       if (props.data?.url) {
         props.data.url = resolveLinkToUrl({
@@ -170,34 +139,6 @@ export const mdxComponentsFactory = ({
       }
       return <LineChart {...props} />;
     }, "LineChart"),
-    Map: withErrorBoundary((props: MapProps) => {
-      const layers = props.layers.map((layer) => {
-        if (layer.data.url) {
-          layer.data.url = resolveLinkToUrl({
-            target: layer.data.url,
-            originFilePath: blob.path,
-            isSrcLink: true,
-            prefix: getSiteUrlPath(site),
-            domain: site.customDomain,
-          });
-        }
-        return layer;
-      });
-      return <Map {...props} layers={layers} />;
-    }, "Map"),
-    Plotly: withErrorBoundary((props) => {
-      const data =
-        typeof props.data === "string"
-          ? resolveLinkToUrl({
-              target: props.data,
-              originFilePath: blob.path,
-              isSrcLink: true,
-              prefix: getSiteUrlPath(site),
-              domain: site.customDomain,
-            })
-          : props.data;
-      return <Plotly {...props} data={data} />;
-    }, "Plotly"),
     PlotlyBarChart: withErrorBoundary((props: PlotlyBarChartProps) => {
       if (props.data.url) {
         props.data.url = resolveLinkToUrl({
@@ -222,6 +163,44 @@ export const mdxComponentsFactory = ({
       }
       return <PlotlyLineChart {...props} />;
     }, "PlotlyLineChart"),
+    // Excel: withErrorBoundary((props: ExcelProps) => {
+    //   props.data.url = resolveLinkToUrl({
+    //     target: props.data.url,
+    //     originFilePath: blob.path,
+    //     isSrcLink: true,
+    //     prefix: getSiteUrlPath(site),
+    //     domain: site.customDomain,
+    //   });
+    //   return <Excel {...props} />;
+    // }, "Excel"),
+    // Map: withErrorBoundary((props: MapProps) => {
+    //   const layers = props.layers.map((layer) => {
+    //     if (layer.data.url) {
+    //       layer.data.url = resolveLinkToUrl({
+    //         target: layer.data.url,
+    //         originFilePath: blob.path,
+    //         isSrcLink: true,
+    //         prefix: getSiteUrlPath(site),
+    //         domain: site.customDomain,
+    //       });
+    //     }
+    //     return layer;
+    //   });
+    //   return <Map {...props} layers={layers} />;
+    // }, "Map"),
+    Plotly: withErrorBoundary((props) => {
+      const data =
+        typeof props.data === "string"
+          ? resolveLinkToUrl({
+              target: props.data,
+              originFilePath: blob.path,
+              isSrcLink: true,
+              prefix: getSiteUrlPath(site),
+              domain: site.customDomain,
+            })
+          : props.data;
+      return <Plotly {...props} data={data} />;
+    }, "Plotly"),
     Vega: withErrorBoundary((props) => {
       if (props.spec.data.url)
         props.spec.data.url = resolveLinkToUrl({
@@ -233,6 +212,7 @@ export const mdxComponentsFactory = ({
         });
       return <Vega {...props} />;
     }, "Vega"),
+    // TODO this is not needed
     VegaLite: withErrorBoundary((props) => {
       if (props.spec.data.url)
         props.spec.data.url = resolveLinkToUrl({
@@ -242,24 +222,9 @@ export const mdxComponentsFactory = ({
           prefix: getSiteUrlPath(site),
           domain: site.customDomain,
         });
-      return <VegaLite {...props} />;
+      return <Vega {...props} />;
     }, "VegaLite"),
   };
-
-  // if (isDatasetPage(blob.metadata as PageMetadata)) {
-  //   // TODO is this needed at all?
-  //   const FrictionlessView = FrictionlessViewFactory(
-  //     blob.metadata as DatasetPageMetadata,
-  //   );
-  //   components.FrictionlessView = ({
-  //     id,
-  //     fullWidth,
-  //   }: {
-  //     id: number;
-  //     fullWidth: boolean;
-  //   }) => <FrictionlessView viewId={id} fullWidth={fullWidth} />;
-  //   components.FrictionlessView.displayName = "FrictionlessView";
-  // }
 
   return components;
 };

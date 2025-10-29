@@ -1,6 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { LineChart, LineChartProps } from "@portaljs/components";
-import "@portaljs/components/styles.css";
+import { LineChart, LineChartProps } from "@/components/public/mdx/line-chart";
 
 const meta: Meta<typeof LineChart> = {
   title: "Charts/LineChart",
