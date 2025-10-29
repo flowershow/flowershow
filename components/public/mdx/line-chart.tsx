@@ -25,7 +25,7 @@ export function LineChart({
   title = "",
   xAxis,
   xAxisType = "temporal",
-  xAxisTimeUnit = "year",
+  xAxisTimeUnit,
   yAxis,
   yAxisType = "quantitative",
   symbol,
