@@ -12,6 +12,13 @@ jest.mock(
   { virtual: true },
 );
 
+jest.mock("../env.mjs", () => ({
+  env: {
+    NEXT_PUBLIC_VERCEL_ENV: "test",
+    NEXT_PUBLIC_ROOT_DOMAIN: "localhost:3000",
+  },
+}));
+
 import "@testing-library/jest-dom";
 import { resolveLinkToUrl } from "./resolve-link";
 
