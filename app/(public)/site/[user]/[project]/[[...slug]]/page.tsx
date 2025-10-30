@@ -31,6 +31,7 @@ import SiteTree from "@/components/public/site-tree";
 import TableOfContents from "@/components/public/table-of-contents";
 
 import UrlNormalizer from "./url-normalizer";
+import { preprocessMdxForgiving } from "@/lib/preprocess-mdx";
 
 const config = getConfig();
 
@@ -272,8 +273,12 @@ export default async function SitePage(props: {
           customDomain: site.customDomain ?? undefined,
         }) as any;
 
+        const preprocessedSource = page.content
+          ? preprocessMdxForgiving(page.content)
+          : "";
+
         const { content, error } = await evaluate({
-          source: page.content ?? "",
+          source: preprocessedSource,
           components: mdxComponents,
           options: mdxOptions,
         });
