@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
-import { MDXRemote } from "next-mdx-remote-client/rsc";
+import { evaluate } from "next-mdx-remote-client/rsc";
 import { EditIcon } from "lucide-react";
 import clsx from "clsx";
 import emojiRegex from "emoji-regex";
@@ -272,24 +272,19 @@ export default async function SitePage(props: {
           customDomain: site.customDomain ?? undefined,
         }) as any;
 
-        // const { content } = await compileMDX({
-        //   source: page.content ?? "",
-        //   components: mdxComponents,
-        //   options: mdxOptions,
-        // });
-        compiledContent = (
-          <MDXRemote
-            source={page.content ?? ""}
-            components={mdxComponents}
-            options={mdxOptions}
-            onError={({ error }) => (
-              <ErrorMessage
-                title="Error"
-                message={typeof error === "string" ? error : error.message}
-              />
-            )}
-          />
-        );
+        const { content, error } = await evaluate({
+          source: page.content ?? "",
+          components: mdxComponents,
+          options: mdxOptions,
+        });
+
+        if (error) {
+          compiledContent = (
+            <ErrorMessage title="Error" message={error.message} />
+          );
+        } else {
+          compiledContent = content;
+        }
       }
     } catch (error: any) {
       compiledContent = <ErrorMessage title="Error" message={error.message} />;

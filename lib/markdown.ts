@@ -22,7 +22,7 @@ import { customEncodeUrl } from "./url-encoder";
 import { unified } from "unified";
 import matter from "gray-matter";
 
-import type { MDXRemoteOptions } from "next-mdx-remote-client/rsc";
+import type { EvaluateOptions } from "next-mdx-remote-client/rsc";
 
 interface MarkdownOptions {
   filePath: string;
@@ -129,7 +129,7 @@ export const getMdxOptions = ({
   sitePrefix: string;
   parseFrontmatter?: boolean;
   customDomain?: string;
-}): MDXRemoteOptions => {
+}): EvaluateOptions => {
   return {
     parseFrontmatter,
     mdxOptions: {
