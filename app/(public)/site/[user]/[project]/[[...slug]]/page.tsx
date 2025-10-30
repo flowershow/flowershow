@@ -32,6 +32,7 @@ import TableOfContents from "@/components/public/table-of-contents";
 
 import UrlNormalizer from "./url-normalizer";
 import { preprocessMdxForgiving } from "@/lib/preprocess-mdx";
+import { MDXRenderingError } from "./mdx-client-error-message";
 
 const config = getConfig();
 
@@ -284,11 +285,14 @@ export default async function SitePage(props: {
         });
 
         if (error) {
+          const message = error.message.concat(
+            "\n\n🧑‍🔧 See how to debug and solve most common MDX errors in our docs:\nhttps://flowershow.app/docs/debug-mdx-errors",
+          );
           compiledContent = (
-            <ErrorMessage title="Error" message={error.message} />
+            <ErrorMessage title="Error parsing MDX" message={message} />
           );
         } else {
-          compiledContent = content;
+          compiledContent = <MDXRenderingError>{content}</MDXRenderingError>;
         }
       }
     } catch (error: any) {
