@@ -82,14 +82,12 @@ graph TD
 1. **Event Handling and Routes**
 
 - Webhook Handler (`/app/api/webhook/route.ts`):
-
   - Receives GitHub push events
   - Validates webhook signatures
   - Filters events by branch
   - Triggers Inngest sync events
 
 - Inngest Handler (`/app/api/inngest/route.ts`):
-
   - Serves Inngest webhook endpoints
   - Registers sync and delete functions
   - Handles function execution and retries
@@ -103,7 +101,6 @@ graph TD
     - INTERNAL_ERROR
 
 2. **Sync Trigger Points**
-
    - Automatic (via GitHub webhooks):
      - Push events to tracked branch
      - Validated using webhook secret
@@ -119,7 +116,6 @@ graph TD
    When a site sync is triggered (either automatically or manually), the following steps occur in sequence:
 
    a. **Initial Setup**
-
    - Fetch site details and user information from PostgreSQL
    - Update site's sync status to "PENDING"
    - Load site configuration from repository's config.json
@@ -127,7 +123,6 @@ graph TD
    - Validate root directory exists (if specified)
 
    b. **Tree Comparison**
-
    - Fetch current content tree from R2 storage
    - Fetch repository tree from GitHub API
    - Compare SHA hashes to detect changes
@@ -137,7 +132,6 @@ graph TD
 
    c. **File Processing**
    For each changed file:
-
    - Filter by supported extensions (.md, .json, .yaml)
    - Apply content include/exclude patterns
    - Download file content from GitHub
@@ -155,7 +149,6 @@ graph TD
      - Store combined metadata in PostgreSQL
 
    d. **Deletion Handling**
-
    - Compare old and new trees to find deleted files
    - Remove deleted files from R2 storage
    - Clean up associated metadata from PostgreSQL
@@ -164,7 +157,6 @@ graph TD
      - Update database records accordingly
 
    e. **Final Steps**
-
    - Upload new tree structure to R2
    - Update site metadata in PostgreSQL
    - Update sync status to "SUCCESS"
@@ -177,7 +169,6 @@ graph TD
      - Page content
 
 4. **Content Storage**
-
    - Files stored in R2 Cloudflare buckets
    - Tree structure maintained for efficient diffing
    - Metadata stored in PostgreSQL for quick access
@@ -237,7 +228,6 @@ Monitor local events at: http://localhost:8288/
    ```
 
 6. Configure MinIO bucket:
-
    - Open MinIO Console at http://localhost:9000
    - Login with default credentials (minioadmin/minioadmin)
    - Click "Buckets" → "Create Bucket"
@@ -271,6 +261,10 @@ Monitor local events at: http://localhost:8288/
 
 #### Stripe Setup for Local Development
 
+0. Setup Stripe sandbox
+
+- Create Sandbox account in Stripe, add product, setup prices and copy over their IDs to `.env`.
+
 1. Install the [Stripe CLI](https://stripe.com/docs/stripe-cli#install):
 
    ```bash
@@ -282,6 +276,8 @@ Monitor local events at: http://localhost:8288/
    ```bash
    stripe login
    ```
+
+   Note: Make sure when you log in, you're in your Stripe sandbox.
 
 3. Start the Stripe webhook listener:
 
@@ -459,20 +455,31 @@ pnpm dev
 Run the tests:
 
 ```bash
-# Run all non-authenticated tests
+# Run all tests
 npx playwright test
 
-# Run authenticated dashboard tests
-npx playwright test dashboard.spec.ts
+# Run specific project
+npx playwright test --project=free-site-chromium
 
 # Run specific test file
 npx playwright test path/to/test.spec.ts
 
 # Run specific test by name
 npx playwright test --grep "should show subscription options on free tier"
+
+# Skip global setup and run tests against last created site(s)
+npx playwright test --no-deps
+# npx playwright test --project=free-site-chromium --no-deps
 ```
 
-Note: If you need to reprocess a test site even when its repository content hasn't changed (e.g., when the app's processing logic has changed), you can uncomment the `forceSync` option in `e2e/global.setup.ts`.
+Note: All tests will first execute `global.setup.ts` file, which creates a test site. To save time, you can run the global setup once, and then skip it when running tests:
+
+```bash
+# E.g. for free-site project. Add --no-deps to ignore global teardown
+npx playwright test free-site/global.setup.ts --no-deps
+# Then run your tests always with --no-deps flag, e.g.
+npx playwright test path/to/test.spec.ts --no-deps
+```
 
 Debug modes:
 
@@ -483,27 +490,6 @@ npx playwright test --debug
 # UI mode
 npx playwright test --ui
 ```
-
-**Important:** Always run E2E tests locally before submitting PRs, especially tests that require authentication (like `dashboard.spec.ts`). This ensures that authenticated features are properly tested since these tests are automatically skipped in CI environment.
-
-### Authenticated Tests
-
-Some tests (like dashboard.spec.ts) require authentication. These tests:
-
-1. Are automatically skipped in CI environment
-2. Require manual login by default:
-
-   - When running dashboard tests, a browser window will open
-   - You'll need to manually log in with your GitHub account
-   - The test will continue automatically after successful login
-   - Your authentication state will be saved for subsequent test runs
-
-3. For non-2FA accounts only: You can optionally automate login by setting GitHub credentials in `.env`:
-   ```
-   E2E_GH_USERNAME=your-github-username
-   E2E_GH_PASSWORD=your-github-password
-   ```
-   Note: This only works for accounts without 2FA enabled. For accounts with 2FA, use manual login.
 
 ## Content Management
 
@@ -563,25 +549,21 @@ DataHub Cloud manages several aliased pages:
 ### Common Issues
 
 1. MinIO Connection Issues
-
    - Verify MinIO is running
    - Check credentials in `.env`
    - Ensure bucket is publicly accessible
 
 2. Database Connection
-
    - Verify PostgreSQL is running
    - Check database credentials
    - Ensure schema is up to date
 
 3. OAuth Authentication
-
    - Verify correct OAuth app configuration
    - Check callback URLs
    - Ensure environment variables are set
 
 4. Stripe Integration
-
    - Ensure Stripe CLI is running with webhook forwarding
    - Verify STRIPE_WEBHOOK_SECRET matches Stripe CLI output
    - Check Stripe CLI logs for webhook delivery status

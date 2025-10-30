@@ -77,15 +77,16 @@ test("Should display frontmatter metadata in the header", async ({
   await expect(header.locator("h1").first()).toHaveText("Blog Post 1");
   await expect(header).toContainText("Blog Post 1 Description");
 
-  const author = header.locator(".page-header-author").first();
-  await expect(author).toContainText("John Doe");
-  await expect(author.getByRole("link")).toHaveAttribute(
+  const authorLink = header.locator(".page-header-author-name").first();
+  await expect(authorLink).toContainText("John Doe", { ignoreCase: true });
+  await expect(authorLink).toHaveAttribute(
     "href",
     `${publishedSitePage.siteUrlPath}/team/john-doe`,
   );
-  await expect(author.locator("img")).toHaveAttribute(
+  const authorAvatar = header.locator(".page-header-author-avatar").first();
+  await expect(authorAvatar).toHaveAttribute(
     "src",
-    `${publishedSitePage.siteUrlPath}/_r/-/team/john.jpg`,
+    `${publishedSitePage.siteUrl}/_r/-/team/john.jpg`,
   );
 });
 

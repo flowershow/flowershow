@@ -27,8 +27,8 @@ test.describe("Site layout", () => {
       `${publishedSitePage.siteUrlPath}/about`,
     );
     // Check social links if configured
-    const socialLinks = navbar.locator(".navbar-social-links-container");
-    await expect(navLinks.getByRole("link")).toHaveAttribute(
+    const socialLinks = navbar.locator(".site-navbar-social-links-container");
+    await expect(socialLinks.getByRole("link")).toHaveAttribute(
       "href",
       "https://discord.link/abc",
     );

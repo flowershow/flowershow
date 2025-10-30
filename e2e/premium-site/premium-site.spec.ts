@@ -7,7 +7,10 @@ test.describe("MDX", () => {
     await publishedSitePage.goto("/syntax/syntax");
     await expect(
       publishedSitePage.page.getByTestId("jsx-img").locator("img"),
-    ).toHaveAttribute("src", "http://test.localhost:3000/_r/-/");
+    ).toHaveAttribute(
+      "src",
+      "http://test.localhost:3000/_r/-/assets/image.jpg",
+    );
   });
 });
 
@@ -58,14 +61,15 @@ test("Should display frontmatter metadata in the header correctly", async ({
   await publishedSitePage.goto("/blog/post-with-metadata");
 
   const header = publishedSitePage.page.locator("header");
-  const author = header.locator(".page-header-author").first();
-  await expect(author).toContainText("John Doe");
-  await expect(author.getByRole("link")).toHaveAttribute(
+  const authorLink = header.locator(".page-header-author-name").first();
+  await expect(authorLink).toContainText("John Doe");
+  await expect(authorLink).toHaveAttribute(
     "href",
     `${publishedSitePage.siteUrlPath}/team/john-doe`,
   );
-  await expect(author.locator("img")).toHaveAttribute(
+  const authorAvatar = header.locator(".page-header-author-avatar").first();
+  await expect(authorAvatar).toHaveAttribute(
     "src",
-    `${publishedSitePage.siteUrlPath}/_r/-/team/john.jpg`,
+    `${publishedSitePage.siteUrl}/_r/-/team/john.jpg`,
   );
 });
