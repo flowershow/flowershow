@@ -147,6 +147,11 @@
   h6 {
     font-family: var(--font-heading);
   }
+
+  iframe {
+    height: 75vh;
+    overflow-y: auto;
+  }
 }
 
 @layer components {
