@@ -247,13 +247,17 @@ export default async function SitePage(props: {
     );
   } else {
     try {
+      const preprocessedContent = page.content
+        ? preprocessMdxForgiving(page.content)
+        : "";
+
       // Determine whether to use MD or MDX rendering based on config and file extension
       const useMdRendering =
         renderMode === "md" || (renderMode === "auto" && isMarkdown);
 
       if (useMdRendering) {
         // Process using unified (MD renderer)
-        const html = await processMarkdown(page.content ?? "", {
+        const html = await processMarkdown(preprocessedContent ?? "", {
           permalinks: sitePermalinks,
           filePath: page.blob.path,
           sitePrefix,
@@ -274,12 +278,8 @@ export default async function SitePage(props: {
           customDomain: site.customDomain ?? undefined,
         }) as any;
 
-        const preprocessedSource = page.content
-          ? preprocessMdxForgiving(page.content)
-          : "";
-
         const { content, error } = await evaluate({
-          source: preprocessedSource,
+          source: preprocessedContent,
           components: mdxComponents,
           options: mdxOptions,
         });
