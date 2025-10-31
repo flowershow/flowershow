@@ -88,6 +88,7 @@
     "rehype-stringify": "^10.0.1",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
+    "remark-mark-highlight": "^0.1.1",
     "remark-math": "^6.0.0",
     "remark-obsidian-callout": "^1.5.1",
     "remark-parse": "^11.0.0",

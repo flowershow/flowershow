@@ -3,6 +3,7 @@ import { h } from "hastscript";
 import remarkCallout from "@r4ai/remark-callout";
 import remarkYouTubeAutoEmbed from "@/lib/remark-youtube-auto-embed";
 import remarkGfm from "remark-gfm";
+import { remarkMark } from "remark-mark-highlight";
 import remarkMath from "remark-math";
 import remarkSmartypants from "remark-smartypants";
 import remarkToc from "remark-toc";
@@ -74,6 +75,7 @@ export async function processMarkdown(
       heading: "Table of contents",
       tight: true,
     })
+    .use(remarkMark)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain })
@@ -170,6 +172,7 @@ export const getMdxOptions = ({
           },
         ],
         [mdxMermaid, {}],
+        remarkMark,
       ],
       rehypePlugins: [
         [rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain }],
