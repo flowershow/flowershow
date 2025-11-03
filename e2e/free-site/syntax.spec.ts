@@ -22,15 +22,14 @@ test.describe("Links and embeds", () => {
       `${publishedSitePage.siteUrlPath}/blog/post-1`,
     );
 
-    // TODO currently the link resolves to incorrect location
-    // const wikiLinkRootReadme = publishedSitePage.page
-    //   .getByTestId("obsidian-wiki-link-readme")
-    //   .locator("a");
-    // await expect(wikiLinkRootReadme).toHaveText("README");
-    // await expect(wikiLinkRootReadme).toHaveAttribute(
-    //   "href",
-    //   `${publishedSitePage.siteUrlPath}`,
-    // );
+    const wikiLinkRootReadme = publishedSitePage.page
+      .getByTestId("obsidian-wiki-link-readme")
+      .locator("a");
+    await expect(wikiLinkRootReadme).toHaveText("README");
+    await expect(wikiLinkRootReadme).toHaveAttribute(
+      "href",
+      `${publishedSitePage.siteUrlPath}/`,
+    );
 
     const wikiLinkBlogReadme = publishedSitePage.page
       .getByTestId("obsidian-wiki-link-readme-blog")
@@ -82,63 +81,73 @@ test("Obsidian embeds", async ({ publishedSitePage }) => {
   );
 });
 
-//   test("CommonMark links", async () => {
-//     const commonMarkLinks = page
-//       .getByTestId("common-mark-links")
-//       .getByRole("link");
+test("CommonMark links", async ({ publishedSitePage }) => {
+  await publishedSitePage.goto("/syntax/links-and-embeds");
 
-//     const simpleRelativeLink = commonMarkLinks.nth(0);
-//     await expect(simpleRelativeLink).toHaveText("post-1");
-//     await expect(simpleRelativeLink).toHaveAttribute(
-//       "href",
-//       `${linkBaseUrl}/blog/post-1`,
-//     );
+  const commonMarkLinks = publishedSitePage.page
+    .getByTestId("common-mark-links")
+    .getByRole("link");
 
-//     const relativeLinkWithDotSlash = commonMarkLinks.nth(1);
-//     await expect(relativeLinkWithDotSlash).toHaveText("./post-1");
-//     await expect(relativeLinkWithDotSlash).toHaveAttribute(
-//       "href",
-//       `${linkBaseUrl}/blog/post-1`,
-//     );
+  const simpleRelativeLink = commonMarkLinks.getByText("/blog/post-1");
+  await expect(simpleRelativeLink).toHaveAttribute(
+    "href",
+    `${publishedSitePage.siteUrlPath}/blog/post-1`,
+  );
 
-//     const absoluteLink = commonMarkLinks.nth(2);
-//     await expect(absoluteLink).toHaveText("/blog/post-1");
-//     await expect(absoluteLink).toHaveAttribute(
-//       "href",
-//       `${linkBaseUrl}/blog/post-1`,
-//     );
+  const relativeLinkWithDotSlash = commonMarkLinks.getByText("./syntax");
+  await expect(relativeLinkWithDotSlash).toHaveAttribute(
+    "href",
+    `${publishedSitePage.siteUrlPath}/syntax/syntax`,
+  );
 
-//     const absoluteLinkToRootReadme = commonMarkLinks.nth(3);
-//     await expect(absoluteLinkToRootReadme).toHaveText("/README");
-//     await expect(absoluteLinkToRootReadme).toHaveAttribute(
-//       "href",
-//       `${linkBaseUrl}`,
-//     );
+  // const absoluteLink = commonMarkLinks.getByText("syntax");
+  // await expect(absoluteLink).toHaveAttribute(
+  //   "href",
+  //   `${publishedSitePage.siteUrlPath}/syntax/syntax`,
+  // );
 
-//     const backwardLinkToRootReadme = commonMarkLinks.nth(4);
-//     await expect(backwardLinkToRootReadme).toHaveText("../README");
-//     await expect(backwardLinkToRootReadme).toHaveAttribute(
-//       "href",
-//       `${linkBaseUrl}`,
-//     );
+  // const absoluteLinkToRootReadme = commonMarkLinks.getByText("/README");
+  // await expect(absoluteLinkToRootReadme).toHaveText("/README");
+  // await expect(absoluteLinkToRootReadme).toHaveAttribute(
+  //   "href",
+  //   `${publishedSitePage.siteUrlPath}`,
+  // );
 
-//     const externalLink = commonMarkLinks.nth(5);
-//     await expect(externalLink).toHaveText("External link");
-//     await expect(externalLink).toHaveAttribute("href", "https://example.com");
-//   });
+  const backwardLinkToRootReadme = commonMarkLinks.getByText("../README");
+  await expect(backwardLinkToRootReadme).toHaveAttribute(
+    "href",
+    `${publishedSitePage.siteUrlPath}`,
+  );
 
-//   test("CommonMark images", async () => {
-//     const commonMarkImages = page
-//       .getByTestId("common-mark-embeds")
-//       .getByRole("img");
+  const externalLink = commonMarkLinks.getByText("External link");
+  await expect(externalLink).toHaveAttribute("href", "https://example.com");
 
-//     const backwardPathImage = commonMarkImages.nth(0);
-//     await expect(backwardPathImage).toHaveAttribute("src", imagePath);
+  const headingLink = commonMarkLinks.getByText("#Links%20in%20JSX%20blocks");
+  await expect(headingLink).toHaveAttribute(
+    "href",
+    `${publishedSitePage.siteUrlPath}/syntax/links-and-embeds#links-in-jsx-blocks`,
+  );
+});
 
-//     const absolutePathImage = commonMarkImages.nth(1);
-//     await expect(absolutePathImage).toHaveAttribute("src", imagePath);
-//   });
-// });
+test("CommonMark images", async ({ publishedSitePage }) => {
+  await publishedSitePage.goto("/syntax/links-and-embeds");
+
+  const commonMarkImages = publishedSitePage.page
+    .getByTestId("common-mark-embeds")
+    .getByRole("img");
+
+  const backwardPathImage = commonMarkImages.nth(0);
+  await expect(backwardPathImage).toHaveAttribute(
+    "src",
+    `${publishedSitePage.siteUrl}/_r/-/assets/image.jpg`,
+  );
+
+  const absolutePathImage = commonMarkImages.nth(1);
+  await expect(absolutePathImage).toHaveAttribute(
+    "src",
+    `${publishedSitePage.siteUrl}/_r/-/assets/image.jpg`,
+  );
+});
 
 // test.describe.configure({ mode: "parallel" });
 

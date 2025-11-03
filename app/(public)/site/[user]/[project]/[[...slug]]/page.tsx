@@ -25,14 +25,14 @@ import { getSiteUrl, getSiteUrlPath } from "@/lib/get-site-url";
 
 import Comments from "@/components/public/comments";
 import { mdxComponentsFactory } from "@/components/public/mdx/mdx-components-factory";
-import { ErrorMessage } from "@/components/public/error-message";
+import ErrorMessage from "@/components/public/error-message";
 import { BlogLayout } from "@/components/public/layouts/blog";
 import SiteTree from "@/components/public/site-tree";
 import TableOfContents from "@/components/public/table-of-contents";
 
 import UrlNormalizer from "./url-normalizer";
 import { preprocessMdxForgiving } from "@/lib/preprocess-mdx";
-import { MDXRenderingError } from "./mdx-client-error-message";
+import { MDXRenderingError } from "@/components/public/mdx/mdx-client-error-message";
 
 const config = getConfig();
 
@@ -79,7 +79,7 @@ export async function generateMetadata(props: {
     })
     .catch(() => null);
 
-  const sitePermalinks = await api.site.getPermalinks
+  const siteFilePaths = await api.site.getAllBlobPaths
     .query({
       siteId: site.id,
     })
@@ -89,12 +89,10 @@ export async function generateMetadata(props: {
 
   const getSrcUrl = (url: string) => {
     // TODO temporary patch to support `image: "[[image.png]]"`
-    // Should probably be moved to the remark-wiki-link plugin
-    // Check if it's a wiki link
     if (isWikiLink(url)) {
       // Get the raw value and try to find a matching permalink
       const value = getWikiLinkValue(url);
-      const match = findMatchingPermalink(sitePermalinks, value);
+      const match = findMatchingPermalink(siteFilePaths, value);
       if (match) {
         return match;
       }
@@ -216,7 +214,7 @@ export default async function SitePage(props: {
     }
   }
 
-  const sitePermalinks = await api.site.getPermalinks
+  const siteFilePaths = await api.site.getAllBlobPaths
     .query({
       siteId: site.id,
     })
@@ -258,7 +256,7 @@ export default async function SitePage(props: {
       if (useMdRendering) {
         // Process using unified (MD renderer)
         const html = await processMarkdown(preprocessedContent ?? "", {
-          permalinks: sitePermalinks,
+          files: siteFilePaths,
           filePath: page.blob.path,
           sitePrefix,
           customDomain: site.customDomain ?? undefined,
@@ -272,7 +270,7 @@ export default async function SitePage(props: {
           pageNumber,
         });
         const mdxOptions = getMdxOptions({
-          permalinks: sitePermalinks,
+          files: siteFilePaths,
           filePath: page.blob.path,
           sitePrefix,
           customDomain: site.customDomain ?? undefined,
@@ -321,12 +319,10 @@ export default async function SitePage(props: {
 
   const resolveLink = (src: string, isSrc: boolean = false) => {
     // TODO temporary patch to support `image: "[[image.png]]"`
-    // Should probably be moved to the remark-wiki-link plugin
-    // Check if it's a wiki link
     if (isWikiLink(src)) {
       // Get the raw value and try to find a matching permalink
       const value = getWikiLinkValue(src);
-      const match = findMatchingPermalink(sitePermalinks, value);
+      const match = findMatchingPermalink(siteFilePaths, value);
       if (match) {
         return match;
       }

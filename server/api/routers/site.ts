@@ -803,65 +803,6 @@ export const siteRouter = createTRPCRouter({
         },
       )(input);
     }),
-
-  getPermalinks: publicProcedure
-    .input(
-      z.object({
-        siteId: z.string().min(1),
-      }),
-    )
-    .query(async ({ ctx, input }) => {
-      return await unstable_cache(
-        async (input) => {
-          const site = await ctx.db.site.findUnique({
-            where: { id: input.siteId },
-            select: {
-              id: true,
-              projectName: true,
-              user: true,
-              customDomain: true,
-            },
-          });
-
-          if (!site) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
-            });
-          }
-
-          const blobs = await ctx.db.blob.findMany({
-            where: {
-              siteId: site.id,
-            },
-            select: {
-              path: true,
-              appPath: true,
-            },
-          });
-
-          return blobs.map((blob) => {
-            let prefix: string;
-            if (site.customDomain) {
-              prefix = "";
-            } else {
-              prefix = `/@${site.user.ghUsername}/${site.projectName}`;
-            }
-
-            return (
-              (blob.appPath
-                ? prefix + (blob.appPath === "/" ? "" : "/" + blob.appPath)
-                : prefix + "/_r/-/" + blob.path) || "/"
-            );
-          });
-        },
-        undefined,
-        {
-          revalidate: 60, // 1 minute
-          tags: [`${input.siteId}`, `${input.siteId}-permalinks`],
-        },
-      )(input);
-    }),
   getCatalogFiles: publicProcedure
     .input(
       z.object({
@@ -1219,6 +1160,48 @@ export const siteRouter = createTRPCRouter({
         )(input);
       },
     ),
+  getAllBlobPaths: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+      }),
+    )
+    .output(z.array(z.string()))
+    .query(async ({ ctx, input }): Promise<string[]> => {
+      return await unstable_cache(
+        async (input) => {
+          const site = await ctx.db.site.findUnique({
+            where: { id: input.siteId },
+          });
+
+          if (!site) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
+          }
+
+          const blobs = await ctx.db.blob.findMany({
+            where: {
+              siteId: input.siteId,
+            },
+            select: {
+              path: true,
+            },
+            orderBy: {
+              path: "asc",
+            },
+          });
+
+          return blobs.map((blob) => "/" + blob.path); // TODO prepend paths in the db with leading slash
+        },
+        undefined,
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.siteId}`, `${input.siteId}-blob-paths`],
+        },
+      )(input);
+    }),
 });
 
 // ---- Util: ensure unique project name per user ----

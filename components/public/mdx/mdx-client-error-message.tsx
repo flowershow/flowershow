@@ -1,7 +1,6 @@
 "use client";
-
-import { ErrorMessage } from "@/components/public/error-message";
 import { ErrorBoundary } from "react-error-boundary";
+import ErrorMessage from "@/components/public/error-message";
 
 export function MDXRenderingError({ children }) {
   return <ErrorBoundary FallbackComponent={Fallback}>{children}</ErrorBoundary>;

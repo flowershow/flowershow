@@ -196,10 +196,10 @@ describe("Site Tree", () => {
     };
 
     const siteMap = buildSiteTree(blobs);
-    console.log({
-      siteMap: JSON.stringify(siteMap, null, 2),
-      expectedSiteMap: JSON.stringify(expectedSiteTree, null, 2),
-    });
+    // console.log({
+    //   siteMap: JSON.stringify(siteMap, null, 2),
+    //   expectedSiteMap: JSON.stringify(expectedSiteTree, null, 2),
+    // });
     expect(siteMap).toMatchObject(expectedSiteTree);
   });
 

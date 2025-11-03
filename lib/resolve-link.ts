@@ -1,5 +1,6 @@
 import * as path from "path";
 import { env } from "@/env.mjs";
+import { slug } from "github-slugger";
 
 /**
  * Resolve href (page link) or src (asset link) path to URL path (or full URL for assets)
@@ -28,31 +29,36 @@ export const resolveLinkToUrl = ({
   if (target.startsWith("http")) {
     return target;
   }
-
-  if (target.startsWith("#")) {
-    return target;
-  }
-
-  let resolvedLink = target;
-
-  resolvedLink =
-    resolvedLink.replace(/\.mdx?$/, "").replace(/\/(README|index)$/, "") || "/";
+  const [, rawPath = "", rawHeading = ""] =
+    target.match(/^(.*?)(?:#(.*))?$/u) || [];
 
   // normalize origin file path so that it always has a leading slash
   if (!originFilePath.startsWith("/")) {
     originFilePath = `/${originFilePath}`;
   }
 
-  // convert relative link to absolute
-  if (!resolvedLink.startsWith("/")) {
-    resolvedLink = path.resolve(path.dirname(originFilePath), resolvedLink);
+  let resolvedPath = rawPath;
+
+  if (rawPath.length === 0) {
+    resolvedPath = originFilePath;
+  } else if (!rawPath.startsWith("/")) {
+    // convert relative link to absolute
+    resolvedPath = path.resolve(path.dirname(originFilePath), rawPath);
   }
 
-  // const prefix = prefix && resolveSiteAlias(prefix, "to");
+  let resolvedUrlPath = resolvedPath
+    .replace(/\.mdx?$/, "")
+    .replace(/\/(README|index)$/, "");
 
   // remove trailing slash unless it's the root
-  if (resolvedLink !== "/" || prefix) {
-    resolvedLink = resolvedLink.replace(/\/$/, "");
+  if (resolvedUrlPath !== "/" || prefix) {
+    resolvedUrlPath = resolvedUrlPath.replace(/\/$/, "");
+  }
+
+  if (rawHeading.length !== 0) {
+    const decodedHeading = decodeURIComponent(rawHeading);
+    const headingId = slug(decodedHeading);
+    resolvedUrlPath = resolvedUrlPath.concat(`#${headingId}`);
   }
 
   // For src need to use full path so that it works with Next.js Image
@@ -64,8 +70,8 @@ export const resolveLinkToUrl = ({
     const protocol = isSecure ? "https" : "http";
     return `${protocol}://${
       domain || env.NEXT_PUBLIC_ROOT_DOMAIN
-    }${prefix}/_r/-${resolvedLink}`;
+    }${prefix}/_r/-${resolvedUrlPath}`;
   }
 
-  return `${prefix}${resolvedLink}`;
+  return `${prefix}${resolvedUrlPath}`;
 };

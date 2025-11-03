@@ -6,7 +6,7 @@ interface Props extends React.PropsWithChildren {
   stack?: string;
 }
 
-export const ErrorMessage: React.FC<Props> = ({ title, message, stack }) => {
+const ErrorMessage: React.FC<Props> = ({ title, message, stack }) => {
   return (
     <div role="alert" className="error-card not-prose">
       <CircleXIcon className="error-card-icon" aria-hidden="true" />
@@ -18,3 +18,5 @@ export const ErrorMessage: React.FC<Props> = ({ title, message, stack }) => {
     </div>
   );
 };
+
+export default ErrorMessage;

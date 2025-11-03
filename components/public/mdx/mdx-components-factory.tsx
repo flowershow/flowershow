@@ -4,31 +4,29 @@ import type { Blob } from "@prisma/client";
 import { resolveLinkToUrl } from "@/lib/resolve-link";
 import { getSiteUrlPath } from "@/lib/get-site-url";
 
-import { ErrorMessage } from "@/components/public/error-message";
+import ErrorMessage from "@/components/public/error-message";
 import List from "./list";
-import type { ListProps } from "./list";
 import Pre from "./pre";
+import { PublicSite } from "@/server/api/routers/site";
+import { PdfViewer } from "./pdf-viewer";
 
 import {
+  CustomHtml,
   FlatUiTable,
   LineChart,
   Mermaid,
-  CustomHtml,
-  // Excel,
-  // Map,
   Plotly,
   PlotlyBarChart,
   PlotlyLineChart,
   Vega,
 } from "./mdx-client-components";
 
-import { PublicSite } from "@/server/api/routers/site";
-import type { MDXComponents } from "next-mdx-remote-client/rsc";
-import { PdfViewer } from "./pdf-viewer";
-import { CustomHtmlProps } from "./custom-html";
-import type { LineChartProps } from "./line-chart";
-import type { PlotlyBarChartProps } from "./plotly-bar-chart";
+import type { CustomHtmlProps } from "./custom-html";
 import type { FlatUiTableProps } from "./flatui-table";
+import type { LineChartProps } from "./line-chart";
+import type { ListProps } from "./list";
+import type { MDXComponents } from "next-mdx-remote-client/rsc";
+import type { PlotlyBarChartProps } from "./plotly-bar-chart";
 import type { PlotlyLineChartProps } from "./plotly-line-chart";
 
 export const mdxComponentsFactory = ({
@@ -41,33 +39,6 @@ export const mdxComponentsFactory = ({
   pageNumber?: number;
 }) => {
   const components: MDXComponents = {
-    /* HTML tags */
-    a: ({
-      href,
-      children,
-      ...rest
-    }: React.LinkHTMLAttributes<HTMLAnchorElement>) => {
-      if (!href) return <a {...rest}>{children}</a>;
-
-      const isExternal = href?.startsWith("http");
-
-      return (
-        <a
-          target={isExternal ? "_blank" : undefined}
-          rel={isExternal ? "noopener noreferrer" : undefined}
-          href={href}
-          {...rest}
-        >
-          {children}
-        </a>
-      );
-    },
-    code: (props) => {
-      const className = props.className?.includes("language-")
-        ? props.className
-        : `${props.className || ""} language-auto`;
-      return <code {...props} className={className}></code>;
-    },
     pre: (props) => <Pre {...props} />,
     iframe: (props) => {
       const src = props.src ?? "";
@@ -76,38 +47,11 @@ export const mdxComponentsFactory = ({
         typeof src === "string" && src.split("#")[0]?.endsWith(".pdf");
 
       if (isPdf) {
-        console.log({ src });
         return <PdfViewer src={src} />;
       }
 
       return <iframe {...props} />;
     },
-    img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => {
-      if (!props.src) return <img {...props} />;
-      // TODO temporary quick patch to support special signs in file names
-      const [sitePath, assetPath] = (props.src as string).split("/_r/-/");
-      if (!sitePath || !assetPath) {
-        return <img {...props} />;
-      }
-      const encodedAssetPath = assetPath!
-        .split("/")
-        .map((f) => encodeURIComponent(f))
-        .join("/");
-      return (
-        <img
-          {...props}
-          src={`${sitePath}/_r/-/${encodedAssetPath}`}
-          className="rounded-md"
-        />
-      );
-    },
-    // pre: (props) => <Pre {...props} className="not-prose" />,
-    table: (props: React.TableHTMLAttributes<HTMLTableElement>) => (
-      <div className="overflow-x-auto">
-        <table {...props} />
-      </div>
-    ),
-    /* Custom */
     CustomHtml: withErrorBoundary((props: CustomHtmlProps) => {
       return <CustomHtml {...props} />;
     }, "CustomHtml"),

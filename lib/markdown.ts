@@ -7,7 +7,10 @@ import { remarkMark } from "remark-mark-highlight";
 import remarkMath from "remark-math";
 import remarkSmartypants from "remark-smartypants";
 import remarkToc from "remark-toc";
-import { remarkWikiLink } from "@flowershow/remark-wiki-link";
+import {
+  defaultUrlResolver,
+  remarkWikiLink,
+} from "@flowershow/remark-wiki-link";
 import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
@@ -15,19 +18,19 @@ import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
 import rehypePrismPlus from "rehype-prism-plus";
 import remarkCommonMarkLinkResolver from "./remark-commonmark-link-resolver";
+import rehypeHtmlEnhancements from "./rehype-html-enhancements";
 import rehypeResolveExplicitJsxUrls from "./rehype-resolve-explicit-jsx-urls";
 import rehypeStringify from "rehype-stringify";
 import rehypeRaw from "rehype-raw";
-import { slug } from "github-slugger";
-import { customEncodeUrl } from "./url-encoder";
 import { unified } from "unified";
 import matter from "gray-matter";
 
 import type { EvaluateOptions } from "next-mdx-remote-client/rsc";
+import { customEncodeUrl } from "./url-encoder";
 
 interface MarkdownOptions {
   filePath: string;
-  permalinks: string[];
+  files: string[];
   sitePrefix: string;
   parseFrontmatter?: boolean;
   customDomain?: string;
@@ -38,33 +41,22 @@ export async function processMarkdown(
   _content: string,
   options: MarkdownOptions,
 ) {
-  const { filePath, permalinks, sitePrefix, customDomain } = options;
+  const { filePath, files, sitePrefix, customDomain } = options;
 
   // this strips out frontmatter, so that it's not inlined with the rest of the markdown file
   const { content } = matter(_content, {});
 
   const processor = unified()
     .use(remarkParse)
-    // Add all remark plugins
-    .use(remarkCommonMarkLinkResolver, { filePath, sitePrefix, customDomain })
+    .use(remarkCommonMarkLinkResolver, {
+      filePath,
+      sitePrefix,
+      customDomain,
+    })
     .use(remarkWikiLink, {
-      permalinks,
+      files,
       format: "shortestPossible",
-      urlResolver: (wikiLinkPath) => {
-        const [, rawPath = "", rawHeading = ""] =
-          /^(.*?)(?:#(.*))?$/u.exec(wikiLinkPath) ?? [];
-
-        const normalizedPath = customEncodeUrl(
-          rawPath.replace(/\/?(index|README)$/, ""),
-        );
-
-        const headingAnchor = rawHeading ? `#${slug(rawHeading)}` : "";
-        if (headingAnchor && !normalizedPath) {
-          return headingAnchor;
-        }
-
-        return normalizedPath + headingAnchor;
-      },
+      urlResolver: getUrlResolver(sitePrefix),
     })
     .use(remarkYouTubeAutoEmbed)
     .use(remarkGfm)
@@ -79,6 +71,7 @@ export async function processMarkdown(
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain })
+    .use(rehypeHtmlEnhancements, { sitePrefix })
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, {
       properties: { className: "heading-link" },
@@ -121,13 +114,13 @@ export async function processMarkdown(
 // TODO this is ugly
 export const getMdxOptions = ({
   filePath,
-  permalinks,
+  files,
   sitePrefix = "",
   parseFrontmatter = true,
   customDomain,
 }: {
   filePath: string;
-  permalinks: string[];
+  files: string[];
   sitePrefix: string;
   parseFrontmatter?: boolean;
   customDomain?: string;
@@ -140,23 +133,9 @@ export const getMdxOptions = ({
         [
           remarkWikiLink,
           {
-            permalinks,
+            files,
             format: "shortestPossible",
-            urlResolver: (wikiLinkPath) => {
-              const [, rawPath = "", rawHeading = ""] =
-                /^(.*?)(?:#(.*))?$/u.exec(wikiLinkPath) ?? [];
-
-              const normalizedPath = customEncodeUrl(
-                rawPath.replace(/\/?(index|README)$/, ""),
-              );
-
-              const headingAnchor = rawHeading ? `#${slug(rawHeading)}` : "";
-              if (headingAnchor && !normalizedPath) {
-                return headingAnchor;
-              }
-
-              return normalizedPath + headingAnchor;
-            },
+            urlResolver: getUrlResolver(sitePrefix),
           },
         ],
         remarkYouTubeAutoEmbed,
@@ -176,6 +155,7 @@ export const getMdxOptions = ({
       ],
       rehypePlugins: [
         [rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain }],
+        [rehypeHtmlEnhancements, { sitePrefix }],
         rehypeSlug,
         [
           rehypeAutolinkHeadings,
@@ -218,5 +198,32 @@ export const getMdxOptions = ({
         [rehypePrismPlus, { ignoreMissing: true }],
       ],
     },
+  };
+};
+
+const getUrlResolver = (sitePrefix: string) => {
+  return ({ filePath, isEmbed, heading }) => {
+    // first resolve normally, using remark-wiki-link resolver
+    const url = defaultUrlResolver({ filePath, isEmbed, heading });
+
+    // don't do anything extra for same page heading links
+    if (filePath.length === 0 && heading) {
+      return url;
+    }
+
+    // standard encoding for embeds and "raw" path prefix
+    if (isEmbed) {
+      const encodedPath = url
+        .split("/")
+        .map((p) => encodeURIComponent(p))
+        .join("/");
+      return `${sitePrefix}/_r/-${encodedPath}`;
+    }
+    // custom encoding (with + signs) for links
+    const encodedPath = url
+      .split("/")
+      .map((p) => customEncodeUrl(p))
+      .join("/");
+    return `${sitePrefix}${encodedPath}`;
   };
 };
