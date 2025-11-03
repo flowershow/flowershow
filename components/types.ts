@@ -38,7 +38,6 @@ export interface SiteConfig {
   logo?: string;
   favicon?: string;
   nav?: NavConfig;
-  markdownRenderer?: "mdx" | "md" | "auto";
   analytics?: string;
   contentInclude?: string[];
   contentExclude?: string[];
@@ -61,6 +60,7 @@ export interface SiteConfig {
     permanent?: boolean; // Whether to use 301 (true) or 302 (false) redirect
   }>;
   theme?: string | ThemeConfig;
+  syntaxMode?: "mdx" | "md" | "auto";
 }
 
 export interface ThemeConfig {

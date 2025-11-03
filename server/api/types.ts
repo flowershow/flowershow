@@ -18,6 +18,7 @@ export interface PageMetadata {
   // authors pages
   avatar?: string;
   [key: string]: any;
+  syntaxMode: "md" | "mdx";
 }
 
 export enum OrganizationType {
