@@ -16,6 +16,9 @@ function remarkCommonMarkLinkResolver({
     visit(tree, "link", (node) => {
       if (typeof node.url !== "string") return;
 
+      if (node.url.startsWith("mailto:")) return;
+      if (node.url.startsWith("http")) return;
+
       const ext = node.url.split(".").pop();
       const isMarkdown = ext === "md" || ext === "mdx" || !ext;
 

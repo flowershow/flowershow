@@ -48,6 +48,7 @@ export async function processMarkdown(
 
   const processor = unified()
     .use(remarkParse)
+    // run this before remark-wiki-link
     .use(remarkCommonMarkLinkResolver, {
       filePath,
       sitePrefix,
@@ -129,6 +130,7 @@ export const getMdxOptions = ({
     parseFrontmatter,
     mdxOptions: {
       remarkPlugins: [
+        // run this before remark-wiki-link
         [remarkCommonMarkLinkResolver, { filePath, sitePrefix, customDomain }],
         [
           remarkWikiLink,
