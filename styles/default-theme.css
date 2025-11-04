@@ -1024,7 +1024,7 @@
    PDF Viewer component
    ──────────────────────────────────────────────────── */
   .pdf-viewer {
-    max-width: 800px;
+    width: 100%;
     display: flex;
     flex-direction: column;
     border-radius: 0.75rem;
@@ -1637,6 +1637,10 @@
   /* ────────────────────────────────────────────────────
    Rendered MDX
    ──────────────────────────────────────────────────── */
+  .rendered-mdx img,
+  video {
+    object-fit: cover;
+  }
 
   .rendered-mdx:not(.is-plain) {
     @apply prose min-h-[55vh] max-w-none dark:prose-invert prose-headings:font-heading prose-headings:tracking-tight prose-a:break-words;
