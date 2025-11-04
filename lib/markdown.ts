@@ -205,6 +205,14 @@ const getUrlResolver = (sitePrefix: string) => {
   return ({ filePath, isEmbed, heading }) => {
     // first resolve normally, using remark-wiki-link resolver
     const url = defaultUrlResolver({ filePath, isEmbed, heading });
+    const ext = filePath.split(".").pop();
+    const isMarkdown = ext === "md" || ext === "mdx" || !ext;
+
+    let useRawUrlPath = isEmbed;
+
+    if (!isMarkdown) {
+      useRawUrlPath = true;
+    }
 
     // don't do anything extra for same page heading links
     if (filePath.length === 0 && heading) {
@@ -212,7 +220,7 @@ const getUrlResolver = (sitePrefix: string) => {
     }
 
     // standard encoding for embeds and "raw" path prefix
-    if (isEmbed) {
+    if (useRawUrlPath) {
       const encodedPath = url
         .split("/")
         .map((p) => encodeURIComponent(p))

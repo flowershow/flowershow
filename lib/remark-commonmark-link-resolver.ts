@@ -16,13 +16,26 @@ function remarkCommonMarkLinkResolver({
     visit(tree, "link", (node) => {
       if (typeof node.url !== "string") return;
 
-      const resolvedUrl = resolveLinkToUrl({
-        target: node.url,
-        originFilePath: filePath,
-        prefix: sitePrefix,
-      });
+      const ext = node.url.split(".").pop();
+      const isMarkdown = ext === "md" || ext === "mdx" || !ext;
 
-      node.url = resolvedUrl;
+      if (isMarkdown) {
+        const resolvedUrl = resolveLinkToUrl({
+          target: node.url,
+          originFilePath: filePath,
+          prefix: sitePrefix,
+        });
+
+        node.url = resolvedUrl;
+      } else {
+        node.url = resolveLinkToUrl({
+          target: node.url,
+          originFilePath: filePath,
+          prefix: sitePrefix,
+          isSrcLink: true,
+          domain: customDomain,
+        });
+      }
     });
     visit(tree, "image", (node) => {
       if (typeof node.url !== "string") return;
