@@ -24,7 +24,6 @@ import { SiteProvider } from "@/components/public/site-context";
 import Providers from "./providers";
 
 import { fontBody, fontBrand, fontHeading } from "@/styles/fonts";
-import "@portaljs/components/styles.css";
 import "@/styles/prism.css";
 import "@/styles/callouts.css";
 import "@/styles/default-theme.css";

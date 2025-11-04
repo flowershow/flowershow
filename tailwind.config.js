@@ -9,8 +9,6 @@ module.exports = {
     "./components/**/*.{js,ts,jsx,tsx,mdx}",
     "./app/**/*.{js,ts,jsx,tsx,mdx}",
     "./providers/**/*.{js,ts,jsx,tsx,mdx}",
-    "./node_modules/@portaljs/core/dist/*.js",
-    "./node_modules/@portaljs/core/*.js",
   ],
   theme: {
     extend: {

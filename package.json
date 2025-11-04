@@ -30,7 +30,6 @@
     "@headlessui/react": "0.0.0-insiders.589ea90",
     "@next-auth/prisma-adapter": "^1.0.7",
     "@next/third-parties": "15.5.6",
-    "@portaljs/components": "^1.2.3",
     "@prisma/client": "5.5.2",
     "@r4ai/remark-callout": "^0.6.2",
     "@sentry/nextjs": "^10.21.0",
