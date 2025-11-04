@@ -1644,14 +1644,14 @@
 
   .rendered-mdx:not(.is-plain) {
     @apply prose min-h-[55vh] max-w-none dark:prose-invert prose-headings:font-heading prose-headings:tracking-tight prose-a:break-words;
+
+    & h1:first-child {
+      display: none;
+    }
   }
 
   .rendered-mdx.is-plain {
     font-family: var(--font-heading);
-  }
-
-  .rendered-mdx h1:first-child {
-    display: none;
   }
 
   .rendered-mdx .heading-link {
