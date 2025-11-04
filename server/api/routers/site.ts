@@ -555,7 +555,11 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      if (!site || site.userId !== ctx.session.user.id) {
+      if (
+        !site ||
+        (ctx.session.user.role !== "ADMIN" &&
+          site.userId !== ctx.session.user.id)
+      ) {
         throw new TRPCError({
           code: "NOT_FOUND",
           message: "Site not found",
