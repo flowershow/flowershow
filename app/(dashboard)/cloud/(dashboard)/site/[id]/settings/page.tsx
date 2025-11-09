@@ -12,11 +12,9 @@ import DeleteSiteForm from "@/components/dashboard/form/delete-site-form";
 import SitePasswordProtectionForm from "@/components/dashboard/form/site-password-form";
 import { SiteUpdateKey } from "@/server/api/routers/site";
 
-export default async function SiteSettingsIndex(
-  props: {
-    params: Promise<{ id: string }>;
-  }
-) {
+export default async function SiteSettingsIndex(props: {
+  params: Promise<{ id: string }>;
+}) {
   const params = await props.params;
   const site = await api.site.getById.query({
     id: decodeURIComponent(params.id),
@@ -63,7 +61,7 @@ export default async function SiteSettingsIndex(
             handleSubmit={updateSite}
           />
 
-          <Form
+          {/* <Form
             title="Branch"
             description="GitHub repository branch used to sync content for your site."
             inputAttrs={{
@@ -72,7 +70,7 @@ export default async function SiteSettingsIndex(
               defaultValue: site?.ghBranch!,
             }}
             handleSubmit={updateSite}
-          />
+          /> */}
 
           <Form
             title="Root Directory"
