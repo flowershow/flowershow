@@ -62,7 +62,7 @@ export default async function SiteSettingsIndex(props: {
           />
 
           <Form
-            title="Syntax Mode"
+            title="Markdown or MDX"
             description="Choose how to process your markdown files: Markdown (md), MDX (mdx), or auto-detect based on file extension (auto)."
             helpText={
               <p>
