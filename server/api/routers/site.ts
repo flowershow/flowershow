@@ -1169,6 +1169,64 @@ export const siteRouter = createTRPCRouter({
         )(input);
       },
     ),
+  getPermalinks: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+      }),
+    )
+    .output(z.array(z.string()))
+    .query(async ({ ctx, input }): Promise<string[]> => {
+      return await unstable_cache(
+        async (input) => {
+          const site = await ctx.db.site.findUnique({
+            where: { id: input.siteId },
+            include: {
+              user: true,
+            },
+          });
+
+          if (!site) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
+          }
+
+          const blobs = await ctx.db.blob.findMany({
+            where: {
+              siteId: site.id,
+            },
+            select: {
+              path: true,
+              appPath: true,
+            },
+          });
+
+          const permalinks = blobs.map((blob) => {
+            let prefix: string;
+            if (site.customDomain) {
+              prefix = "";
+            } else {
+              prefix = `/@${site.user.ghUsername}/${site.projectName}`;
+            }
+
+            return (
+              (blob.appPath
+                ? prefix + (blob.appPath === "/" ? "" : "/" + blob.appPath)
+                : prefix + "/_r/-/" + blob.path) || "/"
+            );
+          });
+
+          return permalinks;
+        },
+        undefined,
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.siteId}`, `${input.siteId}-permalinks`],
+        },
+      )(input);
+    }),
   getAllBlobPaths: publicProcedure
     .input(
       z.object({

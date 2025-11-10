@@ -79,7 +79,7 @@ export async function generateMetadata(props: {
     })
     .catch(() => null);
 
-  const siteFilePaths = await api.site.getAllBlobPaths
+  const permalinks = await api.site.getPermalinks
     .query({
       siteId: site.id,
     })
@@ -92,7 +92,7 @@ export async function generateMetadata(props: {
     if (isWikiLink(url)) {
       // Get the raw value and try to find a matching permalink
       const value = getWikiLinkValue(url);
-      const match = findMatchingPermalink(siteFilePaths, value);
+      const match = findMatchingPermalink(permalinks, value);
       if (match) {
         return match;
       }
@@ -317,12 +317,20 @@ export default async function SitePage(props: {
     );
   }
 
+  const permalinks = await api.site.getPermalinks
+    .query({
+      siteId: site.id,
+    })
+    .catch(() => {
+      notFound();
+    });
+
   const resolveLink = (src: string, isSrc: boolean = false) => {
     // TODO temporary patch to support `image: "[[image.png]]"`
     if (isWikiLink(src)) {
       // Get the raw value and try to find a matching permalink
       const value = getWikiLinkValue(src);
-      const match = findMatchingPermalink(siteFilePaths, value);
+      const match = findMatchingPermalink(permalinks, value);
       if (match) {
         return match;
       }
