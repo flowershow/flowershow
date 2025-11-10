@@ -60,7 +60,6 @@ export interface SiteConfig {
     permanent?: boolean; // Whether to use 301 (true) or 302 (false) redirect
   }>;
   theme?: string | ThemeConfig;
-  syntaxMode?: "mdx" | "md" | "auto";
 }
 
 export interface ThemeConfig {

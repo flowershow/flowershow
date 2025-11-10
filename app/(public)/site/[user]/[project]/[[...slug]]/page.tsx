@@ -237,7 +237,7 @@ export default async function SitePage(props: {
 
   const isMarkdown = page.blob.path.endsWith(".md");
   const isMdx = page.blob.path.endsWith(".mdx");
-  const renderMode = metadata?.syntaxMode ?? siteConfig?.syntaxMode ?? "mdx"; // Default to MDX if not specified
+  const renderMode = metadata?.syntaxMode ?? site.syntaxMode;
 
   if (!isMarkdown && !isMdx) {
     compiledContent = (

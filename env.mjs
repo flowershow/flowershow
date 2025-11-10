@@ -45,8 +45,6 @@ export const env = createEnv({
     INNGEST_APP_ID: z.string(),
     STRIPE_SECRET_KEY: z.string(),
     STRIPE_WEBHOOK_SECRET: z.string(),
-    STRIPE_PREMIUM_MONTHLY_PRICE_ID: z.string(),
-    STRIPE_PREMIUM_YEARLY_PRICE_ID: z.string(),
     E2E_GH_USERNAME: z.string().optional(),
     E2E_GH_PASSWORD: z.string().optional(),
     TYPESENSE_ADMIN_API_KEY: z.string(),
@@ -76,6 +74,8 @@ export const env = createEnv({
     NEXT_PUBLIC_SENTRY_DSN: z.string(),
     NEXT_PUBLIC_POSTHOG_KEY: z.string(),
     NEXT_PUBLIC_POSTHOG_HOST: z.string(),
+    NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID: z.string(),
+    NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID: z.string(),
   },
 
   /**
@@ -118,9 +118,10 @@ export const env = createEnv({
     INNGEST_APP_ID: process.env.INNGEST_APP_ID,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
-    STRIPE_PREMIUM_MONTHLY_PRICE_ID:
-      process.env.STRIPE_PREMIUM_MONTHLY_PRICE_ID,
-    STRIPE_PREMIUM_YEARLY_PRICE_ID: process.env.STRIPE_PREMIUM_YEARLY_PRICE_ID,
+    NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID:
+      process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID,
+    NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID:
+      process.env.NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID,
     E2E_GH_USERNAME: process.env.E2E_GH_USERNAME,
     E2E_GH_PASSWORD: process.env.E2E_GH_PASSWORD,
     TYPESENSE_ADMIN_API_KEY: process.env.TYPESENSE_ADMIN_API_KEY,

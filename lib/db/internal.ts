@@ -14,6 +14,7 @@ export const internalSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   giscusRepoId: true,
   giscusCategoryId: true,
   enableSearch: true,
+  syntaxMode: true,
   privacyMode: true,
   autoSync: true,
   createdAt: true,

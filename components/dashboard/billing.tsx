@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { api } from "@/trpc/react";
 import { LoadingButton } from "./loading-button";
-import type { PlanType, Plan } from "@/lib/stripe";
+import type { PlanType, Plan } from "@/lib/stripe-plans";
 import { Radio, RadioGroup } from "@headlessui/react";
 
 const frequencies = [

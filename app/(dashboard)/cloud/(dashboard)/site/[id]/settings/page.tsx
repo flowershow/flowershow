@@ -3,7 +3,7 @@ import { ExternalLinkIcon } from "lucide-react";
 
 import { api } from "@/trpc/server";
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
-import { PLANS } from "@/lib/stripe";
+import { PLANS } from "@/lib/stripe-plans";
 import { validDomainRegex } from "@/lib/domains";
 import Billing from "@/components/dashboard/billing";
 import SettingsNav from "@/components/dashboard/settings-nav";
@@ -61,16 +61,34 @@ export default async function SiteSettingsIndex(props: {
             handleSubmit={updateSite}
           />
 
-          {/* <Form
-            title="Branch"
-            description="GitHub repository branch used to sync content for your site."
+          <Form
+            title="Syntax Mode"
+            description="Choose how to process your markdown files: Markdown (md), MDX (mdx), or auto-detect based on file extension (auto)."
+            helpText={
+              <p>
+                Learn more about{" "}
+                <a
+                  className="underline"
+                  href="https://flowershow.app/blog/announcing-syntax-mode-configuration"
+                >
+                  Syntax mode
+                  <ExternalLinkIcon className="inline h-4" />
+                </a>
+                .
+              </p>
+            }
             inputAttrs={{
-              name: "ghBranch",
-              type: "text",
-              defaultValue: site?.ghBranch!,
+              name: "syntaxMode",
+              type: "select",
+              defaultValue: site?.syntaxMode!,
+              options: [
+                { value: "auto", label: "Auto-detect" },
+                { value: "md", label: "Markdown (md)" },
+                { value: "mdx", label: "MDX (mdx)" },
+              ],
             }}
             handleSubmit={updateSite}
-          /> */}
+          />
 
           <Form
             title="Root Directory"

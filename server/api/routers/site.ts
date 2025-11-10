@@ -33,7 +33,7 @@ import {
   findMatchingPermalink,
 } from "@/lib/wiki-link";
 import { getSiteUrlPath } from "@/lib/get-site-url";
-import { Prisma } from "@prisma/client";
+import { Prisma, SyntaxMode } from "@prisma/client";
 import PostHogClient from "@/lib/server-posthog";
 
 const asciiPrintableNoEdgeSpaces = new RegExp(
@@ -54,6 +54,7 @@ const publicSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   enableSearch: true,
   privacyMode: true,
   autoSync: true,
+  syntaxMode: true,
   createdAt: true,
   updatedAt: true,
   user: { select: { ghUsername: true } },
@@ -77,6 +78,7 @@ const publicSiteSchema: z.ZodType<PublicSite> = z.object({
   enableSearch: z.boolean(),
   privacyMode: z.enum(PrivacyMode),
   autoSync: z.boolean(),
+  syntaxMode: z.enum(SyntaxMode),
   createdAt: z.date(),
   updatedAt: z.date(),
   user: z.object({ ghUsername: z.string() }),
@@ -90,6 +92,9 @@ export enum SiteUpdateKey {
   enableSearch = "enableSearch",
   subdomain = "subdomain",
   projectName = "projectName",
+  syntaxMode = "syntaxMode",
+  giscusRepoId = "giscusRepoId",
+  giscusCategoryId = "giscusCategoryId",
 }
 
 export const siteRouter = createTRPCRouter({

@@ -126,6 +126,7 @@ model Site {
   accessPasswordHash      String?      @map("access_password_hash")
   accessPasswordUpdatedAt DateTime?    @map("access_password_updated_at")
   tokenVersion            Int          @map("token_version") @default(0)
+  syntaxMode              SyntaxMode   @default(auto) @map("syntax_mode")
 
   @@unique([userId, projectName])
   @@index([userId])
@@ -176,4 +177,10 @@ enum PrivacyMode {
   PUBLIC
   PASSWORD   // single shared password
   // MEMBERS    // (optional) require NextAuth session
+}
+
+enum SyntaxMode {
+  md
+  mdx
+  auto
 }
