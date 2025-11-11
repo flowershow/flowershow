@@ -62,6 +62,31 @@ export default async function SiteSettingsIndex(props: {
           />
 
           <Form
+            title="Root Directory"
+            description="The directory within your repository, in which your content is located. Leave empty if you're publishing the whole repository."
+            helpText={
+              <p>
+                Learn more about{" "}
+                <a
+                  className="underline"
+                  href="https://flowershow.app/docs/site-settings#root-directory"
+                >
+                  Root directory
+                  <ExternalLinkIcon className="inline h-4" />
+                </a>
+                .
+              </p>
+            }
+            inputAttrs={{
+              name: "rootDir",
+              type: "text",
+              defaultValue: site?.rootDir!,
+              required: false,
+            }}
+            handleSubmit={updateSite}
+          />
+
+          <Form
             title="Markdown or MDX"
             description="Choose how to process your markdown files: Markdown (md), MDX (mdx), or auto-detect based on file extension (auto)."
             helpText={
@@ -86,31 +111,6 @@ export default async function SiteSettingsIndex(props: {
                 { value: "md", label: "Markdown (md)" },
                 { value: "mdx", label: "MDX (mdx)" },
               ],
-            }}
-            handleSubmit={updateSite}
-          />
-
-          <Form
-            title="Root Directory"
-            description="The directory within your repository, in which your content is located. Leave empty if you're publishing the whole repository."
-            helpText={
-              <p>
-                Learn more about{" "}
-                <a
-                  className="underline"
-                  href="https://flowershow.app/docs/site-settings#root-directory"
-                >
-                  Root directory
-                  <ExternalLinkIcon className="inline h-4" />
-                </a>
-                .
-              </p>
-            }
-            inputAttrs={{
-              name: "rootDir",
-              type: "text",
-              defaultValue: site?.rootDir!,
-              required: false,
             }}
             handleSubmit={updateSite}
           />
