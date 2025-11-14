@@ -1,6 +1,10 @@
-import "@testing-library/jest-dom";
+import { describe, it, expect } from "vitest";
 import { buildSiteTree } from "./build-site-tree";
 import type { SiteTree } from "./build-site-tree";
+
+type TestMetadata = {
+  title: string;
+};
 
 const blobs: any[] = [
   {
@@ -69,8 +73,8 @@ const blobs: any[] = [
 ];
 
 describe("Site Tree", () => {
-  test("Site tree with files ordered by file name", () => {
-    const expectedSiteTree: SiteTree = {
+  it("Site tree with files ordered by file name", () => {
+    const expectedSiteTree: SiteTree<TestMetadata> = {
       kind: "root",
       label: "root",
       path: null,
@@ -203,8 +207,8 @@ describe("Site Tree", () => {
     expect(siteMap).toMatchObject(expectedSiteTree);
   });
 
-  test("Site tree with files ordered by title (default)", () => {
-    const expectedSiteTree: SiteTree = {
+  it("Site tree with files ordered by title (default)", () => {
+    const expectedSiteTree: SiteTree<TestMetadata> = {
       kind: "root",
       label: "root",
       path: null,

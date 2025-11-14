@@ -1,4 +1,4 @@
-import "@testing-library/jest-dom";
+import { describe, it, expect } from "vitest";
 import { normalizeLink } from "./normalize-link";
 
 describe("normalizeLink on root README/index pages", () => {

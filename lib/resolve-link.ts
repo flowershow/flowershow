@@ -1,5 +1,5 @@
 import * as path from "path";
-import { env } from "@/env.mjs";
+import { env } from "../env.mjs";
 import { slug } from "github-slugger";
 
 /**

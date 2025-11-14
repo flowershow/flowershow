@@ -1,4 +1,4 @@
-import "@testing-library/jest-dom";
+import { describe, it, expect } from "vitest";
 import { extractTitle } from "./extract-title";
 
 describe("extractTitle", () => {
