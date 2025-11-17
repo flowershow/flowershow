@@ -10,18 +10,19 @@ export interface SocialLink extends NavLink {
 }
 
 export type SocialPlatform =
-  | "github"
-  | "discord"
-  | "linkedin"
-  | "twitter"
-  | "x"
-  | "facebook"
-  | "instagram"
-  | "youtube"
-  | "mastodon"
   | "bsky"
   | "bluesky"
-  | "reddit";
+  | "discord"
+  | "facebook"
+  | "github"
+  | "instagram"
+  | "linkedin"
+  | "mastodon"
+  | "reddit"
+  | "substack"
+  | "twitter"
+  | "x"
+  | "youtube";
 
 export interface NavConfig {
   logo?: string;
