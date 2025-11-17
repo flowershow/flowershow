@@ -841,8 +841,8 @@ export const siteRouter = createTRPCRouter({
         async (input) => {
           const _dir = input.dir.replace(/^\//, "");
           const dir = _dir.endsWith("/") ? _dir : `${_dir}/`;
-          const dirReadmePath = dir + "README.md";
-          const dirIndexPath = dir + "index.md";
+          const dirReadmePattern = dir + "README.md(x)?";
+          const dirIndexPattern = dir + "index.md(x)?";
 
           const blobs = await ctx.db.$queryRaw<
             { path: string; app_path: string; metadata: PageMetadata | null }[]
@@ -851,7 +851,8 @@ export const siteRouter = createTRPCRouter({
               FROM "Blob"
               WHERE "site_id" = ${site.id}
                 AND "path" LIKE ${dir + "%"}
-                AND "path" NOT IN (${dirReadmePath}, ${dirIndexPath})
+                AND "path" !~ ${dirReadmePattern}
+                AND "path" !~ ${dirIndexPattern}
                 AND "extension" IN ('md', 'mdx')
               ORDER BY
                 ("metadata"->>'date')::timestamp DESC NULLS LAST,

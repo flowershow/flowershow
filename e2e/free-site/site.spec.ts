@@ -105,11 +105,44 @@ test("Should render List component correctly", async ({
   publishedSitePage,
 }) => {
   await publishedSitePage.goto("/blog");
+
+  // Check that the list component is present
   const list = publishedSitePage.page.locator(".list-component");
   await expect(list).toBeVisible();
-  const blogPost1 = list.locator("article").first();
+
+  // Check that there are exactly 3 list items displayed
+  const listItems = list.locator(".list-component-item");
+  await expect(listItems).toHaveCount(3);
+
+  const blogPost1 = list.locator(".list-component-item ").first();
+  // await expect(blogPost1.innerText).toBe("Blog Post 1");
   await expect(blogPost1.locator("a")).toHaveAttribute(
     "href",
     `${publishedSitePage.siteUrlPath}/blog/post-with-metadata`,
   );
+
+  // Check that "Blog Home Page" is not present on page 1
+  await expect(list.getByText("Blog Home Page")).not.toBeVisible();
+
+  // Check that pagination is present
+  const pagination = list.locator(".list-component-pagination");
+  await expect(pagination).toBeVisible();
+
+  // Check that there are 2 page buttons (for 2 pages)
+  const pageButtons = pagination.locator(
+    ".list-component-pagination-page-button",
+  );
+  await expect(pageButtons).toHaveCount(2);
+
+  // Go to second page
+  const nextButton = pagination.locator(
+    ".list-component-pagination-button--next",
+  );
+  await nextButton.click();
+
+  const listItems2 = list.locator(".list-component-item");
+  await expect(listItems2).toHaveCount(1);
+
+  // Check that "Blog Home Page" is not present on page 2
+  await expect(list.getByText("Blog Home Page")).not.toBeVisible();
 });
