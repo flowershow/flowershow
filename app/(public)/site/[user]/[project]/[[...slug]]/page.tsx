@@ -42,7 +42,7 @@ interface RouteParams {
   slug?: string[];
 }
 
-type SearchParams = Promise<{ [key: string]: string | undefined }>;
+type SearchParams = { [key: string]: string | undefined };
 
 export async function generateMetadata(props: {
   params: Promise<RouteParams>;
@@ -179,11 +179,13 @@ export default async function SitePage(props: {
   searchParams: Promise<SearchParams>;
 }) {
   const params = await props.params;
+  const searchParams = await props.searchParams;
   const projectName = decodeURIComponent(params.project);
   const userName = decodeURIComponent(params.user);
   const slug = params.slug ? params.slug.join("/") : "/";
   const decodedSlug = slug.replace(/%20/g, "+");
-  const pageParam = (await props.searchParams).page;
+  const pageParam = searchParams.page;
+  console.log("searchParams", searchParams);
   const pageNumber = pageParam ? Number(pageParam) : 1;
 
   const site = await getSite(userName, projectName);
@@ -264,6 +266,7 @@ export default async function SitePage(props: {
         compiledContent = <div dangerouslySetInnerHTML={{ __html: html }} />;
       } else {
         // Process using next-mdx-remote-client (MDX renderer)
+        console.log("slug", { pageNumber });
         const mdxComponents = mdxComponentsFactory({
           blob: page.blob,
           site,

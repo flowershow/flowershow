@@ -839,9 +839,10 @@ export const siteRouter = createTRPCRouter({
 
       return await unstable_cache(
         async (input) => {
-          const dir = input.dir.replace(/^\//, "");
-          const dirReadmePath = dir + "/README.md";
-          const dirIndexPath = dir + "/index.md";
+          const _dir = input.dir.replace(/^\//, "");
+          const dir = _dir.endsWith("/") ? _dir : `${_dir}/`;
+          const dirReadmePath = dir + "README.md";
+          const dirIndexPath = dir + "index.md";
 
           const blobs = await ctx.db.$queryRaw<
             { path: string; app_path: string; metadata: PageMetadata | null }[]
@@ -893,7 +894,6 @@ export const siteRouter = createTRPCRouter({
             if (isWikiLink(value)) {
               // Get the raw value and try to find a matching permalink
               const rawValue = getWikiLinkValue(value);
-              console.log({ rawValue });
               const match = findMatchingPermalink(permalinks, rawValue);
               if (match) {
                 return match;
@@ -1087,7 +1087,6 @@ export const siteRouter = createTRPCRouter({
               if (isWikiLink(value)) {
                 // Get the raw value and try to find a matching permalink
                 const rawValue = getWikiLinkValue(value);
-                console.log({ rawValue });
                 const match = findMatchingPermalink(permalinks, rawValue);
                 if (match) {
                   return match;

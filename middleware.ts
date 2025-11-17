@@ -41,6 +41,7 @@ export default async function middleware(req: NextRequest) {
   const normalizedPath = normalizePath(url);
   const { pathname, search } = normalizedPath;
   const path = pathname + search;
+  const searchParams = search; // Preserve for rewrites
 
   // 3) Legacy redirect: flowershow.app/@... → my.flowershow.app/@...
   if (hostname === "flowershow.app" && pathname.startsWith("/@")) {
@@ -114,7 +115,10 @@ export default async function middleware(req: NextRequest) {
     if (raw) return raw;
 
     // All other: render the site
-    return rewrite(`/site/${username}/${projectname}${slug}`, req);
+    return rewrite(
+      `/site/${username}/${projectname}${slug}${searchParams}`,
+      req,
+    );
   }
 
   // 6) Custom domains
@@ -189,7 +193,7 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
-  // Render custom-domain site
+  // Render custom-domain site (path already includes search params)
   return NextResponse.rewrite(
     new URL(`/site/_domain/${hostname}${path}`, req.url),
   );
