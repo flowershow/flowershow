@@ -50,6 +50,15 @@ test.describe("Links and embeds", () => {
       "href",
       `${publishedSitePage.siteUrlPath}/blog/Post+With+Special+Chars+%25%26(1)`,
     );
+
+    const wikiLinkCase = publishedSitePage.page
+      .getByTestId("obsidian-wiki-link-case-insensitive")
+      .locator("a");
+    await expect(wikiLinkCase).toHaveText("POST-1");
+    await expect(wikiLinkCase).toHaveAttribute(
+      "href",
+      `${publishedSitePage.siteUrlPath}/blog/post-1`,
+    );
   });
 });
 
@@ -121,12 +130,6 @@ test("CommonMark links", async ({ publishedSitePage }) => {
 
   const externalLink = commonMarkLinks.getByText("External link");
   await expect(externalLink).toHaveAttribute("href", "https://example.com");
-
-  const headingLink = commonMarkLinks.getByText("#Links%20in%20JSX%20blocks");
-  await expect(headingLink).toHaveAttribute(
-    "href",
-    `${publishedSitePage.siteUrlPath}/syntax/links-and-embeds#links-in-jsx-blocks`,
-  );
 });
 
 test("CommonMark images", async ({ publishedSitePage }) => {

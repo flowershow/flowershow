@@ -19,8 +19,8 @@ importers:
         specifier: ^3.914.0
         version: 3.922.0
       '@flowershow/remark-wiki-link':
-        specifier: ^3.1.2
-        version: 3.1.2
+        specifier: ^3.2.0
+        version: 3.2.0
       '@giscus/react':
         specifier: ^3.1.0
         version: 3.1.0(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -1120,8 +1120,8 @@ packages:
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
 
-  '@flowershow/remark-wiki-link@3.1.2':
-    resolution: {integrity: sha512-wkxj7w4KQitk646s34PpQhbLNhrZiFuR6D+X/2p/83hbgWieOCHGVc0xic/5gQjYmqrAAaXTyTnxVKoN10Lfsg==}
+  '@flowershow/remark-wiki-link@3.2.0':
+    resolution: {integrity: sha512-WOSkB0rwA1eGyCdHwhpP3JyFA2t8Q+0JZ5/ViT0k9I/By7a5ZYwzm/3cRmImNlLgOl5JJ5ptoGVfOSjbeJCEcg==}
 
   '@giscus/react@3.1.0':
     resolution: {integrity: sha512-0TCO2TvL43+oOdyVVGHDItwxD1UMKP2ZYpT6gXmhFOqfAJtZxTzJ9hkn34iAF/b6YzyJ4Um89QIt9z/ajmAEeg==}
@@ -10858,7 +10858,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.10': {}
 
-  '@flowershow/remark-wiki-link@3.1.2':
+  '@flowershow/remark-wiki-link@3.2.0':
     dependencies:
       github-slugger: 2.0.0
       mdast-util-to-markdown: 2.1.2
