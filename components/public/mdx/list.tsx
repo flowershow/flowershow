@@ -80,10 +80,6 @@ export default async function List({
 
   const totalPages = pageSize ? Math.ceil(data.items.length / pageSize) : 1;
 
-  console.log("data.items", data.items);
-  console.log("data.items.length", data.items.length);
-  console.log({ pageSize, pageNumber, items, totalPages });
-
   const slotsMap = fields ? _convertFieldsToSlotsMap(fields) : slots;
 
   return (

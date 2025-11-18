@@ -385,6 +385,9 @@ importers:
       random-word:
         specifier: ^3.0.0
         version: 3.0.0
+      remark-stringify:
+        specifier: ^11.0.0
+        version: 11.0.0
       storybook:
         specifier: ^9.1.4
         version: 9.1.16(@testing-library/dom@10.4.1)(prettier@3.6.2)(vite@7.1.12(@types/node@24.10.0)(jiti@1.21.7)(terser@5.44.0)(yaml@2.8.1))

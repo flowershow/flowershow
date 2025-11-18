@@ -2,6 +2,7 @@ import mdxMermaid from "mdx-mermaid";
 import { h } from "hastscript";
 import remarkCallout from "@r4ai/remark-callout";
 import remarkYouTubeAutoEmbed from "@/lib/remark-youtube-auto-embed";
+import remarkObsidianComments from "@/lib/remark-obsidian-comments";
 import remarkGfm from "remark-gfm";
 import { remarkMark } from "remark-mark-highlight";
 import remarkMath from "remark-math";
@@ -48,6 +49,7 @@ export async function processMarkdown(
 
   const processor = unified()
     .use(remarkParse)
+    .use(remarkObsidianComments)
     // run this before remark-wiki-link
     .use(remarkCommonMarkLinkResolver, {
       filePath,
@@ -130,6 +132,7 @@ export const getMdxOptions = ({
     parseFrontmatter,
     mdxOptions: {
       remarkPlugins: [
+        remarkObsidianComments,
         // run this before remark-wiki-link
         [remarkCommonMarkLinkResolver, { filePath, sitePrefix, customDomain }],
         [
