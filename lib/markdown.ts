@@ -1,28 +1,31 @@
 import mdxMermaid from "mdx-mermaid";
 import { h } from "hastscript";
 import remarkCallout from "@r4ai/remark-callout";
-import remarkYouTubeAutoEmbed from "@/lib/remark-youtube-auto-embed";
-import remarkObsidianComments from "@/lib/remark-obsidian-comments";
+import remarkCommonMarkLinkResolver from "./remark-commonmark-link-resolver";
 import remarkGfm from "remark-gfm";
+import remarkObsidianComments from "@/lib/remark-obsidian-comments";
 import { remarkMark } from "remark-mark-highlight";
 import remarkMath from "remark-math";
+import remarkObsidianImageSize from "./remark-obsidian-image-size";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
 import remarkSmartypants from "remark-smartypants";
 import remarkToc from "remark-toc";
 import {
   defaultUrlResolver,
   remarkWikiLink,
 } from "@flowershow/remark-wiki-link";
-import remarkParse from "remark-parse";
-import remarkRehype from "remark-rehype";
+import remarkYouTubeAutoEmbed from "@/lib/remark-youtube-auto-embed";
+
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeHtmlEnhancements from "./rehype-html-enhancements";
 import rehypeKatex from "rehype-katex";
 import rehypeSlug from "rehype-slug";
 import rehypePrismPlus from "rehype-prism-plus";
-import remarkCommonMarkLinkResolver from "./remark-commonmark-link-resolver";
-import rehypeHtmlEnhancements from "./rehype-html-enhancements";
+import rehypeRaw from "rehype-raw";
 import rehypeResolveExplicitJsxUrls from "./rehype-resolve-explicit-jsx-urls";
 import rehypeStringify from "rehype-stringify";
-import rehypeRaw from "rehype-raw";
+
 import { unified } from "unified";
 import matter from "gray-matter";
 
@@ -56,6 +59,7 @@ export async function processMarkdown(
       sitePrefix,
       customDomain,
     })
+    .use(remarkObsidianImageSize)
     .use(remarkWikiLink, {
       files,
       format: "shortestPossible",
@@ -135,6 +139,7 @@ export const getMdxOptions = ({
         remarkObsidianComments,
         // run this before remark-wiki-link
         [remarkCommonMarkLinkResolver, { filePath, sitePrefix, customDomain }],
+        remarkObsidianImageSize,
         [
           remarkWikiLink,
           {
