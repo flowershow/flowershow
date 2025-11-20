@@ -9,7 +9,7 @@ import clsx from "clsx";
 import { api } from "@/trpc/server";
 
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
-import { resolveLinkToUrl } from "@/lib/resolve-link";
+import { resolvePathToUrl } from "@/lib/resolve-link";
 import { getThemeUrl } from "@/lib/get-theme";
 import { getSiteUrlPath } from "@/lib/get-site-url";
 import { getConfig } from "@/lib/app-config";
@@ -169,37 +169,14 @@ export default async function PublicLayout(props: {
       .catch(() => []);
   }
 
-  const logo = resolveLinkToUrl({
-    target: siteConfig?.nav?.logo ?? siteConfig?.logo ?? appConfig.logo, // default to Flowershow logo
-    prefix: sitePrefix,
-    isSrcLink: true,
-    domain: site.customDomain,
-  });
-
+  const logo = siteConfig?.nav?.logo ?? siteConfig?.logo ?? appConfig.logo; // default to Flowershow logo
   const title = siteConfig?.nav?.title;
-
-  const links = siteConfig?.nav?.links?.map((link) => ({
-    ...link,
-    href: resolveLinkToUrl({
-      target: link.href,
-      prefix: sitePrefix,
-    }),
-  }));
-
-  const social = siteConfig?.nav?.social?.map((link) => ({
-    ...link,
-    href: resolveLinkToUrl({
-      target: link.href,
-      prefix: sitePrefix,
-    }),
-  }));
-
+  const links = siteConfig?.nav?.links;
+  const social = siteConfig?.nav?.social;
   const showBuiltWithButton = !isFeatureEnabled(Feature.NoBranding, site);
   const showSearch =
     isFeatureEnabled(Feature.Search, site) && site.enableSearch;
   const cta = siteConfig?.nav?.cta;
-
-  const handleSignOutFromSite = () => {};
 
   return (
     <html

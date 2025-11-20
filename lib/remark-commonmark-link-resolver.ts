@@ -1,5 +1,5 @@
 import { visit } from "unist-util-visit";
-import { resolveLinkToUrl } from "./resolve-link";
+import { resolvePathToUrl } from "./resolve-link";
 
 export interface Options {
   filePath: string;
@@ -19,35 +19,22 @@ function remarkCommonMarkLinkResolver({
       if (node.url.startsWith("mailto:")) return;
       if (node.url.startsWith("http")) return;
 
-      const ext = node.url.split(".").pop();
-      const isMarkdown = ext === "md" || ext === "mdx" || !ext;
-
-      if (isMarkdown) {
-        const resolvedUrl = resolveLinkToUrl({
-          target: node.url,
-          originFilePath: filePath,
-          prefix: sitePrefix,
-        });
-
-        node.url = resolvedUrl;
-      } else {
-        node.url = resolveLinkToUrl({
-          target: node.url,
-          originFilePath: filePath,
-          prefix: sitePrefix,
-          isSrcLink: true,
-          domain: customDomain,
-        });
-      }
+      node.url = resolvePathToUrl({
+        target: node.url,
+        originFilePath: filePath,
+        sitePrefix: sitePrefix,
+        domain: customDomain,
+        commonMarkSpaceEncoded: true,
+      });
     });
     visit(tree, "image", (node) => {
       if (typeof node.url !== "string") return;
-      node.url = resolveLinkToUrl({
+      node.url = resolvePathToUrl({
         target: node.url,
         originFilePath: filePath,
-        prefix: sitePrefix,
-        isSrcLink: true,
+        sitePrefix: sitePrefix,
         domain: customDomain,
+        commonMarkSpaceEncoded: true,
       });
     });
   };

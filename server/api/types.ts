@@ -14,17 +14,8 @@ export interface PageMetadata {
   cta?: Array<{
     href: string;
     label: string;
-  }>; // CTAs used if hero is enabled (only 2 supported)
-  // authors pages
+  }>;
   avatar?: string;
+  syntaxMode?: "md" | "mdx";
   [key: string]: any;
-  syntaxMode: "md" | "mdx";
-}
-
-export enum OrganizationType {
-  "Business" = "Business",
-  "Charity / NGO" = "Charity / NGO",
-  "Academic / Teacher / Researcher" = "Academic / Teacher / Researcher",
-  "Individual" = "Individual",
-  "Student" = "Student",
 }

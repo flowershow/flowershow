@@ -28,7 +28,7 @@ test.describe("Links and embeds", () => {
     await expect(wikiLinkRootReadme).toHaveText("README");
     await expect(wikiLinkRootReadme).toHaveAttribute(
       "href",
-      `${publishedSitePage.siteUrlPath}/`,
+      `${publishedSitePage.siteUrlPath}`,
     );
 
     const wikiLinkBlogReadme = publishedSitePage.page
@@ -70,7 +70,7 @@ test("Obsidian embeds", async ({ publishedSitePage }) => {
     .getByRole("img");
   await expect(obsidianEmbed).toHaveAttribute(
     "src",
-    `${publishedSitePage.siteUrlPath}/_r/-/assets/image.jpg`,
+    `${publishedSitePage.siteUrl}/_r/-/assets/image.jpg`,
   );
 
   const obsidianEmbedAbsolute = publishedSitePage.page
@@ -78,7 +78,7 @@ test("Obsidian embeds", async ({ publishedSitePage }) => {
     .getByRole("img");
   await expect(obsidianEmbedAbsolute).toHaveAttribute(
     "src",
-    `${publishedSitePage.siteUrlPath}/_r/-/assets/image.jpg`,
+    `${publishedSitePage.siteUrl}/_r/-/assets/image.jpg`,
   );
 
   const obsidianEmbedSpecialChars = publishedSitePage.page
@@ -86,7 +86,7 @@ test("Obsidian embeds", async ({ publishedSitePage }) => {
     .getByRole("img");
   await expect(obsidianEmbedSpecialChars).toHaveAttribute(
     "src",
-    `${publishedSitePage.siteUrlPath}/_r/-/assets/Image%20With%20Special%20Chars%20%25%26(1).jpg`,
+    `${publishedSitePage.siteUrl}/_r/-/assets/Image%20With%20Special%20Chars%20%25%26(1).jpg`,
   );
 });
 
@@ -130,6 +130,12 @@ test("CommonMark links", async ({ publishedSitePage }) => {
 
   const externalLink = commonMarkLinks.getByText("External link");
   await expect(externalLink).toHaveAttribute("href", "https://example.com");
+
+  const linkWithSpaces = commonMarkLinks.getByText("with spaces");
+  await expect(linkWithSpaces).toHaveAttribute(
+    "href",
+    `${publishedSitePage.siteUrlPath}/some/path/with+spaces`,
+  );
 });
 
 test("CommonMark images", async ({ publishedSitePage }) => {

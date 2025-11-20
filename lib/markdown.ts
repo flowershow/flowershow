@@ -11,10 +11,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import remarkSmartypants from "remark-smartypants";
 import remarkToc from "remark-toc";
-import {
-  defaultUrlResolver,
-  remarkWikiLink,
-} from "@flowershow/remark-wiki-link";
+import { remarkWikiLink } from "@flowershow/remark-wiki-link";
 import remarkYouTubeAutoEmbed from "@/lib/remark-youtube-auto-embed";
 
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
@@ -30,7 +27,7 @@ import { unified } from "unified";
 import matter from "gray-matter";
 
 import type { EvaluateOptions } from "next-mdx-remote-client/rsc";
-import { customEncodeUrl } from "./url-encoder";
+import { resolvePathToUrl } from "./resolve-link";
 
 interface MarkdownOptions {
   filePath: string;
@@ -63,7 +60,7 @@ export async function processMarkdown(
     .use(remarkWikiLink, {
       files,
       format: "shortestPossible",
-      urlResolver: getUrlResolver(sitePrefix),
+      urlResolver: getUrlResolver(sitePrefix, customDomain),
     })
     .use(remarkYouTubeAutoEmbed)
     .use(remarkGfm)
@@ -145,7 +142,7 @@ export const getMdxOptions = ({
           {
             files,
             format: "shortestPossible",
-            urlResolver: getUrlResolver(sitePrefix),
+            urlResolver: getUrlResolver(sitePrefix, customDomain),
           },
         ],
         remarkYouTubeAutoEmbed,
@@ -211,37 +208,13 @@ export const getMdxOptions = ({
   };
 };
 
-const getUrlResolver = (sitePrefix: string) => {
-  return ({ filePath, isEmbed, heading }) => {
-    // first resolve normally, using remark-wiki-link resolver
-    const url = defaultUrlResolver({ filePath, isEmbed, heading });
-    const ext = filePath.split(".").pop();
-    const isMarkdown = ext === "md" || ext === "mdx" || !ext;
-
-    let useRawUrlPath = isEmbed;
-
-    if (!isMarkdown) {
-      useRawUrlPath = true;
-    }
-
-    // don't do anything extra for same page heading links
-    if (filePath.length === 0 && heading) {
-      return url;
-    }
-
-    // standard encoding for embeds and "raw" path prefix
-    if (useRawUrlPath) {
-      const encodedPath = url
-        .split("/")
-        .map((p) => encodeURIComponent(p))
-        .join("/");
-      return `${sitePrefix}/_r/-${encodedPath}`;
-    }
-    // custom encoding (with + signs) for links
-    const encodedPath = url
-      .split("/")
-      .map((p) => customEncodeUrl(p))
-      .join("/");
-    return `${sitePrefix}${encodedPath}`;
+export const getUrlResolver = (sitePrefix: string, domain?: string) => {
+  return ({ filePath, heading }: { filePath: string; heading?: string }) => {
+    // We need to concatenate filePath and heading for use with resolvePathToUrl
+    return resolvePathToUrl({
+      target: `${filePath}${heading ? "#" + heading : ""}`,
+      sitePrefix,
+      domain,
+    });
   };
 };

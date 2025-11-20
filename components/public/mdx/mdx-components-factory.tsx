@@ -1,7 +1,7 @@
 import { ErrorBoundary } from "react-error-boundary";
 
 import type { Blob } from "@prisma/client";
-import { resolveLinkToUrl } from "@/lib/resolve-link";
+import { resolvePathToUrl } from "@/lib/resolve-link";
 import { getSiteUrlPath } from "@/lib/get-site-url";
 
 import ErrorMessage from "@/components/public/error-message";
@@ -61,11 +61,10 @@ export const mdxComponentsFactory = ({
     mermaid: Mermaid as any,
     FlatUiTable: withErrorBoundary((props: FlatUiTableProps) => {
       if (props.data?.url)
-        props.data.url = resolveLinkToUrl({
+        props.data.url = resolvePathToUrl({
           target: props.data.url,
           originFilePath: blob.path,
-          isSrcLink: true,
-          prefix: getSiteUrlPath(site),
+          sitePrefix: getSiteUrlPath(site),
           domain: site.customDomain,
         });
 
@@ -73,11 +72,10 @@ export const mdxComponentsFactory = ({
     }, "FlatUiTable"),
     LineChart: withErrorBoundary((props: LineChartProps) => {
       if (props.data?.url) {
-        props.data.url = resolveLinkToUrl({
+        props.data.url = resolvePathToUrl({
           target: props.data.url,
           originFilePath: blob.path,
-          isSrcLink: true,
-          prefix: getSiteUrlPath(site),
+          sitePrefix: getSiteUrlPath(site),
           domain: site.customDomain,
         });
       }
@@ -85,11 +83,10 @@ export const mdxComponentsFactory = ({
     }, "LineChart"),
     PlotlyBarChart: withErrorBoundary((props: PlotlyBarChartProps) => {
       if (props.data.url) {
-        props.data.url = resolveLinkToUrl({
+        props.data.url = resolvePathToUrl({
           target: props.data.url,
           originFilePath: blob.path,
-          isSrcLink: true,
-          prefix: getSiteUrlPath(site),
+          sitePrefix: getSiteUrlPath(site),
           domain: site.customDomain,
         });
       }
@@ -97,18 +94,17 @@ export const mdxComponentsFactory = ({
     }, "PlotlyBarChart"),
     PlotlyLineChart: withErrorBoundary((props: PlotlyLineChartProps) => {
       if (props.data.url) {
-        props.data.url = resolveLinkToUrl({
+        props.data.url = resolvePathToUrl({
           target: props.data.url,
           originFilePath: blob.path,
-          isSrcLink: true,
-          prefix: getSiteUrlPath(site),
+          sitePrefix: getSiteUrlPath(site),
           domain: site.customDomain,
         });
       }
       return <PlotlyLineChart {...props} />;
     }, "PlotlyLineChart"),
     // Excel: withErrorBoundary((props: ExcelProps) => {
-    //   props.data.url = resolveLinkToUrl({
+    //   props.data.url = resolvePathToUrl({
     //     target: props.data.url,
     //     originFilePath: blob.path,
     //     isSrcLink: true,
@@ -120,7 +116,7 @@ export const mdxComponentsFactory = ({
     // Map: withErrorBoundary((props: MapProps) => {
     //   const layers = props.layers.map((layer) => {
     //     if (layer.data.url) {
-    //       layer.data.url = resolveLinkToUrl({
+    //       layer.data.url = resolvePathToUrl({
     //         target: layer.data.url,
     //         originFilePath: blob.path,
     //         isSrcLink: true,
@@ -135,11 +131,10 @@ export const mdxComponentsFactory = ({
     Plotly: withErrorBoundary((props) => {
       const data =
         typeof props.data === "string"
-          ? resolveLinkToUrl({
+          ? resolvePathToUrl({
               target: props.data,
               originFilePath: blob.path,
-              isSrcLink: true,
-              prefix: getSiteUrlPath(site),
+              sitePrefix: getSiteUrlPath(site),
               domain: site.customDomain,
             })
           : props.data;
@@ -147,11 +142,10 @@ export const mdxComponentsFactory = ({
     }, "Plotly"),
     Vega: withErrorBoundary((props) => {
       if (props.spec.data.url)
-        props.spec.data.url = resolveLinkToUrl({
+        props.spec.data.url = resolvePathToUrl({
           target: props.spec.data.url,
           originFilePath: blob.path,
-          isSrcLink: true,
-          prefix: getSiteUrlPath(site),
+          sitePrefix: getSiteUrlPath(site),
           domain: site.customDomain,
         });
       return <Vega {...props} />;
@@ -159,11 +153,10 @@ export const mdxComponentsFactory = ({
     // TODO this is not needed
     VegaLite: withErrorBoundary((props) => {
       if (props.spec.data.url)
-        props.spec.data.url = resolveLinkToUrl({
+        props.spec.data.url = resolvePathToUrl({
           target: props.spec.data.url,
           originFilePath: blob.path,
-          isSrcLink: true,
-          prefix: getSiteUrlPath(site),
+          sitePrefix: getSiteUrlPath(site),
           domain: site.customDomain,
         });
       return <Vega {...props} />;

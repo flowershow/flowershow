@@ -20,8 +20,6 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  console.log({ siteId, site });
-
   if (!site) return NextResponse.json({ success: true }); // nothing to clear
 
   // must match original attributes (path, sameSite, secure, domain if set)

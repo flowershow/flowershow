@@ -1,4 +1,3 @@
-import { env } from "@/env.mjs";
 import { test, expect } from "../_fixtures/published-site-test";
 
 test.describe("Site layout", () => {

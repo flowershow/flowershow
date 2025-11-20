@@ -1,7 +1,7 @@
 import { getConfig } from "@/lib/app-config";
 import { SiteLoginForm } from "./site-login-form";
 import Image from "next/image";
-import { resolveLinkToUrl } from "@/lib/resolve-link";
+import { resolvePathToUrl } from "@/lib/resolve-link";
 import { api } from "@/trpc/server";
 import { getSiteUrlPath, getSiteUrl } from "@/lib/get-site-url";
 import { cookies } from "next/headers";
@@ -19,7 +19,9 @@ interface RouteParams {
   project: string;
 }
 
-export default async function LoginPage(props: { params: Promise<RouteParams> }) {
+export default async function LoginPage(props: {
+  params: Promise<RouteParams>;
+}) {
   const params = await props.params;
   const userName = decodeURIComponent(params.user); // user's github username or "_domain" if on custom domain (see middleware)
   const projectName = decodeURIComponent(params.project);
@@ -57,10 +59,9 @@ export default async function LoginPage(props: { params: Promise<RouteParams> })
     .catch(() => null);
   const sitePrefix = getSiteUrlPath(site);
 
-  const logo = resolveLinkToUrl({
+  const logo = resolvePathToUrl({
     target: siteConfig?.nav?.logo ?? siteConfig?.logo ?? config.logo, // default to Flowershow logo
-    prefix: sitePrefix,
-    isSrcLink: true,
+    sitePrefix,
     domain: site.customDomain,
   });
 

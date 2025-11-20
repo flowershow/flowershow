@@ -26,7 +26,7 @@ import { SiteConfig } from "@/components/types";
 import { env } from "@/env.mjs";
 import { Blob, Plan, PrismaClient, PrivacyMode, Status } from "@prisma/client";
 import { PageMetadata } from "../types";
-import { resolveLinkToUrl } from "@/lib/resolve-link";
+import { resolvePathToUrl } from "@/lib/resolve-link";
 import {
   isWikiLink,
   getWikiLinkValue,
@@ -35,6 +35,8 @@ import {
 import { getSiteUrlPath } from "@/lib/get-site-url";
 import { Prisma, SyntaxMode } from "@prisma/client";
 import PostHogClient from "@/lib/server-posthog";
+import { Page } from "@playwright/test";
+import { resolveWikiLinkToFilePath } from "@/lib/resolve-wiki-link";
 
 const asciiPrintableNoEdgeSpaces = new RegExp(
   "^(?=.{8,128}$)[!-~](?:[ -~]*[!-~])?$",
@@ -244,9 +246,6 @@ export const siteRouter = createTRPCRouter({
         // extremely unlikely; handle defensively
         throw new Error("Site not found after creation");
       }
-
-      console.log({ fresh });
-
       return fresh;
     }),
   update: protectedProcedure
@@ -727,6 +726,7 @@ export const siteRouter = createTRPCRouter({
         async (input) => {
           const site = await ctx.db.site.findUnique({
             where: { id: input.siteId },
+            include: { user: true },
           });
 
           if (!site) {
@@ -736,14 +736,69 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
+          const sitePrefix = getSiteUrlPath(site);
+
           try {
-            const config = await fetchFile({
+            const configJson = await fetchFile({
               projectId: site.id,
               branch: site.ghBranch,
               path: "config.json",
             });
-            // TODO is casting to SiteConfig safe?
-            return config ? (JSON.parse(config) as SiteConfig) : null;
+            const config = configJson
+              ? (JSON.parse(configJson) as SiteConfig)
+              : null;
+
+            if (!config) return null;
+
+            // Resolve media paths to full URLs
+            const keysToResolve = ["image", "logo", "favicon", "thumbnail"];
+            keysToResolve.forEach((key) => {
+              if (config[key]) {
+                config[key] = resolvePathToUrl({
+                  target: config[key],
+                  sitePrefix,
+                  domain: site.customDomain,
+                });
+              }
+            });
+
+            if (config.nav?.links) {
+              config.nav.links.forEach((link) => {
+                link.href = resolvePathToUrl({
+                  target: link.href,
+                  sitePrefix,
+                  domain: site.customDomain,
+                });
+              });
+            }
+
+            if (config.nav?.logo) {
+              config.nav.logo = resolvePathToUrl({
+                target: config.nav.logo,
+                sitePrefix,
+                domain: site.customDomain,
+              });
+            }
+
+            if (config.nav?.social) {
+              config.nav.social.forEach((social) => {
+                social.href = resolvePathToUrl({
+                  target: social.href,
+                  sitePrefix,
+                  domain: site.customDomain,
+                });
+              });
+            }
+
+            if (config.nav?.cta) {
+              config.nav.cta.href = resolvePathToUrl({
+                target: config.nav.cta.href,
+                sitePrefix,
+                domain: site.customDomain,
+              });
+            }
+
+            return config;
           } catch {
             return null;
           }
@@ -812,7 +867,7 @@ export const siteRouter = createTRPCRouter({
         },
       )(input);
     }),
-  getCatalogFiles: publicProcedure
+  getListComponentItems: publicProcedure
     .input(
       z.object({
         siteId: z.string().min(1),
@@ -844,6 +899,19 @@ export const siteRouter = createTRPCRouter({
           const dirReadmePattern = dir + "README.md(x)?";
           const dirIndexPattern = dir + "index.md(x)?";
 
+          const sitePrefix = getSiteUrlPath(site);
+
+          const siteFilePaths = (
+            await ctx.db.blob.findMany({
+              where: {
+                siteId: input.siteId,
+              },
+              select: {
+                path: true,
+              },
+            })
+          ).map((b) => b.path);
+
           const blobs = await ctx.db.$queryRaw<
             { path: string; app_path: string; metadata: PageMetadata | null }[]
           >`
@@ -859,74 +927,27 @@ export const siteRouter = createTRPCRouter({
                 "metadata"->>'title' ASC NULLS LAST
           `;
 
-          const _blobs = await ctx.db.blob.findMany({
-            where: {
-              siteId: site.id,
-            },
-            select: {
-              path: true,
-              appPath: true,
-            },
-          });
-
-          const permalinks = _blobs.map((blob) => {
-            let prefix: string;
-            if (site.customDomain) {
-              prefix = "";
-            } else {
-              prefix = `/@${site.user.ghUsername}/${site.projectName}`;
-            }
-
-            return (
-              (blob.appPath
-                ? prefix + (blob.appPath === "/" ? "" : "/" + blob.appPath)
-                : prefix + "/_r/-/" + blob.path) || "/"
-            );
-          });
-
-          const sitePrefix = getSiteUrlPath(site);
-
-          // TODO ugly quick patch, should be resolved in the wiki-link plugin probably
-          const resolveMediaValueToUrl = (
-            value: string,
-            originFilePath: string,
-          ) => {
-            // Check if it's a wiki link
-            if (isWikiLink(value)) {
-              // Get the raw value and try to find a matching permalink
-              const rawValue = getWikiLinkValue(value);
-              const match = findMatchingPermalink(permalinks, rawValue);
-              if (match) {
-                return match;
-              }
-            }
-
-            // If not a wiki link or no match found, use regular link resolution
-            return resolveLinkToUrl({
-              target: value,
-              originFilePath,
-              prefix: sitePrefix,
-              isSrcLink: true,
-              domain: site.customDomain,
-            });
-          };
-
-          const items = blobs.map((b) => {
-            const metadata = b.metadata;
-
+          const items = blobs.map((blob) => {
+            const metadata = blob.metadata as PageMetadata | null;
             const mediaFrontmatterField = input.slots.media ?? "image";
 
             if (metadata?.[mediaFrontmatterField]) {
-              const mediaValue = metadata[mediaFrontmatterField];
-              const mediaUrl = resolveMediaValueToUrl(mediaValue, b.path);
-              metadata[mediaFrontmatterField] = mediaUrl;
+              let value = metadata[mediaFrontmatterField];
+              if (isWikiLink(value)) {
+                value = resolveWikiLinkToFilePath({
+                  wikiLink: value,
+                  filePaths: siteFilePaths,
+                });
+              }
+              metadata[mediaFrontmatterField] = resolvePathToUrl({
+                target: value,
+                sitePrefix,
+                domain: site.customDomain,
+              });
             }
 
             return {
-              url: resolveLinkToUrl({
-                target: b.app_path,
-                prefix: sitePrefix,
-              }),
+              url: `${sitePrefix}/${blob.app_path}`,
               metadata,
             };
           });
@@ -960,10 +981,67 @@ export const siteRouter = createTRPCRouter({
             orderBy: { path: "desc" },
           });
 
-          if (!blob) {
+          const site = await ctx.db.site.findFirst({
+            where: {
+              id: input.siteId,
+            },
+            include: { user: true },
+          });
+
+          if (!blob || !site) {
             throw new TRPCError({
               code: "NOT_FOUND",
               message: "Page not found",
+            });
+          }
+
+          const sitePrefix = getSiteUrlPath(site);
+
+          const metadata = blob.metadata as PageMetadata | null;
+          const siteFilePaths = (
+            await ctx.db.blob.findMany({
+              where: {
+                siteId: input.siteId,
+              },
+              select: {
+                path: true,
+              },
+            })
+          ).map((b) => b.path);
+
+          ["image", "avatar"].forEach((key) => {
+            if (metadata?.[key]) {
+              let value = metadata[key];
+
+              if (isWikiLink(value)) {
+                value = resolveWikiLinkToFilePath({
+                  wikiLink: value,
+                  filePaths: siteFilePaths,
+                });
+              }
+
+              metadata[key] = resolvePathToUrl({
+                target: value,
+                sitePrefix,
+                domain: site.customDomain,
+              });
+            }
+          });
+
+          if (metadata?.cta) {
+            metadata?.cta.forEach((c) => {
+              let value = c.href;
+              if (isWikiLink(value)) {
+                value = resolveWikiLinkToFilePath({
+                  wikiLink: value,
+                  filePaths: siteFilePaths,
+                });
+              }
+              c.href = resolvePathToUrl({
+                target: value,
+                sitePrefix,
+                domain: site.customDomain,
+              });
             });
           }
 
@@ -976,11 +1054,10 @@ export const siteRouter = createTRPCRouter({
         },
       )(input);
     }),
-  getBlobWithContent: publicProcedure
+  getBlobContent: publicProcedure
     .input(
       z.object({
-        siteId: z.string().min(1),
-        slug: z.string().min(1),
+        id: z.string().min(1),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -988,8 +1065,7 @@ export const siteRouter = createTRPCRouter({
         async (input) => {
           const blob = await ctx.db.blob.findFirst({
             where: {
-              siteId: input.siteId,
-              appPath: input.slug,
+              id: input.id,
             },
             orderBy: { path: "desc" },
             include: {
@@ -1005,17 +1081,17 @@ export const siteRouter = createTRPCRouter({
           }
 
           const content = await fetchFile({
-            projectId: input.siteId,
+            projectId: blob.site.id,
             branch: blob.site.ghBranch,
             path: blob.path,
           });
 
-          return { content, blob };
+          return content;
         },
         undefined,
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.siteId}`, `${input.siteId}-${input.slug}`],
+          tags: [`${input.id}`, `${input.id}-${input.id}`],
         },
       )(input);
     }),
@@ -1052,110 +1128,68 @@ export const siteRouter = createTRPCRouter({
               });
             }
 
-            const _blobs = await ctx.db.blob.findMany({
-              where: {
-                siteId: site.id,
-              },
-              select: {
-                path: true,
-                appPath: true,
-              },
-            });
-
-            const permalinks = _blobs.map((blob) => {
-              let prefix: string;
-              if (site.customDomain) {
-                prefix = "";
-              } else {
-                prefix = `/@${site.user.ghUsername}/${site.projectName}`;
-              }
-
-              return (
-                (blob.appPath
-                  ? prefix + (blob.appPath === "/" ? "" : "/" + blob.appPath)
-                  : prefix + "/_r/-/" + blob.path) || "/"
-              );
-            });
-
             const sitePrefix = getSiteUrlPath(site);
 
-            // TODO ugly quick patch, should be resolved in the wiki-link plugin probably
-            const resolveMediaValueToUrl = (
-              value: string,
-              originFilePath: string,
-            ) => {
-              // Check if it's a wiki link
-              if (isWikiLink(value)) {
-                // Get the raw value and try to find a matching permalink
-                const rawValue = getWikiLinkValue(value);
-                const match = findMatchingPermalink(permalinks, rawValue);
-                if (match) {
-                  return match;
-                }
-              }
-
-              // If not a wiki link or no match found, use regular link resolution
-              return resolveLinkToUrl({
-                target: value,
-                originFilePath,
-                prefix: sitePrefix,
-                isSrcLink: true,
-                domain: site.customDomain,
-              });
-            };
-
-            const authorsPromises = input.authors.map(async (author) => {
-              const authorBlob = await ctx.db.blob.findFirst({
+            const siteFilePaths = (
+              await ctx.db.blob.findMany({
                 where: {
                   siteId: input.siteId,
-                  OR: [
-                    { path: { endsWith: author + ".md" } },
-                    { path: { endsWith: author + ".mdx" } },
-                  ],
                 },
-              });
+                select: {
+                  path: true,
+                },
+              })
+            ).map((b) => b.path);
 
-              if (!authorBlob) {
-                return null;
-              }
+            const authorsPromises = input.authors.map(
+              async (author: string) => {
+                let authorPath = author;
+                if (isWikiLink(authorPath)) {
+                  authorPath = getWikiLinkValue(authorPath);
+                }
+                const authorBlob = await ctx.db.blob.findFirst({
+                  where: {
+                    siteId: input.siteId,
+                    OR: [
+                      { path: { endsWith: authorPath + ".md" } },
+                      { path: { endsWith: authorPath + ".mdx" } },
+                    ],
+                  },
+                });
 
-              const metadata = authorBlob.metadata as
-                | PageMetadata
-                | null
-                | undefined;
+                if (!authorBlob) {
+                  return null;
+                }
 
-              const url = !authorBlob.appPath
-                ? null
-                : site.customDomain
+                const metadata = authorBlob.metadata as PageMetadata | null;
+
+                const url = site.customDomain
                   ? `/${authorBlob.appPath}`
                   : `/@${site.user.ghUsername}/${site.projectName}/${authorBlob.appPath}`;
 
-              let avatar;
-
-              if (metadata?.avatar) {
-                if (metadata.avatar.startsWith("http")) {
-                  avatar = metadata.avatar;
-                } else {
-                  // TODO make it work for relative paths too
-
-                  avatar = resolveMediaValueToUrl(
-                    metadata.avatar,
-                    authorBlob.path,
-                  );
-                  // avatar = site.customDomain
-                  //   ? `/_r/-${metadata.avatar}`
-                  //   : `/@${site.user.ghUsername}/${site.projectName}` +
-                  //     `/_r/-${metadata.avatar}`;
+                if (metadata?.avatar) {
+                  let value = metadata.avatar;
+                  if (isWikiLink(metadata.avatar)) {
+                    value = resolveWikiLinkToFilePath({
+                      wikiLink: value,
+                      filePaths: siteFilePaths,
+                    });
+                  }
+                  metadata.avatar = resolvePathToUrl({
+                    target: value,
+                    sitePrefix,
+                    domain: site.customDomain,
+                  });
                 }
-              }
 
-              return {
-                key: author,
-                name: metadata?.title ?? author,
-                avatar,
-                url,
-              };
-            });
+                return {
+                  key: authorBlob.id,
+                  name: metadata?.title ?? author,
+                  avatar: metadata?.avatar,
+                  url,
+                };
+              },
+            );
 
             const authors = await Promise.all(authorsPromises);
 

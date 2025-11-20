@@ -7,7 +7,7 @@ import { api } from "@/trpc/server";
 vi.mock("@/trpc/server", () => ({
   api: {
     site: {
-      getCatalogFiles: {
+      getListComponentItems: {
         query: vi.fn(),
       },
     },
@@ -97,7 +97,7 @@ describe("List Component - Pagination Tests", () => {
 
   describe("Page size == total items (pageSize=4, total=4)", () => {
     it("should display all items on page 1", async () => {
-      vi.mocked(api.site.getCatalogFiles.query).mockResolvedValue({
+      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
         items: mockItems,
       });
 
@@ -121,7 +121,7 @@ describe("List Component - Pagination Tests", () => {
     });
 
     it("should not display pagination", async () => {
-      vi.mocked(api.site.getCatalogFiles.query).mockResolvedValue({
+      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
         items: mockItems,
       });
 
@@ -140,7 +140,7 @@ describe("List Component - Pagination Tests", () => {
 
   describe("PageSize < total items (pageSize=3, total=4)", () => {
     it("should display 3 items on page 1", async () => {
-      vi.mocked(api.site.getCatalogFiles.query).mockResolvedValue({
+      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
         items: mockItems,
       });
       mockUseSearchParams.mockReturnValue(new URLSearchParams({ page: "1" }));
@@ -167,7 +167,7 @@ describe("List Component - Pagination Tests", () => {
     });
 
     it("should display 1 item on page 2", async () => {
-      vi.mocked(api.site.getCatalogFiles.query).mockResolvedValue({
+      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
         items: mockItems,
       });
 
@@ -197,7 +197,7 @@ describe("List Component - Pagination Tests", () => {
 
   describe("Edge cases", () => {
     it("should not paginate when pageSize is not provided", async () => {
-      vi.mocked(api.site.getCatalogFiles.query).mockResolvedValue({
+      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
         items: mockItems,
       });
 
@@ -218,7 +218,7 @@ describe("List Component - Pagination Tests", () => {
     });
 
     it("should handle empty items array", async () => {
-      vi.mocked(api.site.getCatalogFiles.query).mockResolvedValue({
+      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
         items: [],
       });
 
@@ -234,7 +234,7 @@ describe("List Component - Pagination Tests", () => {
     });
 
     it("should handle page number beyond available pages", async () => {
-      vi.mocked(api.site.getCatalogFiles.query).mockResolvedValue({
+      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
         items: mockItems,
       });
 

@@ -63,7 +63,7 @@ export default async function List({
   pageNumber = 1,
   pageSize,
 }: ListProps) {
-  const data = await api.site.getCatalogFiles.query({
+  const data = await api.site.getListComponentItems.query({
     siteId,
     dir,
     slots,

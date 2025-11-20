@@ -54,7 +54,10 @@ export const BlogLayout: React.FC<Props> = ({
                 </div>
                 <div className="page-header-authors-names-container">
                   {authors.map((author, index) => (
-                    <>
+                    <div
+                      key={author.key}
+                      className="page-header-author-name-wrapper"
+                    >
                       {index > 0 && <span className="mr-1">,</span>}
                       {author.url ? (
                         <Link
@@ -72,7 +75,7 @@ export const BlogLayout: React.FC<Props> = ({
                           {author.name}
                         </span>
                       )}
-                    </>
+                    </div>
                   ))}
                 </div>
               </div>

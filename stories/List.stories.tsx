@@ -27,7 +27,7 @@ type Story = StoryObj<typeof List>;
 
 export const Default: Story = {
   async beforeEach() {
-    mocked(api.site.getCatalogFiles.query).mockResolvedValue({
+    mocked(api.site.getListComponentItems.query).mockResolvedValue({
       items: manyItems(3),
     });
   },
@@ -38,7 +38,7 @@ export const Default: Story = {
 //     fields: ["title", "description", "date", "authors", "image"],
 //   },
 //   async beforeEach() {
-//     mocked(api.site.getCatalogFiles.query).mockResolvedValue({
+//     mocked(api.site.getListComponentItems.query).mockResolvedValue({
 //       items: manyItems(3),
 //     });
 //   },
@@ -57,7 +57,7 @@ export const WithPagination: Story = {
   },
   args: { pageNumber: 2, pageSize: 10 },
   async beforeEach() {
-    mocked(api.site.getCatalogFiles.query).mockResolvedValue({
+    mocked(api.site.getListComponentItems.query).mockResolvedValue({
       items: manyItems(23),
     });
   },
@@ -74,7 +74,7 @@ export const CustomSlots: Story = {
     },
   },
   async beforeEach() {
-    mocked(api.site.getCatalogFiles.query).mockResolvedValue({
+    mocked(api.site.getListComponentItems.query).mockResolvedValue({
       items: manyItems(3),
     });
   },
@@ -95,7 +95,7 @@ export const CustomSlots: Story = {
 //     },
 //   } as any,
 //   async beforeEach() {
-//     mocked(api.site.getCatalogFiles.query).mockResolvedValue({
+//     mocked(api.site.getListComponentItems.query).mockResolvedValue({
 //       items: [oneItem({ authors: ["Ala", "Ola", "Ela"] })],
 //     });
 //   },
@@ -103,6 +103,8 @@ export const CustomSlots: Story = {
 
 export const EmptyState: Story = {
   async beforeEach() {
-    mocked(api.site.getCatalogFiles.query).mockResolvedValue({ items: [] });
+    mocked(api.site.getListComponentItems.query).mockResolvedValue({
+      items: [],
+    });
   },
 };

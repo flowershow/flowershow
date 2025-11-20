@@ -11,12 +11,6 @@ import { PageMetadata } from "@/server/api/types";
 
 import { getConfig } from "@/lib/app-config";
 import { getMdxOptions, processMarkdown } from "@/lib/markdown";
-import { resolveLinkToUrl } from "@/lib/resolve-link";
-import {
-  isWikiLink,
-  getWikiLinkValue,
-  findMatchingPermalink,
-} from "@/lib/wiki-link";
 import { resolveSiteAlias } from "@/lib/resolve-site-alias";
 import { getSite } from "@/lib/get-site";
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
@@ -55,7 +49,6 @@ export async function generateMetadata(props: {
 
   const site = await getSite(userName, projectName);
   const siteUrl = getSiteUrl(site);
-  const sitePrefix = getSiteUrlPath(site);
 
   const blob = await api.site.getBlob
     .query({
@@ -79,56 +72,23 @@ export async function generateMetadata(props: {
     })
     .catch(() => null);
 
-  const permalinks = await api.site.getPermalinks
-    .query({
-      siteId: site.id,
-    })
-    .catch(() => {
-      notFound();
-    });
-
-  const getSrcUrl = (url: string) => {
-    // TODO temporary patch to support `image: "[[image.png]]"`
-    if (isWikiLink(url)) {
-      // Get the raw value and try to find a matching permalink
-      const value = getWikiLinkValue(url);
-      const match = findMatchingPermalink(permalinks, value);
-      if (match) {
-        return match;
-      }
-    }
-
-    // Fall back to regular link resolution
-    return resolveLinkToUrl({
-      target: url,
-      originFilePath: blob.path,
-      prefix: sitePrefix,
-      isSrcLink: true,
-      domain: site.customDomain,
-    });
-  };
-
   const title =
     siteConfig?.title && metadata?.title
       ? `${metadata?.title} - ${siteConfig.title}`
       : (metadata?.title ?? siteConfig?.title ?? "");
   const description = metadata?.description ?? siteConfig?.description;
-  const url = `${siteUrl}/${decodedSlug}`;
+  const url = `${siteUrl}/${decodedSlug !== "/" ? decodedSlug : ""}`;
 
   let imageUrl: string | null = config.thumbnail;
   let faviconUrl: string = config.favicon;
 
   if (isFeatureEnabled(Feature.NoBranding, site)) {
-    imageUrl = metadata?.image
-      ? getSrcUrl(metadata?.image)
-      : siteConfig?.image
-        ? getSrcUrl(siteConfig.image)
-        : null;
+    imageUrl = metadata?.image || siteConfig?.image || null;
     if (siteConfig?.favicon) {
       if (isEmoji(siteConfig.favicon)) {
         faviconUrl = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${siteConfig.favicon}</text></svg>`;
       } else {
-        faviconUrl = getSrcUrl(siteConfig.favicon);
+        faviconUrl = siteConfig.favicon;
       }
     }
   }
@@ -185,7 +145,6 @@ export default async function SitePage(props: {
   const slug = params.slug ? params.slug.join("/") : "/";
   const decodedSlug = slug.replace(/%20/g, "+");
   const pageParam = searchParams.page;
-  console.log("searchParams", searchParams);
   const pageNumber = pageParam ? Number(pageParam) : 1;
 
   const site = await getSite(userName, projectName);
@@ -224,7 +183,7 @@ export default async function SitePage(props: {
       notFound();
     });
 
-  const page = await api.site.getBlobWithContent
+  const blob = await api.site.getBlob
     .query({
       siteId: site.id,
       slug: decodedSlug,
@@ -233,12 +192,16 @@ export default async function SitePage(props: {
       notFound();
     });
 
-  const metadata = page.blob.metadata as PageMetadata | null; // TODO types
+  const content = await api.site.getBlobContent.query({
+    id: blob.id,
+  });
+
+  const metadata = blob.metadata as PageMetadata | null; // TODO types
 
   let compiledContent: React.JSX.Element;
 
-  const isMarkdown = page.blob.path.endsWith(".md");
-  const isMdx = page.blob.path.endsWith(".mdx");
+  const isMarkdown = blob.path.endsWith(".md");
+  const isMdx = blob.path.endsWith(".mdx");
   const renderMode = metadata?.syntaxMode ?? site.syntaxMode;
 
   if (!isMarkdown && !isMdx) {
@@ -247,8 +210,8 @@ export default async function SitePage(props: {
     );
   } else {
     try {
-      const preprocessedContent = page.content
-        ? preprocessMdxForgiving(page.content)
+      const preprocessedContent = content
+        ? preprocessMdxForgiving(content)
         : "";
 
       // Determine whether to use MD or MDX rendering based on config and file extension
@@ -259,22 +222,21 @@ export default async function SitePage(props: {
         // Process using unified (MD renderer)
         const html = await processMarkdown(preprocessedContent ?? "", {
           files: siteFilePaths,
-          filePath: page.blob.path,
+          filePath: blob.path,
           sitePrefix,
           customDomain: site.customDomain ?? undefined,
         });
         compiledContent = <div dangerouslySetInnerHTML={{ __html: html }} />;
       } else {
         // Process using next-mdx-remote-client (MDX renderer)
-        console.log("slug", { pageNumber });
         const mdxComponents = mdxComponentsFactory({
-          blob: page.blob,
+          blob,
           site,
           pageNumber,
         });
         const mdxOptions = getMdxOptions({
           files: siteFilePaths,
-          filePath: page.blob.path,
+          filePath: blob.path,
           sitePrefix,
           customDomain: site.customDomain ?? undefined,
         }) as any;
@@ -301,7 +263,7 @@ export default async function SitePage(props: {
     }
   }
 
-  const scopedCss = await generateScopedCss(page.content ?? "");
+  const scopedCss = await generateScopedCss(content ?? "");
 
   if (metadata?.layout === "plain") {
     return (
@@ -320,43 +282,14 @@ export default async function SitePage(props: {
     );
   }
 
-  const permalinks = await api.site.getPermalinks
-    .query({
-      siteId: site.id,
-    })
-    .catch(() => {
-      notFound();
-    });
-
-  const resolveLink = (src: string, isSrc: boolean = false) => {
-    // TODO temporary patch to support `image: "[[image.png]]"`
-    if (isWikiLink(src)) {
-      // Get the raw value and try to find a matching permalink
-      const value = getWikiLinkValue(src);
-      const match = findMatchingPermalink(permalinks, value);
-      if (match) {
-        return match;
-      }
-    }
-
-    // If not a wiki link or no match found, use regular link resolution
-    return resolveLinkToUrl({
-      target: src,
-      originFilePath: page.blob.path,
-      prefix: sitePrefix,
-      isSrcLink: isSrc,
-      domain: site.customDomain,
-    });
-  };
-
-  const Layout = async ({ children }) => {
-    const authors =
-      metadata?.authors &&
-      (await api.site.getAuthors.query({
+  const authors = metadata?.authors
+    ? await api.site.getAuthors.query({
         siteId: site.id,
         authors: metadata.authors,
-      }));
-    const image = metadata?.image && resolveLink(metadata.image, true);
+      })
+    : undefined;
+
+  const Layout = async ({ children }) => {
     return (
       <BlogLayout
         title={metadata?.title ?? ""}
@@ -364,7 +297,7 @@ export default async function SitePage(props: {
         date={metadata?.date}
         showHero={metadata?.showHero}
         authors={authors}
-        image={image}
+        image={metadata?.image}
       >
         {children}
       </BlogLayout>
@@ -417,7 +350,7 @@ export default async function SitePage(props: {
                     {metadata.cta.map((cta) => (
                       <a
                         key={cta.label}
-                        href={resolveLink(cta.href)}
+                        href={cta.href}
                         className="page-hero-cta"
                       >
                         {cta.label}
@@ -431,7 +364,7 @@ export default async function SitePage(props: {
               <div className="page-hero-image-container">
                 <img
                   alt="Hero Image"
-                  src={resolveLink(metadata.image, true)}
+                  src={metadata.image}
                   className="page-hero-image"
                 />
               </div>
@@ -468,7 +401,7 @@ export default async function SitePage(props: {
           {showEditLink && (
             <div className="page-edit-button-container">
               <Link
-                href={`https://github.com/${site?.ghRepository}/edit/${site?.ghBranch}/${page.blob.path}`}
+                href={`https://github.com/${site?.ghRepository}/edit/${site?.ghBranch}/${blob.path}`}
                 className="page-edit-button"
                 target="_blank"
               >
