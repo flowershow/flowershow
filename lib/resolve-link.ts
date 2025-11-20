@@ -49,7 +49,7 @@ export const resolvePathToUrl = ({
     return headingId;
   }
 
-  const [, , ext = ""] = filePath.match(/^(.+?)(?:\.([^.]+))?$/) ?? [];
+  const [, , ext = ""] = filePath.match(/^(.+?)(?:\.([^./]+))?$/) ?? [];
   const isMarkdown = ext === "md" || ext === "mdx" || !ext;
   const useRawUrlPath = !isMarkdown;
 
