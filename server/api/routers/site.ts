@@ -26,7 +26,7 @@ import { SiteConfig } from "@/components/types";
 import { env } from "@/env.mjs";
 import { Blob, Plan, PrismaClient, PrivacyMode, Status } from "@prisma/client";
 import { PageMetadata } from "../types";
-import { resolvePathToUrl } from "@/lib/resolve-link";
+import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
 import {
   isWikiLink,
   getWikiLinkValue,
@@ -754,7 +754,7 @@ export const siteRouter = createTRPCRouter({
             const keysToResolve = ["image", "logo", "favicon", "thumbnail"];
             keysToResolve.forEach((key) => {
               if (config[key]) {
-                config[key] = resolvePathToUrl({
+                config[key] = resolveFilePathToUrlPath({
                   target: config[key],
                   sitePrefix,
                   domain: site.customDomain,
@@ -764,7 +764,7 @@ export const siteRouter = createTRPCRouter({
 
             if (config.nav?.links) {
               config.nav.links.forEach((link) => {
-                link.href = resolvePathToUrl({
+                link.href = resolveFilePathToUrlPath({
                   target: link.href,
                   sitePrefix,
                   domain: site.customDomain,
@@ -773,7 +773,7 @@ export const siteRouter = createTRPCRouter({
             }
 
             if (config.nav?.logo) {
-              config.nav.logo = resolvePathToUrl({
+              config.nav.logo = resolveFilePathToUrlPath({
                 target: config.nav.logo,
                 sitePrefix,
                 domain: site.customDomain,
@@ -782,7 +782,7 @@ export const siteRouter = createTRPCRouter({
 
             if (config.nav?.social) {
               config.nav.social.forEach((social) => {
-                social.href = resolvePathToUrl({
+                social.href = resolveFilePathToUrlPath({
                   target: social.href,
                   sitePrefix,
                   domain: site.customDomain,
@@ -791,7 +791,7 @@ export const siteRouter = createTRPCRouter({
             }
 
             if (config.nav?.cta) {
-              config.nav.cta.href = resolvePathToUrl({
+              config.nav.cta.href = resolveFilePathToUrlPath({
                 target: config.nav.cta.href,
                 sitePrefix,
                 domain: site.customDomain,
@@ -939,7 +939,7 @@ export const siteRouter = createTRPCRouter({
                   filePaths: siteFilePaths,
                 });
               }
-              metadata[mediaFrontmatterField] = resolvePathToUrl({
+              metadata[mediaFrontmatterField] = resolveFilePathToUrlPath({
                 target: value,
                 sitePrefix,
                 domain: site.customDomain,
@@ -1020,7 +1020,7 @@ export const siteRouter = createTRPCRouter({
                 });
               }
 
-              metadata[key] = resolvePathToUrl({
+              metadata[key] = resolveFilePathToUrlPath({
                 target: value,
                 sitePrefix,
                 domain: site.customDomain,
@@ -1037,7 +1037,7 @@ export const siteRouter = createTRPCRouter({
                   filePaths: siteFilePaths,
                 });
               }
-              c.href = resolvePathToUrl({
+              c.href = resolveFilePathToUrlPath({
                 target: value,
                 sitePrefix,
                 domain: site.customDomain,
@@ -1175,7 +1175,7 @@ export const siteRouter = createTRPCRouter({
                       filePaths: siteFilePaths,
                     });
                   }
-                  metadata.avatar = resolvePathToUrl({
+                  metadata.avatar = resolveFilePathToUrlPath({
                     target: value,
                     sitePrefix,
                     domain: site.customDomain,

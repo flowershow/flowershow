@@ -67,18 +67,22 @@ export default function TableOfContents({
   }
 
   return (
-    <nav className="toc">
-      <h3 className="toc-title">On this page</h3>
-      <ol className="toc-list">
-        {tableOfContents.map((section) => (
-          <TocItems
-            key={section.id}
-            section={section}
-            currentSection={currentSection}
-          />
-        ))}
-      </ol>
-    </nav>
+    <div className="layout-inner-right">
+      <aside className="page-toc-container">
+        <nav className="toc">
+          <h3 className="toc-title">On this page</h3>
+          <ol className="toc-list">
+            {tableOfContents.map((section) => (
+              <TocItems
+                key={section.id}
+                section={section}
+                currentSection={currentSection}
+              />
+            ))}
+          </ol>
+        </nav>
+      </aside>
+    </div>
   );
 }
 

@@ -225,6 +225,7 @@ export default async function SitePage(props: {
           filePath: blob.path,
           sitePrefix,
           customDomain: site.customDomain ?? undefined,
+          siteId: site.id,
         });
         compiledContent = <div dangerouslySetInnerHTML={{ __html: html }} />;
       } else {
@@ -239,6 +240,7 @@ export default async function SitePage(props: {
           filePath: blob.path,
           sitePrefix,
           customDomain: site.customDomain ?? undefined,
+          siteId: site.id,
         }) as any;
 
         const { content, error } = await evaluate({

@@ -1,7 +1,7 @@
 import { getConfig } from "@/lib/app-config";
 import { SiteLoginForm } from "./site-login-form";
 import Image from "next/image";
-import { resolvePathToUrl } from "@/lib/resolve-link";
+import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
 import { api } from "@/trpc/server";
 import { getSiteUrlPath, getSiteUrl } from "@/lib/get-site-url";
 import { cookies } from "next/headers";
@@ -59,7 +59,7 @@ export default async function LoginPage(props: {
     .catch(() => null);
   const sitePrefix = getSiteUrlPath(site);
 
-  const logo = resolvePathToUrl({
+  const logo = resolveFilePathToUrlPath({
     target: siteConfig?.nav?.logo ?? siteConfig?.logo ?? config.logo, // default to Flowershow logo
     sitePrefix,
     domain: site.customDomain,

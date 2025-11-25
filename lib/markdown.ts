@@ -21,13 +21,14 @@ import rehypeSlug from "rehype-slug";
 import rehypePrismPlus from "rehype-prism-plus";
 import rehypeRaw from "rehype-raw";
 import rehypeResolveExplicitJsxUrls from "./rehype-resolve-explicit-jsx-urls";
+import remarkObsidianBases from "./remark-obsidian-bases";
 import rehypeStringify from "rehype-stringify";
 
 import { unified } from "unified";
 import matter from "gray-matter";
 
 import type { EvaluateOptions } from "next-mdx-remote-client/rsc";
-import { resolvePathToUrl } from "./resolve-link";
+import { resolveFilePathToUrlPath } from "./resolve-link";
 
 interface MarkdownOptions {
   filePath: string;
@@ -35,6 +36,7 @@ interface MarkdownOptions {
   sitePrefix: string;
   parseFrontmatter?: boolean;
   customDomain?: string;
+  siteId?: string;
 }
 
 // Process pure markdown files using unified
@@ -42,7 +44,7 @@ export async function processMarkdown(
   _content: string,
   options: MarkdownOptions,
 ) {
-  const { filePath, files, sitePrefix, customDomain } = options;
+  const { filePath, files, sitePrefix, customDomain, siteId } = options;
 
   // this strips out frontmatter, so that it's not inlined with the rest of the markdown file
   const { content } = matter(_content, {});
@@ -72,6 +74,7 @@ export async function processMarkdown(
       tight: true,
     })
     .use(remarkMark)
+    .use(remarkObsidianBases, { sitePrefix, siteId })
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain })
@@ -122,12 +125,14 @@ export const getMdxOptions = ({
   sitePrefix = "",
   parseFrontmatter = true,
   customDomain,
+  siteId,
 }: {
   filePath: string;
   files: string[];
   sitePrefix: string;
   parseFrontmatter?: boolean;
   customDomain?: string;
+  siteId?: string;
 }): EvaluateOptions => {
   return {
     parseFrontmatter,
@@ -159,6 +164,7 @@ export const getMdxOptions = ({
         ],
         [mdxMermaid, {}],
         remarkMark,
+        [remarkObsidianBases, { sitePrefix, siteId }],
       ],
       rehypePlugins: [
         [rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain }],
@@ -210,8 +216,8 @@ export const getMdxOptions = ({
 
 export const getUrlResolver = (sitePrefix: string, domain?: string) => {
   return ({ filePath, heading }: { filePath: string; heading?: string }) => {
-    // We need to concatenate filePath and heading for use with resolvePathToUrl
-    return resolvePathToUrl({
+    // We need to concatenate filePath and heading for use with resolveFilePathToUrlPath
+    return resolveFilePathToUrlPath({
       target: `${filePath}${heading ? "#" + heading : ""}`,
       sitePrefix,
       domain,

@@ -1,5 +1,5 @@
 import { visit } from "unist-util-visit";
-import { resolvePathToUrl } from "./resolve-link";
+import { resolveFilePathToUrlPath } from "./resolve-link";
 
 export interface Options {
   /** path to file where the link was used */
@@ -21,7 +21,7 @@ export default function rehypeResolveExplicitJsxUrls(options: Options) {
       if (node.data?._mdxExplicitJsx && node.attributes) {
         (node.attributes as Array<Record<string, any>>).forEach((a) => {
           if (a.name === "src" || a.name === "href") {
-            a.value = resolvePathToUrl({
+            a.value = resolveFilePathToUrlPath({
               target: a.value,
               originFilePath: filePath,
               sitePrefix,

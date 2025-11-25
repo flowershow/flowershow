@@ -132,6 +132,7 @@ const getContentType = (extension: string): ContentType => {
       return "application/json";
     case "yaml":
     case "yml":
+    case "base": // Obsidian Base files
       return "application/yaml";
     case "css":
       return "text/css";

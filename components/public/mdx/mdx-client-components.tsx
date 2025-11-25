@@ -22,6 +22,10 @@ const PlotlyLineChart = dynamic(
   () => import("./plotly-line-chart").then((mod) => mod.PlotlyLineChart),
   { ssr: false },
 );
+const ObsidianBasesViews = dynamic(
+  () => import("./obsidian-bases-views").then((mod) => mod.ObsidianBasesViews),
+  { ssr: false },
+);
 // const Map = dynamic(() => import("./map").then((mod) => mod.Map), {
 //   ssr: false,
 // });
@@ -40,6 +44,7 @@ export {
   Mermaid,
   FlatUiTable,
   LineChart,
+  ObsidianBasesViews,
   Plotly,
   PlotlyBarChart,
   PlotlyLineChart,

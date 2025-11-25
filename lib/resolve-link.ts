@@ -11,10 +11,10 @@ import { customEncodeUrl } from "./url-encoder";
  * @param opts.isSrc  - Whether it's an asset link (src)
  * @param opts.domain  - User site custom domain (only needed if isSrc==true)
  * @example
- * resolvePathToUrl({ target: "blog/post-abc", originFilePath: "/README.md", prefix: "/@john/acme" })
- * resolvePathToUrl({ target: "assets/image.jpg", originFilePath: "config.json", isSrc: true, domain: "john.com" })
+ * resolveFilePathToUrlPath({ target: "blog/post-abc", originFilePath: "/README.md", prefix: "/@john/acme" })
+ * resolveFilePathToUrlPath({ target: "assets/image.jpg", originFilePath: "config.json", isSrc: true, domain: "john.com" })
  */
-export const resolvePathToUrl = ({
+export const resolveFilePathToUrlPath = ({
   target,
   originFilePath = "/",
   sitePrefix = "",

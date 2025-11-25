@@ -9,7 +9,7 @@ import clsx from "clsx";
 import { api } from "@/trpc/server";
 
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
-import { resolvePathToUrl } from "@/lib/resolve-link";
+import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
 import { getThemeUrl } from "@/lib/get-theme";
 import { getSiteUrlPath } from "@/lib/get-site-url";
 import { getConfig } from "@/lib/app-config";

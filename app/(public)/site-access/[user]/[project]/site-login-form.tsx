@@ -36,7 +36,6 @@ export function SiteLoginForm({ siteId }: Props) {
 
       const returnTo = searchParams.get("returnTo");
 
-      console.log({ returnTo });
       if (returnTo) {
         router.replace(returnTo);
       } else {

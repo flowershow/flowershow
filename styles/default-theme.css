@@ -1643,7 +1643,7 @@
   }
 
   .rendered-mdx:not(.is-plain) {
-    @apply prose min-h-[55vh] max-w-none dark:prose-invert prose-headings:font-heading prose-headings:tracking-tight prose-a:break-words;
+    @apply prose min-h-[55vh] max-w-6xl dark:prose-invert prose-headings:font-heading prose-headings:tracking-tight prose-a:break-words;
 
     & h1:first-child {
       display: none;

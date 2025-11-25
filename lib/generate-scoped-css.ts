@@ -1,6 +1,5 @@
 import { createGenerator } from "@unocss/core";
 import presetWind3 from "@unocss/preset-wind3";
-import presetIcons from "@unocss/preset-icons";
 import postcss from "postcss";
 import prefixWrap from "postcss-prefixwrap";
 

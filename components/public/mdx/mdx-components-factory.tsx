@@ -1,7 +1,7 @@
 import { ErrorBoundary } from "react-error-boundary";
 
 import type { Blob } from "@prisma/client";
-import { resolvePathToUrl } from "@/lib/resolve-link";
+import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
 import { getSiteUrlPath } from "@/lib/get-site-url";
 
 import ErrorMessage from "@/components/public/error-message";
@@ -15,6 +15,7 @@ import {
   FlatUiTable,
   LineChart,
   Mermaid,
+  ObsidianBasesViews,
   Plotly,
   PlotlyBarChart,
   PlotlyLineChart,
@@ -28,6 +29,7 @@ import type { ListProps } from "./list";
 import type { MDXComponents } from "next-mdx-remote-client/rsc";
 import type { PlotlyBarChartProps } from "./plotly-bar-chart";
 import type { PlotlyLineChartProps } from "./plotly-line-chart";
+import type { ObsidianBasesViewsProps } from "./obsidian-bases-views";
 
 export const mdxComponentsFactory = ({
   blob,
@@ -61,7 +63,7 @@ export const mdxComponentsFactory = ({
     mermaid: Mermaid as any,
     FlatUiTable: withErrorBoundary((props: FlatUiTableProps) => {
       if (props.data?.url)
-        props.data.url = resolvePathToUrl({
+        props.data.url = resolveFilePathToUrlPath({
           target: props.data.url,
           originFilePath: blob.path,
           sitePrefix: getSiteUrlPath(site),
@@ -72,7 +74,7 @@ export const mdxComponentsFactory = ({
     }, "FlatUiTable"),
     LineChart: withErrorBoundary((props: LineChartProps) => {
       if (props.data?.url) {
-        props.data.url = resolvePathToUrl({
+        props.data.url = resolveFilePathToUrlPath({
           target: props.data.url,
           originFilePath: blob.path,
           sitePrefix: getSiteUrlPath(site),
@@ -83,7 +85,7 @@ export const mdxComponentsFactory = ({
     }, "LineChart"),
     PlotlyBarChart: withErrorBoundary((props: PlotlyBarChartProps) => {
       if (props.data.url) {
-        props.data.url = resolvePathToUrl({
+        props.data.url = resolveFilePathToUrlPath({
           target: props.data.url,
           originFilePath: blob.path,
           sitePrefix: getSiteUrlPath(site),
@@ -94,7 +96,7 @@ export const mdxComponentsFactory = ({
     }, "PlotlyBarChart"),
     PlotlyLineChart: withErrorBoundary((props: PlotlyLineChartProps) => {
       if (props.data.url) {
-        props.data.url = resolvePathToUrl({
+        props.data.url = resolveFilePathToUrlPath({
           target: props.data.url,
           originFilePath: blob.path,
           sitePrefix: getSiteUrlPath(site),
@@ -104,7 +106,7 @@ export const mdxComponentsFactory = ({
       return <PlotlyLineChart {...props} />;
     }, "PlotlyLineChart"),
     // Excel: withErrorBoundary((props: ExcelProps) => {
-    //   props.data.url = resolvePathToUrl({
+    //   props.data.url = resolveFilePathToUrlPath({
     //     target: props.data.url,
     //     originFilePath: blob.path,
     //     isSrcLink: true,
@@ -116,7 +118,7 @@ export const mdxComponentsFactory = ({
     // Map: withErrorBoundary((props: MapProps) => {
     //   const layers = props.layers.map((layer) => {
     //     if (layer.data.url) {
-    //       layer.data.url = resolvePathToUrl({
+    //       layer.data.url = resolveFilePathToUrlPath({
     //         target: layer.data.url,
     //         originFilePath: blob.path,
     //         isSrcLink: true,
@@ -131,7 +133,7 @@ export const mdxComponentsFactory = ({
     Plotly: withErrorBoundary((props) => {
       const data =
         typeof props.data === "string"
-          ? resolvePathToUrl({
+          ? resolveFilePathToUrlPath({
               target: props.data,
               originFilePath: blob.path,
               sitePrefix: getSiteUrlPath(site),
@@ -142,7 +144,7 @@ export const mdxComponentsFactory = ({
     }, "Plotly"),
     Vega: withErrorBoundary((props) => {
       if (props.spec.data.url)
-        props.spec.data.url = resolvePathToUrl({
+        props.spec.data.url = resolveFilePathToUrlPath({
           target: props.spec.data.url,
           originFilePath: blob.path,
           sitePrefix: getSiteUrlPath(site),
@@ -153,7 +155,7 @@ export const mdxComponentsFactory = ({
     // TODO this is not needed
     VegaLite: withErrorBoundary((props) => {
       if (props.spec.data.url)
-        props.spec.data.url = resolvePathToUrl({
+        props.spec.data.url = resolveFilePathToUrlPath({
           target: props.spec.data.url,
           originFilePath: blob.path,
           sitePrefix: getSiteUrlPath(site),
@@ -161,6 +163,9 @@ export const mdxComponentsFactory = ({
         });
       return <Vega {...props} />;
     }, "VegaLite"),
+    ObsidianBasesViews: withErrorBoundary((props: ObsidianBasesViewsProps) => {
+      return <ObsidianBasesViews {...props} />;
+    }, "ObsidianBasesViews"),
   };
 
   return components;

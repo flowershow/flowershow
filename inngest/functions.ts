@@ -14,7 +14,7 @@ import {
   fetchGitHubRepoTree,
   githubJsonFetch,
 } from "@/lib/github";
-import { resolveFilePathToUrlPath } from "@/lib/resolve-file-path-to-url";
+import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
 import { revalidateTag } from "next/cache";
 import { isPathVisible } from "@/lib/path-validator";
 import { SiteConfig } from "@/components/types";
@@ -181,8 +181,10 @@ export const syncSite = inngest.createFunction(
 
                 const urlPath = (() => {
                   if (["md", "mdx"].includes(extension)) {
+                    const _urlPath = resolveFilePathToUrlPath({
+                      target: filePath,
+                    });
                     // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / 🤦‍♀️)
-                    const _urlPath = resolveFilePathToUrlPath({ filePath });
                     return _urlPath === "/"
                       ? _urlPath
                       : _urlPath.replace(/^\//, "");
