@@ -403,7 +403,7 @@ We use a squash-based system:
 
 ### Prerequisites
 
-Access to https://github.com/flowershow/flowershow-test-repo
+Access to https://github.com/flowershow/test
 
 ### Running Tests
 

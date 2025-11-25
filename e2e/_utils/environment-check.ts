@@ -6,7 +6,7 @@ const exec = promisify(execCallback);
 export default async function environmentSetupCheck() {
   if (!process.env.GH_E2E_TEST_ACCOUNT) {
     throw new Error(
-      "❌ GH_E2E_TEST_ACCOUNT not found. Set it to the name of the GitHub account/org that you want to use in the tests (must have access to `flowershow/flowershow-test-repo` repository)",
+      "❌ GH_E2E_TEST_ACCOUNT not found. Set it to the name of the GitHub account/org that you want to use in the tests (must have access to `flowershow/test` repository)",
     );
   }
 

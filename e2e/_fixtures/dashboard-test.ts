@@ -84,9 +84,7 @@ export const test = baseTest.extend<MyFixtures, { workerStorageState: string }>(
             .selectOption(process.env.GH_E2E_TEST_ACCOUNT!);
         }
 
-        await page
-          .getByLabel("Repository")
-          .selectOption("flowershow-test-repo");
+        await page.getByLabel("Repository").selectOption("test");
 
         // await page.getByLabel("Branch").fill(branch);
         // await page.getByLabel("Root Dir").fill(rootDir);

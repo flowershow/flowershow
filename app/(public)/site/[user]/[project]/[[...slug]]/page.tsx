@@ -192,7 +192,7 @@ export default async function SitePage(props: {
       notFound();
     });
 
-  const content = await api.site.getBlobContent.query({
+  const pageContent = await api.site.getBlobContent.query({
     id: blob.id,
   });
 
@@ -210,15 +210,15 @@ export default async function SitePage(props: {
     );
   } else {
     try {
-      const preprocessedContent = content
-        ? preprocessMdxForgiving(content)
-        : "";
-
       // Determine whether to use MD or MDX rendering based on config and file extension
       const useMdRendering =
         renderMode === "md" || (renderMode === "auto" && isMarkdown);
 
       if (useMdRendering) {
+        const preprocessedContent = pageContent
+          ? preprocessMdxForgiving(pageContent)
+          : "";
+
         // Process using unified (MD renderer)
         const html = await processMarkdown(preprocessedContent ?? "", {
           files: siteFilePaths,
@@ -244,7 +244,7 @@ export default async function SitePage(props: {
         }) as any;
 
         const { content, error } = await evaluate({
-          source: preprocessedContent,
+          source: pageContent ?? "",
           components: mdxComponents,
           options: mdxOptions,
         });
@@ -265,7 +265,7 @@ export default async function SitePage(props: {
     }
   }
 
-  const scopedCss = await generateScopedCss(content ?? "");
+  const scopedCss = await generateScopedCss(pageContent ?? "");
 
   if (metadata?.layout === "plain") {
     return (

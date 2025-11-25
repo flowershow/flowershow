@@ -210,4 +210,14 @@ test.describe("MDX", () => {
       publishedSitePage.siteUrlPath + "/blog/post-with-metadata",
     );
   });
+
+  test("MDX variables", async ({ publishedSitePage }) => {
+    await publishedSitePage.goto("/syntax/mdx-variables");
+
+    await expect(publishedSitePage.page.getByText("44 million")).toBeVisible();
+    await expect(
+      publishedSitePage.page.getByText("$119 trillion"),
+    ).toBeVisible();
+    await expect(publishedSitePage.page.getByText("46,000")).toBeVisible();
+  });
 });
