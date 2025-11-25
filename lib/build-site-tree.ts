@@ -51,6 +51,7 @@ export function buildSiteTree(
   blobs: DbBlob[],
   options: BuildOptions = {},
 ): SiteTree {
+  console.log({ blobs, options });
   const {
     orderBy = "path",
     group = "dirs-first",
@@ -117,6 +118,8 @@ export function buildSiteTree(
     });
   }
 
+  console.log({ root });
+
   sortTreeInPlace(root, { orderBy, group, caseInsensitive, numeric, prefix });
 
   return root;
@@ -155,10 +158,15 @@ function compareNodes<M>(
   if (isFile(a) && isFile(b)) {
     const ka = orderBy === "title" ? a.label : a.name;
     const kb = orderBy === "title" ? b.label : b.name;
-    return ka.localeCompare(kb, undefined, opts);
+    // Ensure we're comparing strings
+    const kaStr = String(ka ?? "");
+    const kbStr = String(kb ?? "");
+    return kaStr.localeCompare(kbStr, undefined, opts);
   }
   if (isDir(a) && isDir(b)) {
-    return a.label.localeCompare(b.label, undefined, opts);
+    const aLabelStr = String(a.label ?? "");
+    const bLabelStr = String(b.label ?? "");
+    return aLabelStr.localeCompare(bLabelStr, undefined, opts);
   }
 
   // fallback (should be unreachable because of grouping)
