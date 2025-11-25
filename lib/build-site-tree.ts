@@ -51,7 +51,6 @@ export function buildSiteTree(
   blobs: DbBlob[],
   options: BuildOptions = {},
 ): SiteTree {
-  console.log({ blobs, options });
   const {
     orderBy = "path",
     group = "dirs-first",
@@ -117,8 +116,6 @@ export function buildSiteTree(
       metadata: blob.metadata as PageMetadata | null,
     });
   }
-
-  console.log({ root });
 
   sortTreeInPlace(root, { orderBy, group, caseInsensitive, numeric, prefix });
 

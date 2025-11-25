@@ -74,7 +74,6 @@ export async function processMarkdown(
       tight: true,
     })
     .use(remarkMark)
-    .use(remarkObsidianBases, { sitePrefix, siteId })
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain })
@@ -164,7 +163,7 @@ export const getMdxOptions = ({
         ],
         [mdxMermaid, {}],
         remarkMark,
-        [remarkObsidianBases, { sitePrefix, siteId }],
+        [remarkObsidianBases, { sitePrefix, customDomain, siteId }],
       ],
       rehypePlugins: [
         [rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain }],

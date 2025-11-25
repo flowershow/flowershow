@@ -27,6 +27,7 @@ export interface ObsidianBaseCardsProps {
   imageAspectRatio?: number;
   rows: string;
   sitePrefix?: string;
+  customDomain?: string;
   order?: string[];
   allSitePaths?: string;
 }
@@ -34,6 +35,7 @@ export interface ObsidianBaseCardsProps {
 export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
   const rows = JSON.parse(props.rows) as Row[];
   const sitePrefix = props.sitePrefix;
+  const customDomain = props.customDomain;
   const cardSize = props.cardSize || 200;
   const imageField = props.image;
   const imageFit = props.imageFit || "cover";
@@ -140,7 +142,11 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
         wikiLink: imageValue,
         filePaths: allSitePaths,
       });
-      return resolveFilePathToUrlPath({ target: filePath, sitePrefix });
+      return resolveFilePathToUrlPath({
+        target: filePath,
+        sitePrefix,
+        domain: customDomain,
+      });
     }
 
     // If it's already a full URL, return it

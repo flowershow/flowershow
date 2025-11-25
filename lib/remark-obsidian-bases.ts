@@ -11,6 +11,7 @@ import { PageMetadata } from "@/server/api/types";
 
 interface Options {
   sitePrefix?: string;
+  customDomain?: string;
   siteId?: string;
 }
 
@@ -474,6 +475,7 @@ async function resolveBaseQuery(
   query: string,
   siteId?: string,
   sitePrefix?: string,
+  customDomain?: string,
 ): Promise<any> {
   try {
     // Parse the YAML query
@@ -482,7 +484,13 @@ async function resolveBaseQuery(
     // If no views specified, execute once with global filters only
     if (!parsedQuery.views || parsedQuery.views.length === 0) {
       const results = await executeBaseQueryForView(parsedQuery, siteId);
-      return await createViewsNode([results], [], sitePrefix, siteId);
+      return await createViewsNode(
+        [results],
+        [],
+        sitePrefix,
+        customDomain,
+        siteId,
+      );
     }
 
     // Execute the query separately for each view
@@ -497,6 +505,7 @@ async function resolveBaseQuery(
       viewResults,
       parsedQuery.views,
       sitePrefix,
+      customDomain,
       siteId,
     );
   } catch (error) {
@@ -979,7 +988,7 @@ function evalExpr(node: ExprNode, env: EvalEnv): any {
  * - Replaces the code block with an HTML node containing the query result
  */
 const remarkObsidianBases: Plugin<[Options?], Root> = (options = {}) => {
-  const { siteId, sitePrefix } = options;
+  const { siteId, sitePrefix, customDomain } = options;
 
   return async (tree) => {
     const nodesToTransform: Array<{
@@ -1010,6 +1019,7 @@ const remarkObsidianBases: Plugin<[Options?], Root> = (options = {}) => {
           queryContent,
           siteId,
           sitePrefix,
+          customDomain,
         );
 
         parent.children[index] = resultNode;
@@ -1138,6 +1148,7 @@ async function createViewsNode(
     [key: string]: any;
   }>,
   sitePrefix?: string,
+  customDomain?: string,
   siteId?: string,
 ): Promise<MdxJsxFlowElement> {
   // If no views specified, default to table view
@@ -1199,6 +1210,11 @@ async function createViewsNode(
       type: "mdxJsxAttribute",
       name: "sitePrefix",
       value: sitePrefix || "",
+    },
+    {
+      type: "mdxJsxAttribute",
+      name: "customDomain",
+      value: customDomain || "",
     },
     {
       type: "mdxJsxAttribute",

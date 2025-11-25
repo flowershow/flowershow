@@ -19,6 +19,7 @@ export interface ObsidianBaseTableProps {
   columns: string;
   rows: string;
   sitePrefix?: string;
+  customDomain?: string;
   summaries?: string;
   allSitePaths?: string;
 }
@@ -27,6 +28,7 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
   const columns = JSON.parse(props.columns) as Column[];
   const rows = JSON.parse(props.rows) as Row[];
   const sitePrefix = props.sitePrefix;
+  const customDomain = props.customDomain;
   const summaries = props.summaries
     ? (JSON.parse(props.summaries) as Record<
         string,
@@ -104,6 +106,7 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
       const urlPath = resolveFilePathToUrlPath({
         target: filePath,
         sitePrefix,
+        domain: customDomain,
       });
 
       return (
