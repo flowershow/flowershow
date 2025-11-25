@@ -65,9 +65,9 @@ export const resolveFilePathToUrlPath = ({
     resolvedPath = path.resolve(path.dirname(originFilePath), filePath);
   }
 
-  let resolvedUrlPath = resolvedPath
-    .replace(/\.(mdx?|md)/, "")
-    .replace(/\/?(index|README)$/, "");
+  let resolvedUrlPath =
+    resolvedPath.replace(/\.(mdx?|md)/, "").replace(/\/?(index|README)$/, "") ||
+    "/";
 
   // remove trailing slash unless it's the root
   if (resolvedUrlPath !== "/" || sitePrefix) {

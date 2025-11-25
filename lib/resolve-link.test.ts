@@ -24,6 +24,38 @@ import { resolveFilePathToUrlPath } from "./resolve-link";
  *   /image.jpg
  * */
 
+describe("resolve file paths to app URL paths", () => {
+  it("Root README.md", () => {
+    const target = "README.md";
+    const resolved = resolveFilePathToUrlPath({ target });
+    expect(resolved).toBe("/");
+  });
+
+  it("Root index.md", () => {
+    const target = "index.md";
+    const resolved = resolveFilePathToUrlPath({ target });
+    expect(resolved).toBe("/");
+  });
+
+  it("Directory README.md", () => {
+    const target = "blog/README.md";
+    const resolved = resolveFilePathToUrlPath({ target });
+    expect(resolved).toBe("/blog");
+  });
+
+  it("Directory index.md", () => {
+    const target = "blog/index.md";
+    const resolved = resolveFilePathToUrlPath({ target });
+    expect(resolved).toBe("/blog");
+  });
+
+  it("Other", () => {
+    const target = "some/file.md";
+    const resolved = resolveFilePathToUrlPath({ target });
+    expect(resolved).toBe("/some/file");
+  });
+});
+
 describe("resolve links on a README page", () => {
   const sitePrefix = "/@username/abc"; // this could also be url to R2 bucket site folder
   const originFilePath = "/blog/README.md";
