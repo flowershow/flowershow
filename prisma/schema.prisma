@@ -1,0 +1,186 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  // if you are using Github OAuth, you can get rid of the username attribute (that is for Twitter OAuth)
+  username      String?  // TODO @unique
+  ghUsername   String?   @map("gh_username") // TODO @unique
+  email         String?   @unique
+  emailVerified DateTime? @map("email_verified")
+  discordId    String?   @unique @map("discord_id")
+  image         String?
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  feedback      Json?     @db.JsonB // Store feedback data including submission status and content
+  accounts      Account[]
+  sessions      Session[]
+  sites         Site[]
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  siteId               String    @unique @map("site_id")
+  stripeCustomerId     String    @unique @map("stripe_customer_id")
+  stripeSubscriptionId String    @unique @map("stripe_subscription_id")
+  stripePriceId        String    @map("stripe_price_id") // to track which price/plan the subscription is for
+  status               SubscriptionStatus
+  interval             String    // month, year
+  currentPeriodStart   DateTime  @default(now()) @map("current_period_start")
+  currentPeriodEnd     DateTime  @map("current_period_end")
+  cancelAtPeriodEnd    Boolean   @default(false) @map("cancel_at_period_end")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @updatedAt @map("updated_at")
+  site                 Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId])
+}
+
+// NextAuth.js model - DO NOT modify this model's structure unless specified in NextAuth.js documentation
+// See: https://next-auth.js.org/adapters/prisma
+model Account {
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String?
+  refresh_token_expires_in Int?
+  access_token             String?
+  expires_at               Int?
+  token_type              String?
+  scope                   String?
+  id_token                String?
+  session_state           String?
+  oauth_token_secret      String?
+  oauth_token             String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+// NextAuth.js model - DO NOT modify this model's structure unless specified in NextAuth.js documentation
+// See: https://next-auth.js.org/adapters/prisma
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// NextAuth.js model - DO NOT modify this model's structure unless specified in NextAuth.js documentation
+// See: https://next-auth.js.org/adapters/prisma
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Site {
+  id                      String       @id @default(cuid())
+  ghRepository            String       @map("gh_repository")
+  ghBranch                String       @map("gh_branch")
+  subdomain               String?      @unique
+  customDomain            String?      @unique @map("custom_domain")
+  rootDir                 String?      @map("root_dir")
+  projectName             String       @map("project_name")
+  createdAt               DateTime     @default(now()) @map("created_at")
+  updatedAt               DateTime     @updatedAt @map("updated_at")
+  user                    User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId                  String       @map("user_id")
+  autoSync                Boolean      @default(false) @map("auto_sync")
+  webhookId               String?      @unique @map("webhook_id")
+  enableComments          Boolean      @default(false) @map("enable_comments")
+  giscusRepoId            String?      @map("giscus_repo_id")
+  giscusCategoryId        String?      @map("giscus_category_id")
+  enableSearch            Boolean      @default(false) @map("enable_search")
+  plan                    Plan         @default(FREE)
+  subscription            Subscription?
+  blobs                   Blob[]
+  tree                    Json?        @db.JsonB // GitHub tree data
+  privacyMode             PrivacyMode  @default(PUBLIC) @map("privacy_mode")
+  accessPasswordHash      String?      @map("access_password_hash")
+  accessPasswordUpdatedAt DateTime?    @map("access_password_updated_at")
+  tokenVersion            Int          @map("token_version") @default(0)
+  syntaxMode              SyntaxMode   @default(auto) @map("syntax_mode")
+
+  @@unique([userId, projectName])
+  @@index([userId])
+}
+
+model Blob {
+  id          String   @id @default(cuid())
+  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  siteId      String   @map("site_id")
+  path        String   // Original file path
+  appPath     String?  @map("app_path") // URL slug
+  size        Int
+  sha         String
+  metadata    Json     @db.JsonB
+  extension   String?  // File extension
+  syncStatus  Status   @default(PENDING) @map("sync_status")
+  syncError   String?  @map("sync_error")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([siteId, path])
+  @@index([siteId])
+}
+
+enum Status {
+  PENDING
+  SUCCESS
+  ERROR
+}
+
+enum Plan {
+  FREE
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  active
+  canceled
+  past_due
+  incomplete
+  incomplete_expired
+  trialing
+  unpaid
+  paused
+}
+
+enum PrivacyMode {
+  PUBLIC
+  PASSWORD   // single shared password
+  // MEMBERS    // (optional) require NextAuth session
+}
+
+enum SyntaxMode {
+  md
+  mdx
+  auto
+}

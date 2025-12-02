@@ -1,0 +1,558 @@
+import { env } from "@/env.mjs";
+import { TRPCError } from "@trpc/server";
+
+const githubAPIBaseURL = "https://api.github.com";
+const githubAPIVersion = "2022-11-28";
+
+type Accept = "application/vnd.github+json" | "application/vnd.github.raw+json";
+
+const makeGitHubHeaders = ({
+  accessToken,
+  accept = "application/vnd.github+json",
+}: {
+  accessToken?: string;
+  accept?: Accept;
+}): HeadersInit => {
+  const headers: Record<string, string> = {
+    "X-GitHub-Api-Version": githubAPIVersion,
+    Accept: accept,
+  };
+
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+
+  return headers;
+};
+
+const githubFetch = async ({
+  url,
+  accessToken,
+  cacheOptions,
+  accept,
+  method,
+  body,
+}: {
+  url: string;
+  accessToken?: string;
+  cacheOptions?: { next?: any; cache?: RequestCache };
+  accept?: Accept;
+  method?: "GET" | "POST" | "PUT" | "DELETE";
+  body?: any;
+}) => {
+  const response = await fetch(`${githubAPIBaseURL}${url}`, {
+    headers: makeGitHubHeaders({ accessToken, accept }),
+    method,
+    body: body ? JSON.stringify(body) : undefined,
+    ...cacheOptions,
+  });
+  if (!response.ok) {
+    const statusCode = response.status;
+    switch (statusCode) {
+      case 401:
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Invalid GitHub access token. Signing out...",
+          cause: `${response.json()}`,
+        });
+      case 403:
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Access to the GitHub resource is forbidden",
+          cause: `${response.json()}`,
+        });
+      case 404:
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "GitHub resource not found",
+          cause: `${response.json()}`,
+        });
+      default:
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to fetch from GitHub",
+          cause: `${response.json()}`,
+        });
+    }
+  }
+  return response;
+};
+
+export const githubJsonFetch = async <T>({
+  url,
+  accessToken,
+  cacheOptions,
+  method,
+  body,
+}: {
+  url: string;
+  queryParams?: Record<string, string>;
+  accessToken?: string;
+  cacheOptions?: { next?: any; cache?: RequestCache };
+  method?: "GET" | "POST" | "PUT" | "DELETE";
+  body?: any;
+}) => {
+  const response = await githubFetch({
+    url,
+    accessToken,
+    cacheOptions,
+    method,
+    body,
+  });
+  return response.json() as Promise<T>;
+};
+
+const githubRawFetch = async ({
+  url,
+  accessToken,
+  cacheOptions,
+}: {
+  url: string;
+  accessToken: string;
+  cacheOptions?: { next?: any; cache?: RequestCache };
+}) => {
+  const response = await githubFetch({
+    url,
+    accessToken,
+    cacheOptions,
+    accept: "application/vnd.github.raw+json",
+  });
+
+  return await response.blob();
+};
+
+export const fetchGitHubScopes = async (accessToken: string) => {
+  // Fetching organizations the user is a member of.
+  // https://docs.github.com/en/rest/orgs/orgs?apiVersion=2022-11-28#list-organizations-for-the-authenticated-user
+  const orgs = await githubJsonFetch<GitHubAPIOrganization[]>({
+    url: `/user/orgs`,
+    accessToken,
+    cacheOptions: {
+      cache: "no-store",
+    },
+  });
+
+  // Fetching the user's own account information.
+  // https://docs.github.com/en/rest/users/users?apiVersion=2022-11-28#get-the-authenticated-user
+  const user = await githubJsonFetch<GitHubAPIUser>({
+    url: `/user`,
+    accessToken,
+    cacheOptions: {
+      cache: "no-store",
+    },
+  });
+
+  // Combining both orgs and the user's GitHub login as selectable scopes.
+  return [
+    { login: user.login, type: "User", avatar_url: user.avatar_url },
+  ].concat(
+    orgs.map((org) => ({
+      login: org.login,
+      type: "Organization",
+      avatar_url: org.avatar_url,
+    })),
+  ) as GitHubScope[];
+};
+
+export const fetchGitHubScopeRepositories = async ({
+  scope = "self",
+  accessToken,
+}: {
+  scope: "self" | string; // self means the user's own repositories
+  accessToken: string;
+}) => {
+  let page = 1;
+  let allRepos: GitHubRepository[] = [];
+  let hasNextPage = false;
+  let scopeReposUrl: string;
+
+  const urlParams = new URLSearchParams({
+    per_page: "100",
+  });
+
+  if (scope === "self") {
+    // https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-repositories-for-the-authenticated-user
+    scopeReposUrl = `/user/repos`;
+    urlParams.set("affiliation", "owner,collaborator");
+  } else {
+    // https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-organization-repositories
+    scopeReposUrl = `/orgs/${scope}/repos`;
+  }
+  do {
+    urlParams.set("page", `${page}`);
+    const response = await githubFetch({
+      url: `${scopeReposUrl}?${urlParams.toString()}`,
+      accessToken,
+      cacheOptions: {
+        cache: "no-store",
+      },
+    });
+    const repos = (await response.json()) as GitHubAPIRepository[];
+
+    allRepos = allRepos.concat(
+      repos.map((repo) => ({
+        id: repo.id,
+        name: repo.name,
+        full_name: repo.full_name,
+        owner: repo.owner.login,
+      })),
+    );
+
+    const linkHeader = response.headers.get("link");
+
+    hasNextPage = linkHeader ? linkHeader.includes('rel="next"') : false;
+    page++;
+  } while (hasNextPage);
+
+  // sort alphabetically by name
+  allRepos.sort((a, b) => a.name.localeCompare(b.name));
+  return allRepos;
+};
+
+export const fetchGitHubRepoTree = async ({
+  ghRepository,
+  ghBranch,
+  accessToken,
+}: {
+  ghRepository: string;
+  ghBranch: string;
+  accessToken: string;
+}) => {
+  return await githubJsonFetch<GitHubAPIRepoTree>({
+    url: `/repos/${ghRepository}/git/trees/${ghBranch}?recursive=1`,
+    accessToken: accessToken,
+    cacheOptions: {
+      cache: "no-store",
+    },
+  });
+};
+
+export const fetchGitHubFile = async ({
+  ghRepository,
+  ghBranch,
+  path,
+  accessToken,
+}: {
+  ghRepository: string;
+  ghBranch: string;
+  path: string;
+  accessToken: string;
+}) => {
+  try {
+    return await githubJsonFetch<GitHubAPIFileContent>({
+      // https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content
+      url: `/repos/${ghRepository}/contents/${path}?ref=${ghBranch}`,
+      accessToken: accessToken,
+      cacheOptions: {
+        cache: "no-store",
+      },
+    });
+  } catch (error) {
+    throw new Error(
+      `Could not read ${ghRepository}/${path} from GitHub: ${error}`,
+    );
+  }
+};
+
+export const fetchGitHubFileRaw = async ({
+  ghRepository,
+  file_sha,
+  accessToken,
+}: {
+  ghRepository: string;
+  file_sha: string;
+  accessToken: string;
+}) => {
+  return await githubRawFetch({
+    // https://docs.github.com/en/rest/git/blobs?apiVersion=2022-11-28#get-a-blob
+    url: `/repos/${ghRepository}/git/blobs/${file_sha}`,
+    accessToken: accessToken,
+    cacheOptions: {
+      cache: "no-store",
+    },
+  });
+};
+
+export const checkIfBranchExists = async ({
+  ghRepository,
+  ghBranch,
+  accessToken,
+}: {
+  ghRepository: string;
+  ghBranch: string;
+  accessToken: string;
+}) => {
+  try {
+    return await githubFetch({
+      // https://docs.github.com/en/rest/branches/branches?apiVersion=2022-11-28#get-a-branch
+      url: `/repos/${ghRepository}/branches/${ghBranch}`,
+      accessToken: accessToken,
+      cacheOptions: {
+        cache: "no-store",
+      },
+    });
+  } catch (error) {
+    if (error instanceof TRPCError) {
+      if (error.code === "NOT_FOUND") {
+        return false;
+      }
+      throw new TRPCError(error);
+    }
+  }
+};
+
+export const fetchGitHubRepo = async ({
+  ghRepository,
+  accessToken,
+}: {
+  ghRepository: string;
+  accessToken?: string;
+}) => {
+  try {
+    return await githubJsonFetch<GitHubAPIRepository>({
+      // https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#get-a-repository
+      url: `/repos/${ghRepository}`,
+      accessToken: accessToken,
+    });
+  } catch (error) {
+    throw new Error(`Could not read ${ghRepository} from GitHub: ${error}`);
+  }
+};
+
+export const fetchGitHubRepoContributors = async ({
+  ghRepository,
+  accessToken,
+}: {
+  ghRepository: string;
+  accessToken?: string;
+}) => {
+  try {
+    return await githubJsonFetch<GitHubAPIContributor[]>({
+      // https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-repository-contributors
+      url: `/repos/${ghRepository}/contributors`,
+      accessToken: accessToken,
+    });
+  } catch (error) {
+    throw new Error(
+      `Could not read contributors for ${ghRepository} from GitHub: ${error}`,
+    );
+  }
+};
+
+export const createGitHubRepoWebhook = async ({
+  ghRepository,
+  accessToken,
+  webhookUrl,
+}: {
+  ghRepository: string;
+  accessToken: string;
+  webhookUrl?: string;
+}) => {
+  // Note: If you're getting "Unprocessable entity" error from GitHub,
+  // there is a chance that the webhook with the same URL already exists.
+  return await githubJsonFetch<GitHubAPIWebhook>({
+    // https://docs.github.com/en/rest/repos/webhooks?apiVersion=2022-11-28#create-a-repository-webhook
+    url: `/repos/${ghRepository}/hooks`,
+    accessToken: accessToken,
+    method: "POST",
+    body: {
+      name: "web",
+      active: true,
+      events: ["push"],
+      config: {
+        content_type: "json",
+        url: webhookUrl,
+        secret: env.GH_WEBHOOK_SECRET,
+      },
+    },
+  });
+};
+
+export const deleteGitHubRepoWebhook = async ({
+  ghRepository,
+  webhook_id,
+  accessToken,
+}: {
+  ghRepository: string;
+  webhook_id: number;
+  accessToken: string;
+}) => {
+  return await githubFetch({
+    // https://docs.github.com/en/rest/repos/webhooks?apiVersion=2022-11-28#delete-a-repository-webhook
+    url: `/repos/${ghRepository}/hooks/${webhook_id}`,
+    accessToken: accessToken,
+    method: "DELETE",
+  });
+};
+
+// export const getGitHubRepoTreeBlobs = async (tree: GitHubAPIRepoTree) => {
+//   return tree.tree
+//     .filter((file) => file.type === "blob") // only include blobs (files) not trees (folders)
+// }
+
+export const submitGitHubIssue = async ({
+  ghRepository,
+  title,
+  body,
+  labels,
+  accessToken,
+}: {
+  ghRepository: string;
+  title: string;
+  body: string;
+  labels?: string[];
+  accessToken: string;
+}) => {
+  return await githubJsonFetch<GitHubAPIIssue>({
+    // https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28#create-an-issue
+    url: `/repos/${ghRepository}/issues`,
+    accessToken: accessToken,
+    method: "POST",
+    body: {
+      title,
+      body,
+      labels,
+    },
+  });
+};
+
+export const getFileLastCommitTimestamp = async ({
+  ghRepository,
+  branch,
+  file_path,
+  accessToken,
+}: {
+  ghRepository: string;
+  branch: string;
+  file_path: string;
+  accessToken: string;
+}) => {
+  const queryParams = new URLSearchParams({
+    sha: branch,
+    path: file_path,
+    per_page: "1",
+  });
+  const commits = await githubJsonFetch<GitHubAPICommit[]>({
+    // https://docs.github.com/en/rest/commits/commits?apiVersion=2022-11-28#list-commits
+    url: `/repos/${ghRepository}/commits?${queryParams.toString()}`,
+    accessToken: accessToken,
+  });
+
+  if (commits.length === 0) {
+    return null;
+  }
+
+  return commits[0]!.commit.author.date;
+};
+
+export interface GitHubAPIFileContent {
+  type: "file";
+  encoding: "base64";
+  size: number;
+  name: string;
+  path: string;
+  content: string;
+  sha: string;
+  url: string;
+  git_url: string;
+  html_url: string;
+  download_url: string;
+  // ...
+}
+
+export interface GitHubAPIRepoTree {
+  sha: string;
+  url: string;
+  tree: GitHubAPIRepoTreeItem[];
+}
+
+export interface GitHubAPIRepoTreeItem {
+  path: string;
+  mode: string;
+  type: "blob" | "tree";
+  size?: number;
+  sha: string;
+  url: string;
+}
+
+interface GitHubAPIUser {
+  login: string;
+  id: number;
+  node_id: string;
+  avatar_url: string;
+  gravatar_id: string;
+  url: string;
+  html_url: string;
+  // ...
+}
+
+export interface GitHubAPIContributor {
+  login: string;
+  id: number;
+  // ...
+}
+
+interface GitHubAPIOrganization {
+  login: string;
+  id: number;
+  node_id: string;
+  url: string;
+  repos_url: string;
+  avatar_url: string;
+  description: string | null;
+  // ...
+}
+
+interface GitHubAPIRepository {
+  id: number;
+  node_id: string;
+  name: string;
+  full_name: string;
+  private: boolean;
+  html_url: string;
+  description: string | null;
+  owner: {
+    login: string;
+  };
+  stargazers_count: number;
+}
+
+interface GitHubAPIWebhook {
+  id: number;
+  active: boolean;
+  events: string[];
+  // ...
+}
+
+interface GitHubAPIIssue {
+  id: number;
+  number: number;
+  title: string;
+  body: string;
+  labels: string[];
+  // ...
+}
+
+interface GitHubAPICommit {
+  sha: string;
+  commit: {
+    author: {
+      date: string;
+      // ...
+    };
+  };
+  // ...
+}
+
+interface GitHubScope {
+  login: string;
+  type: "user" | "organization";
+  avatar_url: string;
+}
+
+interface GitHubRepository {
+  id: number;
+  name: string;
+  full_name: string;
+  owner: string;
+}

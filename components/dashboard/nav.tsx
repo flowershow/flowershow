@@ -1,0 +1,175 @@
+"use client";
+import Image from "next/image";
+import Link from "next/link";
+import { useParams, useSelectedLayoutSegments } from "next/navigation";
+import Cookies from "js-cookie";
+import { ReactNode, useEffect, useMemo } from "react";
+import { ExternalLinkIcon } from "lucide-react";
+import {
+  Disclosure,
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+} from "@headlessui/react";
+import { getConfig } from "@/lib/app-config";
+import { signOut } from "next-auth/react";
+import { api } from "@/trpc/react";
+import { cn } from "@/lib/utils";
+import { useModal } from "@/providers/modal-provider";
+import FeedbackModal from "@/components/dashboard/feedback";
+
+const config = getConfig();
+const FEEDBACK_DISMISSED_COOKIE = "feedback-dismissed";
+
+export default function Nav({ children }: { children: ReactNode }) {
+  const modal = useModal();
+  const segments = useSelectedLayoutSegments();
+  const { id } = useParams() as { id: string };
+
+  const { data: site } = api.site.getById.useQuery(
+    { id },
+    {
+      enabled: !!id,
+    },
+  );
+
+  const pages = useMemo(() => {
+    if (segments[0] === "site" && id && site) {
+      return [
+        {
+          name: site.projectName,
+          href: `/site/${id}/settings`,
+          current: true,
+        },
+      ];
+    }
+    return [];
+  }, [segments, id]);
+
+  const { data: user, refetch } = api.user.getUser.useQuery(undefined, {
+    refetchInterval: 30000,
+  });
+
+  useEffect(() => {
+    // Check if user has submitted feedback before
+    const hasSubmittedFeedback =
+      user?.feedback || Cookies.get(FEEDBACK_DISMISSED_COOKIE);
+    const hasCreatedSite = Boolean(user?.sites.length);
+
+    if (!hasSubmittedFeedback && hasCreatedSite) {
+      const timer = setTimeout(() => {
+        modal?.show(
+          <FeedbackModal dismissable={true} onSubmit={refetch} />,
+          false,
+        );
+      }, 20000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [user]);
+
+  return (
+    <Disclosure
+      as="nav"
+      className="sticky top-0 z-50 bg-white text-base font-normal shadow"
+    >
+      <div className="mx-auto max-w-7xl px-4">
+        <div className="flex h-16 justify-between space-x-2">
+          <div className="flex items-center space-x-2">
+            <Link
+              href="/"
+              className="flex items-center space-x-2 text-lg font-semibold tracking-tight text-primary-strong md:text-xl"
+            >
+              <Image
+                src={config.logo}
+                width={32}
+                height={32}
+                alt={config.product}
+              />
+              {config.product === "flowershow" && (
+                <span
+                  className={cn(
+                    "ml-2 font-brand text-lg font-extrabold md:text-xl",
+                    pages.length && "hidden",
+                  )}
+                >
+                  Flowershow
+                </span>
+              )}
+            </Link>
+            {pages.map((page) => (
+              <div key={page.name} className="flex items-center">
+                <svg
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  aria-hidden="true"
+                  className="h-6 w-6 shrink-0 text-gray-300"
+                >
+                  <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
+                </svg>
+                <a
+                  href={page.href}
+                  aria-current={page.current ? "page" : undefined}
+                  className="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"
+                >
+                  {page.name}
+                </a>
+              </div>
+            ))}
+          </div>
+          <div className="ml-6 flex items-center space-x-2">
+            {config.product === "flowershow" && (
+              <>
+                <Link
+                  className="flex items-center text-sm hover:underline"
+                  href="https://discord.gg/JChzM5VdFn"
+                  target="_blank"
+                >
+                  <span>Support</span>
+                  <ExternalLinkIcon className="h-4" />
+                </Link>
+                <button
+                  type="button"
+                  className="rounded-md bg-pink-50 px-2.5 py-1.5 text-sm font-semibold text-pink-600 shadow-sm hover:bg-pink-100"
+                  onClick={() =>
+                    modal?.show(<FeedbackModal onSubmit={refetch} />)
+                  }
+                >
+                  Send feedback
+                </button>
+              </>
+            )}
+            {/* Profile dropdown */}
+            <Menu as="div" className="relative ml-3">
+              <div>
+                <MenuButton className="relative flex rounded-full bg-white text-sm">
+                  <span className="absolute -inset-1.5" />
+                  <span className="sr-only">Open user menu</span>
+                  {children}
+                </MenuButton>
+              </div>
+              <MenuItems
+                transition
+                className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-200 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
+              >
+                <MenuItem>
+                  <button
+                    onClick={() => signOut()}
+                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
+                  >
+                    Sign out
+                  </button>
+                </MenuItem>
+              </MenuItems>
+            </Menu>
+          </div>
+        </div>
+      </div>
+    </Disclosure>
+  );
+}
+
+function isDefined<T>(value: T | null | undefined): value is NonNullable<T> {
+  return value !== null && value !== undefined;
+}

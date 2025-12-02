@@ -1,0 +1,278 @@
+import { ReactNode } from "react";
+import { Metadata } from "next";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { GoogleTagManager } from "@next/third-parties/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
+import clsx from "clsx";
+
+import { api } from "@/trpc/server";
+
+import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
+import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
+import { getThemeUrl } from "@/lib/get-theme";
+import { getSiteUrlPath } from "@/lib/get-site-url";
+import { getConfig } from "@/lib/app-config";
+import { getSession } from "@/server/auth";
+import { TRPCReactProvider } from "@/trpc/react";
+import { env } from "@/env.mjs";
+
+import BuiltWithFloatingButton from "@/components/public/built-with-floating-button";
+import Footer from "@/components/public/footer";
+import Nav from "@/components/public/nav";
+import { SiteProvider } from "@/components/public/site-context";
+import Providers from "./providers";
+
+import { fontBody, fontBrand, fontHeading } from "@/styles/fonts";
+import "@/styles/prism.css";
+import "@/styles/callouts.css";
+import "@/styles/default-theme.css";
+import { THEME_PREFERENCE_STORAGE_KEY } from "@/lib/const";
+import SiteLogoutButton from "./site-logout-button";
+import { PublicSite } from "@/server/api/routers/site";
+
+const { title, description, favicon, thumbnail } = getConfig();
+
+export const metadata: Metadata = {
+  title,
+  description,
+  icons: [favicon],
+  openGraph: {
+    title,
+    description,
+    type: "website",
+    url: `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}`,
+    images: [
+      {
+        url: thumbnail,
+        width: 1200,
+        height: 630,
+        alt: "Thumbnail",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
+    images: [
+      {
+        url: thumbnail,
+        width: 1200,
+        height: 630,
+        alt: "Thumbnail",
+      },
+    ],
+    creator: "@flowershowapp",
+  },
+};
+
+interface RouteParams {
+  user: string;
+  project: string;
+}
+
+export default async function PublicLayout(props: {
+  params: Promise<RouteParams>;
+  children: ReactNode;
+}) {
+  const params = await props.params;
+
+  const { children } = props;
+
+  const session = await getSession();
+  const userName = decodeURIComponent(params.user); // user's github username or "_domain" if on custom domain (see middleware)
+  const projectName = decodeURIComponent(params.project);
+
+  let site: PublicSite | null;
+  if (userName === "_domain") {
+    site = await api.site.getByDomain.query({
+      domain: projectName,
+    });
+  } else {
+    site = await api.site.get.query({
+      ghUsername: userName,
+      projectName: projectName,
+    });
+  }
+
+  // TODO This is a workaround
+  // Don't call notFound() here, return minimal layout and allow the NOT_FOUND error to be thrown from within [...slug] page
+  // so that not-found.tsx in this segment can be triggered. Otherwise Next.js will look in the parent segment, and won't find it there, showing a blank page.
+  // Why we can't have not-found.js in the parent folder:
+  // Because we have 2 separate route groups with 2 separate ROOT layouts, and root layout for user sites needs to be
+  // nested under /[user]/[project] as it's dynamic. This means we can't have any layout in any parent directory - and it is needed for a not-found page
+  // Note: in Next 15 there is a global-not-found that can be used in /app without a layout, so we should upgrade
+  // https://github.com/vercel/next.js/discussions/50034
+  if (!site) {
+    return (
+      <html
+        className={clsx(fontBody.variable, fontHeading.variable)}
+        lang="en"
+        suppressHydrationWarning
+      >
+        <body>{children}</body>
+      </html>
+    );
+  }
+
+  // Redirect to custom domain if it exists
+  if (userName !== "_domain" && site.customDomain) {
+    return redirect(`https://${site.customDomain}`);
+  }
+
+  const sitePrefix = getSiteUrlPath(site);
+
+  const appConfig = getConfig();
+
+  const siteConfig = await api.site.getConfig
+    .query({
+      siteId: site.id,
+    })
+    .catch(() => null);
+
+  const customCss = await api.site.getCustomStyles
+    .query({
+      siteId: site.id,
+    })
+    .catch(() => null);
+
+  // Theme from official Flowershow Themes collection
+  const themeName =
+    typeof siteConfig?.theme === "string" // backward compatibility for theme of type string
+      ? siteConfig.theme
+      : siteConfig?.theme?.theme;
+  const themeUrl = themeName ? getThemeUrl(themeName) : null;
+  // Light/Dark
+  let showThemeModeSwitch = false;
+  let defaultMode = "light";
+
+  if (typeof siteConfig?.theme !== "string") {
+    showThemeModeSwitch = siteConfig?.theme?.showModeSwitch ?? false;
+
+    if (
+      siteConfig?.theme?.defaultMode &&
+      ["light", "dark", "system"].includes(siteConfig?.theme?.defaultMode)
+    ) {
+      defaultMode = siteConfig?.theme?.defaultMode;
+    }
+  }
+
+  let siteTree;
+
+  if (siteConfig?.showSidebar) {
+    siteTree = await api.site.getSiteTree
+      .query({
+        siteId: site.id,
+        orderBy: siteConfig?.sidebar?.orderBy,
+      })
+      .catch(() => []);
+  }
+
+  const logo = siteConfig?.nav?.logo ?? siteConfig?.logo ?? appConfig.logo; // default to Flowershow logo
+  const title = siteConfig?.nav?.title;
+  const links = siteConfig?.nav?.links;
+  const social = siteConfig?.nav?.social;
+  const showBuiltWithButton = !isFeatureEnabled(Feature.NoBranding, site);
+  const showSearch =
+    isFeatureEnabled(Feature.Search, site) && site.enableSearch;
+  const cta = siteConfig?.nav?.cta;
+
+  return (
+    <html
+      className={clsx(
+        fontBody.variable,
+        fontHeading.variable,
+        fontBrand.variable,
+      )}
+      lang="en"
+      suppressHydrationWarning
+      data-theme={defaultMode}
+    >
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
+          integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn"
+          crossOrigin="anonymous"
+        />
+        {themeUrl && <link rel="stylesheet" href={themeUrl} />}
+        {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
+        {showThemeModeSwitch && (
+          <script
+            dangerouslySetInnerHTML={{
+              __html: `
+(function () {
+  // Adjust data-theme attribute based on stored theme preference
+  try {
+    var t = localStorage.getItem('${THEME_PREFERENCE_STORAGE_KEY}');
+    if (t) {
+      if (t === 'system') t = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      var el = document.documentElement;
+      el.classList.add('disable-theme-transitions');
+      if (el.getAttribute('data-theme') !== t) el.setAttribute('data-theme', t);
+      setTimeout(function(){ el.classList.remove('disable-theme-transitions'); }, 0);
+    } 
+  } catch(_) {}
+})();`,
+            }}
+          />
+        )}
+      </head>
+      <body>
+        <TRPCReactProvider headers={await headers()}>
+          <Providers>
+            {/* it should be in the head */}
+            {siteConfig?.analytics && (
+              <GoogleAnalytics gaId={siteConfig.analytics} />
+            )}
+
+            <SiteProvider
+              value={{
+                user: params.user,
+                project: params.project,
+                prefix: sitePrefix,
+              }}
+            >
+              {/* TODO hacky, temp; move data-plan to root level layout (create separate one for user sites)
+          and don't decide based on that button */}
+              <div
+                data-plan={!showBuiltWithButton && "premium"}
+                className="site-layout"
+              >
+                <Nav
+                  logo={logo}
+                  url={sitePrefix || "/"}
+                  title={title}
+                  links={links}
+                  social={social}
+                  siteTree={siteTree}
+                  showSearch={showSearch}
+                  searchId={site.id}
+                  showThemeSwitch={showThemeModeSwitch}
+                  cta={cta}
+                />
+                <div className="site-body">{children}</div>
+                <Footer />
+                {showBuiltWithButton && <BuiltWithFloatingButton />}
+                {site.privacyMode === "PASSWORD" && (
+                  <SiteLogoutButton
+                    siteId={site.id}
+                    sitename={site.projectName}
+                  />
+                )}
+              </div>
+            </SiteProvider>
+
+            <GoogleTagManager
+              {...(session?.user.id
+                ? { dataLayer: { user_id: session.user.id } }
+                : {})}
+              gtmId={env.GTM_ID}
+            />
+          </Providers>
+        </TRPCReactProvider>
+      </body>
+    </html>
+  );
+}

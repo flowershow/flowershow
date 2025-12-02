@@ -1,0 +1,256 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, cleanup } from "@testing-library/react";
+import List from "./list";
+import { api } from "@/trpc/server";
+
+// Mock the tRPC API
+vi.mock("@/trpc/server", () => ({
+  api: {
+    site: {
+      getListComponentItems: {
+        query: vi.fn(),
+      },
+    },
+  },
+}));
+
+const mockUseSearchParams = vi.fn();
+
+// Mock next/navigation for this test file
+vi.mock("next/navigation", () => {
+  const push = vi.fn();
+  const replace = vi.fn();
+  const back = vi.fn();
+  const forward = vi.fn();
+  const refresh = vi.fn();
+  const prefetch = vi.fn();
+
+  return {
+    // what your component actually uses
+    useRouter: () => ({
+      push,
+      replace,
+      back,
+      forward,
+      refresh,
+      prefetch,
+    }),
+    usePathname: vi.fn(() => "/test-path"),
+    useSearchParams: () => mockUseSearchParams(),
+  };
+});
+
+describe("List Component - Pagination Tests", () => {
+  beforeEach(() => {
+    mockUseSearchParams.mockReset();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  const mockSiteId = "test-site-id";
+
+  // Create 4 mock items for testing
+  const mockItems = [
+    {
+      url: "/item-1",
+      metadata: {
+        title: "Item 1",
+        description: "Description 1",
+        publish: true,
+        syntaxMode: "md" as const,
+      },
+    },
+    {
+      url: "/item-2",
+      metadata: {
+        title: "Item 2",
+        description: "Description 2",
+        publish: true,
+        syntaxMode: "md" as const,
+      },
+    },
+    {
+      url: "/item-3",
+      metadata: {
+        title: "Item 3",
+        description: "Description 3",
+        publish: true,
+        syntaxMode: "md" as const,
+      },
+    },
+    {
+      url: "/item-4",
+      metadata: {
+        title: "Item 4",
+        description: "Description 4",
+        publish: true,
+        syntaxMode: "md" as const,
+      },
+    },
+  ];
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  describe("Page size == total items (pageSize=4, total=4)", () => {
+    it("should display all items on page 1", async () => {
+      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
+        items: mockItems,
+      });
+
+      const component = await List({
+        siteId: mockSiteId,
+        pageSize: 4,
+        pageNumber: 1,
+      });
+
+      const { container } = render(component);
+
+      // Should display all 4 items
+      const articles = container.querySelectorAll(".list-component-item");
+      expect(articles).toHaveLength(4);
+
+      // Verify all items are present
+      expect(screen.getByText("Item 1")).toBeInTheDocument();
+      expect(screen.getByText("Item 2")).toBeInTheDocument();
+      expect(screen.getByText("Item 3")).toBeInTheDocument();
+      expect(screen.getByText("Item 4")).toBeInTheDocument();
+    });
+
+    it("should not display pagination", async () => {
+      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
+        items: mockItems,
+      });
+
+      const component = await List({
+        siteId: mockSiteId,
+        pageSize: 4,
+        pageNumber: 1,
+      });
+
+      const { container } = render(component);
+
+      const pagination = container.querySelector(".list-component-pagination");
+      expect(pagination).not.toBeInTheDocument();
+    });
+  });
+
+  describe("PageSize < total items (pageSize=3, total=4)", () => {
+    it("should display 3 items on page 1", async () => {
+      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
+        items: mockItems,
+      });
+      mockUseSearchParams.mockReturnValue(new URLSearchParams({ page: "1" }));
+
+      const component = await List({
+        siteId: mockSiteId,
+        pageSize: 3,
+        pageNumber: 1,
+      });
+
+      const { container } = render(component);
+
+      // Should display only 3 items on page 1
+      const articles = container.querySelectorAll(".list-component-item");
+      expect(articles).toHaveLength(3);
+
+      // Verify first 3 items are present
+      expect(screen.getByText("Item 1")).toBeInTheDocument();
+      expect(screen.getByText("Item 2")).toBeInTheDocument();
+      expect(screen.getByText("Item 3")).toBeInTheDocument();
+
+      // Item 4 should not be on page 1
+      expect(screen.queryByText("Item 4")).not.toBeInTheDocument();
+    });
+
+    it("should display 1 item on page 2", async () => {
+      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
+        items: mockItems,
+      });
+
+      mockUseSearchParams.mockReturnValue(new URLSearchParams({ page: "2" }));
+
+      const component = await List({
+        siteId: mockSiteId,
+        pageSize: 3,
+        pageNumber: 2,
+      });
+
+      const { container } = render(component);
+
+      // Should display only 1 item on page 2
+      const articles = container.querySelectorAll(".list-component-item");
+      expect(articles).toHaveLength(1);
+
+      // Only Item 4 should be on page 2
+      expect(screen.getByText("Item 4")).toBeInTheDocument();
+
+      // Items 1-3 should not be on page 2
+      expect(screen.queryByText("Item 1")).not.toBeInTheDocument();
+      expect(screen.queryByText("Item 2")).not.toBeInTheDocument();
+      expect(screen.queryByText("Item 3")).not.toBeInTheDocument();
+    });
+  });
+
+  describe("Edge cases", () => {
+    it("should not paginate when pageSize is not provided", async () => {
+      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
+        items: mockItems,
+      });
+
+      const component = await List({
+        siteId: mockSiteId,
+        // No pageSize provided
+      });
+
+      const { container } = render(component);
+
+      // Should display all items without pagination
+      const articles = container.querySelectorAll(".list-component-item");
+      expect(articles).toHaveLength(4);
+
+      // No pagination should be displayed
+      const pagination = screen.queryByTestId("pagination");
+      expect(pagination).not.toBeInTheDocument();
+    });
+
+    it("should handle empty items array", async () => {
+      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
+        items: [],
+      });
+
+      const component = await List({
+        siteId: mockSiteId,
+        pageSize: 3,
+      });
+
+      render(component);
+
+      // Should display "No items found" message
+      expect(screen.getByText("No items found")).toBeInTheDocument();
+    });
+
+    it("should handle page number beyond available pages", async () => {
+      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
+        items: mockItems,
+      });
+
+      mockUseSearchParams.mockReturnValue(new URLSearchParams({ page: "5" }));
+
+      const component = await List({
+        siteId: mockSiteId,
+        pageSize: 3,
+        pageNumber: 5, // Beyond available pages
+      });
+
+      const { container } = render(component);
+
+      // Should display no items (slice returns empty array)
+      const articles = container.querySelectorAll(".list-component-item");
+      expect(articles).toHaveLength(0);
+    });
+  });
+});
