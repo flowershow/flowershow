@@ -1054,6 +1054,40 @@ export const siteRouter = createTRPCRouter({
         },
       )(input);
     }),
+  getBlobByPath: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+        path: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async (input) => {
+          const blob = await ctx.db.blob.findFirst({
+            where: {
+              siteId: input.id,
+              path: input.path,
+            },
+            orderBy: { path: "desc" },
+          });
+
+          if (!blob) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Blob not found",
+            });
+          }
+
+          return blob;
+        },
+        undefined,
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.siteId}`, `${input.siteId}-${input.path}`],
+        },
+      )(input);
+    }),
   getBlobContent: publicProcedure
     .input(
       z.object({
