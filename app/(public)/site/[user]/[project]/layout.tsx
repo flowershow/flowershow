@@ -143,7 +143,6 @@ export default async function PublicLayout(props: {
         sitePrefix,
         domain: site.customDomain,
       });
-      console.log({ customCssSrc });
     })
     .catch(() => null);
 

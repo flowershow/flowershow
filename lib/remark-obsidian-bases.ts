@@ -10,11 +10,70 @@ import { parseExpression } from "./bases-parse";
 import { PageMetadata } from "@/server/api/types";
 
 interface Options {
+  siteId: string;
   sitePrefix?: string;
   customDomain?: string;
-  siteId?: string;
   rootDir?: string;
 }
+
+/**
+ * Remark plugin to transform code blocks with language "base"
+ * to support Obsidian Bases queries.
+ *
+ * This plugin:
+ * - Finds code nodes with lang="base"
+ * - Extracts the YAML query from the code content
+ * - Executes the query against the database
+ * - Replaces the code block with an HTML node containing the query result
+ */
+const remarkObsidianBases: Plugin<[Options], Root> = (options) => {
+  const { siteId, sitePrefix, customDomain, rootDir } = options;
+
+  return async (tree) => {
+    const nodesToTransform: Array<{
+      node: Code;
+      index: number;
+      parent: any;
+    }> = [];
+
+    // First pass: collect all code nodes with lang="base"
+    visit(tree, "code", (node: Code, index, parent) => {
+      if (node.lang === "base" && parent && typeof index === "number") {
+        nodesToTransform.push({
+          node,
+          index,
+          parent,
+        });
+      }
+    });
+
+    // Second pass: transform all collected nodes
+    for (const { node, index, parent } of nodesToTransform) {
+      try {
+        // Execute the query
+        const resultNode = await resolveBaseQuery(
+          node.value,
+          siteId,
+          sitePrefix,
+          customDomain,
+          rootDir,
+        );
+
+        parent.children[index] = resultNode;
+      } catch (error) {
+        console.error("Error processing base query:", error);
+
+        // On error, replace with an error message
+        const errorNode = {
+          type: "html",
+          value: `<div class="obsidian-base-error">Error processing base query: ${error instanceof Error ? error.message : "Unknown error"}</div>`,
+        };
+
+        parent.children[index] = errorNode;
+      }
+    }
+  };
+};
 
 // Recursive filter type: can be a string or an object with and/or/not
 type FilterValue = string | FilterObject;
@@ -55,346 +114,51 @@ export type BaseView = BaseTableView | BaseCardsView | BaseListView;
 
 interface BaseQuery {
   filters?: FilterValue;
-  views?: Array<BaseView>;
-}
-
-function compileExpressionToPrisma(
-  ast: ExprNode,
-  rootDir?: string,
-): Prisma.BlobWhereInput | null {
-  // 1) Binary comparison on simple property
-  if (
-    ast.type === "BinaryExpression" &&
-    ["==", "!=", ">", "<", ">=", "<="].includes(ast.operator)
-  ) {
-    // left must be property
-    const fieldInfo = resolveProperty(ast.left);
-    if (!fieldInfo) return null;
-
-    const literal = ast.right.type === "Literal" ? ast.right.value : undefined;
-    if (literal === undefined) return null;
-
-    const prismaWhere = buildPrismaComparison(fieldInfo, ast.operator, literal);
-    // If buildPrismaComparison returns null, it means this needs JS post-filter
-    if (prismaWhere === null) return null;
-
-    return prismaWhere;
-  }
-
-  // 2) file.inFolder("Something")
-  if (
-    ast.type === "CallExpression" &&
-    isMember(ast.callee, "file", "inFolder") &&
-    ast.args.length === 1 &&
-    ast.args[0]!.type === "Literal" &&
-    typeof ast.args[0]!.value === "string"
-  ) {
-    let folder = ast.args[0]!.value;
-
-    // Strip rootDir prefix if it exists
-    // This handles cases where the site has a rootDir set (e.g., "Public")
-    // and files are indexed without that prefix in the database
-    if (rootDir && folder.startsWith(rootDir)) {
-      // Remove the rootDir prefix, handling both "Public/Something" and "Public"
-      folder = folder.slice(rootDir.length);
-      // Remove leading slash if present after stripping
-      if (folder.startsWith("/")) {
-        folder = folder.slice(1);
-      }
-      // If folder is now empty (was just the rootDir), match all files
-      if (folder === "") {
-        // Return a condition that matches all paths (no filter)
-        return {};
-      }
-    }
-
-    return {
-      path: {
-        startsWith: folder.endsWith("/") ? folder : folder + "/",
-      },
-    };
-  }
-
-  // 3) file.hasProperty("propertyName")
-  if (
-    ast.type === "CallExpression" &&
-    isMember(ast.callee, "file", "hasProperty") &&
-    ast.args.length === 1 &&
-    ast.args[0]!.type === "Literal" &&
-    typeof ast.args[0]!.value === "string"
-  ) {
-    const propertyName = ast.args[0]!.value;
-    // Check if the property exists in metadata JSON column
-    // Using path_exists which checks if a JSON path exists
-    return {
-      metadata: {
-        path: [propertyName],
-        not: Prisma.JsonNull,
-      },
-    };
-  }
-
-  // 4) file.ext == "md" pattern is covered by #1 + resolveProperty mapping
-
-  // anything else → too complex for Prisma
-  return null;
-}
-
-type FieldInfo =
-  | { kind: "scalar"; field: keyof Prisma.BlobWhereInput } // path, extension, siteId...
-  | { kind: "json"; path: string[] } // metadata, formula, etc.
-  | { kind: "computed"; field: "folder" | "name" }; // computed from path
-
-function resolveProperty(node: ExprNode): FieldInfo | null {
-  // price  -> metadata.price
-  if (node.type === "Identifier") {
-    return { kind: "json", path: [node.name] };
-  }
-
-  if (node.type === "MemberExpression") {
-    const obj = node.object;
-    const prop = node.property;
-
-    if (
-      obj.type === "Identifier" &&
-      (obj.name === "note" || obj.name === "formula")
-    ) {
-      return { kind: "json", path: [prop] };
-    }
-
-    if (obj.type === "Identifier" && obj.name === "file") {
-      switch (prop) {
-        case "ext":
-        case "extension":
-          return { kind: "scalar", field: "extension" };
-        case "path":
-          return { kind: "scalar", field: "path" };
-        case "folder":
-          // folder is computed from path, so we'll handle it in post-filter
-          // but we can still support it for startsWith queries
-          return { kind: "computed", field: "folder" };
-        case "name":
-          // name is computed from path, so we'll handle it in post-filter
-          return { kind: "computed", field: "name" };
-      }
-    }
-  }
-
-  return null;
-}
-
-function buildPrismaComparison(
-  field: FieldInfo,
-  op: BinaryExpressionNode["operator"],
-  value: unknown,
-): Prisma.BlobWhereInput | null {
-  if (field.kind === "scalar") {
-    const cond: any = {};
-    switch (op) {
-      case "==":
-        cond[field.field] = value;
-        break;
-      case "!=":
-        cond[field.field] = { not: value };
-        break;
-      case ">":
-        cond[field.field] = { gt: value };
-        break;
-      case "<":
-        cond[field.field] = { lt: value };
-        break;
-      case ">=":
-        cond[field.field] = { gte: value };
-        break;
-      case "<=":
-        cond[field.field] = { lte: value };
-        break;
-    }
-    return cond;
-  }
-
-  if (field.kind === "json") {
-    const jsonValue = value as Prisma.InputJsonValue;
-    const base: any = { path: field.path };
-
-    switch (op) {
-      case "==":
-        base.equals = jsonValue;
-        break;
-      case "!=":
-        // NOT is separate
-        return {
-          NOT: {
-            metadata: { path: field.path, equals: jsonValue },
-          },
-        };
-      case ">":
-        base.gt = jsonValue;
-        break;
-      case "<":
-        base.lt = jsonValue;
-        break;
-      case ">=":
-        base.gte = jsonValue;
-        break;
-      case "<=":
-        base.lte = jsonValue;
-        break;
-    }
-
-    return { metadata: base };
-  }
-
-  if (field.kind === "computed") {
-    // Computed fields like folder and name need to be handled in post-filter
-    // We can't efficiently query them in Prisma since they're derived from path
-    // Return null to indicate this should be handled in JS post-filter
-    return null;
-  }
-
-  return {};
-}
-
-function isMember(node: ExprNode, objName: string, prop: string): boolean {
-  return (
-    node.type === "MemberExpression" &&
-    node.object.type === "Identifier" &&
-    node.object.name === objName &&
-    node.property === prop
-  );
+  views: Array<BaseView>;
 }
 
 /**
- * Recursively builds Prisma where clause from nested Obsidian Bases filters
+ * Resolve base queries by executing them against the database
+ *
+ * @param query - The YAML query string
+ * @param siteId - Site ID to filter results
+ * @param sitePrefix - Optional site prefix for URL generation
+ * @param customDomain - Optional custom domain for URL generation
+ * @param rootDir - Optional root directory for adjusting folder/path filters
+ * @returns A promise that resolves to formatted HTML results
  */
-export function buildPrismaWhereClause(
-  filters: FilterValue | undefined,
+async function resolveBaseQuery(
+  query: string,
+  siteId: string,
+  sitePrefix?: string,
+  customDomain?: string,
   rootDir?: string,
-): {
-  where: Prisma.BlobWhereInput;
-  postFilter?: (row: any) => boolean;
-} {
-  if (!filters) return { where: {} };
+): Promise<any> {
+  try {
+    // Parse the YAML query
+    const parsedQuery = yaml.parse(query) as BaseQuery;
 
-  if (typeof filters === "string") {
-    const ast = parseExpression(filters);
-    const where = compileExpressionToPrisma(ast, rootDir);
+    // Execute the query separately for each view
+    const viewResults = await Promise.all(
+      parsedQuery.views.map((view) =>
+        executeBaseQueryForView(parsedQuery, siteId, view, rootDir),
+      ),
+    );
 
-    if (where) {
-      return { where };
-    }
-
-    return {
-      where: {},
-      postFilter: compileExpressionToJsEvaluator(ast),
-    };
+    // Return a views node with separate data for each view
+    return await createViewsNode(
+      viewResults,
+      parsedQuery.views,
+      sitePrefix,
+      customDomain,
+      siteId,
+    );
+  } catch (error) {
+    console.error("Failed to execute base query:", error);
+    throw new Error(
+      `Failed to execute base query: ${error instanceof Error ? error.message : "Unknown error"}`,
+    );
   }
-
-  // object: and/or/not recursively
-  // object: and/or/not recursively
-  const filterObj = filters as FilterObject;
-
-  const andWheres: Prisma.BlobWhereInput[] = [];
-  const orWheres: Prisma.BlobWhereInput[] = [];
-  const notWheres: Prisma.BlobWhereInput[] = [];
-
-  const andPredicates: Array<(row: any) => boolean> = [];
-  const orPredicates: Array<(row: any) => boolean> = [];
-  const notPredicates: Array<(row: any) => boolean> = [];
-
-  const handleChildren = (
-    children: FilterValue[] | undefined,
-    targetWheres: Prisma.BlobWhereInput[],
-    targetPredicates: Array<(row: any) => boolean>,
-    negatePostFilter = false,
-  ) => {
-    if (!children) return;
-
-    for (const child of children) {
-      const { where, postFilter } = buildPrismaWhereClause(child, rootDir);
-
-      if (Object.keys(where).length > 0) {
-        targetWheres.push(where);
-      }
-
-      if (postFilter) {
-        if (negatePostFilter) {
-          targetPredicates.push((row) => !postFilter(row));
-        } else {
-          targetPredicates.push(postFilter);
-        }
-      }
-    }
-  };
-
-  // Fill groups
-  handleChildren(filterObj.and, andWheres, andPredicates);
-  handleChildren(filterObj.or, orWheres, orPredicates);
-  handleChildren(filterObj.not, notWheres, notPredicates, true);
-
-  // Build Prisma where
-  const where: Prisma.BlobWhereInput = {};
-
-  if (andWheres.length > 0) {
-    // Prisma accepts AND: WhereInput | WhereInput[]
-    where.AND = andWheres;
-  }
-
-  if (orWheres.length > 0) {
-    where.OR = orWheres;
-  }
-
-  if (notWheres.length > 0) {
-    where.NOT = notWheres;
-  }
-
-  // Build JS postFilter if needed
-  let postFilter: ((row: any) => boolean) | undefined;
-
-  if (andPredicates.length || orPredicates.length || notPredicates.length) {
-    postFilter = (row) => {
-      // AND group: all must be true
-      if (andPredicates.length && !andPredicates.every((fn) => fn(row))) {
-        return false;
-      }
-
-      // OR group: if present, at least one must be true
-      if (orPredicates.length && !orPredicates.some((fn) => fn(row))) {
-        return false;
-      }
-
-      // NOT group: all must (already negated) be true
-      if (notPredicates.length && !notPredicates.every((fn) => fn(row))) {
-        return false;
-      }
-
-      return true;
-    };
-  }
-
-  return { where, postFilter };
-}
-
-/**
- * Combines global filters with view-specific filters using AND logic
- */
-function combineFilters(
-  globalFilters?: FilterValue,
-  viewFilters?: FilterValue,
-): FilterValue | undefined {
-  // If neither exists, return undefined
-  if (!globalFilters && !viewFilters) {
-    return undefined;
-  }
-
-  // If only one exists, return it
-  if (!globalFilters) return viewFilters;
-  if (!viewFilters) return globalFilters;
-
-  // Both exist: combine with AND
-  return {
-    and: [globalFilters, viewFilters],
-  };
 }
 
 /**
@@ -407,16 +171,32 @@ async function executeBaseQueryForView(
   rootDir?: string,
 ): Promise<any[]> {
   // Combine global filters with view-specific filters
-  const combinedFilters = combineFilters(parsedQuery.filters, view?.filters);
+  const globalFilters = parsedQuery.filters;
+  const viewFilters = view?.filters;
+  let combinedFilters: FilterValue | undefined;
+
+  if (!globalFilters && !viewFilters) {
+    combinedFilters = undefined;
+  } else if (!globalFilters) {
+    combinedFilters = viewFilters;
+  } else if (!viewFilters) {
+    combinedFilters = globalFilters;
+  } else {
+    combinedFilters = {
+      and: [globalFilters, viewFilters],
+    };
+  }
+
+  if (!combinedFilters) {
+    return [];
+  }
 
   const { where: whereClause, postFilter } = buildPrismaWhereClause(
     combinedFilters,
     rootDir,
   );
 
-  const finalWhere: Prisma.BlobWhereInput = siteId
-    ? { AND: [whereClause, { siteId }] }
-    : whereClause;
+  const finalWhere: Prisma.BlobWhereInput = { AND: [whereClause, { siteId }] };
 
   // Build orderBy clause for file.name only (Prisma limitation with JSON fields)
   const orderBy: Prisma.BlobOrderByWithRelationInput[] = [];
@@ -509,92 +289,447 @@ async function executeBaseQueryForView(
 }
 
 /**
- * Resolve base queries by executing them against the database
- *
- * @param query - The YAML query string
- * @param siteId - Optional site ID to filter results
- * @param sitePrefix - Optional site prefix for URL generation
- * @param customDomain - Optional custom domain for URL generation
- * @param rootDir - Optional root directory that was stripped from file paths
- * @returns A promise that resolves to formatted HTML results
+ * Recursively builds Prisma where clause from nested Obsidian Bases filters
  */
-async function resolveBaseQuery(
-  query: string,
-  siteId?: string,
-  sitePrefix?: string,
-  customDomain?: string,
+export function buildPrismaWhereClause(
+  filter: FilterValue,
   rootDir?: string,
-): Promise<any> {
-  try {
-    // Parse the YAML query
-    const parsedQuery = yaml.parse(query) as BaseQuery;
+): {
+  where: Prisma.BlobWhereInput;
+  postFilter?: (row: any) => boolean;
+} {
+  if (typeof filter === "string") {
+    console.log({ filter });
+    const ast = parseExpression(filter);
+    console.log({ ast });
 
-    // If no views specified, execute once with global filters only
-    if (!parsedQuery.views || parsedQuery.views.length === 0) {
-      const results = await executeBaseQueryForView(
-        parsedQuery,
-        siteId,
-        undefined,
-        rootDir,
-      );
-      return await createViewsNode(
-        [results],
-        [],
-        sitePrefix,
-        customDomain,
-        siteId,
-      );
+    const where = compileExpressionToPrisma(ast, rootDir);
+    console.log({ where });
+
+    if (where) {
+      return { where };
     }
 
-    // Execute the query separately for each view
-    const viewResults = await Promise.all(
-      parsedQuery.views.map((view) =>
-        executeBaseQueryForView(parsedQuery, siteId, view, rootDir),
-      ),
-    );
+    const postFilter = (row: Blob) => {
+      try {
+        const value = evalExpr(ast, row, rootDir);
+        return !!value;
+      } catch {
+        return false;
+      }
+    };
 
-    // Return a views node with separate data for each view
-    return await createViewsNode(
-      viewResults,
-      parsedQuery.views,
-      sitePrefix,
-      customDomain,
-      siteId,
-    );
-  } catch (error) {
-    console.error("Failed to execute base query:", error);
-    throw new Error(
-      `Failed to execute base query: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+    return {
+      where: {},
+      postFilter,
+    };
   }
-}
 
-function compileExpressionToJsEvaluator(ast: ExprNode, rootDir?: string) {
-  return (row: Blob) => {
-    const env = makeEnv(row, rootDir);
-    try {
-      const value = evalExpr(ast, env);
-      return !!value;
-    } catch {
-      return false;
+  // object: and/or/not recursively
+  // object: and/or/not recursively
+  const filterObj = filter as FilterObject;
+
+  const andWheres: Prisma.BlobWhereInput[] = [];
+  const orWheres: Prisma.BlobWhereInput[] = [];
+  const notWheres: Prisma.BlobWhereInput[] = [];
+
+  const andPredicates: Array<(row: any) => boolean> = [];
+  const orPredicates: Array<(row: any) => boolean> = [];
+  const notPredicates: Array<(row: any) => boolean> = [];
+
+  const handleChildren = (
+    children: FilterValue[] | undefined,
+    targetWheres: Prisma.BlobWhereInput[],
+    targetPredicates: Array<(row: any) => boolean>,
+    negatePostFilter = false,
+  ) => {
+    if (!children) return;
+
+    for (const child of children) {
+      const { where, postFilter } = buildPrismaWhereClause(child, rootDir);
+
+      if (Object.keys(where).length > 0) {
+        targetWheres.push(where);
+      }
+
+      if (postFilter) {
+        if (negatePostFilter) {
+          targetPredicates.push((row) => !postFilter(row));
+        } else {
+          targetPredicates.push(postFilter);
+        }
+      }
     }
   };
+
+  // Fill groups
+  handleChildren(filterObj.and, andWheres, andPredicates);
+  handleChildren(filterObj.or, orWheres, orPredicates);
+  handleChildren(filterObj.not, notWheres, notPredicates, true);
+
+  // Build Prisma where
+  const where: Prisma.BlobWhereInput = {};
+
+  if (andWheres.length > 0) {
+    // Prisma accepts AND: WhereInput | WhereInput[]
+    where.AND = andWheres;
+  }
+
+  if (orWheres.length > 0) {
+    where.OR = orWheres;
+  }
+
+  if (notWheres.length > 0) {
+    where.NOT = notWheres;
+  }
+
+  // Build JS postFilter if needed
+  let postFilter: ((row: any) => boolean) | undefined;
+
+  if (andPredicates.length || orPredicates.length || notPredicates.length) {
+    postFilter = (row) => {
+      // AND group: all must be true
+      if (andPredicates.length && !andPredicates.every((fn) => fn(row))) {
+        return false;
+      }
+
+      // OR group: if present, at least one must be true
+      if (orPredicates.length && !orPredicates.some((fn) => fn(row))) {
+        return false;
+      }
+
+      // NOT group: all must (already negated) be true
+      if (notPredicates.length && !notPredicates.every((fn) => fn(row))) {
+        return false;
+      }
+
+      return true;
+    };
+  }
+
+  return { where, postFilter };
 }
 
-// Environment with note/file/formula/global functions later
-type EvalEnv = {
-  note: Record<string, any>;
-  file: {
-    path: string;
-    ext: string;
-    name: string;
-    folder: string;
-  };
-  formula: Record<string, any>;
-  globals: Record<string, (...args: any[]) => any>;
+/**
+ * Compiles an expression AST node into a Prisma where clause for database queries.
+ * Handles binary comparisons, folder checks, and property existence checks.
+ * Returns null if the expression is too complex for Prisma and needs JS post-filtering.
+ */
+function compileExpressionToPrisma(
+  node: ExprNode,
+  rootDir?: string,
+): Prisma.BlobWhereInput | null {
+  // 1) Binary comparison on simple property
+  if (
+    node.type === "BinaryExpression" &&
+    ["==", "!=", ">", "<", ">=", "<="].includes(node.operator)
+  ) {
+    // left must be property
+    const propertyInfo = resolveProperty(node.left);
+    if (!propertyInfo) return null;
+
+    console.log({ propertyInfo });
+
+    // TODO value can be literal or math or function
+    const literal =
+      node.right.type === "Literal" ? node.right.value : undefined;
+    if (literal === undefined) return null;
+
+    const prismaWhere = buildPrismaComparison(
+      propertyInfo,
+      node.operator,
+      literal,
+      rootDir,
+    );
+    // If buildPrismaComparison returns null, it means this needs JS post-filter
+    if (prismaWhere === null) return null;
+
+    return prismaWhere;
+  }
+
+  // 2) file.inFolder("Something")
+  if (
+    node.type === "CallExpression" &&
+    isMember(node.callee, "file", "inFolder") &&
+    node.args.length === 1 &&
+    node.args[0]!.type === "Literal" &&
+    typeof node.args[0]!.value === "string"
+  ) {
+    let folder = node.args[0]!.value;
+
+    // Strip rootDir prefix if it exists
+    // This handles cases where the site has a rootDir set (e.g., "Public")
+    // and files are indexed without that prefix in the database
+    if (rootDir && folder.startsWith(rootDir)) {
+      // Remove the rootDir prefix, handling both "Public/Something" and "Public"
+      folder = folder.slice(rootDir.length);
+      // Remove leading slash if present after stripping
+      if (folder.startsWith("/")) {
+        folder = folder.slice(1);
+      }
+      // If folder is now empty (was just the rootDir), match all files
+      if (folder === "") {
+        // Return a condition that matches all paths (no filter)
+        return {};
+      }
+    }
+
+    return {
+      path: {
+        startsWith: folder.endsWith("/") ? folder : folder + "/",
+      },
+    };
+  }
+
+  // 3) file.hasProperty("propertyName")
+  if (
+    node.type === "CallExpression" &&
+    isMember(node.callee, "file", "hasProperty") &&
+    node.args.length === 1 &&
+    node.args[0]!.type === "Literal" &&
+    typeof node.args[0]!.value === "string"
+  ) {
+    const propertyName = node.args[0]!.value;
+    // Check if the property exists in metadata JSON column
+    // Using path_exists which checks if a JSON path exists
+    return {
+      metadata: {
+        path: [propertyName],
+        not: Prisma.JsonNull,
+      },
+    };
+  }
+
+  // 4) file.ext == "md" pattern is covered by #1 + resolveProperty mapping
+
+  // anything else → too complex for Prisma
+  return null;
+}
+
+type PropertyInfo =
+  | { kind: "file"; name: keyof Prisma.BlobWhereInput; computed?: boolean } // path, extension, folder, name...
+  | { kind: "note"; name: string }; // note frontmatter field
+
+/**
+ * Resolves an expression node to field information, determining if it's a note or file property,
+ * the property to use, and whether it's a computed value.
+ */
+function resolveProperty(node: ExprNode): PropertyInfo | null {
+  // price  -> metadata.price
+  if (node.type === "Identifier") {
+    return { kind: "note", name: node.name };
+  }
+
+  if (node.type === "MemberExpression") {
+    const obj = node.object;
+    const prop = node.property;
+
+    if (obj.type === "Identifier" && obj.name === "note") {
+      return { kind: "note", name: prop };
+    }
+
+    if (obj.type === "Identifier" && obj.name === "file") {
+      switch (prop) {
+        case "ext":
+          return { kind: "file", name: "extension" };
+        case "path":
+          return { kind: "file", name: "path" };
+        case "size":
+          return { kind: "file", name: "size" };
+        case "folder":
+          // folder is computed from path, so we'll handle it in post-filter
+          // but we can still support it for startsWith queries
+          return { kind: "file", name: "folder", computed: true };
+        case "name":
+          // name is computed from path, so we'll handle it in post-filter
+          return { kind: "file", name: "name", computed: true };
+      }
+    }
+  }
+
+  // TODO add support for formula properties
+
+  return null;
+}
+
+/**
+ * Builds a Prisma where clause for a comparison operation on a specific field.
+ * Handles scalar fields, JSON fields, and computed fields differently.
+ * Returns null for computed fields that require JS post-filtering.
+ */
+function buildPrismaComparison(
+  property: PropertyInfo,
+  op: BinaryExpressionNode["operator"],
+  value: unknown,
+  rootDir?: string,
+): Prisma.BlobWhereInput | null {
+  if (property.kind === "file") {
+    if (property.computed) {
+      // Computed fields like file.folder or file.name need to be handled in post-filter
+      // We can't efficiently query them in Prisma since they're derived from path
+      // Return null to indicate this should be handled in JS post-filter
+      return null;
+    }
+
+    // For file.path comparisons, adjust the value if rootDir is set
+    // This handles cases where the site has a rootDir (e.g., "Public")
+    // and files are indexed without that prefix in the database
+    let adjustedValue = value;
+    if (property.name === "path" && rootDir && typeof value === "string") {
+      // Strip rootDir prefix if it exists in the comparison value
+      if (value.startsWith(rootDir)) {
+        adjustedValue = value.slice(rootDir.length);
+        // Remove leading slash if present after stripping
+        if (
+          typeof adjustedValue === "string" &&
+          adjustedValue.startsWith("/")
+        ) {
+          adjustedValue = adjustedValue.slice(1);
+        }
+      }
+    }
+
+    const cond: any = {};
+    switch (op) {
+      case "==":
+        cond[property.name] = adjustedValue;
+        break;
+      case "!=":
+        cond[property.name] = { not: adjustedValue };
+        break;
+      case ">":
+        cond[property.name] = { gt: adjustedValue };
+        break;
+      case "<":
+        cond[property.name] = { lt: adjustedValue };
+        break;
+      case ">=":
+        cond[property.name] = { gte: adjustedValue };
+        break;
+      case "<=":
+        cond[property.name] = { lte: adjustedValue };
+        break;
+    }
+    return cond;
+  }
+
+  if (property.kind === "note") {
+    const jsonValue = value as Prisma.InputJsonValue;
+    const base: any = { path: [property.name] };
+
+    switch (op) {
+      case "==":
+        base.equals = jsonValue;
+        break;
+      case "!=":
+        // NOT is separate
+        return {
+          NOT: {
+            metadata: { path: [property.name], equals: jsonValue },
+          },
+        };
+      case ">":
+        base.gt = jsonValue;
+        break;
+      case "<":
+        base.lt = jsonValue;
+        break;
+      case ">=":
+        base.gte = jsonValue;
+        break;
+      case "<=":
+        base.lte = jsonValue;
+        break;
+    }
+
+    return { metadata: base };
+  }
+
+  return {};
+}
+
+/**
+ * Checks if an expression node is a member access expression matching a specific object and property.
+ * Used to identify patterns like `file.inFolder` or `file.hasProperty`.
+ */
+function isMember(node: ExprNode, objName: string, prop: string): boolean {
+  return (
+    node.type === "MemberExpression" &&
+    node.object.type === "Identifier" &&
+    node.object.name === objName &&
+    node.property === prop
+  );
+}
+
+// Global functions that are shared across all evaluations
+// These are computed once and reused for all rows
+const GLOBAL_FUNCTIONS: Record<string, (...args: any[]) => any> = {
+  today: () => new Date(new Date().toDateString()),
+  now: () => new Date(),
+  number: (x: any) => Number(x),
+  escapeHTML: (html: string) => {
+    if (typeof html !== "string") return String(html);
+    return html
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  },
+  date: (dateString: string) => {
+    // Parse date string in format YYYY-MM-DD HH:mm:ss
+    // Also support YYYY-MM-DD format
+    const parsed = new Date(dateString);
+    if (isNaN(parsed.getTime())) {
+      throw new Error(`Invalid date string: ${dateString}`);
+    }
+    return parsed;
+  },
+  html: (htmlString: string) => {
+    // Return a special object that marks this as raw HTML
+    // This can be recognized when rendering the output
+    return { __html: htmlString, __type: "html" };
+  },
+  min: (...values: number[]) => {
+    if (values.length === 0) return undefined;
+    return Math.min(...values);
+  },
+  max: (...values: number[]) => {
+    if (values.length === 0) return undefined;
+    return Math.max(...values);
+  },
+  list: (element: any) => {
+    // If already a list/array, return it unmodified
+    if (Array.isArray(element)) return element;
+    // Otherwise wrap in an array
+    return [element];
+  },
+  icon: (name: string) => {
+    // Return a special object that marks this as an icon
+    // The icon name should match a Lucide icon
+    return { __icon: name, __type: "icon" };
+  },
+  image: (path: string | any) => {
+    // Return a special object that marks this as an image
+    // Can accept a path string, file object, or URL
+    const imagePath =
+      typeof path === "string" ? path : path?.path || String(path);
+    return { __image: imagePath, __type: "image" };
+  },
+  if: (condition: any, trueResult: any, falseResult?: any) => {
+    // Return trueResult if condition is truthy, otherwise falseResult (default null)
+    return condition
+      ? trueResult
+      : falseResult !== undefined
+        ? falseResult
+        : null;
+  },
 };
 
-function makeEnv(row: Blob, rootDir?: string): EvalEnv {
+/**
+ * Computes file properties from a row
+ */
+function getFileProperty(row: Blob, property: string, rootDir?: string): any {
   let path = row.path;
 
   // Add rootDir prefix back if it was stripped during indexing
@@ -603,92 +738,31 @@ function makeEnv(row: Blob, rootDir?: string): EvalEnv {
   }
 
   const segments = path.split("/");
-  const fileName = segments[segments.length - 1] || "";
-  const ext = fileName.includes(".") ? fileName.split(".").pop()! : "";
-  const folder = segments.slice(0, -1).join("/");
+  const fileNameWithExt = segments[segments.length - 1] || "";
+  const [fileName, ext] = fileNameWithExt.split(".");
 
-  return {
-    note: row.metadata as PageMetadata,
-    file: {
-      path,
-      ext,
-      name: fileName,
-      folder,
-      // backlinks,
-      // ctime,
-      // embeds,
-      // file,
-      // links,
-      // mtime,
-      // properties,
-      // size,
-      // tags
-    },
-    formula: {}, // later: fill after formula pass
-    globals: {
-      today: () => new Date(new Date().toDateString()),
-      now: () => new Date(),
-      number: (x: any) => Number(x),
-      escapeHTML: (html: string) => {
-        if (typeof html !== "string") return String(html);
-        return html
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
-      },
-      date: (dateString: string) => {
-        // Parse date string in format YYYY-MM-DD HH:mm:ss
-        // Also support YYYY-MM-DD format
-        const parsed = new Date(dateString);
-        if (isNaN(parsed.getTime())) {
-          throw new Error(`Invalid date string: ${dateString}`);
+  switch (property) {
+    case "path":
+      return path;
+    case "ext": {
+      return ext;
+    }
+    case "name":
+      return fileName;
+    case "folder": {
+      let folder = segments.slice(0, -1).join("/");
+      // Strip rootDir prefix from folder to match how filters are written
+      if (rootDir && folder.startsWith(rootDir)) {
+        folder = folder.slice(rootDir.length);
+        if (folder.startsWith("/")) {
+          folder = folder.slice(1);
         }
-        return parsed;
-      },
-      html: (htmlString: string) => {
-        // Return a special object that marks this as raw HTML
-        // This can be recognized when rendering the output
-        return { __html: htmlString, __type: "html" };
-      },
-      min: (...values: number[]) => {
-        if (values.length === 0) return undefined;
-        return Math.min(...values);
-      },
-      max: (...values: number[]) => {
-        if (values.length === 0) return undefined;
-        return Math.max(...values);
-      },
-      list: (element: any) => {
-        // If already a list/array, return it unmodified
-        if (Array.isArray(element)) return element;
-        // Otherwise wrap in an array
-        return [element];
-      },
-      icon: (name: string) => {
-        // Return a special object that marks this as an icon
-        // The icon name should match a Lucide icon
-        return { __icon: name, __type: "icon" };
-      },
-      image: (path: string | any) => {
-        // Return a special object that marks this as an image
-        // Can accept a path string, file object, or URL
-        const imagePath =
-          typeof path === "string" ? path : path?.path || String(path);
-        return { __image: imagePath, __type: "image" };
-      },
-      if: (condition: any, trueResult: any, falseResult?: any) => {
-        // Return trueResult if condition is truthy, otherwise falseResult (default null)
-        return condition
-          ? trueResult
-          : falseResult !== undefined
-            ? falseResult
-            : null;
-      },
-      // etc.
-    },
-  };
+      }
+      return folder;
+    }
+    default:
+      return undefined;
+  }
 }
 
 /**
@@ -958,32 +1032,41 @@ function resolveMemberAccess(obj: any, property: string): any {
   return obj?.[property];
 }
 
-function evalExpr(node: ExprNode, env: EvalEnv): any {
+/**
+ * Evaluates an expression AST node with lazy property access.
+ * Properties are only computed when actually needed during evaluation.
+ * Handles literals, identifiers, member access, unary/binary/logical operations, and function calls.
+ */
+function evalExpr(node: ExprNode, row: Blob, rootDir?: string): any {
   switch (node.type) {
     case "Literal":
       return node.value;
 
     case "Identifier":
       // bare identifier → note property if present, else global function
-      if (node.name === "file") return env.file;
-      if (node.name in env.globals) return env.globals[node.name];
-      return env.note[node.name];
+      if (node.name === "file") {
+        return new Proxy({} as any, {
+          get: (_target, prop: string) => getFileProperty(row, prop, rootDir),
+        });
+      }
+      if (node.name in GLOBAL_FUNCTIONS) return GLOBAL_FUNCTIONS[node.name];
+      return (row.metadata as PageMetadata)[node.name];
 
     case "MemberExpression": {
-      const obj = evalExpr(node.object, env);
+      const obj = evalExpr(node.object, row, rootDir);
       return resolveMemberAccess(obj, node.property);
     }
 
     case "UnaryExpression": {
-      const v = evalExpr(node.argument, env);
+      const v = evalExpr(node.argument, row, rootDir);
       if (node.operator === "!") return !v;
       if (node.operator === "-") return -Number(v);
       throw new Error("Unsupported unary operator");
     }
 
     case "BinaryExpression": {
-      const l = evalExpr(node.left, env);
-      const r = evalExpr(node.right, env);
+      const l = evalExpr(node.left, row, rootDir);
+      const r = evalExpr(node.right, row, rootDir);
 
       switch (node.operator) {
         case "==":
@@ -1013,19 +1096,19 @@ function evalExpr(node: ExprNode, env: EvalEnv): any {
 
     case "LogicalExpression": {
       if (node.operator === "&&") {
-        const left = evalExpr(node.left, env);
-        return left && evalExpr(node.right, env);
+        const left = evalExpr(node.left, row, rootDir);
+        return left && evalExpr(node.right, row, rootDir);
       }
       if (node.operator === "||") {
-        const left = evalExpr(node.left, env);
-        return left || evalExpr(node.right, env);
+        const left = evalExpr(node.left, row, rootDir);
+        return left || evalExpr(node.right, row, rootDir);
       }
       throw new Error("Unsupported logical operator");
     }
 
     case "CallExpression": {
-      const callee = evalExpr(node.callee, env);
-      const args = node.args.map((a) => evalExpr(a, env));
+      const callee = evalExpr(node.callee, row, rootDir);
+      const args = node.args.map((a) => evalExpr(a, row, rootDir));
       if (typeof callee === "function") {
         return callee(...args);
       }
@@ -1037,66 +1120,100 @@ function evalExpr(node: ExprNode, env: EvalEnv): any {
 }
 
 /**
- * Remark plugin to transform code blocks with language "base"
- * to support Obsidian Bases queries.
- *
- * This plugin:
- * - Finds code nodes with lang="base"
- * - Extracts the YAML query from the code content
- * - Executes the query against the database
- * - Replaces the code block with an HTML node containing the query result
+ * Creates an MDX JSX element node for rendering Obsidian Bases views.
+ * Transforms query results into the format expected by the ObsidianBasesViews component.
  */
-const remarkObsidianBases: Plugin<[Options?], Root> = (options = {}) => {
-  const { siteId, sitePrefix, customDomain, rootDir } = options;
+async function createViewsNode(
+  viewResults: any[][],
+  views: Array<{
+    type: string;
+    name: string;
+    order?: string[];
+    [key: string]: any;
+  }>,
+  sitePrefix?: string,
+  customDomain?: string,
+  siteId?: string,
+): Promise<MdxJsxFlowElement> {
+  // If no views specified, default to table view
+  if (views.length === 0) {
+    views = [{ type: "table", name: "Table", order: ["file.name"] }];
+  }
 
-  return async (tree) => {
-    const nodesToTransform: Array<{
-      node: Code;
-      index: number;
-      parent: any;
-    }> = [];
+  // Transform each view's results into the expected format
+  const viewData = viewResults.map((results, index) => {
+    const view = views[index];
+    const columns = view?.order ?? ["file.name"];
 
-    // First pass: collect all code nodes with lang="base"
-    visit(tree, "code", (node: Code, index, parent) => {
-      if (node.lang === "base" && parent && typeof index === "number") {
-        nodesToTransform.push({
-          node,
-          index,
-          parent,
-        });
-      }
-    });
+    const rows = results.map((result) => ({
+      path: result.path,
+      appPath: result.appPath,
+      metadata: result.metadata as Record<string, any>,
+    }));
 
-    // Second pass: transform all collected nodes
-    for (const { node, index, parent } of nodesToTransform) {
-      try {
-        // Extract the YAML query from the code block
-        const queryContent = node.value;
-
-        // Execute the query
-        const resultNode = await resolveBaseQuery(
-          queryContent,
-          siteId,
-          sitePrefix,
-          customDomain,
-          rootDir,
-        );
-
-        parent.children[index] = resultNode;
-      } catch (error) {
-        console.error("Error processing base query:", error);
-
-        // On error, replace with an error message
-        const errorNode = {
-          type: "html",
-          value: `<div class="obsidian-base-error">Error processing base query: ${error instanceof Error ? error.message : "Unknown error"}</div>`,
+    // Calculate summaries if specified
+    let summaries:
+      | Record<string, { value: number | string | null; function: string }>
+      | undefined;
+    if (view?.summaries && Object.keys(view.summaries).length > 0) {
+      summaries = {};
+      for (const [column, summaryFunction] of Object.entries(view.summaries)) {
+        summaries[column] = {
+          value: calculateSummary(rows, column, summaryFunction as string),
+          function: summaryFunction as string,
         };
-
-        parent.children[index] = errorNode;
       }
     }
+
+    return {
+      view,
+      columns,
+      rows,
+      summaries,
+    };
+  });
+
+  // Fetch all blob paths for the site
+  let allSitePaths: string[] = [];
+  if (siteId) {
+    const blobs = await prisma.blob.findMany({
+      where: { siteId },
+      select: { path: true },
+    });
+    allSitePaths = blobs.map((blob) => blob.path);
+  }
+
+  // Pass JSON strings as props and parse inside the component
+  const attrs: MdxJsxAttribute[] = [
+    {
+      type: "mdxJsxAttribute",
+      name: "viewData",
+      value: JSON.stringify(viewData),
+    },
+    {
+      type: "mdxJsxAttribute",
+      name: "sitePrefix",
+      value: sitePrefix || "",
+    },
+    {
+      type: "mdxJsxAttribute",
+      name: "customDomain",
+      value: customDomain || "",
+    },
+    {
+      type: "mdxJsxAttribute",
+      name: "allSitePaths",
+      value: JSON.stringify(allSitePaths),
+    },
+  ];
+
+  return {
+    type: "mdxJsxFlowElement",
+    name: "ObsidianBasesViews",
+    attributes: attrs,
+    children: [],
   };
-};
+}
 
 /**
  * Calculate summary for a column based on the summary function name
@@ -1197,98 +1314,6 @@ function calculateSummary(
     default:
       return null;
   }
-}
-
-async function createViewsNode(
-  viewResults: any[][],
-  views: Array<{
-    type: string;
-    name: string;
-    order?: string[];
-    [key: string]: any;
-  }>,
-  sitePrefix?: string,
-  customDomain?: string,
-  siteId?: string,
-): Promise<MdxJsxFlowElement> {
-  // If no views specified, default to table view
-  if (views.length === 0) {
-    views = [{ type: "table", name: "Table", order: ["file.name"] }];
-  }
-
-  // Transform each view's results into the expected format
-  const viewData = viewResults.map((results, index) => {
-    const view = views[index];
-    const columns = view?.order ?? ["file.name"];
-
-    const rows = results.map((result) => ({
-      path: result.path,
-      appPath: result.appPath,
-      metadata: result.metadata as Record<string, any>,
-    }));
-
-    // Calculate summaries if specified
-    let summaries:
-      | Record<string, { value: number | string | null; function: string }>
-      | undefined;
-    if (view?.summaries && Object.keys(view.summaries).length > 0) {
-      summaries = {};
-      for (const [column, summaryFunction] of Object.entries(view.summaries)) {
-        summaries[column] = {
-          value: calculateSummary(rows, column, summaryFunction as string),
-          function: summaryFunction as string,
-        };
-      }
-    }
-
-    return {
-      view,
-      columns,
-      rows,
-      summaries,
-    };
-  });
-
-  // Fetch all blob paths for the site
-  let allSitePaths: string[] = [];
-  if (siteId) {
-    const blobs = await prisma.blob.findMany({
-      where: { siteId },
-      select: { path: true },
-    });
-    allSitePaths = blobs.map((blob) => blob.path);
-  }
-
-  // Pass JSON strings as props and parse inside the component
-  const attrs: MdxJsxAttribute[] = [
-    {
-      type: "mdxJsxAttribute",
-      name: "viewData",
-      value: JSON.stringify(viewData),
-    },
-    {
-      type: "mdxJsxAttribute",
-      name: "sitePrefix",
-      value: sitePrefix || "",
-    },
-    {
-      type: "mdxJsxAttribute",
-      name: "customDomain",
-      value: customDomain || "",
-    },
-    {
-      type: "mdxJsxAttribute",
-      name: "allSitePaths",
-      value: JSON.stringify(allSitePaths),
-    },
-  ];
-
-  return {
-    type: "mdxJsxFlowElement",
-    name: "ObsidianBasesViews",
-    attributes: attrs,
-    children: [],
-  };
 }
 
 export default remarkObsidianBases;
