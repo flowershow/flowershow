@@ -38,7 +38,7 @@
     "@next/third-parties": "15.5.6",
     "@prisma/client": "5.5.2",
     "@r4ai/remark-callout": "^0.6.2",
-    "@sentry/nextjs": "^10.21.0",
+    "@sentry/nextjs": "^10.27.0",
     "@stripe/react-stripe-js": "^3.1.1",
     "@stripe/stripe-js": "^5.5.0",
     "@t3-oss/env-nextjs": "^0.13.8",
