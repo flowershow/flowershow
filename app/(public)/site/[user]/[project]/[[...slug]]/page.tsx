@@ -226,6 +226,7 @@ export default async function SitePage(props: {
           sitePrefix,
           customDomain: site.customDomain ?? undefined,
           siteId: site.id,
+          rootDir: site.rootDir ?? undefined,
         });
         compiledContent = <div dangerouslySetInnerHTML={{ __html: html }} />;
       } else {
@@ -241,6 +242,7 @@ export default async function SitePage(props: {
           sitePrefix,
           customDomain: site.customDomain ?? undefined,
           siteId: site.id,
+          rootDir: site.rootDir ?? undefined,
         }) as any;
 
         const { content, error } = await evaluate({

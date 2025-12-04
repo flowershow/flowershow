@@ -13,6 +13,7 @@ interface Options {
   sitePrefix?: string;
   customDomain?: string;
   siteId?: string;
+  rootDir?: string;
 }
 
 // Recursive filter type: can be a string or an object with and/or/not
@@ -59,6 +60,7 @@ interface BaseQuery {
 
 function compileExpressionToPrisma(
   ast: ExprNode,
+  rootDir?: string,
 ): Prisma.BlobWhereInput | null {
   // 1) Binary comparison on simple property
   if (
@@ -72,7 +74,11 @@ function compileExpressionToPrisma(
     const literal = ast.right.type === "Literal" ? ast.right.value : undefined;
     if (literal === undefined) return null;
 
-    return buildPrismaComparison(fieldInfo, ast.operator, literal);
+    const prismaWhere = buildPrismaComparison(fieldInfo, ast.operator, literal);
+    // If buildPrismaComparison returns null, it means this needs JS post-filter
+    if (prismaWhere === null) return null;
+
+    return prismaWhere;
   }
 
   // 2) file.inFolder("Something")
@@ -83,7 +89,25 @@ function compileExpressionToPrisma(
     ast.args[0]!.type === "Literal" &&
     typeof ast.args[0]!.value === "string"
   ) {
-    const folder = ast.args[0]!.value;
+    let folder = ast.args[0]!.value;
+
+    // Strip rootDir prefix if it exists
+    // This handles cases where the site has a rootDir set (e.g., "Public")
+    // and files are indexed without that prefix in the database
+    if (rootDir && folder.startsWith(rootDir)) {
+      // Remove the rootDir prefix, handling both "Public/Something" and "Public"
+      folder = folder.slice(rootDir.length);
+      // Remove leading slash if present after stripping
+      if (folder.startsWith("/")) {
+        folder = folder.slice(1);
+      }
+      // If folder is now empty (was just the rootDir), match all files
+      if (folder === "") {
+        // Return a condition that matches all paths (no filter)
+        return {};
+      }
+    }
+
     return {
       path: {
         startsWith: folder.endsWith("/") ? folder : folder + "/",
@@ -118,7 +142,8 @@ function compileExpressionToPrisma(
 
 type FieldInfo =
   | { kind: "scalar"; field: keyof Prisma.BlobWhereInput } // path, extension, siteId...
-  | { kind: "json"; path: string[] }; // metadata, formula, etc.
+  | { kind: "json"; path: string[] } // metadata, formula, etc.
+  | { kind: "computed"; field: "folder" | "name" }; // computed from path
 
 function resolveProperty(node: ExprNode): FieldInfo | null {
   // price  -> metadata.price
@@ -144,7 +169,13 @@ function resolveProperty(node: ExprNode): FieldInfo | null {
           return { kind: "scalar", field: "extension" };
         case "path":
           return { kind: "scalar", field: "path" };
-        // later: folder/name via computed or persisted columns
+        case "folder":
+          // folder is computed from path, so we'll handle it in post-filter
+          // but we can still support it for startsWith queries
+          return { kind: "computed", field: "folder" };
+        case "name":
+          // name is computed from path, so we'll handle it in post-filter
+          return { kind: "computed", field: "name" };
       }
     }
   }
@@ -156,7 +187,7 @@ function buildPrismaComparison(
   field: FieldInfo,
   op: BinaryExpressionNode["operator"],
   value: unknown,
-): Prisma.BlobWhereInput {
+): Prisma.BlobWhereInput | null {
   if (field.kind === "scalar") {
     const cond: any = {};
     switch (op) {
@@ -214,6 +245,13 @@ function buildPrismaComparison(
     return { metadata: base };
   }
 
+  if (field.kind === "computed") {
+    // Computed fields like folder and name need to be handled in post-filter
+    // We can't efficiently query them in Prisma since they're derived from path
+    // Return null to indicate this should be handled in JS post-filter
+    return null;
+  }
+
   return {};
 }
 
@@ -229,7 +267,10 @@ function isMember(node: ExprNode, objName: string, prop: string): boolean {
 /**
  * Recursively builds Prisma where clause from nested Obsidian Bases filters
  */
-export function buildPrismaWhereClause(filters: FilterValue | undefined): {
+export function buildPrismaWhereClause(
+  filters: FilterValue | undefined,
+  rootDir?: string,
+): {
   where: Prisma.BlobWhereInput;
   postFilter?: (row: any) => boolean;
 } {
@@ -237,7 +278,7 @@ export function buildPrismaWhereClause(filters: FilterValue | undefined): {
 
   if (typeof filters === "string") {
     const ast = parseExpression(filters);
-    const where = compileExpressionToPrisma(ast);
+    const where = compileExpressionToPrisma(ast, rootDir);
 
     if (where) {
       return { where };
@@ -270,7 +311,7 @@ export function buildPrismaWhereClause(filters: FilterValue | undefined): {
     if (!children) return;
 
     for (const child of children) {
-      const { where, postFilter } = buildPrismaWhereClause(child);
+      const { where, postFilter } = buildPrismaWhereClause(child, rootDir);
 
       if (Object.keys(where).length > 0) {
         targetWheres.push(where);
@@ -363,12 +404,15 @@ async function executeBaseQueryForView(
   parsedQuery: BaseQuery,
   siteId?: string,
   view?: BaseView,
+  rootDir?: string,
 ): Promise<any[]> {
   // Combine global filters with view-specific filters
   const combinedFilters = combineFilters(parsedQuery.filters, view?.filters);
 
-  const { where: whereClause, postFilter } =
-    buildPrismaWhereClause(combinedFilters);
+  const { where: whereClause, postFilter } = buildPrismaWhereClause(
+    combinedFilters,
+    rootDir,
+  );
 
   const finalWhere: Prisma.BlobWhereInput = siteId
     ? { AND: [whereClause, { siteId }] }
@@ -469,6 +513,9 @@ async function executeBaseQueryForView(
  *
  * @param query - The YAML query string
  * @param siteId - Optional site ID to filter results
+ * @param sitePrefix - Optional site prefix for URL generation
+ * @param customDomain - Optional custom domain for URL generation
+ * @param rootDir - Optional root directory that was stripped from file paths
  * @returns A promise that resolves to formatted HTML results
  */
 async function resolveBaseQuery(
@@ -476,6 +523,7 @@ async function resolveBaseQuery(
   siteId?: string,
   sitePrefix?: string,
   customDomain?: string,
+  rootDir?: string,
 ): Promise<any> {
   try {
     // Parse the YAML query
@@ -483,7 +531,12 @@ async function resolveBaseQuery(
 
     // If no views specified, execute once with global filters only
     if (!parsedQuery.views || parsedQuery.views.length === 0) {
-      const results = await executeBaseQueryForView(parsedQuery, siteId);
+      const results = await executeBaseQueryForView(
+        parsedQuery,
+        siteId,
+        undefined,
+        rootDir,
+      );
       return await createViewsNode(
         [results],
         [],
@@ -496,7 +549,7 @@ async function resolveBaseQuery(
     // Execute the query separately for each view
     const viewResults = await Promise.all(
       parsedQuery.views.map((view) =>
-        executeBaseQueryForView(parsedQuery, siteId, view),
+        executeBaseQueryForView(parsedQuery, siteId, view, rootDir),
       ),
     );
 
@@ -516,9 +569,9 @@ async function resolveBaseQuery(
   }
 }
 
-function compileExpressionToJsEvaluator(ast: ExprNode) {
+function compileExpressionToJsEvaluator(ast: ExprNode, rootDir?: string) {
   return (row: Blob) => {
-    const env = makeEnv(row);
+    const env = makeEnv(row, rootDir);
     try {
       const value = evalExpr(ast, env);
       return !!value;
@@ -541,8 +594,14 @@ type EvalEnv = {
   globals: Record<string, (...args: any[]) => any>;
 };
 
-function makeEnv(row: Blob): EvalEnv {
-  const path = row.path;
+function makeEnv(row: Blob, rootDir?: string): EvalEnv {
+  let path = row.path;
+
+  // Add rootDir prefix back if it was stripped during indexing
+  if (rootDir && !path.startsWith(rootDir)) {
+    path = rootDir + (path.startsWith("/") ? "" : "/") + path;
+  }
+
   const segments = path.split("/");
   const fileName = segments[segments.length - 1] || "";
   const ext = fileName.includes(".") ? fileName.split(".").pop()! : "";
@@ -988,7 +1047,7 @@ function evalExpr(node: ExprNode, env: EvalEnv): any {
  * - Replaces the code block with an HTML node containing the query result
  */
 const remarkObsidianBases: Plugin<[Options?], Root> = (options = {}) => {
-  const { siteId, sitePrefix, customDomain } = options;
+  const { siteId, sitePrefix, customDomain, rootDir } = options;
 
   return async (tree) => {
     const nodesToTransform: Array<{
@@ -1020,6 +1079,7 @@ const remarkObsidianBases: Plugin<[Options?], Root> = (options = {}) => {
           siteId,
           sitePrefix,
           customDomain,
+          rootDir,
         );
 
         parent.children[index] = resultNode;

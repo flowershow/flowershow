@@ -37,6 +37,7 @@ interface MarkdownOptions {
   parseFrontmatter?: boolean;
   customDomain?: string;
   siteId?: string;
+  rootDir?: string;
 }
 
 // Process pure markdown files using unified
@@ -125,6 +126,7 @@ export const getMdxOptions = ({
   parseFrontmatter = true,
   customDomain,
   siteId,
+  rootDir,
 }: {
   filePath: string;
   files: string[];
@@ -132,6 +134,7 @@ export const getMdxOptions = ({
   parseFrontmatter?: boolean;
   customDomain?: string;
   siteId?: string;
+  rootDir?: string;
 }): EvaluateOptions => {
   return {
     parseFrontmatter,
@@ -163,7 +166,7 @@ export const getMdxOptions = ({
         ],
         [mdxMermaid, {}],
         remarkMark,
-        [remarkObsidianBases, { sitePrefix, customDomain, siteId }],
+        [remarkObsidianBases, { sitePrefix, customDomain, siteId, rootDir }],
       ],
       rehypePlugins: [
         [rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain }],
