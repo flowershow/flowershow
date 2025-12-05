@@ -53,6 +53,11 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
       const pathParts = row.path.split("/");
       return pathParts[pathParts.length - 1]?.replace(/\.(md|mdx)$/, "") || "";
     }
+    // Check if this is a formula property
+    if (field.startsWith("formula.")) {
+      const formulaName = field.substring(8); // Remove "formula." prefix
+      return row.metadata?.__formulas?.[formulaName];
+    }
     return row.metadata?.[field];
   };
 

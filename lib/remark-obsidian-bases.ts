@@ -114,6 +114,7 @@ export type BaseView = BaseTableView | BaseCardsView | BaseListView;
 
 interface BaseQuery {
   filters?: FilterValue;
+  formulas?: Record<string, string>;
   views: Array<BaseView>;
 }
 
@@ -166,8 +167,8 @@ async function resolveBaseQuery(
  */
 async function executeBaseQueryForView(
   parsedQuery: BaseQuery,
-  siteId?: string,
-  view?: BaseView,
+  siteId: string,
+  view: BaseView,
   rootDir?: string,
 ): Promise<any[]> {
   // Combine global filters with view-specific filters
@@ -191,9 +192,12 @@ async function executeBaseQueryForView(
     return [];
   }
 
-  const { where: whereClause, postFilter } = buildPrismaWhereClause(
+  const formulas = parsedQuery.formulas;
+
+  const { where: whereClause, postFilter } = buildFilterStrategy(
     combinedFilters,
     rootDir,
+    formulas,
   );
 
   const finalWhere: Prisma.BlobWhereInput = { AND: [whereClause, { siteId }] };
@@ -203,29 +207,27 @@ async function executeBaseQueryForView(
   const metadataSort: Array<{ property: string; direction: "asc" | "desc" }> =
     [];
 
-  if (view) {
-    // Handle new sort format
-    if (view.sort && view.sort.length > 0) {
-      for (const sortItem of view.sort) {
-        const direction = sortItem.direction.toLowerCase() as "asc" | "desc";
+  // Handle new sort format
+  if (view.sort && view.sort.length > 0) {
+    for (const sortItem of view.sort) {
+      const direction = sortItem.direction.toLowerCase() as "asc" | "desc";
 
-        if (sortItem.property === "file.name") {
-          orderBy.push({ path: direction });
-        } else {
-          // Store metadata sorts for in-memory sorting
-          metadataSort.push({ property: sortItem.property, direction });
-        }
+      if (sortItem.property === "file.name") {
+        orderBy.push({ path: direction });
+      } else {
+        // Store metadata sorts for in-memory sorting
+        metadataSort.push({ property: sortItem.property, direction });
       }
     }
-    // Fallback to legacy order format
-    else if (view.order && view.order.length > 0) {
-      for (const col of view.order) {
-        if (col === "file.name") {
-          orderBy.push({ path: "asc" });
-        } else {
-          // Store metadata sorts for in-memory sorting
-          metadataSort.push({ property: col, direction: "asc" });
-        }
+  }
+  // Fallback to legacy order format
+  else if (view.order && view.order.length > 0) {
+    for (const col of view.order) {
+      if (col === "file.name") {
+        orderBy.push({ path: "asc" });
+      } else {
+        // Store metadata sorts for in-memory sorting
+        metadataSort.push({ property: col, direction: "asc" });
       }
     }
   }
@@ -241,7 +243,37 @@ async function executeBaseQueryForView(
     },
   });
 
+  // Compute formula values for each row if formulas are defined
+  // This MUST happen before post-filtering so formulas can be used in filters
+  if (formulas && Object.keys(formulas).length > 0) {
+    results = results.map((row) => {
+      const computedFormulas: Record<string, any> = {};
+
+      // Compute all formulas for this row
+      for (const [formulaName, expression] of Object.entries(formulas)) {
+        try {
+          const ast = parseExpression(expression);
+          const value = evalExpr(ast, row as Blob, rootDir, formulas);
+          computedFormulas[formulaName] = value;
+        } catch (error) {
+          console.error(`Error computing formula ${formulaName}:`, error);
+          computedFormulas[formulaName] = null;
+        }
+      }
+
+      // Add computed formulas to metadata
+      return {
+        ...row,
+        metadata: {
+          ...(row.metadata as any),
+          __formulas: computedFormulas,
+        },
+      };
+    });
+  }
+
   // Apply JS filters if needed (this is where arithmetic, functions, etc. can live later)
+  // This happens AFTER formulas are computed so they can be used in filters
   if (postFilter) {
     results = results.filter((row) =>
       postFilter({
@@ -256,8 +288,18 @@ async function executeBaseQueryForView(
   if (metadataSort.length > 0) {
     results = results.sort((a, b) => {
       for (const sort of metadataSort) {
-        const aValue = (a.metadata as any)?.[sort.property];
-        const bValue = (b.metadata as any)?.[sort.property];
+        let aValue: any;
+        let bValue: any;
+
+        // Check if this is a formula property
+        if (sort.property.startsWith("formula.")) {
+          const formulaName = sort.property.substring(8); // Remove "formula." prefix
+          aValue = (a.metadata as any)?.__formulas?.[formulaName];
+          bValue = (b.metadata as any)?.__formulas?.[formulaName];
+        } else {
+          aValue = (a.metadata as any)?.[sort.property];
+          bValue = (b.metadata as any)?.[sort.property];
+        }
 
         // Handle null/undefined values
         if (aValue == null && bValue == null) continue;
@@ -289,22 +331,50 @@ async function executeBaseQueryForView(
 }
 
 /**
- * Recursively builds Prisma where clause from nested Obsidian Bases filters
+ * Computes formula properties for a single row with dependency resolution.
+ * Formulas can reference note properties, file properties, and other formulas.
+ * Detects and prevents circular dependencies.
  */
-export function buildPrismaWhereClause(
+export function getComputedProperty(
+  row: any,
+  formulaName: string,
+  formulas?: Record<string, string>,
+  rootDir?: string,
+): Record<string, any> {
+  if (!formulas) {
+    throw new Error(`Formula not found: ${name}`);
+  }
+  // Get formula expression
+  const expression = formulas[formulaName];
+  if (!expression) {
+    throw new Error(`Formula not found: ${name}`);
+  }
+
+  // Parse the formula expression
+  const ast = parseExpression(expression);
+
+  // Evaluate using the existing evalExpr function
+  const value = evalExpr(ast, row, rootDir, formulas);
+
+  return value;
+}
+
+/**
+ * Recursively builds a filter strategy from nested Obsidian Bases filters.
+ * Returns both a Prisma where clause for database filtering and an optional
+ * post-filter function for JavaScript-based filtering of complex expressions.
+ */
+export function buildFilterStrategy(
   filter: FilterValue,
   rootDir?: string,
+  formulas?: Record<string, string>,
 ): {
   where: Prisma.BlobWhereInput;
   postFilter?: (row: any) => boolean;
 } {
   if (typeof filter === "string") {
-    console.log({ filter });
     const ast = parseExpression(filter);
-    console.log({ ast });
-
     const where = compileExpressionToPrisma(ast, rootDir);
-    console.log({ where });
 
     if (where) {
       return { where };
@@ -312,7 +382,7 @@ export function buildPrismaWhereClause(
 
     const postFilter = (row: Blob) => {
       try {
-        const value = evalExpr(ast, row, rootDir);
+        const value = evalExpr(ast, row, rootDir, formulas);
         return !!value;
       } catch {
         return false;
@@ -346,7 +416,11 @@ export function buildPrismaWhereClause(
     if (!children) return;
 
     for (const child of children) {
-      const { where, postFilter } = buildPrismaWhereClause(child, rootDir);
+      const { where, postFilter } = buildFilterStrategy(
+        child,
+        rootDir,
+        formulas,
+      );
 
       if (Object.keys(where).length > 0) {
         targetWheres.push(where);
@@ -427,8 +501,6 @@ function compileExpressionToPrisma(
     // left must be property
     const propertyInfo = resolveProperty(node.left);
     if (!propertyInfo) return null;
-
-    console.log({ propertyInfo });
 
     // TODO value can be literal or math or function
     const literal =
@@ -528,6 +600,13 @@ function resolveProperty(node: ExprNode): PropertyInfo | null {
       return { kind: "note", name: prop };
     }
 
+    if (obj.type === "Identifier" && obj.name === "formula") {
+      // formula.propertyName -> formulas can't be used in WHERE clauses (not in DB)
+      // They can only be used in post-filters and sorting
+      // Return null to force post-filter evaluation
+      return null;
+    }
+
     if (obj.type === "Identifier" && obj.name === "file") {
       switch (prop) {
         case "ext":
@@ -546,8 +625,6 @@ function resolveProperty(node: ExprNode): PropertyInfo | null {
       }
     }
   }
-
-  // TODO add support for formula properties
 
   return null;
 }
@@ -739,7 +816,17 @@ function getFileProperty(row: Blob, property: string, rootDir?: string): any {
 
   const segments = path.split("/");
   const fileNameWithExt = segments[segments.length - 1] || "";
-  const [fileName, ext] = fileNameWithExt.split(".");
+
+  // Extract extension (everything after the last dot)
+  const lastDotIndex = fileNameWithExt.lastIndexOf(".");
+  const fileName =
+    lastDotIndex !== -1
+      ? fileNameWithExt.substring(0, lastDotIndex)
+      : fileNameWithExt;
+  const ext =
+    lastDotIndex !== -1
+      ? fileNameWithExt.substring(lastDotIndex + 1)
+      : undefined;
 
   switch (property) {
     case "path":
@@ -1037,36 +1124,49 @@ function resolveMemberAccess(obj: any, property: string): any {
  * Properties are only computed when actually needed during evaluation.
  * Handles literals, identifiers, member access, unary/binary/logical operations, and function calls.
  */
-function evalExpr(node: ExprNode, row: Blob, rootDir?: string): any {
+function evalExpr(
+  node: ExprNode,
+  row: Blob,
+  rootDir?: string,
+  formulas?: Record<string, string>,
+): any {
   switch (node.type) {
     case "Literal":
       return node.value;
 
     case "Identifier":
-      // bare identifier → note property if present, else global function
       if (node.name === "file") {
         return new Proxy({} as any, {
           get: (_target, prop: string) => getFileProperty(row, prop, rootDir),
         });
       }
+      if (node.name === "formula") {
+        return new Proxy({} as any, {
+          get: (_target, formulaName: string) =>
+            getComputedProperty(row, formulaName, formulas, rootDir),
+        });
+      }
+      if (node.name === "note") {
+        return row.metadata as PageMetadata;
+      }
       if (node.name in GLOBAL_FUNCTIONS) return GLOBAL_FUNCTIONS[node.name];
       return (row.metadata as PageMetadata)[node.name];
 
     case "MemberExpression": {
-      const obj = evalExpr(node.object, row, rootDir);
+      const obj = evalExpr(node.object, row, rootDir, formulas);
       return resolveMemberAccess(obj, node.property);
     }
 
     case "UnaryExpression": {
-      const v = evalExpr(node.argument, row, rootDir);
+      const v = evalExpr(node.argument, row, rootDir, formulas);
       if (node.operator === "!") return !v;
       if (node.operator === "-") return -Number(v);
       throw new Error("Unsupported unary operator");
     }
 
     case "BinaryExpression": {
-      const l = evalExpr(node.left, row, rootDir);
-      const r = evalExpr(node.right, row, rootDir);
+      const l = evalExpr(node.left, row, rootDir, formulas);
+      const r = evalExpr(node.right, row, rootDir, formulas);
 
       switch (node.operator) {
         case "==":
@@ -1096,19 +1196,19 @@ function evalExpr(node: ExprNode, row: Blob, rootDir?: string): any {
 
     case "LogicalExpression": {
       if (node.operator === "&&") {
-        const left = evalExpr(node.left, row, rootDir);
-        return left && evalExpr(node.right, row, rootDir);
+        const left = evalExpr(node.left, row, rootDir, formulas);
+        return left && evalExpr(node.right, row, rootDir, formulas);
       }
       if (node.operator === "||") {
-        const left = evalExpr(node.left, row, rootDir);
-        return left || evalExpr(node.right, row, rootDir);
+        const left = evalExpr(node.left, row, rootDir, formulas);
+        return left || evalExpr(node.right, row, rootDir, formulas);
       }
       throw new Error("Unsupported logical operator");
     }
 
     case "CallExpression": {
-      const callee = evalExpr(node.callee, row, rootDir);
-      const args = node.args.map((a) => evalExpr(a, row, rootDir));
+      const callee = evalExpr(node.callee, row, rootDir, formulas);
+      const args = node.args.map((a) => evalExpr(a, row, rootDir, formulas));
       if (typeof callee === "function") {
         return callee(...args);
       }

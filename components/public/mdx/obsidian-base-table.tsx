@@ -86,8 +86,14 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
       );
     }
 
-    // Get value from metadata
-    const value = row.metadata?.[col];
+    // Get value from metadata or formulas
+    let value: any;
+    if (col.startsWith("formula.")) {
+      const formulaName = col.substring(8); // Remove "formula." prefix
+      value = row.metadata?.__formulas?.[formulaName];
+    } else {
+      value = row.metadata?.[col];
+    }
 
     if (value === null || value === undefined) {
       return (
@@ -133,6 +139,14 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
 
   const getDisplayName = (col: string) => {
     if (col === "file.name") return "Name";
+    // Handle formula properties
+    if (col.startsWith("formula.")) {
+      const formulaName = col.substring(8);
+      return (
+        formulaName.charAt(0).toUpperCase() +
+        formulaName.slice(1).replace(/_/g, " ")
+      );
+    }
     // Capitalize first letter and replace underscores with spaces
     return col.charAt(0).toUpperCase() + col.slice(1).replace(/_/g, " ");
   };
@@ -174,6 +188,11 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
         return (
           pathParts[pathParts.length - 1]?.replace(/\.(md|mdx)$/, "") || ""
         );
+      }
+      // Handle formula properties
+      if (col.startsWith("formula.")) {
+        const formulaName = col.substring(8);
+        return typedRow.metadata?.__formulas?.[formulaName] ?? "";
       }
       return typedRow.metadata?.[col] ?? "";
     },

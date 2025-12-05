@@ -68,11 +68,24 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
       const pathParts = row.path.split("/");
       return pathParts[pathParts.length - 1]?.replace(/\.(md|mdx)$/, "") || "";
     }
+    // Check if this is a formula property
+    if (field.startsWith("formula.")) {
+      const formulaName = field.substring(8); // Remove "formula." prefix
+      return row.metadata?.__formulas?.[formulaName];
+    }
     return row.metadata?.[field];
   };
 
   const getDisplayName = (field: string) => {
     if (field === "file.name") return "Name";
+    // Handle formula properties
+    if (field.startsWith("formula.")) {
+      const formulaName = field.substring(8);
+      return (
+        formulaName.charAt(0).toUpperCase() +
+        formulaName.slice(1).replace(/_/g, " ")
+      );
+    }
     return field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, " ");
   };
 
