@@ -92,7 +92,6 @@ export const ObsidianBasesViews: React.FC<ObsidianBasesViewsProps> = (
           customDomain={customDomain}
           allSitePaths={allSitePathsStr}
           order={currentView.order}
-          properties={properties}
         />
       );
     }

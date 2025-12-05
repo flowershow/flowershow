@@ -133,10 +133,40 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
       );
     }
 
-    // For wiki links in card view, display as plain text (extract the link text)
-    const displayValue = isWikiLink(value)
-      ? getWikiLinkValue(value)
-      : String(value);
+    // Handle wiki links - render as clickable links
+    let displayValue: React.ReactNode;
+    if (isWikiLink(value)) {
+      const target = getWikiLinkValue(value);
+      const filePath = resolveWikiLinkToFilePath({
+        wikiLink: value,
+        filePaths: allSitePaths,
+      });
+      const urlPath = resolveFilePathToUrlPath({
+        target: filePath,
+        sitePrefix,
+        domain: customDomain,
+      });
+
+      displayValue = (
+        <Link
+          href={urlPath}
+          style={{
+            color: "#1976d2",
+            textDecoration: "none",
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.textDecoration = "underline";
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.textDecoration = "none";
+          }}
+        >
+          {target}
+        </Link>
+      );
+    } else {
+      displayValue = String(value);
+    }
 
     // Other fields are displayed as metadata
     return (
@@ -232,7 +262,7 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
                     sx={{
                       width: "100%",
                       aspectRatio: `1 / ${imageAspectRatio}`,
-                      objectFit: `${imageFit} !important`,
+                      objectFit: imageFit,
                       bgcolor: isHexColor ? image : "grey.100",
                     }}
                   />

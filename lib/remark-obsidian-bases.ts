@@ -581,7 +581,7 @@ function compileExpressionToPrisma(
 }
 
 type PropertyInfo =
-  | { kind: "file"; name: keyof Prisma.BlobWhereInput; computed?: boolean } // path, extension, folder, name...
+  | { kind: "file"; name: string; computed?: boolean } // path, extension, folder, name...
   | { kind: "note"; name: string }; // note frontmatter field
 
 /**
