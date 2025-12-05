@@ -22,6 +22,7 @@ type ViewData = {
     string,
     { value: number | string | null; function: string }
   >;
+  properties?: Record<string, { displayName?: string; [key: string]: any }>;
 };
 
 export interface ObsidianBasesViewsProps {
@@ -61,6 +62,9 @@ export const ObsidianBasesViews: React.FC<ObsidianBasesViewsProps> = (
     const summaries = currentData.summaries
       ? JSON.stringify(currentData.summaries)
       : undefined;
+    const properties = currentData.properties
+      ? JSON.stringify(currentData.properties)
+      : undefined;
     const allSitePathsStr = props.allSitePaths;
 
     if (currentView.type === "cards") {
@@ -75,6 +79,7 @@ export const ObsidianBasesViews: React.FC<ObsidianBasesViewsProps> = (
           imageFit={currentView.imageFit}
           imageAspectRatio={currentView.imageAspectRatio}
           order={currentView.order}
+          properties={properties}
         />
       );
     }
@@ -87,6 +92,7 @@ export const ObsidianBasesViews: React.FC<ObsidianBasesViewsProps> = (
           customDomain={customDomain}
           allSitePaths={allSitePathsStr}
           order={currentView.order}
+          properties={properties}
         />
       );
     }
@@ -100,6 +106,7 @@ export const ObsidianBasesViews: React.FC<ObsidianBasesViewsProps> = (
         customDomain={customDomain}
         allSitePaths={allSitePathsStr}
         summaries={summaries}
+        properties={properties}
       />
     );
   };

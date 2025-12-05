@@ -30,6 +30,7 @@ export interface ObsidianBaseCardsProps {
   customDomain?: string;
   order?: string[];
   allSitePaths?: string;
+  properties?: string;
 }
 
 export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
@@ -38,12 +39,18 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
   const customDomain = props.customDomain;
   const cardSize = props.cardSize || 200;
   const imageField = props.image;
-  const imageFit = props.imageFit || "cover";
+  const imageFit = props.imageFit || "contain";
   const imageAspectRatio = props.imageAspectRatio || 1;
   const order = props.order || ["file.name"];
   const allSitePaths = props.allSitePaths
     ? (JSON.parse(props.allSitePaths) as string[])
     : [];
+  const properties = props.properties
+    ? (JSON.parse(props.properties) as Record<
+        string,
+        { displayName?: string; [key: string]: any }
+      >)
+    : undefined;
 
   if (rows.length === 0) {
     return (
@@ -77,16 +84,24 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
   };
 
   const getDisplayName = (field: string) => {
-    if (field === "file.name") return "Name";
+    // Check if there's a custom displayName in properties
+    if (properties) {
+      // Try exact match first (e.g., "formula.reading_time")
+      if (properties[field]?.displayName) {
+        return properties[field].displayName;
+      }
+
+      // Try with note. prefix (e.g., "note.author" for "author")
+      if (properties[`note.${field}`]?.displayName) {
+        return properties[`note.${field}`]!.displayName;
+      }
+    }
+
     // Handle formula properties
     if (field.startsWith("formula.")) {
-      const formulaName = field.substring(8);
-      return (
-        formulaName.charAt(0).toUpperCase() +
-        formulaName.slice(1).replace(/_/g, " ")
-      );
+      return field.substring(8);
     }
-    return field.charAt(0).toUpperCase() + field.slice(1).replace(/_/g, " ");
+    return field;
   };
 
   const renderFieldValue = (
@@ -217,7 +232,7 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
                     sx={{
                       width: "100%",
                       aspectRatio: `1 / ${imageAspectRatio}`,
-                      objectFit: imageFit,
+                      objectFit: `${imageFit} !important`,
                       bgcolor: isHexColor ? image : "grey.100",
                     }}
                   />

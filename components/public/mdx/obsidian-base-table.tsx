@@ -22,6 +22,7 @@ export interface ObsidianBaseTableProps {
   customDomain?: string;
   summaries?: string;
   allSitePaths?: string;
+  properties?: string;
 }
 
 export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
@@ -38,6 +39,12 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
   const allSitePaths = props.allSitePaths
     ? (JSON.parse(props.allSitePaths) as string[])
     : [];
+  const properties = props.properties
+    ? (JSON.parse(props.properties) as Record<
+        string,
+        { displayName?: string; [key: string]: any }
+      >)
+    : undefined;
 
   if (rows.length === 0) {
     return (
@@ -138,17 +145,25 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
   };
 
   const getDisplayName = (col: string) => {
-    if (col === "file.name") return "Name";
+    // Check if there's a custom displayName in properties
+    if (properties) {
+      // Try exact match first (e.g., "formula.reading_time")
+      if (properties[col]?.displayName) {
+        return properties[col].displayName;
+      }
+
+      // Try with note. prefix (e.g., "note.author" for "author")
+      if (properties[`note.${col}`]?.displayName) {
+        return properties[`note.${col}`]!.displayName;
+      }
+    }
+
     // Handle formula properties
     if (col.startsWith("formula.")) {
-      const formulaName = col.substring(8);
-      return (
-        formulaName.charAt(0).toUpperCase() +
-        formulaName.slice(1).replace(/_/g, " ")
-      );
+      return col.substring(8);
     }
     // Capitalize first letter and replace underscores with spaces
-    return col.charAt(0).toUpperCase() + col.slice(1).replace(/_/g, " ");
+    return col;
   };
 
   const formatSummaryValue = (value: number | string | null): string => {

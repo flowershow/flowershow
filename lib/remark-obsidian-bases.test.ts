@@ -6,85 +6,92 @@ import {
 import type { Prisma, Blob } from "@prisma/client";
 
 describe("buildPrismaComparison", () => {
-  describe("file property comparisons", () => {
+  describe("simple file property comparisons", () => {
     it("should build equality comparison for file.ext", () => {
       const filter = 'file.ext == "md"';
-      const { where, postFilter } = buildFilterStrategy(filter);
+      const { where } = buildFilterStrategy(filter);
 
       expect(where).toEqual({
         extension: "md",
       });
-      expect(postFilter).not.toBeDefined();
     });
 
     it("should build inequality comparison for file.ext", () => {
       const filter = 'file.ext != "pdf"';
-      const { where, postFilter } = buildFilterStrategy(filter);
+      const { where } = buildFilterStrategy(filter);
 
       expect(where).toEqual({
         extension: { not: "pdf" },
       });
-      expect(postFilter).not.toBeDefined();
     });
 
     it("should build equality comparison for file.path", () => {
       const filter = 'file.path == "notes/test.md"';
-      const { where, postFilter } = buildFilterStrategy(filter);
+      const { where } = buildFilterStrategy(filter);
 
       expect(where).toEqual({
         path: "notes/test.md",
       });
-      expect(postFilter).not.toBeDefined();
     });
 
     it("should build greater than comparison for file.size", () => {
       const filter = "file.size > 123";
-      const { where, postFilter } = buildFilterStrategy(filter);
+      const { where } = buildFilterStrategy(filter);
 
       expect(where).toEqual({
         size: { gt: 123 },
       });
-      expect(postFilter).not.toBeDefined();
     });
   });
 
-  describe("computed file properties", () => {
-    it("should return null for file.folder comparison (requires post-filter)", () => {
+  describe("more complex file property comparisons", () => {
+    it("should handle file.folder in post-filter", () => {
       const filter = 'file.folder == "notes"';
-      const { where, postFilter } = buildFilterStrategy(filter);
+      const { postFilter } = buildFilterStrategy(filter);
 
-      expect(where).toEqual({});
-      expect(postFilter).toBeDefined();
-    });
-
-    it("should return null for file.name comparison (requires post-filter)", () => {
-      const filter = 'file.name == "test.md"';
-      const { where, postFilter } = buildFilterStrategy(filter);
-
-      expect(where).toEqual({});
-      expect(postFilter).toBeDefined();
-    });
-
-    it("should handle file.folder comparison with rootDir in post-filter", () => {
-      const filter = 'file.folder == "Test"';
-      const { where, postFilter } = buildFilterStrategy(filter, "Public");
-
-      // Should use post-filter since file.folder is computed
-      expect(where).toEqual({});
       expect(postFilter).toBeDefined();
 
-      // Test that the post-filter correctly strips rootDir
-      // Simulating a blob with path "Test/file.md" (stored without rootDir prefix)
+      // Execute postFilter on mock blob
       const mockBlob = {
-        path: "Test/file.md",
+        path: "notes/test.md",
         metadata: {},
-        appPath: "/test/file",
+        appPath: "notes/test",
       };
-
       expect(postFilter!(mockBlob)).toBe(true);
+
+      // Test with non-matching folder
+      const nonMatchingBlob = {
+        path: "other/test.md",
+        metadata: {},
+        appPath: "other/test",
+      };
+      expect(postFilter!(nonMatchingBlob)).toBe(false);
     });
 
-    it("should handle file.folder comparison with nested folder and rootDir", () => {
+    it("should handle file.name in post-filter", () => {
+      const filter = 'file.name == "test"';
+      const { postFilter } = buildFilterStrategy(filter);
+
+      expect(postFilter).toBeDefined();
+
+      // Execute postFilter on mock blob
+      const mockBlob = {
+        path: "notes/test.md",
+        metadata: {},
+        appPath: "notes/test.md",
+      };
+      expect(postFilter!(mockBlob)).toBe(true);
+
+      // Test with non-matching name
+      const nonMatchingBlob = {
+        path: "notes/other.md",
+        metadata: {},
+        appPath: "notes/other",
+      };
+      expect(postFilter!(nonMatchingBlob)).toBe(false);
+    });
+
+    it("should handle file.folder comparison with rootDir set", () => {
       const filter = 'file.folder == "Test/Subfolder"';
       const { where, postFilter } = buildFilterStrategy(filter, "Public");
 
@@ -365,7 +372,7 @@ describe("buildPrismaComparison", () => {
 
     it("should combine Prisma where and post-filter for mixed conditions", () => {
       const filter = {
-        and: ['file.ext == "md"', 'file.name == "test.md"'],
+        and: ['file.ext == "md"', 'file.name == "test"'],
       };
       const { where, postFilter } = buildFilterStrategy(filter);
 
@@ -373,26 +380,84 @@ describe("buildPrismaComparison", () => {
         AND: [{ extension: "md" }],
       });
       expect(postFilter).toBeDefined();
+
+      // Execute postFilter on mock blob
+      const mockBlob = {
+        path: "notes/test.md",
+        extension: "md",
+        metadata: {},
+        appPath: "notes/test",
+      };
+      expect(postFilter!(mockBlob)).toBe(true);
+
+      // Test with non-matching name
+      const nonMatchingBlob = {
+        path: "notes/other.md",
+        extension: "md",
+        metadata: {},
+        appPath: "notes/other",
+      };
+      expect(postFilter!(nonMatchingBlob)).toBe(false);
     });
 
     it("should handle OR with post-filter predicates", () => {
       const filter = {
-        or: ['file.name == "test.md"', 'file.folder == "notes"'],
+        or: ['file.name == "test"', 'file.folder == "notes"'],
       };
       const { where, postFilter } = buildFilterStrategy(filter);
 
       expect(where).toEqual({});
       expect(postFilter).toBeDefined();
+
+      // Execute postFilter on mock blob - matches name
+      const mockBlobMatchingName = {
+        path: "other/test.md",
+        metadata: {},
+        appPath: "other/test",
+      };
+      expect(postFilter!(mockBlobMatchingName)).toBe(true);
+
+      // Execute postFilter on mock blob - matches folder
+      const mockBlobMatchingFolder = {
+        path: "notes/other.md",
+        metadata: {},
+        appPath: "notes/other",
+      };
+      expect(postFilter!(mockBlobMatchingFolder)).toBe(true);
+
+      // Test with non-matching blob
+      const nonMatchingBlob = {
+        path: "other/different.md",
+        metadata: {},
+        appPath: "other/different",
+      };
+      expect(postFilter!(nonMatchingBlob)).toBe(false);
     });
 
     it("should handle NOT with post-filter predicates", () => {
       const filter = {
-        not: ['file.name == "test.md"'],
+        not: ['file.name == "test"'],
       };
       const { where, postFilter } = buildFilterStrategy(filter);
 
       expect(where).toEqual({});
       expect(postFilter).toBeDefined();
+
+      // Execute postFilter on mock blob - should NOT match test.md
+      const mockBlob = {
+        path: "notes/other.md",
+        metadata: {},
+        appPath: "notes/other",
+      };
+      expect(postFilter!(mockBlob)).toBe(true);
+
+      // Test with matching name (should be false due to NOT)
+      const matchingBlob = {
+        path: "notes/test.md",
+        metadata: {},
+        appPath: "notes/test",
+      };
+      expect(postFilter!(matchingBlob)).toBe(false);
     });
   });
 

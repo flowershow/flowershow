@@ -81,7 +81,7 @@ The `filters` section contains either a single filter statement as a string, or 
 
 The syntax and available functions for filters and formulas are the same.
 
-### Formulas (`formulas`) ❌
+### Formulas (`formulas`) ✅
 
 The `formulas` section defines **formula properties** that can be displayed across all views in the base file.
 
@@ -108,7 +108,7 @@ Formula properties are always stored as strings in YAML, but their actual **outp
 
 Note the use of nested quotes is necessary to include text literals in the YAML field. Text literals must be enclosed in single or double quotes.
 
-### Properties (`properties`) ❌
+### Properties (`properties`) ✅
 
 The `properties` section allows storing configuration information about each property. It is up to the individual view how to use these configuration values. For example, in tables the display name is used for the column headers.
 

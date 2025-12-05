@@ -115,6 +115,7 @@ export type BaseView = BaseTableView | BaseCardsView | BaseListView;
 interface BaseQuery {
   filters?: FilterValue;
   formulas?: Record<string, string>;
+  properties?: Record<string, { displayName?: string; [key: string]: any }>;
   views: Array<BaseView>;
 }
 
@@ -150,6 +151,7 @@ async function resolveBaseQuery(
     return await createViewsNode(
       viewResults,
       parsedQuery.views,
+      parsedQuery.properties,
       sitePrefix,
       customDomain,
       siteId,
@@ -1231,6 +1233,7 @@ async function createViewsNode(
     order?: string[];
     [key: string]: any;
   }>,
+  properties?: Record<string, { displayName?: string; [key: string]: any }>,
   sitePrefix?: string,
   customDomain?: string,
   siteId?: string,
@@ -1270,6 +1273,7 @@ async function createViewsNode(
       columns,
       rows,
       summaries,
+      properties,
     };
   });
 
