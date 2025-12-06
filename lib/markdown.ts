@@ -138,6 +138,7 @@ export const getMdxOptions = ({
 }): EvaluateOptions => {
   return {
     parseFrontmatter,
+    disableImports: true,
     mdxOptions: {
       remarkPlugins: [
         remarkObsidianComments,
