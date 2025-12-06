@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, permanentRedirect, redirect } from "next/navigation";
-import { evaluate } from "next-mdx-remote-client/rsc";
+import { serialize } from "next-mdx-remote-client/serialize";
 import { EditIcon } from "lucide-react";
 import clsx from "clsx";
 import emojiRegex from "emoji-regex";
@@ -18,7 +18,6 @@ import { generateScopedCss } from "@/lib/generate-scoped-css";
 import { getSiteUrl, getSiteUrlPath } from "@/lib/get-site-url";
 
 import Comments from "@/components/public/comments";
-import { mdxComponentsFactory } from "@/components/public/mdx/mdx-components-factory";
 import ErrorMessage from "@/components/public/error-message";
 import { BlogLayout } from "@/components/public/layouts/blog";
 import SiteTree from "@/components/public/site-tree";
@@ -26,7 +25,7 @@ import TableOfContents from "@/components/public/table-of-contents";
 
 import UrlNormalizer from "./url-normalizer";
 import { preprocessMdxForgiving } from "@/lib/preprocess-mdx";
-import { MDXRenderingError } from "@/components/public/mdx/mdx-client-error-message";
+import MDXClient from "@/components/public/mdx/mdx-client";
 
 const config = getConfig();
 
@@ -231,11 +230,6 @@ export default async function SitePage(props: {
         compiledContent = <div dangerouslySetInnerHTML={{ __html: html }} />;
       } else {
         // Process using next-mdx-remote-client (MDX renderer)
-        const mdxComponents = mdxComponentsFactory({
-          blob,
-          site,
-          pageNumber,
-        });
         const mdxOptions = getMdxOptions({
           files: siteFilePaths,
           filePath: blob.path,
@@ -245,21 +239,27 @@ export default async function SitePage(props: {
           rootDir: site.rootDir ?? undefined,
         }) as any;
 
-        const { content, error } = await evaluate({
+        const mdxSource = await serialize<PageMetadata>({
           source: pageContent ?? "",
-          components: mdxComponents,
           options: mdxOptions,
         });
 
-        if (error) {
-          const message = error.message.concat(
+        if ("error" in mdxSource) {
+          const message = mdxSource.error.message.concat(
             "\n\n🧑‍🔧 See how to debug and solve most common MDX errors in our docs:\nhttps://flowershow.app/docs/debug-mdx-errors",
           );
           compiledContent = (
             <ErrorMessage title="Error parsing MDX" message={message} />
           );
         } else {
-          compiledContent = <MDXRenderingError>{content}</MDXRenderingError>;
+          compiledContent = (
+            <MDXClient
+              mdxSource={mdxSource}
+              blob={blob}
+              site={site}
+              pageNumber={pageNumber}
+            />
+          );
         }
       }
     } catch (error: any) {

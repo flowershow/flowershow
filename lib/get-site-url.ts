@@ -1,7 +1,7 @@
 import { env } from "@/env.mjs";
 import { resolveSiteAlias } from "./resolve-site-alias";
 import { Feature, isFeatureEnabled } from "./feature-flags";
-import { PublicSite } from "@/server/api/routers/site";
+import { PublicSite } from "@/server/api/types";
 import { InternalSite } from "./db/internal";
 
 export function getSiteUrl(site: PublicSite | InternalSite) {

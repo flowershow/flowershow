@@ -1,5 +1,5 @@
 import { env } from "@/env.mjs";
-import { PublicSite } from "@/server/api/routers/site";
+import { PublicSite } from "@/server/api/types";
 import { Plan } from "@prisma/client";
 
 export enum Feature {

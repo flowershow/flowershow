@@ -10,7 +10,7 @@ import SettingsNav from "@/components/dashboard/settings-nav";
 import Form from "@/components/dashboard/form";
 import DeleteSiteForm from "@/components/dashboard/form/delete-site-form";
 import SitePasswordProtectionForm from "@/components/dashboard/form/site-password-form";
-import { SiteUpdateKey } from "@/server/api/routers/site";
+import { SiteUpdateKey } from "@/server/api/types";
 
 export default async function SiteSettingsIndex(props: {
   params: Promise<{ id: string }>;

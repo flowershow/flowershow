@@ -83,6 +83,7 @@
     "react-error-boundary": "^6.0.0",
     "react-instantsearch": "^7.16.3",
     "react-leaflet": "^5.0.0",
+    "react-loading-skeleton": "^3.5.0",
     "react-pdf": "^10.2.0",
     "react-plotly.js": "^2.6.0",
     "react-query": "^3.39.3",

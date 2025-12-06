@@ -1,4 +1,4 @@
-import { PublicSite } from "@/server/api/routers/site";
+import { PublicSite } from "@/server/api/types";
 import { api } from "@/trpc/server";
 import { notFound, redirect } from "next/navigation";
 

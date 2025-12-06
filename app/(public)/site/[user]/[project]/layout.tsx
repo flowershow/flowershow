@@ -29,7 +29,7 @@ import "@/styles/callouts.css";
 import "@/styles/default-theme.css";
 import { THEME_PREFERENCE_STORAGE_KEY } from "@/lib/const";
 import SiteLogoutButton from "./site-logout-button";
-import { PublicSite } from "@/server/api/routers/site";
+import { PublicSite } from "@/server/api/types";
 
 const { title, description, favicon, thumbnail } = getConfig();
 

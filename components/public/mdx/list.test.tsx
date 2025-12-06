@@ -1,18 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import List from "./list";
-import { api } from "@/trpc/server";
 
-// Mock the tRPC API
-vi.mock("@/trpc/server", () => ({
+// Mock the tRPC React API
+vi.mock("@/trpc/react", () => ({
   api: {
     site: {
       getListComponentItems: {
-        query: vi.fn(),
+        useQuery: vi.fn(),
       },
     },
   },
 }));
+
+import { api } from "@/trpc/react";
 
 const mockUseSearchParams = vi.fn();
 
@@ -96,18 +97,16 @@ describe("List Component - Pagination Tests", () => {
   });
 
   describe("Page size == total items (pageSize=4, total=4)", () => {
-    it("should display all items on page 1", async () => {
-      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
-        items: mockItems,
-      });
+    it("should display all items on page 1", () => {
+      vi.mocked(api.site.getListComponentItems.useQuery).mockReturnValue({
+        data: { items: mockItems },
+        isLoading: false,
+        error: null,
+      } as any);
 
-      const component = await List({
-        siteId: mockSiteId,
-        pageSize: 4,
-        pageNumber: 1,
-      });
-
-      const { container } = render(component);
+      const { container } = render(
+        <List siteId={mockSiteId} pageSize={4} pageNumber={1} />,
+      );
 
       // Should display all 4 items
       const articles = container.querySelectorAll(".list-component-item");
@@ -120,18 +119,16 @@ describe("List Component - Pagination Tests", () => {
       expect(screen.getByText("Item 4")).toBeInTheDocument();
     });
 
-    it("should not display pagination", async () => {
-      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
-        items: mockItems,
-      });
+    it("should not display pagination", () => {
+      vi.mocked(api.site.getListComponentItems.useQuery).mockReturnValue({
+        data: { items: mockItems },
+        isLoading: false,
+        error: null,
+      } as any);
 
-      const component = await List({
-        siteId: mockSiteId,
-        pageSize: 4,
-        pageNumber: 1,
-      });
-
-      const { container } = render(component);
+      const { container } = render(
+        <List siteId={mockSiteId} pageSize={4} pageNumber={1} />,
+      );
 
       const pagination = container.querySelector(".list-component-pagination");
       expect(pagination).not.toBeInTheDocument();
@@ -139,19 +136,17 @@ describe("List Component - Pagination Tests", () => {
   });
 
   describe("PageSize < total items (pageSize=3, total=4)", () => {
-    it("should display 3 items on page 1", async () => {
-      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
-        items: mockItems,
-      });
+    it("should display 3 items on page 1", () => {
+      vi.mocked(api.site.getListComponentItems.useQuery).mockReturnValue({
+        data: { items: mockItems },
+        isLoading: false,
+        error: null,
+      } as any);
       mockUseSearchParams.mockReturnValue(new URLSearchParams({ page: "1" }));
 
-      const component = await List({
-        siteId: mockSiteId,
-        pageSize: 3,
-        pageNumber: 1,
-      });
-
-      const { container } = render(component);
+      const { container } = render(
+        <List siteId={mockSiteId} pageSize={3} pageNumber={1} />,
+      );
 
       // Should display only 3 items on page 1
       const articles = container.querySelectorAll(".list-component-item");
@@ -166,20 +161,18 @@ describe("List Component - Pagination Tests", () => {
       expect(screen.queryByText("Item 4")).not.toBeInTheDocument();
     });
 
-    it("should display 1 item on page 2", async () => {
-      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
-        items: mockItems,
-      });
+    it("should display 1 item on page 2", () => {
+      vi.mocked(api.site.getListComponentItems.useQuery).mockReturnValue({
+        data: { items: mockItems },
+        isLoading: false,
+        error: null,
+      } as any);
 
       mockUseSearchParams.mockReturnValue(new URLSearchParams({ page: "2" }));
 
-      const component = await List({
-        siteId: mockSiteId,
-        pageSize: 3,
-        pageNumber: 2,
-      });
-
-      const { container } = render(component);
+      const { container } = render(
+        <List siteId={mockSiteId} pageSize={3} pageNumber={2} />,
+      );
 
       // Should display only 1 item on page 2
       const articles = container.querySelectorAll(".list-component-item");
@@ -196,17 +189,14 @@ describe("List Component - Pagination Tests", () => {
   });
 
   describe("Edge cases", () => {
-    it("should not paginate when pageSize is not provided", async () => {
-      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
-        items: mockItems,
-      });
+    it("should not paginate when pageSize is not provided", () => {
+      vi.mocked(api.site.getListComponentItems.useQuery).mockReturnValue({
+        data: { items: mockItems },
+        isLoading: false,
+        error: null,
+      } as any);
 
-      const component = await List({
-        siteId: mockSiteId,
-        // No pageSize provided
-      });
-
-      const { container } = render(component);
+      const { container } = render(<List siteId={mockSiteId} />);
 
       // Should display all items without pagination
       const articles = container.querySelectorAll(".list-component-item");
@@ -217,40 +207,61 @@ describe("List Component - Pagination Tests", () => {
       expect(pagination).not.toBeInTheDocument();
     });
 
-    it("should handle empty items array", async () => {
-      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
-        items: [],
-      });
+    it("should handle empty items array", () => {
+      vi.mocked(api.site.getListComponentItems.useQuery).mockReturnValue({
+        data: { items: [] },
+        isLoading: false,
+        error: null,
+      } as any);
 
-      const component = await List({
-        siteId: mockSiteId,
-        pageSize: 3,
-      });
-
-      render(component);
+      render(<List siteId={mockSiteId} pageSize={3} />);
 
       // Should display "No items found" message
       expect(screen.getByText("No items found")).toBeInTheDocument();
     });
 
-    it("should handle page number beyond available pages", async () => {
-      vi.mocked(api.site.getListComponentItems.query).mockResolvedValue({
-        items: mockItems,
-      });
+    it("should handle page number beyond available pages", () => {
+      vi.mocked(api.site.getListComponentItems.useQuery).mockReturnValue({
+        data: { items: mockItems },
+        isLoading: false,
+        error: null,
+      } as any);
 
       mockUseSearchParams.mockReturnValue(new URLSearchParams({ page: "5" }));
 
-      const component = await List({
-        siteId: mockSiteId,
-        pageSize: 3,
-        pageNumber: 5, // Beyond available pages
-      });
-
-      const { container } = render(component);
+      const { container } = render(
+        <List siteId={mockSiteId} pageSize={3} pageNumber={5} />,
+      );
 
       // Should display no items (slice returns empty array)
       const articles = container.querySelectorAll(".list-component-item");
       expect(articles).toHaveLength(0);
+    });
+
+    it("should display loading state", () => {
+      vi.mocked(api.site.getListComponentItems.useQuery).mockReturnValue({
+        data: undefined,
+        isLoading: true,
+        error: null,
+      } as any);
+
+      render(<List siteId={mockSiteId} />);
+
+      expect(screen.getByText("Loading...")).toBeInTheDocument();
+    });
+
+    it("should display error state", () => {
+      vi.mocked(api.site.getListComponentItems.useQuery).mockReturnValue({
+        data: undefined,
+        isLoading: false,
+        error: { message: "Failed to load items" },
+      } as any);
+
+      render(<List siteId={mockSiteId} />);
+
+      expect(
+        screen.getByText("Error loading items: Failed to load items"),
+      ).toBeInTheDocument();
     });
   });
 });

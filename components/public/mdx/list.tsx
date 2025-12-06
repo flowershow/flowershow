@@ -1,6 +1,10 @@
-import { api } from "@/trpc/server";
+"use client";
+
+import { api } from "@/trpc/react";
 import { PageMetadata } from "@/server/api/types";
 import ListComponentPagination from "./list-pagination";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
 
 type Slot = "media" | "eyebrow" | "headline" | "summary" | "footnote";
 export type SlotsMap = Partial<Record<Slot, keyof PageMetadata>>;
@@ -53,7 +57,7 @@ export interface ListProps {
   pageSize?: number;
 }
 
-export default async function List({
+export default function List({
   siteId,
   dir = "",
   fields,
@@ -63,11 +67,54 @@ export default async function List({
   pageNumber = 1,
   pageSize,
 }: ListProps) {
-  const data = await api.site.getListComponentItems.query({
+  const { data, isLoading, error } = api.site.getListComponentItems.useQuery({
     siteId,
     dir,
     slots,
   });
+
+  if (isLoading) {
+    return (
+      <div className="list-component-skeleton">
+        {Array.from("abcde").map((x) => (
+          <article key={x} className="list-component-skeleton-item">
+            {slots.media && (
+              <div className="list-component-skeleton-media">
+                <Skeleton className="list-component-skeleton-media-placeholder" />
+              </div>
+            )}
+            <div className="list-component-skeleton-content">
+              {slots.eyebrow && (
+                <Skeleton
+                  className="list-component-skeleton-eyebrow"
+                  width={100}
+                />
+              )}
+              {slots.headline && (
+                <Skeleton className="list-component-skeleton-headline" />
+              )}
+              {slots.summary && (
+                <Skeleton
+                  className="list-component-skeleton-summary"
+                  count={2}
+                />
+              )}
+              {slots.footnote && (
+                <Skeleton
+                  className="list-component-skeleton-footnote"
+                  width={100}
+                />
+              )}
+            </div>
+          </article>
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div>Error loading items: {error.message}</div>;
+  }
 
   if (!data?.items?.length) {
     return <div>No items found</div>;

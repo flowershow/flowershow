@@ -24,80 +24,23 @@ import { TRPCError } from "@trpc/server";
 import { buildSiteTree } from "@/lib/build-site-tree";
 import { SiteConfig } from "@/components/types";
 import { env } from "@/env.mjs";
-import { Blob, Plan, PrismaClient, PrivacyMode, Status } from "@prisma/client";
-import { PageMetadata } from "../types";
-import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
+import { Blob, Prisma, PrismaClient, Status } from "@prisma/client";
 import {
-  isWikiLink,
-  getWikiLinkValue,
-  findMatchingPermalink,
-} from "@/lib/wiki-link";
+  PageMetadata,
+  PublicSite,
+  publicSiteSchema,
+  publicSiteSelect,
+  SiteUpdateKey,
+} from "../types";
+import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
+import { isWikiLink, getWikiLinkValue } from "@/lib/wiki-link";
 import { getSiteUrlPath } from "@/lib/get-site-url";
-import { Prisma, SyntaxMode } from "@prisma/client";
 import PostHogClient from "@/lib/server-posthog";
-import { Page } from "@playwright/test";
 import { resolveWikiLinkToFilePath } from "@/lib/resolve-wiki-link";
 
 const asciiPrintableNoEdgeSpaces = new RegExp(
   "^(?=.{8,128}$)[!-~](?:[ -~]*[!-~])?$",
 );
-
-const publicSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
-  id: true,
-  ghRepository: true,
-  ghBranch: true,
-  projectName: true,
-  customDomain: true,
-  rootDir: true,
-  plan: true,
-  enableComments: true,
-  giscusRepoId: true,
-  giscusCategoryId: true,
-  enableSearch: true,
-  privacyMode: true,
-  autoSync: true,
-  syntaxMode: true,
-  createdAt: true,
-  updatedAt: true,
-  user: { select: { ghUsername: true } },
-});
-
-export type PublicSite = Prisma.SiteGetPayload<{
-  select: typeof publicSiteSelect;
-}>;
-
-const publicSiteSchema: z.ZodType<PublicSite> = z.object({
-  id: z.string(),
-  ghRepository: z.string(),
-  ghBranch: z.string(),
-  projectName: z.string(),
-  customDomain: z.string().nullable(),
-  rootDir: z.string().nullable(),
-  plan: z.enum(Plan),
-  enableComments: z.boolean(),
-  giscusRepoId: z.string().nullable(),
-  giscusCategoryId: z.string().nullable(),
-  enableSearch: z.boolean(),
-  privacyMode: z.enum(PrivacyMode),
-  autoSync: z.boolean(),
-  syntaxMode: z.enum(SyntaxMode),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  user: z.object({ ghUsername: z.string() }),
-});
-
-export enum SiteUpdateKey {
-  customDomain = "customDomain",
-  rootDir = "rootDir",
-  autoSync = "autoSync",
-  enableComments = "enableComments",
-  enableSearch = "enableSearch",
-  subdomain = "subdomain",
-  projectName = "projectName",
-  syntaxMode = "syntaxMode",
-  giscusRepoId = "giscusRepoId",
-  giscusCategoryId = "giscusCategoryId",
-}
 
 export const siteRouter = createTRPCRouter({
   get: publicProcedure

@@ -7,7 +7,7 @@ import LoadingDots from "@/components/icons/loading-dots";
 import Status from "./status";
 import SyncSiteButton from "./sync-button";
 import { env } from "@/env.mjs";
-import { PublicSite } from "@/server/api/routers/site";
+import { PublicSite } from "@/server/api/types";
 
 export default async function SiteSettingsHeader({
   site,

@@ -7,7 +7,6 @@ import { getSiteUrlPath } from "@/lib/get-site-url";
 import ErrorMessage from "@/components/public/error-message";
 import List from "./list";
 import Pre from "./pre";
-import { PublicSite } from "@/server/api/routers/site";
 import { PdfViewer } from "./pdf-viewer";
 
 import {
@@ -30,6 +29,7 @@ import type { MDXComponents } from "next-mdx-remote-client/rsc";
 import type { PlotlyBarChartProps } from "./plotly-bar-chart";
 import type { PlotlyLineChartProps } from "./plotly-line-chart";
 import type { ObsidianBasesViewsProps } from "./obsidian-bases-views";
+import { PublicSite } from "@/server/api/types";
 
 export const mdxComponentsFactory = ({
   blob,

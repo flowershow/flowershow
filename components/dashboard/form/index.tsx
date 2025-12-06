@@ -9,7 +9,7 @@ import DomainStatus from "./domain-status";
 import DomainConfiguration from "./domain-configuration";
 import clsx from "clsx";
 import { ReactNode, useState, FormEvent } from "react";
-import { SiteUpdateKey } from "@/server/api/routers/site";
+import { SiteUpdateKey } from "@/server/api/types";
 
 export default function Form({
   title,

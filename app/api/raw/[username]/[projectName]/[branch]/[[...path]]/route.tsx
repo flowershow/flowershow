@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createTRPCContext } from "@/server/api/trpc";
 import { appRouter } from "@/server/api/root";
 import { env } from "@/env.mjs";
-import { PublicSite } from "@/server/api/routers/site";
+import { PublicSite } from "@/server/api/types";
 
 /**
  * Creates the tRPC context required for API calls.
@@ -21,7 +21,7 @@ export async function GET(
       projectName: string;
       path?: string[];
     }>;
-  }
+  },
 ) {
   const params = await props.params;
   const ctx = await createContext(req);
