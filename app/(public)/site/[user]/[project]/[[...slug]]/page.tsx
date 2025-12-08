@@ -182,6 +182,12 @@ export default async function SitePage(props: {
       notFound();
     });
 
+  const permalinksMapping = await api.site.getPermalinksMapping
+    .query({
+      siteId: site.id,
+    })
+    .catch(() => ({}));
+
   const blob = await api.site.getBlob
     .query({
       siteId: site.id,
@@ -190,6 +196,18 @@ export default async function SitePage(props: {
     .catch(() => {
       notFound();
     });
+
+  // Handle Obsidian permalink redirects
+  if (blob?.permalink) {
+    // If current path doesn't match the permalink, redirect to permalink
+    if (decodedSlug !== blob.permalink) {
+      const redirectUrl = site.customDomain
+        ? blob.permalink
+        : `${sitePrefix}/${blob.permalink}`;
+
+      return permanentRedirect(redirectUrl);
+    }
+  }
 
   const pageContent = await api.site.getBlobContent.query({
     id: blob.id,
@@ -226,6 +244,7 @@ export default async function SitePage(props: {
           customDomain: site.customDomain ?? undefined,
           siteId: site.id,
           rootDir: site.rootDir ?? undefined,
+          permalinks: permalinksMapping,
         });
         compiledContent = <div dangerouslySetInnerHTML={{ __html: html }} />;
       } else {
@@ -237,6 +256,7 @@ export default async function SitePage(props: {
           customDomain: site.customDomain ?? undefined,
           siteId: site.id,
           rootDir: site.rootDir ?? undefined,
+          permalinks: permalinksMapping,
         }) as any;
 
         const mdxSource = await serialize<PageMetadata>({

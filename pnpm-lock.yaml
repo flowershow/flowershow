@@ -25,8 +25,8 @@ importers:
         specifier: ^11.14.1
         version: 11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.1))(@types/react@19.2.2)(react@19.2.1)
       '@flowershow/remark-wiki-link':
-        specifier: ^3.2.1
-        version: 3.2.1
+        specifier: ^3.3.1
+        version: 3.3.1
       '@giscus/react':
         specifier: ^3.1.0
         version: 3.1.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -1160,8 +1160,8 @@ packages:
   '@floating-ui/utils@0.2.10':
     resolution: {integrity: sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ==}
 
-  '@flowershow/remark-wiki-link@3.2.1':
-    resolution: {integrity: sha512-2Ibb5CHvMsempV9ha3wfBQtcWtg2SXVXm11rA5QyEfjEYk4p2OZupX1n0RWdQePtuTnjMKqV4E4j17CvmVEmHg==}
+  '@flowershow/remark-wiki-link@3.3.1':
+    resolution: {integrity: sha512-kIIbGXZigPU+X3pRn9tgrrnbVAwXi1a6gT9G4NcohJF0+WiReBPOaxa4d7G75+wfXdvw+8dkMUfn1m68qQuPKg==}
 
   '@giscus/react@3.1.0':
     resolution: {integrity: sha512-0TCO2TvL43+oOdyVVGHDItwxD1UMKP2ZYpT6gXmhFOqfAJtZxTzJ9hkn34iAF/b6YzyJ4Um89QIt9z/ajmAEeg==}
@@ -11095,7 +11095,7 @@ snapshots:
 
   '@floating-ui/utils@0.2.10': {}
 
-  '@flowershow/remark-wiki-link@3.2.1':
+  '@flowershow/remark-wiki-link@3.3.1':
     dependencies:
       github-slugger: 2.0.0
       mdast-util-to-markdown: 2.1.2

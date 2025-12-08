@@ -38,6 +38,7 @@ interface MarkdownOptions {
   customDomain?: string;
   siteId?: string;
   rootDir?: string;
+  permalinks?: Record<string, string>;
 }
 
 // Process pure markdown files using unified
@@ -45,7 +46,8 @@ export async function processMarkdown(
   _content: string,
   options: MarkdownOptions,
 ) {
-  const { filePath, files, sitePrefix, customDomain, siteId } = options;
+  const { filePath, files, sitePrefix, customDomain, siteId, permalinks } =
+    options;
 
   // this strips out frontmatter, so that it's not inlined with the rest of the markdown file
   const { content } = matter(_content, {});
@@ -64,6 +66,7 @@ export async function processMarkdown(
       files,
       format: "shortestPossible",
       urlResolver: getUrlResolver(sitePrefix, customDomain),
+      permalinks,
     })
     .use(remarkYouTubeAutoEmbed)
     .use(remarkGfm)
@@ -127,6 +130,7 @@ export const getMdxOptions = ({
   customDomain,
   siteId,
   rootDir,
+  permalinks,
 }: {
   filePath: string;
   files: string[];
@@ -135,6 +139,7 @@ export const getMdxOptions = ({
   customDomain?: string;
   siteId?: string;
   rootDir?: string;
+  permalinks?: Record<string, string>;
 }): EvaluateOptions => {
   return {
     parseFrontmatter,
@@ -150,6 +155,7 @@ export const getMdxOptions = ({
             files,
             format: "shortestPossible",
             urlResolver: getUrlResolver(sitePrefix, customDomain),
+            permalinks,
           },
         ],
         remarkYouTubeAutoEmbed,

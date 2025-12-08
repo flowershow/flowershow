@@ -794,6 +794,7 @@ export const siteRouter = createTRPCRouter({
             select: {
               path: true,
               appPath: true,
+              permalink: true,
               metadata: true,
             },
           })) as Blob[];
@@ -856,9 +857,14 @@ export const siteRouter = createTRPCRouter({
           ).map((b) => b.path);
 
           const blobs = await ctx.db.$queryRaw<
-            { path: string; app_path: string; metadata: PageMetadata | null }[]
+            {
+              path: string;
+              app_path: string;
+              permalink: string | null;
+              metadata: PageMetadata | null;
+            }[]
           >`
-              SELECT "path", "app_path", "metadata"
+              SELECT "path", "app_path", "permalink", "metadata"
               FROM "Blob"
               WHERE "site_id" = ${site.id}
                 AND "path" LIKE ${dir + "%"}
@@ -889,8 +895,10 @@ export const siteRouter = createTRPCRouter({
               });
             }
 
+            // Use permalink if available, otherwise use app_path
+            const pathToUse = blob.permalink || blob.app_path;
             return {
-              url: `${sitePrefix}/${blob.app_path}`,
+              url: `${sitePrefix}/${pathToUse}`,
               metadata,
             };
           });
@@ -916,13 +924,25 @@ export const siteRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return await unstable_cache(
         async (input) => {
-          const blob = await ctx.db.blob.findFirst({
+          // Try to find by permalink first, then fallback to appPath
+          let blob = await ctx.db.blob.findFirst({
             where: {
               siteId: input.siteId,
-              appPath: input.slug,
+              permalink: input.slug,
             },
             orderBy: { path: "desc" },
           });
+
+          // If not found by permalink, try appPath
+          if (!blob) {
+            blob = await ctx.db.blob.findFirst({
+              where: {
+                siteId: input.siteId,
+                appPath: input.slug,
+              },
+              orderBy: { path: "desc" },
+            });
+          }
 
           const site = await ctx.db.site.findFirst({
             where: {
@@ -1140,9 +1160,11 @@ export const siteRouter = createTRPCRouter({
 
                 const metadata = authorBlob.metadata as PageMetadata | null;
 
+                // Use permalink if available, otherwise use appPath
+                const pathToUse = authorBlob.permalink || authorBlob.appPath;
                 const url = site.customDomain
-                  ? `/${authorBlob.appPath}`
-                  : `/@${site.user.ghUsername}/${site.projectName}/${authorBlob.appPath}`;
+                  ? `/${pathToUse}`
+                  : `/@${site.user.ghUsername}/${site.projectName}/${pathToUse}`;
 
                 if (metadata?.avatar) {
                   let value = metadata.avatar;
@@ -1180,6 +1202,63 @@ export const siteRouter = createTRPCRouter({
         )(input);
       },
     ),
+  getPermalinksMapping: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+      }),
+    )
+    .output(z.record(z.string(), z.string()))
+    .query(async ({ ctx, input }): Promise<Record<string, string>> => {
+      return await unstable_cache(
+        async (input) => {
+          const site = await ctx.db.site.findUnique({
+            where: { id: input.siteId },
+            include: { user: true },
+          });
+
+          if (!site) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Site not found",
+            });
+          }
+
+          const sitePrefix = getSiteUrlPath(site);
+
+          const blobs = await ctx.db.blob.findMany({
+            where: {
+              siteId: input.siteId,
+              permalink: { not: null },
+            },
+            select: {
+              path: true,
+              permalink: true,
+            },
+          });
+
+          // Create a mapping of file paths to permalinks
+          const mapping: Record<string, string> = {};
+          for (const blob of blobs) {
+            if (blob.permalink) {
+              // TODO prepend paths
+              const path = "/" + blob.path;
+              let url = blob.permalink.replace(/^\//, "");
+              url = `${sitePrefix}/${url}`;
+
+              mapping[path] = url;
+            }
+          }
+
+          return mapping;
+        },
+        undefined,
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.siteId}`, `${input.siteId}-permalinks-mapping`],
+        },
+      )(input);
+    }),
   getPermalinks: publicProcedure
     .input(
       z.object({

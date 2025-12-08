@@ -5,12 +5,14 @@ export interface Options {
   filePath: string;
   sitePrefix: string;
   customDomain?: string;
+  permalinks?: Record<string, string>;
 }
 
 function remarkCommonMarkLinkResolver({
   filePath,
   sitePrefix,
   customDomain,
+  permalinks,
 }: Options) {
   return (tree: any) => {
     visit(tree, "link", (node) => {
@@ -25,6 +27,7 @@ function remarkCommonMarkLinkResolver({
         sitePrefix: sitePrefix,
         domain: customDomain,
         commonMarkSpaceEncoded: true,
+        permalinks,
       });
     });
     visit(tree, "image", (node) => {

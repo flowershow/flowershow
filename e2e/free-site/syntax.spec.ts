@@ -59,6 +59,15 @@ test.describe("Links and embeds", () => {
       "href",
       `${publishedSitePage.siteUrlPath}/blog/post-1`,
     );
+
+    const wikiLinkPermalink = publishedSitePage.page
+      .getByTestId("obsidian-wiki-link-to-file-with-permalink")
+      .locator("a");
+    await expect(wikiLinkPermalink).toHaveText("post-with-permalink");
+    await expect(wikiLinkPermalink).toHaveAttribute(
+      "href",
+      `${publishedSitePage.siteUrlPath}/different/url`,
+    );
   });
 });
 

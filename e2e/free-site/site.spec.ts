@@ -141,8 +141,30 @@ test("Should render List component correctly", async ({
   await nextButton.click();
 
   const listItems2 = list.locator(".list-component-item");
-  await expect(listItems2).toHaveCount(1);
+  await expect(listItems2).toHaveCount(3);
 
   // Check that "Blog Home Page" is not present on page 2
   await expect(list.getByText("Blog Home Page")).not.toBeVisible();
+});
+
+test.describe("Obsidian permalinks", () => {
+  // test("Should handle permalink URL", async ({ publishedSitePage }) => {
+  //   await publishedSitePage.goto("/different/url");
+  //   expect(publishedSitePage.page).toHaveTitle("Post with permalink");
+  // });
+
+  test("Should redirect from original URL to permalink if set", async ({
+    publishedSitePage,
+  }) => {
+    const [redirectResponse] = await Promise.all([
+      publishedSitePage.page.waitForResponse(
+        (res) =>
+          res.url().endsWith("/blog/post-with-permalink") &&
+          res.status() === 308,
+      ),
+      publishedSitePage.goto("/blog/post-with-permalink"),
+    ]);
+    expect(redirectResponse.status()).toBe(308);
+    expect(redirectResponse.headers()["location"]).toMatch(/\/different\/url$/);
+  });
 });

@@ -10,6 +10,7 @@ import { customEncodeUrl } from "./url-encoder";
  * @param opts.prefix  - User site prefix (/@username/sitename) if not hosted on a custom domain.
  * @param opts.isSrc  - Whether it's an asset link (src)
  * @param opts.domain  - User site custom domain (only needed if isSrc==true)
+ * @param opts.permalinks  - Map of file paths to permalinks
  * @example
  * resolveFilePathToUrlPath({ target: "blog/post-abc", originFilePath: "/README.md", prefix: "/@john/acme" })
  * resolveFilePathToUrlPath({ target: "assets/image.jpg", originFilePath: "config.json", isSrc: true, domain: "john.com" })
@@ -20,12 +21,14 @@ export const resolveFilePathToUrlPath = ({
   sitePrefix = "",
   domain,
   commonMarkSpaceEncoded = false,
+  permalinks,
 }: {
   target: string;
   originFilePath?: string;
   sitePrefix?: string;
   domain?: string | null;
   commonMarkSpaceEncoded?: boolean;
+  permalinks?: Record<string, string>;
 }) => {
   if (target.startsWith("http")) {
     return target;
@@ -65,9 +68,16 @@ export const resolveFilePathToUrlPath = ({
     resolvedPath = path.resolve(path.dirname(originFilePath), filePath);
   }
 
-  let resolvedUrlPath =
-    resolvedPath.replace(/\.(mdx?|md)/, "").replace(/\/?(index|README)$/, "") ||
-    "/";
+  let resolvedUrlPath: string;
+
+  if (permalinks && permalinks[resolvedPath]) {
+    resolvedUrlPath = permalinks[resolvedPath]!;
+  } else {
+    resolvedUrlPath =
+      resolvedPath
+        .replace(/\.(mdx?|md)/, "")
+        .replace(/\/?(index|README)$/, "") || "/";
+  }
 
   // remove trailing slash unless it's the root
   if (resolvedUrlPath !== "/" || sitePrefix) {

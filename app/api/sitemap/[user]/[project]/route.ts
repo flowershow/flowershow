@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 
 export async function GET(
   request: NextRequest,
-  props: { params: Promise<{ user: string; project: string }> }
+  props: { params: Promise<{ user: string; project: string }> },
 ) {
   const params = await props.params;
   const { user, project } = params;
@@ -33,6 +33,7 @@ export async function GET(
         select: {
           appPath: true,
           updatedAt: true,
+          permalink: true,
         },
       },
     },
@@ -47,8 +48,9 @@ export async function GET(
   // Create XML sitemap
   const xmlItems = site.blobs.map((blob) => {
     if (blob.appPath === "/") return "";
+    const permalink = (blob.permalink ?? blob.appPath)?.replace(/^\//, "");
     return `<url>
-      <loc>${siteUrl}/${blob.appPath}</loc>
+      <loc>${siteUrl}/${permalink}</loc>
       <lastmod>${blob.updatedAt.toISOString()}</lastmod>
     </url>`;
   });

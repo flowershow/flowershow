@@ -27,6 +27,13 @@ test.describe("Free site sitemap", () => {
     expect(text).not.toContain(
       `<loc>${siteUrl}/blog/archive/archived-post</loc>`,
     );
+
+    // Should use permalink if defined for a page
+    expect(text).toContain(`<loc>${siteUrl}/different/url</loc>`);
+    // and not the original path
+    expect(text).not.toContain(
+      `<loc>${siteUrl}/blog/post-with-permalink</loc>`,
+    );
   });
 
   test("Main sitemap should include the free site", async ({

@@ -70,6 +70,7 @@ export interface PageMetadata {
   showHero?: boolean;
   showEditLink?: boolean;
   showComments?: boolean;
+  permalink?: string;
   cta?: Array<{
     href: string;
     label: string;

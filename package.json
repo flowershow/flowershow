@@ -28,7 +28,7 @@
     "@aws-sdk/s3-request-presigner": "^3.914.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
-    "@flowershow/remark-wiki-link": "^3.2.1",
+    "@flowershow/remark-wiki-link": "^3.3.1",
     "@giscus/react": "^3.1.0",
     "@githubocto/flat-ui": "^0.14.1",
     "@headlessui/react": "0.0.0-insiders.589ea90",

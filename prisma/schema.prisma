@@ -138,6 +138,7 @@ model Blob {
   siteId      String   @map("site_id")
   path        String   // Original file path
   appPath     String?  @map("app_path") // URL slug
+  permalink   String?  // Obsidian permalink from frontmatter
   size        Int
   sha         String
   metadata    Json     @db.JsonB
@@ -149,6 +150,7 @@ model Blob {
 
   @@unique([siteId, path])
   @@index([siteId])
+  @@index([siteId, permalink])
 }
 
 enum Status {

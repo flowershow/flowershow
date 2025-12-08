@@ -102,9 +102,11 @@ export function buildSiteTree(
     // create file node (leaf)
     const filename = parts[parts.length - 1]!;
     const label = (blob.metadata as PageMetadata | null)?.title || filename;
-    // TODO this is ugly
+
+    // Use permalink if available, otherwise use appPath
+    const pathToUse = blob.permalink || blob.appPath;
     const urlPath = `${prefix}${
-      blob.appPath === "/" ? blob.appPath : "/" + blob.appPath
+      pathToUse === "/" ? pathToUse : "/" + pathToUse
     }`;
 
     parent.children.push({
