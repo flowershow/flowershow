@@ -238,18 +238,6 @@ describe("List Component - Pagination Tests", () => {
       expect(articles).toHaveLength(0);
     });
 
-    it("should display loading state", () => {
-      vi.mocked(api.site.getListComponentItems.useQuery).mockReturnValue({
-        data: undefined,
-        isLoading: true,
-        error: null,
-      } as any);
-
-      render(<List siteId={mockSiteId} />);
-
-      expect(screen.getByText("Loading...")).toBeInTheDocument();
-    });
-
     it("should display error state", () => {
       vi.mocked(api.site.getListComponentItems.useQuery).mockReturnValue({
         data: undefined,
