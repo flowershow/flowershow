@@ -178,7 +178,6 @@ export default function Form({
               placeholder={inputAttrs.placeholder}
               maxLength={inputAttrs.maxLength}
               pattern={inputAttrs.pattern}
-              required={required}
               disabled={disabled || pending}
               value={value}
               onChange={(e) => setValue(e.target.value)}
