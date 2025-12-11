@@ -314,21 +314,6 @@ export default async function SitePage(props: {
       })
     : undefined;
 
-  const Layout = async ({ children }) => {
-    return (
-      <BlogLayout
-        title={metadata?.title ?? ""}
-        description={metadata?.description ?? ""}
-        date={metadata?.date}
-        showHero={metadata?.showHero}
-        authors={authors}
-        image={metadata?.image}
-      >
-        {children}
-      </BlogLayout>
-    );
-  };
-
   const showEditLink = metadata?.showEditLink ?? siteConfig?.showEditLink;
   const showPageComments =
     site.enableComments &&
@@ -389,11 +374,18 @@ export default async function SitePage(props: {
 
         <div className="layout-inner-center">
           <main className="page-main">
-            <Layout>
+            <BlogLayout
+              title={metadata?.title ?? ""}
+              description={metadata?.description ?? ""}
+              date={metadata?.date}
+              showHero={metadata?.showHero}
+              authors={authors}
+              image={metadata?.image}
+            >
               <div className="rendered-mdx" id="mdxpage">
                 {compiledContent}
               </div>
-            </Layout>
+            </BlogLayout>
           </main>
 
           {showEditLink && (

@@ -97,6 +97,7 @@ export const BlogLayout: React.FC<Props> = ({
                 alt="Featured image"
                 src={image}
                 className="page-header-image"
+                fetchPriority="high"
               />
             </div>
           )}
