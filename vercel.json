@@ -2,6 +2,9 @@
   "functions": {
     "app/api/trpc/**/*.ts": {
       "maxDuration": 300
+    },
+    "app/api/inngest/**/*.ts": {
+      "maxDuration": 120
     }
   }
 }
