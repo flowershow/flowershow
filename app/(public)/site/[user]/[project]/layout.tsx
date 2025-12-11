@@ -7,6 +7,7 @@ import { GoogleAnalytics } from "@next/third-parties/google";
 import clsx from "clsx";
 
 import { api } from "@/trpc/server";
+import { generateScopedCss } from "@/lib/generate-scoped-css";
 
 import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
 import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
@@ -187,6 +188,52 @@ export default async function PublicLayout(props: {
     isFeatureEnabled(Feature.Search, site) && site.enableSearch;
   const cta = siteConfig?.nav?.cta;
 
+  // Generate CSS for custom footer and hero components
+  let customFooterCss: string | null = null;
+  let customHeroCss: string | null = null;
+
+  if (site.id) {
+    try {
+      const customFooterBlob = await api.site.getBlobByPath.query({
+        siteId: site.id,
+        path: "_flowershow/components/Footer.html",
+      });
+
+      if (customFooterBlob) {
+        const customFooterContent = await api.site.getBlobContent.query({
+          id: customFooterBlob.id,
+        });
+        const footerCssResult = await generateScopedCss(
+          customFooterContent ?? "",
+          "#customfooter",
+        );
+        customFooterCss = footerCssResult.css;
+      }
+    } catch (error) {
+      // Custom footer doesn't exist
+    }
+
+    try {
+      const customHeroBlob = await api.site.getBlobByPath.query({
+        siteId: site.id,
+        path: "_flowershow/components/Hero.html",
+      });
+
+      if (customHeroBlob) {
+        const customHeroContent = await api.site.getBlobContent.query({
+          id: customHeroBlob.id,
+        });
+        const heroCssResult = await generateScopedCss(
+          customHeroContent ?? "",
+          "#customhero",
+        );
+        customHeroCss = heroCssResult.css;
+      }
+    } catch (error) {
+      // Custom hero doesn't exist
+    }
+  }
+
   return (
     <html
       className={clsx(
@@ -208,6 +255,22 @@ export default async function PublicLayout(props: {
         {themeUrl && <link rel="stylesheet" href={themeUrl} />}
         {customCssSrc && (
           <link rel="stylesheet" crossOrigin="anonymous" href={customCssSrc} />
+        )}
+        {customFooterCss && (
+          <style
+            id="unocss-footer"
+            dangerouslySetInnerHTML={{
+              __html: customFooterCss,
+            }}
+          />
+        )}
+        {customHeroCss && (
+          <style
+            id="unocss-hero"
+            dangerouslySetInnerHTML={{
+              __html: customHeroCss,
+            }}
+          />
         )}
         {showThemeModeSwitch && (
           <script
@@ -264,7 +327,7 @@ export default async function PublicLayout(props: {
                   cta={cta}
                 />
                 <div className="site-body">{children}</div>
-                <Footer />
+                <Footer siteId={site.id} />
                 {showBuiltWithButton && <BuiltWithFloatingButton />}
                 {site.privacyMode === "PASSWORD" && (
                   <SiteLogoutButton

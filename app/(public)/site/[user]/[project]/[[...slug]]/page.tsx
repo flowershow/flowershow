@@ -19,6 +19,7 @@ import { getSiteUrl, getSiteUrlPath } from "@/lib/get-site-url";
 
 import Comments from "@/components/public/comments";
 import ErrorMessage from "@/components/public/error-message";
+import Hero from "@/components/public/hero";
 import { BlogLayout } from "@/components/public/layouts/blog";
 import SiteTree from "@/components/public/site-tree";
 import TableOfContents from "@/components/public/table-of-contents";
@@ -287,7 +288,7 @@ export default async function SitePage(props: {
     }
   }
 
-  const scopedCss = await generateScopedCss(pageContent ?? "");
+  const scopedCss = await generateScopedCss(pageContent ?? "", "#mdxpage");
 
   if (metadata?.layout === "plain") {
     return (
@@ -361,40 +362,13 @@ export default async function SitePage(props: {
       <UrlNormalizer />
 
       {showHero && (
-        <header className="page-hero-container">
-          <div className={clsx("page-hero", metadata?.image && "has-image")}>
-            <div className="page-hero-content-container">
-              <div className="page-hero-content">
-                <h1 className="page-hero-title">{metadata?.title ?? ""}</h1>
-                <p className="page-hero-description">
-                  {metadata?.description ?? ""}
-                </p>
-                {metadata?.cta && (
-                  <div className="page-hero-ctas-container">
-                    {metadata.cta.map((cta) => (
-                      <a
-                        key={cta.label}
-                        href={cta.href}
-                        className="page-hero-cta"
-                      >
-                        {cta.label}
-                      </a>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-            {metadata?.image && (
-              <div className="page-hero-image-container">
-                <img
-                  alt="Hero Image"
-                  src={metadata.image}
-                  className="page-hero-image"
-                />
-              </div>
-            )}
-          </div>
-        </header>
+        <Hero
+          siteId={site.id}
+          title={metadata?.title}
+          description={metadata?.description}
+          image={metadata?.image}
+          cta={metadata?.cta}
+        />
       )}
 
       <div

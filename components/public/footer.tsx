@@ -1,9 +1,50 @@
 import Link from "next/link";
 import { getConfig } from "@/lib/app-config";
+import { api } from "@/trpc/server";
 
 const config = getConfig();
 
-export default function Footer() {
+interface FooterProps {
+  siteId?: string;
+}
+
+export default async function Footer({ siteId }: FooterProps) {
+  // Try to fetch custom footer
+  let customFooterContent: string | null = null;
+
+  if (siteId) {
+    try {
+      const customFooterBlob = await api.site.getBlobByPath.query({
+        siteId,
+        path: "_flowershow/components/Footer.html",
+      });
+
+      if (customFooterBlob) {
+        customFooterContent = await api.site.getBlobContent.query({
+          id: customFooterBlob.id,
+        });
+      }
+    } catch (error) {
+      // Custom footer doesn't exist, will use default
+    }
+  }
+
+  // If custom footer exists, render it as HTML
+  if (customFooterContent) {
+    return (
+      <>
+        <p id="footer" className="sr-only">
+          Footer
+        </p>
+        <div
+          id="customfooter"
+          dangerouslySetInnerHTML={{ __html: customFooterContent }}
+        />
+      </>
+    );
+  }
+
+  // Default footer
   return (
     <footer className="site-footer" aria-labelledby="footer">
       <div className="site-footer-inner">

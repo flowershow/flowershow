@@ -8,9 +8,9 @@ import prefixWrap from "postcss-prefixwrap";
  * compile them to CSS (Tailwind classes only)
  * and prefix with #mdx to make the rules scoped to the markdown content
  */
-export async function generateScopedCss(content: string) {
+export async function generateScopedCss(content: string, selector: string) {
   const { css } = await generateUnoCSS(content, { minify: true });
-  return postcss([prefixWrap("#mdxpage")]).process(css, {
+  return postcss([prefixWrap(selector)]).process(css, {
     from: undefined,
   });
 }
