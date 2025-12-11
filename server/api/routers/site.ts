@@ -1029,7 +1029,7 @@ export const siteRouter = createTRPCRouter({
         async (input) => {
           const blob = await ctx.db.blob.findFirst({
             where: {
-              siteId: input.id,
+              siteId: input.siteId,
               path: input.path,
             },
             orderBy: { path: "desc" },
