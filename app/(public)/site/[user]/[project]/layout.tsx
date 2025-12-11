@@ -30,6 +30,7 @@ import "@/styles/callouts.css";
 import "@/styles/default-theme.css";
 import { THEME_PREFERENCE_STORAGE_KEY } from "@/lib/const";
 import SiteLogoutButton from "./site-logout-button";
+import KatexStylesLoader from "./katex-loader";
 import { PublicSite } from "@/server/api/types";
 
 const { title, description, favicon, thumbnail } = getConfig();
@@ -246,12 +247,14 @@ export default async function PublicLayout(props: {
       data-theme={defaultMode}
     >
       <head>
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
-          integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn"
-          crossOrigin="anonymous"
-        />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
+            integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn"
+            crossOrigin="anonymous"
+          />
+        </noscript>
         {themeUrl && <link rel="stylesheet" href={themeUrl} />}
         {customCssSrc && (
           <link rel="stylesheet" crossOrigin="anonymous" href={customCssSrc} />
@@ -294,6 +297,7 @@ export default async function PublicLayout(props: {
         )}
       </head>
       <body>
+        <KatexStylesLoader />
         <TRPCReactProvider headers={await headers()}>
           <Providers>
             {/* it should be in the head */}
