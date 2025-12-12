@@ -841,11 +841,9 @@
   .list-component-item-media {
     position: relative;
     overflow: hidden;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 3 / 2;
 
     @media (min-width: 1024px) {
-      /* align-self: flex-start; */
-      aspect-ratio: 3 / 2;
       flex-shrink: 0;
       width: 16rem;
     }
@@ -1306,19 +1304,20 @@
     z-index: 30;
     display: inline-block;
     width: 1.5rem;
-    height: 1.5rem;
     border-radius: 9999px;
     outline-style: solid;
     outline-width: 2px;
     outline-color: var(--color-background);
   }
   .page-header-image-container {
+    position: relative;
     width: 100%;
+    aspect-ratio: 3 / 2;
     padding: 0.75rem 0;
   }
   .page-header-image {
     border-radius: 0.375rem;
-    object-fit: cover;
+    object-fit: contain;
   }
 
   /* ────────────────────────────────────────────────────

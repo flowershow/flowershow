@@ -5,6 +5,7 @@ import { PageMetadata } from "@/server/api/types";
 import ListComponentPagination from "./list-pagination";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
+import Image from "next/image";
 
 type Slot = "media" | "eyebrow" | "headline" | "summary" | "footnote";
 export type SlotsMap = Partial<Record<Slot, keyof PageMetadata>>;
@@ -135,12 +136,14 @@ export default function List({
         <article key={url} className="list-component-item">
           {slotsMap.media && (
             <div className="list-component-item-media">
-              <img
+              <Image
                 alt="Image"
                 src={
                   (getValue("media", metadata, slotsMap) as string) ??
                   "https://r2-assets.flowershow.app/placeholder.png"
                 }
+                width={1200}
+                height={800}
                 className="list-component-item-media-img"
               />
             </div>

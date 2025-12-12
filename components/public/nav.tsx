@@ -17,6 +17,7 @@ import { SearchModal } from "@/components/public/search-modal";
 import { socialIcons } from "@/components/public/social-icons";
 import { usePathname } from "next/navigation";
 import ThemeSwitch from "./theme-switch";
+import Image from "next/image";
 
 export interface Props {
   logo: string;
@@ -63,7 +64,7 @@ const Nav = ({
           {/* Desktop Navigation */}
           <div className="site-navbar-inner">
             <Link href={url} className="site-navbar-site-title">
-              <img
+              <Image
                 className="site-navbar-site-logo"
                 alt="Logo"
                 src={logo}

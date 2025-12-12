@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { api } from "@/trpc/server";
+import Image from "next/image";
 
 interface HeroProps {
   siteId?: string;
@@ -76,7 +77,13 @@ export default async function Hero({
         </div>
         {image && (
           <div className="page-hero-image-container">
-            <img alt="Hero Image" src={image} className="page-hero-image" />
+            <Image
+              alt="Hero Image"
+              width={1200}
+              height={800}
+              src={image}
+              className="page-hero-image"
+            />
           </div>
         )}
       </div>

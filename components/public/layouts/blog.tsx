@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CalendarIcon } from "lucide-react";
+import Image from "next/image";
 
 interface Props extends React.PropsWithChildren {
   title: string;
@@ -43,10 +44,12 @@ export const BlogLayout: React.FC<Props> = ({
                   {authors.map(
                     (author) =>
                       author.avatar && (
-                        <img
+                        <Image
                           key={author.key}
                           alt={author.name}
                           src={author.avatar}
+                          width={50}
+                          height={50}
                           className="page-header-author-avatar"
                         />
                       ),
@@ -93,9 +96,10 @@ export const BlogLayout: React.FC<Props> = ({
 
           {image && (
             <div className="page-header-image-container">
-              <img
+              <Image
                 alt="Featured image"
                 src={image}
+                fill
                 className="page-header-image"
                 fetchPriority="high"
               />
