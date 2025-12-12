@@ -42,9 +42,6 @@ yarn-error.log*
 /playwright/.auth/
 /playwright/test-env.json
 
-# cloud app config
-config.json
-
 # Sentry Config File
 .env.sentry-build-plugin
 

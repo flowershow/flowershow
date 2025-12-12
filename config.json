@@ -1,0 +1,78 @@
+{
+  "product": "flowershow",
+  "title": "Flowershow Cloud",
+  "description": "Turn your markdown into a website in a couple of clicks with Flowershow Cloud.",
+  "logo": "https://r2-assets.flowershow.app/logo.png",
+  "favicon": "https://r2-assets.flowershow.app/favicon.ico",
+  "thumbnail": "https://r2-assets.flowershow.app/thumbnail.png",
+  "termsOfService": "https://datahub.io/docs/terms-of-service",
+  "githubTemplateUrl": "https://github.com/datopian/flowershow-cloud-template",
+  "landingPageUrl": "https://flowershow.app/",
+  "dataVisComponentsEnabled": true,
+  "siteAliases": [],
+  "nav": {
+    "logo": "https://r2-assets.flowershow.app/logo.png",
+    "links": [
+      {
+        "href": "/#features",
+        "name": "Features"
+      },
+      {
+        "href": "/docs",
+        "name": "Docs"
+      },
+      {
+        "href": "/blog",
+        "name": "Blog"
+      },
+      {
+        "href": "/docs/roadmap",
+        "name": "Roadmap"
+      },
+      {
+        "href": "/about",
+        "name": "About"
+      },
+      {
+        "href": "/cloud",
+        "name": "Cloud"
+      },
+      {
+        "href": "https://github.com/flowershow/flowershow/discussions",
+        "name": "Forum"
+      },
+      {
+        "href": "/_all",
+        "name": "All"
+      }
+    ],
+    "cta": {
+      "href": "https://cloud.flowershow.app/login",
+      "name": "Flowershow Cloud"
+    }
+  },
+  "dashboardSidebar": {
+    "links": [
+      {
+        "type": "discord",
+        "href": null,
+        "name": ""
+      },
+      {
+        "type": "announcement",
+        "href": null,
+        "name": ""
+      },
+      {
+        "type": "guide",
+        "href": null,
+        "name": ""
+      },
+      {
+        "type": "demo",
+        "href": null,
+        "name": ""
+      }
+    ]
+  }
+}
