@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import LoadingDots from "@/components/icons/loading-dots";
-import { cn } from "@/lib/utils";
-import { useState } from "react";
-import { useFormStatus } from "react-dom";
-import { toast } from "sonner";
+import { useState } from 'react';
+import { useFormStatus } from 'react-dom';
+import { toast } from 'sonner';
+import LoadingDots from '@/components/icons/loading-dots';
+import { cn } from '@/lib/utils';
 
 export default function BulkCreateForm({
   handleSubmit,
@@ -38,7 +38,7 @@ export default function BulkCreateForm({
           if (error instanceof Error) {
             toast.error(error.message);
           } else {
-            toast.error("An error occurred");
+            toast.error('An error occurred');
           }
         }
       }}
@@ -83,10 +83,10 @@ function FormButton() {
   return (
     <button
       className={cn(
-        "flex h-8 w-32 items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none sm:h-10",
+        'flex h-8 w-32 items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none sm:h-10',
         pending
-          ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   "
-          : "border-black bg-black text-white hover:bg-white hover:text-black     ",
+          ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   '
+          : 'border-black bg-black text-white hover:bg-white hover:text-black     ',
       )}
       disabled={pending}
     >

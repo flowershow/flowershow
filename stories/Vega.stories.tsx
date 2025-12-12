@@ -1,8 +1,8 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { Vega } from "@/components/public/mdx/vega";
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { Vega } from '@/components/public/mdx/vega';
 
 const meta: Meta<typeof Vega> = {
-  title: "Charts/Vega",
+  title: 'Charts/Vega',
   component: Vega,
   argTypes: {
     data: {
@@ -22,7 +22,7 @@ type Story = StoryObj<any>;
 
 // More on writing stories with args: https://storybook.js.org/docs/react/writing-stories/args
 export const Primary: Story = {
-  name: "Bar chart",
+  name: 'Bar chart',
   args: {
     data: {
       values: [
@@ -37,19 +37,19 @@ export const Primary: Story = {
       ],
     },
     spec: {
-      $schema: "https://vega.github.io/schema/vega-lite/v4.json",
-      mark: "bar",
+      $schema: 'https://vega.github.io/schema/vega-lite/v4.json',
+      mark: 'bar',
       data: {
-        name: "table",
+        name: 'table',
       },
       encoding: {
         x: {
-          field: "x",
-          type: "ordinal",
+          field: 'x',
+          type: 'ordinal',
         },
         y: {
-          field: "y",
-          type: "quantitative",
+          field: 'y',
+          type: 'quantitative',
         },
       },
     },

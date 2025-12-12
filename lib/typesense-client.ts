@@ -1,5 +1,5 @@
-import TypesenseInstantSearchAdapter from "typesense-instantsearch-adapter";
-import { env } from "@/env.mjs";
+import TypesenseInstantSearchAdapter from 'typesense-instantsearch-adapter';
+import { env } from '@/env.mjs';
 
 const typesenseInstantsearchAdapter = new TypesenseInstantSearchAdapter({
   server: {
@@ -16,7 +16,7 @@ const typesenseInstantsearchAdapter = new TypesenseInstantSearchAdapter({
   //  So you can pass any parameters supported by the search endpoint below.
   //  query_by is required.
   additionalSearchParameters: {
-    query_by: "title,description,content",
+    query_by: 'title,description,content',
   },
 });
 
@@ -34,8 +34,8 @@ export const searchClient = {
           processingTimeMS: 0,
           hitsPerPage: 0,
           exhaustiveNbHits: false,
-          query: "",
-          params: "",
+          query: '',
+          params: '',
         })),
       });
     }

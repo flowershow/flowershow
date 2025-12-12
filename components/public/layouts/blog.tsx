@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { CalendarIcon } from "lucide-react";
-import Image from "next/image";
+import { CalendarIcon } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
 
 interface Props extends React.PropsWithChildren {
   title: string;
@@ -114,14 +114,14 @@ export const BlogLayout: React.FC<Props> = ({
 
 const formatDate = (
   date: string | undefined,
-  locales = "en-US",
+  locales = 'en-US',
 ): string | null => {
   if (!date) return null;
 
   const options: Intl.DateTimeFormatOptions = {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   };
 
   return new Date(date).toLocaleDateString(locales, options);

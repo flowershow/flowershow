@@ -1,5 +1,5 @@
-import { useEffect, useRef, ReactNode, Dispatch, SetStateAction } from "react";
-import { AnimatePresence, motion, useAnimate } from "motion/react";
+import { AnimatePresence, motion, useAnimate } from 'motion/react';
+import { Dispatch, ReactNode, SetStateAction, useEffect, useRef } from 'react';
 
 type DragInfo = {
   offset: { y: number };
@@ -17,7 +17,7 @@ export default function Leaflet({
   const heightRef = useRef(0);
 
   const transitionProps = {
-    type: "spring",
+    type: 'spring',
     stiffness: 500,
     damping: 30,
   } as const;
@@ -38,7 +38,7 @@ export default function Leaflet({
     const height = heightRef.current || 0;
 
     if (offset > height / 2 || velocity > 800) {
-      await animate(scope.current, { y: "100%" }, transitionProps);
+      await animate(scope.current, { y: '100%' }, transitionProps);
       setShow(false);
     } else {
       animate(scope.current, { y: 0 }, transitionProps);
@@ -52,15 +52,15 @@ export default function Leaflet({
         ref={scope}
         key="leaflet"
         className="group fixed inset-x-0 bottom-0 z-40 w-screen cursor-grab bg-white pb-5 active:cursor-grabbing sm:hidden"
-        initial={{ y: "100%" }}
-        exit={{ y: "100%" }}
+        initial={{ y: '100%' }}
+        exit={{ y: '100%' }}
         drag="y"
         dragDirectionLock
         onDragEnd={handleDragEnd}
         dragElastic={{ top: 0, bottom: 1 }}
         dragConstraints={{ top: 0, bottom: 0 }}
         // whileDrag keeps it above the backdrop when dragging quickly
-        style={{ willChange: "transform" }}
+        style={{ willChange: 'transform' }}
         transition={transitionProps}
       >
         <div className="rounded-t-4xl -mb-1 flex h-7 w-full items-center justify-center border-t border-gray-200">

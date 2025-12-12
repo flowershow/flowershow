@@ -1,28 +1,28 @@
-import { NextRequest } from "next/server";
-import prisma from "@/server/db";
-import { env } from "@/env.mjs";
-import { inngest } from "@/inngest/client";
-import axios from "axios";
-import PostHogClient from "@/lib/server-posthog";
+import axios from 'axios';
+import { NextRequest } from 'next/server';
+import { env } from '@/env.mjs';
+import { inngest } from '@/inngest/client';
+import PostHogClient from '@/lib/server-posthog';
+import prisma from '@/server/db';
 
 // TODO https://www.inngest.com/docs/platform/webhooks
 export async function POST(req: NextRequest) {
-  const event = req.headers.get("x-github-event");
+  const event = req.headers.get('x-github-event');
 
-  if (event === "ping") {
-    return new Response("Event processed", { status: 200 });
+  if (event === 'ping') {
+    return new Response('Event processed', { status: 200 });
   }
 
   const secret = env.GH_WEBHOOK_SECRET;
-  const signature = req.headers.get("x-hub-signature")!;
+  const signature = req.headers.get('x-hub-signature')!;
   const payload = await req.json();
 
   if (!verifySignature(secret, signature, payload)) {
-    return new Response("Invalid signature", { status: 401 });
+    return new Response('Invalid signature', { status: 401 });
   }
 
-  const webhookId = req.headers.get("x-github-hook-id");
-  const siteId = req.nextUrl.searchParams.get("siteid");
+  const webhookId = req.headers.get('x-github-hook-id');
+  const siteId = req.nextUrl.searchParams.get('siteid');
 
   let site;
   if (siteId) {
@@ -48,11 +48,11 @@ export async function POST(req: NextRequest) {
   }
 
   if (!site) {
-    return new Response("Site not found", { status: 404 });
+    return new Response('Site not found', { status: 404 });
   }
 
-  if (payload.ref !== `refs/heads/${site.ghBranch}` || event !== "push") {
-    return new Response("Incorrect branch", { status: 404 });
+  if (payload.ref !== `refs/heads/${site.ghBranch}` || event !== 'push') {
+    return new Response('Incorrect branch', { status: 404 });
   }
 
   const account = await prisma.account.findFirst({
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   });
 
   await inngest.send({
-    name: "site/sync",
+    name: 'site/sync',
     data: {
       siteId: site.id,
       ghRepository: site.ghRepository,
@@ -75,12 +75,12 @@ export async function POST(req: NextRequest) {
   const posthog = PostHogClient();
   posthog.capture({
     distinctId: site.userId,
-    event: "site_sync_triggered",
-    properties: { id: site.id, source: "auto" },
+    event: 'site_sync_triggered',
+    properties: { id: site.id, source: 'auto' },
   });
   await posthog.shutdown();
 
-  return new Response("Event processed", { status: 200 });
+  return new Response('Event processed', { status: 200 });
 }
 
 const encoder = new TextEncoder();
@@ -91,19 +91,19 @@ async function verifySignature(
   header: string,
   payload: string,
 ) {
-  const parts = header.split("=");
+  const parts = header.split('=');
   const sigHex = parts[1]!;
 
-  const algorithm = { name: "HMAC", hash: { name: "SHA-256" } };
+  const algorithm = { name: 'HMAC', hash: { name: 'SHA-256' } };
 
   const keyBytes = encoder.encode(secret);
   const extractable = false;
   const key = await crypto.subtle.importKey(
-    "raw",
+    'raw',
     keyBytes,
     algorithm,
     extractable,
-    ["sign", "verify"],
+    ['sign', 'verify'],
   );
 
   const sigBytes = hexToBytes(sigHex);

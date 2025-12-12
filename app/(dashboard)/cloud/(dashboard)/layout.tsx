@@ -1,7 +1,7 @@
-import { ReactNode, Suspense } from "react";
-import Profile from "@/components/dashboard/profile";
-import Nav from "@/components/dashboard/nav";
-import Footer from "@/components/dashboard/footer";
+import { ReactNode, Suspense } from 'react';
+import Footer from '@/components/dashboard/footer';
+import Nav from '@/components/dashboard/nav';
+import Profile from '@/components/dashboard/profile';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (

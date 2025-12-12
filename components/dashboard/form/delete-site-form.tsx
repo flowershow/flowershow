@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { cn } from "@/lib/utils";
-import { useParams, useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { api } from "@/trpc/react";
-import { signOut } from "next-auth/react";
-import { useState } from "react";
-import type { Subscription } from "@prisma/client";
-import LoadingDots from "@/components/icons/loading-dots";
+import type { Subscription } from '@prisma/client';
+import { useParams, useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import LoadingDots from '@/components/icons/loading-dots';
+import { cn } from '@/lib/utils';
+import { api } from '@/trpc/react';
 
 type SubscriptionWithInterval = Subscription & {
-  interval?: "month" | "year";
+  interval?: 'month' | 'year';
   cancelAtPeriodEnd?: boolean;
 };
 
@@ -34,13 +34,13 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
   const { isLoading: isDeletingSite, mutate: deleteSite } =
     api.site.delete.useMutation({
       onSuccess: (res) => {
-        router.push("/");
+        router.push('/');
         router.refresh();
         toast.success(`Successfully deleted site!`);
       },
       onError: (error) => {
         toast.error(error.message);
-        if (error.data?.code === "UNAUTHORIZED") {
+        if (error.data?.code === 'UNAUTHORIZED') {
           setTimeout(() => {
             signOut();
           }, 3000);
@@ -61,7 +61,7 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
 
   const handleDelete = async () => {
     const { data: latestSubscription } = await refetch();
-    if (latestSubscription && latestSubscription.status === "active") {
+    if (latestSubscription && latestSubscription.status === 'active') {
       setShowSubscriptionWarning(true);
     } else {
       deleteSite({ id });
@@ -122,22 +122,22 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
                     the site now will immediately cancel the subscription.
                   </>
                 ) : (
-                  "This site has an active subscription that will be automatically cancelled."
+                  'This site has an active subscription that will be automatically cancelled.'
                 )}
               </p>
               {subscription?.currentPeriodEnd && (
                 <p className="mt-2">
                   {subscription?.cancelAtPeriodEnd
-                    ? "Scheduled cancellation date"
-                    : "Next billing date"}
-                  :{" "}
+                    ? 'Scheduled cancellation date'
+                    : 'Next billing date'}
+                  :{' '}
                   {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                   <br />
-                  Billing period:{" "}
+                  Billing period:{' '}
                   {(subscription as SubscriptionWithInterval)?.interval ===
-                  "year"
-                    ? "Annually"
-                    : "Monthly"}
+                  'year'
+                    ? 'Annually'
+                    : 'Monthly'}
                 </p>
               )}
               <p className="mt-4 font-medium">
@@ -172,10 +172,10 @@ function FormButton({ pending = false }) {
   return (
     <button
       className={cn(
-        "flex h-8 w-32 items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none sm:h-10",
+        'flex h-8 w-32 items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none sm:h-10',
         pending
-          ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   "
-          : "border-red-600 bg-red-600 text-white hover:bg-white hover:text-red-600 ",
+          ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   '
+          : 'border-red-600 bg-red-600 text-white hover:bg-white hover:text-red-600 ',
       )}
       disabled={pending}
     >

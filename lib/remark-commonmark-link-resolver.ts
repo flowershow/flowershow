@@ -1,5 +1,5 @@
-import { visit } from "unist-util-visit";
-import { resolveFilePathToUrlPath } from "./resolve-link";
+import { visit } from 'unist-util-visit';
+import { resolveFilePathToUrlPath } from './resolve-link';
 
 export interface Options {
   filePath: string;
@@ -15,11 +15,11 @@ function remarkCommonMarkLinkResolver({
   permalinks,
 }: Options) {
   return (tree: any) => {
-    visit(tree, "link", (node) => {
-      if (typeof node.url !== "string") return;
+    visit(tree, 'link', (node) => {
+      if (typeof node.url !== 'string') return;
 
-      if (node.url.startsWith("mailto:")) return;
-      if (node.url.startsWith("http")) return;
+      if (node.url.startsWith('mailto:')) return;
+      if (node.url.startsWith('http')) return;
 
       node.url = resolveFilePathToUrlPath({
         target: node.url,
@@ -30,8 +30,8 @@ function remarkCommonMarkLinkResolver({
         permalinks,
       });
     });
-    visit(tree, "image", (node) => {
-      if (typeof node.url !== "string") return;
+    visit(tree, 'image', (node) => {
+      if (typeof node.url !== 'string') return;
       node.url = resolveFilePathToUrlPath({
         target: node.url,
         originFilePath: filePath,

@@ -1,5 +1,5 @@
-import { z } from "zod";
-import { Prisma, Plan, PrivacyMode, SyntaxMode } from "@prisma/client";
+import { Plan, Prisma, PrivacyMode, SyntaxMode } from '@prisma/client';
+import { z } from 'zod';
 
 export const publicSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   id: true,
@@ -46,21 +46,21 @@ export const publicSiteSchema: z.ZodType<PublicSite> = z.object({
 });
 
 export enum SiteUpdateKey {
-  customDomain = "customDomain",
-  rootDir = "rootDir",
-  autoSync = "autoSync",
-  enableComments = "enableComments",
-  enableSearch = "enableSearch",
-  subdomain = "subdomain",
-  projectName = "projectName",
-  syntaxMode = "syntaxMode",
-  giscusRepoId = "giscusRepoId",
-  giscusCategoryId = "giscusCategoryId",
+  customDomain = 'customDomain',
+  rootDir = 'rootDir',
+  autoSync = 'autoSync',
+  enableComments = 'enableComments',
+  enableSearch = 'enableSearch',
+  subdomain = 'subdomain',
+  projectName = 'projectName',
+  syntaxMode = 'syntaxMode',
+  giscusRepoId = 'giscusRepoId',
+  giscusCategoryId = 'giscusCategoryId',
 }
 export interface PageMetadata {
   title: string;
   description?: string;
-  layout?: "plain";
+  layout?: 'plain';
   image?: string;
   authors?: string[];
   date?: string;
@@ -76,6 +76,6 @@ export interface PageMetadata {
     label: string;
   }>;
   avatar?: string;
-  syntaxMode?: "md" | "mdx";
+  syntaxMode?: 'md' | 'mdx';
   [key: string]: any;
 }

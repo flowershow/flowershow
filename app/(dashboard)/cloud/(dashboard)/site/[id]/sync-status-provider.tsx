@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import { api } from "@/trpc/react";
-import { Status } from "@prisma/client";
+import { Status } from '@prisma/client';
 import {
-  ReactNode,
-  Dispatch,
   createContext,
-  useContext,
-  useState,
-  useEffect,
+  Dispatch,
+  ReactNode,
   SetStateAction,
-} from "react";
+  useContext,
+  useEffect,
+  useState,
+} from 'react';
+import { api } from '@/trpc/react';
 
 interface SyncStatus {
-  status: Status | "OUTDATED" | "LOADING";
+  status: Status | 'OUTDATED' | 'LOADING';
   error?: string | null;
   lastSyncedAt?: Date | null;
 }
@@ -23,7 +23,7 @@ interface SyncStatusContextProps extends SyncStatus {
 }
 
 const SyncStatusContext = createContext<SyncStatusContextProps>({
-  status: "LOADING",
+  status: 'LOADING',
 });
 
 export function SyncStatusProvider({
@@ -34,7 +34,7 @@ export function SyncStatusProvider({
   siteId: string;
 }) {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
-    status: "LOADING",
+    status: 'LOADING',
   });
 
   const { data, isLoading, refetch } = api.site.getSyncStatus.useQuery(
@@ -52,7 +52,7 @@ export function SyncStatusProvider({
   }, [data]);
 
   const setSyncTriggered = () => {
-    setSyncStatus((prev) => ({ ...prev, status: "PENDING" }));
+    setSyncStatus((prev) => ({ ...prev, status: 'PENDING' }));
   };
 
   return (

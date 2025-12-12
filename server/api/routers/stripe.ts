@@ -1,11 +1,11 @@
-import { z } from "zod";
-import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, protectedProcedure } from "../trpc";
-import { stripe } from "@/lib/stripe";
-import { env } from "@/env.mjs";
+import { TRPCError } from '@trpc/server';
+import { z } from 'zod';
+import { env } from '@/env.mjs';
+import { stripe } from '@/lib/stripe';
+import { createTRPCRouter, protectedProcedure } from '../trpc';
 
 const protocol =
-  process.env.NODE_ENV === "development" ? "http://" : "https://";
+  process.env.NODE_ENV === 'development' ? 'http://' : 'https://';
 
 const returnURLBase = `${protocol}${env.NEXT_PUBLIC_CLOUD_DOMAIN}/site`;
 
@@ -24,22 +24,22 @@ export const stripeRouter = createTRPCRouter({
 
       if (!site) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Site not found",
+          code: 'NOT_FOUND',
+          message: 'Site not found',
         });
       }
 
       if (site.userId !== ctx.session.user.id) {
         throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Not authorized",
+          code: 'FORBIDDEN',
+          message: 'Not authorized',
         });
       }
 
       if (!site.subscription?.stripeSubscriptionId) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "No active subscription found",
+          code: 'NOT_FOUND',
+          message: 'No active subscription found',
         });
       }
 
@@ -63,15 +63,15 @@ export const stripeRouter = createTRPCRouter({
 
       if (!site) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Site not found",
+          code: 'NOT_FOUND',
+          message: 'Site not found',
         });
       }
 
       if (site.userId !== ctx.session.user.id) {
         throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Not authorized",
+          code: 'FORBIDDEN',
+          message: 'Not authorized',
         });
       }
 
@@ -80,18 +80,18 @@ export const stripeRouter = createTRPCRouter({
         where: { siteId: input.siteId },
       });
 
-      if (existingSubscription && existingSubscription.status === "active") {
+      if (existingSubscription && existingSubscription.status === 'active') {
         throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Site already has an active subscription",
+          code: 'BAD_REQUEST',
+          message: 'Site already has an active subscription',
         });
       }
 
       const checkoutSession = await stripe.checkout.sessions.create({
         client_reference_id: input.siteId,
         customer_email: site.user?.email!,
-        mode: "subscription",
-        payment_method_types: ["card"],
+        mode: 'subscription',
+        payment_method_types: ['card'],
         line_items: [
           {
             price: input.priceId,
@@ -122,22 +122,22 @@ export const stripeRouter = createTRPCRouter({
 
       if (!site) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Site not found",
+          code: 'NOT_FOUND',
+          message: 'Site not found',
         });
       }
 
       if (site.userId !== ctx.session.user.id) {
         throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Not authorized",
+          code: 'FORBIDDEN',
+          message: 'Not authorized',
         });
       }
 
       if (!site.subscription?.stripeCustomerId) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "No active subscription found",
+          code: 'NOT_FOUND',
+          message: 'No active subscription found',
         });
       }
 
@@ -163,15 +163,15 @@ export const stripeRouter = createTRPCRouter({
 
       if (!site) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Site not found",
+          code: 'NOT_FOUND',
+          message: 'Site not found',
         });
       }
 
       if (site.userId !== ctx.session.user.id) {
         throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Not authorized",
+          code: 'FORBIDDEN',
+          message: 'Not authorized',
         });
       }
 

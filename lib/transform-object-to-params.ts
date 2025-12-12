@@ -6,5 +6,5 @@ export function transformObjectToParams(object) {
         `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
     );
 
-  return params.length > 0 ? `?${params.join("&")}` : "";
+  return params.length > 0 ? `?${params.join('&')}` : '';
 }

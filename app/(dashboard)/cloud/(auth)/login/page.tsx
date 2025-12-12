@@ -1,8 +1,7 @@
-import Image from "next/image";
-import { Suspense } from "react";
-
-import LoginButton from "./login-button";
-import { getConfig } from "@/lib/app-config";
+import Image from 'next/image';
+import { Suspense } from 'react';
+import { getConfig } from '@/lib/app-config';
+import LoginButton from './login-button';
 
 const config = getConfig();
 
@@ -38,7 +37,7 @@ export default function LoginPage() {
             href={config.termsOfService}
             target="_blank"
           >
-            {" "}
+            {' '}
             Terms of Service.
           </a>
         </p>

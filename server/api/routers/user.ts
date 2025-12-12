@@ -1,6 +1,6 @@
-import { z } from "zod";
-import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
-import { fetchGitHubScopes, fetchGitHubScopeRepositories } from "@/lib/github";
+import { z } from 'zod';
+import { fetchGitHubScopeRepositories, fetchGitHubScopes } from '@/lib/github';
+import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 
 export const userRouter = createTRPCRouter({
   getUser: protectedProcedure.query(async ({ ctx }) => {
@@ -32,7 +32,7 @@ export const userRouter = createTRPCRouter({
         user: { username },
       } = ctx.session;
       return await fetchGitHubScopeRepositories({
-        scope: username === scope ? "self" : scope,
+        scope: username === scope ? 'self' : scope,
         accessToken,
       });
     }),
@@ -66,7 +66,7 @@ export const userRouter = createTRPCRouter({
 
         if (lastSubmissionTime > fiveMinutesAgo) {
           throw new Error(
-            "⏳ Please wait at least 5min between feedback submissions, or click Support and create an issue or start a discussion.",
+            '⏳ Please wait at least 5min between feedback submissions, or click Support and create an issue or start a discussion.',
           );
         }
       }

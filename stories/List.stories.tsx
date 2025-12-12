@@ -1,19 +1,19 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { mocked } from "storybook/test";
-import List from "@/components/public/mdx/list";
-import { api } from "@/trpc/server";
-import { manyItems } from "@/stories/__fixtures__/catalog";
-import "@/styles/default-theme.css";
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { mocked } from 'storybook/test';
+import List from '@/components/public/mdx/list';
+import { manyItems } from '@/stories/__fixtures__/catalog';
+import { api } from '@/trpc/server';
+import '@/styles/default-theme.css';
 
 const meta: Meta<typeof List> = {
-  title: "Other/List",
+  title: 'Other/List',
   component: List,
   args: {
-    siteId: "site_123",
-    dir: "",
+    siteId: 'site_123',
+    dir: '',
   },
   parameters: {
-    controls: { exclude: ["fields", "siteId", "pageNumber"] },
+    controls: { exclude: ['fields', 'siteId', 'pageNumber'] },
   },
   argTypes: {
     dir: {
@@ -48,7 +48,7 @@ export const WithPagination: Story = {
   parameters: {
     nextjs: {
       router: {
-        pathname: "/blog",
+        pathname: '/blog',
         query: {
           page: 1,
         },
@@ -66,11 +66,11 @@ export const WithPagination: Story = {
 export const CustomSlots: Story = {
   args: {
     slots: {
-      media: "image",
-      eyebrow: "title",
-      headline: "date",
-      summary: "description",
-      footnote: "tags",
+      media: 'image',
+      eyebrow: 'title',
+      headline: 'date',
+      summary: 'description',
+      footnote: 'tags',
     },
   },
   async beforeEach() {

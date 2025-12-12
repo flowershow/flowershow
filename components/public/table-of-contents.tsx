@@ -1,7 +1,7 @@
-"use client";
-import { useState, useEffect, useCallback } from "react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
+'use client';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useCallback, useEffect, useState } from 'react';
 
 export interface TocSection {
   id: string;
@@ -47,7 +47,7 @@ function TocItems({
 }
 
 export default function TableOfContents({
-  className = "",
+  className = '',
 }: {
   className?: string;
 }) {
@@ -57,7 +57,7 @@ export default function TableOfContents({
 
   useEffect(() => {
     const headingNodes: NodeListOf<HTMLHeadingElement> =
-      document.querySelectorAll("h2,h3,h4,h5,h6");
+      document.querySelectorAll('h2,h3,h4,h5,h6');
     const toc = collectHeadings(headingNodes);
     setTableOfContents(toc ?? []);
   }, [currentPath]);
@@ -96,13 +96,13 @@ export function collectHeadings(nodes: NodeListOf<HTMLHeadingElement>) {
       return;
     }
 
-    if (level === "H1") {
+    if (level === 'H1') {
       sections.push({ id, title, level, children: [] });
     }
 
     const parentSection = sections[sections.length - 1];
 
-    if (level === "H2") {
+    if (level === 'H2') {
       if (parentSection && level > parentSection.level) {
         (parentSection as TocSection).children.push({
           id,
@@ -115,7 +115,7 @@ export function collectHeadings(nodes: NodeListOf<HTMLHeadingElement>) {
       }
     }
 
-    if (level === "H3") {
+    if (level === 'H3') {
       const subSection =
         parentSection?.children[parentSection?.children?.length - 1];
       if (subSection && level > subSection.level) {
@@ -184,10 +184,10 @@ export const useTableOfContents = (tableOfContents) => {
       });
       setCurrentSection(current);
     }
-    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener('scroll', onScroll);
     };
   }, [getHeadings, tableOfContents]);
 

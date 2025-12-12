@@ -1,35 +1,35 @@
-"use client";
+'use client';
 
-import { api } from "@/trpc/react";
-import { PageMetadata } from "@/server/api/types";
-import ListComponentPagination from "./list-pagination";
-import Skeleton from "react-loading-skeleton";
-import "react-loading-skeleton/dist/skeleton.css";
-import Image from "next/image";
+import Skeleton from 'react-loading-skeleton';
+import { PageMetadata } from '@/server/api/types';
+import { api } from '@/trpc/react';
+import ListComponentPagination from './list-pagination';
+import 'react-loading-skeleton/dist/skeleton.css';
+import Image from 'next/image';
 
-type Slot = "media" | "eyebrow" | "headline" | "summary" | "footnote";
+type Slot = 'media' | 'eyebrow' | 'headline' | 'summary' | 'footnote';
 export type SlotsMap = Partial<Record<Slot, keyof PageMetadata>>;
 type SlotsFormatMap = Partial<Record<Slot, string>>;
 
-type Field = "title" | "description" | "authors" | "date" | "image"; // TODO TB deprecated
+type Field = 'title' | 'description' | 'authors' | 'date' | 'image'; // TODO TB deprecated
 
 const _convertFieldsToSlotsMap = (fields: Field[]) => {
   const _slotsMap: SlotsMap = {};
   fields.forEach((f) => {
     switch (f) {
-      case "title":
+      case 'title':
         _slotsMap.headline = f;
         break;
-      case "description":
+      case 'description':
         _slotsMap.summary = f;
         break;
-      case "image":
+      case 'image':
         _slotsMap.media = f;
         break;
-      case "date":
+      case 'date':
         _slotsMap.eyebrow = f;
         break;
-      case "authors":
+      case 'authors':
         _slotsMap.footnote = f;
         break;
     }
@@ -60,9 +60,9 @@ export interface ListProps {
 
 export default function List({
   siteId,
-  dir = "",
+  dir = '',
   fields,
-  slots = { headline: "title", summary: "description" },
+  slots = { headline: 'title', summary: 'description' },
   // slotsFormat = { eyebrow: "date", footnote: "join: , " },
   // locale,
   pageNumber = 1,
@@ -77,7 +77,7 @@ export default function List({
   if (isLoading) {
     return (
       <div className="list-component-skeleton">
-        {Array.from("abcde").map((x) => (
+        {Array.from('abcde').map((x) => (
           <article key={x} className="list-component-skeleton-item">
             {slots.media && (
               <div className="list-component-skeleton-media">
@@ -139,8 +139,8 @@ export default function List({
               <Image
                 alt="Image"
                 src={
-                  (getValue("media", metadata, slotsMap) as string) ??
-                  "https://r2-assets.flowershow.app/placeholder.png"
+                  (getValue('media', metadata, slotsMap) as string) ??
+                  'https://r2-assets.flowershow.app/placeholder.png'
                 }
                 width={1200}
                 height={800}
@@ -150,24 +150,24 @@ export default function List({
           )}
 
           <div className="list-component-item-content">
-            {slotsMap.eyebrow && getValue("eyebrow", metadata, slotsMap) && (
+            {slotsMap.eyebrow && getValue('eyebrow', metadata, slotsMap) && (
               <div className="list-component-item-eyebrow">
-                {fmt("eyebrow", metadata, slotsMap)}
+                {fmt('eyebrow', metadata, slotsMap)}
               </div>
             )}
-            {slotsMap.headline && getValue("headline", metadata, slotsMap) && (
+            {slotsMap.headline && getValue('headline', metadata, slotsMap) && (
               <h3 className="list-component-item-headline">
-                <a href={url!}>{fmt("headline", metadata, slotsMap)}</a>
+                <a href={url!}>{fmt('headline', metadata, slotsMap)}</a>
               </h3>
             )}
-            {slotsMap.summary && getValue("summary", metadata, slotsMap) && (
+            {slotsMap.summary && getValue('summary', metadata, slotsMap) && (
               <p className="list-component-item-summary">
-                {fmt("summary", metadata, slotsMap)}
+                {fmt('summary', metadata, slotsMap)}
               </p>
             )}
-            {slotsMap.footnote && getValue("footnote", metadata, slotsMap) && (
+            {slotsMap.footnote && getValue('footnote', metadata, slotsMap) && (
               <p className="list-component-item-footnote">
-                {fmt("footnote", metadata, slotsMap)}
+                {fmt('footnote', metadata, slotsMap)}
               </p>
             )}
           </div>
@@ -186,46 +186,46 @@ const getValue = (s: Slot, meta: PageMetadata | null, slotsMap: SlotsMap) =>
   slotsMap[s] && meta?.[slotsMap[s]!];
 
 function applyFormat(spec: string, value: any, locale?: string) {
-  if (value == null) return "";
+  if (value == null) return '';
 
-  const [type, arg] = spec.split(":");
+  const [type, arg] = spec.split(':');
 
   switch (type) {
-    case "currency": {
+    case 'currency': {
       const n = Number(value),
-        cur = arg || "USD";
+        cur = arg || 'USD';
       try {
         return new Intl.NumberFormat(locale, {
-          style: "currency",
+          style: 'currency',
           currency: cur,
         }).format(n);
       } catch {
         return `${n} ${cur}`;
       }
     }
-    case "date": {
+    case 'date': {
       const d = new Date(value);
-      if ((arg ?? "").toLowerCase() === "yyyy-mm-dd") {
+      if ((arg ?? '').toLowerCase() === 'yyyy-mm-dd') {
         const yyyy = d.getFullYear(),
-          mm = String(d.getMonth() + 1).padStart(2, "0"),
-          dd = String(d.getDate()).padStart(2, "0");
+          mm = String(d.getMonth() + 1).padStart(2, '0'),
+          dd = String(d.getDate()).padStart(2, '0');
         return `${yyyy}-${mm}-${dd}`;
       }
       return d.toLocaleDateString(locale);
     }
-    case "number":
+    case 'number':
       return new Intl.NumberFormat(locale).format(Number(value));
-    case "percent":
+    case 'percent':
       return new Intl.NumberFormat(locale, {
-        style: "percent",
+        style: 'percent',
         maximumFractionDigits: 2,
       }).format(Number(value));
-    case "join":
-      return Array.isArray(value) ? value.join(arg ?? ", ") : String(value);
-    case "prefix":
-      return `${arg ?? ""}${value}`;
-    case "suffix":
-      return `${value}${arg ?? ""}`;
+    case 'join':
+      return Array.isArray(value) ? value.join(arg ?? ', ') : String(value);
+    case 'prefix':
+      return `${arg ?? ''}${value}`;
+    case 'suffix':
+      return `${value}${arg ?? ''}`;
     default:
       return String(value);
   }
@@ -247,8 +247,8 @@ const fmt = (
   }
 
   // if (s === "eyebrow" && typeof v === "string") return v.slice(0, 10);
-  if (Array.isArray(v)) return v.join(", ");
-  return v ?? "";
+  if (Array.isArray(v)) return v.join(', ');
+  return v ?? '';
 };
 
 const isoish =
@@ -256,9 +256,9 @@ const isoish =
 
 export const isDateInput = (v) => {
   if (v instanceof Date) return !Number.isNaN(v.getTime());
-  if (typeof v === "number" && Number.isFinite(v))
+  if (typeof v === 'number' && Number.isFinite(v))
     return !Number.isNaN(new Date(v).getTime());
-  if (typeof v === "string" && isoish.test(v))
+  if (typeof v === 'string' && isoish.test(v))
     return !Number.isNaN(new Date(v).getTime());
   return false;
 };

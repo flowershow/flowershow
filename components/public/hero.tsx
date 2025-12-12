@@ -1,6 +1,6 @@
-import clsx from "clsx";
-import { api } from "@/trpc/server";
-import Image from "next/image";
+import clsx from 'clsx';
+import Image from 'next/image';
+import { api } from '@/trpc/server';
 
 interface HeroProps {
   siteId?: string;
@@ -24,7 +24,7 @@ export default async function Hero({
     try {
       const customHeroBlob = await api.site.getBlobByPath.query({
         siteId,
-        path: "_flowershow/components/Hero.html",
+        path: '_flowershow/components/Hero.html',
       });
 
       if (customHeroBlob) {
@@ -55,11 +55,11 @@ export default async function Hero({
   // Default hero
   return (
     <header className="page-hero-container">
-      <div className={clsx("page-hero", image && "has-image")}>
+      <div className={clsx('page-hero', image && 'has-image')}>
         <div className="page-hero-content-container">
           <div className="page-hero-content">
-            <h1 className="page-hero-title">{title ?? ""}</h1>
-            <p className="page-hero-description">{description ?? ""}</p>
+            <h1 className="page-hero-title">{title ?? ''}</h1>
+            <p className="page-hero-description">{description ?? ''}</p>
             {cta && (
               <div className="page-hero-ctas-container">
                 {cta.map((ctaItem) => (

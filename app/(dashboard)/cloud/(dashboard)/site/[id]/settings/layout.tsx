@@ -1,24 +1,20 @@
-import { ReactNode } from "react";
-import { getSession } from "@/server/auth";
-import prisma from "@/server/db";
-import { notFound, redirect } from "next/navigation";
-import SiteSettingsHeader from "./header";
+import { notFound, redirect } from 'next/navigation';
+import { ReactNode } from 'react';
+import { getSession } from '@/server/auth';
+import prisma from '@/server/db';
+import SiteSettingsHeader from './header';
 
-export default async function SiteSettingsLayout(
-  props: {
-    params: Promise<{ id: string }>;
-    children: ReactNode;
-  }
-) {
+export default async function SiteSettingsLayout(props: {
+  params: Promise<{ id: string }>;
+  children: ReactNode;
+}) {
   const params = await props.params;
 
-  const {
-    children
-  } = props;
+  const { children } = props;
 
   const session = await getSession();
   if (!session) {
-    redirect("/login");
+    redirect('/login');
   }
 
   const site = await prisma.site.findUnique({

@@ -1,11 +1,11 @@
-import { PageMetadata } from "@/server/api/types";
-import type { Blob as DbBlob } from "@prisma/client";
-import { customEncodeUrl } from "./url-encoder";
+import type { Blob as DbBlob } from '@prisma/client';
+import { PageMetadata } from '@/server/api/types';
+import { customEncodeUrl } from './url-encoder';
 
 type Meta = PageMetadata | null;
 
 export interface FileNode<M = Meta> {
-  kind: "file";
+  kind: 'file';
   label: string;
   name: string; // file name (e.g. "01-start-here.md")
   path: string; // full repo file path (e.g. "guide/quickstart/01-start-here.md")
@@ -14,7 +14,7 @@ export interface FileNode<M = Meta> {
 }
 
 export interface DirNode<M = Meta> {
-  kind: "dir";
+  kind: 'dir';
   label: string;
   name: string; // dir name (e.g. "guide", "quickstart")
   path: string; // full repo dir path (e.g. "guide/quickstart")
@@ -25,19 +25,19 @@ export interface DirNode<M = Meta> {
 export type Node<M = Meta> = DirNode<M> | FileNode<M>;
 
 export interface RootNode<M = Meta> {
-  kind: "root";
-  label: "root";
+  kind: 'root';
+  label: 'root';
   path: null;
   children: Array<Node<M>>;
 }
 
 export type SiteTree<M = Meta> = RootNode<M>;
 
-export const isDir = <M>(n: Node<M>): n is DirNode<M> => n.kind === "dir";
-export const isFile = <M>(n: Node<M>): n is FileNode<M> => n.kind === "file";
+export const isDir = <M>(n: Node<M>): n is DirNode<M> => n.kind === 'dir';
+export const isFile = <M>(n: Node<M>): n is FileNode<M> => n.kind === 'file';
 
-export type SiteTreeSortOrder = "path" | "title";
-type Grouping = "dirs-first" | "files-first" | "none";
+export type SiteTreeSortOrder = 'path' | 'title';
+type Grouping = 'dirs-first' | 'files-first' | 'none';
 
 type BuildOptions = {
   orderBy?: SiteTreeSortOrder; // default: "path"
@@ -52,16 +52,16 @@ export function buildSiteTree(
   options: BuildOptions = {},
 ): SiteTree {
   const {
-    orderBy = "path",
-    group = "dirs-first",
+    orderBy = 'path',
+    group = 'dirs-first',
     caseInsensitive = true,
     numeric = true,
-    prefix = "",
+    prefix = '',
   } = options;
 
   const root: SiteTree = {
-    kind: "root",
-    label: "root",
+    kind: 'root',
+    label: 'root',
     path: null,
     children: [],
   };
@@ -77,7 +77,7 @@ export function buildSiteTree(
     if (!node) {
       const nodePath = parent.path ? `${parent.path}/${name}` : name;
       node = {
-        kind: "dir",
+        kind: 'dir',
         label: toLabel(name),
         name,
         path: nodePath,
@@ -90,7 +90,7 @@ export function buildSiteTree(
   };
 
   for (const blob of blobs) {
-    const parts = blob.path.split("/").filter(Boolean);
+    const parts = blob.path.split('/').filter(Boolean);
     if (parts.length === 0) continue;
 
     let parent: RootNode | DirNode = root;
@@ -106,11 +106,11 @@ export function buildSiteTree(
     // Use permalink if available, otherwise use appPath
     const pathToUse = blob.permalink || blob.appPath;
     const urlPath = `${prefix}${
-      pathToUse === "/" ? pathToUse : "/" + pathToUse
+      pathToUse === '/' ? pathToUse : '/' + pathToUse
     }`;
 
     parent.children.push({
-      kind: "file",
+      kind: 'file',
       label,
       name: filename,
       path: blob.path,
@@ -140,31 +140,31 @@ function compareNodes<M>(
   { orderBy, group, caseInsensitive, numeric }: Required<BuildOptions>,
 ) {
   // group dirs/files first if requested
-  if (group !== "none") {
+  if (group !== 'none') {
     const aRank =
-      group === "dirs-first" ? (isDir(a) ? 0 : 1) : isFile(a) ? 0 : 1;
+      group === 'dirs-first' ? (isDir(a) ? 0 : 1) : isFile(a) ? 0 : 1;
     const bRank =
-      group === "dirs-first" ? (isDir(b) ? 0 : 1) : isFile(b) ? 0 : 1;
+      group === 'dirs-first' ? (isDir(b) ? 0 : 1) : isFile(b) ? 0 : 1;
     if (aRank !== bRank) return aRank - bRank;
   }
 
   // within same kind: compare by label|dir/file name
   const opts: Intl.CollatorOptions = {
     numeric,
-    sensitivity: caseInsensitive ? "base" : "variant",
+    sensitivity: caseInsensitive ? 'base' : 'variant',
   };
 
   if (isFile(a) && isFile(b)) {
-    const ka = orderBy === "title" ? a.label : a.name;
-    const kb = orderBy === "title" ? b.label : b.name;
+    const ka = orderBy === 'title' ? a.label : a.name;
+    const kb = orderBy === 'title' ? b.label : b.name;
     // Ensure we're comparing strings
-    const kaStr = String(ka ?? "");
-    const kbStr = String(kb ?? "");
+    const kaStr = String(ka ?? '');
+    const kbStr = String(kb ?? '');
     return kaStr.localeCompare(kbStr, undefined, opts);
   }
   if (isDir(a) && isDir(b)) {
-    const aLabelStr = String(a.label ?? "");
-    const bLabelStr = String(b.label ?? "");
+    const aLabelStr = String(a.label ?? '');
+    const bLabelStr = String(b.label ?? '');
     return aLabelStr.localeCompare(bLabelStr, undefined, opts);
   }
 

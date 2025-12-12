@@ -1,7 +1,7 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
-import clsx from "clsx";
-import { api } from "@/trpc/react";
+'use client';
+import clsx from 'clsx';
+import { useEffect, useRef, useState } from 'react';
+import { api } from '@/trpc/react';
 
 export default function SitesAdminTable() {
   const checkbox = useRef<HTMLInputElement>(null);
@@ -15,7 +15,7 @@ export default function SitesAdminTable() {
   const { data: sites } = api.site.getAll.useQuery(undefined, {
     initialData: [],
     refetchInterval: 5 * 1000,
-    refetchOnWindowFocus: "always",
+    refetchOnWindowFocus: 'always',
   });
   const { mutate: syncSite } = api.site.sync.useMutation();
 
@@ -126,7 +126,7 @@ export default function SitesAdminTable() {
                       <tr
                         key={site.id}
                         className={
-                          sites.includes(site) ? "bg-gray-50" : undefined
+                          sites.includes(site) ? 'bg-gray-50' : undefined
                         }
                       >
                         <td className="relative px-7 sm:w-12 sm:px-6">
@@ -190,10 +190,10 @@ export default function SitesAdminTable() {
                         </td>
                         <td
                           className={clsx(
-                            "whitespace-nowrap py-4 pr-3 text-sm font-medium",
+                            'whitespace-nowrap py-4 pr-3 text-sm font-medium',
                             selectedSites.includes(site.id)
-                              ? "text-indigo-600"
-                              : "text-gray-900",
+                              ? 'text-indigo-600'
+                              : 'text-gray-900',
                           )}
                         >
                           {site.projectName}

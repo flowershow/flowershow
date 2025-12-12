@@ -1,4 +1,4 @@
-import { env } from "@/env.mjs";
+import { env } from '@/env.mjs';
 
 /**
  * Deterministically derive per-site key bytes using SHA-256 over
@@ -9,6 +9,6 @@ export async function siteKeyBytes(siteId: string, tokenVersion: number) {
   const material = enc.encode(
     `${env.SITE_ACCESS_JWT_SECRET}:${siteId}:${tokenVersion}`,
   );
-  const digest = await crypto.subtle.digest("SHA-256", material);
+  const digest = await crypto.subtle.digest('SHA-256', material);
   return new Uint8Array(digest);
 }

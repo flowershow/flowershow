@@ -1,19 +1,19 @@
-"use client";
-import { useSync } from "../sync-status-provider";
-import {
-  CircleArrowDownIcon,
-  CalendarIcon,
-  CircleCheckIcon,
-  CircleAlertIcon,
-  InfoIcon,
-} from "lucide-react";
-import { useState } from "react";
+'use client';
 import {
   Popover,
   PopoverButton,
   PopoverPanel,
   Transition,
-} from "@headlessui/react";
+} from '@headlessui/react';
+import {
+  CalendarIcon,
+  CircleAlertIcon,
+  CircleArrowDownIcon,
+  CircleCheckIcon,
+  InfoIcon,
+} from 'lucide-react';
+import { useState } from 'react';
+import { useSync } from '../sync-status-provider';
 
 export default function Status() {
   const syncStatus = useSync();
@@ -25,7 +25,7 @@ export default function Status() {
         data-testid="sync-status"
         className="mt-2 flex items-center text-sm text-gray-500"
       >
-        {syncStatus.status === "LOADING" ? (
+        {syncStatus.status === 'LOADING' ? (
           <div className="flex items-center">
             <CircleAlertIcon
               className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
@@ -33,7 +33,7 @@ export default function Status() {
             />
             <span>-</span>
           </div>
-        ) : syncStatus.status === "SUCCESS" ? (
+        ) : syncStatus.status === 'SUCCESS' ? (
           <div className="flex items-center">
             <CircleCheckIcon
               className="mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"
@@ -41,7 +41,7 @@ export default function Status() {
             />
             <span>Synced</span>
           </div>
-        ) : syncStatus.status === "PENDING" ? (
+        ) : syncStatus.status === 'PENDING' ? (
           <div className="flex items-center">
             <CircleArrowDownIcon
               className="mr-1.5 h-5 w-5 flex-shrink-0 text-orange-400"
@@ -49,7 +49,7 @@ export default function Status() {
             />
             <span>Syncing...</span>
           </div>
-        ) : syncStatus.status === "ERROR" ? (
+        ) : syncStatus.status === 'ERROR' ? (
           <div className="group flex items-center hover:cursor-default">
             <CircleAlertIcon
               className="mr-1.5 h-5 w-5 flex-shrink-0 text-red-400"
@@ -104,14 +104,14 @@ export default function Status() {
           className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
           aria-hidden="true"
         />
-        {syncStatus.status === "LOADING" ? (
+        {syncStatus.status === 'LOADING' ? (
           <span>-</span>
         ) : (
           <span>
-            Last synced{" "}
+            Last synced{' '}
             {syncStatus && syncStatus.lastSyncedAt
               ? new Date(syncStatus?.lastSyncedAt)?.toLocaleString()
-              : "—"}
+              : '—'}
           </span>
         )}
       </div>

@@ -8,7 +8,7 @@ export default function NotFoundPage() {
           The page you are looking for might not exist or has been moved.
         </p>
         <p className="not-found-hint">
-          Site creator? You can find debugging instructions{" "}
+          Site creator? You can find debugging instructions{' '}
           <a
             href="https://flowershow.app/blog/how-to-debug-404-pages#common-causes-of-404-errors"
             target="_blank"

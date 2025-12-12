@@ -1,13 +1,13 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from 'vitest';
 
-vi.mock("@/env.mjs", () => ({
+vi.mock('@/env.mjs', () => ({
   env: {
-    NEXT_PUBLIC_VERCEL_ENV: "test",
-    NEXT_PUBLIC_ROOT_DOMAIN: "localhost:3000",
+    NEXT_PUBLIC_VERCEL_ENV: 'test',
+    NEXT_PUBLIC_ROOT_DOMAIN: 'localhost:3000',
   },
 }));
 
-import { resolveFilePathToUrlPath } from "./resolve-link";
+import { resolveFilePathToUrlPath } from './resolve-link';
 
 /* example site file tree:
  * /README.md
@@ -24,50 +24,50 @@ import { resolveFilePathToUrlPath } from "./resolve-link";
  *   /image.jpg
  * */
 
-describe("resolve file paths to app URL paths", () => {
-  it("Root README.md", () => {
-    const target = "README.md";
+describe('resolve file paths to app URL paths', () => {
+  it('Root README.md', () => {
+    const target = 'README.md';
     const resolved = resolveFilePathToUrlPath({ target });
-    expect(resolved).toBe("/");
+    expect(resolved).toBe('/');
   });
 
-  it("Root index.md", () => {
-    const target = "index.md";
+  it('Root index.md', () => {
+    const target = 'index.md';
     const resolved = resolveFilePathToUrlPath({ target });
-    expect(resolved).toBe("/");
+    expect(resolved).toBe('/');
   });
 
-  it("Directory README.md", () => {
-    const target = "blog/README.md";
+  it('Directory README.md', () => {
+    const target = 'blog/README.md';
     const resolved = resolveFilePathToUrlPath({ target });
-    expect(resolved).toBe("/blog");
+    expect(resolved).toBe('/blog');
   });
 
-  it("Directory index.md", () => {
-    const target = "blog/index.md";
+  it('Directory index.md', () => {
+    const target = 'blog/index.md';
     const resolved = resolveFilePathToUrlPath({ target });
-    expect(resolved).toBe("/blog");
+    expect(resolved).toBe('/blog');
   });
 
-  it("Other", () => {
-    const target = "some/file.md";
+  it('Other', () => {
+    const target = 'some/file.md';
     const resolved = resolveFilePathToUrlPath({ target });
-    expect(resolved).toBe("/some/file");
+    expect(resolved).toBe('/some/file');
   });
 });
 
-describe("resolve links on a README page", () => {
-  const sitePrefix = "/@username/abc"; // this could also be url to R2 bucket site folder
-  const originFilePath = "/blog/README.md";
+describe('resolve links on a README page', () => {
+  const sitePrefix = '/@username/abc'; // this could also be url to R2 bucket site folder
+  const originFilePath = '/blog/README.md';
 
-  it("external link", () => {
-    const target = "https://example.com";
+  it('external link', () => {
+    const target = 'https://example.com';
     const resolved = resolveFilePathToUrlPath({ target, originFilePath });
     expect(resolved).toBe(target);
   });
 
-  it("absolute link", () => {
-    const target = "/blog/post-1";
+  it('absolute link', () => {
+    const target = '/blog/post-1';
     const expected = `${sitePrefix}/blog/post-1`;
     const resolved = resolveFilePathToUrlPath({
       target,
@@ -77,8 +77,8 @@ describe("resolve links on a README page", () => {
     expect(resolved).toBe(expected);
   });
 
-  it("link to home page", () => {
-    const target = "/";
+  it('link to home page', () => {
+    const target = '/';
     const expected = `${sitePrefix}`;
     const resolved = resolveFilePathToUrlPath({
       target,
@@ -88,8 +88,8 @@ describe("resolve links on a README page", () => {
     expect(resolved).toBe(expected);
   });
 
-  it("link ending with README", () => {
-    const target = "/README";
+  it('link ending with README', () => {
+    const target = '/README';
     const expected = `${sitePrefix}`;
     const resolved = resolveFilePathToUrlPath({
       target,
@@ -99,8 +99,8 @@ describe("resolve links on a README page", () => {
     expect(resolved).toBe(expected);
   });
 
-  it("link ending with .md extension", () => {
-    const target = "post-2.md";
+  it('link ending with .md extension', () => {
+    const target = 'post-2.md';
     const expected = `${sitePrefix}/blog/post-2`;
     const resolved = resolveFilePathToUrlPath({
       target,
@@ -110,16 +110,16 @@ describe("resolve links on a README page", () => {
     expect(resolved).toBe(expected);
   });
 
-  it("link with no sitePrefix", () => {
-    const target = "post-2";
+  it('link with no sitePrefix', () => {
+    const target = 'post-2';
     const expected = `/blog/post-2`;
     const resolved = resolveFilePathToUrlPath({ target, originFilePath });
     expect(resolved).toBe(expected);
   });
 
-  describe("relative links", () => {
-    it("same directory, no dot", () => {
-      const target = "post-1";
+  describe('relative links', () => {
+    it('same directory, no dot', () => {
+      const target = 'post-1';
       const expected = `${sitePrefix}/blog/post-1`;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -129,8 +129,8 @@ describe("resolve links on a README page", () => {
       expect(resolved).toBe(expected);
     });
 
-    it("same directory, with dot", () => {
-      const target = "./post-1";
+    it('same directory, with dot', () => {
+      const target = './post-1';
       const expected = `${sitePrefix}/blog/post-1`;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -140,8 +140,8 @@ describe("resolve links on a README page", () => {
       expect(resolved).toBe(expected);
     });
 
-    it("up a directory", () => {
-      const target = "../about";
+    it('up a directory', () => {
+      const target = '../about';
       const expected = `${sitePrefix}/about`;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -151,8 +151,8 @@ describe("resolve links on a README page", () => {
       expect(resolved).toBe(expected);
     });
 
-    it("to sibling directory", () => {
-      const target = "../projects/project-1";
+    it('to sibling directory', () => {
+      const target = '../projects/project-1';
       const expected = `${sitePrefix}/projects/project-1`;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -163,9 +163,9 @@ describe("resolve links on a README page", () => {
     });
   });
 
-  describe("links with headings", () => {
-    it("absolute link with heading", () => {
-      const target = "/blog/post-1#introduction";
+  describe('links with headings', () => {
+    it('absolute link with heading', () => {
+      const target = '/blog/post-1#introduction';
       const expected = `${sitePrefix}/blog/post-1#introduction`;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -175,8 +175,8 @@ describe("resolve links on a README page", () => {
       expect(resolved).toBe(expected);
     });
 
-    it("relative link with heading", () => {
-      const target = "post-1#getting-started";
+    it('relative link with heading', () => {
+      const target = 'post-1#getting-started';
       const expected = `${sitePrefix}/blog/post-1#getting-started`;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -186,8 +186,8 @@ describe("resolve links on a README page", () => {
       expect(resolved).toBe(expected);
     });
 
-    it("link with heading containing spaces", () => {
-      const target = "/blog/post-1#My Section Title";
+    it('link with heading containing spaces', () => {
+      const target = '/blog/post-1#My Section Title';
       const expected = `${sitePrefix}/blog/post-1#my-section-title`;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -197,8 +197,8 @@ describe("resolve links on a README page", () => {
       expect(resolved).toBe(expected);
     });
 
-    it("only heading (same page)", () => {
-      const target = "#conclusion";
+    it('only heading (same page)', () => {
+      const target = '#conclusion';
       const expected = target;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -208,8 +208,8 @@ describe("resolve links on a README page", () => {
       expect(resolved).toBe(expected);
     });
 
-    it("relative link up directory with heading", () => {
-      const target = "../about#contact-info";
+    it('relative link up directory with heading', () => {
+      const target = '../about#contact-info';
       const expected = `${sitePrefix}/about#contact-info`;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -219,8 +219,8 @@ describe("resolve links on a README page", () => {
       expect(resolved).toBe(expected);
     });
 
-    it("link with .md extension and heading", () => {
-      const target = "post-2.md#summary";
+    it('link with .md extension and heading', () => {
+      const target = 'post-2.md#summary';
       const expected = `${sitePrefix}/blog/post-2#summary`;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -232,18 +232,18 @@ describe("resolve links on a README page", () => {
   });
 });
 
-describe("resolve links on non-README page", () => {
-  const sitePrefix = "/@username/abc"; // this could also be url to R2 bucket site folder
-  const originFilePath = "/blog/post-1.md";
+describe('resolve links on non-README page', () => {
+  const sitePrefix = '/@username/abc'; // this could also be url to R2 bucket site folder
+  const originFilePath = '/blog/post-1.md';
 
-  it("external link", () => {
-    const target = "https://example.com";
+  it('external link', () => {
+    const target = 'https://example.com';
     const resolved = resolveFilePathToUrlPath({ target, originFilePath });
     expect(resolved).toBe(target);
   });
 
-  it("absolute link", () => {
-    const target = "/blog/post-2";
+  it('absolute link', () => {
+    const target = '/blog/post-2';
     const expected = `${sitePrefix}/blog/post-2`;
     const resolved = resolveFilePathToUrlPath({
       target,
@@ -253,8 +253,8 @@ describe("resolve links on non-README page", () => {
     expect(resolved).toBe(expected);
   });
 
-  it("link to home page", () => {
-    const target = "/";
+  it('link to home page', () => {
+    const target = '/';
     const expected = `${sitePrefix}`;
     const resolved = resolveFilePathToUrlPath({
       target,
@@ -264,8 +264,8 @@ describe("resolve links on non-README page", () => {
     expect(resolved).toBe(expected);
   });
 
-  it("link ending with README", () => {
-    const target = "/README";
+  it('link ending with README', () => {
+    const target = '/README';
     const expected = `${sitePrefix}`;
     const resolved = resolveFilePathToUrlPath({
       target,
@@ -275,8 +275,8 @@ describe("resolve links on non-README page", () => {
     expect(resolved).toBe(expected);
   });
 
-  it("link ending with .md extension", () => {
-    const target = "post-2.md";
+  it('link ending with .md extension', () => {
+    const target = 'post-2.md';
     const expected = `${sitePrefix}/blog/post-2`;
     const resolved = resolveFilePathToUrlPath({
       target,
@@ -286,16 +286,16 @@ describe("resolve links on non-README page", () => {
     expect(resolved).toBe(expected);
   });
 
-  it("link with no sitePrefix", () => {
-    const target = "post-2";
+  it('link with no sitePrefix', () => {
+    const target = 'post-2';
     const expected = `/blog/post-2`;
     const resolved = resolveFilePathToUrlPath({ target, originFilePath });
     expect(resolved).toBe(expected);
   });
 
-  describe("relative links", () => {
-    it("same directory, no dot", () => {
-      const target = "post-2";
+  describe('relative links', () => {
+    it('same directory, no dot', () => {
+      const target = 'post-2';
       const expected = `${sitePrefix}/blog/post-2`;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -305,8 +305,8 @@ describe("resolve links on non-README page", () => {
       expect(resolved).toBe(expected);
     });
 
-    it("same directory, with dot", () => {
-      const target = "./post-2";
+    it('same directory, with dot', () => {
+      const target = './post-2';
       const expected = `${sitePrefix}/blog/post-2`;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -316,8 +316,8 @@ describe("resolve links on non-README page", () => {
       expect(resolved).toBe(expected);
     });
 
-    it("up a directory", () => {
-      const target = "../about";
+    it('up a directory', () => {
+      const target = '../about';
       const expected = `${sitePrefix}/about`;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -327,8 +327,8 @@ describe("resolve links on non-README page", () => {
       expect(resolved).toBe(expected);
     });
 
-    it("to sibling directory", () => {
-      const target = "../projects/project-1";
+    it('to sibling directory', () => {
+      const target = '../projects/project-1';
       const expected = `${sitePrefix}/projects/project-1`;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -339,9 +339,9 @@ describe("resolve links on non-README page", () => {
     });
   });
 
-  describe("links with headings", () => {
-    it("absolute link with heading", () => {
-      const target = "/blog/post-2#introduction";
+  describe('links with headings', () => {
+    it('absolute link with heading', () => {
+      const target = '/blog/post-2#introduction';
       const expected = `${sitePrefix}/blog/post-2#introduction`;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -351,8 +351,8 @@ describe("resolve links on non-README page", () => {
       expect(resolved).toBe(expected);
     });
 
-    it("only heading (same page)", () => {
-      const target = "#conclusion";
+    it('only heading (same page)', () => {
+      const target = '#conclusion';
       const expected = target;
       const resolved = resolveFilePathToUrlPath({
         target,
@@ -362,8 +362,8 @@ describe("resolve links on non-README page", () => {
       expect(resolved).toBe(expected);
     });
 
-    it("relative link up directory with heading", () => {
-      const target = "../about#contact-info";
+    it('relative link up directory with heading', () => {
+      const target = '../about#contact-info';
       const expected = `${sitePrefix}/about#contact-info`;
       const resolved = resolveFilePathToUrlPath({
         target,

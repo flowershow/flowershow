@@ -1,22 +1,21 @@
-"use client";
-import FocusTrap from "focus-trap-react";
-import { AnimatePresence, motion } from "motion/react";
-import { SearchIcon, XIcon } from "lucide-react";
-import Link from "next/link";
-import { useCallback, useEffect, useRef, useState } from "react";
+'use client';
+import FocusTrap from 'focus-trap-react';
+import { SearchIcon, XIcon } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import Link from 'next/link';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  SearchBox,
-  Hits,
   Highlight,
-  useInstantSearch,
-  Snippet,
+  Hits,
   InstantSearch,
+  SearchBox,
   SearchBoxProps,
-} from "react-instantsearch";
-
-import { searchClient } from "@/lib/typesense-client";
-import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
-import { useSite } from "./site-context";
+  Snippet,
+  useInstantSearch,
+} from 'react-instantsearch';
+import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { searchClient } from '@/lib/typesense-client';
+import { useSite } from './site-context';
 
 interface SearchModalProps {
   indexId: string;
@@ -47,23 +46,23 @@ export function SearchModal({ indexId }: SearchModalProps) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
+      if (e.key === 'Escape') {
         closeModal();
       }
     };
 
     if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden";
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
     }
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "unset";
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
 
-  const debounceQuery: SearchBoxProps["queryHook"] = useCallback(
+  const debounceQuery: SearchBoxProps['queryHook'] = useCallback(
     async (query, search) => {
       if (timerRef.current) {
         clearTimeout(timerRef.current);
@@ -126,11 +125,11 @@ export function SearchModal({ indexId }: SearchModalProps) {
                         ref={searchRef}
                         placeholder="Search..."
                         classNames={{
-                          root: "flex-grow",
-                          input: "search-modal-input",
-                          submitIcon: "hidden",
-                          resetIcon: "hidden",
-                          loadingIcon: "hidden",
+                          root: 'flex-grow',
+                          input: 'search-modal-input',
+                          submitIcon: 'hidden',
+                          resetIcon: 'hidden',
+                          loadingIcon: 'hidden',
                         }}
                         onFocus={() => setShowHits(true)}
                         queryHook={debounceQuery}
@@ -170,13 +169,13 @@ function Hit({
   const snippetFields = hit._snippetResult || {};
 
   // Priority order for showing snippet content
-  const contentFields = ["description", "content"];
+  const contentFields = ['description', 'content'];
 
   // Find the best field to show as snippet content
-  let snippetField: string = "description"; // Default to description
+  let snippetField: string = 'description'; // Default to description
 
   for (const field of contentFields) {
-    if (snippetFields[field] && snippetFields[field].matchLevel !== "none") {
+    if (snippetFields[field] && snippetFields[field].matchLevel !== 'none') {
       snippetField = field;
       break;
     }
@@ -194,7 +193,7 @@ function Hit({
             attribute="title"
             hit={hit}
             classNames={{
-              highlighted: "search-modal-highlight",
+              highlighted: 'search-modal-highlight',
             }}
           />
         </h1>
@@ -203,7 +202,7 @@ function Hit({
             attribute={snippetField}
             hit={hit}
             classNames={{
-              highlighted: "search-modal-highlight",
+              highlighted: 'search-modal-highlight',
             }}
           />
         </div>
@@ -219,7 +218,7 @@ function SearchResults({
 }) {
   const { results, status, indexUiState } = useInstantSearch();
   const hasResults = results?.nbHits > 0;
-  const query = indexUiState.query || "";
+  const query = indexUiState.query || '';
   const hasQuery = query.length > 0;
   const site = useSite();
 
@@ -249,13 +248,13 @@ function SearchResults({
       ) : hasQuery && hasResults ? (
         <Hits
           classNames={{
-            list: "search-modal-hits-list",
-            item: "search-modal-hits-item",
+            list: 'search-modal-hits-list',
+            item: 'search-modal-hits-item',
           }}
           hitComponent={(props) => <Hit {...props} onHitClick={onHitClick} />}
           transformItems={transformItems}
         />
-      ) : hasQuery && !hasResults && status === "idle" ? (
+      ) : hasQuery && !hasResults && status === 'idle' ? (
         <div className="search-modal-status-container">
           <div className="search-modal-status-content">
             <SearchIcon className="search-modal-status-icon" />
@@ -267,7 +266,7 @@ function SearchResults({
             </p>
           </div>
         </div>
-      ) : status === "error" ? (
+      ) : status === 'error' ? (
         <div className="search-modal-status-container">
           <div className="search-modal-status-content">
             <div className="search-modal-error-icon">
@@ -279,7 +278,7 @@ function SearchResults({
             </p>
           </div>
         </div>
-      ) : status === "stalled" ? (
+      ) : status === 'stalled' ? (
         <div className="search-modal-status-container">
           <div className="search-modal-status-content">
             <div className="search-modal-stalled-spinner"></div>

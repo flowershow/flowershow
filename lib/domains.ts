@@ -1,20 +1,20 @@
+import { env } from '@/env.mjs';
 import {
-  DomainResponse,
   DomainConfigResponse,
+  DomainResponse,
   DomainVerificationResponse,
-} from "@/lib/types";
-import { env } from "@/env.mjs";
+} from '@/lib/types';
 
 export const addDomainToVercel = async (domain: string) => {
   return await fetch(
     `https://api.vercel.com/v10/projects/${env.PROJECT_ID_VERCEL}/domains${
-      env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ""
+      env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ''
     }`,
     {
-      method: "POST",
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${env.AUTH_BEARER_TOKEN}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         name: domain,
@@ -32,13 +32,13 @@ export const removeDomainFromVercelProject = async (domain: string) => {
     `https://api.vercel.com/v9/projects/${
       env.PROJECT_ID_VERCEL
     }/domains/${domain}${
-      env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ""
+      env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ''
     }`,
     {
       headers: {
         Authorization: `Bearer ${env.AUTH_BEARER_TOKEN}`,
       },
-      method: "DELETE",
+      method: 'DELETE',
     },
   ).then((res) => res.json());
 };
@@ -46,13 +46,13 @@ export const removeDomainFromVercelProject = async (domain: string) => {
 export const removeDomainFromVercelTeam = async (domain: string) => {
   return await fetch(
     `https://api.vercel.com/v6/domains/${domain}${
-      env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ""
+      env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ''
     }`,
     {
       headers: {
         Authorization: `Bearer ${env.AUTH_BEARER_TOKEN}`,
       },
-      method: "DELETE",
+      method: 'DELETE',
     },
   ).then((res) => res.json());
 };
@@ -64,13 +64,13 @@ export const getDomainResponse = async (
     `https://api.vercel.com/v9/projects/${
       env.PROJECT_ID_VERCEL
     }/domains/${domain}${
-      env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ""
+      env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ''
     }`,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
         Authorization: `Bearer ${env.AUTH_BEARER_TOKEN}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     },
   ).then((res) => {
@@ -83,13 +83,13 @@ export const getConfigResponse = async (
 ): Promise<DomainConfigResponse> => {
   return await fetch(
     `https://api.vercel.com/v6/domains/${domain}/config${
-      env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ""
+      env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ''
     }`,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
         Authorization: `Bearer ${env.AUTH_BEARER_TOKEN}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     },
   ).then((res) => res.json());
@@ -102,13 +102,13 @@ export const verifyDomain = async (
     `https://api.vercel.com/v9/projects/${
       env.PROJECT_ID_VERCEL
     }/domains/${domain}/verify${
-      env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ""
+      env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ''
     }`,
     {
-      method: "POST",
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${env.AUTH_BEARER_TOKEN}`,
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     },
   ).then((res) => res.json());
@@ -124,12 +124,12 @@ export const getApexDomain = (url: string) => {
   try {
     domain = new URL(url).hostname;
   } catch (e) {
-    return "";
+    return '';
   }
-  const parts = domain.split(".");
+  const parts = domain.split('.');
   if (parts.length > 2) {
     // if it's a subdomain (e.g. dub.vercel.app), return the last 2 parts
-    return parts.slice(-2).join(".");
+    return parts.slice(-2).join('.');
   }
   // if it's a normal domain (e.g. dub.sh), we return the domain
   return domain;

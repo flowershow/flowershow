@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { TwitterIcon, LinkedInIcon, FacebookIcon } from "@/components/icons";
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
+import { FacebookIcon, LinkedInIcon, TwitterIcon } from '@/components/icons';
 
 interface SocialShareProps {
   title: string;
 }
 
 export const SocialShare = ({ title }: SocialShareProps) => {
-  const [currentUrl, setCurrentUrl] = useState<string>("");
+  const [currentUrl, setCurrentUrl] = useState<string>('');
 
   useEffect(() => {
     setCurrentUrl(window.location.href);
@@ -17,7 +17,7 @@ export const SocialShare = ({ title }: SocialShareProps) => {
   const iconProps = {
     width: 24,
     height: 24,
-    className: "w-5 h-5",
+    className: 'w-5 h-5',
   };
 
   return (

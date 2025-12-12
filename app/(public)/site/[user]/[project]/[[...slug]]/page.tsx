@@ -1,32 +1,28 @@
-import Link from "next/link";
-import { notFound, permanentRedirect, redirect } from "next/navigation";
-import { serialize } from "next-mdx-remote-client/serialize";
-import { EditIcon } from "lucide-react";
-import clsx from "clsx";
-import emojiRegex from "emoji-regex";
-import { GiscusProps } from "@giscus/react";
-
-import { api } from "@/trpc/server";
-import { PageMetadata } from "@/server/api/types";
-
-import { getConfig } from "@/lib/app-config";
-import { getMdxOptions, processMarkdown } from "@/lib/markdown";
-import { resolveSiteAlias } from "@/lib/resolve-site-alias";
-import { getSite } from "@/lib/get-site";
-import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
-import { generateScopedCss } from "@/lib/generate-scoped-css";
-import { getSiteUrl, getSiteUrlPath } from "@/lib/get-site-url";
-
-import Comments from "@/components/public/comments";
-import ErrorMessage from "@/components/public/error-message";
-import Hero from "@/components/public/hero";
-import { BlogLayout } from "@/components/public/layouts/blog";
-import SiteTree from "@/components/public/site-tree";
-import TableOfContents from "@/components/public/table-of-contents";
-
-import UrlNormalizer from "./url-normalizer";
-import { preprocessMdxForgiving } from "@/lib/preprocess-mdx";
-import MDXClient from "@/components/public/mdx/mdx-client";
+import { GiscusProps } from '@giscus/react';
+import clsx from 'clsx';
+import emojiRegex from 'emoji-regex';
+import { EditIcon } from 'lucide-react';
+import Link from 'next/link';
+import { notFound, permanentRedirect, redirect } from 'next/navigation';
+import { serialize } from 'next-mdx-remote-client/serialize';
+import Comments from '@/components/public/comments';
+import ErrorMessage from '@/components/public/error-message';
+import Hero from '@/components/public/hero';
+import { BlogLayout } from '@/components/public/layouts/blog';
+import MDXClient from '@/components/public/mdx/mdx-client';
+import SiteTree from '@/components/public/site-tree';
+import TableOfContents from '@/components/public/table-of-contents';
+import { getConfig } from '@/lib/app-config';
+import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
+import { generateScopedCss } from '@/lib/generate-scoped-css';
+import { getSite } from '@/lib/get-site';
+import { getSiteUrl, getSiteUrlPath } from '@/lib/get-site-url';
+import { getMdxOptions, processMarkdown } from '@/lib/markdown';
+import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
+import { resolveSiteAlias } from '@/lib/resolve-site-alias';
+import { PageMetadata } from '@/server/api/types';
+import { api } from '@/trpc/server';
+import UrlNormalizer from './url-normalizer';
 
 const config = getConfig();
 
@@ -44,8 +40,8 @@ export async function generateMetadata(props: {
   const params = await props.params;
   const projectName = decodeURIComponent(params.project);
   const userName = decodeURIComponent(params.user);
-  const slug = params.slug ? params.slug.join("/") : "/";
-  const decodedSlug = slug.replace(/%20/g, "+");
+  const slug = params.slug ? params.slug.join('/') : '/';
+  const decodedSlug = slug.replace(/%20/g, '+');
 
   const site = await getSite(userName, projectName);
   const siteUrl = getSiteUrl(site);
@@ -75,9 +71,9 @@ export async function generateMetadata(props: {
   const title =
     siteConfig?.title && metadata?.title
       ? `${metadata?.title} - ${siteConfig.title}`
-      : (metadata?.title ?? siteConfig?.title ?? "");
+      : (metadata?.title ?? siteConfig?.title ?? '');
   const description = metadata?.description ?? siteConfig?.description;
-  const url = `${siteUrl}/${decodedSlug !== "/" ? decodedSlug : ""}`;
+  const url = `${siteUrl}/${decodedSlug !== '/' ? decodedSlug : ''}`;
 
   let imageUrl: string | null = config.thumbnail;
   let faviconUrl: string = config.favicon;
@@ -100,19 +96,19 @@ export async function generateMetadata(props: {
     openGraph: {
       title,
       description,
-      type: "website",
+      type: 'website',
       url,
       images: [
         {
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: "Thumbnail",
+          alt: 'Thumbnail',
         },
       ],
     },
     twitter: {
-      card: "summary_large_image",
+      card: 'summary_large_image',
       title,
       description,
       images: [
@@ -120,10 +116,10 @@ export async function generateMetadata(props: {
           url: imageUrl,
           width: 1200,
           height: 630,
-          alt: "Thumbnail",
+          alt: 'Thumbnail',
         },
       ],
-      creator: "@flowershowapp",
+      creator: '@flowershowapp',
     },
     // Set canonical URL to custom domain if it exists
     // Maybe not needed since we redirect to a custom domain if it exists ?
@@ -142,8 +138,8 @@ export default async function SitePage(props: {
   const searchParams = await props.searchParams;
   const projectName = decodeURIComponent(params.project);
   const userName = decodeURIComponent(params.user);
-  const slug = params.slug ? params.slug.join("/") : "/";
-  const decodedSlug = slug.replace(/%20/g, "+");
+  const slug = params.slug ? params.slug.join('/') : '/';
+  const decodedSlug = slug.replace(/%20/g, '+');
   const pageParam = searchParams.page;
   const pageNumber = pageParam ? Number(pageParam) : 1;
 
@@ -160,12 +156,12 @@ export default async function SitePage(props: {
   if (siteConfig?.redirects) {
     for (const r of siteConfig.redirects) {
       // Simple string comparison for exact path matching
-      if ("/" + decodedSlug === r.from) {
+      if ('/' + decodedSlug === r.from) {
         const redirectUrl = site.customDomain
           ? r.to
           : `${resolveSiteAlias(
               `/@${site.user?.ghUsername}/${site.projectName}`,
-              "to",
+              'to',
             )}${r.to}`;
 
         return r.permanent
@@ -218,8 +214,8 @@ export default async function SitePage(props: {
 
   let compiledContent: React.JSX.Element;
 
-  const isMarkdown = blob.path.endsWith(".md");
-  const isMdx = blob.path.endsWith(".mdx");
+  const isMarkdown = blob.path.endsWith('.md');
+  const isMdx = blob.path.endsWith('.mdx');
   const renderMode = metadata?.syntaxMode ?? site.syntaxMode;
 
   if (!isMarkdown && !isMdx) {
@@ -230,15 +226,15 @@ export default async function SitePage(props: {
     try {
       // Determine whether to use MD or MDX rendering based on config and file extension
       const useMdRendering =
-        renderMode === "md" || (renderMode === "auto" && isMarkdown);
+        renderMode === 'md' || (renderMode === 'auto' && isMarkdown);
 
       if (useMdRendering) {
         const preprocessedContent = pageContent
           ? preprocessMdxForgiving(pageContent)
-          : "";
+          : '';
 
         // Process using unified (MD renderer)
-        const html = await processMarkdown(preprocessedContent ?? "", {
+        const html = await processMarkdown(preprocessedContent ?? '', {
           files: siteFilePaths,
           filePath: blob.path,
           sitePrefix,
@@ -261,13 +257,13 @@ export default async function SitePage(props: {
         }) as any;
 
         const mdxSource = await serialize<PageMetadata>({
-          source: pageContent ?? "",
+          source: pageContent ?? '',
           options: mdxOptions,
         });
 
-        if ("error" in mdxSource) {
+        if ('error' in mdxSource) {
           const message = mdxSource.error.message.concat(
-            "\n\n🧑‍🔧 See how to debug and solve most common MDX errors in our docs:\nhttps://flowershow.app/docs/debug-mdx-errors",
+            '\n\n🧑‍🔧 See how to debug and solve most common MDX errors in our docs:\nhttps://flowershow.app/docs/debug-mdx-errors',
           );
           compiledContent = (
             <ErrorMessage title="Error parsing MDX" message={message} />
@@ -288,9 +284,9 @@ export default async function SitePage(props: {
     }
   }
 
-  const scopedCss = await generateScopedCss(pageContent ?? "", "#mdxpage");
+  const scopedCss = await generateScopedCss(pageContent ?? '', '#mdxpage');
 
-  if (metadata?.layout === "plain") {
+  if (metadata?.layout === 'plain') {
     return (
       <>
         <style
@@ -358,10 +354,10 @@ export default async function SitePage(props: {
 
       <div
         className={clsx(
-          "layout-inner",
-          showSidebar && showToc && "has-sidebar-and-toc",
-          !showSidebar && showToc && "has-toc",
-          showSidebar && !showToc && "has-sidebar",
+          'layout-inner',
+          showSidebar && showToc && 'has-sidebar-and-toc',
+          !showSidebar && showToc && 'has-toc',
+          showSidebar && !showToc && 'has-sidebar',
         )}
       >
         {showSidebar && (
@@ -375,8 +371,8 @@ export default async function SitePage(props: {
         <div className="layout-inner-center">
           <main className="page-main">
             <BlogLayout
-              title={metadata?.title ?? ""}
-              description={metadata?.description ?? ""}
+              title={metadata?.title ?? ''}
+              description={metadata?.description ?? ''}
               date={metadata?.date}
               showHero={metadata?.showHero}
               authors={authors}
@@ -405,7 +401,7 @@ export default async function SitePage(props: {
                 {...giscusConfig}
                 repo={
                   giscusConfig?.repo ??
-                  (site.ghRepository as GiscusProps["repo"])
+                  (site.ghRepository as GiscusProps['repo'])
                 }
                 repoId={giscusConfig?.repoId ?? site.giscusRepoId ?? undefined}
                 categoryId={

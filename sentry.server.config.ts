@@ -2,16 +2,16 @@
 // The config you add here will be used whenever the server handles a request.
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from '@sentry/nextjs';
 
 const env =
   process.env.SENTRY_ENVIRONMENT ??
   process.env.VERCEL_ENV ??
   process.env.NODE_ENV ??
-  "development";
+  'development';
 
-const isProd = env === "production";
-const isPreview = env === "preview";
+const isProd = env === 'production';
+const isPreview = env === 'preview';
 
 if (isProd || isPreview) {
   Sentry.init({
@@ -27,17 +27,17 @@ if (isProd || isPreview) {
 
       // Ignore Next.js “expected” navigation errors
       if (
-        typeof digest === "string" &&
-        (digest.startsWith("NEXT_NOT_FOUND") ||
-          digest.startsWith("NEXT_REDIRECT"))
+        typeof digest === 'string' &&
+        (digest.startsWith('NEXT_NOT_FOUND') ||
+          digest.startsWith('NEXT_REDIRECT'))
       ) {
         return null;
       }
 
       // Optional extra guard if your messages read literally "Page not found"
       const msg =
-        err?.message || event.logentry?.message || event.message || "";
-      if (typeof msg === "string" && /page not found/i.test(msg)) {
+        err?.message || event.logentry?.message || event.message || '';
+      if (typeof msg === 'string' && /page not found/i.test(msg)) {
         return null;
       }
 

@@ -1,11 +1,11 @@
-import jsep, { Expression as JsepExpression } from "jsep";
-import type { ExprNode } from "./bases-expr";
+import jsep, { Expression as JsepExpression } from 'jsep';
+import type { ExprNode } from './bases-expr';
 
 // configure jsep if needed
-jsep.addBinaryOp("==", 6);
-jsep.addBinaryOp("!=", 6);
-jsep.addBinaryOp(">=", 7);
-jsep.addBinaryOp("<=", 7);
+jsep.addBinaryOp('==', 6);
+jsep.addBinaryOp('!=', 6);
+jsep.addBinaryOp('>=', 7);
+jsep.addBinaryOp('<=', 7);
 // etc – but most are already there by default
 
 export function parseExpression(expr: string): ExprNode {
@@ -15,25 +15,25 @@ export function parseExpression(expr: string): ExprNode {
 
 function convertJsep(node: JsepExpression): ExprNode {
   switch (node.type) {
-    case "Literal":
-      return { type: "Literal", value: (node as any).value };
+    case 'Literal':
+      return { type: 'Literal', value: (node as any).value };
 
-    case "Identifier":
-      return { type: "Identifier", name: (node as any).name };
+    case 'Identifier':
+      return { type: 'Identifier', name: (node as any).name };
 
-    case "UnaryExpression": {
+    case 'UnaryExpression': {
       const n = node as any;
       return {
-        type: "UnaryExpression",
+        type: 'UnaryExpression',
         operator: n.operator,
         argument: convertJsep(n.argument),
       };
     }
 
-    case "BinaryExpression": {
+    case 'BinaryExpression': {
       const n = node as any;
       return {
-        type: "BinaryExpression",
+        type: 'BinaryExpression',
         // jsep uses "===" etc; you can normalise to your subset if you like
         operator: n.operator,
         left: convertJsep(n.left),
@@ -41,29 +41,29 @@ function convertJsep(node: JsepExpression): ExprNode {
       };
     }
 
-    case "LogicalExpression": {
+    case 'LogicalExpression': {
       const n = node as any;
       return {
-        type: "LogicalExpression",
+        type: 'LogicalExpression',
         operator: n.operator,
         left: convertJsep(n.left),
         right: convertJsep(n.right),
       };
     }
 
-    case "MemberExpression": {
+    case 'MemberExpression': {
       const n = node as any;
       return {
-        type: "MemberExpression",
+        type: 'MemberExpression',
         object: convertJsep(n.object),
         property: (n.property as any).name,
       };
     }
 
-    case "CallExpression": {
+    case 'CallExpression': {
       const n = node as any;
       return {
-        type: "CallExpression",
+        type: 'CallExpression',
         callee: convertJsep(n.callee),
         args: n.arguments.map(convertJsep),
       };

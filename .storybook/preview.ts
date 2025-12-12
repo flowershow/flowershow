@@ -1,12 +1,12 @@
-import type { Preview } from "@storybook/nextjs-vite";
-import { sb } from "storybook/test";
+import type { Preview } from '@storybook/nextjs-vite';
+import { sb } from 'storybook/test';
 
-sb.mock(import("../trpc/server.ts"));
-sb.mock(import("next-auth"));
-sb.mock(import("next-auth/react"));
+sb.mock(import('../trpc/server.ts'));
+sb.mock(import('next-auth'));
+sb.mock(import('next-auth/react'));
 
 const preview: Preview = {
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   parameters: {
     nextjs: {
       appDirectory: true,
@@ -22,7 +22,7 @@ const preview: Preview = {
       // 'todo' - show a11y violations in the test UI only
       // 'error' - fail CI on a11y violations
       // 'off' - skip a11y checks entirely
-      test: "todo",
+      test: 'todo',
     },
   },
 };

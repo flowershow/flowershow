@@ -1,7 +1,7 @@
-import { createGenerator } from "@unocss/core";
-import presetWind3 from "@unocss/preset-wind3";
-import postcss from "postcss";
-import prefixWrap from "postcss-prefixwrap";
+import { createGenerator } from '@unocss/core';
+import presetWind3 from '@unocss/preset-wind3';
+import postcss from 'postcss';
+import prefixWrap from 'postcss-prefixwrap';
 
 /**
  * Extract CSS classes from markdown string,
@@ -33,7 +33,7 @@ function extractClassNames(content: string): string {
     }
   }
 
-  return Array.from(extractedClasses).join(" ");
+  return Array.from(extractedClasses).join(' ');
 }
 
 /**

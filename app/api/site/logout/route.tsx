@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import prisma from "@/server/db";
-import { SITE_ACCESS_COOKIE_NAME } from "@/lib/const";
+import { cookies } from 'next/headers';
+import { NextRequest, NextResponse } from 'next/server';
+import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
+import prisma from '@/server/db';
 
 export async function POST(req: NextRequest) {
   const url = new URL(req.url);
-  const siteId = url.searchParams.get("siteid") ?? "";
+  const siteId = url.searchParams.get('siteid') ?? '';
 
   const site = await prisma.site.findUnique({
     where: {
@@ -25,10 +25,10 @@ export async function POST(req: NextRequest) {
   // must match original attributes (path, sameSite, secure, domain if set)
   (await cookies()).set({
     name: SITE_ACCESS_COOKIE_NAME(site.id),
-    value: "",
+    value: '',
     httpOnly: true,
     secure: true,
-    sameSite: "lax",
+    sameSite: 'lax',
     maxAge: 0, // delete
     ...(site.customDomain
       ? { domain: site.customDomain }

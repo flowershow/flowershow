@@ -1,16 +1,15 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { toast } from "sonner";
-import Cookies from "js-cookie";
+import Cookies from 'js-cookie';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import LoadingDots from '@/components/icons/loading-dots';
+import { cn } from '@/lib/utils';
+import { useConfetti } from '@/providers/confetti-provider';
+import { useModal } from '@/providers/modal-provider';
+import { api } from '@/trpc/react';
 
-import { cn } from "@/lib/utils";
-import { api } from "@/trpc/react";
-import LoadingDots from "@/components/icons/loading-dots";
-import { useModal } from "@/providers/modal-provider";
-import { useConfetti } from "@/providers/confetti-provider";
-
-const FEEDBACK_COOKIE = "feedback-dismissed";
+const FEEDBACK_COOKIE = 'feedback-dismissed';
 
 export default function FeedbackModal({
   onSubmit,
@@ -22,7 +21,7 @@ export default function FeedbackModal({
   const modal = useModal();
   const [formData, setFormData] = useState({
     rating: 5,
-    feedback: "",
+    feedback: '',
   });
   const { showConfetti } = useConfetti();
 
@@ -34,7 +33,7 @@ export default function FeedbackModal({
           onSubmit();
         }
         toast.success(
-          "Thank you for taking the time to share your thoughts! 🎉",
+          'Thank you for taking the time to share your thoughts! 🎉',
         );
         showConfetti();
       },
@@ -49,7 +48,7 @@ export default function FeedbackModal({
     const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: name === "rating" ? Number(value) : value,
+      [name]: name === 'rating' ? Number(value) : value,
     });
   };
 
@@ -60,7 +59,7 @@ export default function FeedbackModal({
 
   const handleDismiss = () => {
     if (dismissable) {
-      Cookies.set(FEEDBACK_COOKIE, "true", { expires: 3 });
+      Cookies.set(FEEDBACK_COOKIE, 'true', { expires: 3 });
     }
     modal?.hide();
   };
@@ -86,18 +85,18 @@ export default function FeedbackModal({
           </p>
           <div className="flex space-x-2">
             {[
-              { value: 1, emoji: "😢" },
-              { value: 2, emoji: "🙁" },
-              { value: 3, emoji: "😐" },
-              { value: 4, emoji: "🙂" },
-              { value: 5, emoji: "😍" },
+              { value: 1, emoji: '😢' },
+              { value: 2, emoji: '🙁' },
+              { value: 3, emoji: '😐' },
+              { value: 4, emoji: '🙂' },
+              { value: 5, emoji: '😍' },
             ].map(({ value, emoji }) => (
               <label
                 key={value}
                 className={`cursor-pointer px-2 py-1 text-2xl transition-all ${
                   formData.rating === value
-                    ? "rounded-full bg-blue-100 "
-                    : "hover:opacity-80"
+                    ? 'rounded-full bg-blue-100 '
+                    : 'hover:opacity-80'
                 }`}
               >
                 <input
@@ -154,10 +153,10 @@ function SubmitButton({ disabled = false, pending = false }) {
     <button
       type="submit"
       className={cn(
-        "flex h-10 items-center justify-center space-x-2 rounded-md border px-4 text-sm transition-all focus:outline-none",
+        'flex h-10 items-center justify-center space-x-2 rounded-md border px-4 text-sm transition-all focus:outline-none',
         pending || disabled
-          ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   "
-          : "border-black bg-black text-white hover:bg-white hover:text-black     ",
+          ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   '
+          : 'border-black bg-black text-white hover:bg-white hover:text-black     ',
       )}
       disabled={pending || disabled}
     >

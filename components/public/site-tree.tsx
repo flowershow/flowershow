@@ -1,23 +1,23 @@
-"use client";
+'use client';
 import {
   Disclosure,
   DisclosureButton,
   DisclosurePanel,
-} from "@headlessui/react";
-import { ChevronRightIcon } from "lucide-react";
-import clsx from "clsx";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { isDir, Node } from "@/lib/build-site-tree";
+} from '@headlessui/react';
+import clsx from 'clsx';
+import { ChevronRightIcon } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { isDir, Node } from '@/lib/build-site-tree';
 
 function TreeView({ items, level = 0 }: { items: Node[]; level?: number }) {
   const currentPath = usePathname();
   const isCurrent = (path: string) =>
-    currentPath === path || currentPath === path + "/";
+    currentPath === path || currentPath === path + '/';
   const isCurrentParent = (path: string) => currentPath?.startsWith(path);
 
   return (
-    <ul className={clsx(level ? "site-tree-item-children" : "site-tree")}>
+    <ul className={clsx(level ? 'site-tree-item-children' : 'site-tree')}>
       {items.map((item) => (
         <li key={item.label} className="site-tree-item">
           {isDir(item) ? (
@@ -26,8 +26,8 @@ function TreeView({ items, level = 0 }: { items: Node[]; level?: number }) {
                 <>
                   <DisclosureButton
                     className={clsx(
-                      "site-tree-item-self is-collapsible",
-                      open && "is-open",
+                      'site-tree-item-self is-collapsible',
+                      open && 'is-open',
                     )}
                   >
                     <ChevronRightIcon className="site-tree-item-icon" />
@@ -43,8 +43,8 @@ function TreeView({ items, level = 0 }: { items: Node[]; level?: number }) {
             <Link
               href={item.urlPath}
               className={clsx(
-                "site-tree-item-self",
-                isCurrent(item.urlPath) && "is-current",
+                'site-tree-item-self',
+                isCurrent(item.urlPath) && 'is-current',
               )}
             >
               {item.label}

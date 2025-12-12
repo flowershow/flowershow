@@ -2,16 +2,16 @@
 // The added config here will be used whenever a users loads a page in their browser.
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from '@sentry/nextjs';
 
 const env =
   process.env.SENTRY_ENVIRONMENT ??
   process.env.VERCEL_ENV ??
   process.env.NODE_ENV ??
-  "development";
+  'development';
 
-const isProd = env === "production";
-const isPreview = env === "preview";
+const isProd = env === 'production';
+const isPreview = env === 'preview';
 
 if (isProd || isPreview) {
   Sentry.init({

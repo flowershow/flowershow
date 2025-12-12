@@ -1,11 +1,11 @@
-import { getSession } from "@/server/auth";
-import { redirect } from "next/navigation";
-import Image from "next/image";
+import Image from 'next/image';
+import { redirect } from 'next/navigation';
+import { getSession } from '@/server/auth';
 
 export default async function Profile() {
   const session = await getSession();
   if (!session?.user) {
-    redirect("/login");
+    redirect('/login');
   }
 
   return (
@@ -18,7 +18,7 @@ export default async function Profile() {
           }
           width={40}
           height={40}
-          alt={session.user.name ?? "User avatar"}
+          alt={session.user.name ?? 'User avatar'}
           className="h-6 w-6 rounded-full"
         />
         {/* <span className="cursor-default truncate text-sm font-medium">

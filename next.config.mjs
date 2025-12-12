@@ -1,5 +1,5 @@
 // @ts-check
-import { withSentryConfig } from "@sentry/nextjs";
+import { withSentryConfig } from '@sentry/nextjs';
 
 /**
  * @type {import('next').NextConfig}
@@ -8,19 +8,19 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: "/enterprise",
-        destination: "/portal",
+        source: '/enterprise',
+        destination: '/portal',
         permanent: true,
       },
     ];
   },
   experimental: {
     serverActions: {
-      allowedOrigins: ["cloud.localhost:3000"],
+      allowedOrigins: ['cloud.localhost:3000'],
     },
   },
   images: {
-    remotePatterns: [{ hostname: "*" }],
+    remotePatterns: [{ hostname: '*' }],
   },
   skipTrailingSlashRedirect: true,
 };

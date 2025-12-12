@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 export const SessionProvider = ({
   children,
@@ -8,7 +8,7 @@ export const SessionProvider = ({
 
 export const useSession = () => ({
   data: null,
-  status: "unauthenticated" as const,
+  status: 'unauthenticated' as const,
   update: async () => null,
 });
 

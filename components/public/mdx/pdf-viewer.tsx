@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useCallback } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
+import { useCallback, useState } from 'react';
+import { Document, Page, pdfjs } from 'react-pdf';
 
 // Tell pdf.js where to load its worker from
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
@@ -17,10 +17,10 @@ export function PdfViewer({ src }: { src: string }) {
     <div className="pdf-viewer">
       <div className="pdf-header">
         <div className="pdf-page-count">
-          {numPages > 0 ? `${numPages} pages` : "Loading…"}
+          {numPages > 0 ? `${numPages} pages` : 'Loading…'}
         </div>
         <div className="pdf-filename">
-          {src.split("/").pop()?.split("#")[0]}
+          {src.split('/').pop()?.split('#')[0]}
         </div>
       </div>
 

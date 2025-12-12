@@ -1,23 +1,21 @@
-"use client";
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import clsx from "clsx";
+'use client';
 import {
   Disclosure,
   DisclosureButton,
   DisclosurePanel,
-} from "@headlessui/react";
-import { ChevronRightIcon, GlobeIcon, MenuIcon, XIcon } from "lucide-react";
-
-import { isDir } from "@/lib/build-site-tree";
-import type { Node } from "@/lib/build-site-tree";
-
-import { NavLink, SocialLink } from "@/components/types";
-import { SearchModal } from "@/components/public/search-modal";
-import { socialIcons } from "@/components/public/social-icons";
-import { usePathname } from "next/navigation";
-import ThemeSwitch from "./theme-switch";
-import Image from "next/image";
+} from '@headlessui/react';
+import clsx from 'clsx';
+import { ChevronRightIcon, GlobeIcon, MenuIcon, XIcon } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { SearchModal } from '@/components/public/search-modal';
+import { socialIcons } from '@/components/public/social-icons';
+import { NavLink, SocialLink } from '@/components/types';
+import type { Node } from '@/lib/build-site-tree';
+import { isDir } from '@/lib/build-site-tree';
+import ThemeSwitch from './theme-switch';
 
 export interface Props {
   logo: string;
@@ -51,16 +49,16 @@ const Nav = ({
       setIsScrolled(window.scrollY > 0);
     };
     onScroll();
-    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener('scroll', onScroll, { passive: true });
     return () => {
-      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener('scroll', onScroll);
     };
   }, []);
 
   return (
     <Disclosure>
       {({ open, close }) => (
-        <nav className={clsx("site-navbar", isScrolled && "is-scrolled")}>
+        <nav className={clsx('site-navbar', isScrolled && 'is-scrolled')}>
           {/* Desktop Navigation */}
           <div className="site-navbar-inner">
             <Link href={url} className="site-navbar-site-title">
@@ -198,7 +196,7 @@ function TreeView({
   return (
     <ul
       className={clsx(
-        level ? "mobile-nav-tree-item-children" : "mobile-nav-tree",
+        level ? 'mobile-nav-tree-item-children' : 'mobile-nav-tree',
       )}
     >
       {items.map((item) => (
@@ -209,8 +207,8 @@ function TreeView({
                 <>
                   <DisclosureButton
                     className={clsx(
-                      "mobile-nav-tree-item-self is-collapsible",
-                      open && "is-open",
+                      'mobile-nav-tree-item-self is-collapsible',
+                      open && 'is-open',
                     )}
                   >
                     <ChevronRightIcon className="mobile-nav-tree-item-icon" />
@@ -232,8 +230,8 @@ function TreeView({
             <Link
               href={item.urlPath}
               className={clsx(
-                "mobile-nav-tree-item-self",
-                isCurrent(item.urlPath) && "is-current",
+                'mobile-nav-tree-item-self',
+                isCurrent(item.urlPath) && 'is-current',
               )}
               onClick={onLinkClick}
             >

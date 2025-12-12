@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from 'next/image';
 
 export default function ObsidianQuickstart() {
   return (
@@ -26,7 +26,7 @@ export default function ObsidianQuickstart() {
           Step 1: Install the Flowershow Plugin
         </h3>
         <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
-          Install and enable the{" "}
+          Install and enable the{' '}
           <a className="underline" href="obsidian://show-plugin?id=flowershow">
             Flowershow Obsidian plugin
           </a>
@@ -37,7 +37,7 @@ export default function ObsidianQuickstart() {
           Step 2: Create a GitHub Repository for Syncing
         </h3>
         <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
-          Click{" "}
+          Click{' '}
           <a
             className="underline"
             target="_blank"
@@ -45,7 +45,7 @@ export default function ObsidianQuickstart() {
             href="https://github.com/new?template_owner=flowershow&template_name=flowershow-cloud-template"
           >
             here
-          </a>{" "}
+          </a>{' '}
           to create a new repository from our template.
           <i className="mt-1 block">
             It will act as a backup and sync point between your Obsidian vault
@@ -57,7 +57,7 @@ export default function ObsidianQuickstart() {
           Step 3: Connect Flowershow to Your GitHub Repository
         </h3>
         <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
-          Click{" "}
+          Click{' '}
           <a
             className="underline"
             href="/new"

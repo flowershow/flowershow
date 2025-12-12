@@ -1,22 +1,22 @@
-"use client";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
-import LoadingDots from "@/components/icons/loading-dots";
-import { useEffect, useState } from "react";
-import { api } from "@/trpc/react";
-import { GithubIcon } from "@/components/icons";
-import { signOut } from "next-auth/react";
-import { env } from "@/env.mjs";
+'use client';
+import { useRouter } from 'next/navigation';
+import { signOut } from 'next-auth/react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { GithubIcon } from '@/components/icons';
+import LoadingDots from '@/components/icons/loading-dots';
+import { env } from '@/env.mjs';
+import { cn } from '@/lib/utils';
+import { api } from '@/trpc/react';
 
 export default function NewSitePage() {
   const router = useRouter();
 
   const [data, setData] = useState({
-    gh_scope: "",
-    ghRepository: "",
-    ghBranch: "main",
-    rootDir: "",
+    gh_scope: '',
+    ghRepository: '',
+    ghBranch: 'main',
+    rootDir: '',
   });
 
   const {
@@ -41,7 +41,7 @@ export default function NewSitePage() {
   useEffect(() => {
     if (isErrorFetchingScopes) {
       toast.error(errorFetchingScopes.message);
-      if (errorFetchingScopes.data?.code === "UNAUTHORIZED") {
+      if (errorFetchingScopes.data?.code === 'UNAUTHORIZED') {
         setTimeout(() => {
           signOut();
         }, 1000);
@@ -52,7 +52,7 @@ export default function NewSitePage() {
   useEffect(() => {
     if (isErrorFetchingRepos) {
       toast.error(errorFetchingRepos.message);
-      if (errorFetchingRepos.data?.code === "UNAUTHORIZED") {
+      if (errorFetchingRepos.data?.code === 'UNAUTHORIZED') {
         setTimeout(() => {
           signOut();
         }, 1000);
@@ -63,7 +63,7 @@ export default function NewSitePage() {
   useEffect(() => {
     if (scopes) {
       if (scopes.length > 0) {
-        setData((prev) => ({ ...prev, gh_scope: scopes[0]?.login ?? "" }));
+        setData((prev) => ({ ...prev, gh_scope: scopes[0]?.login ?? '' }));
       }
     }
   }, [scopes]);
@@ -72,7 +72,7 @@ export default function NewSitePage() {
     if (repos) {
       const repositories = repos.map(({ name }) => name);
       if (repositories.length > 0) {
-        setData((prev) => ({ ...prev, ghRepository: repositories[0] ?? "" }));
+        setData((prev) => ({ ...prev, ghRepository: repositories[0] ?? '' }));
       }
     }
   }, [repos]);
@@ -85,7 +85,7 @@ export default function NewSitePage() {
       },
       onError: (error) => {
         toast.error(error.message);
-        if (error.data?.code === "UNAUTHORIZED") {
+        if (error.data?.code === 'UNAUTHORIZED') {
           setTimeout(() => {
             signOut();
           }, 3000);
@@ -98,9 +98,9 @@ export default function NewSitePage() {
       <form
         data-testid="create-site-form"
         action={async (data: FormData) => {
-          const ghRepository = data.get("ghRepository") as string;
-          const ghBranch = data.get("ghBranch") as string;
-          const rootDir = data.get("rootDir") as string;
+          const ghRepository = data.get('ghRepository') as string;
+          const ghBranch = data.get('ghBranch') as string;
+          const rootDir = data.get('rootDir') as string;
 
           createSite({
             ghRepository,
@@ -136,7 +136,7 @@ export default function NewSitePage() {
                 setData({
                   ...data,
                   gh_scope: e.target.value,
-                  ghRepository: "",
+                  ghRepository: '',
                 })
               }
             >
@@ -238,14 +238,14 @@ export default function NewSitePage() {
         <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3   md:px-10">
           <button
             className={cn(
-              "flex h-10 w-full items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none",
+              'flex h-10 w-full items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none',
               isCreatingSite ||
                 isLoadingScopes ||
                 isLoadingRepos ||
                 isErrorFetchingScopes ||
                 isErrorFetchingRepos
-                ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   "
-                : "border-black bg-black text-white hover:bg-white hover:text-black     ",
+                ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   '
+                : 'border-black bg-black text-white hover:bg-white hover:text-black     ',
             )}
             disabled={
               isCreatingSite ||

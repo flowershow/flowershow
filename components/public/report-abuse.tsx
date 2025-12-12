@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { cn } from "@/lib/utils";
-import { AlertTriangle } from "lucide-react";
-import { useParams } from "next/navigation";
-import { useState } from "react";
-import { useFormStatus } from "react-dom";
-import LoadingDots from "@/components/icons/loading-dots";
-import { toast } from "sonner";
+import { AlertTriangle } from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { useState } from 'react';
+import { useFormStatus } from 'react-dom';
+import { toast } from 'sonner';
+import LoadingDots from '@/components/icons/loading-dots';
+import { cn } from '@/lib/utils';
 
 export default function ReportAbuse() {
   const [open, setOpen] = useState(false);
@@ -24,12 +24,12 @@ export default function ReportAbuse() {
       {open && (
         <form
           action={async (formData) => {
-            const url = formData.get("url") as string;
+            const url = formData.get('url') as string;
             // artificial 1s delay
             await new Promise((resolve) => setTimeout(resolve, 1000));
             setOpen(false);
             toast.success(
-              "Successfully reported abuse – thank you for helping us keep the internet safe!",
+              'Successfully reported abuse – thank you for helping us keep the internet safe!',
             );
           }}
           className="absolute bottom-20 right-2 flex w-96 flex-col space-y-6 rounded-lg border border-stone-200 bg-white p-8 shadow-lg animate-in slide-in-from-bottom-5"
@@ -74,10 +74,10 @@ function SubmitButton() {
   return (
     <button
       className={cn(
-        "h flex h-8 w-full items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none sm:h-10",
+        'h flex h-8 w-full items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none sm:h-10',
         pending
-          ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400"
-          : "border-black bg-black text-white hover:bg-white hover:text-black",
+          ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
+          : 'border-black bg-black text-white hover:bg-white hover:text-black',
       )}
       disabled={pending}
     >

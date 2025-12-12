@@ -3,5 +3,5 @@ export async function getServerSession() {
   return null;
 }
 export default function NextAuth() {
-  throw new Error("next-auth is server-only; mocked in Storybook.");
+  throw new Error('next-auth is server-only; mocked in Storybook.');
 }

@@ -1,5 +1,5 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
+'use client';
+import { useEffect, useRef, useState } from 'react';
 
 type Props = React.PropsWithChildren;
 
@@ -9,7 +9,7 @@ export default function Pre({ children }: Props) {
   const timeoutRef = useRef<number | null>(null);
 
   const onCopy = async () => {
-    const text = preRef.current?.innerText?.replace(/\n$/, "") ?? "";
+    const text = preRef.current?.innerText?.replace(/\n$/, '') ?? '';
     if (!text) return;
 
     const markCopied = () => {
@@ -24,13 +24,13 @@ export default function Pre({ children }: Props) {
     } catch {
       // Fallback
       try {
-        const ta = document.createElement("textarea");
+        const ta = document.createElement('textarea');
         ta.value = text;
-        ta.style.position = "fixed";
-        ta.style.opacity = "0";
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
         document.body.appendChild(ta);
         ta.select();
-        document.execCommand("copy");
+        document.execCommand('copy');
         document.body.removeChild(ta);
         markCopied();
       } catch {
@@ -51,7 +51,7 @@ export default function Pre({ children }: Props) {
         aria-label="Copy code"
         type="button"
         className="pre-copy-button"
-        data-copied={copied ? "true" : "false"}
+        data-copied={copied ? 'true' : 'false'}
         onClick={onCopy}
       >
         <svg
@@ -81,7 +81,7 @@ export default function Pre({ children }: Props) {
       </button>
 
       <span aria-live="polite" className="pre-sr">
-        {copied ? "Code copied to clipboard" : ""}
+        {copied ? 'Code copied to clipboard' : ''}
       </span>
 
       <pre ref={preRef}>{children}</pre>

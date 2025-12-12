@@ -1,42 +1,42 @@
-import Link from "next/link";
-import { getConfig } from "@/lib/app-config";
-import ObsidianIcon from "@/components/icons/obsidian";
-import { MarkdownIcon } from "@/components/icons";
+import Link from 'next/link';
+import { MarkdownIcon } from '@/components/icons';
+import ObsidianIcon from '@/components/icons/obsidian';
+import { getConfig } from '@/lib/app-config';
 
 const config = getConfig();
 
 export default async function Sites({ limit }: { limit?: number }) {
   const quickstarts =
-    config.product === "flowershow"
+    config.product === 'flowershow'
       ? [
           {
-            title: "Publish Hello World Site",
+            title: 'Publish Hello World Site',
             description:
               "If you want to quickly try it out or if you're starting from scratch.",
-            href: "/hello-world",
+            href: '/hello-world',
             icon: () => <span className="text-xl">👋</span>,
           },
           {
-            title: "Publish your markdown from GitHub",
+            title: 'Publish your markdown from GitHub',
             description:
-              "If you already have existing markdown documentation, blogs, wikis etc. stored in a GitHub repository.",
-            href: "/new",
+              'If you already have existing markdown documentation, blogs, wikis etc. stored in a GitHub repository.',
+            href: '/new',
             icon: MarkdownIcon,
           },
           {
-            title: "Publish your Obsidian vault",
+            title: 'Publish your Obsidian vault',
             description:
-              "If want to publically share your Obsidian notes while maintaining your existing note-taking workflow.",
-            href: "/obsidian-quickstart",
+              'If want to publically share your Obsidian notes while maintaining your existing note-taking workflow.',
+            href: '/obsidian-quickstart',
             icon: ObsidianIcon,
           },
         ]
       : [
           {
-            title: "Publish your markdown from GitHub",
+            title: 'Publish your markdown from GitHub',
             description:
-              "Connect your GitHub repository containing markdown files to automatically publish and sync your content.",
-            href: "/new",
+              'Connect your GitHub repository containing markdown files to automatically publish and sync your content.',
+            href: '/new',
             icon: MarkdownIcon,
           },
         ];

@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createTRPCContext } from "@/server/api/trpc";
-import { appRouter } from "@/server/api/root";
-import { env } from "@/env.mjs";
-import { PublicSite } from "@/server/api/types";
+import { NextRequest, NextResponse } from 'next/server';
+import { env } from '@/env.mjs';
+import { appRouter } from '@/server/api/root';
+import { createTRPCContext } from '@/server/api/trpc';
+import { PublicSite } from '@/server/api/types';
 
 /**
  * Creates the tRPC context required for API calls.
@@ -31,12 +31,12 @@ export async function GET(
   const { username, projectName, path } = params;
 
   if (!path || path.length === 0) {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 
   let site: PublicSite | null = null;
 
-  if (username === "_domain") {
+  if (username === '_domain') {
     site = await caller.site.getByDomain({
       domain: projectName,
     });
@@ -48,15 +48,15 @@ export async function GET(
   }
 
   if (!site) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
   // In development with MinIO, use http://. In production with R2, use https://
   const protocol =
-    process.env.NODE_ENV === "development" ? "http://" : "https://";
+    process.env.NODE_ENV === 'development' ? 'http://' : 'https://';
   const encodedPath = path
     .map((segment) => encodeURIComponent(segment))
-    .join("/");
+    .join('/');
   const R2FileUrl = `${protocol}${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${site.id}/${site.ghBranch}/raw/${encodedPath}`;
 
   return NextResponse.redirect(R2FileUrl, { status: 302 });

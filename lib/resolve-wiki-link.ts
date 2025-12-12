@@ -1,5 +1,5 @@
-import { getWikiLinkValue } from "./wiki-link";
-import { findMatchingFilePath } from "@flowershow/remark-wiki-link";
+import { findMatchingFilePath } from '@flowershow/remark-wiki-link';
+import { getWikiLinkValue } from './wiki-link';
 
 /**
  * Only works with simple wiki-links, i.e. no headings or aliases,
@@ -16,7 +16,7 @@ export const resolveWikiLinkToFilePath = ({
   const matchingFilePath = findMatchingFilePath({
     path: target,
     files: filePaths,
-    format: "shortestPossible",
+    format: 'shortestPossible',
     caseInsensitive: false,
   });
 

@@ -1,6 +1,6 @@
-"use client";
-import { useEffect, useRef } from "react";
-import { useVegaEmbed, VegaEmbedProps } from "react-vega";
+'use client';
+import { useEffect, useRef } from 'react';
+import { useVegaEmbed, VegaEmbedProps } from 'react-vega';
 
 export interface SpecData {
   name: string; // "table"
@@ -11,7 +11,7 @@ export function Vega({
   spec,
   data,
 }: {
-  spec: VegaEmbedProps["spec"];
+  spec: VegaEmbedProps['spec'];
   data?: SpecData | null;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -24,9 +24,9 @@ export function Vega({
   useEffect(() => {
     if (!embed || !data) return;
     // Make sure the named dataset exists in the spec: data: { name: "table" }
-    embed.view.data("table", data.values).runAsync();
+    embed.view.data('table', data.values).runAsync();
   }, [embed, data]);
 
   // ⬇️ Ensure the container has width so width:"container" is non-zero
-  return <div ref={ref} style={{ width: "100%" }} />;
+  return <div ref={ref} style={{ width: '100%' }} />;
 }

@@ -1,6 +1,6 @@
-import { PublicSite } from "@/server/api/types";
-import { api } from "@/trpc/server";
-import { notFound, redirect } from "next/navigation";
+import { notFound, redirect } from 'next/navigation';
+import { PublicSite } from '@/server/api/types';
+import { api } from '@/trpc/server';
 
 export async function getSite(
   user: string,
@@ -8,7 +8,7 @@ export async function getSite(
 ): Promise<PublicSite> {
   let site: PublicSite | null = null;
 
-  if (user === "_domain") {
+  if (user === '_domain') {
     site = await api.site.getByDomain.query({
       domain: project,
     });
@@ -24,7 +24,7 @@ export async function getSite(
   }
 
   // Redirect to custom domain if it exists
-  if (user !== "_domain" && site.customDomain) {
+  if (user !== '_domain' && site.customDomain) {
     return redirect(`https://${site.customDomain}`);
   }
 

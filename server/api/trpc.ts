@@ -6,13 +6,14 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { TRPCError, initTRPC } from "@trpc/server";
-import superjson from "superjson";
-import { ZodError } from "zod";
-import * as Sentry from "@sentry/nextjs";
 
-import { getSession } from "@/server/auth";
-import { db } from "@/server/db";
+import * as Sentry from '@sentry/nextjs';
+import { initTRPC, TRPCError } from '@trpc/server';
+import superjson from 'superjson';
+import { ZodError } from 'zod';
+
+import { getSession } from '@/server/auth';
+import { db } from '@/server/db';
 
 /**
  * 1. CONTEXT
@@ -89,7 +90,7 @@ export const publicProcedure = t.procedure.use(sentryMw);
 /** Reusable middleware that enforces users are logged in before running the procedure. */
 const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
   if (!ctx.session || !ctx.session.user) {
-    throw new TRPCError({ code: "UNAUTHORIZED" });
+    throw new TRPCError({ code: 'UNAUTHORIZED' });
   }
   return next({
     ctx: {

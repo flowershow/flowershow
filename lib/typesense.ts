@@ -1,5 +1,5 @@
-import { Client } from "typesense";
-import { env } from "@/env.mjs";
+import { Client } from 'typesense';
+import { env } from '@/env.mjs';
 
 // Initialize the Typesense client
 export const typesense = new Client({
@@ -16,7 +16,7 @@ export const typesense = new Client({
 
 type TypesenseField = {
   name: string;
-  type: "string" | "string[]" | "int64";
+  type: 'string' | 'string[]' | 'int64';
   facet?: boolean;
   optional?: boolean;
 };
@@ -28,15 +28,15 @@ type TypesenseSchema = {
 };
 
 // Schema for the site collection
-const siteCollectionSchema: Omit<TypesenseSchema, "name"> = {
+const siteCollectionSchema: Omit<TypesenseSchema, 'name'> = {
   fields: [
-    { name: "title", type: "string", facet: false },
-    { name: "content", type: "string", facet: false },
-    { name: "path", type: "string", facet: false },
-    { name: "description", type: "string", facet: false, optional: true },
-    { name: "authors", type: "string[]", facet: false, optional: true },
+    { name: 'title', type: 'string', facet: false },
+    { name: 'content', type: 'string', facet: false },
+    { name: 'path', type: 'string', facet: false },
+    { name: 'description', type: 'string', facet: false, optional: true },
+    { name: 'authors', type: 'string[]', facet: false, optional: true },
     // Date must be provided as Unix timestamp
-    { name: "date", type: "int64", facet: false, optional: true },
+    { name: 'date', type: 'int64', facet: false, optional: true },
   ],
 };
 
@@ -52,7 +52,7 @@ export async function createSiteCollection(siteId: string) {
   try {
     await typesense.collections().create(schema);
   } catch (error: any) {
-    console.error("Failed to create Typesense collection:", error);
+    console.error('Failed to create Typesense collection:', error);
     // Re-throw all errors except if collection already exists
     if (error?.httpStatus !== 409) {
       throw error;
@@ -69,7 +69,7 @@ export async function deleteSiteCollection(siteId: string) {
   } catch (error: any) {
     // If collection doesn't exist, that's fine
     if (error?.httpStatus !== 404) {
-      console.error("Failed to delete Typesense collection:", error);
+      console.error('Failed to delete Typesense collection:', error);
       throw error;
     }
   }

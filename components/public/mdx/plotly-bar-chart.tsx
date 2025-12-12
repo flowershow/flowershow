@@ -1,8 +1,8 @@
-import { QueryClient, QueryClientProvider, useQuery } from "react-query";
-import { Plotly } from "./plotly";
-import Papa, { ParseConfig } from "papaparse";
-import LoadingSpinner from "./loading-spinner";
-import { Data } from "./types";
+import Papa, { ParseConfig } from 'papaparse';
+import { QueryClient, QueryClientProvider, useQuery } from 'react-query';
+import LoadingSpinner from './loading-spinner';
+import { Plotly } from './plotly';
+import { Data } from './types';
 
 const queryClient = new QueryClient();
 
@@ -22,7 +22,7 @@ export const PlotlyBarChart: React.FC<PlotlyBarChartProps> = ({
   parsingConfig = {},
   xAxis,
   yAxis,
-  title = "",
+  title = '',
 }) => {
   const uniqueId = Math.random();
   return (
@@ -50,13 +50,13 @@ const PlotlyBarChartInner: React.FC<PlotlyBarChartProps> = ({
   title,
 }) => {
   const { data: csvString, isLoading: isDownloadingCSV } = useQuery(
-    ["dataCsv", data.url, uniqueId],
+    ['dataCsv', data.url, uniqueId],
     () => getCsv(data.url as string, bytes ?? 5132288),
     { enabled: !!data.url },
   );
 
   const { data: parsedData, isLoading: isParsing } = useQuery(
-    ["dataPreview", csvString, uniqueId],
+    ['dataPreview', csvString, uniqueId],
     () =>
       parseCsv(
         data.csv ? (data.csv as string) : (csvString as string),
@@ -67,7 +67,7 @@ const PlotlyBarChartInner: React.FC<PlotlyBarChartProps> = ({
 
   if (data.values) {
     return (
-      <div className="w-full" style={{ height: "500px" }}>
+      <div className="w-full" style={{ height: '500px' }}>
         <Plotly
           layout={{
             title,
@@ -76,7 +76,7 @@ const PlotlyBarChartInner: React.FC<PlotlyBarChartProps> = ({
             {
               x: data.values.map((d) => d[xAxis]),
               y: data.values.map((d) => d[yAxis]),
-              type: "bar",
+              type: 'bar',
             },
           ]}
         />
@@ -90,7 +90,7 @@ const PlotlyBarChartInner: React.FC<PlotlyBarChartProps> = ({
     </div>;
   if (parsedData)
     return (
-      <div className="w-full" style={{ height: "500px" }}>
+      <div className="w-full" style={{ height: '500px' }}>
         <Plotly
           layout={{
             title,
@@ -99,7 +99,7 @@ const PlotlyBarChartInner: React.FC<PlotlyBarChartProps> = ({
             {
               x: parsedData.data.map((d: any) => d[xAxis]),
               y: parsedData.data.map((d: any) => d[yAxis]),
-              type: "bar",
+              type: 'bar',
             },
           ]}
         />

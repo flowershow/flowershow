@@ -1,13 +1,13 @@
 import {
-  GetObjectCommand,
-  PutObjectCommand,
-  ListObjectsV2Command,
-  DeleteObjectsCommand,
   DeleteObjectCommand,
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
+  PutObjectCommand,
   S3Client,
-} from "@aws-sdk/client-s3";
-import { GitHubAPIRepoTree } from "./github";
-import { env } from "@/env.mjs";
+} from '@aws-sdk/client-s3';
+import { env } from '@/env.mjs';
+import { GitHubAPIRepoTree } from './github';
 
 const {
   S3_ENDPOINT,
@@ -29,26 +29,26 @@ const s3Client = new S3Client({
 });
 
 type ContentType =
-  | "text/markdown"
-  | "text/csv"
-  | "text/plain"
-  | "application/geo+json"
-  | "application/json"
-  | "application/yaml"
-  | "text/css"
-  | "image/jpeg"
-  | "image/png"
-  | "image/gif"
-  | "image/svg+xml"
-  | "video/mp4"
-  | "video/webm"
-  | "audio/aac"
-  | "audio/mpeg" // mp3
-  | "audio/opus"
-  | "image/x-icon"
-  | "image/webp"
-  | "image/avif"
-  | "application/pdf";
+  | 'text/markdown'
+  | 'text/csv'
+  | 'text/plain'
+  | 'application/geo+json'
+  | 'application/json'
+  | 'application/yaml'
+  | 'text/css'
+  | 'image/jpeg'
+  | 'image/png'
+  | 'image/gif'
+  | 'image/svg+xml'
+  | 'video/mp4'
+  | 'video/webm'
+  | 'audio/aac'
+  | 'audio/mpeg' // mp3
+  | 'audio/opus'
+  | 'image/x-icon'
+  | 'image/webp'
+  | 'image/avif'
+  | 'application/pdf';
 
 const uploadS3Object = async ({
   key,
@@ -65,7 +65,7 @@ const uploadS3Object = async ({
       Key: key,
       Body: file,
       ContentType: contentType,
-      CacheControl: "no-cache",
+      CacheControl: 'no-cache',
     }),
   );
 };
@@ -100,8 +100,8 @@ const emptyS3Directory = async (dir: string) => {
   if (!listedObjects.Contents || listedObjects.Contents.length === 0) return;
 
   const objectsToDelete = listedObjects.Contents.map(({ Key }) => ({
-    Key: Key || "", // Ensure Key is never undefined
-  })).filter(({ Key }) => Key !== ""); // Filter out any empty keys
+    Key: Key || '', // Ensure Key is never undefined
+  })).filter(({ Key }) => Key !== ''); // Filter out any empty keys
 
   // Only send delete command if we have objects to delete
   if (objectsToDelete.length > 0) {
@@ -121,55 +121,55 @@ const emptyS3Directory = async (dir: string) => {
 
 const getContentType = (extension: string): ContentType => {
   switch (extension) {
-    case "md":
-    case "mdx":
-      return "text/markdown";
-    case "csv":
-      return "text/csv";
-    case "geojson":
-      return "application/geo+json";
-    case "json":
-      return "application/json";
-    case "yaml":
-    case "yml":
-    case "base": // Obsidian Base files
-      return "application/yaml";
-    case "css":
-      return "text/css";
-    case "jpeg":
-    case "jpg":
-      return "image/jpeg";
-    case "png":
-      return "image/png";
-    case "gif":
-      return "image/gif";
-    case "svg":
-      return "image/svg+xml";
-    case "ico":
-      return "image/x-icon";
-    case "webp":
-      return "image/webp";
-    case "avif":
-      return "image/avif";
-    case "pdf":
-      return "application/pdf";
+    case 'md':
+    case 'mdx':
+      return 'text/markdown';
+    case 'csv':
+      return 'text/csv';
+    case 'geojson':
+      return 'application/geo+json';
+    case 'json':
+      return 'application/json';
+    case 'yaml':
+    case 'yml':
+    case 'base': // Obsidian Base files
+      return 'application/yaml';
+    case 'css':
+      return 'text/css';
+    case 'jpeg':
+    case 'jpg':
+      return 'image/jpeg';
+    case 'png':
+      return 'image/png';
+    case 'gif':
+      return 'image/gif';
+    case 'svg':
+      return 'image/svg+xml';
+    case 'ico':
+      return 'image/x-icon';
+    case 'webp':
+      return 'image/webp';
+    case 'avif':
+      return 'image/avif';
+    case 'pdf':
+      return 'application/pdf';
 
     // Video
-    case "mp4":
-      return "video/mp4";
-    case "webm":
-      return "video/webm";
+    case 'mp4':
+      return 'video/mp4';
+    case 'webm':
+      return 'video/webm';
 
     // Audio
-    case "aac":
-      return "audio/aac";
-    case "mp3":
-      return "audio/mpeg";
-    case "opus":
-      return "audio/opus";
+    case 'aac':
+      return 'audio/aac';
+    case 'mp3':
+      return 'audio/mpeg';
+    case 'opus':
+      return 'audio/opus';
 
     default:
-      return "application/json"; // Fallback to JSON for any new extensions
+      return 'application/json'; // Fallback to JSON for any new extensions
   }
 };
 
@@ -234,7 +234,7 @@ export const uploadTree = async ({
   return uploadS3Object({
     key: `${projectId}/${branch}/_tree`,
     file: Buffer.from(JSON.stringify(tree)),
-    contentType: "application/json",
+    contentType: 'application/json',
   });
 };
 

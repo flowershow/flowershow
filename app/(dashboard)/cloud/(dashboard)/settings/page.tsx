@@ -1,10 +1,10 @@
-import { getSession } from "@/server/auth";
-import { redirect } from "next/navigation";
+import { redirect } from 'next/navigation';
+import { getSession } from '@/server/auth';
 
 export default async function SettingsPage() {
   const session = await getSession();
   if (!session) {
-    redirect("/login");
+    redirect('/login');
   }
   return (
     <div className="flex max-w-screen-xl flex-col space-y-12 p-8">

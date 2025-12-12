@@ -1,5 +1,5 @@
-"use client";
-import { useEffect, useRef } from "react";
+'use client';
+import { useEffect, useRef } from 'react';
 
 export type CustomHtmlProps = {
   html: string;
@@ -17,9 +17,9 @@ export const CustomHtml = ({ html }: CustomHtmlProps) => {
     if (!el) return;
 
     // find any scripts in the injected HTML
-    const scripts = Array.from(el.querySelectorAll("script"));
+    const scripts = Array.from(el.querySelectorAll('script'));
     scripts.forEach((oldScript) => {
-      const newScript = document.createElement("script");
+      const newScript = document.createElement('script');
       // copy attributes (src, type, async, etc.)
       Array.from(oldScript.attributes).forEach((attr) =>
         newScript.setAttribute(attr.name, attr.value),

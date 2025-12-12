@@ -1,45 +1,44 @@
-import { revalidateTag, unstable_cache } from "next/cache";
-import { z } from "zod";
-import bcrypt from "bcryptjs";
-
-import { inngest } from "@/inngest/client";
-import {
-  createTRPCRouter,
-  protectedProcedure,
-  publicProcedure,
-} from "@/server/api/trpc";
-import {
-  fetchGitHubRepoTree,
-  checkIfBranchExists,
-  createGitHubRepoWebhook,
-  deleteGitHubRepoWebhook,
-} from "@/lib/github";
-import { deleteProject, fetchFile } from "@/lib/content-store";
+import { Blob, Prisma, PrismaClient, Status } from '@prisma/client';
+import { TRPCError } from '@trpc/server';
+import bcrypt from 'bcryptjs';
+import { revalidateTag, unstable_cache } from 'next/cache';
+import { z } from 'zod';
+import { SiteConfig } from '@/components/types';
+import { env } from '@/env.mjs';
+import { inngest } from '@/inngest/client';
+import { buildSiteTree } from '@/lib/build-site-tree';
+import { deleteProject, fetchFile } from '@/lib/content-store';
 import {
   addDomainToVercel,
   removeDomainFromVercelProject,
   validDomainRegex,
-} from "@/lib/domains";
-import { TRPCError } from "@trpc/server";
-import { buildSiteTree } from "@/lib/build-site-tree";
-import { SiteConfig } from "@/components/types";
-import { env } from "@/env.mjs";
-import { Blob, Prisma, PrismaClient, Status } from "@prisma/client";
+} from '@/lib/domains';
+import { getSiteUrlPath } from '@/lib/get-site-url';
+import {
+  checkIfBranchExists,
+  createGitHubRepoWebhook,
+  deleteGitHubRepoWebhook,
+  fetchGitHubRepoTree,
+} from '@/lib/github';
+import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
+import PostHogClient from '@/lib/server-posthog';
+import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from '@/server/api/trpc';
 import {
   PageMetadata,
   PublicSite,
   publicSiteSchema,
   publicSiteSelect,
   SiteUpdateKey,
-} from "../types";
-import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
-import { isWikiLink, getWikiLinkValue } from "@/lib/wiki-link";
-import { getSiteUrlPath } from "@/lib/get-site-url";
-import PostHogClient from "@/lib/server-posthog";
-import { resolveWikiLinkToFilePath } from "@/lib/resolve-wiki-link";
+} from '../types';
 
 const asciiPrintableNoEdgeSpaces = new RegExp(
-  "^(?=.{8,128}$)[!-~](?:[ -~]*[!-~])?$",
+  '^(?=.{8,128}$)[!-~](?:[ -~]*[!-~])?$',
 );
 
 export const siteRouter = createTRPCRouter({
@@ -85,8 +84,8 @@ export const siteRouter = createTRPCRouter({
   getAll: protectedProcedure
     .output(z.array(publicSiteSchema))
     .query(async ({ ctx }): Promise<PublicSite[]> => {
-      if (ctx.session.user.role !== "ADMIN") {
-        throw new Error("Unauthorized");
+      if (ctx.session.user.role !== 'ADMIN') {
+        throw new Error('Unauthorized');
       }
       return await ctx.db.site.findMany({ select: publicSiteSelect });
     }),
@@ -118,7 +117,7 @@ export const siteRouter = createTRPCRouter({
       }
 
       // 2) Decide projectName (unique per user)
-      const repoName = ghRepository.split("/")[1]!;
+      const repoName = ghRepository.split('/')[1]!;
       const baseName = input.projectName?.trim() || repoName;
       const projectName = await ensureUniqueProjectName(
         ctx.db,
@@ -155,12 +154,12 @@ export const siteRouter = createTRPCRouter({
           data: { autoSync: true, webhookId },
         });
       } catch (e) {
-        console.error("Failed to create webhook", e);
+        console.error('Failed to create webhook', e);
       }
 
       // 5) Kick off initial sync
       await inngest.send({
-        name: "site/sync",
+        name: 'site/sync',
         data: {
           siteId: created.id,
           ghRepository,
@@ -175,7 +174,7 @@ export const siteRouter = createTRPCRouter({
       const posthog = await PostHogClient();
       posthog.capture({
         distinctId: created.userId,
-        event: "site_created",
+        event: 'site_created',
         properties: { id: created.id },
       });
       await posthog.shutdown();
@@ -187,7 +186,7 @@ export const siteRouter = createTRPCRouter({
       });
       if (!fresh) {
         // extremely unlikely; handle defensively
-        throw new Error("Site not found after creation");
+        throw new Error('Site not found after creation');
       }
       return fresh;
     }),
@@ -210,17 +209,17 @@ export const siteRouter = createTRPCRouter({
 
       if (!site || site.userId !== ctx.session.user.id) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Site not found",
+          code: 'NOT_FOUND',
+          message: 'Site not found',
         });
       }
 
       // Utils
       const parseIfBoolString = (v: string) =>
-        v === "true" ? true : v === "false" ? false : v;
-      const toNullIfEmpty = (v: string) => (v.trim() === "" ? null : v.trim());
+        v === 'true' ? true : v === 'false' ? false : v;
+      const toNullIfEmpty = (v: string) => (v.trim() === '' ? null : v.trim());
 
-      if (key === "customDomain") {
+      if (key === 'customDomain') {
         const newDomain = toNullIfEmpty(value);
         if (!newDomain) {
           await ctx.db.site.update({
@@ -229,11 +228,11 @@ export const siteRouter = createTRPCRouter({
             select: publicSiteSelect,
           });
         } else {
-          if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
+          if (env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
             if (!validDomainRegex.test(newDomain)) {
               throw new TRPCError({
-                code: "BAD_REQUEST",
-                message: "Invalid domain",
+                code: 'BAD_REQUEST',
+                message: 'Invalid domain',
               });
             }
 
@@ -262,7 +261,7 @@ export const siteRouter = createTRPCRouter({
             });
           }
         }
-      } else if (key === "rootDir") {
+      } else if (key === 'rootDir') {
         const newRoot = toNullIfEmpty(value);
 
         await ctx.db.site.update({
@@ -271,7 +270,7 @@ export const siteRouter = createTRPCRouter({
         });
         await deleteProject(id).catch(() => {}); // TODO handle it in a better way
         await inngest.send({
-          name: "site/sync",
+          name: 'site/sync',
           data: {
             siteId: id,
             ghRepository: site.ghRepository,
@@ -281,8 +280,8 @@ export const siteRouter = createTRPCRouter({
             initialSync: true,
           },
         });
-      } else if (key === "autoSync") {
-        const enable = value === "true";
+      } else if (key === 'autoSync') {
+        const enable = value === 'true';
 
         if (enable) {
           try {
@@ -297,9 +296,9 @@ export const siteRouter = createTRPCRouter({
             });
           } catch {
             throw new TRPCError({
-              code: "BAD_REQUEST",
+              code: 'BAD_REQUEST',
               message:
-                "Failed to create webhook. Check if the repository already has a webhook installed.",
+                'Failed to create webhook. Check if the repository already has a webhook installed.',
             });
           }
         } else {
@@ -317,7 +316,7 @@ export const siteRouter = createTRPCRouter({
             });
           } catch (error) {
             throw new TRPCError({
-              code: "BAD_REQUEST",
+              code: 'BAD_REQUEST',
               message: `Failed to delete webhook: ${String(error)}`,
             });
           }
@@ -332,9 +331,9 @@ export const siteRouter = createTRPCRouter({
         // If enableSearch is being turned on, trigger a force sync to index all files
         // Note: this is a temporary solution, to make sure people who upgrade now have their
         // site's indexes updated (but we index all documents, even for non-premium users atm, which we shouldn't)
-        if (key === "enableSearch" && converted === true) {
+        if (key === 'enableSearch' && converted === true) {
           await inngest.send({
-            name: "site/sync",
+            name: 'site/sync',
             data: {
               siteId: id,
               ghRepository: site.ghRepository,
@@ -351,7 +350,7 @@ export const siteRouter = createTRPCRouter({
       const posthog = PostHogClient();
       posthog.capture({
         distinctId: site.userId,
-        event: "site_settings_changed",
+        event: 'site_settings_changed',
         properties: { id: site.id, config: key },
       });
       await posthog.shutdown();
@@ -362,8 +361,8 @@ export const siteRouter = createTRPCRouter({
       });
       if (!fresh) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Site not found after update",
+          code: 'NOT_FOUND',
+          message: 'Site not found after update',
         });
       }
 
@@ -379,7 +378,7 @@ export const siteRouter = createTRPCRouter({
           .string()
           .refine((s) => asciiPrintableNoEdgeSpaces.test(s), {
             message:
-              "Password must be 8–128 printable characters with no leading/trailing spaces.",
+              'Password must be 8–128 printable characters with no leading/trailing spaces.',
           })
           .optional(),
       }),
@@ -392,23 +391,23 @@ export const siteRouter = createTRPCRouter({
 
       if (!site || site.userId !== ctx.session.user.id) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Site not found",
+          code: 'NOT_FOUND',
+          message: 'Site not found',
         });
       }
 
       if (input.enabled) {
         if (!input.password) {
           throw new TRPCError({
-            code: "BAD_REQUEST",
-            message: "You need to provide a password to set",
+            code: 'BAD_REQUEST',
+            message: 'You need to provide a password to set',
           });
         } else {
           const hash = await bcrypt.hash(input.password, 12);
           await ctx.db.site.update({
             where: { id: input.id },
             data: {
-              privacyMode: "PASSWORD",
+              privacyMode: 'PASSWORD',
               accessPasswordHash: hash,
               accessPasswordUpdatedAt: new Date(),
               tokenVersion: {
@@ -421,7 +420,7 @@ export const siteRouter = createTRPCRouter({
         await ctx.db.site.update({
           where: { id: input.id },
           data: {
-            privacyMode: "PUBLIC",
+            privacyMode: 'PUBLIC',
             accessPasswordHash: null,
             accessPasswordUpdatedAt: new Date(),
           },
@@ -433,8 +432,8 @@ export const siteRouter = createTRPCRouter({
       });
       if (!fresh) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Site not found after update",
+          code: 'NOT_FOUND',
+          message: 'Site not found after update',
         });
       }
 
@@ -449,8 +448,8 @@ export const siteRouter = createTRPCRouter({
 
       if (!site || site.userId !== ctx.session.user.id) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Site not found",
+          code: 'NOT_FOUND',
+          message: 'Site not found',
         });
       }
 
@@ -462,7 +461,7 @@ export const siteRouter = createTRPCRouter({
             accessToken: ctx.session.accessToken,
           });
         } catch (error) {
-          console.error("Failed to delete webhook", error);
+          console.error('Failed to delete webhook', error);
         }
       }
 
@@ -471,7 +470,7 @@ export const siteRouter = createTRPCRouter({
       });
 
       await inngest.send({
-        name: "site/delete",
+        name: 'site/delete',
         data: {
           siteId: site.id,
           accessToken: ctx.session.accessToken,
@@ -481,7 +480,7 @@ export const siteRouter = createTRPCRouter({
       const posthog = PostHogClient();
       posthog.capture({
         distinctId: site.userId,
-        event: "site_deleted",
+        event: 'site_deleted',
         properties: { id: site.id },
       });
       await posthog.shutdown();
@@ -504,12 +503,12 @@ export const siteRouter = createTRPCRouter({
 
       if (
         !site ||
-        (ctx.session.user.role !== "ADMIN" &&
+        (ctx.session.user.role !== 'ADMIN' &&
           site.userId !== ctx.session.user.id)
       ) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Site not found",
+          code: 'NOT_FOUND',
+          message: 'Site not found',
         });
       }
 
@@ -517,7 +516,7 @@ export const siteRouter = createTRPCRouter({
       const accessToken = ctx.session.accessToken;
 
       await inngest.send({
-        name: "site/sync",
+        name: 'site/sync',
         data: {
           siteId: id,
           ghRepository,
@@ -540,7 +539,7 @@ export const siteRouter = createTRPCRouter({
         ctx,
         input,
       }): Promise<{
-        status: Status | "OUTDATED";
+        status: Status | 'OUTDATED';
         error?: string | null;
         lastSyncedAt?: Date | null;
       }> => {
@@ -551,8 +550,8 @@ export const siteRouter = createTRPCRouter({
 
         if (!site || site.userId !== ctx.session.user.id) {
           throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Site not found",
+            code: 'NOT_FOUND',
+            message: 'Site not found',
           });
         }
 
@@ -570,7 +569,7 @@ export const siteRouter = createTRPCRouter({
         });
 
         // Calculate aggregate sync status
-        let status: Status | "OUTDATED";
+        let status: Status | 'OUTDATED';
         let error: string | null = null;
         // Get the most recent update date
         const lastSyncedAt =
@@ -579,26 +578,26 @@ export const siteRouter = createTRPCRouter({
             .sort((a, b) => b.getTime() - a.getTime())[0] || null;
 
         // If any blob is PENDING, site sync is PENDING
-        if (blobs.some((b) => b.syncStatus === "PENDING")) {
-          status = "PENDING";
+        if (blobs.some((b) => b.syncStatus === 'PENDING')) {
+          status = 'PENDING';
         }
         // If any blob is ERROR, site is ERROR
-        else if (blobs.some((b) => b.syncStatus === "ERROR")) {
-          status = "ERROR";
+        else if (blobs.some((b) => b.syncStatus === 'ERROR')) {
+          status = 'ERROR';
           error = blobs
-            .filter((b) => b.syncStatus === "ERROR")
+            .filter((b) => b.syncStatus === 'ERROR')
             .map((b) =>
               b.syncError
                 ? `[${b.path}]: ${b.syncError}`
                 : `[${b.path}]: Unknown error`,
             )
-            .join("\n");
+            .join('\n');
         }
         // Otherwise, compare trees
         else {
           if (!site.tree) {
             return {
-              status: "PENDING",
+              status: 'PENDING',
             };
           }
           const gitHubTree = await fetchGitHubRepoTree({
@@ -607,7 +606,7 @@ export const siteRouter = createTRPCRouter({
             accessToken: ctx.session.accessToken,
           });
           status =
-            site.tree?.["sha"] === gitHubTree.sha ? "SUCCESS" : "OUTDATED";
+            site.tree?.['sha'] === gitHubTree.sha ? 'SUCCESS' : 'OUTDATED';
         }
 
         return {
@@ -635,8 +634,8 @@ export const siteRouter = createTRPCRouter({
 
           if (!site) {
             throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
+              code: 'NOT_FOUND',
+              message: 'Site not found',
             });
           }
 
@@ -644,7 +643,7 @@ export const siteRouter = createTRPCRouter({
             return await fetchFile({
               projectId: site.id,
               branch: site.ghBranch,
-              path: "custom.css",
+              path: 'custom.css',
             });
           } catch {
             return null;
@@ -674,8 +673,8 @@ export const siteRouter = createTRPCRouter({
 
           if (!site) {
             throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
+              code: 'NOT_FOUND',
+              message: 'Site not found',
             });
           }
 
@@ -685,7 +684,7 @@ export const siteRouter = createTRPCRouter({
             const configJson = await fetchFile({
               projectId: site.id,
               branch: site.ghBranch,
-              path: "config.json",
+              path: 'config.json',
             });
             const config = configJson
               ? (JSON.parse(configJson) as SiteConfig)
@@ -694,7 +693,7 @@ export const siteRouter = createTRPCRouter({
             if (!config) return null;
 
             // Resolve media paths to full URLs
-            const keysToResolve = ["image", "logo", "favicon", "thumbnail"];
+            const keysToResolve = ['image', 'logo', 'favicon', 'thumbnail'];
             keysToResolve.forEach((key) => {
               if (config[key]) {
                 config[key] = resolveFilePathToUrlPath({
@@ -758,7 +757,7 @@ export const siteRouter = createTRPCRouter({
     .input(
       z.object({
         siteId: z.string().min(1),
-        orderBy: z.enum(["path", "title"]).default("title"),
+        orderBy: z.enum(['path', 'title']).default('title'),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -773,8 +772,8 @@ export const siteRouter = createTRPCRouter({
 
           if (!site) {
             throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
+              code: 'NOT_FOUND',
+              message: 'Site not found',
             });
           }
 
@@ -784,11 +783,11 @@ export const siteRouter = createTRPCRouter({
           const blobs = (await ctx.db.blob.findMany({
             where: {
               siteId: site.id,
-              extension: { in: ["md", "mdx"] },
+              extension: { in: ['md', 'mdx'] },
               metadata: { not: Prisma.AnyNull }, // metadata must exist
               OR: [
-                { metadata: { path: ["publish"], equals: true } }, // explicitly published
-                { metadata: { path: ["publish"], equals: Prisma.AnyNull } }, // no publish field
+                { metadata: { path: ['publish'], equals: true } }, // explicitly published
+                { metadata: { path: ['publish'], equals: Prisma.AnyNull } }, // no publish field
               ],
             },
             select: {
@@ -831,17 +830,17 @@ export const siteRouter = createTRPCRouter({
 
       if (!site) {
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Site not found",
+          code: 'NOT_FOUND',
+          message: 'Site not found',
         });
       }
 
       return await unstable_cache(
         async (input) => {
-          const _dir = input.dir.replace(/^\//, "");
-          const dir = _dir.endsWith("/") ? _dir : `${_dir}/`;
-          const dirReadmePattern = dir + "README.md(x)?";
-          const dirIndexPattern = dir + "index.md(x)?";
+          const _dir = input.dir.replace(/^\//, '');
+          const dir = _dir.endsWith('/') ? _dir : `${_dir}/`;
+          const dirReadmePattern = dir + 'README.md(x)?';
+          const dirIndexPattern = dir + 'index.md(x)?';
 
           const sitePrefix = getSiteUrlPath(site);
 
@@ -867,7 +866,7 @@ export const siteRouter = createTRPCRouter({
               SELECT "path", "app_path", "permalink", "metadata"
               FROM "Blob"
               WHERE "site_id" = ${site.id}
-                AND "path" LIKE ${dir + "%"}
+                AND "path" LIKE ${dir + '%'}
                 AND "path" !~ ${dirReadmePattern}
                 AND "path" !~ ${dirIndexPattern}
                 AND "extension" IN ('md', 'mdx')
@@ -878,7 +877,7 @@ export const siteRouter = createTRPCRouter({
 
           const items = blobs.map((blob) => {
             const metadata = blob.metadata as PageMetadata | null;
-            const mediaFrontmatterField = input.slots.media ?? "image";
+            const mediaFrontmatterField = input.slots.media ?? 'image';
 
             if (metadata?.[mediaFrontmatterField]) {
               let value = metadata[mediaFrontmatterField];
@@ -930,7 +929,7 @@ export const siteRouter = createTRPCRouter({
               siteId: input.siteId,
               permalink: input.slug,
             },
-            orderBy: { path: "desc" },
+            orderBy: { path: 'desc' },
           });
 
           // If not found by permalink, try appPath
@@ -940,7 +939,7 @@ export const siteRouter = createTRPCRouter({
                 siteId: input.siteId,
                 appPath: input.slug,
               },
-              orderBy: { path: "desc" },
+              orderBy: { path: 'desc' },
             });
           }
 
@@ -953,8 +952,8 @@ export const siteRouter = createTRPCRouter({
 
           if (!blob || !site) {
             throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Page not found",
+              code: 'NOT_FOUND',
+              message: 'Page not found',
             });
           }
 
@@ -972,7 +971,7 @@ export const siteRouter = createTRPCRouter({
             })
           ).map((b) => b.path);
 
-          ["image", "avatar"].forEach((key) => {
+          ['image', 'avatar'].forEach((key) => {
             if (metadata?.[key]) {
               let value = metadata[key];
 
@@ -1032,13 +1031,13 @@ export const siteRouter = createTRPCRouter({
               siteId: input.siteId,
               path: input.path,
             },
-            orderBy: { path: "desc" },
+            orderBy: { path: 'desc' },
           });
 
           if (!blob) {
             throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Blob not found",
+              code: 'NOT_FOUND',
+              message: 'Blob not found',
             });
           }
 
@@ -1064,7 +1063,7 @@ export const siteRouter = createTRPCRouter({
             where: {
               id: input.id,
             },
-            orderBy: { path: "desc" },
+            orderBy: { path: 'desc' },
             include: {
               site: true,
             },
@@ -1072,8 +1071,8 @@ export const siteRouter = createTRPCRouter({
 
           if (!blob) {
             throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Page not found",
+              code: 'NOT_FOUND',
+              message: 'Page not found',
             });
           }
 
@@ -1120,8 +1119,8 @@ export const siteRouter = createTRPCRouter({
 
             if (!site) {
               throw new TRPCError({
-                code: "NOT_FOUND",
-                message: "Site not found",
+                code: 'NOT_FOUND',
+                message: 'Site not found',
               });
             }
 
@@ -1148,8 +1147,8 @@ export const siteRouter = createTRPCRouter({
                   where: {
                     siteId: input.siteId,
                     OR: [
-                      { path: { endsWith: authorPath + ".md" } },
-                      { path: { endsWith: authorPath + ".mdx" } },
+                      { path: { endsWith: authorPath + '.md' } },
+                      { path: { endsWith: authorPath + '.mdx' } },
                     ],
                   },
                 });
@@ -1219,8 +1218,8 @@ export const siteRouter = createTRPCRouter({
 
           if (!site) {
             throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
+              code: 'NOT_FOUND',
+              message: 'Site not found',
             });
           }
 
@@ -1242,8 +1241,8 @@ export const siteRouter = createTRPCRouter({
           for (const blob of blobs) {
             if (blob.permalink) {
               // TODO prepend paths
-              const path = "/" + blob.path;
-              let url = blob.permalink.replace(/^\//, "");
+              const path = '/' + blob.path;
+              let url = blob.permalink.replace(/^\//, '');
               url = `${sitePrefix}/${url}`;
 
               mapping[path] = url;
@@ -1278,8 +1277,8 @@ export const siteRouter = createTRPCRouter({
 
           if (!site) {
             throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
+              code: 'NOT_FOUND',
+              message: 'Site not found',
             });
           }
 
@@ -1296,15 +1295,15 @@ export const siteRouter = createTRPCRouter({
           const permalinks = blobs.map((blob) => {
             let prefix: string;
             if (site.customDomain) {
-              prefix = "";
+              prefix = '';
             } else {
               prefix = `/@${site.user.ghUsername}/${site.projectName}`;
             }
 
             return (
               (blob.appPath
-                ? prefix + (blob.appPath === "/" ? "" : "/" + blob.appPath)
-                : prefix + "/_r/-/" + blob.path) || "/"
+                ? prefix + (blob.appPath === '/' ? '' : '/' + blob.appPath)
+                : prefix + '/_r/-/' + blob.path) || '/'
             );
           });
 
@@ -1333,8 +1332,8 @@ export const siteRouter = createTRPCRouter({
 
           if (!site) {
             throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Site not found",
+              code: 'NOT_FOUND',
+              message: 'Site not found',
             });
           }
 
@@ -1346,11 +1345,11 @@ export const siteRouter = createTRPCRouter({
               path: true,
             },
             orderBy: {
-              path: "asc",
+              path: 'asc',
             },
           });
 
-          return blobs.map((blob) => "/" + blob.path); // TODO prepend paths in the db with leading slash
+          return blobs.map((blob) => '/' + blob.path); // TODO prepend paths in the db with leading slash
         },
         undefined,
         {

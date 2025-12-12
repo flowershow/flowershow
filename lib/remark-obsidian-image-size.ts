@@ -1,5 +1,5 @@
-import { visit } from "unist-util-visit";
-import type { Root, Image } from "mdast";
+import type { Image, Root } from 'mdast';
+import { visit } from 'unist-util-visit';
 
 /**
  * Remark plugin to add support for Obsidian-style image resizing.
@@ -18,7 +18,7 @@ import type { Root, Image } from "mdast";
  */
 function remarkObsidianImageSize() {
   return (tree: Root) => {
-    visit(tree, "image", (node: Image) => {
+    visit(tree, 'image', (node: Image) => {
       if (!node.alt) {
         return;
       }
@@ -56,7 +56,7 @@ function remarkObsidianImageSize() {
         node.data.hProperties.style = styleValue;
 
         // Clear the alt text since it was only dimensions
-        node.alt = "";
+        node.alt = '';
       }
       // If alt text contains other content besides dimensions, leave it as-is
       // This preserves meaningful alt text like "My image 250x100"

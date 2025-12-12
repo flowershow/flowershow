@@ -1,26 +1,26 @@
-"use client";
-import Image from "next/image";
-import Link from "next/link";
-import { useParams, useSelectedLayoutSegments } from "next/navigation";
-import Cookies from "js-cookie";
-import { ReactNode, useEffect, useMemo } from "react";
-import { ExternalLinkIcon } from "lucide-react";
+'use client';
 import {
   Disclosure,
   Menu,
   MenuButton,
   MenuItem,
   MenuItems,
-} from "@headlessui/react";
-import { getConfig } from "@/lib/app-config";
-import { signOut } from "next-auth/react";
-import { api } from "@/trpc/react";
-import { cn } from "@/lib/utils";
-import { useModal } from "@/providers/modal-provider";
-import FeedbackModal from "@/components/dashboard/feedback";
+} from '@headlessui/react';
+import Cookies from 'js-cookie';
+import { ExternalLinkIcon } from 'lucide-react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useParams, useSelectedLayoutSegments } from 'next/navigation';
+import { signOut } from 'next-auth/react';
+import { ReactNode, useEffect, useMemo } from 'react';
+import FeedbackModal from '@/components/dashboard/feedback';
+import { getConfig } from '@/lib/app-config';
+import { cn } from '@/lib/utils';
+import { useModal } from '@/providers/modal-provider';
+import { api } from '@/trpc/react';
 
 const config = getConfig();
-const FEEDBACK_DISMISSED_COOKIE = "feedback-dismissed";
+const FEEDBACK_DISMISSED_COOKIE = 'feedback-dismissed';
 
 export default function Nav({ children }: { children: ReactNode }) {
   const modal = useModal();
@@ -35,7 +35,7 @@ export default function Nav({ children }: { children: ReactNode }) {
   );
 
   const pages = useMemo(() => {
-    if (segments[0] === "site" && id && site) {
+    if (segments[0] === 'site' && id && site) {
       return [
         {
           name: site.projectName,
@@ -87,11 +87,11 @@ export default function Nav({ children }: { children: ReactNode }) {
                 height={32}
                 alt={config.product}
               />
-              {config.product === "flowershow" && (
+              {config.product === 'flowershow' && (
                 <span
                   className={cn(
-                    "ml-2 font-brand text-lg font-extrabold md:text-xl",
-                    pages.length && "hidden",
+                    'ml-2 font-brand text-lg font-extrabold md:text-xl',
+                    pages.length && 'hidden',
                   )}
                 >
                   Flowershow
@@ -110,7 +110,7 @@ export default function Nav({ children }: { children: ReactNode }) {
                 </svg>
                 <a
                   href={page.href}
-                  aria-current={page.current ? "page" : undefined}
+                  aria-current={page.current ? 'page' : undefined}
                   className="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"
                 >
                   {page.name}
@@ -119,7 +119,7 @@ export default function Nav({ children }: { children: ReactNode }) {
             ))}
           </div>
           <div className="ml-6 flex items-center space-x-2">
-            {config.product === "flowershow" && (
+            {config.product === 'flowershow' && (
               <>
                 <Link
                   className="flex items-center text-sm hover:underline"

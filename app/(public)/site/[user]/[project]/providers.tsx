@@ -1,6 +1,6 @@
-"use client";
-import { SessionProvider } from "next-auth/react";
-import { PostHogProvider } from "@/providers/posthog-provider";
+'use client';
+import { SessionProvider } from 'next-auth/react';
+import { PostHogProvider } from '@/providers/posthog-provider';
 
 export default function RootProviders({
   children,

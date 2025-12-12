@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import React from "react";
-import Link from "next/link";
-import { Box, Typography } from "@mui/material";
-import { DataGrid, GridColDef, GridRenderCellParams } from "@mui/x-data-grid";
-import { getWikiLinkValue, isWikiLink } from "@/lib/wiki-link";
-import { resolveWikiLinkToFilePath } from "@/lib/resolve-wiki-link";
-import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
+import { Box, Typography } from '@mui/material';
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
+import Link from 'next/link';
+import React from 'react';
+import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
+import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
 
 type Column = string;
 type Row = {
@@ -52,11 +52,11 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
         sx={{
           my: 2,
           p: 2,
-          textAlign: "center",
+          textAlign: 'center',
           border: 1,
-          borderColor: "divider",
+          borderColor: 'divider',
           borderRadius: 1,
-          bgcolor: "background.default",
+          bgcolor: 'background.default',
         }}
       >
         <Typography color="text.secondary">No results found</Typography>
@@ -65,27 +65,27 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
   }
 
   const getCellValue = (row: Row, col: Column) => {
-    if (col === "file.name") {
+    if (col === 'file.name') {
       // Extract filename from path
-      const pathParts = row.path.split("/");
+      const pathParts = row.path.split('/');
       const fileName =
-        pathParts[pathParts.length - 1]?.replace(/\.(md|mdx)$/, "") || "";
+        pathParts[pathParts.length - 1]?.replace(/\.(md|mdx)$/, '') || '';
 
       // Create a link using appPath with sitePrefix
-      const linkUrl = `${sitePrefix}/${row.appPath || ""}`;
+      const linkUrl = `${sitePrefix}/${row.appPath || ''}`;
 
       return (
         <Link
           href={linkUrl}
           style={{
-            color: "#1976d2",
-            textDecoration: "none",
+            color: '#1976d2',
+            textDecoration: 'none',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.textDecoration = "underline";
+            e.currentTarget.style.textDecoration = 'underline';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.textDecoration = "none";
+            e.currentTarget.style.textDecoration = 'none';
           }}
         >
           {fileName}
@@ -95,7 +95,7 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
 
     // Get value from metadata or formulas
     let value: any;
-    if (col.startsWith("formula.")) {
+    if (col.startsWith('formula.')) {
       const formulaName = col.substring(8); // Remove "formula." prefix
       value = row.metadata?.__formulas?.[formulaName];
     } else {
@@ -126,14 +126,14 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
         <Link
           href={urlPath}
           style={{
-            color: "#1976d2",
-            textDecoration: "none",
+            color: '#1976d2',
+            textDecoration: 'none',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.textDecoration = "underline";
+            e.currentTarget.style.textDecoration = 'underline';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.textDecoration = "none";
+            e.currentTarget.style.textDecoration = 'none';
           }}
         >
           {target}
@@ -159,7 +159,7 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
     }
 
     // Handle formula properties
-    if (col.startsWith("formula.")) {
+    if (col.startsWith('formula.')) {
       return col.substring(8);
     }
     // Capitalize first letter and replace underscores with spaces
@@ -167,13 +167,13 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
   };
 
   const formatSummaryValue = (value: number | string | null): string => {
-    if (value === null || value === undefined) return "—";
-    if (typeof value === "number") {
+    if (value === null || value === undefined) return '—';
+    if (typeof value === 'number') {
       // Round to 2 decimal places if it's a decimal number
       return value % 1 === 0 ? value.toString() : value.toFixed(2);
     }
     // For dates, format them nicely
-    if (typeof value === "string" && value.match(/^\d{4}-\d{2}-\d{2}/)) {
+    if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}/)) {
       try {
         const date = new Date(value);
         return date.toLocaleDateString();
@@ -192,29 +192,29 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
     minWidth: 150,
     valueGetter: (value: any, row: any) => {
       // Check if this is the summary row
-      if (row.id === "__summary__") {
+      if (row.id === '__summary__') {
         const summary = summaries?.[col];
-        if (!summary) return "";
+        if (!summary) return '';
         return `${summary.function}: ${formatSummaryValue(summary.value)}`;
       }
       const typedRow = row as Row;
-      if (col === "file.name") {
-        const pathParts = typedRow.path.split("/");
+      if (col === 'file.name') {
+        const pathParts = typedRow.path.split('/');
         return (
-          pathParts[pathParts.length - 1]?.replace(/\.(md|mdx)$/, "") || ""
+          pathParts[pathParts.length - 1]?.replace(/\.(md|mdx)$/, '') || ''
         );
       }
       // Handle formula properties
-      if (col.startsWith("formula.")) {
+      if (col.startsWith('formula.')) {
         const formulaName = col.substring(8);
-        return typedRow.metadata?.__formulas?.[formulaName] ?? "";
+        return typedRow.metadata?.__formulas?.[formulaName] ?? '';
       }
-      return typedRow.metadata?.[col] ?? "";
+      return typedRow.metadata?.[col] ?? '';
     },
     renderCell: (params: GridRenderCellParams) => {
       const row = params.row as Row;
       // Check if this is the summary row
-      if ((row as any).id === "__summary__") {
+      if ((row as any).id === '__summary__') {
         const summary = summaries?.[col];
         if (!summary || summary.value === null || summary.value === undefined) {
           return null;
@@ -223,8 +223,8 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
           <Typography
             component="span"
             sx={{
-              fontSize: "0.875rem",
-              color: "text.primary",
+              fontSize: '0.875rem',
+              color: 'text.primary',
             }}
           >
             {summary.function}: {formatSummaryValue(summary.value)}
@@ -244,9 +244,9 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
   // Add summary row if summaries exist
   if (summaries && Object.keys(summaries).length > 0) {
     gridRows.push({
-      id: "__summary__",
-      path: "",
-      appPath: "",
+      id: '__summary__',
+      path: '',
+      appPath: '',
       metadata: {},
     } as any);
   }
@@ -256,7 +256,7 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
       className="not-prose"
       sx={{
         my: 3,
-        width: "100%",
+        width: '100%',
       }}
     >
       <DataGrid
@@ -267,35 +267,35 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
             paginationModel: { pageSize: 10, page: 0 },
           },
         }}
-        getRowHeight={() => "auto"}
+        getRowHeight={() => 'auto'}
         pageSizeOptions={[5, 10, 25, 50]}
         disableRowSelectionOnClick
         getRowClassName={(params) =>
-          params.id === "__summary__" ? "summary-row" : ""
+          params.id === '__summary__' ? 'summary-row' : ''
         }
         sx={{
           border: 1,
-          borderColor: "divider",
-          "& .MuiDataGrid-cell": {
-            fontSize: "0.875rem",
+          borderColor: 'divider',
+          '& .MuiDataGrid-cell': {
+            fontSize: '0.875rem',
           },
-          "& .MuiDataGrid-columnHeaders": {
+          '& .MuiDataGrid-columnHeaders': {
             fontWeight: 600,
-            textTransform: "uppercase",
-            fontSize: "0.75rem",
-            letterSpacing: "0.05em",
-            bgcolor: "background.default",
+            textTransform: 'uppercase',
+            fontSize: '0.75rem',
+            letterSpacing: '0.05em',
+            bgcolor: 'background.default',
           },
-          "&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell": { py: "8px" },
-          "&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell": {
-            py: "15px",
+          '&.MuiDataGrid-root--densityCompact .MuiDataGrid-cell': { py: '8px' },
+          '&.MuiDataGrid-root--densityStandard .MuiDataGrid-cell': {
+            py: '15px',
           },
-          "&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell": {
-            py: "22px",
+          '&.MuiDataGrid-root--densityComfortable .MuiDataGrid-cell': {
+            py: '22px',
           },
-          "& .summary-row": {
-            bgcolor: "action.hover",
-            borderColor: "divider",
+          '& .summary-row': {
+            bgcolor: 'action.hover',
+            borderColor: 'divider',
           },
         }}
       />

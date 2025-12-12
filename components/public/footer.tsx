@@ -1,6 +1,6 @@
-import Link from "next/link";
-import { getConfig } from "@/lib/app-config";
-import { api } from "@/trpc/server";
+import Link from 'next/link';
+import { getConfig } from '@/lib/app-config';
+import { api } from '@/trpc/server';
 
 const config = getConfig();
 
@@ -16,7 +16,7 @@ export default async function Footer({ siteId }: FooterProps) {
     try {
       const customFooterBlob = await api.site.getBlobByPath.query({
         siteId,
-        path: "_flowershow/components/Footer.html",
+        path: '_flowershow/components/Footer.html',
       });
 
       if (customFooterBlob) {

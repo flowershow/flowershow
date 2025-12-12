@@ -1,13 +1,13 @@
-import { visit } from "unist-util-visit";
-import type { MdxJsxFlowElement, MdxJsxAttribute } from "mdast-util-mdx-jsx";
-import * as yaml from "yaml";
-import prisma from "@/server/db";
-import { Blob, Prisma } from "@prisma/client";
-import type { Root, Code } from "mdast";
-import type { Plugin } from "unified";
-import { BinaryExpressionNode, ExprNode } from "./bases-expr";
-import { parseExpression } from "./bases-parse";
-import { PageMetadata } from "@/server/api/types";
+import { Blob, Prisma } from '@prisma/client';
+import type { Code, Root } from 'mdast';
+import type { MdxJsxAttribute, MdxJsxFlowElement } from 'mdast-util-mdx-jsx';
+import type { Plugin } from 'unified';
+import { visit } from 'unist-util-visit';
+import * as yaml from 'yaml';
+import { PageMetadata } from '@/server/api/types';
+import prisma from '@/server/db';
+import { BinaryExpressionNode, ExprNode } from './bases-expr';
+import { parseExpression } from './bases-parse';
 
 interface Options {
   siteId: string;
@@ -37,8 +37,8 @@ const remarkObsidianBases: Plugin<[Options], Root> = (options) => {
     }> = [];
 
     // First pass: collect all code nodes with lang="base"
-    visit(tree, "code", (node: Code, index, parent) => {
-      if (node.lang === "base" && parent && typeof index === "number") {
+    visit(tree, 'code', (node: Code, index, parent) => {
+      if (node.lang === 'base' && parent && typeof index === 'number') {
         nodesToTransform.push({
           node,
           index,
@@ -61,12 +61,12 @@ const remarkObsidianBases: Plugin<[Options], Root> = (options) => {
 
         parent.children[index] = resultNode;
       } catch (error) {
-        console.error("Error processing base query:", error);
+        console.error('Error processing base query:', error);
 
         // On error, replace with an error message
         const errorNode = {
-          type: "html",
-          value: `<div class="obsidian-base-error">Error processing base query: ${error instanceof Error ? error.message : "Unknown error"}</div>`,
+          type: 'html',
+          value: `<div class="obsidian-base-error">Error processing base query: ${error instanceof Error ? error.message : 'Unknown error'}</div>`,
         };
 
         parent.children[index] = errorNode;
@@ -78,7 +78,7 @@ const remarkObsidianBases: Plugin<[Options], Root> = (options) => {
 // Recursive filter type: can be a string or an object with and/or/not
 type FilterValue = string | FilterObject;
 
-type FilterKey = "and" | "or" | "not";
+type FilterKey = 'and' | 'or' | 'not';
 
 type FilterObject = {
   [K in FilterKey]?: FilterValue[];
@@ -90,7 +90,7 @@ interface BaseViewShared {
   order?: string[];
   sort?: Array<{
     property: string;
-    direction: "ASC" | "DESC";
+    direction: 'ASC' | 'DESC';
   }>;
   filters?: FilterValue;
   [key: string]: any;
@@ -99,12 +99,12 @@ interface BaseViewShared {
 export interface BaseCardsView extends BaseViewShared {
   cardSize?: number;
   image?: string;
-  imageFit?: "contain" | "cover" | "fill" | "none" | "scale-down";
+  imageFit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
   imageAspectRatio?: number;
 }
 
 export interface BaseTableView extends BaseViewShared {
-  rowHeight?: "short" | "medium" | "tall" | "extra";
+  rowHeight?: 'short' | 'medium' | 'tall' | 'extra';
   summaries?: Record<string, string>; // property -> summary function name
 }
 
@@ -157,9 +157,9 @@ async function resolveBaseQuery(
       siteId,
     );
   } catch (error) {
-    console.error("Failed to execute base query:", error);
+    console.error('Failed to execute base query:', error);
     throw new Error(
-      `Failed to execute base query: ${error instanceof Error ? error.message : "Unknown error"}`,
+      `Failed to execute base query: ${error instanceof Error ? error.message : 'Unknown error'}`,
     );
   }
 }
@@ -206,15 +206,15 @@ async function executeBaseQueryForView(
 
   // Build orderBy clause for file.name only (Prisma limitation with JSON fields)
   const orderBy: Prisma.BlobOrderByWithRelationInput[] = [];
-  const metadataSort: Array<{ property: string; direction: "asc" | "desc" }> =
+  const metadataSort: Array<{ property: string; direction: 'asc' | 'desc' }> =
     [];
 
   // Handle new sort format
   if (view.sort && view.sort.length > 0) {
     for (const sortItem of view.sort) {
-      const direction = sortItem.direction.toLowerCase() as "asc" | "desc";
+      const direction = sortItem.direction.toLowerCase() as 'asc' | 'desc';
 
-      if (sortItem.property === "file.name") {
+      if (sortItem.property === 'file.name') {
         orderBy.push({ path: direction });
       } else {
         // Store metadata sorts for in-memory sorting
@@ -225,11 +225,11 @@ async function executeBaseQueryForView(
   // Fallback to legacy order format
   else if (view.order && view.order.length > 0) {
     for (const col of view.order) {
-      if (col === "file.name") {
-        orderBy.push({ path: "asc" });
+      if (col === 'file.name') {
+        orderBy.push({ path: 'asc' });
       } else {
         // Store metadata sorts for in-memory sorting
-        metadataSort.push({ property: col, direction: "asc" });
+        metadataSort.push({ property: col, direction: 'asc' });
       }
     }
   }
@@ -294,7 +294,7 @@ async function executeBaseQueryForView(
         let bValue: any;
 
         // Check if this is a formula property
-        if (sort.property.startsWith("formula.")) {
+        if (sort.property.startsWith('formula.')) {
           const formulaName = sort.property.substring(8); // Remove "formula." prefix
           aValue = (a.metadata as any)?.__formulas?.[formulaName];
           bValue = (b.metadata as any)?.__formulas?.[formulaName];
@@ -305,8 +305,8 @@ async function executeBaseQueryForView(
 
         // Handle null/undefined values
         if (aValue == null && bValue == null) continue;
-        if (aValue == null) return sort.direction === "asc" ? 1 : -1;
-        if (bValue == null) return sort.direction === "asc" ? -1 : 1;
+        if (aValue == null) return sort.direction === 'asc' ? 1 : -1;
+        if (bValue == null) return sort.direction === 'asc' ? -1 : 1;
 
         // Convert to numbers if both are numeric
         const aNum = Number(aValue);
@@ -322,7 +322,7 @@ async function executeBaseQueryForView(
         }
 
         if (comparison !== 0) {
-          return sort.direction === "asc" ? comparison : -comparison;
+          return sort.direction === 'asc' ? comparison : -comparison;
         }
       }
       return 0;
@@ -374,7 +374,7 @@ export function buildFilterStrategy(
   where: Prisma.BlobWhereInput;
   postFilter?: (row: any) => boolean;
 } {
-  if (typeof filter === "string") {
+  if (typeof filter === 'string') {
     const ast = parseExpression(filter);
     const where = compileExpressionToPrisma(ast, rootDir);
 
@@ -497,8 +497,8 @@ function compileExpressionToPrisma(
 ): Prisma.BlobWhereInput | null {
   // 1) Binary comparison on simple property
   if (
-    node.type === "BinaryExpression" &&
-    ["==", "!=", ">", "<", ">=", "<="].includes(node.operator)
+    node.type === 'BinaryExpression' &&
+    ['==', '!=', '>', '<', '>=', '<='].includes(node.operator)
   ) {
     // left must be property
     const propertyInfo = resolveProperty(node.left);
@@ -506,7 +506,7 @@ function compileExpressionToPrisma(
 
     // TODO value can be literal or math or function
     const literal =
-      node.right.type === "Literal" ? node.right.value : undefined;
+      node.right.type === 'Literal' ? node.right.value : undefined;
     if (literal === undefined) return null;
 
     const prismaWhere = buildPrismaComparison(
@@ -523,11 +523,11 @@ function compileExpressionToPrisma(
 
   // 2) file.inFolder("Something")
   if (
-    node.type === "CallExpression" &&
-    isMember(node.callee, "file", "inFolder") &&
+    node.type === 'CallExpression' &&
+    isMember(node.callee, 'file', 'inFolder') &&
     node.args.length === 1 &&
-    node.args[0]!.type === "Literal" &&
-    typeof node.args[0]!.value === "string"
+    node.args[0]!.type === 'Literal' &&
+    typeof node.args[0]!.value === 'string'
   ) {
     let folder = node.args[0]!.value;
 
@@ -538,11 +538,11 @@ function compileExpressionToPrisma(
       // Remove the rootDir prefix, handling both "Public/Something" and "Public"
       folder = folder.slice(rootDir.length);
       // Remove leading slash if present after stripping
-      if (folder.startsWith("/")) {
+      if (folder.startsWith('/')) {
         folder = folder.slice(1);
       }
       // If folder is now empty (was just the rootDir), match all files
-      if (folder === "") {
+      if (folder === '') {
         // Return a condition that matches all paths (no filter)
         return {};
       }
@@ -550,18 +550,18 @@ function compileExpressionToPrisma(
 
     return {
       path: {
-        startsWith: folder.endsWith("/") ? folder : folder + "/",
+        startsWith: folder.endsWith('/') ? folder : folder + '/',
       },
     };
   }
 
   // 3) file.hasProperty("propertyName")
   if (
-    node.type === "CallExpression" &&
-    isMember(node.callee, "file", "hasProperty") &&
+    node.type === 'CallExpression' &&
+    isMember(node.callee, 'file', 'hasProperty') &&
     node.args.length === 1 &&
-    node.args[0]!.type === "Literal" &&
-    typeof node.args[0]!.value === "string"
+    node.args[0]!.type === 'Literal' &&
+    typeof node.args[0]!.value === 'string'
   ) {
     const propertyName = node.args[0]!.value;
     // Check if the property exists in metadata JSON column
@@ -581,8 +581,8 @@ function compileExpressionToPrisma(
 }
 
 type PropertyInfo =
-  | { kind: "file"; name: string; computed?: boolean } // path, extension, folder, name...
-  | { kind: "note"; name: string }; // note frontmatter field
+  | { kind: 'file'; name: string; computed?: boolean } // path, extension, folder, name...
+  | { kind: 'note'; name: string }; // note frontmatter field
 
 /**
  * Resolves an expression node to field information, determining if it's a note or file property,
@@ -590,40 +590,40 @@ type PropertyInfo =
  */
 function resolveProperty(node: ExprNode): PropertyInfo | null {
   // price  -> metadata.price
-  if (node.type === "Identifier") {
-    return { kind: "note", name: node.name };
+  if (node.type === 'Identifier') {
+    return { kind: 'note', name: node.name };
   }
 
-  if (node.type === "MemberExpression") {
+  if (node.type === 'MemberExpression') {
     const obj = node.object;
     const prop = node.property;
 
-    if (obj.type === "Identifier" && obj.name === "note") {
-      return { kind: "note", name: prop };
+    if (obj.type === 'Identifier' && obj.name === 'note') {
+      return { kind: 'note', name: prop };
     }
 
-    if (obj.type === "Identifier" && obj.name === "formula") {
+    if (obj.type === 'Identifier' && obj.name === 'formula') {
       // formula.propertyName -> formulas can't be used in WHERE clauses (not in DB)
       // They can only be used in post-filters and sorting
       // Return null to force post-filter evaluation
       return null;
     }
 
-    if (obj.type === "Identifier" && obj.name === "file") {
+    if (obj.type === 'Identifier' && obj.name === 'file') {
       switch (prop) {
-        case "ext":
-          return { kind: "file", name: "extension" };
-        case "path":
-          return { kind: "file", name: "path" };
-        case "size":
-          return { kind: "file", name: "size" };
-        case "folder":
+        case 'ext':
+          return { kind: 'file', name: 'extension' };
+        case 'path':
+          return { kind: 'file', name: 'path' };
+        case 'size':
+          return { kind: 'file', name: 'size' };
+        case 'folder':
           // folder is computed from path, so we'll handle it in post-filter
           // but we can still support it for startsWith queries
-          return { kind: "file", name: "folder", computed: true };
-        case "name":
+          return { kind: 'file', name: 'folder', computed: true };
+        case 'name':
           // name is computed from path, so we'll handle it in post-filter
-          return { kind: "file", name: "name", computed: true };
+          return { kind: 'file', name: 'name', computed: true };
       }
     }
   }
@@ -638,11 +638,11 @@ function resolveProperty(node: ExprNode): PropertyInfo | null {
  */
 function buildPrismaComparison(
   property: PropertyInfo,
-  op: BinaryExpressionNode["operator"],
+  op: BinaryExpressionNode['operator'],
   value: unknown,
   rootDir?: string,
 ): Prisma.BlobWhereInput | null {
-  if (property.kind === "file") {
+  if (property.kind === 'file') {
     if (property.computed) {
       // Computed fields like file.folder or file.name need to be handled in post-filter
       // We can't efficiently query them in Prisma since they're derived from path
@@ -654,14 +654,14 @@ function buildPrismaComparison(
     // This handles cases where the site has a rootDir (e.g., "Public")
     // and files are indexed without that prefix in the database
     let adjustedValue = value;
-    if (property.name === "path" && rootDir && typeof value === "string") {
+    if (property.name === 'path' && rootDir && typeof value === 'string') {
       // Strip rootDir prefix if it exists in the comparison value
       if (value.startsWith(rootDir)) {
         adjustedValue = value.slice(rootDir.length);
         // Remove leading slash if present after stripping
         if (
-          typeof adjustedValue === "string" &&
-          adjustedValue.startsWith("/")
+          typeof adjustedValue === 'string' &&
+          adjustedValue.startsWith('/')
         ) {
           adjustedValue = adjustedValue.slice(1);
         }
@@ -670,53 +670,53 @@ function buildPrismaComparison(
 
     const cond: any = {};
     switch (op) {
-      case "==":
+      case '==':
         cond[property.name] = adjustedValue;
         break;
-      case "!=":
+      case '!=':
         cond[property.name] = { not: adjustedValue };
         break;
-      case ">":
+      case '>':
         cond[property.name] = { gt: adjustedValue };
         break;
-      case "<":
+      case '<':
         cond[property.name] = { lt: adjustedValue };
         break;
-      case ">=":
+      case '>=':
         cond[property.name] = { gte: adjustedValue };
         break;
-      case "<=":
+      case '<=':
         cond[property.name] = { lte: adjustedValue };
         break;
     }
     return cond;
   }
 
-  if (property.kind === "note") {
+  if (property.kind === 'note') {
     const jsonValue = value as Prisma.InputJsonValue;
     const base: any = { path: [property.name] };
 
     switch (op) {
-      case "==":
+      case '==':
         base.equals = jsonValue;
         break;
-      case "!=":
+      case '!=':
         // NOT is separate
         return {
           NOT: {
             metadata: { path: [property.name], equals: jsonValue },
           },
         };
-      case ">":
+      case '>':
         base.gt = jsonValue;
         break;
-      case "<":
+      case '<':
         base.lt = jsonValue;
         break;
-      case ">=":
+      case '>=':
         base.gte = jsonValue;
         break;
-      case "<=":
+      case '<=':
         base.lte = jsonValue;
         break;
     }
@@ -733,8 +733,8 @@ function buildPrismaComparison(
  */
 function isMember(node: ExprNode, objName: string, prop: string): boolean {
   return (
-    node.type === "MemberExpression" &&
-    node.object.type === "Identifier" &&
+    node.type === 'MemberExpression' &&
+    node.object.type === 'Identifier' &&
     node.object.name === objName &&
     node.property === prop
   );
@@ -747,13 +747,13 @@ const GLOBAL_FUNCTIONS: Record<string, (...args: any[]) => any> = {
   now: () => new Date(),
   number: (x: any) => Number(x),
   escapeHTML: (html: string) => {
-    if (typeof html !== "string") return String(html);
+    if (typeof html !== 'string') return String(html);
     return html
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
-      .replace(/'/g, "&#039;");
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   },
   date: (dateString: string) => {
     // Parse date string in format YYYY-MM-DD HH:mm:ss
@@ -767,7 +767,7 @@ const GLOBAL_FUNCTIONS: Record<string, (...args: any[]) => any> = {
   html: (htmlString: string) => {
     // Return a special object that marks this as raw HTML
     // This can be recognized when rendering the output
-    return { __html: htmlString, __type: "html" };
+    return { __html: htmlString, __type: 'html' };
   },
   min: (...values: number[]) => {
     if (values.length === 0) return undefined;
@@ -786,14 +786,14 @@ const GLOBAL_FUNCTIONS: Record<string, (...args: any[]) => any> = {
   icon: (name: string) => {
     // Return a special object that marks this as an icon
     // The icon name should match a Lucide icon
-    return { __icon: name, __type: "icon" };
+    return { __icon: name, __type: 'icon' };
   },
   image: (path: string | any) => {
     // Return a special object that marks this as an image
     // Can accept a path string, file object, or URL
     const imagePath =
-      typeof path === "string" ? path : path?.path || String(path);
-    return { __image: imagePath, __type: "image" };
+      typeof path === 'string' ? path : path?.path || String(path);
+    return { __image: imagePath, __type: 'image' };
   },
   if: (condition: any, trueResult: any, falseResult?: any) => {
     // Return trueResult if condition is truthy, otherwise falseResult (default null)
@@ -813,14 +813,14 @@ function getFileProperty(row: Blob, property: string, rootDir?: string): any {
 
   // Add rootDir prefix back if it was stripped during indexing
   if (rootDir && !path.startsWith(rootDir)) {
-    path = rootDir + (path.startsWith("/") ? "" : "/") + path;
+    path = rootDir + (path.startsWith('/') ? '' : '/') + path;
   }
 
-  const segments = path.split("/");
-  const fileNameWithExt = segments[segments.length - 1] || "";
+  const segments = path.split('/');
+  const fileNameWithExt = segments[segments.length - 1] || '';
 
   // Extract extension (everything after the last dot)
-  const lastDotIndex = fileNameWithExt.lastIndexOf(".");
+  const lastDotIndex = fileNameWithExt.lastIndexOf('.');
   const fileName =
     lastDotIndex !== -1
       ? fileNameWithExt.substring(0, lastDotIndex)
@@ -831,19 +831,19 @@ function getFileProperty(row: Blob, property: string, rootDir?: string): any {
       : undefined;
 
   switch (property) {
-    case "path":
+    case 'path':
       return path;
-    case "ext": {
+    case 'ext': {
       return ext;
     }
-    case "name":
+    case 'name':
       return fileName;
-    case "folder": {
-      let folder = segments.slice(0, -1).join("/");
+    case 'folder': {
+      let folder = segments.slice(0, -1).join('/');
       // Strip rootDir prefix from folder to match how filters are written
       if (rootDir && folder.startsWith(rootDir)) {
         folder = folder.slice(rootDir.length);
-        if (folder.startsWith("/")) {
+        if (folder.startsWith('/')) {
           folder = folder.slice(1);
         }
       }
@@ -861,31 +861,31 @@ function resolveMemberAccess(obj: any, property: string): any {
   // Handle date properties and methods
   if (obj instanceof Date) {
     switch (property) {
-      case "year":
+      case 'year':
         return obj.getFullYear();
-      case "month":
+      case 'month':
         return obj.getMonth() + 1; // JavaScript months are 0-indexed
-      case "day":
+      case 'day':
         return obj.getDate();
-      case "hour":
+      case 'hour':
         return obj.getHours();
-      case "minute":
+      case 'minute':
         return obj.getMinutes();
-      case "second":
+      case 'second':
         return obj.getSeconds();
-      case "millisecond":
+      case 'millisecond':
         return obj.getMilliseconds();
-      case "date":
+      case 'date':
         return () => {
           const newDate = new Date(obj);
           newDate.setHours(0, 0, 0, 0);
           return newDate;
         };
-      case "format":
+      case 'format':
         return (formatString: string) => {
           // Basic Moment.js-style format implementation
           const pad = (n: number, width: number = 2) =>
-            String(n).padStart(width, "0");
+            String(n).padStart(width, '0');
           return formatString
             .replace(/YYYY/g, String(obj.getFullYear()))
             .replace(/YY/g, String(obj.getFullYear()).slice(-2))
@@ -901,12 +901,12 @@ function resolveMemberAccess(obj: any, property: string): any {
             .replace(/s/g, String(obj.getSeconds()))
             .replace(/SSS/g, pad(obj.getMilliseconds(), 3));
         };
-      case "time":
+      case 'time':
         return () => {
-          const pad = (n: number) => String(n).padStart(2, "0");
+          const pad = (n: number) => String(n).padStart(2, '0');
           return `${pad(obj.getHours())}:${pad(obj.getMinutes())}:${pad(obj.getSeconds())}`;
         };
-      case "relative":
+      case 'relative':
         return () => {
           const now = new Date();
           const diffMs = now.getTime() - obj.getTime();
@@ -919,92 +919,92 @@ function resolveMemberAccess(obj: any, property: string): any {
           const diffYear = Math.floor(diffDay / 365);
 
           const isPast = diffMs > 0;
-          const suffix = isPast ? " ago" : " from now";
+          const suffix = isPast ? ' ago' : ' from now';
 
           if (diffYear > 0)
-            return `${diffYear} year${diffYear > 1 ? "s" : ""}${suffix}`;
+            return `${diffYear} year${diffYear > 1 ? 's' : ''}${suffix}`;
           if (diffMonth > 0)
-            return `${diffMonth} month${diffMonth > 1 ? "s" : ""}${suffix}`;
+            return `${diffMonth} month${diffMonth > 1 ? 's' : ''}${suffix}`;
           if (diffWeek > 0)
-            return `${diffWeek} week${diffWeek > 1 ? "s" : ""}${suffix}`;
+            return `${diffWeek} week${diffWeek > 1 ? 's' : ''}${suffix}`;
           if (diffDay > 0)
-            return `${diffDay} day${diffDay > 1 ? "s" : ""}${suffix}`;
+            return `${diffDay} day${diffDay > 1 ? 's' : ''}${suffix}`;
           if (diffHour > 0)
-            return `${diffHour} hour${diffHour > 1 ? "s" : ""}${suffix}`;
+            return `${diffHour} hour${diffHour > 1 ? 's' : ''}${suffix}`;
           if (diffMin > 0)
-            return `${diffMin} minute${diffMin > 1 ? "s" : ""}${suffix}`;
-          return "just now";
+            return `${diffMin} minute${diffMin > 1 ? 's' : ''}${suffix}`;
+          return 'just now';
         };
-      case "isEmpty":
+      case 'isEmpty':
         return () => false; // Dates are never empty
     }
   }
 
   // Handle string properties and methods
-  if (typeof obj === "string") {
+  if (typeof obj === 'string') {
     switch (property) {
-      case "length":
+      case 'length':
         return obj.length;
-      case "contains":
+      case 'contains':
         return (value: string) => obj.includes(value);
-      case "containsAll":
+      case 'containsAll':
         return (...values: string[]) => values.every((v) => obj.includes(v));
-      case "containsAny":
+      case 'containsAny':
         return (...values: string[]) => values.some((v) => obj.includes(v));
-      case "endsWith":
+      case 'endsWith':
         return (query: string) => obj.endsWith(query);
-      case "isEmpty":
+      case 'isEmpty':
         return () => obj.length === 0;
-      case "lower":
+      case 'lower':
         return () => obj.toLowerCase();
-      case "replace":
+      case 'replace':
         return (pattern: string | RegExp, replacement: string) => {
-          if (typeof pattern === "string") {
+          if (typeof pattern === 'string') {
             // Replace all occurrences for string patterns
             return obj.split(pattern).join(replacement);
           }
           // For RegExp, use native replace
           return obj.replace(pattern, replacement);
         };
-      case "repeat":
+      case 'repeat':
         return (count: number) => obj.repeat(count);
-      case "reverse":
-        return () => obj.split("").reverse().join("");
-      case "slice":
+      case 'reverse':
+        return () => obj.split('').reverse().join('');
+      case 'slice':
         return (start: number, end?: number) => obj.slice(start, end);
-      case "split":
+      case 'split':
         return (separator: string | RegExp, n?: number) => {
           const parts = obj.split(separator);
           return n !== undefined ? parts.slice(0, n) : parts;
         };
-      case "startsWith":
+      case 'startsWith':
         return (query: string) => obj.startsWith(query);
-      case "title":
+      case 'title':
         return () =>
           obj
-            .split(" ")
+            .split(' ')
             .map(
               (word) =>
                 word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
             )
-            .join(" ");
-      case "trim":
+            .join(' ');
+      case 'trim':
         return () => obj.trim();
     }
   }
 
   // Handle number methods
-  if (typeof obj === "number") {
+  if (typeof obj === 'number') {
     switch (property) {
-      case "abs":
+      case 'abs':
         return () => Math.abs(obj);
-      case "ceil":
+      case 'ceil':
         return () => Math.ceil(obj);
-      case "floor":
+      case 'floor':
         return () => Math.floor(obj);
-      case "isEmpty":
+      case 'isEmpty':
         return () => false; // Numbers are never empty (even 0 is not empty)
-      case "round":
+      case 'round':
         return (digits?: number) => {
           if (digits === undefined) {
             return Math.round(obj);
@@ -1012,7 +1012,7 @@ function resolveMemberAccess(obj: any, property: string): any {
           const multiplier = Math.pow(10, digits);
           return Math.round(obj * multiplier) / multiplier;
         };
-      case "toFixed":
+      case 'toFixed':
         return (precision: number) => obj.toFixed(precision);
     }
   }
@@ -1020,65 +1020,65 @@ function resolveMemberAccess(obj: any, property: string): any {
   // Handle array/list properties and methods
   if (Array.isArray(obj)) {
     switch (property) {
-      case "length":
+      case 'length':
         return obj.length;
-      case "contains":
+      case 'contains':
         return (value: any) => obj.includes(value);
-      case "containsAll":
+      case 'containsAll':
         return (...values: any[]) => values.every((v) => obj.includes(v));
-      case "containsAny":
+      case 'containsAny':
         return (...values: any[]) => values.some((v) => obj.includes(v));
-      case "filter":
+      case 'filter':
         return (expression: any) => {
           // The expression should be evaluated with 'value' and 'index' variables
           // For now, we'll support simple boolean expressions
           // This is a simplified implementation - full support would require
           // parsing and evaluating the expression with proper context
-          if (typeof expression === "function") {
+          if (typeof expression === 'function') {
             return obj.filter(expression);
           }
           // If expression is already evaluated to boolean, filter by it
           return obj.filter(() => expression);
         };
-      case "flat":
+      case 'flat':
         return () => obj.flat();
-      case "isEmpty":
+      case 'isEmpty':
         return () => obj.length === 0;
-      case "join":
+      case 'join':
         return (separator: string) => obj.join(separator);
-      case "map":
+      case 'map':
         return (expression: any) => {
           // Similar to filter, this would need proper expression evaluation
           // For now, support function callbacks
-          if (typeof expression === "function") {
+          if (typeof expression === 'function') {
             return obj.map(expression);
           }
           // If expression is a value, return array of that value
           return obj.map(() => expression);
         };
-      case "reduce":
+      case 'reduce':
         return (expression: any, initialValue: any) => {
           // This would need proper expression evaluation with acc, value, index
           // For now, support function callbacks
-          if (typeof expression === "function") {
+          if (typeof expression === 'function') {
             return obj.reduce(expression, initialValue);
           }
           return initialValue;
         };
-      case "reverse":
+      case 'reverse':
         return () => [...obj].reverse(); // Create copy to avoid mutating original
-      case "slice":
+      case 'slice':
         return (start: number, end?: number) => obj.slice(start, end);
-      case "sort":
+      case 'sort':
         return () =>
           [...obj].sort((a, b) => {
             // Sort numbers numerically, strings alphabetically
-            if (typeof a === "number" && typeof b === "number") {
+            if (typeof a === 'number' && typeof b === 'number') {
               return a - b;
             }
             return String(a).localeCompare(String(b));
           });
-      case "unique":
+      case 'unique':
         return () => [...new Set(obj)];
     }
   }
@@ -1086,7 +1086,7 @@ function resolveMemberAccess(obj: any, property: string): any {
   // Handle RegExp methods
   if (obj instanceof RegExp) {
     switch (property) {
-      case "matches":
+      case 'matches':
         return (value: string) => obj.test(value);
     }
   }
@@ -1094,26 +1094,26 @@ function resolveMemberAccess(obj: any, property: string): any {
   // Handle object methods (for plain objects)
   if (
     obj !== null &&
-    typeof obj === "object" &&
+    typeof obj === 'object' &&
     !Array.isArray(obj) &&
     !(obj instanceof Date) &&
     !(obj instanceof RegExp)
   ) {
     switch (property) {
-      case "isEmpty":
+      case 'isEmpty':
         return () => Object.keys(obj).length === 0;
-      case "keys":
+      case 'keys':
         return () => Object.keys(obj);
-      case "values":
+      case 'values':
         return () => Object.values(obj);
     }
   }
 
   // Handle generic methods
-  if (property === "isTruthy") {
+  if (property === 'isTruthy') {
     return () => !!obj;
   }
-  if (property === "toString") {
+  if (property === 'toString') {
     return () => obj.toString();
   }
 
@@ -1133,90 +1133,90 @@ function evalExpr(
   formulas?: Record<string, string>,
 ): any {
   switch (node.type) {
-    case "Literal":
+    case 'Literal':
       return node.value;
 
-    case "Identifier":
-      if (node.name === "file") {
+    case 'Identifier':
+      if (node.name === 'file') {
         return new Proxy({} as any, {
           get: (_target, prop: string) => getFileProperty(row, prop, rootDir),
         });
       }
-      if (node.name === "formula") {
+      if (node.name === 'formula') {
         return new Proxy({} as any, {
           get: (_target, formulaName: string) =>
             getComputedProperty(row, formulaName, formulas, rootDir),
         });
       }
-      if (node.name === "note") {
+      if (node.name === 'note') {
         return row.metadata as PageMetadata;
       }
       if (node.name in GLOBAL_FUNCTIONS) return GLOBAL_FUNCTIONS[node.name];
       return (row.metadata as PageMetadata)[node.name];
 
-    case "MemberExpression": {
+    case 'MemberExpression': {
       const obj = evalExpr(node.object, row, rootDir, formulas);
       return resolveMemberAccess(obj, node.property);
     }
 
-    case "UnaryExpression": {
+    case 'UnaryExpression': {
       const v = evalExpr(node.argument, row, rootDir, formulas);
-      if (node.operator === "!") return !v;
-      if (node.operator === "-") return -Number(v);
-      throw new Error("Unsupported unary operator");
+      if (node.operator === '!') return !v;
+      if (node.operator === '-') return -Number(v);
+      throw new Error('Unsupported unary operator');
     }
 
-    case "BinaryExpression": {
+    case 'BinaryExpression': {
       const l = evalExpr(node.left, row, rootDir, formulas);
       const r = evalExpr(node.right, row, rootDir, formulas);
 
       switch (node.operator) {
-        case "==":
+        case '==':
           return l == r;
-        case "!=":
+        case '!=':
           return l != r;
-        case ">":
+        case '>':
           return l > r;
-        case "<":
+        case '<':
           return l < r;
-        case ">=":
+        case '>=':
           return l >= r;
-        case "<=":
+        case '<=':
           return l <= r;
-        case "+":
+        case '+':
           return l + r;
-        case "-":
+        case '-':
           return l - r;
-        case "*":
+        case '*':
           return l * r;
-        case "/":
+        case '/':
           return l / r;
-        case "%":
+        case '%':
           return l % r;
       }
     }
 
-    case "LogicalExpression": {
-      if (node.operator === "&&") {
+    case 'LogicalExpression': {
+      if (node.operator === '&&') {
         const left = evalExpr(node.left, row, rootDir, formulas);
         return left && evalExpr(node.right, row, rootDir, formulas);
       }
-      if (node.operator === "||") {
+      if (node.operator === '||') {
         const left = evalExpr(node.left, row, rootDir, formulas);
         return left || evalExpr(node.right, row, rootDir, formulas);
       }
-      throw new Error("Unsupported logical operator");
+      throw new Error('Unsupported logical operator');
     }
 
-    case "CallExpression": {
+    case 'CallExpression': {
       const callee = evalExpr(node.callee, row, rootDir, formulas);
       const args = node.args.map((a) => evalExpr(a, row, rootDir, formulas));
-      if (typeof callee === "function") {
+      if (typeof callee === 'function') {
         return callee(...args);
       }
       // method call like file.inFolder(...) we want to support:
       // if callee is a property, we may need to interpret MemberExpression specially
-      throw new Error("Callee is not a function");
+      throw new Error('Callee is not a function');
     }
   }
 }
@@ -1240,13 +1240,13 @@ async function createViewsNode(
 ): Promise<MdxJsxFlowElement> {
   // If no views specified, default to table view
   if (views.length === 0) {
-    views = [{ type: "table", name: "Table", order: ["file.name"] }];
+    views = [{ type: 'table', name: 'Table', order: ['file.name'] }];
   }
 
   // Transform each view's results into the expected format
   const viewData = viewResults.map((results, index) => {
     const view = views[index];
-    const columns = view?.order ?? ["file.name"];
+    const columns = view?.order ?? ['file.name'];
 
     const rows = results.map((result) => ({
       path: result.path,
@@ -1290,30 +1290,30 @@ async function createViewsNode(
   // Pass JSON strings as props and parse inside the component
   const attrs: MdxJsxAttribute[] = [
     {
-      type: "mdxJsxAttribute",
-      name: "viewData",
+      type: 'mdxJsxAttribute',
+      name: 'viewData',
       value: JSON.stringify(viewData),
     },
     {
-      type: "mdxJsxAttribute",
-      name: "sitePrefix",
-      value: sitePrefix || "",
+      type: 'mdxJsxAttribute',
+      name: 'sitePrefix',
+      value: sitePrefix || '',
     },
     {
-      type: "mdxJsxAttribute",
-      name: "customDomain",
-      value: customDomain || "",
+      type: 'mdxJsxAttribute',
+      name: 'customDomain',
+      value: customDomain || '',
     },
     {
-      type: "mdxJsxAttribute",
-      name: "allSitePaths",
+      type: 'mdxJsxAttribute',
+      name: 'allSitePaths',
       value: JSON.stringify(allSitePaths),
     },
   ];
 
   return {
-    type: "mdxJsxFlowElement",
-    name: "ObsidianBasesViews",
+    type: 'mdxJsxFlowElement',
+    name: 'ObsidianBasesViews',
     attributes: attrs,
     children: [],
   };
@@ -1330,7 +1330,7 @@ function calculateSummary(
   // Extract values for the column
   const values = rows
     .map((row) => {
-      if (column === "file.name") {
+      if (column === 'file.name') {
         return null; // file.name doesn't make sense for summaries
       }
       return row.metadata?.[column];
@@ -1344,27 +1344,27 @@ function calculateSummary(
 
   switch (summaryFunction.toLowerCase()) {
     // Numeric summaries
-    case "average":
+    case 'average':
       if (numericValues.length === 0) return null;
       return numericValues.reduce((a, b) => a + b, 0) / numericValues.length;
 
-    case "min":
+    case 'min':
       if (numericValues.length === 0) return null;
       return Math.min(...numericValues);
 
-    case "max":
+    case 'max':
       if (numericValues.length === 0) return null;
       return Math.max(...numericValues);
 
-    case "sum":
+    case 'sum':
       if (numericValues.length === 0) return null;
       return numericValues.reduce((a, b) => a + b, 0);
 
-    case "range":
+    case 'range':
       if (numericValues.length === 0) return null;
       return Math.max(...numericValues) - Math.min(...numericValues);
 
-    case "median":
+    case 'median':
       if (numericValues.length === 0) return null;
       const sorted = [...numericValues].sort((a, b) => a - b);
       const mid = Math.floor(sorted.length / 2);
@@ -1372,7 +1372,7 @@ function calculateSummary(
         ? (sorted[mid - 1]! + sorted[mid]!) / 2
         : sorted[mid]!;
 
-    case "stddev":
+    case 'stddev':
       if (numericValues.length === 0) return null;
       const mean =
         numericValues.reduce((a, b) => a + b, 0) / numericValues.length;
@@ -1382,14 +1382,14 @@ function calculateSummary(
       return Math.sqrt(variance);
 
     // Date summaries
-    case "earliest":
+    case 'earliest':
       const dates = values
         .map((v) => new Date(v))
         .filter((d) => !isNaN(d.getTime()));
       if (dates.length === 0) return null;
       return new Date(Math.min(...dates.map((d) => d.getTime()))).toISOString();
 
-    case "latest":
+    case 'latest':
       const latestDates = values
         .map((v) => new Date(v))
         .filter((d) => !isNaN(d.getTime()));
@@ -1399,20 +1399,20 @@ function calculateSummary(
       ).toISOString();
 
     // Boolean summaries
-    case "checked":
-      return values.filter((v) => v === true || v === "true").length;
+    case 'checked':
+      return values.filter((v) => v === true || v === 'true').length;
 
-    case "unchecked":
-      return values.filter((v) => v === false || v === "false").length;
+    case 'unchecked':
+      return values.filter((v) => v === false || v === 'false').length;
 
     // Generic summaries
-    case "empty":
+    case 'empty':
       return rows.length - values.length;
 
-    case "filled":
+    case 'filled':
       return values.length;
 
-    case "unique":
+    case 'unique':
       return new Set(values).size;
 
     default:

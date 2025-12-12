@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import LoadingDots from "@/components/icons/loading-dots";
-import { cn } from "@/lib/utils";
-import { useParams, useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { Switch } from "@headlessui/react";
-import DomainStatus from "./domain-status";
-import DomainConfiguration from "./domain-configuration";
-import clsx from "clsx";
-import { ReactNode, useState, FormEvent } from "react";
-import { SiteUpdateKey } from "@/server/api/types";
+import { Switch } from '@headlessui/react';
+import clsx from 'clsx';
+import { useParams, useRouter } from 'next/navigation';
+import { FormEvent, ReactNode, useState } from 'react';
+import { toast } from 'sonner';
+import LoadingDots from '@/components/icons/loading-dots';
+import { cn } from '@/lib/utils';
+import { SiteUpdateKey } from '@/server/api/types';
+import DomainConfiguration from './domain-configuration';
+import DomainStatus from './domain-status';
 
 export default function Form({
   title,
@@ -49,16 +49,16 @@ export default function Form({
 
   const required = inputAttrs.required ?? true;
 
-  const isToggleField = ["autoSync", "enableComments", "enableSearch"].includes(
+  const isToggleField = ['autoSync', 'enableComments', 'enableSearch'].includes(
     inputAttrs.name,
   );
 
   // Controlled value for all non-toggle inputs (text, textarea, select)
-  const [value, setValue] = useState(inputAttrs.defaultValue ?? "");
+  const [value, setValue] = useState(inputAttrs.defaultValue ?? '');
 
   // Controlled value for toggle switches
   const [toggleValue, setToggleValue] = useState(
-    inputAttrs.defaultValue === "true",
+    inputAttrs.defaultValue === 'true',
   );
 
   // Manual pending state (replaces useFormStatus)
@@ -69,10 +69,10 @@ export default function Form({
     if (disabled || isToggleField) return;
 
     // Extra validation for projectName
-    if (inputAttrs.name === "projectName") {
+    if (inputAttrs.name === 'projectName') {
       if (inputAttrs.pattern && !RegExp(inputAttrs.pattern).test(value)) {
         toast.error(
-          "Error: Project name can only contain ASCII letters, digits, and the characters -, and _",
+          'Error: Project name can only contain ASCII letters, digits, and the characters -, and _',
         );
         return;
       }
@@ -90,7 +90,7 @@ export default function Form({
 
       toast.success(`Successfully updated ${inputAttrs.name}!`);
     } catch (error: any) {
-      toast.error(`Error: ${error?.message ?? "Failed to update setting."}`);
+      toast.error(`Error: ${error?.message ?? 'Failed to update setting.'}`);
     } finally {
       setPending(false);
     }
@@ -115,11 +115,11 @@ export default function Form({
       toast.success(`Successfully updated ${inputAttrs.name}!`);
     } catch (error) {
       toast.error(
-        inputAttrs.name === "autoSync"
-          ? "Failed to create webhook. Check if the repository has a webhook for this application already installed."
-          : inputAttrs.name === "enableComments"
-            ? "Failed to enable comments."
-            : "Failed to enable search.",
+        inputAttrs.name === 'autoSync'
+          ? 'Failed to create webhook. Check if the repository has a webhook for this application already installed.'
+          : inputAttrs.name === 'enableComments'
+            ? 'Failed to enable comments.'
+            : 'Failed to enable search.',
       );
     } finally {
       setPending(false);
@@ -132,8 +132,8 @@ export default function Form({
       onSubmit={onFormSubmit}
       /* no `action={...}` to prevent reset issues in select field (bug: https://github.com/facebook/react/issues/30580#issuecomment-2822605921)  */
       className={cn(
-        "isolate rounded-lg border border-stone-200",
-        disabled ? "bg-stone-50" : "bg-white",
+        'isolate rounded-lg border border-stone-200',
+        disabled ? 'bg-stone-50' : 'bg-white',
       )}
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
@@ -156,21 +156,21 @@ export default function Form({
             checked={toggleValue}
             onChange={onToggleChange}
             className={clsx(
-              toggleValue ? "bg-indigo-600" : "bg-gray-200",
-              "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
-              (disabled || pending) && "cursor-auto opacity-70",
+              toggleValue ? 'bg-indigo-600' : 'bg-gray-200',
+              'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2',
+              (disabled || pending) && 'cursor-auto opacity-70',
             )}
           >
             <span className="sr-only">Use setting</span>
             <span
               aria-hidden="true"
               className={clsx(
-                toggleValue ? "translate-x-5" : "translate-x-0",
-                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                toggleValue ? 'translate-x-5' : 'translate-x-0',
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
               )}
             />
           </Switch>
-        ) : inputAttrs.name === "customDomain" ? (
+        ) : inputAttrs.name === 'customDomain' ? (
           <div className="relative flex w-full max-w-md">
             <input
               name={inputAttrs.name}
@@ -189,7 +189,7 @@ export default function Form({
               </div>
             )}
           </div>
-        ) : inputAttrs.name === "description" ? (
+        ) : inputAttrs.name === 'description' ? (
           <textarea
             name={inputAttrs.name}
             placeholder={inputAttrs.placeholder}
@@ -232,7 +232,7 @@ export default function Form({
         )}
       </div>
 
-      {inputAttrs.name === "customDomain" && value && (
+      {inputAttrs.name === 'customDomain' && value && (
         <DomainConfiguration domain={value} />
       )}
 
@@ -250,10 +250,10 @@ function FormButton({ name, pending }: { name: string; pending: boolean }) {
   return (
     <button
       className={cn(
-        "flex h-8 w-32 shrink-0 items-center justify-center space-x-2 rounded-md border px-2 py-1 text-sm transition-all focus:outline-none sm:h-10",
+        'flex h-8 w-32 shrink-0 items-center justify-center space-x-2 rounded-md border px-2 py-1 text-sm transition-all focus:outline-none sm:h-10',
         pending
-          ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400"
-          : "border-black bg-black text-white hover:bg-white hover:text-black",
+          ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
+          : 'border-black bg-black text-white hover:bg-white hover:text-black',
       )}
       disabled={pending}
       data-testid={`save-${name}`}

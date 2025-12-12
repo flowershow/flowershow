@@ -1,19 +1,19 @@
-import { headers } from "next/headers";
-import { NextResponse } from "next/server";
-import { stripe } from "@/lib/stripe";
-import prisma from "@/server/db";
-import { env } from "@/env.mjs";
-import PostHogClient from "@/lib/server-posthog";
+import { headers } from 'next/headers';
+import { NextResponse } from 'next/server';
+import { env } from '@/env.mjs';
+import PostHogClient from '@/lib/server-posthog';
+import { stripe } from '@/lib/stripe';
+import prisma from '@/server/db';
 
 const relevantEvents = new Set([
-  "checkout.session.completed",
-  "customer.subscription.updated",
-  "customer.subscription.deleted",
+  'checkout.session.completed',
+  'customer.subscription.updated',
+  'customer.subscription.deleted',
 ]);
 
 export async function POST(req: Request) {
   const body = await req.text();
-  const sig = (await headers()).get("Stripe-Signature");
+  const sig = (await headers()).get('Stripe-Signature');
 
   let event;
 
@@ -36,7 +36,7 @@ export async function POST(req: Request) {
   if (relevantEvents.has(event.type)) {
     try {
       switch (event.type) {
-        case "checkout.session.completed": {
+        case 'checkout.session.completed': {
           console.log(`🔄 Processing checkout.session.completed`);
           const checkoutSession = event.data.object as any;
           const subscription = await stripe.subscriptions.retrieve(
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
             subscription.items.data[0]?.price?.recurring?.interval;
 
           if (!priceId || !interval) {
-            throw new Error("Missing required subscription data");
+            throw new Error('Missing required subscription data');
           }
 
           console.log(`📋 Subscription details:
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
           // If there's an existing canceled subscription, delete it
           if (
             existingSubscription &&
-            existingSubscription.status === "canceled"
+            existingSubscription.status === 'canceled'
           ) {
             console.log(
               `🗑️ Deleting existing canceled subscription: ${existingSubscription.id}`,
@@ -104,7 +104,7 @@ export async function POST(req: Request) {
               id: checkoutSession.metadata.siteId,
             },
             data: {
-              plan: "PREMIUM",
+              plan: 'PREMIUM',
             },
             include: {
               user: true,
@@ -114,7 +114,7 @@ export async function POST(req: Request) {
           const posthog = PostHogClient();
           posthog.capture({
             distinctId: updatedSite.userId,
-            event: "site_upgraded",
+            event: 'site_upgraded',
             properties: {
               siteId: checkoutSession.metadata.siteId,
               interval: interval,
@@ -126,8 +126,8 @@ export async function POST(req: Request) {
           console.log(`✅ Checkout session processing completed`);
           break;
         }
-        case "customer.subscription.updated":
-        case "customer.subscription.deleted": {
+        case 'customer.subscription.updated':
+        case 'customer.subscription.deleted': {
           console.log(`🔄 Processing ${event.type}`);
           const subscription = event.data.object as any;
 
@@ -146,7 +146,7 @@ export async function POST(req: Request) {
           });
 
           if (!dbSubscription) {
-            throw new Error("Subscription not found");
+            throw new Error('Subscription not found');
           }
 
           const priceId = subscription.items.data[0]?.price?.id;
@@ -154,7 +154,7 @@ export async function POST(req: Request) {
             subscription.items.data[0]?.price?.recurring?.interval;
 
           if (!priceId || !interval) {
-            throw new Error("Missing required subscription data");
+            throw new Error('Missing required subscription data');
           }
 
           console.log(`📝 Updating subscription record`);
@@ -177,14 +177,14 @@ export async function POST(req: Request) {
           });
 
           // If subscription is cancelled/deleted, downgrade site to FREE
-          if (subscription.status === "canceled") {
+          if (subscription.status === 'canceled') {
             console.log(`⬇️ Downgrading site to FREE plan`);
             await prisma.site.update({
               where: {
                 id: dbSubscription.siteId,
               },
               data: {
-                plan: "FREE",
+                plan: 'FREE',
               },
             });
           }
@@ -193,12 +193,12 @@ export async function POST(req: Request) {
           break;
         }
         default:
-          throw new Error("Unhandled relevant event!");
+          throw new Error('Unhandled relevant event!');
       }
     } catch (error) {
       console.error(`❌ Webhook handler failed:`, error);
       return NextResponse.json(
-        { message: "Webhook handler failed" },
+        { message: 'Webhook handler failed' },
         { status: 500 },
       );
     }

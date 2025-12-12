@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Image from 'next/image';
 
 export default function ObsidianQuickstart() {
   return (
@@ -26,7 +26,7 @@ export default function ObsidianQuickstart() {
           Step 1: Create a GitHub Repository
         </h3>
         <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
-          Click{" "}
+          Click{' '}
           <a
             className="underline"
             target="_blank"
@@ -34,7 +34,7 @@ export default function ObsidianQuickstart() {
             href="https://github.com/new?template_owner=flowershow&template_name=flowershow-cloud-template"
           >
             here
-          </a>{" "}
+          </a>{' '}
           to create a new repository from our template.
         </div>
 
@@ -42,7 +42,7 @@ export default function ObsidianQuickstart() {
           Step 2: Publish it with Flowershow
         </h3>
         <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
-          Click{" "}
+          Click{' '}
           <a
             className="underline"
             href="/new"

@@ -1,6 +1,6 @@
-import { getSiteUrl } from "@/lib/get-site-url";
-import prisma from "@/server/db";
-import { NextRequest } from "next/server";
+import { NextRequest } from 'next/server';
+import { getSiteUrl } from '@/lib/get-site-url';
+import prisma from '@/server/db';
 
 export async function GET(
   request: NextRequest,
@@ -27,8 +27,8 @@ export async function GET(
       user: true,
       blobs: {
         where: {
-          syncStatus: "SUCCESS",
-          OR: [{ path: { endsWith: ".md" } }, { path: { endsWith: ".mdx" } }],
+          syncStatus: 'SUCCESS',
+          OR: [{ path: { endsWith: '.md' } }, { path: { endsWith: '.mdx' } }],
         },
         select: {
           appPath: true,
@@ -40,15 +40,15 @@ export async function GET(
   });
 
   if (!site) {
-    return new Response("Not found", { status: 404 });
+    return new Response('Not found', { status: 404 });
   }
 
   const siteUrl = getSiteUrl(site);
 
   // Create XML sitemap
   const xmlItems = site.blobs.map((blob) => {
-    if (blob.appPath === "/") return "";
-    const permalink = (blob.permalink ?? blob.appPath)?.replace(/^\//, "");
+    if (blob.appPath === '/') return '';
+    const permalink = (blob.permalink ?? blob.appPath)?.replace(/^\//, '');
     return `<url>
       <loc>${siteUrl}/${permalink}</loc>
       <lastmod>${blob.updatedAt.toISOString()}</lastmod>
@@ -60,12 +60,12 @@ export async function GET(
     <url>
       <loc>${siteUrl}</loc>
       <lastmod>${site.updatedAt.toISOString()}</lastmod>
-    </url>${xmlItems.join("")}
+    </url>${xmlItems.join('')}
 </urlset>`;
 
   return new Response(xml, {
     headers: {
-      "Content-Type": "application/xml",
+      'Content-Type': 'application/xml',
     },
   });
 }

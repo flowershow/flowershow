@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+import { notFound } from 'next/navigation';
 
 // TODO This is a workaround
 // Don't call notFound() here, return minimal layout and allow the NOT_FOUND error to be thrown from within [...slug] page

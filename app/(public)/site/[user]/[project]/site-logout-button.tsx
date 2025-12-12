@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { LogOutIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { LogOutIcon } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function SiteAuthButton({
   siteId,
@@ -14,8 +14,8 @@ export default function SiteAuthButton({
 
   const handleSignOutFromSite = async () => {
     await fetch(`/api/site/logout?siteid=${siteId}`, {
-      method: "POST",
-      credentials: "include",
+      method: 'POST',
+      credentials: 'include',
     });
     router.refresh();
   };

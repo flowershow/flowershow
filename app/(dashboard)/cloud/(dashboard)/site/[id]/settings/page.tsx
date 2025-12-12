@@ -1,16 +1,15 @@
-import { notFound } from "next/navigation";
-import { ExternalLinkIcon } from "lucide-react";
-
-import { api } from "@/trpc/server";
-import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
-import { PLANS } from "@/lib/stripe-plans";
-import { validDomainRegex } from "@/lib/domains";
-import Billing from "@/components/dashboard/billing";
-import SettingsNav from "@/components/dashboard/settings-nav";
-import Form from "@/components/dashboard/form";
-import DeleteSiteForm from "@/components/dashboard/form/delete-site-form";
-import SitePasswordProtectionForm from "@/components/dashboard/form/site-password-form";
-import { SiteUpdateKey } from "@/server/api/types";
+import { ExternalLinkIcon } from 'lucide-react';
+import { notFound } from 'next/navigation';
+import Billing from '@/components/dashboard/billing';
+import Form from '@/components/dashboard/form';
+import DeleteSiteForm from '@/components/dashboard/form/delete-site-form';
+import SitePasswordProtectionForm from '@/components/dashboard/form/site-password-form';
+import SettingsNav from '@/components/dashboard/settings-nav';
+import { validDomainRegex } from '@/lib/domains';
+import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
+import { PLANS } from '@/lib/stripe-plans';
+import { SiteUpdateKey } from '@/server/api/types';
+import { api } from '@/trpc/server';
 
 export default async function SiteSettingsIndex(props: {
   params: Promise<{ id: string }>;
@@ -37,7 +36,7 @@ export default async function SiteSettingsIndex(props: {
     key: SiteUpdateKey;
     value: string;
   }) => {
-    "use server";
+    'use server';
     await api.site.update.mutate({ id, key, value });
   };
   return (
@@ -51,12 +50,12 @@ export default async function SiteSettingsIndex(props: {
             title="Name"
             description="The name of your site. It can only consist of ASCII letters, digits, and characters ., -, and _. Maximum 32 characters can be used."
             inputAttrs={{
-              name: "projectName",
-              type: "text",
+              name: 'projectName',
+              type: 'text',
               defaultValue: site?.projectName!,
-              placeholder: "site name",
+              placeholder: 'site name',
               maxLength: 32,
-              pattern: "^[a-zA-Z0-9_.-]+$",
+              pattern: '^[a-zA-Z0-9_.-]+$',
             }}
             handleSubmit={updateSite}
           />
@@ -66,7 +65,7 @@ export default async function SiteSettingsIndex(props: {
             description="The directory within your repository, in which your content is located. Leave empty if you're publishing the whole repository."
             helpText={
               <p>
-                Learn more about{" "}
+                Learn more about{' '}
                 <a
                   className="underline"
                   href="https://flowershow.app/docs/site-settings#root-directory"
@@ -78,8 +77,8 @@ export default async function SiteSettingsIndex(props: {
               </p>
             }
             inputAttrs={{
-              name: "rootDir",
-              type: "text",
+              name: 'rootDir',
+              type: 'text',
               defaultValue: site?.rootDir!,
               required: false,
             }}
@@ -91,7 +90,7 @@ export default async function SiteSettingsIndex(props: {
             description="Choose how to process your markdown files: Markdown (md), MDX (mdx), or auto-detect based on file extension (auto)."
             helpText={
               <p>
-                Learn more about{" "}
+                Learn more about{' '}
                 <a
                   className="underline"
                   href="https://flowershow.app/blog/announcing-syntax-mode-configuration"
@@ -103,13 +102,13 @@ export default async function SiteSettingsIndex(props: {
               </p>
             }
             inputAttrs={{
-              name: "syntaxMode",
-              type: "select",
+              name: 'syntaxMode',
+              type: 'select',
               defaultValue: site?.syntaxMode!,
               options: [
-                { value: "auto", label: "Auto-detect" },
-                { value: "md", label: "Markdown (md)" },
-                { value: "mdx", label: "MDX (mdx)" },
+                { value: 'auto', label: 'Auto-detect' },
+                { value: 'md', label: 'Markdown (md)' },
+                { value: 'mdx', label: 'MDX (mdx)' },
               ],
             }}
             handleSubmit={updateSite}
@@ -120,7 +119,7 @@ export default async function SiteSettingsIndex(props: {
             description="Automatically sync your site after each change to the GitHub repository."
             helpText={
               <p>
-                Learn more about{" "}
+                Learn more about{' '}
                 <a
                   className="underline"
                   href="https://flowershow.app/docs/site-settings#auto-sync"
@@ -132,8 +131,8 @@ export default async function SiteSettingsIndex(props: {
               </p>
             }
             inputAttrs={{
-              name: "autoSync",
-              type: "text",
+              name: 'autoSync',
+              type: 'text',
               defaultValue: Boolean(site?.autoSync!).toString(),
             }}
             handleSubmit={updateSite}
@@ -144,7 +143,7 @@ export default async function SiteSettingsIndex(props: {
             description="Enable comments at the bottom of your site's pages."
             helpText={
               <p>
-                Learn more about{" "}
+                Learn more about{' '}
                 <a
                   className="underline"
                   href="https://flowershow.app/docs/comments"
@@ -156,8 +155,8 @@ export default async function SiteSettingsIndex(props: {
               </p>
             }
             inputAttrs={{
-              name: "enableComments",
-              type: "text",
+              name: 'enableComments',
+              type: 'text',
               defaultValue: Boolean(site?.enableComments!).toString(),
             }}
             handleSubmit={updateSite}
@@ -170,10 +169,10 @@ export default async function SiteSettingsIndex(props: {
                 description="The ID of your GitHub repository for Giscus."
                 helpText="You can find this in your Giscus configuration at https://giscus.app. After selecting your repository, the Repository ID will be shown in the configuration section. It starts with 'R_'."
                 inputAttrs={{
-                  name: "giscusRepoId",
-                  type: "text",
-                  defaultValue: site?.giscusRepoId || "",
-                  placeholder: "R_kgDOxxxxxx",
+                  name: 'giscusRepoId',
+                  type: 'text',
+                  defaultValue: site?.giscusRepoId || '',
+                  placeholder: 'R_kgDOxxxxxx',
                   required: false,
                 }}
                 handleSubmit={updateSite}
@@ -184,10 +183,10 @@ export default async function SiteSettingsIndex(props: {
                 description="The ID of the discussion category in your repository."
                 helpText="You can find this in your Giscus configuration at https://giscus.app. After selecting your discussion category, the Category ID will be shown in the configuration section. It starts with 'DIC_'."
                 inputAttrs={{
-                  name: "giscusCategoryId",
-                  type: "text",
-                  defaultValue: site?.giscusCategoryId || "",
-                  placeholder: "DIC_kwDOxxxxxx",
+                  name: 'giscusCategoryId',
+                  type: 'text',
+                  defaultValue: site?.giscusCategoryId || '',
+                  placeholder: 'DIC_kwDOxxxxxx',
                   required: false,
                 }}
                 handleSubmit={updateSite}
@@ -201,7 +200,7 @@ export default async function SiteSettingsIndex(props: {
             disabled={!isFeatureEnabled(Feature.CustomDomain, site)}
             helpText={
               <p>
-                Learn more about{" "}
+                Learn more about{' '}
                 <a
                   className="underline"
                   href="https://flowershow.app/docs/site-settings#custom-domain-%EF%B8%8F-premium-feature"
@@ -213,12 +212,12 @@ export default async function SiteSettingsIndex(props: {
               </p>
             }
             inputAttrs={{
-              name: "customDomain",
-              type: "text",
+              name: 'customDomain',
+              type: 'text',
               defaultValue: isFeatureEnabled(Feature.CustomDomain, site)
                 ? site?.customDomain!
-                : "",
-              placeholder: "yourdomain.com",
+                : '',
+              placeholder: 'yourdomain.com',
               maxLength: 64,
               pattern: validDomainRegex.toString(),
             }}
@@ -230,7 +229,7 @@ export default async function SiteSettingsIndex(props: {
             description="Enable full-text search functionality for your site."
             helpText={
               <p>
-                Learn more about{" "}
+                Learn more about{' '}
                 <a
                   className="underline"
                   href="https://flowershow.app/blog/announcing-full-text-search"
@@ -243,11 +242,11 @@ export default async function SiteSettingsIndex(props: {
             }
             disabled={!isFeatureEnabled(Feature.Search, site)}
             inputAttrs={{
-              name: "enableSearch",
-              type: "text",
+              name: 'enableSearch',
+              type: 'text',
               defaultValue: isFeatureEnabled(Feature.Search, site)
                 ? Boolean(site?.enableSearch).toString()
-                : "false",
+                : 'false',
             }}
             handleSubmit={updateSite}
           />

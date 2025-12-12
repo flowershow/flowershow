@@ -1,8 +1,8 @@
-import { QueryClient, QueryClientProvider, useQuery } from "react-query";
-import { Plotly } from "./plotly";
-import Papa, { ParseConfig } from "papaparse";
-import LoadingSpinner from "./loading-spinner";
-import { Data } from "./types";
+import Papa, { ParseConfig } from 'papaparse';
+import { QueryClient, QueryClientProvider, useQuery } from 'react-query';
+import LoadingSpinner from './loading-spinner';
+import { Plotly } from './plotly';
+import { Data } from './types';
 
 const queryClient = new QueryClient();
 
@@ -24,7 +24,7 @@ export const PlotlyLineChart: React.FC<PlotlyLineChartProps> = ({
   xAxis,
   yAxis,
   lineLabel,
-  title = "",
+  title = '',
   uniqueId,
 }) => {
   uniqueId = uniqueId ?? Math.random();
@@ -60,12 +60,12 @@ const LineChartInner: React.FC<PlotlyLineChartProps> = ({
   const csv = data.csv;
 
   const { data: csvString, isLoading: isDownloadingCSV } = useQuery(
-    ["dataCsv", url, uniqueId],
+    ['dataCsv', url, uniqueId],
     () => getCsv(url as string, bytes ?? 5132288),
     { enabled: !!url },
   );
   const { data: parsedData, isLoading: isParsing } = useQuery(
-    ["dataPreview", csvString, uniqueId],
+    ['dataPreview', csvString, uniqueId],
     () =>
       parseCsv(
         csv ? (csv as string) : (csvString as string),
@@ -76,7 +76,7 @@ const LineChartInner: React.FC<PlotlyLineChartProps> = ({
 
   if (values) {
     return (
-      <div className="w-full" style={{ height: "500px" }}>
+      <div className="w-full" style={{ height: '500px' }}>
         <Plotly
           layout={{
             title,
@@ -85,7 +85,7 @@ const LineChartInner: React.FC<PlotlyLineChartProps> = ({
             {
               x: values.map((d) => d[xAxis]),
               y: values.map((d) => d[yAxis]),
-              mode: "lines",
+              mode: 'lines',
               name: lineLabel,
             },
           ]}
@@ -100,7 +100,7 @@ const LineChartInner: React.FC<PlotlyLineChartProps> = ({
     </div>;
   if (parsedData)
     return (
-      <div className="w-full" style={{ height: "500px" }}>
+      <div className="w-full" style={{ height: '500px' }}>
         <Plotly
           layout={{
             title,
@@ -109,7 +109,7 @@ const LineChartInner: React.FC<PlotlyLineChartProps> = ({
             {
               x: parsedData.data.map((d: any) => d[xAxis]),
               y: parsedData.data.map((d: any) => d[yAxis]),
-              mode: "lines",
+              mode: 'lines',
               name: lineLabel,
             },
           ]}

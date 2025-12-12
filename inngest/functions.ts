@@ -1,55 +1,55 @@
-import { inngest } from "./client";
-import prisma from "@/server/db";
-import { deleteFile, deleteProject, uploadFile } from "@/lib/content-store";
+import { Prisma } from '@prisma/client';
+import { revalidateTag } from 'next/cache';
+import { SiteConfig } from '@/components/types';
+import { deleteFile, deleteProject, uploadFile } from '@/lib/content-store';
+import {
+  fetchGitHubFileRaw,
+  fetchGitHubRepoTree,
+  GitHubAPIFileContent,
+  GitHubAPIRepoTreeItem,
+  githubJsonFetch,
+} from '@/lib/github';
+import { isPathVisible } from '@/lib/path-validator';
+import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import {
   createSiteCollection,
   deleteSiteCollection,
   deleteSiteDocument,
   siteCollectionExists,
-} from "@/lib/typesense";
-import {
-  GitHubAPIFileContent,
-  GitHubAPIRepoTreeItem,
-  fetchGitHubFileRaw,
-  fetchGitHubRepoTree,
-  githubJsonFetch,
-} from "@/lib/github";
-import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
-import { revalidateTag } from "next/cache";
-import { isPathVisible } from "@/lib/path-validator";
-import { SiteConfig } from "@/components/types";
-import { Prisma } from "@prisma/client";
+} from '@/lib/typesense';
+import prisma from '@/server/db';
+import { inngest } from './client';
 
 // Number of files to process in each batch
 const BATCH_SIZE = 20;
 
 export const syncSite = inngest.createFunction(
   {
-    id: "sync",
+    id: 'sync',
     concurrency: [
       {
-        scope: "account",
+        scope: 'account',
         limit: 5,
-        key: "event.data.accessToken",
+        key: 'event.data.accessToken',
       },
     ],
     cancelOn: [
       {
-        event: "site/delete",
-        if: "async.data.siteId == event.data.siteId",
+        event: 'site/delete',
+        if: 'async.data.siteId == event.data.siteId',
       },
       {
-        event: "site/sync",
-        if: "async.data.siteId == event.data.siteId",
+        event: 'site/sync',
+        if: 'async.data.siteId == event.data.siteId',
       },
     ],
   },
-  { event: "site/sync" },
+  { event: 'site/sync' },
   async ({ event, step }) => {
     const { siteId, ghRepository, ghBranch, rootDir, accessToken, forceSync } =
       event.data;
 
-    const site = await step.run("fetch-site", async () => {
+    const site = await step.run('fetch-site', async () => {
       const site = await prisma.site.findUnique({
         where: { id: siteId },
         include: { user: true },
@@ -66,24 +66,24 @@ export const syncSite = inngest.createFunction(
     const {
       contentInclude: includes = [],
       contentExclude: excludes = [],
-    }: SiteConfig = await step.run("fetch-site-config", async () => {
+    }: SiteConfig = await step.run('fetch-site-config', async () => {
       try {
         const config = await githubJsonFetch<GitHubAPIFileContent>({
           url: `/repos/${ghRepository}/contents/config.json?ref=${ghBranch}`,
           accessToken: accessToken,
           cacheOptions: {
-            cache: "no-store",
+            cache: 'no-store',
           },
         });
         return JSON.parse(
-          Buffer.from(config.content, "base64").toString("utf-8"),
+          Buffer.from(config.content, 'base64').toString('utf-8'),
         );
       } catch (e: any) {
         return {};
       }
     });
 
-    await step.run("check-typesense-collection", async () => {
+    await step.run('check-typesense-collection', async () => {
       const typesenseCollectionExists = await siteCollectionExists(siteId);
       if (!typesenseCollectionExists) {
         await createSiteCollection(siteId);
@@ -91,7 +91,7 @@ export const syncSite = inngest.createFunction(
     });
 
     // Fetch latest GitHub repository tree
-    const gitHubTree = await step.run("fetch-github-tree", async () => {
+    const gitHubTree = await step.run('fetch-github-tree', async () => {
       const repoTree = await fetchGitHubRepoTree({
         ghRepository,
         ghBranch,
@@ -102,11 +102,11 @@ export const syncSite = inngest.createFunction(
     });
 
     const normalizedRootDir = rootDir
-      ? rootDir.replace(/^(.?\/)+|\/+$/g, "") + "/"
-      : "";
+      ? rootDir.replace(/^(.?\/)+|\/+$/g, '') + '/'
+      : '';
 
     const fileBatchesToUpsert = await step.run(
-      "get-file-batches-to-upsert",
+      'get-file-batches-to-upsert',
       async () => {
         const existingBlobs = await prisma.blob.findMany({
           where: { siteId },
@@ -121,14 +121,14 @@ export const syncSite = inngest.createFunction(
           .filter(
             (ghTreeItem) =>
               // Keep only files (not directories)
-              ghTreeItem.type !== "tree" &&
+              ghTreeItem.type !== 'tree' &&
               // Check if file is in the root directory
               ghTreeItem.path.startsWith(normalizedRootDir) &&
               // Validate against includes/excludes
               isPathVisible(ghTreeItem.path, includes, excludes),
           )
           .map((ghTreeItem) => {
-            const filePath = ghTreeItem.path.replace(normalizedRootDir, "");
+            const filePath = ghTreeItem.path.replace(normalizedRootDir, '');
             return { ghTreeItem, filePath };
           })
           .filter(({ ghTreeItem, filePath }) => {
@@ -163,7 +163,7 @@ export const syncSite = inngest.createFunction(
           const processedFiles = await Promise.all(
             batch.map(async ({ ghTreeItem, filePath }) => {
               try {
-                const extension = ghTreeItem.path.split(".").pop() || "";
+                const extension = ghTreeItem.path.split('.').pop() || '';
 
                 const gitHubFile = await fetchGitHubFileRaw({
                   ghRepository,
@@ -180,14 +180,14 @@ export const syncSite = inngest.createFunction(
                 });
 
                 const urlPath = (() => {
-                  if (["md", "mdx"].includes(extension)) {
+                  if (['md', 'mdx'].includes(extension)) {
                     const _urlPath = resolveFilePathToUrlPath({
                       target: filePath,
                     });
                     // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / 🤦‍♀️)
-                    return _urlPath === "/"
+                    return _urlPath === '/'
                       ? _urlPath
-                      : _urlPath.replace(/^\//, "");
+                      : _urlPath.replace(/^\//, '');
                   } else {
                     return null;
                   }
@@ -208,16 +208,16 @@ export const syncSite = inngest.createFunction(
                     sha: ghTreeItem.sha,
                     metadata: Prisma.JsonNull,
                     extension,
-                    syncStatus: ["md", "mdx"].includes(extension)
-                      ? "PENDING"
-                      : "SUCCESS",
+                    syncStatus: ['md', 'mdx'].includes(extension)
+                      ? 'PENDING'
+                      : 'SUCCESS',
                   },
                   update: {
                     size: ghTreeItem.size || 0,
                     sha: ghTreeItem.sha,
                   },
                 });
-                return { filePath, status: "SUCCESS", message: "" }; // Return path of successfully processed file
+                return { filePath, status: 'SUCCESS', message: '' }; // Return path of successfully processed file
               } catch (error: any) {
                 await prisma.blob.upsert({
                   where: {
@@ -230,17 +230,17 @@ export const syncSite = inngest.createFunction(
                     siteId,
                     path: filePath,
                     size: 0,
-                    sha: "",
+                    sha: '',
                     metadata: Prisma.JsonNull,
-                    syncStatus: "ERROR",
+                    syncStatus: 'ERROR',
                     syncError: error.message,
                   },
                   update: {
-                    syncStatus: "ERROR",
+                    syncStatus: 'ERROR',
                     syncError: error.message,
                   },
                 });
-                return { filePath, status: "ERROR", message: error };
+                return { filePath, status: 'ERROR', message: error };
               }
             }),
           );
@@ -250,7 +250,7 @@ export const syncSite = inngest.createFunction(
     );
 
     const fileBatchesToDelete = await step.run(
-      "get-file-batches-to-delete",
+      'get-file-batches-to-delete',
       async () => {
         // existing site files
         const existingBlobs = await prisma.blob.findMany({
@@ -263,13 +263,13 @@ export const syncSite = inngest.createFunction(
           .filter(
             (ghTreeItem) =>
               // Keep only files (not directories)
-              ghTreeItem.type !== "tree" &&
+              ghTreeItem.type !== 'tree' &&
               // Check if file is in the root directory
               ghTreeItem.path.startsWith(normalizedRootDir) &&
               // Validate against includes/excludes
               isPathVisible(ghTreeItem.path, includes, excludes),
           )
-          .map((ghTreeItem) => ghTreeItem.path.replace(normalizedRootDir, ""));
+          .map((ghTreeItem) => ghTreeItem.path.replace(normalizedRootDir, ''));
 
         const filesToDelete = existingBlobs.filter(
           (blob) => !items.includes(blob.path),
@@ -311,7 +311,7 @@ export const syncSite = inngest.createFunction(
       }),
     );
 
-    await step.run("update-tree", async () =>
+    await step.run('update-tree', async () =>
       prisma.site.update({
         where: { id: siteId },
         data: {
@@ -322,7 +322,7 @@ export const syncSite = inngest.createFunction(
 
     // NOTE: this won't fully work (e.g. for getBlob) as part of the metadata is being updated in the db later, by the Cloudflare worker
     // still works for most site related cached data
-    await step.run("revalidate-tags", async () => {
+    await step.run('revalidate-tags', async () => {
       revalidateTag(`${site.id}`);
     });
   },
@@ -330,16 +330,16 @@ export const syncSite = inngest.createFunction(
 
 export const deleteSite = inngest.createFunction(
   {
-    id: "delete",
+    id: 'delete',
     concurrency: [
       {
-        scope: "account",
+        scope: 'account',
         limit: 5,
-        key: "event.data.accessToken",
+        key: 'event.data.accessToken',
       },
     ],
   },
-  { event: "site/delete" },
+  { event: 'site/delete' },
   async ({ event }) => {
     const { siteId } = event.data;
     await deleteProject(siteId);

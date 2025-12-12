@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { createContext, useContext, useState } from "react";
-import Lottie from "lottie-react";
-import confettiAnimation from "./confetti.json";
+import Lottie from 'lottie-react';
+import { createContext, useContext, useState } from 'react';
+import confettiAnimation from './confetti.json';
 
 type ConfettiContextType = {
   showConfetti: () => void;
@@ -17,7 +17,7 @@ export function ConfettiProvider({ children }: { children: React.ReactNode }) {
     animationData: confettiAnimation,
     autoplay: true,
     rendererSettings: {
-      preserveAspectRatio: "xMidYMid meet",
+      preserveAspectRatio: 'xMidYMid meet',
     },
   };
 
@@ -34,7 +34,7 @@ export function ConfettiProvider({ children }: { children: React.ReactNode }) {
       {isVisible && (
         <div
           className="pointer-events-none fixed inset-0 z-[100]"
-          style={{ width: "100vw", height: "100vh" }}
+          style={{ width: '100vw', height: '100vh' }}
         >
           <div className="flex h-full w-full items-center justify-center">
             <div className="w-full max-w-[1200px]">
@@ -50,7 +50,7 @@ export function ConfettiProvider({ children }: { children: React.ReactNode }) {
 export function useConfetti() {
   const context = useContext(ConfettiContext);
   if (!context) {
-    throw new Error("useConfetti must be used within a ConfettiProvider");
+    throw new Error('useConfetti must be used within a ConfettiProvider');
   }
   return context;
 }

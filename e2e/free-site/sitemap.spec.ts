@@ -1,13 +1,13 @@
-import { test, expect } from "../_fixtures/published-site-test";
+import { expect, test } from '../_fixtures/published-site-test';
 
-test.describe("Free site sitemap", () => {
-  test("Individual site sitemap should return valid XML", async ({
+test.describe('Free site sitemap', () => {
+  test('Individual site sitemap should return valid XML', async ({
     publishedSitePage,
   }) => {
-    const response = await publishedSitePage.goto("/sitemap.xml");
+    const response = await publishedSitePage.goto('/sitemap.xml');
     expect(response).not.toBeNull();
     expect(response!.status()).toBe(200);
-    expect(response!.headers()["content-type"]).toBe("application/xml");
+    expect(response!.headers()['content-type']).toBe('application/xml');
 
     const text = await response!.text();
     expect(text).toContain('<?xml version="1.0" encoding="UTF-8"?>');
@@ -36,7 +36,7 @@ test.describe("Free site sitemap", () => {
     );
   });
 
-  test("Main sitemap should include the free site", async ({
+  test('Main sitemap should include the free site', async ({
     page,
     publishedSitePage,
   }) => {
@@ -45,7 +45,7 @@ test.describe("Free site sitemap", () => {
     );
     expect(response).not.toBeNull();
     expect(response!.status()).toBe(200);
-    expect(response!.headers()["content-type"]).toBe("application/xml");
+    expect(response!.headers()['content-type']).toBe('application/xml');
 
     const text = await response!.text();
     expect(text).toContain('<?xml version="1.0" encoding="UTF-8"?>');

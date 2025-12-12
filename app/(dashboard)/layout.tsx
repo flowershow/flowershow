@@ -1,20 +1,19 @@
-import { headers } from "next/headers";
-import { Metadata } from "next";
-import { GoogleTagManager } from "@next/third-parties/google";
-
-import { getSession } from "@/server/auth";
-import { TRPCReactProvider } from "@/trpc/react";
-import Providers from "./providers";
-import { env } from "@/env.mjs";
-import { getConfig } from "@/lib/app-config";
-import clsx from "clsx";
+import { GoogleTagManager } from '@next/third-parties/google';
+import clsx from 'clsx';
+import { Metadata } from 'next';
+import { headers } from 'next/headers';
+import { env } from '@/env.mjs';
+import { getConfig } from '@/lib/app-config';
+import { getSession } from '@/server/auth';
 import {
+  fontBrand,
   fontDashboardBody,
   fontDashboardHeading,
-  fontBrand,
-} from "@/styles/fonts";
+} from '@/styles/fonts';
+import { TRPCReactProvider } from '@/trpc/react';
+import Providers from './providers';
 
-import "@/styles/dashboard.css";
+import '@/styles/dashboard.css';
 
 const { title, description, favicon, thumbnail } = getConfig();
 
@@ -25,19 +24,19 @@ export const metadata: Metadata = {
   openGraph: {
     title,
     description,
-    type: "website",
+    type: 'website',
     url: `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}`,
     images: [
       {
         url: thumbnail,
         width: 1200,
         height: 630,
-        alt: "Thumbnail",
+        alt: 'Thumbnail',
       },
     ],
   },
   twitter: {
-    card: "summary_large_image",
+    card: 'summary_large_image',
     title,
     description,
     images: [
@@ -45,10 +44,10 @@ export const metadata: Metadata = {
         url: thumbnail,
         width: 1200,
         height: 630,
-        alt: "Thumbnail",
+        alt: 'Thumbnail',
       },
     ],
-    creator: "@flowershowapp",
+    creator: '@flowershowapp',
   },
 };
 

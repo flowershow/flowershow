@@ -1,5 +1,3 @@
-import { SocialPlatform } from "@/components/types";
-
 import {
   BlueskyIcon,
   DiscordIcon,
@@ -8,11 +6,12 @@ import {
   InstagramIcon,
   LinkedInIcon,
   MastodonIcon,
-  SubstackIcon,
   RedditIcon,
+  SubstackIcon,
   TwitterIcon,
   YouTubeIcon,
-} from "@/components/icons";
+} from '@/components/icons';
+import { SocialPlatform } from '@/components/types';
 
 export const socialIcons: { [K in SocialPlatform]: React.FC<any> } = {
   bluesky: BlueskyIcon,

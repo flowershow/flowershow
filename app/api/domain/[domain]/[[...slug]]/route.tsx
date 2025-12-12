@@ -1,8 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createTRPCContext } from "@/server/api/trpc";
-import { appRouter } from "@/server/api/root";
-import { fetchFile } from "@/lib/content-store";
-import { TRPCError } from "@trpc/server";
+import { TRPCError } from '@trpc/server';
+import { NextRequest, NextResponse } from 'next/server';
+import { fetchFile } from '@/lib/content-store';
+import { appRouter } from '@/server/api/root';
+import { createTRPCContext } from '@/server/api/trpc';
 
 /**
  * This wraps the `createTRPCContext` helper and provides the required context for the tRPC API when
@@ -16,7 +16,7 @@ const createContext = async (req: NextRequest) => {
 
 export async function GET(
   req: NextRequest,
-  props: { params: Promise<{ domain: string; slug?: string[] }> }
+  props: { params: Promise<{ domain: string; slug?: string[] }> },
 ) {
   const params = await props.params;
   const ctx = await createContext(req);
@@ -24,7 +24,7 @@ export async function GET(
   const { domain, slug } = params;
 
   if (!slug) {
-    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 
   const site = await caller.site.getByDomain({
@@ -32,27 +32,27 @@ export async function GET(
   });
 
   if (!site) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
   try {
     const file = await fetchFile({
       projectId: site.id,
       branch: site.ghBranch,
-      path: slug.join("/"),
+      path: slug.join('/'),
     });
 
     return new Response(file, {
       headers: {
-        "Content-Type": "text/plain",
+        'Content-Type': 'text/plain',
       },
     });
   } catch (e) {
-    if (e instanceof TRPCError && e.code === "NOT_FOUND") {
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (e instanceof TRPCError && e.code === 'NOT_FOUND') {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Internal server error' },
       { status: 500 },
     );
   }

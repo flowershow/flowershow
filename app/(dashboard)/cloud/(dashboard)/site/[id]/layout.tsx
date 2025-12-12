@@ -1,17 +1,13 @@
-import { ReactNode } from "react";
-import { SyncStatusProvider } from "./sync-status-provider";
+import { ReactNode } from 'react';
+import { SyncStatusProvider } from './sync-status-provider';
 
-export default async function SiteLayout(
-  props: {
-    children: ReactNode;
-    params: Promise<{ id: string }>;
-  }
-) {
+export default async function SiteLayout(props: {
+  children: ReactNode;
+  params: Promise<{ id: string }>;
+}) {
   const params = await props.params;
 
-  const {
-    children
-  } = props;
+  const { children } = props;
 
   return (
     <SyncStatusProvider siteId={params.id}>

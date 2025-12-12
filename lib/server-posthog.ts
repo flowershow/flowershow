@@ -1,5 +1,5 @@
-import { env } from "@/env.mjs";
-import { PostHog } from "posthog-node";
+import { PostHog } from 'posthog-node';
+import { env } from '@/env.mjs';
 
 export default function PostHogClient() {
   const posthogClient = new PostHog(env.NEXT_PUBLIC_POSTHOG_KEY, {

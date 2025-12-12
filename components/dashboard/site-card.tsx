@@ -1,7 +1,7 @@
-import { Site } from "@prisma/client";
-import Link from "next/link";
-import { env } from "@/env.mjs";
-import Star from "@/components/icons/star";
+import { Site } from '@prisma/client';
+import Link from 'next/link';
+import Star from '@/components/icons/star';
+import { env } from '@/env.mjs';
 
 export default function SiteCard({
   data: site,
@@ -12,7 +12,7 @@ export default function SiteCard({
 }) {
   let url: string;
 
-  if (env.NEXT_PUBLIC_VERCEL_ENV === "production") {
+  if (env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
     if (site.customDomain) {
       url = `https://${site.customDomain}`;
     } else {
@@ -23,11 +23,11 @@ export default function SiteCard({
   }
 
   const displayedUrl =
-    site.customDomain || new URL(url).pathname.replace(/^\/+/, "");
+    site.customDomain || new URL(url).pathname.replace(/^\/+/, '');
 
   return (
     <div className="relative rounded-lg border border-stone-200 pb-10 shadow-md transition-all hover:shadow-xl  ">
-      {site.plan === "PREMIUM" && (
+      {site.plan === 'PREMIUM' && (
         <div className="absolute right-2 top-2 text-yellow-500">
           <Star className="h-5 w-5" />
         </div>

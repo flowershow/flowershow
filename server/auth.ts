@@ -1,10 +1,10 @@
-import { getServerSession, type NextAuthOptions } from "next-auth";
-import GitHubProvider, { GithubProfile } from "next-auth/providers/github";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import prisma from "@/server/db";
-import { env } from "@/env.mjs";
-import axios from "axios";
-import PostHogClient from "@/lib/server-posthog";
+import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import axios from 'axios';
+import { getServerSession, type NextAuthOptions } from 'next-auth';
+import GitHubProvider, { GithubProfile } from 'next-auth/providers/github';
+import { env } from '@/env.mjs';
+import PostHogClient from '@/lib/server-posthog';
+import prisma from '@/server/db';
 
 const VERCEL_DEPLOYMENT = !!env.VERCEL_URL;
 
@@ -28,7 +28,7 @@ export const authOptions: NextAuthOptions = {
       },
       authorization: {
         params: {
-          scope: "read:user user:email repo read:org",
+          scope: 'read:user user:email repo read:org',
         },
       },
     }),
@@ -36,22 +36,22 @@ export const authOptions: NextAuthOptions = {
   pages: {
     signIn: `/login`,
     verifyRequest: `/login`,
-    error: "/login", // Error code passed in query string as ?error=
+    error: '/login', // Error code passed in query string as ?error=
   },
   adapter: PrismaAdapter(prisma),
   session: {
-    strategy: "jwt",
+    strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   cookies: {
     sessionToken: {
-      name: `${VERCEL_DEPLOYMENT ? "__Secure-" : ""}next-auth.session-token`,
+      name: `${VERCEL_DEPLOYMENT ? '__Secure-' : ''}next-auth.session-token`,
       options: {
         httpOnly: true,
-        sameSite: "lax",
-        path: "/",
+        sameSite: 'lax',
+        path: '/',
         // When working on localhost, the cookie domain must be omitted entirely (https://stackoverflow.com/a/1188145)
-        domain: VERCEL_DEPLOYMENT ? ".flowershow.app" : undefined, // set to apex domain to make posthog identify/reset work (and to allow some UI indicators that you're logged in and previewing your own site)
+        domain: VERCEL_DEPLOYMENT ? '.flowershow.app' : undefined, // set to apex domain to make posthog identify/reset work (and to allow some UI indicators that you're logged in and previewing your own site)
         secure: VERCEL_DEPLOYMENT,
       },
     },
@@ -64,7 +64,7 @@ export const authOptions: NextAuthOptions = {
       // Add user to Brevo contact list
       try {
         await axios.post(
-          "https://api.brevo.com/v3/contacts",
+          'https://api.brevo.com/v3/contacts',
           {
             email: user.email,
             listIds: [parseInt(env.BREVO_CONTACT_LISTID)],
@@ -73,22 +73,22 @@ export const authOptions: NextAuthOptions = {
           },
           {
             headers: {
-              "api-key": `${env.BREVO_API_KEY}`,
-              "Content-Type": "application/json",
+              'api-key': `${env.BREVO_API_KEY}`,
+              'Content-Type': 'application/json',
             },
           },
         );
       } catch (error: any) {
         // Ignore duplicate contact error
-        if (error.response?.data?.code !== "duplicate_parameter") {
-          console.error("Issue adding contact to Brevo:", error.message);
+        if (error.response?.data?.code !== 'duplicate_parameter') {
+          console.error('Issue adding contact to Brevo:', error.message);
         }
       }
 
       const posthog = PostHogClient();
       posthog.capture({
         distinctId: user.id,
-        event: "sign_up",
+        event: 'sign_up',
       });
       await posthog.shutdown();
     },
@@ -137,7 +137,7 @@ export const authOptions: NextAuthOptions = {
             },
           });
         } catch (error) {
-          console.error("SignIn error:", error);
+          console.error('SignIn error:', error);
           return false;
         }
       }
@@ -195,7 +195,7 @@ export function withSiteAuth(action: any) {
     const session = await getSession();
     if (!session) {
       return {
-        error: "Not authenticated",
+        error: 'Not authenticated',
       };
     }
     const site = await prisma.site.findUnique({
@@ -205,7 +205,7 @@ export function withSiteAuth(action: any) {
     });
     if (!site || site.userId !== session.user.id) {
       return {
-        error: "Not authorized",
+        error: 'Not authorized',
       };
     }
 

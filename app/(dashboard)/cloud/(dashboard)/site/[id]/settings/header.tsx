@@ -1,13 +1,13 @@
-import Link from "next/link";
-import { Suspense } from "react";
-import { SquareArrowOutUpRight } from "lucide-react";
+import { SquareArrowOutUpRight } from 'lucide-react';
+import Link from 'next/link';
+import { Suspense } from 'react';
 
-import { GithubIcon } from "@/components/icons";
-import LoadingDots from "@/components/icons/loading-dots";
-import Status from "./status";
-import SyncSiteButton from "./sync-button";
-import { env } from "@/env.mjs";
-import { PublicSite } from "@/server/api/types";
+import { GithubIcon } from '@/components/icons';
+import LoadingDots from '@/components/icons/loading-dots';
+import { env } from '@/env.mjs';
+import { PublicSite } from '@/server/api/types';
+import Status from './status';
+import SyncSiteButton from './sync-button';
 
 export default async function SiteSettingsHeader({
   site,
@@ -16,9 +16,9 @@ export default async function SiteSettingsHeader({
 }) {
   // TODO move this to some lib; we have solutions like this scattered in many places
   const isSecure =
-    env.NEXT_PUBLIC_VERCEL_ENV === "production" ||
-    env.NEXT_PUBLIC_VERCEL_ENV === "preview";
-  const protocol = isSecure ? "https" : "http";
+    env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+    env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
+  const protocol = isSecure ? 'https' : 'http';
 
   const url = site.customDomain
     ? `${protocol}://${site.customDomain}`
@@ -33,7 +33,7 @@ export default async function SiteSettingsHeader({
               <span data-testid="site-name" className="font-dashboard-heading">
                 {site.projectName}
               </span>
-              {site.plan === "PREMIUM" && (
+              {site.plan === 'PREMIUM' && (
                 <span className="ml-1 inline-flex items-center rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">
                   Premium
                 </span>

@@ -1,19 +1,19 @@
-import { describe, it, expect } from "vitest";
-import { extractTitle } from "./extract-title";
+import { describe, expect, it } from 'vitest';
+import { extractTitle } from './extract-title';
 
-describe("extractTitle", () => {
-  it("extracts the first heading correctly", async () => {
+describe('extractTitle', () => {
+  it('extracts the first heading correctly', async () => {
     const source = `
 ## Second Heading
 # First Heading
 # Another Heading
       `;
-    const expected = "First Heading";
+    const expected = 'First Heading';
     const result = await extractTitle(source);
     expect(result).toBe(expected);
   });
 
-  it("returns null if there is no first heading", async () => {
+  it('returns null if there is no first heading', async () => {
     const source = `
 ## Heading
 Some other content
@@ -23,40 +23,40 @@ Some other content
     expect(result).toBe(expected);
   });
 
-  it("extracts link text correctly", async () => {
+  it('extracts link text correctly', async () => {
     const source = `
 # [[Link Text]]
       `;
-    const expected = "Link Text";
+    const expected = 'Link Text';
     const result = await extractTitle(source);
     expect(result).toBe(expected);
   });
 
-  it("extracts bold title correctly", async () => {
+  it('extracts bold title correctly', async () => {
     const source = `
 # **Bold Title**
       `;
-    const expected = "Bold Title";
+    const expected = 'Bold Title';
     const result = await extractTitle(source);
     expect(result).toBe(expected);
   });
 
-  it("extracts the first heading with introductory text", async () => {
+  it('extracts the first heading with introductory text', async () => {
     const source = `
 Some introduction text
 # First Heading
 ## Second Heading
       `;
-    const expected = "First Heading";
+    const expected = 'First Heading';
     const result = await extractTitle(source);
     expect(result).toBe(expected);
   });
 
-  it("extracts bold title correctly", async () => {
+  it('extracts bold title correctly', async () => {
     const source = `
 # __Bold Title__
         `;
-    const expected = "Bold Title";
+    const expected = 'Bold Title';
     const result = await extractTitle(source);
     expect(result).toBe(expected);
   });

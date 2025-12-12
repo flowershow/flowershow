@@ -1,38 +1,38 @@
-"use client";
-import dynamic from "next/dynamic";
-import { CustomHtml } from "./custom-html";
+'use client';
+import dynamic from 'next/dynamic';
+import { CustomHtml } from './custom-html';
 
 const Mermaid = dynamic(
-  () => import("mdx-mermaid/lib/Mermaid").then((mod) => mod.Mermaid),
+  () => import('mdx-mermaid/lib/Mermaid').then((mod) => mod.Mermaid),
   { ssr: false },
 );
 const FlatUiTable = dynamic(
-  () => import("./flatui-table").then((mod) => mod.FlatUiTable),
+  () => import('./flatui-table').then((mod) => mod.FlatUiTable),
   { ssr: false },
 );
 const LineChart = dynamic(
-  () => import("./line-chart").then((mod) => mod.LineChart),
+  () => import('./line-chart').then((mod) => mod.LineChart),
   { ssr: false },
 );
 const PlotlyBarChart = dynamic(
-  () => import("./plotly-bar-chart").then((mod) => mod.PlotlyBarChart),
+  () => import('./plotly-bar-chart').then((mod) => mod.PlotlyBarChart),
   { ssr: false },
 );
 const PlotlyLineChart = dynamic(
-  () => import("./plotly-line-chart").then((mod) => mod.PlotlyLineChart),
+  () => import('./plotly-line-chart').then((mod) => mod.PlotlyLineChart),
   { ssr: false },
 );
 const ObsidianBasesViews = dynamic(
-  () => import("./obsidian-bases-views").then((mod) => mod.ObsidianBasesViews),
+  () => import('./obsidian-bases-views').then((mod) => mod.ObsidianBasesViews),
   { ssr: false },
 );
 // const Map = dynamic(() => import("./map").then((mod) => mod.Map), {
 //   ssr: false,
 // });
-const Plotly = dynamic(() => import("./plotly").then((mod) => mod.Plotly), {
+const Plotly = dynamic(() => import('./plotly').then((mod) => mod.Plotly), {
   ssr: false,
 });
-const Vega = dynamic(() => import("./vega").then((mod) => mod.Vega), {
+const Vega = dynamic(() => import('./vega').then((mod) => mod.Vega), {
   ssr: false,
 });
 // const Excel = dynamic(

@@ -1,12 +1,12 @@
 const normalizeUrl = (path: string) => {
-  return path?.startsWith("/") ? path : "/" + path;
+  return path?.startsWith('/') ? path : '/' + path;
 };
 
 const isPathIncluded = (path: string, collection: string[]) => {
   path = normalizeUrl(path);
   return collection.some((item) => {
     item = normalizeUrl(item);
-    return item === path || path.startsWith(item + "/");
+    return item === path || path.startsWith(item + '/');
   });
 };
 
@@ -18,7 +18,7 @@ export function isPathVisible(
   const normalizedPath = normalizeUrl(path);
 
   // Always allow config.json and custom.css
-  if (normalizedPath === "/config.json" || normalizedPath === "/custom.css") {
+  if (normalizedPath === '/config.json' || normalizedPath === '/custom.css') {
     return true;
   }
 

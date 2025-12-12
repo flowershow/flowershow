@@ -1,7 +1,5 @@
-"use client";
+'use client';
 
-import React from "react";
-import Link from "next/link";
 import {
   Box,
   Card,
@@ -9,10 +7,12 @@ import {
   CardContent,
   CardMedia,
   Typography,
-} from "@mui/material";
-import { getWikiLinkValue, isWikiLink } from "@/lib/wiki-link";
-import { resolveWikiLinkToFilePath } from "@/lib/resolve-wiki-link";
-import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
+} from '@mui/material';
+import Link from 'next/link';
+import React from 'react';
+import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
+import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
 
 type Row = {
   path: string;
@@ -23,7 +23,7 @@ type Row = {
 export interface ObsidianBaseCardsProps {
   cardSize?: number;
   image?: string;
-  imageFit?: "contain" | "cover";
+  imageFit?: 'contain' | 'cover';
   imageAspectRatio?: number;
   rows: string;
   sitePrefix?: string;
@@ -39,9 +39,9 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
   const customDomain = props.customDomain;
   const cardSize = props.cardSize || 200;
   const imageField = props.image;
-  const imageFit = props.imageFit || "contain";
+  const imageFit = props.imageFit || 'contain';
   const imageAspectRatio = props.imageAspectRatio || 1;
-  const order = props.order || ["file.name"];
+  const order = props.order || ['file.name'];
   const allSitePaths = props.allSitePaths
     ? (JSON.parse(props.allSitePaths) as string[])
     : [];
@@ -58,11 +58,11 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
         sx={{
           my: 2,
           p: 2,
-          textAlign: "center",
+          textAlign: 'center',
           border: 1,
-          borderColor: "divider",
+          borderColor: 'divider',
           borderRadius: 1,
-          bgcolor: "background.default",
+          bgcolor: 'background.default',
         }}
       >
         <Typography color="text.secondary">No results found</Typography>
@@ -71,12 +71,12 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
   }
 
   const getFieldValue = (row: Row, field: string): any => {
-    if (field === "file.name") {
-      const pathParts = row.path.split("/");
-      return pathParts[pathParts.length - 1]?.replace(/\.(md|mdx)$/, "") || "";
+    if (field === 'file.name') {
+      const pathParts = row.path.split('/');
+      return pathParts[pathParts.length - 1]?.replace(/\.(md|mdx)$/, '') || '';
     }
     // Check if this is a formula property
-    if (field.startsWith("formula.")) {
+    if (field.startsWith('formula.')) {
       const formulaName = field.substring(8); // Remove "formula." prefix
       return row.metadata?.__formulas?.[formulaName];
     }
@@ -98,7 +98,7 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
     }
 
     // Handle formula properties
-    if (field.startsWith("formula.")) {
+    if (field.startsWith('formula.')) {
       return field.substring(8);
     }
     return field;
@@ -125,7 +125,7 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
           sx={{
             mb: 1,
             fontWeight: 600,
-            fontSize: "1rem",
+            fontSize: '1rem',
           }}
         >
           {value}
@@ -151,14 +151,14 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
         <Link
           href={urlPath}
           style={{
-            color: "#1976d2",
-            textDecoration: "none",
+            color: '#1976d2',
+            textDecoration: 'none',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.textDecoration = "underline";
+            e.currentTarget.style.textDecoration = 'underline';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.textDecoration = "none";
+            e.currentTarget.style.textDecoration = 'none';
           }}
         >
           {target}
@@ -189,13 +189,13 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
     if (!imageField) return null;
 
     // Extract the field name from patterns like "note.image"
-    const fieldName = imageField.split(".").pop() || imageField;
+    const fieldName = imageField.split('.').pop() || imageField;
     const imageValue = row.metadata?.[fieldName];
 
     if (!imageValue) return null;
 
     // Check if it's a wiki link
-    if (typeof imageValue === "string" && isWikiLink(imageValue)) {
+    if (typeof imageValue === 'string' && isWikiLink(imageValue)) {
       const filePath = resolveWikiLinkToFilePath({
         wikiLink: imageValue,
         filePaths: allSitePaths,
@@ -209,8 +209,8 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
 
     // If it's already a full URL, return it
     if (
-      typeof imageValue === "string" &&
-      (imageValue.startsWith("http://") || imageValue.startsWith("https://"))
+      typeof imageValue === 'string' &&
+      (imageValue.startsWith('http://') || imageValue.startsWith('https://'))
     ) {
       return imageValue;
     }
@@ -222,48 +222,48 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
     <Box className="not-prose" sx={{ my: 3 }}>
       <Box
         sx={{
-          display: "grid",
+          display: 'grid',
           gridTemplateColumns: `repeat(auto-fit, minmax(${cardSize}px, 1fr))`,
           gap: 2,
         }}
       >
         {rows.map((row, index) => {
-          const linkUrl = `${sitePrefix}/${row.appPath || ""}`;
+          const linkUrl = `${sitePrefix}/${row.appPath || ''}`;
           const image = getImage(row);
-          const isHexColor = image?.startsWith("#") && image.length === 7;
+          const isHexColor = image?.startsWith('#') && image.length === 7;
 
           return (
             <Card
               key={`${row.path}-${index}`}
               sx={{
-                display: "flex",
-                flexDirection: "column",
-                boxShadow: "none",
-                border: "1px solid #ebebeb",
+                display: 'flex',
+                flexDirection: 'column',
+                boxShadow: 'none',
+                border: '1px solid #ebebeb',
               }}
             >
               <CardActionArea
                 component={Link}
                 href={linkUrl}
                 sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "stretch",
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'stretch',
                   flexGrow: 1,
                 }}
               >
                 {image && (
                   <CardMedia
-                    component={isHexColor ? "div" : "img"}
+                    component={isHexColor ? 'div' : 'img'}
                     image={!isHexColor ? image : undefined}
                     alt={
-                      !isHexColor ? getFieldValue(row, "file.name") : undefined
+                      !isHexColor ? getFieldValue(row, 'file.name') : undefined
                     }
                     sx={{
-                      width: "100%",
+                      width: '100%',
                       aspectRatio: `1 / ${imageAspectRatio}`,
                       objectFit: imageFit,
-                      bgcolor: isHexColor ? image : "grey.100",
+                      bgcolor: isHexColor ? image : 'grey.100',
                     }}
                   />
                 )}

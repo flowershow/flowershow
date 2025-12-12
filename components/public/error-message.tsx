@@ -1,4 +1,4 @@
-import { CircleXIcon } from "lucide-react";
+import { CircleXIcon } from 'lucide-react';
 
 interface Props extends React.PropsWithChildren {
   title: string;

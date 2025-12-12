@@ -1,16 +1,14 @@
 // @ts-nocheck
 // // https://github.com/storybookjs/storybook/issues/32127
-import path from "node:path";
-import { fileURLToPath } from "node:url";
-
-import { defineConfig } from "vitest/config";
-import react from "@vitejs/plugin-react";
-import tsconfigPaths from "vite-tsconfig-paths";
-
-import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
+import react from '@vitejs/plugin-react';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import { defineConfig } from 'vitest/config';
 
 const dirname =
-  typeof __dirname !== "undefined"
+  typeof __dirname !== 'undefined'
     ? __dirname
     : path.dirname(fileURLToPath(import.meta.url));
 
@@ -19,7 +17,7 @@ export default defineConfig({
   plugins: [tsconfigPaths(), react()],
   resolve: {
     alias: {
-      "@": path.resolve(dirname, "./"),
+      '@': path.resolve(dirname, './'),
     },
   },
   test: {
@@ -28,11 +26,11 @@ export default defineConfig({
       {
         extends: true,
         test: {
-          name: "unit",
-          environment: "jsdom",
-          include: ["**/*.test.{ts,tsx}"],
-          exclude: ["**/node_modules/**", "stories/**/*", "e2e/**/*"],
-          setupFiles: ["./vitest.setup.ts"],
+          name: 'unit',
+          environment: 'jsdom',
+          include: ['**/*.test.{ts,tsx}'],
+          exclude: ['**/node_modules/**', 'stories/**/*', 'e2e/**/*'],
+          setupFiles: ['./vitest.setup.ts'],
         },
       },
       // Storybook tests project
@@ -41,17 +39,17 @@ export default defineConfig({
         plugins: [
           // The plugin will run tests for the stories defined in your Storybook config
           // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest
-          storybookTest({ configDir: path.join(dirname, ".storybook") }),
+          storybookTest({ configDir: path.join(dirname, '.storybook') }),
         ],
         test: {
-          name: "storybook",
+          name: 'storybook',
           browser: {
             enabled: true,
             headless: true,
-            provider: "playwright",
-            instances: [{ browser: "chromium" }],
+            provider: 'playwright',
+            instances: [{ browser: 'chromium' }],
           },
-          setupFiles: [".storybook/vitest.setup.ts"],
+          setupFiles: ['.storybook/vitest.setup.ts'],
         },
       },
     ],

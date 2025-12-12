@@ -1,19 +1,19 @@
-import { Metadata } from "next";
-import { ReactNode } from "react";
+import { Metadata } from 'next';
+import { ReactNode } from 'react';
 
-import "@/styles/dashboard.css";
-import clsx from "clsx";
+import '@/styles/dashboard.css';
+import clsx from 'clsx';
+import { getConfig } from '@/lib/app-config';
 import {
   fontBrand,
   fontDashboardBody,
   fontDashboardHeading,
-} from "@/styles/fonts";
-import { getConfig } from "@/lib/app-config";
+} from '@/styles/fonts';
 
 const { favicon } = getConfig();
 
 export const metadata: Metadata = {
-  title: "Site authentication",
+  title: 'Site authentication',
   icons: [favicon],
 };
 

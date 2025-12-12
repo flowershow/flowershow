@@ -1,6 +1,5 @@
-"use client";
+'use client';
 
-import React, { useState } from "react";
 import {
   Box,
   FormControl,
@@ -8,11 +7,12 @@ import {
   MenuItem,
   Select,
   SelectChangeEvent,
-} from "@mui/material";
-import { ObsidianBaseTable } from "./obsidian-base-table";
-import { ObsidianBaseCards } from "./obsidian-base-cards";
-import { ObsidianBaseList } from "./obsidian-base-list";
-import { BaseView } from "@/lib/remark-obsidian-bases";
+} from '@mui/material';
+import React, { useState } from 'react';
+import { BaseView } from '@/lib/remark-obsidian-bases';
+import { ObsidianBaseCards } from './obsidian-base-cards';
+import { ObsidianBaseList } from './obsidian-base-list';
+import { ObsidianBaseTable } from './obsidian-base-table';
 
 type ViewData = {
   view: BaseView;
@@ -67,7 +67,7 @@ export const ObsidianBasesViews: React.FC<ObsidianBasesViewsProps> = (
       : undefined;
     const allSitePathsStr = props.allSitePaths;
 
-    if (currentView.type === "cards") {
+    if (currentView.type === 'cards') {
       return (
         <ObsidianBaseCards
           rows={rows}
@@ -84,7 +84,7 @@ export const ObsidianBasesViews: React.FC<ObsidianBasesViewsProps> = (
       );
     }
 
-    if (currentView.type === "list") {
+    if (currentView.type === 'list') {
       return (
         <ObsidianBaseList
           rows={rows}
@@ -113,7 +113,7 @@ export const ObsidianBasesViews: React.FC<ObsidianBasesViewsProps> = (
   return (
     <Box sx={{ my: 2 }}>
       {hasMultipleViews && (
-        <Box sx={{ mb: 2, display: "flex", justifyContent: "flex-end" }}>
+        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end' }}>
           <FormControl size="small" sx={{ minWidth: 150 }}>
             <InputLabel id="view-select-label">View</InputLabel>
             <Select

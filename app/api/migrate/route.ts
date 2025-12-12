@@ -5,7 +5,7 @@
     posterity.
 */
 
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 // import prisma from "@/server/db";
 
 export async function GET() {
@@ -51,5 +51,5 @@ export async function GET() {
   //     skipDuplicates: true,
   //   })
 
-  return NextResponse.json({ response: "ok" });
+  return NextResponse.json({ response: 'ok' });
 }

@@ -1,4 +1,4 @@
-import { GiscusProps } from "@giscus/react";
+import { GiscusProps } from '@giscus/react';
 
 export interface NavLink {
   name: string;
@@ -10,19 +10,19 @@ export interface SocialLink extends NavLink {
 }
 
 export type SocialPlatform =
-  | "bsky"
-  | "bluesky"
-  | "discord"
-  | "facebook"
-  | "github"
-  | "instagram"
-  | "linkedin"
-  | "mastodon"
-  | "reddit"
-  | "substack"
-  | "twitter"
-  | "x"
-  | "youtube";
+  | 'bsky'
+  | 'bluesky'
+  | 'discord'
+  | 'facebook'
+  | 'github'
+  | 'instagram'
+  | 'linkedin'
+  | 'mastodon'
+  | 'reddit'
+  | 'substack'
+  | 'twitter'
+  | 'x'
+  | 'youtube';
 
 export interface NavConfig {
   logo?: string;
@@ -44,7 +44,7 @@ export interface SiteConfig {
   contentExclude?: string[];
   showSidebar?: boolean;
   sidebar?: {
-    orderBy?: "title" | "path";
+    orderBy?: 'title' | 'path';
   };
   showToc?: boolean;
   showHero?: boolean;
@@ -65,7 +65,7 @@ export interface SiteConfig {
 
 export interface ThemeConfig {
   theme?: string; // name of the official theme to use
-  defaultMode?: "light" | "dark" | "system";
+  defaultMode?: 'light' | 'dark' | 'system';
   showModeSwitch?: boolean;
 }
 
@@ -75,7 +75,7 @@ export interface SiteAlias {
 }
 
 export interface DashboardLink extends NavLink {
-  type: "guide" | "discord" | "announcement" | "demo";
+  type: 'guide' | 'discord' | 'announcement' | 'demo';
 }
 
 export interface AppNavConfig extends NavConfig {
@@ -83,7 +83,7 @@ export interface AppNavConfig extends NavConfig {
 }
 
 export interface AppConfig extends SiteConfig {
-  product: "flowershow" | "datahub";
+  product: 'flowershow' | 'datahub';
   logo: string;
   favicon: string;
   thumbnail: string;

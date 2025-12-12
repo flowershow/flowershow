@@ -1,6 +1,6 @@
-"use server";
-import prisma from "@/server/db";
-import { getSession } from "@/server/auth";
+'use server';
+import { getSession } from '@/server/auth';
+import prisma from '@/server/db';
 
 export const editUser = async (
   formData: FormData,
@@ -10,7 +10,7 @@ export const editUser = async (
   const session = await getSession();
   if (!session?.user.id) {
     return {
-      error: "Not authenticated",
+      error: 'Not authenticated',
     };
   }
   const value = formData.get(key) as string;
@@ -26,7 +26,7 @@ export const editUser = async (
     });
     return response;
   } catch (error: any) {
-    if (error.code === "P2002") {
+    if (error.code === 'P2002') {
       return {
         error: `This ${key} is already in use`,
       };

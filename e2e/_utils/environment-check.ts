@@ -1,27 +1,27 @@
-import { exec as execCallback } from "child_process";
-import { promisify } from "util";
+import { exec as execCallback } from 'child_process';
+import { promisify } from 'util';
 
 const exec = promisify(execCallback);
 
 export default async function environmentSetupCheck() {
   if (!process.env.GH_E2E_TEST_ACCOUNT) {
     throw new Error(
-      "❌ GH_E2E_TEST_ACCOUNT not found. Set it to the name of the GitHub account/org that you want to use in the tests (must have access to `flowershow/test` repository)",
+      '❌ GH_E2E_TEST_ACCOUNT not found. Set it to the name of the GitHub account/org that you want to use in the tests (must have access to `flowershow/test` repository)',
     );
   }
 
-  await checkServiceHealth("http://cloud.localhost:3000", "Next.js app");
-  await checkServiceHealth("http://localhost:8288", "Inngest");
+  await checkServiceHealth('http://cloud.localhost:3000', 'Next.js app');
+  await checkServiceHealth('http://localhost:8288', 'Inngest');
   // await checkServiceHealth("http://localhost:8108/health", "Typesense"); TODO
 
   if (!process.env.CI) {
     await checkServiceHealth(
-      "http://localhost:9000/minio/health/live",
-      "MinIO",
+      'http://localhost:9000/minio/health/live',
+      'MinIO',
     );
     await checkServiceHealth(
-      "http://localhost:8787/health",
-      "Cloudflare worker",
+      'http://localhost:8787/health',
+      'Cloudflare worker',
     );
   }
 
@@ -31,7 +31,7 @@ export default async function environmentSetupCheck() {
     );
     if (!stdout.trim()) {
       throw new Error(
-        "Stripe CLI webhook forwarding is not running. Please run: stripe listen --forward-to localhost:3000/api/stripe/webhook",
+        'Stripe CLI webhook forwarding is not running. Please run: stripe listen --forward-to localhost:3000/api/stripe/webhook',
       );
     }
     console.log(
@@ -39,9 +39,9 @@ export default async function environmentSetupCheck() {
     );
   } catch (error: unknown) {
     // If exec fails with a non-zero exit code (command not found or no process found)
-    if (error instanceof Error && "code" in error && error.code === 1) {
+    if (error instanceof Error && 'code' in error && error.code === 1) {
       throw new Error(
-        "Stripe CLI webhook forwarding is not running. Please run: stripe listen --forward-to localhost:3000/api/stripe/webhook",
+        'Stripe CLI webhook forwarding is not running. Please run: stripe listen --forward-to localhost:3000/api/stripe/webhook',
       );
     }
     throw error;

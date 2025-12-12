@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useId, useState, forwardRef, InputHTMLAttributes } from "react";
-import { Eye, EyeOff } from "lucide-react";
-import clsx from "clsx";
+import clsx from 'clsx';
+import { Eye, EyeOff } from 'lucide-react';
+import { forwardRef, InputHTMLAttributes, useId, useState } from 'react';
 
-type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
+type Props = Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> & {
   label?: string;
   helpText?: string;
   error?: string;
@@ -13,7 +13,7 @@ type Props = Omit<InputHTMLAttributes<HTMLInputElement>, "type"> & {
 export const PasswordInput = forwardRef<HTMLInputElement, Props>(
   (
     {
-      label = "Password",
+      label = 'Password',
       required = true,
       disabled,
       helpText,
@@ -42,7 +42,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, Props>(
             <input
               id={id}
               ref={ref}
-              type={show ? "text" : "password"}
+              type={show ? 'text' : 'password'}
               required={required}
               name="password"
               autoComplete="new-password"
@@ -50,14 +50,14 @@ export const PasswordInput = forwardRef<HTMLInputElement, Props>(
               spellCheck={false}
               disabled={disabled}
               className={clsx(
-                "h-10 w-full rounded-md border border-stone-300 pr-10 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500",
+                'h-10 w-full rounded-md border border-stone-300 pr-10 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500',
                 error &&
-                  "border-red-400 focus:border-red-500 focus:ring-red-500",
+                  'border-red-400 focus:border-red-500 focus:ring-red-500',
                 className,
               )}
               aria-invalid={!!error}
               aria-describedby={
-                [helpId, errId].filter(Boolean).join(" ") || undefined
+                [helpId, errId].filter(Boolean).join(' ') || undefined
               }
               {...props}
             />
@@ -67,7 +67,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, Props>(
                 type="button"
                 onClick={() => setShow((s) => !s)}
                 className="absolute inset-y-0 right-0 m-2 inline-flex items-center rounded p-1 text-stone-500 hover:text-stone-800"
-                aria-label={show ? "Hide password" : "Show password"}
+                aria-label={show ? 'Hide password' : 'Show password'}
                 aria-pressed={show}
               >
                 {show ? (
@@ -104,4 +104,4 @@ export const PasswordInput = forwardRef<HTMLInputElement, Props>(
     );
   },
 );
-PasswordInput.displayName = "PasswordInput";
+PasswordInput.displayName = 'PasswordInput';

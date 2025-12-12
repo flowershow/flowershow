@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import Giscus, { GiscusProps } from "@giscus/react";
+import Giscus, { GiscusProps } from '@giscus/react';
 
-type CommentsProps = Partial<Omit<GiscusProps, "loading">>;
+type CommentsProps = Partial<Omit<GiscusProps, 'loading'>>;
 
 export default function Comments({
   repo,
@@ -10,14 +10,14 @@ export default function Comments({
   host,
   category,
   categoryId,
-  mapping = "pathname",
+  mapping = 'pathname',
   term,
-  theme = "light",
-  strict = "1",
-  reactionsEnabled = "1",
-  emitMetadata = "0",
-  inputPosition = "top",
-  lang = "en",
+  theme = 'light',
+  strict = '1',
+  reactionsEnabled = '1',
+  emitMetadata = '0',
+  inputPosition = 'top',
+  lang = 'en',
 }: CommentsProps) {
   if (!repo || !repoId || !categoryId) {
     return null;

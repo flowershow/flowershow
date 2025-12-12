@@ -1,6 +1,6 @@
-import "server-only";
-import { Prisma } from "@prisma/client";
-import prisma from "@/server/db";
+import 'server-only';
+import { Prisma } from '@prisma/client';
+import prisma from '@/server/db';
 
 export const internalSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   id: true,

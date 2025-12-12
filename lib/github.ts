@@ -1,20 +1,20 @@
-import { env } from "@/env.mjs";
-import { TRPCError } from "@trpc/server";
+import { TRPCError } from '@trpc/server';
+import { env } from '@/env.mjs';
 
-const githubAPIBaseURL = "https://api.github.com";
-const githubAPIVersion = "2022-11-28";
+const githubAPIBaseURL = 'https://api.github.com';
+const githubAPIVersion = '2022-11-28';
 
-type Accept = "application/vnd.github+json" | "application/vnd.github.raw+json";
+type Accept = 'application/vnd.github+json' | 'application/vnd.github.raw+json';
 
 const makeGitHubHeaders = ({
   accessToken,
-  accept = "application/vnd.github+json",
+  accept = 'application/vnd.github+json',
 }: {
   accessToken?: string;
   accept?: Accept;
 }): HeadersInit => {
   const headers: Record<string, string> = {
-    "X-GitHub-Api-Version": githubAPIVersion,
+    'X-GitHub-Api-Version': githubAPIVersion,
     Accept: accept,
   };
 
@@ -37,7 +37,7 @@ const githubFetch = async ({
   accessToken?: string;
   cacheOptions?: { next?: any; cache?: RequestCache };
   accept?: Accept;
-  method?: "GET" | "POST" | "PUT" | "DELETE";
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: any;
 }) => {
   const response = await fetch(`${githubAPIBaseURL}${url}`, {
@@ -51,26 +51,26 @@ const githubFetch = async ({
     switch (statusCode) {
       case 401:
         throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: "Invalid GitHub access token. Signing out...",
+          code: 'UNAUTHORIZED',
+          message: 'Invalid GitHub access token. Signing out...',
           cause: `${response.json()}`,
         });
       case 403:
         throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Access to the GitHub resource is forbidden",
+          code: 'FORBIDDEN',
+          message: 'Access to the GitHub resource is forbidden',
           cause: `${response.json()}`,
         });
       case 404:
         throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "GitHub resource not found",
+          code: 'NOT_FOUND',
+          message: 'GitHub resource not found',
           cause: `${response.json()}`,
         });
       default:
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to fetch from GitHub",
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to fetch from GitHub',
           cause: `${response.json()}`,
         });
     }
@@ -89,7 +89,7 @@ export const githubJsonFetch = async <T>({
   queryParams?: Record<string, string>;
   accessToken?: string;
   cacheOptions?: { next?: any; cache?: RequestCache };
-  method?: "GET" | "POST" | "PUT" | "DELETE";
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
   body?: any;
 }) => {
   const response = await githubFetch({
@@ -115,7 +115,7 @@ const githubRawFetch = async ({
     url,
     accessToken,
     cacheOptions,
-    accept: "application/vnd.github.raw+json",
+    accept: 'application/vnd.github.raw+json',
   });
 
   return await response.blob();
@@ -128,7 +128,7 @@ export const fetchGitHubScopes = async (accessToken: string) => {
     url: `/user/orgs`,
     accessToken,
     cacheOptions: {
-      cache: "no-store",
+      cache: 'no-store',
     },
   });
 
@@ -138,27 +138,27 @@ export const fetchGitHubScopes = async (accessToken: string) => {
     url: `/user`,
     accessToken,
     cacheOptions: {
-      cache: "no-store",
+      cache: 'no-store',
     },
   });
 
   // Combining both orgs and the user's GitHub login as selectable scopes.
   return [
-    { login: user.login, type: "User", avatar_url: user.avatar_url },
+    { login: user.login, type: 'User', avatar_url: user.avatar_url },
   ].concat(
     orgs.map((org) => ({
       login: org.login,
-      type: "Organization",
+      type: 'Organization',
       avatar_url: org.avatar_url,
     })),
   ) as GitHubScope[];
 };
 
 export const fetchGitHubScopeRepositories = async ({
-  scope = "self",
+  scope = 'self',
   accessToken,
 }: {
-  scope: "self" | string; // self means the user's own repositories
+  scope: 'self' | string; // self means the user's own repositories
   accessToken: string;
 }) => {
   let page = 1;
@@ -167,24 +167,24 @@ export const fetchGitHubScopeRepositories = async ({
   let scopeReposUrl: string;
 
   const urlParams = new URLSearchParams({
-    per_page: "100",
+    per_page: '100',
   });
 
-  if (scope === "self") {
+  if (scope === 'self') {
     // https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-repositories-for-the-authenticated-user
     scopeReposUrl = `/user/repos`;
-    urlParams.set("affiliation", "owner,collaborator");
+    urlParams.set('affiliation', 'owner,collaborator');
   } else {
     // https://docs.github.com/en/rest/repos/repos?apiVersion=2022-11-28#list-organization-repositories
     scopeReposUrl = `/orgs/${scope}/repos`;
   }
   do {
-    urlParams.set("page", `${page}`);
+    urlParams.set('page', `${page}`);
     const response = await githubFetch({
       url: `${scopeReposUrl}?${urlParams.toString()}`,
       accessToken,
       cacheOptions: {
-        cache: "no-store",
+        cache: 'no-store',
       },
     });
     const repos = (await response.json()) as GitHubAPIRepository[];
@@ -198,7 +198,7 @@ export const fetchGitHubScopeRepositories = async ({
       })),
     );
 
-    const linkHeader = response.headers.get("link");
+    const linkHeader = response.headers.get('link');
 
     hasNextPage = linkHeader ? linkHeader.includes('rel="next"') : false;
     page++;
@@ -222,7 +222,7 @@ export const fetchGitHubRepoTree = async ({
     url: `/repos/${ghRepository}/git/trees/${ghBranch}?recursive=1`,
     accessToken: accessToken,
     cacheOptions: {
-      cache: "no-store",
+      cache: 'no-store',
     },
   });
 };
@@ -244,7 +244,7 @@ export const fetchGitHubFile = async ({
       url: `/repos/${ghRepository}/contents/${path}?ref=${ghBranch}`,
       accessToken: accessToken,
       cacheOptions: {
-        cache: "no-store",
+        cache: 'no-store',
       },
     });
   } catch (error) {
@@ -268,7 +268,7 @@ export const fetchGitHubFileRaw = async ({
     url: `/repos/${ghRepository}/git/blobs/${file_sha}`,
     accessToken: accessToken,
     cacheOptions: {
-      cache: "no-store",
+      cache: 'no-store',
     },
   });
 };
@@ -288,12 +288,12 @@ export const checkIfBranchExists = async ({
       url: `/repos/${ghRepository}/branches/${ghBranch}`,
       accessToken: accessToken,
       cacheOptions: {
-        cache: "no-store",
+        cache: 'no-store',
       },
     });
   } catch (error) {
     if (error instanceof TRPCError) {
-      if (error.code === "NOT_FOUND") {
+      if (error.code === 'NOT_FOUND') {
         return false;
       }
       throw new TRPCError(error);
@@ -354,13 +354,13 @@ export const createGitHubRepoWebhook = async ({
     // https://docs.github.com/en/rest/repos/webhooks?apiVersion=2022-11-28#create-a-repository-webhook
     url: `/repos/${ghRepository}/hooks`,
     accessToken: accessToken,
-    method: "POST",
+    method: 'POST',
     body: {
-      name: "web",
+      name: 'web',
       active: true,
-      events: ["push"],
+      events: ['push'],
       config: {
-        content_type: "json",
+        content_type: 'json',
         url: webhookUrl,
         secret: env.GH_WEBHOOK_SECRET,
       },
@@ -381,7 +381,7 @@ export const deleteGitHubRepoWebhook = async ({
     // https://docs.github.com/en/rest/repos/webhooks?apiVersion=2022-11-28#delete-a-repository-webhook
     url: `/repos/${ghRepository}/hooks/${webhook_id}`,
     accessToken: accessToken,
-    method: "DELETE",
+    method: 'DELETE',
   });
 };
 
@@ -407,7 +407,7 @@ export const submitGitHubIssue = async ({
     // https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28#create-an-issue
     url: `/repos/${ghRepository}/issues`,
     accessToken: accessToken,
-    method: "POST",
+    method: 'POST',
     body: {
       title,
       body,
@@ -430,7 +430,7 @@ export const getFileLastCommitTimestamp = async ({
   const queryParams = new URLSearchParams({
     sha: branch,
     path: file_path,
-    per_page: "1",
+    per_page: '1',
   });
   const commits = await githubJsonFetch<GitHubAPICommit[]>({
     // https://docs.github.com/en/rest/commits/commits?apiVersion=2022-11-28#list-commits
@@ -446,8 +446,8 @@ export const getFileLastCommitTimestamp = async ({
 };
 
 export interface GitHubAPIFileContent {
-  type: "file";
-  encoding: "base64";
+  type: 'file';
+  encoding: 'base64';
   size: number;
   name: string;
   path: string;
@@ -469,7 +469,7 @@ export interface GitHubAPIRepoTree {
 export interface GitHubAPIRepoTreeItem {
   path: string;
   mode: string;
-  type: "blob" | "tree";
+  type: 'blob' | 'tree';
   size?: number;
   sha: string;
   url: string;
@@ -546,7 +546,7 @@ interface GitHubAPICommit {
 
 interface GitHubScope {
   login: string;
-  type: "user" | "organization";
+  type: 'user' | 'organization';
   avatar_url: string;
 }
 

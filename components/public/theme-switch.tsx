@@ -1,33 +1,33 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { MonitorIcon, SunIcon, MoonIcon } from "lucide-react";
-import { THEME_PREFERENCE_STORAGE_KEY } from "@/lib/const";
+import { MonitorIcon, MoonIcon, SunIcon } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { THEME_PREFERENCE_STORAGE_KEY } from '@/lib/const';
 
-type Theme = "light" | "dark" | "system";
-const themes: Theme[] = ["light", "dark", "system"];
+type Theme = 'light' | 'dark' | 'system';
+const themes: Theme[] = ['light', 'dark', 'system'];
 
-function resolve(theme: Theme): "light" | "dark" {
-  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-  return theme === "system" ? (prefersDark ? "dark" : "light") : theme;
+function resolve(theme: Theme): 'light' | 'dark' {
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  return theme === 'system' ? (prefersDark ? 'dark' : 'light') : theme;
 }
 
 function applyTheme(theme: Theme) {
   const resolved = resolve(theme);
-  document.documentElement.setAttribute("data-theme", resolved);
+  document.documentElement.setAttribute('data-theme', resolved);
 }
 
 export default function ThemeSwitch() {
-  const [theme, setTheme] = useState<Theme>("system");
+  const [theme, setTheme] = useState<Theme>('system');
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
     try {
       const initial = document.documentElement.getAttribute(
-        "data-theme",
+        'data-theme',
       ) as Theme | null;
-      setTheme(initial || "light");
+      setTheme(initial || 'light');
     } catch (_) {
       // ok
     }
@@ -46,12 +46,12 @@ export default function ThemeSwitch() {
 
   // Track OS changes when in "system"
   useEffect(() => {
-    if (theme !== "system") return;
-    const mql = window.matchMedia("(prefers-color-scheme: dark)");
-    const onChange = () => applyTheme("system");
-    mql.addEventListener?.("change", onChange);
+    if (theme !== 'system') return;
+    const mql = window.matchMedia('(prefers-color-scheme: dark)');
+    const onChange = () => applyTheme('system');
+    mql.addEventListener?.('change', onChange);
     return () => {
-      mql.removeEventListener?.("change", onChange);
+      mql.removeEventListener?.('change', onChange);
     };
   }, [theme]);
 
@@ -61,14 +61,14 @@ export default function ThemeSwitch() {
   };
 
   const Icon =
-    theme === "light" ? SunIcon : theme === "dark" ? MoonIcon : MonitorIcon;
+    theme === 'light' ? SunIcon : theme === 'dark' ? MoonIcon : MonitorIcon;
 
   return (
     <button
       className="theme-switch"
       onClick={switchTheme}
-      aria-label={mounted ? `Switch theme (current: ${theme})` : "Switch theme"}
-      title={mounted ? `Theme: ${theme}` : "Switch theme"}
+      aria-label={mounted ? `Switch theme (current: ${theme})` : 'Switch theme'}
+      title={mounted ? `Theme: ${theme}` : 'Switch theme'}
     >
       {mounted ? (
         <Icon className="theme-switch-icon" />

@@ -1,16 +1,16 @@
-"use client";
-import { useEffect, useMemo, useState } from "react";
-import { cn } from "@/lib/utils";
-import { toast } from "sonner";
-import { api } from "@/trpc/react";
-import { signOut } from "next-auth/react";
-import LoadingDots from "@/components/icons/loading-dots";
-import { ExternalLinkIcon } from "lucide-react";
-import { Switch } from "@headlessui/react";
-import clsx from "clsx";
-import { PasswordInput } from "../password-input";
+'use client';
+import { Switch } from '@headlessui/react';
+import clsx from 'clsx';
+import { ExternalLinkIcon } from 'lucide-react';
+import { signOut } from 'next-auth/react';
+import { useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
+import LoadingDots from '@/components/icons/loading-dots';
+import { cn } from '@/lib/utils';
+import { api } from '@/trpc/react';
+import { PasswordInput } from '../password-input';
 
-type PrivacyMode = "PUBLIC" | "PASSWORD";
+type PrivacyMode = 'PUBLIC' | 'PASSWORD';
 
 export default function SitePasswordProtectionForm({
   siteId,
@@ -25,8 +25,8 @@ export default function SitePasswordProtectionForm({
     refetch,
   } = api.site.getById.useQuery({ id: siteId });
 
-  const [privacyMode, setPrivacyMode] = useState<PrivacyMode>("PUBLIC");
-  const [newPassword, setNewPassword] = useState("");
+  const [privacyMode, setPrivacyMode] = useState<PrivacyMode>('PUBLIC');
+  const [newPassword, setNewPassword] = useState('');
 
   useEffect(() => {
     if (site?.privacyMode) {
@@ -34,7 +34,7 @@ export default function SitePasswordProtectionForm({
     }
   }, [site?.privacyMode]);
 
-  const isProtectionOn = privacyMode === "PASSWORD";
+  const isProtectionOn = privacyMode === 'PASSWORD';
   const dbPrivacyMode = site?.privacyMode as PrivacyMode | undefined;
 
   const passwordIsValid = useMemo(() => {
@@ -56,13 +56,13 @@ export default function SitePasswordProtectionForm({
 
   const setPasswordProtection = api.site.setPasswordProtection.useMutation({
     onSuccess: async () => {
-      toast.success("Password protection updated.");
-      setNewPassword("");
+      toast.success('Password protection updated.');
+      setNewPassword('');
       await refetch();
     },
     onError: (error) => {
       toast.error(error.message);
-      if ((error as any).data?.code === "UNAUTHORIZED") {
+      if ((error as any).data?.code === 'UNAUTHORIZED') {
         setTimeout(() => signOut(), 3000);
       }
     },
@@ -73,7 +73,7 @@ export default function SitePasswordProtectionForm({
 
   function handleProtectionToggle(value: boolean) {
     if (disabled) return;
-    setPrivacyMode(value ? "PASSWORD" : "PUBLIC");
+    setPrivacyMode(value ? 'PASSWORD' : 'PUBLIC');
   }
 
   function handlePasswordChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -86,14 +86,14 @@ export default function SitePasswordProtectionForm({
 
     if (!site) return;
 
-    if (privacyMode === "PASSWORD" && !passwordIsValid) {
+    if (privacyMode === 'PASSWORD' && !passwordIsValid) {
       toast.error(
-        "Set a valid password first (8–128 characters, no leading/trailing spaces).",
+        'Set a valid password first (8–128 characters, no leading/trailing spaces).',
       );
     } else {
       setPasswordProtection.mutate({
         id: site.id,
-        enabled: privacyMode === "PASSWORD",
+        enabled: privacyMode === 'PASSWORD',
         password: newPassword || undefined,
       });
     }
@@ -102,8 +102,8 @@ export default function SitePasswordProtectionForm({
     <form
       onSubmit={handleSubmit}
       className={cn(
-        "isolate rounded-lg border border-stone-200",
-        disabled ? "bg-stone-50" : "bg-white",
+        'isolate rounded-lg border border-stone-200',
+        disabled ? 'bg-stone-50' : 'bg-white',
       )}
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
@@ -137,17 +137,17 @@ export default function SitePasswordProtectionForm({
             checked={isProtectionOn}
             onChange={handleProtectionToggle}
             className={clsx(
-              isProtectionOn ? "bg-indigo-600" : "bg-gray-200",
-              "relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2",
-              inputDisabled && "cursor-auto",
+              isProtectionOn ? 'bg-indigo-600' : 'bg-gray-200',
+              'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2',
+              inputDisabled && 'cursor-auto',
             )}
           >
             <span className="sr-only">Enable password protection</span>
             <span
               aria-hidden="true"
               className={clsx(
-                isProtectionOn ? "translate-x-5" : "translate-x-0",
-                "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out",
+                isProtectionOn ? 'translate-x-5' : 'translate-x-0',
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
               )}
             />
           </Switch>
@@ -164,7 +164,7 @@ export default function SitePasswordProtectionForm({
             label="New password"
             minLength={8}
             maxLength={128}
-            required={dbPrivacyMode === "PUBLIC" && privacyMode === "PASSWORD"}
+            required={dbPrivacyMode === 'PUBLIC' && privacyMode === 'PASSWORD'}
             pattern="^(?=.{8,128}$)[!-~](?:[ -~]*[!-~])?$"
             helpText="8–128 printable characters. No leading/trailing spaces. Note: We never store plaintext. You won’t be able to “view” it later — only replace it."
             onChange={handlePasswordChange}
@@ -176,7 +176,7 @@ export default function SitePasswordProtectionForm({
 
       <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
         <p className="w-full text-sm text-stone-500">
-          Learn more about{" "}
+          Learn more about{' '}
           <a className="underline" href="#">
             Password protection <ExternalLinkIcon className="inline h-4" />
           </a>
@@ -187,10 +187,10 @@ export default function SitePasswordProtectionForm({
           <button
             type="submit"
             className={cn(
-              "flex h-8 w-32 shrink-0 items-center justify-center space-x-2 rounded-md border px-2 py-1 text-sm transition-all focus:outline-none sm:h-10",
+              'flex h-8 w-32 shrink-0 items-center justify-center space-x-2 rounded-md border px-2 py-1 text-sm transition-all focus:outline-none sm:h-10',
               !canSave || pending
-                ? "cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400"
-                : "border-black bg-black text-white hover:bg-white hover:text-black",
+                ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
+                : 'border-black bg-black text-white hover:bg-white hover:text-black',
             )}
             disabled={!canSave || pending}
           >

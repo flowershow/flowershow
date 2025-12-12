@@ -1,11 +1,11 @@
+import clsx from 'clsx';
 import {
   fontBrand,
   fontDashboardBody,
   fontDashboardHeading,
-} from "@/styles/fonts";
-import clsx from "clsx";
+} from '@/styles/fonts';
 
-import "@/styles/dashboard.css";
+import '@/styles/dashboard.css';
 
 // TODO this is a workaround for having a root not-found route
 // with multiple root layouts
@@ -14,7 +14,7 @@ import "@/styles/dashboard.css";
 // Note: it is not triggered automatically as a regular not-found page
 // but we rewrite to it in the middleware
 export const metadata = {
-  title: "Not Found",
+  title: 'Not Found',
 };
 
 export default function RootLayout({

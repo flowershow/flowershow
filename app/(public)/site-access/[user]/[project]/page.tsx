@@ -1,16 +1,16 @@
-import { getConfig } from "@/lib/app-config";
-import { SiteLoginForm } from "./site-login-form";
-import Image from "next/image";
-import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
-import { api } from "@/trpc/server";
-import { getSiteUrlPath, getSiteUrl } from "@/lib/get-site-url";
-import { cookies } from "next/headers";
-import { jwtVerify } from "jose";
-import { notFound, redirect } from "next/navigation";
-import { SITE_ACCESS_COOKIE_NAME } from "@/lib/const";
-import { siteKeyBytes } from "@/lib/site-hmac-key";
-import { getSite } from "@/lib/get-site";
-import { internalGetSiteById } from "@/lib/db/internal";
+import { jwtVerify } from 'jose';
+import { cookies } from 'next/headers';
+import Image from 'next/image';
+import { notFound, redirect } from 'next/navigation';
+import { getConfig } from '@/lib/app-config';
+import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
+import { internalGetSiteById } from '@/lib/db/internal';
+import { getSite } from '@/lib/get-site';
+import { getSiteUrl, getSiteUrlPath } from '@/lib/get-site-url';
+import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { siteKeyBytes } from '@/lib/site-hmac-key';
+import { api } from '@/trpc/server';
+import { SiteLoginForm } from './site-login-form';
 
 const config = getConfig();
 
@@ -28,7 +28,7 @@ export default async function LoginPage(props: {
 
   const site = await getSite(userName, projectName);
 
-  if (site.privacyMode === "PUBLIC") {
+  if (site.privacyMode === 'PUBLIC') {
     // TODO redirect to returnTo
     redirect(getSiteUrl(site));
   }
@@ -47,7 +47,7 @@ export default async function LoginPage(props: {
       // TODO redirect to returnTo
       redirect(getSiteUrl(site));
     } catch (_) {
-      console.log("Not authenticated");
+      console.log('Not authenticated');
       // display the form
     }
   }

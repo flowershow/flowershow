@@ -1,42 +1,45 @@
+import { NextResponse } from 'next/server';
 import {
   getConfigResponse,
   getDomainResponse,
   verifyDomain,
-} from "@/lib/domains";
-import { DomainVerificationStatusProps } from "@/lib/types";
-import { NextResponse } from "next/server";
+} from '@/lib/domains';
+import { DomainVerificationStatusProps } from '@/lib/types';
 
-export async function GET(_req: Request, props: { params: Promise<{ domain: string }> }) {
+export async function GET(
+  _req: Request,
+  props: { params: Promise<{ domain: string }> },
+) {
   const params = await props.params;
   const domain = decodeURIComponent(params.domain);
-  let status: DomainVerificationStatusProps = "Valid Configuration";
+  let status: DomainVerificationStatusProps = 'Valid Configuration';
 
   const [domainJson, configJson] = await Promise.all([
     getDomainResponse(domain),
     getConfigResponse(domain),
   ]);
 
-  if (domainJson?.error?.code === "not_found") {
+  if (domainJson?.error?.code === 'not_found') {
     // domain not found on Vercel project
-    status = "Domain Not Found";
+    status = 'Domain Not Found';
 
     // unknown error
   } else if (domainJson.error) {
-    status = "Unknown Error";
+    status = 'Unknown Error';
 
     // if domain is not verified, we try to verify now
   } else if (!domainJson.verified) {
-    status = "Pending Verification";
+    status = 'Pending Verification';
     const verificationJson = await verifyDomain(domain);
 
     // domain was just verified
     if (verificationJson && verificationJson.verified) {
-      status = "Valid Configuration";
+      status = 'Valid Configuration';
     }
   } else if (configJson.misconfigured) {
-    status = "Invalid Configuration";
+    status = 'Invalid Configuration';
   } else {
-    status = "Valid Configuration";
+    status = 'Valid Configuration';
   }
 
   const response = NextResponse.json({
@@ -45,9 +48,9 @@ export async function GET(_req: Request, props: { params: Promise<{ domain: stri
   });
 
   // Prevent caching at all levels - CDN, Vercel, and browser
-  response.headers.set("Cache-Control", "no-store, max-age=0");
-  response.headers.set("CDN-Cache-Control", "no-store, max-age=0");
-  response.headers.set("Vercel-CDN-Cache-Control", "no-store, max-age=0");
+  response.headers.set('Cache-Control', 'no-store, max-age=0');
+  response.headers.set('CDN-Cache-Control', 'no-store, max-age=0');
+  response.headers.set('Vercel-CDN-Cache-Control', 'no-store, max-age=0');
 
   return response;
 }

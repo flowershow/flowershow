@@ -1,34 +1,34 @@
-"use client";
-import Image from "next/image";
-import Link from "next/link";
-import { useEffect, useRef } from "react";
-import { getConfig } from "@/lib/app-config";
+'use client';
+import Image from 'next/image';
+import Link from 'next/link';
+import { useEffect, useRef } from 'react';
+import { getConfig } from '@/lib/app-config';
 
 const config = getConfig();
 
 const buttonStyles: React.CSSProperties = {
-  position: "fixed",
+  position: 'fixed',
   bottom: 24,
   right: 32,
   zIndex: 100,
-  display: "flex",
-  alignItems: "center",
-  backgroundColor: "white",
-  padding: "0.5rem 0.75rem",
+  display: 'flex',
+  alignItems: 'center',
+  backgroundColor: 'white',
+  padding: '0.5rem 0.75rem',
   borderRadius: 40,
-  boxShadow: "0 8px 20px 0 rgba(0,0,0,.08)",
+  boxShadow: '0 8px 20px 0 rgba(0,0,0,.08)',
 };
 
 const spanStyles: React.CSSProperties = {
-  fontSize: "0.875rem",
+  fontSize: '0.875rem',
   fontWeight: 500,
-  fontFamily: "var(--font-body)",
-  color: "#18181B",
-  letterSpacing: "-0.025em",
+  fontFamily: 'var(--font-body)',
+  color: '#18181B',
+  letterSpacing: '-0.025em',
 };
 
 const logoStyles = {
-  margin: "0 0.5rem",
+  margin: '0 0.5rem',
 };
 
 export default function BuiltWithFloatingButton() {
@@ -39,30 +39,30 @@ export default function BuiltWithFloatingButton() {
     const btn = buttonRef.current;
     if (btn) {
       const s = btn.style;
-      s.setProperty("position", "fixed", "important");
-      s.setProperty("bottom", "24px", "important");
-      s.setProperty("right", "32px", "important");
-      s.setProperty("z-index", "100", "important");
-      s.setProperty("display", "flex", "important");
-      s.setProperty("align-items", "center", "important");
-      s.setProperty("background-color", "white", "important");
-      s.setProperty("padding", "0.5rem 0.75rem", "important");
-      s.setProperty("border-radius", "40px", "important");
-      s.setProperty("box-shadow", "0 8px 20px 0 rgba(0,0,0,.08)", "important");
-      const spans = btn.getElementsByTagName("span");
+      s.setProperty('position', 'fixed', 'important');
+      s.setProperty('bottom', '24px', 'important');
+      s.setProperty('right', '32px', 'important');
+      s.setProperty('z-index', '100', 'important');
+      s.setProperty('display', 'flex', 'important');
+      s.setProperty('align-items', 'center', 'important');
+      s.setProperty('background-color', 'white', 'important');
+      s.setProperty('padding', '0.5rem 0.75rem', 'important');
+      s.setProperty('border-radius', '40px', 'important');
+      s.setProperty('box-shadow', '0 8px 20px 0 rgba(0,0,0,.08)', 'important');
+      const spans = btn.getElementsByTagName('span');
       for (const spanEl of spans) {
         spanEl.style.setProperty(
-          "font-family",
-          "var(--next-font-brand)",
-          "important",
+          'font-family',
+          'var(--next-font-brand)',
+          'important',
         );
-        spanEl.style.setProperty("font-size", "0.875rem", "important");
-        spanEl.style.setProperty("font-weight", "500", "important");
-        spanEl.style.setProperty("color", "#18181B", "important");
-        spanEl.style.setProperty("letter-spacing", "-0.025em", "important");
+        spanEl.style.setProperty('font-size', '0.875rem', 'important');
+        spanEl.style.setProperty('font-weight', '500', 'important');
+        spanEl.style.setProperty('color', '#18181B', 'important');
+        spanEl.style.setProperty('letter-spacing', '-0.025em', 'important');
       }
-      const logo = btn.getElementsByTagName("img").item(0)!;
-      logo.style.setProperty("margin", "0 0.5rem", "important");
+      const logo = btn.getElementsByTagName('img').item(0)!;
+      logo.style.setProperty('margin', '0 0.5rem', 'important');
     }
   }, []);
   return (

@@ -524,7 +524,7 @@
   }
 
   .page-hero-image {
-    aspect-ratio: 3/2;
+    aspect-ratio: 3 / 2;
     width: 100%;
     object-fit: cover;
     background-color: oklch(from var(--color-background) calc(l - 0.025) c h);

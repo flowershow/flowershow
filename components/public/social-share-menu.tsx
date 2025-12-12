@@ -1,20 +1,20 @@
-"use client";
-import Link from "next/link";
-import { Fragment } from "react";
+'use client';
 import {
   Menu,
   MenuButton,
   MenuItem,
   MenuItems,
   Transition,
-} from "@headlessui/react";
-import { LinkIcon, ShareIcon } from "lucide-react";
-import { transformObjectToParams } from "@/lib/transform-object-to-params";
-import { socialIcons } from "@/components/public/social-icons";
-import { toast } from "sonner";
+} from '@headlessui/react';
+import { LinkIcon, ShareIcon } from 'lucide-react';
+import Link from 'next/link';
+import { Fragment } from 'react';
+import { toast } from 'sonner';
+import { socialIcons } from '@/components/public/social-icons';
+import { transformObjectToParams } from '@/lib/transform-object-to-params';
 
 function classNames(...classes) {
-  return classes.filter(Boolean).join(" ");
+  return classes.filter(Boolean).join(' ');
 }
 
 export default function SocialShareMenu({
@@ -25,59 +25,59 @@ export default function SocialShareMenu({
   const onCopyClick = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-      toast.success("Copied to clipboard!");
+      toast.success('Copied to clipboard!');
     } catch (err) {
-      toast.error("Failed to copy");
+      toast.error('Failed to copy');
     }
   };
 
   const onShareClick = (link, text) => (e) => {
     e.preventDefault();
-    window.open(link, text, "width=650,height=650");
+    window.open(link, text, 'width=650,height=650');
   };
 
   const twitterShareLink =
-    "https://twitter.com/intent/tweet" +
+    'https://twitter.com/intent/tweet' +
     transformObjectToParams({
       url: window.location.href,
       text: shareTitle,
-      via: "datopian",
+      via: 'datopian',
       // hashtags: categories.join(',') // TODO
     });
 
   const facebookShareLink =
-    "https://www.facebook.com/sharer/sharer.php" +
+    'https://www.facebook.com/sharer/sharer.php' +
     transformObjectToParams({
       u: window.location.href,
       quote: shareTitle,
     });
 
   const linkedInShareLink =
-    "https://www.linkedin.com/sharing/share-offsite" +
+    'https://www.linkedin.com/sharing/share-offsite' +
     transformObjectToParams({
       url: window.location.href,
       title: shareTitle,
-      source: "datopian",
+      source: 'datopian',
     });
 
   const shareOptions = [
     {
-      name: "Share on Twitter",
+      name: 'Share on Twitter',
       icon: socialIcons.twitter,
       href: twitterShareLink,
-      onClick: onShareClick(twitterShareLink, "Share on X"),
+      onClick: onShareClick(twitterShareLink, 'Share on X'),
     },
     {
-      name: "Share on LinkedIn",
+      name: 'Share on LinkedIn',
       icon: socialIcons.linkedin,
       href: linkedInShareLink,
-      onClick: onShareClick(linkedInShareLink, "Share on LinkedIn"),
+      onClick: onShareClick(linkedInShareLink, 'Share on LinkedIn'),
     },
     {
-      name: "Share on Facebook",
+      name: 'Share on Facebook',
       icon: socialIcons.facebook,
       href: facebookShareLink,
-      onClick: onShareClick(facebookShareLink, "Share on Facebook"),
+      onClick: onShareClick(facebookShareLink, 'Share on Facebook'),
     },
   ];
   return (
@@ -104,8 +104,8 @@ export default function SocialShareMenu({
                     <button
                       onClick={onCopyClick}
                       className={classNames(
-                        active && "text-primary-subtle",
-                        "group flex items-center px-4 py-2 text-sm",
+                        active && 'text-primary-subtle',
+                        'group flex items-center px-4 py-2 text-sm',
                       )}
                     >
                       <LinkIcon className="mr-3 h-5 w-5" aria-hidden="true" />
@@ -124,8 +124,8 @@ export default function SocialShareMenu({
                         target="_blank"
                         rel="noopener noreferrer"
                         className={classNames(
-                          active && "text-primary-subtle",
-                          "group flex items-center px-4 py-2 text-sm font-normal no-underline",
+                          active && 'text-primary-subtle',
+                          'group flex items-center px-4 py-2 text-sm font-normal no-underline',
                         )}
                       >
                         <option.icon

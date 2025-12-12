@@ -1,10 +1,10 @@
 export function getThemeUrl(theme: string): string | null {
   // for self-hosted community themes?
-  if (theme.startsWith("http")) {
+  if (theme.startsWith('http')) {
     return theme;
   }
 
-  const [name, version] = theme.split("@");
+  const [name, version] = theme.split('@');
 
   if (version) {
     return `https://cdn.jsdelivr.net/gh/flowershow/themes@${version}/${name}/theme.css`;

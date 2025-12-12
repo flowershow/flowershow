@@ -1,5 +1,5 @@
-import { env } from "@/env.mjs";
-import { EventSchemas, Inngest } from "inngest";
+import { EventSchemas, Inngest } from 'inngest';
+import { env } from '@/env.mjs';
 
 /* Types */
 interface SiteSync {
@@ -25,9 +25,9 @@ interface SiteDelete {
 
 /* Events */
 type Events = {
-  "site/sync": SiteSync;
-  "site/create": SiteCreate;
-  "site/delete": SiteDelete;
+  'site/sync': SiteSync;
+  'site/create': SiteCreate;
+  'site/delete': SiteDelete;
 };
 
 /* Client */

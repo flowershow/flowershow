@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React from "react";
-import Link from "next/link";
-import { Box, Typography } from "@mui/material";
-import { getWikiLinkValue, isWikiLink } from "@/lib/wiki-link";
-import { resolveWikiLinkToFilePath } from "@/lib/resolve-wiki-link";
-import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
+import { Box, Typography } from '@mui/material';
+import Link from 'next/link';
+import React from 'react';
+import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
+import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
 
 type Row = {
   path: string;
@@ -25,7 +25,7 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
   const rows = JSON.parse(props.rows) as Row[];
   const sitePrefix = props.sitePrefix;
   const customDomain = props.customDomain;
-  const order = props.order || ["file.name"];
+  const order = props.order || ['file.name'];
   const allSitePaths = props.allSitePaths
     ? (JSON.parse(props.allSitePaths) as string[])
     : [];
@@ -36,11 +36,11 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
         sx={{
           my: 2,
           p: 2,
-          textAlign: "center",
+          textAlign: 'center',
           border: 1,
-          borderColor: "divider",
+          borderColor: 'divider',
           borderRadius: 1,
-          bgcolor: "background.default",
+          bgcolor: 'background.default',
         }}
       >
         <Typography color="text.secondary">No results found</Typography>
@@ -49,12 +49,12 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
   }
 
   const getFieldValue = (row: Row, field: string): any => {
-    if (field === "file.name") {
-      const pathParts = row.path.split("/");
-      return pathParts[pathParts.length - 1]?.replace(/\.(md|mdx)$/, "") || "";
+    if (field === 'file.name') {
+      const pathParts = row.path.split('/');
+      return pathParts[pathParts.length - 1]?.replace(/\.(md|mdx)$/, '') || '';
     }
     // Check if this is a formula property
-    if (field.startsWith("formula.")) {
+    if (field.startsWith('formula.')) {
       const formulaName = field.substring(8); // Remove "formula." prefix
       return row.metadata?.__formulas?.[formulaName];
     }
@@ -63,9 +63,9 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
 
   const formatValue = (value: any): string => {
     if (value === null || value === undefined) {
-      return "";
+      return '';
     }
-    if (typeof value === "object") {
+    if (typeof value === 'object') {
       return JSON.stringify(value);
     }
     return String(value);
@@ -79,9 +79,9 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
     const value = getFieldValue(row, field);
 
     // Handle file.name as a link
-    if (field === "file.name") {
+    if (field === 'file.name') {
       const formattedValue = formatValue(value);
-      if (formattedValue === "") {
+      if (formattedValue === '') {
         return null;
       }
 
@@ -95,14 +95,14 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
         <Link
           href={linkUrl}
           style={{
-            color: "#1976d2",
-            textDecoration: "none",
+            color: '#1976d2',
+            textDecoration: 'none',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.textDecoration = "underline";
+            e.currentTarget.style.textDecoration = 'underline';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.textDecoration = "none";
+            e.currentTarget.style.textDecoration = 'none';
           }}
         >
           {formattedValue}
@@ -131,14 +131,14 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
         <Link
           href={urlPath}
           style={{
-            color: "#1976d2",
-            textDecoration: "none",
+            color: '#1976d2',
+            textDecoration: 'none',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.textDecoration = "underline";
+            e.currentTarget.style.textDecoration = 'underline';
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.textDecoration = "none";
+            e.currentTarget.style.textDecoration = 'none';
           }}
         >
           {target}
@@ -148,7 +148,7 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
 
     // Handle regular values
     const formattedValue = formatValue(value);
-    return formattedValue === "" ? null : formattedValue;
+    return formattedValue === '' ? null : formattedValue;
   };
 
   return (
@@ -156,7 +156,7 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
       <Box
         component="ul"
         sx={{
-          listStyle: "disc",
+          listStyle: 'disc',
           pl: 4,
           m: 0,
         }}
@@ -180,7 +180,7 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
             >
               {propertyParts.map((part, partIndex) => (
                 <React.Fragment key={partIndex}>
-                  {partIndex > 0 && ", "}
+                  {partIndex > 0 && ', '}
                   {part}
                 </React.Fragment>
               ))}

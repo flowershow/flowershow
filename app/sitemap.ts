@@ -1,6 +1,6 @@
-import { getSiteUrl } from "@/lib/get-site-url";
-import prisma from "@/server/db";
-import { unstable_noStore as noStore } from "next/cache";
+import { unstable_noStore as noStore } from 'next/cache';
+import { getSiteUrl } from '@/lib/get-site-url';
+import prisma from '@/server/db';
 
 async function Sitemap() {
   noStore();

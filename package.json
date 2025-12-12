@@ -3,10 +3,11 @@
   "scripts": {
     "dev": "pnpm fetch-config && prisma migrate dev && next dev --turbopack",
     "build": "pnpm fetch-config && prisma migrate deploy && prisma generate && next build",
-    "format:write": "prettier --write '**/*.{css,js,json,jsx,ts,tsx}'",
-    "format": "prettier '**/*.{css,js,json,jsx,ts,tsx}'",
     "start": "next start",
+    "format": "biome format",
+    "format:write": "biome format --write",
     "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
     "prepare": "husky install",
     "test": "vitest --project=unit",
     "test:unit": "vitest --project=unit",
@@ -18,10 +19,7 @@
     "build-storybook": "storybook build -o ./deploy/storybook/out"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "eslint . --fix",
-      "prettier --write"
-    ]
+    "*.{js,jsx,ts,tsx}": ["eslint . --fix", "biome format --write"]
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.914.0",
@@ -122,6 +120,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.3.8",
     "@chromatic-com/storybook": "^4.1.1",
     "@eslint/eslintrc": "^3.3.1",
     "@iconify-json/mdi": "^1.2.3",
@@ -155,8 +154,6 @@
     "lint-staged": "^15.2.2",
     "playwright": "^1.55.0",
     "postcss": "^8.4.31",
-    "prettier": "^3.1.0",
-    "prettier-plugin-tailwindcss": "^0.5.7",
     "prisma": "5.5.2",
     "random-word": "^3.0.0",
     "remark-stringify": "^11.0.0",

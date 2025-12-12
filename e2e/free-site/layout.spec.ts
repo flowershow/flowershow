@@ -1,35 +1,35 @@
-import { test, expect } from "../_fixtures/published-site-test";
+import { expect, test } from '../_fixtures/published-site-test';
 
-test.describe("Site layout", () => {
-  test("Navbar", async ({ publishedSitePage }) => {
-    await publishedSitePage.goto("/");
+test.describe('Site layout', () => {
+  test('Navbar', async ({ publishedSitePage }) => {
+    await publishedSitePage.goto('/');
 
-    const navbar = publishedSitePage.page.locator(".site-navbar");
+    const navbar = publishedSitePage.page.locator('.site-navbar');
     await expect(navbar).toBeVisible();
 
     // Site title and logo
-    const navTitle = navbar.locator(".site-navbar-site-title");
+    const navTitle = navbar.locator('.site-navbar-site-title');
     await expect(navTitle).toHaveAttribute(
-      "href",
+      'href',
       publishedSitePage.siteUrlPath,
     );
-    await expect(navTitle).toContainText("SiteName");
-    const navLogo = navTitle.getByRole("img");
+    await expect(navTitle).toContainText('SiteName');
+    const navLogo = navTitle.getByRole('img');
     await expect(navLogo).toHaveAttribute(
-      "src",
-      publishedSitePage.siteUrl + "/_r/-/logo.jpg",
+      'src',
+      publishedSitePage.siteUrl + '/_r/-/logo.jpg',
     );
     // Check navigation links
-    const navLinks = navbar.locator(".site-navbar-links-container");
-    await expect(navLinks.getByRole("link", { name: "About" })).toHaveAttribute(
-      "href",
+    const navLinks = navbar.locator('.site-navbar-links-container');
+    await expect(navLinks.getByRole('link', { name: 'About' })).toHaveAttribute(
+      'href',
       `${publishedSitePage.siteUrlPath}/about`,
     );
     // Check social links if configured
-    const socialLinks = navbar.locator(".site-navbar-social-links-container");
-    await expect(socialLinks.getByRole("link")).toHaveAttribute(
-      "href",
-      "https://discord.link/abc",
+    const socialLinks = navbar.locator('.site-navbar-social-links-container');
+    await expect(socialLinks.getByRole('link')).toHaveAttribute(
+      'href',
+      'https://discord.link/abc',
     );
   });
 

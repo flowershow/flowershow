@@ -1,11 +1,10 @@
-"use client";
-import { ErrorBoundary } from "react-error-boundary";
-import { hydrate, type SerializeResult } from "next-mdx-remote-client/csr";
-
-import type { PageMetadata, PublicSite } from "@/server/api/types";
-import type { Blob } from "@prisma/client";
-import ErrorMessage from "@/components/public/error-message";
-import { mdxComponentsFactory } from "./mdx-components-factory";
+'use client';
+import type { Blob } from '@prisma/client';
+import { hydrate, type SerializeResult } from 'next-mdx-remote-client/csr';
+import { ErrorBoundary } from 'react-error-boundary';
+import ErrorMessage from '@/components/public/error-message';
+import type { PageMetadata, PublicSite } from '@/server/api/types';
+import { mdxComponentsFactory } from './mdx-components-factory';
 
 type Props = {
   mdxSource: SerializeResult<PageMetadata>;
@@ -15,9 +14,9 @@ type Props = {
 };
 
 function MDXClientRenderer({ mdxSource, blob, site, pageNumber }: Props) {
-  if ("error" in mdxSource) {
+  if ('error' in mdxSource) {
     const message = mdxSource.error.message.concat(
-      "\n\n🧑‍🔧 See how to debug and solve most common MDX errors in our docs:\nhttps://flowershow.app/docs/debug-mdx-errors",
+      '\n\n🧑‍🔧 See how to debug and solve most common MDX errors in our docs:\nhttps://flowershow.app/docs/debug-mdx-errors',
     );
     return <ErrorMessage title="Error parsing MDX" message={message} />;
   }
@@ -36,7 +35,7 @@ function MDXClientRenderer({ mdxSource, blob, site, pageNumber }: Props) {
 
     if (error) {
       const message = error.message.concat(
-        "\n\n🧑‍🔧 See how to debug and solve most common MDX errors in our docs:\nhttps://flowershow.app/docs/debug-mdx-errors",
+        '\n\n🧑‍🔧 See how to debug and solve most common MDX errors in our docs:\nhttps://flowershow.app/docs/debug-mdx-errors',
       );
       return <ErrorMessage title="Error parsing MDX" message={message} />;
     }

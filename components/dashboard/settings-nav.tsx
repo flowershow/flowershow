@@ -1,26 +1,26 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import Link from 'next/link';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 const navItems = [
-  { name: "Name", href: "#projectName" },
-  { name: "Root Directory", href: "#rootDir" },
-  { name: "Markdown or MDX", href: "#syntaxMode" },
-  { name: "Auto-Sync", href: "#autoSync" },
-  { name: "Comments", href: "#enableComments" },
-  { name: "Custom Domain", href: "#customDomain" },
-  { name: "Full-Text Search", href: "#enableSearch" },
-  { name: "Password Protection", href: "#passwordProtection" },
-  { name: "Billing", href: "#billing" },
-  { name: "Delete Site", href: "#deleteSite" },
+  { name: 'Name', href: '#projectName' },
+  { name: 'Root Directory', href: '#rootDir' },
+  { name: 'Markdown or MDX', href: '#syntaxMode' },
+  { name: 'Auto-Sync', href: '#autoSync' },
+  { name: 'Comments', href: '#enableComments' },
+  { name: 'Custom Domain', href: '#customDomain' },
+  { name: 'Full-Text Search', href: '#enableSearch' },
+  { name: 'Password Protection', href: '#passwordProtection' },
+  { name: 'Billing', href: '#billing' },
+  { name: 'Delete Site', href: '#deleteSite' },
 ];
 
 export default function SettingsNav() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [activeHash, setActiveHash] = useState("");
+  const [activeHash, setActiveHash] = useState('');
 
   useEffect(() => {
     // Update active hash whenever pathname or search params change
@@ -36,8 +36,8 @@ export default function SettingsNav() {
       setActiveHash(window.location.hash);
     };
 
-    window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
   return (
@@ -47,7 +47,7 @@ export default function SettingsNav() {
           <Link
             href={item.href}
             className={`block rounded-md px-2 py-2 text-sm font-medium transition-colors hover:bg-primary-faint/70 ${
-              activeHash === item.href ? "bg-primary-faint" : ""
+              activeHash === item.href ? 'bg-primary-faint' : ''
             }`}
           >
             {item.name}

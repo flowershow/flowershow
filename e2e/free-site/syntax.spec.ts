@@ -1,120 +1,120 @@
-import { test, expect } from "../_fixtures/published-site-test";
+import { expect, test } from '../_fixtures/published-site-test';
 
-test.describe("Links and embeds", () => {
-  test("Obsidian wiki-links", async ({ publishedSitePage }) => {
-    await publishedSitePage.goto("/syntax/links-and-embeds");
+test.describe('Links and embeds', () => {
+  test('Obsidian wiki-links', async ({ publishedSitePage }) => {
+    await publishedSitePage.goto('/syntax/links-and-embeds');
 
     const wikiLink = publishedSitePage.page
-      .getByTestId("obsidian-wiki-link")
-      .locator("a");
-    await expect(wikiLink).toHaveText("post-1");
+      .getByTestId('obsidian-wiki-link')
+      .locator('a');
+    await expect(wikiLink).toHaveText('post-1');
     await expect(wikiLink).toHaveAttribute(
-      "href",
+      'href',
       `${publishedSitePage.siteUrlPath}/blog/post-1`,
     );
 
     const wikiLinkAbsolute = publishedSitePage.page
-      .getByTestId("obsidian-wiki-link-absolute")
-      .locator("a");
-    await expect(wikiLinkAbsolute).toHaveText("blog/post-1");
+      .getByTestId('obsidian-wiki-link-absolute')
+      .locator('a');
+    await expect(wikiLinkAbsolute).toHaveText('blog/post-1');
     await expect(wikiLinkAbsolute).toHaveAttribute(
-      "href",
+      'href',
       `${publishedSitePage.siteUrlPath}/blog/post-1`,
     );
 
     const wikiLinkRootReadme = publishedSitePage.page
-      .getByTestId("obsidian-wiki-link-readme")
-      .locator("a");
-    await expect(wikiLinkRootReadme).toHaveText("README");
+      .getByTestId('obsidian-wiki-link-readme')
+      .locator('a');
+    await expect(wikiLinkRootReadme).toHaveText('README');
     await expect(wikiLinkRootReadme).toHaveAttribute(
-      "href",
+      'href',
       `${publishedSitePage.siteUrlPath}`,
     );
 
     const wikiLinkBlogReadme = publishedSitePage.page
-      .getByTestId("obsidian-wiki-link-readme-blog")
-      .locator("a");
-    await expect(wikiLinkBlogReadme).toHaveText("blog/README");
+      .getByTestId('obsidian-wiki-link-readme-blog')
+      .locator('a');
+    await expect(wikiLinkBlogReadme).toHaveText('blog/README');
     await expect(wikiLinkBlogReadme).toHaveAttribute(
-      "href",
+      'href',
       `${publishedSitePage.siteUrlPath}/blog`,
     );
 
     const wikiLinkSpecialChars = publishedSitePage.page
-      .getByTestId("obsidian-wiki-link-special-signs")
-      .locator("a");
+      .getByTestId('obsidian-wiki-link-special-signs')
+      .locator('a');
     await expect(wikiLinkSpecialChars).toHaveText(
-      "Post With Special Chars %&(1)",
+      'Post With Special Chars %&(1)',
     );
     await expect(wikiLinkSpecialChars).toHaveAttribute(
-      "href",
+      'href',
       `${publishedSitePage.siteUrlPath}/blog/Post+With+Special+Chars+%25%26(1)`,
     );
 
     const wikiLinkCase = publishedSitePage.page
-      .getByTestId("obsidian-wiki-link-case-insensitive")
-      .locator("a");
-    await expect(wikiLinkCase).toHaveText("POST-1");
+      .getByTestId('obsidian-wiki-link-case-insensitive')
+      .locator('a');
+    await expect(wikiLinkCase).toHaveText('POST-1');
     await expect(wikiLinkCase).toHaveAttribute(
-      "href",
+      'href',
       `${publishedSitePage.siteUrlPath}/blog/post-1`,
     );
 
     const wikiLinkPermalink = publishedSitePage.page
-      .getByTestId("obsidian-wiki-link-to-file-with-permalink")
-      .locator("a");
-    await expect(wikiLinkPermalink).toHaveText("post-with-permalink");
+      .getByTestId('obsidian-wiki-link-to-file-with-permalink')
+      .locator('a');
+    await expect(wikiLinkPermalink).toHaveText('post-with-permalink');
     await expect(wikiLinkPermalink).toHaveAttribute(
-      "href",
+      'href',
       `${publishedSitePage.siteUrlPath}/different/url`,
     );
   });
 });
 
-test("Obsidian embeds", async ({ publishedSitePage }) => {
-  await publishedSitePage.goto("/syntax/links-and-embeds");
+test('Obsidian embeds', async ({ publishedSitePage }) => {
+  await publishedSitePage.goto('/syntax/links-and-embeds');
 
   const obsidianEmbed = publishedSitePage.page
-    .getByTestId("obsidian-embed")
-    .getByRole("img");
+    .getByTestId('obsidian-embed')
+    .getByRole('img');
   await expect(obsidianEmbed).toHaveAttribute(
-    "src",
+    'src',
     `${publishedSitePage.siteUrl}/_r/-/assets/image.jpg`,
   );
 
   const obsidianEmbedAbsolute = publishedSitePage.page
-    .getByTestId("obsidian-embed-absolute")
-    .getByRole("img");
+    .getByTestId('obsidian-embed-absolute')
+    .getByRole('img');
   await expect(obsidianEmbedAbsolute).toHaveAttribute(
-    "src",
+    'src',
     `${publishedSitePage.siteUrl}/_r/-/assets/image.jpg`,
   );
 
   const obsidianEmbedSpecialChars = publishedSitePage.page
-    .getByTestId("obsidian-embed-special-signs")
-    .getByRole("img");
+    .getByTestId('obsidian-embed-special-signs')
+    .getByRole('img');
   await expect(obsidianEmbedSpecialChars).toHaveAttribute(
-    "src",
+    'src',
     `${publishedSitePage.siteUrl}/_r/-/assets/Image%20With%20Special%20Chars%20%25%26(1).jpg`,
   );
 });
 
-test("CommonMark links", async ({ publishedSitePage }) => {
-  await publishedSitePage.goto("/syntax/links-and-embeds");
+test('CommonMark links', async ({ publishedSitePage }) => {
+  await publishedSitePage.goto('/syntax/links-and-embeds');
 
   const commonMarkLinks = publishedSitePage.page
-    .getByTestId("common-mark-links")
-    .getByRole("link");
+    .getByTestId('common-mark-links')
+    .getByRole('link');
 
-  const simpleRelativeLink = commonMarkLinks.getByText("/blog/post-1");
+  const simpleRelativeLink = commonMarkLinks.getByText('/blog/post-1');
   await expect(simpleRelativeLink).toHaveAttribute(
-    "href",
+    'href',
     `${publishedSitePage.siteUrlPath}/blog/post-1`,
   );
 
-  const relativeLinkWithDotSlash = commonMarkLinks.getByText("./syntax");
+  const relativeLinkWithDotSlash = commonMarkLinks.getByText('./syntax');
   await expect(relativeLinkWithDotSlash).toHaveAttribute(
-    "href",
+    'href',
     `${publishedSitePage.siteUrlPath}/syntax/syntax`,
   );
 
@@ -131,38 +131,38 @@ test("CommonMark links", async ({ publishedSitePage }) => {
   //   `${publishedSitePage.siteUrlPath}`,
   // );
 
-  const backwardLinkToRootReadme = commonMarkLinks.getByText("../README");
+  const backwardLinkToRootReadme = commonMarkLinks.getByText('../README');
   await expect(backwardLinkToRootReadme).toHaveAttribute(
-    "href",
+    'href',
     `${publishedSitePage.siteUrlPath}`,
   );
 
-  const externalLink = commonMarkLinks.getByText("External link");
-  await expect(externalLink).toHaveAttribute("href", "https://example.com");
+  const externalLink = commonMarkLinks.getByText('External link');
+  await expect(externalLink).toHaveAttribute('href', 'https://example.com');
 
-  const linkWithSpaces = commonMarkLinks.getByText("with spaces");
+  const linkWithSpaces = commonMarkLinks.getByText('with spaces');
   await expect(linkWithSpaces).toHaveAttribute(
-    "href",
+    'href',
     `${publishedSitePage.siteUrlPath}/some/path/with+spaces`,
   );
 });
 
-test("CommonMark images", async ({ publishedSitePage }) => {
-  await publishedSitePage.goto("/syntax/links-and-embeds");
+test('CommonMark images', async ({ publishedSitePage }) => {
+  await publishedSitePage.goto('/syntax/links-and-embeds');
 
   const commonMarkImages = publishedSitePage.page
-    .getByTestId("common-mark-embeds")
-    .getByRole("img");
+    .getByTestId('common-mark-embeds')
+    .getByRole('img');
 
   const backwardPathImage = commonMarkImages.nth(0);
   await expect(backwardPathImage).toHaveAttribute(
-    "src",
+    'src',
     `${publishedSitePage.siteUrl}/_r/-/assets/image.jpg`,
   );
 
   const absolutePathImage = commonMarkImages.nth(1);
   await expect(absolutePathImage).toHaveAttribute(
-    "src",
+    'src',
     `${publishedSitePage.siteUrl}/_r/-/assets/image.jpg`,
   );
 });
@@ -199,34 +199,34 @@ test("CommonMark images", async ({ publishedSitePage }) => {
 //   await expect(error).toHaveText(/\[next-mdx-remote\] error compiling MDX/);
 // });
 
-test.describe("MDX", () => {
-  test("Should resolve JSX href and src attributes", async ({
+test.describe('MDX', () => {
+  test('Should resolve JSX href and src attributes', async ({
     publishedSitePage,
   }) => {
-    await publishedSitePage.goto("/syntax/links-and-embeds");
+    await publishedSitePage.goto('/syntax/links-and-embeds');
     await expect(
-      publishedSitePage.page.getByTestId("jsx-img").locator("img"),
-    ).toHaveAttribute("src", /\/@.+\/.+\/_r\/-\/.+/);
+      publishedSitePage.page.getByTestId('jsx-img').locator('img'),
+    ).toHaveAttribute('src', /\/@.+\/.+\/_r\/-\/.+/);
   });
 
-  test("List component", async ({ publishedSitePage }) => {
-    await publishedSitePage.goto("/blog");
+  test('List component', async ({ publishedSitePage }) => {
+    await publishedSitePage.goto('/blog');
     const listItemLink = publishedSitePage.page
-      .locator(".list-component-item")
-      .getByRole("link", { name: "Blog Post 1" });
+      .locator('.list-component-item')
+      .getByRole('link', { name: 'Blog Post 1' });
     await expect(listItemLink).toHaveAttribute(
-      "href",
-      publishedSitePage.siteUrlPath + "/blog/post-with-metadata",
+      'href',
+      publishedSitePage.siteUrlPath + '/blog/post-with-metadata',
     );
   });
 
-  test("MDX variables", async ({ publishedSitePage }) => {
-    await publishedSitePage.goto("/syntax/mdx-variables");
+  test('MDX variables', async ({ publishedSitePage }) => {
+    await publishedSitePage.goto('/syntax/mdx-variables');
 
-    await expect(publishedSitePage.page.getByText("44 million")).toBeVisible();
+    await expect(publishedSitePage.page.getByText('44 million')).toBeVisible();
     await expect(
-      publishedSitePage.page.getByText("$119 trillion"),
+      publishedSitePage.page.getByText('$119 trillion'),
     ).toBeVisible();
-    await expect(publishedSitePage.page.getByText("46,000")).toBeVisible();
+    await expect(publishedSitePage.page.getByText('46,000')).toBeVisible();
   });
 });

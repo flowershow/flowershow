@@ -1,8 +1,7 @@
-"use client";
+'use client';
 
-import { ArrowLeftIcon, ArrowRightIcon } from "lucide-react";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useRouter } from "next/navigation";
+import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 export default function ListComponentPagination({
   totalPages,
@@ -12,8 +11,8 @@ export default function ListComponentPagination({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const currentPage = searchParams.get("page")
-    ? Number(searchParams.get("page"))
+  const currentPage = searchParams.get('page')
+    ? Number(searchParams.get('page'))
     : 1;
 
   const goToPreviousPage = () => {
@@ -57,11 +56,11 @@ export default function ListComponentPagination({
               <button
                 key={page}
                 onClick={() => goToPage(page)}
-                aria-current={currentPage === page ? "page" : undefined}
+                aria-current={currentPage === page ? 'page' : undefined}
                 className={`list-component-pagination-page-button ${
                   currentPage === page
-                    ? "list-component-pagination-page-button--current"
-                    : "list-component-pagination-page-button--other"
+                    ? 'list-component-pagination-page-button--current'
+                    : 'list-component-pagination-page-button--other'
                 }`}
               >
                 {page}

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createTRPCContext } from "@/server/api/trpc";
-import { appRouter } from "@/server/api/root";
+import { NextRequest, NextResponse } from 'next/server';
+import { appRouter } from '@/server/api/root';
+import { createTRPCContext } from '@/server/api/trpc';
 
 interface GhRepo {
   full_name: string; // e.g. "octocat/Hello-World"
@@ -32,11 +32,11 @@ export async function POST(req: NextRequest) {
 
   // Insert sites
   for (const site of sitesToInsert) {
-    const [scope, repo] = site.full_name.split("/");
+    const [scope, repo] = site.full_name.split('/');
     if (!scope || !repo || !site.branch) {
       failed.push(
         Object.assign(site, {
-          error: "Invalid site data. Must have full_name and branch.",
+          error: 'Invalid site data. Must have full_name and branch.',
         }),
       );
       continue;

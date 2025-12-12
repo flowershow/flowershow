@@ -3,16 +3,16 @@
 // Note that this config is unrelated to the Vercel Edge Runtime and is also required when running locally.
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
 
-import * as Sentry from "@sentry/nextjs";
+import * as Sentry from '@sentry/nextjs';
 
 const env =
   process.env.SENTRY_ENVIRONMENT ??
   process.env.VERCEL_ENV ??
   process.env.NODE_ENV ??
-  "development";
+  'development';
 
-const isProd = env === "production";
-const isPreview = env === "preview";
+const isProd = env === 'production';
+const isPreview = env === 'preview';
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,

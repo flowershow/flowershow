@@ -1,37 +1,32 @@
-import { ReactNode } from "react";
-import { Metadata } from "next";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
-import { GoogleTagManager } from "@next/third-parties/google";
-import { GoogleAnalytics } from "@next/third-parties/google";
-import clsx from "clsx";
-
-import { api } from "@/trpc/server";
-import { generateScopedCss } from "@/lib/generate-scoped-css";
-
-import { Feature, isFeatureEnabled } from "@/lib/feature-flags";
-import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
-import { getThemeUrl } from "@/lib/get-theme";
-import { getSiteUrlPath } from "@/lib/get-site-url";
-import { getConfig } from "@/lib/app-config";
-import { getSession } from "@/server/auth";
-import { TRPCReactProvider } from "@/trpc/react";
-import { env } from "@/env.mjs";
-
-import BuiltWithFloatingButton from "@/components/public/built-with-floating-button";
-import Footer from "@/components/public/footer";
-import Nav from "@/components/public/nav";
-import { SiteProvider } from "@/components/public/site-context";
-import Providers from "./providers";
-
-import { fontBody, fontBrand, fontHeading } from "@/styles/fonts";
-import "@/styles/prism.css";
-import "@/styles/callouts.css";
-import "@/styles/default-theme.css";
-import { THEME_PREFERENCE_STORAGE_KEY } from "@/lib/const";
-import SiteLogoutButton from "./site-logout-button";
-import KatexStylesLoader from "./katex-loader";
-import { PublicSite } from "@/server/api/types";
+import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
+import clsx from 'clsx';
+import { Metadata } from 'next';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+import { ReactNode } from 'react';
+import BuiltWithFloatingButton from '@/components/public/built-with-floating-button';
+import Footer from '@/components/public/footer';
+import Nav from '@/components/public/nav';
+import { SiteProvider } from '@/components/public/site-context';
+import { env } from '@/env.mjs';
+import { getConfig } from '@/lib/app-config';
+import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
+import { generateScopedCss } from '@/lib/generate-scoped-css';
+import { getSiteUrlPath } from '@/lib/get-site-url';
+import { getThemeUrl } from '@/lib/get-theme';
+import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { getSession } from '@/server/auth';
+import { fontBody, fontBrand, fontHeading } from '@/styles/fonts';
+import { TRPCReactProvider } from '@/trpc/react';
+import { api } from '@/trpc/server';
+import Providers from './providers';
+import '@/styles/prism.css';
+import '@/styles/callouts.css';
+import '@/styles/default-theme.css';
+import { THEME_PREFERENCE_STORAGE_KEY } from '@/lib/const';
+import { PublicSite } from '@/server/api/types';
+import KatexStylesLoader from './katex-loader';
+import SiteLogoutButton from './site-logout-button';
 
 const { title, description, favicon, thumbnail } = getConfig();
 
@@ -42,19 +37,19 @@ export const metadata: Metadata = {
   openGraph: {
     title,
     description,
-    type: "website",
+    type: 'website',
     url: `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}`,
     images: [
       {
         url: thumbnail,
         width: 1200,
         height: 630,
-        alt: "Thumbnail",
+        alt: 'Thumbnail',
       },
     ],
   },
   twitter: {
-    card: "summary_large_image",
+    card: 'summary_large_image',
     title,
     description,
     images: [
@@ -62,10 +57,10 @@ export const metadata: Metadata = {
         url: thumbnail,
         width: 1200,
         height: 630,
-        alt: "Thumbnail",
+        alt: 'Thumbnail',
       },
     ],
-    creator: "@flowershowapp",
+    creator: '@flowershowapp',
   },
 };
 
@@ -87,7 +82,7 @@ export default async function PublicLayout(props: {
   const projectName = decodeURIComponent(params.project);
 
   let site: PublicSite | null;
-  if (userName === "_domain") {
+  if (userName === '_domain') {
     site = await api.site.getByDomain.query({
       domain: projectName,
     });
@@ -119,7 +114,7 @@ export default async function PublicLayout(props: {
   }
 
   // Redirect to custom domain if it exists
-  if (userName !== "_domain" && site.customDomain) {
+  if (userName !== '_domain' && site.customDomain) {
     return redirect(`https://${site.customDomain}`);
   }
 
@@ -137,11 +132,11 @@ export default async function PublicLayout(props: {
   const customCss = await api.site.getBlobByPath
     .query({
       siteId: site.id,
-      path: "custom.css",
+      path: 'custom.css',
     })
     .then(() => {
       customCssSrc = resolveFilePathToUrlPath({
-        target: "custom.css",
+        target: 'custom.css',
         sitePrefix,
         domain: site.customDomain,
       });
@@ -150,20 +145,20 @@ export default async function PublicLayout(props: {
 
   // Theme from official Flowershow Themes collection
   const themeName =
-    typeof siteConfig?.theme === "string" // backward compatibility for theme of type string
+    typeof siteConfig?.theme === 'string' // backward compatibility for theme of type string
       ? siteConfig.theme
       : siteConfig?.theme?.theme;
   const themeUrl = themeName ? getThemeUrl(themeName) : null;
   // Light/Dark
   let showThemeModeSwitch = false;
-  let defaultMode = "light";
+  let defaultMode = 'light';
 
-  if (typeof siteConfig?.theme !== "string") {
+  if (typeof siteConfig?.theme !== 'string') {
     showThemeModeSwitch = siteConfig?.theme?.showModeSwitch ?? false;
 
     if (
       siteConfig?.theme?.defaultMode &&
-      ["light", "dark", "system"].includes(siteConfig?.theme?.defaultMode)
+      ['light', 'dark', 'system'].includes(siteConfig?.theme?.defaultMode)
     ) {
       defaultMode = siteConfig?.theme?.defaultMode;
     }
@@ -197,7 +192,7 @@ export default async function PublicLayout(props: {
     try {
       const customFooterBlob = await api.site.getBlobByPath.query({
         siteId: site.id,
-        path: "_flowershow/components/Footer.html",
+        path: '_flowershow/components/Footer.html',
       });
 
       if (customFooterBlob) {
@@ -205,8 +200,8 @@ export default async function PublicLayout(props: {
           id: customFooterBlob.id,
         });
         const footerCssResult = await generateScopedCss(
-          customFooterContent ?? "",
-          "#customfooter",
+          customFooterContent ?? '',
+          '#customfooter',
         );
         customFooterCss = footerCssResult.css;
       }
@@ -217,7 +212,7 @@ export default async function PublicLayout(props: {
     try {
       const customHeroBlob = await api.site.getBlobByPath.query({
         siteId: site.id,
-        path: "_flowershow/components/Hero.html",
+        path: '_flowershow/components/Hero.html',
       });
 
       if (customHeroBlob) {
@@ -225,8 +220,8 @@ export default async function PublicLayout(props: {
           id: customHeroBlob.id,
         });
         const heroCssResult = await generateScopedCss(
-          customHeroContent ?? "",
-          "#customhero",
+          customHeroContent ?? '',
+          '#customhero',
         );
         customHeroCss = heroCssResult.css;
       }
@@ -315,12 +310,12 @@ export default async function PublicLayout(props: {
               {/* TODO hacky, temp; move data-plan to root level layout (create separate one for user sites)
           and don't decide based on that button */}
               <div
-                data-plan={!showBuiltWithButton && "premium"}
+                data-plan={!showBuiltWithButton && 'premium'}
                 className="site-layout"
               >
                 <Nav
                   logo={logo}
-                  url={sitePrefix || "/"}
+                  url={sitePrefix || '/'}
                   title={title}
                   links={links}
                   social={social}
@@ -333,7 +328,7 @@ export default async function PublicLayout(props: {
                 <div className="site-body">{children}</div>
                 <Footer siteId={site.id} />
                 {showBuiltWithButton && <BuiltWithFloatingButton />}
-                {site.privacyMode === "PASSWORD" && (
+                {site.privacyMode === 'PASSWORD' && (
                   <SiteLogoutButton
                     siteId={site.id}
                     sitename={site.projectName}

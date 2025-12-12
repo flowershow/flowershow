@@ -1,14 +1,15 @@
-import { ErrorBoundary } from "react-error-boundary";
-
-import type { Blob } from "@prisma/client";
-import { resolveFilePathToUrlPath } from "@/lib/resolve-link";
-import { getSiteUrlPath } from "@/lib/get-site-url";
-
-import ErrorMessage from "@/components/public/error-message";
-import List from "./list";
-import Pre from "./pre";
-import { PdfViewer } from "./pdf-viewer";
-
+import type { Blob } from '@prisma/client';
+import type { MDXComponents } from 'next-mdx-remote-client/rsc';
+import { ErrorBoundary } from 'react-error-boundary';
+import ErrorMessage from '@/components/public/error-message';
+import { getSiteUrlPath } from '@/lib/get-site-url';
+import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { PublicSite } from '@/server/api/types';
+import type { CustomHtmlProps } from './custom-html';
+import type { FlatUiTableProps } from './flatui-table';
+import type { LineChartProps } from './line-chart';
+import type { ListProps } from './list';
+import List from './list';
 import {
   CustomHtml,
   FlatUiTable,
@@ -19,17 +20,12 @@ import {
   PlotlyBarChart,
   PlotlyLineChart,
   Vega,
-} from "./mdx-client-components";
-
-import type { CustomHtmlProps } from "./custom-html";
-import type { FlatUiTableProps } from "./flatui-table";
-import type { LineChartProps } from "./line-chart";
-import type { ListProps } from "./list";
-import type { MDXComponents } from "next-mdx-remote-client/rsc";
-import type { PlotlyBarChartProps } from "./plotly-bar-chart";
-import type { PlotlyLineChartProps } from "./plotly-line-chart";
-import type { ObsidianBasesViewsProps } from "./obsidian-bases-views";
-import { PublicSite } from "@/server/api/types";
+} from './mdx-client-components';
+import type { ObsidianBasesViewsProps } from './obsidian-bases-views';
+import { PdfViewer } from './pdf-viewer';
+import type { PlotlyBarChartProps } from './plotly-bar-chart';
+import type { PlotlyLineChartProps } from './plotly-line-chart';
+import Pre from './pre';
 
 export const mdxComponentsFactory = ({
   blob,
@@ -43,10 +39,10 @@ export const mdxComponentsFactory = ({
   const components: MDXComponents = {
     pre: (props) => <Pre {...props} />,
     iframe: (props) => {
-      const src = props.src ?? "";
+      const src = props.src ?? '';
 
       const isPdf =
-        typeof src === "string" && src.split("#")[0]?.endsWith(".pdf");
+        typeof src === 'string' && src.split('#')[0]?.endsWith('.pdf');
 
       if (isPdf) {
         return <PdfViewer src={src} />;
@@ -56,10 +52,10 @@ export const mdxComponentsFactory = ({
     },
     CustomHtml: withErrorBoundary((props: CustomHtmlProps) => {
       return <CustomHtml {...props} />;
-    }, "CustomHtml"),
+    }, 'CustomHtml'),
     List: withErrorBoundary((props: ListProps) => {
       return <List {...props} siteId={site.id} pageNumber={pageNumber} />;
-    }, "List"),
+    }, 'List'),
     mermaid: Mermaid as any,
     FlatUiTable: withErrorBoundary((props: FlatUiTableProps) => {
       if (props.data?.url)
@@ -71,7 +67,7 @@ export const mdxComponentsFactory = ({
         });
 
       return <FlatUiTable {...props} />;
-    }, "FlatUiTable"),
+    }, 'FlatUiTable'),
     LineChart: withErrorBoundary((props: LineChartProps) => {
       if (props.data?.url) {
         props.data.url = resolveFilePathToUrlPath({
@@ -82,7 +78,7 @@ export const mdxComponentsFactory = ({
         });
       }
       return <LineChart {...props} />;
-    }, "LineChart"),
+    }, 'LineChart'),
     PlotlyBarChart: withErrorBoundary((props: PlotlyBarChartProps) => {
       if (props.data.url) {
         props.data.url = resolveFilePathToUrlPath({
@@ -93,7 +89,7 @@ export const mdxComponentsFactory = ({
         });
       }
       return <PlotlyBarChart {...props} />;
-    }, "PlotlyBarChart"),
+    }, 'PlotlyBarChart'),
     PlotlyLineChart: withErrorBoundary((props: PlotlyLineChartProps) => {
       if (props.data.url) {
         props.data.url = resolveFilePathToUrlPath({
@@ -104,7 +100,7 @@ export const mdxComponentsFactory = ({
         });
       }
       return <PlotlyLineChart {...props} />;
-    }, "PlotlyLineChart"),
+    }, 'PlotlyLineChart'),
     // Excel: withErrorBoundary((props: ExcelProps) => {
     //   props.data.url = resolveFilePathToUrlPath({
     //     target: props.data.url,
@@ -132,7 +128,7 @@ export const mdxComponentsFactory = ({
     // }, "Map"),
     Plotly: withErrorBoundary((props) => {
       const data =
-        typeof props.data === "string"
+        typeof props.data === 'string'
           ? resolveFilePathToUrlPath({
               target: props.data,
               originFilePath: blob.path,
@@ -141,7 +137,7 @@ export const mdxComponentsFactory = ({
             })
           : props.data;
       return <Plotly {...props} data={data} />;
-    }, "Plotly"),
+    }, 'Plotly'),
     Vega: withErrorBoundary((props) => {
       if (props.spec.data.url)
         props.spec.data.url = resolveFilePathToUrlPath({
@@ -151,7 +147,7 @@ export const mdxComponentsFactory = ({
           domain: site.customDomain,
         });
       return <Vega {...props} />;
-    }, "Vega"),
+    }, 'Vega'),
     // TODO this is not needed
     VegaLite: withErrorBoundary((props) => {
       if (props.spec.data.url)
@@ -162,10 +158,10 @@ export const mdxComponentsFactory = ({
           domain: site.customDomain,
         });
       return <Vega {...props} />;
-    }, "VegaLite"),
+    }, 'VegaLite'),
     ObsidianBasesViews: withErrorBoundary((props: ObsidianBasesViewsProps) => {
       return <ObsidianBasesViews {...props} />;
-    }, "ObsidianBasesViews"),
+    }, 'ObsidianBasesViews'),
   };
 
   return components;
@@ -187,6 +183,6 @@ const withErrorBoundary = (
       <Component {...props} />
     </ErrorBoundary>
   );
-  WrappedComponent.displayName = "ErrorBoundary";
+  WrappedComponent.displayName = 'ErrorBoundary';
   return WrappedComponent;
 };

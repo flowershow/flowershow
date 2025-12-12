@@ -1,14 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
-import { env } from "@/env.mjs";
-import { resolveSiteAlias } from "./lib/resolve-site-alias";
-import { SITE_ACCESS_COOKIE_NAME } from "./lib/const";
-import { siteKeyBytes } from "./lib/site-hmac-key";
-import { jwtVerify } from "jose";
-import { getSiteUrl } from "./lib/get-site-url";
-import { InternalSite } from "./lib/db/internal";
-import PostHogClient from "./lib/server-posthog";
-import { PostHog } from "posthog-node";
+import { jwtVerify } from 'jose';
+import { NextRequest, NextResponse } from 'next/server';
+import { getToken } from 'next-auth/jwt';
+import { PostHog } from 'posthog-node';
+import { env } from '@/env.mjs';
+import { SITE_ACCESS_COOKIE_NAME } from './lib/const';
+import { InternalSite } from './lib/db/internal';
+import { getSiteUrl } from './lib/get-site-url';
+import { resolveSiteAlias } from './lib/resolve-site-alias';
+import PostHogClient from './lib/server-posthog';
+import { siteKeyBytes } from './lib/site-hmac-key';
 
 export const config = {
   matcher: [
@@ -17,7 +17,7 @@ export const config = {
     // - Next internals
     // - /_static (public)
     // - root files in /public (favicon, etc) — BUT still include sitemap.xml & robots.txt
-    "/((?!api/|_next/|_static/|_vercel|(?!sitemap\\.xml|robots\\.txt)[\\w-]+\\.\\w+).*)",
+    '/((?!api/|_next/|_static/|_vercel|(?!sitemap\\.xml|robots\\.txt)[\\w-]+\\.\\w+).*)',
   ],
 };
 
@@ -27,12 +27,12 @@ export default async function middleware(req: NextRequest) {
   const posthog = PostHogClient();
 
   // 0) PostHog proxy
-  if (url.pathname.startsWith("/relay-qYYb/")) {
+  if (url.pathname.startsWith('/relay-qYYb/')) {
     return proxyPostHog(req);
   }
 
   // 1) Normalize hostname (handle Vercel preview)
-  let hostname = req.headers.get("host")!;
+  let hostname = req.headers.get('host')!;
   if (hostname.endsWith(`.${env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`)) {
     hostname = env.NEXT_PUBLIC_ROOT_DOMAIN;
   }
@@ -44,7 +44,7 @@ export default async function middleware(req: NextRequest) {
   const searchParams = search; // Preserve for rewrites
 
   // 3) Legacy redirect: flowershow.app/@... → my.flowershow.app/@...
-  if (hostname === "flowershow.app" && pathname.startsWith("/@")) {
+  if (hostname === 'flowershow.app' && pathname.startsWith('/@')) {
     return NextResponse.redirect(
       new URL(`https://my.flowershow.app${path}`, req.url),
       { status: 301 },
@@ -57,15 +57,15 @@ export default async function middleware(req: NextRequest) {
 
     const session = await getToken({ req });
 
-    if (!session && pathname !== "/login") {
+    if (!session && pathname !== '/login') {
       return withPHBootstrapCookie(
-        NextResponse.redirect(new URL("/login", req.url)),
+        NextResponse.redirect(new URL('/login', req.url)),
         phBootstrap,
       );
     }
-    if (session && pathname === "/login") {
+    if (session && pathname === '/login') {
       return withPHBootstrapCookie(
-        NextResponse.redirect(new URL("/", req.url)),
+        NextResponse.redirect(new URL('/', req.url)),
         phBootstrap,
       );
     }
@@ -77,23 +77,23 @@ export default async function middleware(req: NextRequest) {
 
   // 5) Root domain (my.flowershow.app) — user sites at /@<user>/<project>
   if (hostname === env.NEXT_PUBLIC_ROOT_DOMAIN) {
-    if (pathname === "/sitemap.xml") return rewrite(`/sitemap.xml`, req);
-    if (pathname === "/robots.txt") return rewrite(`/robots.txt`, req);
+    if (pathname === '/sitemap.xml') return rewrite(`/sitemap.xml`, req);
+    if (pathname === '/robots.txt') return rewrite(`/robots.txt`, req);
 
     // Resolve alias to canonical /@user/project path
-    const aliasResolved = resolveSiteAlias(pathname, "from");
+    const aliasResolved = resolveSiteAlias(pathname, 'from');
     const match = aliasResolved.match(/^\/@([^/]+)\/([^/]+)(.*)/);
 
     if (!match) return rewrite(`/not-found`, req);
 
-    const [, username, projectname, slug = ""] = match;
+    const [, username, projectname, slug = ''] = match;
 
     // Look up site
     const site = await fetchSite(req, `/api/site/${username}/${projectname}`);
     if (!site) return rewrite(`/not-found`, req);
 
     // Per-site login page
-    if (slug === "/_login") {
+    if (slug === '/_login') {
       return rewrite(`/site-access/${username}/${projectname}`, req);
     }
 
@@ -102,7 +102,7 @@ export default async function middleware(req: NextRequest) {
     if (guard) return guard;
 
     // Per-site sitemap
-    if (slug === "/sitemap.xml") {
+    if (slug === '/sitemap.xml') {
       return rewrite(`/api/sitemap/${username}/${projectname}`, req);
     }
 
@@ -122,7 +122,7 @@ export default async function middleware(req: NextRequest) {
   }
 
   // 6) Custom domains
-  if (pathname === "/robots.txt") {
+  if (pathname === '/robots.txt') {
     return rewrite(`/api/robots/${hostname}`, req);
   }
 
@@ -131,7 +131,7 @@ export default async function middleware(req: NextRequest) {
   if (!site) return rewrite(`/not-found`, req);
 
   // Per-site login page
-  if (pathname === "/_login") {
+  if (pathname === '/_login') {
     return rewrite(`/site-access/_domain/${hostname}`, req);
   }
 
@@ -140,7 +140,7 @@ export default async function middleware(req: NextRequest) {
   if (guard) return guard;
 
   // Per-site sitemap
-  if (pathname === "/sitemap.xml") {
+  if (pathname === '/sitemap.xml') {
     // For custom domains: username "_domain", project = hostname
     return rewrite(`/api/sitemap/_domain/${hostname}`, req);
   }
@@ -151,8 +151,8 @@ export default async function middleware(req: NextRequest) {
 
   // Posthog experiments for flowershow.app site pages
   if (
-    (hostname === "flowershow.app" || hostname === "test.localhost:3000") &&
-    pathname === "/"
+    (hostname === 'flowershow.app' || hostname === 'test.localhost:3000') &&
+    pathname === '/'
   ) {
     const phBootstrap = await buildPHBootstrapCookie(req, posthog);
     // console.log({ phBootstrap });
@@ -160,9 +160,9 @@ export default async function middleware(req: NextRequest) {
       try {
         const flags = phBootstrap.value.featureFlags;
 
-        const landingPageFlagName = "landing-page-a-b";
+        const landingPageFlagName = 'landing-page-a-b';
         const landingPageFlag = flags[landingPageFlagName];
-        const isVariantB = landingPageFlag === "test";
+        const isVariantB = landingPageFlag === 'test';
 
         // This is only to send "Feature flag called event" for this flag
         await posthog.getFeatureFlag(
@@ -209,7 +209,7 @@ function rewrite(targetPath: string, req: NextRequest, ph?: PHBootstrap) {
 }
 
 function normalizePath(url: URL) {
-  const pathname = url.pathname.replace(/\+/g, "%20");
+  const pathname = url.pathname.replace(/\+/g, '%20');
   const search = url.search; // already encoded
   return { pathname, search };
 }
@@ -218,9 +218,9 @@ function normalizePath(url: URL) {
 async function fetchSite(req: NextRequest, apiPath: string) {
   try {
     const res = await fetch(new URL(apiPath, req.nextUrl.origin), {
-      cache: "no-store",
+      cache: 'no-store',
     });
-    if (!res.ok) throw new Error("Site fetch failed");
+    if (!res.ok) throw new Error('Site fetch failed');
     const site = await res.json();
     return (site as InternalSite) ?? null;
   } catch {
@@ -229,7 +229,7 @@ async function fetchSite(req: NextRequest, apiPath: string) {
 }
 
 async function ensureSiteAccess(req: NextRequest, site: InternalSite) {
-  if (site.privacyMode !== "PASSWORD") return null;
+  if (site.privacyMode !== 'PASSWORD') return null;
 
   const cookie = req.cookies.get(SITE_ACCESS_COOKIE_NAME(site.id));
   if (!cookie) {
@@ -264,7 +264,7 @@ function rewriteRawIfNeeded(
   const branch = rawMatch[1]!;
   const filePath = rawMatch[2]!;
 
-  const encoded = filePath.split("/").map(normaliseSegment).join("/");
+  const encoded = filePath.split('/').map(normaliseSegment).join('/');
 
   return NextResponse.rewrite(
     new URL(`${apiBase}/${branch}/${encoded}`, req.url),
@@ -278,7 +278,7 @@ function rewriteRawIfNeeded(
  * 3. Re-encode cleanly
  */
 function normaliseSegment(raw: string) {
-  const fixed = raw.replace(/%(?![0-9A-Fa-f]{2})/g, "%25");
+  const fixed = raw.replace(/%(?![0-9A-Fa-f]{2})/g, '%25');
   let decoded: string;
   try {
     decoded = decodeURIComponent(fixed);
@@ -290,17 +290,17 @@ function normaliseSegment(raw: string) {
 
 function proxyPostHog(req: NextRequest) {
   const url = req.nextUrl;
-  const isStatic = url.pathname.startsWith("/relay-qYYb/static/");
-  const hostname = isStatic ? "eu-assets.i.posthog.com" : "eu.i.posthog.com";
+  const isStatic = url.pathname.startsWith('/relay-qYYb/static/');
+  const hostname = isStatic ? 'eu-assets.i.posthog.com' : 'eu.i.posthog.com';
 
   const proxied = url.clone();
-  proxied.protocol = "https:";
+  proxied.protocol = 'https:';
   proxied.hostname = hostname;
-  proxied.port = "443";
-  proxied.pathname = url.pathname.replace(/^\/relay-qYYb/, ""); // strip prefix
+  proxied.port = '443';
+  proxied.pathname = url.pathname.replace(/^\/relay-qYYb/, ''); // strip prefix
 
   const headers = new Headers(req.headers);
-  headers.set("host", hostname);
+  headers.set('host', hostname);
 
   return NextResponse.rewrite(proxied, { headers });
 }
@@ -316,9 +316,9 @@ type PHBootstrap = {
 
 async function buildPHBootstrapCookie(req: NextRequest, posthog: PostHog) {
   // Only for real HTML page views
-  const isGet = req.method === "GET";
-  const accept = req.headers.get("accept") || "";
-  const isHtml = accept.includes("text/html");
+  const isGet = req.method === 'GET';
+  const accept = req.headers.get('accept') || '';
+  const isHtml = accept.includes('text/html');
   if (!isGet || !isHtml) return null;
 
   const apiKey = env.NEXT_PUBLIC_POSTHOG_KEY;
@@ -346,7 +346,7 @@ async function buildPHBootstrapCookie(req: NextRequest, posthog: PostHog) {
     };
 
     return {
-      name: "ph_bootstrap",
+      name: 'ph_bootstrap',
       value: bootstrapData,
     };
   } catch {
@@ -360,13 +360,13 @@ function withPHBootstrapCookie(res: NextResponse, ph: PHBootstrap) {
   const cookieValue = JSON.stringify(ph.value);
   res.cookies.set(cookieName, cookieValue, {
     httpOnly: false,
-    sameSite: "lax",
-    path: "/",
+    sameSite: 'lax',
+    path: '/',
     maxAge: 60 * 10,
   });
   res.headers.set(
-    "Vary",
-    [res.headers.get("Vary"), "Cookie"].filter(Boolean).join(", "),
+    'Vary',
+    [res.headers.get('Vary'), 'Cookie'].filter(Boolean).join(', '),
   );
   return res;
 }

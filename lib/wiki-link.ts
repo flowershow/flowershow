@@ -16,11 +16,11 @@ export function isWikiLink(text: string): boolean {
  */
 export function getWikiLinkValue(wikiLink: string): string {
   if (!isWikiLink(wikiLink)) {
-    throw new Error("Input is not a wiki link");
+    throw new Error('Input is not a wiki link');
   }
   const match = wikiLink.match(/^\[\[([^|]+?)(?:\|.+?)?\]\]$/);
   if (!match?.[1]) {
-    console.error("Failed to extract wiki link value");
+    console.error('Failed to extract wiki link value');
     return wikiLink;
   }
   return match[1];
@@ -37,13 +37,13 @@ export function findMatchingPermalink(
   filePath: string,
 ): string | null {
   // Normalize the file path by ensuring forward slashes
-  const normalizedFilePath = filePath.replace(/\\/g, "/");
+  const normalizedFilePath = filePath.replace(/\\/g, '/');
 
   // Find a permalink that ends with the file path
   return (
     permalinks.find(
       (permalink) =>
-        permalink.endsWith("/" + normalizedFilePath) ||
+        permalink.endsWith('/' + normalizedFilePath) ||
         permalink.endsWith(normalizedFilePath),
     ) || null
   );

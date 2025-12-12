@@ -1,9 +1,9 @@
-import type { Meta, StoryObj } from "@storybook/nextjs-vite";
-import { Plotly } from "@/components/public/mdx/plotly";
+import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import { Plotly } from '@/components/public/mdx/plotly';
 
 // More on how to set up stories at: https://storybook.js.org/docs/react/writing-stories/introduction
 const meta: Meta<typeof Plotly> = {
-  title: "Charts/Plotly",
+  title: 'Charts/Plotly',
   component: Plotly,
   argTypes: {
     data: {
@@ -23,24 +23,24 @@ type Story = StoryObj<any>;
 
 // More on writing stories with args: https://storybook.js.org/docs/react/writing-stories/args
 export const Primary: Story = {
-  name: "Line chart",
+  name: 'Line chart',
   args: {
     data: [
       {
         x: [1, 2, 3],
         y: [2, 6, 3],
-        type: "scatter",
-        mode: "lines+markers",
-        marker: { color: "red" },
+        type: 'scatter',
+        mode: 'lines+markers',
+        marker: { color: 'red' },
       },
     ],
     layout: {
-      title: "Chart built with Plotly",
+      title: 'Chart built with Plotly',
       xaxis: {
-        title: "x Axis",
+        title: 'x Axis',
       },
       yaxis: {
-        title: "y Axis",
+        title: 'y Axis',
       },
     },
   },

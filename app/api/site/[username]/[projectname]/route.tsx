@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
-import { InternalSite, internalSiteSelect } from "@/lib/db/internal";
-import prisma from "@/server/db";
+import { NextRequest, NextResponse } from 'next/server';
+import { InternalSite, internalSiteSelect } from '@/lib/db/internal';
+import prisma from '@/server/db';
 
 export async function GET(
   req: NextRequest,
@@ -9,13 +9,13 @@ export async function GET(
       username: string;
       projectname: string;
     }>;
-  }
+  },
 ) {
   const params = await props.params;
   const { username, projectname } = params;
   let site: InternalSite | null = null;
 
-  if (username === "_domain") {
+  if (username === '_domain') {
     site = await prisma.site.findUnique({
       where: {
         customDomain: projectname,
@@ -35,7 +35,7 @@ export async function GET(
   }
 
   if (!site) {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
   return NextResponse.json(site);

@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { api } from "@/trpc/react";
-import { LoadingButton } from "./loading-button";
-import type { PlanType, Plan } from "@/lib/stripe-plans";
-import { Radio, RadioGroup } from "@headlessui/react";
+import { Radio, RadioGroup } from '@headlessui/react';
+import { useEffect, useState } from 'react';
+import type { Plan, PlanType } from '@/lib/stripe-plans';
+import { api } from '@/trpc/react';
+import { LoadingButton } from './loading-button';
 
 const frequencies = [
-  { value: "month", label: "Monthly", priceSuffix: "/month" },
-  { value: "year", label: "Annually", priceSuffix: "/year" },
+  { value: 'month', label: 'Monthly', priceSuffix: '/month' },
+  { value: 'year', label: 'Annually', priceSuffix: '/year' },
 ] as const;
 
 interface BillingProps {
@@ -25,19 +25,19 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
   // Check for success parameter in URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    if (params.get("success") === "true") {
+    if (params.get('success') === 'true') {
       setShowSuccess(true);
       // Remove success parameter from URL
       const newUrl = window.location.pathname;
-      window.history.replaceState({}, "", newUrl);
+      window.history.replaceState({}, '', newUrl);
     }
   }, []);
 
   const getPriceString = (plan: Plan) => {
-    const interval = frequency.value as "month" | "year";
-    if (!plan.price?.[interval]) return "Free";
+    const interval = frequency.value as 'month' | 'year';
+    if (!plan.price?.[interval]) return 'Free';
     const price = plan.price[interval]!; // Non-null assertion since we checked above
-    return `${price.currency === "USD" ? "$" : ""}${price.amount}`;
+    return `${price.currency === 'USD' ? '$' : ''}${price.amount}`;
   };
 
   const createCheckoutSession = api.stripe.createCheckoutSession.useMutation({
@@ -69,9 +69,9 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
   const handleSubscribe = async () => {
     setLoading(true);
     const priceId =
-      plans.PREMIUM.price?.[frequency.value as "month" | "year"]?.stripePriceId;
+      plans.PREMIUM.price?.[frequency.value as 'month' | 'year']?.stripePriceId;
     if (!priceId) {
-      console.error("No price ID found for selected interval");
+      console.error('No price ID found for selected interval');
       setLoading(false);
       return;
     }
@@ -96,17 +96,17 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
         <p>
           Current plan:
           <span className="ml-1 font-semibold">
-            {subscription?.status === "active" ? "Premium" : "Free"}
+            {subscription?.status === 'active' ? 'Premium' : 'Free'}
           </span>
         </p>
 
-        {subscription?.status === "canceled" && (
+        {subscription?.status === 'canceled' && (
           <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
             Expired
           </span>
         )}
 
-        {(!subscription || subscription.status !== "active") && (
+        {(!subscription || subscription.status !== 'active') && (
           <div className="space-y-4">
             <div>
               <p className="mb-2 flex items-baseline gap-x-2 text-lg">
@@ -141,20 +141,20 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
           </div>
         )}
 
-        {subscription?.status === "active" && subscription.currentPeriodEnd && (
+        {subscription?.status === 'active' && subscription.currentPeriodEnd && (
           <div className="text-sm text-stone-500">
             {subscription.cancelAtPeriodEnd ? (
               <p className="font-medium text-amber-600">
-                Your subscription will end on{" "}
+                Your subscription will end on{' '}
                 {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
               </p>
             ) : (
               <p>
-                Next billing date:{" "}
-                {new Date(subscription.currentPeriodEnd).toLocaleDateString()}{" "}
+                Next billing date:{' '}
+                {new Date(subscription.currentPeriodEnd).toLocaleDateString()}{' '}
                 <span className="text-stone-500">
-                  (Renews{" "}
-                  {subscription.interval === "month" ? "monthly" : "annually"})
+                  (Renews{' '}
+                  {subscription.interval === 'month' ? 'monthly' : 'annually'})
                 </span>
               </p>
             )}
@@ -164,22 +164,22 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
 
       <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
         <p className="w-full text-sm text-stone-500">
-          {subscription?.status === "active"
-            ? "Manage your subscription and payment method."
-            : "Select billing interval and upgrade to Premium."}
+          {subscription?.status === 'active'
+            ? 'Manage your subscription and payment method.'
+            : 'Select billing interval and upgrade to Premium.'}
         </p>
         <LoadingButton
           onClick={
-            subscription?.status === "active"
+            subscription?.status === 'active'
               ? handleManageSubscription
               : handleSubscribe
           }
           loading={loading}
-          variant={subscription?.status === "active" ? "outlined" : "filled"}
+          variant={subscription?.status === 'active' ? 'outlined' : 'filled'}
         >
-          {subscription?.status === "active"
-            ? "Manage Subscription"
-            : "Upgrade to Premium"}
+          {subscription?.status === 'active'
+            ? 'Manage Subscription'
+            : 'Upgrade to Premium'}
         </LoadingButton>
       </div>
     </div>

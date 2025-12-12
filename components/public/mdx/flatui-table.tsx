@@ -1,8 +1,8 @@
-import { QueryClient, QueryClientProvider, useQuery } from "react-query";
-import Papa from "papaparse";
-import { Grid } from "@githubocto/flat-ui";
-import LoadingSpinner from "./loading-spinner";
-import { Data } from "./types";
+import { Grid } from '@githubocto/flat-ui';
+import Papa from 'papaparse';
+import { QueryClient, QueryClientProvider, useQuery } from 'react-query';
+import LoadingSpinner from './loading-spinner';
+import { Data } from './types';
 
 const queryClient = new QueryClient();
 
@@ -74,13 +74,13 @@ const TableInner: React.FC<FlatUiTableProps> = ({
   const values = data.values;
 
   const { data: csvString, isLoading: isDownloadingCSV } = useQuery(
-    ["dataCsv", url, uniqueId],
+    ['dataCsv', url, uniqueId],
     () => getCsv(url as string, bytes),
     { enabled: !!url },
   );
 
   const { data: parsedData, isLoading: isParsing } = useQuery(
-    ["dataPreview", csvString, uniqueId],
+    ['dataPreview', csvString, uniqueId],
     () =>
       parseCsv(csv ? (csv as string) : (csvString as string), parsingConfig),
     { enabled: csv ? true : !!csvString },
@@ -88,7 +88,7 @@ const TableInner: React.FC<FlatUiTableProps> = ({
 
   if (values) {
     return (
-      <div className="w-full" style={{ height: "500px" }}>
+      <div className="w-full" style={{ height: '500px' }}>
         <Grid data={values} />
       </div>
     );
@@ -103,7 +103,7 @@ const TableInner: React.FC<FlatUiTableProps> = ({
 
   if (parsedData)
     return (
-      <div className="w-full" style={{ height: "500px" }}>
+      <div className="w-full" style={{ height: '500px' }}>
         <Grid data={parsedData.data} />
       </div>
     );

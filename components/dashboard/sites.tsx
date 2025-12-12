@@ -1,13 +1,12 @@
-import { redirect } from "next/navigation";
-
-import SiteCard from "./site-card";
-import { getSession } from "@/server/auth";
-import { api } from "@/trpc/server";
+import { redirect } from 'next/navigation';
+import { getSession } from '@/server/auth';
+import { api } from '@/trpc/server';
+import SiteCard from './site-card';
 
 export default async function Sites({ limit }: { limit?: number }) {
   const session = await getSession();
   if (!session) {
-    redirect("/login");
+    redirect('/login');
   }
 
   const sites = await api.user.getSites.query({ limit });
