@@ -9,7 +9,7 @@ import {
   fontBrand,
   fontDashboardBody,
   fontDashboardHeading,
-} from '@/styles/fonts';
+} from '@/styles/fonts-dashboard';
 import { TRPCReactProvider } from '@/trpc/react';
 import Providers from './providers';
 

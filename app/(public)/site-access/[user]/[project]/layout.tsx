@@ -8,7 +8,7 @@ import {
   fontBrand,
   fontDashboardBody,
   fontDashboardHeading,
-} from '@/styles/fonts';
+} from '@/styles/fonts-dashboard';
 
 const { favicon } = getConfig();
 

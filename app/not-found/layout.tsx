@@ -3,7 +3,7 @@ import {
   fontBrand,
   fontDashboardBody,
   fontDashboardHeading,
-} from '@/styles/fonts';
+} from '@/styles/fonts-dashboard';
 
 import '@/styles/dashboard.css';
 

@@ -16,7 +16,7 @@ import { getSiteUrlPath } from '@/lib/get-site-url';
 import { getThemeUrl } from '@/lib/get-theme';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { getSession } from '@/server/auth';
-import { fontBody, fontBrand, fontHeading } from '@/styles/fonts';
+import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
 import { TRPCReactProvider } from '@/trpc/react';
 import { api } from '@/trpc/server';
 import Providers from './providers';
