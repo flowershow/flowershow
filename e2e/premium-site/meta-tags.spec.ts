@@ -25,7 +25,7 @@ test.describe('Meta tags', () => {
       .locator("meta[property='og:image']")
       .getAttribute('content');
     await expect(ogImage).toBe(
-      `http://${publishedSitePage.domain}/_r/-/assets/image.jpg`,
+      `http://${publishedSitePage.domain}/assets/image.jpg`,
     );
 
     const ogType = await publishedSitePage.page

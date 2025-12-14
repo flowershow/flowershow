@@ -1303,7 +1303,7 @@ export const siteRouter = createTRPCRouter({
             return (
               (blob.appPath
                 ? prefix + (blob.appPath === '/' ? '' : '/' + blob.appPath)
-                : prefix + '/_r/-/' + blob.path) || '/'
+                : prefix + '/' + blob.path) || '/'
             );
           });
 

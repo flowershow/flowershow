@@ -106,7 +106,7 @@ export default async function middleware(req: NextRequest) {
       return rewrite(`/api/sitemap/${username}/${projectname}`, req);
     }
 
-    // Raw files: /_r/-/<path>
+    // Raw asset file access
     const raw = rewriteRawIfNeeded(
       slug,
       `/api/raw/${username}/${projectname}`,
@@ -145,7 +145,7 @@ export default async function middleware(req: NextRequest) {
     return rewrite(`/api/sitemap/_domain/${hostname}`, req);
   }
 
-  // Raw files: /_r/-/<path>
+  // Raw asset file access
   const raw = rewriteRawIfNeeded(path, `/api/raw/_domain/${hostname}`, req);
   if (raw) return raw;
 
@@ -258,17 +258,17 @@ function rewriteRawIfNeeded(
   apiBase: string,
   req: NextRequest,
 ) {
-  const rawMatch = inputPath?.match(/^\/_r\/(-)\/(.+)/);
-  if (!rawMatch) return null;
+  const [, filePath, ext = ''] =
+    inputPath.match(/^([^&]+?)(?:\.([^.\/&]+))?(?:&.*)?$/) ?? [];
 
-  const branch = rawMatch[1]!;
-  const filePath = rawMatch[2]!;
+  // TODO handle edge case where file name includes dots
+  if (!ext || !filePath) return null;
 
-  const encoded = filePath.split('/').map(normaliseSegment).join('/');
+  const encoded = inputPath.split('/').map(normaliseSegment).join('/');
 
-  return NextResponse.rewrite(
-    new URL(`${apiBase}/${branch}/${encoded}`, req.url),
-  );
+  console.log(`${apiBase}${encoded}`);
+
+  return NextResponse.rewrite(new URL(`${apiBase}${encoded}`, req.url));
 }
 
 /**

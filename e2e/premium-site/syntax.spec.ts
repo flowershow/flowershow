@@ -32,6 +32,6 @@ test('Obsidian embeds', async ({ publishedSitePage }) => {
     .getByRole('img');
   await expect(obsidianEmbed).toHaveAttribute(
     'src',
-    `${publishedSitePage.siteUrl}/_r/-/assets/image.jpg`,
+    `${publishedSitePage.siteUrl}/assets/image.jpg`,
   );
 });

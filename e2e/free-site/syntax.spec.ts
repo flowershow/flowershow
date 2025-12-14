@@ -79,7 +79,7 @@ test('Obsidian embeds', async ({ publishedSitePage }) => {
     .getByRole('img');
   await expect(obsidianEmbed).toHaveAttribute(
     'src',
-    `${publishedSitePage.siteUrl}/_r/-/assets/image.jpg`,
+    `${publishedSitePage.siteUrl}/assets/image.jpg`,
   );
 
   const obsidianEmbedAbsolute = publishedSitePage.page
@@ -87,7 +87,7 @@ test('Obsidian embeds', async ({ publishedSitePage }) => {
     .getByRole('img');
   await expect(obsidianEmbedAbsolute).toHaveAttribute(
     'src',
-    `${publishedSitePage.siteUrl}/_r/-/assets/image.jpg`,
+    `${publishedSitePage.siteUrl}/assets/image.jpg`,
   );
 
   const obsidianEmbedSpecialChars = publishedSitePage.page
@@ -95,7 +95,7 @@ test('Obsidian embeds', async ({ publishedSitePage }) => {
     .getByRole('img');
   await expect(obsidianEmbedSpecialChars).toHaveAttribute(
     'src',
-    `${publishedSitePage.siteUrl}/_r/-/assets/Image%20With%20Special%20Chars%20%25%26(1).jpg`,
+    `${publishedSitePage.siteUrl}/assets/Image%20With%20Special%20Chars%20%25%26(1).jpg`,
   );
 });
 
@@ -157,20 +157,20 @@ test('CommonMark images', async ({ publishedSitePage }) => {
   const backwardPathImage = commonMarkImages.nth(0);
   await expect(backwardPathImage).toHaveAttribute(
     'src',
-    `${publishedSitePage.siteUrl}/_r/-/assets/image.jpg`,
+    `${publishedSitePage.siteUrl}/assets/image.jpg`,
   );
 
   const absolutePathImage = commonMarkImages.nth(1);
   await expect(absolutePathImage).toHaveAttribute(
     'src',
-    `${publishedSitePage.siteUrl}/_r/-/assets/image.jpg`,
+    `${publishedSitePage.siteUrl}/assets/image.jpg`,
   );
 });
 
 // test.describe.configure({ mode: "parallel" });
 
 // const linkBaseUrl = `/${testSite}`;
-// const imagePath = `/${testSite}/_r/-/assets/image.jpg`;
+// const imagePath = `/${testSite}/assets/image.jpg`;
 
 // test("URL with spaces encoded as +", async ({ page }) => {
 //   await page.goto(testSite + `/blog/Post+With+Special+Signs+%25%26(1)%2B`);
@@ -206,7 +206,7 @@ test.describe('MDX', () => {
     await publishedSitePage.goto('/syntax/links-and-embeds');
     await expect(
       publishedSitePage.page.getByTestId('jsx-img').locator('img'),
-    ).toHaveAttribute('src', /\/@.+\/.+\/_r\/-\/.+/);
+    ).toHaveAttribute('src', /\/@.+\/.+\/.+/);
   });
 
   test('List component', async ({ publishedSitePage }) => {

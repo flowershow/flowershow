@@ -7,10 +7,7 @@ test.describe('MDX', () => {
     await publishedSitePage.goto('/syntax/syntax');
     await expect(
       publishedSitePage.page.getByTestId('jsx-img').locator('img'),
-    ).toHaveAttribute(
-      'src',
-      'http://test.localhost:3000/_r/-/assets/image.jpg',
-    );
+    ).toHaveAttribute('src', 'http://test.localhost:3000/assets/image.jpg');
   });
 });
 
@@ -70,6 +67,6 @@ test('Should display frontmatter metadata in the header correctly', async ({
   const authorAvatar = header.locator('.page-header-author-avatar').first();
   await expect(authorAvatar).toHaveAttribute(
     'src',
-    `${publishedSitePage.siteUrl}/_r/-/team/john.jpg`,
+    `${publishedSitePage.siteUrl}/team/john.jpg`,
   );
 });

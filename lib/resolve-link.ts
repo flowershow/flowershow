@@ -52,7 +52,7 @@ export const resolveFilePathToUrlPath = ({
     return headingId;
   }
 
-  const [, , ext = ''] = filePath.match(/^(.+?)(?:\.([^./]+))?$/) ?? [];
+  const [, , ext = ''] = filePath.match(/^(.+?)(?:\.([^.\/]+))?$/) ?? [];
   const isMarkdown = ext === 'md' || ext === 'mdx' || !ext;
   const useRawUrlPath = !isMarkdown;
 
@@ -98,7 +98,7 @@ export const resolveFilePathToUrlPath = ({
 
     return `${protocol}://${
       domain || env.NEXT_PUBLIC_ROOT_DOMAIN
-    }${sitePrefix}/_r/-${encodedUrlPath}`;
+    }${sitePrefix}${encodedUrlPath}`;
   }
 
   const encodedUrlPath = resolvedUrlPath

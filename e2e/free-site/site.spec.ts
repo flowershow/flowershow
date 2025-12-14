@@ -59,8 +59,8 @@ test.describe('Raw resource endpoints', () => {
   test('Should redirect to R2 and download the file if passed correct file path', async ({
     publishedSitePage,
   }) => {
-    // const response = await request.get(`${testSite}/_r/-/assets/image.jpg`);
-    const response = await publishedSitePage.goto('/_r/-/assets/image.jpg');
+    // const response = await request.get(`${testSite}/assets/image.jpg`);
+    const response = await publishedSitePage.goto('/assets/image.jpg');
     expect(response).not.toBeNull();
     expect(response!.status()).toBe(200);
     expect(response!.headers()['content-type']).toBe('image/jpeg');
@@ -86,7 +86,7 @@ test('Should display frontmatter metadata in the header', async ({
   const authorAvatar = header.locator('.page-header-author-avatar').first();
   await expect(authorAvatar).toHaveAttribute(
     'src',
-    `${publishedSitePage.siteUrl}/_r/-/team/john.jpg`,
+    `${publishedSitePage.siteUrl}/team/john.jpg`,
   );
 });
 

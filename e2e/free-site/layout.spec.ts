@@ -17,7 +17,7 @@ test.describe('Site layout', () => {
     const navLogo = navTitle.getByRole('img');
     await expect(navLogo).toHaveAttribute(
       'src',
-      publishedSitePage.siteUrl + '/_r/-/logo.jpg',
+      publishedSitePage.siteUrl + '/logo.jpg',
     );
     // Check navigation links
     const navLinks = navbar.locator('.site-navbar-links-container');
