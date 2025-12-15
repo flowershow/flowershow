@@ -16,7 +16,6 @@ import remarkMath from 'remark-math';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import remarkSmartypants from 'remark-smartypants';
-import remarkToc from 'remark-toc';
 import { unified } from 'unified';
 import remarkObsidianComments from '@/lib/remark-obsidian-comments';
 import remarkYouTubeAutoEmbed from '@/lib/remark-youtube-auto-embed';
@@ -70,10 +69,6 @@ export async function processMarkdown(
     .use(remarkSmartypants, { quotes: false, dashes: 'oldschool' })
     .use(remarkMath)
     .use(remarkCallout)
-    .use(remarkToc, {
-      heading: 'Table of contents',
-      tight: true,
-    })
     .use(remarkMark)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
@@ -160,13 +155,6 @@ export const getMdxOptions = ({
         [remarkSmartypants, { quotes: false, dashes: 'oldschool' }],
         remarkMath,
         remarkCallout,
-        [
-          remarkToc,
-          {
-            heading: 'Table of contents',
-            tight: true,
-          },
-        ],
         [mdxMermaid, {}],
         remarkMark,
         [remarkObsidianBases, { sitePrefix, customDomain, siteId, rootDir }],
