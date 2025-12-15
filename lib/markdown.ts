@@ -21,6 +21,7 @@ import remarkObsidianComments from '@/lib/remark-obsidian-comments';
 import remarkYouTubeAutoEmbed from '@/lib/remark-youtube-auto-embed';
 import rehypeHtmlEnhancements from './rehype-html-enhancements';
 import rehypeResolveExplicitJsxUrls from './rehype-resolve-explicit-jsx-urls';
+import rehypeUnwrapParagraphsAroundMedia from './rehype-unwrap-paragraph-around-media';
 import remarkCommonMarkLinkResolver from './remark-commonmark-link-resolver';
 import remarkObsidianBases from './remark-obsidian-bases';
 import remarkObsidianImageSize from './remark-obsidian-image-size';
@@ -72,39 +73,11 @@ export async function processMarkdown(
     .use(remarkMark)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
+    .use(rehypeUnwrapParagraphsAroundMedia)
     .use(rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain })
     .use(rehypeHtmlEnhancements, { sitePrefix })
     .use(rehypeSlug)
-    .use(rehypeAutolinkHeadings, {
-      properties: { className: 'heading-link' },
-      test(element: any) {
-        return (
-          ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(element.tagName) &&
-          element.properties?.id !== 'table-of-contents' &&
-          element.properties?.className !== 'blockquote-heading'
-        );
-      },
-      content() {
-        return [
-          h(
-            'svg',
-            {
-              xmlns: 'http:www.w3.org/2000/svg',
-              fill: '#ab2b65',
-              viewBox: '0 0 20 20',
-              className: 'w-5 h-5',
-            },
-            [
-              h('path', {
-                fillRule: 'evenodd',
-                clipRule: 'evenodd',
-                d: 'M9.493 2.853a.75.75 0 00-1.486-.205L7.545 6H4.198a.75.75 0 000 1.5h3.14l-.69 5H3.302a.75.75 0 000 1.5h3.14l-.435 3.148a.75.75 0 001.486.205L7.955 14h2.986l-.434 3.148a.75.75 0 001.486.205L12.456 14h3.346a.75.75 0 000-1.5h-3.14l.69-5h3.346a.75.75 0 000-1.5h-3.14l.435-3.147a.75.75 0 00-1.486-.205L12.045 6H9.059l.434-3.147zM8.852 7.5l-.69 5h2.986l.69-5H8.852z',
-              }),
-            ],
-          ),
-        ];
-      },
-    })
+    .use(rehypeAutolinkHeadings, rehypeAutolinkHeadingsConfig)
     .use(rehypeKatex, { output: 'htmlAndMathml' })
     .use(rehypePrismPlus, { ignoreMissing: true })
     .use(rehypeStringify);
@@ -160,44 +133,11 @@ export const getMdxOptions = ({
         [remarkObsidianBases, { sitePrefix, customDomain, siteId, rootDir }],
       ],
       rehypePlugins: [
+        rehypeUnwrapParagraphsAroundMedia,
         [rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain }],
         [rehypeHtmlEnhancements, { sitePrefix }],
         rehypeSlug,
-        [
-          rehypeAutolinkHeadings,
-          {
-            properties: { className: 'heading-link' },
-            test(element: any) {
-              return (
-                ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(
-                  element.tagName,
-                ) &&
-                element.properties?.id !== 'table-of-contents' &&
-                element.properties?.className !== 'blockquote-heading'
-              );
-            },
-            content() {
-              return [
-                h(
-                  'svg',
-                  {
-                    xmlns: 'http:www.w3.org/2000/svg',
-                    fill: '#ab2b65',
-                    viewBox: '0 0 20 20',
-                    className: 'w-5 h-5',
-                  },
-                  [
-                    h('path', {
-                      fillRule: 'evenodd',
-                      clipRule: 'evenodd',
-                      d: 'M9.493 2.853a.75.75 0 00-1.486-.205L7.545 6H4.198a.75.75 0 000 1.5h3.14l-.69 5H3.302a.75.75 0 000 1.5h3.14l-.435 3.148a.75.75 0 001.486.205L7.955 14h2.986l-.434 3.148a.75.75 0 001.486.205L12.456 14h3.346a.75.75 0 000-1.5h-3.14l.69-5h3.346a.75.75 0 000-1.5h-3.14l.435-3.147a.75.75 0 00-1.486-.205L12.045 6H9.059l.434-3.147zM8.852 7.5l-.69 5h2.986l.69-5H8.852z',
-                    }),
-                  ],
-                ),
-              ];
-            },
-          },
-        ],
+        [rehypeAutolinkHeadings, rehypeAutolinkHeadingsConfig],
         // @ts-ignore
         [rehypeKatex, { output: 'htmlAndMathml' }],
         // @ts-ignore
@@ -216,4 +156,35 @@ export const getUrlResolver = (sitePrefix: string, domain?: string) => {
       domain,
     });
   };
+};
+
+const rehypeAutolinkHeadingsConfig = {
+  properties: { className: 'heading-link' },
+  test(element: any) {
+    return (
+      ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(element.tagName) &&
+      element.properties?.id !== 'table-of-contents' &&
+      element.properties?.className !== 'blockquote-heading'
+    );
+  },
+  content() {
+    return [
+      h(
+        'svg',
+        {
+          xmlns: 'http:www.w3.org/2000/svg',
+          fill: '#ab2b65',
+          viewBox: '0 0 20 20',
+          className: 'w-5 h-5',
+        },
+        [
+          h('path', {
+            fillRule: 'evenodd',
+            clipRule: 'evenodd',
+            d: 'M9.493 2.853a.75.75 0 00-1.486-.205L7.545 6H4.198a.75.75 0 000 1.5h3.14l-.69 5H3.302a.75.75 0 000 1.5h3.14l-.435 3.148a.75.75 0 001.486.205L7.955 14h2.986l-.434 3.148a.75.75 0 001.486.205L12.456 14h3.346a.75.75 0 000-1.5h-3.14l.69-5h3.346a.75.75 0 000-1.5h-3.14l.435-3.147a.75.75 0 00-1.486-.205L12.045 6H9.059l.434-3.147zM8.852 7.5l-.69 5h2.986l.69-5H8.852z',
+          }),
+        ],
+      ),
+    ];
+  },
 };
