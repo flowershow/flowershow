@@ -128,18 +128,9 @@ export default async function PublicLayout(props: {
     })
     .catch(() => null);
 
-  let customCssSrc;
-  const customCss = await api.site.getBlobByPath
+  const customCss = await api.site.getCustomStyles
     .query({
       siteId: site.id,
-      path: 'custom.css',
-    })
-    .then(() => {
-      customCssSrc = resolveFilePathToUrlPath({
-        target: 'custom.css',
-        sitePrefix,
-        domain: site.customDomain,
-      });
     })
     .catch(() => null);
 
@@ -251,9 +242,7 @@ export default async function PublicLayout(props: {
           />
         </noscript>
         {themeUrl && <link rel="stylesheet" href={themeUrl} />}
-        {customCssSrc && (
-          <link rel="stylesheet" crossOrigin="anonymous" href={customCssSrc} />
-        )}
+        {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
         {customFooterCss && (
           <style
             id="unocss-footer"

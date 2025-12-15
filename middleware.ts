@@ -266,8 +266,6 @@ function rewriteRawIfNeeded(
 
   const encoded = inputPath.split('/').map(normaliseSegment).join('/');
 
-  console.log(`${apiBase}${encoded}`);
-
   return NextResponse.rewrite(new URL(`${apiBase}${encoded}`, req.url));
 }
 
