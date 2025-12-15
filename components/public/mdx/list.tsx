@@ -6,6 +6,7 @@ import { api } from '@/trpc/react';
 import ListComponentPagination from './list-pagination';
 import 'react-loading-skeleton/dist/skeleton.css';
 import Image from 'next/image';
+import { useSearchParams } from 'next/navigation';
 
 type Slot = 'media' | 'eyebrow' | 'headline' | 'summary' | 'footnote';
 export type SlotsMap = Partial<Record<Slot, keyof PageMetadata>>;
@@ -39,7 +40,6 @@ const _convertFieldsToSlotsMap = (fields: Field[]) => {
 
 export interface ListProps {
   siteId: string;
-  pageNumber?: number;
   /** Optional: Directory (relative to site root) to list items from. Default: "" (root folder). */
   dir?: string;
   /** Optional: Page frontmatter fields to display. `Array<"title" | "description" | "authors" | "date" | "image">`<br/>⚠️ NOTE This prop is going to be deprecated in favor of the new `slots` prop.*/
@@ -65,9 +65,12 @@ export default function List({
   slots = { headline: 'title', summary: 'description' },
   // slotsFormat = { eyebrow: "date", footnote: "join: , " },
   // locale,
-  pageNumber = 1,
   pageSize,
 }: ListProps) {
+  const searchParams = useSearchParams();
+  const pageParam = searchParams.get('page');
+  const pageNumber = pageParam ? Number(pageParam) : 1;
+
   const { data, isLoading, error } = api.site.getListComponentItems.useQuery({
     siteId,
     dir,

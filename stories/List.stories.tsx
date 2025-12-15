@@ -13,7 +13,7 @@ const meta: Meta<typeof List> = {
     dir: '',
   },
   parameters: {
-    controls: { exclude: ['fields', 'siteId', 'pageNumber'] },
+    controls: { exclude: ['fields', 'siteId'] },
   },
   argTypes: {
     dir: {
@@ -55,7 +55,7 @@ export const WithPagination: Story = {
       },
     },
   },
-  args: { pageNumber: 2, pageSize: 10 },
+  args: { pageSize: 10 },
   async beforeEach() {
     mocked(api.site.getListComponentItems.query).mockResolvedValue({
       items: manyItems(23),

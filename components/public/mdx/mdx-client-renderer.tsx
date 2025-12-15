@@ -10,10 +10,9 @@ type Props = {
   mdxSource: SerializeResult<PageMetadata>;
   blob: Blob;
   site: PublicSite;
-  pageNumber?: number;
 };
 
-function MDXClientRenderer({ mdxSource, blob, site, pageNumber }: Props) {
+function MDXClientRenderer({ mdxSource, blob, site }: Props) {
   if ('error' in mdxSource) {
     const message = mdxSource.error.message.concat(
       '\n\n🧑‍🔧 See how to debug and solve most common MDX errors in our docs:\nhttps://flowershow.app/docs/debug-mdx-errors',
@@ -24,7 +23,6 @@ function MDXClientRenderer({ mdxSource, blob, site, pageNumber }: Props) {
   const components = mdxComponentsFactory({
     blob,
     site,
-    pageNumber,
   });
 
   try {

@@ -104,9 +104,7 @@ describe('List Component - Pagination Tests', () => {
         error: null,
       } as any);
 
-      const { container } = render(
-        <List siteId={mockSiteId} pageSize={4} pageNumber={1} />,
-      );
+      const { container } = render(<List siteId={mockSiteId} pageSize={4} />);
 
       // Should display all 4 items
       const articles = container.querySelectorAll('.list-component-item');
@@ -126,9 +124,7 @@ describe('List Component - Pagination Tests', () => {
         error: null,
       } as any);
 
-      const { container } = render(
-        <List siteId={mockSiteId} pageSize={4} pageNumber={1} />,
-      );
+      const { container } = render(<List siteId={mockSiteId} pageSize={4} />);
 
       const pagination = container.querySelector('.list-component-pagination');
       expect(pagination).not.toBeInTheDocument();
@@ -144,9 +140,7 @@ describe('List Component - Pagination Tests', () => {
       } as any);
       mockUseSearchParams.mockReturnValue(new URLSearchParams({ page: '1' }));
 
-      const { container } = render(
-        <List siteId={mockSiteId} pageSize={3} pageNumber={1} />,
-      );
+      const { container } = render(<List siteId={mockSiteId} pageSize={3} />);
 
       // Should display only 3 items on page 1
       const articles = container.querySelectorAll('.list-component-item');
@@ -170,9 +164,7 @@ describe('List Component - Pagination Tests', () => {
 
       mockUseSearchParams.mockReturnValue(new URLSearchParams({ page: '2' }));
 
-      const { container } = render(
-        <List siteId={mockSiteId} pageSize={3} pageNumber={2} />,
-      );
+      const { container } = render(<List siteId={mockSiteId} pageSize={3} />);
 
       // Should display only 1 item on page 2
       const articles = container.querySelectorAll('.list-component-item');
@@ -229,9 +221,7 @@ describe('List Component - Pagination Tests', () => {
 
       mockUseSearchParams.mockReturnValue(new URLSearchParams({ page: '5' }));
 
-      const { container } = render(
-        <List siteId={mockSiteId} pageSize={3} pageNumber={5} />,
-      );
+      const { container } = render(<List siteId={mockSiteId} pageSize={3} />);
 
       // Should display no items (slice returns empty array)
       const articles = container.querySelectorAll('.list-component-item');

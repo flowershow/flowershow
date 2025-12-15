@@ -30,11 +30,9 @@ import Pre from './pre';
 export const mdxComponentsFactory = ({
   blob,
   site,
-  pageNumber,
 }: {
   blob: Blob;
   site: PublicSite;
-  pageNumber?: number;
 }) => {
   const components: MDXComponents = {
     pre: (props) => <Pre {...props} />,
@@ -54,7 +52,7 @@ export const mdxComponentsFactory = ({
       return <CustomHtml {...props} />;
     }, 'CustomHtml'),
     List: withErrorBoundary((props: ListProps) => {
-      return <List {...props} siteId={site.id} pageNumber={pageNumber} />;
+      return <List {...props} siteId={site.id} />;
     }, 'List'),
     mermaid: Mermaid as any,
     FlatUiTable: withErrorBoundary((props: FlatUiTableProps) => {

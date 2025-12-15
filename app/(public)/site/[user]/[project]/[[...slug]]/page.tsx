@@ -132,16 +132,12 @@ export async function generateMetadata(props: {
 
 export default async function SitePage(props: {
   params: Promise<RouteParams>;
-  searchParams: Promise<SearchParams>;
 }) {
   const params = await props.params;
-  const searchParams = await props.searchParams;
   const projectName = decodeURIComponent(params.project);
   const userName = decodeURIComponent(params.user);
   const slug = params.slug ? params.slug.join('/') : '/';
   const decodedSlug = slug.replace(/%20/g, '+');
-  const pageParam = searchParams.page;
-  const pageNumber = pageParam ? Number(pageParam) : 1;
 
   const site = await getSite(userName, projectName);
   const sitePrefix = getSiteUrlPath(site);
@@ -270,12 +266,7 @@ export default async function SitePage(props: {
           );
         } else {
           compiledContent = (
-            <MDXClient
-              mdxSource={mdxSource}
-              blob={blob}
-              site={site}
-              pageNumber={pageNumber}
-            />
+            <MDXClient mdxSource={mdxSource} blob={blob} site={site} />
           );
         }
       }
