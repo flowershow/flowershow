@@ -68,14 +68,6 @@ export default async function RootLayout({
       lang="en"
       suppressHydrationWarning
     >
-      <head>
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex.min.css"
-          integrity="sha384-WcoG4HRXMzYzfCgiyfrySxx90XSl2rxY5mnVY5TwtWE6KLrArNKn0T/mOgNL0Mmi"
-          crossOrigin="anonymous"
-        />
-      </head>
       <body>
         <TRPCReactProvider headers={await headers()}>
           <Providers>

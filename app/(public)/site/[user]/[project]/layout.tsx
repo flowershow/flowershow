@@ -14,7 +14,6 @@ import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { generateScopedCss } from '@/lib/generate-scoped-css';
 import { getSiteUrlPath } from '@/lib/get-site-url';
 import { getThemeUrl } from '@/lib/get-theme';
-import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { getSession } from '@/server/auth';
 import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
 import { TRPCReactProvider } from '@/trpc/react';
@@ -134,6 +133,10 @@ export default async function PublicLayout(props: {
     })
     .catch(() => null);
 
+  const usesGoogleFonts = customCss
+    ? /fonts\.googleapis\.com/i.test(customCss)
+    : false;
+
   // Theme from official Flowershow Themes collection
   const themeName =
     typeof siteConfig?.theme === 'string' // backward compatibility for theme of type string
@@ -233,14 +236,16 @@ export default async function PublicLayout(props: {
       data-theme={defaultMode}
     >
       <head>
-        <noscript>
-          <link
-            rel="stylesheet"
-            href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
-            integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn"
-            crossOrigin="anonymous"
-          />
-        </noscript>
+        {usesGoogleFonts && (
+          <>
+            <link rel="preconnect" href="https://fonts.googleapis.com" />
+            <link
+              rel="preconnect"
+              href="https://fonts.gstatic.com"
+              crossOrigin="anonymous"
+            ></link>
+          </>
+        )}
         {themeUrl && <link rel="stylesheet" href={themeUrl} />}
         {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
         {customFooterCss && (
@@ -279,6 +284,14 @@ export default async function PublicLayout(props: {
             }}
           />
         )}
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css"
+            integrity="sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn"
+            crossOrigin="anonymous"
+          />
+        </noscript>
       </head>
       <body>
         <KatexStylesLoader />
