@@ -5,9 +5,9 @@ import {
   Card,
   CardActionArea,
   CardContent,
-  CardMedia,
   Typography,
 } from '@mui/material';
+import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
@@ -231,6 +231,8 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
           const linkUrl = `${sitePrefix}/${row.appPath || ''}`;
           const image = getImage(row);
           const isHexColor = image?.startsWith('#') && image.length === 7;
+          // Prioritize images in the first 6 cards (likely above the fold)
+          const isPriorityImage = index < 6;
 
           return (
             <Card
@@ -253,19 +255,28 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
                 }}
               >
                 {image && (
-                  <CardMedia
-                    component={isHexColor ? 'div' : 'img'}
-                    image={!isHexColor ? image : undefined}
-                    alt={
-                      !isHexColor ? getFieldValue(row, 'file.name') : undefined
-                    }
+                  <Box
                     sx={{
+                      position: 'relative',
                       width: '100%',
                       aspectRatio: `1 / ${imageAspectRatio}`,
-                      objectFit: imageFit,
                       bgcolor: isHexColor ? image : 'grey.100',
+                      overflow: 'hidden',
                     }}
-                  />
+                  >
+                    {!isHexColor && (
+                      <Image
+                        src={image}
+                        alt={getFieldValue(row, 'file.name')}
+                        fill
+                        sizes={`${cardSize}px`}
+                        fetchPriority={isPriorityImage ? 'high' : 'auto'}
+                        style={{
+                          objectFit: imageFit,
+                        }}
+                      />
+                    )}
+                  </Box>
                 )}
                 <CardContent sx={{ flexGrow: 1, p: 2 }}>
                   {order.map((field, fieldIndex) =>

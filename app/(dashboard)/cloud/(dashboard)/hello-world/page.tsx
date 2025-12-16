@@ -1,6 +1,6 @@
 import Image from 'next/image';
 
-export default function ObsidianQuickstart() {
+export default function HelloWorld() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col px-8 py-16">
       {/* <div className="mb-8 w-full max-w-[600px]">

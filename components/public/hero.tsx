@@ -83,6 +83,7 @@ export default async function Hero({
               height={800}
               src={image}
               className="page-hero-image"
+              fetchPriority="high"
             />
           </div>
         )}

@@ -18,10 +18,7 @@
     "build-storybook": "storybook build -o ./deploy/storybook/out"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "eslint . --fix",
-      "biome format --write"
-    ]
+    "*.{js,jsx,ts,tsx}": ["eslint . --fix", "biome format --write"]
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.914.0",
@@ -60,6 +57,7 @@
     "github-slugger": "^2.0.0",
     "gray-matter": "^4.0.3",
     "hast-util-from-html": "^2.0.3",
+    "hast-util-to-jsx-runtime": "^2.3.6",
     "hastscript": "^9.0.1",
     "inngest": "^3.44.3",
     "jose": "^6.1.0",

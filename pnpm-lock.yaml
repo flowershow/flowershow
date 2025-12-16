@@ -120,6 +120,9 @@ importers:
       hast-util-from-html:
         specifier: ^2.0.3
         version: 2.0.3
+      hast-util-to-jsx-runtime:
+        specifier: ^2.3.6
+        version: 2.3.6
       hastscript:
         specifier: ^9.0.1
         version: 9.0.1

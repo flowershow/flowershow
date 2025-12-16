@@ -4,12 +4,12 @@ import matter from 'gray-matter';
 import { h } from 'hastscript';
 import mdxMermaid from 'mdx-mermaid';
 import type { EvaluateOptions } from 'next-mdx-remote-client/rsc';
+import { ReactElement } from 'react';
 import rehypeAutolinkHeadings from 'rehype-autolink-headings';
 import rehypeKatex from 'rehype-katex';
 import rehypePrismPlus from 'rehype-prism-plus';
 import rehypeRaw from 'rehype-raw';
 import rehypeSlug from 'rehype-slug';
-import rehypeStringify from 'rehype-stringify';
 import remarkGfm from 'remark-gfm';
 import { remarkMark } from 'remark-mark-highlight';
 import remarkMath from 'remark-math';
@@ -17,10 +17,12 @@ import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import remarkSmartypants from 'remark-smartypants';
 import { unified } from 'unified';
+import FsImage from '@/components/public/mdx/fs-image';
 import remarkObsidianComments from '@/lib/remark-obsidian-comments';
 import remarkYouTubeAutoEmbed from '@/lib/remark-youtube-auto-embed';
 import rehypeHtmlEnhancements from './rehype-html-enhancements';
 import rehypeResolveExplicitJsxUrls from './rehype-resolve-explicit-jsx-urls';
+import rehypeToReact from './rehype-to-react';
 import rehypeUnwrapParagraphsAroundMedia from './rehype-unwrap-paragraph-around-media';
 import remarkCommonMarkLinkResolver from './remark-commonmark-link-resolver';
 import remarkObsidianBases from './remark-obsidian-bases';
@@ -43,8 +45,7 @@ export async function processMarkdown(
   _content: string,
   options: MarkdownOptions,
 ) {
-  const { filePath, files, sitePrefix, customDomain, siteId, permalinks } =
-    options;
+  const { filePath, files, sitePrefix, customDomain, permalinks } = options;
 
   // this strips out frontmatter, so that it's not inlined with the rest of the markdown file
   const { content } = matter(_content, {});
@@ -80,13 +81,16 @@ export async function processMarkdown(
     .use(rehypeAutolinkHeadings, rehypeAutolinkHeadingsConfig)
     .use(rehypeKatex, { output: 'htmlAndMathml' })
     .use(rehypePrismPlus, { ignoreMissing: true })
-    .use(rehypeStringify);
+    .use(rehypeToReact, {
+      components: {
+        img: FsImage,
+      },
+    });
 
-  const result = await processor.process(content);
-  return result.toString();
+  return (await processor.process(content)).result as ReactElement;
 }
 
-// TODO this is ugly
+// Get MDX options
 export const getMdxOptions = ({
   filePath,
   files,

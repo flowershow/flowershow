@@ -4,7 +4,7 @@ import { hydrate, type SerializeResult } from 'next-mdx-remote-client/csr';
 import { ErrorBoundary } from 'react-error-boundary';
 import ErrorMessage from '@/components/public/error-message';
 import type { PageMetadata, PublicSite } from '@/server/api/types';
-import { mdxComponentsFactory } from './mdx-components-factory';
+import { mdxComponentsFactory } from './mdx/mdx-components-factory';
 
 type Props = {
   mdxSource: SerializeResult<PageMetadata>;

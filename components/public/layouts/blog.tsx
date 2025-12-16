@@ -100,6 +100,8 @@ export const BlogLayout: React.FC<Props> = ({
                 alt="Featured image"
                 src={image}
                 fill
+                objectFit="contain"
+                sizes="(min-width: 1280px) 1152px, 100vw"
                 className="page-header-image"
                 fetchPriority="high"
               />

@@ -9,7 +9,7 @@ import Comments from '@/components/public/comments';
 import ErrorMessage from '@/components/public/error-message';
 import Hero from '@/components/public/hero';
 import { BlogLayout } from '@/components/public/layouts/blog';
-import MDXClient from '@/components/public/mdx/mdx-client';
+import MDXClient from '@/components/public/mdx-client';
 import SiteTree from '@/components/public/site-tree';
 import TableOfContents from '@/components/public/table-of-contents';
 import { getConfig } from '@/lib/app-config';
@@ -230,7 +230,7 @@ export default async function SitePage(props: {
           : '';
 
         // Process using unified (MD renderer)
-        const html = await processMarkdown(preprocessedContent ?? '', {
+        const result = await processMarkdown(preprocessedContent ?? '', {
           files: siteFilePaths,
           filePath: blob.path,
           sitePrefix,
@@ -239,7 +239,7 @@ export default async function SitePage(props: {
           rootDir: site.rootDir ?? undefined,
           permalinks: permalinksMapping,
         });
-        compiledContent = <div dangerouslySetInnerHTML={{ __html: html }} />;
+        compiledContent = result;
       } else {
         // Process using next-mdx-remote-client (MDX renderer)
         const mdxOptions = getMdxOptions({

@@ -10,9 +10,9 @@ export default function LoginPage() {
     <div className="mx-5 border border-primary-faint p-10 sm:mx-auto sm:w-full sm:max-w-md sm:rounded-lg sm:shadow-md md:max-w-lg md:p-12">
       <Image
         alt={`${config.title} logo`}
-        width={100}
-        height={100}
-        className="relative mx-auto h-12 w-auto"
+        width={48}
+        height={48}
+        className="relative mx-auto w-auto"
         src={config.logo}
       />
       <h1 className="mt-6 text-center font-dashboard-heading text-3xl">

@@ -1833,6 +1833,12 @@
     transform: rotate(180deg);
     color: var(--color-foreground-100);
   }
+
+  .image-container {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 3 / 2;
+  }
 }
 
 @layer utilities {
