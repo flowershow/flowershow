@@ -253,17 +253,93 @@ function redirectToSiteLogin(req: NextRequest, site: InternalSite) {
   return NextResponse.redirect(new URL(loginUrl, req.url), 307);
 }
 
+/**
+ * Whitelist of known file extensions for raw file serving.
+ * Only files with these extensions will be treated as raw assets.
+ *
+ * NOTE: Multi-part extensions (e.g., .tar.gz, .d.ts) are not currently supported.
+ * Only the last segment after the final dot is checked against this whitelist.
+ */
+const KNOWN_FILE_EXTENSIONS = new Set([
+  // Documents
+  'md',
+  'mdx',
+  'pdf',
+  'txt',
+  // Images
+  'png',
+  'jpg',
+  'jpeg',
+  'gif',
+  'svg',
+  'webp',
+  // Data
+  'csv',
+  'json',
+  'yaml',
+  'yml',
+  'xml',
+  // Media
+  'mp4',
+  'mp3',
+  'wav',
+  'ogg',
+  // Archives
+  'zip',
+  'tar',
+  'gz',
+  // Web assets
+  'css',
+  'js',
+  'ico',
+  // Fonts
+  'woff',
+  'woff2',
+  'ttf',
+  'eot',
+]);
+
+/**
+ * Determines if a path should be rewritten as a raw file request.
+ * Uses a whitelist approach to identify valid file extensions, which handles
+ * edge cases where filenames contain dots (e.g., "my.config.json", "file.v2.png").
+ *
+ * Only checks the extension in the filename (last path segment), not in folder names.
+ *
+ * @param inputPath - The request path (may include query parameters)
+ * @param apiBase - The API base path to rewrite to
+ * @param req - The Next.js request object
+ * @returns NextResponse for rewrite, or null if not a raw file
+ */
 function rewriteRawIfNeeded(
   inputPath: string,
   apiBase: string,
   req: NextRequest,
 ) {
-  const [, filePath, ext = ''] =
-    inputPath.match(/^([^&]+?)(?:\.([^.\/&]+))?(?:&.*)?$/) ?? [];
+  // Extract the path before query parameters
+  const [pathPart] = inputPath.split('&');
+  if (!pathPart) return null;
 
-  // TODO handle edge case where file name includes dots
-  if (!ext || !filePath) return null;
+  // Get the filename (last segment of the path)
+  const lastSlashIndex = pathPart.lastIndexOf('/');
+  const filename =
+    lastSlashIndex === -1 ? pathPart : pathPart.slice(lastSlashIndex + 1);
 
+  // Find the last dot in the filename to identify potential extension
+  const lastDotIndex = filename.lastIndexOf('.');
+  if (lastDotIndex === -1) return null; // No extension found
+
+  // Extract the potential extension (everything after the last dot, without the dot itself)
+  const potentialExt = filename.slice(lastDotIndex + 1).toLowerCase();
+
+  // Check if the extension is in our whitelist of known file types
+  // This prevents false positives where dots are part of the filename
+  // (e.g., "my.data.file" won't be treated as having a "file" extension)
+  if (!KNOWN_FILE_EXTENSIONS.has(potentialExt)) {
+    return null; // Not a recognized file extension, treat as regular path
+  }
+
+  // Normalize and encode each path segment
   const encoded = inputPath.split('/').map(normaliseSegment).join('/');
 
   return NextResponse.rewrite(new URL(`${apiBase}${encoded}`, req.url));
