@@ -814,7 +814,7 @@ export const siteRouter = createTRPCRouter({
     .input(
       z.object({
         siteId: z.string().min(1),
-        dir: z.string().min(1), // absolute dir
+        dir: z.string().optional(), // absolute dir
         slots: z.looseObject({ media: z.any().optional() }).optional(),
       }),
     )
@@ -838,7 +838,7 @@ export const siteRouter = createTRPCRouter({
       return await unstable_cache(
         async (input) => {
           const _dir = input.dir.replace(/^\//, '');
-          const dir = _dir.endsWith('/') ? _dir : `${_dir}/`;
+          const dir = _dir && (_dir.endsWith('/') ? _dir : `${_dir}/`);
           const dirReadmePattern = dir + 'README.md(x)?';
           const dirIndexPattern = dir + 'index.md(x)?';
 
