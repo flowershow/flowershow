@@ -1,6 +1,6 @@
 # 💐 Flowershow
 
-> The best way to publish markdown powered websites
+> The fast and simple way to turn markdown into a website
 
 [👉 See Flowershow in action on flowershow.app](https://flowershow.app/)
 
