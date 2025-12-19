@@ -16,8 +16,8 @@ export const config = {
     // - /api
     // - Next internals
     // - /_static (public)
-    // - root files in /public (favicon, etc) — BUT still include sitemap.xml & robots.txt
-    '/((?!api/|_next/|_static/|_vercel|(?!sitemap\\.xml|robots\\.txt)[\\w-]+\\.\\w+).*)',
+    // - /_vercel
+    '/((?!api/|_next/|_static/|_vercel).*)',
   ],
 };
 
