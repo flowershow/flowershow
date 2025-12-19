@@ -524,59 +524,6 @@ npx playwright test --debug
 npx playwright test --ui
 ```
 
-## Content Management
-
-### Special Pages
-
-DataHub Cloud manages several aliased pages:
-
-#### Core Datasets
-
-- Path: `/core/xxx`
-- Alias for: `/@olayway/xxx`
-- Source: https://github.com/datasets
-- Auto-sync enabled
-
-#### Blog
-
-- Path: `/blog`
-- Alias for: `@olayway/blog`
-- Source: https://github.com/datahubio/blog
-- Auto-sync enabled
-
-#### Collections
-
-- Path: `/collections/*`
-- Alias for: `@olayway/collections/*`
-- Source: https://github.com/datasets/awesome-data
-- Auto-sync enabled
-
-#### Documentation
-
-- Path: `/docs`
-- Alias for: `@olayway/docs`
-- Source: https://github.com/datahubio/datahub-cloud-template
-- Auto-sync enabled
-
-#### Notes
-
-- Path: `/notes`
-- Alias for: `@rufuspollock/data-notes`
-- Auto-sync enabled
-
-#### Logistics
-
-- Path: `/logistics/postal-codes-*`
-- Alias for: `@olayway/postal-codes-*`
-- Source: https://github.com/datopian/postal-codes
-- Manual sync required via admin page
-
-### Site Aliases
-
-- Configured via `siteAliases` in `config.json`
-- Used to provide clean URLs for official content
-- Enables consistent branding across different content sources
-
 ## Troubleshooting
 
 ### Common Issues
