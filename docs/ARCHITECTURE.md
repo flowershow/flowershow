@@ -112,34 +112,47 @@ erDiagram
 5. Worker parses markdown, updates Blob metadata, and indexes in Typesense.
 6. Next.js serves pages by reading metadata from Postgres and raw content from storage (via redirects).
 
-## Major components (and where they live)
+## Major components
 
-- Auth + signup flow
-  - NextAuth config and session helpers: `server/auth.ts`.
-  - OAuth endpoints: `app/api/auth/[...nextauth]/route.ts`.
-  - Login UI: `app/(dashboard)/cloud/(auth)/login/page.tsx`, `app/(dashboard)/cloud/(auth)/login/login-button.tsx`.
-  - Site access gate (passworded sites): `app/(public)/site-access/[user]/[project]/page.tsx`.
-- User dashboard + site management
-  - Dashboard layouts and pages: `app/(dashboard)/cloud/(dashboard)/**`.
-  - Admin pages: `app/(dashboard)/cloud/(dashboard)/admin/page.tsx`.
-  - Site settings (sync, appearance, billing): `app/(dashboard)/cloud/(dashboard)/site/[id]/settings/**`.
-  - API backing: `server/api/routers/site.ts`, `server/api/routers/stripe.ts`.
-- Rendering system (Markdown/MDX)
-  - Main page renderer: `app/(public)/site/[user]/[project]/[[...slug]]/page.tsx`.
-  - MDX client hydration: `components/public/mdx-client.tsx`, `components/public/mdx-client-renderer.tsx`.
-  - Markdown/MDX processing pipeline: `lib/markdown.ts`, `lib/preprocess-mdx.ts`, `lib/generate-scoped-css.ts`.
-  - Obsidian/Flowershow remark plugins: `lib/remark-*.ts`.
-  - MDX component mapping: `components/public/mdx/mdx-components-factory.tsx`.
-- Ingest from GitHub (sync + diff)
-  - GitHub client helpers: `lib/github.ts`.
-  - Inngest workflows: `inngest/functions.ts`.
-  - Webhook intake: `app/api/webhook/route.ts`.
-  - Inngest handler: `app/api/inngest/route.ts`.
-- Content pipeline (storage + metadata)
-  - Content storage abstraction: `lib/content-store.ts`.
-  - Blob metadata updates and Typesense indexing: Cloudflare worker (`/Users/rgrp/src/datopian/datahub-next-workers`).
-- Database structure + business logic
-  - Schema: `prisma/schema.prisma`.
-  - Prisma client: `server/db.ts`.
-  - Core API logic: `server/api/routers/*.ts`.
-  - Shared DB selectors/helpers: `lib/db/internal.ts`, `lib/actions.ts`.
+And where they live.
+
+### Auth + signup flow
+
+- NextAuth config and session helpers: `server/auth.ts`.
+- OAuth endpoints: `app/api/auth/[...nextauth]/route.ts`.
+- Login UI: `app/(dashboard)/cloud/(auth)/login/page.tsx`, `app/(dashboard)/cloud/(auth)/login/login-button.tsx`.
+- Site access gate (passworded sites): `app/(public)/site-access/[user]/[project]/page.tsx`.
+
+### User dashboard + site management
+
+- Dashboard layouts and pages: `app/(dashboard)/cloud/(dashboard)/**`.
+- Admin pages: `app/(dashboard)/cloud/(dashboard)/admin/page.tsx`.
+- Site settings (sync, appearance, billing): `app/(dashboard)/cloud/(dashboard)/site/[id]/settings/**`.
+- API backing: `server/api/routers/site.ts`, `server/api/routers/stripe.ts`.
+
+### Rendering system (Markdown/MDX)
+
+- Main page renderer: `app/(public)/site/[user]/[project]/[[...slug]]/page.tsx`.
+- MDX client hydration: `components/public/mdx-client.tsx`, `components/public/mdx-client-renderer.tsx`.
+- Markdown/MDX processing pipeline: `lib/markdown.ts`, `lib/preprocess-mdx.ts`, `lib/generate-scoped-css.ts`.
+- Obsidian/Flowershow remark plugins: `lib/remark-*.ts`.
+- MDX component mapping: `components/public/mdx/mdx-components-factory.tsx`.
+
+### Ingest from GitHub (sync + diff)
+
+- GitHub client helpers: `lib/github.ts`.
+- Inngest workflows: `inngest/functions.ts`.
+- Webhook intake: `app/api/webhook/route.ts`.
+- Inngest handler: `app/api/inngest/route.ts`.
+
+### Content pipeline (storage + metadata)
+
+- Content storage abstraction: `lib/content-store.ts`.
+- Blob metadata updates and Typesense indexing: Cloudflare worker (`/Users/rgrp/src/datopian/datahub-next-workers`).
+
+### Database structure + business logic
+
+- Schema: `prisma/schema.prisma`.
+- Prisma client: `server/db.ts`.
+- Core API logic: `server/api/routers/*.ts`.
+- Shared DB selectors/helpers: `lib/db/internal.ts`, `lib/actions.ts`.
