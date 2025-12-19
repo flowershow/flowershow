@@ -75,7 +75,7 @@ export default function ObsidianQuickstart() {
             width="600"
             height="400"
             alt="Flowershow template"
-            src="/create-flowershow-site.png"
+            src="https://r2-assets.flowershow.app/create-flowershow-site.png"
             className="my-2"
           />
         </div>
@@ -98,7 +98,7 @@ export default function ObsidianQuickstart() {
             width="600"
             height="400"
             alt="Flowershow template"
-            src="/configure-plugin.png"
+            src="https://r2-assets.flowershow.app/configure-plugin.png"
             className="my-2"
           />
           Lastly, click on the Flowershow icon in the Obsidian sidebar, select

@@ -57,7 +57,7 @@ export default function HelloWorld() {
             width="600"
             height="400"
             alt="Flowershow template"
-            src="/create-flowershow-site.png"
+            src="https://r2-assets.flowershow.app/create-flowershow-site.png"
             className="my-2"
           />
         </div>
@@ -70,7 +70,7 @@ export default function HelloWorld() {
             width="600"
             height="400"
             alt="Flowershow template"
-            src="/preview-site.png"
+            src="https://r2-assets.flowershow.app/preview-site.png"
             className="my-2"
           />
         </div>
