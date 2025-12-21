@@ -6,6 +6,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '@/env.mjs';
 import { GitHubAPIRepoTree } from './github';
 
@@ -243,3 +244,31 @@ export const fetchTree = async (projectId: string, branch: string) => {
   const tree = await response.Body?.transformToString();
   return tree ? (JSON.parse(tree) as GitHubAPIRepoTree) : null;
 };
+
+/**
+ * Generate a presigned URL for uploading a file directly to R2
+ * @param key - The S3 key for the file
+ * @param expiresIn - Expiration time in seconds (default: 3600 = 1 hour)
+ * @returns Presigned URL for PUT request
+ */
+export const generatePresignedUploadUrl = async (
+  key: string,
+  expiresIn: number = 3600,
+): Promise<string> => {
+  const command = new PutObjectCommand({
+    Bucket: S3_BUCKET_NAME,
+    Key: key,
+  });
+
+  return getSignedUrl(s3Client, command, { expiresIn });
+};
+
+/**
+ * Get the S3 client instance (for advanced usage)
+ */
+export const getS3Client = () => s3Client;
+
+/**
+ * Get the bucket name
+ */
+export const getBucketName = () => S3_BUCKET_NAME;

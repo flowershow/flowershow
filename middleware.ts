@@ -58,8 +58,12 @@ export default async function middleware(req: NextRequest) {
     const session = await getToken({ req });
 
     if (!session && pathname !== '/login') {
+      // Preserve the original URL as callbackUrl for post-login redirect
+      const callbackUrl = encodeURIComponent(path);
       return withPHBootstrapCookie(
-        NextResponse.redirect(new URL('/login', req.url)),
+        NextResponse.redirect(
+          new URL(`/login?callbackUrl=${callbackUrl}`, req.url),
+        ),
         phBootstrap,
       );
     }

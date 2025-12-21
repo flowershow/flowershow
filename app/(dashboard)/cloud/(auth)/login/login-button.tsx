@@ -12,6 +12,7 @@ export default function LoginButton() {
   // Get error message added by next/auth in URL.
   const searchParams = useSearchParams();
   const error = searchParams?.get('error');
+  const callbackUrl = searchParams?.get('callbackUrl');
 
   useEffect(() => {
     const errorMessage = Array.isArray(error) ? error.pop() : error;
@@ -25,7 +26,7 @@ export default function LoginButton() {
       disabled={loading}
       onClick={() => {
         setLoading(true);
-        signIn('github');
+        signIn('github', { callbackUrl: callbackUrl || '/' });
       }}
       className={`${
         loading
