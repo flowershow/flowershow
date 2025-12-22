@@ -1,6 +1,91 @@
 # Architecture Notes
 
-This repo implements Flowershow Cloud, a multitenant Next.js app that publishes markdown from GitHub into R2/MinIO, stores metadata in Postgres, and indexes content in Typesense. A separate Cloudflare Worker processes markdown uploads and updates Blob metadata and search indexing.
+This repo implements Flowershow Cloud, a multitenant Next.js app that turns markdown into an elegant website.
+
+It can pull from GitHub or store directly. It stores metadata in Postgres, and indexes content in Typesense. A separate Cloudflare Worker processes markdown uploads and updates Blob metadata and search indexing.
+
+<img width="1227" height="950" alt="image" src="https://github.com/user-attachments/assets/e2398149-3d6f-4171-9735-40a41b6e8ab5" />
+
+## High-level data flow
+
+1. User authenticates and creates a site in the Next.js app.
+2. Sync is triggered (manual or GitHub webhook) and sent to Inngest from `app/api/webhook/route.ts`.
+3. Inngest sync function pulls files from GitHub, writes raw files to R2/MinIO, and creates/updates Blob rows in Postgres.
+4. Each markdown upload to storage triggers the Cloudflare worker via queue.
+5. Worker parses markdown, updates Blob metadata, and indexes in Typesense.
+6. Next.js serves pages by reading metadata from Postgres and raw content from storage (via redirects).
+
+## Domain model (key entities + relationships)
+
+Entities (Prisma models in `prisma/schema.prisma`):
+- `User`: account record for an authenticated user.
+- `Account`, `Session`, `VerificationToken`: NextAuth-related models.
+- `Site`: a published site tied to a GitHub repo/branch and owner.
+- `Blob`: a content file record (metadata + status) tied to a `Site`.
+- `Subscription`: Stripe billing state for a `Site`.
+
+Relationships:
+- `User` 1→N `Site`
+- `User` 1→N `Account`
+- `User` 1→N `Session`
+- `Site` 1→N `Blob`
+- `Site` 1→1 `Subscription` (optional)
+
+```mermaid
+erDiagram
+  User ||--o{ Site : owns
+  User ||--o{ Account : has
+  User ||--o{ Session : has
+  Site ||--o{ Blob : contains
+  Site ||--o| Subscription : billing
+```
+
+## Major components
+
+And where they live.
+
+### Auth + signup flow
+
+- NextAuth config and session helpers: `server/auth.ts`.
+- OAuth endpoints: `app/api/auth/[...nextauth]/route.ts`.
+- Login UI: `app/(dashboard)/cloud/(auth)/login/page.tsx`, `app/(dashboard)/cloud/(auth)/login/login-button.tsx`.
+- Site access gate (passworded sites): `app/(public)/site-access/[user]/[project]/page.tsx`.
+
+### User dashboard + site management
+
+- Dashboard layouts and pages: `app/(dashboard)/cloud/(dashboard)/**`.
+- Admin pages: `app/(dashboard)/cloud/(dashboard)/admin/page.tsx`.
+- Site settings (sync, appearance, billing): `app/(dashboard)/cloud/(dashboard)/site/[id]/settings/**`.
+- API backing: `server/api/routers/site.ts`, `server/api/routers/stripe.ts`.
+
+### Rendering system (Markdown/MDX)
+
+- Main page renderer: `app/(public)/site/[user]/[project]/[[...slug]]/page.tsx`.
+- MDX client hydration: `components/public/mdx-client.tsx`, `components/public/mdx-client-renderer.tsx`.
+- Markdown/MDX processing pipeline: `lib/markdown.ts`, `lib/preprocess-mdx.ts`, `lib/generate-scoped-css.ts`.
+- Obsidian/Flowershow remark plugins: `lib/remark-*.ts`.
+- MDX component mapping: `components/public/mdx/mdx-components-factory.tsx`.
+
+### Ingest from GitHub (sync + diff)
+
+- GitHub client helpers: `lib/github.ts`.
+- Inngest workflows: `inngest/functions.ts`.
+- Webhook intake: `app/api/webhook/route.ts`.
+- Inngest handler: `app/api/inngest/route.ts`.
+
+### Content pipeline (storage + metadata)
+
+- Content storage abstraction: `lib/content-store.ts`.
+- Blob metadata updates and Typesense indexing: Cloudflare worker (`/Users/rgrp/src/datopian/datahub-next-workers`).
+
+### Database structure + business logic
+
+- Schema: `prisma/schema.prisma`.
+- Prisma client: `server/db.ts`.
+- Core API logic: `server/api/routers/*.ts`.
+- Shared DB selectors/helpers: `lib/db/internal.ts`, `lib/actions.ts`.
+
+---
 
 ## Next.js (Vercel) responsibilities
 
@@ -77,82 +162,3 @@ Storage key pattern handled by the worker:
 - Inngest: background sync and delete workflows defined in `inngest/functions.ts`, invoked via `app/api/inngest/route.ts`.
 - Stripe: subscription and billing (`server/api/routers/stripe.ts`, `app/api/stripe/webhook/route.ts`).
 - GitHub OAuth: auth with NextAuth (`server/auth.ts`, `app/api/auth/[...nextauth]/route.ts`).
-
-## Domain model (key entities + relationships)
-
-Entities (Prisma models in `prisma/schema.prisma`):
-- `User`: account record for an authenticated user.
-- `Account`, `Session`, `VerificationToken`: NextAuth-related models.
-- `Site`: a published site tied to a GitHub repo/branch and owner.
-- `Blob`: a content file record (metadata + status) tied to a `Site`.
-- `Subscription`: Stripe billing state for a `Site`.
-
-Relationships:
-- `User` 1→N `Site`
-- `User` 1→N `Account`
-- `User` 1→N `Session`
-- `Site` 1→N `Blob`
-- `Site` 1→1 `Subscription` (optional)
-
-```mermaid
-erDiagram
-  User ||--o{ Site : owns
-  User ||--o{ Account : has
-  User ||--o{ Session : has
-  Site ||--o{ Blob : contains
-  Site ||--o| Subscription : billing
-```
-
-## High-level data flow
-
-1. User authenticates and creates a site in the Next.js app.
-2. Sync is triggered (manual or GitHub webhook) and sent to Inngest from `app/api/webhook/route.ts`.
-3. Inngest sync function pulls files from GitHub, writes raw files to R2/MinIO, and creates/updates Blob rows in Postgres.
-4. Each markdown upload to storage triggers the Cloudflare worker via queue.
-5. Worker parses markdown, updates Blob metadata, and indexes in Typesense.
-6. Next.js serves pages by reading metadata from Postgres and raw content from storage (via redirects).
-
-## Major components
-
-And where they live.
-
-### Auth + signup flow
-
-- NextAuth config and session helpers: `server/auth.ts`.
-- OAuth endpoints: `app/api/auth/[...nextauth]/route.ts`.
-- Login UI: `app/(dashboard)/cloud/(auth)/login/page.tsx`, `app/(dashboard)/cloud/(auth)/login/login-button.tsx`.
-- Site access gate (passworded sites): `app/(public)/site-access/[user]/[project]/page.tsx`.
-
-### User dashboard + site management
-
-- Dashboard layouts and pages: `app/(dashboard)/cloud/(dashboard)/**`.
-- Admin pages: `app/(dashboard)/cloud/(dashboard)/admin/page.tsx`.
-- Site settings (sync, appearance, billing): `app/(dashboard)/cloud/(dashboard)/site/[id]/settings/**`.
-- API backing: `server/api/routers/site.ts`, `server/api/routers/stripe.ts`.
-
-### Rendering system (Markdown/MDX)
-
-- Main page renderer: `app/(public)/site/[user]/[project]/[[...slug]]/page.tsx`.
-- MDX client hydration: `components/public/mdx-client.tsx`, `components/public/mdx-client-renderer.tsx`.
-- Markdown/MDX processing pipeline: `lib/markdown.ts`, `lib/preprocess-mdx.ts`, `lib/generate-scoped-css.ts`.
-- Obsidian/Flowershow remark plugins: `lib/remark-*.ts`.
-- MDX component mapping: `components/public/mdx/mdx-components-factory.tsx`.
-
-### Ingest from GitHub (sync + diff)
-
-- GitHub client helpers: `lib/github.ts`.
-- Inngest workflows: `inngest/functions.ts`.
-- Webhook intake: `app/api/webhook/route.ts`.
-- Inngest handler: `app/api/inngest/route.ts`.
-
-### Content pipeline (storage + metadata)
-
-- Content storage abstraction: `lib/content-store.ts`.
-- Blob metadata updates and Typesense indexing: Cloudflare worker (`/Users/rgrp/src/datopian/datahub-next-workers`).
-
-### Database structure + business logic
-
-- Schema: `prisma/schema.prisma`.
-- Prisma client: `server/db.ts`.
-- Core API logic: `server/api/routers/*.ts`.
-- Shared DB selectors/helpers: `lib/db/internal.ts`, `lib/actions.ts`.
