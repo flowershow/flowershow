@@ -33,6 +33,7 @@ type ContentType =
   | 'text/markdown'
   | 'text/csv'
   | 'text/plain'
+  | 'text/html'
   | 'application/geo+json'
   | 'application/json'
   | 'application/yaml'
@@ -125,6 +126,8 @@ const getContentType = (extension: string): ContentType => {
     case 'md':
     case 'mdx':
       return 'text/markdown';
+    case 'html':
+      return 'text/html';
     case 'csv':
       return 'text/csv';
     case 'geojson':
