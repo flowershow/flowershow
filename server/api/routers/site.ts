@@ -1154,7 +1154,12 @@ export const siteRouter = createTRPCRouter({
                 });
 
                 if (!authorBlob) {
-                  return null;
+                  // Return author with name but no URL if no profile page exists
+                  return {
+                    key: author,
+                    name: author,
+                    url: null,
+                  };
                 }
 
                 const metadata = authorBlob.metadata as PageMetadata | null;
@@ -1191,7 +1196,7 @@ export const siteRouter = createTRPCRouter({
 
             const authors = await Promise.all(authorsPromises);
 
-            return authors.filter(Boolean);
+            return authors;
           },
           undefined,
           {

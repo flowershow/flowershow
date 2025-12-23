@@ -48,8 +48,8 @@ export const BlogLayout: React.FC<Props> = ({
                           key={author.key}
                           alt={author.name}
                           src={author.avatar}
-                          width={50}
-                          height={50}
+                          width={24}
+                          height={24}
                           className="page-header-author-avatar"
                         />
                       ),
@@ -57,14 +57,19 @@ export const BlogLayout: React.FC<Props> = ({
                 </div>
                 <div className="page-header-authors-names-container">
                   {authors.map((author, index) => (
-                    <div
+                    <span
                       key={author.key}
                       className="page-header-author-name-wrapper"
                     >
-                      {index > 0 && <span className="mr-1">,</span>}
+                      {index > 0 &&
+                        (index < authors.length - 1 ? (
+                          <span className="mr-1">,</span>
+                        ) : (
+                          <span className="mx-1">and</span>
+                        ))}
                       {author.url ? (
                         <Link
-                          className="page-header-author-name"
+                          className="page-header-author-name .is-linked"
                           key={author.key}
                           href={author.url}
                         >
@@ -78,7 +83,7 @@ export const BlogLayout: React.FC<Props> = ({
                           {author.name}
                         </span>
                       )}
-                    </div>
+                    </span>
                   ))}
                 </div>
               </div>

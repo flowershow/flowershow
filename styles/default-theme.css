@@ -1285,10 +1285,6 @@
     display: flex;
     align-items: center;
     color: var(--color-foreground-400);
-
-    > * + * {
-      margin-left: 0.5rem;
-    }
   }
   .page-header-authors-avatars-container {
     isolation: isolate;
@@ -1300,15 +1296,24 @@
     }
   }
   .page-header-author-avatar {
+    width: 1.5rem;
+    height: 1.5rem;
     position: relative;
     z-index: 30;
     display: inline-block;
-    width: 1.5rem;
     border-radius: 9999px;
     outline-style: solid;
     outline-width: 2px;
     outline-color: var(--color-background);
+
+    &:last-child {
+      margin-right: 0.5rem;
+    }
   }
+  a.page-header-author-name:hover {
+    text-decoration: underline;
+  }
+
   .page-header-image-container {
     position: relative;
     width: 100%;
