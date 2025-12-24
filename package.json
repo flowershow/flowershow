@@ -157,7 +157,7 @@
     "prisma": "5.5.2",
     "random-word": "^3.0.0",
     "remark-stringify": "^11.0.0",
-    "storybook": "^9.1.4",
+    "storybook": "^9.1.17",
     "tailwindcss": "^3.4.17",
     "tailwindcss-animate": "^1.0.7",
     "ts-node": "^10.9.2",
