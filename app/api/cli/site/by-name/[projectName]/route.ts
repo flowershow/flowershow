@@ -29,13 +29,28 @@ export async function GET(
 
         const { projectName } = await props.params;
 
-        span.setAttribute('projectName', projectName);
+        // Sanitize project name (alphanumeric, hyphens, underscores only)
+        // as this value would be used for site creation
+        const sanitizedName = projectName
+          .toLowerCase()
+          .replace(/[^a-z0-9-_]/g, '-');
+        if (sanitizedName.length < 1 || sanitizedName.length > 100) {
+          return NextResponse.json(
+            {
+              error: 'invalid_project_name',
+              message: 'Project name must be 1-100 characters',
+            },
+            { status: 400 },
+          );
+        }
+
+        span.setAttribute('projectName', sanitizedName);
         span.setAttribute('userId', auth.userId);
 
         // Fetch site by project name and user ID
         const site = await prisma.site.findFirst({
           where: {
-            projectName,
+            projectName: sanitizedName,
             userId: auth.userId,
           },
           select: {
@@ -45,12 +60,8 @@ export async function GET(
             ghBranch: true,
             customDomain: true,
             rootDir: true,
-            autoSync: true,
             plan: true,
             privacyMode: true,
-            enableComments: true,
-            enableSearch: true,
-            syntaxMode: true,
             createdAt: true,
             updatedAt: true,
             userId: true,
@@ -109,12 +120,7 @@ export async function GET(
             ghBranch: site.ghBranch,
             customDomain: site.customDomain,
             rootDir: site.rootDir,
-            autoSync: site.autoSync,
             plan: site.plan,
-            privacyMode: site.privacyMode,
-            enableComments: site.enableComments,
-            enableSearch: site.enableSearch,
-            syntaxMode: site.syntaxMode,
             url: siteUrl,
             fileCount: site._count.blobs,
             totalSize,

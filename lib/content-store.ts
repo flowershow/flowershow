@@ -121,7 +121,7 @@ const emptyS3Directory = async (dir: string) => {
   if (listedObjects.IsTruncated) await emptyS3Directory(dir);
 };
 
-const getContentType = (extension: string): ContentType => {
+export const getContentType = (extension: string): ContentType => {
   switch (extension) {
     case 'md':
     case 'mdx':
