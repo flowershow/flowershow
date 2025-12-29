@@ -2,38 +2,50 @@ import Image from 'next/image';
 import { ImgHTMLAttributes } from 'react';
 
 function FsImage(props: ImgHTMLAttributes<HTMLImageElement>) {
-  const newProps = {
-    src: typeof props.src == 'string' ? props.src : '',
+  const commonProps = {
+    src: typeof props.src === 'string' ? props.src : '',
     alt: props.alt ?? 'Image',
     className: 'not-prose',
   };
 
   if (props.width && props.height) {
-    const width =
-      typeof props.width === 'number'
-        ? props.width
-        : Number.parseInt(props.width);
-    const height =
-      typeof props.height === 'number'
-        ? props.height
-        : Number.parseInt(props.height);
-    // No sizes attribute here - we treat user provided image sizes as fixed, literal (not just image geometry)
-    // Next.js will generate DPR-based srcset
-    // (1x, 2x, etc.) for pixel density optimization while maintaining exact dimensions
+    const width = parseSize(props.width);
+    const height = parseSize(props.height);
     return (
-      <div className="fixed-image-container">
-        <Image {...newProps} width={width} height={height} />
-      </div>
+      <Image
+        {...commonProps}
+        width={width}
+        height={height}
+        style={{
+          width: `${width}px`,
+          height: `${height}px`,
+          margin: 'auto',
+        }}
+      />
+    );
+  }
+
+  if (props.width) {
+    const width = parseSize(props.width);
+    // we need some value for height, so we default to width, but this will cause layout shift if image is not square obviously
+    const height = width;
+    return (
+      <Image
+        {...commonProps}
+        width={width}
+        height={height}
+        style={{ margin: 'auto', width: `${width}px` }}
+      />
     );
   }
 
   return (
-    <div className="image-container">
+    <div style={{ position: 'relative', width: '100%', aspectRatio: '3/2' }}>
       {/* Optimized sizes for content width:
         - Desktop (1280px+): max prose width (72rem = 1152px)
         - Mobile: viewport*/}
       <Image
-        {...newProps}
+        {...commonProps}
         fill
         objectFit="contain"
         sizes="(min-width: 1280px) 1152px, 100vw"
@@ -43,3 +55,6 @@ function FsImage(props: ImgHTMLAttributes<HTMLImageElement>) {
 }
 
 export default FsImage;
+
+const parseSize = (value: string | number): number =>
+  typeof value === 'number' ? value : Number.parseInt(value);
