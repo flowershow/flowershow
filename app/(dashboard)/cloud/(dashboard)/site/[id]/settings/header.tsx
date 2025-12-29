@@ -43,41 +43,52 @@ export default async function SiteSettingsHeader({
           <Suspense fallback={<LoadingDots />}>
             <Status />
           </Suspense>
-          <Link
-            href={`https://github.com/${site.ghRepository}`}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-2 inline-flex items-center text-sm text-gray-500 hover:underline"
-          >
-            <GithubIcon
-              className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400"
-              aria-hidden="true"
-            />
-            <span>{site.ghRepository}</span>
-          </Link>
-        </div>
-        <div className="mt-5 flex lg:ml-4 lg:mt-0">
-          <span className="block">
-            <a
+
+          {site.ghRepository !== 'cli-upload' ? (
+            <Link
               href={`https://github.com/${site.ghRepository}`}
               target="_blank"
               rel="noreferrer"
+              className="mt-2 inline-flex items-center text-sm text-gray-500 hover:underline"
             >
-              <button
-                type="button"
-                className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-              >
-                <GithubIcon
-                  className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400"
-                  aria-hidden="true"
-                />
-                Repository
-              </button>
-            </a>
-          </span>
-          <span className="ml-3">
-            <SyncSiteButton siteId={site.id} />
-          </span>
+              <GithubIcon
+                className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400"
+                aria-hidden="true"
+              />
+              <span>{site.ghRepository}</span>
+            </Link>
+          ) : (
+            <span className="mt-2 inline-flex items-center text-sm text-gray-500">
+              Published with CLI
+            </span>
+          )}
+        </div>
+        <div className="mt-5 flex lg:ml-4 lg:mt-0">
+          {site.ghRepository !== 'cli-upload' && (
+            <>
+              <span className="block">
+                <a
+                  href={`https://github.com/${site.ghRepository}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <button
+                    type="button"
+                    className="inline-flex items-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                  >
+                    <GithubIcon
+                      className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400"
+                      aria-hidden="true"
+                    />
+                    Repository
+                  </button>
+                </a>
+              </span>
+              <span className="ml-3">
+                <SyncSiteButton siteId={site.id} />
+              </span>
+            </>
+          )}
           <span className="ml-3 block">
             <a
               href={url}

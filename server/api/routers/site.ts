@@ -594,7 +594,12 @@ export const siteRouter = createTRPCRouter({
             .join('\n');
         }
         // Otherwise, compare trees
-        else {
+        else if (site.ghRepository === 'cli-upload') {
+          return {
+            status: 'SUCCESS',
+            lastSyncedAt,
+          };
+        } else {
           if (!site.tree) {
             return {
               status: 'PENDING',
