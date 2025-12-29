@@ -223,7 +223,7 @@ test.describe('Links and embeds', () => {
     test('PDF embed', async ({ publishedSitePage }) => {
       const pdfEmbed = publishedSitePage.page
         .getByTestId('obsidian-embed-pdf')
-        .locator('canvas');
+        .locator('.pdf-viewer');
 
       await expect(pdfEmbed).toBeVisible();
     });
@@ -352,7 +352,7 @@ test.describe('Links and embeds', () => {
       await expect(linkSpecialChars).toHaveText('link');
       await expect(linkSpecialChars).toHaveAttribute(
         'href',
-        `${publishedSitePage.siteUrlPath}/caf%C3%A9%26restaurant!`,
+        `${publishedSitePage.siteUrlPath}/blog/caf%C3%A9%26restaurant!`,
       );
     });
   });
@@ -437,49 +437,41 @@ test.describe('Links and embeds', () => {
 });
 
 test.describe('MDX', () => {
-  test.describe('JSX and links-and-embeds page', () => {
-    test.beforeEach(async ({ publishedSitePage }) => {
-      await publishedSitePage.goto('/syntax/links-and-embeds');
-    });
-
-    test('Should resolve JSX href and src attributes', async ({
-      publishedSitePage,
-    }) => {
-      await expect(
-        publishedSitePage.page.getByTestId('jsx-img').locator('img'),
-      ).toHaveAttribute('src', /\/@.+\/.+\/.+/);
-    });
+  test('Should resolve JSX href and src attributes', async ({
+    publishedSitePage,
+  }) => {
+    await publishedSitePage.goto('/syntax/jsx');
+    await expect(
+      publishedSitePage.page.getByTestId('jsx-img').locator('img'),
+    ).toHaveAttribute('src', /\/@.+\/.+\/.+/);
   });
 
-  test.describe('List component', () => {
-    test.beforeEach(async ({ publishedSitePage }) => {
-      await publishedSitePage.goto('/blog');
-    });
-
-    test('List component', async ({ publishedSitePage }) => {
-      const listItemLink = publishedSitePage.page
-        .locator('.list-component-item')
-        .getByRole('link', { name: 'Blog Post 1' });
-      await expect(listItemLink).toHaveAttribute(
-        'href',
-        publishedSitePage.siteUrlPath + '/blog/post-with-metadata',
-      );
-    });
+  test('MDX variables', async ({ publishedSitePage }) => {
+    await publishedSitePage.goto('/syntax/mdx-variables');
+    await expect(publishedSitePage.page.getByText('44 million')).toBeVisible();
+    await expect(
+      publishedSitePage.page.getByText('$119 trillion'),
+    ).toBeVisible();
+    await expect(publishedSitePage.page.getByText('46,000')).toBeVisible();
   });
 
-  test.describe('MDX variables', () => {
-    test.beforeEach(async ({ publishedSitePage }) => {
-      await publishedSitePage.goto('/syntax/mdx-variables');
-    });
+  test('Frontmatter variables', async ({ publishedSitePage }) => {
+    await publishedSitePage.goto('/syntax/frontmatter-variables');
+    await expect(
+      publishedSitePage.page.getByText('var1 equals 123'),
+    ).toBeVisible();
+  });
+});
 
-    test('MDX variables', async ({ publishedSitePage }) => {
-      await expect(
-        publishedSitePage.page.getByText('44 million'),
-      ).toBeVisible();
-      await expect(
-        publishedSitePage.page.getByText('$119 trillion'),
-      ).toBeVisible();
-      await expect(publishedSitePage.page.getByText('46,000')).toBeVisible();
-    });
+test.describe('Blog', () => {
+  test('List component', async ({ publishedSitePage }) => {
+    await publishedSitePage.goto('/blog');
+    const listItemLink = publishedSitePage.page
+      .locator('.list-component-item')
+      .getByRole('link', { name: 'Blog Post 1' });
+    await expect(listItemLink).toHaveAttribute(
+      'href',
+      publishedSitePage.siteUrlPath + '/blog/post-with-metadata',
+    );
   });
 });
