@@ -5,8 +5,6 @@ authors:
   - rufuspollock
 ---
 
-**🚚2024-07-09 MOVED to https://github.com/datopian/datahub/discussions/1222**
-
 This is a *major* RFC/Shaping doc. It sets out a design for the storage layer and metastore of DataHub Cloud. IMO this represents something of breakthrough 😄
 
 Definitions
