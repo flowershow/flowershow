@@ -42,7 +42,7 @@ export const publicSiteSchema: z.ZodType<PublicSite> = z.object({
   syntaxMode: z.enum(SyntaxMode),
   createdAt: z.date(),
   updatedAt: z.date(),
-  user: z.object({ ghUsername: z.string() }),
+  user: z.object({ ghUsername: z.string().nullable() }),
 });
 
 export enum SiteUpdateKey {

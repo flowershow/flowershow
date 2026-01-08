@@ -8,20 +8,9 @@ import LoadingDots from '@/components/icons/loading-dots';
 import { cn } from '@/lib/utils';
 import { api } from '@/trpc/react';
 
-interface Installation {
-  id: string;
-  accountLogin: string;
-  accountType: 'User' | 'Organization';
-  repositories: Array<{
-    id: string;
-    name: string;
-    fullName: string;
-    isPrivate: boolean;
-  }>;
-}
-
 export default function NewSitePage() {
   const router = useRouter();
+  const getInstallationUrl = api.github.getInstallationUrl.useMutation();
 
   const [data, setData] = useState({
     selectedAccount: '', // Account/org selector
@@ -31,46 +20,22 @@ export default function NewSitePage() {
     installationId: '',
   });
 
-  const [installations, setInstallations] = useState<Installation[]>([]);
-  const [isLoadingInstallations, setIsLoadingInstallations] = useState(true);
+  // Use tRPC to fetch installations
+  const {
+    data: installations = [],
+    isLoading: isLoadingInstallations,
+    refetch: refetchInstallations,
+  } = api.github.listInstallations.useQuery(undefined, {
+    onError: (error) => {
+      console.error('Failed to fetch installations:', error);
+      toast.error('Failed to load GitHub installations');
+    },
+  });
 
   // Handler to refresh installations
   const handleRefreshInstallations = useCallback(async () => {
-    setIsLoadingInstallations(true);
-    try {
-      const response = await fetch('/api/github-app/installations');
-      if (response.ok) {
-        const result = await response.json();
-        setInstallations(result.installations || []);
-      }
-    } catch (error) {
-      console.error('Failed to refresh installations:', error);
-    } finally {
-      setIsLoadingInstallations(false);
-    }
-  }, []);
-
-  // Fetch GitHub App installations
-  useEffect(() => {
-    const fetchInstallations = async () => {
-      try {
-        const response = await fetch('/api/github-app/installations');
-        if (response.ok) {
-          const result = await response.json();
-          setInstallations(result.installations || []);
-        } else {
-          toast.error('Failed to load GitHub installations');
-        }
-      } catch (error) {
-        console.error('Failed to fetch installations:', error);
-        toast.error('Failed to load GitHub installations');
-      } finally {
-        setIsLoadingInstallations(false);
-      }
-    };
-
-    fetchInstallations();
-  }, []);
+    await refetchInstallations();
+  }, [refetchInstallations]);
 
   // Listen for postMessage from popup window
   useEffect(() => {
@@ -88,6 +53,8 @@ export default function NewSitePage() {
           'GitHub App installation completed, refreshing installations',
         );
         handleRefreshInstallations();
+        // Force a full page refresh to ensure UI updates
+        router.refresh();
       }
     };
 
@@ -96,7 +63,7 @@ export default function NewSitePage() {
     return () => {
       window.removeEventListener('message', handleMessage);
     };
-  }, [handleRefreshInstallations]);
+  }, [handleRefreshInstallations, router]);
 
   // Auto-select first account and repository when installations load
   useEffect(() => {
@@ -106,7 +73,8 @@ export default function NewSitePage() {
         setData((prev) => ({
           ...prev,
           selectedAccount: firstInstallation.accountLogin,
-          ghRepository: firstInstallation.repositories[0]?.fullName ?? '',
+          ghRepository:
+            firstInstallation.repositories[0]?.repositoryFullName ?? '',
           installationId: firstInstallation.id,
         }));
       }
@@ -141,14 +109,16 @@ export default function NewSitePage() {
       setData({
         ...data,
         selectedAccount: accountLogin,
-        ghRepository: installation.repositories[0]?.fullName ?? '',
+        ghRepository: installation.repositories[0]?.repositoryFullName ?? '',
         installationId: installation.id,
       });
     }
   };
 
   const handleRepositoryChange = (fullName: string) => {
-    const repo = availableRepositories.find((r) => r.fullName === fullName);
+    const repo = availableRepositories.find(
+      (r) => r.repositoryFullName === fullName,
+    );
     if (repo) {
       setData({
         ...data,
@@ -194,9 +164,6 @@ export default function NewSitePage() {
           <h1 className="text-3xl font-bold text-stone-900 mb-2">
             Create a new site
           </h1>
-          <p className="text-stone-600">
-            Connect your GitHub repositories to get started
-          </p>
         </div>
         <GitHubConnectionCard onRefresh={handleRefreshInstallations} />
       </div>
@@ -205,18 +172,7 @@ export default function NewSitePage() {
 
   const handleChangeGitHubAppPermissions = async () => {
     try {
-      const response = await fetch('/api/github-app/installation-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      });
-
-      if (!response.ok) {
-        toast.error('Failed to get installation URL');
-        return;
-      }
-
-      const result = await response.json();
+      const result = await getInstallationUrl.mutateAsync({});
 
       // Open GitHub App installation in popup window
       const width = 800;
@@ -361,8 +317,8 @@ export default function NewSitePage() {
                   </option>
                 )}
               {filteredRepositories.map((repo) => (
-                <option key={repo.id} value={repo.fullName}>
-                  {repo.name} {repo.isPrivate ? '🔒' : ''}
+                <option key={repo.id} value={repo.repositoryFullName}>
+                  {repo.repositoryName} {repo.isPrivate ? '🔒' : ''}
                 </option>
               ))}
             </select>

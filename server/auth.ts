@@ -2,6 +2,7 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import axios from 'axios';
 import { getServerSession, type NextAuthOptions } from 'next-auth';
 import GitHubProvider, { GithubProfile } from 'next-auth/providers/github';
+import GoogleProvider from 'next-auth/providers/google';
 import { env } from '@/env.mjs';
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
@@ -31,6 +32,23 @@ export const authOptions: NextAuthOptions = {
           // Removed 'repo' scope - GitHub App will handle repository access
           scope: 'read:user user:email read:org',
         },
+      },
+    }),
+    GoogleProvider({
+      clientId: env.AUTH_GOOGLE_ID as string,
+      clientSecret: env.AUTH_GOOGLE_SECRET as string,
+      profile(profile) {
+        const username =
+          profile.email?.split('@')[0] ||
+          profile.name?.replace(/\s+/g, '-').toLowerCase() ||
+          profile.sub;
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+          username: username,
+        };
       },
     }),
   ],
@@ -102,7 +120,7 @@ export const authOptions: NextAuthOptions = {
       //   on first sign up - value returned from profile method above
       //   on subsequent sign in - prisma user
       // account: prisma account
-      // profile: full GitHub profile
+      // profile: full GitHub or Google profile
       if (!account || !profile) return false;
 
       const existingAccount = await prisma.account.findFirst({
@@ -129,13 +147,22 @@ export const authOptions: NextAuthOptions = {
               scope: account.scope,
             },
           });
+
+          // Update user data based on provider
+          const updateData: any = {};
+
+          if (account.provider === 'github') {
+            updateData.ghUsername = (profile as any).login;
+            updateData.username = (profile as any).login;
+            updateData.name = (profile as any).name || (profile as any).login;
+          } else if (account.provider === 'google') {
+            // For Google, keep existing username but update name if changed
+            updateData.name = (profile as any).name;
+          }
+
           await prisma.user.update({
             where: { id: user.id },
-            data: {
-              ghUsername: profile.login,
-              username: profile.login,
-              name: profile.name || profile.login,
-            },
+            data: updateData,
           });
         } catch (error) {
           console.error('SignIn error:', error);
@@ -159,7 +186,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.name = user.name;
-        token.username = user.ghUsername;
+        token.username = user.username;
         token.email = user.email;
         token.image = user.image;
         token.role = user.role!;

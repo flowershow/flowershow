@@ -21,6 +21,8 @@ export const env = createEnv({
         ? z.string()
         : z.string().optional(),
     AUTH_GITHUB_SECRET: z.string(),
+    AUTH_GOOGLE_ID: z.string(),
+    AUTH_GOOGLE_SECRET: z.string(),
     AUTH_BEARER_TOKEN: z.string().optional(),
     PROJECT_ID_VERCEL: z.string().optional(),
     TEAM_ID_VERCEL: z.string().optional(),
@@ -101,6 +103,8 @@ export const env = createEnv({
     NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
     NEXT_PUBLIC_AUTH_GITHUB_ID: process.env.NEXT_PUBLIC_AUTH_GITHUB_ID,
     AUTH_GITHUB_SECRET: process.env.AUTH_GITHUB_SECRET,
+    AUTH_GOOGLE_ID: process.env.AUTH_GOOGLE_ID,
+    AUTH_GOOGLE_SECRET: process.env.AUTH_GOOGLE_SECRET,
     AUTH_BEARER_TOKEN: process.env.AUTH_BEARER_TOKEN,
     PROJECT_ID_VERCEL: process.env.PROJECT_ID_VERCEL,
     TEAM_ID_VERCEL: process.env.TEAM_ID_VERCEL,

@@ -1,100 +1,83 @@
 'use client';
 import * as Sentry from '@sentry/nextjs';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { GithubIcon } from '@/components/icons';
 import LoadingDots from '@/components/icons/loading-dots';
 import { cn } from '@/lib/utils';
-
-interface Installation {
-  id: string;
-  accountLogin: string;
-  accountType: 'User' | 'Organization';
-  repositories: Array<{
-    id: string;
-    name: string;
-    fullName: string;
-    isPrivate: boolean;
-  }>;
-  createdAt: string;
-}
+import { api } from '@/trpc/react';
 
 export default function GitHubSettingsPage() {
   const router = useRouter();
-  const [installations, setInstallations] = useState<Installation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [syncingIds, setSyncingIds] = useState<Set<string>>(new Set());
   const [removingIds, setRemovingIds] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    fetchInstallations();
-  }, []);
+  // Use tRPC to fetch installations
+  const {
+    data: installations = [],
+    isLoading,
+    refetch: refetchInstallations,
+  } = api.github.listInstallations.useQuery(undefined, {
+    onError: (error) => {
+      console.error('Error fetching installations:', error);
+      Sentry.captureException(error);
+      toast.error('Failed to load GitHub installations');
+    },
+  });
 
-  const fetchInstallations = async () => {
-    Sentry.startSpan(
-      {
-        op: 'http.client',
-        name: 'Fetch GitHub Installations',
-      },
-      async () => {
-        try {
-          const response = await fetch('/api/github-app/installations');
-          if (!response.ok) {
-            throw new Error('Failed to fetch installations');
-          }
-          const data = await response.json();
-          setInstallations(data.installations || []);
-        } catch (error) {
-          console.error('Error fetching installations:', error);
-          Sentry.captureException(error);
-          toast.error('Failed to load GitHub installations');
-        } finally {
-          setIsLoading(false);
-        }
-      },
-    );
-  };
+  // Mutation for syncing repositories
+  const syncInstallation = api.github.syncInstallation.useMutation({
+    onSuccess: (data) => {
+      toast.success(
+        `Synced ${data.repositoriesCount} repositor${data.repositoriesCount !== 1 ? 'ies' : 'y'}`,
+      );
+      refetchInstallations();
+    },
+    onError: (error) => {
+      console.error('Error syncing repositories:', error);
+      Sentry.captureException(error);
+      toast.error('Failed to sync repositories');
+    },
+  });
+
+  // Mutation for deleting installation
+  const deleteInstallation = api.github.deleteInstallation.useMutation({
+    onSuccess: () => {
+      toast.success('Installation removed successfully');
+      refetchInstallations();
+    },
+    onError: (error) => {
+      console.error('Error removing installation:', error);
+      Sentry.captureException(error);
+      toast.error(error.message || 'Failed to remove installation');
+    },
+  });
+
+  // Mutation for getting installation URL
+  const getInstallationUrl = api.github.getInstallationUrl.useMutation({
+    onSuccess: (data) => {
+      window.location.href = data.url;
+    },
+    onError: (error) => {
+      console.error('Failed to connect GitHub App:', error);
+      Sentry.captureException(error);
+      toast.error('Failed to connect GitHub. Please try again.');
+    },
+  });
 
   const handleSync = async (installationId: string) => {
     setSyncingIds((prev) => new Set(prev).add(installationId));
 
-    Sentry.startSpan(
-      {
-        op: 'http.client',
-        name: 'Sync GitHub Installation Repositories',
-      },
-      async (span) => {
-        try {
-          const response = await fetch('/api/github-app/sync-repositories', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ installationId }),
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to sync repositories');
-          }
-
-          const data = await response.json();
-          span.setAttribute('repositories_synced', data.count);
-          toast.success(
-            `Synced ${data.count} repositor${data.count !== 1 ? 'ies' : 'y'}`,
-          );
-          await fetchInstallations();
-        } catch (error) {
-          console.error('Error syncing repositories:', error);
-          Sentry.captureException(error);
-          toast.error('Failed to sync repositories');
-        } finally {
-          setSyncingIds((prev) => {
-            const next = new Set(prev);
-            next.delete(installationId);
-            return next;
-          });
-        }
-      },
-    );
+    try {
+      await syncInstallation.mutateAsync({ installationId });
+    } finally {
+      setSyncingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(installationId);
+        return next;
+      });
+    }
   };
 
   const handleRemove = async (installationId: string, accountLogin: string) => {
@@ -108,67 +91,25 @@ export default function GitHubSettingsPage() {
 
     setRemovingIds((prev) => new Set(prev).add(installationId));
 
-    Sentry.startSpan(
-      {
-        op: 'http.client',
-        name: 'Remove GitHub Installation',
-      },
-      async (span) => {
-        try {
-          const response = await fetch(
-            `/api/github-app/installations/${installationId}`,
-            {
-              method: 'DELETE',
-            },
-          );
-
-          if (!response.ok) {
-            throw new Error('Failed to remove installation');
-          }
-
-          span.setAttribute('installation_removed', true);
-          toast.success('Installation removed successfully');
-          await fetchInstallations();
-        } catch (error) {
-          console.error('Error removing installation:', error);
-          Sentry.captureException(error);
-          toast.error('Failed to remove installation');
-        } finally {
-          setRemovingIds((prev) => {
-            const next = new Set(prev);
-            next.delete(installationId);
-            return next;
-          });
-        }
-      },
-    );
+    try {
+      await deleteInstallation.mutateAsync({ installationId });
+    } finally {
+      setRemovingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(installationId);
+        return next;
+      });
+    }
   };
 
-  const handleAddMore = async () => {
+  const handleAddMore = () => {
     Sentry.startSpan(
       {
         op: 'ui.click',
         name: 'Add More Repositories Click',
       },
-      async () => {
-        try {
-          const response = await fetch('/api/github-app/installation-url', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({}),
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to generate installation URL');
-          }
-
-          const data = await response.json();
-          window.location.href = data.url;
-        } catch (error) {
-          console.error('Failed to connect GitHub App:', error);
-          Sentry.captureException(error);
-          toast.error('Failed to connect GitHub. Please try again.');
-        }
+      () => {
+        getInstallationUrl.mutate({});
       },
     );
   };
@@ -292,7 +233,7 @@ export default function GitHubSettingsPage() {
                           key={repo.id}
                           className="flex items-center space-x-2 text-sm text-stone-600 bg-stone-50 rounded px-3 py-2"
                         >
-                          <span>{repo.fullName}</span>
+                          <span>{repo.repositoryFullName}</span>
                           {repo.isPrivate && (
                             <span
                               className="text-xs"

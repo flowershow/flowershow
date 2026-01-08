@@ -1,6 +1,6 @@
+import { User as PrismaUser } from '@prisma/client';
 import NextAuth, { DefaultUser } from 'next-auth';
 import { GithubProfile } from 'next-auth/providers/github';
-import { User as PrismaUser } from '@prisma/client';
 
 declare module 'next-auth' {
   /**
@@ -24,7 +24,8 @@ declare module 'next-auth' {
     name: string;
     email: string | null;
     image: string;
-    ghUsername: string;
+    username: string;
+    ghUsername?: string;
     role?: PrismaUser['role'];
   }
 }

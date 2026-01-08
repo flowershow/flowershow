@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { GithubIcon } from '@/components/icons';
 import LoadingDots from '@/components/icons/loading-dots';
 import { cn } from '@/lib/utils';
+import { api } from '@/trpc/react';
 
 interface GitHubConnectionCardProps {
   onRefresh?: () => void;
@@ -14,6 +15,7 @@ export default function GitHubConnectionCard({
   onRefresh,
 }: GitHubConnectionCardProps) {
   const [isConnecting, setIsConnecting] = useState(false);
+  const getInstallationUrl = api.github.getInstallationUrl.useMutation();
 
   const handleConnect = async () => {
     setIsConnecting(true);
@@ -25,17 +27,7 @@ export default function GitHubConnectionCard({
       },
       async (span) => {
         try {
-          const response = await fetch('/api/github-app/installation-url', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({}),
-          });
-
-          if (!response.ok) {
-            throw new Error('Failed to generate installation URL');
-          }
-
-          const data = await response.json();
+          const data = await getInstallationUrl.mutateAsync({});
           span.setAttribute('installation_url_generated', true);
 
           // Open GitHub App installation in popup window
@@ -58,6 +50,7 @@ export default function GitHubConnectionCard({
 
           // Listen for messages from the popup
           const handleMessage = (event: MessageEvent) => {
+            console.log('Handle popup message');
             // Verify the message origin for security
             const expectedOrigin = window.location.origin;
             if (event.origin !== expectedOrigin) {
@@ -138,7 +131,7 @@ export default function GitHubConnectionCard({
           ) : (
             <>
               <GithubIcon className="h-4 w-4" />
-              <span>Connect GitHub Repositories</span>
+              <span>Connect GitHub</span>
             </>
           )}
         </button>

@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/nextjs';
 import { TRPCError } from '@trpc/server';
 import jwt from 'jsonwebtoken';
 import { env } from '@/env.mjs';
+import { db } from '@/server/db';
 
 const githubAPIBaseURL = 'https://api.github.com';
 const githubAPIVersion = '2022-11-28';
@@ -48,12 +49,13 @@ async function generateGitHubAppJWT(): Promise<string> {
 
 /**
  * Refresh installation access token
+ * @param githubInstallationId - The actual GitHub installation ID (BigInt as string)
  */
 async function refreshInstallationToken(
-  installationId: string,
+  githubInstallationId: string,
 ): Promise<string> {
   // Check if refresh is already in progress
-  const existingLock = refreshLocks.get(installationId);
+  const existingLock = refreshLocks.get(githubInstallationId);
   if (existingLock) {
     return existingLock;
   }
@@ -67,12 +69,12 @@ async function refreshInstallationToken(
           name: 'Refresh GitHub App Installation Token',
         },
         async (span) => {
-          span.setAttribute('installation_id', installationId);
+          span.setAttribute('installation_id', githubInstallationId);
 
           const jwtToken = await generateGitHubAppJWT();
 
           const response = await fetch(
-            `${githubAPIBaseURL}/app/installations/${installationId}/access_tokens`,
+            `${githubAPIBaseURL}/app/installations/${githubInstallationId}/access_tokens`,
             {
               method: 'POST',
               headers: {
@@ -91,7 +93,7 @@ async function refreshInstallationToken(
               ),
               {
                 extra: {
-                  installationId,
+                  installationId: githubInstallationId,
                   status: response.status,
                   errorBody,
                 },
@@ -104,7 +106,7 @@ async function refreshInstallationToken(
           const expiresAt = new Date(data.expires_at);
 
           // Cache the token
-          tokenCache.set(installationId, {
+          tokenCache.set(githubInstallationId, {
             token: data.token,
             expiresAt,
           });
@@ -118,28 +120,42 @@ async function refreshInstallationToken(
       Sentry.captureException(error);
       throw error;
     } finally {
-      refreshLocks.delete(installationId);
+      refreshLocks.delete(githubInstallationId);
     }
   })();
 
-  refreshLocks.set(installationId, refreshPromise);
+  refreshLocks.set(githubInstallationId, refreshPromise);
   return refreshPromise;
 }
 
 /**
  * Get installation access token (with caching and auto-refresh)
+ * @param installationDbId - The database CUID for the GitHubInstallation record
  */
 export async function getInstallationToken(
-  installationId: string,
+  installationDbId: string,
 ): Promise<string> {
-  const cached = tokenCache.get(installationId);
+  // Look up the actual GitHub installation ID from the database
+  const installation = await db.gitHubInstallation.findUnique({
+    where: { id: installationDbId },
+    select: { installationId: true },
+  });
+
+  if (!installation) {
+    throw new Error(
+      `GitHub installation not found for database ID: ${installationDbId}`,
+    );
+  }
+
+  const githubInstallationId = installation.installationId.toString();
+  const cached = tokenCache.get(githubInstallationId);
 
   // Refresh if token expires in < 5 minutes
   const now = new Date();
   const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
 
   if (!cached || cached.expiresAt < fiveMinutesFromNow) {
-    return refreshInstallationToken(installationId);
+    return refreshInstallationToken(githubInstallationId);
   }
 
   return cached.token;
@@ -147,9 +163,12 @@ export async function getInstallationToken(
 
 /**
  * Clear cached token for an installation (useful after revocation)
+ * @param githubInstallationId - The actual GitHub installation ID (BigInt as string)
  */
-export function clearInstallationTokenCache(installationId: string): void {
-  tokenCache.delete(installationId);
+export function clearInstallationTokenCache(
+  githubInstallationId: string,
+): void {
+  tokenCache.delete(githubInstallationId);
 }
 
 // ============================================================================

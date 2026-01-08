@@ -100,16 +100,16 @@ export async function GET(request: Request) {
           // Fallback: redirect if can't close
           setTimeout(() => {
             window.location.href = setupAction === 'update' 
-              ? '/cloud/settings/github'
-              : '/cloud/new';
+              ? '/settings/github'
+              : '/new';
           }, 1500);
         }
       } else {
         // Not in popup, redirect normally
         setTimeout(() => {
           window.location.href = setupAction === 'update'
-            ? '/cloud/settings/github'
-            : '/cloud/new';
+            ? '/settings/github'
+            : '/new';
         }, 1500);
       }
     })();
