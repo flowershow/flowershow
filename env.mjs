@@ -39,6 +39,7 @@ export const env = createEnv({
     GH_WEBHOOK_URL: z.string(),
     GH_ACCESS_TOKEN: z.string(),
     GITHUB_APP_ID: z.string(),
+    GITHUB_APP_SLUG: z.string(), // GitHub App URL slug (e.g., 'my-app-name')
     GITHUB_APP_CLIENT_ID: z.string(),
     GITHUB_APP_CLIENT_SECRET: z.string(),
     GITHUB_APP_WEBHOOK_SECRET: z.string(),
@@ -117,6 +118,7 @@ export const env = createEnv({
     GH_WEBHOOK_URL: process.env.GH_WEBHOOK_URL,
     GH_ACCESS_TOKEN: process.env.GH_ACCESS_TOKEN,
     GITHUB_APP_ID: process.env.GITHUB_APP_ID,
+    GITHUB_APP_SLUG: process.env.GITHUB_APP_SLUG,
     GITHUB_APP_CLIENT_ID: process.env.GITHUB_APP_CLIENT_ID,
     GITHUB_APP_CLIENT_SECRET: process.env.GITHUB_APP_CLIENT_SECRET,
     GITHUB_APP_WEBHOOK_SECRET: process.env.GITHUB_APP_WEBHOOK_SECRET,

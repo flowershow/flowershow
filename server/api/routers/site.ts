@@ -96,11 +96,12 @@ export const siteRouter = createTRPCRouter({
         ghBranch: z.string().min(1),
         rootDir: z.string().optional(),
         projectName: z.string().optional(),
+        installationId: z.string().optional(), // GitHub App installation ID
       }),
     )
     .output(publicSiteSchema)
     .mutation(async ({ ctx, input }): Promise<PublicSite> => {
-      const { ghRepository, ghBranch, rootDir } = input;
+      const { ghRepository, ghBranch, rootDir, installationId } = input;
       const accessToken = ctx.session.accessToken;
 
       // 1) Validate remote branch exists
@@ -108,6 +109,7 @@ export const siteRouter = createTRPCRouter({
         ghRepository,
         ghBranch,
         accessToken,
+        installationId,
       });
 
       if (!branchExists) {
@@ -135,6 +137,9 @@ export const siteRouter = createTRPCRouter({
           autoSync: false,
           webhookId: null,
           user: { connect: { id: ctx.session.user.id } },
+          ...(installationId && {
+            installation: { connect: { id: installationId } },
+          }),
         },
       });
 
@@ -144,6 +149,7 @@ export const siteRouter = createTRPCRouter({
         const response = await createGitHubRepoWebhook({
           ghRepository,
           accessToken,
+          installationId,
           webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${created.id}`,
         });
         webhookId = response.id.toString();
@@ -166,6 +172,7 @@ export const siteRouter = createTRPCRouter({
           ghBranch,
           rootDir: created.rootDir,
           accessToken,
+          installationId,
           initialSync: true,
         },
       });

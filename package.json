@@ -18,7 +18,10 @@
     "build-storybook": "storybook build -o ./deploy/storybook/out"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": ["eslint . --fix", "biome format --write"]
+    "*.{js,jsx,ts,tsx}": [
+      "eslint . --fix",
+      "biome format --write"
+    ]
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.914.0",
@@ -44,6 +47,7 @@
     "@trpc/next": "^10.37.1",
     "@trpc/react-query": "^10.37.1",
     "@trpc/server": "^10.37.1",
+    "@types/jsonwebtoken": "^9.0.10",
     "@unocss/core": "^66.5.4",
     "ag-grid-community": "^34.3.1",
     "ag-grid-react": "^34.3.1",
@@ -63,6 +67,7 @@
     "jose": "^6.1.0",
     "js-cookie": "^3.0.5",
     "jsep": "^1.4.0",
+    "jsonwebtoken": "^9.0.3",
     "leaflet": "^1.9.4",
     "lottie-react": "^2.4.1",
     "lucide-react": "^0.546.0",

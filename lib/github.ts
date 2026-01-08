@@ -1,8 +1,160 @@
+import * as Sentry from '@sentry/nextjs';
 import { TRPCError } from '@trpc/server';
+import jwt from 'jsonwebtoken';
 import { env } from '@/env.mjs';
 
 const githubAPIBaseURL = 'https://api.github.com';
 const githubAPIVersion = '2022-11-28';
+
+// ============================================================================
+// GitHub App Token Management
+// ============================================================================
+
+// In-memory cache for installation tokens (consider Redis for production)
+const tokenCache = new Map<
+  string,
+  {
+    token: string;
+    expiresAt: Date;
+  }
+>();
+
+// Mutex to prevent concurrent refresh
+const refreshLocks = new Map<string, Promise<string>>();
+
+/**
+ * Generate JWT for GitHub App authentication
+ */
+async function generateGitHubAppJWT(): Promise<string> {
+  return Sentry.startSpan(
+    {
+      op: 'github.app.jwt',
+      name: 'Generate GitHub App JWT',
+    },
+    () => {
+      const now = Math.floor(Date.now() / 1000);
+      const payload = {
+        iat: now,
+        exp: now + 600, // 10 minutes
+        iss: env.GITHUB_APP_ID,
+      };
+
+      return jwt.sign(payload, env.GITHUB_APP_PRIVATE_KEY, {
+        algorithm: 'RS256',
+      });
+    },
+  );
+}
+
+/**
+ * Refresh installation access token
+ */
+async function refreshInstallationToken(
+  installationId: string,
+): Promise<string> {
+  // Check if refresh is already in progress
+  const existingLock = refreshLocks.get(installationId);
+  if (existingLock) {
+    return existingLock;
+  }
+
+  // Create new refresh promise
+  const refreshPromise = (async () => {
+    try {
+      return await Sentry.startSpan(
+        {
+          op: 'github.app.token.refresh',
+          name: 'Refresh GitHub App Installation Token',
+        },
+        async (span) => {
+          span.setAttribute('installation_id', installationId);
+
+          const jwtToken = await generateGitHubAppJWT();
+
+          const response = await fetch(
+            `${githubAPIBaseURL}/app/installations/${installationId}/access_tokens`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${jwtToken}`,
+                Accept: 'application/vnd.github+json',
+                'X-GitHub-Api-Version': githubAPIVersion,
+              },
+            },
+          );
+
+          if (!response.ok) {
+            const errorBody = await response.text();
+            Sentry.captureException(
+              new Error(
+                `Failed to refresh GitHub App token: ${response.status} ${response.statusText}`,
+              ),
+              {
+                extra: {
+                  installationId,
+                  status: response.status,
+                  errorBody,
+                },
+              },
+            );
+            throw new Error(`Failed to refresh token: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          const expiresAt = new Date(data.expires_at);
+
+          // Cache the token
+          tokenCache.set(installationId, {
+            token: data.token,
+            expiresAt,
+          });
+
+          span.setAttribute('expires_at', data.expires_at);
+
+          return data.token;
+        },
+      );
+    } catch (error) {
+      Sentry.captureException(error);
+      throw error;
+    } finally {
+      refreshLocks.delete(installationId);
+    }
+  })();
+
+  refreshLocks.set(installationId, refreshPromise);
+  return refreshPromise;
+}
+
+/**
+ * Get installation access token (with caching and auto-refresh)
+ */
+export async function getInstallationToken(
+  installationId: string,
+): Promise<string> {
+  const cached = tokenCache.get(installationId);
+
+  // Refresh if token expires in < 5 minutes
+  const now = new Date();
+  const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+
+  if (!cached || cached.expiresAt < fiveMinutesFromNow) {
+    return refreshInstallationToken(installationId);
+  }
+
+  return cached.token;
+}
+
+/**
+ * Clear cached token for an installation (useful after revocation)
+ */
+export function clearInstallationTokenCache(installationId: string): void {
+  tokenCache.delete(installationId);
+}
+
+// ============================================================================
+// GitHub API Helpers
+// ============================================================================
 
 type Accept = 'application/vnd.github+json' | 'application/vnd.github.raw+json';
 
@@ -277,16 +429,23 @@ export const checkIfBranchExists = async ({
   ghRepository,
   ghBranch,
   accessToken,
+  installationId,
 }: {
   ghRepository: string;
   ghBranch: string;
   accessToken: string;
+  installationId?: string;
 }) => {
+  // Use installation token if available, otherwise use OAuth token
+  const token = installationId
+    ? await getInstallationToken(installationId)
+    : accessToken;
+
   try {
     return await githubFetch({
       // https://docs.github.com/en/rest/branches/branches?apiVersion=2022-11-28#get-a-branch
       url: `/repos/${ghRepository}/branches/${ghBranch}`,
-      accessToken: accessToken,
+      accessToken: token,
       cacheOptions: {
         cache: 'no-store',
       },
@@ -342,18 +501,25 @@ export const fetchGitHubRepoContributors = async ({
 export const createGitHubRepoWebhook = async ({
   ghRepository,
   accessToken,
+  installationId,
   webhookUrl,
 }: {
   ghRepository: string;
   accessToken: string;
+  installationId?: string;
   webhookUrl?: string;
 }) => {
+  // Use installation token if available, otherwise use OAuth token
+  const token = installationId
+    ? await getInstallationToken(installationId)
+    : accessToken;
+
   // Note: If you're getting "Unprocessable entity" error from GitHub,
   // there is a chance that the webhook with the same URL already exists.
   return await githubJsonFetch<GitHubAPIWebhook>({
     // https://docs.github.com/en/rest/repos/webhooks?apiVersion=2022-11-28#create-a-repository-webhook
     url: `/repos/${ghRepository}/hooks`,
-    accessToken: accessToken,
+    accessToken: token,
     method: 'POST',
     body: {
       name: 'web',
