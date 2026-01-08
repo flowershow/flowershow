@@ -7,7 +7,7 @@ import { withSentryConfig } from '@sentry/nextjs';
 const nextConfig = {
   async redirects() {
     return [
-      { 
+      {
         source: '/enterprise',
         destination: '/portal',
         permanent: true,

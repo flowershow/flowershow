@@ -18,10 +18,7 @@
     "build-storybook": "storybook build -o ./deploy/storybook/out"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "eslint . --fix",
-      "biome format --write"
-    ]
+    "*.{js,jsx,ts,tsx}": ["eslint . --fix", "biome format --write"]
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.914.0",

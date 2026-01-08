@@ -206,7 +206,7 @@ export const githubRouter = createTRPCRouter({
 
           // Get installation access token
           const installationAccessToken = await getInstallationToken(
-            installation.installationId.toString(),
+            installation.id,
           );
 
           // Fetch repositories from GitHub with pagination

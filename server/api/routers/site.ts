@@ -134,7 +134,7 @@ export const siteRouter = createTRPCRouter({
           ghRepository,
           ghBranch,
           rootDir,
-          autoSync: false,
+          autoSync: true,
           webhookId: null,
           user: { connect: { id: ctx.session.user.id } },
           ...(installationId && {
@@ -142,26 +142,6 @@ export const siteRouter = createTRPCRouter({
           }),
         },
       });
-
-      // 4) Try to create webhook; if it works, mark autoSync on
-      let webhookId: string | null = null;
-      try {
-        const response = await createGitHubRepoWebhook({
-          ghRepository,
-          accessToken,
-          installationId,
-          webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${created.id}`,
-        });
-        webhookId = response.id.toString();
-
-        // update site to enable autoSync
-        await ctx.db.site.update({
-          where: { id: created.id },
-          data: { autoSync: true, webhookId },
-        });
-      } catch (e) {
-        console.error('Failed to create webhook', e);
-      }
 
       // 5) Kick off initial sync
       await inngest.send({
@@ -290,42 +270,53 @@ export const siteRouter = createTRPCRouter({
       } else if (key === 'autoSync') {
         const enable = value === 'true';
 
-        if (enable) {
-          try {
-            const { id: webhookId } = await createGitHubRepoWebhook({
-              ghRepository: site.ghRepository,
-              accessToken: ctx.session.accessToken,
-              webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${site.id}`, // Add site ID to webhook URL
-            });
-            await ctx.db.site.update({
-              where: { id },
-              data: { autoSync: true, webhookId: webhookId.toString() },
-            });
-          } catch {
-            throw new TRPCError({
-              code: 'BAD_REQUEST',
-              message:
-                'Failed to create webhook. Check if the repository already has a webhook installed.',
-            });
-          }
+        // GitHub App installations don't need per-repository webhooks
+        // They receive push events at the installation level
+        if (site.installationId) {
+          // GitHub App site: simply toggle autoSync
+          await ctx.db.site.update({
+            where: { id },
+            data: { autoSync: enable },
+          });
         } else {
-          try {
-            if (site.webhookId) {
-              await deleteGitHubRepoWebhook({
+          // Legacy OAuth site: manage per-repository webhook
+          if (enable) {
+            try {
+              const { id: webhookId } = await createGitHubRepoWebhook({
                 ghRepository: site.ghRepository,
                 accessToken: ctx.session.accessToken,
-                webhook_id: Number(site.webhookId),
-              }).catch(() => {});
+                webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${site.id}`,
+              });
+              await ctx.db.site.update({
+                where: { id },
+                data: { autoSync: true, webhookId: webhookId.toString() },
+              });
+            } catch {
+              throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message:
+                  'Failed to create webhook. Check if the repository already has a webhook installed.',
+              });
             }
-            await ctx.db.site.update({
-              where: { id },
-              data: { autoSync: false, webhookId: null },
-            });
-          } catch (error) {
-            throw new TRPCError({
-              code: 'BAD_REQUEST',
-              message: `Failed to delete webhook: ${String(error)}`,
-            });
+          } else {
+            try {
+              if (site.webhookId) {
+                await deleteGitHubRepoWebhook({
+                  ghRepository: site.ghRepository,
+                  accessToken: ctx.session.accessToken,
+                  webhook_id: Number(site.webhookId),
+                }).catch(() => {});
+              }
+              await ctx.db.site.update({
+                where: { id },
+                data: { autoSync: false, webhookId: null },
+              });
+            } catch (error) {
+              throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message: `Failed to delete webhook: ${String(error)}`,
+              });
+            }
           }
         }
       } else {
@@ -460,7 +451,8 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      if (site.webhookId) {
+      // Only delete webhook for OAuth sites (GitHub App sites use installation-level webhooks)
+      if (site.webhookId && !site.installationId) {
         try {
           await deleteGitHubRepoWebhook({
             ghRepository: site.ghRepository,

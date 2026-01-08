@@ -279,6 +279,15 @@ Handle GitHub App webhook events.
 - Check if any sites use removed repos
 - Mark affected sites for re-authorization
 
+#### `push`
+
+**This eliminates the need for per-repository webhooks!**
+
+- Extract repository full name and branch from webhook payload
+- Find all sites using this repository/branch with GitHub App installation and `autoSync: true`
+- Trigger `site/sync` events for all matching sites
+- GitHub App receives push events for ALL repositories in the installation automatically
+
 **Webhook Security:**
 
 - Verify webhook signature using `GITHUB_APP_WEBHOOK_SECRET`
@@ -335,7 +344,7 @@ Location: [`/app/(dashboard)/cloud/(dashboard)/new/page.tsx`](<../app/(dashboard
 <Card>
   <CardHeader>
     <h3>Connect GitHub Repositories</h3>
-    <p>Grant Flowershow access to specific repositories</p>
+    <p>Grant Flowershow access to selected repositories</p>
   </CardHeader>
   <CardBody>
     {installations.length === 0 ? (
@@ -894,8 +903,11 @@ If critical issues arise during rollout:
 
    - Each org gets separate installation, user can have multiple
 
-5. **Existing Webhooks:** Migrate webhook creation to use installation tokens?
-   - Yes, new sites use installation tokens for webhooks
+5. **Per-Repository Webhooks:** Do GitHub App installations need per-repository webhooks?
+   - **No!** GitHub App installations receive push events at the installation level for ALL repositories
+   - The app webhook receives `push` events for every repository in the installation automatically
+   - Only legacy OAuth sites need per-repository webhooks
+   - This simplifies site creation and eliminates webhook management complexity
 
 ## References
 

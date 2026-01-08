@@ -140,8 +140,9 @@ export async function GET(request: Request) {
         });
 
         // Get installation access token for fetching repositories
-        const installationAccessToken =
-          await getInstallationToken(installationId);
+        const installationAccessToken = await getInstallationToken(
+          dbInstallation.id,
+        );
 
         // Fetch all accessible repositories using installation access token with pagination
         let allRepositories: GitHubRepository[] = [];

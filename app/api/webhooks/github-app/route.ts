@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/nextjs';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
+import { inngest } from '@/inngest/client';
 import {
   clearInstallationTokenCache,
   getInstallationToken,
@@ -10,7 +11,7 @@ import prisma from '@/server/db';
 
 interface WebhookPayload {
   action: string;
-  installation: {
+  installation?: {
     id: number;
     account: {
       id: number;
@@ -38,6 +39,14 @@ interface WebhookPayload {
     full_name: string;
     private: boolean;
   }>;
+  // Push event fields
+  ref?: string;
+  repository?: {
+    id: number;
+    name: string;
+    full_name: string;
+    private: boolean;
+  };
 }
 
 /**
@@ -112,6 +121,10 @@ export async function POST(request: Request) {
             await handleInstallationRepositoriesEvent(data);
             break;
 
+          case 'push':
+            await handlePushEvent(data);
+            break;
+
           default:
             console.log(`Unhandled webhook event: ${eventType}`);
         }
@@ -134,6 +147,11 @@ export async function POST(request: Request) {
  */
 async function handleInstallationEvent(data: WebhookPayload) {
   const { action, installation } = data;
+
+  if (!installation) {
+    console.error('Installation event missing installation data');
+    return;
+  }
 
   const installationId = BigInt(installation.id);
 
@@ -209,6 +227,11 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
   const { action, installation, repositories_added, repositories_removed } =
     data;
 
+  if (!installation) {
+    console.error('Installation repositories event missing installation data');
+    return;
+  }
+
   const installationId = BigInt(installation.id);
 
   // Find the installation in our database
@@ -272,4 +295,83 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
     where: { id: dbInstallation.id },
     data: { updatedAt: new Date() },
   });
+}
+
+/**
+ * Handle push events for repositories in GitHub App installations
+ * This eliminates the need for per-repository webhooks
+ */
+async function handlePushEvent(data: WebhookPayload) {
+  return Sentry.startSpan(
+    {
+      op: 'webhook.push',
+      name: 'Handle GitHub App Push Event',
+    },
+    async (span) => {
+      const { ref, repository } = data;
+
+      if (!repository || !ref) {
+        console.error('Push event missing repository or ref data');
+        return;
+      }
+
+      // Extract branch name from ref (refs/heads/main -> main)
+      const branch = ref.replace('refs/heads/', '');
+
+      span.setAttribute('repository', repository.full_name);
+      span.setAttribute('branch', branch);
+
+      console.log(
+        `Push event received for ${repository.full_name} on branch ${branch}`,
+      );
+
+      // Find all sites using this repository and branch with GitHub App installation
+      const sites = await prisma.site.findMany({
+        where: {
+          ghRepository: repository.full_name,
+          ghBranch: branch,
+          installationId: { not: null },
+          autoSync: true,
+        },
+        select: {
+          id: true,
+          ghRepository: true,
+          ghBranch: true,
+          rootDir: true,
+          installationId: true,
+        },
+      });
+
+      span.setAttribute('sites_found', sites.length);
+
+      if (sites.length === 0) {
+        console.log(
+          `No sites found for ${repository.full_name}:${branch} with autoSync enabled`,
+        );
+        return;
+      }
+
+      console.log(
+        `Triggering sync for ${sites.length} site(s) using ${repository.full_name}:${branch}`,
+      );
+
+      // Trigger sync for each matching site
+      const syncPromises = sites.map((site) =>
+        inngest.send({
+          name: 'site/sync',
+          data: {
+            siteId: site.id,
+            ghRepository: site.ghRepository,
+            ghBranch: site.ghBranch,
+            rootDir: site.rootDir,
+            installationId: site.installationId!,
+          },
+        }),
+      );
+
+      await Promise.all(syncPromises);
+
+      console.log(`Successfully triggered sync for ${sites.length} site(s)`);
+    },
+  );
 }

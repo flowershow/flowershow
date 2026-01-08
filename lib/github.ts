@@ -453,7 +453,7 @@ export const checkIfBranchExists = async ({
   ghRepository: string;
   ghBranch: string;
   accessToken: string;
-  installationId?: string;
+  installationId?: string; // Database CUID from GitHubInstallation table
 }) => {
   // Use installation token if available, otherwise use OAuth token
   const token = installationId
@@ -525,7 +525,7 @@ export const createGitHubRepoWebhook = async ({
 }: {
   ghRepository: string;
   accessToken: string;
-  installationId?: string;
+  installationId?: string; // Database CUID from GitHubInstallation table
   webhookUrl?: string;
 }) => {
   // Use installation token if available, otherwise use OAuth token

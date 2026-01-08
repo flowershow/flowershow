@@ -111,7 +111,7 @@ export default function GitHubConnectionCard({
           </h3>
         </div>
         <p className="text-sm text-stone-600">
-          Grant Flowershow access to specific repositories using GitHub App
+          Grant Flowershow access to selected repositories
         </p>
       </div>
 

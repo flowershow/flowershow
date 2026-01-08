@@ -140,32 +140,18 @@ export default function NewSitePage() {
       }))
     : [];
 
-  // Show loading state while checking installations
-  if (isLoadingInstallations) {
-    return (
-      <div className="mx-auto max-w-xl py-16">
-        <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold text-stone-900 mb-2">
-            Create a new site
-          </h1>
-          <p className="text-stone-600 flex items-center justify-center gap-2">
-            <LoadingDots color="#57534e" />
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show only GitHub connection card if no installations
+  // Show only GitHub connection card if no installations and not loading
   if (installations.length === 0) {
     return (
-      <div className="mx-auto max-w-xl py-16">
-        <div className="mb-6 text-center">
-          <h1 className="text-3xl font-bold text-stone-900 mb-2">
-            Create a new site
-          </h1>
+      <div className="mx-auto max-w-xl py-16 space-y-6">
+        <div className="w-full rounded-md bg-white md:border md:border-stone-200 md:shadow ">
+          <div className="relative flex flex-col space-y-6 p-5 md:p-10">
+            <h2 className="font-dashboard-heading text-2xl ">
+              Create a new site
+            </h2>
+            <GitHubConnectionCard onRefresh={handleRefreshInstallations} />
+          </div>
         </div>
-        <GitHubConnectionCard onRefresh={handleRefreshInstallations} />
       </div>
     );
   }

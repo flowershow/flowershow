@@ -8,7 +8,8 @@ interface SiteSync {
     ghRepository: string;
     ghBranch: string;
     rootDir: string | null;
-    accessToken: string;
+    accessToken?: string; // Optional for GitHub App installations
+    installationId?: string; // For GitHub App installations
     initialSync?: boolean;
     forceSync?: boolean;
   };

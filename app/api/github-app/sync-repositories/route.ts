@@ -56,9 +56,7 @@ export async function POST(request: Request) {
         }
 
         // Get installation access token
-        const accessToken = await getInstallationToken(
-          installation.installationId.toString(),
-        );
+        const accessToken = await getInstallationToken(installation.id);
 
         // Fetch accessible repositories
         const reposResponse = await fetch(
