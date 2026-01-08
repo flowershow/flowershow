@@ -264,6 +264,7 @@ export const siteRouter = createTRPCRouter({
             ghBranch: site.ghBranch,
             rootDir: newRoot,
             accessToken: ctx.session.accessToken,
+            installationId: site.installationId ?? undefined,
             initialSync: true,
           },
         });
@@ -338,6 +339,7 @@ export const siteRouter = createTRPCRouter({
               ghBranch: site.ghBranch,
               rootDir: site.rootDir,
               accessToken: ctx.session.accessToken,
+              installationId: site.installationId ?? undefined,
               forceSync: true,
             },
           });
@@ -522,6 +524,7 @@ export const siteRouter = createTRPCRouter({
           ghBranch,
           rootDir: site.rootDir,
           accessToken,
+          installationId: site.installationId ?? undefined,
           forceSync: input.force,
         },
       });
@@ -608,6 +611,7 @@ export const siteRouter = createTRPCRouter({
             ghRepository: site.ghRepository,
             ghBranch: site.ghBranch,
             accessToken: ctx.session.accessToken,
+            installationId: site.installationId ?? undefined,
           });
           status =
             site.tree?.['sha'] === gitHubTree.sha ? 'SUCCESS' : 'OUTDATED';

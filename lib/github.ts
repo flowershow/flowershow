@@ -384,14 +384,25 @@ export const fetchGitHubRepoTree = async ({
   ghRepository,
   ghBranch,
   accessToken,
+  installationId,
 }: {
   ghRepository: string;
   ghBranch: string;
-  accessToken: string;
+  accessToken?: string; // Legacy OAuth token (optional for backward compatibility)
+  installationId?: string; // GitHub App installation DB ID
 }) => {
+  // Prefer installation token over OAuth token
+  const token = installationId
+    ? await getInstallationToken(installationId)
+    : accessToken;
+
+  if (!token) {
+    throw new Error('Either accessToken or installationId must be provided');
+  }
+
   return await githubJsonFetch<GitHubAPIRepoTree>({
     url: `/repos/${ghRepository}/git/trees/${ghBranch}?recursive=1`,
-    accessToken: accessToken,
+    accessToken: token,
     cacheOptions: {
       cache: 'no-store',
     },
@@ -429,15 +440,26 @@ export const fetchGitHubFileRaw = async ({
   ghRepository,
   file_sha,
   accessToken,
+  installationId,
 }: {
   ghRepository: string;
   file_sha: string;
-  accessToken: string;
+  accessToken?: string; // Legacy OAuth token (optional for backward compatibility)
+  installationId?: string; // GitHub App installation DB ID
 }) => {
+  // Prefer installation token over OAuth token
+  const token = installationId
+    ? await getInstallationToken(installationId)
+    : accessToken;
+
+  if (!token) {
+    throw new Error('Either accessToken or installationId must be provided');
+  }
+
   return await githubRawFetch({
     // https://docs.github.com/en/rest/git/blobs?apiVersion=2022-11-28#get-a-blob
     url: `/repos/${ghRepository}/git/blobs/${file_sha}`,
-    accessToken: accessToken,
+    accessToken: token,
     cacheOptions: {
       cache: 'no-store',
     },
