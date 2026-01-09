@@ -272,8 +272,26 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
           `${repositories_removed.length} repositories removed from installation ${installation.id}`,
         );
 
+        const repoFullNames = repositories_removed.map(
+          (repo) => repo.full_name,
+        );
         const repoIds = repositories_removed.map((repo) => BigInt(repo.id));
 
+        // Find affected sites BEFORE deleting repository records
+        const affectedSites = await prisma.site.findMany({
+          where: {
+            installationId: dbInstallation.id,
+            ghRepository: { in: repoFullNames },
+          },
+          select: {
+            id: true,
+            projectName: true,
+            ghRepository: true,
+            userId: true,
+          },
+        });
+
+        // Delete repository access records
         await prisma.gitHubInstallationRepository.deleteMany({
           where: {
             installationId: dbInstallation.id,
@@ -281,8 +299,22 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
           },
         });
 
-        // Note: Check if any sites use the removed repositories
-        // You may want to add notification or update logic here
+        // Clear installationId and disable autoSync for affected sites
+        if (affectedSites.length > 0) {
+          console.log(
+            `Clearing installation access for ${affectedSites.length} affected site(s)`,
+          );
+
+          await prisma.site.updateMany({
+            where: {
+              id: { in: affectedSites.map((s) => s.id) },
+            },
+            data: {
+              installationId: null,
+              autoSync: false,
+            },
+          });
+        }
       }
       break;
 
