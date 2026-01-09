@@ -141,14 +141,27 @@ export default function MigrateToGitHubAppForm({
             for enhanced security with granular repository access control.
           </p>
 
-          {!hasInstallation && (
-            <div className="mb-4 rounded-md bg-blue-100 p-3">
-              <p className="text-sm text-blue-900">
-                First, you need to install the GitHub App and grant it access to{' '}
-                <code className="font-mono text-xs bg-blue-200 px-1 py-0.5 rounded">
+          {!hasInstallation ? (
+            <div className="mb-4 rounded-md bg-blue-100 p-3 space-y-2">
+              <p className="text-sm font-semibold text-blue-900">
+                Step 1 of 2: Install GitHub App
+              </p>
+              <p className="text-sm text-blue-800">
+                Install the Flowershow GitHub App and grant it access to:
+                <code className="font-mono ml-1 text-xs bg-blue-200 px-1.5 py-1 rounded text-blue-900">
                   {repositoryName}
                 </code>
-                .
+              </p>
+            </div>
+          ) : (
+            <div className="mb-4 rounded-md bg-blue-100 p-3 space-y-2">
+              <p className="text-sm font-semibold text-blue-900">
+                Step 2 of 2: Link This Site
+              </p>
+              <p className="text-sm text-blue-800">
+                Click &quot;Migrate to GitHub App&quot; below to link this
+                specific site to your installation. This switches the
+                site&apos;s authentication and removes the legacy webhook.
               </p>
             </div>
           )}
@@ -195,14 +208,6 @@ export default function MigrateToGitHubAppForm({
               Learn More
             </a> */}
           </div>
-
-          {hasInstallation && (
-            <p className="text-xs text-blue-700 mt-3">
-              After migration, this site will use your GitHub App installation
-              for authentication and auto-syncing. Legacy per-repository
-              webhooks will be automatically removed.
-            </p>
-          )}
         </div>
       </div>
     </div>
