@@ -10,7 +10,7 @@ import * as Sentry from '@sentry/nextjs';
  */
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   return Sentry.startSpan(
     {
@@ -25,7 +25,7 @@ export async function DELETE(
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const installationId = params.id;
+        const { id: installationId } = await params;
 
         if (!installationId) {
           return NextResponse.json(
