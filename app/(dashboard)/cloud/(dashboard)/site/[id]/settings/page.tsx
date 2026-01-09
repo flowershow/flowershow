@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Billing from '@/components/dashboard/billing';
 import Form from '@/components/dashboard/form';
 import DeleteSiteForm from '@/components/dashboard/form/delete-site-form';
+import MigrateToGitHubAppForm from '@/components/dashboard/form/migrate-to-github-app-form';
 import SitePasswordProtectionForm from '@/components/dashboard/form/site-password-form';
 import SettingsNav from '@/components/dashboard/settings-nav';
 import { validDomainRegex } from '@/lib/domains';
@@ -27,6 +28,25 @@ export default async function SiteSettingsIndex(props: {
     siteId: site.id,
   });
 
+  // Check if site needs migration (OAuth-only, no GitHub App installation)
+  const isOAuthSite = !site.installationId;
+  let hasInstallationForRepo = false;
+
+  if (isOAuthSite) {
+    try {
+      const installations = await api.github.listInstallations.query();
+      // Check if any installation has access to this site's repository
+      hasInstallationForRepo = installations.some((installation) =>
+        installation.repositories.some(
+          (repo) => repo.repositoryFullName === site.ghRepository,
+        ),
+      );
+    } catch (error) {
+      // If installations can't be fetched, assume no installation
+      console.error('Failed to fetch installations:', error);
+    }
+  }
+
   const updateSite = async ({
     id,
     key,
@@ -46,6 +66,14 @@ export default async function SiteSettingsIndex(props: {
           <SettingsNav />
         </div>
         <div className="col-span-10 flex flex-col space-y-6 sm:col-span-9 lg:col-span-10">
+          {isOAuthSite && (
+            <MigrateToGitHubAppForm
+              siteId={site.id}
+              repositoryName={site.ghRepository}
+              hasInstallation={hasInstallationForRepo}
+            />
+          )}
+
           <Form
             title="Name"
             description="The name of your site. It can only consist of ASCII letters, digits, and characters ., -, and _. Maximum 32 characters can be used."

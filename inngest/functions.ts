@@ -7,6 +7,7 @@ import {
   fetchGitHubRepoTree,
   GitHubAPIFileContent,
   GitHubAPIRepoTreeItem,
+  getInstallationToken,
   githubJsonFetch,
 } from '@/lib/github';
 import { isPathVisible } from '@/lib/path-validator';
@@ -30,7 +31,7 @@ export const syncSite = inngest.createFunction(
       {
         scope: 'account',
         limit: 5,
-        key: 'event.data.accessToken',
+        key: 'event.data.accessToken || event.data.installationId',
       },
     ],
     cancelOn: [
@@ -46,8 +47,15 @@ export const syncSite = inngest.createFunction(
   },
   { event: 'site/sync' },
   async ({ event, step }) => {
-    const { siteId, ghRepository, ghBranch, rootDir, accessToken, forceSync } =
-      event.data;
+    const {
+      siteId,
+      ghRepository,
+      ghBranch,
+      rootDir,
+      accessToken,
+      installationId,
+      forceSync,
+    } = event.data;
 
     const site = await step.run('fetch-site', async () => {
       const site = await prisma.site.findUnique({
@@ -68,9 +76,14 @@ export const syncSite = inngest.createFunction(
       contentExclude: excludes = [],
     }: SiteConfig = await step.run('fetch-site-config', async () => {
       try {
+        // Use installation token if available, otherwise use OAuth token
+        const token = installationId
+          ? await getInstallationToken(installationId)
+          : accessToken;
+
         const config = await githubJsonFetch<GitHubAPIFileContent>({
           url: `/repos/${ghRepository}/contents/config.json?ref=${ghBranch}`,
-          accessToken: accessToken,
+          accessToken: token,
           cacheOptions: {
             cache: 'no-store',
           },
@@ -96,6 +109,7 @@ export const syncSite = inngest.createFunction(
         ghRepository,
         ghBranch,
         accessToken,
+        installationId,
       });
 
       return repoTree;
@@ -169,6 +183,7 @@ export const syncSite = inngest.createFunction(
                   ghRepository,
                   file_sha: ghTreeItem.sha,
                   accessToken,
+                  installationId,
                 });
 
                 await uploadFile({

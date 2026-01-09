@@ -43,6 +43,12 @@ export default async function middleware(req: NextRequest) {
   const path = pathname + search;
   const searchParams = search; // Preserve for rewrites
 
+  // 2.5) Handle Google OAuth redirect for local development
+  // Google OAuth doesn't support subdomains with localhost, so we allow redirects to localhost:3000
+  if (hostname === 'localhost:3000') {
+    return NextResponse.rewrite(new URL(`/cloud${path}`, req.url));
+  }
+
   // 3) Legacy redirect: flowershow.app/@... → my.flowershow.app/@...
   if (hostname === 'flowershow.app' && pathname.startsWith('/@')) {
     return NextResponse.redirect(
