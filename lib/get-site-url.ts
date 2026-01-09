@@ -15,8 +15,8 @@ export function getSiteUrl(site: PublicSite | InternalSite) {
   if (isFeatureEnabled(Feature.CustomDomain, site) && customDomain) {
     return `${protocol}://${site.customDomain}`;
   } else {
-    const ghUsername = user.ghUsername!;
-    const sitePath = resolveSiteAlias(`/@${ghUsername}/${projectName}`, 'to');
+    const username = user.username;
+    const sitePath = resolveSiteAlias(`/@${username}/${projectName}`, 'to');
     return `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${sitePath}`;
   }
 }
@@ -27,7 +27,7 @@ export function getSiteUrlPath(site: PublicSite) {
   if (isFeatureEnabled(Feature.CustomDomain, site) && customDomain) {
     return '';
   } else {
-    const ghUsername = user.ghUsername!;
-    return resolveSiteAlias(`/@${ghUsername}/${projectName}`, 'to');
+    const username = user.username;
+    return resolveSiteAlias(`/@${username}/${projectName}`, 'to');
   }
 }

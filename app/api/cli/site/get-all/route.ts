@@ -42,7 +42,6 @@ export async function GET(request: NextRequest) {
             user: {
               select: {
                 username: true,
-                ghUsername: true,
               },
             },
             _count: {
@@ -65,7 +64,7 @@ export async function GET(request: NextRequest) {
             (sum, blob) => sum + blob.size,
             0,
           );
-          const username = site.user.username || site.user.ghUsername;
+          const username = site.user.username;
 
           // Determine site URL
           let siteUrl: string;

@@ -41,11 +41,6 @@ export default function LoginPage() {
             Terms of Service.
           </a>
         </p>
-        <p className="mt-3 border-t pt-3 text-center text-xs text-primary-subtle">
-          We use GitHub to securely sync your vault and markdown files with
-          Flowershow for a seamless experience. No GitHub account? No
-          problem—sign-up will take just a few seconds.
-        </p>
       </div>
     </div>
   );

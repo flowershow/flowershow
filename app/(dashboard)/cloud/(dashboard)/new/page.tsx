@@ -1,83 +1,87 @@
 'use client';
 import { useRouter } from 'next/navigation';
-import { signOut } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import GitHubConnectionCard from '@/components/dashboard/github-connection-card';
 import { GithubIcon } from '@/components/icons';
 import LoadingDots from '@/components/icons/loading-dots';
-import { env } from '@/env.mjs';
 import { cn } from '@/lib/utils';
 import { api } from '@/trpc/react';
 
 export default function NewSitePage() {
   const router = useRouter();
+  const getInstallationUrl = api.github.getInstallationUrl.useMutation();
 
   const [data, setData] = useState({
-    gh_scope: '',
+    selectedAccount: '', // Account/org selector
     ghRepository: '',
     ghBranch: 'main',
     rootDir: '',
+    installationId: '',
   });
 
+  // Use tRPC to fetch installations
   const {
-    data: scopes,
-    isLoading: isLoadingScopes,
-    isError: isErrorFetchingScopes,
-    error: errorFetchingScopes,
-  } = api.user.getGitHubScopes.useQuery(undefined, {
-    retry: 2,
+    data: installations = [],
+    isLoading: isLoadingInstallations,
+    refetch: refetchInstallations,
+  } = api.github.listInstallations.useQuery(undefined, {
+    onError: (error) => {
+      console.error('Failed to fetch installations:', error);
+      toast.error('Failed to load GitHub installations');
+    },
   });
 
-  const {
-    data: repos,
-    isLoading: isLoadingRepos,
-    isError: isErrorFetchingRepos,
-    error: errorFetchingRepos,
-  } = api.user.getGitHubScopeRepos.useQuery(data.gh_scope, {
-    retry: 2,
-    enabled: !!data.gh_scope,
-  });
+  // Handler to refresh installations
+  const handleRefreshInstallations = useCallback(async () => {
+    await refetchInstallations();
+  }, [refetchInstallations]);
 
+  // Listen for postMessage from popup window
   useEffect(() => {
-    if (isErrorFetchingScopes) {
-      toast.error(errorFetchingScopes.message);
-      if (errorFetchingScopes.data?.code === 'UNAUTHORIZED') {
-        setTimeout(() => {
-          signOut();
-        }, 1000);
+    const handleMessage = (event: MessageEvent) => {
+      // Verify the message origin for security
+      const expectedOrigin = window.location.origin;
+      if (event.origin !== expectedOrigin) {
+        console.warn('Received message from unexpected origin:', event.origin);
+        return;
+      }
+
+      // Verify the message is from our callback
+      if (event.data?.type === 'github-app-installed') {
+        console.log(
+          'GitHub App installation completed, refreshing installations',
+        );
+        handleRefreshInstallations();
+        // Force a full page refresh to ensure UI updates
+        router.refresh();
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [handleRefreshInstallations, router]);
+
+  // Auto-select first account and repository when installations load
+  useEffect(() => {
+    if (installations.length > 0) {
+      const firstInstallation = installations[0];
+      if (firstInstallation) {
+        setData((prev) => ({
+          ...prev,
+          selectedAccount: firstInstallation.accountLogin,
+          ghRepository:
+            firstInstallation.repositories[0]?.repositoryFullName ?? '',
+          installationId: firstInstallation.id,
+        }));
       }
     }
-  }, [errorFetchingScopes]);
+  }, [installations]);
 
-  useEffect(() => {
-    if (isErrorFetchingRepos) {
-      toast.error(errorFetchingRepos.message);
-      if (errorFetchingRepos.data?.code === 'UNAUTHORIZED') {
-        setTimeout(() => {
-          signOut();
-        }, 1000);
-      }
-    }
-  }, [errorFetchingRepos]);
-
-  useEffect(() => {
-    if (scopes) {
-      if (scopes.length > 0) {
-        setData((prev) => ({ ...prev, gh_scope: scopes[0]?.login ?? '' }));
-      }
-    }
-  }, [scopes]);
-
-  useEffect(() => {
-    if (repos) {
-      const repositories = repos.map(({ name }) => name);
-      if (repositories.length > 0) {
-        setData((prev) => ({ ...prev, ghRepository: repositories[0] ?? '' }));
-      }
-    }
-  }, [repos]);
-
-  const { isLoading: isCreatingSite, mutate: createSite } =
+  const { isPending: isCreatingSite, mutate: createSite } =
     api.site.create.useMutation({
       onSuccess: (res) => {
         router.push(`/site/${res.id}/settings`);
@@ -85,27 +89,119 @@ export default function NewSitePage() {
       },
       onError: (error) => {
         toast.error(error.message);
-        if (error.data?.code === 'UNAUTHORIZED') {
-          setTimeout(() => {
-            signOut();
-          }, 3000);
-        }
       },
     });
 
+  // Get all available repositories from GitHub App installations
+  const availableRepositories = installations.flatMap((inst) =>
+    inst.repositories.map((repo) => ({
+      ...repo,
+      installationId: inst.id,
+      accountLogin: inst.accountLogin,
+    })),
+  );
+
+  const handleAccountChange = (accountLogin: string) => {
+    const installation = installations.find(
+      (inst) => inst.accountLogin === accountLogin,
+    );
+    if (installation) {
+      setData({
+        ...data,
+        selectedAccount: accountLogin,
+        ghRepository: installation.repositories[0]?.repositoryFullName ?? '',
+        installationId: installation.id,
+      });
+    }
+  };
+
+  const handleRepositoryChange = (fullName: string) => {
+    const repo = availableRepositories.find(
+      (r) => r.repositoryFullName === fullName,
+    );
+    if (repo) {
+      setData({
+        ...data,
+        ghRepository: fullName,
+        installationId: repo.installationId,
+      });
+    }
+  };
+
+  // Get repositories for the selected account
+  const selectedInstallation = installations.find(
+    (inst) => inst.accountLogin === data.selectedAccount,
+  );
+  const filteredRepositories = selectedInstallation
+    ? selectedInstallation.repositories.map((repo) => ({
+        ...repo,
+        installationId: selectedInstallation.id,
+        accountLogin: selectedInstallation.accountLogin,
+      }))
+    : [];
+
+  // Show only GitHub connection card if no installations and not loading
+  if (installations.length === 0) {
+    return (
+      <div className="mx-auto max-w-xl py-16 space-y-6">
+        <div className="w-full rounded-md bg-white md:border md:border-stone-200 md:shadow ">
+          <div className="relative flex flex-col space-y-6 p-5 md:p-10">
+            <h2 className="font-dashboard-heading text-2xl ">
+              Create a new site
+            </h2>
+            <GitHubConnectionCard onRefresh={handleRefreshInstallations} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const handleChangeGitHubAppPermissions = async () => {
+    try {
+      const result = await getInstallationUrl.mutateAsync({});
+
+      // Open GitHub App installation in popup window
+      const width = 800;
+      const height = 800;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
+
+      const popup = window.open(
+        result.url,
+        'github-app-install',
+        `width=${width},height=${height},left=${left},top=${top},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`,
+      );
+
+      if (!popup) {
+        toast.error('Please allow popups for this site');
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to get installation URL:', error);
+      toast.error('Failed to get installation URL');
+    }
+  };
+
   return (
-    <div className="mx-auto max-w-xl py-16">
+    <div className="mx-auto max-w-xl py-16 space-y-6">
       <form
         data-testid="create-site-form"
-        action={async (data: FormData) => {
-          const ghRepository = data.get('ghRepository') as string;
-          const ghBranch = data.get('ghBranch') as string;
-          const rootDir = data.get('rootDir') as string;
+        action={async (formData: FormData) => {
+          const ghRepository = formData.get('ghRepository') as string;
+          const ghBranch = formData.get('ghBranch') as string;
+          const rootDir = formData.get('rootDir') as string;
+          const installationId = formData.get('installationId') as string;
+
+          if (!installationId) {
+            toast.error('Please connect GitHub repositories first');
+            return;
+          }
 
           createSite({
             ghRepository,
             ghBranch,
             rootDir,
+            installationId,
           });
         }}
         className="w-full rounded-md bg-white  md:border md:border-stone-200 md:shadow "
@@ -115,9 +211,16 @@ export default function NewSitePage() {
             Create a new site
           </h2>
 
+          {/* Hidden field for installationId */}
+          <input
+            type="hidden"
+            name="installationId"
+            value={data.installationId}
+          />
+
           <div className="flex flex-col space-y-2">
             <label
-              htmlFor="gh_scope"
+              htmlFor="selectedAccount"
               className="text-sm font-medium text-stone-500 "
             >
               <span className="flex items-center space-x-1">
@@ -127,40 +230,39 @@ export default function NewSitePage() {
             </label>
             <select
               aria-label="GitHub Account"
-              name="gh_scope"
+              name="selectedAccount"
               className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black     "
-              value={data.gh_scope}
+              value={data.selectedAccount}
               required
-              disabled={!scopes}
-              onChange={(e) =>
-                setData({
-                  ...data,
-                  gh_scope: e.target.value,
-                  ghRepository: '',
-                })
-              }
+              disabled={isLoadingInstallations || installations.length === 0}
+              onChange={(e) => handleAccountChange(e.target.value)}
             >
-              {!scopes && (
+              {isLoadingInstallations && (
                 <option value="" disabled>
                   Loading...
                 </option>
               )}
-              {scopes &&
-                scopes.map((scope) => (
-                  <option key={scope.login} value={scope.login}>
-                    {scope.login}
-                  </option>
-                ))}
+              {!isLoadingInstallations && installations.length === 0 && (
+                <option value="" disabled>
+                  Connect GitHub repositories first
+                </option>
+              )}
+              {installations.map((installation) => (
+                <option key={installation.id} value={installation.accountLogin}>
+                  {installation.accountLogin}
+                </option>
+              ))}
             </select>
-            <a
-              target="_blank"
-              rel="noreferrer"
-              href={`https://github.com/settings/connections/applications/${env.NEXT_PUBLIC_AUTH_GITHUB_ID}`}
-            >
-              <span className="flex items-center space-x-1 text-xs text-blue-500 hover:text-blue-800">
-                <span>Manage app access</span>
-              </span>
-            </a>
+            <p className="text-xs text-stone-500 mt-1">
+              Missing GitHub account?{' '}
+              <button
+                type="button"
+                onClick={handleChangeGitHubAppPermissions}
+                className="text-sky-500 hover:underline"
+              >
+                Add GitHub account →
+              </button>
+            </p>
           </div>
 
           <div className="flex flex-col space-y-2">
@@ -176,24 +278,46 @@ export default function NewSitePage() {
               className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black     "
               value={data.ghRepository}
               required
-              disabled={!data.gh_scope || !repos}
-              onChange={(e) =>
-                setData({ ...data, ghRepository: e.target.value })
+              disabled={
+                isLoadingInstallations ||
+                !data.selectedAccount ||
+                filteredRepositories.length === 0
               }
+              onChange={(e) => handleRepositoryChange(e.target.value)}
             >
-              {(!scopes || !repos) && (
+              {isLoadingInstallations && (
                 <option value="" disabled>
                   Loading...
                 </option>
               )}
-              {data.gh_scope &&
-                repos &&
-                repos.map((repo) => (
-                  <option key={repo.id} value={repo.full_name}>
-                    {repo.name}
+              {!isLoadingInstallations && installations.length === 0 && (
+                <option value="" disabled>
+                  Connect GitHub repositories first
+                </option>
+              )}
+              {!isLoadingInstallations &&
+                filteredRepositories.length === 0 &&
+                data.selectedAccount && (
+                  <option value="" disabled>
+                    No repositories available for this account
                   </option>
-                ))}
+                )}
+              {filteredRepositories.map((repo) => (
+                <option key={repo.id} value={repo.repositoryFullName}>
+                  {repo.repositoryName} {repo.isPrivate ? '🔒' : ''}
+                </option>
+              ))}
             </select>
+            <p className="text-xs text-stone-500 mt-1">
+              Missing Git repository?{' '}
+              <button
+                type="button"
+                onClick={handleChangeGitHubAppPermissions}
+                className="text-sky-500 hover:underline"
+              >
+                Adjust GitHub App Permissions →
+              </button>
+            </p>
           </div>
 
           <div className="flex flex-col space-y-2">
@@ -235,24 +359,20 @@ export default function NewSitePage() {
             </span>
           </div>
         </div>
-        <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3   md:px-10">
+        <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 md:px-10">
           <button
             className={cn(
               'flex h-10 w-full items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none',
               isCreatingSite ||
-                isLoadingScopes ||
-                isLoadingRepos ||
-                isErrorFetchingScopes ||
-                isErrorFetchingRepos
+                isLoadingInstallations ||
+                installations.length === 0
                 ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   '
                 : 'border-black bg-black text-white hover:bg-white hover:text-black     ',
             )}
             disabled={
               isCreatingSite ||
-              isLoadingScopes ||
-              isLoadingRepos ||
-              isErrorFetchingScopes ||
-              isErrorFetchingRepos
+              isLoadingInstallations ||
+              installations.length === 0
             }
           >
             {isCreatingSite ? (

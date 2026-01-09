@@ -42,8 +42,8 @@ export async function GET(
     });
   } else {
     site = await caller.site.get({
-      ghUsername: username!,
-      projectName: projectName!,
+      username,
+      projectName,
     });
   }
 

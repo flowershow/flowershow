@@ -14,7 +14,7 @@ export async function POST(req: NextRequest) {
     include: {
       user: {
         select: {
-          ghUsername: true,
+          username: true,
         },
       },
     },
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     ...(site.customDomain
       ? { domain: site.customDomain }
       : {
-          path: `/@${site.user.ghUsername}/${site.projectName}`, // scope to this site segment
+          path: `/@${site.user.username}/${site.projectName}`, // scope to this site segment
         }),
   });
 

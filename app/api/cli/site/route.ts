@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     // Get user info for URL generation
     const user = await prisma.user.findUnique({
       where: { id: auth.userId },
-      select: { username: true, ghUsername: true },
+      select: { username: true },
     });
 
     if (!user) {
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const username = user.username || user.ghUsername;
+    const username = user.username;
     if (!username) {
       return NextResponse.json(
         { error: 'no_username', message: 'User has no username set' },
@@ -158,7 +158,7 @@ export async function GET(request: NextRequest) {
     // Get user info for URL generation
     const user = await prisma.user.findUnique({
       where: { id: auth.userId },
-      select: { username: true, ghUsername: true },
+      select: { username: true },
     });
 
     if (!user) {
@@ -168,7 +168,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const username = user.username || user.ghUsername;
+    const username = user.username;
 
     // Fetch all sites for the user
     const sites = await prisma.site.findMany({

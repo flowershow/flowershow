@@ -45,7 +45,7 @@ export const siteRouter = createTRPCRouter({
   get: publicProcedure
     .input(
       z.object({
-        ghUsername: z.string().min(1),
+        username: z.string().min(1),
         projectName: z.string().min(1),
       }),
     )
@@ -55,7 +55,7 @@ export const siteRouter = createTRPCRouter({
         where: {
           AND: [
             { projectName: input.projectName },
-            { user: { ghUsername: input.ghUsername } },
+            { user: { username: input.username } },
           ],
         },
         select: publicSiteSelect,
@@ -96,11 +96,12 @@ export const siteRouter = createTRPCRouter({
         ghBranch: z.string().min(1),
         rootDir: z.string().optional(),
         projectName: z.string().optional(),
+        installationId: z.string().optional(), // GitHub App installation ID
       }),
     )
     .output(publicSiteSchema)
     .mutation(async ({ ctx, input }): Promise<PublicSite> => {
-      const { ghRepository, ghBranch, rootDir } = input;
+      const { ghRepository, ghBranch, rootDir, installationId } = input;
       const accessToken = ctx.session.accessToken;
 
       // 1) Validate remote branch exists
@@ -108,6 +109,7 @@ export const siteRouter = createTRPCRouter({
         ghRepository,
         ghBranch,
         accessToken,
+        installationId,
       });
 
       if (!branchExists) {
@@ -132,30 +134,14 @@ export const siteRouter = createTRPCRouter({
           ghRepository,
           ghBranch,
           rootDir,
-          autoSync: false,
+          autoSync: true,
           webhookId: null,
           user: { connect: { id: ctx.session.user.id } },
+          ...(installationId && {
+            installation: { connect: { id: installationId } },
+          }),
         },
       });
-
-      // 4) Try to create webhook; if it works, mark autoSync on
-      let webhookId: string | null = null;
-      try {
-        const response = await createGitHubRepoWebhook({
-          ghRepository,
-          accessToken,
-          webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${created.id}`,
-        });
-        webhookId = response.id.toString();
-
-        // update site to enable autoSync
-        await ctx.db.site.update({
-          where: { id: created.id },
-          data: { autoSync: true, webhookId },
-        });
-      } catch (e) {
-        console.error('Failed to create webhook', e);
-      }
 
       // 5) Kick off initial sync
       await inngest.send({
@@ -166,6 +152,7 @@ export const siteRouter = createTRPCRouter({
           ghBranch,
           rootDir: created.rootDir,
           accessToken,
+          installationId,
           initialSync: true,
         },
       });
@@ -277,48 +264,60 @@ export const siteRouter = createTRPCRouter({
             ghBranch: site.ghBranch,
             rootDir: newRoot,
             accessToken: ctx.session.accessToken,
+            installationId: site.installationId ?? undefined,
             initialSync: true,
           },
         });
       } else if (key === 'autoSync') {
         const enable = value === 'true';
 
-        if (enable) {
-          try {
-            const { id: webhookId } = await createGitHubRepoWebhook({
-              ghRepository: site.ghRepository,
-              accessToken: ctx.session.accessToken,
-              webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${site.id}`, // Add site ID to webhook URL
-            });
-            await ctx.db.site.update({
-              where: { id },
-              data: { autoSync: true, webhookId: webhookId.toString() },
-            });
-          } catch {
-            throw new TRPCError({
-              code: 'BAD_REQUEST',
-              message:
-                'Failed to create webhook. Check if the repository already has a webhook installed.',
-            });
-          }
+        // GitHub App installations don't need per-repository webhooks
+        // They receive push events at the installation level
+        if (site.installationId) {
+          // GitHub App site: simply toggle autoSync
+          await ctx.db.site.update({
+            where: { id },
+            data: { autoSync: enable },
+          });
         } else {
-          try {
-            if (site.webhookId) {
-              await deleteGitHubRepoWebhook({
+          // Legacy OAuth site: manage per-repository webhook
+          if (enable) {
+            try {
+              const { id: webhookId } = await createGitHubRepoWebhook({
                 ghRepository: site.ghRepository,
                 accessToken: ctx.session.accessToken,
-                webhook_id: Number(site.webhookId),
-              }).catch(() => {});
+                webhookUrl: `${env.GH_WEBHOOK_URL}?siteid=${site.id}`,
+              });
+              await ctx.db.site.update({
+                where: { id },
+                data: { autoSync: true, webhookId: webhookId.toString() },
+              });
+            } catch {
+              throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message:
+                  'Failed to create webhook. Check if the repository already has a webhook installed.',
+              });
             }
-            await ctx.db.site.update({
-              where: { id },
-              data: { autoSync: false, webhookId: null },
-            });
-          } catch (error) {
-            throw new TRPCError({
-              code: 'BAD_REQUEST',
-              message: `Failed to delete webhook: ${String(error)}`,
-            });
+          } else {
+            try {
+              if (site.webhookId) {
+                await deleteGitHubRepoWebhook({
+                  ghRepository: site.ghRepository,
+                  accessToken: ctx.session.accessToken,
+                  webhook_id: Number(site.webhookId),
+                }).catch(() => {});
+              }
+              await ctx.db.site.update({
+                where: { id },
+                data: { autoSync: false, webhookId: null },
+              });
+            } catch (error) {
+              throw new TRPCError({
+                code: 'BAD_REQUEST',
+                message: `Failed to delete webhook: ${String(error)}`,
+              });
+            }
           }
         }
       } else {
@@ -340,6 +339,7 @@ export const siteRouter = createTRPCRouter({
               ghBranch: site.ghBranch,
               rootDir: site.rootDir,
               accessToken: ctx.session.accessToken,
+              installationId: site.installationId ?? undefined,
               forceSync: true,
             },
           });
@@ -453,7 +453,8 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      if (site.webhookId) {
+      // Only delete webhook for OAuth sites (GitHub App sites use installation-level webhooks)
+      if (site.webhookId && !site.installationId) {
         try {
           await deleteGitHubRepoWebhook({
             ghRepository: site.ghRepository,
@@ -523,6 +524,7 @@ export const siteRouter = createTRPCRouter({
           ghBranch,
           rootDir: site.rootDir,
           accessToken,
+          installationId: site.installationId ?? undefined,
           forceSync: input.force,
         },
       });
@@ -609,6 +611,7 @@ export const siteRouter = createTRPCRouter({
             ghRepository: site.ghRepository,
             ghBranch: site.ghBranch,
             accessToken: ctx.session.accessToken,
+            installationId: site.installationId ?? undefined,
           });
           status =
             site.tree?.['sha'] === gitHubTree.sha ? 'SUCCESS' : 'OUTDATED';
@@ -1173,7 +1176,7 @@ export const siteRouter = createTRPCRouter({
                 const pathToUse = authorBlob.permalink || authorBlob.appPath;
                 const url = site.customDomain
                   ? `/${pathToUse}`
-                  : `/@${site.user.ghUsername}/${site.projectName}/${pathToUse}`;
+                  : `/@${site.user.username}/${site.projectName}/${pathToUse}`;
 
                 if (metadata?.avatar) {
                   let value = metadata.avatar;
@@ -1307,7 +1310,7 @@ export const siteRouter = createTRPCRouter({
             if (site.customDomain) {
               prefix = '';
             } else {
-              prefix = `/@${site.user.ghUsername}/${site.projectName}`;
+              prefix = `/@${site.user.username}/${site.projectName}`;
             }
 
             return (
@@ -1367,6 +1370,159 @@ export const siteRouter = createTRPCRouter({
           tags: [`${input.siteId}`, `${input.siteId}-blob-paths`],
         },
       )(input);
+    }),
+  migrateSiteToGitHubApp: protectedProcedure
+    .input(z.object({ siteId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        include: { user: true },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      if (site.installationId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Site is already using GitHub App',
+        });
+      }
+
+      // Find matching installation that has access to this repo
+      const installation = await ctx.db.gitHubInstallation.findFirst({
+        where: {
+          userId: site.userId,
+          repositories: {
+            some: {
+              repositoryFullName: site.ghRepository,
+            },
+          },
+        },
+        include: { repositories: true },
+      });
+
+      if (!installation) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `No GitHub App installation found with access to ${site.ghRepository}. Please install the GitHub App and grant access to this repository first.`,
+        });
+      }
+
+      // Update site to use installation
+      await ctx.db.site.update({
+        where: { id: input.siteId },
+        data: { installationId: installation.id },
+      });
+
+      // If site had a webhook, it's no longer needed (GitHub App uses installation-level webhooks)
+      if (site.webhookId) {
+        try {
+          await deleteGitHubRepoWebhook({
+            ghRepository: site.ghRepository,
+            accessToken: ctx.session.accessToken,
+            webhook_id: Number(site.webhookId),
+          });
+        } catch (error) {
+          // Best effort - don't fail migration if webhook deletion fails
+          console.error('Failed to delete webhook during migration:', error);
+        }
+
+        await ctx.db.site.update({
+          where: { id: input.siteId },
+          data: { webhookId: null },
+        });
+      }
+
+      // Return updated site
+      const fresh = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: publicSiteSelect,
+      });
+
+      if (!fresh) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found after migration',
+        });
+      }
+
+      return fresh;
+    }),
+  batchMigrateSitesToGitHubApp: protectedProcedure
+    .input(z.object({ installationId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const installation = await ctx.db.gitHubInstallation.findUnique({
+        where: { id: input.installationId },
+        include: { repositories: true },
+      });
+
+      if (!installation || installation.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Installation not found',
+        });
+      }
+
+      // Get all OAuth sites for this user
+      const oauthSites = await ctx.db.site.findMany({
+        where: {
+          userId: ctx.session.user.id,
+          installationId: null, // OAuth-only sites
+        },
+      });
+
+      // Filter sites whose repositories are accessible through this installation
+      const accessibleRepoNames = new Set(
+        installation.repositories.map((r) => r.repositoryFullName),
+      );
+
+      const sitesToMigrate = oauthSites.filter((site) =>
+        accessibleRepoNames.has(site.ghRepository),
+      );
+
+      // Migrate each matching site
+      const migratedSites: string[] = [];
+      for (const site of sitesToMigrate) {
+        try {
+          await ctx.db.site.update({
+            where: { id: site.id },
+            data: { installationId: installation.id },
+          });
+
+          // Clean up old webhook if exists
+          if (site.webhookId) {
+            try {
+              await deleteGitHubRepoWebhook({
+                ghRepository: site.ghRepository,
+                accessToken: ctx.session.accessToken,
+                webhook_id: Number(site.webhookId),
+              });
+            } catch (error) {
+              console.error('Failed to delete webhook:', error);
+            }
+
+            await ctx.db.site.update({
+              where: { id: site.id },
+              data: { webhookId: null },
+            });
+          }
+
+          migratedSites.push(site.projectName);
+        } catch (error) {
+          console.error(`Failed to migrate site ${site.id}:`, error);
+        }
+      }
+
+      return {
+        migratedCount: migratedSites.length,
+        migratedSites,
+        totalOAuthSites: oauthSites.length,
+      };
     }),
 });
 

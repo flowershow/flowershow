@@ -32,8 +32,6 @@ interface RouteParams {
   slug?: string[];
 }
 
-type SearchParams = { [key: string]: string | undefined };
-
 export async function generateMetadata(props: {
   params: Promise<RouteParams>;
 }) {
@@ -156,7 +154,7 @@ export default async function SitePage(props: {
         const redirectUrl = site.customDomain
           ? r.to
           : `${resolveSiteAlias(
-              `/@${site.user?.ghUsername}/${site.projectName}`,
+              `/@${site.user?.username}/${site.projectName}`,
               'to',
             )}${r.to}`;
 

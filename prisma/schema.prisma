@@ -17,40 +17,41 @@ enum Role {
 }
 
 model User {
-  id            String       @id @default(cuid())
-  name          String?
+  id                  String               @id @default(cuid())
+  name                String?
   // if you are using Github OAuth, you can get rid of the username attribute (that is for Twitter OAuth)
-  username      String?      // TODO @unique
-  ghUsername    String?      @map("gh_username") // TODO @unique
-  email         String?      @unique
-  emailVerified DateTime?    @map("email_verified")
-  discordId     String?      @unique @map("discord_id")
-  image         String?
-  role          Role         @default(USER)
-  createdAt     DateTime     @default(now()) @map("created_at")
-  updatedAt     DateTime     @updatedAt @map("updated_at")
-  feedback      Json?        @db.JsonB // Store feedback data including submission status and content
-  accounts      Account[]
-  sessions      Session[]
-  sites         Site[]
-  deviceCodes   DeviceCode[]
-  cliTokens     CliToken[]
+  username            String              @unique
+  ghUsername          String?              @map("gh_username") // TODO @unique
+  email               String?              @unique
+  emailVerified       DateTime?            @map("email_verified")
+  discordId           String?              @unique @map("discord_id")
+  image               String?
+  role                Role                 @default(USER)
+  createdAt           DateTime             @default(now()) @map("created_at")
+  updatedAt           DateTime             @updatedAt @map("updated_at")
+  feedback            Json?                @db.JsonB // Store feedback data including submission status and content
+  accounts            Account[]
+  sessions            Session[]
+  sites               Site[]
+  deviceCodes         DeviceCode[]
+  cliTokens           CliToken[]
+  githubInstallations GitHubInstallation[]
 }
 
 model Subscription {
-  id                   String    @id @default(cuid())
-  siteId               String    @unique @map("site_id")
-  stripeCustomerId     String    @unique @map("stripe_customer_id")
-  stripeSubscriptionId String    @unique @map("stripe_subscription_id")
-  stripePriceId        String    @map("stripe_price_id") // to track which price/plan the subscription is for
+  id                   String             @id @default(cuid())
+  siteId               String             @unique @map("site_id")
+  stripeCustomerId     String             @unique @map("stripe_customer_id")
+  stripeSubscriptionId String             @unique @map("stripe_subscription_id")
+  stripePriceId        String             @map("stripe_price_id") // to track which price/plan the subscription is for
   status               SubscriptionStatus
-  interval             String    // month, year
-  currentPeriodStart   DateTime  @default(now()) @map("current_period_start")
-  currentPeriodEnd     DateTime  @map("current_period_end")
-  cancelAtPeriodEnd    Boolean   @default(false) @map("cancel_at_period_end")
-  createdAt            DateTime  @default(now()) @map("created_at")
-  updatedAt            DateTime  @updatedAt @map("updated_at")
-  site                 Site      @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  interval             String // month, year
+  currentPeriodStart   DateTime           @default(now()) @map("current_period_start")
+  currentPeriodEnd     DateTime           @map("current_period_end")
+  cancelAtPeriodEnd    Boolean            @default(false) @map("cancel_at_period_end")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+  site                 Site               @relation(fields: [siteId], references: [id], onDelete: Cascade)
 
   @@index([siteId])
 }
@@ -67,12 +68,12 @@ model Account {
   refresh_token_expires_in Int?
   access_token             String?
   expires_at               Int?
-  token_type              String?
-  scope                   String?
-  id_token                String?
-  session_state           String?
-  oauth_token_secret      String?
-  oauth_token             String?
+  token_type               String?
+  scope                    String?
+  id_token                 String?
+  session_state            String?
+  oauth_token_secret       String?
+  oauth_token              String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -103,52 +104,57 @@ model VerificationToken {
 }
 
 model Site {
-  id                      String       @id @default(cuid())
-  ghRepository            String       @map("gh_repository")
-  ghBranch                String       @map("gh_branch")
-  subdomain               String?      @unique
-  customDomain            String?      @unique @map("custom_domain")
-  rootDir                 String?      @map("root_dir")
-  projectName             String       @map("project_name")
-  createdAt               DateTime     @default(now()) @map("created_at")
-  updatedAt               DateTime     @updatedAt @map("updated_at")
-  user                    User         @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  userId                  String       @map("user_id")
-  autoSync                Boolean      @default(false) @map("auto_sync")
-  webhookId               String?      @unique @map("webhook_id")
-  enableComments          Boolean      @default(false) @map("enable_comments")
-  giscusRepoId            String?      @map("giscus_repo_id")
-  giscusCategoryId        String?      @map("giscus_category_id")
-  enableSearch            Boolean      @default(false) @map("enable_search")
-  plan                    Plan         @default(FREE)
+  id                      String        @id @default(cuid())
+  ghRepository            String        @map("gh_repository")
+  ghBranch                String        @map("gh_branch")
+  subdomain               String?       @unique
+  customDomain            String?       @unique @map("custom_domain")
+  rootDir                 String?       @map("root_dir")
+  projectName             String        @map("project_name")
+  createdAt               DateTime      @default(now()) @map("created_at")
+  updatedAt               DateTime      @updatedAt @map("updated_at")
+  user                    User          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId                  String        @map("user_id")
+  autoSync                Boolean       @default(false) @map("auto_sync")
+  webhookId               String?       @unique @map("webhook_id")
+  enableComments          Boolean       @default(false) @map("enable_comments")
+  giscusRepoId            String?       @map("giscus_repo_id")
+  giscusCategoryId        String?       @map("giscus_category_id")
+  enableSearch            Boolean       @default(false) @map("enable_search")
+  plan                    Plan          @default(FREE)
   subscription            Subscription?
   blobs                   Blob[]
-  tree                    Json?        @db.JsonB // GitHub tree data
-  privacyMode             PrivacyMode  @default(PUBLIC) @map("privacy_mode")
-  accessPasswordHash      String?      @map("access_password_hash")
-  accessPasswordUpdatedAt DateTime?    @map("access_password_updated_at")
-  tokenVersion            Int          @map("token_version") @default(0)
-  syntaxMode              SyntaxMode   @default(auto) @map("syntax_mode")
+  tree                    Json?         @db.JsonB // GitHub tree data
+  privacyMode             PrivacyMode   @default(PUBLIC) @map("privacy_mode")
+  accessPasswordHash      String?       @map("access_password_hash")
+  accessPasswordUpdatedAt DateTime?     @map("access_password_updated_at")
+  tokenVersion            Int           @default(0) @map("token_version")
+  syntaxMode              SyntaxMode    @default(auto) @map("syntax_mode")
+
+  // GitHub App installation for fine-grained permissions
+  installationId String?             @map("installation_id")
+  installation   GitHubInstallation? @relation(fields: [installationId], references: [id])
 
   @@unique([userId, projectName])
   @@index([userId])
+  @@index([installationId])
 }
 
 model Blob {
-  id          String   @id @default(cuid())
-  site        Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  siteId      String   @map("site_id")
-  path        String   // Original file path
-  appPath     String?  @map("app_path") // URL slug
-  permalink   String?  // Obsidian permalink from frontmatter
-  size        Int
-  sha         String
-  metadata    Json     @db.JsonB
-  extension   String?  // File extension
-  syncStatus  Status   @default(PENDING) @map("sync_status")
-  syncError   String?  @map("sync_error")
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id         String   @id @default(cuid())
+  site       Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  siteId     String   @map("site_id")
+  path       String // Original file path
+  appPath    String?  @map("app_path") // URL slug
+  permalink  String? // Obsidian permalink from frontmatter
+  size       Int
+  sha        String
+  metadata   Json     @db.JsonB
+  extension  String? // File extension
+  syncStatus Status   @default(PENDING) @map("sync_status")
+  syncError  String?  @map("sync_error")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   @@unique([siteId, path])
   @@index([siteId])
@@ -179,7 +185,7 @@ enum SubscriptionStatus {
 
 enum PrivacyMode {
   PUBLIC
-  PASSWORD   // single shared password
+  PASSWORD // single shared password
   // MEMBERS    // (optional) require NextAuth session
 }
 
@@ -191,20 +197,20 @@ enum SyntaxMode {
 
 // OAuth Device Flow for CLI authentication
 model DeviceCode {
-  id           String    @id @default(cuid())
-  deviceCode   String    @unique @map("device_code")
-  userCode     String    @unique @map("user_code")
-  expiresAt    DateTime  @map("expires_at")
-  interval     Int       @default(5) // polling interval in seconds
-  
+  id         String   @id @default(cuid())
+  deviceCode String   @unique @map("device_code")
+  userCode   String   @unique @map("user_code")
+  expiresAt  DateTime @map("expires_at")
+  interval   Int      @default(5) // polling interval in seconds
+
   // After user authorizes
   userId       String?   @map("user_id")
   user         User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
   authorized   Boolean   @default(false)
   authorizedAt DateTime? @map("authorized_at")
-  
-  createdAt    DateTime  @default(now()) @map("created_at")
-  
+
+  createdAt DateTime @default(now()) @map("created_at")
+
   @@index([deviceCode])
   @@index([userCode])
   @@index([expiresAt])
@@ -212,16 +218,53 @@ model DeviceCode {
 
 // CLI authentication tokens
 model CliToken {
-  id         String    @id @default(cuid())
-  token      String    @unique // hashed token
-  name       String?   // optional user-provided name
-  userId     String    @map("user_id")
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+  id     String  @id @default(cuid())
+  token  String  @unique // hashed token
+  name   String? // optional user-provided name
+  userId String  @map("user_id")
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   lastUsedAt DateTime? @map("last_used_at")
   expiresAt  DateTime? @map("expires_at") // optional expiration
   createdAt  DateTime  @default(now()) @map("created_at")
-  
+
   @@index([userId])
   @@index([token])
+}
+
+// GitHub App installation tracking
+model GitHubInstallation {
+  id             String    @id @default(cuid())
+  installationId BigInt    @unique @map("installation_id") // GitHub's installation ID
+  accountType    String    @map("account_type") // 'User' | 'Organization'
+  accountLogin   String    @map("account_login") // username or org name
+  accountId      BigInt    @map("account_id") // GitHub account ID
+  userId         String    @map("user_id")
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  suspendedAt    DateTime? @map("suspended_at")
+  suspendedBy    String?   @map("suspended_by")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+
+  repositories GitHubInstallationRepository[]
+  sites        Site[]
+
+  @@index([userId])
+  @@index([installationId])
+}
+
+// Repositories accessible through a GitHub App installation
+model GitHubInstallationRepository {
+  id                 String             @id @default(cuid())
+  installationId     String             @map("installation_id")
+  installation       GitHubInstallation @relation(fields: [installationId], references: [id], onDelete: Cascade)
+  repositoryId       BigInt             @map("repository_id") // GitHub repo ID
+  repositoryName     String             @map("repository_name")
+  repositoryFullName String             @map("repository_full_name") // 'owner/repo'
+  isPrivate          Boolean            @default(false) @map("is_private")
+  createdAt          DateTime           @default(now()) @map("created_at")
+
+  @@unique([installationId, repositoryId])
+  @@index([installationId])
+  @@index([repositoryFullName])
 }

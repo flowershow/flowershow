@@ -77,18 +77,18 @@ export default async function PublicLayout(props: {
   const { children } = props;
 
   const session = await getSession();
-  const userName = decodeURIComponent(params.user); // user's github username or "_domain" if on custom domain (see middleware)
+  const username = decodeURIComponent(params.user); // user's github username or "_domain" if on custom domain (see middleware)
   const projectName = decodeURIComponent(params.project);
 
   let site: PublicSite | null;
-  if (userName === '_domain') {
+  if (username === '_domain') {
     site = await api.site.getByDomain.query({
       domain: projectName,
     });
   } else {
     site = await api.site.get.query({
-      ghUsername: userName,
-      projectName: projectName,
+      username,
+      projectName,
     });
   }
 
@@ -113,7 +113,7 @@ export default async function PublicLayout(props: {
   }
 
   // Redirect to custom domain if it exists
-  if (userName !== '_domain' && site.customDomain) {
+  if (username !== '_domain' && site.customDomain) {
     return redirect(`https://${site.customDomain}`);
   }
 

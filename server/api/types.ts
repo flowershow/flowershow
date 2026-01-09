@@ -16,9 +16,10 @@ export const publicSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   privacyMode: true,
   autoSync: true,
   syntaxMode: true,
+  installationId: true,
   createdAt: true,
   updatedAt: true,
-  user: { select: { ghUsername: true } },
+  user: { select: { username: true } },
 });
 
 export type PublicSite = Prisma.SiteGetPayload<{
@@ -40,9 +41,10 @@ export const publicSiteSchema: z.ZodType<PublicSite> = z.object({
   privacyMode: z.enum(PrivacyMode),
   autoSync: z.boolean(),
   syntaxMode: z.enum(SyntaxMode),
+  installationId: z.string().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  user: z.object({ ghUsername: z.string() }),
+  user: z.object({ username: z.string() }),
 });
 
 export enum SiteUpdateKey {

@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
     ...(site.customDomain
       ? { domain: site.customDomain }
       : {
-          path: `/@${site.user.ghUsername}/${site.projectName}`, // scope to this site segment
+          path: `/@${site.user.username}/${site.projectName}`, // scope to this site segment
         }),
   });
 

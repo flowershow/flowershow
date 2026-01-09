@@ -26,7 +26,7 @@ export async function GET(
     site = await prisma.site.findFirst({
       where: {
         user: {
-          ghUsername: username,
+          username,
         },
         projectName: projectname,
       },

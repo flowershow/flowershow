@@ -14,7 +14,7 @@ export async function GET(
       OR: [
         {
           user: {
-            ghUsername: user,
+            username: user,
           },
           projectName: project,
         },

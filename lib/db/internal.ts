@@ -17,9 +17,10 @@ export const internalSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   syntaxMode: true,
   privacyMode: true,
   autoSync: true,
+  installationId: true,
   createdAt: true,
   updatedAt: true,
-  user: { select: { ghUsername: true } },
+  user: { select: { username: true } },
   // Internal only data
   accessPasswordHash: true,
   tokenVersion: true,

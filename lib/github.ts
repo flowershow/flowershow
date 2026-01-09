@@ -1,8 +1,181 @@
+import * as Sentry from '@sentry/nextjs';
 import { TRPCError } from '@trpc/server';
+import jwt from 'jsonwebtoken';
 import { env } from '@/env.mjs';
+import { db } from '@/server/db';
 
 const githubAPIBaseURL = 'https://api.github.com';
 const githubAPIVersion = '2022-11-28';
+
+// ============================================================================
+// GitHub App Token Management
+// ============================================================================
+
+// In-memory cache for installation tokens (consider Redis for production)
+const tokenCache = new Map<
+  string,
+  {
+    token: string;
+    expiresAt: Date;
+  }
+>();
+
+// Mutex to prevent concurrent refresh
+const refreshLocks = new Map<string, Promise<string>>();
+
+/**
+ * Generate JWT for GitHub App authentication
+ */
+async function generateGitHubAppJWT(): Promise<string> {
+  return Sentry.startSpan(
+    {
+      op: 'github.app.jwt',
+      name: 'Generate GitHub App JWT',
+    },
+    () => {
+      const now = Math.floor(Date.now() / 1000);
+      const payload = {
+        iat: now,
+        exp: now + 600, // 10 minutes
+        iss: env.GITHUB_APP_ID,
+      };
+
+      // Convert escaped newlines to actual newlines in private key
+      const privateKey = env.GITHUB_APP_PRIVATE_KEY.replace(/\\n/g, '\n');
+      return jwt.sign(payload, privateKey, {
+        algorithm: 'RS256',
+      });
+    },
+  );
+}
+
+/**
+ * Refresh installation access token
+ * @param githubInstallationId - The actual GitHub installation ID (BigInt as string)
+ */
+async function refreshInstallationToken(
+  githubInstallationId: string,
+): Promise<string> {
+  // Check if refresh is already in progress
+  const existingLock = refreshLocks.get(githubInstallationId);
+  if (existingLock) {
+    return existingLock;
+  }
+
+  // Create new refresh promise
+  const refreshPromise = (async () => {
+    try {
+      return await Sentry.startSpan(
+        {
+          op: 'github.app.token.refresh',
+          name: 'Refresh GitHub App Installation Token',
+        },
+        async (span) => {
+          span.setAttribute('installation_id', githubInstallationId);
+
+          const jwtToken = await generateGitHubAppJWT();
+
+          const response = await fetch(
+            `${githubAPIBaseURL}/app/installations/${githubInstallationId}/access_tokens`,
+            {
+              method: 'POST',
+              headers: {
+                Authorization: `Bearer ${jwtToken}`,
+                Accept: 'application/vnd.github+json',
+                'X-GitHub-Api-Version': githubAPIVersion,
+              },
+            },
+          );
+
+          if (!response.ok) {
+            const errorBody = await response.text();
+            Sentry.captureException(
+              new Error(
+                `Failed to refresh GitHub App token: ${response.status} ${response.statusText}`,
+              ),
+              {
+                extra: {
+                  installationId: githubInstallationId,
+                  status: response.status,
+                  errorBody,
+                },
+              },
+            );
+            throw new Error(`Failed to refresh token: ${response.statusText}`);
+          }
+
+          const data = await response.json();
+          const expiresAt = new Date(data.expires_at);
+
+          // Cache the token
+          tokenCache.set(githubInstallationId, {
+            token: data.token,
+            expiresAt,
+          });
+
+          span.setAttribute('expires_at', data.expires_at);
+
+          return data.token;
+        },
+      );
+    } catch (error) {
+      Sentry.captureException(error);
+      throw error;
+    } finally {
+      refreshLocks.delete(githubInstallationId);
+    }
+  })();
+
+  refreshLocks.set(githubInstallationId, refreshPromise);
+  return refreshPromise;
+}
+
+/**
+ * Get installation access token (with caching and auto-refresh)
+ * @param installationDbId - The database CUID for the GitHubInstallation record
+ */
+export async function getInstallationToken(
+  installationDbId: string,
+): Promise<string> {
+  // Look up the actual GitHub installation ID from the database
+  const installation = await db.gitHubInstallation.findUnique({
+    where: { id: installationDbId },
+    select: { installationId: true },
+  });
+
+  if (!installation) {
+    throw new Error(
+      `GitHub installation not found for database ID: ${installationDbId}`,
+    );
+  }
+
+  const githubInstallationId = installation.installationId.toString();
+  const cached = tokenCache.get(githubInstallationId);
+
+  // Refresh if token expires in < 5 minutes
+  const now = new Date();
+  const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60 * 1000);
+
+  if (!cached || cached.expiresAt < fiveMinutesFromNow) {
+    return refreshInstallationToken(githubInstallationId);
+  }
+
+  return cached.token;
+}
+
+/**
+ * Clear cached token for an installation (useful after revocation)
+ * @param githubInstallationId - The actual GitHub installation ID (BigInt as string)
+ */
+export function clearInstallationTokenCache(
+  githubInstallationId: string,
+): void {
+  tokenCache.delete(githubInstallationId);
+}
+
+// ============================================================================
+// GitHub API Helpers
+// ============================================================================
 
 type Accept = 'application/vnd.github+json' | 'application/vnd.github.raw+json';
 
@@ -213,14 +386,25 @@ export const fetchGitHubRepoTree = async ({
   ghRepository,
   ghBranch,
   accessToken,
+  installationId,
 }: {
   ghRepository: string;
   ghBranch: string;
-  accessToken: string;
+  accessToken?: string; // Legacy OAuth token (optional for backward compatibility)
+  installationId?: string; // GitHub App installation DB ID
 }) => {
+  // Prefer installation token over OAuth token
+  const token = installationId
+    ? await getInstallationToken(installationId)
+    : accessToken;
+
+  if (!token) {
+    throw new Error('Either accessToken or installationId must be provided');
+  }
+
   return await githubJsonFetch<GitHubAPIRepoTree>({
     url: `/repos/${ghRepository}/git/trees/${ghBranch}?recursive=1`,
-    accessToken: accessToken,
+    accessToken: token,
     cacheOptions: {
       cache: 'no-store',
     },
@@ -258,15 +442,26 @@ export const fetchGitHubFileRaw = async ({
   ghRepository,
   file_sha,
   accessToken,
+  installationId,
 }: {
   ghRepository: string;
   file_sha: string;
-  accessToken: string;
+  accessToken?: string; // Legacy OAuth token (optional for backward compatibility)
+  installationId?: string; // GitHub App installation DB ID
 }) => {
+  // Prefer installation token over OAuth token
+  const token = installationId
+    ? await getInstallationToken(installationId)
+    : accessToken;
+
+  if (!token) {
+    throw new Error('Either accessToken or installationId must be provided');
+  }
+
   return await githubRawFetch({
     // https://docs.github.com/en/rest/git/blobs?apiVersion=2022-11-28#get-a-blob
     url: `/repos/${ghRepository}/git/blobs/${file_sha}`,
-    accessToken: accessToken,
+    accessToken: token,
     cacheOptions: {
       cache: 'no-store',
     },
@@ -277,16 +472,23 @@ export const checkIfBranchExists = async ({
   ghRepository,
   ghBranch,
   accessToken,
+  installationId,
 }: {
   ghRepository: string;
   ghBranch: string;
   accessToken: string;
+  installationId?: string; // Database CUID from GitHubInstallation table
 }) => {
+  // Use installation token if available, otherwise use OAuth token
+  const token = installationId
+    ? await getInstallationToken(installationId)
+    : accessToken;
+
   try {
     return await githubFetch({
       // https://docs.github.com/en/rest/branches/branches?apiVersion=2022-11-28#get-a-branch
       url: `/repos/${ghRepository}/branches/${ghBranch}`,
-      accessToken: accessToken,
+      accessToken: token,
       cacheOptions: {
         cache: 'no-store',
       },
@@ -342,18 +544,25 @@ export const fetchGitHubRepoContributors = async ({
 export const createGitHubRepoWebhook = async ({
   ghRepository,
   accessToken,
+  installationId,
   webhookUrl,
 }: {
   ghRepository: string;
   accessToken: string;
+  installationId?: string; // Database CUID from GitHubInstallation table
   webhookUrl?: string;
 }) => {
+  // Use installation token if available, otherwise use OAuth token
+  const token = installationId
+    ? await getInstallationToken(installationId)
+    : accessToken;
+
   // Note: If you're getting "Unprocessable entity" error from GitHub,
   // there is a chance that the webhook with the same URL already exists.
   return await githubJsonFetch<GitHubAPIWebhook>({
     // https://docs.github.com/en/rest/repos/webhooks?apiVersion=2022-11-28#create-a-repository-webhook
     url: `/repos/${ghRepository}/hooks`,
-    accessToken: accessToken,
+    accessToken: token,
     method: 'POST',
     body: {
       name: 'web',
