@@ -40,6 +40,7 @@ export async function POST(req: NextRequest) {
     site = await prisma.site.findUnique({
       where: {
         webhookId,
+        autoSync: true,
       },
       include: {
         user: true,
