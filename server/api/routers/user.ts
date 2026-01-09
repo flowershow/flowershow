@@ -86,4 +86,21 @@ export const userRouter = createTRPCRouter({
       });
       return { success: true };
     }),
+  hasOAuthOnlySites: protectedProcedure.query(async ({ ctx }) => {
+    // Check if user has any sites that use OAuth (no installationId)
+    return await ctx.db.site.findMany({
+      where: {
+        userId: ctx.session.user.id,
+        installationId: null, // Sites without GitHub App installation
+      },
+      select: {
+        id: true,
+        projectName: true,
+        ghRepository: true,
+      },
+      orderBy: {
+        projectName: 'asc',
+      },
+    });
+  }),
 });

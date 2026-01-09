@@ -1371,6 +1371,159 @@ export const siteRouter = createTRPCRouter({
         },
       )(input);
     }),
+  migrateSiteToGitHubApp: protectedProcedure
+    .input(z.object({ siteId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        include: { user: true },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      if (site.installationId) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Site is already using GitHub App',
+        });
+      }
+
+      // Find matching installation that has access to this repo
+      const installation = await ctx.db.gitHubInstallation.findFirst({
+        where: {
+          userId: site.userId,
+          repositories: {
+            some: {
+              repositoryFullName: site.ghRepository,
+            },
+          },
+        },
+        include: { repositories: true },
+      });
+
+      if (!installation) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `No GitHub App installation found with access to ${site.ghRepository}. Please install the GitHub App and grant access to this repository first.`,
+        });
+      }
+
+      // Update site to use installation
+      await ctx.db.site.update({
+        where: { id: input.siteId },
+        data: { installationId: installation.id },
+      });
+
+      // If site had a webhook, it's no longer needed (GitHub App uses installation-level webhooks)
+      if (site.webhookId) {
+        try {
+          await deleteGitHubRepoWebhook({
+            ghRepository: site.ghRepository,
+            accessToken: ctx.session.accessToken,
+            webhook_id: Number(site.webhookId),
+          });
+        } catch (error) {
+          // Best effort - don't fail migration if webhook deletion fails
+          console.error('Failed to delete webhook during migration:', error);
+        }
+
+        await ctx.db.site.update({
+          where: { id: input.siteId },
+          data: { webhookId: null },
+        });
+      }
+
+      // Return updated site
+      const fresh = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: publicSiteSelect,
+      });
+
+      if (!fresh) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found after migration',
+        });
+      }
+
+      return fresh;
+    }),
+  batchMigrateSitesToGitHubApp: protectedProcedure
+    .input(z.object({ installationId: z.string().min(1) }))
+    .mutation(async ({ ctx, input }) => {
+      const installation = await ctx.db.gitHubInstallation.findUnique({
+        where: { id: input.installationId },
+        include: { repositories: true },
+      });
+
+      if (!installation || installation.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Installation not found',
+        });
+      }
+
+      // Get all OAuth sites for this user
+      const oauthSites = await ctx.db.site.findMany({
+        where: {
+          userId: ctx.session.user.id,
+          installationId: null, // OAuth-only sites
+        },
+      });
+
+      // Filter sites whose repositories are accessible through this installation
+      const accessibleRepoNames = new Set(
+        installation.repositories.map((r) => r.repositoryFullName),
+      );
+
+      const sitesToMigrate = oauthSites.filter((site) =>
+        accessibleRepoNames.has(site.ghRepository),
+      );
+
+      // Migrate each matching site
+      const migratedSites: string[] = [];
+      for (const site of sitesToMigrate) {
+        try {
+          await ctx.db.site.update({
+            where: { id: site.id },
+            data: { installationId: installation.id },
+          });
+
+          // Clean up old webhook if exists
+          if (site.webhookId) {
+            try {
+              await deleteGitHubRepoWebhook({
+                ghRepository: site.ghRepository,
+                accessToken: ctx.session.accessToken,
+                webhook_id: Number(site.webhookId),
+              });
+            } catch (error) {
+              console.error('Failed to delete webhook:', error);
+            }
+
+            await ctx.db.site.update({
+              where: { id: site.id },
+              data: { webhookId: null },
+            });
+          }
+
+          migratedSites.push(site.projectName);
+        } catch (error) {
+          console.error(`Failed to migrate site ${site.id}:`, error);
+        }
+      }
+
+      return {
+        migratedCount: migratedSites.length,
+        migratedSites,
+        totalOAuthSites: oauthSites.length,
+      };
+    }),
 });
 
 // ---- Util: ensure unique project name per user ----

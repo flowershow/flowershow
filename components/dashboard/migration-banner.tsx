@@ -1,22 +1,42 @@
 'use client';
-import { useState } from 'react';
+import * as Sentry from '@sentry/nextjs';
+import { ExternalLink } from 'lucide-react';
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { GithubIcon } from '@/components/icons';
 import LoadingDots from '@/components/icons/loading-dots';
 import { cn } from '@/lib/utils';
-import * as Sentry from '@sentry/nextjs';
 
 interface MigrationBannerProps {
+  sites: Array<{
+    id: string;
+    projectName: string;
+    ghRepository: string;
+  }>;
   onDismiss?: () => void;
   className?: string;
 }
 
 export default function MigrationBanner({
+  sites,
   onDismiss,
   className,
 }: MigrationBannerProps) {
   const [isMigrating, setIsMigrating] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Check localStorage only after mount to avoid hydration errors
+  useEffect(() => {
+    setIsMounted(true);
+    const dismissed = localStorage.getItem(
+      'github-app-migration-banner-dismissed',
+    );
+    if (dismissed === 'true') {
+      setIsDismissed(true);
+    }
+  }, []);
 
   const handleMigrate = async () => {
     setIsMigrating(true);
@@ -62,18 +82,9 @@ export default function MigrationBanner({
     localStorage.setItem('github-app-migration-banner-dismissed', 'true');
   };
 
-  // Check if banner was previously dismissed
-  if (isDismissed) {
+  // Don't render until mounted to avoid hydration errors
+  if (!isMounted || isDismissed) {
     return null;
-  }
-
-  if (typeof window !== 'undefined') {
-    const dismissed = localStorage.getItem(
-      'github-app-migration-banner-dismissed',
-    );
-    if (dismissed === 'true') {
-      return null;
-    }
   }
 
   return (
@@ -88,37 +99,36 @@ export default function MigrationBanner({
           <div className="flex items-center space-x-2 mb-2">
             <GithubIcon className="h-5 w-5 text-blue-700" />
             <h3 className="text-sm font-semibold text-blue-900">
-              Upgrade to Secure Repository Access
+              Upgrade {sites.length} Site{sites.length !== 1 ? 's' : ''} to
+              Secure Repository Access
             </h3>
           </div>
           <p className="text-sm text-blue-800 mb-3">
-            Switch to GitHub App for enhanced security. Grant Flowershow access
-            only to the repositories you choose, instead of all your
-            repositories.
+            The following sites use legacy OAuth. Upgrade them to GitHub App for
+            enhanced security with granular repository access control.
           </p>
-          <div className="flex flex-col sm:flex-row gap-2">
-            <button
-              onClick={handleMigrate}
-              disabled={isMigrating}
-              className={cn(
-                'flex h-9 items-center justify-center space-x-2 rounded-md border px-4 text-sm transition-all focus:outline-none',
-                isMigrating
-                  ? 'cursor-not-allowed border-blue-300 bg-blue-100 text-blue-400'
-                  : 'border-blue-600 bg-blue-600 text-white hover:bg-blue-700',
-              )}
-            >
-              {isMigrating ? (
-                <LoadingDots color="#60a5fa" />
-              ) : (
-                <span>Upgrade to GitHub App</span>
-              )}
-            </button>
-            <button
-              onClick={handleDismiss}
-              className="h-9 rounded-md px-4 text-sm text-blue-700 hover:text-blue-900 hover:underline focus:outline-none"
-            >
-              Dismiss
-            </button>
+
+          {/* Scrollable site list */}
+          <div className="mb-3 max-h-48 overflow-y-auto rounded-md bg-blue-100 p-3">
+            <div className="space-y-2">
+              {sites.map((site) => (
+                <Link
+                  key={site.id}
+                  href={`/site/${site.id}/settings`}
+                  className="flex items-center justify-between rounded-md bg-white px-3 py-2 text-sm transition-colors hover:bg-blue-50 group"
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-blue-900 truncate">
+                      {site.projectName}
+                    </div>
+                    <div className="text-xs text-blue-700 truncate">
+                      {site.ghRepository}
+                    </div>
+                  </div>
+                  <ExternalLink className="h-4 w-4 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2" />
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
         <button
