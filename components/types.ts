@@ -28,8 +28,17 @@ export interface NavConfig {
   logo?: string;
   title?: string;
   links?: NavLink[];
-  social?: SocialLink[];
+  social?: SocialLink[]; // DEPRECATED, moved to the root of the config as it's used in both navbar and footer
   cta?: NavLink;
+}
+
+export interface FooterNavigationGroup {
+  title: string;
+  links: NavLink[];
+}
+
+export interface FooterConfig {
+  navigation?: FooterNavigationGroup[];
 }
 
 export interface SiteConfig {
@@ -39,6 +48,8 @@ export interface SiteConfig {
   logo?: string;
   favicon?: string;
   nav?: NavConfig;
+  footer?: FooterConfig;
+  social?: SocialLink[];
   analytics?: string;
   contentInclude?: string[];
   contentExclude?: string[];

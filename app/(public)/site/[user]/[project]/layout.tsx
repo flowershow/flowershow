@@ -172,7 +172,7 @@ export default async function PublicLayout(props: {
   const logo = siteConfig?.nav?.logo ?? siteConfig?.logo ?? appConfig.logo; // default to Flowershow logo
   const title = siteConfig?.nav?.title;
   const links = siteConfig?.nav?.links;
-  const social = siteConfig?.nav?.social;
+  const social = siteConfig?.social || siteConfig?.nav?.social;
   const showBuiltWithButton = !isFeatureEnabled(Feature.NoBranding, site);
   const showSearch =
     isFeatureEnabled(Feature.Search, site) && site.enableSearch;
@@ -328,7 +328,12 @@ export default async function PublicLayout(props: {
                   cta={cta}
                 />
                 <div className="site-body">{children}</div>
-                <Footer siteId={site.id} />
+                <Footer
+                  siteId={site.id}
+                  siteName={siteConfig?.title || site.projectName}
+                  social={social}
+                  navigation={siteConfig?.footer?.navigation}
+                />
                 {showBuiltWithButton && <BuiltWithFloatingButton />}
                 {site.privacyMode === 'PASSWORD' && (
                   <SiteLogoutButton
