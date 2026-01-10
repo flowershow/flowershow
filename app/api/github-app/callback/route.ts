@@ -86,7 +86,9 @@ export async function GET(request: Request) {
           exp: now + 600, // 10 minutes
           iss: env.GITHUB_APP_ID,
         };
-        const appJWT = jwt.sign(jwtPayload, env.GITHUB_APP_PRIVATE_KEY, {
+        // Convert escaped newlines to actual newlines in private key
+        const privateKey = env.GITHUB_APP_PRIVATE_KEY.replace(/\\n/g, '\n');
+        const appJWT = jwt.sign(jwtPayload, privateKey, {
           algorithm: 'RS256',
         });
 
