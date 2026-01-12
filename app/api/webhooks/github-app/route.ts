@@ -162,26 +162,23 @@ async function handleInstallationEvent(data: WebhookPayload) {
       break;
 
     case 'deleted':
-      // Installation was deleted
+      // Installation was deleted - remove all user links to this installation
       console.log(`Installation deleted: ${installation.id}`);
 
       // Clear token cache
       clearInstallationTokenCache(installation.id.toString());
 
-      // Find and mark the installation as deleted
-      const existingInstallation = await prisma.gitHubInstallation.findUnique({
+      // Delete all user links to this installation (cascade will handle repositories and sites)
+      const deletedCount = await prisma.gitHubInstallation.deleteMany({
         where: { installationId },
       });
 
-      if (existingInstallation) {
-        // Delete the installation (cascade will handle repositories and sites)
-        await prisma.gitHubInstallation.delete({
-          where: { installationId },
-        });
+      console.log(
+        `Deleted ${deletedCount.count} user link(s) for installation ${installation.id}`,
+      );
 
-        // Note: Sites using this installation will need to be updated
-        // You may want to add notification logic here
-      }
+      // Note: Sites using this installation will need to be updated
+      // You may want to add notification logic here
       break;
 
     case 'suspend':
@@ -234,15 +231,19 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
 
   const installationId = BigInt(installation.id);
 
-  // Find the installation in our database
-  const dbInstallation = await prisma.gitHubInstallation.findUnique({
+  // Find all user links to this installation (many-to-many)
+  const dbInstallations = await prisma.gitHubInstallation.findMany({
     where: { installationId },
   });
 
-  if (!dbInstallation) {
+  if (dbInstallations.length === 0) {
     console.log(`Installation not found in database: ${installation.id}`);
     return;
   }
+
+  console.log(
+    `Found ${dbInstallations.length} user link(s) for installation ${installation.id}`,
+  );
 
   switch (action) {
     case 'added':
@@ -252,16 +253,19 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
           `${repositories_added.length} repositories added to installation ${installation.id}`,
         );
 
-        await prisma.gitHubInstallationRepository.createMany({
-          data: repositories_added.map((repo) => ({
-            installationId: dbInstallation.id,
-            repositoryId: BigInt(repo.id),
-            repositoryName: repo.name,
-            repositoryFullName: repo.full_name,
-            isPrivate: repo.private,
-          })),
-          skipDuplicates: true,
-        });
+        // Add repositories for each user link
+        for (const dbInstallation of dbInstallations) {
+          await prisma.gitHubInstallationRepository.createMany({
+            data: repositories_added.map((repo) => ({
+              installationId: dbInstallation.id,
+              repositoryId: BigInt(repo.id),
+              repositoryName: repo.name,
+              repositoryFullName: repo.full_name,
+              isPrivate: repo.private,
+            })),
+            skipDuplicates: true,
+          });
+        }
       }
       break;
 
@@ -277,43 +281,46 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
         );
         const repoIds = repositories_removed.map((repo) => BigInt(repo.id));
 
-        // Find affected sites BEFORE deleting repository records
-        const affectedSites = await prisma.site.findMany({
-          where: {
-            installationId: dbInstallation.id,
-            ghRepository: { in: repoFullNames },
-          },
-          select: {
-            id: true,
-            projectName: true,
-            ghRepository: true,
-            userId: true,
-          },
-        });
-
-        // Delete repository access records
-        await prisma.gitHubInstallationRepository.deleteMany({
-          where: {
-            installationId: dbInstallation.id,
-            repositoryId: { in: repoIds },
-          },
-        });
-
-        // Clear installationId and disable autoSync for affected sites
-        if (affectedSites.length > 0) {
-          console.log(
-            `Clearing installation access for ${affectedSites.length} affected site(s)`,
-          );
-
-          await prisma.site.updateMany({
+        // Process each user link
+        for (const dbInstallation of dbInstallations) {
+          // Find affected sites BEFORE deleting repository records
+          const affectedSites = await prisma.site.findMany({
             where: {
-              id: { in: affectedSites.map((s) => s.id) },
+              installationId: dbInstallation.id,
+              ghRepository: { in: repoFullNames },
             },
-            data: {
-              installationId: null,
-              autoSync: false,
+            select: {
+              id: true,
+              projectName: true,
+              ghRepository: true,
+              userId: true,
             },
           });
+
+          // Delete repository access records for this user link
+          await prisma.gitHubInstallationRepository.deleteMany({
+            where: {
+              installationId: dbInstallation.id,
+              repositoryId: { in: repoIds },
+            },
+          });
+
+          // Clear installationId and disable autoSync for affected sites
+          if (affectedSites.length > 0) {
+            console.log(
+              `Clearing installation access for ${affectedSites.length} affected site(s) for user ${dbInstallation.userId}`,
+            );
+
+            await prisma.site.updateMany({
+              where: {
+                id: { in: affectedSites.map((s) => s.id) },
+              },
+              data: {
+                installationId: null,
+                autoSync: false,
+              },
+            });
+          }
         }
       }
       break;
@@ -322,9 +329,9 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
       console.log(`Unhandled installation_repositories action: ${action}`);
   }
 
-  // Update installation timestamp
-  await prisma.gitHubInstallation.update({
-    where: { id: dbInstallation.id },
+  // Update installation timestamps for all user links
+  await prisma.gitHubInstallation.updateMany({
+    where: { installationId },
     data: { updatedAt: new Date() },
   });
 }

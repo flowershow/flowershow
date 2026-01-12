@@ -20,7 +20,7 @@ model User {
   id                  String               @id @default(cuid())
   name                String?
   // if you are using Github OAuth, you can get rid of the username attribute (that is for Twitter OAuth)
-  username            String              @unique
+  username            String               @unique
   ghUsername          String?              @map("gh_username") // TODO @unique
   email               String?              @unique
   emailVerified       DateTime?            @map("email_verified")
@@ -233,9 +233,10 @@ model CliToken {
 }
 
 // GitHub App installation tracking
+// Many-to-many: Same installation can be linked to multiple users
 model GitHubInstallation {
   id             String    @id @default(cuid())
-  installationId BigInt    @unique @map("installation_id") // GitHub's installation ID
+  installationId BigInt    @map("installation_id") // GitHub's installation ID
   accountType    String    @map("account_type") // 'User' | 'Organization'
   accountLogin   String    @map("account_login") // username or org name
   accountId      BigInt    @map("account_id") // GitHub account ID
@@ -249,8 +250,10 @@ model GitHubInstallation {
   repositories GitHubInstallationRepository[]
   sites        Site[]
 
+  @@unique([installationId, userId]) // Composite unique: each user can link once
   @@index([userId])
   @@index([installationId])
+  @@index([accountId]) // For finding installations by GitHub account
 }
 
 // Repositories accessible through a GitHub App installation

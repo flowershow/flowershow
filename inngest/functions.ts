@@ -234,6 +234,8 @@ export const syncSite = inngest.createFunction(
                 });
                 return { filePath, status: 'SUCCESS', message: '' }; // Return path of successfully processed file
               } catch (error: any) {
+                console.error(error);
+
                 await prisma.blob.upsert({
                   where: {
                     siteId_path: {
