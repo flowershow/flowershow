@@ -5,7 +5,7 @@
   "logo": "https://r2-assets.flowershow.app/logo.png",
   "favicon": "https://r2-assets.flowershow.app/favicon.ico",
   "thumbnail": "https://r2-assets.flowershow.app/thumbnail.png",
-  "termsOfService": "https://datahub.io/docs/terms-of-service",
+  "termsOfService": "https://flowershow.app/docs/terms-of-service",
   "githubTemplateUrl": "https://github.com/datopian/flowershow-cloud-template",
   "landingPageUrl": "https://flowershow.app/",
   "dataVisComponentsEnabled": true,
