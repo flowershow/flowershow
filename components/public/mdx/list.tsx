@@ -246,7 +246,11 @@ const fmt = (
   // const spec = k && formatMap?.[k];
   // if (spec) return applyFormat(spec, v, locale);
   if (isDateInput(v)) {
-    return new Date(v).toLocaleDateString();
+    const d = new Date(v);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
   }
 
   // if (s === "eyebrow" && typeof v === "string") return v.slice(0, 10);
