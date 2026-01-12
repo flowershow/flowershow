@@ -1,22 +1,18 @@
 // @ts-check
 import { withSentryConfig } from '@sentry/nextjs';
+import { env } from './env.mjs';
 
 /**
  * @type {import('next').NextConfig}
  */
 const nextConfig = {
-  async redirects() {
-    return [
-      {
-        source: '/enterprise',
-        destination: '/portal',
-        permanent: true,
-      },
-    ];
-  },
   experimental: {
     serverActions: {
-      allowedOrigins: ['cloud.localhost:3000'],
+      allowedOrigins: [
+        'cloud.localhost:3000',
+        env.NEXT_PUBLIC_ROOT_DOMAIN,
+        env.NEXT_PUBLIC_CLOUD_DOMAIN,
+      ],
     },
   },
   images: {
