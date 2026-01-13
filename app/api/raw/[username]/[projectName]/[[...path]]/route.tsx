@@ -96,6 +96,10 @@ export async function GET(
     headers.set('Content-Type', contentType);
     // Ensure no download disposition (omit or set 'inline')
     headers.delete('Content-Disposition');
+    // Remove compression headers to avoid ERR_CONTENT_DECODING_FAILED
+    // The body stream may already be decompressed by fetch()
+    headers.delete('Content-Encoding');
+    headers.delete('Content-Length');
     // Optional: Add cache for images
     // headers.set('Cache-Control', 'public, max-age=31536000, immutable');
 
