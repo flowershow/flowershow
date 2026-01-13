@@ -1,3 +1,4 @@
+import { Blob } from '@prisma/client';
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateCliToken } from '@/lib/cli-auth';
@@ -8,7 +9,6 @@ import {
 } from '@/lib/content-store';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import prisma from '@/server/db';
-import { Blob } from '@prisma/client';
 
 // Maximum file size: 100MB
 const MAX_FILE_SIZE = 100 * 1024 * 1024;
@@ -337,17 +337,21 @@ export async function POST(
                     // Generate S3 key: siteId/main/raw/path
                     const s3Key = `${siteId}/main/raw/${file.path}`;
 
-                    // Generate presigned URL (valid for 1 hour)
+                    // Get content type for the file
+                    const contentType = getContentType(extension);
+
+                    // Generate presigned URL (valid for 1 hour) with content type
                     const uploadUrl = await generatePresignedUploadUrl(
                       s3Key,
                       3600,
+                      contentType,
                     );
 
                     return {
                       path: file.path,
                       uploadUrl,
                       blobId: blob.id,
-                      contentType: getContentType(extension),
+                      contentType,
                     };
                   }),
                 );

@@ -252,15 +252,18 @@ export const fetchTree = async (projectId: string, branch: string) => {
  * Generate a presigned URL for uploading a file directly to R2
  * @param key - The S3 key for the file
  * @param expiresIn - Expiration time in seconds (default: 3600 = 1 hour)
+ * @param contentType - Optional content type for the file
  * @returns Presigned URL for PUT request
  */
 export const generatePresignedUploadUrl = async (
   key: string,
   expiresIn: number = 3600,
+  contentType?: ContentType,
 ): Promise<string> => {
   const command = new PutObjectCommand({
     Bucket: S3_BUCKET_NAME,
     Key: key,
+    ...(contentType && { ContentType: contentType }),
   });
 
   return getSignedUrl(s3Client, command, { expiresIn });
