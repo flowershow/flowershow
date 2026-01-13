@@ -43,7 +43,7 @@
     "@trpc/client": "^10.37.1",
     "@trpc/next": "^10.37.1",
     "@trpc/react-query": "^10.37.1",
-    "@trpc/server": "^10.37.1",
+    "@trpc/server": "^10.45.3",
     "@types/jsonwebtoken": "^9.0.10",
     "@unocss/core": "^66.5.4",
     "ag-grid-community": "^34.3.1",
