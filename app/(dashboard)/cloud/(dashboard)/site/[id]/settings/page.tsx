@@ -29,7 +29,8 @@ export default async function SiteSettingsIndex(props: {
   });
 
   // Check if site needs migration (OAuth-only, no GitHub App installation)
-  const isOAuthSite = !site.installationId;
+  const isOAuthSite =
+    !site.installationId && site.ghRepository !== 'cli-upload';
   let hasInstallationForRepo = false;
 
   if (isOAuthSite) {
