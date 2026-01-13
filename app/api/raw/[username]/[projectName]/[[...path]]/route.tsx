@@ -100,8 +100,9 @@ export async function GET(
     // The body stream may already be decompressed by fetch()
     headers.delete('Content-Encoding');
     headers.delete('Content-Length');
-    // Optional: Add cache for images
-    // headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+    const maxAge =
+      contentType === 'text/html' || contentType === 'text/markdown' ? 0 : 300;
+    headers.set('Cache-Control', `max-age=${maxAge}, must-revalidate`);
 
     return new Response(fileResponse.body, {
       status: 200,
