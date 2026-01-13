@@ -1,17 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
-import { appRouter } from '@/server/api/root';
-import { createTRPCContext } from '@/server/api/trpc';
+import { getContentType } from '@/lib/content-store';
 import { PublicSite } from '@/server/api/types';
-
-/**
- * Creates the tRPC context required for API calls.
- */
-const createContext = async (req: NextRequest) => {
-  return createTRPCContext({
-    headers: req.headers,
-  });
-};
+import prisma from '@/server/db';
 
 export async function GET(
   req: NextRequest,
@@ -24,10 +15,6 @@ export async function GET(
   },
 ) {
   const params = await props.params;
-  const ctx = await createContext(req);
-  const caller = appRouter.createCaller(ctx);
-  // NOTE currently branch is not implemented and is always equal to "-"
-  /* const { username, projectName, branch, slug } = params; */
   const { username, projectName, path } = params;
 
   if (!path || path.length === 0) {
@@ -37,13 +24,21 @@ export async function GET(
   let site: PublicSite | null = null;
 
   if (username === '_domain') {
-    site = await caller.site.getByDomain({
-      domain: projectName,
+    site = await prisma.site.findFirst({
+      where: {
+        customDomain: projectName,
+      },
+      include: { user: true },
     });
   } else {
-    site = await caller.site.get({
-      username,
-      projectName,
+    site = await prisma.site.findFirst({
+      where: {
+        projectName,
+        user: {
+          username,
+        },
+      },
+      include: { user: true },
     });
   }
 
@@ -59,5 +54,60 @@ export async function GET(
     .join('/');
   const R2FileUrl = `${protocol}${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${site.id}/${site.ghBranch}/raw/${encodedPath}`;
 
-  return NextResponse.redirect(R2FileUrl, { status: 302 });
+  try {
+    const fileResponse = await fetch(R2FileUrl, {
+      // Add headers for prod compatibility if R2 needs auth/public access
+      headers: {
+        // 'Range': req.headers.get('Range') || undefined, // Optional: support byte ranges
+      },
+    });
+
+    if (!fileResponse.ok) {
+      return NextResponse.json(
+        { error: 'File not found' },
+        { status: fileResponse.status },
+      );
+    }
+
+    // Get Content-Type from R2 response
+    let contentType = fileResponse.headers.get('Content-Type') || '';
+
+    console.log({ contentType });
+
+    // Fallback: derive from extension if missing/unknown
+    if (
+      !contentType ||
+      contentType.startsWith('application/') ||
+      contentType === 'octet/stream'
+    ) {
+      const ext = path[path.length - 1]?.split('.').pop()?.toLowerCase();
+
+      if (!ext) {
+        return NextResponse.json(
+          { error: 'Missing file extension' },
+          { status: 400 },
+        );
+      }
+
+      contentType = getContentType(ext) || 'application/octet-stream';
+    }
+
+    const headers = new Headers(fileResponse.headers);
+    headers.set('Content-Type', contentType);
+    // Ensure no download disposition (omit or set 'inline')
+    headers.delete('Content-Disposition');
+    // Optional: Add cache for images
+    // headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+
+    return new Response(fileResponse.body, {
+      status: 200,
+      headers,
+    });
+  } catch (error) {
+    console.error('Error fetching file:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 },
+    );
+  }
 }

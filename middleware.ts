@@ -291,6 +291,7 @@ const KNOWN_FILE_EXTENSIONS = new Set([
   'mdx',
   'pdf',
   'txt',
+  'html',
   // Images
   'png',
   'jpg',
