@@ -1,6 +1,6 @@
 import clsx from 'clsx';
 import Image from 'next/image';
-import { api } from '@/trpc/server';
+// import { api } from '@/trpc/server';
 
 interface HeroProps {
   siteId?: string;
@@ -18,39 +18,39 @@ export default async function Hero({
   cta,
 }: HeroProps) {
   // Try to fetch custom hero
-  let customHeroContent: string | null = null;
+  const customHeroContent: string | null = null;
 
-  if (siteId) {
-    try {
-      const customHeroBlob = await api.site.getBlobByPath.query({
-        siteId,
-        path: '_flowershow/components/Hero.html',
-      });
+  // if (siteId) {
+  //   try {
+  //     const customHeroBlob = await api.site.getBlobByPath.query({
+  //       siteId,
+  //       path: '_flowershow/components/Hero.html',
+  //     });
 
-      if (customHeroBlob) {
-        customHeroContent = await api.site.getBlobContent.query({
-          id: customHeroBlob.id,
-        });
-      }
-    } catch (error) {
-      // Custom hero doesn't exist, will use default
-    }
-  }
+  //     if (customHeroBlob) {
+  //       customHeroContent = await api.site.getBlobContent.query({
+  //         id: customHeroBlob.id,
+  //       });
+  //     }
+  //   } catch (error) {
+  //     // Custom hero doesn't exist, will use default
+  //   }
+  // }
 
   // If custom hero exists, render it as HTML
-  if (customHeroContent) {
-    return (
-      <>
-        <p id="hero" className="sr-only">
-          Hero
-        </p>
-        <div
-          id="customhero"
-          dangerouslySetInnerHTML={{ __html: customHeroContent }}
-        />
-      </>
-    );
-  }
+  // if (customHeroContent) {
+  //   return (
+  //     <>
+  //       <p id="hero" className="sr-only">
+  //         Hero
+  //       </p>
+  //       <div
+  //         id="customhero"
+  //         dangerouslySetInnerHTML={{ __html: customHeroContent }}
+  //       />
+  //     </>
+  //   );
+  // }
 
   // Default hero
   return (

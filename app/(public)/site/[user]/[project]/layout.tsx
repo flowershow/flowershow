@@ -179,50 +179,50 @@ export default async function PublicLayout(props: {
   const cta = siteConfig?.nav?.cta;
 
   // Generate CSS for custom footer and hero components
-  let customFooterCss: string | null = null;
-  let customHeroCss: string | null = null;
+  // let customFooterCss: string | null = null;
+  // let customHeroCss: string | null = null;
 
-  if (site.id) {
-    try {
-      const customFooterBlob = await api.site.getBlobByPath.query({
-        siteId: site.id,
-        path: '_flowershow/components/Footer.html',
-      });
+  // if (site.id) {
+  //   try {
+  //     const customFooterBlob = await api.site.getBlobByPath.query({
+  //       siteId: site.id,
+  //       path: '_flowershow/components/Footer.html',
+  //     });
 
-      if (customFooterBlob) {
-        const customFooterContent = await api.site.getBlobContent.query({
-          id: customFooterBlob.id,
-        });
-        const footerCssResult = await generateScopedCss(
-          customFooterContent ?? '',
-          '#customfooter',
-        );
-        customFooterCss = footerCssResult.css;
-      }
-    } catch (error) {
-      // Custom footer doesn't exist
-    }
+  //     if (customFooterBlob) {
+  //       const customFooterContent = await api.site.getBlobContent.query({
+  //         id: customFooterBlob.id,
+  //       });
+  //       const footerCssResult = await generateScopedCss(
+  //         customFooterContent ?? '',
+  //         '#customfooter',
+  //       );
+  //       customFooterCss = footerCssResult.css;
+  //     }
+  //   } catch (error) {
+  //     // Custom footer doesn't exist
+  //   }
 
-    try {
-      const customHeroBlob = await api.site.getBlobByPath.query({
-        siteId: site.id,
-        path: '_flowershow/components/Hero.html',
-      });
+  //   try {
+  //     const customHeroBlob = await api.site.getBlobByPath.query({
+  //       siteId: site.id,
+  //       path: '_flowershow/components/Hero.html',
+  //     });
 
-      if (customHeroBlob) {
-        const customHeroContent = await api.site.getBlobContent.query({
-          id: customHeroBlob.id,
-        });
-        const heroCssResult = await generateScopedCss(
-          customHeroContent ?? '',
-          '#customhero',
-        );
-        customHeroCss = heroCssResult.css;
-      }
-    } catch (error) {
-      // Custom hero doesn't exist
-    }
-  }
+  //     if (customHeroBlob) {
+  //       const customHeroContent = await api.site.getBlobContent.query({
+  //         id: customHeroBlob.id,
+  //       });
+  //       const heroCssResult = await generateScopedCss(
+  //         customHeroContent ?? '',
+  //         '#customhero',
+  //       );
+  //       customHeroCss = heroCssResult.css;
+  //     }
+  //   } catch (error) {
+  //     // Custom hero doesn't exist
+  //   }
+  // }
 
   return (
     <html
@@ -248,7 +248,7 @@ export default async function PublicLayout(props: {
         )}
         {themeUrl && <link rel="stylesheet" href={themeUrl} />}
         {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
-        {customFooterCss && (
+        {/* {customFooterCss && (
           <style
             id="unocss-footer"
             dangerouslySetInnerHTML={{
@@ -263,7 +263,7 @@ export default async function PublicLayout(props: {
               __html: customHeroCss,
             }}
           />
-        )}
+        )} */}
         {showThemeModeSwitch && (
           <script
             dangerouslySetInnerHTML={{
@@ -329,7 +329,6 @@ export default async function PublicLayout(props: {
                 />
                 <div className="site-body">{children}</div>
                 <Footer
-                  siteId={site.id}
                   siteName={siteConfig?.title || site.projectName}
                   social={social}
                   navigation={siteConfig?.footer?.navigation}

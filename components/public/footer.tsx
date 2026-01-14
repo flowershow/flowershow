@@ -1,57 +1,57 @@
 import { GlobeIcon } from 'lucide-react';
 import Link from 'next/link';
 import { FooterNavigationGroup, SocialLink } from '@/components/types';
-import { getConfig } from '@/lib/app-config';
-import { api } from '@/trpc/server';
+// import { getConfig } from '@/lib/app-config';
+// import { api } from '@/trpc/server';
 import { socialIcons } from './social-icons';
 
 interface FooterProps {
-  siteId?: string;
+  // siteId?: string;
   siteName?: string;
   navigation?: FooterNavigationGroup[];
   social?: SocialLink[];
 }
 
 export default async function Footer({
-  siteId,
+  // siteId,
   siteName,
   navigation,
   social,
 }: FooterProps) {
   // Try to fetch custom footer
-  let customFooterContent: string | null = null;
+  // let customFooterContent: string | null = null;
 
-  if (siteId) {
-    try {
-      const customFooterBlob = await api.site.getBlobByPath.query({
-        siteId,
-        path: '_flowershow/components/Footer.html',
-      });
+  // if (siteId) {
+  //   try {
+  //     const customFooterBlob = await api.site.getBlobByPath.query({
+  //       siteId,
+  //       path: '_flowershow/components/Footer.html',
+  //     });
 
-      if (customFooterBlob) {
-        customFooterContent = await api.site.getBlobContent.query({
-          id: customFooterBlob.id,
-        });
-      }
-    } catch (error) {
-      // Custom footer doesn't exist, will use default
-    }
-  }
+  //     if (customFooterBlob) {
+  //       customFooterContent = await api.site.getBlobContent.query({
+  //         id: customFooterBlob.id,
+  //       });
+  //     }
+  //   } catch (error) {
+  //     // Custom footer doesn't exist, will use default
+  //   }
+  // }
 
-  // If custom footer exists, render it as HTML
-  if (customFooterContent) {
-    return (
-      <>
-        <p id="footer" className="sr-only">
-          Footer
-        </p>
-        <div
-          id="customfooter"
-          dangerouslySetInnerHTML={{ __html: customFooterContent }}
-        />
-      </>
-    );
-  }
+  // // If custom footer exists, render it as HTML
+  // if (customFooterContent) {
+  //   return (
+  //     <>
+  //       <p id="footer" className="sr-only">
+  //         Footer
+  //       </p>
+  //       <div
+  //         id="customfooter"
+  //         dangerouslySetInnerHTML={{ __html: customFooterContent }}
+  //       />
+  //     </>
+  //   );
+  // }
 
   const currentYear = new Date().getFullYear();
 
