@@ -36,6 +36,7 @@ import {
   publicSiteSelect,
   SiteUpdateKey,
 } from '../types';
+import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 
 const asciiPrintableNoEdgeSpaces = new RegExp(
   '^(?=.{8,128}$)[!-~](?:[ -~]*[!-~])?$',
@@ -57,6 +58,22 @@ export const siteRouter = createTRPCRouter({
             { projectName: input.projectName },
             { user: { username: input.username } },
           ],
+        },
+        select: publicSiteSelect,
+      });
+    }),
+  getAnonymous: publicProcedure
+    .input(
+      z.object({
+        projectName: z.string().min(1),
+      }),
+    )
+    .output(publicSiteSchema.nullable())
+    .query(async ({ ctx, input }): Promise<PublicSite | null> => {
+      return ctx.db.site.findFirst({
+        where: {
+          projectName: input.projectName,
+          userId: ANONYMOUS_USER_ID,
         },
         select: publicSiteSelect,
       });
@@ -160,7 +177,7 @@ export const siteRouter = createTRPCRouter({
       // 6) Analytics (best-effort)
       const posthog = await PostHogClient();
       posthog.capture({
-        distinctId: created.userId,
+        distinctId: created.userId!,
         event: 'site_created',
         properties: { id: created.id },
       });
@@ -1176,7 +1193,7 @@ export const siteRouter = createTRPCRouter({
                 const pathToUse = authorBlob.permalink || authorBlob.appPath;
                 const url = site.customDomain
                   ? `/${pathToUse}`
-                  : `/@${site.user.username}/${site.projectName}/${pathToUse}`;
+                  : `/@${site.user?.username}/${site.projectName}/${pathToUse}`;
 
                 if (metadata?.avatar) {
                   let value = metadata.avatar;
@@ -1310,7 +1327,7 @@ export const siteRouter = createTRPCRouter({
             if (site.customDomain) {
               prefix = '';
             } else {
-              prefix = `/@${site.user.username}/${site.projectName}`;
+              prefix = `/@${site.user?.username}/${site.projectName}`;
             }
 
             return (

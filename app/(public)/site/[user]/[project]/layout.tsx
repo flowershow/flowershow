@@ -84,6 +84,10 @@ export default async function PublicLayout(props: {
     site = await api.site.getByDomain.query({
       domain: projectName,
     });
+  } else if (username === 'anon') {
+    site = await api.site.getAnonymous.query({
+      projectName,
+    });
   } else {
     site = await api.site.get.query({
       username,
@@ -111,8 +115,8 @@ export default async function PublicLayout(props: {
     );
   }
 
-  // Redirect to custom domain if it exists
-  if (username !== '_domain' && site.customDomain) {
+  // Redirect to custom domain if it exists (anonymous sites don't have custom domains)
+  if (username !== '_domain' && username !== 'anon' && site.customDomain) {
     return redirect(`https://${site.customDomain}`);
   }
 

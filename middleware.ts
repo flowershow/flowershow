@@ -97,6 +97,9 @@ export default async function middleware(req: NextRequest) {
   if (hostname === env.NEXT_PUBLIC_ROOT_DOMAIN) {
     if (pathname === '/sitemap.xml') return rewrite(`/sitemap.xml`, req);
     if (pathname === '/robots.txt') return rewrite(`/robots.txt`, req);
+    // TODO temporary
+    if (pathname === '/publish')
+      return NextResponse.rewrite(new URL(`/home/publish`, req.url));
 
     // Resolve alias to canonical /@user/project path
     const aliasResolved = resolveSiteAlias(pathname, 'from');

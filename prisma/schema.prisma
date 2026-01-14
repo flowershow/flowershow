@@ -105,8 +105,8 @@ model VerificationToken {
 
 model Site {
   id                      String        @id @default(cuid())
-  ghRepository            String        @map("gh_repository")
-  ghBranch                String        @map("gh_branch")
+  ghRepository            String?        @map("gh_repository")
+  ghBranch                String?        @map("gh_branch")
   subdomain               String?       @unique
   customDomain            String?       @unique @map("custom_domain")
   rootDir                 String?       @map("root_dir")
@@ -135,7 +135,6 @@ model Site {
   installationId String?             @map("installation_id")
   installation   GitHubInstallation? @relation(fields: [installationId], references: [id])
 
-  @@unique([userId, projectName])
   @@index([userId])
   @@index([installationId])
 }

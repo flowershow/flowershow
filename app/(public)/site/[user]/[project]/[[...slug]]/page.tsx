@@ -44,14 +44,22 @@ export async function generateMetadata(props: {
   const site = await getSite(userName, projectName);
   const siteUrl = getSiteUrl(site);
 
+  // For anonymous sites, handle case where blob might not be ready yet
   const blob = await api.site.getBlob
     .query({
       siteId: site.id,
       slug: decodedSlug,
     })
-    .catch(() => notFound());
+    .catch(() => {
+      // For anonymous sites, return null instead of throwing 404
+      // This allows the page to render even if metadata isn't ready
+      if (userName === 'anon') {
+        return null;
+      }
+      notFound();
+    });
 
-  const metadata = blob.metadata as PageMetadata | null;
+  const metadata = blob?.metadata as PageMetadata | null;
 
   // workaround (?) to "not publish" files marked with `publish: false`
   // it's needed atm as Inngest sync function doesn't parse frontmatter, and so it uploads to R2
@@ -69,7 +77,7 @@ export async function generateMetadata(props: {
   const title =
     siteConfig?.title && metadata?.title
       ? `${metadata?.title} - ${siteConfig.title}`
-      : (metadata?.title ?? siteConfig?.title ?? '');
+      : (metadata?.title ?? siteConfig?.title ?? projectName);
   const description = metadata?.description ?? siteConfig?.description;
   const url = `${siteUrl}/${decodedSlug !== '/' ? decodedSlug : ''}`;
 
