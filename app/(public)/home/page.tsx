@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { DropZone } from '@/components/publish/drop-zone';
 import { PublishingState } from '@/components/publish/publishing-state';
+import { ClaimPrompt, ClaimTrigger } from '@/components/publish/claim-prompt';
 
 type State = 'idle' | 'uploading' | 'published' | 'error';
 
@@ -10,6 +11,7 @@ interface PublishResult {
   siteId: string;
   projectName: string;
   liveUrl: string;
+  ownershipToken: string;
 }
 
 interface PublishedSite {
@@ -18,6 +20,7 @@ interface PublishedSite {
   liveUrl: string;
   publishedAt: string;
   fileName?: string;
+  ownershipToken?: string;
 }
 
 const MAX_STORED_SITES = 10;
@@ -27,9 +30,13 @@ export default function HomePage() {
   const [state, setState] = useState<State>('idle');
   const [liveUrl, setLiveUrl] = useState<string>('');
   const [siteId, setSiteId] = useState<string>('');
+  const [ownershipToken, setOwnershipToken] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [publishedSites, setPublishedSites] = useState<PublishedSite[]>([]);
+  const [showClaimPrompt, setShowClaimPrompt] = useState(false);
+  const [claimTrigger, setClaimTrigger] = useState<ClaimTrigger>('save_click');
+  const [urlCopyCount, setUrlCopyCount] = useState(0);
 
   // Load published sites from localStorage on mount
   useEffect(() => {
@@ -114,13 +121,22 @@ export default function HomePage() {
       trackPublishSuccess(result.siteId, file.size);
 
       // Save to localStorage
+      // Store ownership token
+      const token = result.ownershipToken;
+      setOwnershipToken(token);
+
+      // Save to localStorage with token
       savePublishedSite({
         siteId: result.siteId,
         projectName: result.projectName,
         liveUrl: result.liveUrl,
         publishedAt: new Date().toISOString(),
         fileName: file.name,
+        ownershipToken: token,
       });
+
+      // Store token separately for easy access
+      localStorage.setItem(`ownership_token_${result.siteId}`, token);
 
       // Show success
       setLiveUrl(result.liveUrl);
@@ -142,9 +158,25 @@ export default function HomePage() {
       // Track URL copy
       trackUrlCopied(siteId);
 
+      // Increment copy count and show claim prompt after second copy
+      const newCopyCount = urlCopyCount + 1;
+      setUrlCopyCount(newCopyCount);
+
+      if (newCopyCount >= 2 && ownershipToken) {
+        setClaimTrigger('url_copy');
+        setShowClaimPrompt(true);
+      }
+
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
+    }
+  };
+
+  const handleSaveSite = () => {
+    if (ownershipToken) {
+      setClaimTrigger('save_click');
+      setShowClaimPrompt(true);
     }
   };
 
@@ -152,8 +184,10 @@ export default function HomePage() {
     setState('idle');
     setLiveUrl('');
     setSiteId('');
+    setOwnershipToken('');
     setError('');
     setCopied(false);
+    setUrlCopyCount(0);
   };
 
   if (state === 'uploading') {
@@ -162,54 +196,79 @@ export default function HomePage() {
 
   if (state === 'published') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 px-4">
-        <div className="max-w-2xl w-full text-center">
-          <div className="mb-8">
-            <div className="inline-block">
-              <div className="text-6xl mb-4">🎉</div>
+      <>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 px-4">
+          <div className="max-w-2xl w-full text-center">
+            <div className="mb-8">
+              <div className="inline-block">
+                <div className="text-6xl mb-4">🎉</div>
+              </div>
+              <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                Your site is live!
+              </h1>
+              <p className="text-gray-600">Share this URL with anyone</p>
             </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              Your site is live!
-            </h1>
-            <p className="text-gray-600">Share this URL with anyone</p>
-          </div>
 
-          <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <code className="flex-1 text-left bg-gray-100 px-4 py-3 rounded text-sm break-all">
-                {window.location.origin}
-                {liveUrl}
-              </code>
+            <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+              <div className="flex items-center gap-3 mb-4">
+                <code className="flex-1 text-left bg-gray-100 px-4 py-3 rounded text-sm break-all">
+                  {window.location.origin}
+                  {liveUrl}
+                </code>
+                <button
+                  onClick={handleCopyUrl}
+                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium whitespace-nowrap"
+                >
+                  {copied ? '✓ Copied!' : 'Copy URL'}
+                </button>
+              </div>
+
+              <div className="flex gap-4 justify-center">
+                <a
+                  href={liveUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  View your site →
+                </a>
+              </div>
+            </div>
+
+            {/* Save this site button */}
+            <div className="mb-6">
               <button
-                onClick={handleCopyUrl}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium whitespace-nowrap"
+                onClick={handleSaveSite}
+                className="px-8 py-4 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-lg shadow-md"
               >
-                {copied ? '✓ Copied!' : 'Copy URL'}
+                Save this site
+              </button>
+              <p className="text-sm text-gray-500 mt-2">
+                Create an account to keep your site permanently
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <button
+                onClick={handlePublishAnother}
+                className="text-gray-600 hover:text-gray-900 underline"
+              >
+                Publish another file
               </button>
             </div>
-
-            <div className="flex gap-4 justify-center">
-              <a
-                href={liveUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-700 font-medium"
-              >
-                View your site →
-              </a>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <button
-              onClick={handlePublishAnother}
-              className="text-gray-600 hover:text-gray-900 underline"
-            >
-              Publish another file
-            </button>
           </div>
         </div>
-      </div>
+
+        {/* Claim prompt modal */}
+        {showClaimPrompt && ownershipToken && (
+          <ClaimPrompt
+            siteId={siteId}
+            ownershipToken={ownershipToken}
+            trigger={claimTrigger}
+            onDismiss={() => setShowClaimPrompt(false)}
+          />
+        )}
+      </>
     );
   }
 

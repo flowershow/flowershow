@@ -8,7 +8,7 @@ import { getConfig } from '@/lib/app-config';
 import { getSession } from '@/server/auth';
 import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
 import { TRPCReactProvider } from '@/trpc/react';
-import Providers from '../../providers';
+import Providers from '../providers';
 import '@/styles/default-theme.css';
 
 const { title, description, favicon, thumbnail } = getConfig();

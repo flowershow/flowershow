@@ -93,13 +93,14 @@ export default async function middleware(req: NextRequest) {
     );
   }
 
+  // Rewrites for home pages
+  if (hostname === env.NEXT_PUBLIC_HOME_DOMAIN)
+    return NextResponse.rewrite(new URL(`/home${path}`, req.url));
+
   // 5) Root domain (my.flowershow.app) — user sites at /@<user>/<project>
   if (hostname === env.NEXT_PUBLIC_ROOT_DOMAIN) {
     if (pathname === '/sitemap.xml') return rewrite(`/sitemap.xml`, req);
     if (pathname === '/robots.txt') return rewrite(`/robots.txt`, req);
-    // TODO temporary
-    if (pathname === '/publish')
-      return NextResponse.rewrite(new URL(`/home/publish`, req.url));
 
     // Resolve alias to canonical /@user/project path
     const aliasResolved = resolveSiteAlias(pathname, 'from');

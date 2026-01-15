@@ -7,7 +7,11 @@ import {
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import PostHogClient from '@/lib/server-posthog';
-import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
+import {
+  ANONYMOUS_USER_ID,
+  generateAnonymousOwnerId,
+  generateOwnershipToken,
+} from '@/lib/anonymous-user';
 import prisma from '@/server/db';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
@@ -23,6 +27,7 @@ interface PublishResponse {
   projectName: string;
   uploadUrl: string;
   liveUrl: string;
+  ownershipToken: string;
 }
 
 /**
@@ -97,9 +102,10 @@ export async function POST(request: NextRequest) {
         span.setAttribute('file_size', fileSize);
         span.setAttribute('file_extension', extension);
 
-        // Generate unique project name
+        // Generate unique project name and anonymous owner ID
         const randomPart = Math.random().toString(36).substring(2, 10);
         const projectName = randomPart;
+        const anonymousOwnerId = generateAnonymousOwnerId();
 
         // Create anonymous site with anonymous user ID
         const site = await prisma.site.create({
@@ -110,6 +116,7 @@ export async function POST(request: NextRequest) {
             rootDir: null,
             autoSync: false,
             userId: ANONYMOUS_USER_ID,
+            anonymousOwnerId,
           },
         });
 
@@ -164,11 +171,18 @@ export async function POST(request: NextRequest) {
         });
         await posthog.shutdown();
 
+        // Generate ownership token for claiming later
+        const ownershipToken = generateOwnershipToken(
+          site.id,
+          anonymousOwnerId,
+        );
+
         const response: PublishResponse = {
           siteId: site.id,
           projectName,
           uploadUrl,
           liveUrl,
+          ownershipToken,
         };
 
         return NextResponse.json(response);

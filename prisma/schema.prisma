@@ -131,12 +131,19 @@ model Site {
   tokenVersion            Int           @default(0) @map("token_version")
   syntaxMode              SyntaxMode    @default(auto) @map("syntax_mode")
 
+  // Anonymous/temporary site fields for claim flow
+  isTemporary             Boolean       @default(false) @map("is_temporary")
+  expiresAt               DateTime?     @map("expires_at")
+  anonymousOwnerId        String?       @map("anonymous_owner_id")
+
   // GitHub App installation for fine-grained permissions
   installationId String?             @map("installation_id")
   installation   GitHubInstallation? @relation(fields: [installationId], references: [id])
 
   @@index([userId])
   @@index([installationId])
+  @@index([expiresAt])
+  @@index([anonymousOwnerId])
 }
 
 model Blob {

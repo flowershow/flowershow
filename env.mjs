@@ -1,5 +1,5 @@
-import { createEnv } from '@t3-oss/env-nextjs';
-import { z } from 'zod';
+import { createEnv } from "@t3-oss/env-nextjs";
+import { z } from "zod";
 
 export const env = createEnv({
   /**
@@ -12,12 +12,12 @@ export const env = createEnv({
       // Since NextAuth.js automatically uses the VERCEL_URL if present.
       (str) => process.env.VERCEL_URL ?? str,
       // VERCEL_URL doesn't include `https` so it cant be validated as a URL
-      process.env.VERCEL ? z.string() : z.string().url(),
+      process.env.VERCEL ? z.string() : z.string().url()
     ),
     POSTGRES_PRISMA_URL: z.string().url(),
     POSTGRES_URL_NON_POOLING: z.string().url(),
     NEXTAUTH_SECRET:
-      process.env.NODE_ENV === 'production'
+      process.env.NODE_ENV === "production"
         ? z.string()
         : z.string().optional(),
     AUTH_GITHUB_SECRET: z.string(),
@@ -32,11 +32,11 @@ export const env = createEnv({
     S3_ACCESS_KEY_ID: z.string(),
     S3_SECRET_ACCESS_KEY: z.string(),
     S3_BUCKET_NAME: z.string(),
-    S3_REGION: z.string().default('auto'),
+    S3_REGION: z.string().default("auto"),
     S3_FORCE_PATH_STYLE: z
-      .enum(['true', 'false'])
-      .default('false')
-      .transform((val) => val === 'true'),
+      .enum(["true", "false"])
+      .default("false")
+      .transform((val) => val === "true"),
     GH_WEBHOOK_SECRET: z.string(),
     GH_WEBHOOK_URL: z.string(),
     GH_ACCESS_TOKEN: z.string(),
@@ -71,6 +71,7 @@ export const env = createEnv({
     NEXT_PUBLIC_AUTH_GITHUB_ID: z.string(),
     NEXT_PUBLIC_ROOT_DOMAIN: z.string(),
     NEXT_PUBLIC_CLOUD_DOMAIN: z.string(),
+    NEXT_PUBLIC_HOME_DOMAIN: z.string(),
     NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX: z.string(),
     NEXT_PUBLIC_VERCEL_ENV: z.string().optional(),
     NEXT_PUBLIC_DNS_DOMAIN: z.string(),
@@ -95,6 +96,7 @@ export const env = createEnv({
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     NEXT_PUBLIC_ROOT_DOMAIN: process.env.NEXT_PUBLIC_ROOT_DOMAIN,
     NEXT_PUBLIC_CLOUD_DOMAIN: process.env.NEXT_PUBLIC_CLOUD_DOMAIN,
+    NEXT_PUBLIC_HOME_DOMAIN: process.env.NEXT_PUBLIC_HOME_DOMAIN,
     NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX:
       process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX,
     NEXT_PUBLIC_VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV,
