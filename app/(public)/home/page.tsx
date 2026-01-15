@@ -1,9 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DropZone } from '@/components/publish/drop-zone';
-import { PublishingState } from '@/components/publish/publishing-state';
-import { ClaimPrompt, ClaimTrigger } from '@/components/publish/claim-prompt';
+import { DropZone } from '@/components/home/drop-zone';
+import { PublishingState } from '@/components/home/publishing-state';
+import { ClaimPrompt, ClaimTrigger } from '@/components/home/claim-prompt';
+import {
+  getOrCreateAnonymousUserId,
+  setAnonymousToken,
+  getAnonymousToken,
+} from '@/lib/client-anonymous-user';
 
 type State = 'idle' | 'uploading' | 'published' | 'error';
 
@@ -78,18 +83,21 @@ export default function HomePage() {
     setError('');
 
     try {
+      // Get or create persistent anonymous user ID for this browser
+      const anonymousUserId = getOrCreateAnonymousUserId();
+
       // Calculate SHA-256
       const sha = await calculateSHA256(file);
-      const extension = file.name.split('.').pop();
 
-      // Call publish API
+      // Call publish API with anonymous user ID
       const response = await fetch('/api/publish-anon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fileName: `README.${extension}`, // always publish as README
+          fileName: file.name,
           fileSize: file.size,
           sha,
+          anonymousUserId, // Pass persistent browser ID
         }),
       });
 
@@ -120,23 +128,19 @@ export default function HomePage() {
       // Track success
       trackPublishSuccess(result.siteId, file.size);
 
-      // Save to localStorage
-      // Store ownership token
+      // Store the reusable ownership token (same token for all sites from this browser)
       const token = result.ownershipToken;
       setOwnershipToken(token);
+      setAnonymousToken(token);
 
-      // Save to localStorage with token
+      // Save to localStorage
       savePublishedSite({
         siteId: result.siteId,
         projectName: result.projectName,
         liveUrl: result.liveUrl,
         publishedAt: new Date().toISOString(),
         fileName: file.name,
-        ownershipToken: token,
       });
-
-      // Store token separately for easy access
-      localStorage.setItem(`ownership_token_${result.siteId}`, token);
 
       // Show success
       setLiveUrl(result.liveUrl);
@@ -174,7 +178,10 @@ export default function HomePage() {
   };
 
   const handleSaveSite = () => {
-    if (ownershipToken) {
+    // Get token from state or localStorage
+    const token = ownershipToken || getAnonymousToken();
+    if (token) {
+      setOwnershipToken(token);
       setClaimTrigger('save_click');
       setShowClaimPrompt(true);
     }

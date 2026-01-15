@@ -1,63 +1,50 @@
 import jwt from 'jsonwebtoken';
-import { randomBytes } from 'crypto';
+import { env } from '@/env.mjs';
 
-/**
- * Anonymous user ID for sites created without authentication
- * This matches the ID created by the Prisma migration
- */
-export const ANONYMOUS_USER_ID = 'anon000000000000000000000000';
-
-/**
- * Anonymous username for display purposes
- */
-export const ANONYMOUS_USERNAME = 'anonymous';
+// Re-export constants for backward compatibility
+export {
+  ANONYMOUS_USER_ID,
+  ANONYMOUS_USERNAME,
+  ANONYMOUS_USER_ID_KEY,
+  ANONYMOUS_TOKEN_KEY,
+  isValidAnonymousUserId,
+} from './anonymous-user-constants';
 
 /**
  * JWT secret for anonymous ownership tokens
  * In production, this should be a strong secret from environment variables
  */
-const ANONYMOUS_JWT_SECRET =
-  process.env.ANONYMOUS_JWT_SECRET ||
-  process.env.NEXTAUTH_SECRET ||
-  'fallback-secret-change-in-production';
+const ANONYMOUS_JWT_SECRET = env.ANONYMOUS_JWT_SECRET;
 
 /**
- * Generate a unique anonymous owner ID
+ * Generate an ownership token for an anonymous user
+ * This token proves ownership of all sites created by this browser
+ *
+ * Design: One token per browser (stored in localStorage), reusable across all anonymous sites
+ *
+ * SERVER-SIDE ONLY
  */
-export function generateAnonymousOwnerId(): string {
-  return randomBytes(16).toString('hex');
-}
-
-/**
- * Generate an ownership token for an anonymous site
- * This token proves ownership without authentication
- */
-export function generateOwnershipToken(
-  siteId: string,
-  anonymousOwnerId: string,
-): string {
+export function generateOwnershipToken(anonymousUserId: string): string {
   return jwt.sign(
     {
-      siteId,
-      anonymousOwnerId,
+      anonymousUserId,
       type: 'anonymous_ownership',
     },
     ANONYMOUS_JWT_SECRET,
-    { expiresIn: '8d' }, // 8 days (1 day after default 7-day expiry)
+    { expiresIn: '30d' }, // 30 days - longer since it's reusable
   );
 }
 
 /**
  * Verify and decode an ownership token
+ * Returns the anonymousUserId if valid, null otherwise
+ *
+ * SERVER-SIDE ONLY
  */
-export function verifyOwnershipToken(token: string): {
-  siteId: string;
-  anonymousOwnerId: string;
-} | null {
+export function verifyOwnershipToken(token: string): string | null {
   try {
     const decoded = jwt.verify(token, ANONYMOUS_JWT_SECRET) as {
-      siteId: string;
-      anonymousOwnerId: string;
+      anonymousUserId: string;
       type: string;
     };
 
@@ -65,10 +52,7 @@ export function verifyOwnershipToken(token: string): {
       return null;
     }
 
-    return {
-      siteId: decoded.siteId,
-      anonymousOwnerId: decoded.anonymousOwnerId,
-    };
+    return decoded.anonymousUserId;
   } catch (error) {
     return null;
   }

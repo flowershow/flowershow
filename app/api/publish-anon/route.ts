@@ -9,8 +9,8 @@ import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import PostHogClient from '@/lib/server-posthog';
 import {
   ANONYMOUS_USER_ID,
-  generateAnonymousOwnerId,
   generateOwnershipToken,
+  isValidAnonymousUserId,
 } from '@/lib/anonymous-user';
 import prisma from '@/server/db';
 
@@ -20,6 +20,7 @@ interface PublishRequest {
   fileName: string;
   fileSize: number;
   sha: string;
+  anonymousUserId: string; // Client-generated persistent ID
 }
 
 interface PublishResponse {
@@ -54,7 +55,15 @@ export async function POST(request: NextRequest) {
 
         // Parse request
         const body = (await request.json()) as PublishRequest;
-        const { fileName, fileSize, sha } = body;
+        const { fileName, fileSize, sha, anonymousUserId } = body;
+
+        // Validate anonymousUserId
+        if (!anonymousUserId || !isValidAnonymousUserId(anonymousUserId)) {
+          return NextResponse.json(
+            { error: 'Valid anonymousUserId is required' },
+            { status: 400 },
+          );
+        }
 
         // Validate file name
         if (!fileName || typeof fileName !== 'string') {
@@ -65,9 +74,9 @@ export async function POST(request: NextRequest) {
         }
 
         const extension = fileName.split('.').pop()?.toLowerCase();
-        if (!extension || !['md', 'mdx'].includes(extension)) {
+        if (!extension || !['md', 'mdx', 'html'].includes(extension)) {
           return NextResponse.json(
-            { error: 'Only .md and .mdx files are supported' },
+            { error: 'Only .md, .mdx and .html files are supported' },
             { status: 400 },
           );
         }
@@ -102,41 +111,27 @@ export async function POST(request: NextRequest) {
         span.setAttribute('file_size', fileSize);
         span.setAttribute('file_extension', extension);
 
-        // Generate unique project name and anonymous owner ID
+        // Generate unique project name
         const randomPart = Math.random().toString(36).substring(2, 10);
         const projectName = randomPart;
-        const anonymousOwnerId = generateAnonymousOwnerId();
 
-        // Create anonymous site with anonymous user ID
+        // Create anonymous site with client's persistent anonymous user ID
         const site = await prisma.site.create({
           data: {
             projectName,
-            ghRepository: 'cli-upload',
-            ghBranch: 'main',
-            rootDir: null,
-            autoSync: false,
             userId: ANONYMOUS_USER_ID,
-            anonymousOwnerId,
+            anonymousOwnerId: anonymousUserId,
           },
         });
 
         span.setAttribute('site_id', site.id);
-
-        // Determine URL path for the blob
-        const urlPath = (() => {
-          const _urlPath = resolveFilePathToUrlPath({
-            target: fileName,
-          });
-          // Make sure root path is just /
-          return _urlPath === '/' ? _urlPath : _urlPath.replace(/^\//, '');
-        })();
 
         // Create blob record
         await prisma.blob.create({
           data: {
             siteId: site.id,
             path: fileName,
-            appPath: urlPath,
+            appPath: '/', // always only single file site
             size: fileSize,
             sha,
             metadata: {},
@@ -172,10 +167,8 @@ export async function POST(request: NextRequest) {
         await posthog.shutdown();
 
         // Generate ownership token for claiming later
-        const ownershipToken = generateOwnershipToken(
-          site.id,
-          anonymousOwnerId,
-        );
+        // Token is reusable across all sites for this browser
+        const ownershipToken = generateOwnershipToken(anonymousUserId);
 
         const response: PublishResponse = {
           siteId: site.id,

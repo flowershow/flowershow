@@ -56,9 +56,9 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Verify ownership token
-        const tokenData = verifyOwnershipToken(ownershipToken);
-        if (!tokenData || tokenData.siteId !== siteId) {
+        // Verify ownership token - returns anonymousUserId if valid
+        const anonymousUserId = verifyOwnershipToken(ownershipToken);
+        if (!anonymousUserId) {
           span.setAttribute('token_valid', false);
           return NextResponse.json(
             { success: false, error: 'Invalid ownership token' },
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        if (site.anonymousOwnerId !== tokenData.anonymousOwnerId) {
+        if (site.anonymousOwnerId !== anonymousUserId) {
           return NextResponse.json(
             { success: false, error: 'Ownership verification failed' },
             { status: 403 },
