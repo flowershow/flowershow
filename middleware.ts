@@ -51,13 +51,11 @@ export default async function middleware(req: NextRequest) {
     );
   }
 
-  // 4) Cloud app (dashboard)
+  // 4) Cloud app (authentication required)
   if (hostname === env.NEXT_PUBLIC_CLOUD_DOMAIN) {
     const phBootstrap = await buildPHBootstrapCookie(req, posthog);
 
     const session = await getToken({ req });
-
-    console.log({ session });
 
     if (!session && pathname !== '/login') {
       // Preserve the original URL as callbackUrl for post-login redirect
@@ -69,14 +67,28 @@ export default async function middleware(req: NextRequest) {
         phBootstrap,
       );
     }
-    if (session && pathname === '/login') {
+    if (pathname === '/login') {
+      if (session) {
+        return withPHBootstrapCookie(
+          NextResponse.redirect(new URL('/', req.url)),
+          phBootstrap,
+        );
+      }
       return withPHBootstrapCookie(
-        NextResponse.redirect(new URL('/', req.url)),
+        NextResponse.rewrite(new URL(`/login`, req.url)),
         phBootstrap,
       );
     }
+
+    if (pathname.startsWith('/cli/')) {
+      return withPHBootstrapCookie(
+        NextResponse.rewrite(new URL(`/cli${path}`, req.url)),
+        phBootstrap,
+      );
+    }
+
     return withPHBootstrapCookie(
-      NextResponse.rewrite(new URL(`/cloud${path}`, req.url)),
+      NextResponse.rewrite(new URL(`/dashboard${path}`, req.url)),
       phBootstrap,
     );
   }
@@ -96,6 +108,7 @@ export default async function middleware(req: NextRequest) {
 
     // Look up site
     const site = await fetchSite(req, `/api/site/${username}/${projectname}`);
+
     if (!site) return rewrite(`/not-found`, req);
 
     // Per-site login page

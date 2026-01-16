@@ -51,7 +51,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default async function CloudRootLayout({
   children,
 }: {
   children: React.ReactNode;

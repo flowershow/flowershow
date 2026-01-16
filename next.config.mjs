@@ -7,6 +7,7 @@ import { env } from './env.mjs';
  */
 const nextConfig = {
   experimental: {
+    globalNotFound: true,
     serverActions: {
       allowedOrigins: [
         'cloud.localhost:3000',

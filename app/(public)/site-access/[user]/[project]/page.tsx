@@ -1,4 +1,6 @@
+import clsx from 'clsx';
 import { jwtVerify } from 'jose';
+import { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import Image from 'next/image';
 import { notFound, redirect } from 'next/navigation';
@@ -9,8 +11,13 @@ import { getSite } from '@/lib/get-site';
 import { getSiteUrl, getSiteUrlPath } from '@/lib/get-site-url';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { siteKeyBytes } from '@/lib/site-hmac-key';
+import {
+  fontBrand,
+  fontDashboardBody,
+  fontDashboardHeading,
+} from '@/styles/fonts-dashboard';
 import { api } from '@/trpc/server';
-import { SiteLoginForm } from './site-login-form';
+import { SiteLoginForm } from './_components/site-login-form';
 
 const config = getConfig();
 
@@ -18,6 +25,10 @@ interface RouteParams {
   user: string;
   project: string;
 }
+
+export const metadata: Metadata = {
+  title: 'Site authentication',
+};
 
 export default async function LoginPage(props: {
   params: Promise<RouteParams>;
@@ -66,7 +77,14 @@ export default async function LoginPage(props: {
   });
 
   return (
-    <div className="mx-5 border border-primary-faint p-10 sm:mx-auto sm:w-full sm:max-w-md sm:rounded-lg sm:shadow-md md:max-w-lg md:p-12">
+    <div
+      className={clsx(
+        'mx-5 border border-primary-faint p-10 sm:mx-auto sm:w-full sm:max-w-md sm:rounded-lg sm:shadow-md md:max-w-lg md:p-12',
+        fontDashboardBody.variable,
+        fontDashboardHeading.variable,
+        fontBrand.variable,
+      )}
+    >
       <Image
         alt="Logo"
         width={100}

@@ -22,7 +22,7 @@ import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
 import { PageMetadata } from '@/server/api/types';
 import { api } from '@/trpc/server';
-import UrlNormalizer from './url-normalizer';
+import UrlNormalizer from './_components/url-normalizer';
 
 const config = getConfig();
 

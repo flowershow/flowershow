@@ -11,21 +11,20 @@ import { SiteProvider } from '@/components/public/site-context';
 import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
-import { generateScopedCss } from '@/lib/generate-scoped-css';
 import { getSiteUrlPath } from '@/lib/get-site-url';
 import { getThemeUrl } from '@/lib/get-theme';
 import { getSession } from '@/server/auth';
 import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
 import { TRPCReactProvider } from '@/trpc/react';
 import { api } from '@/trpc/server';
-import Providers from './providers';
+import Providers from './_components/providers';
 import '@/styles/prism.css';
 import '@/styles/callouts.css';
 import '@/styles/default-theme.css';
 import { THEME_PREFERENCE_STORAGE_KEY } from '@/lib/const';
 import { PublicSite } from '@/server/api/types';
-import KatexStylesLoader from './katex-loader';
-import SiteLogoutButton from './site-logout-button';
+import KatexStylesLoader from './_components/katex-loader';
+import SiteLogoutButton from './_components/site-logout-button';
 
 const { title, description, favicon, thumbnail } = getConfig();
 

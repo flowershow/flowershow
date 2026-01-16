@@ -1,8 +1,14 @@
 'use client';
 
 import * as Sentry from '@sentry/nextjs';
-import NextError from 'next/error';
+import clsx from 'clsx';
 import { useEffect } from 'react';
+import {
+  fontBrand,
+  fontDashboardBody,
+  fontDashboardHeading,
+} from '@/styles/fonts-dashboard';
+import '@/styles/dashboard.css';
 
 export default function GlobalError({
   error,
@@ -14,13 +20,26 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html>
+    <html
+      className={clsx(
+        fontDashboardHeading.variable,
+        fontDashboardBody.variable,
+        fontBrand.variable,
+      )}
+      lang="en"
+      suppressHydrationWarning
+    >
       <body>
-        {/* `NextError` is the default Next.js error page component. Its type
-        definition requires a `statusCode` prop. However, since the App Router
-        does not expose status codes for errors, we simply pass 0 to render a
-        generic error message. */}
-        <NextError statusCode={0} />
+        <div className="flex min-h-screen items-center justify-center bg-gray-100">
+          <div className="max-w-4xl text-center">
+            <h1 className="mb-4 text-6xl font-bold text-gray-800">500</h1>
+            <p className="mb-8 text-xl text-gray-600">Internal Server Error</p>
+            <p className="text-gray-500">
+              An error occurred while rendering this page. Please try again
+              later.
+            </p>
+          </div>
+        </div>
       </body>
     </html>
   );
