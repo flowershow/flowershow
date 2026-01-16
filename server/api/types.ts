@@ -28,8 +28,8 @@ export type PublicSite = Prisma.SiteGetPayload<{
 
 export const publicSiteSchema: z.ZodType<PublicSite> = z.object({
   id: z.string(),
-  ghRepository: z.string(),
-  ghBranch: z.string(),
+  ghRepository: z.string().nullable(),
+  ghBranch: z.string().nullable(),
   projectName: z.string(),
   customDomain: z.string().nullable(),
   rootDir: z.string().nullable(),

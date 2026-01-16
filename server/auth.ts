@@ -113,6 +113,48 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
+    // redirect: async ({ url, baseUrl }) => {
+    //   // Allow redirects to cloud subdomain for claim flow
+    //   // url: The URL to redirect to (can be relative or absolute)
+    //   // baseUrl: The base URL of the site (e.g., http://localhost:3000)
+
+    //   console.log("REDIRECT IN NEXT AUTH", { url, baseUrl });
+
+    //   // Parse the URLs
+    //   try {
+    //     const redirectUrl = new URL(url, baseUrl);
+    //     const base = new URL(baseUrl);
+
+    //     // Allow same origin redirects
+    //     if (redirectUrl.origin === base.origin) {
+    //       return url;
+    //     }
+
+    //     // Allow redirects to cloud subdomain (for claim flow)
+    //     const cloudDomain = env.NEXT_PUBLIC_CLOUD_DOMAIN;
+    //     const homeDomain = env.NEXT_PUBLIC_HOME_DOMAIN;
+
+    //     if (
+    //       redirectUrl.hostname === cloudDomain ||
+    //       redirectUrl.hostname === homeDomain ||
+    //       redirectUrl.hostname === `cloud.${homeDomain}` ||
+    //       redirectUrl.hostname === `www.${homeDomain}`
+    //     ) {
+    //       return redirectUrl.href;
+    //     }
+
+    //     // For relative URLs, use baseUrl
+    //     if (url.startsWith("/")) {
+    //       return `${baseUrl}${url}`;
+    //     }
+
+    //     // Default: return base URL for safety
+    //     return baseUrl;
+    //   } catch (error) {
+    //     console.error("Redirect callback error:", error);
+    //     return baseUrl;
+    //   }
+    // },
     signIn: async ({ user, account, profile }) => {
       // console.log("signIn", { user, account, profile });
       // This is called only once

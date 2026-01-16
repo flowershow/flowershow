@@ -3,6 +3,8 @@
  * For production, consider using Redis or similar
  */
 
+import { env } from '@/env.mjs';
+
 const rateLimitMap = new Map<string, number[]>();
 
 /**
@@ -14,7 +16,7 @@ const rateLimitMap = new Map<string, number[]>();
  */
 export function checkRateLimit(
   key: string,
-  maxRequests: number = 10,
+  maxRequests: number = env.VERCEL_URL ? 10 : 1000,
   windowMs: number = 3600000, // 1 hour
 ): boolean {
   const now = Date.now();

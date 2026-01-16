@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { SiteConfig } from '@/components/types';
 import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
+import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { buildSiteTree } from '@/lib/build-site-tree';
 import { deleteProject, fetchFile } from '@/lib/content-store';
 import {
@@ -36,7 +37,6 @@ import {
   publicSiteSelect,
   SiteUpdateKey,
 } from '../types';
-import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 
 const asciiPrintableNoEdgeSpaces = new RegExp(
   '^(?=.{8,128}$)[!-~](?:[ -~]*[!-~])?$',
@@ -1103,7 +1103,7 @@ export const siteRouter = createTRPCRouter({
 
           const content = await fetchFile({
             projectId: blob.site.id,
-            branch: blob.site.ghBranch,
+            branch: blob.site.ghBranch || 'main', // TODO
             path: blob.path,
           });
 

@@ -1,14 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { ClaimPrompt, ClaimTrigger } from '@/components/home/claim-prompt';
 import { DropZone } from '@/components/home/drop-zone';
 import { PublishingState } from '@/components/home/publishing-state';
-import { ClaimPrompt, ClaimTrigger } from '@/components/home/claim-prompt';
+import { env } from '@/env.mjs';
 import {
+  getAnonymousToken,
   getOrCreateAnonymousUserId,
   setAnonymousToken,
-  getAnonymousToken,
 } from '@/lib/client-anonymous-user';
+
+const isSecure =
+  env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+  env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
+const protocol = isSecure ? 'https' : 'http';
 
 type State = 'idle' | 'uploading' | 'published' | 'error';
 
@@ -219,8 +225,7 @@ export default function HomePage() {
             <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
               <div className="flex items-center gap-3 mb-4">
                 <code className="flex-1 text-left bg-gray-100 px-4 py-3 rounded text-sm break-all">
-                  {window.location.origin}
-                  {liveUrl}
+                  {`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${liveUrl}`}
                 </code>
                 <button
                   onClick={handleCopyUrl}
@@ -232,7 +237,7 @@ export default function HomePage() {
 
               <div className="flex gap-4 justify-center">
                 <a
-                  href={liveUrl}
+                  href={`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${liveUrl}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-blue-600 hover:text-blue-700 font-medium"
@@ -267,10 +272,9 @@ export default function HomePage() {
         </div>
 
         {/* Claim prompt modal */}
-        {showClaimPrompt && ownershipToken && (
+        {showClaimPrompt && (
           <ClaimPrompt
             siteId={siteId}
-            ownershipToken={ownershipToken}
             trigger={claimTrigger}
             onDismiss={() => setShowClaimPrompt(false)}
           />
@@ -345,18 +349,17 @@ export default function HomePage() {
                           </span>
                         </div>
                         <a
-                          href={site.liveUrl}
+                          href={`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${site.liveUrl}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-sm text-blue-600 hover:text-blue-700 hover:underline truncate block"
                         >
-                          {window.location.origin}
-                          {site.liveUrl}
+                          {`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${site.liveUrl}`}
                         </a>
                       </div>
                       <div className="flex items-center gap-2">
                         <a
-                          href={site.liveUrl}
+                          href={`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${site.liveUrl}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="px-4 py-2 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors whitespace-nowrap"

@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { getAnonymousToken } from '@/lib/client-anonymous-user';
+import { env } from '@/env.mjs';
 
 type ClaimState = 'loading' | 'claiming' | 'success' | 'error';
 
@@ -25,8 +27,10 @@ export default function ClaimPage() {
     }
 
     if (status === 'unauthenticated') {
-      // Redirect to sign in
-      router.push('/api/auth/signin');
+      // Already on cloud domain, just redirect to login with relative path
+      const siteId = searchParams.get('siteId');
+      const callbackUrl = siteId ? `/claim?siteId=${siteId}` : '/claim';
+      router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
       return;
     }
 
@@ -35,13 +39,11 @@ export default function ClaimPage() {
       try {
         setState('claiming');
 
-        // Get stored claim data
-        const storedSiteId = sessionStorage.getItem('claim_site_id');
-        const storedToken = sessionStorage.getItem('claim_ownership_token');
+        // Get siteId from URL params
+        const siteId = searchParams.get('siteId');
 
-        // Also check URL params as fallback
-        const siteId = storedSiteId || searchParams.get('siteId');
-        const ownershipToken = storedToken;
+        // Get reusable ownership token from localStorage (persistent across all anonymous sites)
+        const ownershipToken = getAnonymousToken();
 
         if (!siteId || !ownershipToken) {
           setError('Missing claim information. Please try publishing again.');
@@ -69,17 +71,13 @@ export default function ClaimPage() {
           return;
         }
 
-        // Clear stored data
-        sessionStorage.removeItem('claim_site_id');
-        sessionStorage.removeItem('claim_ownership_token');
-
-        // Success!
+        // Success! Token remains in localStorage for claiming other sites
         setClaimedSite(result.site);
         setState('success');
 
         // Redirect to dashboard after a short delay
         setTimeout(() => {
-          router.push('/dashboard');
+          router.push('/');
         }, 2000);
       } catch (err) {
         console.error('Claim error:', err);

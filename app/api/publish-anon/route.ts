@@ -5,7 +5,6 @@ import {
   getContentType,
 } from '@/lib/content-store';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
-import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import PostHogClient from '@/lib/server-posthog';
 import {
   ANONYMOUS_USER_ID,
