@@ -22,6 +22,7 @@ import remarkObsidianComments from '@/lib/remark-obsidian-comments';
 import remarkYouTubeAutoEmbed from '@/lib/remark-youtube-auto-embed';
 import rehypeHtmlEnhancements from './rehype-html-enhancements';
 import rehypeResolveExplicitJsxUrls from './rehype-resolve-explicit-jsx-urls';
+import rehypeResolveHtmlUrls from './rehype-resolve-html-urls';
 import rehypeToReact from './rehype-to-react';
 import rehypeUnwrapParagraphsAroundMedia from './rehype-unwrap-paragraph-around-media';
 import remarkCommonMarkLinkResolver from './remark-commonmark-link-resolver';
@@ -75,7 +76,7 @@ export async function processMarkdown(
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeUnwrapParagraphsAroundMedia)
-    .use(rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain })
+    .use(rehypeResolveHtmlUrls, { filePath, sitePrefix, customDomain })
     .use(rehypeHtmlEnhancements, { sitePrefix })
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, rehypeAutolinkHeadingsConfig)
