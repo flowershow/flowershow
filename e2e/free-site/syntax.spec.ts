@@ -463,6 +463,21 @@ test.describe('MDX', () => {
   });
 });
 
+test.describe('HTML blocks', () => {
+  test('Should resolve HTML href and src paths', async ({
+    publishedSitePage,
+  }) => {
+    await publishedSitePage.goto('/syntax/html-blocks');
+    const embed = publishedSitePage.page.getByTestId('html-img').locator('img');
+    await embed.waitFor({ state: 'attached' });
+    const src = await embed.getAttribute('src');
+    const decoded = decodeURIComponent(
+      new URL(src!, 'http://localhost').searchParams.get('url')!,
+    );
+    expect(decoded).toMatch(/\/@.+\/.+\/.+/);
+  });
+});
+
 test.describe('Blog', () => {
   test('List component', async ({ publishedSitePage }) => {
     await publishedSitePage.goto('/blog');
