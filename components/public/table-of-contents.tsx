@@ -56,10 +56,33 @@ export default function TableOfContents({
   const currentPath = usePathname();
 
   useEffect(() => {
-    const headingNodes: NodeListOf<HTMLHeadingElement> =
-      document.querySelectorAll('h2,h3,h4,h5,h6');
-    const toc = collectHeadings(headingNodes);
-    setTableOfContents(toc ?? []);
+    const updateToc = () => {
+      const headingNodes: NodeListOf<HTMLHeadingElement> =
+        document.querySelectorAll(
+          '#mdxpage h2, #mdxpage h3, #mdxpage h4, #mdxpage h5, #mdxpage h6',
+        );
+      const toc = collectHeadings(headingNodes);
+      setTableOfContents(toc ?? []);
+    };
+
+    // Use requestAnimationFrame to ensure DOM is painted
+    requestAnimationFrame(() => {
+      updateToc();
+    });
+
+    const mdxContainer = document.getElementById('mdxpage');
+    if (mdxContainer) {
+      const observer = new MutationObserver(() => {
+        requestAnimationFrame(updateToc);
+      });
+
+      observer.observe(mdxContainer, {
+        childList: true,
+        subtree: true,
+      });
+
+      return () => observer.disconnect();
+    }
   }, [currentPath]);
 
   if (tableOfContents.length === 0) {
@@ -67,22 +90,18 @@ export default function TableOfContents({
   }
 
   return (
-    <div className="layout-inner-right">
-      <aside className="page-toc-container">
-        <nav className="toc">
-          <h3 className="toc-title">On this page</h3>
-          <ol className="toc-list">
-            {tableOfContents.map((section) => (
-              <TocItems
-                key={section.id}
-                section={section}
-                currentSection={currentSection}
-              />
-            ))}
-          </ol>
-        </nav>
-      </aside>
-    </div>
+    <nav className="toc">
+      <h3 className="toc-title">On this page</h3>
+      <ol className="toc-list">
+        {tableOfContents.map((section) => (
+          <TocItems
+            key={section.id}
+            section={section}
+            currentSection={currentSection}
+          />
+        ))}
+      </ol>
+    </nav>
   );
 }
 
