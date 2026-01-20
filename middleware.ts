@@ -82,7 +82,7 @@ export default async function middleware(req: NextRequest) {
 
     if (pathname.startsWith('/cli/')) {
       return withPHBootstrapCookie(
-        NextResponse.rewrite(new URL(`/cli${path}`, req.url)),
+        NextResponse.rewrite(new URL(path, req.url)),
         phBootstrap,
       );
     }
