@@ -153,7 +153,6 @@ export const siteRouter = createTRPCRouter({
           rootDir: created.rootDir,
           accessToken,
           installationId,
-          initialSync: true,
         },
       });
 
@@ -265,7 +264,6 @@ export const siteRouter = createTRPCRouter({
             rootDir: newRoot,
             accessToken: ctx.session.accessToken,
             installationId: site.installationId ?? undefined,
-            initialSync: true,
           },
         });
       } else if (key === 'autoSync') {
