@@ -748,6 +748,32 @@ export const siteRouter = createTRPCRouter({
               });
             }
 
+            if (
+              config.hero &&
+              typeof config.hero === 'object' &&
+              !Array.isArray(config.hero)
+            ) {
+              if (typeof config.hero.image === 'string') {
+                config.hero.image = resolveFilePathToUrlPath({
+                  target: config.hero.image,
+                  sitePrefix,
+                  domain: site.customDomain,
+                });
+              }
+
+              if (Array.isArray(config.hero.cta)) {
+                config.hero.cta.forEach((c) => {
+                  if (typeof c?.href === 'string') {
+                    c.href = resolveFilePathToUrlPath({
+                      target: c.href,
+                      sitePrefix,
+                      domain: site.customDomain,
+                    });
+                  }
+                });
+              }
+            }
+
             return config;
           } catch {
             return null;
@@ -1013,6 +1039,46 @@ export const siteRouter = createTRPCRouter({
                 domain: site.customDomain,
               });
             });
+          }
+
+          if (
+            metadata?.hero &&
+            typeof metadata.hero === 'object' &&
+            !Array.isArray(metadata.hero)
+          ) {
+            if (typeof metadata.hero.image === 'string') {
+              let value = metadata.hero.image;
+
+              if (isWikiLink(value)) {
+                value = resolveWikiLinkToFilePath({
+                  wikiLink: value,
+                  filePaths: siteFilePaths,
+                });
+              }
+
+              metadata.hero.image = resolveFilePathToUrlPath({
+                target: value,
+                sitePrefix,
+                domain: site.customDomain,
+              });
+            }
+
+            if (Array.isArray(metadata.hero.cta)) {
+              metadata.hero.cta.forEach((c) => {
+                let value = c.href;
+                if (isWikiLink(value)) {
+                  value = resolveWikiLinkToFilePath({
+                    wikiLink: value,
+                    filePaths: siteFilePaths,
+                  });
+                }
+                c.href = resolveFilePathToUrlPath({
+                  target: value,
+                  sitePrefix,
+                  domain: site.customDomain,
+                });
+              });
+            }
           }
 
           return blob;

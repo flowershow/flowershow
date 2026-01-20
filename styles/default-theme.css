@@ -451,6 +451,50 @@
         justify-content: start;
       }
     }
+
+    &.image-full {
+      max-width: 100%;
+      text-align: center;
+
+      @media (min-width: 1024px) {
+        display: block;
+      }
+
+      .page-hero-content-container {
+        position: relative;
+        z-index: 1;
+
+        @media (min-width: 1024px) {
+          grid-column: auto;
+        }
+      }
+
+      .page-hero-content {
+        max-width: 48rem;
+        margin: 0 auto;
+      }
+
+      .page-hero-image-container {
+        position: absolute;
+        inset: 0;
+        margin-right: 0;
+
+        @media (min-width: 1024px) {
+          grid-column: auto;
+        }
+      }
+
+      .page-hero-image {
+        position: absolute;
+        inset: 0;
+        height: 100%;
+        aspect-ratio: auto;
+      }
+
+      .page-hero-ctas-container {
+        justify-content: center;
+      }
+    }
   }
 
   .page-hero-content-container {

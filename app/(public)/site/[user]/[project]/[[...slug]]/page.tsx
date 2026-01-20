@@ -15,6 +15,7 @@ import TableOfContents from '@/components/public/table-of-contents';
 import { getConfig } from '@/lib/app-config';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { generateScopedCss } from '@/lib/generate-scoped-css';
+import { resolveHeroConfig } from '@/lib/hero-config';
 import { getSite } from '@/lib/get-site';
 import { getSiteUrl, getSiteUrlPath } from '@/lib/get-site-url';
 import { getMdxOptions, processMarkdown } from '@/lib/markdown';
@@ -306,7 +307,8 @@ export default async function SitePage(props: {
   const giscusConfig = siteConfig?.giscus;
   const showSidebar = metadata?.showSidebar ?? siteConfig?.showSidebar ?? false;
   const showToc = metadata?.showToc ?? siteConfig?.showToc ?? true;
-  const showHero = metadata?.showHero ?? siteConfig?.showHero;
+  const heroConfig = resolveHeroConfig(metadata, siteConfig);
+  const showHero = heroConfig.showHero;
 
   let siteTree;
 
@@ -334,10 +336,11 @@ export default async function SitePage(props: {
       {showHero && (
         <Hero
           siteId={site.id}
-          title={metadata?.title}
-          description={metadata?.description}
-          image={metadata?.image}
-          cta={metadata?.cta}
+          title={heroConfig.title}
+          description={heroConfig.description}
+          image={heroConfig.image}
+          cta={heroConfig.cta}
+          imageLayout={heroConfig.imageLayout}
         />
       )}
 
@@ -363,7 +366,7 @@ export default async function SitePage(props: {
               title={metadata?.title ?? ''}
               description={metadata?.description ?? ''}
               date={metadata?.date}
-              showHero={metadata?.showHero}
+              showHero={heroConfig.showHero}
               authors={authors}
               image={metadata?.image}
             >
