@@ -70,6 +70,18 @@ export interface PageMetadata {
   showSidebar?: boolean;
   showToc?: boolean;
   showHero?: boolean;
+  hero?:
+    | boolean
+    | {
+        title?: string;
+        description?: string;
+        image?: string;
+        cta?: Array<{
+          href: string;
+          label: string;
+        }>;
+        imagelayout?: 'right' | 'full';
+      };
   showEditLink?: boolean;
   showComments?: boolean;
   permalink?: string;

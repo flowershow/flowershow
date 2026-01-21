@@ -7,6 +7,7 @@ interface HeroProps {
   title?: string;
   description?: string;
   image?: string;
+  imageLayout?: 'right' | 'full';
   cta?: Array<{ label: string; href: string }>;
 }
 
@@ -15,8 +16,10 @@ export default async function Hero({
   title,
   description,
   image,
+  imageLayout,
   cta,
 }: HeroProps) {
+  const isFullWidthImage = image && imageLayout === 'full';
   // Try to fetch custom hero
   const customHeroContent: string | null = null;
 
@@ -55,7 +58,13 @@ export default async function Hero({
   // Default hero
   return (
     <header className="page-hero-container">
-      <div className={clsx('page-hero', image && 'has-image')}>
+      <div
+        className={clsx(
+          'page-hero',
+          image && 'has-image',
+          isFullWidthImage && 'image-full',
+        )}
+      >
         <div className="page-hero-content-container">
           <div className="page-hero-content">
             <h1 className="page-hero-title">{title ?? ''}</h1>
