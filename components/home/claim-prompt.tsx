@@ -20,6 +20,7 @@ export function ClaimPrompt({ siteId, trigger, onDismiss }: ClaimPromptProps) {
   const router = useRouter();
 
   const handleClaim = () => {
+    console.log('handleClaim called, siteId:', siteId);
     // Redirect to claim page which will:
     // 1. Authenticate user
     // 2. Get token from localStorage
@@ -27,54 +28,39 @@ export function ClaimPrompt({ siteId, trigger, onDismiss }: ClaimPromptProps) {
     router.push(`/claim?siteId=${siteId}`);
   };
 
-  const getTriggerMessage = () => {
-    if (trigger === 'url_copy') {
-      return "You've copied your site URL multiple times! Want to keep this site permanently?";
-    }
-    return 'Create an account to save your site and manage it from your dashboard.';
-  };
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-        <div className="text-center mb-6">
-          <div className="text-5xl mb-4">💾</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
-            Save Your Site
-          </h2>
-          <p className="text-gray-600">{getTriggerMessage()}</p>
-        </div>
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8">
+        {/* Title */}
+        <h2 className="text-2xl font-bold text-gray-900 mb-4 text-center">
+          Want to keep this site?
+        </h2>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <h3 className="font-semibold text-blue-900 mb-2">
-            With an account you can:
-          </h3>
-          <ul className="text-sm text-blue-800 space-y-1">
-            <li>✓ Keep your site permanently</li>
-            <li>✓ Update content anytime</li>
-            <li>✓ Manage multiple sites</li>
-            <li>✓ Custom domains (coming soon)</li>
-          </ul>
-        </div>
+        {/* Body - single sentence */}
+        <p className="text-gray-600 mb-8 text-center">
+          Create an account to save it, manage multiple sites, and keep it live.
+        </p>
 
+        {/* Buttons */}
         <div className="flex flex-col gap-3">
           <button
+            type="button"
             onClick={handleClaim}
-            className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+            className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold"
           >
-            Create Account & Save Site
+            Save & create account
           </button>
           <button
-            onClick={onDismiss}
-            className="w-full px-6 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+            type="button"
+            onClick={() => {
+              console.log('onDismiss called');
+              onDismiss();
+            }}
+            className="w-full px-6 py-3 text-gray-700 hover:text-gray-900 transition-colors font-medium"
           >
-            Maybe later
+            Not now
           </button>
         </div>
-
-        <p className="text-xs text-gray-500 text-center mt-4">
-          Your site will remain live for 30 days without an account
-        </p>
       </div>
     </div>
   );

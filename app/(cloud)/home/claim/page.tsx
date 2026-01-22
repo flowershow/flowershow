@@ -32,10 +32,14 @@ export default function ClaimPage() {
     }
 
     if (status === 'unauthenticated') {
-      // Already on cloud domain, just redirect to login with relative path
+      // Redirect to login on cloud domain with callback back to home domain
       const siteId = searchParams.get('siteId');
-      const callbackUrl = siteId ? `/claim?siteId=${siteId}` : '/claim';
-      router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+      const callbackUrl = siteId
+        ? `${protocol}://${env.NEXT_PUBLIC_HOME_DOMAIN}/claim?siteId=${siteId}`
+        : '/claim';
+      router.push(
+        `${protocol}://${env.NEXT_PUBLIC_CLOUD_DOMAIN}/login?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+      );
       return;
     }
 

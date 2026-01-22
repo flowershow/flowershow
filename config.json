@@ -8,14 +8,16 @@
   "termsOfService": "https://flowershow.app/docs/terms-of-service",
   "githubTemplateUrl": "https://github.com/datopian/flowershow-cloud-template",
   "landingPageUrl": "https://flowershow.app/",
-  "dataVisComponentsEnabled": true,
-  "siteAliases": [],
   "nav": {
     "logo": "https://r2-assets.flowershow.app/logo.png",
     "links": [
       {
         "href": "/#features",
         "name": "Features"
+      },
+      {
+        "href": "/pricing",
+        "name": "Pricing"
       },
       {
         "href": "/docs",
@@ -26,31 +28,100 @@
         "name": "Blog"
       },
       {
-        "href": "/docs/roadmap",
-        "name": "Roadmap"
+        "href": "/blogs",
+        "name": "Flowershow for Blogs"
       },
       {
-        "href": "/about",
-        "name": "About"
+        "href": "/data-stories",
+        "name": "Flowershow for Data Stories"
       },
       {
-        "href": "/cloud",
-        "name": "Cloud"
+        "href": "https://demo.flowershow.app/",
+        "name": "Demo"
       },
       {
-        "href": "https://github.com/flowershow/flowershow/discussions",
-        "name": "Forum"
-      },
-      {
-        "href": "/_all",
-        "name": "All"
+        "href": "https://github.com/flowershow/themes",
+        "name": "Themes"
       }
     ],
     "cta": {
-      "href": "https://cloud.flowershow.app/login",
-      "name": "Flowershow Cloud"
+      "name": "Sign In",
+      "href": "https://cloud.flowershow.app/login"
     }
   },
+  "footer": {
+    "navigation": [
+      {
+        "title": "Product",
+        "links": [
+          {
+            "href": "/pricing",
+            "name": "Pricing"
+          },
+          {
+            "href": "/docs",
+            "name": "Docs"
+          },
+          {
+            "href": "/blog",
+            "name": "Blog"
+          },
+          {
+            "href": "/blogs",
+            "name": "Flowershow for Blogs"
+          }
+        ]
+      },
+      {
+        "title": "Community",
+        "links": [
+          {
+            "href": "https://github.com/flowershow/flowershow",
+            "name": "GitHub"
+          },
+          {
+            "href": "https://discord.gg/JChzM5VdFn",
+            "name": "Discord"
+          }
+        ]
+      },
+      {
+        "title": "Legal",
+        "links": [
+          {
+            "href": "/docs/terms-of-service",
+            "name": "Terms"
+          },
+          {
+            "href": "/docs/privacy",
+            "name": "Privacy"
+          }
+        ]
+      }
+    ]
+  },
+  "social": [
+    {
+      "label": "github",
+      "href": "https://github.com/flowershow/flowershow",
+      "name": "GitHub"
+    },
+    {
+      "label": "x",
+      "href": "https://x.com/flowershowapp",
+      "name": "X"
+    },
+    {
+      "label": "reddit",
+      "href": "https://www.reddit.com/r/flowershow/",
+      "name": "Reddit"
+    },
+    {
+      "label": "discord",
+      "href": "https://discord.gg/JChzM5VdFn",
+      "name": "Discord"
+    }
+  ],
   "dashboardSidebar": {
     "links": [
       {

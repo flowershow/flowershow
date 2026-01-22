@@ -54,24 +54,7 @@ export default async function middleware(req: NextRequest) {
   // 4) Cloud app (authentication required)
   if (hostname === env.NEXT_PUBLIC_CLOUD_DOMAIN) {
     const phBootstrap = await buildPHBootstrapCookie(req, posthog);
-
-    if (pathname === '/publish') {
-      return withPHBootstrapCookie(
-        NextResponse.rewrite(new URL(`/home`, req.url)),
-        phBootstrap,
-      );
-    }
-
     const session = await getToken({ req });
-
-    // Handle /claim route - allow both authenticated and unauthenticated access
-    // The page itself will handle redirecting to login if needed
-    if (pathname === '/claim') {
-      return withPHBootstrapCookie(
-        NextResponse.rewrite(new URL(`/home/claim${searchParams}`, req.url)),
-        phBootstrap,
-      );
-    }
 
     if (!session && pathname !== '/login') {
       // Preserve the original URL as callbackUrl for post-login redirect
@@ -161,6 +144,14 @@ export default async function middleware(req: NextRequest) {
   }
 
   // 6) Custom domains
+  // TODO posthog experiment
+  if (
+    hostname === env.NEXT_PUBLIC_HOME_DOMAIN &&
+    (pathname === '/' || pathname === '/claim')
+  ) {
+    return rewrite(`/home${path}`, req);
+  }
+
   if (pathname === '/robots.txt') {
     return rewrite(`/api/robots/${hostname}`, req);
   }

@@ -1,9 +1,9 @@
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/server/auth';
-import { verifyOwnershipToken, ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
+import { ANONYMOUS_USER_ID, verifyOwnershipToken } from '@/lib/anonymous-user';
 import PostHogClient from '@/lib/server-posthog';
+import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
 
 interface ClaimRequest {

@@ -10,6 +10,25 @@ import {
 } from './anonymous-user-constants';
 
 /**
+ * Generate a UUID v4 that works in both secure (HTTPS) and non-secure (HTTP) contexts.
+ * crypto.randomUUID() requires HTTPS in browsers, so we fall back to getRandomValues().
+ */
+function generateUUID(): string {
+  if (
+    typeof crypto !== 'undefined' &&
+    typeof crypto.randomUUID === 'function'
+  ) {
+    return crypto.randomUUID();
+  }
+  // Fallback for non-secure contexts (HTTP in development)
+  const bytes = new Uint8Array(1);
+  return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) => {
+    crypto.getRandomValues(bytes);
+    return (+c ^ (bytes[0]! & (15 >> (+c / 4)))).toString(16);
+  });
+}
+
+/**
  * Get or create a persistent anonymous user ID for this browser
  * Stored in localStorage to persist across sessions
  *
@@ -29,7 +48,7 @@ export function getOrCreateAnonymousUserId(): string {
   }
 
   // Generate new UUID v4
-  userId = crypto.randomUUID();
+  userId = generateUUID();
 
   // Store for future use
   localStorage.setItem(ANONYMOUS_USER_ID_KEY, userId);

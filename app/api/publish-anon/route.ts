@@ -1,16 +1,16 @@
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import {
+  ANONYMOUS_USER_ID,
+  generateOwnershipToken,
+  isValidAnonymousUserId,
+} from '@/lib/anonymous-user';
+import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import PostHogClient from '@/lib/server-posthog';
-import {
-  ANONYMOUS_USER_ID,
-  generateOwnershipToken,
-  isValidAnonymousUserId,
-} from '@/lib/anonymous-user';
 import prisma from '@/server/db';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
