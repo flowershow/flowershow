@@ -144,12 +144,50 @@ export default async function middleware(req: NextRequest) {
   }
 
   // 6) Custom domains
-  // TODO posthog experiment
-  if (
-    hostname === env.NEXT_PUBLIC_HOME_DOMAIN &&
-    (pathname === '/' || pathname === '/claim')
-  ) {
-    return rewrite(`/home${path}`, req);
+  if (hostname === env.NEXT_PUBLIC_HOME_DOMAIN) {
+    if (pathname === '/') {
+      const phBootstrap = await buildPHBootstrapCookie(req, posthog);
+      // console.log({ phBootstrap });
+      if (phBootstrap) {
+        try {
+          const flags = phBootstrap.value.featureFlags;
+
+          const landingPageFlagName = 'landing-page-a-b';
+          const landingPageFlag = flags[landingPageFlagName];
+          const isVariantB = landingPageFlag === 'test';
+
+          // This is only to send "Feature flag called event" for this flag
+          await posthog.getFeatureFlag(
+            landingPageFlagName,
+            phBootstrap.value.distinctID,
+          );
+
+          // console.log({ isVariantB });
+
+          if (isVariantB) {
+            return withPHBootstrapCookie(
+              NextResponse.rewrite(new URL(`/home${path}`, req.url)),
+              phBootstrap,
+            );
+          } else {
+            return withPHBootstrapCookie(
+              NextResponse.rewrite(
+                new URL(`/site/_domain/${hostname}`, req.url),
+              ),
+              phBootstrap,
+            );
+          }
+        } catch {
+          return NextResponse.rewrite(
+            new URL(`/site/_domain/${hostname}${path}`, req.url),
+          );
+        }
+      }
+    }
+
+    if (pathname === '/claim') {
+      return rewrite(`/home${path}`, req);
+    }
   }
 
   if (pathname === '/robots.txt') {
@@ -178,50 +216,6 @@ export default async function middleware(req: NextRequest) {
   // Raw asset file access
   const raw = rewriteRawIfNeeded(path, `/api/raw/_domain/${hostname}`, req);
   if (raw) return raw;
-
-  // Posthog experiments for flowershow.app site pages
-  if (
-    (hostname === 'flowershow.app' || hostname === 'test.localhost:3000') &&
-    pathname === '/'
-  ) {
-    const phBootstrap = await buildPHBootstrapCookie(req, posthog);
-    // console.log({ phBootstrap });
-    if (phBootstrap) {
-      try {
-        const flags = phBootstrap.value.featureFlags;
-
-        const landingPageFlagName = 'landing-page-a-b';
-        const landingPageFlag = flags[landingPageFlagName];
-        const isVariantB = landingPageFlag === 'test';
-
-        // This is only to send "Feature flag called event" for this flag
-        await posthog.getFeatureFlag(
-          landingPageFlagName,
-          phBootstrap.value.distinctID,
-        );
-
-        // console.log({ isVariantB });
-
-        if (isVariantB) {
-          return withPHBootstrapCookie(
-            NextResponse.rewrite(
-              new URL(`/site/_domain/${hostname}/README-B`, req.url),
-            ),
-            phBootstrap,
-          );
-        } else {
-          return withPHBootstrapCookie(
-            NextResponse.rewrite(new URL(`/site/_domain/${hostname}`, req.url)),
-            phBootstrap,
-          );
-        }
-      } catch {
-        return NextResponse.rewrite(
-          new URL(`/site/_domain/${hostname}${path}`, req.url),
-        );
-      }
-    }
-  }
 
   // Render custom-domain site (path already includes search params)
   return NextResponse.rewrite(
