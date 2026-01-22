@@ -168,7 +168,7 @@ export default async function middleware(req: NextRequest) {
         try {
           const flags = phBootstrap.value.featureFlags;
 
-          const landingPageFlagName = 'landing-page-a-b';
+          const landingPageFlagName = 'landing-page-a-b-drag-n-drop';
           const landingPageFlag = flags[landingPageFlagName];
           const isVariantB = landingPageFlag === 'test';
 
