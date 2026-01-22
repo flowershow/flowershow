@@ -43,17 +43,22 @@ export default async function middleware(req: NextRequest) {
   const path = pathname + search;
   const searchParams = search; // Preserve for rewrites
 
+  // Build PostHog bootstrap cookie once for all routes
+  const phBootstrap = await buildPHBootstrapCookie(req, posthog);
+
   // 3) Legacy redirect: flowershow.app/@... → my.flowershow.app/@...
   if (hostname === 'flowershow.app' && pathname.startsWith('/@')) {
-    return NextResponse.redirect(
-      new URL(`https://my.flowershow.app${path}`, req.url),
-      { status: 301 },
+    return withPHBootstrapCookie(
+      NextResponse.redirect(
+        new URL(`https://my.flowershow.app${path}`, req.url),
+        { status: 301 },
+      ),
+      phBootstrap,
     );
   }
 
   // 4) Cloud app (authentication required)
   if (hostname === env.NEXT_PUBLIC_CLOUD_DOMAIN) {
-    const phBootstrap = await buildPHBootstrapCookie(req, posthog);
     const session = await getToken({ req });
 
     if (!session && pathname !== '/login') {
@@ -98,34 +103,44 @@ export default async function middleware(req: NextRequest) {
 
   // 5) Root domain (my.flowershow.app) — user sites at /@<user>/<project>
   if (hostname === env.NEXT_PUBLIC_ROOT_DOMAIN) {
-    if (pathname === '/sitemap.xml') return rewrite(`/sitemap.xml`, req);
-    if (pathname === '/robots.txt') return rewrite(`/robots.txt`, req);
+    if (pathname === '/sitemap.xml')
+      return rewrite(`/sitemap.xml`, req, phBootstrap);
+    if (pathname === '/robots.txt')
+      return rewrite(`/robots.txt`, req, phBootstrap);
 
     // Resolve alias to canonical /@user/project path
     const aliasResolved = resolveSiteAlias(pathname, 'from');
     const match = aliasResolved.match(/^\/@([^/]+)\/([^/]+)(.*)/);
 
-    if (!match) return rewrite(`/not-found`, req);
+    if (!match) return rewrite(`/not-found`, req, phBootstrap);
 
     const [, username, projectname, slug = ''] = match;
 
     // Look up site
     const site = await fetchSite(req, `/api/site/${username}/${projectname}`);
 
-    if (!site) return rewrite(`/not-found`, req);
+    if (!site) return rewrite(`/not-found`, req, phBootstrap);
 
     // Per-site login page
     if (slug === '/_login') {
-      return rewrite(`/site-access/${username}/${projectname}`, req);
+      return rewrite(
+        `/site-access/${username}/${projectname}`,
+        req,
+        phBootstrap,
+      );
     }
 
     // Password gate
-    const guard = await ensureSiteAccess(req, site);
+    const guard = await ensureSiteAccess(req, site, phBootstrap);
     if (guard) return guard;
 
     // Per-site sitemap
     if (slug === '/sitemap.xml') {
-      return rewrite(`/api/sitemap/${username}/${projectname}`, req);
+      return rewrite(
+        `/api/sitemap/${username}/${projectname}`,
+        req,
+        phBootstrap,
+      );
     }
 
     // Raw asset file access
@@ -133,6 +148,7 @@ export default async function middleware(req: NextRequest) {
       slug,
       `/api/raw/${username}/${projectname}`,
       req,
+      phBootstrap,
     );
     if (raw) return raw;
 
@@ -140,13 +156,13 @@ export default async function middleware(req: NextRequest) {
     return rewrite(
       `/site/${username}/${projectname}${slug}${searchParams}`,
       req,
+      phBootstrap,
     );
   }
 
   // 6) Custom domains
   if (hostname === env.NEXT_PUBLIC_HOME_DOMAIN) {
     if (pathname === '/') {
-      const phBootstrap = await buildPHBootstrapCookie(req, posthog);
       // console.log({ phBootstrap });
       if (phBootstrap) {
         try {
@@ -178,48 +194,57 @@ export default async function middleware(req: NextRequest) {
             );
           }
         } catch {
-          return NextResponse.rewrite(
-            new URL(`/site/_domain/${hostname}${path}`, req.url),
+          return withPHBootstrapCookie(
+            NextResponse.rewrite(
+              new URL(`/site/_domain/${hostname}${path}`, req.url),
+            ),
+            phBootstrap,
           );
         }
       }
     }
 
     if (pathname === '/claim') {
-      return rewrite(`/home${path}`, req);
+      return rewrite(`/home${path}`, req, phBootstrap);
     }
   }
 
   if (pathname === '/robots.txt') {
-    return rewrite(`/api/robots/${hostname}`, req);
+    return rewrite(`/api/robots/${hostname}`, req, phBootstrap);
   }
 
   // Look up site
   const site = await fetchSite(req, `/api/site/_domain/${hostname}`);
-  if (!site) return rewrite(`/not-found`, req);
+  if (!site) return rewrite(`/not-found`, req, phBootstrap);
 
   // Per-site login page
   if (pathname === '/_login') {
-    return rewrite(`/site-access/_domain/${hostname}`, req);
+    return rewrite(`/site-access/_domain/${hostname}`, req, phBootstrap);
   }
 
   // Password gate
-  const guard = await ensureSiteAccess(req, site);
+  const guard = await ensureSiteAccess(req, site, phBootstrap);
   if (guard) return guard;
 
   // Per-site sitemap
   if (pathname === '/sitemap.xml') {
     // For custom domains: username "_domain", project = hostname
-    return rewrite(`/api/sitemap/_domain/${hostname}`, req);
+    return rewrite(`/api/sitemap/_domain/${hostname}`, req, phBootstrap);
   }
 
   // Raw asset file access
-  const raw = rewriteRawIfNeeded(path, `/api/raw/_domain/${hostname}`, req);
+  const raw = rewriteRawIfNeeded(
+    path,
+    `/api/raw/_domain/${hostname}`,
+    req,
+    phBootstrap,
+  );
   if (raw) return raw;
 
   // Render custom-domain site (path already includes search params)
-  return NextResponse.rewrite(
-    new URL(`/site/_domain/${hostname}${path}`, req.url),
+  return withPHBootstrapCookie(
+    NextResponse.rewrite(new URL(`/site/_domain/${hostname}${path}`, req.url)),
+    phBootstrap,
   );
 }
 
@@ -252,7 +277,11 @@ async function fetchSite(req: NextRequest, apiPath: string) {
   }
 }
 
-async function ensureSiteAccess(req: NextRequest, site: InternalSite) {
+async function ensureSiteAccess(
+  req: NextRequest,
+  site: InternalSite,
+  ph: PHBootstrap,
+) {
   if (site.privacyMode !== 'PASSWORD') return null;
 
   // TEMPORARY FIX: Skip password check for non-HTML requests (assets, API calls, etc.)
@@ -272,7 +301,7 @@ async function ensureSiteAccess(req: NextRequest, site: InternalSite) {
 
   const cookie = req.cookies.get(SITE_ACCESS_COOKIE_NAME(site.id));
   if (!cookie) {
-    return redirectToSiteLogin(req, site);
+    return redirectToSiteLogin(req, site, ph);
   }
 
   try {
@@ -280,16 +309,23 @@ async function ensureSiteAccess(req: NextRequest, site: InternalSite) {
     await jwtVerify(cookie.value, secret, { audience: site.id });
     return null; // verified
   } catch {
-    return redirectToSiteLogin(req, site);
+    return redirectToSiteLogin(req, site, ph);
   }
 }
 
-function redirectToSiteLogin(req: NextRequest, site: InternalSite) {
+function redirectToSiteLogin(
+  req: NextRequest,
+  site: InternalSite,
+  ph: PHBootstrap,
+) {
   const returnTo = encodeURIComponent(
     req.nextUrl.pathname + req.nextUrl.search,
   );
   const loginUrl = `${getSiteUrl(site)}/_login?returnTo=${returnTo}`;
-  return NextResponse.redirect(new URL(loginUrl, req.url), 307);
+  return withPHBootstrapCookie(
+    NextResponse.redirect(new URL(loginUrl, req.url), 307),
+    ph,
+  );
 }
 
 /**
@@ -349,12 +385,14 @@ const KNOWN_FILE_EXTENSIONS = new Set([
  * @param inputPath - The request path (may include query parameters)
  * @param apiBase - The API base path to rewrite to
  * @param req - The Next.js request object
+ * @param ph - The PostHog bootstrap cookie data
  * @returns NextResponse for rewrite, or null if not a raw file
  */
 function rewriteRawIfNeeded(
   inputPath: string,
   apiBase: string,
   req: NextRequest,
+  ph: PHBootstrap,
 ) {
   // Extract the path before query parameters
   const [pathPart] = inputPath.split('&');
@@ -382,7 +420,10 @@ function rewriteRawIfNeeded(
   // Normalize and encode each path segment
   const encoded = inputPath.split('/').map(normaliseSegment).join('/');
 
-  return NextResponse.rewrite(new URL(`${apiBase}${encoded}`, req.url));
+  return withPHBootstrapCookie(
+    NextResponse.rewrite(new URL(`${apiBase}${encoded}`, req.url)),
+    ph,
+  );
 }
 
 /**
