@@ -1,8 +1,40 @@
 import { z } from 'zod';
 import { fetchGitHubScopeRepositories, fetchGitHubScopes } from '@/lib/github';
-import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
+import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from '@/server/api/trpc';
 
 export const userRouter = createTRPCRouter({
+  getStats: publicProcedure.query(async ({ ctx }) => {
+    // Get total user count (excluding anonymous user)
+    const userCount = await ctx.db.user.count({
+      where: {
+        id: { not: ANONYMOUS_USER_ID },
+      },
+    });
+
+    // Get recent users with avatars (for social proof display)
+    const recentUsers = await ctx.db.user.findMany({
+      where: {
+        id: { not: ANONYMOUS_USER_ID },
+        image: { not: null },
+      },
+      select: {
+        id: true,
+        image: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    });
+
+    return {
+      userCount,
+      recentUsers,
+    };
+  }),
   getUser: protectedProcedure.query(async ({ ctx }) => {
     return await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },

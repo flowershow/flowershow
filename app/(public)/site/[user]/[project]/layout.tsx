@@ -7,6 +7,7 @@ import { ReactNode } from 'react';
 import BuiltWithFloatingButton from '@/components/public/built-with-floating-button';
 import Footer from '@/components/public/footer';
 import Nav from '@/components/public/nav';
+import { TemporarySiteBanner } from '@/components/public/temporary-site-banner';
 import { SiteProvider } from '@/components/public/site-context';
 import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
@@ -318,6 +319,13 @@ export default async function PublicLayout(props: {
                 data-plan={!showBuiltWithButton && 'premium'}
                 className="site-layout"
               >
+                {site.isTemporary && site.anonymousOwnerId && (
+                  <TemporarySiteBanner
+                    siteId={site.id}
+                    expiresAt={site.expiresAt}
+                    anonymousOwnerId={site.anonymousOwnerId}
+                  />
+                )}
                 <Nav
                   logo={logo}
                   url={sitePrefix || '/'}

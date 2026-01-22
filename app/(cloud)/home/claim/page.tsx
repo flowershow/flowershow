@@ -83,11 +83,9 @@ export default function ClaimPage() {
         // Success! Token remains in localStorage for claiming other sites
         setClaimedSite(result.site);
         setState('success');
-
-        // Redirect to dashboard after a short delay
-        setTimeout(() => {
-          router.push('/');
-        }, 2000);
+        router.push(
+          `${protocol}://${env.NEXT_PUBLIC_CLOUD_DOMAIN}/site/${result.site.id}/settings`,
+        );
       } catch (err) {
         console.error('Claim error:', err);
         setError('An unexpected error occurred');
@@ -103,12 +101,10 @@ export default function ClaimPage() {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100">
         <div className="max-w-md w-full text-center px-4">
           <div className="mb-6">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-blue-600"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-orange-500"></div>
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            {state === 'loading'
-              ? 'Authenticating...'
-              : 'Claiming your site...'}
+            Claiming your site...
           </h1>
           <p className="text-gray-600">This will just take a moment</p>
         </div>
@@ -126,8 +122,10 @@ export default function ClaimPage() {
           </h1>
           <p className="text-gray-600 mb-6">{error}</p>
           <button
-            onClick={() => router.push('/dashboard')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            onClick={() =>
+              router.push(`${protocol}://${env.NEXT_PUBLIC_CLOUD_DOMAIN}`)
+            }
+            className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
           >
             Go to Dashboard
           </button>

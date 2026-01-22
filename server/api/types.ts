@@ -19,7 +19,11 @@ export const publicSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   installationId: true,
   createdAt: true,
   updatedAt: true,
-  user: { select: { username: true } },
+  user: { select: { username: true, id: true } },
+  // Anonymous/temporary site fields
+  isTemporary: true,
+  expiresAt: true,
+  anonymousOwnerId: true,
 });
 
 export type PublicSite = Prisma.SiteGetPayload<{
@@ -44,7 +48,11 @@ export const publicSiteSchema: z.ZodType<PublicSite> = z.object({
   installationId: z.string().nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
-  user: z.object({ username: z.string() }),
+  user: z.object({ username: z.string(), id: z.string() }),
+  // Anonymous/temporary site fields
+  isTemporary: z.boolean(),
+  expiresAt: z.date().nullable(),
+  anonymousOwnerId: z.string().nullable(),
 });
 
 export enum SiteUpdateKey {

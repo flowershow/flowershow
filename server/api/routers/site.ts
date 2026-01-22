@@ -98,6 +98,19 @@ export const siteRouter = createTRPCRouter({
         select: publicSiteSelect,
       });
     }),
+  getMany: publicProcedure
+    .input(z.object({ ids: z.array(z.string()) }))
+    .output(z.array(publicSiteSchema))
+    .query(async ({ ctx, input }): Promise<PublicSite[]> => {
+      if (input.ids.length === 0) {
+        return [];
+      }
+      return await ctx.db.site.findMany({
+        where: { id: { in: input.ids } },
+        select: publicSiteSelect,
+        orderBy: { createdAt: 'desc' },
+      });
+    }),
   getAll: protectedProcedure
     .output(z.array(publicSiteSchema))
     .query(async ({ ctx }): Promise<PublicSite[]> => {

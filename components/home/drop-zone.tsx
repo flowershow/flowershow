@@ -1,97 +1,109 @@
-'use client';
-
-import { useCallback, useState } from 'react';
+import React, { useRef, useState } from 'react';
 
 interface DropZoneProps {
-  onFileSelect: (file: File) => Promise<void>;
+  onFileSelect: (file: File) => void;
   disabled?: boolean;
 }
 
-export function DropZone({ onFileSelect, disabled = false }: DropZoneProps) {
+export const DropZone: React.FC<DropZoneProps> = ({
+  onFileSelect,
+  disabled,
+}) => {
   const [isDragging, setIsDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleDrop = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      setIsDragging(false);
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!disabled) setIsDragging(true);
+  };
 
-      if (disabled) return;
-
-      const file = e.dataTransfer.files[0];
-      if (file) {
-        onFileSelect(file);
-      }
-    },
-    [onFileSelect, disabled],
-  );
-
-  const handleFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      if (disabled) return;
-
-      const file = e.target.files?.[0];
-      if (file) {
-        onFileSelect(file);
-      }
-    },
-    [onFileSelect, disabled],
-  );
-
-  const handleDragOver = useCallback(
-    (e: React.DragEvent) => {
-      e.preventDefault();
-      if (!disabled) {
-        setIsDragging(true);
-      }
-    },
-    [disabled],
-  );
-
-  const handleDragLeave = useCallback(() => {
+  const handleDragLeave = () => {
     setIsDragging(false);
-  }, []);
+  };
 
-  const handleClick = useCallback(() => {
-    if (!disabled) {
-      document.getElementById('file-input')?.click();
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (disabled) return;
+
+    const file = e.dataTransfer.files?.[0];
+    if (
+      file &&
+      (file.name.endsWith('.md') || file.name.endsWith('.markdown'))
+    ) {
+      onFileSelect(file);
     }
-  }, [disabled]);
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onFileSelect(file);
+    }
+  };
 
   return (
     <div
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      onClick={handleClick}
-      className={`
-        border-4 border-dashed rounded-2xl p-20 cursor-pointer
-        transition-all duration-200
+      className={`relative group cursor-pointer transition-all duration-300 rounded-3xl border-2 border-dashed
         ${
           isDragging
-            ? 'border-blue-500 bg-blue-50 scale-105'
-            : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
+            ? 'border-orange-500 bg-orange-50/50'
+            : 'border-orange-200 bg-white hover:border-orange-400 hover:bg-orange-50'
         }
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
       `}
+      onClick={() => !disabled && fileInputRef.current?.click()}
     >
       <input
-        id="file-input"
         type="file"
-        accept=".md,.mdx"
-        onChange={handleFileInput}
-        disabled={disabled}
+        ref={fileInputRef}
+        onChange={handleFileInputChange}
+        accept=".md,.markdown"
         className="hidden"
       />
-      <div className="text-center">
-        <div className="text-6xl mb-4">📄</div>
-        <p className="text-2xl font-semibold text-gray-700">
-          {isDragging ? 'Drop it here!' : 'Drop a Markdown file'}
-        </p>
-        <p className="text-gray-500 mt-2">or click to browse</p>
-        <p className="text-sm text-gray-400 mt-4">
-          Supports .md and .mdx files up to 100MB
-        </p>
+
+      <div className="py-16 px-6 text-center space-y-4">
+        <div
+          className={`mx-auto w-16 h-16 rounded-2xl flex items-center justify-center transition-transform duration-300 ${isDragging ? 'scale-110 bg-orange-600 text-white' : 'bg-orange-100 text-orange-600 group-hover:bg-orange-500 group-hover:text-white'}`}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-8 w-8"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+            />
+          </svg>
+        </div>
+
+        <div>
+          <h3 className="text-xl font-bold text-slate-900">
+            Drop your markdown file here
+          </h3>
+          <p className="mt-1 text-slate-500 max-w-sm mx-auto">
+            Instantly turn your content into a beautiful website. No
+            configuration required.
+          </p>
+        </div>
+
+        <div className="pt-4 flex items-center justify-center gap-2">
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+            .md
+          </span>
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+            .mdx
+          </span>
+        </div>
       </div>
     </div>
   );
-}
+};

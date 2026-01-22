@@ -115,11 +115,16 @@ export async function POST(request: NextRequest) {
         const projectName = randomPart;
 
         // Create anonymous site with client's persistent anonymous user ID
+        // Temporary sites expire in 7 days if not claimed
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
         const site = await prisma.site.create({
           data: {
             projectName,
             userId: ANONYMOUS_USER_ID,
             anonymousOwnerId: anonymousUserId,
+            isTemporary: true,
+            expiresAt,
           },
         });
 

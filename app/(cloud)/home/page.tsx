@@ -9,7 +9,9 @@ import {
   getOrCreateAnonymousUserId,
   setAnonymousToken,
 } from '@/lib/client-anonymous-user';
+import { getSiteUrlPath } from '@/lib/get-site-url';
 import Modal from '@/providers/modal';
+import { api } from '@/trpc/react';
 
 const isSecure =
   env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
@@ -25,17 +27,8 @@ interface PublishResult {
   ownershipToken: string;
 }
 
-interface PublishedSite {
-  siteId: string;
-  projectName: string;
-  liveUrl: string;
-  publishedAt: string;
-  fileName?: string;
-  ownershipToken?: string;
-}
-
 const MAX_STORED_SITES = 10;
-const STORAGE_KEY = 'flowershow_published_sites';
+const STORAGE_KEY = 'flowershow_site_ids';
 
 export default function HomePage() {
   const router = useRouter();
@@ -45,41 +38,47 @@ export default function HomePage() {
   const [ownershipToken, setOwnershipToken] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [copied, setCopied] = useState(false);
-  const [publishedSites, setPublishedSites] = useState<PublishedSite[]>([]);
+  const [siteIds, setSiteIds] = useState<string[]>([]);
   const [showPublishModal, setShowPublishModal] = useState(false);
 
-  // Load published sites from localStorage on mount
+  // Load site IDs from localStorage on mount
   useEffect(() => {
-    loadPublishedSites();
+    loadSiteIds();
   }, []);
 
-  const loadPublishedSites = () => {
+  // Fetch full site data from database using tRPC
+  const { data: sites, refetch: refetchSites } = api.site.getMany.useQuery(
+    { ids: siteIds },
+    { enabled: siteIds.length > 0 },
+  );
+
+  const loadSiteIds = () => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        const sites = JSON.parse(stored) as PublishedSite[];
-        setPublishedSites(sites);
+        const ids = JSON.parse(stored) as string[];
+        setSiteIds(ids);
       }
     } catch (err) {
-      console.error('Failed to load published sites:', err);
+      console.error('Failed to load site IDs:', err);
     }
   };
 
-  const savePublishedSite = (site: PublishedSite) => {
+  const saveSiteId = (siteId: string) => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      const sites = stored ? (JSON.parse(stored) as PublishedSite[]) : [];
+      const ids = stored ? (JSON.parse(stored) as string[]) : [];
 
-      // Add new site at the beginning
-      const updatedSites = [site, ...sites];
+      // Add new site ID at the beginning if not already present
+      const updatedIds = [siteId, ...ids.filter((id) => id !== siteId)];
 
       // Keep only the last MAX_STORED_SITES
-      const trimmedSites = updatedSites.slice(0, MAX_STORED_SITES);
+      const trimmedIds = updatedIds.slice(0, MAX_STORED_SITES);
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmedSites));
-      setPublishedSites(trimmedSites);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmedIds));
+      setSiteIds(trimmedIds);
     } catch (err) {
-      console.error('Failed to save published site:', err);
+      console.error('Failed to save site ID:', err);
     }
   };
 
@@ -139,14 +138,11 @@ export default function HomePage() {
       setOwnershipToken(token);
       setAnonymousToken(token);
 
-      // Save to localStorage
-      savePublishedSite({
-        siteId: result.siteId,
-        projectName: result.projectName,
-        liveUrl: result.liveUrl,
-        publishedAt: new Date().toISOString(),
-        fileName: file.name,
-      });
+      // Save site ID to localStorage
+      saveSiteId(result.siteId);
+
+      // Refetch sites to get the new one
+      refetchSites();
 
       // Show success
       setLiveUrl(result.liveUrl);
@@ -196,10 +192,14 @@ export default function HomePage() {
     }
   };
 
+  const handleClaimSite = (siteId: string) => {
+    router.push(`/claim?siteId=${siteId}`);
+  };
+
   return (
     <>
       {/* Hero Section - Minimal, activation-focused */}
-      <div className="min-h-[90vh] flex items-center justify-center py-12 px-4">
+      <div className="min-h-[95vh] flex items-center justify-center py-12 px-4">
         <div className="w-full max-w-4xl">
           <div className="text-center mb-12">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 mb-6">
@@ -219,11 +219,14 @@ export default function HomePage() {
             <DropZone onFileSelect={handleFileSelect} />
           </div>
 
+          {/* Social proof */}
+          <SocialProof />
+
           {/* Secondary CTA - de-emphasized */}
           <div className="text-center">
             <a
               href="https://cloud.flowershow.app/login"
-              className="text-sm text-gray-500 hover:text-gray-700 underline"
+              className="text-xs text-gray-400 hover:text-gray-700 underline"
             >
               Publishing a repo or multiple pages? Sign in →
             </a>
@@ -232,47 +235,68 @@ export default function HomePage() {
       </div>
 
       {/* Your Published Sites - only show if user has published sites */}
-      {publishedSites.length > 0 && (
+      {sites && sites.length > 0 && (
         <div className="py-12 px-4">
           <div className="max-w-4xl mx-auto">
             <h2 className="text-xl font-semibold text-gray-900 mb-6">
               You recently published
             </h2>
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 divide-y divide-gray-100 max-h-[250px] overflow-y-auto">
-              {publishedSites.map((site) => (
-                <div
-                  key={site.siteId}
-                  className="flex items-center justify-between p-4 hover:bg-gray-50"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {site.fileName || site.projectName}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {formatRelativeTime(site.publishedAt)}
-                    </p>
+              {sites.map((site) => {
+                const siteUrl = getSiteUrlPath(site);
+                const isOwned = !site.isTemporary && !!site.user.id;
+
+                return (
+                  <div
+                    key={site.id}
+                    className="flex items-center justify-between p-4 hover:bg-gray-50"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {site.projectName}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {formatRelativeTime(site.createdAt.toISOString())}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 ml-4">
+                      {isOwned ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                          Owned
+                        </span>
+                      ) : (
+                        <button
+                          onClick={() => handleClaimSite(site.id)}
+                          className="text-sm text-orange-600 hover:text-orange-800 hover:underline font-medium"
+                        >
+                          Claim
+                        </button>
+                      )}
+                      <a
+                        href={`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${siteUrl}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        View
+                      </a>
+                      <button
+                        onClick={async () => {
+                          try {
+                            const fullUrl = `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${siteUrl}`;
+                            await navigator.clipboard.writeText(fullUrl);
+                          } catch (err) {
+                            console.error('Failed to copy URL:', err);
+                          }
+                        }}
+                        className="text-sm text-gray-600 hover:text-gray-900 hover:underline"
+                      >
+                        Copy URL
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 ml-4">
-                    <a
-                      href={`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${site.liveUrl}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
-                    >
-                      View
-                    </a>
-                    <button
-                      onClick={async () => {
-                        const fullUrl = `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${site.liveUrl}`;
-                        await navigator.clipboard.writeText(fullUrl);
-                      }}
-                      className="text-sm text-gray-600 hover:text-gray-900 hover:underline"
-                    >
-                      Copy URL
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -702,6 +726,41 @@ function trackUrlCopied(siteId: string) {
 /**
  * Format relative time (e.g., "2 hours ago")
  */
+function SocialProof() {
+  const { data: stats } = api.user.getStats.useQuery();
+
+  if (!stats) {
+    return null;
+  }
+
+  const displayCount =
+    stats.userCount >= 1000
+      ? `${Math.floor(stats.userCount / 100) * 100}+`
+      : `${stats.userCount}+`;
+
+  return (
+    <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm mb-6">
+      {stats.recentUsers.length > 0 && (
+        <div className="flex -space-x-2">
+          {stats.recentUsers.map((user) => (
+            <img
+              key={user.id}
+              className="w-8 h-8 rounded-full border-2 border-white"
+              src={user.image!}
+              alt="user"
+            />
+          ))}
+        </div>
+      )}
+      <p className="text-slate-500 font-medium">
+        Join{' '}
+        <span className="text-slate-900 font-bold">{displayCount} users</span>{' '}
+        already publishing with Flowershow.
+      </p>
+    </div>
+  );
+}
+
 function formatRelativeTime(isoDate: string): string {
   const date = new Date(isoDate);
   const now = new Date();

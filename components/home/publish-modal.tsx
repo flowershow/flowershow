@@ -30,16 +30,14 @@ export function PublishModal({
 }: PublishModalProps) {
   if (state === 'uploading') {
     return (
-      <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4">
+      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
         <div className="text-center">
-          <div className="relative inline-block">
-            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+          <div className="mb-6">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-orange-500"></div>
           </div>
-          <p className="text-xl font-semibold text-gray-700 mb-2">
-            Publishing your site...
-          </p>
-          <p className="text-sm text-gray-500">
-            This usually takes 10-20 seconds
+          <p className="text-lg text-gray-600 mb-2">Publishing your site...</p>
+          <p className="text-sm text-gray-400">
+            This usually takes 5-10 seconds
           </p>
         </div>
       </div>
@@ -48,16 +46,16 @@ export function PublishModal({
 
   if (state === 'error') {
     return (
-      <div className="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full mx-4">
+      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
         <div className="text-center">
-          <div className="text-5xl mb-4">⚠️</div>
-          <h2 className="text-xl font-bold text-gray-900 mb-2">
+          <div className="text-3xl mb-4 opacity-70">⚠️</div>
+          <h2 className="text-lg font-medium text-gray-700 mb-2">
             Publishing Failed
           </h2>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <p className="text-sm text-gray-500 mb-6">{error}</p>
           <button
             onClick={onPublishAnother}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            className="px-5 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 transition-colors text-sm"
           >
             Try Again
           </button>
@@ -68,83 +66,59 @@ export function PublishModal({
 
   // Published state
   return (
-    <div className="bg-white rounded-xl shadow-2xl p-8 max-w-lg w-full mx-4">
-      {/* Close button */}
-      <button
-        onClick={onClose}
-        className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-        aria-label="Close"
-      >
-        <svg
-          className="w-6 h-6"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-
+    <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
       {/* Success header */}
-      <div className="text-center mb-6">
-        <div className="text-4xl mb-3">✓</div>
-        <h2 className="text-2xl font-bold text-gray-900">Your site is live!</h2>
+      <div className="text-center mb-5">
+        <h2 className="text-xl font-medium text-gray-700">
+          Your site is live! 🎉
+        </h2>
       </div>
 
       {/* Live URL */}
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Your live URL
-        </label>
-        <div className="flex items-center gap-2">
-          <code className="flex-1 bg-gray-50 px-3 py-2 rounded-lg text-sm break-all border border-gray-200">
-            {`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${liveUrl}`}
-          </code>
+      <div className="mb-5">
+        <label className="block text-xs text-gray-500 mb-1.5">Live URL</label>
+        <code className="block bg-gray-50 px-3 py-2 rounded text-xs break-all text-gray-600 mb-2.5">
+          {`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${liveUrl}`}
+        </code>
+        <div className="flex gap-2">
           <button
             onClick={onCopyUrl}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium whitespace-nowrap text-sm"
+            className="flex-1 px-3 py-1.5 bg-gray-100 text-gray-600 rounded hover:bg-gray-200 transition-colors text-sm"
           >
-            {copied ? 'Copied!' : 'Copy'}
+            {copied ? 'Copied' : 'Copy URL'}
           </button>
+          <a
+            href={`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${liveUrl}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex-1 px-3 py-1.5 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors text-sm text-center"
+          >
+            Visit site
+          </a>
         </div>
       </div>
 
-      {/* Expiry notice */}
-      <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-        <p className="text-sm text-amber-800">
-          This site is temporary and will expire in 7 days.
+      {/* Expiry notice + save action */}
+      <div className="mb-2 p-3 bg-gray-50 rounded">
+        <p className="text-xs text-gray-500 mb-2.5">
+          This site will expire in 7 days unless you save it.
         </p>
+        <button
+          onClick={onSaveSite}
+          className="w-full px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors text-sm"
+        >
+          Save to keep permanently
+        </button>
       </div>
 
-      {/* Primary action */}
-      <button
-        onClick={onSaveSite}
-        className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-semibold text-base mb-4"
-      >
-        Save this site
-      </button>
-
       {/* Secondary actions */}
-      <div className="flex items-center justify-center gap-6 text-sm">
+      <div className="flex items-center justify-center">
         <button
           onClick={onPublishAnother}
-          className="text-gray-600 hover:text-gray-900 hover:underline"
+          className="text-xs text-gray-400 hover:text-gray-600"
         >
           Publish another
         </button>
-        <a
-          href={`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${liveUrl}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-gray-600 hover:text-gray-900 hover:underline"
-        >
-          View site
-        </a>
       </div>
     </div>
   );
