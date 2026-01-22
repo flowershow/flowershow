@@ -1,6 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import posthog from 'posthog-js';
 import { useEffect, useState } from 'react';
 import { DropZone } from '@/components/home/drop-zone';
 import { PublishModal } from '@/components/home/publish-modal';
@@ -719,70 +720,58 @@ function trackPublishSuccess(
   fileSize: number,
   timeToPublishMs: number,
 ) {
-  if (typeof window !== 'undefined' && (window as any).posthog) {
-    (window as any).posthog.capture('anon_publish_succeeded', {
-      site_id: siteId,
-      file_size: fileSize,
-      time_to_publish_ms: timeToPublishMs,
-    });
-  }
+  posthog.capture('anon_publish_succeeded', {
+    site_id: siteId,
+    file_size: fileSize,
+    time_to_publish_ms: timeToPublishMs,
+  });
 }
 
 /**
  * Track publish failure event
  */
 function trackPublishFailed(errorMessage: string) {
-  if (typeof window !== 'undefined' && (window as any).posthog) {
-    (window as any).posthog.capture('anon_publish_failed', {
-      error_message: errorMessage,
-    });
-  }
+  posthog.capture('anon_publish_failed', {
+    error_message: errorMessage,
+  });
 }
 
 /**
  * Track URL copied event
  */
 function trackUrlCopied(siteId: string) {
-  if (typeof window !== 'undefined' && (window as any).posthog) {
-    (window as any).posthog.capture('anon_url_copied', {
-      site_id: siteId,
-    });
-  }
+  posthog.capture('anon_url_copied', {
+    site_id: siteId,
+  });
 }
 
 /**
  * Track claim prompt shown event
  */
 function trackClaimPromptShown(siteId: string, trigger: 'modal' | 'banner') {
-  if (typeof window !== 'undefined' && (window as any).posthog) {
-    (window as any).posthog.capture('anon_claim_prompt_shown', {
-      site_id: siteId,
-      trigger,
-    });
-  }
+  posthog.capture('anon_claim_prompt_shown', {
+    site_id: siteId,
+    trigger,
+  });
 }
 
 /**
  * Track claim started event
  */
 function trackClaimStarted(siteId: string, trigger: 'modal' | 'banner') {
-  if (typeof window !== 'undefined' && (window as any).posthog) {
-    (window as any).posthog.capture('anon_claim_started', {
-      site_id: siteId,
-      trigger,
-    });
-  }
+  posthog.capture('anon_claim_started', {
+    site_id: siteId,
+    trigger,
+  });
 }
 
 /**
  * Track visit site clicked event
  */
 function trackVisitSiteClicked(siteId: string) {
-  if (typeof window !== 'undefined' && (window as any).posthog) {
-    (window as any).posthog.capture('anon_visit_site_clicked', {
-      site_id: siteId,
-    });
-  }
+  posthog.capture('anon_visit_site_clicked', {
+    site_id: siteId,
+  });
 }
 
 /**

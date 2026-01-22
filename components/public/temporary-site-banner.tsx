@@ -1,6 +1,7 @@
 'use client';
 
 import { XIcon } from 'lucide-react';
+import posthog from 'posthog-js';
 import { useEffect, useState } from 'react';
 import { env } from '@/env.mjs';
 import { getAnonymousUserId } from '@/lib/client-anonymous-user';
@@ -78,17 +79,13 @@ export function TemporarySiteBanner({
 
   // Track banner shown when owner visits their site
   useEffect(() => {
-    if (isOwner && typeof window !== 'undefined' && (window as any).posthog) {
-      (window as any).posthog.capture('anon_banner_shown', { site_id: siteId });
-    }
+    posthog.capture('anon_banner_shown', { site_id: siteId });
   }, [isOwner, siteId]);
 
   const handleClaimClick = () => {
-    if (typeof window !== 'undefined' && (window as any).posthog) {
-      (window as any).posthog.capture('anon_banner_claim_clicked', {
-        site_id: siteId,
-      });
-    }
+    posthog.capture('anon_banner_claim_clicked', {
+      site_id: siteId,
+    });
   };
 
   // const handleDismiss = () => {

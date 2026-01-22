@@ -180,7 +180,7 @@ export default async function middleware(req: NextRequest) {
 
           // console.log({ isVariantB });
 
-          if (isTestVariant) {
+          if (!isTestVariant) {
             return withPHBootstrapCookie(
               NextResponse.rewrite(new URL(`/home${path}`, req.url)),
               phBootstrap,
