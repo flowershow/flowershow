@@ -92,7 +92,7 @@ export const userRouter = createTRPCRouter({
       where: {
         userId: ctx.session.user.id,
         installationId: null, // Sites without GitHub App installation
-        NOT: { ghRepository: 'cli-upload' },
+        NOT: { ghRepository: null },
       },
       select: {
         id: true,

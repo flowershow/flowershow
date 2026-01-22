@@ -611,9 +611,7 @@ export const siteRouter = createTRPCRouter({
                 : `[${b.path}]: Unknown error`,
             )
             .join('\n');
-        }
-        // Otherwise, compare trees
-        else if (site.ghRepository === 'cli-upload') {
+        } else if (!site.ghRepository) {
           return {
             status: 'SUCCESS',
             lastSyncedAt,
@@ -626,7 +624,7 @@ export const siteRouter = createTRPCRouter({
           }
           const gitHubTree = await fetchGitHubRepoTree({
             ghRepository: site.ghRepository,
-            ghBranch: site.ghBranch,
+            ghBranch: site.ghBranch!,
             accessToken: ctx.session.accessToken,
             installationId: site.installationId ?? undefined,
           });

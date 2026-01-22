@@ -105,11 +105,7 @@ export async function POST(request: NextRequest) {
       site = await prisma.site.create({
         data: {
           projectName: sanitizedName,
-          ghRepository: 'cli-upload',
-          ghBranch: 'main',
-          rootDir: null,
           autoSync: false,
-          webhookId: null,
           userId: auth.userId,
         },
       });
@@ -174,7 +170,6 @@ export async function GET(request: NextRequest) {
     const sites = await prisma.site.findMany({
       where: {
         userId: auth.userId,
-        ghRepository: 'cli-upload', // Only CLI-uploaded sites
       },
       select: {
         id: true,
