@@ -83,6 +83,7 @@ export default function HomePage() {
   };
 
   const handleFileSelect = async (file: File) => {
+    const startTime = Date.now();
     setState('uploading');
     setError('');
     setShowPublishModal(true);
@@ -130,8 +131,12 @@ export default function HomePage() {
       // Wait for processing to complete
       await waitForProcessing(result.siteId);
 
-      // Track success
-      trackPublishSuccess(result.siteId, file.size);
+      // Track success with time to publish
+      const timeToPublishMs = Date.now() - startTime;
+      trackPublishSuccess(result.siteId, file.size, timeToPublishMs);
+
+      // Track that user sees the claim prompt
+      trackClaimPromptShown(result.siteId, 'modal');
 
       // Store the reusable ownership token (same token for all sites from this browser)
       const token = result.ownershipToken;
@@ -150,7 +155,10 @@ export default function HomePage() {
       setState('published');
     } catch (err) {
       console.error('Publish error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to publish');
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to publish';
+      trackPublishFailed(errorMessage);
+      setError(errorMessage);
       setState('error');
     }
   };
@@ -171,8 +179,12 @@ export default function HomePage() {
   };
 
   const handleSaveSite = () => {
-    // Navigate directly to claim flow
+    trackClaimStarted(siteId, 'modal');
     router.push(`/claim?siteId=${siteId}`);
+  };
+
+  const handleVisitSite = () => {
+    trackVisitSiteClicked(siteId);
   };
 
   const handlePublishAnother = () => {
@@ -632,6 +644,7 @@ export default function HomePage() {
           copied={copied}
           onCopyUrl={handleCopyUrl}
           onSaveSite={handleSaveSite}
+          onVisitSite={handleVisitSite}
           onPublishAnother={handlePublishAnother}
           onClose={handleCloseModal}
         />
@@ -701,13 +714,27 @@ async function calculateSHA256(file: File): Promise<string> {
 /**
  * Track publish success event
  */
-function trackPublishSuccess(siteId: string, fileSize: number) {
-  // Track with PostHog
+function trackPublishSuccess(
+  siteId: string,
+  fileSize: number,
+  timeToPublishMs: number,
+) {
   if (typeof window !== 'undefined' && (window as any).posthog) {
-    (window as any).posthog.capture('publish_succeeded', {
+    (window as any).posthog.capture('anon_publish_succeeded', {
       site_id: siteId,
       file_size: fileSize,
-      publish_type: 'anonymous',
+      time_to_publish_ms: timeToPublishMs,
+    });
+  }
+}
+
+/**
+ * Track publish failure event
+ */
+function trackPublishFailed(errorMessage: string) {
+  if (typeof window !== 'undefined' && (window as any).posthog) {
+    (window as any).posthog.capture('anon_publish_failed', {
+      error_message: errorMessage,
     });
   }
 }
@@ -717,7 +744,42 @@ function trackPublishSuccess(siteId: string, fileSize: number) {
  */
 function trackUrlCopied(siteId: string) {
   if (typeof window !== 'undefined' && (window as any).posthog) {
-    (window as any).posthog.capture('url_copied', {
+    (window as any).posthog.capture('anon_url_copied', {
+      site_id: siteId,
+    });
+  }
+}
+
+/**
+ * Track claim prompt shown event
+ */
+function trackClaimPromptShown(siteId: string, trigger: 'modal' | 'banner') {
+  if (typeof window !== 'undefined' && (window as any).posthog) {
+    (window as any).posthog.capture('anon_claim_prompt_shown', {
+      site_id: siteId,
+      trigger,
+    });
+  }
+}
+
+/**
+ * Track claim started event
+ */
+function trackClaimStarted(siteId: string, trigger: 'modal' | 'banner') {
+  if (typeof window !== 'undefined' && (window as any).posthog) {
+    (window as any).posthog.capture('anon_claim_started', {
+      site_id: siteId,
+      trigger,
+    });
+  }
+}
+
+/**
+ * Track visit site clicked event
+ */
+function trackVisitSiteClicked(siteId: string) {
+  if (typeof window !== 'undefined' && (window as any).posthog) {
+    (window as any).posthog.capture('anon_visit_site_clicked', {
       site_id: siteId,
     });
   }

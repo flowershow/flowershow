@@ -14,6 +14,7 @@ interface PublishModalProps {
   copied: boolean;
   onCopyUrl: () => void;
   onSaveSite: () => void;
+  onVisitSite: () => void;
   onPublishAnother: () => void;
   onClose: () => void;
 }
@@ -25,6 +26,7 @@ export function PublishModal({
   copied,
   onCopyUrl,
   onSaveSite,
+  onVisitSite,
   onPublishAnother,
   onClose,
 }: PublishModalProps) {
@@ -91,6 +93,7 @@ export function PublishModal({
             href={`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${liveUrl}`}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={onVisitSite}
             className="flex-1 px-3 py-1.5 bg-green-100 text-green-600 rounded hover:bg-green-200 transition-colors text-sm text-center"
           >
             Visit site

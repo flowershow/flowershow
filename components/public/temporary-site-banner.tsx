@@ -76,6 +76,21 @@ export function TemporarySiteBanner({
     return () => clearInterval(interval);
   }, [expiresAt, isOwner]);
 
+  // Track banner shown when owner visits their site
+  useEffect(() => {
+    if (isOwner && typeof window !== 'undefined' && (window as any).posthog) {
+      (window as any).posthog.capture('anon_banner_shown', { site_id: siteId });
+    }
+  }, [isOwner, siteId]);
+
+  const handleClaimClick = () => {
+    if (typeof window !== 'undefined' && (window as any).posthog) {
+      (window as any).posthog.capture('anon_banner_claim_clicked', {
+        site_id: siteId,
+      });
+    }
+  };
+
   // const handleDismiss = () => {
   //   setIsDismissed(true);
   //   sessionStorage.setItem(`temp-banner-dismissed-${siteId}`, "true");
@@ -99,6 +114,7 @@ export function TemporarySiteBanner({
         <span className="text-gray-300">•</span>
         <a
           href={claimUrl}
+          onClick={handleClaimClick}
           className="inline-flex items-center font-medium text-white whitespace-nowrap hover:underline"
         >
           Claim this site →

@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
         const posthog = PostHogClient();
         posthog.capture({
           distinctId: site.id,
-          event: 'publish_started',
+          event: 'anon_publish_started',
           properties: {
             site_id: site.id,
             file_size: fileSize,

@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
         const posthog = PostHogClient();
         posthog.capture({
           distinctId: session.user.id,
-          event: 'claim_completed',
+          event: 'anon_claim_completed',
           properties: {
             site_id: siteId,
             sites_owned_count: userSitesCount + 1,
