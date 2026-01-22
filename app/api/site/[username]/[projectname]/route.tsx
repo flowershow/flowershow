@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { InternalSite, internalSiteSelect } from '@/lib/db/internal';
 import prisma from '@/server/db';
+import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 
 export async function GET(
   req: NextRequest,
@@ -19,6 +20,14 @@ export async function GET(
     site = await prisma.site.findUnique({
       where: {
         customDomain: projectname,
+      },
+      select: internalSiteSelect,
+    });
+  } else if (username === 'anon') {
+    site = await prisma.site.findFirst({
+      where: {
+        projectName: projectname,
+        userId: ANONYMOUS_USER_ID,
       },
       select: internalSiteSelect,
     });

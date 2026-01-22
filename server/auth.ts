@@ -69,8 +69,10 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        // When working on localhost, the cookie domain must be omitted entirely (https://stackoverflow.com/a/1188145)
-        domain: VERCEL_DEPLOYMENT ? '.flowershow.app' : undefined, // set to apex domain to make posthog identify/reset work (and to allow some UI indicators that you're logged in and previewing your own site)
+        // In production: .flowershow.app allows cookies across all subdomains
+        // In development: .flowershow.local requires adding entries to /etc/hosts:
+        //   127.0.0.1 flowershow.local cloud.flowershow.local my.flowershow.local
+        domain: VERCEL_DEPLOYMENT ? '.flowershow.app' : '.flowershow.local',
         secure: VERCEL_DEPLOYMENT,
       },
     },
@@ -113,6 +115,41 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
+    redirect: async ({ url, baseUrl }) => {
+      // Allow redirects to trusted domains (for claim flow across subdomains)
+      try {
+        const redirectUrl = new URL(url, baseUrl);
+        const base = new URL(baseUrl);
+
+        // Allow same origin redirects
+        if (redirectUrl.origin === base.origin) {
+          return url;
+        }
+
+        // Extract base domain (e.g., "flowershow.local" from "cloud.flowershow.local:3000")
+        // NEXT_PUBLIC_HOME_DOMAIN includes port, so extract just the hostname
+        const homeDomain = env.NEXT_PUBLIC_HOME_DOMAIN.split(':')[0];
+
+        // Allow redirects to any subdomain of the home domain (or the home domain itself)
+        const targetHost = redirectUrl.hostname;
+        if (
+          targetHost === homeDomain ||
+          targetHost.endsWith(`.${homeDomain}`)
+        ) {
+          return redirectUrl.href;
+        }
+
+        // For relative URLs, use baseUrl
+        if (url.startsWith('/')) {
+          return `${baseUrl}${url}`;
+        }
+
+        // Default: return base URL for safety
+        return baseUrl;
+      } catch {
+        return baseUrl;
+      }
+    },
     signIn: async ({ user, account, profile }) => {
       // console.log("signIn", { user, account, profile });
       // This is called only once

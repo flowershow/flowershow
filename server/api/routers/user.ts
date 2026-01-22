@@ -1,8 +1,40 @@
 import { z } from 'zod';
+import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { fetchGitHubScopeRepositories, fetchGitHubScopes } from '@/lib/github';
-import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
+import {
+  createTRPCRouter,
+  protectedProcedure,
+  publicProcedure,
+} from '@/server/api/trpc';
 
 export const userRouter = createTRPCRouter({
+  getStats: publicProcedure.query(async ({ ctx }) => {
+    // Get total user count (excluding anonymous user)
+    const userCount = await ctx.db.user.count({
+      where: {
+        id: { not: ANONYMOUS_USER_ID },
+      },
+    });
+
+    // Get recent users with avatars (for social proof display)
+    const recentUsers = await ctx.db.user.findMany({
+      where: {
+        id: { not: ANONYMOUS_USER_ID },
+        image: { not: null },
+      },
+      select: {
+        id: true,
+        image: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 5,
+    });
+
+    return {
+      userCount,
+      recentUsers,
+    };
+  }),
   getUser: protectedProcedure.query(async ({ ctx }) => {
     return await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
@@ -88,11 +120,11 @@ export const userRouter = createTRPCRouter({
     }),
   hasOAuthOnlySites: protectedProcedure.query(async ({ ctx }) => {
     // Check if user has any sites that use OAuth (no installationId)
-    return await ctx.db.site.findMany({
+    const sites = await ctx.db.site.findMany({
       where: {
         userId: ctx.session.user.id,
         installationId: null, // Sites without GitHub App installation
-        NOT: { ghRepository: 'cli-upload' },
+        NOT: { ghRepository: null },
       },
       select: {
         id: true,
@@ -103,5 +135,11 @@ export const userRouter = createTRPCRouter({
         projectName: 'asc',
       },
     });
+
+    // Filter out any sites with null ghRepository and assert the type
+    return sites.filter(
+      (site): site is typeof site & { ghRepository: string } =>
+        site.ghRepository !== null,
+    );
   }),
 });
