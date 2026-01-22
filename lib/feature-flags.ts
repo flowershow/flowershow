@@ -3,7 +3,6 @@ import { env } from '@/env.mjs';
 import { PublicSite } from '@/server/api/types';
 
 export enum Feature {
-  DataRequest = 'DataRequest',
   CustomDomain = 'CustomDomain',
   NoBranding = 'NoBranding',
   Search = 'Search',
@@ -29,12 +28,6 @@ const PREMIUM_FEATURES: Feature[] = [
  */
 export function isFeatureEnabled(feature: Feature, site: PublicSite): boolean {
   switch (feature) {
-    case Feature.DataRequest:
-      return (
-        env.NEXT_PUBLIC_ROOT_DOMAIN === 'datahub.io' &&
-        (site?.ghRepository.startsWith('datasets/') ||
-          site?.ghRepository === 'datopian/postal-codes')
-      );
     case Feature.NoBranding:
       return site.customDomain === 'flowershow.app'
         ? false

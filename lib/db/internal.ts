@@ -20,7 +20,11 @@ export const internalSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   installationId: true,
   createdAt: true,
   updatedAt: true,
-  user: { select: { username: true } },
+  user: { select: { username: true, id: true } },
+  // Anonymous/temporary site fields
+  isTemporary: true,
+  expiresAt: true,
+  anonymousOwnerId: true,
   // Internal only data
   accessPasswordHash: true,
   tokenVersion: true,

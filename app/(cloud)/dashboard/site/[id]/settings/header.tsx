@@ -44,7 +44,7 @@ export default async function SiteSettingsHeader({
             <Status />
           </Suspense>
 
-          {site.ghRepository !== 'cli-upload' ? (
+          {site.ghRepository && (
             <Link
               href={`https://github.com/${site.ghRepository}`}
               target="_blank"
@@ -57,14 +57,10 @@ export default async function SiteSettingsHeader({
               />
               <span>{site.ghRepository}</span>
             </Link>
-          ) : (
-            <span className="mt-2 inline-flex items-center text-sm text-gray-500">
-              Published with CLI
-            </span>
           )}
         </div>
         <div className="mt-5 flex lg:ml-4 lg:mt-0">
-          {site.ghRepository !== 'cli-upload' && (
+          {site.ghRepository && (
             <>
               <span className="block">
                 <a

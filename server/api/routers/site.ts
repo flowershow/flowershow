@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { SiteConfig } from '@/components/types';
 import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
+import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { buildSiteTree } from '@/lib/build-site-tree';
 import { deleteProject, fetchFile } from '@/lib/content-store';
 import {
@@ -61,6 +62,22 @@ export const siteRouter = createTRPCRouter({
         select: publicSiteSelect,
       });
     }),
+  getAnonymous: publicProcedure
+    .input(
+      z.object({
+        projectName: z.string().min(1),
+      }),
+    )
+    .output(publicSiteSchema.nullable())
+    .query(async ({ ctx, input }): Promise<PublicSite | null> => {
+      return ctx.db.site.findFirst({
+        where: {
+          projectName: input.projectName,
+          userId: ANONYMOUS_USER_ID,
+        },
+        select: publicSiteSelect,
+      });
+    }),
   getByDomain: publicProcedure
     .input(z.object({ domain: z.string().min(1) }))
     .output(publicSiteSchema.nullable())
@@ -79,6 +96,19 @@ export const siteRouter = createTRPCRouter({
       return await ctx.db.site.findFirst({
         where: { id: input.id },
         select: publicSiteSelect,
+      });
+    }),
+  getMany: publicProcedure
+    .input(z.object({ ids: z.array(z.string()) }))
+    .output(z.array(publicSiteSchema))
+    .query(async ({ ctx, input }): Promise<PublicSite[]> => {
+      if (input.ids.length === 0) {
+        return [];
+      }
+      return await ctx.db.site.findMany({
+        where: { id: { in: input.ids } },
+        select: publicSiteSelect,
+        orderBy: { createdAt: 'desc' },
       });
     }),
   getAll: protectedProcedure
@@ -159,7 +189,7 @@ export const siteRouter = createTRPCRouter({
       // 6) Analytics (best-effort)
       const posthog = await PostHogClient();
       posthog.capture({
-        distinctId: created.userId,
+        distinctId: created.userId!,
         event: 'site_created',
         properties: { id: created.id },
       });
@@ -255,17 +285,19 @@ export const siteRouter = createTRPCRouter({
           data: { rootDir: newRoot },
         });
         await deleteProject(id).catch(() => {}); // TODO handle it in a better way
-        await inngest.send({
-          name: 'site/sync',
-          data: {
-            siteId: id,
-            ghRepository: site.ghRepository,
-            ghBranch: site.ghBranch,
-            rootDir: newRoot,
-            accessToken: ctx.session.accessToken,
-            installationId: site.installationId ?? undefined,
-          },
-        });
+        if (site.ghRepository && site.ghBranch) {
+          await inngest.send({
+            name: 'site/sync',
+            data: {
+              siteId: id,
+              ghRepository: site.ghRepository,
+              ghBranch: site.ghBranch,
+              rootDir: newRoot,
+              accessToken: ctx.session.accessToken,
+              installationId: site.installationId ?? undefined,
+            },
+          });
+        }
       } else if (key === 'autoSync') {
         const enable = value === 'true';
 
@@ -279,7 +311,7 @@ export const siteRouter = createTRPCRouter({
           });
         } else {
           // Legacy OAuth site: manage per-repository webhook
-          if (enable) {
+          if (enable && site.ghRepository) {
             try {
               const { id: webhookId } = await createGitHubRepoWebhook({
                 ghRepository: site.ghRepository,
@@ -299,7 +331,7 @@ export const siteRouter = createTRPCRouter({
             }
           } else {
             try {
-              if (site.webhookId) {
+              if (site.ghRepository && site.webhookId) {
                 await deleteGitHubRepoWebhook({
                   ghRepository: site.ghRepository,
                   accessToken: ctx.session.accessToken,
@@ -328,7 +360,12 @@ export const siteRouter = createTRPCRouter({
         // If enableSearch is being turned on, trigger a force sync to index all files
         // Note: this is a temporary solution, to make sure people who upgrade now have their
         // site's indexes updated (but we index all documents, even for non-premium users atm, which we shouldn't)
-        if (key === 'enableSearch' && converted === true) {
+        if (
+          site.ghRepository &&
+          site.ghBranch &&
+          key === 'enableSearch' &&
+          converted === true
+        ) {
           await inngest.send({
             name: 'site/sync',
             data: {
@@ -452,7 +489,7 @@ export const siteRouter = createTRPCRouter({
       }
 
       // Only delete webhook for OAuth sites (GitHub App sites use installation-level webhooks)
-      if (site.webhookId && !site.installationId) {
+      if (site.ghRepository && site.webhookId && !site.installationId) {
         try {
           await deleteGitHubRepoWebhook({
             ghRepository: site.ghRepository,
@@ -512,6 +549,14 @@ export const siteRouter = createTRPCRouter({
       }
 
       const { id, ghRepository, ghBranch } = site;
+
+      if (!ghRepository || !ghBranch) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: "Can't sync a site with no GitHub repository connected.",
+        });
+      }
+
       const accessToken = ctx.session.accessToken;
 
       await inngest.send({
@@ -592,9 +637,7 @@ export const siteRouter = createTRPCRouter({
                 : `[${b.path}]: Unknown error`,
             )
             .join('\n');
-        }
-        // Otherwise, compare trees
-        else if (site.ghRepository === 'cli-upload') {
+        } else if (!site.ghRepository) {
           return {
             status: 'SUCCESS',
             lastSyncedAt,
@@ -607,7 +650,7 @@ export const siteRouter = createTRPCRouter({
           }
           const gitHubTree = await fetchGitHubRepoTree({
             ghRepository: site.ghRepository,
-            ghBranch: site.ghBranch,
+            ghBranch: site.ghBranch!,
             accessToken: ctx.session.accessToken,
             installationId: site.installationId ?? undefined,
           });
@@ -648,7 +691,7 @@ export const siteRouter = createTRPCRouter({
           try {
             return await fetchFile({
               projectId: site.id,
-              branch: site.ghBranch,
+              branch: site.ghBranch ?? 'main',
               path: 'custom.css',
             });
           } catch {
@@ -689,7 +732,7 @@ export const siteRouter = createTRPCRouter({
           try {
             const configJson = await fetchFile({
               projectId: site.id,
-              branch: site.ghBranch,
+              branch: site.ghBranch ?? 'main',
               path: 'config.json',
             });
             const config = configJson
@@ -1150,7 +1193,7 @@ export const siteRouter = createTRPCRouter({
 
           const content = await fetchFile({
             projectId: blob.site.id,
-            branch: blob.site.ghBranch,
+            branch: blob.site.ghBranch || 'main', // TODO
             path: blob.path,
           });
 
@@ -1240,7 +1283,7 @@ export const siteRouter = createTRPCRouter({
                 const pathToUse = authorBlob.permalink || authorBlob.appPath;
                 const url = site.customDomain
                   ? `/${pathToUse}`
-                  : `/@${site.user.username}/${site.projectName}/${pathToUse}`;
+                  : `/@${site.user?.username}/${site.projectName}/${pathToUse}`;
 
                 if (metadata?.avatar) {
                   let value = metadata.avatar;
@@ -1374,7 +1417,7 @@ export const siteRouter = createTRPCRouter({
             if (site.customDomain) {
               prefix = '';
             } else {
-              prefix = `/@${site.user.username}/${site.projectName}`;
+              prefix = `/@${site.user?.username}/${site.projectName}`;
             }
 
             return (
@@ -1454,6 +1497,13 @@ export const siteRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Site is already using GitHub App',
+        });
+      }
+
+      if (!site.ghRepository || !site.ghBranch) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: "Site doesn't have a GitHub repo connected.",
         });
       }
 
@@ -1545,8 +1595,9 @@ export const siteRouter = createTRPCRouter({
         installation.repositories.map((r) => r.repositoryFullName),
       );
 
-      const sitesToMigrate = oauthSites.filter((site) =>
-        accessibleRepoNames.has(site.ghRepository),
+      const sitesToMigrate = oauthSites.filter(
+        (site) =>
+          site.ghRepository && accessibleRepoNames.has(site.ghRepository),
       );
 
       // Migrate each matching site
@@ -1559,7 +1610,7 @@ export const siteRouter = createTRPCRouter({
           });
 
           // Clean up old webhook if exists
-          if (site.webhookId) {
+          if (site.ghRepository && site.webhookId) {
             try {
               await deleteGitHubRepoWebhook({
                 ghRepository: site.ghRepository,

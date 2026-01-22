@@ -38,7 +38,7 @@ export async function GET(
   try {
     const file = await fetchFile({
       projectId: site.id,
-      branch: site.ghBranch,
+      branch: site.ghBranch ?? 'main',
       path: slug.join('/'),
     });
 

@@ -60,6 +60,7 @@ export const env = createEnv({
     SENTRY_ORG: z.string(),
     SENTRY_PROJECT: z.string(),
     SITE_ACCESS_JWT_SECRET: z.string(),
+    ANONYMOUS_JWT_SECRET: z.string(),
   },
 
   /**
@@ -71,6 +72,7 @@ export const env = createEnv({
     NEXT_PUBLIC_AUTH_GITHUB_ID: z.string(),
     NEXT_PUBLIC_ROOT_DOMAIN: z.string(),
     NEXT_PUBLIC_CLOUD_DOMAIN: z.string(),
+    NEXT_PUBLIC_HOME_DOMAIN: z.string(),
     NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX: z.string(),
     NEXT_PUBLIC_VERCEL_ENV: z.string().optional(),
     NEXT_PUBLIC_DNS_DOMAIN: z.string(),
@@ -95,6 +97,7 @@ export const env = createEnv({
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
     NEXT_PUBLIC_ROOT_DOMAIN: process.env.NEXT_PUBLIC_ROOT_DOMAIN,
     NEXT_PUBLIC_CLOUD_DOMAIN: process.env.NEXT_PUBLIC_CLOUD_DOMAIN,
+    NEXT_PUBLIC_HOME_DOMAIN: process.env.NEXT_PUBLIC_HOME_DOMAIN,
     NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX:
       process.env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX,
     NEXT_PUBLIC_VERCEL_ENV: process.env.NEXT_PUBLIC_VERCEL_ENV,
@@ -154,6 +157,7 @@ export const env = createEnv({
     NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     SITE_ACCESS_JWT_SECRET: process.env.SITE_ACCESS_JWT_SECRET,
+    ANONYMOUS_JWT_SECRET: process.env.ANONYMOUS_JWT_SECRET,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,
