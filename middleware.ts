@@ -170,7 +170,7 @@ export default async function middleware(req: NextRequest) {
 
           const landingPageFlagName = 'landing-page-a-b-drag-n-drop';
           const landingPageFlag = flags[landingPageFlagName];
-          const isVariantB = landingPageFlag === 'test';
+          const isTestVariant = landingPageFlag === 'test';
 
           // This is only to send "Feature flag called event" for this flag
           await posthog.getFeatureFlag(
@@ -180,7 +180,7 @@ export default async function middleware(req: NextRequest) {
 
           // console.log({ isVariantB });
 
-          if (isVariantB) {
+          if (isTestVariant) {
             return withPHBootstrapCookie(
               NextResponse.rewrite(new URL(`/home${path}`, req.url)),
               phBootstrap,
@@ -188,7 +188,7 @@ export default async function middleware(req: NextRequest) {
           } else {
             return withPHBootstrapCookie(
               NextResponse.rewrite(
-                new URL(`/site/_domain/${hostname}`, req.url),
+                new URL(`/site/_domain/${hostname}${path}`, req.url),
               ),
               phBootstrap,
             );
