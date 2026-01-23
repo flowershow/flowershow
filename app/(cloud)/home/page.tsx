@@ -230,20 +230,39 @@ export default function HomePage() {
           {/* Drop Zone - Primary interaction */}
           <div className="mb-8">
             <DropZone onFileSelect={handleFileSelect} />
+            <p className="text-center text-sm text-gray-400 mt-3">
+              Publishing a repo or multiple pages?{' '}
+              <a
+                href="https://cloud.flowershow.app/login"
+                className="hover:text-gray-700 underline"
+              >
+                Sign in →
+              </a>
+            </p>
+            <p className="text-center text-sm text-gray-400 mt-2">
+              No file handy?{' '}
+              <button
+                onClick={async () => {
+                  const response = await fetch(
+                    'https://r2-assets.flowershow.app/README.md',
+                  );
+                  const blob = await response.blob();
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = 'README.md';
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+                className="underline hover:text-gray-600"
+              >
+                Try an example
+              </button>
+            </p>
           </div>
 
           {/* Social proof */}
           <SocialProof />
-
-          {/* Secondary CTA - de-emphasized */}
-          <div className="text-center">
-            <a
-              href="https://cloud.flowershow.app/login"
-              className="text-xs text-gray-400 hover:text-gray-700 underline"
-            >
-              Publishing a repo or multiple pages? Sign in →
-            </a>
-          </div>
         </div>
       </div>
 
