@@ -163,6 +163,14 @@ export default async function middleware(req: NextRequest) {
   // 6) Custom domains
   if (hostname === env.NEXT_PUBLIC_HOME_DOMAIN) {
     if (pathname === '/') {
+      // In development, always show the test variant
+      if (process.env.NODE_ENV === 'development') {
+        return withPHBootstrapCookie(
+          NextResponse.rewrite(new URL(`/home${path}`, req.url)),
+          phBootstrap,
+        );
+      }
+
       // console.log({ phBootstrap });
       if (phBootstrap) {
         try {
