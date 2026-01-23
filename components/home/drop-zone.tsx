@@ -65,7 +65,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
         className="hidden"
       />
 
-      <div className="py-16 px-6 text-center space-y-4">
+      <div className="py-12 px-6 text-center space-y-4">
         <div
           className={`mx-auto w-16 h-16 rounded-2xl flex items-center justify-center transition-transform duration-300 ${isDragging ? 'scale-110 bg-orange-600 text-white' : 'bg-orange-100 text-orange-600 group-hover:bg-orange-500 group-hover:text-white'}`}
         >
