@@ -3,10 +3,7 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
-import {
-  clearInstallationTokenCache,
-  getInstallationToken,
-} from '@/lib/github';
+import { clearInstallationTokenCache } from '@/lib/github';
 import prisma from '@/server/db';
 
 interface WebhookPayload {
@@ -400,8 +397,8 @@ async function handlePushEvent(data: WebhookPayload) {
           name: 'site/sync',
           data: {
             siteId: site.id,
-            ghRepository: site.ghRepository,
-            ghBranch: site.ghBranch,
+            ghRepository: site.ghRepository!,
+            ghBranch: site.ghBranch!,
             rootDir: site.rootDir,
             installationId: site.installationId!,
           },

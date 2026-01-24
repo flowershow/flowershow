@@ -7,30 +7,26 @@ import {
 import config from '../config.json';
 
 // Type assert the dashboard links to ensure they match the expected type
-const typedDashboardLinks = config.dashboardSidebar?.links.map((link) => ({
-  ...link,
-  type: link.type as DashboardLink['type'],
-  href: link.href ?? '',
-}));
+const typedDashboardLinks =
+  config.dashboardSidebar?.links.map((link) => ({
+    ...link,
+    type: link.type as DashboardLink['type'],
+    href: link.href ?? '',
+  })) ?? [];
 
 // Type assert social links
-const typedSocialLinks =
-  (config as SiteConfig).nav?.social?.map((social) => ({
-    ...social,
-    label: social.label as SocialLink['label'],
-  })) ?? [];
+const typedSocialLinks = config.social?.map((social) => ({
+  ...social,
+  label: social.label as SocialLink['label'],
+}));
 
 // Construct the fully typed config
 const typedConfig: AppConfig = {
   ...config,
-  product: config.product as 'flowershow' | 'datahub',
-  nav: {
-    ...(config.nav || {}),
-    social: typedSocialLinks,
-  },
   dashboardSidebar: {
     links: typedDashboardLinks,
   },
+  social: typedSocialLinks,
 };
 
 export const getConfig = (): AppConfig => {

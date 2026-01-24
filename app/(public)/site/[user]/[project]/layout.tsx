@@ -7,6 +7,7 @@ import { ReactNode } from 'react';
 import BuiltWithFloatingButton from '@/components/public/built-with-floating-button';
 import Footer from '@/components/public/footer';
 import Nav from '@/components/public/nav';
+import { TemporarySiteBanner } from '@/components/public/temporary-site-banner';
 import { SiteProvider } from '@/components/public/site-context';
 import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
@@ -84,6 +85,10 @@ export default async function PublicLayout(props: {
     site = await api.site.getByDomain.query({
       domain: projectName,
     });
+  } else if (username === 'anon') {
+    site = await api.site.getAnonymous.query({
+      projectName,
+    });
   } else {
     site = await api.site.get.query({
       username,
@@ -111,8 +116,8 @@ export default async function PublicLayout(props: {
     );
   }
 
-  // Redirect to custom domain if it exists
-  if (username !== '_domain' && site.customDomain) {
+  // Redirect to custom domain if it exists (anonymous sites don't have custom domains)
+  if (username !== '_domain' && username !== 'anon' && site.customDomain) {
     return redirect(`https://${site.customDomain}`);
   }
 
@@ -314,6 +319,13 @@ export default async function PublicLayout(props: {
                 data-plan={!showBuiltWithButton && 'premium'}
                 className="site-layout"
               >
+                {site.isTemporary && site.anonymousOwnerId && (
+                  <TemporarySiteBanner
+                    siteId={site.id}
+                    expiresAt={site.expiresAt}
+                    anonymousOwnerId={site.anonymousOwnerId}
+                  />
+                )}
                 <Nav
                   logo={logo}
                   url={sitePrefix || '/'}

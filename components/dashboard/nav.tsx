@@ -81,22 +81,15 @@ export default function Nav({ children }: { children: ReactNode }) {
               href="/"
               className="flex items-center space-x-2 text-lg font-semibold tracking-tight text-primary-strong md:text-xl"
             >
-              <Image
-                src={config.logo}
-                width={32}
-                height={32}
-                alt={config.product}
-              />
-              {config.product === 'flowershow' && (
-                <span
-                  className={cn(
-                    'ml-2 font-brand text-lg font-extrabold md:text-xl',
-                    pages.length && 'hidden',
-                  )}
-                >
-                  Flowershow
-                </span>
-              )}
+              <Image src={config.logo} width={32} height={32} alt="Logo" />
+              <span
+                className={cn(
+                  'ml-2 font-brand text-lg font-extrabold md:text-xl',
+                  pages.length && 'hidden',
+                )}
+              >
+                Flowershow
+              </span>
             </Link>
             {pages.map((page) => (
               <div key={page.name} className="flex items-center">
@@ -119,27 +112,21 @@ export default function Nav({ children }: { children: ReactNode }) {
             ))}
           </div>
           <div className="ml-6 flex items-center space-x-2">
-            {config.product === 'flowershow' && (
-              <>
-                <Link
-                  className="flex items-center text-sm hover:underline"
-                  href="https://discord.gg/JChzM5VdFn"
-                  target="_blank"
-                >
-                  <span>Support</span>
-                  <ExternalLinkIcon className="h-4" />
-                </Link>
-                <button
-                  type="button"
-                  className="rounded-md bg-pink-50 px-2.5 py-1.5 text-sm font-semibold text-pink-600 shadow-sm hover:bg-pink-100"
-                  onClick={() =>
-                    modal?.show(<FeedbackModal onSubmit={refetch} />)
-                  }
-                >
-                  Send feedback
-                </button>
-              </>
-            )}
+            <Link
+              className="flex items-center text-sm hover:underline"
+              href="https://discord.gg/JChzM5VdFn"
+              target="_blank"
+            >
+              <span>Support</span>
+              <ExternalLinkIcon className="h-4" />
+            </Link>
+            <button
+              type="button"
+              className="rounded-md bg-pink-50 px-2.5 py-1.5 text-sm font-semibold text-pink-600 shadow-sm hover:bg-pink-100"
+              onClick={() => modal?.show(<FeedbackModal onSubmit={refetch} />)}
+            >
+              Send feedback
+            </button>
             {/* Profile dropdown */}
             <Menu as="div" className="relative ml-3">
               <div>

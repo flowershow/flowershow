@@ -12,6 +12,11 @@ export async function getSite(
     site = await api.site.getByDomain.query({
       domain: project,
     });
+  } else if (user === 'anon') {
+    // Handle anonymous sites
+    site = await api.site.getAnonymous.query({
+      projectName: project,
+    });
   } else {
     site = await api.site.get.query({
       username: user,
@@ -23,8 +28,8 @@ export async function getSite(
     notFound();
   }
 
-  // Redirect to custom domain if it exists
-  if (user !== '_domain' && site.customDomain) {
+  // Redirect to custom domain if it exists (anonymous sites don't have custom domains)
+  if (user !== '_domain' && user !== 'anon' && site.customDomain) {
     return redirect(`https://${site.customDomain}`);
   }
 

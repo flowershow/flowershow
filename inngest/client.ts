@@ -10,7 +10,6 @@ interface SiteSync {
     rootDir: string | null;
     accessToken?: string; // Optional for GitHub App installations
     installationId?: string; // For GitHub App installations
-    initialSync?: boolean;
     forceSync?: boolean;
   };
 }

@@ -363,3 +363,61 @@ export const deleteSite = inngest.createFunction(
     await deleteSiteCollection(siteId);
   },
 );
+
+export const cleanupExpiredSites = inngest.createFunction(
+  {
+    id: 'cleanup-expired-sites',
+  },
+  { cron: '0 3 * * *' }, // Run daily at 3 AM UTC
+  async ({ step }) => {
+    const expiredSites = await step.run('find-expired-sites', async () => {
+      return prisma.site.findMany({
+        where: {
+          isTemporary: true,
+          expiresAt: {
+            lte: new Date(),
+          },
+        },
+        select: {
+          id: true,
+          projectName: true,
+        },
+      });
+    });
+
+    if (expiredSites.length === 0) {
+      return { deleted: 0 };
+    }
+
+    const results = await Promise.all(
+      expiredSites.map((site) =>
+        step.run(`delete-expired-site-${site.id}`, async () => {
+          try {
+            // Delete from database (cascades to blobs)
+            await prisma.site.delete({
+              where: { id: site.id },
+            });
+
+            // Clean up S3 and Typesense
+            await deleteProject(site.id);
+            await deleteSiteCollection(site.id);
+
+            return { siteId: site.id, status: 'deleted' };
+          } catch (error: any) {
+            console.error(
+              `Failed to delete expired site ${site.id}:`,
+              error.message,
+            );
+            return { siteId: site.id, status: 'error', error: error.message };
+          }
+        }),
+      ),
+    );
+
+    return {
+      deleted: results.filter((r) => r.status === 'deleted').length,
+      failed: results.filter((r) => r.status === 'error').length,
+      results,
+    };
+  },
+);
