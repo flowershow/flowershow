@@ -32,13 +32,25 @@ const normalizeImageLayout = (value: unknown): HeroLayout | undefined => {
   return undefined;
 };
 
-const resolveFromHeroObject = (hero: HeroObject): ResolvedHeroConfig => ({
+type TopLevelFields = {
+  title?: string;
+  description?: string;
+  image?: string;
+  cta?: Array<{ href: string; label: string }>;
+};
+
+const resolveFromHeroObject = (
+  hero: HeroObject,
+  topLevel: TopLevelFields,
+): ResolvedHeroConfig => ({
   showHero: true,
-  title: typeof hero.title === 'string' ? hero.title : undefined,
+  title: typeof hero.title === 'string' ? hero.title : topLevel.title,
   description:
-    typeof hero.description === 'string' ? hero.description : undefined,
-  image: typeof hero.image === 'string' ? hero.image : undefined,
-  cta: Array.isArray(hero.cta) ? hero.cta : undefined,
+    typeof hero.description === 'string'
+      ? hero.description
+      : topLevel.description,
+  image: typeof hero.image === 'string' ? hero.image : topLevel.image,
+  cta: Array.isArray(hero.cta) ? hero.cta : topLevel.cta,
   imageLayout: normalizeImageLayout(hero.imagelayout),
 });
 
@@ -51,7 +63,12 @@ export const resolveHeroConfig = (
 
   if (metadataHero !== undefined) {
     if (isObject(metadataHero)) {
-      return resolveFromHeroObject(metadataHero as HeroObject);
+      return resolveFromHeroObject(metadataHero as HeroObject, {
+        title: metadata?.title,
+        description: metadata?.description,
+        image: metadata?.image,
+        cta: metadata?.cta,
+      });
     }
 
     if (typeof metadataHero === 'boolean') {
@@ -68,7 +85,12 @@ export const resolveHeroConfig = (
 
   if (siteHero !== undefined) {
     if (isObject(siteHero)) {
-      return resolveFromHeroObject(siteHero as HeroObject);
+      return resolveFromHeroObject(siteHero as HeroObject, {
+        title: metadata?.title,
+        description: metadata?.description,
+        image: metadata?.image,
+        cta: metadata?.cta,
+      });
     }
 
     if (typeof siteHero === 'boolean') {

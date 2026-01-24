@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { resolveHeroConfig } from './hero-config';
 
 describe('resolveHeroConfig', () => {
-  it('uses hero object values without falling back to top-level fields', () => {
+  it('uses hero object values with top-level fallbacks for unset fields', () => {
     const result = resolveHeroConfig(
       {
         title: 'Top Title',
@@ -20,9 +20,9 @@ describe('resolveHeroConfig', () => {
     expect(result).toEqual({
       showHero: true,
       title: 'Hero Title',
-      description: undefined,
-      image: undefined,
-      cta: undefined,
+      description: 'Top Description',
+      image: '/top.png',
+      cta: [{ href: '/top', label: 'Top CTA' }],
       imageLayout: 'full',
     });
   });
@@ -72,7 +72,7 @@ describe('resolveHeroConfig', () => {
     });
   });
 
-  it('uses site config hero object when page metadata does not define hero', () => {
+  it('uses site config hero object with top-level fallbacks when page metadata does not define hero', () => {
     const result = resolveHeroConfig(
       {
         title: 'Top Title',
@@ -89,7 +89,7 @@ describe('resolveHeroConfig', () => {
     expect(result).toEqual({
       showHero: true,
       title: 'Config Title',
-      description: undefined,
+      description: 'Top Description',
       image: undefined,
       cta: undefined,
       imageLayout: 'right',
