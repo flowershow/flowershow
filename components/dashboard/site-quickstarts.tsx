@@ -1,9 +1,7 @@
 import Link from 'next/link';
+import FileUploadCard from '@/components/dashboard/file-upload-card';
 import { MarkdownIcon } from '@/components/icons';
 import ObsidianIcon from '@/components/icons/obsidian';
-import { getConfig } from '@/lib/app-config';
-
-const config = getConfig();
 
 export default async function Sites({ limit }: { limit?: number }) {
   const quickstarts = [
@@ -31,7 +29,8 @@ export default async function Sites({ limit }: { limit?: number }) {
   ];
 
   return (
-    <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <FileUploadCard />
       {quickstarts.map((q) => (
         <Link
           key={q.href}
