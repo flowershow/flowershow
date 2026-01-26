@@ -10,6 +10,7 @@ import {
   getContentType,
 } from '@/lib/content-store';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 
@@ -192,21 +193,17 @@ export async function POST(request: NextRequest) {
           const extension = file.fileName.split('.').pop()?.toLowerCase()!;
           const isMarkdown = markdownExtensions.includes(extension);
 
-          // Determine appPath: only for markdown files
-          // Assets (images, etc.) don't have an appPath - they're served as static files
-          let appPath: string | null = null;
-          if (isMarkdown) {
-            const baseName = file.fileName.replace(/\.(md|mdx|markdown)$/i, '');
-            if (
-              markdownFiles.length === 1 ||
-              baseName.toLowerCase() === 'index' ||
-              baseName.toLowerCase() === 'readme'
-            ) {
-              appPath = '/';
+          const appPath = (() => {
+            if (['md', 'mdx'].includes(extension)) {
+              const _urlPath = resolveFilePathToUrlPath({
+                target: file.fileName,
+              });
+              // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / 🤦‍♀️)
+              return _urlPath === '/' ? _urlPath : _urlPath.replace(/^\//, '');
             } else {
-              appPath = `/${baseName}`;
+              return null;
             }
-          }
+          })();
 
           await prisma.blob.create({
             data: {
