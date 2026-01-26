@@ -12,7 +12,7 @@ export const ANONYMOUS_USER_ID = 'anon000000000000000000000000';
 /**
  * Anonymous username for display purposes
  */
-export const ANONYMOUS_USERNAME = 'anonymous';
+export const ANONYMOUS_USERNAME = 'anon';
 
 /**
  * LocalStorage key for persistent anonymous user ID

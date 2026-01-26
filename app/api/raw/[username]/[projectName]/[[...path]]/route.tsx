@@ -46,13 +46,15 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  // In development with MinIO, use http://. In production with R2, use https://
-  const protocol =
-    process.env.NODE_ENV === 'development' ? 'http://' : 'https://';
+  const isSecure =
+    env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+    env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
+  const protocol = isSecure ? 'https' : 'http';
+
   const encodedPath = path
     .map((segment) => encodeURIComponent(segment))
     .join('/');
-  const R2FileUrl = `${protocol}${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${site.id}/${site.ghBranch}/raw/${encodedPath}`;
+  const R2FileUrl = `${protocol}://${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${site.id}/${site.ghBranch ?? 'main'}/raw/${encodedPath}`;
 
   try {
     const fileResponse = await fetch(R2FileUrl, {

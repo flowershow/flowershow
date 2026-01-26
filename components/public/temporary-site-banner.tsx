@@ -1,6 +1,5 @@
 'use client';
 
-import { XIcon } from 'lucide-react';
 import posthog from 'posthog-js';
 import { useEffect, useState } from 'react';
 import { env } from '@/env.mjs';

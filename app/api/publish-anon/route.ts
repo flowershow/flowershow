@@ -14,18 +14,28 @@ import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+const MAX_FILES = 5;
 
-interface PublishRequest {
+interface FileInfo {
   fileName: string;
   fileSize: number;
   sha: string;
+}
+
+interface PublishRequest {
+  files: FileInfo[];
   anonymousUserId: string; // Client-generated persistent ID
+}
+
+interface FileUploadInfo {
+  fileName: string;
+  uploadUrl: string;
 }
 
 interface PublishResponse {
   siteId: string;
   projectName: string;
-  uploadUrl: string;
+  files: FileUploadInfo[];
   liveUrl: string;
   ownershipToken: string;
 }
@@ -54,7 +64,7 @@ export async function POST(request: NextRequest) {
 
         // Parse request
         const body = (await request.json()) as PublishRequest;
-        const { fileName, fileSize, sha, anonymousUserId } = body;
+        const { files, anonymousUserId } = body;
 
         // Validate anonymousUserId
         if (!anonymousUserId || !isValidAnonymousUserId(anonymousUserId)) {
@@ -64,51 +74,90 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // Validate file name
-        if (!fileName || typeof fileName !== 'string') {
+        // Validate files array
+        if (!files || !Array.isArray(files) || files.length === 0) {
           return NextResponse.json(
-            { error: 'fileName is required' },
+            { error: 'At least one file is required' },
             { status: 400 },
           );
         }
 
-        const extension = fileName.split('.').pop()?.toLowerCase();
-        if (!extension || !['md', 'mdx', 'html'].includes(extension)) {
-          return NextResponse.json(
-            { error: 'Only .md, .mdx and .html files are supported' },
-            { status: 400 },
-          );
-        }
-
-        // Validate file size
-        if (!fileSize || typeof fileSize !== 'number' || fileSize <= 0) {
-          return NextResponse.json(
-            { error: 'Invalid file size' },
-            { status: 400 },
-          );
-        }
-
-        if (fileSize > MAX_FILE_SIZE) {
+        if (files.length > MAX_FILES) {
           return NextResponse.json(
             {
-              error: `File too large. Maximum size is ${
-                MAX_FILE_SIZE / 1024 / 1024
-              }MB`,
+              error: `Maximum ${MAX_FILES} files allowed. Sign in to publish more.`,
             },
             { status: 400 },
           );
         }
 
-        // Validate SHA
-        if (!sha || typeof sha !== 'string') {
+        // Validate each file
+        const markdownExtensions = ['md', 'mdx'];
+        let totalSize = 0;
+        let hasMarkdownFile = false;
+
+        for (const file of files) {
+          if (!file.fileName || typeof file.fileName !== 'string') {
+            return NextResponse.json(
+              { error: 'fileName is required for each file' },
+              { status: 400 },
+            );
+          }
+
+          const extension = file.fileName.split('.').pop()?.toLowerCase();
+          if (!extension) {
+            return NextResponse.json(
+              { error: 'File must have an extension' },
+              { status: 400 },
+            );
+          }
+
+          if (markdownExtensions.includes(extension)) {
+            hasMarkdownFile = true;
+          }
+
+          if (
+            !file.fileSize ||
+            typeof file.fileSize !== 'number' ||
+            file.fileSize <= 0
+          ) {
+            return NextResponse.json(
+              { error: 'Invalid file size' },
+              { status: 400 },
+            );
+          }
+
+          if (file.fileSize > MAX_FILE_SIZE) {
+            return NextResponse.json(
+              {
+                error: `File too large. Maximum size is ${
+                  MAX_FILE_SIZE / 1024 / 1024
+                }MB`,
+              },
+              { status: 400 },
+            );
+          }
+
+          if (!file.sha || typeof file.sha !== 'string') {
+            return NextResponse.json(
+              { error: 'sha is required for each file' },
+              { status: 400 },
+            );
+          }
+
+          totalSize += file.fileSize;
+        }
+
+        // Require at least one markdown file
+        if (!hasMarkdownFile) {
           return NextResponse.json(
-            { error: 'sha is required' },
+            { error: 'At least one markdown file (.md, .mdx) is required' },
             { status: 400 },
           );
         }
 
-        span.setAttribute('file_size', fileSize);
-        span.setAttribute('file_extension', extension);
+        span.setAttribute('file_count', files.length);
+        span.setAttribute('total_size', totalSize);
 
         // Generate unique project name
         const randomPart = Math.random().toString(36).substring(2, 10);
@@ -130,28 +179,62 @@ export async function POST(request: NextRequest) {
 
         span.setAttribute('site_id', site.id);
 
-        // Create blob record
-        await prisma.blob.create({
-          data: {
-            siteId: site.id,
-            path: fileName,
-            appPath: '/', // always only single file site
-            size: fileSize,
-            sha,
-            metadata: {},
-            extension,
-            syncStatus: 'PENDING',
-          },
-        });
-
-        // Generate presigned upload URL
-        const s3Key = `${site.id}/main/raw/${fileName}`;
-        const contentType = getContentType(extension);
-        const uploadUrl = await generatePresignedUploadUrl(
-          s3Key,
-          3600, // 1 hour expiry
-          contentType,
+        // Create blob records and generate upload URLs for all files
+        const fileUploads: FileUploadInfo[] = [];
+        const markdownFiles = files.filter((f) =>
+          markdownExtensions.includes(
+            f.fileName.split('.').pop()?.toLowerCase() || '',
+          ),
         );
+
+        for (let i = 0; i < files.length; i++) {
+          const file = files[i]!;
+          const extension = file.fileName.split('.').pop()?.toLowerCase()!;
+          const isMarkdown = markdownExtensions.includes(extension);
+
+          // Determine appPath: only for markdown files
+          // Assets (images, etc.) don't have an appPath - they're served as static files
+          let appPath: string | null = null;
+          if (isMarkdown) {
+            const baseName = file.fileName.replace(/\.(md|mdx|markdown)$/i, '');
+            if (
+              markdownFiles.length === 1 ||
+              baseName.toLowerCase() === 'index' ||
+              baseName.toLowerCase() === 'readme'
+            ) {
+              appPath = '/';
+            } else {
+              appPath = `/${baseName}`;
+            }
+          }
+
+          await prisma.blob.create({
+            data: {
+              siteId: site.id,
+              path: file.fileName,
+              appPath,
+              size: file.fileSize,
+              sha: file.sha,
+              metadata: {},
+              extension,
+              syncStatus: isMarkdown ? 'PENDING' : 'SUCCESS',
+            },
+          });
+
+          // Generate presigned upload URL
+          const s3Key = `${site.id}/main/raw/${file.fileName}`;
+          const contentType = getContentType(extension);
+          const uploadUrl = await generatePresignedUploadUrl(
+            s3Key,
+            3600, // 1 hour expiry
+            contentType,
+          );
+
+          fileUploads.push({
+            fileName: file.fileName,
+            uploadUrl,
+          });
+        }
 
         // Construct live URL
         const liveUrl = `/@anon/${projectName}`;
@@ -163,7 +246,8 @@ export async function POST(request: NextRequest) {
           event: 'anon_publish_started',
           properties: {
             site_id: site.id,
-            file_size: fileSize,
+            file_count: files.length,
+            total_size: totalSize,
             referrer: request.headers.get('referer') || 'direct',
             is_authenticated: false,
           },
@@ -177,7 +261,7 @@ export async function POST(request: NextRequest) {
         const response: PublishResponse = {
           siteId: site.id,
           projectName,
-          uploadUrl,
+          files: fileUploads,
           liveUrl,
           ownershipToken,
         };

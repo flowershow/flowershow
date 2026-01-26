@@ -3,10 +3,10 @@ import { env } from '@/env.mjs';
 
 // Re-export constants for backward compatibility
 export {
-  ANONYMOUS_USER_ID,
-  ANONYMOUS_USERNAME,
-  ANONYMOUS_USER_ID_KEY,
   ANONYMOUS_TOKEN_KEY,
+  ANONYMOUS_USER_ID,
+  ANONYMOUS_USER_ID_KEY,
+  ANONYMOUS_USERNAME,
   isValidAnonymousUserId,
 } from './anonymous-user-constants';
 

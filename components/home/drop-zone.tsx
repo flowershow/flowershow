@@ -1,7 +1,9 @@
 import React, { useRef, useState } from 'react';
 
+const MAX_FILES = 5;
+
 interface DropZoneProps {
-  onFileSelect: (file: File) => void;
+  onFileSelect: (files: File[]) => void;
   disabled?: boolean;
 }
 
@@ -10,7 +12,43 @@ export const DropZone: React.FC<DropZoneProps> = ({
   disabled,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isMarkdownFile = (file: File): boolean => {
+    return (
+      file.name.endsWith('.md') ||
+      file.name.endsWith('.mdx') ||
+      file.name.endsWith('.markdown')
+    );
+  };
+
+  const validateFiles = (
+    files: FileList | null,
+  ): { valid: File[]; error: string | null } => {
+    if (!files || files.length === 0) {
+      return { valid: [], error: null };
+    }
+
+    const allFiles = Array.from(files);
+
+    if (allFiles.length > MAX_FILES) {
+      return {
+        valid: [],
+        error: `Maximum ${MAX_FILES} files allowed. Sign in to publish more.`,
+      };
+    }
+
+    const hasMarkdown = allFiles.some(isMarkdownFile);
+    if (!hasMarkdown) {
+      return {
+        valid: [],
+        error: 'At least one markdown file (.md, .mdx) is required',
+      };
+    }
+
+    return { valid: allFiles, error: null };
+  };
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -24,22 +62,31 @@ export const DropZone: React.FC<DropZoneProps> = ({
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
+    setError(null);
     if (disabled) return;
 
-    const file = e.dataTransfer.files?.[0];
-    if (
-      file &&
-      (file.name.endsWith('.md') || file.name.endsWith('.markdown'))
-    ) {
-      onFileSelect(file);
+    const { valid, error: validationError } = validateFiles(
+      e.dataTransfer.files,
+    );
+    if (validationError) {
+      setError(validationError);
+      return;
     }
+    if (valid.length === 0) return;
+    onFileSelect(valid);
   };
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onFileSelect(file);
+    setError(null);
+    const { valid, error: validationError } = validateFiles(e.target.files);
+    if (validationError) {
+      setError(validationError);
+      return;
     }
+    if (valid.length === 0) return;
+    onFileSelect(valid);
+    // Reset input so the same files can be selected again
+    e.target.value = '';
   };
 
   return (
@@ -61,7 +108,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
         type="file"
         ref={fileInputRef}
         onChange={handleFileInputChange}
-        accept=".md,.markdown"
+        multiple
         className="hidden"
       />
 
@@ -87,12 +134,13 @@ export const DropZone: React.FC<DropZoneProps> = ({
 
         <div>
           <h3 className="text-xl font-bold text-slate-900">
-            Drop your markdown file here
+            Drop your files here
           </h3>
           <p className="mt-1 text-slate-500 max-w-sm mx-auto">
-            Instantly turn your content into a beautiful website. No
-            configuration required.
+            Markdown files with images and assets.
+            <br /> Up to {MAX_FILES} files when not signed in.
           </p>
+          {error && <p className="mt-2 text-sm text-indigo-600">{error}</p>}
         </div>
 
         <div className="pt-4 flex items-center justify-center gap-2">

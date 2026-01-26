@@ -21,9 +21,15 @@ const protocol = isSecure ? 'https' : 'http';
 
 type State = 'idle' | 'uploading' | 'published' | 'error';
 
+interface FileUploadInfo {
+  fileName: string;
+  uploadUrl: string;
+}
+
 interface PublishResult {
   siteId: string;
   projectName: string;
+  files: FileUploadInfo[];
   liveUrl: string;
   ownershipToken: string;
 }
@@ -36,7 +42,6 @@ export default function HomePage() {
   const [state, setState] = useState<State>('idle');
   const [liveUrl, setLiveUrl] = useState<string>('');
   const [siteId, setSiteId] = useState<string>('');
-  const [ownershipToken, setOwnershipToken] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [siteIds, setSiteIds] = useState<string[]>([]);
@@ -83,7 +88,7 @@ export default function HomePage() {
     }
   };
 
-  const handleFileSelect = async (file: File) => {
+  const handleFileSelect = async (files: File[]) => {
     const startTime = Date.now();
     setState('uploading');
     setError('');
@@ -93,17 +98,21 @@ export default function HomePage() {
       // Get or create persistent anonymous user ID for this browser
       const anonymousUserId = getOrCreateAnonymousUserId();
 
-      // Calculate SHA-256
-      const sha = await calculateSHA256(file);
+      // Calculate SHA-256 for all files
+      const filesInfo = await Promise.all(
+        files.map(async (file) => ({
+          fileName: file.name,
+          fileSize: file.size,
+          sha: await calculateSHA256(file),
+        })),
+      );
 
       // Call publish API with anonymous user ID
       const response = await fetch('/api/publish-anon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fileName: file.name,
-          fileSize: file.size,
-          sha,
+          files: filesInfo,
           anonymousUserId, // Pass persistent browser ID
         }),
       });
@@ -113,35 +122,43 @@ export default function HomePage() {
         throw new Error(errorData.error || 'Failed to create site');
       }
 
-      const result: PublishResult & { uploadUrl: string } =
-        await response.json();
+      const result: PublishResult = await response.json();
 
-      // Upload file to R2 using presigned URL
-      const uploadResponse = await fetch(result.uploadUrl, {
-        method: 'PUT',
-        body: file,
-        headers: {
-          'Content-Type': 'text/markdown',
-        },
-      });
+      // Upload all files to R2 using presigned URLs
+      await Promise.all(
+        result.files.map(async (fileInfo) => {
+          const file = files.find((f) => f.name === fileInfo.fileName);
+          if (!file) {
+            throw new Error(`File not found: ${fileInfo.fileName}`);
+          }
 
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload file');
-      }
+          const uploadResponse = await fetch(fileInfo.uploadUrl, {
+            method: 'PUT',
+            body: file,
+            headers: {
+              'Content-Type': 'text/markdown',
+            },
+          });
+
+          if (!uploadResponse.ok) {
+            throw new Error(`Failed to upload file: ${fileInfo.fileName}`);
+          }
+        }),
+      );
 
       // Wait for processing to complete
       await waitForProcessing(result.siteId);
 
       // Track success with time to publish
       const timeToPublishMs = Date.now() - startTime;
-      trackPublishSuccess(result.siteId, file.size, timeToPublishMs);
+      const totalSize = files.reduce((sum, f) => sum + f.size, 0);
+      trackPublishSuccess(result.siteId, totalSize, timeToPublishMs);
 
       // Track that user sees the claim prompt
       trackClaimPromptShown(result.siteId, 'modal');
 
       // Store the reusable ownership token (same token for all sites from this browser)
       const token = result.ownershipToken;
-      setOwnershipToken(token);
       setAnonymousToken(token);
 
       // Save site ID to localStorage
@@ -193,7 +210,6 @@ export default function HomePage() {
     setShowPublishModal(false);
     setLiveUrl('');
     setSiteId('');
-    setOwnershipToken('');
     setError('');
     setCopied(false);
   };
@@ -231,7 +247,7 @@ export default function HomePage() {
           <div className="mb-8">
             <DropZone onFileSelect={handleFileSelect} />
             <p className="text-center text-sm text-gray-400 mt-3">
-              Publishing a repo or multiple pages?{' '}
+              Publishing more than 5 files or a GitHub repo?{' '}
               <a
                 href="https://cloud.flowershow.app/login"
                 className="hover:text-gray-700 underline"
