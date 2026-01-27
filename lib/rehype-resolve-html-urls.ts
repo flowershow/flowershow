@@ -33,7 +33,11 @@ export default function rehypeResolveHtmlUrls(options: Options) {
         }
 
         // Handle href attribute (for a, link, etc.)
-        if (node.properties.href && typeof node.properties.href === 'string') {
+        if (
+          node.properties.href &&
+          typeof node.properties.href === 'string' &&
+          !(sitePrefix && node.properties.href.startsWith(sitePrefix))
+        ) {
           node.properties.href = resolveFilePathToUrlPath({
             target: node.properties.href,
             originFilePath: filePath,
