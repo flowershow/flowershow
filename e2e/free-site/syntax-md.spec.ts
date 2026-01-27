@@ -212,7 +212,9 @@ test.describe('Links and embeds', () => {
     });
 
     test('PDF embed', async ({ publishedSitePage }) => {
-      await expect(publishedSitePage.page.locator('.pdf-viewer')).toBeVisible();
+      await expect(
+        publishedSitePage.page.locator('iframe[title="sample"]'),
+      ).toBeVisible();
     });
 
     test('Video embed', async ({ publishedSitePage }) => {
