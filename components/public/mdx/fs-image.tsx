@@ -40,15 +40,15 @@ function FsImage(props: ImgHTMLAttributes<HTMLImageElement>) {
   //   );
   // }
 
-  let width: number | undefined;
-  let height: number | undefined;
+  const width = props.width ? parseSize(props.width) : undefined;
+  const height = props.height ? parseSize(props.height) : undefined;
   const style: any = { margin: 'auto' };
 
-  if (props.width) {
-    style.width = `${parseSize(props.width)}px`;
+  if (width) {
+    style.width = `${width}px`;
   }
-  if (props.height) {
-    style.height = `${parseSize(props.height)}px`;
+  if (height) {
+    style.height = `${height}px`;
   }
 
   return (

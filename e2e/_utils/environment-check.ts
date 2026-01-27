@@ -1,6 +1,8 @@
 import { exec as execCallback } from 'child_process';
 import { promisify } from 'util';
 
+import 'dotenv/config';
+
 const exec = promisify(execCallback);
 
 export default async function environmentSetupCheck() {
@@ -10,7 +12,10 @@ export default async function environmentSetupCheck() {
     );
   }
 
-  await checkServiceHealth('http://cloud.localhost:3000', 'Next.js app');
+  await checkServiceHealth(
+    `http://${process.env.NEXT_PUBLIC_CLOUD_DOMAIN}`,
+    'Next.js app',
+  );
   await checkServiceHealth('http://localhost:8288', 'Inngest');
   // await checkServiceHealth("http://localhost:8108/health", "Typesense"); TODO
 
@@ -50,6 +55,7 @@ export default async function environmentSetupCheck() {
 
 export async function checkServiceHealth(url: string, serviceName: string) {
   try {
+    console.log(url);
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`${serviceName} returned status ${response.status}`);
