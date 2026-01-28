@@ -1,4 +1,5 @@
 import { expect, test } from '../_fixtures/published-site-test';
+import { decodedImageSrc } from '../_utils/utils';
 
 test.describe('Site layout', () => {
   test('Navbar', async ({ publishedSitePage }) => {
@@ -15,8 +16,9 @@ test.describe('Site layout', () => {
     );
     await expect(navTitle).toContainText('SiteName');
     const navLogo = navTitle.getByRole('img');
-    await expect(navLogo).toHaveAttribute(
-      'src',
+    const navLogoSrc = await navLogo.getAttribute('src');
+    expect(navLogoSrc).not.toBeNull();
+    expect(decodedImageSrc(navLogoSrc!)).toBe(
       publishedSitePage.siteUrl + '/logo.jpg',
     );
     // Check navigation links
@@ -25,7 +27,7 @@ test.describe('Site layout', () => {
       'href',
       `${publishedSitePage.siteUrlPath}/about`,
     );
-    // Check social links if configured
+    // Check social links
     const socialLinks = navbar.locator('.site-navbar-social-links-container');
     await expect(socialLinks.getByRole('link')).toHaveAttribute(
       'href',
@@ -33,47 +35,16 @@ test.describe('Site layout', () => {
     );
   });
 
-  // test("Sidebar", async ({ publishedSitePage }) => {
-  //   await publishedSitePage.goto("/");
+  test('Sidebar', async ({ publishedSitePage }) => {
+    await publishedSitePage.goto('/');
 
-  //   const sidebar = publishedSitePage.page.locator(".site-sidebar");
-  //   await expect(sidebar).toBeVisible();
+    const sidebar = publishedSitePage.page.locator('.site-sidebar');
+    await expect(sidebar).toBeVisible();
 
-  //   const sidebarLink = sidebar.getByRole("link", { name: "Blog Index" });
-  //   await expect(sidebarLink).toHaveAttribute(
-  //     "href",
-  //     publishedSitePage.siteUrlPath + "/blog",
-  //   );
-  // });
-
-  // test("applies fallback values correctly", async ({ page }) => {
-  //   await page.goto(testSite);
-
-  //   // Title should fallback to project name if not in config
-  //   const title = await page.title();
-  //   expect(title).toBeTruthy();
-
-  //   // Description should be empty string if not in config
-  //   const description = await page
-  //     .locator('meta[name="description"]')
-  //     .getAttribute("content");
-  //   expect(description).toBeDefined();
-
-  //   // Nav links should be empty array if not in config
-  //   const navLinks = page.getByTestId("nav-links");
-  //   if ((await navLinks.count()) > 0) {
-  //     const links = await navLinks.locator("a").count();
-  //     expect(links).toBeGreaterThanOrEqual(0);
-  //   }
-  // });
-
-  // test("Branding elements", async ({ publishedSitePage }) => {
-  //   await publishedSitePage.page.goto("/");
-
-  //   // Should show built-with button
-  //   const builtWithButton =
-  //     publishedSitePage.page.locator("#built-with-button");
-  //   await expect(builtWithButton).toBeVisible();
-  //   await expect(builtWithButton).toContainText("Flowershow Cloud");
-  // });
+    const sidebarLink = sidebar.getByRole('link', { name: 'Welcome!' });
+    await expect(sidebarLink).toHaveAttribute(
+      'href',
+      publishedSitePage.siteUrlPath + '/',
+    );
+  });
 });

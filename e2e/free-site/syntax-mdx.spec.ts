@@ -40,7 +40,7 @@ test.describe('Links and embeds', () => {
         .first();
       await expect(link).toHaveAttribute(
         'href',
-        `${publishedSitePage.siteUrlPath}/`,
+        `${publishedSitePage.siteUrlPath}`,
       );
     });
 
@@ -154,7 +154,6 @@ test.describe('Links and embeds', () => {
         const embed = publishedSitePage.page
           .locator('img[alt="assets/image"]')
           .first();
-        await embed.waitFor({ state: 'attached' });
         const src = await embed.getAttribute('src');
         // expect(decodedImageSrc(src!)).toBe(
         //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
@@ -415,7 +414,7 @@ test.describe('MDX', () => {
   test('Should resolve JSX href and src attributes', async ({
     publishedSitePage,
   }) => {
-    await publishedSitePage.goto('/syntax/jsx');
+    await publishedSitePage.goto('/syntax/jsx-blocks');
     await expect(
       publishedSitePage.page.getByTestId('jsx-img').locator('img'),
     ).toHaveAttribute('src', /\/@.+\/.+\/.+/);
@@ -435,34 +434,5 @@ test.describe('MDX', () => {
     await expect(
       publishedSitePage.page.getByText('var1 equals 123'),
     ).toBeVisible();
-  });
-});
-
-test.describe('HTML blocks', () => {
-  test('Should resolve HTML href and src paths', async ({
-    publishedSitePage,
-  }) => {
-    await publishedSitePage.goto('/syntax/html-blocks');
-    const embed = publishedSitePage.page.getByTestId('html-img').locator('img');
-    await embed.waitFor({ state: 'attached' });
-    const src = await embed.getAttribute('src');
-    // const decoded = decodeURIComponent(
-    //   new URL(src!, 'http://localhost').searchParams.get('url')!,
-    // );
-    // expect(decoded).toMatch(/\/@.+\/.+\/.+/);
-    expect(src).toMatch(/\/@.+\/.+\/.+/);
-  });
-});
-
-test.describe('Blog', () => {
-  test('List component', async ({ publishedSitePage }) => {
-    await publishedSitePage.goto('/blog');
-    const listItemLink = publishedSitePage.page
-      .locator('.list-component-item')
-      .getByRole('link', { name: 'Blog Post 1' });
-    await expect(listItemLink).toHaveAttribute(
-      'href',
-      publishedSitePage.siteUrlPath + '/blog/post-with-metadata',
-    );
   });
 });

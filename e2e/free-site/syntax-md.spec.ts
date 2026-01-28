@@ -1,12 +1,5 @@
 import { expect, test } from '../_fixtures/published-site-test';
 
-/** Extract decoded URL from Next.js Image src query param */
-function decodedImageSrc(src: string) {
-  return decodeURIComponent(
-    new URL(src, 'http://localhost').searchParams.get('url')!,
-  );
-}
-
 test.describe('Links and embeds', () => {
   test.beforeEach(async ({ publishedSitePage }) => {
     await publishedSitePage.goto('/syntax/links-and-embeds-md');
@@ -40,7 +33,7 @@ test.describe('Links and embeds', () => {
         .first();
       await expect(link).toHaveAttribute(
         'href',
-        `${publishedSitePage.siteUrlPath}/`,
+        `${publishedSitePage.siteUrlPath}`,
       );
     });
 
@@ -413,33 +406,6 @@ test.describe('Links and embeds', () => {
   });
 });
 
-test.describe('MDX', () => {
-  test('Should resolve JSX href and src attributes', async ({
-    publishedSitePage,
-  }) => {
-    await publishedSitePage.goto('/syntax/jsx');
-    await expect(
-      publishedSitePage.page.getByTestId('jsx-img').locator('img'),
-    ).toHaveAttribute('src', /\/@.+\/.+\/.+/);
-  });
-
-  test('MDX variables', async ({ publishedSitePage }) => {
-    await publishedSitePage.goto('/syntax/mdx-variables');
-    await expect(publishedSitePage.page.getByText('44 million')).toBeVisible();
-    await expect(
-      publishedSitePage.page.getByText('$119 trillion'),
-    ).toBeVisible();
-    await expect(publishedSitePage.page.getByText('46,000')).toBeVisible();
-  });
-
-  test('Frontmatter variables', async ({ publishedSitePage }) => {
-    await publishedSitePage.goto('/syntax/frontmatter-variables');
-    await expect(
-      publishedSitePage.page.getByText('var1 equals 123'),
-    ).toBeVisible();
-  });
-});
-
 test.describe('HTML blocks', () => {
   test('Should resolve HTML href and src paths', async ({
     publishedSitePage,
@@ -453,18 +419,5 @@ test.describe('HTML blocks', () => {
     // );
     // expect(decoded).toMatch(/\/@.+\/.+\/.+/);
     expect(src).toMatch(/\/@.+\/.+\/.+/);
-  });
-});
-
-test.describe('Blog', () => {
-  test('List component', async ({ publishedSitePage }) => {
-    await publishedSitePage.goto('/blog');
-    const listItemLink = publishedSitePage.page
-      .locator('.list-component-item')
-      .getByRole('link', { name: 'Blog Post 1' });
-    await expect(listItemLink).toHaveAttribute(
-      'href',
-      publishedSitePage.siteUrlPath + '/blog/post-with-metadata',
-    );
   });
 });

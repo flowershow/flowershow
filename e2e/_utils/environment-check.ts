@@ -55,7 +55,6 @@ export default async function environmentSetupCheck() {
 
 export async function checkServiceHealth(url: string, serviceName: string) {
   try {
-    console.log(url);
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`${serviceName} returned status ${response.status}`);

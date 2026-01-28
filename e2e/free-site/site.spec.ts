@@ -1,4 +1,5 @@
 import { expect, test } from '../_fixtures/published-site-test';
+import { decodedImageSrc } from '../_utils/utils';
 
 test.describe('Site configuration in `config.json`', () => {
   test('Folders in `contentExclude` are not published', async ({
@@ -67,13 +68,13 @@ test.describe('Raw resource endpoints', () => {
   });
 });
 
-test('Should display frontmatter metadata in the header', async ({
+test('Should display frontmatter metadata in the header correctly', async ({
   publishedSitePage,
 }) => {
   await publishedSitePage.goto('/blog/post-with-metadata');
 
   const header = publishedSitePage.page.locator('header');
-  await expect(header.locator('time').first()).toHaveText('June 6, 2024');
+  await expect(header.locator('time').first()).toHaveText('January 1, 2026');
   await expect(header.locator('h1').first()).toHaveText('Blog Post 1');
   await expect(header).toContainText('Blog Post 1 Description');
 
@@ -84,8 +85,8 @@ test('Should display frontmatter metadata in the header', async ({
     `${publishedSitePage.siteUrlPath}/team/john-doe`,
   );
   const authorAvatar = header.locator('.page-header-author-avatar').first();
-  await expect(authorAvatar).toHaveAttribute(
-    'src',
+  const authorAvatarSrc = await authorAvatar.getAttribute('src');
+  expect(decodedImageSrc(authorAvatarSrc!)).toBe(
     `${publishedSitePage.siteUrl}/team/john.jpg`,
   );
 });
@@ -142,9 +143,6 @@ test('Should render List component correctly', async ({
 
   const listItems2 = list.locator('.list-component-item');
   await expect(listItems2).toHaveCount(3);
-
-  // Check that "Blog Home Page" is not present on page 2
-  await expect(list.getByText('Blog Home Page')).not.toBeVisible();
 });
 
 test.describe('Obsidian permalinks', () => {

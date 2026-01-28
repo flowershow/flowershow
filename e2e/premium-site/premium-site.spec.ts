@@ -1,10 +1,11 @@
 import { expect, test } from '../_fixtures/published-site-test';
+import { decodedImageSrc } from '../_utils/utils';
 
 test.describe('MDX', () => {
   test('Should resolve JSX href and src attributes', async ({
     publishedSitePage,
   }) => {
-    await publishedSitePage.goto('/syntax/syntax');
+    await publishedSitePage.goto('/syntax/jsx-blocks');
     await expect(
       publishedSitePage.page.getByTestId('jsx-img').locator('img'),
     ).toHaveAttribute('src', 'http://test.localhost:3000/assets/image.jpg');
@@ -65,8 +66,8 @@ test('Should display frontmatter metadata in the header correctly', async ({
     `${publishedSitePage.siteUrlPath}/team/john-doe`,
   );
   const authorAvatar = header.locator('.page-header-author-avatar').first();
-  await expect(authorAvatar).toHaveAttribute(
-    'src',
+  const authorAvatarSrc = await authorAvatar.getAttribute('src');
+  expect(decodedImageSrc(authorAvatarSrc!)).toBe(
     `${publishedSitePage.siteUrl}/team/john.jpg`,
   );
 });
