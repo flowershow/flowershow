@@ -44,7 +44,8 @@ interface SyncResponse {
 
 /**
  * POST /api/cli/site/:siteId/sync
- * Unified sync endpoint that handles both initial publish and subsequent syncs
+ * Unified sync endpoint for direct publishing (CLI, Obsidian plugin, or other integrations)
+ * Accepts both fs_cli_* and fs_pat_* tokens
  *
  * Compares local files with existing files in the database:
  * - Returns presigned URLs for new or modified files
@@ -65,7 +66,7 @@ export async function POST(
     },
     async () => {
       try {
-        // Validate CLI token
+        // Validate access token (CLI or PAT)
         const auth = await validateCliToken(request);
         if (!auth?.userId) {
           return NextResponse.json(

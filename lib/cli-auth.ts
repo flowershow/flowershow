@@ -56,10 +56,11 @@ export async function hashToken(token: string): Promise<string> {
 }
 
 /**
- * Validate a CLI token from Authorization header
+ * Validate an access token (CLI or PAT) from Authorization header
+ * Accepts both fs_cli_* and fs_pat_* token formats
  * Returns userId if valid, null otherwise
  */
-export async function validateCliToken(
+export async function validateAccessToken(
   request: NextRequest,
 ): Promise<{ userId: string } | null> {
   const authHeader = request.headers.get('authorization');
@@ -142,3 +143,9 @@ export async function cleanupExpiredDeviceCodes(): Promise<number> {
 
   return result.count;
 }
+
+/**
+ * Alias for backward compatibility
+ * @deprecated Use validateAccessToken instead
+ */
+export const validateCliToken = validateAccessToken;

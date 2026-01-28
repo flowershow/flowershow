@@ -5,11 +5,12 @@ import prisma from '@/server/db';
 
 /**
  * POST /api/cli/site
- * Create a new site for CLI upload
+ * Create a new site for direct publishing (CLI, Obsidian plugin, or other integrations)
+ * Accepts both fs_cli_* and fs_pat_* tokens
  */
 export async function POST(request: NextRequest) {
   try {
-    // Validate CLI token
+    // Validate access token (CLI or PAT)
     const auth = await validateCliToken(request);
     if (!auth?.userId) {
       return NextResponse.json(
