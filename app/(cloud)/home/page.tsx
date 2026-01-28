@@ -559,21 +559,33 @@ export default function HomePage() {
       </div>
 
       {/* Community Sites */}
-      <div className="py-12 sm:py-16">
+      <div className="py-12 sm:py-24 my-12">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <h2 className="my-2 text-pretty text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl lg:text-balance lg:text-center">
             Community sites
           </h2>
-          <div className="mt-10 grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-3">
+          <div className="mt-6 grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-3">
             <div>
-              <a href="https://www.wet-vermilion-crowd.com/">
+              <a href="https://my.flowershow.app/@ASingleMind/Verdantverse">
                 <img
-                  alt="Wet Vermilion Crowd of Things"
-                  src="/assets/showcases/wet-vermillion.png"
+                  alt="Verdantverse"
+                  src="/assets/showcases/verdantverse.png"
                   className="aspect-video w-full rounded-lg bg-gray-100 object-cover"
                 />
                 <div className="mt-4 text-lg font-medium text-gray-900">
-                  <h3>Wet Vermilion Crowd of Things</h3>
+                  <h3>Verdantverse</h3>
+                </div>
+              </a>
+            </div>
+            <div>
+              <a href="https://backtobasic.dev/">
+                <img
+                  alt="Back to Basic"
+                  src="/assets/showcases/backtobasic.png"
+                  className="aspect-video w-full rounded-lg bg-gray-100 object-cover"
+                />
+                <div className="mt-4 text-lg font-medium text-gray-900">
+                  <h3>Back to Basic</h3>
                 </div>
               </a>
             </div>
@@ -586,6 +598,78 @@ export default function HomePage() {
                 />
                 <div className="mt-4 text-lg font-medium text-gray-900">
                   <h3>Give Wiser</h3>
+                </div>
+              </a>
+            </div>
+            <div>
+              <a href="https://my.flowershow.app/@Iwuaa/dnd-compendium">
+                <img
+                  alt="D&D Compendium"
+                  src="/assets/showcases/dnd.png"
+                  className="aspect-video w-full rounded-lg bg-gray-100 object-cover"
+                />
+                <div className="mt-4 text-lg font-medium text-gray-900">
+                  <h3>D&D Compendium</h3>
+                </div>
+              </a>
+            </div>
+            <div>
+              <a href="https://my.flowershow.app/@CCCCOOH/Note">
+                <img
+                  alt="Sy_Study&Note"
+                  src="/assets/showcases/ccccooh.png"
+                  className="aspect-video w-full rounded-lg bg-gray-100 object-cover"
+                />
+                <div className="mt-4 text-lg font-medium text-gray-900">
+                  <h3>Sy_Study&Note</h3>
+                </div>
+              </a>
+            </div>
+            <div>
+              <a href="https://developmentalspaces.org/">
+                <img
+                  alt="Developmental Spaces"
+                  src="/assets/showcases/developmentalspaces.png"
+                  className="aspect-video w-full rounded-lg bg-gray-100 object-cover"
+                />
+                <div className="mt-4 text-lg font-medium text-gray-900">
+                  <h3>Developmental Spaces</h3>
+                </div>
+              </a>
+            </div>
+            <div>
+              <a href="https://metacrisis.info/">
+                <img
+                  alt="Metacrisis"
+                  src="/assets/showcases/metacrisis.png"
+                  className="aspect-video w-full rounded-lg bg-gray-100 object-cover"
+                />
+                <div className="mt-4 text-lg font-medium text-gray-900">
+                  <h3>Metacrisis</h3>
+                </div>
+              </a>
+            </div>
+            <div>
+              <a href="https://my.flowershow.app/@bluedogXLII/hexxen-herr-der-fliegen">
+                <img
+                  alt="Hexxen 1733"
+                  src="/assets/showcases/hexxen.png"
+                  className="aspect-video w-full rounded-lg bg-gray-100 object-cover"
+                />
+                <div className="mt-4 text-lg font-medium text-gray-900">
+                  <h3>Hexxen 1733</h3>
+                </div>
+              </a>
+            </div>
+            <div>
+              <a href="https://rufuspollock.com/">
+                <img
+                  alt="Rufus Pollock"
+                  src="/assets/showcases/rufuspollockcom.png"
+                  className="aspect-video w-full rounded-lg bg-gray-100 object-cover"
+                />
+                <div className="mt-4 text-lg font-medium text-gray-900">
+                  <h3>Rufus Pollock</h3>
                 </div>
               </a>
             </div>
@@ -622,18 +706,6 @@ export default function HomePage() {
                 />
                 <div className="mt-4 text-lg font-medium text-gray-900">
                   <h3>Linux & Cybersecurity Knowledge Hub</h3>
-                </div>
-              </a>
-            </div>
-            <div>
-              <a href="https://my.flowershow.app/@Iwuaa/dnd-compendium">
-                <img
-                  alt="D&D Compendium"
-                  src="/assets/showcases/dnd.png"
-                  className="aspect-video w-full rounded-lg bg-gray-100 object-cover"
-                />
-                <div className="mt-4 text-lg font-medium text-gray-900">
-                  <h3>D&D Compendium</h3>
                 </div>
               </a>
             </div>
