@@ -12,7 +12,7 @@ test.describe('Site layout', () => {
     const navTitle = navbar.locator('.site-navbar-site-title');
     await expect(navTitle).toHaveAttribute(
       'href',
-      publishedSitePage.siteUrlPath,
+      publishedSitePage.siteUrlPath + '/',
     );
     await expect(navTitle).toContainText('SiteName');
     const navLogo = navTitle.getByRole('img');

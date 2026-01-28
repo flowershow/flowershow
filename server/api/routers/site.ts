@@ -826,6 +826,18 @@ export const siteRouter = createTRPCRouter({
               }
             }
 
+            if (config.footer?.navigation) {
+              config.footer.navigation.forEach((group) => {
+                group.links.forEach((link) => {
+                  link.href = resolveFilePathToUrlPath({
+                    target: link.href,
+                    sitePrefix,
+                    domain: site.customDomain,
+                  });
+                });
+              });
+            }
+
             return config;
           } catch {
             return null;
