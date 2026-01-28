@@ -21,6 +21,7 @@ import {
   deleteGitHubRepoWebhook,
   fetchGitHubRepoTree,
 } from '@/lib/github';
+import { isEmoji } from '@/lib/is-emoji';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
 import PostHogClient from '@/lib/server-posthog';
@@ -741,9 +742,19 @@ export const siteRouter = createTRPCRouter({
 
             if (!config) return null;
 
+            console.log({ config });
+
             // Resolve media paths to full URLs
             const keysToResolve = ['image', 'logo', 'favicon', 'thumbnail'];
             keysToResolve.forEach((key) => {
+              if (
+                key === 'favicon' &&
+                config.favicon &&
+                isEmoji(config.favicon)
+              ) {
+                return;
+              }
+
               if (config[key]) {
                 config[key] = resolveFilePathToUrlPath({
                   target: config[key],

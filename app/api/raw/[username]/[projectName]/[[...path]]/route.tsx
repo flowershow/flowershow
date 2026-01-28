@@ -74,8 +74,6 @@ export async function GET(
     // Get Content-Type from R2 response
     let contentType = fileResponse.headers.get('Content-Type') || '';
 
-    console.log({ contentType });
-
     // Fallback: derive from extension if missing/unknown
     if (
       !contentType ||

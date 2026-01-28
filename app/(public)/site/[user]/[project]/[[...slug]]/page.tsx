@@ -1,6 +1,5 @@
 import { GiscusProps } from '@giscus/react';
 import clsx from 'clsx';
-import emojiRegex from 'emoji-regex';
 import { EditIcon } from 'lucide-react';
 import Link from 'next/link';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
@@ -18,6 +17,7 @@ import { generateScopedCss } from '@/lib/generate-scoped-css';
 import { getSite } from '@/lib/get-site';
 import { getSiteUrl, getSiteUrlPath } from '@/lib/get-site-url';
 import { resolveHeroConfig } from '@/lib/hero-config';
+import { isEmoji } from '@/lib/is-emoji';
 import { getMdxOptions, processMarkdown } from '@/lib/markdown';
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
@@ -84,6 +84,10 @@ export async function generateMetadata(props: {
 
   let imageUrl: string | null = config.thumbnail;
   let faviconUrl: string = config.favicon;
+
+  console.log('Generate metadata');
+  console.log('Generate metadata');
+  console.log('Generate metadata');
 
   if (isFeatureEnabled(Feature.NoBranding, site)) {
     imageUrl = metadata?.image || siteConfig?.image || null;
@@ -422,11 +426,4 @@ export default async function SitePage(props: {
       </div>
     </>
   );
-}
-
-const regex = emojiRegex();
-
-function isEmoji(str: string) {
-  const match = str.match(regex);
-  return match !== null && match[0] === str;
 }
