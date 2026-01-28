@@ -11,7 +11,12 @@ interface Token {
   expiresAt: Date | null;
 }
 
-export default function TokensList({ tokens }: { tokens: Token[] }) {
+interface TokensListProps {
+  tokens: Token[];
+  emptyMessage: string;
+}
+
+export default function TokensList({ tokens, emptyMessage }: TokensListProps) {
   const router = useRouter();
   const [revokingId, setRevokingId] = useState<string | null>(null);
 
@@ -27,7 +32,7 @@ export default function TokensList({ tokens }: { tokens: Token[] }) {
     setRevokingId(tokenId);
 
     try {
-      const response = await fetch('/api/cli/tokens/revoke', {
+      const response = await fetch('/api/tokens/revoke', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -61,15 +66,10 @@ export default function TokensList({ tokens }: { tokens: Token[] }) {
 
   if (tokens.length === 0) {
     return (
-      <div className="rounded-lg border border-stone-200 bg-white p-8 text-center dark:border-stone-700 dark:bg-black">
-        <p className="text-stone-500 dark:text-stone-400">
-          No CLI tokens found. Authenticate with the CLI to create one.
+      <div className="rounded-lg border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-black">
+        <p className="text-sm text-stone-500 dark:text-stone-400">
+          {emptyMessage}
         </p>
-        <div className="mt-4">
-          <code className="rounded bg-stone-100 px-2 py-1 text-sm dark:bg-stone-800">
-            flowershow auth login
-          </code>
-        </div>
       </div>
     );
   }
@@ -101,7 +101,7 @@ export default function TokensList({ tokens }: { tokens: Token[] }) {
             {tokens.map((token) => (
               <tr key={token.id}>
                 <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-stone-900 dark:text-stone-100">
-                  {token.name || 'CLI Token'}
+                  {token.name || 'Unnamed Token'}
                 </td>
                 <td className="whitespace-nowrap px-6 py-4 text-sm text-stone-500 dark:text-stone-400">
                   {formatDate(token.createdAt)}

@@ -40,6 +40,15 @@ export function generateCliToken(): string {
 }
 
 /**
+ * Generate a PAT (Personal Access Token)
+ * Format: fs_pat_ + 32 character base64url string
+ */
+export function generatePatToken(): string {
+  const tokenBytes = randomBytes(32).toString('base64url');
+  return `fs_pat_${tokenBytes}`;
+}
+
+/**
  * Hash a CLI token for storage
  */
 export async function hashToken(token: string): Promise<string> {
@@ -61,12 +70,13 @@ export async function validateCliToken(
 
   const token = authHeader.substring(7);
 
-  if (!token.startsWith('fs_cli_')) {
+  // Accept both CLI and PAT token prefixes
+  if (!token.startsWith('fs_cli_') && !token.startsWith('fs_pat_')) {
     return null;
   }
 
   // Find all non-expired tokens
-  const cliTokens = await prisma.cliToken.findMany({
+  const cliTokens = await prisma.accessToken.findMany({
     where: {
       OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }],
     },
@@ -82,7 +92,7 @@ export async function validateCliToken(
     const isValid = await bcrypt.compare(token, record.token);
     if (isValid) {
       // Update last used timestamp (fire and forget)
-      prisma.cliToken
+      prisma.accessToken
         .update({
           where: { id: record.id },
           data: { lastUsedAt: new Date() },

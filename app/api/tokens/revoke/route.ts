@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find and delete the token (only if it belongs to the user)
-    const token = await prisma.cliToken.findFirst({
+    const token = await prisma.accessToken.findFirst({
       where: {
         id: token_id,
         userId: session.user.id,
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await prisma.cliToken.delete({
+    await prisma.accessToken.delete({
       where: { id: token_id },
     });
 

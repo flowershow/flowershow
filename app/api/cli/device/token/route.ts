@@ -68,11 +68,12 @@ export async function POST(request: NextRequest) {
     const hashedToken = await hashToken(cliToken);
 
     // Store token in database
-    await prisma.cliToken.create({
+    await prisma.accessToken.create({
       data: {
         token: hashedToken,
         userId: deviceCodeRecord.userId,
         name: 'CLI Token',
+        type: 'CLI',
       },
     });
 

@@ -6,6 +6,7 @@ import {
   protectedProcedure,
   publicProcedure,
 } from '@/server/api/trpc';
+import { generatePatToken, hashToken } from '@/lib/cli-auth';
 
 export const userRouter = createTRPCRouter({
   getStats: publicProcedure.query(async ({ ctx }) => {
@@ -142,4 +143,57 @@ export const userRouter = createTRPCRouter({
         site.ghRepository !== null,
     );
   }),
+  getAccessTokens: protectedProcedure.query(async ({ ctx }) => {
+    return await ctx.db.accessToken.findMany({
+      where: {
+        userId: ctx.session.user.id,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        createdAt: true,
+        lastUsedAt: true,
+        expiresAt: true,
+      },
+    });
+  }),
+  createAccessToken: protectedProcedure
+    .input(
+      z.object({
+        name: z
+          .string()
+          .min(1, 'Name is required')
+          .max(100, 'Name is too long'),
+        expiresAt: z.iso.datetime().optional().nullable(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { name, expiresAt } = input;
+
+      // Generate PAT token
+      const patToken = generatePatToken();
+      const hashedToken = await hashToken(patToken);
+
+      // Store token in database
+      await ctx.db.accessToken.create({
+        data: {
+          token: hashedToken,
+          userId: ctx.session.user.id,
+          name,
+          type: 'PAT',
+          expiresAt: expiresAt ? new Date(expiresAt) : null,
+        },
+      });
+
+      // Return the plaintext token ONCE
+      return {
+        token: patToken,
+        message:
+          'Token created successfully. Copy this token now - it will not be shown again.',
+      };
+    }),
 });
