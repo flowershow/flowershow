@@ -2,7 +2,7 @@ import { expect, test } from '../_fixtures/published-site-test';
 
 test.describe('Links and embeds', () => {
   test.beforeEach(async ({ publishedSitePage }) => {
-    await publishedSitePage.goto('/syntax/links-and-embeds');
+    await publishedSitePage.goto('/syntax/links-and-embeds-md');
   });
 
   test.describe('Obsidian wiki-links', () => {
@@ -153,31 +153,18 @@ test.describe('Links and embeds', () => {
   });
 });
 
-test.describe('MDX', () => {
-  test('Should resolve JSX href and src attributes', async ({
+test.describe('HTML blocks', () => {
+  test('Should resolve HTML href and src paths', async ({
     publishedSitePage,
   }) => {
-    await publishedSitePage.goto('/syntax/jsx-blocks');
-    const src = await publishedSitePage.page
-      .getByTestId('jsx-img')
-      .locator('img')
-      .getAttribute('src');
+    await publishedSitePage.goto('/syntax/html-blocks');
+    const embed = publishedSitePage.page.getByTestId('html-img').locator('img');
+    await embed.waitFor({ state: 'attached' });
+    const src = await embed.getAttribute('src');
+    // const decoded = decodeURIComponent(
+    //   new URL(src!, 'http://localhost').searchParams.get('url')!,
+    // );
+    // expect(decoded).toMatch(/\/@.+\/.+\/.+/);
     expect(src).toBe(`${publishedSitePage.siteUrl}/assets/image.jpg`);
-  });
-
-  test('MDX variables', async ({ publishedSitePage }) => {
-    await publishedSitePage.goto('/syntax/mdx-variables');
-    await expect(publishedSitePage.page.getByText('44 million')).toBeVisible();
-    await expect(
-      publishedSitePage.page.getByText('$119 trillion'),
-    ).toBeVisible();
-    await expect(publishedSitePage.page.getByText('46,000')).toBeVisible();
-  });
-
-  test('Frontmatter variables', async ({ publishedSitePage }) => {
-    await publishedSitePage.goto('/syntax/frontmatter-variables');
-    await expect(
-      publishedSitePage.page.getByText('var1 equals 123'),
-    ).toBeVisible();
   });
 });
