@@ -71,7 +71,7 @@
     "mdast-util-mdx-jsx": "^3.2.0",
     "mdx-mermaid": "^2.0.3",
     "motion": "^12.23.24",
-    "next": "15.5.9",
+    "next": "16.1.5",
     "next-auth": "4.24.12",
     "next-mdx-remote-client": "^2.1.7",
     "papaparse": "^5.5.3",
