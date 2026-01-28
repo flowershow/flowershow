@@ -1,9 +1,45 @@
 import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { mocked } from 'storybook/test';
+import type { Decorator } from '@storybook/nextjs-vite';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { observable } from '@trpc/server/observable';
+import { api } from '@/trpc/react';
+import superjson from 'superjson';
 import List from '@/components/public/mdx/list';
 import { manyItems } from '@/stories/__fixtures__/catalog';
-import { api } from '@/trpc/server';
 import '@/styles/default-theme.css';
+
+/**
+ * Creates a Storybook decorator that wraps the story in the tRPC React
+ * provider. The supplied `resolvedData` is returned for every tRPC query,
+ * so each story can control what the component "sees".
+ */
+function withTRPC(resolvedData: unknown): Decorator {
+  return function TRPCWrapper(Story) {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    const trpcClient = api.createClient({
+      transformer: superjson,
+      links: [
+        () => () =>
+          observable((observer) => {
+            observer.next({
+              result: { type: 'data', data: resolvedData },
+            });
+            observer.complete();
+          }),
+      ],
+    });
+
+    return (
+      <QueryClientProvider client={queryClient}>
+        <api.Provider client={trpcClient} queryClient={queryClient}>
+          <Story />
+        </api.Provider>
+      </QueryClientProvider>
+    );
+  };
+}
 
 const meta: Meta<typeof List> = {
   title: 'Other/List',
@@ -26,23 +62,8 @@ export default meta;
 type Story = StoryObj<typeof List>;
 
 export const Default: Story = {
-  async beforeEach() {
-    mocked(api.site.getListComponentItems.query).mockResolvedValue({
-      items: manyItems(3),
-    });
-  },
+  decorators: [withTRPC({ items: manyItems(3) })],
 };
-
-// export const WithOldFieldsProp: Story = {
-//   args: {
-//     fields: ["title", "description", "date", "authors", "image"],
-//   },
-//   async beforeEach() {
-//     mocked(api.site.getListComponentItems.query).mockResolvedValue({
-//       items: manyItems(3),
-//     });
-//   },
-// };
 
 export const WithPagination: Story = {
   parameters: {
@@ -56,11 +77,7 @@ export const WithPagination: Story = {
     },
   },
   args: { pageSize: 10 },
-  async beforeEach() {
-    mocked(api.site.getListComponentItems.query).mockResolvedValue({
-      items: manyItems(23),
-    });
-  },
+  decorators: [withTRPC({ items: manyItems(23) })],
 };
 
 export const CustomSlots: Story = {
@@ -73,38 +90,9 @@ export const CustomSlots: Story = {
       footnote: 'tags',
     },
   },
-  async beforeEach() {
-    mocked(api.site.getListComponentItems.query).mockResolvedValue({
-      items: manyItems(3),
-    });
-  },
+  decorators: [withTRPC({ items: manyItems(3) })],
 };
 
-// export const WithFormats: Story = {
-//   args: {
-//     locale: "pl-PL",
-//     slots: {
-//       eyebrow: "date",
-//       headline: "title",
-//       summary: "description",
-//       footnote: "authors",
-//     },
-//     slotsFormat: {
-//       date: "date:yyyy-mm-dd",
-//       authors: "join: • ",
-//     },
-//   } as any,
-//   async beforeEach() {
-//     mocked(api.site.getListComponentItems.query).mockResolvedValue({
-//       items: [oneItem({ authors: ["Ala", "Ola", "Ela"] })],
-//     });
-//   },
-// };
-
 export const EmptyState: Story = {
-  async beforeEach() {
-    mocked(api.site.getListComponentItems.query).mockResolvedValue({
-      items: [],
-    });
-  },
+  decorators: [withTRPC({ items: [] })],
 };

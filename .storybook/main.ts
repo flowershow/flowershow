@@ -27,6 +27,10 @@ const config: StorybookConfig = {
     experimentalRSC: true,
   },
   async viteFinal(cfg) {
+    cfg.define = {
+      ...cfg.define,
+      'process.env.SKIP_ENV_VALIDATION': JSON.stringify('true'),
+    };
     cfg.resolve = cfg.resolve || {};
     const aliases = cfg.resolve.alias || {};
     cfg.resolve.alias = {
