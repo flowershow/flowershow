@@ -88,30 +88,32 @@ export default async function SiteSettingsIndex(props: {
             handleSubmit={updateSite}
           />
 
-          <Form
-            title="Root Directory"
-            description="The directory within your repository, in which your content is located. Leave empty if you're publishing the whole repository."
-            helpText={
-              <p>
-                Learn more about{' '}
-                <a
-                  className="underline"
-                  href="https://flowershow.app/docs/site-settings#root-directory"
-                >
-                  Root directory
-                  <ExternalLinkIcon className="inline h-4" />
-                </a>
-                .
-              </p>
-            }
-            inputAttrs={{
-              name: 'rootDir',
-              type: 'text',
-              defaultValue: site?.rootDir!,
-              required: false,
-            }}
-            handleSubmit={updateSite}
-          />
+          {site.ghRepository && (
+            <Form
+              title="Root Directory"
+              description="The directory within your repository, in which your content is located. Leave empty if you're publishing the whole repository."
+              helpText={
+                <p>
+                  Learn more about{' '}
+                  <a
+                    className="underline"
+                    href="https://flowershow.app/docs/site-settings#root-directory"
+                  >
+                    Root directory
+                    <ExternalLinkIcon className="inline h-4" />
+                  </a>
+                  .
+                </p>
+              }
+              inputAttrs={{
+                name: 'rootDir',
+                type: 'text',
+                defaultValue: site?.rootDir!,
+                required: false,
+              }}
+              handleSubmit={updateSite}
+            />
+          )}
 
           <Form
             title="Markdown or MDX"
@@ -142,29 +144,31 @@ export default async function SiteSettingsIndex(props: {
             handleSubmit={updateSite}
           />
 
-          <Form
-            title="Auto-sync"
-            description="Automatically sync your site after each change to the GitHub repository."
-            helpText={
-              <p>
-                Learn more about{' '}
-                <a
-                  className="underline"
-                  href="https://flowershow.app/docs/site-settings#auto-sync"
-                >
-                  Auto-Sync
-                  <ExternalLinkIcon className="inline h-4" />
-                </a>
-                .
-              </p>
-            }
-            inputAttrs={{
-              name: 'autoSync',
-              type: 'text',
-              defaultValue: Boolean(site?.autoSync!).toString(),
-            }}
-            handleSubmit={updateSite}
-          />
+          {site.ghRepository && (
+            <Form
+              title="Auto-sync"
+              description="Automatically sync your site after each change to the GitHub repository."
+              helpText={
+                <p>
+                  Learn more about{' '}
+                  <a
+                    className="underline"
+                    href="https://flowershow.app/docs/site-settings#auto-sync"
+                  >
+                    Auto-Sync
+                    <ExternalLinkIcon className="inline h-4" />
+                  </a>
+                  .
+                </p>
+              }
+              inputAttrs={{
+                name: 'autoSync',
+                type: 'text',
+                defaultValue: Boolean(site?.autoSync!).toString(),
+              }}
+              handleSubmit={updateSite}
+            />
+          )}
 
           <Form
             title="Comments"
