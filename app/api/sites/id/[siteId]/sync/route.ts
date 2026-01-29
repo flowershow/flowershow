@@ -43,7 +43,7 @@ interface SyncResponse {
 }
 
 /**
- * POST /api/site/:siteId/sync
+ * POST /api/sites/id/:siteId/sync
  * Unified sync endpoint for direct publishing (CLI, Obsidian plugin, or other integrations)
  * Accepts both fs_cli_* and fs_pat_* tokens
  *
@@ -62,7 +62,7 @@ export async function POST(
   return Sentry.startSpan(
     {
       op: 'http.server',
-      name: 'POST /api/site/[siteId]/sync',
+      name: 'POST /api/sites/id/[siteId]/sync',
     },
     async () => {
       try {

@@ -4,7 +4,7 @@ import { validateAccessToken } from '@/lib/cli-auth';
 import prisma from '@/server/db';
 
 /**
- * POST /api/site
+ * POST /api/sites
  * Create a new site for direct publishing (CLI, Obsidian plugin, or other integrations)
  * Accepts both fs_cli_* and fs_pat_* tokens
  */
@@ -136,7 +136,7 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/site
+ * GET /api/sites
  * List all sites for the authenticated user
  */
 export async function GET(request: NextRequest) {

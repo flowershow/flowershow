@@ -4,7 +4,7 @@ import { validateAccessToken } from '@/lib/cli-auth';
 import prisma from '@/server/db';
 
 /**
- * GET /api/site/:siteId/status
+ * GET /api/sites/id/:siteId/status
  * Get processing status of site files
  *
  * When authenticated: Returns detailed blob information with individual file statuses

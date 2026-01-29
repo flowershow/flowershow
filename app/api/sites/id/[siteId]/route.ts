@@ -5,7 +5,7 @@ import { deleteProject } from '@/lib/content-store';
 import prisma from '@/server/db';
 
 /**
- * GET /api/site/:siteId
+ * GET /api/sites/id/:siteId
  * Get details for a specific site
  */
 export async function GET(
@@ -118,7 +118,7 @@ export async function GET(
 }
 
 /**
- * DELETE /api/site/:siteId
+ * DELETE /api/sites/id/:siteId
  * Delete a site and all its content
  */
 export async function DELETE(

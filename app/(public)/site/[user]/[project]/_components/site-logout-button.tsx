@@ -13,7 +13,7 @@ export default function SiteAuthButton({
   const router = useRouter();
 
   const handleSignOutFromSite = async () => {
-    await fetch(`/api/site/logout?siteid=${siteId}`, {
+    await fetch(`/api/sites/id/${siteId}/logout`, {
       method: 'POST',
       credentials: 'include',
     });

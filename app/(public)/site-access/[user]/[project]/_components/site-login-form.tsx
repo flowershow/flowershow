@@ -22,7 +22,7 @@ export function SiteLoginForm({ siteId }: Props) {
     const formData = new FormData(e.currentTarget);
 
     try {
-      const response = await fetch('/api/site/login', {
+      const response = await fetch(`/api/sites/id/${siteId}/login`, {
         method: 'POST',
         body: formData,
       });
@@ -49,7 +49,6 @@ export function SiteLoginForm({ siteId }: Props) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <input type="hidden" name="siteid" value={siteId} />
       <PasswordInput
         id="password"
         name="password"

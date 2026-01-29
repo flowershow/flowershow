@@ -9,9 +9,26 @@ import prisma from '@/server/db';
 
 const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
-export async function POST(request: NextRequest) {
+/**
+ * POST /api/sites/id/:siteId/login
+ *
+ * Authenticate a visitor to access a password-protected site.
+ * Sets an httpOnly JWT cookie scoped to the site's path or custom domain.
+ *
+ * No authentication required (password provided in form data).
+ *
+ * Request body (form data): {
+ *   password: string
+ * }
+ *
+ * Response: { success: true } or { error: string }
+ */
+export async function POST(
+  request: NextRequest,
+  props: { params: Promise<{ siteId: string }> },
+) {
+  const { siteId } = await props.params;
   const form = await request.formData();
-  const siteId = String(form.get('siteid') ?? '');
   const password = String(form.get('password') ?? '');
 
   const site = await prisma.site.findUnique({

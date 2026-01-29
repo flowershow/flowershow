@@ -12,8 +12,10 @@ import { siteKeyBytes } from './lib/site-hmac-key';
 
 export const config = {
   matcher: [
+    // Match API routes for CORS
+    '/api/:path*',
     // Match everything except:
-    // - /api
+    // - /api (handled above)
     // - Next internals
     // - /_static (public)
     // - /_vercel
@@ -23,6 +25,31 @@ export const config = {
 
 export default async function middleware(req: NextRequest) {
   const url = req.nextUrl;
+
+  // Handle CORS for API routes (Obsidian plugin)
+  if (url.pathname.startsWith('/api/')) {
+    const origin = req.headers.get('origin');
+    const isAllowedOrigin = origin === 'app://obsidian.md';
+
+    // Handle preflight OPTIONS request
+    if (req.method === 'OPTIONS') {
+      return new NextResponse(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': isAllowedOrigin ? origin : '',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        },
+      });
+    }
+
+    // For other API requests, add CORS headers and continue
+    const response = NextResponse.next();
+    if (isAllowedOrigin) {
+      response.headers.set('Access-Control-Allow-Origin', origin);
+    }
+    return response;
+  }
 
   const posthog = PostHogClient();
 
@@ -117,7 +144,7 @@ export default async function middleware(req: NextRequest) {
     const [, username, projectname, slug = ''] = match;
 
     // Look up site
-    const site = await fetchSite(req, `/api/site/${username}/${projectname}`);
+    const site = await fetchSite(req, `/api/sites/${username}/${projectname}`);
 
     if (!site) return rewrite(`/not-found`, req, phBootstrap);
 
@@ -222,7 +249,7 @@ export default async function middleware(req: NextRequest) {
   }
 
   // Look up site
-  const site = await fetchSite(req, `/api/site/_domain/${hostname}`);
+  const site = await fetchSite(req, `/api/sites/_domain/${hostname}`);
   if (!site) return rewrite(`/not-found`, req, phBootstrap);
 
   // Per-site login page
