@@ -160,6 +160,13 @@ export async function POST(request: NextRequest) {
         span.setAttribute('file_count', files.length);
         span.setAttribute('total_size', totalSize);
 
+        // Check if there's only a single markdown file
+        const mdFiles = files.filter((f) => {
+          const ext = f.fileName.split('.').pop()?.toLowerCase() || '';
+          return ['md', 'mdx'].includes(ext);
+        });
+        const isSinglePage = mdFiles.length === 1;
+
         // Generate unique project name
         const randomPart = Math.random().toString(36).substring(2, 10);
         const projectName = randomPart;
@@ -182,19 +189,16 @@ export async function POST(request: NextRequest) {
 
         // Create blob records and generate upload URLs for all files
         const fileUploads: FileUploadInfo[] = [];
-        const markdownFiles = files.filter((f) =>
-          markdownExtensions.includes(
-            f.fileName.split('.').pop()?.toLowerCase() || '',
-          ),
-        );
 
         for (let i = 0; i < files.length; i++) {
           const file = files[i]!;
           const extension = file.fileName.split('.').pop()?.toLowerCase()!;
-          const isMarkdown = markdownExtensions.includes(extension);
 
           const appPath = (() => {
             if (['md', 'mdx'].includes(extension)) {
+              if (isSinglePage) {
+                return '/';
+              }
               const _urlPath = resolveFilePathToUrlPath({
                 target: file.fileName,
               });
