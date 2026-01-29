@@ -3,12 +3,54 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateAccessToken } from '@/lib/cli-auth';
 import prisma from '@/server/db';
 
+// ─── Response Types ──────────────────────────────────────────────────────────
+
+/** Error response for API failures */
+type ErrorResponse = {
+  error: 'not_found' | 'forbidden' | 'internal_error';
+  message: string;
+};
+
+/** File status counts */
+type FileStatusCounts = {
+  total: number;
+  pending: number;
+  success: number;
+  failed: number;
+};
+
+/** Individual blob status info (authenticated response only) */
+type BlobStatus = {
+  id: string;
+  path: string;
+  syncStatus: string;
+  syncError: string | null;
+  extension: string | null;
+};
+
+/** Authenticated response with detailed blob information */
+type AuthenticatedStatusResponse = {
+  siteId: string;
+  status: 'pending' | 'complete' | 'error';
+  files: FileStatusCounts;
+  blobs: BlobStatus[];
+};
+
+/** Public response for unauthenticated polling */
+type PublicStatusResponse =
+  | { status: 'pending' | 'complete' }
+  | { status: 'error'; errors: Array<{ path: string; error: string }> };
+
+/** All possible successful response types */
+type StatusResponse = AuthenticatedStatusResponse | PublicStatusResponse;
+
 /**
  * GET /api/sites/id/:siteId/status
  * Get processing status of site files
  *
- * When authenticated: Returns detailed blob information with individual file statuses
- * When unauthenticated: Returns simple ready/not-ready status (for public polling)
+ * @returns {ErrorResponse} - 404/403/500 error responses
+ * @returns {AuthenticatedStatusResponse} - Detailed status when authenticated
+ * @returns {PublicStatusResponse} - Simple ready/not-ready for public polling
  */
 export async function GET(
   request: NextRequest,
@@ -77,10 +119,7 @@ export async function GET(
           blobs: [],
         });
       } else {
-        return NextResponse.json({
-          status: 'pending',
-          ready: false,
-        });
+        return NextResponse.json({ status: 'pending' });
       }
     }
 
@@ -94,7 +133,8 @@ export async function GET(
 
     for (const blob of blobs) {
       switch (blob.syncStatus) {
-        case 'PENDING':
+        case 'UPLOADING':
+        case 'PROCESSING':
           statusCounts.pending++;
           break;
         case 'SUCCESS':
@@ -107,16 +147,11 @@ export async function GET(
     }
 
     // Determine overall status
-    let overallStatus:
-      | 'processing'
-      | 'complete'
-      | 'error'
-      | 'pending'
-      | 'success';
+    let overallStatus: 'pending' | 'complete' | 'error';
     if (statusCounts.failed > 0) {
       overallStatus = 'error';
     } else if (statusCounts.pending > 0) {
-      overallStatus = 'processing';
+      overallStatus = 'pending';
     } else {
       overallStatus = 'complete';
     }
@@ -138,28 +173,17 @@ export async function GET(
     }
 
     // Return simple response for public polling
-    const errorBlob = blobs.find((b) => b.syncStatus === 'ERROR');
-
     if (overallStatus === 'error') {
-      return NextResponse.json({
-        status: 'error',
-        ready: false,
-        error: errorBlob?.syncError || 'Processing failed',
-      });
+      const errors = blobs
+        .filter((b) => b.syncStatus === 'ERROR')
+        .map((b) => ({
+          path: b.path,
+          error: b.syncError || 'Processing failed',
+        }));
+      return NextResponse.json({ status: 'error', errors });
     }
 
-    if (overallStatus === 'processing') {
-      return NextResponse.json({
-        status: 'processing',
-        ready: false,
-      });
-    }
-
-    // All blobs are SUCCESS
-    return NextResponse.json({
-      status: 'success',
-      ready: true,
-    });
+    return NextResponse.json({ status: overallStatus });
   } catch (error) {
     console.error('Error fetching site status:', error);
     Sentry.captureException(error);
