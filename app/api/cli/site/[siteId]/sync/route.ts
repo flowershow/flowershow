@@ -263,13 +263,6 @@ export async function POST(
           deletedPaths.push(...toDelete.map((f) => f.path));
         }
 
-        // Check if there's only a single .md/.mdx file across all synced files
-        const mdFiles = files.filter((f) => {
-          const ext = f.path.split('.').pop()?.toLowerCase() || '';
-          return ['md', 'mdx'].includes(ext);
-        });
-        const isSinglePage = mdFiles.length === 1;
-
         // Generate presigned URLs for files to upload
         const uploadUrls: UploadUrl[] = dryRun
           ? // In dry-run mode, return placeholder data
@@ -298,9 +291,6 @@ export async function POST(
 
                     const urlPath = (() => {
                       if (['md', 'mdx'].includes(extension)) {
-                        if (isSinglePage) {
-                          return '/';
-                        }
                         const _urlPath = resolveFilePathToUrlPath({
                           target: file.path,
                         });

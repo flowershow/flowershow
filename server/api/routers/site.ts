@@ -1047,6 +1047,17 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
+          // If on home page and still no blob found, fall back to first md/mdx file alphabetically
+          if (!blob && input.slug === '/') {
+            blob = await ctx.db.blob.findFirst({
+              where: {
+                siteId: input.siteId,
+                extension: { in: ['md', 'mdx'] },
+              },
+              orderBy: { path: 'asc' },
+            });
+          }
+
           const site = await ctx.db.site.findFirst({
             where: {
               id: input.siteId,
