@@ -38,6 +38,7 @@ type ContentType =
   | 'application/json'
   | 'application/yaml'
   | 'text/css'
+  | 'text/javascript'
   | 'image/jpeg'
   | 'image/png'
   | 'image/gif'
@@ -142,6 +143,8 @@ export const getContentType = (extension: string): ContentType => {
       return 'application/yaml';
     case 'css':
       return 'text/css';
+    case 'js':
+      return 'text/javascript';
     case 'jpeg':
     case 'jpg':
       return 'image/jpeg';
