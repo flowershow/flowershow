@@ -1,7 +1,55 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/server/db';
 import bcrypt from 'bcryptjs';
 import { randomBytes } from 'crypto';
+
+/** Minimum CLI version required to use the API */
+const MIN_CLI_VERSION = '1.0.0';
+
+/**
+ * Compare semver versions
+ * Returns: -1 if a < b, 0 if a == b, 1 if a > b
+ */
+function compareSemver(a: string, b: string): number {
+  const pa = a.split('.').map(Number);
+  const pb = b.split('.').map(Number);
+  for (let i = 0; i < 3; i++) {
+    const na = pa[i] || 0;
+    const nb = pb[i] || 0;
+    if (na < nb) return -1;
+    if (na > nb) return 1;
+  }
+  return 0;
+}
+
+/**
+ * Check CLI version from request header
+ * Only validates if header is present (to allow PAT usage without CLI)
+ * Returns error response if version is outdated, null if OK
+ */
+export function checkCliVersion(request: NextRequest): NextResponse | null {
+  const cliVersion = request.headers.get('X-Flowershow-CLI-Version');
+
+  // No header = not a CLI request, skip check
+  if (!cliVersion) {
+    return null;
+  }
+
+  if (compareSemver(cliVersion, MIN_CLI_VERSION) < 0) {
+    return NextResponse.json(
+      {
+        error: 'client_outdated',
+        message:
+          'Your FlowerShow CLI is outdated and no longer works with the API.',
+        currentVersion: cliVersion,
+        minimumVersion: MIN_CLI_VERSION,
+      },
+      { status: 426 },
+    );
+  }
+
+  return null;
+}
 
 /**
  * Generate a cryptographically secure device code

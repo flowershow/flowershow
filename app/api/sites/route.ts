@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
-import { validateAccessToken } from '@/lib/cli-auth';
+import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
 import prisma from '@/server/db';
 
 /**
@@ -10,6 +10,10 @@ import prisma from '@/server/db';
  */
 export async function POST(request: NextRequest) {
   try {
+    // Check CLI version
+    const versionError = checkCliVersion(request);
+    if (versionError) return versionError;
+
     // Validate access token (CLI or PAT)
     const auth = await validateAccessToken(request);
     if (!auth?.userId) {
@@ -141,6 +145,10 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Check CLI version
+    const versionError = checkCliVersion(request);
+    if (versionError) return versionError;
+
     // Validate access token (CLI or PAT)
     const auth = await validateAccessToken(request);
     if (!auth?.userId) {

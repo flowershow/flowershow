@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
-import { validateAccessToken } from '@/lib/cli-auth';
+import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
 import prisma from '@/server/db';
 
 // ─── Response Types ──────────────────────────────────────────────────────────
@@ -57,6 +57,10 @@ export async function GET(
   props: { params: Promise<{ siteId: string }> },
 ) {
   try {
+    // Check CLI version
+    const versionError = checkCliVersion(request);
+    if (versionError) return versionError;
+
     const { siteId } = await props.params;
 
     // Check for authentication (optional)

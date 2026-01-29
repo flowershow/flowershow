@@ -1,7 +1,7 @@
 import { Blob } from '@prisma/client';
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
-import { validateAccessToken } from '@/lib/cli-auth';
+import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
 import {
   deleteFile,
   generatePresignedUploadUrl,
@@ -68,6 +68,10 @@ export async function POST(
     },
     async () => {
       try {
+        // Check CLI version
+        const versionError = checkCliVersion(request);
+        if (versionError) return versionError;
+
         // Validate access token (CLI or PAT)
         const auth = await validateAccessToken(request);
         if (!auth?.userId) {
@@ -306,18 +310,14 @@ export async function POST(
                   sha: file.sha,
                   metadata: {},
                   extension,
-                  syncStatus: ['md', 'mdx'].includes(extension)
-                    ? 'PENDING'
-                    : 'SUCCESS',
+                  syncStatus: 'UPLOADING',
                 },
                 update: {
                   size: file.size,
                   sha: file.sha,
                   appPath: urlPath,
                   extension,
-                  syncStatus: ['md', 'mdx'].includes(extension)
-                    ? 'PENDING'
-                    : 'SUCCESS',
+                  syncStatus: 'UPLOADING',
                 },
               });
 

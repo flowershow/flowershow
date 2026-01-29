@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
-import { validateAccessToken } from '@/lib/cli-auth';
+import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
 import { deleteProject } from '@/lib/content-store';
 import prisma from '@/server/db';
 
@@ -13,6 +13,10 @@ export async function GET(
   props: { params: Promise<{ siteId: string }> },
 ) {
   try {
+    // Check CLI version
+    const versionError = checkCliVersion(request);
+    if (versionError) return versionError;
+
     // Validate access token (CLI or PAT)
     const auth = await validateAccessToken(request);
     if (!auth?.userId) {
@@ -126,6 +130,10 @@ export async function DELETE(
   props: { params: Promise<{ siteId: string }> },
 ) {
   try {
+    // Check CLI version
+    const versionError = checkCliVersion(request);
+    if (versionError) return versionError;
+
     // Validate access token (CLI or PAT)
     const auth = await validateAccessToken(request);
     if (!auth?.userId) {
