@@ -1,6 +1,6 @@
 // @ts-check
-import { withSentryConfig } from '@sentry/nextjs';
-import { env } from './env.mjs';
+import { withSentryConfig } from "@sentry/nextjs";
+import { env } from "./env.mjs";
 
 /**
  * @type {import('next').NextConfig}
@@ -10,23 +10,44 @@ const nextConfig = {
     globalNotFound: true,
     serverActions: {
       allowedOrigins: [
-        'cloud.localhost:3000',
+        "cloud.localhost:3000",
         env.NEXT_PUBLIC_ROOT_DOMAIN,
         env.NEXT_PUBLIC_CLOUD_DOMAIN,
       ],
     },
   },
   images: {
-    remotePatterns: [{ hostname: '*' }],
+    remotePatterns: [{ hostname: "*" }],
   },
   skipTrailingSlashRedirect: true,
   compiler: {
     removeConsole:
-      process.env.NODE_ENV === 'production'
+      process.env.NODE_ENV === "production"
         ? {
-            exclude: ['error'],
+            exclude: ["error"],
           }
         : false,
+  },
+  async headers() {
+    return [
+      {
+        source: "/api/:path*",
+        headers: [
+          {
+            key: "Access-Control-Allow-Origin",
+            value: "app://obsidian.md",
+          },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET, POST, PUT, DELETE, OPTIONS",
+          },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "Content-Type, Authorization",
+          },
+        ],
+      },
+    ];
   },
 };
 
