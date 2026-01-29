@@ -214,7 +214,7 @@ export async function POST(request: NextRequest) {
               sha: file.sha,
               metadata: {},
               extension,
-              syncStatus: isMarkdown ? 'PENDING' : 'SUCCESS',
+              syncStatus: 'UPLOADING',
             },
           });
 

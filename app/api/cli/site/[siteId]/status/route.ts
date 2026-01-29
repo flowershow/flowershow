@@ -69,7 +69,8 @@ export async function GET(
 
     for (const blob of blobs) {
       switch (blob.syncStatus) {
-        case 'PENDING':
+        case 'UPLOADING':
+        case 'PROCESSING':
           statusCounts.pending++;
           break;
         case 'SUCCESS':

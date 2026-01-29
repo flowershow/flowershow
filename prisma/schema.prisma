@@ -157,7 +157,7 @@ model Blob {
   sha        String
   metadata   Json     @db.JsonB
   extension  String? // File extension
-  syncStatus Status   @default(PENDING) @map("sync_status")
+  syncStatus Status   @default(UPLOADING) @map("sync_status")
   syncError  String?  @map("sync_error")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
@@ -168,9 +168,10 @@ model Blob {
 }
 
 enum Status {
-  PENDING
-  SUCCESS
-  ERROR
+  UPLOADING  // Presigned URL generated, awaiting upload to R2
+  PROCESSING // Upload complete, content being processed (md/mdx parsing)
+  SUCCESS    // Fully complete and ready to serve
+  ERROR      // Failed at some stage
 }
 
 enum Plan {

@@ -224,7 +224,7 @@ export const syncSite = inngest.createFunction(
                     metadata: Prisma.JsonNull,
                     extension,
                     syncStatus: ['md', 'mdx'].includes(extension)
-                      ? 'PENDING'
+                      ? 'PROCESSING'
                       : 'SUCCESS',
                   },
                   update: {

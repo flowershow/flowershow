@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Blob" ALTER COLUMN "sync_status" SET DEFAULT 'UPLOADING';

@@ -1,6 +1,5 @@
 'use client';
 
-import { Status } from '@prisma/client';
 import {
   createContext,
   Dispatch,
@@ -12,8 +11,11 @@ import {
 } from 'react';
 import { api } from '@/trpc/react';
 
+// Site-level sync status (separate from blob-level Status enum)
+type SiteSyncStatus = 'SUCCESS' | 'PENDING' | 'ERROR' | 'OUTDATED' | 'LOADING';
+
 interface SyncStatus {
-  status: Status | 'OUTDATED' | 'LOADING';
+  status: SiteSyncStatus;
   error?: string | null;
   lastSyncedAt?: Date | null;
 }

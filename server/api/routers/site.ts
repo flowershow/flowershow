@@ -585,7 +585,7 @@ export const siteRouter = createTRPCRouter({
         ctx,
         input,
       }): Promise<{
-        status: Status | 'OUTDATED';
+        status: 'SUCCESS' | 'PENDING' | 'ERROR' | 'OUTDATED';
         error?: string | null;
         lastSyncedAt?: Date | null;
       }> => {
@@ -615,7 +615,8 @@ export const siteRouter = createTRPCRouter({
         });
 
         // Calculate aggregate sync status
-        let status: Status | 'OUTDATED';
+        // Site-level status is separate from blob-level Status enum
+        let status: 'SUCCESS' | 'PENDING' | 'ERROR' | 'OUTDATED';
         let error: string | null = null;
         // Get the most recent update date
         const lastSyncedAt =
@@ -623,8 +624,13 @@ export const siteRouter = createTRPCRouter({
             .map((b) => b.updatedAt)
             .sort((a, b) => b.getTime() - a.getTime())[0] || null;
 
-        // If any blob is PENDING, site sync is PENDING
-        if (blobs.some((b) => b.syncStatus === 'PENDING')) {
+        // If any blob is UPLOADING or PROCESSING, site sync is PENDING
+        if (
+          blobs.some(
+            (b) =>
+              b.syncStatus === 'UPLOADING' || b.syncStatus === 'PROCESSING',
+          )
+        ) {
           status = 'PENDING';
         }
         // If any blob is ERROR, site is ERROR

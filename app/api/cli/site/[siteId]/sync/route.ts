@@ -329,18 +329,14 @@ export async function POST(
                         sha: file.sha,
                         metadata: {},
                         extension,
-                        syncStatus: ['md', 'mdx'].includes(extension)
-                          ? 'PENDING'
-                          : 'SUCCESS',
+                        syncStatus: 'UPLOADING',
                       },
                       update: {
                         size: file.size,
                         sha: file.sha,
                         appPath: urlPath,
                         extension,
-                        syncStatus: ['md', 'mdx'].includes(extension)
-                          ? 'PENDING'
-                          : 'SUCCESS',
+                        syncStatus: 'UPLOADING',
                       },
                     });
 

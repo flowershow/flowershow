@@ -28,8 +28,10 @@ export async function GET(
       });
     }
 
-    // Check if any blobs are still pending
-    const hasPending = blobs.some((b) => b.syncStatus === 'PENDING');
+    // Check if any blobs are still uploading or processing
+    const hasPending = blobs.some(
+      (b) => b.syncStatus === 'UPLOADING' || b.syncStatus === 'PROCESSING',
+    );
     const hasError = blobs.some((b) => b.syncStatus === 'ERROR');
 
     if (hasError) {
