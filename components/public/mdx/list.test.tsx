@@ -44,6 +44,7 @@ vi.mock('next/navigation', () => {
 describe('List Component - Pagination Tests', () => {
   beforeEach(() => {
     mockUseSearchParams.mockReset();
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
   });
 
   afterEach(() => {
