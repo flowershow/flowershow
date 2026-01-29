@@ -1,7 +1,7 @@
 import { Blob } from '@prisma/client';
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
-import { validateCliToken } from '@/lib/cli-auth';
+import { validateAccessToken } from '@/lib/cli-auth';
 import {
   deleteFile,
   generatePresignedUploadUrl,
@@ -43,7 +43,7 @@ interface SyncResponse {
 }
 
 /**
- * POST /api/cli/site/:siteId/sync
+ * POST /api/site/:siteId/sync
  * Unified sync endpoint for direct publishing (CLI, Obsidian plugin, or other integrations)
  * Accepts both fs_cli_* and fs_pat_* tokens
  *
@@ -62,12 +62,12 @@ export async function POST(
   return Sentry.startSpan(
     {
       op: 'http.server',
-      name: 'POST /api/cli/site/[siteId]/sync',
+      name: 'POST /api/site/[siteId]/sync',
     },
     async () => {
       try {
         // Validate access token (CLI or PAT)
-        const auth = await validateCliToken(request);
+        const auth = await validateAccessToken(request);
         if (!auth?.userId) {
           return NextResponse.json(
             { error: 'unauthorized', message: 'Not authenticated' },
@@ -295,7 +295,7 @@ export async function POST(
                         const _urlPath = resolveFilePathToUrlPath({
                           target: file.path,
                         });
-                        // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / 🤦‍♀️)
+                        // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / )
                         return _urlPath === '/'
                           ? _urlPath
                           : _urlPath.replace(/^\//, '');

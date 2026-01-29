@@ -1,11 +1,13 @@
-import axios from 'axios';
 import { NextRequest } from 'next/server';
 import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 
-// TODO https://www.inngest.com/docs/platform/webhooks
+/**
+ * @deprecated This endpoint was used with OAuth GitHub Apps.
+ * Use /api/webhooks/github-app instead, which handles GitHub App webhooks.
+ */
 export async function POST(req: NextRequest) {
   const event = req.headers.get('x-github-event');
 

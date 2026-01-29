@@ -2,6 +2,22 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/server/auth';
 import prisma from '@/server/db';
 
+/**
+ * POST /api/cli/authorize
+ *
+ * Authorizes a pending device code during the CLI login flow.
+ * This endpoint is called from the web UI after a user enters their verification code.
+ *
+ * OAuth 2.0 Device Authorization Grant - Step 3:
+ * 1. CLI calls /api/cli/device/authorize to get device_code and user_code
+ * 2. User visits verification URL and enters user_code
+ * 3. Web UI calls THIS endpoint to authorize the device_code  <--
+ * 4. CLI polls /api/cli/device/token and receives access_token
+ *
+ * Requires: Authenticated web session (cookie-based)
+ * Request body: { user_code: string }
+ * Response: { success: true } or error
+ */
 export async function POST(request: NextRequest) {
   try {
     // Check authentication

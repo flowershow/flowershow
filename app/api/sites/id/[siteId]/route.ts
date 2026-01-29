@@ -1,11 +1,11 @@
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
-import { validateCliToken } from '@/lib/cli-auth';
+import { validateAccessToken } from '@/lib/cli-auth';
 import { deleteProject } from '@/lib/content-store';
 import prisma from '@/server/db';
 
 /**
- * GET /api/cli/site/:siteId
+ * GET /api/site/:siteId
  * Get details for a specific site
  */
 export async function GET(
@@ -13,8 +13,8 @@ export async function GET(
   props: { params: Promise<{ siteId: string }> },
 ) {
   try {
-    // Validate CLI token
-    const auth = await validateCliToken(request);
+    // Validate access token (CLI or PAT)
+    const auth = await validateAccessToken(request);
     if (!auth?.userId) {
       return NextResponse.json(
         { error: 'unauthorized', message: 'Not authenticated' },
@@ -118,7 +118,7 @@ export async function GET(
 }
 
 /**
- * DELETE /api/cli/site/:siteId
+ * DELETE /api/site/:siteId
  * Delete a site and all its content
  */
 export async function DELETE(
@@ -126,8 +126,8 @@ export async function DELETE(
   props: { params: Promise<{ siteId: string }> },
 ) {
   try {
-    // Validate CLI token
-    const auth = await validateCliToken(request);
+    // Validate access token (CLI or PAT)
+    const auth = await validateAccessToken(request);
     if (!auth?.userId) {
       return NextResponse.json(
         { error: 'unauthorized', message: 'Not authenticated' },

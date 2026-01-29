@@ -1,12 +1,31 @@
+import { getServerSession } from 'next-auth';
 import { NextRequest, NextResponse } from 'next/server';
-import { validateCliToken } from '@/lib/cli-auth';
+import { validateAccessToken } from '@/lib/cli-auth';
+import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
 
+/**
+ * GET /api/user
+ * Get current authenticated user details
+ * Supports both token-based auth (CLI, PAT, integrations) and session-based auth (web)
+ */
 export async function GET(request: NextRequest) {
   try {
-    // Validate CLI token from Authorization header
-    const auth = await validateCliToken(request);
-    if (!auth?.userId) {
+    let userId: string | null = null;
+
+    // First try token-based auth (CLI, PAT, integrations)
+    const tokenAuth = await validateAccessToken(request);
+    if (tokenAuth?.userId) {
+      userId = tokenAuth.userId;
+    } else {
+      // Fall back to session-based auth (web users)
+      const session = await getServerSession(authOptions);
+      if (session?.user?.id) {
+        userId = session.user.id;
+      }
+    }
+
+    if (!userId) {
       return NextResponse.json(
         { error: 'unauthorized', error_description: 'Not authenticated' },
         { status: 401 },
@@ -15,7 +34,7 @@ export async function GET(request: NextRequest) {
 
     // Fetch user details
     const user = await prisma.user.findUnique({
-      where: { id: auth.userId },
+      where: { id: userId },
       select: {
         id: true,
         name: true,

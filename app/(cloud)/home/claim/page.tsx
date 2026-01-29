@@ -61,7 +61,7 @@ export default function ClaimPage() {
         }
 
         // Call claim API
-        const response = await fetch('/api/claim', {
+        const response = await fetch('/api/sites/claim', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

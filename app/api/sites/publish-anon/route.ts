@@ -42,14 +42,36 @@ interface PublishResponse {
 }
 
 /**
- * POST /api/publish-anon
- * Create anonymous site and return presigned upload URL
+ * POST /api/sites/publish-anon
+ *
+ * Create an anonymous site without authentication.
+ * Returns presigned upload URLs for the client to upload files directly to R2.
+ *
+ * No authentication required (rate-limited by IP).
+ *
+ * Request body: {
+ *   files: Array<{ fileName: string, fileSize: number, sha: string }>,
+ *   anonymousUserId: string  // Client-generated persistent browser ID
+ * }
+ *
+ * Response: {
+ *   siteId: string,
+ *   projectName: string,
+ *   files: Array<{ fileName: string, uploadUrl: string }>,
+ *   liveUrl: string,
+ *   ownershipToken: string  // For claiming the site later
+ * }
+ *
+ * Limitations:
+ * - Max 5 files per site
+ * - At least one markdown file required
+ * - Sites expire in 7 days if not claimed
  */
 export async function POST(request: NextRequest) {
   return Sentry.startSpan(
     {
       op: 'http.server',
-      name: 'POST /api/publish-anon',
+      name: 'POST /api/sites/publish-anon',
     },
     async (span) => {
       try {

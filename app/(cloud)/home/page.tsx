@@ -108,7 +108,7 @@ export default function HomePage() {
       );
 
       // Call publish API with anonymous user ID
-      const response = await fetch('/api/publish-anon', {
+      const response = await fetch('/api/sites/publish-anon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

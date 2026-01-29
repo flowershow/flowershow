@@ -77,7 +77,7 @@ export async function validateAccessToken(
   }
 
   // Find all non-expired tokens
-  const cliTokens = await prisma.accessToken.findMany({
+  const accessTokens = await prisma.accessToken.findMany({
     where: {
       OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }],
     },
@@ -89,7 +89,7 @@ export async function validateAccessToken(
   });
 
   // Check each token (constant-time comparison via bcrypt)
-  for (const record of cliTokens) {
+  for (const record of accessTokens) {
     const isValid = await bcrypt.compare(token, record.token);
     if (isValid) {
       // Update last used timestamp (fire and forget)
@@ -143,9 +143,3 @@ export async function cleanupExpiredDeviceCodes(): Promise<number> {
 
   return result.count;
 }
-
-/**
- * Alias for backward compatibility
- * @deprecated Use validateAccessToken instead
- */
-export const validateCliToken = validateAccessToken;

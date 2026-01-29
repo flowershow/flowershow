@@ -22,14 +22,14 @@ interface ClaimResponse {
 }
 
 /**
- * POST /api/claim
+ * POST /api/sites/claim
  * Claim an anonymous site after authentication
  */
 export async function POST(request: NextRequest) {
   return Sentry.startSpan(
     {
       op: 'http.server',
-      name: 'POST /api/claim',
+      name: 'POST /api/sites/claim',
     },
     async (span) => {
       try {

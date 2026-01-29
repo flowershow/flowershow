@@ -1,17 +1,17 @@
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
-import { validateCliToken } from '@/lib/cli-auth';
+import { validateAccessToken } from '@/lib/cli-auth';
 import prisma from '@/server/db';
 
 /**
- * POST /api/cli/site
+ * POST /api/site
  * Create a new site for direct publishing (CLI, Obsidian plugin, or other integrations)
  * Accepts both fs_cli_* and fs_pat_* tokens
  */
 export async function POST(request: NextRequest) {
   try {
     // Validate access token (CLI or PAT)
-    const auth = await validateCliToken(request);
+    const auth = await validateAccessToken(request);
     if (!auth?.userId) {
       return NextResponse.json(
         { error: 'unauthorized', message: 'Not authenticated' },
@@ -136,13 +136,13 @@ export async function POST(request: NextRequest) {
 }
 
 /**
- * GET /api/cli/site
+ * GET /api/site
  * List all sites for the authenticated user
  */
 export async function GET(request: NextRequest) {
   try {
-    // Validate CLI token
-    const auth = await validateCliToken(request);
+    // Validate access token (CLI or PAT)
+    const auth = await validateAccessToken(request);
     if (!auth?.userId) {
       return NextResponse.json(
         { error: 'unauthorized', message: 'Not authenticated' },
