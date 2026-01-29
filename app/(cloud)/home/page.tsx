@@ -769,7 +769,7 @@ async function waitForProcessing(siteId: string): Promise<void> {
   const pollInterval = 1000; // 1 second
 
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
-    const response = await fetch(`/api/sites/status/${siteId}`);
+    const response = await fetch(`/api/sites/id/${siteId}/status`);
 
     if (!response.ok) {
       throw new Error('Failed to check processing status');
