@@ -31,12 +31,14 @@ interface UploadUrl {
 }
 
 interface SyncResponse {
-  uploadUrls: UploadUrl[];
+  toUpload: UploadUrl[];
+  toUpdate: UploadUrl[];
   deleted: string[];
   unchanged: string[];
   summary: {
     toUpload: number;
-    toDelete: number;
+    toUpdate: number;
+    deleted: number;
     unchanged: number;
   };
   dryRun?: boolean;
@@ -186,6 +188,7 @@ export async function POST(
 
         // Categorize files
         const toUpload: FileMetadata[] = [];
+        const toUpdate: FileMetadata[] = [];
         const unchanged: string[] = [];
         const toDelete: Array<{ id: string; path: string }> = [];
 
@@ -198,7 +201,7 @@ export async function POST(
             toUpload.push(file);
           } else if (existingBlob.sha !== file.sha) {
             // Modified file (different SHA)
-            toUpload.push(file);
+            toUpdate.push(file);
           } else {
             // Unchanged file (same SHA)
             unchanged.push(file.path);
@@ -264,18 +267,104 @@ export async function POST(
           deletedPaths.push(...toDelete.map((f) => f.path));
         }
 
-        // Generate presigned URLs for files to upload
-        const uploadUrls: UploadUrl[] = dryRun
-          ? // In dry-run mode, return placeholder data
-            toUpload.map((file) => {
+        // Helper function to generate presigned URLs for a list of files
+        const generateUrlsForFiles = async (
+          files: FileMetadata[],
+        ): Promise<UploadUrl[]> => {
+          return Promise.all(
+            files.map(async (file) => {
+              // Extract file extension
               const extension = file.path.split('.').pop()?.toLowerCase() || '';
+
+              const urlPath = (() => {
+                if (['md', 'mdx'].includes(extension)) {
+                  const _urlPath = resolveFilePathToUrlPath({
+                    target: file.path,
+                  });
+                  // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / )
+                  return _urlPath === '/'
+                    ? _urlPath
+                    : _urlPath.replace(/^\//, '');
+                } else {
+                  return null;
+                }
+              })();
+
+              // Create or update blob record
+              const blob = await prisma.blob.upsert({
+                where: {
+                  siteId_path: {
+                    siteId,
+                    path: file.path,
+                  },
+                },
+                create: {
+                  siteId,
+                  path: file.path,
+                  appPath: urlPath,
+                  size: file.size,
+                  sha: file.sha,
+                  metadata: {},
+                  extension,
+                  syncStatus: ['md', 'mdx'].includes(extension)
+                    ? 'PENDING'
+                    : 'SUCCESS',
+                },
+                update: {
+                  size: file.size,
+                  sha: file.sha,
+                  appPath: urlPath,
+                  extension,
+                  syncStatus: ['md', 'mdx'].includes(extension)
+                    ? 'PENDING'
+                    : 'SUCCESS',
+                },
+              });
+
+              // Generate S3 key: siteId/main/raw/path
+              const s3Key = `${siteId}/main/raw/${file.path}`;
+
+              // Get content type for the file
+              const contentType = getContentType(extension);
+
+              // Generate presigned URL (valid for 1 hour) with content type
+              const uploadUrl = await generatePresignedUploadUrl(
+                s3Key,
+                3600,
+                contentType,
+              );
+
               return {
                 path: file.path,
-                uploadUrl: '',
-                blobId: '',
-                contentType: getContentType(extension),
+                uploadUrl,
+                blobId: blob.id,
+                contentType,
               };
-            })
+            }),
+          );
+        };
+
+        // Helper function to generate placeholder data for dry-run mode
+        const generateDryRunPlaceholders = (
+          files: FileMetadata[],
+        ): UploadUrl[] => {
+          return files.map((file) => {
+            const extension = file.path.split('.').pop()?.toLowerCase() || '';
+            return {
+              path: file.path,
+              uploadUrl: '',
+              blobId: '',
+              contentType: getContentType(extension),
+            };
+          });
+        };
+
+        // Generate presigned URLs for files to upload and update
+        const [uploadUrls, updateUrls] = dryRun
+          ? [
+              generateDryRunPlaceholders(toUpload),
+              generateDryRunPlaceholders(toUpdate),
+            ]
           : await Sentry.startSpan(
               {
                 op: 'http.client',
@@ -283,85 +372,24 @@ export async function POST(
               },
               async (span) => {
                 span.setAttribute('files_to_upload', toUpload.length);
+                span.setAttribute('files_to_update', toUpdate.length);
 
-                return Promise.all(
-                  toUpload.map(async (file) => {
-                    // Extract file extension
-                    const extension =
-                      file.path.split('.').pop()?.toLowerCase() || '';
-
-                    const urlPath = (() => {
-                      if (['md', 'mdx'].includes(extension)) {
-                        const _urlPath = resolveFilePathToUrlPath({
-                          target: file.path,
-                        });
-                        // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / )
-                        return _urlPath === '/'
-                          ? _urlPath
-                          : _urlPath.replace(/^\//, '');
-                      } else {
-                        return null;
-                      }
-                    })();
-
-                    // Create or update blob record
-                    const blob = await prisma.blob.upsert({
-                      where: {
-                        siteId_path: {
-                          siteId,
-                          path: file.path,
-                        },
-                      },
-                      create: {
-                        siteId,
-                        path: file.path,
-                        appPath: urlPath,
-                        size: file.size,
-                        sha: file.sha,
-                        metadata: {},
-                        extension,
-                        syncStatus: 'UPLOADING',
-                      },
-                      update: {
-                        size: file.size,
-                        sha: file.sha,
-                        appPath: urlPath,
-                        extension,
-                        syncStatus: 'UPLOADING',
-                      },
-                    });
-
-                    // Generate S3 key: siteId/main/raw/path
-                    const s3Key = `${siteId}/main/raw/${file.path}`;
-
-                    // Get content type for the file
-                    const contentType = getContentType(extension);
-
-                    // Generate presigned URL (valid for 1 hour) with content type
-                    const uploadUrl = await generatePresignedUploadUrl(
-                      s3Key,
-                      3600,
-                      contentType,
-                    );
-
-                    return {
-                      path: file.path,
-                      uploadUrl,
-                      blobId: blob.id,
-                      contentType,
-                    };
-                  }),
-                );
+                return Promise.all([
+                  generateUrlsForFiles(toUpload),
+                  generateUrlsForFiles(toUpdate),
+                ]);
               },
             );
 
         const response: SyncResponse = {
-          uploadUrls,
+          toUpload: uploadUrls,
+          toUpdate: updateUrls,
           deleted: deletedPaths,
           unchanged,
           summary: {
             toUpload: uploadUrls.length,
-            toDelete: deletedPaths.length,
+            toUpdate: updateUrls.length,
+            deleted: deletedPaths.length,
             unchanged: unchanged.length,
           },
           ...(dryRun && { dryRun: true }),
