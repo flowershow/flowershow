@@ -34,7 +34,7 @@ model User {
   sessions            Session[]
   sites               Site[]
   deviceCodes         DeviceCode[]
-  cliTokens           CliToken[]
+  accessTokens        AccessToken[]
   githubInstallations GitHubInstallation[]
 }
 
@@ -202,6 +202,11 @@ enum SyntaxMode {
   auto
 }
 
+enum TokenType {
+  CLI
+  PAT
+}
+
 // OAuth Device Flow for CLI authentication
 model DeviceCode {
   id         String   @id @default(cuid())
@@ -223,13 +228,14 @@ model DeviceCode {
   @@index([expiresAt])
 }
 
-// CLI authentication tokens
-model CliToken {
-  id     String  @id @default(cuid())
-  token  String  @unique // hashed token
+// CLI and PAT authentication tokens
+model AccessToken {
+  id     String    @id @default(cuid())
+  token  String    @unique // hashed token
   name   String? // optional user-provided name
-  userId String  @map("user_id")
-  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type   TokenType
+  userId String    @map("user_id")
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   lastUsedAt DateTime? @map("last_used_at")
   expiresAt  DateTime? @map("expires_at") // optional expiration

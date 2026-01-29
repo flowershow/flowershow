@@ -24,7 +24,7 @@ export function ClaimPrompt({ siteId, trigger, onDismiss }: ClaimPromptProps) {
     // Redirect to claim page which will:
     // 1. Authenticate user
     // 2. Get token from localStorage
-    // 3. Call /api/claim
+    // 3. Call /api/sites/claim
     router.push(`/claim?siteId=${siteId}`);
   };
 
