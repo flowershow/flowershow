@@ -45,7 +45,7 @@ export default async function TokensPage() {
           <p className="text-sm text-stone-500 dark:text-stone-400">
             Tokens created via{' '}
             <code className="rounded bg-stone-100 px-1.5 py-0.5 text-xs dark:bg-stone-800">
-              flowershow auth login
+              publish auth login
             </code>
           </p>
         </div>
