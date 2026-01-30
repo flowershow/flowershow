@@ -157,6 +157,8 @@ model Blob {
   sha        String
   metadata   Json     @db.JsonB
   extension  String? // File extension
+  width      Int? // Original image width in pixels
+  height     Int? // Original image height in pixels
   syncStatus Status   @default(UPLOADING) @map("sync_status")
   syncError  String?  @map("sync_error")
   createdAt  DateTime @default(now()) @map("created_at")
