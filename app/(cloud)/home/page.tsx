@@ -777,12 +777,13 @@ async function waitForProcessing(siteId: string): Promise<void> {
 
     const status = await response.json();
 
-    if (status.ready) {
+    if (status.status === 'complete') {
       return; // Processing complete
     }
 
     if (status.status === 'error') {
-      throw new Error(status.error || 'Processing failed');
+      const errorMessage = status.errors?.[0]?.error || 'Processing failed';
+      throw new Error(errorMessage);
     }
 
     // Wait before polling again

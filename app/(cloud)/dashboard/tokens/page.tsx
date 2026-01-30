@@ -51,7 +51,7 @@ export default async function TokensPage() {
         </div>
         <TokensList
           tokens={cliTokens}
-          emptyMessage="No CLI tokens. Run 'flowershow auth login' to authenticate."
+          emptyMessage="No CLI tokens. Run 'publish auth login' to authenticate."
         />
       </section>
     </div>
