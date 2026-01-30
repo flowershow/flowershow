@@ -33,6 +33,14 @@ export default defineConfig({
   /** Note: Test fixtures rely on the names, so remember to update them as well if renaming the projects below.*/
   projects: [
     {
+      name: 'home-chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `http://${process.env.NEXT_PUBLIC_HOME_DOMAIN}`,
+      },
+      testMatch: /home\/.+\.spec\.ts/,
+    },
+    {
       name: 'dashboard-setup',
       testMatch: /dashboard\/global\.setup\.ts/,
       teardown: 'dashboard-teardown',
