@@ -6,9 +6,9 @@ import { useEffect, useState } from 'react';
 
 const navItems = [
   { name: 'Name', href: '#projectName' },
-  { name: 'Root Directory', href: '#rootDir' },
+  { name: 'Root Directory', href: '#rootDir', requiresGhRepository: true },
   { name: 'Markdown or MDX', href: '#syntaxMode' },
-  { name: 'Auto-Sync', href: '#autoSync' },
+  { name: 'Auto-Sync', href: '#autoSync', requiresGhRepository: true },
   { name: 'Comments', href: '#enableComments' },
   { name: 'Custom Domain', href: '#customDomain' },
   { name: 'Full-Text Search', href: '#enableSearch' },
@@ -17,7 +17,11 @@ const navItems = [
   { name: 'Delete Site', href: '#deleteSite' },
 ];
 
-export default function SettingsNav() {
+interface SettingsNavProps {
+  hasGhRepository?: boolean;
+}
+
+export default function SettingsNav({ hasGhRepository }: SettingsNavProps) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [activeHash, setActiveHash] = useState('');
@@ -40,9 +44,13 @@ export default function SettingsNav() {
     return () => window.removeEventListener('hashchange', handleHashChange);
   }, []);
 
+  const filteredNavItems = navItems.filter(
+    (item) => !item.requiresGhRepository || hasGhRepository,
+  );
+
   return (
     <ul className="border-primary-silent space-y-2 rounded-md border px-4 py-5">
-      {navItems.map((item) => (
+      {filteredNavItems.map((item) => (
         <li className="w-full" key={item.name}>
           <Link
             href={item.href}

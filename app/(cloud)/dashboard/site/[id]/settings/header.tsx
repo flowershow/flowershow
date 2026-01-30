@@ -80,9 +80,11 @@ export default async function SiteSettingsHeader({
                   </button>
                 </a>
               </span>
-              <span className="ml-3">
-                <SyncSiteButton siteId={site.id} />
-              </span>
+              {site.ghRepository && (
+                <span className="ml-3">
+                  <SyncSiteButton siteId={site.id} />
+                </span>
+              )}
             </>
           )}
           <span className="ml-3 block">

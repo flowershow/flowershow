@@ -63,7 +63,7 @@ export default async function SiteSettingsIndex(props: {
     <>
       <div className="sm:grid sm:grid-cols-12 sm:space-x-6">
         <div className="sticky top-[5rem] col-span-2 hidden self-start sm:col-span-3 sm:block lg:col-span-2">
-          <SettingsNav />
+          <SettingsNav hasGhRepository={!!site.ghRepository} />
         </div>
         <div className="col-span-10 flex flex-col space-y-6 sm:col-span-9 lg:col-span-10">
           {isOAuthSite && (
