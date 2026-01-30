@@ -179,21 +179,6 @@ export const syncSite = inngest.createFunction(
               try {
                 const extension = ghTreeItem.path.split('.').pop() || '';
 
-                const gitHubFile = await fetchGitHubFileRaw({
-                  ghRepository,
-                  file_sha: ghTreeItem.sha,
-                  accessToken,
-                  installationId,
-                });
-
-                await uploadFile({
-                  projectId: siteId,
-                  branch: ghBranch,
-                  path: filePath,
-                  content: Buffer.from(await gitHubFile.arrayBuffer()),
-                  extension,
-                });
-
                 const urlPath = (() => {
                   if (['md', 'mdx'].includes(extension)) {
                     const _urlPath = resolveFilePathToUrlPath({
@@ -208,6 +193,8 @@ export const syncSite = inngest.createFunction(
                   }
                 })();
 
+                // Create/update blob record BEFORE uploading to S3
+                // This ensures the record exists when the S3 worker is triggered
                 await prisma.blob.upsert({
                   where: {
                     siteId_path: {
@@ -232,6 +219,22 @@ export const syncSite = inngest.createFunction(
                     sha: ghTreeItem.sha,
                   },
                 });
+
+                const gitHubFile = await fetchGitHubFileRaw({
+                  ghRepository,
+                  file_sha: ghTreeItem.sha,
+                  accessToken,
+                  installationId,
+                });
+
+                await uploadFile({
+                  projectId: siteId,
+                  branch: ghBranch,
+                  path: filePath,
+                  content: Buffer.from(await gitHubFile.arrayBuffer()),
+                  extension,
+                });
+
                 return { filePath, status: 'SUCCESS', message: '' }; // Return path of successfully processed file
               } catch (error: any) {
                 console.error(error);
