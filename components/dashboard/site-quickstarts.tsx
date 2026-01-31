@@ -15,18 +15,18 @@ export default async function Sites({ limit }: { limit?: number }) {
       icon: () => <span className="text-xl">👋</span>,
     },
     {
-      title: 'Publish your markdown from GitHub',
-      description:
-        'If you already have existing markdown documentation, blogs, wikis etc. stored in a GitHub repository.',
-      href: '/new',
-      icon: MarkdownIcon,
-    },
-    {
       title: 'Publish your Obsidian vault',
       description:
         'If want to publically share your Obsidian notes while maintaining your existing note-taking workflow.',
       href: '/obsidian-quickstart',
-      icon: ObsidianIcon,
+      icon: (props) => <ObsidianIcon {...props} fill="#8b1bd5" />,
+    },
+    {
+      title: 'Publish your markdown from GitHub',
+      description:
+        'If you already have existing markdown documentation, blogs, wikis etc. stored in a GitHub repository.',
+      href: '/new',
+      icon: (props) => <MarkdownIcon {...props} fill="black" />,
     },
   ];
 

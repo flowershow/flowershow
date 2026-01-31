@@ -1,9 +1,7 @@
-import Image from 'next/image';
-
 export default function ObsidianQuickstart() {
   return (
     <div className="mx-auto flex max-w-4xl flex-col px-8 py-16">
-      <div className="mb-8 w-full max-w-[600px]">
+      {/* <div className="mb-8 w-full max-w-[600px]">
         <div className="relative overflow-hidden pt-[56.25%]">
           <iframe
             className="absolute inset-0 h-full w-full"
@@ -13,7 +11,7 @@ export default function ObsidianQuickstart() {
             allowFullScreen
           />
         </div>
-      </div>
+      </div> */}
 
       <div className="flex items-center justify-between">
         <h1 className="font-dashboard-heading text-3xl font-bold ">
@@ -34,75 +32,40 @@ export default function ObsidianQuickstart() {
         </div>
 
         <h3 className="mt-4 text-lg font-semibold">
-          Step 2: Create a GitHub Repository for Syncing
+          Step 2: Generate a Personal Access Token
         </h3>
         <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
-          Click{' '}
+          Go to your{' '}
           <a
             className="underline"
+            href="/tokens"
             target="_blank"
             rel="noreferrer noopener"
-            href="https://github.com/new?template_owner=flowershow&template_name=flowershow-cloud-template"
           >
-            here
+            Flowershow tokens page
           </a>{' '}
-          to create a new repository from our template.
+          and create a new Personal Access Token.
           <i className="mt-1 block">
-            It will act as a backup and sync point between your Obsidian vault
-            and Flowershow. (It can be private if you want.)
+            Copy the token (it starts with <code>fs_pat_</code>).
           </i>
         </div>
 
         <h3 className="mt-4 text-lg font-semibold">
-          Step 3: Connect Flowershow to Your GitHub Repository
-        </h3>
-        <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
-          Click{' '}
-          <a
-            className="underline"
-            href="/new"
-            target="_blank"
-            rel="noreferrer noopener"
-          >
-            here
-          </a>
-          , select the repository you&apos;ve just created and click on
-          &quot;Create Site&quot;.
-          <i className="mt-1 block">
-            ⚠️ Then, navigate back to this page to complete the last step.
-          </i>
-          <Image
-            width="600"
-            height="400"
-            alt="Flowershow template"
-            src="https://r2-assets.flowershow.app/create-flowershow-site.png"
-            className="my-2"
-          />
-        </div>
-
-        <h3 className="mt-4 text-lg font-semibold">
-          Step 4: Configure Flowershow Plugin & Publish Your Vault
+          Step 3: Configure Flowershow Plugin
         </h3>
         <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
           Go to Flowershow plugin options in your Obsidian vault and input your
-          GitHub username, name of your repository, and your GitHub Personal
-          Access Token (
-          <a
-            className="underline"
-            href="https://github.com/settings/tokens/new?scopes=repo"
-          >
-            generate one here
-          </a>
-          ).
-          <Image
-            width="600"
-            height="400"
-            alt="Flowershow template"
-            src="https://r2-assets.flowershow.app/configure-plugin.png"
-            className="my-2"
-          />
+          Flowershow Personal Access Token and choose a site name.
+        </div>
+
+        <h3 className="mt-4 text-lg font-semibold">
+          Step 4: Publish Your Vault (Or Selected Notes)
+        </h3>
+        <div className="mt-2 rounded-lg border border-gray-200 p-4 ">
           Lastly, click on the Flowershow icon in the Obsidian sidebar, select
           the notes to publish — and that&apos;s it!
+          <br />
+          <i>You can also use Flowreshow commands in the command palette.</i>
         </div>
 
         <div className="/20 mt-8 rounded-lg border border-green-200 bg-green-50  p-4">
