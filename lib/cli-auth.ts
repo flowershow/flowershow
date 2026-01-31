@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/server/db';
 import bcrypt from 'bcryptjs';
-import { randomBytes } from 'crypto';
+import { randomBytes, createHash } from 'crypto';
 
 /** Minimum CLI version required to use the API */
 const MIN_CLI_VERSION = '1.0.0';
@@ -97,10 +97,10 @@ export function generatePatToken(): string {
 }
 
 /**
- * Hash a CLI token for storage
+ * Hash a CLI token for storage using SHA256
  */
-export async function hashToken(token: string): Promise<string> {
-  return bcrypt.hash(token, 12);
+export function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
 }
 
 /**
@@ -124,37 +124,36 @@ export async function validateAccessToken(
     return null;
   }
 
-  // Find all non-expired tokens
-  const accessTokens = await prisma.accessToken.findMany({
+  // Hash token for direct database lookup (O(1) instead of O(n) bcrypt comparisons)
+  const tokenHash = hashToken(token);
+
+  // Direct lookup by hash
+  const accessToken = await prisma.accessToken.findFirst({
     where: {
+      token: tokenHash,
       OR: [{ expiresAt: null }, { expiresAt: { gte: new Date() } }],
     },
     select: {
       id: true,
-      token: true,
       userId: true,
     },
   });
 
-  // Check each token (constant-time comparison via bcrypt)
-  for (const record of accessTokens) {
-    const isValid = await bcrypt.compare(token, record.token);
-    if (isValid) {
-      // Update last used timestamp (fire and forget)
-      prisma.accessToken
-        .update({
-          where: { id: record.id },
-          data: { lastUsedAt: new Date() },
-        })
-        .catch(() => {
-          // Ignore errors in background update
-        });
-
-      return { userId: record.userId };
-    }
+  if (!accessToken) {
+    return null;
   }
 
-  return null;
+  // Update last used timestamp (fire and forget)
+  prisma.accessToken
+    .update({
+      where: { id: accessToken.id },
+      data: { lastUsedAt: new Date() },
+    })
+    .catch(() => {
+      // Ignore errors in background update
+    });
+
+  return { userId: accessToken.userId };
 }
 
 /**

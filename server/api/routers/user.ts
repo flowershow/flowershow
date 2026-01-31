@@ -176,7 +176,7 @@ export const userRouter = createTRPCRouter({
 
       // Generate PAT token
       const patToken = generatePatToken();
-      const hashedToken = await hashToken(patToken);
+      const hashedToken = hashToken(patToken);
 
       // Store token in database
       await ctx.db.accessToken.create({

@@ -89,12 +89,31 @@ async function main() {
     return;
   }
 
+  // Count files for each site and sort by file count (lowest first)
+  console.log('Counting files for each site to prioritize...\n');
+  const sitesWithCounts = await Promise.all(
+    sites.map(async (site) => {
+      const objects = await listAllObjects(`${site.id}/${site.ghBranch}/`);
+      return { site, fileCount: objects.length };
+    }),
+  );
+
+  // Sort by file count (ascending - lowest first)
+  sitesWithCounts.sort((a, b) => a.fileCount - b.fileCount);
+
+  console.log('Sites prioritized by file count (lowest first):\n');
+  for (const { site, fileCount } of sitesWithCounts) {
+    const siteIdentifier = `${site.user?.ghUsername ?? 'unknown'}/${site.projectName}`;
+    console.log(`  ${siteIdentifier}: ${fileCount} file(s)`);
+  }
+  console.log('');
+
   let successCount = 0;
   let errorCount = 0;
   let totalObjectsMigrated = 0;
   const errors: Array<{ site: string; error: string }> = [];
 
-  for (const site of sites) {
+  for (const { site, fileCount } of sitesWithCounts) {
     const siteIdentifier = `${site.user?.ghUsername ?? 'unknown'}/${site.projectName} (${site.id})`;
     const fromBranch = site.ghBranch!;
 
@@ -103,21 +122,10 @@ async function main() {
 
     try {
       if (dryRun) {
-        // In dry run, just list objects that would be migrated
-        const objects = await listAllObjects(`${site.id}/${fromBranch}/`);
-        console.log(`  [DRY RUN] Would migrate ${objects.length} object(s)`);
-        if (objects.length > 0 && objects.length <= 10) {
-          for (const obj of objects) {
-            console.log(`    - ${obj.Key}`);
-          }
-        } else if (objects.length > 10) {
-          for (const obj of objects.slice(0, 5)) {
-            console.log(`    - ${obj.Key}`);
-          }
-          console.log(`    ... and ${objects.length - 5} more`);
-        }
+        // In dry run, we already have the file count
+        console.log(`  [DRY RUN] Would migrate ${fileCount} object(s)`);
         successCount++;
-        totalObjectsMigrated += objects.length;
+        totalObjectsMigrated += fileCount;
       } else {
         const count = await migrateBranchToMain(site.id, fromBranch);
         console.log(`  ✓ Migrated ${count} object(s)`);

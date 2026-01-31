@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     // Generate CLI token
     const cliToken = generateCliToken();
-    const hashedToken = await hashToken(cliToken);
+    const hashedToken = hashToken(cliToken);
 
     // Store token in database
     await prisma.accessToken.create({
