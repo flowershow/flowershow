@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import Billing from '@/components/dashboard/billing';
 import Form from '@/components/dashboard/form';
 import DeleteSiteForm from '@/components/dashboard/form/delete-site-form';
+import GitHubConnectionForm from '@/components/dashboard/form/github-connection-form';
 import MigrateToGitHubAppForm from '@/components/dashboard/form/migrate-to-github-app-form';
 import SitePasswordProtectionForm from '@/components/dashboard/form/site-password-form';
 import SettingsNav from '@/components/dashboard/settings-nav';
@@ -88,33 +89,6 @@ export default async function SiteSettingsIndex(props: {
             handleSubmit={updateSite}
           />
 
-          {site.ghRepository && (
-            <Form
-              title="Root Directory"
-              description="The directory within your repository, in which your content is located. Leave empty if you're publishing the whole repository."
-              helpText={
-                <p>
-                  Learn more about{' '}
-                  <a
-                    className="underline"
-                    href="https://flowershow.app/docs/site-settings#root-directory"
-                  >
-                    Root directory
-                    <ExternalLinkIcon className="inline h-4" />
-                  </a>
-                  .
-                </p>
-              }
-              inputAttrs={{
-                name: 'rootDir',
-                type: 'text',
-                defaultValue: site?.rootDir!,
-                required: false,
-              }}
-              handleSubmit={updateSite}
-            />
-          )}
-
           <Form
             title="Markdown or MDX"
             description="Choose how to process your markdown files: Markdown (md), MDX (mdx), or auto-detect based on file extension (auto)."
@@ -142,6 +116,13 @@ export default async function SiteSettingsIndex(props: {
               ],
             }}
             handleSubmit={updateSite}
+          />
+
+          <GitHubConnectionForm
+            siteId={site.id}
+            ghRepository={site.ghRepository}
+            ghBranch={site.ghBranch}
+            rootDir={site.rootDir}
           />
 
           {site.ghRepository && (

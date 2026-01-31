@@ -229,7 +229,6 @@ export const syncSite = inngest.createFunction(
 
                 await uploadFile({
                   projectId: siteId,
-                  branch: ghBranch,
                   path: filePath,
                   content: Buffer.from(await gitHubFile.arrayBuffer()),
                   extension,
@@ -311,7 +310,6 @@ export const syncSite = inngest.createFunction(
             batch.map(async (blob) => {
               await deleteFile({
                 projectId: siteId,
-                branch: ghBranch,
                 path: blob.path,
               });
 

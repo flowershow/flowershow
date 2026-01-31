@@ -1,4 +1,5 @@
 import {
+  CopyObjectCommand,
   DeleteObjectCommand,
   DeleteObjectsCommand,
   GetObjectCommand,
@@ -184,19 +185,17 @@ export const getContentType = (extension: string): ContentType => {
 
 export const uploadFile = async ({
   projectId,
-  branch,
   path,
   content,
   extension,
 }: {
   projectId: string;
-  branch: string;
   path: string;
   content: Buffer;
   extension: string;
 }) => {
   return uploadS3Object({
-    key: `${projectId}/${branch}/raw/${path}`,
+    key: `${projectId}/main/raw/${path}`,
     file: content,
     contentType: getContentType(extension),
   });
@@ -204,27 +203,23 @@ export const uploadFile = async ({
 
 export const fetchFile = async ({
   projectId,
-  branch,
   path,
 }: {
   projectId: string;
-  branch: string;
   path: string;
 }) => {
-  const response = await fetchS3Object(`${projectId}/${branch}/raw/${path}`);
+  const response = await fetchS3Object(`${projectId}/main/raw/${path}`);
   return (await response.Body?.transformToString()) || null;
 };
 
 export const deleteFile = async ({
   projectId,
-  branch,
   path,
 }: {
   projectId: string;
-  branch: string;
   path: string;
 }) => {
-  return deleteS3Object(`${projectId}/${branch}/raw/${path}`);
+  return deleteS3Object(`${projectId}/main/raw/${path}`);
 };
 
 export const deleteProject = async (projectId: string) => {
@@ -233,22 +228,20 @@ export const deleteProject = async (projectId: string) => {
 
 export const uploadTree = async ({
   projectId,
-  branch,
   tree,
 }: {
   projectId: string;
-  branch: string;
   tree: GitHubAPIRepoTree;
 }) => {
   return uploadS3Object({
-    key: `${projectId}/${branch}/_tree`,
+    key: `${projectId}/main/_tree`,
     file: Buffer.from(JSON.stringify(tree)),
     contentType: 'application/json',
   });
 };
 
-export const fetchTree = async (projectId: string, branch: string) => {
-  const response = await fetchS3Object(`${projectId}/${branch}/_tree`);
+export const fetchTree = async (projectId: string) => {
+  const response = await fetchS3Object(`${projectId}/main/_tree`);
   const tree = await response.Body?.transformToString();
   return tree ? (JSON.parse(tree) as GitHubAPIRepoTree) : null;
 };
@@ -289,3 +282,65 @@ export const getS3Client = () => s3Client;
  * Get the bucket name
  */
 export const getBucketName = () => S3_BUCKET_NAME;
+
+/**
+ * Copy an S3 object to a new key (server-side copy, no bandwidth used)
+ */
+export const copyS3Object = async (sourceKey: string, destKey: string) => {
+  return s3Client.send(
+    new CopyObjectCommand({
+      Bucket: S3_BUCKET_NAME,
+      CopySource: encodeURIComponent(`${S3_BUCKET_NAME}/${sourceKey}`),
+      Key: destKey,
+    }),
+  );
+};
+
+/**
+ * List all objects with a given prefix (handles pagination)
+ */
+export const listAllObjects = async (prefix: string) => {
+  const objects: { Key: string }[] = [];
+  let continuationToken: string | undefined;
+
+  do {
+    const response = await s3Client.send(
+      new ListObjectsV2Command({
+        Bucket: S3_BUCKET_NAME,
+        Prefix: prefix,
+        ContinuationToken: continuationToken,
+      }),
+    );
+    if (response.Contents) {
+      objects.push(
+        ...response.Contents.filter((o) => o.Key).map((o) => ({ Key: o.Key! })),
+      );
+    }
+    continuationToken = response.NextContinuationToken;
+  } while (continuationToken);
+
+  return objects;
+};
+
+/**
+ * Migrate all content from a branch path to /main/ path
+ * Used for migrating sites that were using non-main branches
+ */
+export const migrateBranchToMain = async (
+  siteId: string,
+  fromBranch: string,
+) => {
+  const oldPrefix = `${siteId}/${fromBranch}/`;
+  const objects = await listAllObjects(oldPrefix);
+
+  for (const obj of objects) {
+    const newKey = obj.Key.replace(
+      `${siteId}/${fromBranch}/`,
+      `${siteId}/main/`,
+    );
+    await copyS3Object(obj.Key, newKey);
+    await deleteS3Object(obj.Key);
+  }
+
+  return objects.length;
+};

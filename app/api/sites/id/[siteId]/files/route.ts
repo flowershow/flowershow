@@ -394,7 +394,6 @@ export async function DELETE(
                   try {
                     await deleteFile({
                       projectId: siteId,
-                      branch: 'main',
                       path: blob.path,
                     });
                   } catch (error) {

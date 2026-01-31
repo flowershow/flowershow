@@ -1,13 +1,9 @@
-'use client';
-
 import Link from 'next/link';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
 
 const navItems = [
   { name: 'Name', href: '#projectName' },
-  { name: 'Root Directory', href: '#rootDir', requiresGhRepository: true },
   { name: 'Markdown or MDX', href: '#syntaxMode' },
+  { name: 'GitHub Integration', href: '#ghIntegration' },
   { name: 'Auto-Sync', href: '#autoSync', requiresGhRepository: true },
   { name: 'Comments', href: '#enableComments' },
   { name: 'Custom Domain', href: '#customDomain' },
@@ -22,28 +18,6 @@ interface SettingsNavProps {
 }
 
 export default function SettingsNav({ hasGhRepository }: SettingsNavProps) {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-  const [activeHash, setActiveHash] = useState('');
-
-  useEffect(() => {
-    // Update active hash whenever pathname or search params change
-    setActiveHash(window.location.hash);
-  }, [pathname, searchParams]);
-
-  useEffect(() => {
-    // Set initial hash
-    setActiveHash(window.location.hash);
-
-    // Update hash on change
-    const handleHashChange = () => {
-      setActiveHash(window.location.hash);
-    };
-
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
-
   const filteredNavItems = navItems.filter(
     (item) => !item.requiresGhRepository || hasGhRepository,
   );
@@ -54,9 +28,7 @@ export default function SettingsNav({ hasGhRepository }: SettingsNavProps) {
         <li className="w-full" key={item.name}>
           <Link
             href={item.href}
-            className={`block rounded-md px-2 py-2 text-sm font-medium transition-colors hover:bg-primary-faint/70 ${
-              activeHash === item.href ? 'bg-primary-faint' : ''
-            }`}
+            className="block rounded-md px-2 py-2 text-sm font-medium transition-colors hover:bg-primary-faint/70"
           >
             {item.name}
           </Link>

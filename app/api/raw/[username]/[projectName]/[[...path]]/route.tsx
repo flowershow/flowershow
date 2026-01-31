@@ -54,7 +54,7 @@ export async function GET(
   const encodedPath = path
     .map((segment) => encodeURIComponent(segment))
     .join('/');
-  const R2FileUrl = `${protocol}://${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${site.id}/${site.ghBranch ?? 'main'}/raw/${encodedPath}`;
+  const R2FileUrl = `${protocol}://${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${site.id}/main/raw/${encodedPath}`;
 
   try {
     const fileResponse = await fetch(R2FileUrl, {

@@ -698,7 +698,6 @@ export const siteRouter = createTRPCRouter({
           try {
             return await fetchFile({
               projectId: site.id,
-              branch: site.ghBranch ?? 'main',
               path: 'custom.css',
             });
           } catch {
@@ -739,7 +738,6 @@ export const siteRouter = createTRPCRouter({
           try {
             const configJson = await fetchFile({
               projectId: site.id,
-              branch: site.ghBranch ?? 'main',
               path: 'config.json',
             });
             const config = configJson
@@ -1233,7 +1231,6 @@ export const siteRouter = createTRPCRouter({
 
           const content = await fetchFile({
             projectId: blob.site.id,
-            branch: blob.site.ghBranch || 'main', // TODO
             path: blob.path,
           });
 
@@ -1678,6 +1675,178 @@ export const siteRouter = createTRPCRouter({
         migratedSites,
         totalOAuthSites: oauthSites.length,
       };
+    }),
+  disconnectGitHub: protectedProcedure
+    .input(z.object({ siteId: z.string().min(1) }))
+    .output(publicSiteSchema)
+    .mutation(async ({ ctx, input }): Promise<PublicSite> => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      if (!site.ghRepository) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Site is not connected to a GitHub repository',
+        });
+      }
+
+      // Delete webhook for OAuth sites (GitHub App sites use installation-level webhooks)
+      if (site.webhookId && !site.installationId) {
+        try {
+          await deleteGitHubRepoWebhook({
+            ghRepository: site.ghRepository,
+            accessToken: ctx.session.accessToken,
+            webhook_id: Number(site.webhookId),
+          });
+        } catch (error) {
+          console.error('Failed to delete webhook during disconnect:', error);
+        }
+      }
+
+      // Clear all GitHub-related fields
+      await ctx.db.site.update({
+        where: { id: input.siteId },
+        data: {
+          ghRepository: null,
+          ghBranch: null,
+          rootDir: null,
+          installationId: null,
+          webhookId: null,
+          autoSync: false,
+          tree: Prisma.JsonNull,
+        },
+      });
+
+      // Analytics
+      const posthog = PostHogClient();
+      posthog.capture({
+        distinctId: site.userId,
+        event: 'site_github_disconnected',
+        properties: { id: site.id },
+      });
+      await posthog.shutdown();
+
+      const fresh = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: publicSiteSelect,
+      });
+
+      if (!fresh) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found after update',
+        });
+      }
+
+      revalidateTag(`${site.id}`);
+      return fresh;
+    }),
+  connectGitHub: protectedProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+        ghRepository: z.string().min(1),
+        ghBranch: z.string().min(1),
+        rootDir: z.string().optional(),
+        installationId: z.string().optional(),
+      }),
+    )
+    .output(publicSiteSchema)
+    .mutation(async ({ ctx, input }): Promise<PublicSite> => {
+      const { siteId, ghRepository, ghBranch, rootDir, installationId } = input;
+
+      const site = await ctx.db.site.findUnique({
+        where: { id: siteId },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      if (site.ghRepository) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            'Site is already connected to a GitHub repository. Disconnect first before connecting to a new repository.',
+        });
+      }
+
+      // Validate remote branch exists
+      const branchExists = await checkIfBranchExists({
+        ghRepository,
+        ghBranch,
+        accessToken: ctx.session.accessToken,
+        installationId,
+      });
+
+      if (!branchExists) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Branch ${ghBranch} does not exist in repository ${ghRepository}`,
+        });
+      }
+
+      // Update site with GitHub connection
+      await ctx.db.site.update({
+        where: { id: siteId },
+        data: {
+          ghRepository,
+          ghBranch,
+          rootDir: rootDir || null,
+          autoSync: true,
+          ...(installationId && {
+            installation: { connect: { id: installationId } },
+          }),
+        },
+      });
+
+      // Trigger initial sync
+      await inngest.send({
+        name: 'site/sync',
+        data: {
+          siteId,
+          ghRepository,
+          ghBranch,
+          rootDir: rootDir || null,
+          accessToken: ctx.session.accessToken,
+          installationId,
+        },
+      });
+
+      // Analytics
+      const posthog = PostHogClient();
+      posthog.capture({
+        distinctId: site.userId,
+        event: 'site_github_connected',
+        properties: { id: site.id, ghRepository },
+      });
+      await posthog.shutdown();
+
+      const fresh = await ctx.db.site.findUnique({
+        where: { id: siteId },
+        select: publicSiteSelect,
+      });
+
+      if (!fresh) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found after update',
+        });
+      }
+
+      revalidateTag(`${site.id}`);
+      return fresh;
     }),
 });
 

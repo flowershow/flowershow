@@ -239,7 +239,6 @@ export async function POST(
                   try {
                     await deleteFile({
                       projectId: siteId,
-                      branch: 'main',
                       path: file.path,
                     });
                     deletedPaths.push(file.path);
