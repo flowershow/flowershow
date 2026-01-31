@@ -64,6 +64,10 @@ export default function TokensList({ tokens, emptyMessage }: TokensListProps) {
     });
   };
 
+  const isExpired = (token: Token) => {
+    return token.expiresAt && new Date(token.expiresAt) < new Date();
+  };
+
   if (tokens.length === 0) {
     return (
       <div className="rounded-lg border border-stone-200 bg-white p-6 text-center dark:border-stone-700 dark:bg-black">
@@ -98,31 +102,41 @@ export default function TokensList({ tokens, emptyMessage }: TokensListProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-stone-200 dark:divide-stone-700">
-            {tokens.map((token) => (
-              <tr key={token.id}>
-                <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-stone-900 dark:text-stone-100">
-                  {token.name || 'Unnamed Token'}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-stone-500 dark:text-stone-400">
-                  {formatDate(token.createdAt)}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-stone-500 dark:text-stone-400">
-                  {formatDate(token.lastUsedAt)}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-sm text-stone-500 dark:text-stone-400">
-                  {token.expiresAt ? formatDate(token.expiresAt) : 'Never'}
-                </td>
-                <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
-                  <button
-                    onClick={() => handleRevoke(token.id)}
-                    disabled={revokingId === token.id}
-                    className="text-red-600 hover:text-red-900 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400 dark:hover:text-red-300"
-                  >
-                    {revokingId === token.id ? 'Revoking...' : 'Revoke'}
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {tokens.map((token) => {
+              const expired = isExpired(token);
+              return (
+                <tr key={token.id} className={expired ? 'opacity-60' : ''}>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm font-medium text-stone-900 dark:text-stone-100">
+                    <span className="flex items-center gap-2">
+                      {token.name || 'Unnamed Token'}
+                      {expired && (
+                        <span className="rounded bg-stone-200 px-1.5 py-0.5 text-xs font-normal text-stone-600 dark:bg-stone-700 dark:text-stone-400">
+                          Expired
+                        </span>
+                      )}
+                    </span>
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-stone-500 dark:text-stone-400">
+                    {formatDate(token.createdAt)}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-stone-500 dark:text-stone-400">
+                    {formatDate(token.lastUsedAt)}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-sm text-stone-500 dark:text-stone-400">
+                    {token.expiresAt ? formatDate(token.expiresAt) : 'Never'}
+                  </td>
+                  <td className="whitespace-nowrap px-6 py-4 text-right text-sm">
+                    <button
+                      onClick={() => handleRevoke(token.id)}
+                      disabled={revokingId === token.id}
+                      className="text-red-600 hover:text-red-900 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400 dark:hover:text-red-300"
+                    >
+                      {revokingId === token.id ? 'Revoking...' : 'Revoke'}
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
