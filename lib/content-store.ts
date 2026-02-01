@@ -63,8 +63,11 @@ const uploadS3Object = async ({
   file: Buffer;
   contentType: ContentType;
 }) => {
-  const maxAge =
-    contentType === 'text/html' || contentType === 'text/markdown' ? 0 : 300;
+  const isMedia =
+    contentType.startsWith('image/') ||
+    contentType.startsWith('video/') ||
+    contentType.startsWith('audio/');
+  const maxAge = isMedia ? 300 : 0;
   return s3Client.send(
     new PutObjectCommand({
       Bucket: S3_BUCKET_NAME,
@@ -258,8 +261,11 @@ export const generatePresignedUploadUrl = async (
   expiresIn: number = 3600,
   contentType?: ContentType,
 ): Promise<string> => {
-  const maxAge =
-    contentType === 'text/html' || contentType === 'text/markdown' ? 0 : 300;
+  const isMedia =
+    contentType?.startsWith('image/') ||
+    contentType?.startsWith('video/') ||
+    contentType?.startsWith('audio/');
+  const maxAge = isMedia ? 300 : 0;
 
   const command = new PutObjectCommand({
     Bucket: S3_BUCKET_NAME,
