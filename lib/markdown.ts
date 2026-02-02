@@ -17,7 +17,7 @@ import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import remarkSmartypants from 'remark-smartypants';
 import { unified } from 'unified';
-import FsImage from '@/components/public/mdx/fs-image';
+// import FsImage from '@/components/public/mdx/fs-image';
 import remarkObsidianComments from '@/lib/remark-obsidian-comments';
 import remarkYouTubeAutoEmbed from '@/lib/remark-youtube-auto-embed';
 import rehypeHtmlEnhancements from './rehype-html-enhancements';
@@ -82,11 +82,12 @@ export async function processMarkdown(
     .use(rehypeAutolinkHeadings, rehypeAutolinkHeadingsConfig)
     .use(rehypeKatex, { output: 'htmlAndMathml' })
     .use(rehypePrismPlus, { ignoreMissing: true })
-    .use(rehypeToReact, {
-      components: {
-        img: FsImage,
-      },
-    });
+    // .use(rehypeToReact, {
+    //   components: {
+    //     img: FsImage,
+    //   },
+    // });
+    .use(rehypeToReact);
 
   return (await processor.process(content)).result as ReactElement;
 }

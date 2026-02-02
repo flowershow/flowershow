@@ -135,7 +135,6 @@ test.describe('Links and embeds', () => {
     test.describe('Images', () => {
       test('Image embed with shortest path', async ({ publishedSitePage }) => {
         const embed = publishedSitePage.page.locator('img[alt="image"]');
-        await embed.waitFor({ state: 'attached' });
         const src = await embed.getAttribute('src');
         // expect(decodedImageSrc(src!)).toBe(
         //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
@@ -147,7 +146,6 @@ test.describe('Links and embeds', () => {
         const embed = publishedSitePage.page
           .locator('img[alt="assets/image"]')
           .first();
-        await embed.waitFor({ state: 'attached' });
         const src = await embed.getAttribute('src');
         // expect(decodedImageSrc(src!)).toBe(
         //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
@@ -161,7 +159,6 @@ test.describe('Links and embeds', () => {
         const embed = publishedSitePage.page.locator(
           'img[alt="Image With Special Chars %&(1)"]',
         );
-        await embed.waitFor({ state: 'attached' });
         const src = await embed.getAttribute('src');
         // expect(decodedImageSrc(src!)).toBe(
         //   `${publishedSitePage.siteUrl}/assets/Image With Special Chars %&(1).jpg`,
@@ -180,7 +177,6 @@ test.describe('Links and embeds', () => {
         const embed = publishedSitePage.page.locator(
           'img[alt="assets/image"][width="300"][height="200"]',
         );
-        await embed.waitFor({ state: 'attached' });
         const src = await embed.getAttribute('src');
         // expect(decodedImageSrc(src!)).toBe(
         //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
@@ -194,7 +190,6 @@ test.describe('Links and embeds', () => {
         const embed = publishedSitePage.page.locator(
           'img[alt="assets/image"][width="300"]:not([height])',
         );
-        await embed.waitFor({ state: 'attached' });
         const src = await embed.getAttribute('src');
         // expect(decodedImageSrc(src!)).toBe(
         //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
@@ -338,7 +333,6 @@ test.describe('Links and embeds', () => {
       const embed = publishedSitePage.page.locator(
         'img[alt="/assets/image.jpg"]',
       );
-      await embed.waitFor({ state: 'attached' });
       const src = await embed.getAttribute('src');
       // expect(decodedImageSrc(src!)).toBe(
       //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
@@ -352,7 +346,6 @@ test.describe('Links and embeds', () => {
       const embed = publishedSitePage.page.locator(
         'img[width="100"][height="200"]',
       );
-      await embed.waitFor({ state: 'attached' });
       const src = await embed.getAttribute('src');
       // expect(decodedImageSrc(src!)).toBe(
       //   'https://publish-01.obsidian.md/access/f786db9fac45774fa4f0d8112e232d67/Attachments/Engelbart.jpg',
@@ -368,7 +361,6 @@ test.describe('Links and embeds', () => {
       const embed = publishedSitePage.page.locator(
         'img[width="150"]:not([height])',
       );
-      await embed.waitFor({ state: 'attached' });
       const src = await embed.getAttribute('src');
       // expect(decodedImageSrc(src!)).toBe(
       //   'https://publish-01.obsidian.md/access/f786db9fac45774fa4f0d8112e232d67/Attachments/Engelbart.jpg',
@@ -407,17 +399,41 @@ test.describe('Links and embeds', () => {
 });
 
 test.describe('HTML blocks', () => {
-  test('Should resolve HTML href and src paths', async ({
+  test.beforeEach(async ({ publishedSitePage }) => {
+    await publishedSitePage.goto('/syntax/html-blocks');
+  });
+
+  test('Should resolve HTML img src paths', async ({ publishedSitePage }) => {
+    const embed = publishedSitePage.page.getByTestId('html-img').locator('img');
+    const src = await embed.getAttribute('src');
+    expect(src).toMatch(/\/@.+\/.+\/.+/);
+  });
+
+  test('Should preserve HTML img attributes', async ({ publishedSitePage }) => {
+    const embed = publishedSitePage.page.getByTestId('html-img').locator('img');
+    await expect(embed).toHaveAttribute('alt', 'Image');
+    await expect(embed).toHaveAttribute(
+      'style',
+      'float:right;margin:auto;width:200px',
+    );
+  });
+
+  test('Should resolve HTML anchor href paths', async ({
     publishedSitePage,
   }) => {
-    await publishedSitePage.goto('/syntax/html-blocks');
-    const embed = publishedSitePage.page.getByTestId('html-img').locator('img');
-    await embed.waitFor({ state: 'attached' });
-    const src = await embed.getAttribute('src');
-    // const decoded = decodeURIComponent(
-    //   new URL(src!, 'http://localhost').searchParams.get('url')!,
-    // );
-    // expect(decoded).toMatch(/\/@.+\/.+\/.+/);
-    expect(src).toMatch(/\/@.+\/.+\/.+/);
+    const link = publishedSitePage.page.getByTestId('html-link').locator('a');
+    await expect(link).toHaveAttribute(
+      'href',
+      `${publishedSitePage.siteUrlPath}/blog/post-1`,
+    );
+  });
+
+  test('Should preserve HTML anchor attributes', async ({
+    publishedSitePage,
+  }) => {
+    const link = publishedSitePage.page.getByTestId('html-link').locator('a');
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    await expect(link).toHaveAttribute('class', 'custom-link');
   });
 });

@@ -42,17 +42,20 @@ function FsImage(props: ImgHTMLAttributes<HTMLImageElement>) {
 
   const width = props.width ? parseSize(props.width) : undefined;
   const height = props.height ? parseSize(props.height) : undefined;
-  const style: any = { margin: 'auto' };
+  const style: any = {};
 
   if (width) {
     style.width = `${width}px`;
+    style.margin = 'auto';
   }
   if (height) {
     style.height = `${height}px`;
   }
 
   return (
-    <img {...props} width={width} height={height} style={style} />
+    <div style={style}>
+      <img {...props} width={width} height={height} />
+    </div>
     // <div style={{ position: "relative", width: "100%", aspectRatio: "3/2" }}>
     //   {/* Optimized sizes for content width:
     //     - Desktop (1280px+): max prose width (72rem = 1152px)

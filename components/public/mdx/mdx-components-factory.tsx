@@ -7,7 +7,7 @@ import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { PublicSite } from '@/server/api/types';
 import type { CustomHtmlProps } from './custom-html';
 import type { FlatUiTableProps } from './flatui-table';
-import FsImage from './fs-image';
+// import FsImage from './fs-image';
 import type { LineChartProps } from './line-chart';
 import type { ListProps } from './list';
 import List from './list';
@@ -36,7 +36,7 @@ export const mdxComponentsFactory = ({
   site: PublicSite;
 }) => {
   const components: MDXComponents = {
-    img: (props: any) => <FsImage {...props} />,
+    // img: (props: any) => <FsImage {...props} />,
     pre: (props: any) => <Pre {...props} />,
     iframe: (props) => {
       const src = props.src ?? '';
