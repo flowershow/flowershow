@@ -11,20 +11,20 @@
     "logo": "https://r2-assets.flowershow.app/logo.png",
     "links": [
       {
-        "href": "/#features",
-        "name": "Features"
-      },
-      {
-        "href": "/pricing",
-        "name": "Pricing"
-      },
-      {
         "href": "/docs",
         "name": "Docs"
       },
       {
         "href": "/blog",
         "name": "Blog"
+      },
+      {
+        "href": "/pricing",
+        "name": "Pricing"
+      },
+      {
+        "href": "/publish",
+        "name": "Publish CLI"
       },
       {
         "href": "/blogs",
@@ -66,8 +66,8 @@
             "name": "Blog"
           },
           {
-            "href": "/blogs",
-            "name": "Flowershow for Blogs"
+            "href": "/publish",
+            "name": "Publish CLI"
           }
         ]
       },
