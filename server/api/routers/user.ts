@@ -40,6 +40,7 @@ export const userRouter = createTRPCRouter({
     return await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
       select: {
+        username: true,
         feedback: true,
         sites: true,
       },
@@ -195,5 +196,60 @@ export const userRouter = createTRPCRouter({
         message:
           'Token created successfully. Copy this token now - it will not be shown again.',
       };
+    }),
+  deleteAccount: protectedProcedure
+    .input(
+      z.object({
+        confirm: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Get user and check for sites with active subscriptions
+      const user = await ctx.db.user.findUnique({
+        where: { id: userId },
+        select: {
+          username: true,
+          sites: {
+            select: {
+              id: true,
+              projectName: true,
+              subscription: {
+                select: { status: true },
+              },
+            },
+          },
+        },
+      });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      if (input.confirm !== user.username) {
+        throw new Error('Confirmation does not match username');
+      }
+
+      // Check for sites with active subscriptions
+      const sitesWithActiveSubscriptions = user.sites.filter(
+        (site) => site.subscription?.status === 'active',
+      );
+
+      if (sitesWithActiveSubscriptions.length > 0) {
+        const siteNames = sitesWithActiveSubscriptions
+          .map((s) => s.projectName)
+          .join(', ');
+        throw new Error(
+          `Please delete these sites with active subscriptions first: ${siteNames}`,
+        );
+      }
+
+      // Delete user (cascades to all relations per schema)
+      await ctx.db.user.delete({
+        where: { id: userId },
+      });
+
+      return { success: true };
     }),
 });
