@@ -1,5 +1,6 @@
 import { Blob } from '@prisma/client';
 import * as Sentry from '@sentry/nextjs';
+import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
 import {
@@ -225,46 +226,51 @@ export async function POST(
         // Delete files from R2 and database
         const deletedPaths: string[] = [];
         if (toDelete.length > 0 && !dryRun) {
-          await Sentry.startSpan(
-            {
-              op: 'db.delete',
-              name: 'Delete files from R2 and database',
-            },
-            async (span) => {
-              span.setAttribute('files_to_delete', toDelete.length);
+          try {
+            await Sentry.startSpan(
+              {
+                op: 'db.delete',
+                name: 'Delete files from R2 and database',
+              },
+              async (span) => {
+                span.setAttribute('files_to_delete', toDelete.length);
 
-              // Delete from R2 storage
-              await Promise.all(
-                toDelete.map(async (file) => {
-                  try {
-                    await deleteFile({
-                      projectId: siteId,
-                      path: file.path,
-                    });
-                    deletedPaths.push(file.path);
-                  } catch (error) {
-                    Sentry.captureException(error, {
-                      extra: {
-                        siteId,
-                        filePath: file.path,
-                        operation: 'delete_from_r2',
-                      },
-                    });
-                    // Continue with other deletions even if one fails
-                  }
-                }),
-              );
+                // Delete from R2 storage
+                await Promise.all(
+                  toDelete.map(async (file) => {
+                    try {
+                      await deleteFile({
+                        projectId: siteId,
+                        path: file.path,
+                      });
+                      deletedPaths.push(file.path);
+                    } catch (error) {
+                      Sentry.captureException(error, {
+                        extra: {
+                          siteId,
+                          filePath: file.path,
+                          operation: 'delete_from_r2',
+                        },
+                      });
+                      // Continue with other deletions even if one fails
+                    }
+                  }),
+                );
 
-              // Delete from database
-              await prisma.blob.deleteMany({
-                where: {
-                  id: {
-                    in: toDelete.map((f) => f.id),
+                // Delete from database
+                await prisma.blob.deleteMany({
+                  where: {
+                    id: {
+                      in: toDelete.map((f) => f.id),
+                    },
                   },
-                },
-              });
-            },
-          );
+                });
+              },
+            );
+          } finally {
+            // Invalidate cache after deletions (even on partial failures)
+            revalidateTag(siteId);
+          }
         } else if (toDelete.length > 0 && dryRun) {
           // In dry-run mode, just list what would be deleted
           deletedPaths.push(...toDelete.map((f) => f.path));
@@ -359,12 +365,15 @@ export async function POST(
         };
 
         // Generate presigned URLs for files to upload and update
-        const [uploadUrls, updateUrls] = dryRun
-          ? [
-              generateDryRunPlaceholders(toUpload),
-              generateDryRunPlaceholders(toUpdate),
-            ]
-          : await Sentry.startSpan(
+        let uploadUrls: UploadUrl[];
+        let updateUrls: UploadUrl[];
+
+        if (dryRun) {
+          uploadUrls = generateDryRunPlaceholders(toUpload);
+          updateUrls = generateDryRunPlaceholders(toUpdate);
+        } else {
+          try {
+            [uploadUrls, updateUrls] = await Sentry.startSpan(
               {
                 op: 'http.client',
                 name: 'Generate presigned URLs',
@@ -379,6 +388,11 @@ export async function POST(
                 ]);
               },
             );
+          } finally {
+            // Invalidate cache after upserts (even on partial failures)
+            revalidateTag(siteId);
+          }
+        }
 
         const response: SyncResponse = {
           toUpload: uploadUrls,

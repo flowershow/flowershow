@@ -1210,6 +1210,19 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      // First fetch the blob to get its siteId for proper cache tagging
+      const blobForTags = await ctx.db.blob.findFirst({
+        where: { id: input.id },
+        select: { siteId: true },
+      });
+
+      if (!blobForTags) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Page not found',
+        });
+      }
+
       return await unstable_cache(
         async (input) => {
           const blob = await ctx.db.blob.findFirst({
@@ -1239,7 +1252,7 @@ export const siteRouter = createTRPCRouter({
         undefined,
         {
           revalidate: 60, // 1 minute
-          tags: [`${input.id}`, `${input.id}-${input.id}`],
+          tags: [`${blobForTags.siteId}`, `${input.id}`],
         },
       )(input);
     }),

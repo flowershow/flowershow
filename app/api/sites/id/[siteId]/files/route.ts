@@ -1,5 +1,6 @@
 import { Blob } from '@prisma/client';
 import * as Sentry from '@sentry/nextjs';
+import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { validateAccessToken } from '@/lib/cli-auth';
 import {
@@ -167,84 +168,90 @@ export async function POST(
         }
 
         // Generate presigned URLs for all files
-        const uploadUrls: UploadUrl[] = await Sentry.startSpan(
-          {
-            op: 'http.client',
-            name: 'Generate presigned URLs for files',
-          },
-          async (span) => {
-            span.setAttribute('file_count', files.length);
+        let uploadUrls: UploadUrl[];
+        try {
+          uploadUrls = await Sentry.startSpan(
+            {
+              op: 'http.client',
+              name: 'Generate presigned URLs for files',
+            },
+            async (span) => {
+              span.setAttribute('file_count', files.length);
 
-            return Promise.all(
-              files.map(async (file) => {
-                // Extract file extension
-                const extension =
-                  file.path.split('.').pop()?.toLowerCase() || '';
+              return Promise.all(
+                files.map(async (file) => {
+                  // Extract file extension
+                  const extension =
+                    file.path.split('.').pop()?.toLowerCase() || '';
 
-                const urlPath = (() => {
-                  if (['md', 'mdx'].includes(extension)) {
-                    const _urlPath = resolveFilePathToUrlPath({
-                      target: file.path,
-                    });
-                    // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / )
-                    return _urlPath === '/'
-                      ? _urlPath
-                      : _urlPath.replace(/^\//, '');
-                  } else {
-                    return null;
-                  }
-                })();
+                  const urlPath = (() => {
+                    if (['md', 'mdx'].includes(extension)) {
+                      const _urlPath = resolveFilePathToUrlPath({
+                        target: file.path,
+                      });
+                      // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / )
+                      return _urlPath === '/'
+                        ? _urlPath
+                        : _urlPath.replace(/^\//, '');
+                    } else {
+                      return null;
+                    }
+                  })();
 
-                // Create or update blob record
-                const blob = await prisma.blob.upsert({
-                  where: {
-                    siteId_path: {
+                  // Create or update blob record
+                  const blob = await prisma.blob.upsert({
+                    where: {
+                      siteId_path: {
+                        siteId,
+                        path: file.path,
+                      },
+                    },
+                    create: {
                       siteId,
                       path: file.path,
+                      appPath: urlPath,
+                      size: file.size,
+                      sha: file.sha,
+                      metadata: {},
+                      extension,
+                      syncStatus: 'UPLOADING',
                     },
-                  },
-                  create: {
-                    siteId,
+                    update: {
+                      size: file.size,
+                      sha: file.sha,
+                      appPath: urlPath,
+                      extension,
+                      syncStatus: 'UPLOADING',
+                    },
+                  });
+
+                  // Generate S3 key: siteId/main/raw/path
+                  const s3Key = `${siteId}/main/raw/${file.path}`;
+
+                  // Get content type for the file
+                  const contentType = getContentType(extension);
+
+                  // Generate presigned URL (valid for 1 hour) with content type
+                  const uploadUrl = await generatePresignedUploadUrl(
+                    s3Key,
+                    3600,
+                    contentType,
+                  );
+
+                  return {
                     path: file.path,
-                    appPath: urlPath,
-                    size: file.size,
-                    sha: file.sha,
-                    metadata: {},
-                    extension,
-                    syncStatus: 'UPLOADING',
-                  },
-                  update: {
-                    size: file.size,
-                    sha: file.sha,
-                    appPath: urlPath,
-                    extension,
-                    syncStatus: 'UPLOADING',
-                  },
-                });
-
-                // Generate S3 key: siteId/main/raw/path
-                const s3Key = `${siteId}/main/raw/${file.path}`;
-
-                // Get content type for the file
-                const contentType = getContentType(extension);
-
-                // Generate presigned URL (valid for 1 hour) with content type
-                const uploadUrl = await generatePresignedUploadUrl(
-                  s3Key,
-                  3600,
-                  contentType,
-                );
-
-                return {
-                  path: file.path,
-                  uploadUrl,
-                  blobId: blob.id,
-                  contentType,
-                };
-              }),
-            );
-          },
-        );
+                    uploadUrl,
+                    blobId: blob.id,
+                    contentType,
+                  };
+                }),
+              );
+            },
+          );
+        } finally {
+          // Always invalidate cache, even on partial failures
+          revalidateTag(siteId);
+        }
 
         const response: PublishFilesResponse = {
           files: uploadUrls,
@@ -380,45 +387,50 @@ export async function DELETE(
 
         // Delete files from R2 and database
         if (existingBlobs.length > 0) {
-          await Sentry.startSpan(
-            {
-              op: 'db.delete',
-              name: 'Delete files from R2 and database',
-            },
-            async (span) => {
-              span.setAttribute('files_to_delete', existingBlobs.length);
+          try {
+            await Sentry.startSpan(
+              {
+                op: 'db.delete',
+                name: 'Delete files from R2 and database',
+              },
+              async (span) => {
+                span.setAttribute('files_to_delete', existingBlobs.length);
 
-              // Delete from R2 storage
-              await Promise.all(
-                existingBlobs.map(async (blob) => {
-                  try {
-                    await deleteFile({
-                      projectId: siteId,
-                      path: blob.path,
-                    });
-                  } catch (error) {
-                    Sentry.captureException(error, {
-                      extra: {
-                        siteId,
-                        filePath: blob.path,
-                        operation: 'delete_from_r2',
-                      },
-                    });
-                    // Continue with other deletions even if one fails
-                  }
-                }),
-              );
+                // Delete from R2 storage
+                await Promise.all(
+                  existingBlobs.map(async (blob) => {
+                    try {
+                      await deleteFile({
+                        projectId: siteId,
+                        path: blob.path,
+                      });
+                    } catch (error) {
+                      Sentry.captureException(error, {
+                        extra: {
+                          siteId,
+                          filePath: blob.path,
+                          operation: 'delete_from_r2',
+                        },
+                      });
+                      // Continue with other deletions even if one fails
+                    }
+                  }),
+                );
 
-              // Delete from database
-              await prisma.blob.deleteMany({
-                where: {
-                  id: {
-                    in: existingBlobs.map((b) => b.id),
+                // Delete from database
+                await prisma.blob.deleteMany({
+                  where: {
+                    id: {
+                      in: existingBlobs.map((b) => b.id),
+                    },
                   },
-                },
-              });
-            },
-          );
+                });
+              },
+            );
+          } finally {
+            // Always invalidate cache, even on partial failures
+            revalidateTag(siteId);
+          }
         }
 
         const response: DeleteFilesResponse = {
