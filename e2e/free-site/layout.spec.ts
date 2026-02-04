@@ -30,7 +30,7 @@ test.describe('Site layout', () => {
     // Check social links
     const socialLinks = navbar.locator('.site-navbar-social-links-container');
     const socialLinkElements = socialLinks.getByRole('link');
-    await expect(socialLinkElements).toHaveCount(2);
+    await expect(socialLinkElements).toHaveCount(3);
     await expect(socialLinkElements.nth(0)).toHaveAttribute(
       'href',
       'https://discord.link/abc',
@@ -38,6 +38,10 @@ test.describe('Site layout', () => {
     await expect(socialLinkElements.nth(1)).toHaveAttribute(
       'href',
       'https://github.com/flowershow/test',
+    );
+    await expect(socialLinkElements.nth(2)).toHaveAttribute(
+      'href',
+      'mailto:myemail@mail.com',
     );
   });
 
@@ -73,7 +77,7 @@ test.describe('Site layout', () => {
     // Social links
     const socialLinks = footer.locator('.site-footer-social-links');
     const socialLinkElements = socialLinks.locator('.site-footer-social-link');
-    await expect(socialLinkElements).toHaveCount(2);
+    await expect(socialLinkElements).toHaveCount(3);
     await expect(socialLinkElements.nth(0)).toHaveAttribute(
       'href',
       'https://discord.link/abc',
@@ -81,6 +85,10 @@ test.describe('Site layout', () => {
     await expect(socialLinkElements.nth(1)).toHaveAttribute(
       'href',
       'https://github.com/flowershow/test',
+    );
+    await expect(socialLinkElements.nth(2)).toHaveAttribute(
+      'href',
+      'mailto:myemail@mail.com',
     );
 
     // Navigation groups

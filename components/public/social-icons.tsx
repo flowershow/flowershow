@@ -12,11 +12,13 @@ import {
   YouTubeIcon,
 } from '@/components/icons';
 import { SocialPlatform } from '@/components/types';
+import { MailIcon } from 'lucide-react';
 
 export const socialIcons: { [K in SocialPlatform]: React.FC<any> } = {
   bluesky: BlueskyIcon,
   bsky: BlueskyIcon,
   discord: DiscordIcon,
+  mail: (props) => <MailIcon strokeWidth={2.5} {...props} />,
   facebook: FacebookIcon,
   github: GithubIcon,
   instagram: InstagramIcon,

@@ -13,6 +13,7 @@ export type SocialPlatform =
   | 'bsky'
   | 'bluesky'
   | 'discord'
+  | 'mail'
   | 'facebook'
   | 'github'
   | 'instagram'

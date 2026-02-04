@@ -33,6 +33,9 @@ export const resolveFilePathToUrlPath = ({
   if (target.startsWith('http')) {
     return target;
   }
+  if (target.startsWith('mailto:') || target.startsWith('tel:')) {
+    return target;
+  }
 
   // remove space encoding (required in CommonMark links)
   if (commonMarkSpaceEncoded) {
