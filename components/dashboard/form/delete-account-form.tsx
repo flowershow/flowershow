@@ -1,6 +1,5 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
@@ -8,8 +7,6 @@ import { cn } from '@/lib/utils';
 import { api } from '@/trpc/react';
 
 export default function DeleteAccountForm({ username }: { username: string }) {
-  const router = useRouter();
-
   const { isPending: isDeletingAccount, mutate: deleteAccount } =
     api.user.deleteAccount.useMutation({
       onSuccess: () => {
@@ -63,9 +60,7 @@ export default function DeleteAccountForm({ username }: { username: string }) {
         <p className="w-full text-sm text-stone-500 ">
           This action is irreversible. Please proceed with caution.
         </p>
-        <div className="min-w-32">
-          <FormButton pending={isDeletingAccount} />
-        </div>
+        <FormButton pending={isDeletingAccount} />
       </div>
     </form>
   );
@@ -75,7 +70,7 @@ function FormButton({ pending = false }) {
   return (
     <button
       className={cn(
-        'flex h-8 w-32 items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none sm:h-10',
+        'flex h-8 min-w-32 text-nowrap items-center justify-center px-4 rounded-md border text-sm transition-all focus:outline-none sm:h-10',
         pending
           ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   '
           : 'border-red-600 bg-red-600 text-white hover:bg-white hover:text-red-600 ',

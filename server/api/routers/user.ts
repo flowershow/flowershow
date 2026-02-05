@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { fetchGitHubScopeRepositories, fetchGitHubScopes } from '@/lib/github';
+import PostHogClient from '@/lib/server-posthog';
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -197,6 +198,46 @@ export const userRouter = createTRPCRouter({
           'Token created successfully. Copy this token now - it will not be shown again.',
       };
     }),
+  changeUsername: protectedProcedure
+    .input(
+      z.object({
+        newUsername: z
+          .string()
+          .min(3, 'Username must be at least 3 characters')
+          .max(39, 'Username must be at most 39 characters')
+          .regex(
+            /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/,
+            'Username may only contain alphanumeric characters or single hyphens, and cannot begin or end with a hyphen',
+          ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Check if username is already taken
+      const existingUser = await ctx.db.user.findUnique({
+        where: { username: input.newUsername },
+      });
+
+      if (existingUser && existingUser.id !== userId) {
+        throw new Error('Username is already taken');
+      }
+
+      // Update username
+      await ctx.db.user.update({
+        where: { id: userId },
+        data: { username: input.newUsername },
+      });
+
+      const posthog = PostHogClient();
+      posthog.capture({
+        distinctId: userId,
+        event: 'username_changed',
+      });
+      await posthog.shutdown();
+
+      return { success: true };
+    }),
   deleteAccount: protectedProcedure
     .input(
       z.object({
@@ -249,6 +290,13 @@ export const userRouter = createTRPCRouter({
       await ctx.db.user.delete({
         where: { id: userId },
       });
+
+      const posthog = PostHogClient();
+      posthog.capture({
+        distinctId: userId,
+        event: 'account_deleted',
+      });
+      await posthog.shutdown();
 
       return { success: true };
     }),

@@ -156,12 +156,13 @@ export const authOptions: NextAuthOptions = {
       // user:
       //   on first sign up - value returned from profile method above
       //   on subsequent sign in - prisma user
-      // account: prisma account
+      // account: OAuth response with fresh tokens from provider
       // profile: full GitHub or Google profile
       if (!account || !profile) return false;
 
       const existingAccount = await prisma.account.findFirst({
         where: {
+          provider: account.provider,
           providerAccountId: account.providerAccountId, // same as profile.id
         },
       });
@@ -186,14 +187,14 @@ export const authOptions: NextAuthOptions = {
           });
 
           // Update user data based on provider
+          // Note: We never update username on sign-in - it's only set on initial account creation
+          // and can only be changed manually by the user
           const updateData: any = {};
 
           if (account.provider === 'github') {
             updateData.ghUsername = (profile as any).login;
-            updateData.username = (profile as any).login;
             updateData.name = (profile as any).name || (profile as any).login;
           } else if (account.provider === 'google') {
-            // For Google, keep existing username but update name if changed
             updateData.name = (profile as any).name;
           }
 
@@ -208,14 +209,21 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    jwt: async ({ token, user, account, profile }) => {
-      // console.log("jwt", { token, user, account, profile });
+    jwt: async ({ token, user, account, profile, trigger, session }) => {
+      // console.log("jwt", { token, user, account, profile, trigger, session });
       // token:
       //   first time it's called (sign in): minimal token with name, email, picture and sub (user ID)
       //   subsequent calls (get session): token with validity properties + any extra ones that we added first time in this callback
-      // (available only on first call) account: prisma account
-      // (available only on first call) user: user account
+      // (available only on first call) account: OAuth response with fresh tokens from provider
+      // (available only on first call) user: prisma user
       // (available only on first call) profile: full GitHub profile
+      // trigger: "signIn" | "signUp" | "update" - indicates why this callback was called
+      // session: data passed to update() function
+
+      if (trigger === 'update' && session?.username) {
+        token.username = session.username;
+      }
+
       if (account) {
         token.accessToken = account.access_token!;
       }
