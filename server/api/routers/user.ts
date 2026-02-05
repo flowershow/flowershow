@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { fetchGitHubScopeRepositories, fetchGitHubScopes } from '@/lib/github';
+import PostHogClient from '@/lib/server-posthog';
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -40,6 +41,7 @@ export const userRouter = createTRPCRouter({
     return await ctx.db.user.findUnique({
       where: { id: ctx.session.user.id },
       select: {
+        username: true,
         feedback: true,
         sites: true,
       },
@@ -195,5 +197,107 @@ export const userRouter = createTRPCRouter({
         message:
           'Token created successfully. Copy this token now - it will not be shown again.',
       };
+    }),
+  changeUsername: protectedProcedure
+    .input(
+      z.object({
+        newUsername: z
+          .string()
+          .min(3, 'Username must be at least 3 characters')
+          .max(39, 'Username must be at most 39 characters')
+          .regex(
+            /^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$/,
+            'Username may only contain alphanumeric characters or single hyphens, and cannot begin or end with a hyphen',
+          ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Check if username is already taken
+      const existingUser = await ctx.db.user.findUnique({
+        where: { username: input.newUsername },
+      });
+
+      if (existingUser && existingUser.id !== userId) {
+        throw new Error('Username is already taken');
+      }
+
+      // Update username
+      await ctx.db.user.update({
+        where: { id: userId },
+        data: { username: input.newUsername },
+      });
+
+      const posthog = PostHogClient();
+      posthog.capture({
+        distinctId: userId,
+        event: 'username_changed',
+      });
+      await posthog.shutdown();
+
+      return { success: true };
+    }),
+  deleteAccount: protectedProcedure
+    .input(
+      z.object({
+        confirm: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      // Get user and check for sites with active subscriptions
+      const user = await ctx.db.user.findUnique({
+        where: { id: userId },
+        select: {
+          username: true,
+          sites: {
+            select: {
+              id: true,
+              projectName: true,
+              subscription: {
+                select: { status: true },
+              },
+            },
+          },
+        },
+      });
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      if (input.confirm !== user.username) {
+        throw new Error('Confirmation does not match username');
+      }
+
+      // Check for sites with active subscriptions
+      const sitesWithActiveSubscriptions = user.sites.filter(
+        (site) => site.subscription?.status === 'active',
+      );
+
+      if (sitesWithActiveSubscriptions.length > 0) {
+        const siteNames = sitesWithActiveSubscriptions
+          .map((s) => s.projectName)
+          .join(', ');
+        throw new Error(
+          `Please delete these sites with active subscriptions first: ${siteNames}`,
+        );
+      }
+
+      // Delete user (cascades to all relations per schema)
+      await ctx.db.user.delete({
+        where: { id: userId },
+      });
+
+      const posthog = PostHogClient();
+      posthog.capture({
+        distinctId: userId,
+        event: 'account_deleted',
+      });
+      await posthog.shutdown();
+
+      return { success: true };
     }),
 });

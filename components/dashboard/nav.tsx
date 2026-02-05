@@ -149,6 +149,14 @@ export default function Nav({ children }: { children: ReactNode }) {
                   </Link>
                 </MenuItem>
                 <MenuItem>
+                  <Link
+                    href="/settings"
+                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
+                  >
+                    Settings
+                  </Link>
+                </MenuItem>
+                <MenuItem>
                   <button
                     onClick={() => signOut()}
                     className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
