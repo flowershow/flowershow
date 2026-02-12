@@ -6,7 +6,9 @@
 
 ## Documentation
 
-For documentation and how-to guides, visit [https://flowershow.app/docs]()
+For documentation and how-to guides, visit [https://flowershow.app/docs](https://flowershow.app/docs).
+
+REST API reference (OpenAPI 3.1): `docs/openapi.yaml`
 
 ## Community
 
