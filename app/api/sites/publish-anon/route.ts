@@ -12,6 +12,7 @@ import {
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import PostHogClient from '@/lib/server-posthog';
+import { ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
@@ -201,6 +202,9 @@ export async function POST(request: NextRequest) {
         });
 
         span.setAttribute('site_id', site.id);
+
+        // Ensure Typesense collection exists for search indexing
+        await ensureSiteCollection(site.id);
 
         // Create blob records and generate upload URLs for all files
         const fileUploads: FileUploadInfo[] = [];

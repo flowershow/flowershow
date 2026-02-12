@@ -9,6 +9,7 @@ import {
   getContentType,
 } from '@/lib/content-store';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
 // Maximum file size: 100MB
@@ -95,6 +96,9 @@ export async function POST(
             { status: 403 },
           );
         }
+
+        // Ensure Typesense collection exists for search indexing
+        await ensureSiteCollection(siteId);
 
         // Parse request body
         const body = await request.json();

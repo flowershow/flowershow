@@ -1,6 +1,7 @@
 import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
+import { ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
 /**
@@ -116,6 +117,9 @@ export async function POST(request: NextRequest) {
 
     // Generate site URL
     const siteUrl = `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${sanitizedName}`;
+
+    // Ensure Typesense collection exists for search indexing
+    await ensureSiteCollection(site.id);
 
     return NextResponse.json(
       {
