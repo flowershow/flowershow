@@ -169,6 +169,9 @@
     "eslint-plugin-storybook": "10.2.0"
   },
   "pnpm": {
+    "patchedDependencies": {
+      "gray-matter@4.0.3": "patches/gray-matter@4.0.3.patch"
+    },
     "overrides": {
       "@types/react": "19.2.2",
       "@types/react-dom": "19.2.2",
