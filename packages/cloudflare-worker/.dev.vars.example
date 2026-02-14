@@ -1,5 +1,5 @@
 # Database Configuration (required for all environments)
-DATABASE_URL=postgresql://postgres@localhost:5432/datahub-next-dev
+DATABASE_URL=postgresql://postgres:postgres@localhost:5433/flowershow-dev
 TYPESENSE_HOST=localhost
 TYPESENSE_PORT=8108
 TYPESENSE_PROTOCOL=http

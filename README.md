@@ -23,21 +23,35 @@ content/
 
 ## Quick Start
 
+**Prerequisites:** [Docker](https://docs.docker.com/get-docker/) and [pnpm](https://pnpm.io/installation) installed.
+
 ```bash
 # Install dependencies
 pnpm install
 
-# Build all packages
-pnpm build
+# Copy env template (then edit apps/flowershow/.env with your secrets)
+cp apps/flowershow/.env.example apps/flowershow/.env
 
-# Start the web app in development mode
-pnpm dev
+# Start everything: Postgres, MinIO, Inngest, Cloudflare Worker, Next.js app
+pnpm dev:up
+```
 
-# Run tests across all packages
-pnpm test
+Visit `http://cloud.localhost:3000` once it's running.
 
-# Lint all packages
-pnpm lint
+### Other commands
+
+```bash
+pnpm dev:up --stripe           # Also start Stripe webhook forwarding
+pnpm dev:up --github           # Also start Smee (GitHub webhook proxy)
+pnpm dev:up --search           # Also start Typesense
+pnpm dev:up:all                # Start everything including all optional services
+
+pnpm dev:down                  # Stop Docker containers (keep data)
+pnpm dev:nuke                  # Stop containers + delete all data volumes
+
+pnpm build                     # Build all packages
+pnpm test                      # Run tests across all packages
+pnpm lint                      # Lint all packages
 ```
 
 For web app setup (database, storage, auth, etc.), see [`apps/flowershow/README.md`](apps/flowershow/README.md).

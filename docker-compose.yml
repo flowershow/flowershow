@@ -1,0 +1,109 @@
+# Local development infrastructure
+# Usage:
+#   pnpm dev:up              — start core services + app
+#   pnpm dev:up --stripe     — include Stripe webhook forwarding
+#   pnpm dev:up --github     — include GitHub webhook proxy (Smee)
+#   pnpm dev:up --search     — include Typesense search
+#   pnpm dev:up:all          — start everything
+#   pnpm dev:down            — stop all containers (keep data)
+#   pnpm dev:nuke            — stop all containers + delete volumes
+
+services:
+  # ── Core services (always started) ─────────────────────────────
+
+  postgres:
+    image: postgres:16
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: flowershow-dev
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+      # Pre-configure webhook so the ARN exists at startup (no restart needed).
+      MINIO_NOTIFY_WEBHOOK_ENABLE_worker: "on"
+      MINIO_NOTIFY_WEBHOOK_ENDPOINT_worker: "http://host.docker.internal:8787/queue"
+    command: server /data --console-address ":9001"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - miniodata:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+  # One-shot init container: creates bucket, sets public access policy,
+  # and wires up the webhook event notification for the Cloudflare Worker.
+  minio-setup:
+    image: minio/mc
+    depends_on:
+      minio:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: >
+      /bin/sh -c "
+        mc alias set local http://minio:9000 minioadmin minioadmin;
+        mc mb --ignore-existing local/flowershow;
+        mc anonymous set download local/flowershow;
+        mc event add local/flowershow arn:minio:sqs::worker:webhook --event put || true;
+        echo 'MinIO setup complete: bucket created, webhook configured.';
+      "
+
+  inngest:
+    image: inngest/inngest:latest
+    ports:
+      - "8288:8288"
+    command: inngest dev -u http://host.docker.internal:3000/api/inngest
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # ── Optional profiles ──────────────────────────────────────────
+
+  typesense:
+    image: typesense/typesense:27.1
+    profiles: [search]
+    ports:
+      - "8108:8108"
+    environment:
+      TYPESENSE_API_KEY: xyz
+      TYPESENSE_DATA_DIR: /data
+    volumes:
+      - typesensedata:/data
+
+  stripe-cli:
+    image: stripe/stripe-cli:latest
+    profiles: [stripe]
+    command: listen --forward-to http://host.docker.internal:3000/api/stripe/webhook --api-key ${STRIPE_SECRET_KEY}
+    env_file: apps/flowershow/.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  smee:
+    image: node:22-alpine
+    profiles: [github]
+    command: npx smee -u ${GH_WEBHOOK_URL} -t http://host.docker.internal:3000/api/webhook
+    env_file: apps/flowershow/.env
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+volumes:
+  pgdata:
+  miniodata:
+  typesensedata:

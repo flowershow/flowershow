@@ -209,11 +209,7 @@ Key metrics available:
 
 ### Local Development
 
-For local development, run the Inngest dev server:
-
-```bash
-npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest
-```
+The Inngest dev server starts automatically as part of `pnpm dev:up`.
 
 Monitor local events at: http://localhost:8288/
 
@@ -221,97 +217,74 @@ Monitor local events at: http://localhost:8288/
 
 ### Local Development Setup
 
-All commands below should be run from within `apps/flowershow/` (or use `pnpm --filter @flowershow/app`).
+**Prerequisites:** Docker and pnpm installed.
 
-1. Clone the repository and install dependencies from the monorepo root:
+1. Install dependencies from the monorepo root:
    ```bash
    pnpm install
    ```
+
 2. Create a `.env` file from `.env.example`:
    ```bash
-   cp .env.example .env
+   cp apps/flowershow/.env.example apps/flowershow/.env
    ```
-3. Set up local PostgreSQL database
-4. Configure database variables in `.env`
-5. Set up MinIO for local storage:
 
+3. Fetch or create the app config:
    ```bash
-   # Install MinIO on MacOS
-   brew install minio/stable/minio
-
-   # Start MinIO server
-   minio server ~/minio
+   pnpm --filter @flowershow/app fetch-config
    ```
+   Or create your own `apps/flowershow/config.json` file.
 
-6. Configure MinIO bucket:
-   - Open MinIO Console at http://localhost:9000
-   - Login with default credentials (minioadmin/minioadmin)
-   - Click "Buckets" → "Create Bucket"
-   - Create bucket named "datahub"
-   - Set bucket Access Policy to "public"
-
-7. Set up Typesense for local search:
-
-   For installation instructions, see the [Typesense Installation Guide](https://typesense.org/docs/guide/install-typesense.html)
-
-   After installation, configure the following environment variables in `.env`:
-
-   ```
-   NEXT_PUBLIC_TYPESENSE_CLIENT_API_KEY=xyz  # Default
-   NEXT_PUBLIC_TYPESENSE_HOST=localhost
-   NEXT_PUBLIC_TYPESENSE_PORT=8108           # Default Typesense port
-   NEXT_PUBLIC_TYPESENSE_PROTOCOL=http
-   ```
-
-8. Run `pnpm fetch-config` or create your own `config.json` file
-9. Generate Prisma schema: `npx prisma generate`
-10. Create database schema: `npx prisma db push`
-11. Start development server: `pnpm dev`
-12. Start local Inngest instance:
-    ```bash
-    npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest
-    ```
-13. Visit app at `http://cloud.localhost:3000`
-
-#### Stripe Setup for Local Development
-
-0. Setup Stripe sandbox
-
-- Create Sandbox account in Stripe, add product, setup prices and copy over their IDs to `.env`.
-
-1. Install the [Stripe CLI](https://stripe.com/docs/stripe-cli#install):
-
+4. Start everything:
    ```bash
-   brew install stripe-cli
+   pnpm dev:up
    ```
 
-2. Log in to your Stripe account:
+   This single command:
+    - Starts **PostgreSQL** (localhost:5433), **MinIO** (localhost:9000), and **Inngest** (localhost:8288) via Docker
+   - Auto-creates the MinIO `flowershow` bucket with public access
+   - Configures MinIO webhook notifications to the Cloudflare Worker
+   - Runs Prisma migrations
+   - Starts the Next.js app (localhost:3000) and Cloudflare Worker (localhost:8787)
 
-   ```bash
-   stripe login
-   ```
+5. Visit the app at `http://cloud.localhost:3000`
 
-   Note: Make sure when you log in, you're in your Stripe sandbox.
+#### Optional services
 
-3. Start the Stripe webhook listener:
+Add flags to include extra services:
 
-   ```bash
-   stripe listen --forward-to localhost:3000/api/stripe/webhook
-   ```
+```bash
+pnpm dev:up --stripe           # + Stripe webhook forwarding
+pnpm dev:up --github           # + Smee GitHub webhook proxy
+pnpm dev:up --search           # + Typesense search engine
+pnpm dev:up --stripe --github  # combine any flags
+pnpm dev:up:all                # everything
+```
 
-4. Copy the webhook signing secret that Stripe CLI outputs and update your `.env`:
+**Stripe** requires `STRIPE_SECRET_KEY` in your `.env` (Stripe test key). You must also `stripe login` once on the host before first use.
 
-   ```
-   STRIPE_WEBHOOK_SECRET=whsec_.... # Use the secret from stripe listen command
-   ```
+**Smee** requires `GH_WEBHOOK_URL` in your `.env` (your Smee channel URL).
 
-5. Keep the Stripe CLI running in a separate terminal while testing subscriptions
+**Typesense** runs on localhost:8108 with API key `xyz`.
 
-The webhook listener will now forward Stripe events to your local server, enabling:
+#### Stopping services
 
-- Subscription creation and management
-- Premium plan activation
-- Subscription updates and cancellations
+```bash
+pnpm dev:down   # stop containers, keep data volumes
+pnpm dev:nuke   # stop containers + delete all data (fresh start)
+```
+
+#### Service endpoints
+
+| Service    | URL                    | Credentials            |
+|------------|------------------------|------------------------|
+| Next.js    | http://localhost:3000   |                        |
+| Worker     | http://localhost:8787   |                        |
+| PostgreSQL | localhost:5433         | postgres / postgres    |
+| MinIO API  | http://localhost:9000   | minioadmin / minioadmin |
+| MinIO Console | http://localhost:9001 | minioadmin / minioadmin |
+| Inngest    | http://localhost:8288   |                        |
+| Typesense  | http://localhost:8108   | API key: `xyz`         |
 
 ## Environment Configuration
 
@@ -452,34 +425,16 @@ Note: after you log in to the dashboard, you can close the Playwright browser wi
 
 2. Start the application
 
-Start minio:
+Start all services (core + Stripe + worker):
 
 ```bash
-minio server ~/minio
+pnpm dev:up --stripe
 ```
 
-Start inngest:
+Or if you need GitHub webhooks too:
 
 ```bash
-npx inngest-cli@latest dev
-```
-
-Start stripe:
-
-```bash
-stripe listen --forward-to localhost:3000/api/stripe/webhook
-```
-
-Start Cloudflare worker (datopian/datahub-next-workers repo):
-
-```bash
-npm run dev
-```
-
-Start the app:
-
-```bash
-pnpm dev
+pnpm dev:up --stripe --github
 ```
 
 Run the tests:
@@ -525,31 +480,35 @@ npx playwright test --ui
 
 ### Common Issues
 
-1. MinIO Connection Issues
-   - Verify MinIO is running
-   - Check credentials in `.env`
-   - Ensure bucket is publicly accessible
+1. **Docker containers won't start**
+   - Check if ports are already in use: `lsof -i :5433 -i :9000 -i :8288`
+   - Try a clean restart: `pnpm dev:nuke && pnpm dev:up`
+   - Check container logs: `docker compose logs <service>`
 
-2. Database Connection
-   - Verify PostgreSQL is running
-   - Check database credentials
-   - Ensure schema is up to date
+2. MinIO Connection Issues
+   - Verify MinIO is running: `docker compose ps minio`
+   - Check credentials in `.env` match docker-compose defaults (minioadmin/minioadmin)
+   - Check bucket exists: visit http://localhost:9001
 
-3. OAuth Authentication
+3. Database Connection
+   - Verify PostgreSQL is running: `docker compose ps postgres`
+   - Check database credentials in `.env`
+   - Reset database: `pnpm dev:nuke && pnpm dev:up`
+
+4. OAuth Authentication
    - Verify correct OAuth app configuration
    - Check callback URLs
    - Ensure environment variables are set
 
-4. Stripe Integration
-   - Ensure Stripe CLI is running with webhook forwarding
-   - Verify STRIPE_WEBHOOK_SECRET matches Stripe CLI output
-   - Check Stripe CLI logs for webhook delivery status
-   - Confirm subscription events in Stripe Dashboard
-   - Verify database updates after subscription events
+5. Stripe Integration
+   - Ensure you started with `pnpm dev:up --stripe`
+   - Verify `STRIPE_SECRET_KEY` is set in `.env`
+   - Check Stripe CLI logs: `docker compose logs stripe-cli`
+   - You must run `stripe login` once on the host before first use
 
-5. Typesense Search
+6. Typesense Search
+   - Ensure you started with `pnpm dev:up --search`
    - Check Typesense health status: `curl http://localhost:8108/health`
    - Verify environment variables in `.env`
-   - Check browser console for connection errors
 
 For additional support, please create an issue in the GitHub repository.

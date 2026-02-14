@@ -4,6 +4,10 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:up": "bash scripts/dev-up.sh",
+    "dev:up:all": "bash scripts/dev-up.sh --all",
+    "dev:down": "docker compose --profile stripe --profile github --profile search down",
+    "dev:nuke": "docker compose --profile stripe --profile github --profile search down -v",
     "lint": "turbo run lint",
     "test": "turbo run test",
     "format": "turbo run format",
