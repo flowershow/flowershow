@@ -1034,15 +1034,25 @@ export const siteRouter = createTRPCRouter({
             orderBy: { path: 'desc' },
           });
 
-          // If not found by permalink, try appPath
+          // If not found by permalink, try appPath.
+          // When both index.md and README.md exist in the same directory they
+          // share the same appPath.  We prefer index.* over README.* (matching
+          // the convention of most static-site generators), so fetch all
+          // candidates and pick deterministically.
           if (!blob) {
-            blob = await ctx.db.blob.findFirst({
+            const candidates = await ctx.db.blob.findMany({
               where: {
                 siteId: input.siteId,
                 appPath: input.slug,
               },
-              orderBy: { path: 'desc' },
             });
+            if (candidates.length === 1) {
+              blob = candidates[0]!;
+            } else if (candidates.length > 1) {
+              blob =
+                candidates.find((b) => /(?:^|\/)index\.mdx?$/.test(b.path)) ??
+                candidates[0]!;
+            }
           }
 
           // If on home page and still no blob found, fall back to first md/mdx file alphabetically
