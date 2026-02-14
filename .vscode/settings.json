@@ -4,5 +4,6 @@
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": "explicit",
     "source.organizeImports.biome": "explicit"
-  }
+  },
+  "git.ignoreLimitWarning": true
 }

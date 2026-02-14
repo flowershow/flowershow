@@ -1,0 +1,25 @@
+name: Sync Default Branch
+on:
+  push: { branches: main }
+  workflow_dispatch:
+permissions: {}
+
+jobs:
+  sync-default-branch:
+    if: github.ref_name == github.event.repository.default_branch
+    permissions: {contents: write}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: step-security/harden-runner@f086349bfa2bd1361f7909c78558e816508cdc10 # v2.8.0
+      with: {egress-policy: audit}
+    - uses: actions/checkout@a5ac7e51b41094c92402da3b24376905380afc29 # v4.1.6
+    - run: git push --force origin HEAD:refs/heads/master
+
+# One-time commands for users to switch-over:
+#
+# ```console
+# git branch -m master main
+# git fetch origin
+# git branch -u origin/main main
+# git remote set-head origin -a
+# ```

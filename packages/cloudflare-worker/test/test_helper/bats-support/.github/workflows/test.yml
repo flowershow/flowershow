@@ -1,0 +1,15 @@
+name: Test
+on:
+  push:
+  pull_request:
+  schedule: [{ cron: "0 0 10 * *" }] # monthly https://crontab.guru/#0_0_10_*_*
+  workflow_dispatch:
+
+permissions: {}
+jobs:
+  test:
+    uses: bats-core/.github/.github/workflows/test.yml@main
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write

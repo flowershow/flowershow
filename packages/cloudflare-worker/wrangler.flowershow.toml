@@ -1,0 +1,54 @@
+name = "flowershow-markdown-worker"
+main = "src/worker.js"
+compatibility_date = "2024-03-18"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+head_sampling_rate = 1
+
+# PRODUCTION
+[env.production.vars]
+ENVIRONMENT = "production"
+
+[[env.production.queues.consumers]]
+queue = "flowershow-markdown-queue"
+max_batch_size = 10
+max_batch_timeout = 1
+max_retries = 3
+
+[[env.production.r2_buckets]]
+binding = "BUCKET"
+bucket_name = "flowershow-cloud"
+
+# STAGING
+[env.staging.vars]
+ENVIRONMENT = "staging"
+
+[[env.staging.queues.consumers]]
+queue = "flowershow-markdown-queue-staging"
+max_batch_size = 10
+max_batch_timeout = 1
+max_retries = 3
+
+[[env.staging.r2_buckets]]
+binding = "BUCKET"
+bucket_name = "flowershow-cloud-staging"
+
+# DEV
+[env.dev]
+port = 8787
+local_protocol = "http"
+
+[env.dev.vars]
+ENVIRONMENT = "dev"
+
+[[env.dev.queues.producers]]
+binding = "FILE_PROCESSOR_QUEUE"
+queue = "markdown-processing-queue-dev"
+
+[[env.dev.queues.consumers]]
+queue = "markdown-processing-queue-dev"
+max_batch_size = 10
+max_batch_timeout = 1
+max_retries = 3

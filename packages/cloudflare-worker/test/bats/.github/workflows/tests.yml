@@ -1,0 +1,373 @@
+name: Tests
+
+# Controls when the action will run.
+on:
+  pull_request:
+    branches:
+      - main
+      - master
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  changelog:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Check that PR is mentioned in Changelog
+        run: |
+          if ! ./.github/workflows/check_pr_label.sh "${{github.event.pull_request.number}}" "no changelog"; then
+            grep "#${{github.event.pull_request.number}}" docs/CHANGELOG.md
+          fi
+    if: ${{github.event.pull_request}}
+
+  shfmt:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - run: |
+          curl https://github.com/mvdan/sh/releases/download/v3.5.1/shfmt_v3.5.1_linux_amd64 -o shfmt
+          chmod a+x shfmt
+      - run: ./shfmt --diff .
+
+  # Ensure we detect when a change disables Bats from reporting failure.
+  # This would not be detectable by Bats' selftests.
+  failsafe:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Check failing tests fail suite,
+        run: "! bin/bats test/fixtures/bats/failing.bats"
+
+  shellcheck:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Run shellcheck
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install shellcheck
+          ./shellcheck.sh
+
+  linux:
+    strategy:
+      matrix:
+        os: ['ubuntu-22.04', 'ubuntu-24.04']
+        env_vars:
+          - ''
+          # allow for some parallelity without GNU parallel, since it is not installed by default
+          - 'BATS_NO_PARALLELIZE_ACROSS_FILES=1 BATS_NUMBER_OF_PARALLEL_JOBS=2'
+          - 'BATS_PARALLEL_BINARY_NAME=rush'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Install rush
+        run: |
+          curl -sSfL https://github.com/shenwei356/rush/releases/download/v0.5.0/rush_linux_amd64.tar.gz | sudo tar xzf - -C /usr/local/bin
+        if: contains(matrix.env_vars, 'rush')
+      - name: Run test on OS ${{ matrix.os }}
+        shell: 'script -q -e -c "bash {0}"' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+        run: |
+          bash --version
+          bash -c "time ${{ matrix.env_vars }} bin/bats  --print-output-on-failure --formatter tap test"
+
+  unset_variables:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Check unset variables
+        shell: 'script -q -e -c "bash {0}"' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+          BASH_ENV: ${GITHUB_WORKSPACE}/.github/workflows/set_nounset.bash
+        run: bin/bats test --print-output-on-failure
+
+  npm_on_linux:
+    strategy:
+      matrix:
+        os: ['ubuntu-22.04', 'ubuntu-24.04']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: v18.20.2
+      - run: npm pack ./
+      - run: npm install -g ./bats-*.tgz
+      - name: Run test on OS ${{ matrix.os }}
+        shell: 'script -q -e -c "bash {0}"' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+        run: bats test --print-output-on-failure
+
+  windows:
+    strategy:
+      matrix:
+        os: ['windows-2022', 'windows-2025']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Check failing tests fail suite,
+        run: bash -c "! bin/bats test/fixtures/bats/failing.bats"
+      - run: |
+          bash --version
+          bash -c "time bin/bats -T --print-output-on-failure --formatter tap test"
+
+  npm_on_windows:
+    strategy:
+      matrix:
+        os: ['windows-2022', 'windows-2025']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: v18.20.2
+      - run: npm pack ./
+      - run: npm install -g (get-item .\bats-*.tgz).FullName
+      - run: bats  -T --print-output-on-failure test
+
+  macos:
+    strategy:
+      matrix:
+        os: ['macos-14', 'macos-15']
+        env_vars:
+          - ''
+          # allow for some parallelity without GNU parallel, since it is not installed by default
+          - 'BATS_NO_PARALLELIZE_ACROSS_FILES=1 BATS_NUMBER_OF_PARALLEL_JOBS=2'
+          - 'BATS_PARALLEL_BINARY_NAME=rush'
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Install unbuffer via expect
+        run: brew install expect
+      - name: Install rush
+        run: |
+          curl -sSfL https://github.com/shenwei356/rush/releases/download/v0.5.0/rush_darwin_amd64.tar.gz | sudo tar xzf - -C /usr/local/bin
+        if: contains(matrix.env_vars, 'rush')
+
+      - name: Check failing tests fail suite,
+        shell: 'unbuffer bash {0}' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+        run: bash -c '! bin/bats test/fixtures/bats/failing.bats'
+
+      - name: Run test on OS ${{ matrix.os }}
+        shell: 'unbuffer bash {0}' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+        run: |
+          bash --version
+          bash -c "time ${{ matrix.env_vars }} bin/bats  --print-output-on-failure --formatter tap test"
+
+  npm_on_macos:
+    strategy:
+      matrix:
+        os: ['macos-14', 'macos-15']
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
+        with:
+          node-version: v18.20.2
+      - name: Install unbuffer via expect
+        run: brew install expect
+      - name: Run test on OS ${{ matrix.os }}
+        shell: 'unbuffer bash {0}' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+        run: |
+          npm pack ./
+          # somehow there is already an installed bats version around
+          npm install --force -g ./bats-*.tgz
+          bats  --print-output-on-failure test
+
+  bash-version:
+    strategy:
+      matrix:
+        version: ['3.2', '4.0', '4.1', '4.2', '4.3', '4.4', '4', '5.0', '5.1', '5', 'rc']
+        env_vars:
+            - ''
+            # also test running (recursively!) in parallel
+            - '-e BATS_NUMBER_OF_PARALLEL_JOBS=2'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Run test on bash version ${{ matrix.version }}
+        shell: 'script -q -e -c "bash {0}"' # work around tty issues
+        run: |
+          set -e
+          docker build --build-arg bashver="${{ matrix.version }}" --tag "bats/bats:bash-${{ matrix.version }}" .
+          docker run -it "bash:${{ matrix.version }}" --version
+          time docker run -it ${{ matrix.env_vars }} "bats/bats:bash-${{ matrix.version }}"  --print-output-on-failure --tap /opt/bats/test
+
+  lib64-install:
+    runs-on: ubuntu-latest
+    permissions:
+        checks: write
+        pull-requests: write
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Install in lib64
+        run: sudo ./install.sh /usr/ lib64
+      - name: Run from env
+        shell: 'script -q -e -c "bash {0}"' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+        run: |
+          mkdir test-results/
+          time bats test --print-output-on-failure --report-formatter junit --output test-results
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@34d7c956a59aed1bfebf31df77b8de55db9bbaaf # v2.21.0
+        if: always()
+        with:
+          files: |
+            test-results/**/*.xml
+
+  alpine:
+    runs-on: ubuntu-latest
+    container: alpine:latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - name: Install dependencies
+        run: apk add bash ncurses util-linux
+      - name: Run test on bash version ${{ matrix.version }}
+        shell: 'script -q -e -c "bash {0}"' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+        run:
+          time ./bin/bats  --print-output-on-failure test/
+
+  freebsd:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        packages:
+          - flock
+          - ""
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: acj/freebsd-firecracker-action@a5a3fc1709c5b5368141a5699f10259aca3cd965 # v0.6.0
+        with:
+          run-in-vm: |
+            pkg install -y bash parallel ${{ matrix.packages }}
+            time ./bin/bats --print-output-on-failure test/
+
+  find_broken_symlinks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      # list symlinks that are broken and force non-zero exit if there are any
+      - run: "! find . -xtype l | grep ."
+
+  rpm:
+    runs-on: ubuntu-latest
+    container: almalinux:8
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - run: dnf install -y rpm-build rpmdevtools
+      - name: Build and install RPM and dependencies
+        run: |
+          rpmdev-setuptree
+          version=$(rpmspec -q --qf '%{version}' contrib/rpm/bats.spec)
+          tar --transform "s,^,bats-core-${version}/," -cf /github/home/rpmbuild/SOURCES/v${version}.tar.gz ./
+          rpmbuild -v -bb ./contrib/rpm/bats.spec
+          ls -al /github/home/rpmbuild/RPMS/noarch/
+          dnf install -y /github/home/rpmbuild/RPMS/noarch/bats-*.rpm
+          dnf -y install procps-ng # avoid timeout failure
+      - name: Run tests
+        shell: 'script -q -e -c "bash {0}"' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+        run: bats --print-output-on-failure --filter-tags !dep:install_sh test/
+
+  dockerfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@c47758b77c9736f4b2ef4073d4d51994fabfe349 # v3.7.1
+
+      - uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        with:
+          platforms: linux/amd64
+          tags: bats:test
+          load: true
+
+      - run: docker run -itv "$PWD":/code bats:test  --tap --print-output-on-failure test/
+        shell: 'script -q -e -c "bash {0}"' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          repository: bats-core/bats-assert
+          path: bats-assert
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          repository: bats-core/bats-support
+          path: bats-support
+
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          repository: bats-core/bats-file
+          path: bats-file
+
+      - run: |
+          <<EOF cat >test.sh
+            apk add sudo python3 # install bats-file's dependencies
+            ln -sf python3 /usr/bin/python # bats-file uses python without version
+            bats --tap --print-output-on-failure bats-*/test/
+          EOF
+          docker run -itv "$PWD":/code --entrypoint bash bats:test test.sh
+        shell: 'script -q -e -c "bash {0}"' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+
+  coverage:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - run: |
+          wget https://github.com/SimonKagstrom/kcov/releases/download/v42/kcov-amd64.tar.gz
+          tar -xf kcov-amd64.tar.gz
+      - run: |
+          ./usr/local/bin/kcov --exclude-path=/tmp $PWD/coverage ./bin/bats --filter-tags '!no-kcov' test/
+        shell: 'script -q -e -c "bash {0}"' # work around tty issues
+        env:
+          TERM: linux # fix tput for tty issue work around
+
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: code-coverage-report
+          path: coverage/*
+
+      - name: Print the Total Coverage
+        id: coverage-percent
+        shell: bash
+        env:
+          minimum_coverage: 86.40
+        run: |
+          value=$(jq '.percent_covered' <coverage/bats/coverage.json)
+          fixed_point() { # <float val>
+            int=${1%.*}
+            decimals=${1#*.}
+            echo $int${decimals::2}
+          }
+          echo "Coverage: $value%" | tee "$GITHUB_STEP_SUMMARY"
+          if (( $(fixed_point $value) < $(fixed_point $expected) )); then
+            echo "  is below required minimum coverage ($minimum_coverage%)." | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi

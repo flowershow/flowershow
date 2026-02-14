@@ -1,0 +1,7 @@
+# Copy this file to compose.override.yaml
+services:
+    bats:
+        entrypoint:
+            - "bash"
+networks:
+    default:

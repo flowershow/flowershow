@@ -1,24 +1,35 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
-/node_modules
-/.pnp
+node_modules/
+.pnp
 .pnp.js
-/.yarn
+.yarn
+
+# build outputs
+dist/
+.next/
+out/
+build/
+storybook-static/
 
 # testing
-/coverage
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+playwright/.auth/
+playwright/test-env.json
 
-# next.js
-/.next/
-/out/
-
-# production
-/build
+# env files
+.env*
+!.env*.example
 
 # misc
 .DS_Store
 *.pem
+*.tsbuildinfo
+*.log
+*storybook.log
 
 # debug
 npm-debug.log*
@@ -26,27 +37,29 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# local env files
-.env*
-!.env*.example
-
 # vercel
 .vercel
 
-# typescript
-*.tsbuildinfo
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache/
-/playwright/.auth/
-/playwright/test-env.json
+# turbo
+.turbo
 
-# Sentry Config File
+# IDE
+.idea/
+*.iml
+
+# Sentry
 .env.sentry-build-plugin
 
-*storybook.log
-storybook-static
+# Cloudflare
+.wrangler/
+.dev.vars
 
-# bv (beads viewer) local config and caches
+# Obsidian plugin build artifacts
+packages/obsidian-plugin/main.js
+*.map
+
+# Package tarballs
+*.tgz
+
+# beads
 .bv/

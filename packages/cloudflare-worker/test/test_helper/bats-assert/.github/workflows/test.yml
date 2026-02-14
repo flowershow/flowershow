@@ -1,0 +1,9 @@
+name: Test
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    uses: bats-core/.github/.github/workflows/test.yml@v1

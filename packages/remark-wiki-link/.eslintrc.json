@@ -1,0 +1,6 @@
+{
+  "ignorePatterns": ["!**/*", "dist/**/*"],
+  "env": {
+    "jest": true
+  }
+}

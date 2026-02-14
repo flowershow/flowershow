@@ -1,422 +1,66 @@
-# 💐 Flowershow
+# Flowershow
 
 > The fast and simple way to turn markdown into a website
 
-[👉 See Flowershow in action on flowershow.app](https://flowershow.app/)
+[See Flowershow in action on flowershow.app](https://flowershow.app/)
+
+## Monorepo Structure
+
+This is a [Turborepo](https://turbo.build/) monorepo managed with [pnpm](https://pnpm.io/) workspaces.
+
+```
+apps/
+  flowershow/             # Next.js web application (flowershow.app)
+packages/
+  cli/                  # @flowershow/publish — CLI for publishing sites
+  cloudflare-worker/    # Markdown processing Cloudflare worker
+  obsidian-plugin/      # Obsidian plugin for Flowershow
+  remark-wiki-link/     # @flowershow/remark-wiki-link — remark plugin for wiki-style links
+  themes/               # CSS themes
+content/
+  flowershow-app/       # Marketing site content (Obsidian vault)
+```
+
+## Quick Start
+
+```bash
+# Install dependencies
+pnpm install
+
+# Build all packages
+pnpm build
+
+# Start the web app in development mode
+pnpm dev
+
+# Run tests across all packages
+pnpm test
+
+# Lint all packages
+pnpm lint
+```
+
+For web app setup (database, storage, auth, etc.), see [`apps/flowershow/README.md`](apps/flowershow/README.md).
 
 ## Documentation
 
-For documentation and how-to guides, visit [https://flowershow.app/docs](https://flowershow.app/docs).
-
-REST API reference (OpenAPI 3.1): `docs/openapi.yaml`
+- **Web app**: [`apps/flowershow/README.md`](apps/flowershow/README.md) — architecture, local dev setup, environment config, testing, troubleshooting
+- **REST API**: [`apps/flowershow/docs/openapi.yaml`](apps/flowershow/docs/openapi.yaml) — OpenAPI 3.1 spec
+- **User docs**: [flowershow.app/docs](https://flowershow.app/docs)
 
 ## Community
 
-* Browse [existing issues](https://github.com/flowershow/flowershow/issues) or [submit a new one](https://github.com/flowershow/flowershow/issues/new) if you encounter any problems
-* Visit our [discussions](https://github.com/flowershow/flowershow/discussions) to ask questions, share ideas, or showcase your Flowershow site
+- Browse [existing issues](https://github.com/flowershow/flowershow/issues) or [submit a new one](https://github.com/flowershow/flowershow/issues/new)
+- Visit our [discussions](https://github.com/flowershow/flowershow/discussions) to ask questions, share ideas, or showcase your Flowershow site
 
 ## Contributing
 
-🚧 **Work in Progress**
+We're working on opening up parts of Flowershow for community contributions. While this isn't ready yet, we're excited to welcome contributors soon.
 
-We're working on opening up parts of Flowershow for community contributions. While this isn't ready yet, we're excited to welcome contributors soon who want to help make Flowershow even better. Stay tuned!
+You can already contribute by adding pull requests for demos or tests of Flowershow markdown features:
 
-You can already contribute by adding pull requests for demos or tests of Flowershow markdown features to our Demo and Test repos below.
-
-### Demo Repo
-
-https://demo.flowershow.app
-
-https://github.com/flowershow/demo
-
-### Test Repo
-
-https://test.flowershow.app/
-
-https://github.com/flowershow/test
-
-## Project Overview
-
-Flowershow Cloud is a NextJS multitenant application designed for seamlessly publishing markdown content from GitHub repositories.
-
-The application provides:
-
-- Multi-tenant architecture supporting multiple users and sites
-- Built-in authentication via GitHub
-- Markdown content publishing from GitHub repositories
-- Automatic content synchronization
-
-## Architecture
-
-The application is built with:
-
-- **Frontend**: Next.js with TypeScript
-- **Database**: PostgreSQL (Neon, managed by Vercel) for user accounts and site metadata
-- **Storage**: R2 Cloudflare buckets for content storage
-- **Authentication**: NextAuth with GitHub OAuth
-- **Deployment**: Vercel
-- **Background Jobs**: Inngest + Cloudflare worker
-- **Content indexing**: Typesense
-- **Subscriptions**: Stripe
-
-## Site Creation and Data Flow
-
-The site creation process follows these steps:
-
-1. **GitHub Authentication**
-
-- Users authenticate with GitHub OAuth
-- Application requests necessary repository access permissions
-
-2. **Site Configuration**
-
-- User selects:
-  - Repository to publish from
-  - Branch to track (defaults to 'main')
-  - Root directory (optional, for publishing specific folder)
-- User creates a new site with the selected configurations
-
-3. **Site Content Processing**
-
-- Initial site synchronization triggered
-  - Inngest sync function fetches files from GitHub, creates Blob records in the database and uploads the files to R2 storage
-  - Each markdown file uploaded to R2 triggers the Cloudflare worker, which processes it and updates associated Blob records in the db with the extracted data (e.g. frontmatter fields)
-
-4. **Consecutive Site Content Synchronization**
-
-- Automatic sync triggered with GitHub webhooks (default)
-- Manual sync option available
-
-## Content Synchronization Architecture
-
-### Inngest Configuration
-
-The synchronization process is managed by Inngest, with configuration files located in:
-
-- `/inngest/client.ts` - Event definitions and client setup
-- `/inngest/functions.ts` - Sync and delete functions implementation
-
-```mermaid
-graph TD
-    subgraph "Trigger Sources"
-        GH[GitHub Push] -->|Webhook| WH[Webhook Handler]
-        UI[Manual UI Trigger] -->|Direct| IE[Inngest Event]
-        WH -->|Validate & Filter| IE
-    end
-
-    subgraph "Event Processing"
-        IE -->|site/sync| SF[Sync Function]
-        IE -->|site/delete| DF[Delete Function]
-    end
-```
-
-### Sync Process Details
-
-![](./inngest.webp)
-
-1. **Event Handling and Routes**
-
-- Webhook Handler (`/app/api/webhook/route.ts`):
-  - Receives GitHub push events
-  - Validates webhook signatures
-  - Filters events by branch
-  - Triggers Inngest sync events
-
-- Inngest Handler (`/app/api/inngest/route.ts`):
-  - Serves Inngest webhook endpoints
-  - Registers sync and delete functions
-  - Handles function execution and retries
-
-- Function Configuration (`/inngest/functions.ts`):
-  - Concurrency limit: 10 per account
-  - Cancellation on: new sync or delete events
-  - Error handling with specific error types:
-    - BLOB_SYNC_ERROR
-    - INVALID_ROOT_DIR
-    - INTERNAL_ERROR
-
-2. **Sync Trigger Points**
-   - Automatic (via GitHub webhooks):
-     - Push events to tracked branch
-     - Validated using webhook secret
-     - Branch-specific filtering
-   - Manual (via UI):
-     - User-initiated sync
-     - Force sync option available
-   - Initial sync:
-     - On site creation
-     - Full repository processing
-
-3. **Detailed Sync Steps**
-   When a site sync is triggered (either automatically or manually), the following steps occur in sequence:
-
-   a. **Initial Setup**
-   - Fetch site details and user information from PostgreSQL
-   - Update site's sync status to "PENDING"
-   - Load site configuration from repository's config.json
-   - Parse content include/exclude patterns from config
-   - Validate root directory exists (if specified)
-
-   b. **Tree Comparison**
-   - Fetch current content tree from R2 storage
-   - Fetch repository tree from GitHub API
-   - Compare SHA hashes to detect changes
-   - If trees match (no changes):
-     - Update sync status to "SUCCESS"
-     - Exit sync process early
-
-   c. **File Processing**
-   For each changed file:
-   - Filter by supported extensions (.md, .json, .yaml)
-   - Apply content include/exclude patterns
-   - Download file content from GitHub
-   - Upload raw file to R2 storage
-   - For markdown files:
-     - Parse YAML frontmatter for metadata
-     - Look for associated datapackage file
-     - If README.md/index.md, check directory for datapackage
-     - Compute metadata (URL, title, description)
-     - Store metadata in PostgreSQL
-   - For datapackage files:
-     - Find associated README.md/index.md
-     - Parse package metadata
-     - Update linked markdown file metadata
-     - Store combined metadata in PostgreSQL
-
-   d. **Deletion Handling**
-   - Compare old and new trees to find deleted files
-   - Remove deleted files from R2 storage
-   - Clean up associated metadata from PostgreSQL
-   - For deleted datapackage files:
-     - Recompute metadata for associated markdown files
-     - Update database records accordingly
-
-   e. **Final Steps**
-   - Upload new tree structure to R2
-   - Update site metadata in PostgreSQL
-   - Update sync status to "SUCCESS"
-   - Clear any previous sync errors
-   - Update sync timestamp
-   - Revalidate Next.js cache tags for:
-     - Site metadata
-     - Site permalinks
-     - Site tree
-     - Page content
-
-4. **Content Storage**
-   - Files stored in R2 Cloudflare buckets
-   - Tree structure maintained for efficient diffing
-   - Metadata stored in PostgreSQL for quick access
-
-5. **Error Handling**
-   - Detailed error messages stored in database
-   - Non-retriable errors marked permanent:
-     - Invalid root directory
-     - YAML frontmatter parsing errors
-     - Invalid datapackage format
-   - Retriable errors with automatic retry:
-     - GitHub API rate limits
-     - Network timeouts
-     - Storage upload failures
-   - Error status visible in site dashboard
-   - Detailed error logs in Inngest dashboard
-
-### Monitoring and Debugging
-
-The sync process can be monitored through the Inngest Dashboard:
-
-[Inngest Dashboard](https://app.inngest.com) (you need an invite to the organization)
-
-Key metrics available:
-
-- Success/failure rates
-- Processing times
-- Error distribution
-- Event queues
-
-### Local Development
-
-For local development, run the Inngest dev server:
-
-```bash
-npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest
-```
-
-Monitor local events at: http://localhost:8288/
-
-## Environment Setup
-
-### Local Development Setup
-
-1. Clone the [repository](https://github.com/datopian/datahub-next)
-2. Create a `.env` file from `.env.example`
-3. Set up local PostgreSQL database
-4. Configure database variables in `.env`
-5. Set up MinIO for local storage:
-
-   ```bash
-   # Install MinIO on MacOS
-   brew install minio/stable/minio
-
-   # Start MinIO server
-   minio server ~/minio
-   ```
-
-6. Configure MinIO bucket:
-   - Open MinIO Console at http://localhost:9000
-   - Login with default credentials (minioadmin/minioadmin)
-   - Click "Buckets" → "Create Bucket"
-   - Create bucket named "datahub"
-   - Set bucket Access Policy to "public"
-
-7. Set up Typesense for local search:
-
-   For installation instructions, see the [Typesense Installation Guide](https://typesense.org/docs/guide/install-typesense.html)
-
-   After installation, configure the following environment variables in `.env`:
-
-   ```
-   NEXT_PUBLIC_TYPESENSE_CLIENT_API_KEY=xyz  # Default
-   NEXT_PUBLIC_TYPESENSE_HOST=localhost
-   NEXT_PUBLIC_TYPESENSE_PORT=8108           # Default Typesense port
-   NEXT_PUBLIC_TYPESENSE_PROTOCOL=http
-   ```
-
-8. Run `pnpm fetch-config` or create your own `config.json` file
-9. Install pnpm: `npm install -g pnpm`
-10. Install dependencies: `pnpm i`
-11. Generate Prisma schema: `npx prisma generate`
-12. Create database schema: `npx prisma db push`
-13. Start development server: `pnpm dev`
-14. Start local Inngest instance:
-    ```bash
-    npx inngest-cli@latest dev --no-discovery -u http://localhost:3000/api/inngest
-    ```
-15. Visit app at `http://cloud.localhost:3000`
-
-#### Stripe Setup for Local Development
-
-0. Setup Stripe sandbox
-
-- Create Sandbox account in Stripe, add product, setup prices and copy over their IDs to `.env`.
-
-1. Install the [Stripe CLI](https://stripe.com/docs/stripe-cli#install):
-
-   ```bash
-   brew install stripe-cli
-   ```
-
-2. Log in to your Stripe account:
-
-   ```bash
-   stripe login
-   ```
-
-   Note: Make sure when you log in, you're in your Stripe sandbox.
-
-3. Start the Stripe webhook listener:
-
-   ```bash
-   stripe listen --forward-to localhost:3000/api/stripe/webhook
-   ```
-
-4. Copy the webhook signing secret that Stripe CLI outputs and update your `.env`:
-
-   ```
-   STRIPE_WEBHOOK_SECRET=whsec_.... # Use the secret from stripe listen command
-   ```
-
-5. Keep the Stripe CLI running in a separate terminal while testing subscriptions
-
-The webhook listener will now forward Stripe events to your local server, enabling:
-
-- Subscription creation and management
-- Premium plan activation
-- Subscription updates and cancellations
-
-## Environment Configuration
-
-### Environment Variables
-
-- Create `.env` file based on `.env.example`
-- All environment variables must be defined in `env.mjs`
-- Access variables using `import { env } from './env.mjs'`
-
-### App Configuration
-
-The application is configurable via `config.json` file (path set via `APP_CONFIG_URL`). Configuration options include:
-
-- Title
-- Description
-- Favicon URL
-- Logo URL
-- Thumbnail URL
-- Navigation links
-- Social links
-- Site aliases
-
-Current config file: [DataHub Cloud config.json](https://dash.cloudflare.com/83025b28472d6aa2bf5ae59f3724aa78/r2/default/buckets/datahub-assets/objects/config.json/details)
-
-## Infrastructure
-
-### Databases
-
-PostgreSQL databases on Vercel:
-
-- Production: `datahub-cloud`
-- Staging: `datahub-cloud-staging`
-- Development: Local PostgreSQL instance
-
-### Content Storage
-
-R2 Cloudflare buckets:
-
-- Production: `datahub-cloud`
-- Staging: `datahub-cloud-staging`
-- Development: Local MinIO instance
-
-### Authentication
-
-GitHub OAuth applications under Datopian account:
-
-- Production: `DataHub Cloud`
-- Staging: `DataHub Cloud - Staging`
-- Development: `DataHub Cloud - Dev`
-
-### Domain Configuration
-
-#### Root Domain (datahub.io)
-
-Two projects share the datahub.io domain:
-
-1. DataHub Cloud app (`@username/projectname` paths)
-2. DataHub.io website (landing pages)
-
-Traffic routing managed by Cloudflare worker:
-
-- Landing pages (`/`, `/publish`, `/pricing`, `/collections`) → datahub-io project
-- All other paths → datahub-next-new project
-
-Worker: [datahub-io-reverse-proxy](https://dash.cloudflare.com/83025b28472d6aa2bf5ae59f3724aa78/workers/services/view/datahub-io-reverse-proxy)
-
-#### Subdomains
-
-- Production: `cloud.datahub.io`
-- Staging: `staging-cloud.datahub.io`
-
-## Development
-
-### Branching Strategy
-
-Two main branches:
-
-- `main` (production)
-  - Protected branch
-  - No direct pushes
-  - Changes merged via staging
-- `staging`
-  - Testing environment
-  - Accepts pull requests
+- **Demo**: [demo.flowershow.app](https://demo.flowershow.app) — [github.com/flowershow/demo](https://github.com/flowershow/demo)
+- **Test**: [test.flowershow.app](https://test.flowershow.app/) — [github.com/flowershow/test](https://github.com/flowershow/test)
 
 ### Development Workflow
 
@@ -425,136 +69,4 @@ Two main branches:
 3. Submit PR to `staging`
 4. After approval, changes are merged to `main`
 
-### Commit Strategy
-
-We use a squash-based system:
-
-1. Developers work freely on feature branches
-2. PRs are squash-merged to `staging`
-3. Commit messages follow conventional commits specification
-4. Changes are rebased from staging to main
-
-## Testing
-
-### Prerequisites
-
-Access to https://github.com/flowershow/test
-
-### Running Tests
-
-#### Locally
-
-1. Authenticate user
-
-Log in manually and save authentication cookies to a JSON file:
-
-```bash
-npx playwright codegen 'http://cloud.localhost:3000/api/auth/signin/github?callbackUrl=http://cloud.localhost:3000' \
-  --save-storage=playwright/.auth/user.json
-```
-
-Note: after you log in to the dashboard, you can close the Playwright browser window.
-
-2. Start the application
-
-Start minio:
-
-```bash
-minio server ~/minio
-```
-
-Start inngest:
-
-```bash
-npx inngest-cli@latest dev
-```
-
-Start stripe:
-
-```bash
-stripe listen --forward-to localhost:3000/api/stripe/webhook
-```
-
-Start Cloudflare worker (datopian/datahub-next-workers repo):
-
-```bash
-npm run dev
-```
-
-Start the app:
-
-```bash
-pnpm dev
-```
-
-Run the tests:
-
-```bash
-# Run all tests
-npx playwright test
-
-# Run specific project
-npx playwright test --project=free-site-chromium
-
-# Run specific test file
-npx playwright test path/to/test.spec.ts
-
-# Run specific test by name
-npx playwright test --grep "should show subscription options on free tier"
-
-# Skip global setup and run tests against last created site(s)
-npx playwright test --no-deps
-# npx playwright test --project=free-site-chromium --no-deps
-```
-
-Note: All tests will first execute `global.setup.ts` file, which creates a test site. To save time, you can run the global setup once, and then skip it when running tests:
-
-```bash
-# E.g. for free-site project. Add --no-deps to ignore global teardown
-npx playwright test free-site/global.setup.ts --no-deps
-# Then run your tests always with --no-deps flag, e.g.
-npx playwright test path/to/test.spec.ts --no-deps
-```
-
-Debug modes:
-
-```bash
-# Debug mode
-npx playwright test --debug
-
-# UI mode
-npx playwright test --ui
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. MinIO Connection Issues
-   - Verify MinIO is running
-   - Check credentials in `.env`
-   - Ensure bucket is publicly accessible
-
-2. Database Connection
-   - Verify PostgreSQL is running
-   - Check database credentials
-   - Ensure schema is up to date
-
-3. OAuth Authentication
-   - Verify correct OAuth app configuration
-   - Check callback URLs
-   - Ensure environment variables are set
-
-4. Stripe Integration
-   - Ensure Stripe CLI is running with webhook forwarding
-   - Verify STRIPE_WEBHOOK_SECRET matches Stripe CLI output
-   - Check Stripe CLI logs for webhook delivery status
-   - Confirm subscription events in Stripe Dashboard
-   - Verify database updates after subscription events
-
-5. Typesense Search
-   - Check Typesense health status: `curl http://localhost:8108/health`
-   - Verify environment variables in `.env`
-   - Check browser console for connection errors
-
-For additional support, please create an issue in the GitHub repository.
+We use squash merges to `staging` with conventional commit messages.

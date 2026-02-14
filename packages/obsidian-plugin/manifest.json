@@ -1,0 +1,10 @@
+{
+  "id": "flowershow",
+  "name": "Flowershow",
+  "version": "4.0.10",
+  "minAppVersion": "0.15.0",
+  "description": "Publish with Flowershow directly from your Obsidian vault.",
+  "author": "Flowershow",
+  "authorUrl": "https://flowershow.app/",
+  "isDesktopOnly": false
+}

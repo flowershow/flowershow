@@ -1,0 +1,17 @@
+# Database Configuration (required for all environments)
+DATABASE_URL=postgresql://postgres@localhost:5432/datahub-next-dev
+TYPESENSE_HOST=localhost
+TYPESENSE_PORT=8108
+TYPESENSE_PROTOCOL=http
+TYPESENSE_API_KEY=xyz # With document write permissions to all collections
+
+# S3 Configuration (only needed for local development with MinIO)
+# These can be removed in production/staging as we use R2 bindings there
+S3_ACCESS_KEY_ID=minioadmin
+S3_SECRET_ACCESS_KEY=minioadmin
+S3_BUCKET=flowershow
+S3_ENDPOINT=http://localhost:9000
+S3_FORCE_PATH_STYLE=true
+
+# Optional S3 settings
+S3_REGION=us-east-1  # Defaults to us-east-1 for MinIO if not set

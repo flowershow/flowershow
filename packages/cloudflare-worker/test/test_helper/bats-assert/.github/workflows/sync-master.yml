@@ -1,0 +1,8 @@
+name: Sync Master
+on:
+  push: { branches: main }
+  workflow_dispatch:
+
+jobs:
+  sync:
+    uses: bats-core/.github/.github/workflows/sync-master.yml@v1

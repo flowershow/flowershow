@@ -1,0 +1,56 @@
+{
+  "title": "Flowershow",
+  "nav": {
+    "title": "Flowershow",
+    "links": [
+      { "href": "/docs", "name": "Docs" },
+      { "href": "/blog", "name": "Blog" },
+      { "href": "/pricing", "name": "Pricing" },
+      { "href": "/publish", "name": "Publish CLI" },
+      { "href": "/blogs", "name": "Flowershow for Blogs" },
+      { "href": "/data-stories", "name": "Flowershow for Data Stories" },
+      { "href": "https://demo.flowershow.app/", "name": "Demo" },
+      { "href": "https://github.com/flowershow/themes", "name": "Themes" }
+    ],
+    "cta": { "name": "Sign In", "href": "https://cloud.flowershow.app/login" }
+  },
+  "footer": {
+    "navigation": [
+      {
+        "title": "Product",
+        "links": [
+          { "href": "/pricing", "name": "Pricing" },
+          { "href": "/docs", "name": "Docs" },
+          { "href": "/blog", "name": "Blog" },
+          { "href": "/publish", "name": "Publish CLI" }
+        ]
+      },
+      {
+        "title": "Community",
+        "links": [
+          { "href": "https://github.com/flowershow/flowershow", "name": "GitHub" },
+          { "href": "https://discord.gg/JChzM5VdFn", "name": "Discord" }
+        ]
+      },
+      {
+        "title": "Legal",
+        "links": [
+          { "href": "/docs/terms-of-service", "name": "Terms" },
+          { "href": "/docs/privacy", "name": "Privacy" }
+        ]
+      }
+    ]
+  },
+  "social": [
+    { "label": "github", "href": "https://github.com/flowershow/flowershow", "name": "GitHub" },
+    { "label": "x", "href": "https://x.com/flowershowapp", "name": "X" },
+    { "label": "reddit", "href": "https://www.reddit.com/r/flowershow/", "name": "Reddit" },
+    { "label": "discord", "href": "https://discord.gg/JChzM5VdFn", "name": "Discord" }
+  ],
+  "contentExclude": ["/excalidraw", "/journal", "/meta", "/notes", "/blog/archive", "/docs/self-hosted", "/self-hosted.md", "/about.md"],
+  "showEditLink": true,
+  "redirects": [
+    { "from": "/docs/site-wide-toc", "to": "/docs/sidebar" },
+    { "from": "/blog/how-to-set-up-blog", "to": "/blog/how-to-publish-blog" }
+  ]
+}
