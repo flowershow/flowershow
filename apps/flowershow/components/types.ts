@@ -31,10 +31,21 @@ export type SocialPlatform =
   | 'x'
   | 'youtube';
 
+export interface NavDropdown {
+  name: string;
+  links: NavLink[];
+}
+
+export type NavItem = NavLink | NavDropdown;
+
+export function isNavDropdown(item: NavItem): item is NavDropdown {
+  return 'links' in item && !('href' in item);
+}
+
 export interface NavConfig {
   logo?: string;
   title?: string;
-  links?: NavLink[];
+  links?: NavItem[];
   social?: SocialLink[]; // DEPRECATED, moved to the root of the config as it's used in both navbar and footer
   cta?: NavLink;
 }

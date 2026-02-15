@@ -5,14 +5,25 @@ import {
   DisclosurePanel,
 } from '@headlessui/react';
 import clsx from 'clsx';
-import { ChevronRightIcon, GlobeIcon, MenuIcon, XIcon } from 'lucide-react';
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  GlobeIcon,
+  MenuIcon,
+  XIcon,
+} from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { SearchModal } from '@/components/public/search-modal';
 import { socialIcons } from '@/components/public/social-icons';
-import { NavLink, SocialLink } from '@/components/types';
+import {
+  isNavDropdown,
+  NavItem,
+  NavLink,
+  SocialLink,
+} from '@/components/types';
 import type { Node } from '@/lib/build-site-tree';
 import { isDir } from '@/lib/build-site-tree';
 import ThemeSwitch from './theme-switch';
@@ -21,7 +32,7 @@ export interface Props {
   logo: string;
   url: string;
   title?: string;
-  links?: NavLink[];
+  links?: NavItem[];
   siteTree?: Node[];
   social?: SocialLink[];
   showThemeSwitch?: boolean;
@@ -73,15 +84,19 @@ const Nav = ({
             </Link>
             <div className="site-navbar-links-container">
               {links &&
-                links.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className="site-navbar-link"
-                  >
-                    {link.name}
-                  </Link>
-                ))}
+                links.map((item) =>
+                  isNavDropdown(item) ? (
+                    <NavbarDropdown key={item.name} item={item} />
+                  ) : (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className="site-navbar-link"
+                    >
+                      {item.name}
+                    </Link>
+                  ),
+                )}
             </div>
             {showSearch && (
               <div className="site-navbar-search-container">
@@ -135,16 +150,40 @@ const Nav = ({
           <DisclosurePanel transition className="mobile-nav">
             {links && (
               <div className="mobile-nav-links-container">
-                {links.map((link) => (
-                  <DisclosureButton
-                    key={link.name}
-                    as="a"
-                    href={link.href}
-                    className="mobile-nav-link"
-                  >
-                    {link.name}
-                  </DisclosureButton>
-                ))}
+                {links.map((item) =>
+                  isNavDropdown(item) ? (
+                    <Disclosure key={item.name}>
+                      {({ open }) => (
+                        <div className="mobile-nav-dropdown">
+                          <DisclosureButton className={clsx('mobile-nav-dropdown-trigger', open && 'is-open')}>
+                            {item.name}
+                            <ChevronRightIcon className={clsx('mobile-nav-dropdown-icon', open && 'is-open')} />
+                          </DisclosureButton>
+                          <DisclosurePanel className="mobile-nav-dropdown-panel">
+                            {item.links.map((link) => (
+                              <a
+                                key={link.name}
+                                href={link.href}
+                                className="mobile-nav-dropdown-item"
+                              >
+                                {link.name}
+                              </a>
+                            ))}
+                          </DisclosurePanel>
+                        </div>
+                      )}
+                    </Disclosure>
+                  ) : (
+                    <DisclosureButton
+                      key={item.name}
+                      as="a"
+                      href={item.href}
+                      className="mobile-nav-link"
+                    >
+                      {item.name}
+                    </DisclosureButton>
+                  ),
+                )}
               </div>
             )}
             {social && (
@@ -179,6 +218,66 @@ const Nav = ({
     </Disclosure>
   );
 };
+
+function NavbarDropdown({ item }: { item: { name: string; links: NavLink[] } }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const open = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setIsOpen(true);
+  }, []);
+
+  const close = useCallback(() => {
+    timeoutRef.current = setTimeout(() => setIsOpen(false), 150);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as HTMLElement)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('click', onClickOutside);
+    return () => document.removeEventListener('click', onClickOutside);
+  }, [isOpen]);
+
+  return (
+    <div
+      ref={containerRef}
+      className="site-navbar-dropdown"
+      onMouseEnter={open}
+      onMouseLeave={close}
+    >
+      <button
+        className={clsx('site-navbar-dropdown-trigger', isOpen && 'is-open')}
+        onClick={() => setIsOpen((v) => !v)}
+        aria-expanded={isOpen}
+        aria-haspopup="true"
+      >
+        {item.name}
+        <ChevronDownIcon className="site-navbar-dropdown-icon" />
+      </button>
+      {isOpen && (
+        <div className="site-navbar-dropdown-panel" role="menu">
+          {item.links.map((link) => (
+            <Link
+              key={link.name}
+              href={link.href}
+              className="site-navbar-dropdown-item"
+              role="menuitem"
+              onClick={() => setIsOpen(false)}
+            >
+              {link.name}
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function TreeView({
   items,

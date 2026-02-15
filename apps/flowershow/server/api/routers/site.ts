@@ -3,7 +3,7 @@ import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
 import { revalidateTag, unstable_cache } from 'next/cache';
 import { z } from 'zod';
-import { SiteConfig } from '@/components/types';
+import { isNavDropdown, SiteConfig } from '@/components/types';
 import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
@@ -769,12 +769,22 @@ export const siteRouter = createTRPCRouter({
             });
 
             if (config.nav?.links) {
-              config.nav.links.forEach((link) => {
-                link.href = resolveFilePathToUrlPath({
-                  target: link.href,
-                  sitePrefix,
-                  domain: site.customDomain,
-                });
+              config.nav.links.forEach((item) => {
+                if (isNavDropdown(item)) {
+                  item.links.forEach((link) => {
+                    link.href = resolveFilePathToUrlPath({
+                      target: link.href,
+                      sitePrefix,
+                      domain: site.customDomain,
+                    });
+                  });
+                } else {
+                  item.href = resolveFilePathToUrlPath({
+                    target: item.href,
+                    sitePrefix,
+                    domain: site.customDomain,
+                  });
+                }
               });
             }
 

@@ -52,6 +52,36 @@ Properties:
 - `href`: URL or path the link points to
 - `name`: Display text for the link
 
+### Dropdown menus
+
+You can group links under a dropdown by using a `links` array instead of an `href`. On desktop, the dropdown opens on hover; on mobile, it expands as a collapsible section. Only one level of nesting is supported.
+
+```json
+{
+  "nav": {
+    "links": [
+      { "href": "/about", "name": "About" },
+      {
+        "name": "Docs",
+        "links": [
+          { "href": "/docs/getting-started", "name": "Getting Started" },
+          { "href": "/docs/config", "name": "Configuration" },
+          { "href": "/docs/themes", "name": "Themes" }
+        ]
+      },
+      { "href": "/blog", "name": "Blog" }
+    ]
+  }
+}
+```
+
+A dropdown item has:
+- `name`: Label displayed as the dropdown trigger
+- `links`: Array of plain links (each with `href` and `name`)
+
+> [!tip]
+> If you want the dropdown label to also link to a page (e.g. "Docs" linking to `/docs`), add it as the first item in the `links` array.
+
 ## Social media links
 
 Add social media links using the `social` array. Each social link requires:
@@ -116,6 +146,13 @@ Here's a comprehensive configuration example:
       {
         "href": "/blog",
         "name": "Blog"
+      },
+      {
+        "name": "Docs",
+        "links": [
+          { "href": "/docs/getting-started", "name": "Getting Started" },
+          { "href": "/docs/config", "name": "Configuration" }
+        ]
       },
       {
         "href": "/about",
