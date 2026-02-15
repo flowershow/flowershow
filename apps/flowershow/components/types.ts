@@ -19,9 +19,15 @@ export type SocialPlatform =
   | 'instagram'
   | 'linkedin'
   | 'mastodon'
+  | 'pinterest'
   | 'reddit'
+  | 'spotify'
   | 'substack'
+  | 'telegram'
+  | 'threads'
+  | 'tiktok'
   | 'twitter'
+  | 'whatsapp'
   | 'x'
   | 'youtube';
 

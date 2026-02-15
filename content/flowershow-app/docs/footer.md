@@ -62,9 +62,15 @@ Supported social platforms:
 - `instagram`
 - `linkedin`
 - `mastodon`
+- `pinterest`
 - `reddit`
+- `spotify`
 - `substack`
+- `telegram`
+- `threads`
+- `tiktok`
 - `twitter` (or `x`)
+- `whatsapp`
 - `youtube`
 
 > [!info] Missing your favorite platform?
