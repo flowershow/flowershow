@@ -8,6 +8,9 @@ description: Set logo, title, links and socials in your navigation bar.
 
 The navigation bar configuration is defined under the `nav` object in your `config.json`.
 
+> [!note]
+> If you omit the `nav` key from your `config.json` entirely, the navbar will not be displayed. A `no-nav` CSS class is added to the page layout in this case, which you can use in custom themes to adjust styling.
+
 ## Logo and title
 
 Configure your site's branding with a logo and title:

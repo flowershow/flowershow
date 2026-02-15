@@ -181,6 +181,7 @@ export default async function PublicLayout(props: {
   const showSearch =
     isFeatureEnabled(Feature.Search, site) && site.enableSearch;
   const cta = siteConfig?.nav?.cta;
+  const showNav = !!siteConfig?.nav;
 
   // Generate CSS for custom footer and hero components
   // let customFooterCss: string | null = null;
@@ -317,7 +318,7 @@ export default async function PublicLayout(props: {
           and don't decide based on that button */}
               <div
                 data-plan={!showBuiltWithButton && 'premium'}
-                className="site-layout"
+                className={clsx('site-layout', !showNav && 'no-nav')}
               >
                 {site.isTemporary && site.anonymousOwnerId && (
                   <TemporarySiteBanner
@@ -326,18 +327,20 @@ export default async function PublicLayout(props: {
                     anonymousOwnerId={site.anonymousOwnerId}
                   />
                 )}
-                <Nav
-                  logo={logo}
-                  url={sitePrefix || '/'}
-                  title={title}
-                  links={links}
-                  social={social}
-                  siteTree={siteTree}
-                  showSearch={showSearch}
-                  searchId={site.id}
-                  showThemeSwitch={showThemeModeSwitch}
-                  cta={cta}
-                />
+                {showNav && (
+                  <Nav
+                    logo={logo}
+                    url={sitePrefix || '/'}
+                    title={title}
+                    links={links}
+                    social={social}
+                    siteTree={siteTree}
+                    showSearch={showSearch}
+                    searchId={site.id}
+                    showThemeSwitch={showThemeModeSwitch}
+                    cta={cta}
+                  />
+                )}
                 <div className="site-body">{children}</div>
                 <Footer
                   siteName={siteConfig?.title || site.projectName}
