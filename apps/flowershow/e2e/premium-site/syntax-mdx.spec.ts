@@ -1,4 +1,5 @@
 import { expect, test } from '../_fixtures/published-site-test';
+import { decodedImageSrc } from '../_utils/utils';
 
 test.describe('Links and embeds', () => {
   test.beforeEach(async ({ publishedSitePage }) => {
@@ -65,10 +66,10 @@ test.describe('Links and embeds', () => {
         const embed = publishedSitePage.page.locator('img[alt="image"]');
         await embed.waitFor({ state: 'attached' });
         const src = await embed.getAttribute('src');
-        // expect(decodedImageSrc(src!)).toBe(
-        //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
-        // );
-        expect(src).toBe(`${publishedSitePage.siteUrl}/assets/image.jpg`);
+        expect(src).toContain('/_next/image');
+        expect(decodedImageSrc(src!)).toBe(
+          `${publishedSitePage.siteUrl}/assets/image.jpg`,
+        );
       });
 
       test('Image embed with absolute path', async ({ publishedSitePage }) => {
@@ -77,10 +78,10 @@ test.describe('Links and embeds', () => {
           .first();
         await embed.waitFor({ state: 'attached' });
         const src = await embed.getAttribute('src');
-        // expect(decodedImageSrc(src!)).toBe(
-        //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
-        // );
-        expect(src).toBe(`${publishedSitePage.siteUrl}/assets/image.jpg`);
+        expect(src).toContain('/_next/image');
+        expect(decodedImageSrc(src!)).toBe(
+          `${publishedSitePage.siteUrl}/assets/image.jpg`,
+        );
       });
     });
   });
@@ -145,10 +146,10 @@ test.describe('Links and embeds', () => {
       );
       await embed.waitFor({ state: 'attached' });
       const src = await embed.getAttribute('src');
-      // expect(decodedImageSrc(src!)).toBe(
-      //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
-      // );
-      expect(src).toBe(`${publishedSitePage.siteUrl}/assets/image.jpg`);
+      expect(src).toContain('/_next/image');
+      expect(decodedImageSrc(src!)).toBe(
+        `${publishedSitePage.siteUrl}/assets/image.jpg`,
+      );
     });
   });
 });
@@ -158,11 +159,10 @@ test.describe('MDX', () => {
     publishedSitePage,
   }) => {
     await publishedSitePage.goto('/syntax/jsx-blocks');
-    const src = await publishedSitePage.page
-      .getByTestId('jsx-img')
-      .locator('img')
-      .getAttribute('src');
-    expect(src).toBe(`${publishedSitePage.siteUrl}/assets/image.jpg`);
+    const embed = publishedSitePage.page.getByTestId('jsx-img').locator('img');
+    const src = await embed.getAttribute('src');
+    expect(src).toContain('/_next/image');
+    expect(decodedImageSrc(src!)).toMatch(/\/@.+\/.+\/.+/);
   });
 
   test('MDX variables', async ({ publishedSitePage }) => {

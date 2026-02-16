@@ -1,4 +1,5 @@
 import { expect, test } from '../_fixtures/published-site-test';
+import { decodedImageSrc } from '../_utils/utils';
 
 test.describe('Links and embeds', () => {
   test.beforeEach(async ({ publishedSitePage }) => {
@@ -136,10 +137,10 @@ test.describe('Links and embeds', () => {
       test('Image embed with shortest path', async ({ publishedSitePage }) => {
         const embed = publishedSitePage.page.locator('img[alt="image"]');
         const src = await embed.getAttribute('src');
-        // expect(decodedImageSrc(src!)).toBe(
-        //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
-        // );
-        expect(src).toBe(`${publishedSitePage.siteUrl}/assets/image.jpg`);
+        expect(src).toContain('/_next/image');
+        expect(decodedImageSrc(src!)).toBe(
+          `${publishedSitePage.siteUrl}/assets/image.jpg`,
+        );
       });
 
       test('Image embed with absolute path', async ({ publishedSitePage }) => {
@@ -147,10 +148,10 @@ test.describe('Links and embeds', () => {
           .locator('img[alt="assets/image"]')
           .first();
         const src = await embed.getAttribute('src');
-        // expect(decodedImageSrc(src!)).toBe(
-        //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
-        // );
-        expect(src).toBe(`${publishedSitePage.siteUrl}/assets/image.jpg`);
+        expect(src).toContain('/_next/image');
+        expect(decodedImageSrc(src!)).toBe(
+          `${publishedSitePage.siteUrl}/assets/image.jpg`,
+        );
       });
 
       test('Image embed with special characters', async ({
@@ -160,14 +161,9 @@ test.describe('Links and embeds', () => {
           'img[alt="Image With Special Chars %&(1)"]',
         );
         const src = await embed.getAttribute('src');
-        // expect(decodedImageSrc(src!)).toBe(
-        //   `${publishedSitePage.siteUrl}/assets/Image With Special Chars %&(1).jpg`,
-        // );
-        // expect(src).toBe(
-        //   `${publishedSitePage.siteUrl}/assets/Image With Special Chars %&(1).jpg`,
-        // );
-        expect(src).toBe(
-          `${publishedSitePage.siteUrl}/assets/Image%20With%20Special%20Chars%20%25%26(1).jpg`,
+        expect(src).toContain('/_next/image');
+        expect(decodedImageSrc(src!)).toBe(
+          `${publishedSitePage.siteUrl}/assets/Image With Special Chars %&(1).jpg`,
         );
       });
 
@@ -178,24 +174,34 @@ test.describe('Links and embeds', () => {
           'img[alt="assets/image"][width="300"][height="200"]',
         );
         const src = await embed.getAttribute('src');
-        // expect(decodedImageSrc(src!)).toBe(
-        //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
-        // );
-        expect(src).toBe(`${publishedSitePage.siteUrl}/assets/image.jpg`);
+        expect(src).toContain('/_next/image');
+        expect(decodedImageSrc(src!)).toBe(
+          `${publishedSitePage.siteUrl}/assets/image.jpg`,
+        );
         await expect(embed).toHaveCSS('width', '300px');
         await expect(embed).toHaveCSS('height', '200px');
       });
 
       test('Image embed with width only', async ({ publishedSitePage }) => {
         const embed = publishedSitePage.page.locator(
-          'img[alt="assets/image"][width="300"]:not([height])',
+          'img[alt="assets/image"][width="300"]',
         );
-        const src = await embed.getAttribute('src');
-        // expect(decodedImageSrc(src!)).toBe(
-        //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
-        // );
-        expect(src).toBe(`${publishedSitePage.siteUrl}/assets/image.jpg`);
-        await expect(embed).toHaveCSS('width', '300px');
+        // Filter to the one without explicit height="200"
+        const candidates = await embed.all();
+        let widthOnlyEmbed = embed.first();
+        for (const el of candidates) {
+          const h = await el.getAttribute('height');
+          if (h !== '200') {
+            widthOnlyEmbed = el;
+            break;
+          }
+        }
+        const src = await widthOnlyEmbed.getAttribute('src');
+        expect(src).toContain('/_next/image');
+        expect(decodedImageSrc(src!)).toBe(
+          `${publishedSitePage.siteUrl}/assets/image.jpg`,
+        );
+        await expect(widthOnlyEmbed).toHaveCSS('width', '300px');
       });
     });
 
@@ -334,10 +340,10 @@ test.describe('Links and embeds', () => {
         'img[alt="/assets/image.jpg"]',
       );
       const src = await embed.getAttribute('src');
-      // expect(decodedImageSrc(src!)).toBe(
-      //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
-      // );
-      expect(src).toBe(`${publishedSitePage.siteUrl}/assets/image.jpg`);
+      expect(src).toContain('/_next/image');
+      expect(decodedImageSrc(src!)).toBe(
+        `${publishedSitePage.siteUrl}/assets/image.jpg`,
+      );
     });
 
     test('CommonMark embed with width and height', async ({
@@ -347,10 +353,8 @@ test.describe('Links and embeds', () => {
         'img[width="100"][height="200"]',
       );
       const src = await embed.getAttribute('src');
-      // expect(decodedImageSrc(src!)).toBe(
-      //   'https://publish-01.obsidian.md/access/f786db9fac45774fa4f0d8112e232d67/Attachments/Engelbart.jpg',
-      // );
-      expect(src).toBe(
+      expect(src).toContain('/_next/image');
+      expect(decodedImageSrc(src!)).toBe(
         'https://publish-01.obsidian.md/access/f786db9fac45774fa4f0d8112e232d67/Attachments/Engelbart.jpg',
       );
       await expect(embed).toHaveCSS('width', '100px');
@@ -359,16 +363,24 @@ test.describe('Links and embeds', () => {
 
     test('CommonMark embed with width only', async ({ publishedSitePage }) => {
       const embed = publishedSitePage.page.locator(
-        'img[width="150"]:not([height])',
+        'img[width="150"]',
       );
-      const src = await embed.getAttribute('src');
-      // expect(decodedImageSrc(src!)).toBe(
-      //   'https://publish-01.obsidian.md/access/f786db9fac45774fa4f0d8112e232d67/Attachments/Engelbart.jpg',
-      // );
-      expect(src).toBe(
+      // Filter to the one without height="200"
+      const candidates = await embed.all();
+      let widthOnlyEmbed = embed.first();
+      for (const el of candidates) {
+        const h = await el.getAttribute('height');
+        if (h !== '200') {
+          widthOnlyEmbed = el;
+          break;
+        }
+      }
+      const src = await widthOnlyEmbed.getAttribute('src');
+      expect(src).toContain('/_next/image');
+      expect(decodedImageSrc(src!)).toBe(
         'https://publish-01.obsidian.md/access/f786db9fac45774fa4f0d8112e232d67/Attachments/Engelbart.jpg',
       );
-      await expect(embed).toHaveCSS('width', '150px');
+      await expect(widthOnlyEmbed).toHaveCSS('width', '150px');
     });
   });
 
@@ -406,7 +418,8 @@ test.describe('HTML blocks', () => {
   test('Should resolve HTML img src paths', async ({ publishedSitePage }) => {
     const embed = publishedSitePage.page.getByTestId('html-img').locator('img');
     const src = await embed.getAttribute('src');
-    expect(src).toMatch(/\/@.+\/.+\/.+/);
+    expect(src).toContain('/_next/image');
+    expect(decodedImageSrc(src!)).toMatch(/\/@.+\/.+\/.+/);
   });
 
   test('Should preserve HTML img attributes', async ({ publishedSitePage }) => {
