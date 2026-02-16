@@ -1548,6 +1548,41 @@ export const siteRouter = createTRPCRouter({
         },
       )(input);
     }),
+  getImageDimensions: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      return await unstable_cache(
+        async (input) => {
+          const blobs = await ctx.db.blob.findMany({
+            where: {
+              siteId: input.siteId,
+              width: { not: null },
+              height: { not: null },
+            },
+            select: {
+              path: true,
+              width: true,
+              height: true,
+            },
+          });
+
+          return blobs as Array<{
+            path: string;
+            width: number;
+            height: number;
+          }>;
+        },
+        undefined,
+        {
+          revalidate: 60,
+          tags: [`${input.siteId}`, `${input.siteId}-image-dimensions`],
+        },
+      )(input);
+    }),
   migrateSiteToGitHubApp: protectedProcedure
     .input(z.object({ siteId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
