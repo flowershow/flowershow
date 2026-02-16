@@ -110,6 +110,15 @@ The following features are planned for future releases:
 
 To use Obsidian Bases in your Flowershow site, embed a base configuration using a YAML code block with the `base` language identifier, e.g.:
 
+> [!important]
+> Bases blocks are parsed in MDX mode.
+> To make them work, use one of these options:
+> - Set your site's global syntax mode to `mdx`
+> - Set `syntaxMode: mdx` in the page frontmatter
+> - Use a `.mdx` file extension (when your global syntax mode is `auto`)
+>
+> See [[syntax-mode|Syntax Mode Configuration]] for details.
+
 ````markdown
 ```base
 filters:

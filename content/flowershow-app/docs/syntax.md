@@ -626,6 +626,15 @@ graph LR
 
 Flowershow now supports **Obsidian Bases**, a powerful feature that allows you to create dynamic, queryable views of your notes directly in your published sites.
 
+> [!important]
+> Obsidian Bases blocks are parsed in MDX mode.
+> To make them work, use one of these options:
+> - Set your site's global syntax mode to `mdx`
+> - Set `syntaxMode: mdx` in the page frontmatter
+> - Use a `.mdx` file extension (when your global syntax mode is `auto`)
+>
+> See [[syntax-mode|Syntax Mode Configuration]] for details.
+
 **Example:**
 
 ````

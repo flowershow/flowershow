@@ -32,6 +32,15 @@ Obsidian Bases (formerly "Databases") allow you to query your notes and display 
 
 You can start using Bases today by adding a `base` code block to any of your pages:
 
+> [!important]
+> Bases blocks are parsed in MDX mode.
+> To make them work, use one of these options:
+> - Set your site's global syntax mode to `mdx`
+> - Set `syntaxMode: mdx` in the page frontmatter
+> - Use a `.mdx` file extension (when your global syntax mode is `auto`)
+>
+> See [[syntax-mode|Syntax Mode Configuration]] for details.
+
 ````markdown
 ```base
 filters:
