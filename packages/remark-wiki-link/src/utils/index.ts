@@ -1,6 +1,4 @@
 import { slug } from 'github-slugger';
-import fs from 'node:fs';
-import path from 'node:path';
 
 // File type definitions
 export type MarkdownFile = `.md` | `.mdx`;
@@ -135,17 +133,3 @@ export const findMatchingFilePath = ({
   return matchingFiles.sort((a, b) => a.length - b.length)[0];
 };
 
-const _recursiveGetFiles = (dir: string) => {
-  const dirents = fs.readdirSync(dir, { withFileTypes: true });
-  const files = dirents
-    .filter((dirent) => dirent.isFile())
-    .map((dirent) => path.join(dir, dirent.name));
-  const dirs = dirents
-    .filter((dirent) => dirent.isDirectory())
-    .map((dirent) => path.join(dir, dirent.name));
-  for (const d of dirs) {
-    files.push(..._recursiveGetFiles(d));
-  }
-
-  return files;
-};
