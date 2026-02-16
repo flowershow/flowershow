@@ -10,7 +10,7 @@ describe("micromark-extension-wiki-link", () => {
         htmlExtensions: [html({ files: ["Wiki Link.md"] })],
       });
       expect(serialized).toBe(
-        '<p><a href="Wiki Link" class="internal">Wiki Link</a></p>',
+        '<p><a href="Wiki Link" class="internal" data-resolved-file-path="Wiki Link.md">Wiki Link</a></p>',
       );
     });
 
@@ -34,7 +34,7 @@ describe("micromark-extension-wiki-link", () => {
         ],
       });
       expect(serialized).toBe(
-        '<p><a href="/blog" class="internal">/blog/README</a></p>',
+        '<p><a href="/blog" class="internal" data-resolved-file-path="/blog/README.md">/blog/README</a></p>',
       );
     });
 
@@ -122,7 +122,7 @@ describe("micromark-extension-wiki-link", () => {
         ],
       });
       expect(serialized).toBe(
-        '<p><a href="/some/folder/Wiki Link" class="internal">Wiki Link</a></p>',
+        '<p><a href="/some/folder/Wiki Link" class="internal" data-resolved-file-path="/some/folder/Wiki Link.md">Wiki Link</a></p>',
       );
     });
   });
@@ -148,7 +148,7 @@ describe("micromark-extension-wiki-link", () => {
         ],
       });
       expect(serialized).toBe(
-        '<p><img src="My Image.jpg" alt="My Image" class="internal" /></p>',
+        '<p><img src="My Image.jpg" alt="My Image" class="internal" data-resolved-file-path="My Image.jpg" /></p>',
       );
     });
 
@@ -178,7 +178,7 @@ describe("micromark-extension-wiki-link", () => {
         htmlExtensions: [html({ files: ["My Image.jpg"] })],
       });
       expect(serialized).toBe(
-        '<p><img src="My Image.jpg" alt="My Image" class="internal" /></p>',
+        '<p><img src="My Image.jpg" alt="My Image" class="internal" data-resolved-file-path="My Image.jpg" /></p>',
       );
     });
 
@@ -193,7 +193,7 @@ describe("micromark-extension-wiki-link", () => {
         ],
       });
       expect(serialized).toBe(
-        '<p><img src="/assets/My Image.jpg" alt="My Image" class="internal" /></p>',
+        '<p><img src="/assets/My Image.jpg" alt="My Image" class="internal" data-resolved-file-path="/assets/My Image.jpg" /></p>',
       );
     });
 
@@ -203,7 +203,7 @@ describe("micromark-extension-wiki-link", () => {
         htmlExtensions: [html({ files: ["My Image.jpg"] })],
       });
       expect(serialized).toBe(
-        '<p><img src="My Image.jpg" alt="My Image" class="internal" width="200" style="width: 200px" /></p>',
+        '<p><img src="My Image.jpg" alt="My Image" class="internal" width="200" style="width: 200px" data-resolved-file-path="My Image.jpg" /></p>',
       );
     });
 
@@ -213,7 +213,7 @@ describe("micromark-extension-wiki-link", () => {
         htmlExtensions: [html({ files: ["My Image.jpg"] })],
       });
       expect(serialized).toBe(
-        '<p><img src="My Image.jpg" alt="My Image" class="internal" width="200" height="300" style="width: 200px; height: 300px" /></p>',
+        '<p><img src="My Image.jpg" alt="My Image" class="internal" width="200" height="300" style="width: 200px; height: 300px" data-resolved-file-path="My Image.jpg" /></p>',
       );
     });
 
@@ -264,6 +264,113 @@ describe("micromark-extension-wiki-link", () => {
       });
       expect(serialized).toBe(
         '<p><audio src="My Audio.mp3" class="internal new" controls>Your browser does not support the audio tag.</audio></p>',
+      );
+    });
+  });
+
+  describe("data-resolved-file-path attribute", () => {
+    test("wiki link with matching file includes data-resolved-file-path", () => {
+      const serialized = micromark("[[Wiki Link]]", "ascii", {
+        extensions: [syntax()],
+        htmlExtensions: [html({ files: ["Wiki Link.md"] })],
+      });
+      expect(serialized).toBe(
+        '<p><a href="Wiki Link" class="internal" data-resolved-file-path="Wiki Link.md">Wiki Link</a></p>',
+      );
+    });
+
+    test("wiki link without matching file has no data-resolved-file-path", () => {
+      const serialized = micromark("[[New Page]]", "ascii", {
+        extensions: [syntax()],
+        htmlExtensions: [html()],
+      });
+      expect(serialized).toBe(
+        '<p><a href="New Page" class="internal new">New Page</a></p>',
+      );
+    });
+
+    test("image embed with matching file includes data-resolved-file-path", () => {
+      const serialized = micromark("![[photo.png]]", "ascii", {
+        extensions: [syntax()],
+        htmlExtensions: [
+          html({
+            files: ["/assets/photo.png"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+      expect(serialized).toBe(
+        '<p><img src="/assets/photo.png" alt="photo" class="internal" data-resolved-file-path="/assets/photo.png" /></p>',
+      );
+    });
+
+    test("image embed without matching file has no data-resolved-file-path", () => {
+      const serialized = micromark("![[missing.jpg]]", "ascii", {
+        extensions: [syntax()],
+        htmlExtensions: [html()],
+      });
+      expect(serialized).toBe(
+        '<p><img src="missing.jpg" alt="missing" class="internal new" /></p>',
+      );
+    });
+
+    test("video embed with matching file includes data-resolved-file-path", () => {
+      const serialized = micromark("![[clip.mp4]]", "ascii", {
+        extensions: [syntax()],
+        htmlExtensions: [
+          html({
+            files: ["media/clip.mp4"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+      expect(serialized).toBe(
+        '<p><video src="media/clip.mp4" class="internal" controls data-resolved-file-path="media/clip.mp4">Your browser does not support the video tag.</video></p>',
+      );
+    });
+
+    test("audio embed with matching file includes data-resolved-file-path", () => {
+      const serialized = micromark("![[song.mp3]]", "ascii", {
+        extensions: [syntax()],
+        htmlExtensions: [
+          html({
+            files: ["music/song.mp3"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+      expect(serialized).toBe(
+        '<p><audio src="music/song.mp3" class="internal" data-resolved-file-path="music/song.mp3" controls>Your browser does not support the audio tag.</audio></p>',
+      );
+    });
+
+    test("pdf embed with matching file includes data-resolved-file-path", () => {
+      const serialized = micromark("![[doc.pdf]]", "ascii", {
+        extensions: [syntax()],
+        htmlExtensions: [
+          html({
+            files: ["docs/doc.pdf"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+      expect(serialized).toBe(
+        '<p><iframe width="100%" src="docs/doc.pdf" title="doc" class="internal" data-resolved-file-path="docs/doc.pdf" /></p>',
+      );
+    });
+
+    test("markdown transclusion with matching file includes data-resolved-file-path", () => {
+      const serialized = micromark("![[Some Page]]", "ascii", {
+        extensions: [syntax()],
+        htmlExtensions: [
+          html({
+            files: ["notes/Some Page.md"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+      expect(serialized).toBe(
+        '<p><a href="notes/Some Page.md" class="internal transclusion" data-resolved-file-path="notes/Some Page.md">Some Page</a></p>',
       );
     });
   });
@@ -362,7 +469,7 @@ describe("micromark-extension-wiki-link", () => {
         ],
       });
       expect(serialized).toBe(
-        '<p><img src="/assets/My Image.jpg" alt="My Image" class="internal" /></p>',
+        '<p><img src="/assets/My Image.jpg" alt="My Image" class="internal" data-resolved-file-path="/assets/My Image.jpg" /></p>',
       );
 
       const serialized2 = micromark("[[post]]", "ascii", {
@@ -375,7 +482,7 @@ describe("micromark-extension-wiki-link", () => {
         ],
       });
       expect(serialized2).toBe(
-        '<p><a href="/blog/post" class="internal">post</a></p>',
+        '<p><a href="/blog/post" class="internal" data-resolved-file-path="/blog/post.md">post</a></p>',
       );
     });
 
@@ -385,7 +492,7 @@ describe("micromark-extension-wiki-link", () => {
         htmlExtensions: [html({ files: ["Wiki Link.md"] })],
       });
       expect(serialized).toBe(
-        '<p><a href="Wiki Link" class="internal">wiki link</a></p>',
+        '<p><a href="Wiki Link" class="internal" data-resolved-file-path="Wiki Link.md">wiki link</a></p>',
       );
     });
 
@@ -400,7 +507,7 @@ describe("micromark-extension-wiki-link", () => {
         ],
       });
       expect(serialized).toBe(
-        '<p><a href="/blog/post" class="internal">BLOG/POST</a></p>',
+        '<p><a href="/blog/post" class="internal" data-resolved-file-path="/blog/post.md">BLOG/POST</a></p>',
       );
     });
 

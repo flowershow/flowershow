@@ -538,6 +538,145 @@ describe("mdast-util-wiki-link", () => {
     });
   });
 
+  describe("fromMarkdown - data-resolved-file-path attribute", () => {
+    test("wiki link with matching file has data-resolved-file-path", () => {
+      const ast = fromMarkdown("[[Wiki Link]]", {
+        extensions: [syntax()],
+        mdastExtensions: [
+          wikiLinkFromMarkdown({
+            files: ["Wiki Link.md"],
+          }),
+        ],
+      });
+
+      visit(ast, "wikiLink", (node) => {
+        expect(node.data.hProperties?.["data-resolved-file-path"]).toBe(
+          "Wiki Link.md",
+        );
+      });
+    });
+
+    test("wiki link without matching file has no data-resolved-file-path", () => {
+      const ast = fromMarkdown("[[New Page]]", {
+        extensions: [syntax()],
+        mdastExtensions: [
+          wikiLinkFromMarkdown({
+            files: [],
+          }),
+        ],
+      });
+
+      visit(ast, "wikiLink", (node) => {
+        expect(
+          node.data.hProperties?.["data-resolved-file-path"],
+        ).toBeUndefined();
+      });
+    });
+
+    test("image embed with matching file has data-resolved-file-path", () => {
+      const ast = fromMarkdown("![[photo.png]]", {
+        extensions: [syntax()],
+        mdastExtensions: [
+          wikiLinkFromMarkdown({
+            files: ["/assets/photo.png"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+
+      visit(ast, "embed", (node) => {
+        expect(node.data.hProperties?.["data-resolved-file-path"]).toBe(
+          "/assets/photo.png",
+        );
+      });
+    });
+
+    test("image embed without matching file has no data-resolved-file-path", () => {
+      const ast = fromMarkdown("![[missing.jpg]]", {
+        extensions: [syntax()],
+        mdastExtensions: [wikiLinkFromMarkdown({ files: [] })],
+      });
+
+      visit(ast, "embed", (node) => {
+        expect(
+          node.data.hProperties?.["data-resolved-file-path"],
+        ).toBeUndefined();
+      });
+    });
+
+    test("video embed with matching file has data-resolved-file-path", () => {
+      const ast = fromMarkdown("![[clip.mp4]]", {
+        extensions: [syntax()],
+        mdastExtensions: [
+          wikiLinkFromMarkdown({
+            files: ["media/clip.mp4"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+
+      visit(ast, "embed", (node) => {
+        expect(node.data.hProperties?.["data-resolved-file-path"]).toBe(
+          "media/clip.mp4",
+        );
+      });
+    });
+
+    test("audio embed with matching file has data-resolved-file-path", () => {
+      const ast = fromMarkdown("![[song.mp3]]", {
+        extensions: [syntax()],
+        mdastExtensions: [
+          wikiLinkFromMarkdown({
+            files: ["music/song.mp3"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+
+      visit(ast, "embed", (node) => {
+        expect(node.data.hProperties?.["data-resolved-file-path"]).toBe(
+          "music/song.mp3",
+        );
+      });
+    });
+
+    test("pdf embed with matching file has data-resolved-file-path", () => {
+      const ast = fromMarkdown("![[doc.pdf]]", {
+        extensions: [syntax()],
+        mdastExtensions: [
+          wikiLinkFromMarkdown({
+            files: ["docs/doc.pdf"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+
+      visit(ast, "embed", (node) => {
+        expect(node.data.hProperties?.["data-resolved-file-path"]).toBe(
+          "docs/doc.pdf",
+        );
+      });
+    });
+
+    test("markdown transclusion with matching file has data-resolved-file-path", () => {
+      const ast = fromMarkdown("![[Some Page]]", {
+        extensions: [syntax()],
+        mdastExtensions: [
+          wikiLinkFromMarkdown({
+            files: ["notes/Some Page.md"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+
+      visit(ast, "embed", (node) => {
+        expect(node.data.hProperties?.["data-resolved-file-path"]).toBe(
+          "notes/Some Page.md",
+        );
+      });
+    });
+  });
+
   describe("fromMarkdown - Custom alias divider", () => {
     test("parses wiki link with custom divider", () => {
       const ast = fromMarkdown("[[Wiki Link:Alias]]", {

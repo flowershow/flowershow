@@ -205,6 +205,13 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
       }
     }
 
+    if (matchingFilePath) {
+      wikiLink.data.hProperties = {
+        ...wikiLink.data.hProperties,
+        "data-resolved-file-path": matchingFilePath,
+      };
+    }
+
     this.exit(token);
   };
 
