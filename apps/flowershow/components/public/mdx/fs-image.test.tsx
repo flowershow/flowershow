@@ -70,6 +70,29 @@ describe('FsImage', () => {
     expect(props.style).toEqual({ width: '100%', height: 'auto' });
   });
 
+  it('prefers author-explicit dimensions over intrinsic dimensions', () => {
+    render(
+      <FsImage
+        src="/demo.png"
+        alt="Demo"
+        width={300}
+        height={200}
+        {...({ 'data-intrinsic-width': 4000, 'data-intrinsic-height': 3000 } as any)}
+      />,
+    );
+
+    const image = screen.getByTestId('next-image');
+    const props = JSON.parse(image.getAttribute('data-props') ?? '{}');
+
+    // Author-explicit dimensions win: fixed pixel rendering
+    expect(props.width).toBe(300);
+    expect(props.height).toBe(200);
+    expect(props.sizes).toBeUndefined();
+    // Style uses fixed pixel size, not responsive 100%
+    expect(props.style.width).toBe('300px');
+    expect(props.style.height).toBe('200px');
+  });
+
   it('falls back to responsive mode when no dimensions provided', () => {
     render(<FsImage src="/demo.png" alt="Demo" />);
 
