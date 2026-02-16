@@ -1,0 +1,29 @@
+{
+  "name": "@flowershow/mcp",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack -p 3100",
+    "build": "next build",
+    "start": "next start",
+    "format": "biome format",
+    "format:write": "biome format --write",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.25.2",
+    "mcp-handler": "^1.0.7",
+    "next": "15.5.12",
+    "react": "19.2.1",
+    "react-dom": "19.2.1",
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.8",
+    "@types/node": "^24.9.1",
+    "@types/react": "19.2.2",
+    "@types/react-dom": "19.2.2",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}
