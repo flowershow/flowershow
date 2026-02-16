@@ -1,6 +1,6 @@
-import { slug } from "github-slugger";
-import fs from "fs";
-import path from "path";
+import { slug } from 'github-slugger';
+import fs from 'fs';
+import path from 'path';
 
 // File type definitions
 export type MarkdownFile = `.md` | `.mdx`;
@@ -29,25 +29,25 @@ export type SupportedFileType =
   | PdfFile;
 
 export function isMarkdownFile(extension: string): extension is MarkdownFile {
-  return extension === "md" || extension === "mdx" || extension === "";
+  return extension === 'md' || extension === 'mdx' || extension === '';
 }
 
 export function isImageFile(extension: string): extension is ImageFile {
-  return ["avif", "bmp", "gif", "jpeg", "jpg", "png", "svg", "webp"].includes(
+  return ['avif', 'bmp', 'gif', 'jpeg', 'jpg', 'png', 'svg', 'webp'].includes(
     extension,
   );
 }
 
 export function isAudioFile(extension: string): extension is AudioFile {
-  return ["flac", "m4a", "mp3", "ogg", "wav", "3gp"].includes(extension);
+  return ['flac', 'm4a', 'mp3', 'ogg', 'wav', '3gp'].includes(extension);
 }
 
 export function isVideoFile(extension: string): extension is VideoFile {
-  return ["mkv", "mov", "mp4", "ogv", "webm"].includes(extension);
+  return ['mkv', 'mov', 'mp4', 'ogv', 'webm'].includes(extension);
 }
 
 export function isPdfFile(extension: string): extension is PdfFile {
-  return extension === "pdf";
+  return extension === 'pdf';
 }
 
 export function isSupportedFileType(
@@ -74,20 +74,20 @@ export const defaultUrlResolver = ({
   if (isEmbed) {
     return filePath;
   }
-  const pathWithNoExtension = filePath.replace(/\.(mdx?|md)/, "");
+  const pathWithNoExtension = filePath.replace(/\.(mdx?|md)/, '');
 
   // Remove trailing /index and /README
-  const normalizedPath = pathWithNoExtension.replace(/\/?(index|README)$/, "");
+  const normalizedPath = pathWithNoExtension.replace(/\/?(index|README)$/, '');
 
   // Generate heading id if present
-  const headingId = heading ? `#${slug(heading)}` : "";
+  const headingId = heading ? `#${slug(heading)}` : '';
 
   // Special case: only heading anchor
   if (headingId && !normalizedPath) {
     return headingId;
   }
 
-  return (normalizedPath || "/") + headingId;
+  return (normalizedPath || '/') + headingId;
 };
 
 export const findMatchingFilePath = ({
@@ -98,7 +98,7 @@ export const findMatchingFilePath = ({
 }: {
   path: string; // wiki-link target (e.g. some/file in [[some/file#Some heading|Alias]])
   files: string[]; // file paths with  (with or without extensions)
-  format?: "regular" | "shortestPossible";
+  format?: 'regular' | 'shortestPossible';
   caseInsensitive?: boolean; // whether to match case-insensitively (default: true)
 }): string | undefined => {
   if (path.length === 0) {
@@ -107,9 +107,9 @@ export const findMatchingFilePath = ({
 
   const normalizedPath = caseInsensitive ? path.toLowerCase() : path;
 
-  if (format === "regular") {
+  if (format === 'regular') {
     return files.find((file) => {
-      const fileWithoutExt = file.replace(/\.(mdx?|md)$/, "");
+      const fileWithoutExt = file.replace(/\.(mdx?|md)$/, '');
       const normalizedFile = caseInsensitive
         ? fileWithoutExt.toLowerCase()
         : fileWithoutExt;
@@ -119,7 +119,7 @@ export const findMatchingFilePath = ({
 
   // Find all files that end with the path (without extension for markdown files)
   const matchingFiles = files.filter((file) => {
-    const fileWithoutExt = file.replace(/\.(mdx?|md)$/, "");
+    const fileWithoutExt = file.replace(/\.(mdx?|md)$/, '');
     const normalizedFile = caseInsensitive
       ? fileWithoutExt.toLowerCase()
       : fileWithoutExt;

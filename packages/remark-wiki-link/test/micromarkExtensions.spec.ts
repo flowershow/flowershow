@@ -1,13 +1,13 @@
-import { syntax } from "../src/lib/syntax";
-import { html } from "../src/lib/html";
-import { micromark } from "micromark";
+import { syntax } from '../src/lib/syntax';
+import { html } from '../src/lib/html';
+import { micromark } from 'micromark';
 
-describe("micromark-extension-wiki-link", () => {
-  describe("Parses a wikilink", () => {
-    test("that has a matching file", () => {
-      const serialized = micromark("[[Wiki Link]]", "ascii", {
+describe('micromark-extension-wiki-link', () => {
+  describe('Parses a wikilink', () => {
+    test('that has a matching file', () => {
+      const serialized = micromark('[[Wiki Link]]', 'ascii', {
         extensions: [syntax()],
-        htmlExtensions: [html({ files: ["Wiki Link.md"] })],
+        htmlExtensions: [html({ files: ['Wiki Link.md'] })],
       });
       expect(serialized).toBe(
         '<p><a href="Wiki Link" class="internal" data-fs-resolved-file-path="Wiki Link.md">Wiki Link</a></p>',
@@ -15,7 +15,7 @@ describe("micromark-extension-wiki-link", () => {
     });
 
     test("that doesn't have a matching file", () => {
-      const serialized = micromark("[[New Page]]", "ascii", {
+      const serialized = micromark('[[New Page]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -24,12 +24,12 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("to a README file with a matching file", () => {
-      const serialized = micromark("[[/blog/README]]", "ascii", {
+    test('to a README file with a matching file', () => {
+      const serialized = micromark('[[/blog/README]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [
           html({
-            files: ["/blog/README.md"],
+            files: ['/blog/README.md'],
           }),
         ],
       });
@@ -38,8 +38,8 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("with a heading", () => {
-      const serialized = micromark("[[Wiki Link#Some Heading]]", "ascii", {
+    test('with a heading', () => {
+      const serialized = micromark('[[Wiki Link#Some Heading]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -48,10 +48,10 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("with heading and alias", () => {
+    test('with heading and alias', () => {
       const serialized = micromark(
-        "[[Wiki Link#Some Heading|Alias]]",
-        "ascii",
+        '[[Wiki Link#Some Heading|Alias]]',
+        'ascii',
         {
           extensions: [syntax()],
           htmlExtensions: [html()],
@@ -62,10 +62,10 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("with a heading with special characters", () => {
+    test('with a heading with special characters', () => {
       const serialized = micromark(
-        "[[Wiki Link#Some.Heading.With-♥-Unicode and spaces]]",
-        "ascii",
+        '[[Wiki Link#Some.Heading.With-♥-Unicode and spaces]]',
+        'ascii',
         {
           extensions: [syntax()],
           htmlExtensions: [html()],
@@ -76,8 +76,8 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("to a heading on the same page", () => {
-      const serialized = micromark("[[#Heading On Same Page]]", "ascii", {
+    test('to a heading on the same page', () => {
+      const serialized = micromark('[[#Heading On Same Page]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -86,8 +86,8 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("with an alias", () => {
-      const serialized = micromark("[[Wiki Link|Alias]]", "ascii", {
+    test('with an alias', () => {
+      const serialized = micromark('[[Wiki Link|Alias]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -96,11 +96,11 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("with an alias inside a table", () => {
+    test('with an alias inside a table', () => {
       const markdown = `| Column 1 | Column 2  | Column 3 |
 | -------- | --------------------------------- | -------- |
 | Data 1   | [[post-1\|Link with Alias]]       | Data 2   |`;
-      const serialized = micromark(markdown, "ascii", {
+      const serialized = micromark(markdown, 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -111,13 +111,13 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("with Obsidian-style shortest possible path format and a matching file", () => {
-      const serialized = micromark("[[Wiki Link]]", "ascii", {
+    test('with Obsidian-style shortest possible path format and a matching file', () => {
+      const serialized = micromark('[[Wiki Link]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [
           html({
-            files: ["/some/folder/Wiki Link.md"],
-            format: "shortestPossible",
+            files: ['/some/folder/Wiki Link.md'],
+            format: 'shortestPossible',
           }),
         ],
       });
@@ -127,9 +127,9 @@ describe("micromark-extension-wiki-link", () => {
     });
   });
 
-  describe("Parses an embed", () => {
-    test("image", () => {
-      const serialized = micromark("![[My Image.jpg]]", "ascii", {
+  describe('Parses an embed', () => {
+    test('image', () => {
+      const serialized = micromark('![[My Image.jpg]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -138,12 +138,12 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("image with a matching file", () => {
-      const serialized = micromark("![[My Image.jpg]]", "ascii", {
+    test('image with a matching file', () => {
+      const serialized = micromark('![[My Image.jpg]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [
           html({
-            files: ["My Image.jpg"],
+            files: ['My Image.jpg'],
           }),
         ],
       });
@@ -152,8 +152,8 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("pdf", () => {
-      const serialized = micromark("![[My Document.pdf]]", "ascii", {
+    test('pdf', () => {
+      const serialized = micromark('![[My Document.pdf]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -162,8 +162,8 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("unsupported file format", () => {
-      const serialized = micromark("![[My Image.xyz]]", "ascii", {
+    test('unsupported file format', () => {
+      const serialized = micromark('![[My Image.xyz]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -172,23 +172,23 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("image with a matching file", () => {
-      const serialized = micromark("![[My Image.jpg]]", "ascii", {
+    test('image with a matching file', () => {
+      const serialized = micromark('![[My Image.jpg]]', 'ascii', {
         extensions: [syntax()],
-        htmlExtensions: [html({ files: ["My Image.jpg"] })],
+        htmlExtensions: [html({ files: ['My Image.jpg'] })],
       });
       expect(serialized).toBe(
         '<p><img src="My Image.jpg" alt="My Image" class="internal" data-fs-resolved-file-path="My Image.jpg" /></p>',
       );
     });
 
-    test("image with a matching file and shortestPossible path format", () => {
-      const serialized = micromark("![[My Image.jpg]]", "ascii", {
+    test('image with a matching file and shortestPossible path format', () => {
+      const serialized = micromark('![[My Image.jpg]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [
           html({
-            format: "shortestPossible",
-            files: ["/assets/My Image.jpg"],
+            format: 'shortestPossible',
+            files: ['/assets/My Image.jpg'],
           }),
         ],
       });
@@ -197,28 +197,28 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("image with width", () => {
-      const serialized = micromark("![[My Image.jpg|200]]", "ascii", {
+    test('image with width', () => {
+      const serialized = micromark('![[My Image.jpg|200]]', 'ascii', {
         extensions: [syntax()],
-        htmlExtensions: [html({ files: ["My Image.jpg"] })],
+        htmlExtensions: [html({ files: ['My Image.jpg'] })],
       });
       expect(serialized).toBe(
         '<p><img src="My Image.jpg" alt="My Image" class="internal" data-fs-width="200" data-fs-resolved-file-path="My Image.jpg" /></p>',
       );
     });
 
-    test("image with width and height", () => {
-      const serialized = micromark("![[My Image.jpg|200x300]]", "ascii", {
+    test('image with width and height', () => {
+      const serialized = micromark('![[My Image.jpg|200x300]]', 'ascii', {
         extensions: [syntax()],
-        htmlExtensions: [html({ files: ["My Image.jpg"] })],
+        htmlExtensions: [html({ files: ['My Image.jpg'] })],
       });
       expect(serialized).toBe(
         '<p><img src="My Image.jpg" alt="My Image" class="internal" data-fs-width="200" data-fs-height="300" data-fs-resolved-file-path="My Image.jpg" /></p>',
       );
     });
 
-    test("markdown note transclusion as a regular wiki link (with extra class)", () => {
-      const serialized = micromark("![[Some Page]]", "ascii", {
+    test('markdown note transclusion as a regular wiki link (with extra class)', () => {
+      const serialized = micromark('![[Some Page]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -227,8 +227,8 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("video", () => {
-      const serialized = micromark("![[My Video.mp4]]", "ascii", {
+    test('video', () => {
+      const serialized = micromark('![[My Video.mp4]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -237,8 +237,8 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("video with dimensions", () => {
-      const serialized = micromark("![[My Video.mp4|640x480]]", "ascii", {
+    test('video with dimensions', () => {
+      const serialized = micromark('![[My Video.mp4|640x480]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -247,8 +247,8 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("video with width only", () => {
-      const serialized = micromark("![[My Video.mp4|640]]", "ascii", {
+    test('video with width only', () => {
+      const serialized = micromark('![[My Video.mp4|640]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -257,8 +257,8 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("audio", () => {
-      const serialized = micromark("![[My Audio.mp3]]", "ascii", {
+    test('audio', () => {
+      const serialized = micromark('![[My Audio.mp3]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -268,19 +268,19 @@ describe("micromark-extension-wiki-link", () => {
     });
   });
 
-  describe("data-fs-resolved-file-path attribute", () => {
-    test("wiki link with matching file includes data-fs-resolved-file-path", () => {
-      const serialized = micromark("[[Wiki Link]]", "ascii", {
+  describe('data-fs-resolved-file-path attribute', () => {
+    test('wiki link with matching file includes data-fs-resolved-file-path', () => {
+      const serialized = micromark('[[Wiki Link]]', 'ascii', {
         extensions: [syntax()],
-        htmlExtensions: [html({ files: ["Wiki Link.md"] })],
+        htmlExtensions: [html({ files: ['Wiki Link.md'] })],
       });
       expect(serialized).toBe(
         '<p><a href="Wiki Link" class="internal" data-fs-resolved-file-path="Wiki Link.md">Wiki Link</a></p>',
       );
     });
 
-    test("wiki link without matching file has no data-fs-resolved-file-path", () => {
-      const serialized = micromark("[[New Page]]", "ascii", {
+    test('wiki link without matching file has no data-fs-resolved-file-path', () => {
+      const serialized = micromark('[[New Page]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -289,13 +289,13 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("image embed with matching file includes data-fs-resolved-file-path", () => {
-      const serialized = micromark("![[photo.png]]", "ascii", {
+    test('image embed with matching file includes data-fs-resolved-file-path', () => {
+      const serialized = micromark('![[photo.png]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [
           html({
-            files: ["/assets/photo.png"],
-            format: "shortestPossible",
+            files: ['/assets/photo.png'],
+            format: 'shortestPossible',
           }),
         ],
       });
@@ -304,8 +304,8 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("image embed without matching file has no data-fs-resolved-file-path", () => {
-      const serialized = micromark("![[missing.jpg]]", "ascii", {
+    test('image embed without matching file has no data-fs-resolved-file-path', () => {
+      const serialized = micromark('![[missing.jpg]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
@@ -314,13 +314,13 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("video embed with matching file includes data-fs-resolved-file-path", () => {
-      const serialized = micromark("![[clip.mp4]]", "ascii", {
+    test('video embed with matching file includes data-fs-resolved-file-path', () => {
+      const serialized = micromark('![[clip.mp4]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [
           html({
-            files: ["media/clip.mp4"],
-            format: "shortestPossible",
+            files: ['media/clip.mp4'],
+            format: 'shortestPossible',
           }),
         ],
       });
@@ -329,13 +329,13 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("audio embed with matching file includes data-fs-resolved-file-path", () => {
-      const serialized = micromark("![[song.mp3]]", "ascii", {
+    test('audio embed with matching file includes data-fs-resolved-file-path', () => {
+      const serialized = micromark('![[song.mp3]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [
           html({
-            files: ["music/song.mp3"],
-            format: "shortestPossible",
+            files: ['music/song.mp3'],
+            format: 'shortestPossible',
           }),
         ],
       });
@@ -344,13 +344,13 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("pdf embed with matching file includes data-fs-resolved-file-path", () => {
-      const serialized = micromark("![[doc.pdf]]", "ascii", {
+    test('pdf embed with matching file includes data-fs-resolved-file-path', () => {
+      const serialized = micromark('![[doc.pdf]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [
           html({
-            files: ["docs/doc.pdf"],
-            format: "shortestPossible",
+            files: ['docs/doc.pdf'],
+            format: 'shortestPossible',
           }),
         ],
       });
@@ -359,13 +359,13 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("markdown transclusion with matching file includes data-fs-resolved-file-path", () => {
-      const serialized = micromark("![[Some Page]]", "ascii", {
+    test('markdown transclusion with matching file includes data-fs-resolved-file-path', () => {
+      const serialized = micromark('![[Some Page]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [
           html({
-            files: ["notes/Some Page.md"],
-            format: "shortestPossible",
+            files: ['notes/Some Page.md'],
+            format: 'shortestPossible',
           }),
         ],
       });
@@ -376,55 +376,55 @@ describe("micromark-extension-wiki-link", () => {
   });
 
   describe("Doesn't parse invalid wiki links", () => {
-    test("empty wikilink", () => {
-      const serialized = micromark("[[]]", "ascii", {
+    test('empty wikilink', () => {
+      const serialized = micromark('[[]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
-      expect(serialized).toBe("<p>[[]]</p>");
+      expect(serialized).toBe('<p>[[]]</p>');
     });
 
-    test("with single brackets", () => {
-      const serialized = micromark("[Wiki Link]", "ascii", {
+    test('with single brackets', () => {
+      const serialized = micromark('[Wiki Link]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
-      expect(serialized).toBe("<p>[Wiki Link]</p>");
+      expect(serialized).toBe('<p>[Wiki Link]</p>');
     });
 
-    test("with 1 missing closing bracket", () => {
-      const serialized = micromark("[[Wiki Link]", "ascii", {
+    test('with 1 missing closing bracket', () => {
+      const serialized = micromark('[[Wiki Link]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
-      expect(serialized).toBe("<p>[[Wiki Link]</p>");
+      expect(serialized).toBe('<p>[[Wiki Link]</p>');
     });
 
-    test("with 2 missing closing brackets", () => {
-      const serialized = micromark("[[Wiki Link", "ascii", {
+    test('with 2 missing closing brackets', () => {
+      const serialized = micromark('[[Wiki Link', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
-      expect(serialized).toBe("<p>[[Wiki Link</p>");
+      expect(serialized).toBe('<p>[[Wiki Link</p>');
     });
 
-    test("with 1 missing opening bracket", () => {
-      const serialized = micromark("[Wiki Link]]", "ascii", {
+    test('with 1 missing opening bracket', () => {
+      const serialized = micromark('[Wiki Link]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],
       });
-      expect(serialized).toBe("<p>[Wiki Link]]</p>");
+      expect(serialized).toBe('<p>[Wiki Link]]</p>');
     });
   });
 
-  describe("Supports config options", () => {
-    test("custom classes", () => {
-      const serialized = micromark("[[Wiki Link]]", "ascii", {
+  describe('Supports config options', () => {
+    test('custom classes', () => {
+      const serialized = micromark('[[Wiki Link]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [
           html({
-            className: "test-wiki-link",
-            newClassName: "test-new",
+            className: 'test-wiki-link',
+            newClassName: 'test-new',
           }),
         ],
       });
@@ -433,9 +433,9 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("custom alias divider", () => {
-      const serialized = micromark("[[Wiki Link:Alias Name]]", "ascii", {
-        extensions: [syntax({ aliasDivider: ":" })],
+    test('custom alias divider', () => {
+      const serialized = micromark('[[Wiki Link:Alias Name]]', 'ascii', {
+        extensions: [syntax({ aliasDivider: ':' })],
         htmlExtensions: [html()],
       });
       expect(serialized).toBe(
@@ -443,7 +443,7 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("custom urlResolver", () => {
+    test('custom urlResolver', () => {
       const urlResolver = ({
         filePath,
         isEmbed,
@@ -453,17 +453,17 @@ describe("micromark-extension-wiki-link", () => {
       }) => {
         if (!isEmbed) {
           // Remove .md extension and then process
-          const pathWithoutExt = filePath.replace(/\.md$/, "");
-          return pathWithoutExt.replace(/\s+/g, "-").toLowerCase();
+          const pathWithoutExt = filePath.replace(/\.md$/, '');
+          return pathWithoutExt.replace(/\s+/g, '-').toLowerCase();
         }
         return filePath;
       };
 
-      const serialized = micromark("![[My Image.jpg]]", "ascii", {
+      const serialized = micromark('![[My Image.jpg]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [
           html({
-            files: ["/assets/My Image.jpg"],
+            files: ['/assets/My Image.jpg'],
             urlResolver,
           }),
         ],
@@ -472,11 +472,11 @@ describe("micromark-extension-wiki-link", () => {
         '<p><img src="/assets/My Image.jpg" alt="My Image" class="internal" data-fs-resolved-file-path="/assets/My Image.jpg" /></p>',
       );
 
-      const serialized2 = micromark("[[post]]", "ascii", {
+      const serialized2 = micromark('[[post]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [
           html({
-            files: ["/blog/post.md"],
+            files: ['/blog/post.md'],
             urlResolver,
           }),
         ],
@@ -486,22 +486,22 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("case-insensitive matching by default", () => {
-      const serialized = micromark("[[wiki link]]", "ascii", {
+    test('case-insensitive matching by default', () => {
+      const serialized = micromark('[[wiki link]]', 'ascii', {
         extensions: [syntax()],
-        htmlExtensions: [html({ files: ["Wiki Link.md"] })],
+        htmlExtensions: [html({ files: ['Wiki Link.md'] })],
       });
       expect(serialized).toBe(
         '<p><a href="Wiki Link" class="internal" data-fs-resolved-file-path="Wiki Link.md">wiki link</a></p>',
       );
     });
 
-    test("case-insensitive matching when explicitly enabled", () => {
-      const serialized = micromark("[[BLOG/POST]]", "ascii", {
+    test('case-insensitive matching when explicitly enabled', () => {
+      const serialized = micromark('[[BLOG/POST]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [
           html({
-            files: ["/blog/post.md"],
+            files: ['/blog/post.md'],
             caseInsensitive: true,
           }),
         ],
@@ -511,12 +511,12 @@ describe("micromark-extension-wiki-link", () => {
       );
     });
 
-    test("case-sensitive matching when disabled", () => {
-      const serialized = micromark("[[wiki link]]", "ascii", {
+    test('case-sensitive matching when disabled', () => {
+      const serialized = micromark('[[wiki link]]', 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [
           html({
-            files: ["Wiki Link.md"],
+            files: ['Wiki Link.md'],
             caseInsensitive: false,
           }),
         ],

@@ -1,20 +1,20 @@
-declare module "mdast-util-wiki-link";
+declare module 'mdast-util-wiki-link';
 
-import "mdast";
+import 'mdast';
 
-declare module "mdast" {
+declare module 'mdast' {
   interface RootContentMap {
     wikiLink: WikiLink;
     embed: Embed;
   }
 
   interface WikiLink extends Literal {
-    type: "wikiLink";
+    type: 'wikiLink';
     data: WikiLinkData;
   }
 
   interface Embed extends Literal {
-    type: "embed";
+    type: 'embed';
     data: EmbedData;
   }
 
@@ -31,9 +31,9 @@ declare module "mdast" {
   type EmbedData = WikiLinkData;
 }
 
-import "micromark-util-types";
+import 'micromark-util-types';
 
-declare module "micromark-util-types" {
+declare module 'micromark-util-types' {
   interface TokenTypeMap {
     embed: TokenType;
     embedMarker: TokenType; // The embed opening
@@ -58,11 +58,11 @@ declare module "micromark-util-types" {
   }
 }
 
-import "mdast-util-to-markdown";
+import 'mdast-util-to-markdown';
 
-declare module "mdast-util-to-markdown" {
+declare module 'mdast-util-to-markdown' {
   interface ConstructNameMap {
-    wikiLink: "wikiLink";
-    embed: "embed";
+    wikiLink: 'wikiLink';
+    embed: 'embed';
   }
 }

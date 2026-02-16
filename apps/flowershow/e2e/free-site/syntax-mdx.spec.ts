@@ -366,9 +366,7 @@ test.describe('Links and embeds', () => {
     });
 
     test('CommonMark embed with width only', async ({ publishedSitePage }) => {
-      const embed = publishedSitePage.page.locator(
-        'img[width="150"]',
-      );
+      const embed = publishedSitePage.page.locator('img[width="150"]');
       // Filter to the one without height="200"
       const candidates = await embed.all();
       let widthOnlyEmbed = embed.first();

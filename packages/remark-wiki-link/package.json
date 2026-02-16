@@ -5,7 +5,6 @@
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean --sourcemap",
     "test": "jest",
-    "format": "npx prettier . --write",
     "release": "changeset publish"
   },
   "repository": {
@@ -35,7 +34,6 @@
     "mdast-util-from-markdown": "^2.0.2",
     "micromark": "^4.0.2",
     "micromark-util-types": "^2.0.2",
-    "prettier": "3.6.2",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "ts-jest": "^29.4.0",

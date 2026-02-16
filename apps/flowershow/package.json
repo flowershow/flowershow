@@ -5,8 +5,6 @@
     "dev": "prisma migrate dev && next dev --turbopack",
     "build": "prisma migrate deploy && prisma generate && next build",
     "start": "next start",
-    "format": "biome format",
-    "format:write": "biome format --write",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest --project=unit",
@@ -18,7 +16,10 @@
     "build-storybook": "storybook build -o ./deploy/storybook/out"
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": ["eslint . --fix", "biome format --write"]
+    "*.{js,jsx,ts,tsx}": [
+      "eslint . --fix",
+      "biome format --write --no-errors-on-unmatched"
+    ]
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.914.0",

@@ -7,14 +7,7 @@
   "author": "Sam Stephenson <sstephenson@gmail.com> (http://sstephenson.us/)",
   "repository": "github:bats-core/bats-core",
   "bugs": "https://github.com/bats-core/bats-core/issues",
-  "files": [
-    "bin",
-    "libexec",
-    "lib",
-    "man",
-    "install.sh",
-    "uninstall.sh"
-  ],
+  "files": ["bin", "libexec", "lib", "man", "install.sh", "uninstall.sh"],
   "directories": {
     "bin": "bin",
     "doc": "docs",
@@ -24,11 +17,5 @@
   "scripts": {
     "test": "bin/bats test"
   },
-  "keywords": [
-    "bats",
-    "bash",
-    "shell",
-    "test",
-    "unit"
-  ]
+  "keywords": ["bats", "bash", "shell", "test", "unit"]
 }

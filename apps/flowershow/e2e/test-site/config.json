@@ -36,10 +36,7 @@
   "showEditLink": true,
   "showSidebar": true,
   "analytics": "ABC",
-  "contentExclude": [
-    "/blog/archive",
-    "/blog/draft-post.md"
-  ],
+  "contentExclude": ["/blog/archive", "/blog/draft-post.md"],
   "redirects": [
     {
       "from": "/old-page",

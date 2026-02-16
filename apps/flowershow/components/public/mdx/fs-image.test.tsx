@@ -54,7 +54,10 @@ describe('FsImage', () => {
       <FsImage
         src="/demo.png"
         alt="Demo"
-        {...({ 'data-intrinsic-width': 4000, 'data-intrinsic-height': 3000 } as any)}
+        {...({
+          'data-intrinsic-width': 4000,
+          'data-intrinsic-height': 3000,
+        } as any)}
       />,
     );
 
@@ -77,7 +80,10 @@ describe('FsImage', () => {
         alt="Demo"
         width={300}
         height={200}
-        {...({ 'data-intrinsic-width': 4000, 'data-intrinsic-height': 3000 } as any)}
+        {...({
+          'data-intrinsic-width': 4000,
+          'data-intrinsic-height': 3000,
+        } as any)}
       />,
     );
 
