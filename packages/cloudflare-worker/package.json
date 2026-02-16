@@ -5,6 +5,7 @@
   "main": "src/worker.js",
   "scripts": {
     "dev": "wrangler dev --local --config wrangler.flowershow.toml --env dev",
+    "lint": "biome lint .",
     "deploy:staging": "npx wrangler deploy --config wrangler.flowershow.toml --keep-vars --env staging",
     "deploy:production": "npx wrangler deploy --config wrangler.flowershow.toml --keep-vars --env production",
     "test": "bats test/e2e.bats",

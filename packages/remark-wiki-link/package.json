@@ -4,7 +4,8 @@
   "description": "Parse and render wiki-style links, especially Obsidian style links.",
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean --sourcemap",
-    "test": "jest",
+    "lint": "biome lint .",
+    "test": "vitest run",
     "release": "changeset publish"
   },
   "repository": {
@@ -28,19 +29,17 @@
     "micromark-util-symbol": "^2.0.1"
   },
   "devDependencies": {
-    "@types/jest": "^30.0.0",
     "@types/mdast": "^4.0.4",
-    "jest": "^30.0.4",
     "mdast-util-from-markdown": "^2.0.2",
     "micromark": "^4.0.2",
     "micromark-util-types": "^2.0.2",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
-    "ts-jest": "^29.4.0",
     "tsup": "^8.5.0",
     "unified": "^11.0.5",
     "unist-util-select": "^5.1.0",
-    "unist-util-visit": "^5.1.0"
+    "unist-util-visit": "^5.1.0",
+    "vitest": "^3.2.4"
   },
   "type": "module",
   "files": ["dist"],

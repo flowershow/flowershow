@@ -1,17 +1,11 @@
 #!/bin/sh
-#
-# bd (beads) pre-commit hook (chained)
-#
-# This hook chains bd functionality with your existing pre-commit hook.
 
-# Run existing hook first
-if [ -x "/Users/o/Projects/Flowershow/workspace/flowershow/.husky/pre-commit.old" ]; then
-    "/Users/o/Projects/Flowershow/workspace/flowershow/.husky/pre-commit.old" "$@"
-    EXIT_CODE=$?
-    if [ $EXIT_CODE -ne 0 ]; then
-        exit $EXIT_CODE
-    fi
-fi
+# --- lint-staged (formatting + linting on staged files) ---
+. "$(dirname -- "$0")/_/husky.sh"
+cd apps/flowershow && npx lint-staged
+cd - >/dev/null
+
+# --- bd (beads) pre-commit hook ---
 
 # Check if bd is available
 if ! command -v bd >/dev/null 2>&1; then

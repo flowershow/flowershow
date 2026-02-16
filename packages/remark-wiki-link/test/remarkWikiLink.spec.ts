@@ -14,7 +14,7 @@ describe('remark-wiki-link', () => {
           files: ['Wiki Link.md'],
         });
 
-      let ast = processor.parse('[[Wiki Link]]');
+      const ast = processor.parse('[[Wiki Link]]');
 
       expect(select('wikiLink', ast)).not.toEqual(null);
 
@@ -33,7 +33,7 @@ describe('remark-wiki-link', () => {
     test("that doesn't have a matching file", () => {
       const processor = unified().use(markdown).use(wikiLinkPlugin);
 
-      let ast = processor.parse('[[New Page]]');
+      const ast = processor.parse('[[New Page]]');
 
       expect(select('wikiLink', ast)).not.toEqual(null);
 
@@ -52,7 +52,7 @@ describe('remark-wiki-link', () => {
     test('with a heading', () => {
       const processor = unified().use(markdown).use(wikiLinkPlugin);
 
-      let ast = processor.parse('[[Wiki Link#Some Heading]]');
+      const ast = processor.parse('[[Wiki Link#Some Heading]]');
 
       expect(select('wikiLink', ast)).not.toEqual(null);
 
@@ -76,7 +76,7 @@ describe('remark-wiki-link', () => {
           format: 'shortestPossible',
         });
 
-      let ast = processor.parse('[[test]]');
+      const ast = processor.parse('[[test]]');
 
       expect(select('wikiLink', ast)).not.toEqual(null);
 
@@ -95,7 +95,7 @@ describe('remark-wiki-link', () => {
           files: ['Wiki Link.md'],
         });
 
-      let ast = processor.parse('[[wiki link]]');
+      const ast = processor.parse('[[wiki link]]');
 
       expect(select('wikiLink', ast)).not.toEqual(null);
 
@@ -114,7 +114,7 @@ describe('remark-wiki-link', () => {
           caseInsensitive: true,
         });
 
-      let ast = processor.parse('[[blog/post]]');
+      const ast = processor.parse('[[blog/post]]');
 
       expect(select('wikiLink', ast)).not.toEqual(null);
 
@@ -133,7 +133,7 @@ describe('remark-wiki-link', () => {
           caseInsensitive: false,
         });
 
-      let ast = processor.parse('[[wiki link]]');
+      const ast = processor.parse('[[wiki link]]');
 
       expect(select('wikiLink', ast)).not.toEqual(null);
 
@@ -148,7 +148,7 @@ describe('remark-wiki-link', () => {
       test('image', () => {
         const processor = unified().use(markdown).use(wikiLinkPlugin);
 
-        let ast = processor.parse('![[My Image.jpg]]');
+        const ast = processor.parse('![[My Image.jpg]]');
 
         expect(select('embed', ast)).not.toEqual(null);
 
@@ -184,7 +184,7 @@ describe('remark-wiki-link', () => {
             urlResolver,
           });
 
-        let ast = processor.parse('![[My Image.jpg]]');
+        const ast = processor.parse('![[My Image.jpg]]');
 
         expect(select('embed', ast)).not.toEqual(null);
 
@@ -202,7 +202,7 @@ describe('remark-wiki-link', () => {
       test('video', () => {
         const processor = unified().use(markdown).use(wikiLinkPlugin);
 
-        let ast = processor.parse('![[My Video.mp4]]');
+        const ast = processor.parse('![[My Video.mp4]]');
 
         expect(select('embed', ast)).not.toEqual(null);
 
@@ -221,7 +221,7 @@ describe('remark-wiki-link', () => {
       test('video with dimensions', () => {
         const processor = unified().use(markdown).use(wikiLinkPlugin);
 
-        let ast = processor.parse('![[My Video.mp4|640x480]]');
+        const ast = processor.parse('![[My Video.mp4|640x480]]');
 
         expect(select('embed', ast)).not.toEqual(null);
 
@@ -243,7 +243,7 @@ describe('remark-wiki-link', () => {
       test('audio', () => {
         const processor = unified().use(markdown).use(wikiLinkPlugin);
 
-        let ast = processor.parse('![[My Audio.mp3]]');
+        const ast = processor.parse('![[My Audio.mp3]]');
 
         expect(select('embed', ast)).not.toEqual(null);
 
@@ -262,7 +262,7 @@ describe('remark-wiki-link', () => {
       test('pdf', () => {
         const processor = unified().use(markdown).use(wikiLinkPlugin);
 
-        let ast = processor.parse('![[My Document.pdf]]');
+        const ast = processor.parse('![[My Document.pdf]]');
 
         expect(select('embed', ast)).not.toEqual(null);
 
@@ -290,7 +290,7 @@ describe('remark-wiki-link', () => {
             },
           });
 
-        let ast = processor.parse('[[blog/my-post]]');
+        const ast = processor.parse('[[blog/my-post]]');
 
         expect(select('wikiLink', ast)).not.toEqual(null);
 
@@ -313,7 +313,7 @@ describe('remark-wiki-link', () => {
             },
           });
 
-        let ast = processor.parse('[[blog/my-post#Section]]');
+        const ast = processor.parse('[[blog/my-post#Section]]');
 
         expect(select('wikiLink', ast)).not.toEqual(null);
 
@@ -335,7 +335,7 @@ describe('remark-wiki-link', () => {
             },
           });
 
-        let ast = processor.parse('[[blog/my-post]]');
+        const ast = processor.parse('[[blog/my-post]]');
 
         expect(select('wikiLink', ast)).not.toEqual(null);
 
@@ -359,7 +359,7 @@ describe('remark-wiki-link', () => {
             format: 'shortestPossible',
           });
 
-        let ast = processor.parse('[[test]]');
+        const ast = processor.parse('[[test]]');
 
         expect(select('wikiLink', ast)).not.toEqual(null);
 
@@ -382,7 +382,7 @@ describe('remark-wiki-link', () => {
             },
           });
 
-        let ast = processor.parse('![[image.jpg]]');
+        const ast = processor.parse('![[image.jpg]]');
 
         expect(select('embed', ast)).not.toEqual(null);
 
