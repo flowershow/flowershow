@@ -12,6 +12,14 @@ bd close <id>         # Complete work
 bd sync               # Sync with git
 ```
 
+## Starting Implementation Work
+
+When a user asks to implement something, always check for an existing related `bd` issue first.
+
+1. Run `bd ready` and look for the most relevant item.
+2. If you find a match, review it with `bd show <id>` and claim it with `bd update <id> --status in_progress` before coding.
+3. If no issue is a clear match, call that out and create a follow-up `bd` issue before or during implementation so the work is tracked.
+
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
@@ -37,4 +45,3 @@ bd sync               # Sync with git
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push
 - If push fails, resolve and retry until it succeeds
-
