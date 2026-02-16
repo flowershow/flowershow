@@ -3,6 +3,7 @@ import type { Blob } from '@prisma/client';
 import { hydrate, type SerializeResult } from 'next-mdx-remote-client/csr';
 import { ErrorBoundary } from 'react-error-boundary';
 import ErrorMessage from '@/components/public/error-message';
+import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import type { PageMetadata, PublicSite } from '@/server/api/types';
 import { mdxComponentsFactory } from './mdx/mdx-components-factory';
 
@@ -10,9 +11,10 @@ type Props = {
   mdxSource: SerializeResult<PageMetadata>;
   blob: Blob;
   site: PublicSite;
+  imageDimensions?: ImageDimensionsMap;
 };
 
-function MDXClientRenderer({ mdxSource, blob, site }: Props) {
+function MDXClientRenderer({ mdxSource, blob, site, imageDimensions }: Props) {
   if ('error' in mdxSource) {
     const message = mdxSource.error.message.concat(
       '\n\n🧑‍🔧 See how to debug and solve most common MDX errors in our docs:\nhttps://flowershow.app/docs/debug-mdx-errors',
@@ -23,6 +25,7 @@ function MDXClientRenderer({ mdxSource, blob, site }: Props) {
   const components = mdxComponentsFactory({
     blob,
     site,
+    imageDimensions,
   });
 
   try {

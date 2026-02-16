@@ -20,7 +20,9 @@ import { unified } from 'unified';
 import FsImage from '@/components/public/mdx/fs-image';
 import remarkObsidianComments from '@/lib/remark-obsidian-comments';
 import remarkYouTubeAutoEmbed from '@/lib/remark-youtube-auto-embed';
+import type { ImageDimensionsMap } from './image-dimensions';
 import rehypeHtmlEnhancements from './rehype-html-enhancements';
+import rehypeInjectImageDimensions from './rehype-inject-image-dimensions';
 import rehypeResolveExplicitJsxUrls from './rehype-resolve-explicit-jsx-urls';
 import rehypeResolveHtmlUrls from './rehype-resolve-html-urls';
 import rehypeToReact from './rehype-to-react';
@@ -39,6 +41,7 @@ interface MarkdownOptions {
   siteId?: string;
   rootDir?: string;
   permalinks?: Record<string, string>;
+  imageDimensions?: ImageDimensionsMap;
 }
 
 // Process pure markdown files using unified
@@ -82,6 +85,9 @@ export async function processMarkdown(
     .use(rehypeAutolinkHeadings, rehypeAutolinkHeadingsConfig)
     .use(rehypeKatex, { output: 'htmlAndMathml' })
     .use(rehypePrismPlus, { ignoreMissing: true })
+    .use(rehypeInjectImageDimensions, {
+      dimensions: options.imageDimensions ?? {},
+    })
     .use(rehypeToReact, {
       components: {
         img: FsImage,
