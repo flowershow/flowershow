@@ -280,6 +280,27 @@ export const generatePresignedUploadUrl = async (
 };
 
 /**
+ * Generate a presigned URL for reading (GET) a file from R2.
+ * Used for password-protected sites so we can redirect to a
+ * time-limited URL without proxying the body.
+ *
+ * @param key - The S3 key for the file
+ * @param expiresIn - Expiration time in seconds (default: 300 = 5 minutes)
+ * @returns Presigned URL for GET request
+ */
+export const generatePresignedGetUrl = async (
+  key: string,
+  expiresIn: number = 300,
+): Promise<string> => {
+  const command = new GetObjectCommand({
+    Bucket: S3_BUCKET_NAME,
+    Key: key,
+  });
+
+  return getSignedUrl(s3Client, command, { expiresIn });
+};
+
+/**
  * Get the S3 client instance (for advanced usage)
  */
 export const getS3Client = () => s3Client;
