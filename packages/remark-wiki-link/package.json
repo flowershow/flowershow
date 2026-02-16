@@ -12,12 +12,7 @@
     "type": "git",
     "url": "git+https://github.com/flowershow/remark-wiki-link.git"
   },
-  "keywords": [
-    "remark",
-    "remark-plugin",
-    "markdown",
-    "obsidian"
-  ],
+  "keywords": ["remark", "remark-plugin", "markdown", "obsidian"],
   "author": "Flowershow",
   "license": "MIT",
   "bugs": {
@@ -36,7 +31,6 @@
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/mdast": "^4.0.4",
-    "@types/node": "^24.0.10",
     "jest": "^30.0.4",
     "mdast-util-from-markdown": "^2.0.2",
     "micromark": "^4.0.2",
@@ -45,17 +39,13 @@
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "ts-jest": "^29.4.0",
-    "ts-node": "^10.9.2",
     "tsup": "^8.5.0",
-    "typescript": "^5.8.3",
     "unified": "^11.0.5",
     "unist-util-select": "^5.1.0",
     "unist-util-visit": "^5.1.0"
   },
   "type": "module",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/src/index.d.ts",

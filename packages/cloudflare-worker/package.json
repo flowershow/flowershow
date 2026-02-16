@@ -15,7 +15,6 @@
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
-		"@biomejs/biome": "1.9.4",
 		"wrangler": "^4.1.0"
 	},
 	"type": "module",
