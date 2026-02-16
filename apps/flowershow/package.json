@@ -13,7 +13,9 @@
     "test:unit": "vitest --project=unit",
     "test:storybook": "vitest --project=storybook",
     "test:all": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test -c playwright.renderer.config.ts",
+    "test:e2e:dashboard": "playwright test -c playwright.dashboard.config.ts",
+    "test:e2e:all": "playwright test -c playwright.dashboard.config.ts && playwright test -c playwright.renderer.config.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build -o ./deploy/storybook/out"
   },

@@ -136,11 +136,11 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Run Playwright tests
+      - name: Run Playwright renderer tests
         id: playwright
         env:
           GH_E2E_TEST_ACCOUNT: flowershow-test-account
-        run: npx playwright test
+        run: npx playwright test -c playwright.renderer.config.ts
 
       # - name: Dump Next.js logs
       #   if: always()
