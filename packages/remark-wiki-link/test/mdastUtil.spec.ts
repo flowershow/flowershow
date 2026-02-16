@@ -276,12 +276,9 @@ describe("mdast-util-wiki-link", () => {
         expect(node.data.hName).toBe("img");
         expect(node.data.hProperties?.className).toBe("internal new");
         expect(node.data.hProperties?.src).toBe("My Image.jpg");
-        expect(node.data.hProperties?.width).toBe("200");
-        expect(node.data.hProperties?.height).toBe("300");
+        expect(node.data.hProperties?.["data-fs-max-width"]).toBe("200");
+        expect(node.data.hProperties?.["data-fs-max-height"]).toBe("300");
         expect(node.data.hProperties?.alt).toBe("My Image");
-        expect(node.data.hProperties?.style).toBe(
-          "width: 200px; height: 300px",
-        );
       });
     });
 
@@ -340,11 +337,8 @@ describe("mdast-util-wiki-link", () => {
         expect(node.data.hProperties?.className).toBe("internal new");
         expect(node.data.hProperties?.src).toBe("My Video.mp4");
         expect(node.data.hProperties?.controls).toBe(true);
-        expect(node.data.hProperties?.width).toBe("640");
-        expect(node.data.hProperties?.height).toBe("480");
-        expect(node.data.hProperties?.style).toBe(
-          "width: 640px; height: 480px",
-        );
+        expect(node.data.hProperties?.["data-fs-max-width"]).toBe("640");
+        expect(node.data.hProperties?.["data-fs-max-height"]).toBe("480");
         expect(node.data.hChildren?.[0].value).toBe(
           "Your browser does not support the video tag.",
         );
@@ -366,10 +360,9 @@ describe("mdast-util-wiki-link", () => {
         expect(node.data.hProperties?.className).toBe("internal new");
         expect(node.data.hProperties?.src).toBe("My Video.mp4");
         expect(node.data.hProperties?.controls).toBe(true);
-        expect(node.data.hProperties?.width).toBe("640");
+        expect(node.data.hProperties?.["data-fs-max-width"]).toBe("640");
         // Height should be undefined to maintain aspect ratio
-        expect(node.data.hProperties?.height).toBe(undefined);
-        expect(node.data.hProperties?.style).toBe("width: 640px");
+        expect(node.data.hProperties?.["data-fs-max-height"]).toBe(undefined);
       });
     });
 
@@ -538,8 +531,8 @@ describe("mdast-util-wiki-link", () => {
     });
   });
 
-  describe("fromMarkdown - data-resolved-file-path attribute", () => {
-    test("wiki link with matching file has data-resolved-file-path", () => {
+  describe("fromMarkdown - data-fs-resolved-file-path attribute", () => {
+    test("wiki link with matching file has data-fs-resolved-file-path", () => {
       const ast = fromMarkdown("[[Wiki Link]]", {
         extensions: [syntax()],
         mdastExtensions: [
@@ -550,13 +543,13 @@ describe("mdast-util-wiki-link", () => {
       });
 
       visit(ast, "wikiLink", (node) => {
-        expect(node.data.hProperties?.["data-resolved-file-path"]).toBe(
+        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
           "Wiki Link.md",
         );
       });
     });
 
-    test("wiki link without matching file has no data-resolved-file-path", () => {
+    test("wiki link without matching file has no data-fs-resolved-file-path", () => {
       const ast = fromMarkdown("[[New Page]]", {
         extensions: [syntax()],
         mdastExtensions: [
@@ -568,12 +561,12 @@ describe("mdast-util-wiki-link", () => {
 
       visit(ast, "wikiLink", (node) => {
         expect(
-          node.data.hProperties?.["data-resolved-file-path"],
+          node.data.hProperties?.["data-fs-resolved-file-path"],
         ).toBeUndefined();
       });
     });
 
-    test("image embed with matching file has data-resolved-file-path", () => {
+    test("image embed with matching file has data-fs-resolved-file-path", () => {
       const ast = fromMarkdown("![[photo.png]]", {
         extensions: [syntax()],
         mdastExtensions: [
@@ -585,13 +578,13 @@ describe("mdast-util-wiki-link", () => {
       });
 
       visit(ast, "embed", (node) => {
-        expect(node.data.hProperties?.["data-resolved-file-path"]).toBe(
+        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
           "/assets/photo.png",
         );
       });
     });
 
-    test("image embed without matching file has no data-resolved-file-path", () => {
+    test("image embed without matching file has no data-fs-resolved-file-path", () => {
       const ast = fromMarkdown("![[missing.jpg]]", {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown({ files: [] })],
@@ -599,12 +592,12 @@ describe("mdast-util-wiki-link", () => {
 
       visit(ast, "embed", (node) => {
         expect(
-          node.data.hProperties?.["data-resolved-file-path"],
+          node.data.hProperties?.["data-fs-resolved-file-path"],
         ).toBeUndefined();
       });
     });
 
-    test("video embed with matching file has data-resolved-file-path", () => {
+    test("video embed with matching file has data-fs-resolved-file-path", () => {
       const ast = fromMarkdown("![[clip.mp4]]", {
         extensions: [syntax()],
         mdastExtensions: [
@@ -616,13 +609,13 @@ describe("mdast-util-wiki-link", () => {
       });
 
       visit(ast, "embed", (node) => {
-        expect(node.data.hProperties?.["data-resolved-file-path"]).toBe(
+        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
           "media/clip.mp4",
         );
       });
     });
 
-    test("audio embed with matching file has data-resolved-file-path", () => {
+    test("audio embed with matching file has data-fs-resolved-file-path", () => {
       const ast = fromMarkdown("![[song.mp3]]", {
         extensions: [syntax()],
         mdastExtensions: [
@@ -634,13 +627,13 @@ describe("mdast-util-wiki-link", () => {
       });
 
       visit(ast, "embed", (node) => {
-        expect(node.data.hProperties?.["data-resolved-file-path"]).toBe(
+        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
           "music/song.mp3",
         );
       });
     });
 
-    test("pdf embed with matching file has data-resolved-file-path", () => {
+    test("pdf embed with matching file has data-fs-resolved-file-path", () => {
       const ast = fromMarkdown("![[doc.pdf]]", {
         extensions: [syntax()],
         mdastExtensions: [
@@ -652,13 +645,13 @@ describe("mdast-util-wiki-link", () => {
       });
 
       visit(ast, "embed", (node) => {
-        expect(node.data.hProperties?.["data-resolved-file-path"]).toBe(
+        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
           "docs/doc.pdf",
         );
       });
     });
 
-    test("markdown transclusion with matching file has data-resolved-file-path", () => {
+    test("markdown transclusion with matching file has data-fs-resolved-file-path", () => {
       const ast = fromMarkdown("![[Some Page]]", {
         extensions: [syntax()],
         mdastExtensions: [
@@ -670,7 +663,7 @@ describe("mdast-util-wiki-link", () => {
       });
 
       visit(ast, "embed", (node) => {
-        expect(node.data.hProperties?.["data-resolved-file-path"]).toBe(
+        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
           "notes/Some Page.md",
         );
       });

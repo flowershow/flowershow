@@ -85,7 +85,7 @@ function html(opts: Options = {}): HtmlExtension {
     });
 
     const resolvedAttr = matchingFilePath
-      ? ` data-resolved-file-path="${matchingFilePath}"`
+      ? ` data-fs-resolved-file-path="${matchingFilePath}"`
       : "";
 
     if (token.type !== "embed") {
@@ -110,14 +110,10 @@ function html(opts: Options = {}): HtmlExtension {
 
         const [, width, height] = alias?.match(/^(\d+)(?:x(\d+))?$/) ?? [];
         if (width) {
-          imgAttributes += ` width="${width}"`;
+          imgAttributes += ` data-fs-max-width="${width}"`;
           if (height) {
-            imgAttributes += ` height="${height}"`;
+            imgAttributes += ` data-fs-max-height="${height}"`;
           }
-          // Add inline styles for better rendering control
-          const styleWidth = `width: ${width}px`;
-          const styleHeight = height ? `; height: ${height}px` : "";
-          imgAttributes += ` style="${styleWidth}${styleHeight}"`;
         }
 
         this.tag(`<img ${imgAttributes}${resolvedAttr} />`);
@@ -136,14 +132,10 @@ function html(opts: Options = {}): HtmlExtension {
 
         const [, width, height] = alias?.match(/^(\d+)(?:x(\d+))?$/) ?? [];
         if (width) {
-          videoAttributes += ` width="${width}"`;
+          videoAttributes += ` data-fs-max-width="${width}"`;
           if (height) {
-            videoAttributes += ` height="${height}"`;
+            videoAttributes += ` data-fs-max-height="${height}"`;
           }
-          // Add inline styles for better rendering control
-          const styleWidth = `width: ${width}px`;
-          const styleHeight = height ? `; height: ${height}px` : "";
-          videoAttributes += ` style="${styleWidth}${styleHeight}"`;
         }
 
         this.tag(`<video ${videoAttributes}${resolvedAttr}>`);
