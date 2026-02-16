@@ -319,21 +319,6 @@ async function ensureSiteAccess(
 ) {
   if (site.privacyMode !== 'PASSWORD') return null;
 
-  // TEMPORARY FIX: Skip password check for non-HTML requests (assets, API calls, etc.)
-  //
-  // This prevents Next.js images from failing with 400 Bad Request, but creates a security hole:
-  // - Assets are accessible without authentication if you know the direct URL
-  // - The root cause: Next.js image optimization (/_next/image) internally fetches the source
-  //   image without forwarding the client's authentication cookies, causing the password check to fail
-  //
-  // PROPER SOLUTION: Implement a custom Next.js image loader that:
-  // 1. Fetches from /api/raw/... endpoints with authentication
-  // 2. Manually passes the site access cookie from the original request headers
-  // 3. Preserves image optimization while maintaining authentication
-  const accept = req.headers.get('accept') || '';
-  const isHtmlRequest = accept.includes('text/html');
-  if (!isHtmlRequest) return null;
-
   const cookie = req.cookies.get(SITE_ACCESS_COOKIE_NAME(site.id));
   if (!cookie) {
     return redirectToSiteLogin(req, site, ph);

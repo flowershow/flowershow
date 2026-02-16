@@ -17,7 +17,7 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("Wiki Link");
         expect(node.data.path).toBe("Wiki Link");
         expect(node.data.alias).toBe(undefined);
@@ -39,7 +39,7 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("New Page");
         expect(node.data.path).toBe("New Page");
         expect(node.data.alias).toBe(undefined);
@@ -61,7 +61,7 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("/blog/README");
         expect(node.data.path).toBe("/blog");
         expect(node.data.alias).toBe(undefined);
@@ -83,7 +83,7 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("Wiki Link#Some Heading");
         expect(node.data.path).toBe("Wiki Link#some-heading");
         expect(node.data.alias).toBe(undefined);
@@ -105,7 +105,7 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("Wiki Link#Some Heading");
         expect(node.data.path).toBe("Wiki Link#some-heading");
         expect(node.data.alias).toBe("Alias");
@@ -130,7 +130,7 @@ describe("mdast-util-wiki-link", () => {
         },
       );
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe(
           "Wiki Link#Some.Heading.With-♥-Unicode and spaces",
         );
@@ -160,7 +160,7 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("#Some Heading");
         expect(node.data.path).toBe("#some-heading");
         expect(node.data.alias).toBe(undefined);
@@ -182,7 +182,7 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("Wiki Link");
         expect(node.data.path).toBe("Wiki Link");
         expect(node.data.alias).toBe("Alias");
@@ -207,7 +207,7 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("post-1");
         expect(node.data.path).toBe("post-1");
         expect(node.data.alias).toBe("Link with Alias");
@@ -230,7 +230,7 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("Wiki Link");
         expect(node.data.path).toBe("/some/folder/Wiki Link");
         expect(node.data.alias).toBe(undefined);
@@ -250,7 +250,7 @@ describe("mdast-util-wiki-link", () => {
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node) => {
+      visit(ast, "embed", (node: any) => {
         expect(node.value).toBe("My Image.jpg");
         expect(node.data.path).toBe("My Image.jpg");
         expect(node.data.alias).toBe(undefined);
@@ -268,7 +268,7 @@ describe("mdast-util-wiki-link", () => {
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node) => {
+      visit(ast, "embed", (node: any) => {
         expect(node.value).toBe("My Image.jpg");
         expect(node.data.path).toBe("My Image.jpg");
         expect(node.data.alias).toBe(undefined);
@@ -276,12 +276,9 @@ describe("mdast-util-wiki-link", () => {
         expect(node.data.hName).toBe("img");
         expect(node.data.hProperties?.className).toBe("internal new");
         expect(node.data.hProperties?.src).toBe("My Image.jpg");
-        expect(node.data.hProperties?.width).toBe("200");
-        expect(node.data.hProperties?.height).toBe("300");
+        expect(node.data.hProperties?.["data-fs-width"]).toBe("200");
+        expect(node.data.hProperties?.["data-fs-height"]).toBe("300");
         expect(node.data.hProperties?.alt).toBe("My Image");
-        expect(node.data.hProperties?.style).toBe(
-          "width: 200px; height: 300px",
-        );
       });
     });
 
@@ -291,7 +288,7 @@ describe("mdast-util-wiki-link", () => {
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node) => {
+      visit(ast, "embed", (node: any) => {
         expect(node.value).toBe("My File.pdf");
         expect(node.data.path).toBe("My File.pdf");
         expect(node.data.alias).toBe(undefined);
@@ -309,7 +306,7 @@ describe("mdast-util-wiki-link", () => {
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node) => {
+      visit(ast, "embed", (node: any) => {
         expect(node.value).toBe("My Video.mp4");
         expect(node.data.path).toBe("My Video.mp4");
         expect(node.data.alias).toBe(undefined);
@@ -330,7 +327,7 @@ describe("mdast-util-wiki-link", () => {
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node) => {
+      visit(ast, "embed", (node: any) => {
         expect(node.value).toBe("My Video.mp4");
         expect(node.data.path).toBe("My Video.mp4");
         // Alias is cleared when dimensions are parsed
@@ -340,11 +337,8 @@ describe("mdast-util-wiki-link", () => {
         expect(node.data.hProperties?.className).toBe("internal new");
         expect(node.data.hProperties?.src).toBe("My Video.mp4");
         expect(node.data.hProperties?.controls).toBe(true);
-        expect(node.data.hProperties?.width).toBe("640");
-        expect(node.data.hProperties?.height).toBe("480");
-        expect(node.data.hProperties?.style).toBe(
-          "width: 640px; height: 480px",
-        );
+        expect(node.data.hProperties?.["data-fs-width"]).toBe("640");
+        expect(node.data.hProperties?.["data-fs-height"]).toBe("480");
         expect(node.data.hChildren?.[0].value).toBe(
           "Your browser does not support the video tag.",
         );
@@ -357,7 +351,7 @@ describe("mdast-util-wiki-link", () => {
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node) => {
+      visit(ast, "embed", (node: any) => {
         expect(node.value).toBe("My Video.mp4");
         expect(node.data.path).toBe("My Video.mp4");
         expect(node.data.alias).toBe(undefined);
@@ -366,10 +360,9 @@ describe("mdast-util-wiki-link", () => {
         expect(node.data.hProperties?.className).toBe("internal new");
         expect(node.data.hProperties?.src).toBe("My Video.mp4");
         expect(node.data.hProperties?.controls).toBe(true);
-        expect(node.data.hProperties?.width).toBe("640");
+        expect(node.data.hProperties?.["data-fs-width"]).toBe("640");
         // Height should be undefined to maintain aspect ratio
-        expect(node.data.hProperties?.height).toBe(undefined);
-        expect(node.data.hProperties?.style).toBe("width: 640px");
+        expect(node.data.hProperties?.["data-fs-height"]).toBe(undefined);
       });
     });
 
@@ -379,7 +372,7 @@ describe("mdast-util-wiki-link", () => {
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node) => {
+      visit(ast, "embed", (node: any) => {
         expect(node.value).toBe("My Audio.mp3");
         expect(node.data.path).toBe("My Audio.mp3");
         expect(node.data.alias).toBe(undefined);
@@ -403,7 +396,7 @@ describe("mdast-util-wiki-link", () => {
           mdastExtensions: [wikiLinkFromMarkdown()],
         });
 
-        visit(ast, "embed", (node) => {
+        visit(ast, "embed", (node: any) => {
           expect(node.data.hName).toBe("audio");
           expect(node.data.hProperties?.controls).toBe(true);
         });
@@ -419,7 +412,7 @@ describe("mdast-util-wiki-link", () => {
           mdastExtensions: [wikiLinkFromMarkdown()],
         });
 
-        visit(ast, "embed", (node) => {
+        visit(ast, "embed", (node: any) => {
           expect(node.data.hName).toBe("video");
           expect(node.data.hProperties?.controls).toBe(true);
         });
@@ -441,7 +434,7 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("blog/my-post");
         expect(node.data.path).toBe("/custom-url");
         expect(node.data.existing).toBe(true);
@@ -463,7 +456,7 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("blog/my-post#Section");
         expect(node.data.path).toBe("/custom-url#Section");
         expect(node.data.existing).toBe(true);
@@ -484,7 +477,7 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("blog/my-post");
         expect(node.data.path).toBe("blog/my-post");
         expect(node.data.existing).toBe(true);
@@ -507,7 +500,7 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("test");
         // Should match test.md (shortest path)
         expect(node.data.path).toBe("/test-permalink");
@@ -529,11 +522,150 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "embed", (node) => {
+      visit(ast, "embed", (node: any) => {
         expect(node.value).toBe("image.jpg");
         // Embeds should use the permalink when available
         expect(node.data.path).toBe("/custom-image-url");
         expect(node.data.hProperties?.src).toBe("/custom-image-url");
+      });
+    });
+  });
+
+  describe("fromMarkdown - data-fs-resolved-file-path attribute", () => {
+    test("wiki link with matching file has data-fs-resolved-file-path", () => {
+      const ast = fromMarkdown("[[Wiki Link]]", {
+        extensions: [syntax()],
+        mdastExtensions: [
+          wikiLinkFromMarkdown({
+            files: ["Wiki Link.md"],
+          }),
+        ],
+      });
+
+      visit(ast, "wikiLink", (node) => {
+        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
+          "Wiki Link.md",
+        );
+      });
+    });
+
+    test("wiki link without matching file has no data-fs-resolved-file-path", () => {
+      const ast = fromMarkdown("[[New Page]]", {
+        extensions: [syntax()],
+        mdastExtensions: [
+          wikiLinkFromMarkdown({
+            files: [],
+          }),
+        ],
+      });
+
+      visit(ast, "wikiLink", (node) => {
+        expect(
+          node.data.hProperties?.["data-fs-resolved-file-path"],
+        ).toBeUndefined();
+      });
+    });
+
+    test("image embed with matching file has data-fs-resolved-file-path", () => {
+      const ast = fromMarkdown("![[photo.png]]", {
+        extensions: [syntax()],
+        mdastExtensions: [
+          wikiLinkFromMarkdown({
+            files: ["/assets/photo.png"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+
+      visit(ast, "embed", (node) => {
+        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
+          "/assets/photo.png",
+        );
+      });
+    });
+
+    test("image embed without matching file has no data-fs-resolved-file-path", () => {
+      const ast = fromMarkdown("![[missing.jpg]]", {
+        extensions: [syntax()],
+        mdastExtensions: [wikiLinkFromMarkdown({ files: [] })],
+      });
+
+      visit(ast, "embed", (node) => {
+        expect(
+          node.data.hProperties?.["data-fs-resolved-file-path"],
+        ).toBeUndefined();
+      });
+    });
+
+    test("video embed with matching file has data-fs-resolved-file-path", () => {
+      const ast = fromMarkdown("![[clip.mp4]]", {
+        extensions: [syntax()],
+        mdastExtensions: [
+          wikiLinkFromMarkdown({
+            files: ["media/clip.mp4"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+
+      visit(ast, "embed", (node) => {
+        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
+          "media/clip.mp4",
+        );
+      });
+    });
+
+    test("audio embed with matching file has data-fs-resolved-file-path", () => {
+      const ast = fromMarkdown("![[song.mp3]]", {
+        extensions: [syntax()],
+        mdastExtensions: [
+          wikiLinkFromMarkdown({
+            files: ["music/song.mp3"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+
+      visit(ast, "embed", (node) => {
+        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
+          "music/song.mp3",
+        );
+      });
+    });
+
+    test("pdf embed with matching file has data-fs-resolved-file-path", () => {
+      const ast = fromMarkdown("![[doc.pdf]]", {
+        extensions: [syntax()],
+        mdastExtensions: [
+          wikiLinkFromMarkdown({
+            files: ["docs/doc.pdf"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+
+      visit(ast, "embed", (node) => {
+        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
+          "docs/doc.pdf",
+        );
+      });
+    });
+
+    test("markdown transclusion with matching file has data-fs-resolved-file-path", () => {
+      const ast = fromMarkdown("![[Some Page]]", {
+        extensions: [syntax()],
+        mdastExtensions: [
+          wikiLinkFromMarkdown({
+            files: ["notes/Some Page.md"],
+            format: "shortestPossible",
+          }),
+        ],
+      });
+
+      visit(ast, "embed", (node) => {
+        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
+          "notes/Some Page.md",
+        );
       });
     });
   });
@@ -549,7 +681,7 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("Wiki Link");
         expect(node.data.alias).toBe("Alias");
         expect(node.data.hChildren?.[0].value).toBe("Alias");
@@ -562,7 +694,7 @@ describe("mdast-util-wiki-link", () => {
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node) => {
+      visit(ast, "embed", (node: any) => {
         expect(node.value).toBe("image.jpg");
         expect(node.data.alias).toBe("Alt Text");
       });

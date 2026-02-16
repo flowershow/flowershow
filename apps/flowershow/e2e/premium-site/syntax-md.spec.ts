@@ -1,4 +1,5 @@
 import { expect, test } from '../_fixtures/published-site-test';
+import { decodedImageSrc } from '../_utils/utils';
 
 test.describe('Links and embeds', () => {
   test.beforeEach(async ({ publishedSitePage }) => {
@@ -65,10 +66,10 @@ test.describe('Links and embeds', () => {
         const embed = publishedSitePage.page.locator('img[alt="image"]');
         await embed.waitFor({ state: 'attached' });
         const src = await embed.getAttribute('src');
-        // expect(decodedImageSrc(src!)).toBe(
-        //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
-        // );
-        expect(src).toBe(`${publishedSitePage.siteUrl}/assets/image.jpg`);
+        expect(src).toContain('/_next/image');
+        expect(decodedImageSrc(src!)).toBe(
+          `${publishedSitePage.siteUrl}/assets/image.jpg`,
+        );
       });
 
       test('Image embed with absolute path', async ({ publishedSitePage }) => {
@@ -77,10 +78,10 @@ test.describe('Links and embeds', () => {
           .first();
         await embed.waitFor({ state: 'attached' });
         const src = await embed.getAttribute('src');
-        // expect(decodedImageSrc(src!)).toBe(
-        //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
-        // );
-        expect(src).toBe(`${publishedSitePage.siteUrl}/assets/image.jpg`);
+        expect(src).toContain('/_next/image');
+        expect(decodedImageSrc(src!)).toBe(
+          `${publishedSitePage.siteUrl}/assets/image.jpg`,
+        );
       });
     });
   });
@@ -145,10 +146,10 @@ test.describe('Links and embeds', () => {
       );
       await embed.waitFor({ state: 'attached' });
       const src = await embed.getAttribute('src');
-      // expect(decodedImageSrc(src!)).toBe(
-      //   `${publishedSitePage.siteUrl}/assets/image.jpg`,
-      // );
-      expect(src).toBe(`${publishedSitePage.siteUrl}/assets/image.jpg`);
+      expect(src).toContain('/_next/image');
+      expect(decodedImageSrc(src!)).toBe(
+        `${publishedSitePage.siteUrl}/assets/image.jpg`,
+      );
     });
   });
 });
@@ -161,10 +162,7 @@ test.describe('HTML blocks', () => {
     const embed = publishedSitePage.page.getByTestId('html-img').locator('img');
     await embed.waitFor({ state: 'attached' });
     const src = await embed.getAttribute('src');
-    // const decoded = decodeURIComponent(
-    //   new URL(src!, 'http://localhost').searchParams.get('url')!,
-    // );
-    // expect(decoded).toMatch(/\/@.+\/.+\/.+/);
-    expect(src).toBe(`${publishedSitePage.siteUrl}/assets/image.jpg`);
+    expect(src).toContain('/_next/image');
+    expect(decodedImageSrc(src!)).toMatch(/\/@.+\/.+\/.+/);
   });
 });

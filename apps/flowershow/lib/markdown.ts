@@ -17,17 +17,18 @@ import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import remarkSmartypants from 'remark-smartypants';
 import { unified } from 'unified';
-// import FsImage from '@/components/public/mdx/fs-image';
+import FsImage from '@/components/public/mdx/fs-image';
 import remarkObsidianComments from '@/lib/remark-obsidian-comments';
 import remarkYouTubeAutoEmbed from '@/lib/remark-youtube-auto-embed';
+import type { ImageDimensionsMap } from './image-dimensions';
 import rehypeHtmlEnhancements from './rehype-html-enhancements';
+import rehypeInjectImageDimensions from './rehype-inject-image-dimensions';
 import rehypeResolveExplicitJsxUrls from './rehype-resolve-explicit-jsx-urls';
 import rehypeResolveHtmlUrls from './rehype-resolve-html-urls';
 import rehypeToReact from './rehype-to-react';
 import rehypeUnwrapParagraphsAroundMedia from './rehype-unwrap-paragraph-around-media';
-import remarkCommonMarkLinkResolver from './remark-commonmark-link-resolver';
+import RemarkCommonMarkLink from './remark-commonmark-link';
 import remarkObsidianBases from './remark-obsidian-bases';
-import remarkObsidianImageSize from './remark-obsidian-image-size';
 import { resolveFilePathToUrlPath } from './resolve-link';
 
 interface MarkdownOptions {
@@ -39,6 +40,7 @@ interface MarkdownOptions {
   siteId?: string;
   rootDir?: string;
   permalinks?: Record<string, string>;
+  imageDimensions?: ImageDimensionsMap;
 }
 
 // Process pure markdown files using unified
@@ -55,12 +57,13 @@ export async function processMarkdown(
     .use(remarkParse)
     .use(remarkObsidianComments)
     // run this before remark-wiki-link
-    .use(remarkCommonMarkLinkResolver, {
+    .use(RemarkCommonMarkLink, {
       filePath,
       sitePrefix,
       customDomain,
+      files,
+      permalinks,
     })
-    .use(remarkObsidianImageSize)
     .use(remarkWikiLink, {
       files,
       format: 'shortestPossible',
@@ -82,12 +85,14 @@ export async function processMarkdown(
     .use(rehypeAutolinkHeadings, rehypeAutolinkHeadingsConfig)
     .use(rehypeKatex, { output: 'htmlAndMathml' })
     .use(rehypePrismPlus, { ignoreMissing: true })
-    // .use(rehypeToReact, {
-    //   components: {
-    //     img: FsImage,
-    //   },
-    // });
-    .use(rehypeToReact);
+    .use(rehypeInjectImageDimensions, {
+      dimensions: options.imageDimensions ?? {},
+    })
+    .use(rehypeToReact, {
+      components: {
+        img: FsImage,
+      },
+    });
 
   return (await processor.process(content)).result as ReactElement;
 }
@@ -118,8 +123,10 @@ export const getMdxOptions = ({
       remarkPlugins: [
         remarkObsidianComments,
         // run this before remark-wiki-link
-        [remarkCommonMarkLinkResolver, { filePath, sitePrefix, customDomain }],
-        remarkObsidianImageSize,
+        [
+          RemarkCommonMarkLink,
+          { filePath, sitePrefix, customDomain, files, permalinks },
+        ],
         [
           remarkWikiLink,
           {

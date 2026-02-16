@@ -12,9 +12,13 @@
     "test": "turbo run test",
     "format": "turbo run format",
     "format:write": "turbo run format:write",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "turbo run build && changeset publish",
     "prepare": "husky install"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.8",
     "husky": "^8.0.0",
     "turbo": "^2.5.4"
   },

@@ -3,11 +3,12 @@ import type { MDXComponents } from 'next-mdx-remote-client/rsc';
 import { ErrorBoundary } from 'react-error-boundary';
 import ErrorMessage from '@/components/public/error-message';
 import { getSiteUrlPath } from '@/lib/get-site-url';
+import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { PublicSite } from '@/server/api/types';
 import type { CustomHtmlProps } from './custom-html';
 import type { FlatUiTableProps } from './flatui-table';
-// import FsImage from './fs-image';
+import FsImage from './fs-image';
 import type { LineChartProps } from './line-chart';
 import type { ListProps } from './list';
 import List from './list';
@@ -31,12 +32,29 @@ import Pre from './pre';
 export const mdxComponentsFactory = ({
   blob,
   site,
+  imageDimensions,
 }: {
   blob: Blob;
   site: PublicSite;
+  imageDimensions?: ImageDimensionsMap;
 }) => {
   const components: MDXComponents = {
-    // img: (props: any) => <FsImage {...props} />,
+    img: (props: any) => {
+      const src = props.src ?? '';
+      // Inject DB-intrinsic dimensions as data attributes so FsImage can
+      // distinguish them from author-explicit width/height. DB dimensions
+      // are used for aspect ratio in responsive rendering, not fixed sizing.
+      const dbDims = imageDimensions?.[src];
+      const injectedProps =
+        !props.width && !props.height && dbDims
+          ? {
+              ...props,
+              'data-intrinsic-width': dbDims.width,
+              'data-intrinsic-height': dbDims.height,
+            }
+          : props;
+      return <FsImage {...injectedProps} />;
+    },
     pre: (props: any) => <Pre {...props} />,
     iframe: (props) => {
       const src = props.src ?? '';
