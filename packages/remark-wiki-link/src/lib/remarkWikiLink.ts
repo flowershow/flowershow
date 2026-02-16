@@ -1,14 +1,14 @@
-import { syntax, SyntaxOptions } from "./syntax";
-import { fromMarkdown } from "./fromMarkdown";
-import { toMarkdown } from "./toMarkdown";
-import type { Processor } from "unified";
+import { syntax, SyntaxOptions } from './syntax';
+import { fromMarkdown } from './fromMarkdown';
+import { toMarkdown } from './toMarkdown';
+import type { Processor } from 'unified';
 
 let warningIssued = false;
 
 export interface Options {
   format?:
-    | "regular" // link paths will be treated as is (absolute or relative, depending on how they are written)
-    | "shortestPossible"; // (default) link paths will be treated as "shortest-possible" absolute paths (e.g. "[[abc]]" would be matched to blog/abc file if provided in files array)
+    | 'regular' // link paths will be treated as is (absolute or relative, depending on how they are written)
+    | 'shortestPossible'; // (default) link paths will be treated as "shortest-possible" absolute paths (e.g. "[[abc]]" would be matched to blog/abc file if provided in files array)
   files?: string[]; // list of file paths used to match wikilinks
   permalinks?: Record<string, string>; // map of file paths to their permalinks (e.g. { "path/to/file.md": "/custom-permalink" })
   caseInsensitive?: boolean; // (default: true) whether to match file paths case-insensitively
@@ -41,16 +41,16 @@ function remarkWikiLink(this: Processor, opts: Options & SyntaxOptions = {}) {
   ) {
     warningIssued = true;
     console.warn(
-      "[remark-wiki-link] Warning: please upgrade to remark 13 to use this plugin",
+      '[remark-wiki-link] Warning: please upgrade to remark 13 to use this plugin',
     );
   }
 
   // mdast-util-to-markdown extensions
-  add("toMarkdownExtensions", toMarkdown(opts));
+  add('toMarkdownExtensions', toMarkdown(opts));
   // micromark extensions
-  add("micromarkExtensions", syntax(opts));
+  add('micromarkExtensions', syntax(opts));
   // mdast-util-from-markdown extensions
-  add("fromMarkdownExtensions", fromMarkdown(opts));
+  add('fromMarkdownExtensions', fromMarkdown(opts));
 }
 
 export default remarkWikiLink;

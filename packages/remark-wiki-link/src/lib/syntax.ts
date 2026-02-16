@@ -1,18 +1,18 @@
-import { codes } from "micromark-util-symbol";
-import { markdownLineEnding } from "micromark-util-character";
+import { codes } from 'micromark-util-symbol';
+import { markdownLineEnding } from 'micromark-util-character';
 import type {
   Code,
   Extension as SyntaxExtension,
   Tokenizer,
   State,
-} from "micromark-util-types";
+} from 'micromark-util-types';
 
 export interface SyntaxOptions {
   aliasDivider?: string;
 }
 
 export function syntax(options?: SyntaxOptions): SyntaxExtension {
-  const aliasDivider = options?.aliasDivider ?? "|";
+  const aliasDivider = options?.aliasDivider ?? '|';
   const aliasMarker = aliasDivider.charCodeAt(0);
 
   const startBracket = codes.leftSquareBracket; // '['
@@ -33,7 +33,7 @@ export function syntax(options?: SyntaxOptions): SyntaxExtension {
     function start(code: Code): any {
       if (code !== startBracket) return nok(code);
 
-      effects.enter("wikiLinkOpenSequence");
+      effects.enter('wikiLinkOpenSequence');
       openCount = 0;
       return openSeq(code);
     }
@@ -49,10 +49,10 @@ export function syntax(options?: SyntaxOptions): SyntaxExtension {
         return nok(code);
       }
 
-      effects.exit("wikiLinkOpenSequence");
-      effects.enter("wikiLink");
-      effects.enter("wikiLinkData");
-      effects.enter("wikiLinkTarget");
+      effects.exit('wikiLinkOpenSequence');
+      effects.enter('wikiLink');
+      effects.enter('wikiLinkData');
+      effects.enter('wikiLinkTarget');
       return inTarget(code);
     }
 
@@ -63,19 +63,19 @@ export function syntax(options?: SyntaxOptions): SyntaxExtension {
 
       if (code === aliasMarker) {
         if (!hasTargetChar) return nok(code);
-        effects.exit("wikiLinkTarget");
-        effects.enter("wikiLinkAliasMarker");
+        effects.exit('wikiLinkTarget');
+        effects.enter('wikiLinkAliasMarker');
         effects.consume(code);
-        effects.exit("wikiLinkAliasMarker");
-        effects.enter("wikiLinkAlias");
+        effects.exit('wikiLinkAliasMarker');
+        effects.enter('wikiLinkAlias');
         return inAlias;
       }
 
       if (code === endBracket) {
         if (!hasTargetChar) return nok(code);
-        effects.exit("wikiLinkTarget");
-        effects.exit("wikiLinkData");
-        effects.enter("wikiLinkMarker");
+        effects.exit('wikiLinkTarget');
+        effects.exit('wikiLinkData');
+        effects.enter('wikiLinkMarker');
         closeCount = 0;
         return closeSeq(code);
       }
@@ -92,9 +92,9 @@ export function syntax(options?: SyntaxOptions): SyntaxExtension {
 
       if (code === endBracket) {
         if (!hasAliasChar) return nok(code);
-        effects.exit("wikiLinkAlias");
-        effects.exit("wikiLinkData");
-        effects.enter("wikiLinkMarker");
+        effects.exit('wikiLinkAlias');
+        effects.exit('wikiLinkData');
+        effects.enter('wikiLinkMarker');
         closeCount = 0;
         return closeSeq(code);
       }
@@ -109,8 +109,8 @@ export function syntax(options?: SyntaxOptions): SyntaxExtension {
         effects.consume(code);
         closeCount++;
         if (closeCount === 2) {
-          effects.exit("wikiLinkMarker");
-          effects.exit("wikiLink");
+          effects.exit('wikiLinkMarker');
+          effects.exit('wikiLink');
           return ok;
         }
         return closeSeq;
@@ -133,10 +133,10 @@ export function syntax(options?: SyntaxOptions): SyntaxExtension {
     function start(code: Code): any {
       if (code !== bang) return nok(code);
 
-      effects.enter("embed");
-      effects.enter("embedMarker");
+      effects.enter('embed');
+      effects.enter('embedMarker');
       effects.consume(code);
-      effects.exit("embedMarker");
+      effects.exit('embedMarker');
 
       return expectFirstBracket;
     }
@@ -145,7 +145,7 @@ export function syntax(options?: SyntaxOptions): SyntaxExtension {
       if (code !== startBracket) {
         return nok(code);
       }
-      effects.enter("wikiLinkOpenSequence");
+      effects.enter('wikiLinkOpenSequence');
       openCount = 0;
       return openSeq(code);
     }
@@ -161,9 +161,9 @@ export function syntax(options?: SyntaxOptions): SyntaxExtension {
         return nok(code);
       }
 
-      effects.exit("wikiLinkOpenSequence");
-      effects.enter("wikiLinkData");
-      effects.enter("wikiLinkTarget");
+      effects.exit('wikiLinkOpenSequence');
+      effects.enter('wikiLinkData');
+      effects.enter('wikiLinkTarget');
       return inTarget(code);
     }
 
@@ -174,19 +174,19 @@ export function syntax(options?: SyntaxOptions): SyntaxExtension {
 
       if (code === aliasMarker) {
         if (!hasTargetChar) return nok(code);
-        effects.exit("wikiLinkTarget");
-        effects.enter("wikiLinkAliasMarker");
+        effects.exit('wikiLinkTarget');
+        effects.enter('wikiLinkAliasMarker');
         effects.consume(code);
-        effects.exit("wikiLinkAliasMarker");
-        effects.enter("wikiLinkAlias");
+        effects.exit('wikiLinkAliasMarker');
+        effects.enter('wikiLinkAlias');
         return inAlias;
       }
 
       if (code === endBracket) {
         if (!hasTargetChar) return nok(code);
-        effects.exit("wikiLinkTarget");
-        effects.exit("wikiLinkData");
-        effects.enter("embedMarker"); // we reuse a marker type specific to embed
+        effects.exit('wikiLinkTarget');
+        effects.exit('wikiLinkData');
+        effects.enter('embedMarker'); // we reuse a marker type specific to embed
         closeCount = 0;
         return closeSeq(code);
       }
@@ -203,9 +203,9 @@ export function syntax(options?: SyntaxOptions): SyntaxExtension {
 
       if (code === endBracket) {
         if (!hasAliasChar) return nok(code);
-        effects.exit("wikiLinkAlias");
-        effects.exit("wikiLinkData");
-        effects.enter("embedMarker");
+        effects.exit('wikiLinkAlias');
+        effects.exit('wikiLinkData');
+        effects.enter('embedMarker');
         closeCount = 0;
         return closeSeq(code);
       }
@@ -220,8 +220,8 @@ export function syntax(options?: SyntaxOptions): SyntaxExtension {
         effects.consume(code);
         closeCount++;
         if (closeCount === 2) {
-          effects.exit("embedMarker");
-          effects.exit("embed");
+          effects.exit('embedMarker');
+          effects.exit('embed');
           return ok;
         }
         return closeSeq;

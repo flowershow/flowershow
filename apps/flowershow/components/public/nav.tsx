@@ -155,9 +155,19 @@ const Nav = ({
                     <Disclosure key={item.name}>
                       {({ open }) => (
                         <div className="mobile-nav-dropdown">
-                          <DisclosureButton className={clsx('mobile-nav-dropdown-trigger', open && 'is-open')}>
+                          <DisclosureButton
+                            className={clsx(
+                              'mobile-nav-dropdown-trigger',
+                              open && 'is-open',
+                            )}
+                          >
                             {item.name}
-                            <ChevronRightIcon className={clsx('mobile-nav-dropdown-icon', open && 'is-open')} />
+                            <ChevronRightIcon
+                              className={clsx(
+                                'mobile-nav-dropdown-icon',
+                                open && 'is-open',
+                              )}
+                            />
                           </DisclosureButton>
                           <DisclosurePanel className="mobile-nav-dropdown-panel">
                             {item.links.map((link) => (
@@ -219,7 +229,11 @@ const Nav = ({
   );
 };
 
-function NavbarDropdown({ item }: { item: { name: string; links: NavLink[] } }) {
+function NavbarDropdown({
+  item,
+}: {
+  item: { name: string; links: NavLink[] };
+}) {
   const [isOpen, setIsOpen] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -236,7 +250,10 @@ function NavbarDropdown({ item }: { item: { name: string; links: NavLink[] } }) 
   useEffect(() => {
     if (!isOpen) return;
     const onClickOutside = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as HTMLElement)) {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(e.target as HTMLElement)
+      ) {
         setIsOpen(false);
       }
     };

@@ -1,7 +1,7 @@
 import type {
   Extension as FromMarkdownExtension,
   Handle,
-} from "mdast-util-from-markdown";
+} from 'mdast-util-from-markdown';
 import {
   defaultUrlResolver,
   findMatchingFilePath,
@@ -10,18 +10,18 @@ import {
   isPdfFile,
   isAudioFile,
   isVideoFile,
-} from "../utils";
-import { Embed, WikiLink } from "mdast";
-import { Options } from "./remarkWikiLink";
-import { WIKI_LINK_TARGET_PATTERN } from "../utils/const";
+} from '../utils';
+import { Embed, WikiLink } from 'mdast';
+import { Options } from './remarkWikiLink';
+import { WIKI_LINK_TARGET_PATTERN } from '../utils/const';
 
 function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
-  const format = opts.format || "shortestPossible";
+  const format = opts.format || 'shortestPossible';
   const files = opts.files || [];
   const permalinks = opts.permalinks || {};
   const caseInsensitive = opts.caseInsensitive ?? true;
-  const className = opts.className || "internal";
-  const newClassName = opts.newClassName || "new";
+  const className = opts.className || 'internal';
+  const newClassName = opts.newClassName || 'new';
   const urlResolver = opts.urlResolver || defaultUrlResolver;
 
   function top(stack: any): WikiLink | Embed {
@@ -31,8 +31,8 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
   const enterWikiLink: Handle = function (this, token) {
     this.enter(
       {
-        type: token.type === "embed" ? "embed" : "wikiLink",
-        value: "",
+        type: token.type === 'embed' ? 'embed' : 'wikiLink',
+        value: '',
         data: {},
       },
       token,
@@ -60,10 +60,10 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
     } = wikiLink;
 
     if (!value) {
-      throw new Error("Empty node value");
+      throw new Error('Empty node value');
     }
 
-    const [, targetPath = "", heading = ""] =
+    const [, targetPath = '', heading = ''] =
       value.match(WIKI_LINK_TARGET_PATTERN) || [];
 
     const matchingFilePath = findMatchingFilePath({
@@ -79,7 +79,7 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
 
     let classNames = className;
     if (!existing) {
-      classNames += " " + newClassName;
+      classNames += ' ' + newClassName;
     }
 
     wikiLink.data.existing = existing;
@@ -96,31 +96,31 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
       url = urlResolver({
         filePath: matchingFilePath ?? targetPath,
         heading,
-        isEmbed: token.type === "embed",
+        isEmbed: token.type === 'embed',
       });
     }
 
     wikiLink.data.path = url;
 
-    if (token.type !== "embed") {
+    if (token.type !== 'embed') {
       const text = alias ?? value;
-      wikiLink.data.hName = "a";
+      wikiLink.data.hName = 'a';
       wikiLink.data.hProperties = {
         href: url,
         className: classNames,
       };
-      wikiLink.data.hChildren = [{ type: "text", value: text }];
+      wikiLink.data.hChildren = [{ type: 'text', value: text }];
     } else {
-      const [, name = "", extension = ""] =
+      const [, name = '', extension = ''] =
         value.match(/^(.+?)(?:\.([^.]+))?$/) ?? [];
 
       if (isMarkdownFile(extension)) {
-        wikiLink.data.hName = "a";
+        wikiLink.data.hName = 'a';
         wikiLink.data.hProperties = {
-          className: classNames + " transclusion",
+          className: classNames + ' transclusion',
           src: url,
         };
-        wikiLink.data.hChildren = [{ type: "text", value: name }];
+        wikiLink.data.hChildren = [{ type: 'text', value: name }];
       } else if (isImageFile(extension)) {
         const [match, width, height] = alias?.match(/^(\d+)(?:x(\d+))?$/) ?? [];
         if (match) {
@@ -131,16 +131,16 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
           src: url,
           alt: name,
           className: classNames,
-          "data-fs-width": width ?? undefined,
-          "data-fs-height": height ?? undefined,
+          'data-fs-width': width ?? undefined,
+          'data-fs-height': height ?? undefined,
         };
 
-        wikiLink.data.hName = "img";
+        wikiLink.data.hName = 'img';
         wikiLink.data.hProperties = hProperties;
       } else if (isPdfFile(extension)) {
-        wikiLink.data.hName = "iframe";
+        wikiLink.data.hName = 'iframe';
         wikiLink.data.hProperties = {
-          width: "100%",
+          width: '100%',
           src: url,
           title: name,
           className: classNames,
@@ -155,20 +155,20 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
           src: url,
           className: classNames,
           controls: true,
-          "data-fs-width": width ?? undefined,
-          "data-fs-height": height ?? undefined,
+          'data-fs-width': width ?? undefined,
+          'data-fs-height': height ?? undefined,
         };
 
-        wikiLink.data.hName = "video";
+        wikiLink.data.hName = 'video';
         wikiLink.data.hProperties = hProperties;
         wikiLink.data.hChildren = [
           {
-            type: "text",
-            value: "Your browser does not support the video tag.",
+            type: 'text',
+            value: 'Your browser does not support the video tag.',
           },
         ];
       } else if (isAudioFile(extension)) {
-        wikiLink.data.hName = "audio";
+        wikiLink.data.hName = 'audio';
         wikiLink.data.hProperties = {
           src: url,
           className: classNames,
@@ -176,25 +176,25 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
         };
         wikiLink.data.hChildren = [
           {
-            type: "text",
-            value: "Your browser does not support the audio tag.",
+            type: 'text',
+            value: 'Your browser does not support the audio tag.',
           },
         ];
       } else {
         // Unsupported file formats
-        wikiLink.data.hName = "a";
+        wikiLink.data.hName = 'a';
         wikiLink.data.hProperties = {
           href: url,
-          className: classNames + " unsupported",
+          className: classNames + ' unsupported',
         };
-        wikiLink.data.hChildren = [{ type: "text", value }];
+        wikiLink.data.hChildren = [{ type: 'text', value }];
       }
     }
 
     if (matchingFilePath) {
       wikiLink.data.hProperties = {
         ...wikiLink.data.hProperties,
-        "data-fs-resolved-file-path": matchingFilePath,
+        'data-fs-resolved-file-path': matchingFilePath,
       };
     }
 

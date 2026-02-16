@@ -17,10 +17,7 @@
     "lib": "src",
     "test": "test"
   },
-  "files": [
-    "load.bash",
-    "src"
-  ],
+  "files": ["load.bash", "src"],
   "scripts": {
     "test": "bats ${CI+-t} test",
     "postversion": "git push --follow-tags"

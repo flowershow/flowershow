@@ -1,36 +1,36 @@
-import { visit } from "unist-util-visit";
-import { syntax } from "../src/lib/syntax";
-import { fromMarkdown } from "mdast-util-from-markdown";
-import { toMarkdown } from "mdast-util-to-markdown";
-import { fromMarkdown as wikiLinkFromMarkdown } from "../src/lib/fromMarkdown";
-import { toMarkdown as wikiLinkToMarkdown } from "../src/lib/toMarkdown";
+import { visit } from 'unist-util-visit';
+import { syntax } from '../src/lib/syntax';
+import { fromMarkdown } from 'mdast-util-from-markdown';
+import { toMarkdown } from 'mdast-util-to-markdown';
+import { fromMarkdown as wikiLinkFromMarkdown } from '../src/lib/fromMarkdown';
+import { toMarkdown as wikiLinkToMarkdown } from '../src/lib/toMarkdown';
 
-describe("mdast-util-wiki-link", () => {
-  describe("fromMarkdown - Parses a wikilink", () => {
-    test("that has a matching file", () => {
-      const ast = fromMarkdown("[[Wiki Link]]", {
+describe('mdast-util-wiki-link', () => {
+  describe('fromMarkdown - Parses a wikilink', () => {
+    test('that has a matching file', () => {
+      const ast = fromMarkdown('[[Wiki Link]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
-            files: ["Wiki Link.md"],
+            files: ['Wiki Link.md'],
           }),
         ],
       });
 
-      visit(ast, "wikiLink", (node: any) => {
-        expect(node.value).toBe("Wiki Link");
-        expect(node.data.path).toBe("Wiki Link");
+      visit(ast, 'wikiLink', (node: any) => {
+        expect(node.value).toBe('Wiki Link');
+        expect(node.data.path).toBe('Wiki Link');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(true);
-        expect(node.data.hName).toBe("a");
-        expect(node.data.hProperties?.className).toBe("internal");
-        expect(node.data.hProperties?.href).toBe("Wiki Link");
-        expect(node.data.hChildren?.[0].value).toBe("Wiki Link");
+        expect(node.data.hName).toBe('a');
+        expect(node.data.hProperties?.className).toBe('internal');
+        expect(node.data.hProperties?.href).toBe('Wiki Link');
+        expect(node.data.hChildren?.[0].value).toBe('Wiki Link');
       });
     });
 
     test("that doesn't have a matching file", () => {
-      const ast = fromMarkdown("[[New Page]]", {
+      const ast = fromMarkdown('[[New Page]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
@@ -39,42 +39,42 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node: any) => {
-        expect(node.value).toBe("New Page");
-        expect(node.data.path).toBe("New Page");
+      visit(ast, 'wikiLink', (node: any) => {
+        expect(node.value).toBe('New Page');
+        expect(node.data.path).toBe('New Page');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
-        expect(node.data.hName).toBe("a");
-        expect(node.data.hProperties?.className).toBe("internal new");
-        expect(node.data.hProperties?.href).toBe("New Page");
-        expect(node.data.hChildren?.[0].value).toBe("New Page");
+        expect(node.data.hName).toBe('a');
+        expect(node.data.hProperties?.className).toBe('internal new');
+        expect(node.data.hProperties?.href).toBe('New Page');
+        expect(node.data.hChildren?.[0].value).toBe('New Page');
       });
     });
 
-    test("to a README file with a matching file", () => {
-      const ast = fromMarkdown("[[/blog/README]]", {
+    test('to a README file with a matching file', () => {
+      const ast = fromMarkdown('[[/blog/README]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
-            files: ["/blog/README.md"],
+            files: ['/blog/README.md'],
           }),
         ],
       });
 
-      visit(ast, "wikiLink", (node: any) => {
-        expect(node.value).toBe("/blog/README");
-        expect(node.data.path).toBe("/blog");
+      visit(ast, 'wikiLink', (node: any) => {
+        expect(node.value).toBe('/blog/README');
+        expect(node.data.path).toBe('/blog');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(true);
-        expect(node.data.hName).toBe("a");
-        expect(node.data.hProperties?.className).toBe("internal");
-        expect(node.data.hProperties?.href).toBe("/blog");
-        expect(node.data.hChildren?.[0].value).toBe("/blog/README");
+        expect(node.data.hName).toBe('a');
+        expect(node.data.hProperties?.className).toBe('internal');
+        expect(node.data.hProperties?.href).toBe('/blog');
+        expect(node.data.hChildren?.[0].value).toBe('/blog/README');
       });
     });
 
-    test("with a heading", () => {
-      const ast = fromMarkdown("[[Wiki Link#Some Heading]]", {
+    test('with a heading', () => {
+      const ast = fromMarkdown('[[Wiki Link#Some Heading]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
@@ -83,20 +83,20 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node: any) => {
-        expect(node.value).toBe("Wiki Link#Some Heading");
-        expect(node.data.path).toBe("Wiki Link#some-heading");
+      visit(ast, 'wikiLink', (node: any) => {
+        expect(node.value).toBe('Wiki Link#Some Heading');
+        expect(node.data.path).toBe('Wiki Link#some-heading');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
-        expect(node.data.hName).toBe("a");
-        expect(node.data.hProperties?.className).toBe("internal new");
-        expect(node.data.hProperties?.href).toBe("Wiki Link#some-heading");
-        expect(node.data.hChildren?.[0].value).toBe("Wiki Link#Some Heading");
+        expect(node.data.hName).toBe('a');
+        expect(node.data.hProperties?.className).toBe('internal new');
+        expect(node.data.hProperties?.href).toBe('Wiki Link#some-heading');
+        expect(node.data.hChildren?.[0].value).toBe('Wiki Link#Some Heading');
       });
     });
 
-    test("with heading and alias", () => {
-      const ast = fromMarkdown("[[Wiki Link#Some Heading|Alias]]", {
+    test('with heading and alias', () => {
+      const ast = fromMarkdown('[[Wiki Link#Some Heading|Alias]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
@@ -105,21 +105,21 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node: any) => {
-        expect(node.value).toBe("Wiki Link#Some Heading");
-        expect(node.data.path).toBe("Wiki Link#some-heading");
-        expect(node.data.alias).toBe("Alias");
+      visit(ast, 'wikiLink', (node: any) => {
+        expect(node.value).toBe('Wiki Link#Some Heading');
+        expect(node.data.path).toBe('Wiki Link#some-heading');
+        expect(node.data.alias).toBe('Alias');
         expect(node.data.existing).toBe(false);
-        expect(node.data.hName).toBe("a");
-        expect(node.data.hProperties?.className).toBe("internal new");
-        expect(node.data.hProperties?.href).toBe("Wiki Link#some-heading");
-        expect(node.data.hChildren?.[0].value).toBe("Alias");
+        expect(node.data.hName).toBe('a');
+        expect(node.data.hProperties?.className).toBe('internal new');
+        expect(node.data.hProperties?.href).toBe('Wiki Link#some-heading');
+        expect(node.data.hChildren?.[0].value).toBe('Alias');
       });
     });
 
-    test("with a heading with special characters", () => {
+    test('with a heading with special characters', () => {
       const ast = fromMarkdown(
-        "[[Wiki Link#Some.Heading.With-♥-Unicode and spaces]]",
+        '[[Wiki Link#Some.Heading.With-♥-Unicode and spaces]]',
         {
           extensions: [syntax()],
           mdastExtensions: [
@@ -130,28 +130,28 @@ describe("mdast-util-wiki-link", () => {
         },
       );
 
-      visit(ast, "wikiLink", (node: any) => {
+      visit(ast, 'wikiLink', (node: any) => {
         expect(node.value).toBe(
-          "Wiki Link#Some.Heading.With-♥-Unicode and spaces",
+          'Wiki Link#Some.Heading.With-♥-Unicode and spaces',
         );
         expect(node.data.path).toBe(
-          "Wiki Link#someheadingwith--unicode-and-spaces",
+          'Wiki Link#someheadingwith--unicode-and-spaces',
         );
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
-        expect(node.data.hName).toBe("a");
-        expect(node.data.hProperties?.className).toBe("internal new");
+        expect(node.data.hName).toBe('a');
+        expect(node.data.hProperties?.className).toBe('internal new');
         expect(node.data.hProperties?.href).toBe(
-          "Wiki Link#someheadingwith--unicode-and-spaces",
+          'Wiki Link#someheadingwith--unicode-and-spaces',
         );
         expect(node.data.hChildren?.[0].value).toBe(
-          "Wiki Link#Some.Heading.With-♥-Unicode and spaces",
+          'Wiki Link#Some.Heading.With-♥-Unicode and spaces',
         );
       });
     });
 
-    test("to a heading on the same page", () => {
-      const ast = fromMarkdown("[[#Some Heading]]", {
+    test('to a heading on the same page', () => {
+      const ast = fromMarkdown('[[#Some Heading]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
@@ -160,20 +160,20 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node: any) => {
-        expect(node.value).toBe("#Some Heading");
-        expect(node.data.path).toBe("#some-heading");
+      visit(ast, 'wikiLink', (node: any) => {
+        expect(node.value).toBe('#Some Heading');
+        expect(node.data.path).toBe('#some-heading');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(true);
-        expect(node.data.hName).toBe("a");
-        expect(node.data.hProperties?.className).toBe("internal");
-        expect(node.data.hProperties?.href).toBe("#some-heading");
-        expect(node.data.hChildren?.[0].value).toBe("#Some Heading");
+        expect(node.data.hName).toBe('a');
+        expect(node.data.hProperties?.className).toBe('internal');
+        expect(node.data.hProperties?.href).toBe('#some-heading');
+        expect(node.data.hChildren?.[0].value).toBe('#Some Heading');
       });
     });
 
-    test("with an alias", () => {
-      const ast = fromMarkdown("[[Wiki Link|Alias]]", {
+    test('with an alias', () => {
+      const ast = fromMarkdown('[[Wiki Link|Alias]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
@@ -182,19 +182,19 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node: any) => {
-        expect(node.value).toBe("Wiki Link");
-        expect(node.data.path).toBe("Wiki Link");
-        expect(node.data.alias).toBe("Alias");
+      visit(ast, 'wikiLink', (node: any) => {
+        expect(node.value).toBe('Wiki Link');
+        expect(node.data.path).toBe('Wiki Link');
+        expect(node.data.alias).toBe('Alias');
         expect(node.data.existing).toBe(false);
-        expect(node.data.hName).toBe("a");
-        expect(node.data.hProperties?.className).toBe("internal new");
-        expect(node.data.hProperties?.href).toBe("Wiki Link");
-        expect(node.data.hChildren?.[0].value).toBe("Alias");
+        expect(node.data.hName).toBe('a');
+        expect(node.data.hProperties?.className).toBe('internal new');
+        expect(node.data.hProperties?.href).toBe('Wiki Link');
+        expect(node.data.hChildren?.[0].value).toBe('Alias');
       });
     });
 
-    test("with an alias inside a table", () => {
+    test('with an alias inside a table', () => {
       const markdown = `| Column 1 | Column 2  | Column 3 |
 | -------- | --------------------------------- | -------- |
 | Data 1   | [[post-1\|Link with Alias]]       | Data 2   |`;
@@ -207,188 +207,188 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node: any) => {
-        expect(node.value).toBe("post-1");
-        expect(node.data.path).toBe("post-1");
-        expect(node.data.alias).toBe("Link with Alias");
+      visit(ast, 'wikiLink', (node: any) => {
+        expect(node.value).toBe('post-1');
+        expect(node.data.path).toBe('post-1');
+        expect(node.data.alias).toBe('Link with Alias');
         expect(node.data.existing).toBe(false);
-        expect(node.data.hName).toBe("a");
-        expect(node.data.hProperties?.className).toBe("internal new");
-        expect(node.data.hProperties?.href).toBe("post-1");
-        expect(node.data.hChildren?.[0].value).toBe("Link with Alias");
+        expect(node.data.hName).toBe('a');
+        expect(node.data.hProperties?.className).toBe('internal new');
+        expect(node.data.hProperties?.href).toBe('post-1');
+        expect(node.data.hChildren?.[0].value).toBe('Link with Alias');
       });
     });
 
-    test("with Obsidian-style shortest possible path format and a matching file", () => {
-      const ast = fromMarkdown("[[Wiki Link]]", {
+    test('with Obsidian-style shortest possible path format and a matching file', () => {
+      const ast = fromMarkdown('[[Wiki Link]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
-            format: "shortestPossible",
-            files: ["/some/folder/Wiki Link.md"],
+            format: 'shortestPossible',
+            files: ['/some/folder/Wiki Link.md'],
           }),
         ],
       });
 
-      visit(ast, "wikiLink", (node: any) => {
-        expect(node.value).toBe("Wiki Link");
-        expect(node.data.path).toBe("/some/folder/Wiki Link");
+      visit(ast, 'wikiLink', (node: any) => {
+        expect(node.value).toBe('Wiki Link');
+        expect(node.data.path).toBe('/some/folder/Wiki Link');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(true);
-        expect(node.data.hName).toBe("a");
-        expect(node.data.hProperties?.className).toBe("internal");
-        expect(node.data.hProperties?.href).toBe("/some/folder/Wiki Link");
-        expect(node.data.hChildren?.[0].value).toBe("Wiki Link");
+        expect(node.data.hName).toBe('a');
+        expect(node.data.hProperties?.className).toBe('internal');
+        expect(node.data.hProperties?.href).toBe('/some/folder/Wiki Link');
+        expect(node.data.hChildren?.[0].value).toBe('Wiki Link');
       });
     });
   });
 
-  describe("fromMarkdown - Parses an embed", () => {
-    test("image", () => {
-      const ast = fromMarkdown("![[My Image.jpg]]", {
+  describe('fromMarkdown - Parses an embed', () => {
+    test('image', () => {
+      const ast = fromMarkdown('![[My Image.jpg]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node: any) => {
-        expect(node.value).toBe("My Image.jpg");
-        expect(node.data.path).toBe("My Image.jpg");
+      visit(ast, 'embed', (node: any) => {
+        expect(node.value).toBe('My Image.jpg');
+        expect(node.data.path).toBe('My Image.jpg');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
-        expect(node.data.hName).toBe("img");
-        expect(node.data.hProperties?.className).toBe("internal new");
-        expect(node.data.hProperties?.src).toBe("My Image.jpg");
-        expect(node.data.hProperties?.alt).toBe("My Image");
+        expect(node.data.hName).toBe('img');
+        expect(node.data.hProperties?.className).toBe('internal new');
+        expect(node.data.hProperties?.src).toBe('My Image.jpg');
+        expect(node.data.hProperties?.alt).toBe('My Image');
       });
     });
 
-    test("image with dimensions", () => {
-      const ast = fromMarkdown("![[My Image.jpg|200x300]]", {
+    test('image with dimensions', () => {
+      const ast = fromMarkdown('![[My Image.jpg|200x300]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node: any) => {
-        expect(node.value).toBe("My Image.jpg");
-        expect(node.data.path).toBe("My Image.jpg");
+      visit(ast, 'embed', (node: any) => {
+        expect(node.value).toBe('My Image.jpg');
+        expect(node.data.path).toBe('My Image.jpg');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
-        expect(node.data.hName).toBe("img");
-        expect(node.data.hProperties?.className).toBe("internal new");
-        expect(node.data.hProperties?.src).toBe("My Image.jpg");
-        expect(node.data.hProperties?.["data-fs-width"]).toBe("200");
-        expect(node.data.hProperties?.["data-fs-height"]).toBe("300");
-        expect(node.data.hProperties?.alt).toBe("My Image");
+        expect(node.data.hName).toBe('img');
+        expect(node.data.hProperties?.className).toBe('internal new');
+        expect(node.data.hProperties?.src).toBe('My Image.jpg');
+        expect(node.data.hProperties?.['data-fs-width']).toBe('200');
+        expect(node.data.hProperties?.['data-fs-height']).toBe('300');
+        expect(node.data.hProperties?.alt).toBe('My Image');
       });
     });
 
-    test("pdf", () => {
-      const ast = fromMarkdown("![[My File.pdf]]", {
+    test('pdf', () => {
+      const ast = fromMarkdown('![[My File.pdf]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node: any) => {
-        expect(node.value).toBe("My File.pdf");
-        expect(node.data.path).toBe("My File.pdf");
+      visit(ast, 'embed', (node: any) => {
+        expect(node.value).toBe('My File.pdf');
+        expect(node.data.path).toBe('My File.pdf');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
-        expect(node.data.hName).toBe("iframe");
-        expect(node.data.hProperties?.className).toBe("internal new");
-        expect(node.data.hProperties?.src).toBe("My File.pdf");
-        expect(node.data.hProperties?.title).toBe("My File");
+        expect(node.data.hName).toBe('iframe');
+        expect(node.data.hProperties?.className).toBe('internal new');
+        expect(node.data.hProperties?.src).toBe('My File.pdf');
+        expect(node.data.hProperties?.title).toBe('My File');
       });
     });
 
-    test("video", () => {
-      const ast = fromMarkdown("![[My Video.mp4]]", {
+    test('video', () => {
+      const ast = fromMarkdown('![[My Video.mp4]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node: any) => {
-        expect(node.value).toBe("My Video.mp4");
-        expect(node.data.path).toBe("My Video.mp4");
+      visit(ast, 'embed', (node: any) => {
+        expect(node.value).toBe('My Video.mp4');
+        expect(node.data.path).toBe('My Video.mp4');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
-        expect(node.data.hName).toBe("video");
-        expect(node.data.hProperties?.className).toBe("internal new");
-        expect(node.data.hProperties?.src).toBe("My Video.mp4");
+        expect(node.data.hName).toBe('video');
+        expect(node.data.hProperties?.className).toBe('internal new');
+        expect(node.data.hProperties?.src).toBe('My Video.mp4');
         expect(node.data.hProperties?.controls).toBe(true);
         expect(node.data.hChildren?.[0].value).toBe(
-          "Your browser does not support the video tag.",
+          'Your browser does not support the video tag.',
         );
       });
     });
 
-    test("video with dimensions", () => {
-      const ast = fromMarkdown("![[My Video.mp4|640x480]]", {
+    test('video with dimensions', () => {
+      const ast = fromMarkdown('![[My Video.mp4|640x480]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node: any) => {
-        expect(node.value).toBe("My Video.mp4");
-        expect(node.data.path).toBe("My Video.mp4");
+      visit(ast, 'embed', (node: any) => {
+        expect(node.value).toBe('My Video.mp4');
+        expect(node.data.path).toBe('My Video.mp4');
         // Alias is cleared when dimensions are parsed
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
-        expect(node.data.hName).toBe("video");
-        expect(node.data.hProperties?.className).toBe("internal new");
-        expect(node.data.hProperties?.src).toBe("My Video.mp4");
+        expect(node.data.hName).toBe('video');
+        expect(node.data.hProperties?.className).toBe('internal new');
+        expect(node.data.hProperties?.src).toBe('My Video.mp4');
         expect(node.data.hProperties?.controls).toBe(true);
-        expect(node.data.hProperties?.["data-fs-width"]).toBe("640");
-        expect(node.data.hProperties?.["data-fs-height"]).toBe("480");
+        expect(node.data.hProperties?.['data-fs-width']).toBe('640');
+        expect(node.data.hProperties?.['data-fs-height']).toBe('480');
         expect(node.data.hChildren?.[0].value).toBe(
-          "Your browser does not support the video tag.",
+          'Your browser does not support the video tag.',
         );
       });
     });
 
-    test("video with width only", () => {
-      const ast = fromMarkdown("![[My Video.mp4|640]]", {
+    test('video with width only', () => {
+      const ast = fromMarkdown('![[My Video.mp4|640]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node: any) => {
-        expect(node.value).toBe("My Video.mp4");
-        expect(node.data.path).toBe("My Video.mp4");
+      visit(ast, 'embed', (node: any) => {
+        expect(node.value).toBe('My Video.mp4');
+        expect(node.data.path).toBe('My Video.mp4');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
-        expect(node.data.hName).toBe("video");
-        expect(node.data.hProperties?.className).toBe("internal new");
-        expect(node.data.hProperties?.src).toBe("My Video.mp4");
+        expect(node.data.hName).toBe('video');
+        expect(node.data.hProperties?.className).toBe('internal new');
+        expect(node.data.hProperties?.src).toBe('My Video.mp4');
         expect(node.data.hProperties?.controls).toBe(true);
-        expect(node.data.hProperties?.["data-fs-width"]).toBe("640");
+        expect(node.data.hProperties?.['data-fs-width']).toBe('640');
         // Height should be undefined to maintain aspect ratio
-        expect(node.data.hProperties?.["data-fs-height"]).toBe(undefined);
+        expect(node.data.hProperties?.['data-fs-height']).toBe(undefined);
       });
     });
 
-    test("audio", () => {
-      const ast = fromMarkdown("![[My Audio.mp3]]", {
+    test('audio', () => {
+      const ast = fromMarkdown('![[My Audio.mp3]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node: any) => {
-        expect(node.value).toBe("My Audio.mp3");
-        expect(node.data.path).toBe("My Audio.mp3");
+      visit(ast, 'embed', (node: any) => {
+        expect(node.value).toBe('My Audio.mp3');
+        expect(node.data.path).toBe('My Audio.mp3');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
-        expect(node.data.hName).toBe("audio");
-        expect(node.data.hProperties?.className).toBe("internal new");
-        expect(node.data.hProperties?.src).toBe("My Audio.mp3");
+        expect(node.data.hName).toBe('audio');
+        expect(node.data.hProperties?.className).toBe('internal new');
+        expect(node.data.hProperties?.src).toBe('My Audio.mp3');
         expect(node.data.hProperties?.controls).toBe(true);
         expect(node.data.hChildren?.[0].value).toBe(
-          "Your browser does not support the audio tag.",
+          'Your browser does not support the audio tag.',
         );
       });
     });
 
-    test("audio with various formats", () => {
-      const formats = ["mp3", "wav", "ogg", "m4a", "flac", "3gp"];
+    test('audio with various formats', () => {
+      const formats = ['mp3', 'wav', 'ogg', 'm4a', 'flac', '3gp'];
 
       formats.forEach((format) => {
         const ast = fromMarkdown(`![[audio.${format}]]`, {
@@ -396,15 +396,15 @@ describe("mdast-util-wiki-link", () => {
           mdastExtensions: [wikiLinkFromMarkdown()],
         });
 
-        visit(ast, "embed", (node: any) => {
-          expect(node.data.hName).toBe("audio");
+        visit(ast, 'embed', (node: any) => {
+          expect(node.data.hName).toBe('audio');
           expect(node.data.hProperties?.controls).toBe(true);
         });
       });
     });
 
-    test("video with various formats", () => {
-      const formats = ["mp4", "webm", "ogv", "mov", "mkv"];
+    test('video with various formats', () => {
+      const formats = ['mp4', 'webm', 'ogv', 'mov', 'mkv'];
 
       formats.forEach((format) => {
         const ast = fromMarkdown(`![[video.${format}]]`, {
@@ -412,145 +412,145 @@ describe("mdast-util-wiki-link", () => {
           mdastExtensions: [wikiLinkFromMarkdown()],
         });
 
-        visit(ast, "embed", (node: any) => {
-          expect(node.data.hName).toBe("video");
+        visit(ast, 'embed', (node: any) => {
+          expect(node.data.hName).toBe('video');
           expect(node.data.hProperties?.controls).toBe(true);
         });
       });
     });
   });
 
-  describe("fromMarkdown - Permalinks", () => {
-    test("uses permalink when file matches and permalink is provided", () => {
-      const ast = fromMarkdown("[[blog/my-post]]", {
+  describe('fromMarkdown - Permalinks', () => {
+    test('uses permalink when file matches and permalink is provided', () => {
+      const ast = fromMarkdown('[[blog/my-post]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
-            files: ["blog/my-post.md"],
+            files: ['blog/my-post.md'],
             permalinks: {
-              "blog/my-post.md": "/custom-url",
+              'blog/my-post.md': '/custom-url',
             },
           }),
         ],
       });
 
-      visit(ast, "wikiLink", (node: any) => {
-        expect(node.value).toBe("blog/my-post");
-        expect(node.data.path).toBe("/custom-url");
+      visit(ast, 'wikiLink', (node: any) => {
+        expect(node.value).toBe('blog/my-post');
+        expect(node.data.path).toBe('/custom-url');
         expect(node.data.existing).toBe(true);
-        expect(node.data.hProperties?.href).toBe("/custom-url");
-        expect(node.data.hProperties?.className).toBe("internal");
+        expect(node.data.hProperties?.href).toBe('/custom-url');
+        expect(node.data.hProperties?.className).toBe('internal');
       });
     });
 
-    test("uses permalink with heading when provided", () => {
-      const ast = fromMarkdown("[[blog/my-post#Section]]", {
+    test('uses permalink with heading when provided', () => {
+      const ast = fromMarkdown('[[blog/my-post#Section]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
-            files: ["blog/my-post.md"],
+            files: ['blog/my-post.md'],
             permalinks: {
-              "blog/my-post.md": "/custom-url",
+              'blog/my-post.md': '/custom-url',
             },
           }),
         ],
       });
 
-      visit(ast, "wikiLink", (node: any) => {
-        expect(node.value).toBe("blog/my-post#Section");
-        expect(node.data.path).toBe("/custom-url#Section");
+      visit(ast, 'wikiLink', (node: any) => {
+        expect(node.value).toBe('blog/my-post#Section');
+        expect(node.data.path).toBe('/custom-url#Section');
         expect(node.data.existing).toBe(true);
-        expect(node.data.hProperties?.href).toBe("/custom-url#Section");
+        expect(node.data.hProperties?.href).toBe('/custom-url#Section');
       });
     });
 
-    test("falls back to urlResolver when no permalink is provided", () => {
-      const ast = fromMarkdown("[[blog/my-post]]", {
+    test('falls back to urlResolver when no permalink is provided', () => {
+      const ast = fromMarkdown('[[blog/my-post]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
-            files: ["blog/my-post.md"],
+            files: ['blog/my-post.md'],
             permalinks: {
-              "other/file.md": "/other-url",
+              'other/file.md': '/other-url',
             },
           }),
         ],
       });
 
-      visit(ast, "wikiLink", (node: any) => {
-        expect(node.value).toBe("blog/my-post");
-        expect(node.data.path).toBe("blog/my-post");
+      visit(ast, 'wikiLink', (node: any) => {
+        expect(node.value).toBe('blog/my-post');
+        expect(node.data.path).toBe('blog/my-post');
         expect(node.data.existing).toBe(true);
-        expect(node.data.hProperties?.href).toBe("blog/my-post");
+        expect(node.data.hProperties?.href).toBe('blog/my-post');
       });
     });
 
-    test("works with shortestPossible format", () => {
-      const ast = fromMarkdown("[[test]]", {
+    test('works with shortestPossible format', () => {
+      const ast = fromMarkdown('[[test]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
-            files: ["blog/test.md", "test.md"],
+            files: ['blog/test.md', 'test.md'],
             permalinks: {
-              "blog/test.md": "/blog-permalink",
-              "test.md": "/test-permalink",
+              'blog/test.md': '/blog-permalink',
+              'test.md': '/test-permalink',
             },
-            format: "shortestPossible",
+            format: 'shortestPossible',
           }),
         ],
       });
 
-      visit(ast, "wikiLink", (node: any) => {
-        expect(node.value).toBe("test");
+      visit(ast, 'wikiLink', (node: any) => {
+        expect(node.value).toBe('test');
         // Should match test.md (shortest path)
-        expect(node.data.path).toBe("/test-permalink");
+        expect(node.data.path).toBe('/test-permalink');
         expect(node.data.existing).toBe(true);
-        expect(node.data.hProperties?.href).toBe("/test-permalink");
+        expect(node.data.hProperties?.href).toBe('/test-permalink');
       });
     });
 
-    test("permalink is applied to embeds", () => {
-      const ast = fromMarkdown("![[image.jpg]]", {
+    test('permalink is applied to embeds', () => {
+      const ast = fromMarkdown('![[image.jpg]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
-            files: ["assets/image.jpg"],
+            files: ['assets/image.jpg'],
             permalinks: {
-              "assets/image.jpg": "/custom-image-url",
+              'assets/image.jpg': '/custom-image-url',
             },
           }),
         ],
       });
 
-      visit(ast, "embed", (node: any) => {
-        expect(node.value).toBe("image.jpg");
+      visit(ast, 'embed', (node: any) => {
+        expect(node.value).toBe('image.jpg');
         // Embeds should use the permalink when available
-        expect(node.data.path).toBe("/custom-image-url");
-        expect(node.data.hProperties?.src).toBe("/custom-image-url");
+        expect(node.data.path).toBe('/custom-image-url');
+        expect(node.data.hProperties?.src).toBe('/custom-image-url');
       });
     });
   });
 
-  describe("fromMarkdown - data-fs-resolved-file-path attribute", () => {
-    test("wiki link with matching file has data-fs-resolved-file-path", () => {
-      const ast = fromMarkdown("[[Wiki Link]]", {
+  describe('fromMarkdown - data-fs-resolved-file-path attribute', () => {
+    test('wiki link with matching file has data-fs-resolved-file-path', () => {
+      const ast = fromMarkdown('[[Wiki Link]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
-            files: ["Wiki Link.md"],
+            files: ['Wiki Link.md'],
           }),
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
-        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
-          "Wiki Link.md",
+      visit(ast, 'wikiLink', (node) => {
+        expect(node.data.hProperties?.['data-fs-resolved-file-path']).toBe(
+          'Wiki Link.md',
         );
       });
     });
 
-    test("wiki link without matching file has no data-fs-resolved-file-path", () => {
-      const ast = fromMarkdown("[[New Page]]", {
+    test('wiki link without matching file has no data-fs-resolved-file-path', () => {
+      const ast = fromMarkdown('[[New Page]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
@@ -559,121 +559,121 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, 'wikiLink', (node) => {
         expect(
-          node.data.hProperties?.["data-fs-resolved-file-path"],
+          node.data.hProperties?.['data-fs-resolved-file-path'],
         ).toBeUndefined();
       });
     });
 
-    test("image embed with matching file has data-fs-resolved-file-path", () => {
-      const ast = fromMarkdown("![[photo.png]]", {
+    test('image embed with matching file has data-fs-resolved-file-path', () => {
+      const ast = fromMarkdown('![[photo.png]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
-            files: ["/assets/photo.png"],
-            format: "shortestPossible",
+            files: ['/assets/photo.png'],
+            format: 'shortestPossible',
           }),
         ],
       });
 
-      visit(ast, "embed", (node) => {
-        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
-          "/assets/photo.png",
+      visit(ast, 'embed', (node) => {
+        expect(node.data.hProperties?.['data-fs-resolved-file-path']).toBe(
+          '/assets/photo.png',
         );
       });
     });
 
-    test("image embed without matching file has no data-fs-resolved-file-path", () => {
-      const ast = fromMarkdown("![[missing.jpg]]", {
+    test('image embed without matching file has no data-fs-resolved-file-path', () => {
+      const ast = fromMarkdown('![[missing.jpg]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown({ files: [] })],
       });
 
-      visit(ast, "embed", (node) => {
+      visit(ast, 'embed', (node) => {
         expect(
-          node.data.hProperties?.["data-fs-resolved-file-path"],
+          node.data.hProperties?.['data-fs-resolved-file-path'],
         ).toBeUndefined();
       });
     });
 
-    test("video embed with matching file has data-fs-resolved-file-path", () => {
-      const ast = fromMarkdown("![[clip.mp4]]", {
+    test('video embed with matching file has data-fs-resolved-file-path', () => {
+      const ast = fromMarkdown('![[clip.mp4]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
-            files: ["media/clip.mp4"],
-            format: "shortestPossible",
+            files: ['media/clip.mp4'],
+            format: 'shortestPossible',
           }),
         ],
       });
 
-      visit(ast, "embed", (node) => {
-        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
-          "media/clip.mp4",
+      visit(ast, 'embed', (node) => {
+        expect(node.data.hProperties?.['data-fs-resolved-file-path']).toBe(
+          'media/clip.mp4',
         );
       });
     });
 
-    test("audio embed with matching file has data-fs-resolved-file-path", () => {
-      const ast = fromMarkdown("![[song.mp3]]", {
+    test('audio embed with matching file has data-fs-resolved-file-path', () => {
+      const ast = fromMarkdown('![[song.mp3]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
-            files: ["music/song.mp3"],
-            format: "shortestPossible",
+            files: ['music/song.mp3'],
+            format: 'shortestPossible',
           }),
         ],
       });
 
-      visit(ast, "embed", (node) => {
-        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
-          "music/song.mp3",
+      visit(ast, 'embed', (node) => {
+        expect(node.data.hProperties?.['data-fs-resolved-file-path']).toBe(
+          'music/song.mp3',
         );
       });
     });
 
-    test("pdf embed with matching file has data-fs-resolved-file-path", () => {
-      const ast = fromMarkdown("![[doc.pdf]]", {
+    test('pdf embed with matching file has data-fs-resolved-file-path', () => {
+      const ast = fromMarkdown('![[doc.pdf]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
-            files: ["docs/doc.pdf"],
-            format: "shortestPossible",
+            files: ['docs/doc.pdf'],
+            format: 'shortestPossible',
           }),
         ],
       });
 
-      visit(ast, "embed", (node) => {
-        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
-          "docs/doc.pdf",
+      visit(ast, 'embed', (node) => {
+        expect(node.data.hProperties?.['data-fs-resolved-file-path']).toBe(
+          'docs/doc.pdf',
         );
       });
     });
 
-    test("markdown transclusion with matching file has data-fs-resolved-file-path", () => {
-      const ast = fromMarkdown("![[Some Page]]", {
+    test('markdown transclusion with matching file has data-fs-resolved-file-path', () => {
+      const ast = fromMarkdown('![[Some Page]]', {
         extensions: [syntax()],
         mdastExtensions: [
           wikiLinkFromMarkdown({
-            files: ["notes/Some Page.md"],
-            format: "shortestPossible",
+            files: ['notes/Some Page.md'],
+            format: 'shortestPossible',
           }),
         ],
       });
 
-      visit(ast, "embed", (node) => {
-        expect(node.data.hProperties?.["data-fs-resolved-file-path"]).toBe(
-          "notes/Some Page.md",
+      visit(ast, 'embed', (node) => {
+        expect(node.data.hProperties?.['data-fs-resolved-file-path']).toBe(
+          'notes/Some Page.md',
         );
       });
     });
   });
 
-  describe("fromMarkdown - Custom alias divider", () => {
-    test("parses wiki link with custom divider", () => {
-      const ast = fromMarkdown("[[Wiki Link:Alias]]", {
-        extensions: [syntax({ aliasDivider: ":" })],
+  describe('fromMarkdown - Custom alias divider', () => {
+    test('parses wiki link with custom divider', () => {
+      const ast = fromMarkdown('[[Wiki Link:Alias]]', {
+        extensions: [syntax({ aliasDivider: ':' })],
         mdastExtensions: [
           wikiLinkFromMarkdown({
             files: [],
@@ -681,57 +681,57 @@ describe("mdast-util-wiki-link", () => {
         ],
       });
 
-      visit(ast, "wikiLink", (node: any) => {
-        expect(node.value).toBe("Wiki Link");
-        expect(node.data.alias).toBe("Alias");
-        expect(node.data.hChildren?.[0].value).toBe("Alias");
+      visit(ast, 'wikiLink', (node: any) => {
+        expect(node.value).toBe('Wiki Link');
+        expect(node.data.alias).toBe('Alias');
+        expect(node.data.hChildren?.[0].value).toBe('Alias');
       });
     });
 
-    test("parses embed with colon divider", () => {
-      const ast = fromMarkdown("![[image.jpg:Alt Text]]", {
-        extensions: [syntax({ aliasDivider: ":" })],
+    test('parses embed with colon divider', () => {
+      const ast = fromMarkdown('![[image.jpg:Alt Text]]', {
+        extensions: [syntax({ aliasDivider: ':' })],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
-      visit(ast, "embed", (node: any) => {
-        expect(node.value).toBe("image.jpg");
-        expect(node.data.alias).toBe("Alt Text");
+      visit(ast, 'embed', (node: any) => {
+        expect(node.value).toBe('image.jpg');
+        expect(node.data.alias).toBe('Alt Text');
       });
     });
 
-    test("round-trip with custom divider maintains consistency", () => {
-      const original = "[[Page:Alias]]";
+    test('round-trip with custom divider maintains consistency', () => {
+      const original = '[[Page:Alias]]';
       const ast = fromMarkdown(original, {
-        extensions: [syntax({ aliasDivider: ":" })],
+        extensions: [syntax({ aliasDivider: ':' })],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
       const stringified = toMarkdown(ast, {
-        extensions: [wikiLinkToMarkdown({ aliasDivider: ":" })],
+        extensions: [wikiLinkToMarkdown({ aliasDivider: ':' })],
       }).trim();
 
       expect(stringified).toBe(original);
     });
 
-    test("converts between different dividers during round-trip", () => {
-      const original = "[[Page|Alias]]";
+    test('converts between different dividers during round-trip', () => {
+      const original = '[[Page|Alias]]';
       const ast = fromMarkdown(original, {
-        extensions: [syntax({ aliasDivider: "|" })],
+        extensions: [syntax({ aliasDivider: '|' })],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
       const stringified = toMarkdown(ast, {
-        extensions: [wikiLinkToMarkdown({ aliasDivider: "->" })],
+        extensions: [wikiLinkToMarkdown({ aliasDivider: '->' })],
       }).trim();
 
-      expect(stringified).toBe("[[Page->Alias]]");
+      expect(stringified).toBe('[[Page->Alias]]');
     });
   });
 
-  describe("toMarkdown - wikiLink handler", () => {
-    test("stringifies a simple wiki link", () => {
-      const ast = fromMarkdown("[[Wiki Link]]", {
+  describe('toMarkdown - wikiLink handler', () => {
+    test('stringifies a simple wiki link', () => {
+      const ast = fromMarkdown('[[Wiki Link]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
@@ -740,11 +740,11 @@ describe("mdast-util-wiki-link", () => {
         extensions: [wikiLinkToMarkdown()],
       }).trim();
 
-      expect(stringified).toBe("[[Wiki Link]]");
+      expect(stringified).toBe('[[Wiki Link]]');
     });
 
-    test("stringifies a wiki link with alias using default divider", () => {
-      const ast = fromMarkdown("[[Real Page|Page Alias]]", {
+    test('stringifies a wiki link with alias using default divider', () => {
+      const ast = fromMarkdown('[[Real Page|Page Alias]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
@@ -753,24 +753,24 @@ describe("mdast-util-wiki-link", () => {
         extensions: [wikiLinkToMarkdown()],
       }).trim();
 
-      expect(stringified).toBe("[[Real Page|Page Alias]]");
+      expect(stringified).toBe('[[Real Page|Page Alias]]');
     });
 
-    test("stringifies a wiki link with alias using custom divider", () => {
-      const ast = fromMarkdown("[[Real Page:Page Alias]]", {
-        extensions: [syntax({ aliasDivider: ":" })],
+    test('stringifies a wiki link with alias using custom divider', () => {
+      const ast = fromMarkdown('[[Real Page:Page Alias]]', {
+        extensions: [syntax({ aliasDivider: ':' })],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
       const stringified = toMarkdown(ast, {
-        extensions: [wikiLinkToMarkdown({ aliasDivider: ":" })],
+        extensions: [wikiLinkToMarkdown({ aliasDivider: ':' })],
       }).trim();
 
-      expect(stringified).toBe("[[Real Page:Page Alias]]");
+      expect(stringified).toBe('[[Real Page:Page Alias]]');
     });
 
-    test("stringifies a wiki link with heading", () => {
-      const ast = fromMarkdown("[[Wiki Link#Some Heading]]", {
+    test('stringifies a wiki link with heading', () => {
+      const ast = fromMarkdown('[[Wiki Link#Some Heading]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
@@ -779,11 +779,11 @@ describe("mdast-util-wiki-link", () => {
         extensions: [wikiLinkToMarkdown()],
       }).trim();
 
-      expect(stringified).toBe("[[Wiki Link#Some Heading]]");
+      expect(stringified).toBe('[[Wiki Link#Some Heading]]');
     });
 
-    test("stringifies a wiki link with heading and alias", () => {
-      const ast = fromMarkdown("[[Wiki Link#Some Heading|Alias]]", {
+    test('stringifies a wiki link with heading and alias', () => {
+      const ast = fromMarkdown('[[Wiki Link#Some Heading|Alias]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
@@ -792,11 +792,11 @@ describe("mdast-util-wiki-link", () => {
         extensions: [wikiLinkToMarkdown()],
       }).trim();
 
-      expect(stringified).toBe("[[Wiki Link#Some Heading|Alias]]");
+      expect(stringified).toBe('[[Wiki Link#Some Heading|Alias]]');
     });
 
-    test("stringifies a wiki link to a heading on the same page", () => {
-      const ast = fromMarkdown("[[#Some Heading]]", {
+    test('stringifies a wiki link to a heading on the same page', () => {
+      const ast = fromMarkdown('[[#Some Heading]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
@@ -805,11 +805,11 @@ describe("mdast-util-wiki-link", () => {
         extensions: [wikiLinkToMarkdown()],
       }).trim();
 
-      expect(stringified).toBe("[[#Some Heading]]");
+      expect(stringified).toBe('[[#Some Heading]]');
     });
 
-    test("stringifies a wiki link with path", () => {
-      const ast = fromMarkdown("[[folder/subfolder/Page]]", {
+    test('stringifies a wiki link with path', () => {
+      const ast = fromMarkdown('[[folder/subfolder/Page]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
@@ -818,13 +818,13 @@ describe("mdast-util-wiki-link", () => {
         extensions: [wikiLinkToMarkdown()],
       }).trim();
 
-      expect(stringified).toBe("[[folder/subfolder/Page]]");
+      expect(stringified).toBe('[[folder/subfolder/Page]]');
     });
   });
 
-  describe("toMarkdown - embed handler", () => {
-    test("stringifies a simple embed", () => {
-      const ast = fromMarkdown("![[My Image.jpg]]", {
+  describe('toMarkdown - embed handler', () => {
+    test('stringifies a simple embed', () => {
+      const ast = fromMarkdown('![[My Image.jpg]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
@@ -833,11 +833,11 @@ describe("mdast-util-wiki-link", () => {
         extensions: [wikiLinkToMarkdown()],
       }).trim();
 
-      expect(stringified).toBe("![[My Image.jpg]]");
+      expect(stringified).toBe('![[My Image.jpg]]');
     });
 
-    test("stringifies an embed with alias using default divider", () => {
-      const ast = fromMarkdown("![[My Image.jpg|Alt Text]]", {
+    test('stringifies an embed with alias using default divider', () => {
+      const ast = fromMarkdown('![[My Image.jpg|Alt Text]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
@@ -846,24 +846,24 @@ describe("mdast-util-wiki-link", () => {
         extensions: [wikiLinkToMarkdown()],
       }).trim();
 
-      expect(stringified).toBe("![[My Image.jpg|Alt Text]]");
+      expect(stringified).toBe('![[My Image.jpg|Alt Text]]');
     });
 
-    test("stringifies an embed with alias using custom divider", () => {
-      const ast = fromMarkdown("![[My Image.jpg:Alt Text]]", {
-        extensions: [syntax({ aliasDivider: ":" })],
+    test('stringifies an embed with alias using custom divider', () => {
+      const ast = fromMarkdown('![[My Image.jpg:Alt Text]]', {
+        extensions: [syntax({ aliasDivider: ':' })],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
 
       const stringified = toMarkdown(ast, {
-        extensions: [wikiLinkToMarkdown({ aliasDivider: ":" })],
+        extensions: [wikiLinkToMarkdown({ aliasDivider: ':' })],
       }).trim();
 
-      expect(stringified).toBe("![[My Image.jpg:Alt Text]]");
+      expect(stringified).toBe('![[My Image.jpg:Alt Text]]');
     });
 
-    test("stringifies an embed with dimensions", () => {
-      const ast = fromMarkdown("![[My Image.jpg|200x300]]", {
+    test('stringifies an embed with dimensions', () => {
+      const ast = fromMarkdown('![[My Image.jpg|200x300]]', {
         extensions: [syntax()],
         mdastExtensions: [wikiLinkFromMarkdown()],
       });
@@ -872,7 +872,7 @@ describe("mdast-util-wiki-link", () => {
         extensions: [wikiLinkToMarkdown()],
       }).trim();
 
-      expect(stringified).toBe("![[My Image.jpg|200x300]]");
+      expect(stringified).toBe('![[My Image.jpg|200x300]]');
     });
   });
 });
