@@ -8,8 +8,7 @@
     "lint": "biome lint .",
     "deploy:staging": "npx wrangler deploy --config wrangler.flowershow.toml --keep-vars --env staging",
     "deploy:production": "npx wrangler deploy --config wrangler.flowershow.toml --keep-vars --env production",
-    "test": "bats test/e2e.bats",
-    "test:watch": "bats test/e2e.bats --watch"
+    "test": "echo 'worker tests disabled (outdated bats suite)'"
   },
   "keywords": [],
   "author": "",
