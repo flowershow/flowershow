@@ -15,7 +15,11 @@
     "prepare": "husky install"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
     "husky": "^8.0.0",
+    "semantic-release": "^24.0.0",
     "turbo": "^2.5.4"
   },
   "packageManager": "pnpm@10.12.1",
