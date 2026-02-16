@@ -34,7 +34,7 @@ describe('mdxComponentsFactory', () => {
     expect(screen.getByTestId('fs-image')).toBeInTheDocument();
   });
 
-  it('injects DB dimensions when no explicit dimensions are set', () => {
+  it('injects DB dimensions as data-intrinsic attributes when no explicit dimensions are set', () => {
     const imageDimensions = {
       '/media/photo.png': { width: 1024, height: 768 },
     };
@@ -51,8 +51,11 @@ describe('mdxComponentsFactory', () => {
     const image = screen.getByTestId('fs-image');
     const props = JSON.parse(image.getAttribute('data-props') ?? '{}');
 
-    expect(props.width).toBe(1024);
-    expect(props.height).toBe(768);
+    expect(props['data-intrinsic-width']).toBe(1024);
+    expect(props['data-intrinsic-height']).toBe(768);
+    // Should NOT set standard width/height
+    expect(props.width).toBeUndefined();
+    expect(props.height).toBeUndefined();
   });
 
   it('preserves author-explicit dimensions over DB dimensions', () => {

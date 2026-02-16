@@ -45,6 +45,29 @@ describe('FsImage', () => {
 
     expect(props.width).toBe(1024);
     expect(props.height).toBe(768);
+    // Author-explicit: no sizes, fixed pixel rendering
+    expect(props.sizes).toBeUndefined();
+  });
+
+  it('uses intrinsic dimensions for responsive rendering with aspect ratio', () => {
+    render(
+      <FsImage
+        src="/demo.png"
+        alt="Demo"
+        {...({ 'data-intrinsic-width': 4000, 'data-intrinsic-height': 3000 } as any)}
+      />,
+    );
+
+    const image = screen.getByTestId('next-image');
+    const props = JSON.parse(image.getAttribute('data-props') ?? '{}');
+
+    // Intrinsic dimensions passed for aspect ratio, not fixed sizing
+    expect(props.width).toBe(4000);
+    expect(props.height).toBe(3000);
+    // Responsive: uses sizes
+    expect(props.sizes).toBeDefined();
+    // CSS drives the rendered size, not the width/height attributes
+    expect(props.style).toEqual({ width: '100%', height: 'auto' });
   });
 
   it('falls back to responsive mode when no dimensions provided', () => {

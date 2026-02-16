@@ -19,15 +19,18 @@ async function process(markdown: string, dimensions: ImageDimensionsMap) {
 }
 
 describe('rehypeInjectImageDimensions', () => {
-  it('injects width and height from dimensions map onto img elements', async () => {
+  it('injects intrinsic dimensions as data attributes onto img elements', async () => {
     const dimensions: ImageDimensionsMap = {
       '/photo.png': { width: 800, height: 600 },
     };
 
     const html = await process('![alt](/photo.png)', dimensions);
 
-    expect(html).toContain('width="800"');
-    expect(html).toContain('height="600"');
+    expect(html).toContain('data-intrinsic-width="800"');
+    expect(html).toContain('data-intrinsic-height="600"');
+    // Should NOT set standalone width/height attributes (only data-intrinsic-*).
+    expect(html).not.toMatch(/ width="/);
+    expect(html).not.toMatch(/ height="/);
   });
 
   it('does not overwrite existing (author-explicit) dimensions', async () => {

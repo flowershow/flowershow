@@ -41,10 +41,17 @@ export const mdxComponentsFactory = ({
   const components: MDXComponents = {
     img: (props: any) => {
       const src = props.src ?? '';
+      // Inject DB-intrinsic dimensions as data attributes so FsImage can
+      // distinguish them from author-explicit width/height. DB dimensions
+      // are used for aspect ratio in responsive rendering, not fixed sizing.
       const dbDims = imageDimensions?.[src];
       const injectedProps =
         !props.width && !props.height && dbDims
-          ? { ...props, width: dbDims.width, height: dbDims.height }
+          ? {
+              ...props,
+              'data-intrinsic-width': dbDims.width,
+              'data-intrinsic-height': dbDims.height,
+            }
           : props;
       return <FsImage {...injectedProps} />;
     },

@@ -26,8 +26,11 @@ const rehypeInjectImageDimensions: Plugin<[Options]> = (options) => {
       const dims = dimensions[src];
       if (!dims) return;
 
-      node.properties.width = String(dims.width);
-      node.properties.height = String(dims.height);
+      // Use data attributes so FsImage can distinguish DB-intrinsic geometry
+      // (used for aspect ratio in responsive rendering) from author-explicit
+      // dimensions (used for fixed pixel sizing).
+      node.properties['data-intrinsic-width'] = String(dims.width);
+      node.properties['data-intrinsic-height'] = String(dims.height);
     });
   };
 };
