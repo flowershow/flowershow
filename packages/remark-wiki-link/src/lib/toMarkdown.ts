@@ -48,8 +48,8 @@ function toMarkdown(opts: ToMarkdownOptions = {}): ToMarkdownExtension {
     const nodeValue = state.safe(node.value, { before: '[', after: ']' });
 
     // Check if there are dimensions (width/height) in hProperties
-    const width = node.data.hProperties?.width;
-    const height = node.data.hProperties?.height;
+    const width = node.data.hProperties?.['data-fs-width'];
+    const height = node.data.hProperties?.['data-fs-height'];
 
     let aliasOrDimensions = '';
     if (width || height) {
