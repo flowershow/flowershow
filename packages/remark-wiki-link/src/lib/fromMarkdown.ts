@@ -11,8 +11,8 @@ import {
   isAudioFile,
   isVideoFile,
 } from '../utils';
-import { Embed, WikiLink } from 'mdast';
-import { Options } from './remarkWikiLink';
+import type { Embed, WikiLink } from 'mdast';
+import type { Options } from './remarkWikiLink';
 import { WIKI_LINK_TARGET_PATTERN } from '../utils/const';
 
 function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
@@ -79,7 +79,7 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
 
     let classNames = className;
     if (!existing) {
-      classNames += ' ' + newClassName;
+      classNames += ` ${newClassName}`;
     }
 
     wikiLink.data.existing = existing;
@@ -117,7 +117,7 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
       if (isMarkdownFile(extension)) {
         wikiLink.data.hName = 'a';
         wikiLink.data.hProperties = {
-          className: classNames + ' transclusion',
+          className: `${classNames} transclusion`,
           src: url,
         };
         wikiLink.data.hChildren = [{ type: 'text', value: name }];
@@ -185,7 +185,7 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
         wikiLink.data.hName = 'a';
         wikiLink.data.hProperties = {
           href: url,
-          className: classNames + ' unsupported',
+          className: `${classNames} unsupported`,
         };
         wikiLink.data.hChildren = [{ type: 'text', value }];
       }

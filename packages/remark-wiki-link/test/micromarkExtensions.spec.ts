@@ -99,7 +99,7 @@ describe('micromark-extension-wiki-link', () => {
     test('with an alias inside a table', () => {
       const markdown = `| Column 1 | Column 2  | Column 3 |
 | -------- | --------------------------------- | -------- |
-| Data 1   | [[post-1\|Link with Alias]]       | Data 2   |`;
+| Data 1   | [[post-1|Link with Alias]]       | Data 2   |`;
       const serialized = micromark(markdown, 'ascii', {
         extensions: [syntax()],
         htmlExtensions: [html()],

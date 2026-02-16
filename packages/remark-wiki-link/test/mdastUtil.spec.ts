@@ -197,7 +197,7 @@ describe('mdast-util-wiki-link', () => {
     test('with an alias inside a table', () => {
       const markdown = `| Column 1 | Column 2  | Column 3 |
 | -------- | --------------------------------- | -------- |
-| Data 1   | [[post-1\|Link with Alias]]       | Data 2   |`;
+| Data 1   | [[post-1|Link with Alias]]       | Data 2   |`;
       const ast = fromMarkdown(markdown, {
         extensions: [syntax()],
         mdastExtensions: [

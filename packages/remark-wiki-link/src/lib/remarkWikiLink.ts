@@ -1,4 +1,4 @@
-import { syntax, SyntaxOptions } from './syntax';
+import { syntax, type SyntaxOptions } from './syntax';
 import { fromMarkdown } from './fromMarkdown';
 import { toMarkdown } from './toMarkdown';
 import type { Processor } from 'unified';
@@ -32,12 +32,8 @@ function remarkWikiLink(this: Processor, opts: Options & SyntaxOptions = {}) {
 
   if (
     !warningIssued &&
-    ((this.parser &&
-      this.parser.prototype &&
-      this.parser.prototype.blockTokenizers) ||
-      (this.compiler &&
-        this.compiler.prototype &&
-        this.compiler.prototype.visitors))
+    (this.parser?.prototype?.blockTokenizers ||
+      this.compiler?.prototype?.visitors)
   ) {
     warningIssued = true;
     console.warn(

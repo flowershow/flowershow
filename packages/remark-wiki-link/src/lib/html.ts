@@ -1,15 +1,15 @@
+import type { CompileData, Handle, HtmlExtension } from 'micromark-util-types';
 import {
   defaultUrlResolver,
   findMatchingFilePath,
+  isAudioFile,
   isImageFile,
   isMarkdownFile,
   isPdfFile,
-  isAudioFile,
   isVideoFile,
 } from '../utils';
-import type { CompileData, Handle, HtmlExtension } from 'micromark-util-types';
-import { Options } from './remarkWikiLink';
 import { WIKI_LINK_TARGET_PATTERN } from '../utils/const';
+import type { Options } from './remarkWikiLink';
 
 // Micromark HtmlExtension
 // https://github.com/micromark/micromark#htmlextension
@@ -25,9 +25,12 @@ function html(opts: Options = {}): HtmlExtension {
     return stack[stack.length - 1];
   }
 
-  const enterWikiLink: Handle = function (this, token) {
+  const enterWikiLink: Handle = function (this, _token) {
     let stack = this.getData('wikiLinkStack');
-    if (!stack) this.setData('wikiLinkStack', (stack = []));
+    if (!stack) {
+      stack = [];
+      this.setData('wikiLinkStack', stack);
+    }
 
     stack.push({
       target: undefined,
@@ -73,7 +76,7 @@ function html(opts: Options = {}): HtmlExtension {
 
     let classNames = className;
     if (!existing) {
-      classNames += ' ' + newClassName;
+      classNames += ` ${newClassName}`;
     }
 
     // Apply urlResolver to the matched file path (or original if no match)

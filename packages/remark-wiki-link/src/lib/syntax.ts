@@ -22,7 +22,7 @@ export function syntax(options?: SyntaxOptions): SyntaxExtension {
   /**
    * Tokenizer for wiki links: [[target|alias]]
    */
-  const tokenizeWikiLink: Tokenizer = function (effects, ok, nok) {
+  const tokenizeWikiLink: Tokenizer = (effects, ok, nok) => {
     let openCount = 0;
     let closeCount = 0;
     let hasTargetChar = false;
@@ -122,7 +122,7 @@ export function syntax(options?: SyntaxOptions): SyntaxExtension {
   /**
    * Tokenizer for embeds: ![[target|alias]]
    */
-  const tokenizeEmbed: Tokenizer = function (effects, ok, nok) {
+  const tokenizeEmbed: Tokenizer = (effects, ok, nok) => {
     let openCount = 0;
     let closeCount = 0;
     let hasTargetChar = false;

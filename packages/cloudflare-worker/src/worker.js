@@ -48,7 +48,7 @@ function getTypesenseClient(env) {
     nodes: [
       {
         host: env.TYPESENSE_HOST,
-        port: Number.parseInt(env.TYPESENSE_PORT),
+        port: Number.parseInt(env.TYPESENSE_PORT, 10),
         protocol: env.TYPESENSE_PROTOCOL,
       },
     ],
@@ -200,7 +200,7 @@ async function processFile({ storage, sql, typesense, siteId, branch, path }) {
       // Remove from Typesense index if it exists
       try {
         await typesense.collections(siteId).documents(`${blobId}`).delete();
-      } catch (typesenseError) {
+      } catch (_typesenseError) {
         // Document might not exist in index, which is fine
       }
 
@@ -287,7 +287,7 @@ async function handleMessage({ msg, storage, sql, typesense }) {
 
 export default {
   // HTTP endpoint (health + dev adapter)
-  async fetch(request, env, ctx) {
+  async fetch(request, env, _ctx) {
     validateEnv(env);
     const url = new URL(request.url);
 
@@ -315,7 +315,7 @@ export default {
   },
 
   // Queue consumer entry point
-  async queue(batch, env, ctx) {
+  async queue(batch, env, _ctx) {
     validateEnv(env);
     const storage = getStorageClient(env);
     const sql = getPostgresClient(env);

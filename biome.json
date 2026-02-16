@@ -23,7 +23,14 @@
     "includes": ["**", "!**/pnpm-lock.yaml", "!**/node_modules", "!**/.next"]
   },
   "linter": {
-    "enabled": false
+    "enabled": true,
+    "includes": ["packages/**"],
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        "noExplicitAny": "off"
+      }
+    }
   },
   "javascript": {
     "formatter": {

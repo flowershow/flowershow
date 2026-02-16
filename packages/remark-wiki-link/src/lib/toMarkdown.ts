@@ -1,7 +1,6 @@
-import {
-  Handle as ToMarkdownHandle,
+import type {
   Options as ToMarkdownExtension,
-  State,
+  Handle as ToMarkdownHandle,
   Unsafe,
 } from 'mdast-util-to-markdown';
 
@@ -23,7 +22,7 @@ function toMarkdown(opts: ToMarkdownOptions = {}): ToMarkdownExtension {
     },
   ];
 
-  const handler: ToMarkdownHandle = function (node, parent, state) {
+  const handler: ToMarkdownHandle = (node, _parent, state) => {
     const exit = state.enter('wikiLink');
 
     const nodeValue = state.safe(node.value, { before: '[', after: ']' });
@@ -31,7 +30,7 @@ function toMarkdown(opts: ToMarkdownOptions = {}): ToMarkdownExtension {
       ? state.safe(node.data.alias, { before: '[', after: ']' })
       : nodeValue;
 
-    let value;
+    let value: string;
     if (nodeAlias !== nodeValue) {
       value = `[[${nodeValue}${aliasDivider}${nodeAlias}]]`;
     } else {
@@ -43,7 +42,7 @@ function toMarkdown(opts: ToMarkdownOptions = {}): ToMarkdownExtension {
     return value;
   };
 
-  const embedHandler: ToMarkdownHandle = (node, parent, state) => {
+  const embedHandler: ToMarkdownHandle = (node, _parent, state) => {
     const exit = state.enter('embed');
 
     const nodeValue = state.safe(node.value, { before: '[', after: ']' });
