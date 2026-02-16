@@ -27,9 +27,8 @@ import rehypeResolveExplicitJsxUrls from './rehype-resolve-explicit-jsx-urls';
 import rehypeResolveHtmlUrls from './rehype-resolve-html-urls';
 import rehypeToReact from './rehype-to-react';
 import rehypeUnwrapParagraphsAroundMedia from './rehype-unwrap-paragraph-around-media';
-import remarkCommonMarkLinkResolver from './remark-commonmark-link-resolver';
+import RemarkCommonMarkLink from './remark-commonmark-link';
 import remarkObsidianBases from './remark-obsidian-bases';
-import remarkObsidianImageSize from './remark-obsidian-image-size';
 import { resolveFilePathToUrlPath } from './resolve-link';
 
 interface MarkdownOptions {
@@ -58,12 +57,13 @@ export async function processMarkdown(
     .use(remarkParse)
     .use(remarkObsidianComments)
     // run this before remark-wiki-link
-    .use(remarkCommonMarkLinkResolver, {
+    .use(RemarkCommonMarkLink, {
       filePath,
       sitePrefix,
       customDomain,
+      files,
+      permalinks,
     })
-    .use(remarkObsidianImageSize)
     .use(remarkWikiLink, {
       files,
       format: 'shortestPossible',
@@ -123,8 +123,10 @@ export const getMdxOptions = ({
       remarkPlugins: [
         remarkObsidianComments,
         // run this before remark-wiki-link
-        [remarkCommonMarkLinkResolver, { filePath, sitePrefix, customDomain }],
-        remarkObsidianImageSize,
+        [
+          RemarkCommonMarkLink,
+          { filePath, sitePrefix, customDomain, files, permalinks },
+        ],
         [
           remarkWikiLink,
           {

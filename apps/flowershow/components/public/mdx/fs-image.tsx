@@ -1,104 +1,200 @@
 import Image from 'next/image';
-import { ImgHTMLAttributes } from 'react';
+import React, { ImgHTMLAttributes } from 'react';
 
-function FsImage(props: ImgHTMLAttributes<HTMLImageElement>) {
+type FsImageProps = ImgHTMLAttributes<HTMLImageElement> & {
+  /** Optional: choose how to fit when author provides WxH (e.g. 300x200). */
+  fit?: 'contain' | 'cover';
+  /** Optional: fallback aspect ratio when no intrinsic size is known. */
+  fallbackAspectRatio?: `${number} / ${number}`;
+};
+
+export default function FsImage(props: FsImageProps) {
   const {
     src: rawSrc,
     alt,
-    width: rawWidth,
-    height: rawHeight,
+    width: _htmlWidth, // IMPORTANT: remove HTML <img width/height> from rest
+    height: _htmlHeight,
     className,
+    fit = 'contain',
+    fallbackAspectRatio = '16 / 9',
+    style,
     ...rest
   } = props;
 
   const src = typeof rawSrc === 'string' ? rawSrc : '';
+  if (!src) return null;
 
-  // Author-explicit dimensions (e.g. ![[image|300x200]] or HTML width/height).
-  const width = rawWidth ? parseSize(rawWidth) : undefined;
-  const height = rawHeight ? parseSize(rawHeight) : undefined;
+  // Only use next/image optimization for images from wiki-link/common-mark syntax
+  // (remark-wiki-link adds "internal" class). HTML/JSX images get a plain <img>.
+  const isInternal = className?.split(/\s+/).includes('internal');
+  if (!isInternal) {
+    return (
+      <img
+        src={src}
+        alt={alt ?? ''}
+        className={className}
+        style={style}
+        {...rest}
+      />
+    );
+  }
 
-  // DB-intrinsic dimensions: the original image geometry stored in the
-  // database. Used only for aspect ratio in responsive rendering, never
-  // as fixed pixel sizes (images may be very large).
-  const intrinsicWidth = parseSizeAttr(rest['data-intrinsic-width' as keyof typeof rest]);
-  const intrinsicHeight = parseSizeAttr(rest['data-intrinsic-height' as keyof typeof rest]);
+  // Author max-constraint dimensions from wiki-link syntax:
+  // ![[image|300]] => data-fs-width="300"
+  // ![[image|300x200]] => data-fs-width="300" data-fs-height="200"
+  const maxWidth = parseSizeAttr(rest['data-fs-width' as keyof typeof rest]);
+  const maxHeight = parseSizeAttr(rest['data-fs-height' as keyof typeof rest]);
 
-  // Strip data attributes so they don't leak onto the rendered <img>.
-  const { ['data-intrinsic-width' as string]: _iw, ['data-intrinsic-height' as string]: _ih, ...cleanRest } = rest as Record<string, unknown>;
+  // DB-intrinsic dimensions (original geometry) stored in your DB.
+  const intrinsicWidth = parseSizeAttr(
+    rest['data-fs-intrinsic-width' as keyof typeof rest],
+  );
+  const intrinsicHeight = parseSizeAttr(
+    rest['data-fs-intrinsic-height' as keyof typeof rest],
+  );
 
-  const imageProps = {
+  // Prevent passing data attributes (and any other <img>-only props) to next/image.
+  // next/image forwards "unknown" props to the underlying <img>, which is fine,
+  // but many people prefer to keep DOM clean.
+  // const cleanedRest = omitDataFs(rest);
+  const cleanedRest = rest;
+
+  const commonImageProps = {
     src,
     alt: alt ?? '',
     className: mergeClassNames('not-prose', className),
-    ...cleanRest,
-  };
+    ...cleanedRest,
+  } as const;
 
-  // Case 1: Author-explicit dimensions — render at fixed pixel size.
-  if (width || height) {
-    // next/image requires both width and height. If the author supplies
-    // only one side, mirror it to preserve a square fallback shape. The
-    // final `1` is a defensive minimum so these are always valid numbers.
-    const normalizedWidth = width ?? height ?? 1;
-    const normalizedHeight = height ?? width ?? 1;
+  // --- Case A: Author provided WxH (box constraint) ---
+  if (maxWidth && maxHeight) {
+    // Responsive box: full width up to maxWidth; height follows aspect ratio of the box.
+    return (
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: `${maxWidth}px`,
+          aspectRatio: `${maxWidth} / ${maxHeight}`,
+          margin: '0 auto',
+        }}
+      >
+        <Image
+          {...commonImageProps}
+          fill
+          sizes={`(min-width: ${maxWidth}px) ${maxWidth}px, 100vw`}
+          style={{ objectFit: fit }}
+        />
+      </div>
+    );
+  }
 
+  // --- Case B: Author provided W only (max width), keep responsive + correct ratio ---
+  if (maxWidth) {
+    // Compute the reserved height from intrinsic ratio if available; otherwise fall back.
+    const computedHeight =
+      intrinsicWidth && intrinsicHeight
+        ? Math.max(1, Math.round((maxWidth * intrinsicHeight) / intrinsicWidth))
+        : undefined;
+
+    // If we can't compute, use a wrapper with fallback aspect ratio to prevent CLS.
+    if (!computedHeight) {
+      return (
+        <div
+          style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: `${maxWidth}px`,
+            aspectRatio: fallbackAspectRatio,
+            margin: '0 auto',
+          }}
+        >
+          <Image
+            {...commonImageProps}
+            fill
+            sizes={`(min-width: ${maxWidth}px) ${maxWidth}px, 100vw`}
+            style={{ objectFit: 'contain' }}
+          />
+        </div>
+      );
+    }
+
+    // With computed ratio, use width/height (best for next/image optimization)
     return (
       <Image
-        {...imageProps}
-        width={normalizedWidth}
-        height={normalizedHeight}
+        {...commonImageProps}
+        width={maxWidth}
+        height={computedHeight}
+        sizes={`(min-width: ${maxWidth}px) ${maxWidth}px, 100vw`}
         style={{
-          width: width ? `${normalizedWidth}px` : undefined,
-          height: height ? `${normalizedHeight}px` : undefined,
+          width: '100%',
+          height: 'auto',
+          maxWidth: `${maxWidth}px`,
           margin: '0 auto',
         }}
       />
     );
   }
 
-  // Case 2: DB-intrinsic dimensions — responsive rendering with known
-  // aspect ratio. The image fills its container (`width: 100%`) while
-  // next/image uses the intrinsic size for aspect ratio calculation and
-  // srcset generation, preventing layout shift.
+  // --- Case C: No author constraint; use DB intrinsic size for ratio + full-width responsive ---
   if (intrinsicWidth && intrinsicHeight) {
     return (
       <Image
-        {...imageProps}
+        {...commonImageProps}
         width={intrinsicWidth}
         height={intrinsicHeight}
+        // Adjust this to your layout/container widths
         sizes="(min-width: 1280px) 1152px, 100vw"
-        style={{ width: '100%', height: 'auto' }}
+        style={{
+          width: '100%',
+          height: 'auto',
+          margin: '0 auto',
+        }}
       />
     );
   }
 
-  // Case 3: No dimensions at all — responsive fallback. Passing 0/0
-  // satisfies next/image's required props while signaling that layout
-  // should be driven entirely by CSS + `sizes`.
+  // --- Case D: Last-resort fallback (unknown intrinsic size) ---
+  // Use wrapper+fill with fallback aspect ratio to avoid CLS.
   return (
-    <Image
-      {...imageProps}
-      width={0}
-      height={0}
-      sizes="(min-width: 1280px) 1152px, 100vw"
-      style={{ width: '100%', height: 'auto' }}
-    />
+    <div
+      style={{
+        position: 'relative',
+        width: '100%',
+        aspectRatio: fallbackAspectRatio,
+      }}
+    >
+      <Image
+        {...commonImageProps}
+        fill
+        sizes="(min-width: 1280px) 1152px, 100vw"
+        style={{ objectFit: 'contain', margin: '0 auto' }}
+      />
+    </div>
   );
 }
-
-export default FsImage;
-
-const parseSize = (value: string | number): number =>
-  typeof value === 'number' ? value : Number.parseInt(value);
 
 /** Parse a data attribute value that may be string, number, or absent. */
 const parseSizeAttr = (value: unknown): number | undefined => {
   if (value == null) return undefined;
   if (typeof value === 'number') return value;
   if (typeof value === 'string') {
-    const n = Number.parseInt(value);
+    const n = Number.parseInt(value, 10);
     return Number.isNaN(n) ? undefined : n;
   }
   return undefined;
+};
+
+/** Drop Flowershow-specific data attrs so they don’t end up on the DOM <img>. */
+const omitDataFs = <T extends Record<string, unknown>>(obj: T): T => {
+  const {
+    ['data-fs-width']: _a,
+    ['data-fs-height']: _b,
+    ['data-fs-intrinsic-width']: _c,
+    ['data-fs-intrinsic-height']: _d,
+    ...rest
+  } = obj as any;
+  return rest as T;
 };
 
 const mergeClassNames = (...classNames: Array<string | undefined>): string =>

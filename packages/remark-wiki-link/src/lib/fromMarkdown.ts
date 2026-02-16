@@ -131,8 +131,8 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
           src: url,
           alt: name,
           className: classNames,
-          "data-fs-max-width": width ?? undefined,
-          "data-fs-max-height": height ?? undefined,
+          "data-fs-width": width ?? undefined,
+          "data-fs-height": height ?? undefined,
         };
 
         wikiLink.data.hName = "img";
@@ -155,8 +155,8 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
           src: url,
           className: classNames,
           controls: true,
-          "data-fs-max-width": width ?? undefined,
-          "data-fs-max-height": height ?? undefined,
+          "data-fs-width": width ?? undefined,
+          "data-fs-height": height ?? undefined,
         };
 
         wikiLink.data.hName = "video";

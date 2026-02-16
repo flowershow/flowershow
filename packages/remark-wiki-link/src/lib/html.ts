@@ -110,9 +110,9 @@ function html(opts: Options = {}): HtmlExtension {
 
         const [, width, height] = alias?.match(/^(\d+)(?:x(\d+))?$/) ?? [];
         if (width) {
-          imgAttributes += ` data-fs-max-width="${width}"`;
+          imgAttributes += ` data-fs-width="${width}"`;
           if (height) {
-            imgAttributes += ` data-fs-max-height="${height}"`;
+            imgAttributes += ` data-fs-height="${height}"`;
           }
         }
 
@@ -132,9 +132,9 @@ function html(opts: Options = {}): HtmlExtension {
 
         const [, width, height] = alias?.match(/^(\d+)(?:x(\d+))?$/) ?? [];
         if (width) {
-          videoAttributes += ` data-fs-max-width="${width}"`;
+          videoAttributes += ` data-fs-width="${width}"`;
           if (height) {
-            videoAttributes += ` data-fs-max-height="${height}"`;
+            videoAttributes += ` data-fs-height="${height}"`;
           }
         }
 

@@ -276,8 +276,8 @@ describe("mdast-util-wiki-link", () => {
         expect(node.data.hName).toBe("img");
         expect(node.data.hProperties?.className).toBe("internal new");
         expect(node.data.hProperties?.src).toBe("My Image.jpg");
-        expect(node.data.hProperties?.["data-fs-max-width"]).toBe("200");
-        expect(node.data.hProperties?.["data-fs-max-height"]).toBe("300");
+        expect(node.data.hProperties?.["data-fs-width"]).toBe("200");
+        expect(node.data.hProperties?.["data-fs-height"]).toBe("300");
         expect(node.data.hProperties?.alt).toBe("My Image");
       });
     });
@@ -337,8 +337,8 @@ describe("mdast-util-wiki-link", () => {
         expect(node.data.hProperties?.className).toBe("internal new");
         expect(node.data.hProperties?.src).toBe("My Video.mp4");
         expect(node.data.hProperties?.controls).toBe(true);
-        expect(node.data.hProperties?.["data-fs-max-width"]).toBe("640");
-        expect(node.data.hProperties?.["data-fs-max-height"]).toBe("480");
+        expect(node.data.hProperties?.["data-fs-width"]).toBe("640");
+        expect(node.data.hProperties?.["data-fs-height"]).toBe("480");
         expect(node.data.hChildren?.[0].value).toBe(
           "Your browser does not support the video tag.",
         );
@@ -360,9 +360,9 @@ describe("mdast-util-wiki-link", () => {
         expect(node.data.hProperties?.className).toBe("internal new");
         expect(node.data.hProperties?.src).toBe("My Video.mp4");
         expect(node.data.hProperties?.controls).toBe(true);
-        expect(node.data.hProperties?.["data-fs-max-width"]).toBe("640");
+        expect(node.data.hProperties?.["data-fs-width"]).toBe("640");
         // Height should be undefined to maintain aspect ratio
-        expect(node.data.hProperties?.["data-fs-max-height"]).toBe(undefined);
+        expect(node.data.hProperties?.["data-fs-height"]).toBe(undefined);
       });
     });
 

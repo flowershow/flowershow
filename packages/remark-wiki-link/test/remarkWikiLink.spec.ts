@@ -235,8 +235,8 @@ describe("remark-wiki-link", () => {
           expect(node.data.hProperties?.className).toBe("internal new");
           expect(node.data.hProperties?.src).toBe("My Video.mp4");
           expect(node.data.hProperties?.controls).toBe(true);
-          expect(node.data.hProperties?.["data-fs-max-width"]).toBe("640");
-          expect(node.data.hProperties?.["data-fs-max-height"]).toBe("480");
+          expect(node.data.hProperties?.["data-fs-width"]).toBe("640");
+          expect(node.data.hProperties?.["data-fs-height"]).toBe("480");
         });
       });
 

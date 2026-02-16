@@ -194,7 +194,7 @@ export default async function SitePage(props: {
     .catch(() => ({}));
 
   const imageDimensions = await api.site.getImageDimensionsMap
-    .query({ siteId: site.id, sitePrefix })
+    .query({ siteId: site.id })
     .catch(() => ({}) as ImageDimensionsMap);
 
   const blob = await api.site.getBlob

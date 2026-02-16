@@ -17,20 +17,17 @@ const rehypeInjectImageDimensions: Plugin<[Options]> = (options) => {
     visit(tree, 'element', (node: any) => {
       if (node.tagName !== 'img') return;
 
-      const src = node.properties?.src;
-      if (!src || typeof src !== 'string') return;
+      const resolvedFilePath = node.properties?.dataFsResolvedFilePath;
+      if (!resolvedFilePath || typeof resolvedFilePath !== 'string') return;
 
-      // Skip if dimensions already set (author-explicit takes priority)
-      if (node.properties.width && node.properties.height) return;
-
-      const dims = dimensions[src];
+      const dims = dimensions[resolvedFilePath];
       if (!dims) return;
 
       // Use data attributes so FsImage can distinguish DB-intrinsic geometry
       // (used for aspect ratio in responsive rendering) from author-explicit
       // dimensions (used for fixed pixel sizing).
-      node.properties['data-intrinsic-width'] = String(dims.width);
-      node.properties['data-intrinsic-height'] = String(dims.height);
+      node.properties['data-fs-intrinsic-width'] = String(dims.width);
+      node.properties['data-fs-intrinsic-height'] = String(dims.height);
     });
   };
 };

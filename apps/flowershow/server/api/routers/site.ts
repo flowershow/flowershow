@@ -1552,7 +1552,6 @@ export const siteRouter = createTRPCRouter({
     .input(
       z.object({
         siteId: z.string().min(1),
-        sitePrefix: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -1574,7 +1573,7 @@ export const siteRouter = createTRPCRouter({
           const map: Record<string, { width: number; height: number }> = {};
           for (const blob of blobs) {
             if (blob.width != null && blob.height != null) {
-              map[`${input.sitePrefix}/${blob.path}`] = {
+              map[`/${blob.path}`] = {
                 width: blob.width,
                 height: blob.height,
               };
