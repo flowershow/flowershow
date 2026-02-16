@@ -131,16 +131,9 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
           src: url,
           alt: name,
           className: classNames,
-          width: width ?? undefined,
-          height: height ?? undefined,
+          "data-fs-width": width ?? undefined,
+          "data-fs-height": height ?? undefined,
         };
-
-        // Add inline styles for better rendering control
-        if (width) {
-          const styleWidth = `width: ${width}px`;
-          const styleHeight = height ? `; height: ${height}px` : "";
-          hProperties.style = `${styleWidth}${styleHeight}`;
-        }
 
         wikiLink.data.hName = "img";
         wikiLink.data.hProperties = hProperties;
@@ -162,16 +155,9 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
           src: url,
           className: classNames,
           controls: true,
-          width: width ?? undefined,
-          height: height ?? undefined,
+          "data-fs-width": width ?? undefined,
+          "data-fs-height": height ?? undefined,
         };
-
-        // Add inline styles for better rendering control
-        if (width) {
-          const styleWidth = `width: ${width}px`;
-          const styleHeight = height ? `; height: ${height}px` : "";
-          hProperties.style = `${styleWidth}${styleHeight}`;
-        }
 
         wikiLink.data.hName = "video";
         wikiLink.data.hProperties = hProperties;
@@ -203,6 +189,13 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
         };
         wikiLink.data.hChildren = [{ type: "text", value }];
       }
+    }
+
+    if (matchingFilePath) {
+      wikiLink.data.hProperties = {
+        ...wikiLink.data.hProperties,
+        "data-fs-resolved-file-path": matchingFilePath,
+      };
     }
 
     this.exit(token);

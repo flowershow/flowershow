@@ -84,9 +84,13 @@ function html(opts: Options = {}): HtmlExtension {
       isEmbed: token.type === "embed",
     });
 
+    const resolvedAttr = matchingFilePath
+      ? ` data-fs-resolved-file-path="${matchingFilePath}"`
+      : "";
+
     if (token.type !== "embed") {
       const text = alias ?? target;
-      this.tag(`<a href="${url}" class="${classNames}">`);
+      this.tag(`<a href="${url}" class="${classNames}"${resolvedAttr}>`);
       this.raw(text);
       this.tag("</a>");
       return;
@@ -95,7 +99,7 @@ function html(opts: Options = {}): HtmlExtension {
         target.match(/^(.+?)(?:\.([^.]+))?$/) ?? [];
 
       if (isMarkdownFile(extension)) {
-        this.tag(`<a href="${url}" class="${classNames} transclusion">`);
+        this.tag(`<a href="${url}" class="${classNames} transclusion"${resolvedAttr}>`);
         this.raw(name);
         this.tag("</a>");
         return;
@@ -106,23 +110,19 @@ function html(opts: Options = {}): HtmlExtension {
 
         const [, width, height] = alias?.match(/^(\d+)(?:x(\d+))?$/) ?? [];
         if (width) {
-          imgAttributes += ` width="${width}"`;
+          imgAttributes += ` data-fs-width="${width}"`;
           if (height) {
-            imgAttributes += ` height="${height}"`;
+            imgAttributes += ` data-fs-height="${height}"`;
           }
-          // Add inline styles for better rendering control
-          const styleWidth = `width: ${width}px`;
-          const styleHeight = height ? `; height: ${height}px` : "";
-          imgAttributes += ` style="${styleWidth}${styleHeight}"`;
         }
 
-        this.tag(`<img ${imgAttributes} />`);
+        this.tag(`<img ${imgAttributes}${resolvedAttr} />`);
         return;
       }
 
       if (isPdfFile(extension)) {
         this.tag(
-          `<iframe width="100%" src="${url}" title="${name}" class="${classNames}" />`,
+          `<iframe width="100%" src="${url}" title="${name}" class="${classNames}"${resolvedAttr} />`,
         );
         return;
       }
@@ -132,31 +132,27 @@ function html(opts: Options = {}): HtmlExtension {
 
         const [, width, height] = alias?.match(/^(\d+)(?:x(\d+))?$/) ?? [];
         if (width) {
-          videoAttributes += ` width="${width}"`;
+          videoAttributes += ` data-fs-width="${width}"`;
           if (height) {
-            videoAttributes += ` height="${height}"`;
+            videoAttributes += ` data-fs-height="${height}"`;
           }
-          // Add inline styles for better rendering control
-          const styleWidth = `width: ${width}px`;
-          const styleHeight = height ? `; height: ${height}px` : "";
-          videoAttributes += ` style="${styleWidth}${styleHeight}"`;
         }
 
-        this.tag(`<video ${videoAttributes}>`);
+        this.tag(`<video ${videoAttributes}${resolvedAttr}>`);
         this.raw(`Your browser does not support the video tag.`);
         this.tag(`</video>`);
         return;
       }
 
       if (isAudioFile(extension)) {
-        this.tag(`<audio src="${url}" class="${classNames}" controls>`);
+        this.tag(`<audio src="${url}" class="${classNames}"${resolvedAttr} controls>`);
         this.raw(`Your browser does not support the audio tag.`);
         this.tag(`</audio>`);
         return;
       }
 
       // Unsupported file formats
-      this.tag(`<a href="${url}" class="${classNames} unsupported">`);
+      this.tag(`<a href="${url}" class="${classNames} unsupported"${resolvedAttr}>`);
       this.raw(target);
       this.tag("</a>");
     }

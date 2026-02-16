@@ -18,7 +18,7 @@ describe("remark-wiki-link", () => {
 
       expect(select("wikiLink", ast)).not.toEqual(null);
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("Wiki Link");
         expect(node.data.path).toBe("Wiki Link");
         expect(node.data.alias).toBe(undefined);
@@ -37,7 +37,7 @@ describe("remark-wiki-link", () => {
 
       expect(select("wikiLink", ast)).not.toEqual(null);
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("New Page");
         expect(node.data.path).toBe("New Page");
         expect(node.data.alias).toBe(undefined);
@@ -56,7 +56,7 @@ describe("remark-wiki-link", () => {
 
       expect(select("wikiLink", ast)).not.toEqual(null);
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("Wiki Link#Some Heading");
         expect(node.data.path).toBe("Wiki Link#some-heading");
         expect(node.data.alias).toBe(undefined);
@@ -80,7 +80,7 @@ describe("remark-wiki-link", () => {
 
       expect(select("wikiLink", ast)).not.toEqual(null);
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("test");
         expect(node.data.path).toBe("/test");
         expect(node.data.existing).toBe(true);
@@ -99,7 +99,7 @@ describe("remark-wiki-link", () => {
 
       expect(select("wikiLink", ast)).not.toEqual(null);
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("wiki link");
         expect(node.data.existing).toBe(true);
         expect(node.data.hProperties?.className).toBe("internal");
@@ -118,7 +118,7 @@ describe("remark-wiki-link", () => {
 
       expect(select("wikiLink", ast)).not.toEqual(null);
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("blog/post");
         expect(node.data.existing).toBe(true);
         expect(node.data.path).toBe("/Blog/Post");
@@ -137,7 +137,7 @@ describe("remark-wiki-link", () => {
 
       expect(select("wikiLink", ast)).not.toEqual(null);
 
-      visit(ast, "wikiLink", (node) => {
+      visit(ast, "wikiLink", (node: any) => {
         expect(node.value).toBe("wiki link");
         expect(node.data.existing).toBe(false);
         expect(node.data.hProperties?.className).toBe("internal new");
@@ -152,7 +152,7 @@ describe("remark-wiki-link", () => {
 
         expect(select("embed", ast)).not.toEqual(null);
 
-        visit(ast, "embed", (node) => {
+        visit(ast, "embed", (node: any) => {
           expect(node.value).toEqual("My Image.jpg");
           expect(node.data?.path).toEqual("My Image.jpg");
           expect(node.data?.alias).toEqual(undefined);
@@ -188,7 +188,7 @@ describe("remark-wiki-link", () => {
 
         expect(select("embed", ast)).not.toEqual(null);
 
-        visit(ast, "embed", (node) => {
+        visit(ast, "embed", (node: any) => {
           expect(node.value).toEqual("My Image.jpg");
           expect(node.data?.path).toEqual("/assets/My Image.jpg");
           expect(node.data?.alias).toEqual(undefined);
@@ -206,7 +206,7 @@ describe("remark-wiki-link", () => {
 
         expect(select("embed", ast)).not.toEqual(null);
 
-        visit(ast, "embed", (node) => {
+        visit(ast, "embed", (node: any) => {
           expect(node.value).toEqual("My Video.mp4");
           expect(node.data?.path).toEqual("My Video.mp4");
           expect(node.data?.alias).toEqual(undefined);
@@ -225,7 +225,7 @@ describe("remark-wiki-link", () => {
 
         expect(select("embed", ast)).not.toEqual(null);
 
-        visit(ast, "embed", (node) => {
+        visit(ast, "embed", (node: any) => {
           expect(node.value).toEqual("My Video.mp4");
           expect(node.data?.path).toEqual("My Video.mp4");
           // Alias is cleared when dimensions are parsed
@@ -235,8 +235,8 @@ describe("remark-wiki-link", () => {
           expect(node.data.hProperties?.className).toBe("internal new");
           expect(node.data.hProperties?.src).toBe("My Video.mp4");
           expect(node.data.hProperties?.controls).toBe(true);
-          expect(node.data.hProperties?.width).toBe("640");
-          expect(node.data.hProperties?.height).toBe("480");
+          expect(node.data.hProperties?.["data-fs-width"]).toBe("640");
+          expect(node.data.hProperties?.["data-fs-height"]).toBe("480");
         });
       });
 
@@ -247,7 +247,7 @@ describe("remark-wiki-link", () => {
 
         expect(select("embed", ast)).not.toEqual(null);
 
-        visit(ast, "embed", (node) => {
+        visit(ast, "embed", (node: any) => {
           expect(node.value).toEqual("My Audio.mp3");
           expect(node.data?.path).toEqual("My Audio.mp3");
           expect(node.data?.alias).toEqual(undefined);
@@ -266,7 +266,7 @@ describe("remark-wiki-link", () => {
 
         expect(select("embed", ast)).not.toEqual(null);
 
-        visit(ast, "embed", (node) => {
+        visit(ast, "embed", (node: any) => {
           expect(node.value).toEqual("My Document.pdf");
           expect(node.data?.path).toEqual("My Document.pdf");
           expect(node.data?.alias).toEqual(undefined);
@@ -294,7 +294,7 @@ describe("remark-wiki-link", () => {
 
         expect(select("wikiLink", ast)).not.toEqual(null);
 
-        visit(ast, "wikiLink", (node) => {
+        visit(ast, "wikiLink", (node: any) => {
           expect(node.value).toBe("blog/my-post");
           expect(node.data.path).toBe("/custom-url");
           expect(node.data.existing).toBe(true);
@@ -317,7 +317,7 @@ describe("remark-wiki-link", () => {
 
         expect(select("wikiLink", ast)).not.toEqual(null);
 
-        visit(ast, "wikiLink", (node) => {
+        visit(ast, "wikiLink", (node: any) => {
           expect(node.value).toBe("blog/my-post#Section");
           expect(node.data.path).toBe("/custom-url#Section");
           expect(node.data.existing).toBe(true);
@@ -339,7 +339,7 @@ describe("remark-wiki-link", () => {
 
         expect(select("wikiLink", ast)).not.toEqual(null);
 
-        visit(ast, "wikiLink", (node) => {
+        visit(ast, "wikiLink", (node: any) => {
           expect(node.value).toBe("blog/my-post");
           expect(node.data.path).toBe("blog/my-post");
           expect(node.data.existing).toBe(true);
@@ -363,7 +363,7 @@ describe("remark-wiki-link", () => {
 
         expect(select("wikiLink", ast)).not.toEqual(null);
 
-        visit(ast, "wikiLink", (node) => {
+        visit(ast, "wikiLink", (node: any) => {
           expect(node.value).toBe("test");
           // Should match blog/test.md (shortest path)
           expect(node.data.path).toBe("/test-permalink");
@@ -386,7 +386,7 @@ describe("remark-wiki-link", () => {
 
         expect(select("embed", ast)).not.toEqual(null);
 
-        visit(ast, "embed", (node) => {
+        visit(ast, "embed", (node: any) => {
           expect(node.value).toBe("image.jpg");
           // Embeds should use the permalink when available
           expect(node.data.path).toBe("/custom-image-url");
