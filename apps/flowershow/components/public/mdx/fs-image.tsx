@@ -2,71 +2,53 @@ import Image from 'next/image';
 import { ImgHTMLAttributes } from 'react';
 
 function FsImage(props: ImgHTMLAttributes<HTMLImageElement>) {
-  // TODO image optimization disabled for now, see issue https://github.com/flowershow/flowershow/issues/1013
-  // const commonProps = {
-  //   src: typeof props.src === "string" ? props.src : "",
-  //   alt: props.alt ?? "Image",
-  //   className: "not-prose",
-  // };
+  const {
+    src: rawSrc,
+    alt,
+    width: rawWidth,
+    height: rawHeight,
+    className,
+    ...rest
+  } = props;
 
-  // if (props.width && props.height) {
-  //   const width = parseSize(props.width);
-  //   const height = parseSize(props.height);
-  //   return (
-  //     <Image
-  //       {...commonProps}
-  //       width={width}
-  //       height={height}
-  //       style={{
-  //         width: `${width}px`,
-  //         height: `${height}px`,
-  //         margin: "auto",
-  //       }}
-  //     />
-  //   );
-  // }
+  const src = typeof rawSrc === 'string' ? rawSrc : '';
 
-  // if (props.width) {
-  //   const width = parseSize(props.width);
-  //   // we need some value for height, so we default to width, but this will cause layout shift if image is not square obviously
-  //   const height = width;
-  //   return (
-  //     <Image
-  //       {...commonProps}
-  //       width={width}
-  //       height={height}
-  //       style={{ margin: "auto", width: `${width}px` }}
-  //     />
-  //   );
-  // }
+  const width = rawWidth ? parseSize(rawWidth) : undefined;
+  const height = rawHeight ? parseSize(rawHeight) : undefined;
 
-  const width = props.width ? parseSize(props.width) : undefined;
-  const height = props.height ? parseSize(props.height) : undefined;
-  const style: any = {};
+  const imageProps = {
+    src,
+    alt: alt ?? '',
+    className: mergeClassNames('not-prose', className),
+    ...rest,
+  };
 
-  if (width) {
-    style.width = `${width}px`;
-    style.margin = 'auto';
-  }
-  if (height) {
-    style.height = `${height}px`;
+  if (width || height) {
+    const normalizedWidth = width ?? height ?? 1;
+    const normalizedHeight = height ?? width ?? 1;
+
+    return (
+      <Image
+        {...imageProps}
+        width={normalizedWidth}
+        height={normalizedHeight}
+        style={{
+          width: width ? `${normalizedWidth}px` : undefined,
+          height: height ? `${normalizedHeight}px` : undefined,
+          margin: '0 auto',
+        }}
+      />
+    );
   }
 
   return (
-    <div style={style}>
-      <img {...props} width={width} height={height} />
-    </div>
-    // <div style={{ position: "relative", width: "100%", aspectRatio: "3/2" }}>
-    //   {/* Optimized sizes for content width:
-    //     - Desktop (1280px+): max prose width (72rem = 1152px)
-    //     - Mobile: viewport*/}
-    //   <Image
-    //     {...commonProps}
-    //     fill
-    //     objectFit="contain"
-    //     sizes="(min-width: 1280px) 1152px, 100vw"
-    //   />
-    // </div>
+    <Image
+      {...imageProps}
+      width={0}
+      height={0}
+      sizes="(min-width: 1280px) 1152px, 100vw"
+      style={{ width: '100%', height: 'auto' }}
+    />
   );
 }
 
@@ -74,3 +56,6 @@ export default FsImage;
 
 const parseSize = (value: string | number): number =>
   typeof value === 'number' ? value : Number.parseInt(value);
+
+const mergeClassNames = (...classNames: Array<string | undefined>): string =>
+  classNames.filter(Boolean).join(' ');
