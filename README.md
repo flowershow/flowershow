@@ -10,22 +10,23 @@ This is a [Turborepo](https://turbo.build/) monorepo managed with [pnpm](https:/
 
 ```
 apps/
-  flowershow/             # Next.js web application (flowershow.app)
+  flowershow/           # Next.js web application (flowershow.app)
 packages/
-  cli/                  # @flowershow/publish — CLI for publishing sites
   cloudflare-worker/    # Markdown processing Cloudflare worker
-  obsidian-plugin/      # Obsidian plugin for Flowershow
   remark-wiki-link/     # @flowershow/remark-wiki-link — remark plugin for wiki-style links
-  themes/               # CSS themes
 content/
-  flowershow-app/       # Marketing site content (Obsidian vault)
+  flowershow-app/       # Marketing site content (Obsidian vault, not a workspace package)
 ```
 
 ## Quick Start
 
-**Prerequisites:** [Docker](https://docs.docker.com/get-docker/) and [pnpm](https://pnpm.io/installation) installed.
+**Prerequisites:** [Node.js 22+](https://nodejs.org/), [pnpm](https://pnpm.io/installation), and [Docker](https://docs.docker.com/get-docker/).
 
 ```bash
+# Clone (include the e2e test-site submodule)
+git clone --recurse-submodules https://github.com/flowershow/flowershow.git
+cd flowershow
+
 # Install dependencies
 pnpm install
 
@@ -38,7 +39,10 @@ pnpm dev:up
 
 Visit `http://cloud.localhost:3000` once it's running.
 
-### Other commands
+> If you already cloned without `--recurse-submodules`, run
+> `git submodule update --init` to fetch the e2e test site.
+
+### Commands
 
 ```bash
 pnpm dev:up --stripe           # Also start Stripe webhook forwarding
@@ -46,15 +50,40 @@ pnpm dev:up --github           # Also start Smee (GitHub webhook proxy)
 pnpm dev:up --search           # Also start Typesense
 pnpm dev:up:all                # Start everything including all optional services
 
+pnpm dev                       # Start dev servers only (no Docker infrastructure)
 pnpm dev:down                  # Stop Docker containers (keep data)
 pnpm dev:nuke                  # Stop containers + delete all data volumes
 
 pnpm build                     # Build all packages
 pnpm test                      # Run tests across all packages
-pnpm lint                      # Lint all packages
+pnpm lint                      # Lint all packages (ESLint for app, Biome for packages)
+pnpm format                    # Check formatting (Biome)
+pnpm format:write              # Auto-fix formatting
 ```
 
 For web app setup (database, storage, auth, etc.), see [`apps/flowershow/README.md`](apps/flowershow/README.md).
+
+## Tooling
+
+| Tool | Scope | Purpose |
+|------|-------|---------|
+| [Biome](https://biomejs.dev/) | Entire repo | Formatting (single quotes, 2-space indent) and linting for `packages/` |
+| [ESLint](https://eslint.org/) | `apps/flowershow` | Next.js-specific linting via `eslint-config-next` |
+| [Vitest](https://vitest.dev/) | `packages/remark-wiki-link` | Unit tests |
+| [Playwright](https://playwright.dev/) | `apps/flowershow` | E2E tests |
+| [Turborepo](https://turbo.build/) | Root | Task orchestration and caching |
+| [Changesets](https://github.com/changesets/changesets) | `packages/` | Versioning and npm publishing |
+| [Husky](https://typicode.github.io/husky/) | Root | Git hooks (pre-commit runs lint-staged) |
+
+A pre-commit hook automatically formats staged files via lint-staged before each commit.
+
+### Releasing packages
+
+```bash
+pnpm changeset                 # Create a changeset describing your change
+pnpm version-packages          # Bump versions based on changesets
+pnpm release                   # Build all packages and publish to npm
+```
 
 ## Documentation
 
