@@ -1548,10 +1548,11 @@ export const siteRouter = createTRPCRouter({
         },
       )(input);
     }),
-  getImageDimensions: publicProcedure
+  getImageDimensionsMap: publicProcedure
     .input(
       z.object({
         siteId: z.string().min(1),
+        sitePrefix: z.string(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -1570,11 +1571,16 @@ export const siteRouter = createTRPCRouter({
             },
           });
 
-          return blobs as Array<{
-            path: string;
-            width: number;
-            height: number;
-          }>;
+          const map: Record<string, { width: number; height: number }> = {};
+          for (const blob of blobs) {
+            if (blob.width != null && blob.height != null) {
+              map[`${input.sitePrefix}/${blob.path}`] = {
+                width: blob.width,
+                height: blob.height,
+              };
+            }
+          }
+          return map;
         },
         undefined,
         {

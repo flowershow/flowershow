@@ -18,7 +18,7 @@ import { getSite } from '@/lib/get-site';
 import { getSiteUrl, getSiteUrlPath } from '@/lib/get-site-url';
 import { resolveHeroConfig } from '@/lib/hero-config';
 import { isEmoji } from '@/lib/is-emoji';
-import { buildImageDimensionsMap } from '@/lib/image-dimensions';
+import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import { getMdxOptions, processMarkdown } from '@/lib/markdown';
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
@@ -193,11 +193,9 @@ export default async function SitePage(props: {
     })
     .catch(() => ({}));
 
-  const imageBlobs = await api.site.getImageDimensions
-    .query({ siteId: site.id })
-    .catch(() => [] as Array<{ path: string; width: number; height: number }>);
-
-  const imageDimensions = buildImageDimensionsMap(imageBlobs, sitePrefix);
+  const imageDimensions = await api.site.getImageDimensionsMap
+    .query({ siteId: site.id, sitePrefix })
+    .catch(() => ({}) as ImageDimensionsMap);
 
   const blob = await api.site.getBlob
     .query({
