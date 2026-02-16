@@ -63,3 +63,8 @@ packages/obsidian-plugin/main.js
 
 # beads
 .bv/
+
+# local git worktrees
+.worktrees/
+# bd worktree
+.worktrees/flowershow-kpm-2/
