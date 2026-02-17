@@ -1,0 +1,100 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+jobs:
+  e2e:
+    timeout-minutes: 30
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: flowershow-dev
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 10
+
+      minio:
+        image: minio/minio
+        env:
+          MINIO_ROOT_USER: minioadmin
+          MINIO_ROOT_PASSWORD: minioadmin
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 2s
+          --health-timeout 5s
+          --health-retries 10
+        # Note: service containers use the image entrypoint by default.
+        # minio/minio defaults to "minio server /data", which is sufficient.
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Set up MinIO bucket
+        run: |
+          # Download MinIO client
+          curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc
+          chmod +x /usr/local/bin/mc
+
+          mc alias set local http://localhost:9000 minioadmin minioadmin
+          mc mb local/flowershow
+          mc anonymous set download local/flowershow
+
+      - name: Create .env file
+        working-directory: apps/flowershow
+        run: |
+          cp .env.example .env
+
+      - name: Run database migrations
+        working-directory: apps/flowershow
+        run: |
+          npx prisma generate
+          npx prisma migrate deploy
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Start Next.js dev server
+        working-directory: apps/flowershow
+        run: |
+          npx next dev --turbopack &
+          # Wait for the server to be ready
+          timeout 120s bash -c 'until curl -sf http://localhost:3000 > /dev/null 2>&1; do sleep 2; done' \
+            || (echo "Next.js dev server failed to start" && exit 1)
+          echo "Next.js dev server is ready"
+
+      - name: Run Playwright tests
+        working-directory: apps/flowershow
+        run: npx playwright test
+        env:
+          CI: true
+
+      - name: Upload Playwright report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/flowershow/playwright-report
+          retention-days: 30
