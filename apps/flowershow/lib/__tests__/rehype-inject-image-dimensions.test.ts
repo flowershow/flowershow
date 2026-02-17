@@ -7,13 +7,17 @@ import rehypeRaw from 'rehype-raw';
 import rehypeInjectImageDimensions from '../rehype-inject-image-dimensions';
 import type { ImageDimensionsMap } from '../image-dimensions';
 
-async function process(markdown: string, dimensions: ImageDimensionsMap) {
+async function processWithRawHtml(
+  html: string,
+  dimensions: ImageDimensionsMap,
+) {
   const result = await unified()
     .use(remarkParse)
-    .use(remarkRehype)
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeRaw)
     .use(rehypeInjectImageDimensions, { dimensions })
     .use(rehypeStringify)
-    .process(markdown);
+    .process(html);
 
   return String(result);
 }
@@ -24,13 +28,13 @@ describe('rehypeInjectImageDimensions', () => {
       '/photo.png': { width: 800, height: 600 },
     };
 
-    const html = await process('![alt](/photo.png)', dimensions);
+    const html = await processWithRawHtml(
+      '<img src="/photo.png" data-fs-resolved-file-path="/photo.png" alt="alt">',
+      dimensions,
+    );
 
-    expect(html).toContain('data-intrinsic-width="800"');
-    expect(html).toContain('data-intrinsic-height="600"');
-    // Should NOT set standalone width/height attributes (only data-intrinsic-*).
-    expect(html).not.toMatch(/ width="/);
-    expect(html).not.toMatch(/ height="/);
+    expect(html).toContain('data-fs-intrinsic-width="800"');
+    expect(html).toContain('data-fs-intrinsic-height="600"');
   });
 
   it('does not overwrite existing (author-explicit) dimensions', async () => {
@@ -38,16 +42,11 @@ describe('rehypeInjectImageDimensions', () => {
       '/photo.png': { width: 800, height: 600 },
     };
 
-    // Use raw HTML with rehypeRaw to get an img that already has width/height
-    const result = await unified()
-      .use(remarkParse)
-      .use(remarkRehype, { allowDangerousHtml: true })
-      .use(rehypeRaw)
-      .use(rehypeInjectImageDimensions, { dimensions })
-      .use(rehypeStringify)
-      .process('<img src="/photo.png" width="250" height="100" alt="alt">');
+    const html = await processWithRawHtml(
+      '<img src="/photo.png" data-fs-resolved-file-path="/photo.png" width="250" height="100" alt="alt">',
+      dimensions,
+    );
 
-    const html = String(result);
     expect(html).toContain('width="250"');
     expect(html).toContain('height="100"');
   });
@@ -55,9 +54,26 @@ describe('rehypeInjectImageDimensions', () => {
   it('leaves images alone when no dimensions found in map', async () => {
     const dimensions: ImageDimensionsMap = {};
 
-    const html = await process('![alt](/unknown.png)', dimensions);
+    const html = await processWithRawHtml(
+      '<img src="/unknown.png" data-fs-resolved-file-path="/unknown.png" alt="alt">',
+      dimensions,
+    );
 
-    expect(html).not.toContain('width=');
-    expect(html).not.toContain('height=');
+    expect(html).not.toContain('data-fs-intrinsic-width');
+    expect(html).not.toContain('data-fs-intrinsic-height');
+  });
+
+  it('leaves images alone when data-fs-resolved-file-path is missing', async () => {
+    const dimensions: ImageDimensionsMap = {
+      '/photo.png': { width: 800, height: 600 },
+    };
+
+    const html = await processWithRawHtml(
+      '<img src="/photo.png" alt="alt">',
+      dimensions,
+    );
+
+    expect(html).not.toContain('data-fs-intrinsic-width');
+    expect(html).not.toContain('data-fs-intrinsic-height');
   });
 });

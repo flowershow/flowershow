@@ -13,100 +13,139 @@ afterEach(() => {
 });
 
 describe('FsImage', () => {
-  it('renders markdown images through next/image', () => {
-    render(<FsImage src="/demo.png" alt="Demo" width={320} height={200} />);
+  describe('external images (no internal class)', () => {
+    it('renders as plain img element without next/image', () => {
+      render(<FsImage src="/demo.png" alt="Demo" width={320} height={200} />);
 
-    expect(screen.getByTestId('next-image')).toBeInTheDocument();
+      expect(screen.getByRole('img')).toBeInTheDocument();
+      expect(screen.queryByTestId('next-image')).not.toBeInTheDocument();
+    });
+
+    it('preserves custom class names on plain img', () => {
+      render(
+        <FsImage
+          src="/demo.png"
+          alt="Demo"
+          width={320}
+          height={200}
+          className="rounded-lg"
+        />,
+      );
+
+      const img = screen.getByRole('img');
+      expect(img).toHaveClass('rounded-lg');
+    });
   });
 
-  it('preserves custom class names', () => {
-    render(
-      <FsImage
-        src="/demo.png"
-        alt="Demo"
-        width={320}
-        height={200}
-        className="rounded-lg"
-      />,
-    );
+  describe('internal images (wiki-link syntax)', () => {
+    it('renders markdown images through next/image', () => {
+      render(
+        <FsImage
+          src="/demo.png"
+          alt="Demo"
+          className="internal"
+          data-fs-width={320}
+          data-fs-height={200}
+        />,
+      );
 
-    const image = screen.getByTestId('next-image');
-    const props = JSON.parse(image.getAttribute('data-props') ?? '{}');
+      expect(screen.getByTestId('next-image')).toBeInTheDocument();
+    });
 
-    expect(props.className).toContain('not-prose');
-    expect(props.className).toContain('rounded-lg');
-  });
+    it('preserves custom class names', () => {
+      render(
+        <FsImage
+          src="/demo.png"
+          alt="Demo"
+          className="internal rounded-lg"
+          data-fs-width={320}
+          data-fs-height={200}
+        />,
+      );
 
-  it('uses numeric dimensions for sized rendering', () => {
-    render(<FsImage src="/demo.png" alt="Demo" width={1024} height={768} />);
+      const image = screen.getByTestId('next-image');
+      const props = JSON.parse(image.getAttribute('data-props') ?? '{}');
 
-    const image = screen.getByTestId('next-image');
-    const props = JSON.parse(image.getAttribute('data-props') ?? '{}');
+      expect(props.className).toContain('not-prose');
+      expect(props.className).toContain('rounded-lg');
+    });
 
-    expect(props.width).toBe(1024);
-    expect(props.height).toBe(768);
-    // Author-explicit: no sizes, fixed pixel rendering
-    expect(props.sizes).toBeUndefined();
-  });
+    it('uses numeric dimensions for sized rendering', () => {
+      render(
+        <FsImage
+          src="/demo.png"
+          alt="Demo"
+          className="internal"
+          data-fs-width={1024}
+          data-fs-height={768}
+        />,
+      );
 
-  it('uses intrinsic dimensions for responsive rendering with aspect ratio', () => {
-    render(
-      <FsImage
-        src="/demo.png"
-        alt="Demo"
-        {...({
-          'data-intrinsic-width': 4000,
-          'data-intrinsic-height': 3000,
-        } as any)}
-      />,
-    );
+      const image = screen.getByTestId('next-image');
+      const props = JSON.parse(image.getAttribute('data-props') ?? '{}');
 
-    const image = screen.getByTestId('next-image');
-    const props = JSON.parse(image.getAttribute('data-props') ?? '{}');
+      // When both width and height are provided, uses fill mode with wrapper
+      expect(props.fill).toBe(true);
+      expect(props.sizes).toContain('1024px');
+    });
 
-    // Intrinsic dimensions passed for aspect ratio, not fixed sizing
-    expect(props.width).toBe(4000);
-    expect(props.height).toBe(3000);
-    // Responsive: uses sizes
-    expect(props.sizes).toBeDefined();
-    // CSS drives the rendered size, not the width/height attributes
-    expect(props.style).toEqual({ width: '100%', height: 'auto' });
-  });
+    it('uses intrinsic dimensions for responsive rendering with aspect ratio', () => {
+      render(
+        <FsImage
+          src="/demo.png"
+          alt="Demo"
+          className="internal"
+          {...({
+            'data-fs-intrinsic-width': 4000,
+            'data-fs-intrinsic-height': 3000,
+          } as any)}
+        />,
+      );
 
-  it('prefers author-explicit dimensions over intrinsic dimensions', () => {
-    render(
-      <FsImage
-        src="/demo.png"
-        alt="Demo"
-        width={300}
-        height={200}
-        {...({
-          'data-intrinsic-width': 4000,
-          'data-intrinsic-height': 3000,
-        } as any)}
-      />,
-    );
+      const image = screen.getByTestId('next-image');
+      const props = JSON.parse(image.getAttribute('data-props') ?? '{}');
 
-    const image = screen.getByTestId('next-image');
-    const props = JSON.parse(image.getAttribute('data-props') ?? '{}');
+      expect(props.width).toBe(4000);
+      expect(props.height).toBe(3000);
+      expect(props.sizes).toBeDefined();
+      expect(props.style).toEqual({
+        width: '100%',
+        height: 'auto',
+        margin: '0 auto',
+      });
+    });
 
-    // Author-explicit dimensions win: fixed pixel rendering
-    expect(props.width).toBe(300);
-    expect(props.height).toBe(200);
-    expect(props.sizes).toBeUndefined();
-    // Style uses fixed pixel size, not responsive 100%
-    expect(props.style.width).toBe('300px');
-    expect(props.style.height).toBe('200px');
-  });
+    it('prefers author-explicit dimensions over intrinsic dimensions', () => {
+      render(
+        <FsImage
+          src="/demo.png"
+          alt="Demo"
+          className="internal"
+          data-fs-width={300}
+          data-fs-height={200}
+          {...({
+            'data-fs-intrinsic-width': 4000,
+            'data-fs-intrinsic-height': 3000,
+          } as any)}
+        />,
+      );
 
-  it('falls back to responsive mode when no dimensions provided', () => {
-    render(<FsImage src="/demo.png" alt="Demo" />);
+      const image = screen.getByTestId('next-image');
+      const props = JSON.parse(image.getAttribute('data-props') ?? '{}');
 
-    const image = screen.getByTestId('next-image');
-    const props = JSON.parse(image.getAttribute('data-props') ?? '{}');
+      // Author dimensions win: uses fill mode with author's aspect ratio, not intrinsic
+      expect(props.fill).toBe(true);
+      expect(props.sizes).toContain('300px');
+    });
 
-    expect(props.width).toBe(0);
-    expect(props.height).toBe(0);
-    expect(props.sizes).toBeDefined();
+    it('falls back to responsive mode when no dimensions provided', () => {
+      render(<FsImage src="/demo.png" alt="Demo" className="internal" />);
+
+      const image = screen.getByTestId('next-image');
+      const props = JSON.parse(image.getAttribute('data-props') ?? '{}');
+
+      expect(props.fill).toBe(true);
+      expect(props.sizes).toBeDefined();
+    });
   });
 });
