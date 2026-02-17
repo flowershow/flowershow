@@ -26,21 +26,6 @@ jobs:
           --health-timeout 5s
           --health-retries 10
 
-      minio:
-        image: minio/minio
-        env:
-          MINIO_ROOT_USER: minioadmin
-          MINIO_ROOT_PASSWORD: minioadmin
-        ports:
-          - 9000:9000
-        options: >-
-          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
-          --health-interval 2s
-          --health-timeout 5s
-          --health-retries 10
-        # Note: service containers use the image entrypoint by default.
-        # minio/minio defaults to "minio server /data", which is sufficient.
-
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -51,6 +36,16 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Start MinIO
+        run: |
+          docker run -d --name minio \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=minioadmin \
+            -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio server /data
+          # Wait for MinIO to be ready
+          timeout 30s bash -c 'until curl -sf http://localhost:9000/minio/health/live; do sleep 1; done'
 
       - name: Set up MinIO bucket
         run: |
