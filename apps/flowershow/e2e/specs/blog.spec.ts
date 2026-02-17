@@ -1,8 +1,7 @@
-import { expect, test } from '@playwright/test';
-import { BASE_PATH } from '../helpers/seed';
+import { expect, type Locator, test } from '../helpers/fixtures';
 
-test('Blog List Component', async ({ page }) => {
-  await page.goto(`${BASE_PATH}/blog`);
+test('Blog List Component', async ({ page, basePath }) => {
+  await page.goto(`${basePath}/blog`);
   const list = page.locator('.list-component');
 
   await test.step('renders the list component with all blog posts', async () => {
@@ -38,8 +37,8 @@ test('Blog List Component', async ({ page }) => {
   });
 });
 
-test('Blog Post Page', async ({ page }) => {
-  await page.goto(`${BASE_PATH}/blog/first-post`);
+test('Blog Post Page', async ({ page, basePath }) => {
+  await page.goto(`${basePath}/blog/first-post`);
   const content = page.locator('#mdxpage');
 
   await test.step('renders the blog post content', async () => {
@@ -50,8 +49,8 @@ test('Blog Post Page', async ({ page }) => {
   });
 });
 
-test('Blog Post Navigation from List', async ({ page }) => {
-  await page.goto(`${BASE_PATH}/blog`);
+test('Blog Post Navigation from List', async ({ page, basePath }) => {
+  await page.goto(`${basePath}/blog`);
   const list = page.locator('.list-component');
 
   await test.step('clicking a post title navigates to the post', async () => {

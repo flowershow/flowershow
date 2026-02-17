@@ -1,8 +1,7 @@
-import { expect, test } from '@playwright/test';
-import { BASE_PATH } from '../helpers/seed';
+import { expect, type Locator, test } from '../helpers/fixtures';
 
-test('Basic Markdown Rendering', async ({ page }) => {
-  await page.goto(`${BASE_PATH}/basic-syntax`);
+test('Basic Markdown Rendering', async ({ page, basePath }) => {
+  await page.goto(`${basePath}/basic-syntax`);
   const content = page.locator('#mdxpage');
 
   await test.step('renders inline formatting', async () => {

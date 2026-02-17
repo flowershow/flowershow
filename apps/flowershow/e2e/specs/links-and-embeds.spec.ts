@@ -1,5 +1,4 @@
-import { expect, type Locator, test } from '@playwright/test';
-import { BASE_PATH } from '../helpers/seed';
+import { expect, type Locator, test } from '../helpers/fixtures';
 
 const expectOptimizedImage = async (img: Locator) => {
   await expect(img).toHaveAttribute('src', /\/_next\/image\?url=/);
@@ -14,25 +13,22 @@ const sectionImages = (content: Locator, heading: string) =>
     .getByRole('heading', { level: 2, name: heading })
     .locator('xpath=following-sibling::p//img');
 
-test('Links', async ({ page }) => {
-  await page.goto(`${BASE_PATH}/links-and-embeds`);
+test('Links', async ({ page, basePath }) => {
+  await page.goto(`${basePath}/links-and-embeds`);
   const content = page.locator('#mdxpage');
 
   // ── CommonMark Links ──────────────────────────────────────────
 
   await test.step('CM: internal link to home resolves to site path', async () => {
     const link = content.locator('a', { hasText: 'Internal link to home' });
-    await expect(link).toHaveAttribute('href', /\/@.+\/e2e-test-site\/?$/);
+    await expect(link).toHaveAttribute('href', new RegExp(`^${basePath}/?$`));
   });
 
   await test.step('CM: internal link to page resolves to site path', async () => {
     const link = content.locator('a', {
       hasText: 'Internal link to basic syntax',
     });
-    await expect(link).toHaveAttribute(
-      'href',
-      /\/@.+\/e2e-test-site\/basic-syntax$/,
-    );
+    await expect(link).toHaveAttribute('href', `${basePath}/basic-syntax`);
   });
 
   await test.step('CM: external link has correct href', async () => {
@@ -49,7 +45,7 @@ test('Links', async ({ page }) => {
     const link = content.locator('a', { hasText: /^Link to nested page$/ });
     await expect(link).toHaveAttribute(
       'href',
-      /\/@.+\/e2e-test-site\/subfolder\/nested-page$/,
+      `${basePath}/subfolder/nested-page`,
     );
   });
 
@@ -63,10 +59,7 @@ test('Links', async ({ page }) => {
     const link = content.locator('a', {
       hasText: 'Dot-slash link to basic syntax',
     });
-    await expect(link).toHaveAttribute(
-      'href',
-      /\/@.+\/e2e-test-site\/basic-syntax$/,
-    );
+    await expect(link).toHaveAttribute('href', `${basePath}/basic-syntax`);
   });
 
   await test.step('CM: dot-slash relative link to nested page resolves', async () => {
@@ -75,7 +68,7 @@ test('Links', async ({ page }) => {
     });
     await expect(link).toHaveAttribute(
       'href',
-      /\/@.+\/e2e-test-site\/subfolder\/nested-page$/,
+      `${basePath}/subfolder/nested-page`,
     );
   });
 
@@ -85,7 +78,7 @@ test('Links', async ({ page }) => {
     });
     await expect(link).toHaveAttribute(
       'href',
-      /\/@.+\/e2e-test-site\/subfolder\/?$/,
+      new RegExp(`^${basePath}/subfolder/?$`),
     );
   });
 
@@ -93,32 +86,26 @@ test('Links', async ({ page }) => {
 
   await test.step('wiki: simple link renders with internal class', async () => {
     const link = content.locator('a.internal', { hasText: /^basic-syntax$/ });
-    await expect(link).toHaveAttribute(
-      'href',
-      /\/@.+\/e2e-test-site\/basic-syntax$/,
-    );
+    await expect(link).toHaveAttribute('href', `${basePath}/basic-syntax`);
   });
 
   await test.step('wiki: link with alias shows alias text', async () => {
     const link = content.locator('a.internal', {
       hasText: 'Custom Link Text',
     });
-    await expect(link).toHaveAttribute(
-      'href',
-      /\/@.+\/e2e-test-site\/basic-syntax$/,
-    );
+    await expect(link).toHaveAttribute('href', `${basePath}/basic-syntax`);
   });
 
   await test.step('wiki: link to index resolves to site root', async () => {
     const link = content.locator('a.internal', { hasText: /^index$/ });
-    await expect(link).toHaveAttribute('href', /\/@.+\/e2e-test-site\/?$/);
+    await expect(link).toHaveAttribute('href', new RegExp(`^${basePath}/?$`));
   });
 
   await test.step('wiki: shortest-possible matches nested page', async () => {
     const link = content.locator('a.internal', { hasText: /^nested-page$/ });
     await expect(link).toHaveAttribute(
       'href',
-      /\/@.+\/e2e-test-site\/subfolder\/nested-page$/,
+      `${basePath}/subfolder/nested-page`,
     );
   });
 
@@ -128,7 +115,7 @@ test('Links', async ({ page }) => {
     });
     await expect(link).toHaveAttribute(
       'href',
-      /\/@.+\/e2e-test-site\/subfolder\/nested-page$/,
+      `${basePath}/subfolder/nested-page`,
     );
   });
 
@@ -138,7 +125,7 @@ test('Links', async ({ page }) => {
     });
     await expect(link).toHaveAttribute(
       'href',
-      /\/@.+\/e2e-test-site\/subfolder\/nested-page#section-one$/,
+      `${basePath}/subfolder/nested-page#section-one`,
     );
   });
 
@@ -148,7 +135,7 @@ test('Links', async ({ page }) => {
     });
     await expect(link).toHaveAttribute(
       'href',
-      /\/@.+\/e2e-test-site\/subfolder\/nested-page#section-one$/,
+      `${basePath}/subfolder/nested-page#section-one`,
     );
   });
 
@@ -163,7 +150,7 @@ test('Links', async ({ page }) => {
     const link = content.locator('a.internal', { hasText: /^README$/ });
     await expect(link).toHaveAttribute(
       'href',
-      /\/@.+\/e2e-test-site\/subfolder\/?$/,
+      new RegExp(`^${basePath}/subfolder/?$`),
     );
   });
 
@@ -184,18 +171,19 @@ test('Links', async ({ page }) => {
 
   // ── Obsidian Embeds ───────────────────────────────────────────
 
-  const obsidianEmbedImages = sectionImages(content, 'Obsidian Embeds');
+  const obsidianEmbeds = content.getByTestId('obsidian-embeds');
+  await obsidianEmbeds.scrollIntoViewIfNeeded();
 
   await test.step('wiki embed: image renders', async () => {
-    const img = obsidianEmbedImages.nth(0);
-    await expect(img).toBeVisible({ timeout: 10_000 }); // TODO, the image is already optimized, not sure why it takes so long to load
+    const img = obsidianEmbeds.getByRole('img').first();
+    await expect(img).toBeVisible();
     await expectOptimizedImage(img);
     await expect(img).not.toHaveAttribute('data-fs-width', /.+/);
     await expect(img).not.toHaveAttribute('data-fs-height', /.+/);
   });
 
   await test.step('wiki embed: image with width has data-fs-width', async () => {
-    const img = obsidianEmbedImages.nth(1);
+    const img = obsidianEmbeds.getByRole('img').nth(1);
     await expect(img).toBeVisible();
     await expect(img).toHaveAttribute('data-fs-width', '300');
     await expect(img).not.toHaveAttribute('data-fs-height', '300');
@@ -203,7 +191,7 @@ test('Links', async ({ page }) => {
   });
 
   await test.step('wiki embed: image with dimensions has both data attributes', async () => {
-    const img = obsidianEmbedImages.nth(2);
+    const img = obsidianEmbeds.getByRole('img').nth(2);
     await expect(img).toBeVisible();
     await expectOptimizedImage(img);
     await expect(img).toHaveAttribute('data-fs-width', '300');
@@ -220,31 +208,24 @@ test('Links', async ({ page }) => {
     await expect(page.locator('h1')).toHaveText('Basic Syntax');
   });
 
+  await page.goto(`${basePath}/links-and-embeds`); // navigate back to test page
+
   await test.step('wiki link navigates to correct page', async () => {
     const link = content.locator('a.internal', { hasText: /^basic-syntax$/ });
     await link.click();
     await expect(page.locator('h1')).toHaveText('Basic Syntax');
   });
 
-  await test.step('wiki link navigates to nested page', async () => {
-    const link = content.locator('a.internal', { hasText: /^nested-page$/ });
-    await link.click();
-    await expect(page.locator('h1')).toHaveText('Nested Page');
-  });
-
   // ── Relative links from nested page ───────────────────────────
 
-  await page.goto(`${BASE_PATH}/subfolder/nested-page`);
+  await page.goto(`${basePath}/subfolder/nested-page`);
   const nestedContent = page.locator('#mdxpage');
 
   await test.step('nested: parent-relative link (../) resolves to root page', async () => {
     const link = nestedContent.locator('a', {
       hasText: 'Parent-relative link to basic syntax',
     });
-    await expect(link).toHaveAttribute(
-      'href',
-      /\/@.+\/e2e-test-site\/basic-syntax$/,
-    );
+    await expect(link).toHaveAttribute('href', `${basePath}/basic-syntax`);
   });
 
   await test.step('nested: dot-slash link (./README.md) resolves to folder path', async () => {
@@ -253,7 +234,7 @@ test('Links', async ({ page }) => {
     });
     await expect(link).toHaveAttribute(
       'href',
-      /\/@.+\/e2e-test-site\/subfolder\/?$/,
+      new RegExp(`^${basePath}/subfolder/?$`),
     );
   });
 

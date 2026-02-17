@@ -6,7 +6,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { PrismaClient, Status } from '@prisma/client';
+import { Plan, PrismaClient, Status } from '@prisma/client';
 import {
   extractImageDimensions,
   parseMarkdownForSync,
@@ -23,13 +23,21 @@ export const TEST_USER = {
   name: 'E2E Test User',
 };
 
-export const TEST_SITE = {
+export const FREE_SITE = {
   id: 'e2e-test-site-id',
   projectName: 'e2e-test-site',
 };
 
-/** URL prefix shared by every spec file: /@username/project */
-export const BASE_PATH = `/@${TEST_USER.username}/${TEST_SITE.projectName}`;
+export const FREE_SITE_BASE_PATH = `/@${TEST_USER.username}/${FREE_SITE.projectName}`;
+
+export const PREMIUM_SITE_CUSTOM_DOMAIN =
+  process.env.E2E_CUSTOM_DOMAIN || 'e2e-premium.localhost:3000';
+
+export const PREMIUM_SITE = {
+  id: 'e2e-premium-site-id',
+  projectName: 'e2e-premium-site',
+  customDomain: PREMIUM_SITE_CUSTOM_DOMAIN,
+};
 
 // --- Prisma ---
 
@@ -152,76 +160,20 @@ async function checkMinIO(s3: S3Client): Promise<void> {
   }
 }
 
-// --- Seed ---
+// --- Upload fixtures ---
 
-// --- Cache invalidation ---
-
-const ROOT_DOMAIN =
-  process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'my.flowershow.local:3000';
-
-async function revalidateCache(): Promise<void> {
-  const url = `http://${ROOT_DOMAIN}/api/e2e/revalidate`;
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ tags: [TEST_SITE.id] }),
-  });
-  if (!res.ok) {
-    console.warn(`⚠️  Cache revalidation failed (${res.status}), continuing…`);
-  }
-}
-
-export async function seed(): Promise<void> {
-  const db = getPrisma();
-  const s3 = getS3Client();
-
-  // Preflight: fail fast with clear messages if services are down
-  // Invalidate any stale Next.js Data Cache entries for this site
-  await revalidateCache();
-
-  await checkPostgres(db);
-  await checkMinIO(s3);
-
-  // 1. Clean up any existing user with the same username (in case of leftover data from previous runs)
-  await db.user
-    .deleteMany({
-      where: {
-        OR: [{ id: TEST_USER.id }, { username: TEST_USER.username }],
-      },
-    })
-    .catch(() => {});
-
-  // 2. Create User
-  await db.user.create({
-    data: {
-      id: TEST_USER.id,
-      username: TEST_USER.username,
-      email: TEST_USER.email,
-      name: TEST_USER.name,
-    },
-  });
-
-  // 2. Upsert Site
-  await db.site.upsert({
-    where: { id: TEST_SITE.id },
-    create: {
-      id: TEST_SITE.id,
-      projectName: TEST_SITE.projectName,
-      userId: TEST_USER.id,
-    },
-    update: {
-      projectName: TEST_SITE.projectName,
-    },
-  });
-
-  // 3. Upload fixtures to MinIO and create Blob records
+async function uploadFixturesForSite(
+  siteId: string,
+  db: PrismaClient,
+  s3: S3Client,
+): Promise<void> {
   const files = listFiles(TEST_SITE_DIR);
 
   for (const filePath of files) {
     const fullPath = path.join(TEST_SITE_DIR, filePath);
     const content = fs.readFileSync(fullPath);
     const ext = path.extname(filePath).slice(1);
-    const s3Key = `${TEST_SITE.id}/main/raw/${filePath}`;
+    const s3Key = `${siteId}/main/raw/${filePath}`;
 
     // Compute metadata for markdown files
     const appPath = computeAppPath(filePath);
@@ -261,12 +213,12 @@ export async function seed(): Promise<void> {
     await db.blob.upsert({
       where: {
         siteId_path: {
-          siteId: TEST_SITE.id,
+          siteId,
           path: filePath,
         },
       },
       create: {
-        siteId: TEST_SITE.id,
+        siteId,
         path: filePath,
         appPath,
         permalink,
@@ -292,7 +244,89 @@ export async function seed(): Promise<void> {
     });
   }
 
-  console.log(`Seeded ${files.length} files for site ${TEST_SITE.id}`);
+  console.log(`Seeded ${files.length} files for site ${siteId}`);
+}
+
+// --- Cache invalidation ---
+
+const ROOT_DOMAIN =
+  process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'my.flowershow.local:3000';
+
+async function revalidateCache(): Promise<void> {
+  const url = `http://${ROOT_DOMAIN}/api/e2e/revalidate`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tags: [FREE_SITE.id, PREMIUM_SITE.id] }),
+  });
+  if (!res.ok) {
+    console.warn(`⚠️  Cache revalidation failed (${res.status}), continuing…`);
+  }
+}
+
+export async function seed(): Promise<void> {
+  const db = getPrisma();
+  const s3 = getS3Client();
+
+  // Preflight: fail fast with clear messages if services are down
+  // Invalidate any stale Next.js Data Cache entries for this site
+  await revalidateCache();
+
+  await checkPostgres(db);
+  await checkMinIO(s3);
+
+  // 1. Clean up any existing user with the same username (in case of leftover data from previous runs)
+  await db.user
+    .deleteMany({
+      where: {
+        OR: [{ id: TEST_USER.id }, { username: TEST_USER.username }],
+      },
+    })
+    .catch(() => {});
+
+  // 2. Create User
+  await db.user.create({
+    data: {
+      id: TEST_USER.id,
+      username: TEST_USER.username,
+      email: TEST_USER.email,
+      name: TEST_USER.name,
+    },
+  });
+
+  // 2. Upsert Free Site
+  await db.site.upsert({
+    where: { id: FREE_SITE.id },
+    create: {
+      id: FREE_SITE.id,
+      projectName: FREE_SITE.projectName,
+      userId: TEST_USER.id,
+    },
+    update: {
+      projectName: FREE_SITE.projectName,
+    },
+  });
+
+  // 3. Upsert Premium Site (custom domain)
+  await db.site.upsert({
+    where: { id: PREMIUM_SITE.id },
+    create: {
+      id: PREMIUM_SITE.id,
+      projectName: PREMIUM_SITE.projectName,
+      userId: TEST_USER.id,
+      customDomain: PREMIUM_SITE.customDomain,
+      plan: Plan.PREMIUM,
+    },
+    update: {
+      projectName: PREMIUM_SITE.projectName,
+      customDomain: PREMIUM_SITE.customDomain,
+      plan: Plan.PREMIUM,
+    },
+  });
+
+  // 4. Upload fixtures to MinIO and create Blob records for both sites
+  await uploadFixturesForSite(FREE_SITE.id, db, s3);
+  await uploadFixturesForSite(PREMIUM_SITE.id, db, s3);
 }
 
 // --- Teardown ---

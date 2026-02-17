@@ -1,8 +1,7 @@
-import { expect, test } from '@playwright/test';
-import { BASE_PATH } from '../helpers/seed';
+import { expect, type Locator, test } from '../helpers/fixtures';
 
-test('Site Layout', async ({ page }) => {
-  await page.goto(`${BASE_PATH}`);
+test('Site Layout', async ({ page, basePath }) => {
+  await page.goto(`${basePath}`);
 
   await test.step('nav bar is visible with site title', async () => {
     const nav = page.locator('nav.site-navbar');

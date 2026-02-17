@@ -28,7 +28,7 @@ jobs:
 
     steps:
       - name: Add localhost subdomains to /etc/hosts
-        run: echo "127.0.0.1 my.localhost cloud.localhost" | sudo tee -a /etc/hosts
+        run: echo "127.0.0.1 my.localhost cloud.localhost e2e-premium.localhost" | sudo tee -a /etc/hosts
 
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -128,5 +128,6 @@ jobs:
           name: playwright-report
           path: |
             apps/flowershow/playwright-report
+            apps/flowershow/test-results
             apps/flowershow/test-debug-logs
           retention-days: 30

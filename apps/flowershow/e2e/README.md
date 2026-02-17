@@ -10,7 +10,7 @@ End-to-end tests using [Playwright](https://playwright.dev/) against a running l
 ## Running tests
 
 ```bash
-# Full run: seed DB → run tests → teardown
+# Full run: seed DB → run tests (both projects) → teardown
 pnpm test:e2e
 
 # Run a single spec file (with seed)
@@ -19,7 +19,13 @@ npx playwright test frontmatter
 # Run a single spec file (without seed)
 npx playwright test --project=chromium --no-deps frontmatter
 
-# Run setup only (seed data)
+# Run links-and-embeds against the free site only
+npx playwright test --project=chromium --no-deps links-and-embeds
+
+# Run links-and-embeds against the premium custom-domain site only
+npx playwright test --project=custom-domain --no-deps links-and-embeds
+
+# Run setup only (seed data — seeds both free and premium sites)
 npx playwright test --project=setup
 
 # Run teardown only (clean up seeded data)
@@ -40,19 +46,22 @@ e2e/
 
 ## How setup works
 
-The Playwright config defines three projects:
+The Playwright config defines four projects:
 
-1. **setup** — seeds the database and MinIO with fixture content
-2. **chromium** — runs the actual specs (depends on setup)
-3. **teardown** — deletes seeded data
+1. **setup** — seeds both the free site and the premium custom-domain site
+2. **chromium** — runs all specs against the free site (`/@test-user/e2e-test-site`)
+3. **custom-domain** — runs `links-and-embeds.spec.ts` against the premium site (`e2e-premium.flowershow.local:3000`), where links resolve without a path prefix
+4. **teardown** — deletes seeded data (depends on both chromium and custom-domain)
 
 Using `--project=chromium --no-deps` (or `pnpm test:e2e:quick`) skips the setup and teardown projects, running only the browser tests against whatever data is already in the DB.
 
 ## Shared constants
 
-All spec files import `BASE_PATH` from `./helpers/seed.ts` instead of defining their own. This ensures the test username and project name always match what was seeded:
+Most spec files import `BASE_PATH` from `./helpers/seed.ts`:
 
 ```ts
 import { BASE_PATH } from "../helpers/seed";
 // BASE_PATH = /@test-user/e2e-test-site
 ```
+
+`links-and-embeds.spec.ts` instead imports `test` from `./helpers/fixtures.ts`, which exposes a `basePath` fixture option. This lets the same spec run under both the `chromium` project (where `basePath = '/@test-user/e2e-test-site'`) and the `custom-domain` project (where `basePath = ''`).

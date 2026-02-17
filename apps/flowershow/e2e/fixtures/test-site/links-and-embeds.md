@@ -50,10 +50,14 @@ title: Links Test
 
 ## Obsidian Embeds
 
+<div data-testid="obsidian-embeds">
+
 ![[image.jpg]]
 
 ![[image.jpg|300]]
 
 ![[image.jpg|300x200]]
+
+</div>
 
 ### Anchor Target

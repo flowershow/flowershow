@@ -1,8 +1,7 @@
-import { expect, test } from '@playwright/test';
-import { BASE_PATH } from '../helpers/seed';
+import { expect, type Locator, test } from '../helpers/fixtures';
 
-test('Frontmatter metadata', async ({ page }) => {
-  await page.goto(`${BASE_PATH}/frontmatter`);
+test('Frontmatter metadata', async ({ page, basePath }) => {
+  await page.goto(`${basePath}/frontmatter`);
   const header = page.locator('.page-header');
 
   await test.step('page title comes from frontmatter', async () => {
@@ -27,8 +26,8 @@ test('Frontmatter metadata', async ({ page }) => {
   });
 });
 
-test('Home page renders title from frontmatter', async ({ page }) => {
-  await page.goto(`${BASE_PATH}`);
+test('Home page renders title from frontmatter', async ({ page, basePath }) => {
+  await page.goto(`${basePath}`);
   const header = page.locator('.page-header');
   await expect(header.locator('h1')).toHaveText('Welcome to E2E Test Site');
 });
