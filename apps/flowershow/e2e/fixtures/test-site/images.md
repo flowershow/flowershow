@@ -2,6 +2,6 @@
 title: Images
 ---
 
-![Test image](assets/test-image.jpg)
+![Test image](assets/image.jpg)
 
-![Image with alt text](assets/test-image.jpg "Image title")
+![Image with alt text](assets/image.jpg "Image title")
