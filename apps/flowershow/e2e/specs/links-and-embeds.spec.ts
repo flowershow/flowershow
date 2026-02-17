@@ -1,8 +1,21 @@
-import { expect, test } from '@playwright/test';
+import { expect, type Locator, test } from '@playwright/test';
 import { BASE_PATH } from '../helpers/seed';
 
+const expectOptimizedImage = async (img: Locator) => {
+  await expect(img).toHaveAttribute('src', /\/_next\/image\?url=/);
+  await expect(img).toHaveAttribute('srcset', /\/_next\/image\?url=/);
+  await expect(img).toHaveAttribute('data-fs-resolved-file-path', /.+/);
+  await expect(img).toHaveAttribute('data-fs-intrinsic-width', /^\d+$/);
+  await expect(img).toHaveAttribute('data-fs-intrinsic-height', /^\d+$/);
+};
+
+const sectionImages = (content: Locator, heading: string) =>
+  content
+    .getByRole('heading', { level: 2, name: heading })
+    .locator('xpath=following-sibling::p//img');
+
 test('Links', async ({ page }) => {
-  await page.goto(`${BASE_PATH}/links`);
+  await page.goto(`${BASE_PATH}/links-and-embeds`);
   const content = page.locator('#mdxpage');
 
   // ── CommonMark Links ──────────────────────────────────────────
@@ -159,33 +172,42 @@ test('Links', async ({ page }) => {
   await test.step('CM embed: image renders with alt text', async () => {
     const img = content.locator('img[alt="CM image"]');
     await expect(img).toBeVisible();
+    await expectOptimizedImage(img);
   });
 
   await test.step('CM embed: image with title has title attribute', async () => {
     const img = content.locator('img[alt="CM image with title"]');
     await expect(img).toBeVisible();
     await expect(img).toHaveAttribute('title', 'Image Title');
+    await expectOptimizedImage(img);
   });
 
   // ── Obsidian Embeds ───────────────────────────────────────────
 
+  const obsidianEmbedImages = sectionImages(content, 'Obsidian Embeds');
+
   await test.step('wiki embed: image renders', async () => {
-    const img = content.locator('img[alt="image"]:not([data-fs-width])');
+    const img = obsidianEmbedImages.nth(0);
     await expect(img).toBeVisible();
+    await expectOptimizedImage(img);
+    await expect(img).not.toHaveAttribute('data-fs-width', /.+/);
+    await expect(img).not.toHaveAttribute('data-fs-height', /.+/);
   });
 
   await test.step('wiki embed: image with width has data-fs-width', async () => {
-    const img = content.locator(
-      'img[data-fs-width="300"]:not([data-fs-height])',
-    );
+    const img = obsidianEmbedImages.nth(1);
     await expect(img).toBeVisible();
+    await expect(img).toHaveAttribute('data-fs-width', '300');
+    await expect(img).not.toHaveAttribute('data-fs-height', '300');
+    await expectOptimizedImage(img);
   });
 
   await test.step('wiki embed: image with dimensions has both data attributes', async () => {
-    const img = content.locator(
-      'img[data-fs-width="300"][data-fs-height="200"]',
-    );
+    const img = obsidianEmbedImages.nth(2);
     await expect(img).toBeVisible();
+    await expectOptimizedImage(img);
+    await expect(img).toHaveAttribute('data-fs-width', '300');
+    await expect(img).toHaveAttribute('data-fs-height', '200');
   });
 
   // ── Navigation (last, since it changes the page) ──────────────
@@ -198,15 +220,11 @@ test('Links', async ({ page }) => {
     await expect(page.locator('h1')).toHaveText('Basic Syntax');
   });
 
-  await page.goto(`${BASE_PATH}/links`);
-
   await test.step('wiki link navigates to correct page', async () => {
     const link = content.locator('a.internal', { hasText: /^basic-syntax$/ });
     await link.click();
     await expect(page.locator('h1')).toHaveText('Basic Syntax');
   });
-
-  await page.goto(`${BASE_PATH}/links`);
 
   await test.step('wiki link navigates to nested page', async () => {
     const link = content.locator('a.internal', { hasText: /^nested-page$/ });

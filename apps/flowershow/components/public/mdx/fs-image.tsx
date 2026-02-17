@@ -12,7 +12,7 @@ export default function FsImage(props: FsImageProps) {
   const {
     src: rawSrc,
     alt,
-    width: _htmlWidth, // IMPORTANT: remove HTML <img width/height> from rest
+    width: _htmlWidth,
     height: _htmlHeight,
     className,
     fit = 'contain',
@@ -143,8 +143,7 @@ export default function FsImage(props: FsImageProps) {
         {...commonImageProps}
         width={intrinsicWidth}
         height={intrinsicHeight}
-        // Adjust this to your layout/container widths
-        sizes="(min-width: 1280px) 1152px, 100vw"
+        sizes="100vw"
         style={{
           width: '100%',
           height: 'auto',
@@ -167,7 +166,7 @@ export default function FsImage(props: FsImageProps) {
       <Image
         {...commonImageProps}
         fill
-        sizes="(min-width: 1280px) 1152px, 100vw"
+        sizes="100vw"
         style={{ objectFit: 'contain', margin: '0 auto' }}
       />
     </div>
