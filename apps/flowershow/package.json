@@ -7,7 +7,7 @@
     "start": "next start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "vitest --project=unit",
+    "test": "prisma generate && vitest --project=unit",
     "test:unit": "vitest --project=unit",
     "test:storybook": "vitest --project=storybook",
     "test:all": "vitest",
