@@ -37,6 +37,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Build workspace packages
+        run: pnpm turbo build --filter='@flowershow/remark-wiki-link'
+
       - name: Start MinIO
         run: |
           docker run -d --name minio \
