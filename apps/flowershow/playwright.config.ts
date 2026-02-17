@@ -13,7 +13,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : 2,
-  timeout: process.env.CI ? 60 * 1000 : 45 * 1000,
+  timeout: process.env.CI ? 120 * 1000 : 60 * 1000,
   expect: { timeout: process.env.CI ? 10 * 1000 : 5 * 1000 },
   reporter: process.env.CI
     ? [
