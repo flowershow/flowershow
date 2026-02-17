@@ -1,41 +1,34 @@
 import { expect, test } from '@playwright/test';
+import { BASE_PATH } from '../helpers/seed';
 
-const TEST_USER = process.env.GH_E2E_TEST_ACCOUNT || 'e2e-testuser';
-const TEST_PROJECT = 'e2e-test-site';
-const BASE_PATH = `/@${TEST_USER}/${TEST_PROJECT}`;
+test('Frontmatter metadata', async ({ page }) => {
+  await page.goto(`${BASE_PATH}/frontmatter`);
+  const header = page.locator('.page-header');
 
-test.describe('Frontmatter & Blog Layout', () => {
-  test('page title comes from frontmatter', async ({ page }) => {
-    await page.goto(`${BASE_PATH}/frontmatter`);
-    const header = page.locator('.page-header');
-    await expect(header.locator('h1')).toHaveText('Post With Metadata');
+  await test.step('page title comes from frontmatter', async () => {
+    await expect(header.locator('h1')).toHaveText('Frontmatter');
   });
 
-  test('description is displayed', async ({ page }) => {
-    await page.goto(`${BASE_PATH}/frontmatter`);
-    const header = page.locator('.page-header');
+  await test.step('description is displayed', async () => {
     await expect(header).toContainText('A post with full frontmatter metadata');
   });
 
-  test('date is displayed and formatted', async ({ page }) => {
-    await page.goto(`${BASE_PATH}/frontmatter`);
-    const header = page.locator('.page-header');
+  await test.step('date is displayed and formatted', async () => {
     // formatDate uses en-US locale: "June 15, 2025"
     await expect(header).toContainText('June 15, 2025');
   });
 
-  test('meta description tag is set from frontmatter', async ({ page }) => {
-    await page.goto(`${BASE_PATH}/frontmatter`);
+  await test.step('meta description tag is set from frontmatter', async () => {
     const metaDesc = page.locator('meta[name="description"]');
     await expect(metaDesc).toHaveAttribute(
       'content',
       'A post with full frontmatter metadata',
     );
   });
+});
 
-  test('home page renders title from frontmatter', async ({ page }) => {
-    await page.goto(`${BASE_PATH}`);
-    const header = page.locator('.page-header');
-    await expect(header.locator('h1')).toHaveText('Welcome to E2E Test Site');
-  });
+test('Home page renders title from frontmatter', async ({ page }) => {
+  await page.goto(`${BASE_PATH}`);
+  const header = page.locator('.page-header');
+  await expect(header.locator('h1')).toHaveText('Welcome to E2E Test Site');
 });

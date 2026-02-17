@@ -2,8 +2,6 @@
 title: Code Blocks
 ---
 
-# Code Blocks
-
 ```javascript
 function hello() {
   console.log("Hello, world!");

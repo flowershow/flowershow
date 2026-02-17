@@ -2,19 +2,7 @@
 title: Basic Syntax
 ---
 
-# Heading 1
-
-## Heading 2
-
-### Heading 3
-
-#### Heading 4
-
-##### Heading 5
-
-###### Heading 6
-
-This is a paragraph with **bold text**, *italic text*, and ~~strikethrough text~~.
+This is a paragraph with **bold text**, _italic text_, and ~~strikethrough text~~.
 
 Here is `inline code` in a sentence.
 

@@ -1,14 +1,13 @@
 import path from 'node:path';
+import { test as teardown } from '@playwright/test';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: path.resolve(__dirname, '../.env') });
 
-import { teardown } from './helpers/seed';
+import { teardown as dbTeardown } from './helpers/seed';
 
-async function globalTeardown() {
+teardown('cleanup database', async () => {
   console.log('🧹 Cleaning up test data...');
-  await teardown();
+  await dbTeardown();
   console.log('✅ Cleanup complete');
-}
-
-export default globalTeardown;
+});

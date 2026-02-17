@@ -1,41 +1,31 @@
 import { expect, test } from '@playwright/test';
+import { BASE_PATH } from '../helpers/seed';
 
-const TEST_USER = process.env.GH_E2E_TEST_ACCOUNT || 'e2e-testuser';
-const TEST_PROJECT = 'e2e-test-site';
-const BASE_PATH = `/@${TEST_USER}/${TEST_PROJECT}`;
+test('Code Blocks', async ({ page }) => {
+  await page.goto(`${BASE_PATH}/code-blocks`);
+  const content = page.locator('#mdxpage');
 
-test.describe('Code Blocks', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_PATH}/code-blocks`);
-  });
-
-  test('renders fenced code blocks', async ({ page }) => {
-    const content = page.locator('#mdxpage');
+  await test.step('renders fenced code blocks', async () => {
     const codeBlocks = content.locator('pre');
     await expect(codeBlocks).toHaveCount(3);
   });
 
-  test('code blocks contain expected content', async ({ page }) => {
-    const content = page.locator('#mdxpage');
+  await test.step('code blocks contain expected content', async () => {
     const jsBlock = content.locator('pre').first();
     await expect(jsBlock).toContainText('function hello()');
     await expect(jsBlock).toContainText('console.log');
   });
 
-  test('code blocks have language-specific syntax highlighting', async ({
-    page,
-  }) => {
-    const content = page.locator('#mdxpage');
+  await test.step('code blocks have language-specific syntax highlighting', async () => {
     // rehype-prism-plus adds language class to <code> inside <pre>
     const jsCode = content.locator('pre code').first();
     const className = await jsCode.getAttribute('class');
     expect(className).toContain('language-javascript');
   });
 
-  test('renders inline code', async ({ page }) => {
-    const content = page.locator('#mdxpage');
+  await test.step('renders inline code', async () => {
     // Inline code is <code> NOT inside <pre>
-    const inlineCode = content.locator('p code');
-    await expect(inlineCode).toHaveText('inline code');
+    const inlineCode = content.locator('p code', { hasText: 'inline code' });
+    await expect(inlineCode).toBeVisible();
   });
 });

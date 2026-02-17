@@ -1,31 +1,22 @@
 import { expect, test } from '@playwright/test';
 import { decodeImageSrc } from '../helpers/decode-image-src';
+import { BASE_PATH } from '../helpers/seed';
 
-const TEST_USER = process.env.GH_E2E_TEST_ACCOUNT || 'e2e-testuser';
-const TEST_PROJECT = 'e2e-test-site';
-const BASE_PATH = `/@${TEST_USER}/${TEST_PROJECT}`;
+test('Images', async ({ page }) => {
+  await page.goto(`${BASE_PATH}/images`);
+  const content = page.locator('#mdxpage');
 
-test.describe('Images', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_PATH}/images`);
-  });
-
-  test('renders markdown images', async ({ page }) => {
-    const content = page.locator('#mdxpage');
+  await test.step('renders markdown images', async () => {
     const images = content.locator('img');
     await expect(images.first()).toBeVisible();
   });
 
-  test('images have alt text', async ({ page }) => {
-    const content = page.locator('#mdxpage');
+  await test.step('images have alt text', async () => {
     const img = content.locator('img').first();
     await expect(img).toHaveAttribute('alt', 'Test image');
   });
 
-  test('image src points to asset via Next.js Image or direct URL', async ({
-    page,
-  }) => {
-    const content = page.locator('#mdxpage');
+  await test.step('image src points to asset via Next.js Image or direct URL', async () => {
     const img = content.locator('img').first();
     const src = await img.getAttribute('src');
     expect(src).toBeTruthy();

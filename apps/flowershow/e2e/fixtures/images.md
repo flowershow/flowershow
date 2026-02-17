@@ -1,8 +1,6 @@
 ---
-title: Images Test
+title: Images
 ---
-
-# Images
 
 ![Test image](assets/test-image.jpg)
 

@@ -1,7 +1,11 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  HeadBucketCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { PrismaClient, Status } from '@prisma/client';
 import matter from 'gray-matter';
 
@@ -11,7 +15,7 @@ const FIXTURES_DIR = path.resolve(__dirname, '../fixtures');
 
 export const TEST_USER = {
   id: 'e2e-test-user-id',
-  username: process.env.GH_E2E_TEST_ACCOUNT || 'e2e-testuser',
+  username: 'test-user',
   email: 'e2e-test@flowershow.app',
   name: 'E2E Test User',
 };
@@ -20,6 +24,9 @@ export const TEST_SITE = {
   id: 'e2e-test-site-id',
   projectName: 'e2e-test-site',
 };
+
+/** URL prefix shared by every spec file: /@username/project */
+export const BASE_PATH = `/@${TEST_USER.username}/${TEST_SITE.projectName}`;
 
 // --- Prisma ---
 
@@ -98,23 +105,76 @@ function listFiles(dir: string, base = ''): string[] {
   return files;
 }
 
+// --- Preflight checks ---
+
+async function checkPostgres(db: PrismaClient): Promise<void> {
+  try {
+    await db.$queryRaw`SELECT 1`;
+  } catch (err) {
+    const pgUrl = process.env.POSTGRES_PRISMA_URL ?? '(not set in environment)';
+    throw new Error(
+      `PostgreSQL is not reachable.\n` +
+        `  POSTGRES_PRISMA_URL: ${pgUrl}\n` +
+        `  Make sure the database is running (e.g. "brew services start postgresql").\n` +
+        `  Original error: ${err instanceof Error ? err.message : err}`,
+    );
+  }
+}
+
+async function checkMinIO(s3: S3Client): Promise<void> {
+  const endpoint = process.env.S3_ENDPOINT || 'http://localhost:9000';
+  try {
+    await s3.send(new HeadBucketCommand({ Bucket: BUCKET }));
+  } catch (err: any) {
+    // HeadBucket can throw for missing bucket vs unreachable service.
+    // A "NotFound" or "403" means the service IS reachable (bucket issue).
+    // A network-level error means the service is down.
+    const code = err?.name ?? err?.Code ?? '';
+    if (['NotFound', 'NoSuchBucket'].includes(code)) {
+      throw new Error(
+        `MinIO is running but bucket "${BUCKET}" does not exist.\n` +
+          `  Create it with: mc mb local/${BUCKET}\n` +
+          `  Original error: ${err.message}`,
+      );
+    }
+    // 403 / AccessDenied means the service is up (auth issue or bucket exists)
+    if (code === 'AccessDenied' || err?.$metadata?.httpStatusCode === 403) {
+      return; // service is reachable, bucket likely exists
+    }
+    throw new Error(
+      `MinIO / S3 is not reachable at ${endpoint}.\n` +
+        `  Make sure MinIO is running (e.g. "minio server ~/data").\n` +
+        `  Original error: ${err instanceof Error ? err.message : err}`,
+    );
+  }
+}
+
 // --- Seed ---
 
 export async function seed(): Promise<void> {
   const db = getPrisma();
   const s3 = getS3Client();
 
-  // 1. Upsert User
-  await db.user.upsert({
-    where: { id: TEST_USER.id },
-    create: {
+  // Preflight: fail fast with clear messages if services are down
+  await checkPostgres(db);
+  await checkMinIO(s3);
+
+  // 1. Clean up any existing user with the same username (in case of leftover data from previous runs)
+  await db.user
+    .deleteMany({
+      where: {
+        OR: [{ id: TEST_USER.id }, { username: TEST_USER.username }],
+      },
+    })
+    .catch(() => {});
+
+  // 2. Create User
+  await db.user.create({
+    data: {
       id: TEST_USER.id,
       username: TEST_USER.username,
       email: TEST_USER.email,
       name: TEST_USER.name,
-    },
-    update: {
-      username: TEST_USER.username,
     },
   });
 
