@@ -69,6 +69,7 @@ jobs:
           npx prisma migrate deploy
 
       - name: Install Playwright browsers
+        working-directory: apps/flowershow
         run: npx playwright install --with-deps chromium
 
       - name: Start Next.js dev server
