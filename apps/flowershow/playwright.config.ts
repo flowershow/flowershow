@@ -12,8 +12,8 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : 2,
-  timeout: 60 * 1000, // default is 30s
-  expect: { timeout: 10_000 }, // default is 5s
+  timeout: process.env.CI ? 120 * 1000 : 30 * 1000,
+  expect: { timeout: process.env.CI ? 20 * 1000 : 5 * 1000 },
   reporter: 'html',
   use: {
     baseURL: `http://${ROOT_DOMAIN}`,
