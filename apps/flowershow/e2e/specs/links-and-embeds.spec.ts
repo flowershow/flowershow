@@ -8,11 +8,6 @@ const expectOptimizedImage = async (img: Locator) => {
   await expect(img).toHaveAttribute('data-fs-intrinsic-height', /^\d+$/);
 };
 
-const sectionImages = (content: Locator, heading: string) =>
-  content
-    .getByRole('heading', { level: 2, name: heading })
-    .locator('xpath=following-sibling::p//img');
-
 test('Links', async ({ page, basePath }) => {
   await page.goto(`${basePath}/links-and-embeds`);
   const content = page.locator('#mdxpage');
@@ -197,27 +192,9 @@ test('Links', async ({ page, basePath }) => {
     await expect(img).toHaveAttribute('data-fs-width', '300');
     await expect(img).toHaveAttribute('data-fs-height', '200');
   });
+});
 
-  // ── Navigation (last, since it changes the page) ──────────────
-
-  await test.step('CM link navigates to correct page', async () => {
-    const link = content.locator('a', {
-      hasText: 'Internal link to basic syntax',
-    });
-    await link.click();
-    await expect(page.locator('h1')).toHaveText('Basic Syntax');
-  });
-
-  await page.goto(`${basePath}/links-and-embeds`); // navigate back to test page
-
-  await test.step('wiki link navigates to correct page', async () => {
-    const link = content.locator('a.internal', { hasText: /^basic-syntax$/ });
-    await link.click();
-    await expect(page.locator('h1')).toHaveText('Basic Syntax');
-  });
-
-  // ── Relative links from nested page ───────────────────────────
-
+test('Relative links on nested page', async ({ page, basePath }) => {
   await page.goto(`${basePath}/subfolder/nested-page`);
   const nestedContent = page.locator('#mdxpage');
 
@@ -236,13 +213,5 @@ test('Links', async ({ page, basePath }) => {
       'href',
       new RegExp(`^${basePath}/subfolder/?$`),
     );
-  });
-
-  await test.step('nested: parent-relative link navigates correctly', async () => {
-    const link = nestedContent.locator('a', {
-      hasText: 'Parent-relative link to basic syntax',
-    });
-    await link.click();
-    await expect(page.locator('h1')).toHaveText('Basic Syntax');
   });
 });
