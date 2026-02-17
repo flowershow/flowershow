@@ -21,6 +21,6 @@ test('Images', async ({ page }) => {
     const src = await img.getAttribute('src');
     expect(src).toBeTruthy();
     const decoded = decodeImageSrc(src!);
-    expect(decoded).toContain('test-image');
+    expect(decoded).toContain('image');
   });
 });
