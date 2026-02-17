@@ -11,7 +11,7 @@ import matter from 'gray-matter';
 
 // --- Config ---
 
-const FIXTURES_DIR = path.resolve(__dirname, '../fixtures');
+const TEST_SITE_DIR = path.resolve(__dirname, '../fixtures/test-site');
 
 export const TEST_USER = {
   id: 'e2e-test-user-id',
@@ -151,11 +151,31 @@ async function checkMinIO(s3: S3Client): Promise<void> {
 
 // --- Seed ---
 
+// --- Cache invalidation ---
+
+const ROOT_DOMAIN =
+  process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'my.flowershow.local:3000';
+
+async function revalidateCache(): Promise<void> {
+  const url = `http://${ROOT_DOMAIN}/api/e2e/revalidate`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ tags: [TEST_SITE.id] }),
+  });
+  if (!res.ok) {
+    console.warn(`⚠️  Cache revalidation failed (${res.status}), continuing…`);
+  }
+}
+
 export async function seed(): Promise<void> {
   const db = getPrisma();
   const s3 = getS3Client();
 
   // Preflight: fail fast with clear messages if services are down
+  // Invalidate any stale Next.js Data Cache entries for this site
+  await revalidateCache();
+
   await checkPostgres(db);
   await checkMinIO(s3);
 
@@ -192,10 +212,10 @@ export async function seed(): Promise<void> {
   });
 
   // 3. Upload fixtures to MinIO and create Blob records
-  const files = listFiles(FIXTURES_DIR);
+  const files = listFiles(TEST_SITE_DIR);
 
   for (const filePath of files) {
-    const fullPath = path.join(FIXTURES_DIR, filePath);
+    const fullPath = path.join(TEST_SITE_DIR, filePath);
     const content = fs.readFileSync(fullPath);
     const ext = path.extname(filePath).slice(1);
     const s3Key = `${TEST_SITE.id}/main/raw/${filePath}`;
