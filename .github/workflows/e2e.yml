@@ -81,22 +81,52 @@ jobs:
       - name: Start Next.js dev server
         working-directory: apps/flowershow
         run: |
-          npx next dev --turbopack &
-          # Wait for the server to be ready
+          nohup npx next dev --turbopack > /tmp/next-dev.log 2>&1 &
+          echo $! > /tmp/next-dev.pid
+          echo "Next.js pid: $(cat /tmp/next-dev.pid)"
+
+          # Wait for the server to be ready and dump logs if it fails.
           timeout 120s bash -c 'until curl -sf http://localhost:3000 > /dev/null 2>&1; do sleep 2; done' \
-            || (echo "Next.js dev server failed to start" && exit 1)
+            || (echo "Next.js dev server failed to start" && tail -n 200 /tmp/next-dev.log && exit 1)
+
           echo "Next.js dev server is ready"
+          ps -p "$(cat /tmp/next-dev.pid)" -o pid,ppid,stat,etime,command
+          tail -n 50 /tmp/next-dev.log || true
 
       - name: Run Playwright tests
         working-directory: apps/flowershow
-        run: npx playwright test
+        run: |
+          set -euxo pipefail
+          echo "=== Service diagnostics ==="
+          docker ps
+          docker logs --tail 50 minio || true
+          pg_isready -h localhost -p 5432 -U postgres || true
+
+          echo "=== Next.js diagnostics ==="
+          ps -p "$(cat /tmp/next-dev.pid)" -o pid,ppid,stat,etime,command || true
+          tail -n 200 /tmp/next-dev.log || true
+          curl -sv --max-time 10 http://localhost:3000 > /tmp/next-homepage.html || true
+
+          echo "=== Running playwright with diagnostic logging ==="
+          timeout 20m bash -c 'DEBUG=pw:webserver,pw:api npx playwright test' \
+            2>&1 | tee /tmp/playwright-debug.log
         env:
           CI: true
+
+      - name: Collect debug logs
+        if: ${{ !cancelled() }}
+        run: |
+          mkdir -p apps/flowershow/test-debug-logs
+          cp /tmp/next-dev.log apps/flowershow/test-debug-logs/next-dev.log || true
+          cp /tmp/playwright-debug.log apps/flowershow/test-debug-logs/playwright-debug.log || true
+          cp /tmp/next-homepage.html apps/flowershow/test-debug-logs/next-homepage.html || true
 
       - name: Upload Playwright report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: apps/flowershow/playwright-report
+          path: |
+            apps/flowershow/playwright-report
+            apps/flowershow/test-debug-logs
           retention-days: 30
