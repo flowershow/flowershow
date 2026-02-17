@@ -18,7 +18,6 @@ When a user asks to implement something, always check for an existing related `b
 
 1. Run `bd ready` and look for the most relevant item.
 2. If you find a match, review it with `bd show <id>` and claim it with `bd update <id> --status in_progress` before coding.
-3. If no issue is a clear match, call that out and create a follow-up `bd` issue before or during implementation so the work is tracked.
 
 ## Landing the Plane (Session Completion)
 
@@ -41,6 +40,7 @@ When a user asks to implement something, always check for an existing related `b
 7. **Hand off** - Provide context for next session
 
 **CRITICAL RULES:**
+
 - Work is NOT complete until `git push` succeeds
 - NEVER stop before pushing - that leaves work stranded locally
 - NEVER say "ready to push when you are" - YOU must push

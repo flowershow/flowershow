@@ -3,10 +3,13 @@ import {
   GetObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { imageSize, types as supportedImageTypes } from 'image-size';
 import postgres from 'postgres';
 import { Client } from 'typesense';
-import { parseMarkdownFile } from './parser';
+import {
+  extractImageDimensions,
+  isSupportedImagePath,
+  parseMarkdownForSync,
+} from './processing-utils.js';
 
 // --- CONFIGURATION & VALIDATION ---
 const REQUIRED_ENV_VARS = ['DATABASE_URL'];
@@ -102,12 +105,7 @@ async function processNonMarkdownFile({ storage, sql, siteId, branch, path }) {
   let width = null;
   let height = null;
 
-  // Check if this is a supported image type before fetching from storage
-  const ext = path.split('.').pop()?.toLowerCase();
-  const normalizedExt = ext === 'jpeg' ? 'jpg' : ext === 'tif' ? 'tiff' : ext;
-  const isImage = supportedImageTypes.includes(normalizedExt);
-
-  if (isImage) {
+  if (isSupportedImagePath(path)) {
     try {
       const key = `${siteId}/${branch}/raw/${path}`;
       let buffer;
@@ -123,11 +121,9 @@ async function processNonMarkdownFile({ storage, sql, siteId, branch, path }) {
         }
       }
       if (buffer) {
-        const dimensions = imageSize(buffer);
-        if (dimensions.width && dimensions.height) {
-          width = dimensions.width;
-          height = dimensions.height;
-        }
+        const dimensions = extractImageDimensions(path, buffer);
+        width = dimensions.width;
+        height = dimensions.height;
       }
     } catch (dimError) {
       console.error('Could not extract dimensions:', dimError.message);
@@ -174,10 +170,11 @@ async function processFile({ storage, sql, typesense, siteId, branch, path }) {
     }
 
     // 3) Parse markdown
-    const { metadata, body } = await parseMarkdownFile(markdown, path);
+    const { metadata, body, permalink, shouldPublish } =
+      await parseMarkdownForSync({ markdown, path });
 
     // Check if publish is false in frontmatter
-    if (metadata.publish === false) {
+    if (!shouldPublish) {
       // Remove from storage (R2/S3)
       try {
         if (storage.type === 's3') {
@@ -208,11 +205,6 @@ async function processFile({ storage, sql, typesense, siteId, branch, path }) {
     }
 
     // 4) Update DB metadata (only if publish is not false)
-    // Normalize permalink by removing leading and trailing slashes if present
-    const permalink = metadata.permalink
-      ? metadata.permalink.replace(/^\/+/, '').replace(/\/+$/, '')
-      : null;
-
     await sql`
 		    UPDATE \"Blob\"
 		    SET metadata = ${sql.json(metadata)},
@@ -259,11 +251,6 @@ async function handleMessage({ msg, storage, sql, typesense }) {
       } catch (e) {
         console.error('Error processing non-markdown file:', e.message);
       }
-      return msg.ack();
-    }
-
-    // Skip files inside _flowershow/ directory
-    if (path.includes('_flowershow/')) {
       return msg.ack();
     }
 

@@ -7,7 +7,10 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { PrismaClient, Status } from '@prisma/client';
-import matter from 'gray-matter';
+import {
+  extractImageDimensions,
+  parseMarkdownForSync,
+} from '../../../../packages/cloudflare-worker/src/processing-utils.js';
 
 // --- Config ---
 
@@ -220,6 +223,27 @@ export async function seed(): Promise<void> {
     const ext = path.extname(filePath).slice(1);
     const s3Key = `${TEST_SITE.id}/main/raw/${filePath}`;
 
+    // Compute metadata for markdown files
+    const appPath = computeAppPath(filePath);
+    let metadata: Record<string, unknown> = {};
+    let permalink: string | null = null;
+    let shouldPublish = true;
+
+    if (['md', 'mdx'].includes(ext)) {
+      const parsed = await parseMarkdownForSync({
+        markdown: content.toString(),
+        path: filePath,
+      });
+
+      metadata = parsed.metadata;
+      permalink = parsed.permalink;
+      shouldPublish = parsed.shouldPublish;
+    }
+
+    if (!shouldPublish) {
+      continue;
+    }
+
     // Upload to S3/MinIO
     await s3.send(
       new PutObjectCommand({
@@ -230,27 +254,9 @@ export async function seed(): Promise<void> {
       }),
     );
 
-    // Compute metadata for markdown files
-    const appPath = computeAppPath(filePath);
-    let metadata: Record<string, unknown> = {};
-    let permalink: string | null = null;
-
-    if (['md', 'mdx'].includes(ext)) {
-      const parsed = matter(content.toString());
-      metadata = {
-        title: parsed.data.title || null,
-        description: parsed.data.description || null,
-        date: parsed.data.date ? String(parsed.data.date) : null,
-        authors: parsed.data.authors || null,
-        image: parsed.data.image || null,
-        publish: parsed.data.publish !== false,
-        layout: parsed.data.layout || null,
-      };
-      permalink = parsed.data.permalink || null;
-    }
-
     // Create Blob record
     const sha = crypto.createHash('sha1').update(content).digest('hex');
+    const dimensions = extractImageDimensions(filePath, content);
 
     await db.blob.upsert({
       where: {
@@ -268,6 +274,8 @@ export async function seed(): Promise<void> {
         sha,
         metadata: metadata as any,
         extension: ext || null,
+        width: dimensions.width,
+        height: dimensions.height,
         syncStatus: 'SUCCESS' as Status,
       },
       update: {
@@ -277,6 +285,8 @@ export async function seed(): Promise<void> {
         sha,
         metadata: metadata as any,
         extension: ext || null,
+        width: dimensions.width,
+        height: dimensions.height,
         syncStatus: 'SUCCESS' as Status,
       },
     });
