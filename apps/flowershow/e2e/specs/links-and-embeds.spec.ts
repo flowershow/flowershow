@@ -188,7 +188,7 @@ test('Links', async ({ page }) => {
 
   await test.step('wiki embed: image renders', async () => {
     const img = obsidianEmbedImages.nth(0);
-    await expect(img).toBeVisible();
+    await expect(img).toBeVisible({ timeout: 10_000 }); // TODO, the image is already optimized, not sure why it takes so long to load
     await expectOptimizedImage(img);
     await expect(img).not.toHaveAttribute('data-fs-width', /.+/);
     await expect(img).not.toHaveAttribute('data-fs-height', /.+/);

@@ -14,7 +14,13 @@ export default defineConfig({
   workers: process.env.CI ? 1 : 2,
   timeout: process.env.CI ? 120 * 1000 : 30 * 1000,
   expect: { timeout: process.env.CI ? 20 * 1000 : 5 * 1000 },
-  reporter: 'html',
+  reporter: process.env.CI
+    ? [
+        ['list'], // Shows each test as it runs in CI logs
+        ['html'], // Still generates HTML report for artifacts
+        ['github'], // Adds GitHub annotations
+      ]
+    : 'html',
   use: {
     baseURL: `http://${ROOT_DOMAIN}`,
     trace: 'on-first-retry',
