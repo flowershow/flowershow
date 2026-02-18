@@ -82,12 +82,19 @@ export function registerNoteTools(
       try {
         await log('info', `Requesting upload URL for ${path}…`);
         const { files } = await api.publishFiles(siteId, [{ path, size, sha }]);
+        if (files.length === 0) {
+          const message = 'Upload request returned no upload targets.';
+          await log('error', message);
+          return { content: [{ type: 'text', text: message }], isError: true };
+        }
         uploadUrl = files[0].uploadUrl;
         contentType = files[0].contentType;
       } catch (err) {
         const message =
           err instanceof ApiError
-            ? `Failed to request upload URL: ${err.message}`
+            ? err.status === 401
+              ? 'Authentication failed. Check that your FLOWERSHOW_PAT is valid.'
+              : `Failed to request upload URL: ${err.message}`
             : `Failed to request upload URL: ${err instanceof Error ? err.message : 'Unknown error'}`;
         await log('error', message);
         return { content: [{ type: 'text', text: message }], isError: true };
@@ -112,7 +119,7 @@ export function registerNoteTools(
         try {
           const status = await api.getSiteStatus(siteId);
           if (status.status === 'complete') {
-            const liveUrl = `${siteUrl}/${path.replace(/\.mdx?$/, '')}`;
+            const liveUrl = `${siteUrl}/${path.replace(/\.mdx?$/, '').replace(/^\//, '')}`;
             await log('info', `Note published: ${liveUrl}`);
             return {
               content: [
@@ -132,8 +139,15 @@ export function registerNoteTools(
             };
           }
           // status === 'pending' — continue polling
-        } catch (_err) {
-          // Status check failed — continue polling (transient errors)
+        } catch (err) {
+          if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
+            const message = err.status === 401
+              ? 'Authentication failed. Check that your FLOWERSHOW_PAT is valid.'
+              : `API error during status check: ${err.message}`;
+            await log('error', message);
+            return { content: [{ type: 'text', text: message }], isError: true };
+          }
+          // Transient error — continue polling
         }
       }
 

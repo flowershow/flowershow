@@ -242,5 +242,59 @@ describe('registerNoteTools', () => {
 
       expect(result.isError).toBe(true);
     });
+
+    it('returns error when publishFiles returns empty files array', async () => {
+      (mockApi.getSite as ReturnType<typeof vi.fn>).mockResolvedValue({ site: SITE_DETAIL });
+      (mockApi.publishFiles as ReturnType<typeof vi.fn>).mockResolvedValue({ files: [] });
+
+      const { client } = await createTestClient(mockApi);
+      const result = await client.callTool({
+        name: 'publish-note',
+        arguments: { siteId: 'site1', path: 'notes/hello.md', content: '# Hello' },
+      });
+
+      expect(result.isError).toBe(true);
+      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      expect(text).toContain('no upload targets');
+    });
+
+    it('returns auth error message when publishFiles returns 401', async () => {
+      (mockApi.getSite as ReturnType<typeof vi.fn>).mockResolvedValue({ site: SITE_DETAIL });
+      (mockApi.publishFiles as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new ApiError(401, 'Unauthorized', ''),
+      );
+
+      const { client } = await createTestClient(mockApi);
+      const result = await client.callTool({
+        name: 'publish-note',
+        arguments: { siteId: 'site1', path: 'notes/hello.md', content: '# Hello' },
+      });
+
+      expect(result.isError).toBe(true);
+      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      expect(text).toContain('Authentication failed');
+      expect(text).toContain('FLOWERSHOW_PAT');
+    });
+
+    it('strips leading slash from path when constructing live URL', async () => {
+      (mockApi.getSite as ReturnType<typeof vi.fn>).mockResolvedValue({ site: SITE_DETAIL });
+      (mockApi.publishFiles as ReturnType<typeof vi.fn>).mockResolvedValue({
+        files: [{ path: '/notes/hello.md', uploadUrl: 'https://s3.example.com/p', blobId: 'b1', contentType: 'text/markdown' }],
+      });
+      (mockApi.uploadToPresignedUrl as ReturnType<typeof vi.fn>).mockResolvedValue(undefined);
+      (mockApi.getSiteStatus as ReturnType<typeof vi.fn>).mockResolvedValue({
+        siteId: 'site1', status: 'complete', files: { total: 1, pending: 0, success: 1, failed: 0 },
+      });
+
+      const { client } = await createTestClient(mockApi);
+      const result = await client.callTool({
+        name: 'publish-note',
+        arguments: { siteId: 'site1', path: '/notes/hello.md', content: '# Hello' },
+      });
+
+      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      expect(text).not.toContain('//notes');
+      expect(text).toContain('https://my-blog.flowershow.app/notes/hello');
+    });
   });
 });
