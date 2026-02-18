@@ -523,6 +523,9 @@ importers:
       '@asteasolutions/zod-to-openapi':
         specifier: ^7.3.0
         version: 7.3.4(zod@3.25.76)
+      openapi3-ts:
+        specifier: ^4.5.0
+        version: 4.5.0
       zod:
         specifier: ^3.25.67
         version: 3.25.76
