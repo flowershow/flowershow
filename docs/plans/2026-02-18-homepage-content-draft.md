@@ -1,6 +1,6 @@
 # Homepage Content Draft
 
-> Status: First draft — Feb 2026
+> Status: Second draft — Feb 2026 (revised for conversion)
 > For design/layout spec see: 2026-02-18-site-ia.md
 > Brand reference: brand-strategy.md, PRODUCT.md
 
@@ -11,12 +11,12 @@ decisions. Annotations in [brackets] give notes for the designer/developer.
 
 ## Section 1: Hero
 
-[Full-width section. Large headline, subhead, primary CTA button, secondary link, demo
-video below. This is the A+C layer — practical promise in the first 3 seconds.]
+[Full-width section. Large headline, subhead, pricing nudge, primary CTA, secondary
+link, demo video. A+C layer — practical promise in the first 3 seconds.]
 
 ---
 
-**Headline (pick one — both are strong, left open for testing):**
+**Headline (A/B test these two):**
 
 > Content to URL. Instantly.
 
@@ -24,70 +24,62 @@ video below. This is the A+C layer — practical promise in the first 3 seconds.
 
 > Markdown to website in seconds.
 
+*Note: "Content to URL. Instantly." is punchier and broader. "Markdown to website in
+seconds" signals the audience more specifically. Both are strong — test to decide.*
+
 ---
 
-**Subheadline:**
+**Subheadline (two lines — aspiration first, pain second):**
 
-> Stop wrestling with build pipelines, CMS configs, and deploy scripts.
-> Drop your files, get a live website. Docs, blogs, landing pages, knowledge bases —
-> published in seconds, not hours.
+> The fastest way to turn your markdown into a live, beautiful website.
+> No repos, no build pipelines, no waiting.
+
+---
+
+**Trust nudge (small text, below subhead):**
+
+> Free plan available — no credit card required.
 
 ---
 
 **Primary CTA:**
 
-> Start publishing — free forever
+> Start publishing free →
 
 **Secondary link:**
 
-> See it in action →
+> Watch the demo ↓
 
-[Secondary link scrolls to or opens the demo video]
-
----
-
-**Below the CTA: demo video**
-
-[Autoplay, muted, looped. The existing demo.mp4 works here.]
+[Secondary link anchors to the demo video below]
 
 ---
 
-## Section 2: Ways to Publish
+**Social proof bar (between CTA and demo video):**
 
-[Visual, scannable section. Four paths shown as icon + label + one-line description.
-Not a marketing pitch — just honest "here's how you can use it." Links go to /github,
-/publish, /docs/cli, /use-cases/obsidian respectively.]
+[A single quiet line of credibility — use whichever stat is honest and largest:]
 
----
+> Trusted by X,000+ publishers worldwide.
 
-**Section heading:** How it works
+*or, if user count isn't available/impressive yet:*
 
-**Intro line:** Connect your content however works for you. We handle the rest.
+> Join a growing community of researchers, writers, and teams publishing with Flowershow.
 
----
-
-**Four paths:**
-
-**Drag & drop**
-Upload a folder or single file in the browser. Your site is live in seconds.
-
-**GitHub**
-Connect a repo. Every push publishes automatically. Great for teams and version-controlled content.
-
-**CLI**
-`publish ./my-folder` from the terminal. No repo needed. Built for speed, scripts, and AI agents.
-→ [Learn more about the CLI](/publish)
-
-**Obsidian plugin**
-Publish directly from your vault. Your wikilinks, graph, and all your markdown features work out of the box.
-→ [Flowershow for Obsidian](/use-cases/obsidian)
+[Designer note: keep this very light — small text, muted colour. It's not the hero,
+just an anchor of trust before the video.]
 
 ---
 
-## Section 3: Features
+**Demo video**
 
-[Grid of 6 cards. Lead each card with the benefit, follow with the feature. Keep short.
-This is the B layer — elegance and simplicity shown, not just claimed.]
+[Autoplay, muted, looped. Existing demo.mp4.]
+
+---
+
+## Section 2: Features
+
+[Grid of 6 cards. Lead with benefit, follow with feature. Short.
+Moved "Ways to Publish" to after this section — let the page build desire first,
+then explain the mechanism.]
 
 ---
 
@@ -115,11 +107,69 @@ Bring your own domain. Customize with CSS or Tailwind. Pick from official themes
 
 ---
 
-## Section 4: Why Now — The Narrative Section
+## Section 3: Testimonials
 
-[New section. This is the D layer — "publishing rebuilt for the AI age." 3–5 short
-paragraphs or a tight editorial block. Not bullet points. This is the first place on
-the homepage where Flowershow sounds like it has a perspective, not just a feature set.
+[NEW SECTION. 2–3 short quotes from real users. Real names, real sites. Pull from
+community members, GitHub discussions, Discord, or direct outreach. Format: pull quote
++ name + site URL or role. Positioned here — after features, before the "how it works"
+section — to validate the promise before explaining the mechanism.]
+
+---
+
+**Section heading:** What people are saying
+
+---
+
+> "I had my site live in under a minute. I didn't believe it until I tried it."
+> — [Name], [site or role]
+
+> "Finally a publishing tool that gets out of my way. My Obsidian vault is now a proper
+> website and I didn't have to touch a config file."
+> — [Name], [site or role]
+
+> "We use Flowershow to publish our team's research notes. It's become the fastest part
+> of our workflow."
+> — [Name], [organisation]
+
+*[PLACEHOLDER — these need to be real quotes. Reach out to active community members,
+check GitHub discussions and Discord for existing praise that can be used with permission.
+Even one strong real quote beats three placeholder ones.]*
+
+---
+
+## Section 4: Ways to Publish
+
+[Moved from Section 2. Visitor now understands the value — this explains the mechanism.
+Four paths as icon + label + one-line description + optional link.]
+
+---
+
+**Section heading:** Works however you work
+
+**Intro line:** Connect your content your way. We handle the rest.
+
+---
+
+**Drag & drop**
+Upload a folder or file in the browser. Your site is live in seconds. No account setup beyond signing in.
+
+**GitHub**
+Connect a repo. Every push publishes automatically. Perfect for teams and version-controlled content.
+→ [Learn more](/github)
+
+**CLI**
+`publish ./my-folder` from the terminal. No repo needed. Built for speed, scripts, and AI agents.
+→ [Flowershow CLI](/publish)
+
+**Obsidian plugin**
+Publish directly from your vault. Wikilinks, graph, and all your Obsidian features work out of the box.
+→ [Flowershow for Obsidian](/use-cases/obsidian)
+
+---
+
+## Section 5: Why Now — The Narrative Section
+
+[The D layer. Editorial prose, not bullet points. Flowershow's perspective on the world.
 Ends with a link to the About page for the full story.]
 
 ---
@@ -129,8 +179,7 @@ Ends with a link to the About page for the full story.]
 ---
 
 Content is moving faster than ever. AI writes drafts in seconds. Research accumulates
-in tools like Obsidian overnight. Teams produce more in a day than they used to in a
-week.
+in tools like Obsidian overnight. Teams produce more in a day than they used to in a week.
 
 Publishing infrastructure hasn't kept up. Setting up a website still means choosing a
 framework, configuring a build pipeline, picking a CMS, wiring up a deploy script —
@@ -138,8 +187,8 @@ and that's before you've written a word. The tools we use to share ideas were de
 for a world that no longer exists.
 
 Flowershow is what you'd build if you started from scratch today. Drop your content,
-get a URL. That's the whole workflow. It's fast because it should be. It's simple
-because complexity is our problem, not yours.
+get a URL. That's the whole workflow. Fast because it should be. Simple because
+complexity is our problem, not yours.
 
 And increasingly, the person publishing isn't a person at all — it's an agent, a script,
 a pipeline. Flowershow works for that too.
@@ -148,10 +197,11 @@ a pipeline. Flowershow works for that too.
 
 ---
 
-## Section 5: Use Cases
+## Section 6: Use Cases
 
-[Cards grid linking to /use-cases/* pages. Each card: title + one sentence. Not trying
-to sell here — just signposting. 7–8 cards in a responsive grid.]
+[Radically trimmed to 4 priority cards on the homepage. Link to the full use cases
+index for the rest. 4 cards in a 2×2 or horizontal row — clean, scannable, no
+hierarchy problem.]
 
 ---
 
@@ -163,34 +213,32 @@ to sell here — just signposting. 7–8 cards in a responsive grid.]
 
 **Obsidian**
 Publish your vault directly. Wikilinks, graph view, and all your Obsidian flavour — live on the web.
+→ [See how](/use-cases/obsidian)
 
 **Blogs**
-A beautiful blog in minutes. Author profiles, comments, RSS, full-text search — everything you'd expect, none of the setup.
+A beautiful blog in minutes. Author profiles, comments, full-text search — everything you'd expect, none of the setup.
+→ [See how](/use-cases/blogs)
 
-**Knowledge Bases**
-Turn a folder of notes into a searchable, navigable knowledge base. Great for teams and public documentation.
-
-**Docs & Handbooks**
-Structured documentation with sidebar navigation, table of contents, and versioning via Git.
-
-**Landing Pages**
-A single markdown file with a hero, features, and a CTA. Beautiful by default, live in seconds.
-
-**Data Stories**
-Prose + live data, together. Embed charts, tables, and visualizations directly in your markdown.
-
-**Wikis**
-Collaborative, interlinked, always up to date. Built for teams who think in connected notes.
+**Knowledge Bases & Docs**
+Turn a folder of notes into a searchable, navigable knowledge base for your team or the world.
+→ [See how](/use-cases/knowledge-bases)
 
 **AI & Automated Publishing**
-Publish from scripts, cron jobs, or AI agents. The CLI is a single command — easy to automate, easy to integrate.
+Publish from scripts, cron jobs, or AI agents. One command. No UI required.
+→ [See how](/use-cases/ai-publishing)
 
 ---
 
-## Section 6: Social Proof — Community Showcase
+**Below the 4 cards:**
 
-[Existing community showcase grid. Keep as-is — it's strong. 12 sites, screenshots,
-names. No copy changes needed here beyond the section heading.]
+> Also great for: [landing pages](/use-cases/landing-pages) · [data stories](/use-cases/data-stories) · [wikis](/use-cases/wikis) · [team handbooks](#)
+> → [See all use cases](/use-cases/)
+
+---
+
+## Section 7: Social Proof — Community Showcase
+
+[Existing 12-site grid. Keep as-is.]
 
 ---
 
@@ -198,44 +246,80 @@ names. No copy changes needed here beyond the section heading.]
 
 **Intro line:** Thousands of sites, across every use case imaginable.
 
-[Then: the 12-site grid as it exists today]
+[12-site grid as now]
 
 ---
 
-**Below the grid — a quiet reinforcing line:**
+**Below the grid:**
 
 > This site is built with Flowershow. [View the source on GitHub →](https://github.com/flowershow/flowershow-app)
 
-[Keep this. It's good. Move it from its current mid-page position to just below the
-community grid where it lands harder as social proof.]
+---
+
+## Section 8: FAQ — Objection Handler
+
+[NEW SECTION. 3–4 short Q&A pairs. Collapsible (accordion) or inline. Positioned here
+— after the showcase, before the final CTA — to clear the last doubts before the
+conversion moment. Keep answers to 1–3 sentences max.]
 
 ---
 
-## Section 7: Newsletter
-
-[Keep the existing Tally form embed. Heading update:]
+**Section heading:** Common questions
 
 ---
 
-**Heading:** Stay in the loop
+**Is it really free?**
+Yes. The free plan lets you publish one site with no time limit and no credit card required.
+Premium plans start at $5/month and unlock custom domains, full-text search, and more.
+[See pricing →](/pricing)
 
-**Subhead:** New features, tutorials, and the occasional idea worth sharing. No spam.
+**What markdown does it support?**
+CommonMark, GitHub Flavored Markdown, Obsidian wiki links, Mermaid diagrams, LaTeX math,
+and more. If you're already writing in Obsidian, Typora, or any markdown editor, your
+content works as-is.
 
-[Tally embed as now]
+**What if I want to move away from Flowershow?**
+Your content stays in plain markdown files — you own them completely. There's no
+proprietary format, no lock-in. Take your files anywhere, any time.
+
+**Can I use my own domain?**
+Yes, on the Premium plan. Custom domains, custom favicons, and custom social images
+are all available. [See pricing →](/pricing)
 
 ---
 
-## Section 8: Final CTA
+## Section 9: Newsletter
 
-[Dark background banner. Keep the existing structure. Copy update:]
+[Moved above the final CTA. Presented as a lower-commitment option for visitors who
+aren't ready to sign up yet — "not ready? stay in touch." Reduces pressure without
+killing conversion momentum.]
 
 ---
 
-**Heading:** Your content deserves to be seen.
+**Heading:** Not ready yet? Stay in the loop.
 
-**Subhead:** Publish an elegant website in seconds — free forever.
+**Subhead:** New features, tutorials, and the occasional idea worth sharing. No spam, unsubscribe any time.
+
+[Tally embed]
+
+---
+
+## Section 10: Final CTA
+
+[Dark background banner. Mirrors the hero headline to bookend the page — a proven
+conversion pattern. Creates a satisfying loop and reinforces the core message at the
+moment of decision.]
+
+---
+
+**Heading:** Content to URL. Instantly. Free.
+
+**Subhead:** Join thousands of writers, researchers, and teams already publishing with Flowershow.
 
 **CTA button:** Start publishing free →
+
+**Quiet secondary line (below button):**
+> No credit card required. Free plan, forever.
 
 ---
 
@@ -251,16 +335,25 @@ community grid where it lands harder as social proof.]
 - "Supercharge your workflow" — generic
 - "Seamlessly integrates" — nobody talks like this
 - "Powerful and flexible" — every product says this
-- Emojis in body copy — fine in feature cards (carries through from existing site), nowhere else
+- Emojis in body copy — fine in feature cards, nowhere else
 
-### Headline decision (left open)
-"Content to URL. Instantly." is punchier and broader (not markdown-specific).
-"Markdown to website in seconds" is more specific — signals the audience immediately.
-Recommend A/B testing both. Either works with this page structure.
+### Changes from first draft and why
 
-### Things this draft does not decide
-- Visual hierarchy (designer's job)
-- Which features get screenshots vs icons vs nothing
-- Exact copy for the Ways to Publish section (depends on whether /github page exists)
-- Video content (existing demo.mp4 is fine to start)
-- Image/screenshot selection for use case cards
+| Change | Reason |
+|---|---|
+| Added pricing nudge near hero | Free is a major conversion driver — make it visible immediately |
+| Added social proof bar near hero | Trust is the primary blocker for unknown products |
+| Added testimonials section (Section 3) | Specific social proof beats generic; positioned before "how it works" |
+| Moved Ways to Publish to Section 4 | Build desire first (features), then explain mechanism |
+| Restructured hero subhead | Aspiration first, pain negation second — broader appeal |
+| Trimmed use cases to 4 + overflow link | 8 equal cards creates no hierarchy; 4 is scannable |
+| Added FAQ section | Removes last objections before conversion moment |
+| Repositioned newsletter | Above final CTA as lower-commitment alternative, not interruption |
+| Rewrote final CTA heading | Mirrors hero headline — bookend pattern, stronger conversion |
+
+### Things still not decided
+- Actual testimonial quotes (need to source from real users)
+- Actual user/site count stat for social proof bar
+- Visual treatment of use cases (cards with images vs icon+text)
+- Whether /github page exists yet (Ways to Publish link is conditional)
+- Screenshot/video selection for feature deep-dives (if kept)
