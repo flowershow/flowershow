@@ -36,6 +36,9 @@ async function createTestClient(api: FlowershowApi) {
 describe('registerSiteTools', () => {
   const mockApi = {
     listSites: vi.fn(),
+    getSite: vi.fn(),
+    createSite: vi.fn(),
+    deleteSite: vi.fn(),
   } as unknown as FlowershowApi;
 
   beforeEach(() => {
@@ -46,9 +49,9 @@ describe('registerSiteTools', () => {
     const { client } = await createTestClient(mockApi);
     const { tools } = await client.listTools();
 
-    expect(tools).toHaveLength(1);
-    expect(tools[0].name).toBe('list-sites');
-    expect(tools[0].description).toBe('List all your Flowershow sites');
+    expect(tools.map((t) => t.name)).toContain('list-sites');
+    const listSitesTool = tools.find((t) => t.name === 'list-sites');
+    expect(listSitesTool?.description).toBe('List all your Flowershow sites');
   });
 
   describe('list-sites tool', () => {
@@ -271,6 +274,137 @@ describe('registerSiteTools', () => {
       const errorLog = logs.find((l) => l.level === 'error');
       expect(errorLog).toBeDefined();
       expect(errorLog!.data).toContain('Authentication failed');
+    });
+  });
+
+  describe('get-site tool', () => {
+    it('registers a get-site tool', async () => {
+      const { client } = await createTestClient(mockApi);
+      const { tools } = await client.listTools();
+      expect(tools.map((t) => t.name)).toContain('get-site');
+    });
+
+    it('returns site details on success', async () => {
+      (mockApi.getSite as ReturnType<typeof vi.fn>).mockResolvedValue({
+        site: {
+          id: 's1',
+          projectName: 'my-blog',
+          url: 'https://my-blog.flowershow.app',
+          plan: 'FREE',
+          privacyMode: 'PUBLIC',
+          enableComments: false,
+          enableSearch: true,
+          fileCount: 42,
+          totalSize: 102400,
+          updatedAt: '2025-01-01T00:00:00Z',
+          createdAt: '2024-01-01T00:00:00Z',
+          ghRepository: null,
+          ghBranch: null,
+          customDomain: null,
+          rootDir: null,
+          autoSync: false,
+          syntaxMode: 'obsidian',
+        },
+      });
+
+      const { client } = await createTestClient(mockApi);
+      const result = await client.callTool({
+        name: 'get-site',
+        arguments: { siteId: 's1' },
+      });
+
+      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      expect(text).toContain('my-blog');
+      expect(text).toContain('https://my-blog.flowershow.app');
+      expect(text).toContain('42 files');
+      expect(result.isError).toBeFalsy();
+    });
+
+    it('returns error on 404', async () => {
+      (mockApi.getSite as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new ApiError(404, 'Not Found', '{"error":"not_found"}'),
+      );
+
+      const { client } = await createTestClient(mockApi);
+      const result = await client.callTool({
+        name: 'get-site',
+        arguments: { siteId: 'bad-id' },
+      });
+
+      expect(result.isError).toBe(true);
+      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      expect(text).toContain('not found');
+    });
+  });
+
+  describe('create-site tool', () => {
+    it('registers a create-site tool', async () => {
+      const { client } = await createTestClient(mockApi);
+      const { tools } = await client.listTools();
+      expect(tools.map((t) => t.name)).toContain('create-site');
+    });
+
+    it('returns new site info on success', async () => {
+      (mockApi.createSite as ReturnType<typeof vi.fn>).mockResolvedValue({
+        site: {
+          id: 'new-site-id',
+          projectName: 'my-new-blog',
+          url: 'https://flowershow.app/alice/my-new-blog',
+        },
+      });
+
+      const { client } = await createTestClient(mockApi);
+      const result = await client.callTool({
+        name: 'create-site',
+        arguments: { projectName: 'my-new-blog' },
+      });
+
+      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      expect(text).toContain('my-new-blog');
+      expect(text).toContain('https://flowershow.app/alice/my-new-blog');
+      expect(result.isError).toBeFalsy();
+    });
+
+    it('returns error on 409 (site already exists)', async () => {
+      (mockApi.createSite as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new ApiError(409, 'Conflict', '{"error":"site_exists"}'),
+      );
+
+      const { client } = await createTestClient(mockApi);
+      const result = await client.callTool({
+        name: 'create-site',
+        arguments: { projectName: 'existing-site' },
+      });
+
+      expect(result.isError).toBe(true);
+      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      expect(text).toContain('already exists');
+    });
+  });
+
+  describe('delete-site tool', () => {
+    it('registers a delete-site tool', async () => {
+      const { client } = await createTestClient(mockApi);
+      const { tools } = await client.listTools();
+      expect(tools.map((t) => t.name)).toContain('delete-site');
+    });
+
+    it('returns success message with deleted file count', async () => {
+      (mockApi.deleteSite as ReturnType<typeof vi.fn>).mockResolvedValue({
+        success: true,
+        deletedFiles: 17,
+      });
+
+      const { client } = await createTestClient(mockApi);
+      const result = await client.callTool({
+        name: 'delete-site',
+        arguments: { siteId: 's1' },
+      });
+
+      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      expect(text).toContain('deleted');
+      expect(text).toContain('17');
+      expect(result.isError).toBeFalsy();
     });
   });
 });
