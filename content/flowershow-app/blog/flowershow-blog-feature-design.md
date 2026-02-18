@@ -1,5 +1,8 @@
 ---
 title: Flowershow blog feature design
+date: 2023-05-18
+authors:
+  - rufuspollock
 ---
 
 What is a blog?
