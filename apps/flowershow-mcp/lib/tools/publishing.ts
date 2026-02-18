@@ -1,7 +1,10 @@
 import type { FlowershowApiClient } from '../api-client';
 import { ApiClientError } from '../api-client';
-import * as tokenStore from '../token-store';
 import * as errors from '../errors';
+import { createLogger } from '../logger';
+import * as tokenStore from '../token-store';
+
+const log = createLogger('tools:publishing');
 
 interface ToolResult {
   [key: string]: unknown;
@@ -20,24 +23,28 @@ function error(content: { type: 'text'; text: string }): ToolResult {
 function requireAuth(): string | ToolResult {
   const token = tokenStore.getToken();
   if (!token) {
+    log.warn('Tool called without authentication');
     return error(errors.notAuthenticated());
   }
   return token;
 }
 
-function handleApiError(e: unknown): ToolResult {
+function handleApiError(e: unknown, toolName: string): ToolResult {
   if (e instanceof ApiClientError) {
     if (e.statusCode === 404) {
       const body = e.body as { error?: string } | null;
-      return error(
-        errors.siteNotFound(body?.error ?? 'unknown'),
-      );
+      log.warn(`${toolName} site not found`, { body });
+      return error(errors.siteNotFound(body?.error ?? 'unknown'));
     }
+    log.error(`${toolName} API error`, {
+      statusCode: e.statusCode,
+      body: typeof e.body === 'string' ? e.body : JSON.stringify(e.body),
+    });
     return error(errors.apiError(e.statusCode, String(e.body)));
   }
-  return error(
-    errors.networkError(e instanceof Error ? e.message : String(e)),
-  );
+  const message = e instanceof Error ? e.message : String(e);
+  log.error(`${toolName} unexpected error`, { error: message });
+  return error(errors.networkError(message));
 }
 
 // ── Content type inference ──────────────────────────────────
@@ -96,6 +103,10 @@ export async function handlePublishContent(
   client: FlowershowApiClient,
   args: PublishContentArgs,
 ): Promise<ToolResult> {
+  log.info('publish_content invoked', {
+    siteId: args.siteId,
+    fileCount: args.files.length,
+  });
   const auth = requireAuth();
   if (typeof auth !== 'string') return auth;
 
@@ -110,16 +121,15 @@ export async function handlePublishContent(
       })),
     );
 
-    const response = await client.publishFiles(
-      auth,
-      args.siteId,
-      fileMetadata,
-    );
+    log.debug('publish_content: computed file metadata', {
+      siteId: args.siteId,
+      files: fileMetadata.map((f) => ({ path: f.path, size: f.size })),
+    });
+
+    const response = await client.publishFiles(auth, args.siteId, fileMetadata);
 
     // Build a map from path to content for uploads
-    const contentByPath = new Map(
-      args.files.map((f) => [f.path, f]),
-    );
+    const contentByPath = new Map(args.files.map((f) => [f.path, f]));
 
     // Upload each file to its presigned URL
     const uploaded: string[] = [];
@@ -137,12 +147,21 @@ export async function handlePublishContent(
         );
         uploaded.push(upload.path);
       } catch (e) {
-        failed.push({
+        const reason = e instanceof Error ? e.message : String(e);
+        log.error('publish_content: upload failed', {
           path: upload.path,
-          reason: e instanceof Error ? e.message : String(e),
+          reason,
         });
+        failed.push({ path: upload.path, reason });
       }
     }
+
+    log.info('publish_content complete', {
+      siteId: args.siteId,
+      uploaded: uploaded.length,
+      unchanged: response.unchanged.length,
+      failed: failed.length,
+    });
 
     // Build result message
     const lines: string[] = [];
@@ -160,9 +179,7 @@ export async function handlePublishContent(
     }
 
     if (failed.length > 0) {
-      lines.push(
-        `${failed.length} file(s) failed to upload:`,
-      );
+      lines.push(`${failed.length} file(s) failed to upload:`);
       for (const f of failed) {
         lines.push(`  - ${f.path}: ${f.reason}`);
       }
@@ -174,7 +191,7 @@ export async function handlePublishContent(
 
     return text(lines.join('\n'));
   } catch (e) {
-    return handleApiError(e);
+    return handleApiError(e, 'publish_content');
   }
 }
 
@@ -195,6 +212,11 @@ export async function handleSyncSite(
   client: FlowershowApiClient,
   args: SyncSiteArgs,
 ): Promise<ToolResult> {
+  log.info('sync_site invoked', {
+    siteId: args.siteId,
+    manifestSize: args.manifest.length,
+    dryRun: args.dryRun,
+  });
   const auth = requireAuth();
   if (typeof auth !== 'string') return auth;
 
@@ -206,15 +228,21 @@ export async function handleSyncSite(
       args.dryRun ?? false,
     );
 
+    log.info('sync_site complete', {
+      siteId: args.siteId,
+      toUpload: response.toUpload.length,
+      toUpdate: response.toUpdate.length,
+      unchanged: response.unchanged.length,
+      deleted: response.deleted.length,
+    });
+
     const lines: string[] = [];
 
     if (args.dryRun) {
       lines.push('**Dry run** — no changes applied.');
     }
 
-    lines.push(
-      `Sync results for site ${args.siteId}:`,
-    );
+    lines.push(`Sync results for site ${args.siteId}:`);
 
     if (response.toUpload.length > 0) {
       lines.push(
@@ -242,7 +270,7 @@ export async function handleSyncSite(
 
     return text(lines.join('\n'));
   } catch (e) {
-    return handleApiError(e);
+    return handleApiError(e, 'sync_site');
   }
 }
 
@@ -257,15 +285,21 @@ export async function handleDeleteFiles(
   client: FlowershowApiClient,
   args: DeleteFilesArgs,
 ): Promise<ToolResult> {
+  log.info('delete_files invoked', {
+    siteId: args.siteId,
+    pathCount: args.paths.length,
+  });
   const auth = requireAuth();
   if (typeof auth !== 'string') return auth;
 
   try {
-    const response = await client.deleteFiles(
-      auth,
-      args.siteId,
-      args.paths,
-    );
+    const response = await client.deleteFiles(auth, args.siteId, args.paths);
+
+    log.info('delete_files complete', {
+      siteId: args.siteId,
+      deleted: response.deleted.length,
+      notFound: response.notFound.length,
+    });
 
     const lines: string[] = [];
 
@@ -287,6 +321,6 @@ export async function handleDeleteFiles(
 
     return text(lines.join('\n'));
   } catch (e) {
-    return handleApiError(e);
+    return handleApiError(e, 'delete_files');
   }
 }

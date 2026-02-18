@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FlowershowApiClient } from '../api-client';
 import type {
   DeleteFilesResponse,
-  PublishFilesResponse,
   Site,
   SiteStatus,
   SyncResponse,
@@ -41,6 +40,7 @@ describe('FlowershowApiClient', () => {
         image: null,
         role: 'user',
       };
+      // API returns user object directly (bare)
       const fetchMock = mockFetch(expected);
       global.fetch = fetchMock;
 
@@ -57,7 +57,7 @@ describe('FlowershowApiClient', () => {
 
   describe('listSites', () => {
     it('gets sites list with auth', async () => {
-      const expected: Site[] = [
+      const sites: Site[] = [
         {
           id: 'site-1',
           projectName: 'blog',
@@ -68,7 +68,8 @@ describe('FlowershowApiClient', () => {
           fileCount: 10,
         },
       ];
-      const fetchMock = mockFetch(expected);
+      // API returns { sites: [...], total: N } (wrapped)
+      const fetchMock = mockFetch({ sites, total: sites.length });
       global.fetch = fetchMock;
 
       const result = await client.listSites('token-123');
@@ -76,13 +77,23 @@ describe('FlowershowApiClient', () => {
       const [url, opts] = fetchMock.mock.calls[0];
       expect(url).toBe(`${baseUrl}/api/sites`);
       expect(opts.headers.Authorization).toBe('Bearer token-123');
-      expect(result).toEqual(expected);
+      expect(result).toEqual(sites);
+    });
+
+    it('throws on unexpected response shape', async () => {
+      // If API returns something unexpected
+      const fetchMock = mockFetch({ unexpected: true });
+      global.fetch = fetchMock;
+
+      await expect(client.listSites('token-123')).rejects.toThrow(
+        'Unexpected response from /api/sites',
+      );
     });
   });
 
   describe('createSite', () => {
     it('posts site creation request', async () => {
-      const expected: Site = {
+      const site: Site = {
         id: 'site-2',
         projectName: 'docs',
         url: 'https://alice.flowershow.app/docs',
@@ -90,7 +101,8 @@ describe('FlowershowApiClient', () => {
         createdAt: '2026-02-01T00:00:00Z',
         updatedAt: '2026-02-01T00:00:00Z',
       };
-      const fetchMock = mockFetch(expected);
+      // API returns { site: {...} } (wrapped)
+      const fetchMock = mockFetch({ site });
       global.fetch = fetchMock;
 
       const result = await client.createSite('token-123', {
@@ -101,13 +113,22 @@ describe('FlowershowApiClient', () => {
       expect(url).toBe(`${baseUrl}/api/sites`);
       expect(opts.method).toBe('POST');
       expect(JSON.parse(opts.body)).toEqual({ projectName: 'docs' });
-      expect(result).toEqual(expected);
+      expect(result).toEqual(site);
+    });
+
+    it('throws on unexpected response shape', async () => {
+      const fetchMock = mockFetch({ unexpected: true });
+      global.fetch = fetchMock;
+
+      await expect(
+        client.createSite('token-123', { projectName: 'test' }),
+      ).rejects.toThrow('Unexpected response from POST /api/sites');
     });
   });
 
   describe('getSite', () => {
     it('gets site by id', async () => {
-      const expected: Site = {
+      const site: Site = {
         id: 'site-1',
         projectName: 'blog',
         url: 'https://alice.flowershow.app/blog',
@@ -115,19 +136,34 @@ describe('FlowershowApiClient', () => {
         createdAt: '2026-01-01T00:00:00Z',
         updatedAt: '2026-01-01T00:00:00Z',
       };
-      const fetchMock = mockFetch(expected);
+      // API returns { site: {...} } (wrapped)
+      const fetchMock = mockFetch({ site });
       global.fetch = fetchMock;
 
       const result = await client.getSite('token-123', 'site-1');
 
       expect(fetchMock.mock.calls[0][0]).toBe(`${baseUrl}/api/sites/id/site-1`);
-      expect(result).toEqual(expected);
+      expect(result).toEqual(site);
+    });
+
+    it('throws on unexpected response shape', async () => {
+      const fetchMock = mockFetch({ unexpected: true });
+      global.fetch = fetchMock;
+
+      await expect(client.getSite('token-123', 'site-1')).rejects.toThrow(
+        'Unexpected response from GET /api/sites/id/site-1',
+      );
     });
   });
 
   describe('deleteSite', () => {
     it('deletes site by id', async () => {
-      const fetchMock = mockFetch({ success: true });
+      // API returns { success: true, message: '...', deletedFiles: N }
+      const fetchMock = mockFetch({
+        success: true,
+        message: 'Site deleted successfully',
+        deletedFiles: 5,
+      });
       global.fetch = fetchMock;
 
       await client.deleteSite('token-123', 'site-1');
@@ -141,14 +177,19 @@ describe('FlowershowApiClient', () => {
   // ── Files ───────────────────────────────────────────────
 
   describe('publishFiles', () => {
-    it('posts file metadata for upload URLs', async () => {
-      const expected: PublishFilesResponse = {
-        uploads: [
-          { path: 'index.md', uploadUrl: 'https://r2.example.com/upload' },
+    it('posts file metadata and returns uploads/unchanged', async () => {
+      // API returns { files: [...] } where files are those needing upload
+      const apiResponse = {
+        files: [
+          {
+            path: 'index.md',
+            uploadUrl: 'https://r2.example.com/upload',
+            blobId: 'b1',
+            contentType: 'text/markdown',
+          },
         ],
-        unchanged: [],
       };
-      const fetchMock = mockFetch(expected);
+      const fetchMock = mockFetch(apiResponse);
       global.fetch = fetchMock;
 
       const result = await client.publishFiles('token-123', 'site-1', [
@@ -158,7 +199,40 @@ describe('FlowershowApiClient', () => {
       const [url, opts] = fetchMock.mock.calls[0];
       expect(url).toBe(`${baseUrl}/api/sites/id/site-1/files`);
       expect(opts.method).toBe('POST');
-      expect(result).toEqual(expected);
+      // Client should transform API response into our internal format
+      expect(result).toEqual({
+        uploads: [
+          { path: 'index.md', uploadUrl: 'https://r2.example.com/upload' },
+        ],
+        unchanged: [],
+      });
+    });
+
+    it('correctly identifies unchanged files', async () => {
+      // API only returns files that need uploading
+      // Files not in the response are unchanged
+      const apiResponse = {
+        files: [
+          {
+            path: 'new.md',
+            uploadUrl: 'https://r2.example.com/u1',
+            blobId: 'b1',
+            contentType: 'text/markdown',
+          },
+        ],
+      };
+      const fetchMock = mockFetch(apiResponse);
+      global.fetch = fetchMock;
+
+      const result = await client.publishFiles('token-123', 'site-1', [
+        { path: 'new.md', sha: 'sha1', size: 50 },
+        { path: 'existing.md', sha: 'sha2', size: 80 },
+      ]);
+
+      expect(result).toEqual({
+        uploads: [{ path: 'new.md', uploadUrl: 'https://r2.example.com/u1' }],
+        unchanged: ['existing.md'],
+      });
     });
   });
 
@@ -168,6 +242,7 @@ describe('FlowershowApiClient', () => {
         deleted: ['old.md'],
         notFound: [],
       };
+      // API returns { deleted: [...], notFound: [...] } (bare)
       const fetchMock = mockFetch(expected);
       global.fetch = fetchMock;
 
@@ -186,13 +261,28 @@ describe('FlowershowApiClient', () => {
 
   describe('syncSite', () => {
     it('posts manifest for sync diff', async () => {
+      // API returns { toUpload, toUpdate, deleted, unchanged, summary, dryRun? }
+      const apiResponse = {
+        toUpload: [
+          {
+            path: 'new.md',
+            uploadUrl: 'https://r2.example.com/u1',
+            blobId: 'b1',
+            contentType: 'text/markdown',
+          },
+        ],
+        toUpdate: [],
+        unchanged: ['existing.md'],
+        deleted: ['removed.md'],
+        summary: { toUpload: 1, toUpdate: 0, deleted: 1, unchanged: 1 },
+      };
       const expected: SyncResponse = {
         toUpload: [{ path: 'new.md', uploadUrl: 'https://r2.example.com/u1' }],
         toUpdate: [],
         unchanged: ['existing.md'],
         deleted: ['removed.md'],
       };
-      const fetchMock = mockFetch(expected);
+      const fetchMock = mockFetch(apiResponse);
       global.fetch = fetchMock;
 
       const result = await client.syncSite('token-123', 'site-1', [
@@ -203,7 +293,11 @@ describe('FlowershowApiClient', () => {
       const [url, opts] = fetchMock.mock.calls[0];
       expect(url).toBe(`${baseUrl}/api/sites/id/site-1/sync`);
       expect(opts.method).toBe('POST');
-      expect(result).toEqual(expected);
+      // The extra summary/blobId/contentType fields are ignored
+      expect(result.toUpload).toHaveLength(1);
+      expect(result.toUpload[0].path).toBe('new.md');
+      expect(result.unchanged).toEqual(['existing.md']);
+      expect(result.deleted).toEqual(['removed.md']);
     });
   });
 
@@ -211,6 +305,18 @@ describe('FlowershowApiClient', () => {
 
   describe('getSiteStatus', () => {
     it('gets site processing status', async () => {
+      // API returns { siteId, status, files: { total, pending, success, failed }, blobs: [...] }
+      const apiResponse = {
+        siteId: 'site-1',
+        status: 'complete' as const,
+        files: {
+          total: 10,
+          pending: 0,
+          success: 10,
+          failed: 0,
+        },
+        blobs: [],
+      };
       const expected: SiteStatus = {
         status: 'complete',
         pending: 0,
@@ -218,7 +324,7 @@ describe('FlowershowApiClient', () => {
         error: 0,
         total: 10,
       };
-      const fetchMock = mockFetch(expected);
+      const fetchMock = mockFetch(apiResponse);
       global.fetch = fetchMock;
 
       const result = await client.getSiteStatus('token-123', 'site-1');

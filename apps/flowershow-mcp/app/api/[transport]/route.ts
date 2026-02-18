@@ -1,6 +1,9 @@
 import { createMcpHandler } from 'mcp-handler';
+import { createLogger, maskToken } from '../../../lib/logger';
 import * as tokenStore from '../../../lib/token-store';
 import { registerTools } from '../../../lib/tools/registry';
+
+const log = createLogger('route');
 
 const mcpHandler = createMcpHandler(
   (server) => {
@@ -40,15 +43,41 @@ const mcpHandler = createMcpHandler(
  *   }
  */
 async function handler(request: Request): Promise<Response> {
+  const method = request.method;
+  const url = new URL(request.url);
+
   const authHeader = request.headers.get('authorization');
-  if (authHeader?.startsWith('Bearer ')) {
-    tokenStore.setToken(authHeader.slice(7));
+  const hasToken = authHeader?.startsWith('Bearer ');
+
+  log.info('Incoming request', {
+    method,
+    path: url.pathname,
+    hasAuth: !!hasToken,
+    token: hasToken ? maskToken(authHeader!.slice(7)) : undefined,
+  });
+
+  if (hasToken) {
+    tokenStore.setToken(authHeader!.slice(7));
   } else {
     tokenStore.clearToken();
   }
 
   try {
-    return await mcpHandler(request);
+    const response = await mcpHandler(request);
+    log.info('Request completed', {
+      method,
+      path: url.pathname,
+      status: response.status,
+    });
+    return response;
+  } catch (err) {
+    log.error('Request failed with unhandled error', {
+      method,
+      path: url.pathname,
+      error: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : undefined,
+    });
+    throw err;
   } finally {
     tokenStore.clearToken();
   }
