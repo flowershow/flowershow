@@ -4,9 +4,23 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes
 
 ## Tools
 
-| Tool         | Description                    |
-| ------------ | ------------------------------ |
-| `list-sites` | List all your Flowershow sites |
+| Tool           | Description                                                        |
+| -------------- | ------------------------------------------------------------------ |
+| `list-sites`   | List all your Flowershow sites                                     |
+| `get-site`     | Get details for a specific site (plan, privacy, file count, etc.)  |
+| `get-user`     | Get current user profile                                           |
+| `create-site`  | Create a new site                                                  |
+| `delete-site`  | Delete a site and all its content                                  |
+| `publish-note` | Publish in-memory markdown as a note to an existing site           |
+
+### Typical AI workflow
+
+The AI agent is expected to compose tools. For example, to publish a note:
+
+1. Call `list-sites` to find the target site and its ID
+2. Call `publish-note` with `siteId`, `path`, and `content`
+
+The `publish-note` tool uploads the content and polls until the note is live, then returns the live URL.
 
 ## Prerequisites
 

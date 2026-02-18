@@ -11,7 +11,9 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { Request, Response } from 'express';
 import { FlowershowApi } from './lib/api.js';
+import { registerNoteTools } from './tools/notes.js';
 import { registerSiteTools } from './tools/sites.js';
+import { registerUserTools } from './tools/user.js';
 
 // ---------------------------------------------------------------------------
 // Auth helper
@@ -37,6 +39,8 @@ export function createServer(api: FlowershowApi): McpServer {
   );
 
   registerSiteTools(server, api);
+  registerUserTools(server, api);
+  registerNoteTools(server, api);
 
   return server;
 }
