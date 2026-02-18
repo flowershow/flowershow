@@ -1,89 +1,83 @@
 ---
-title: About
+title: About Flowershow
+description: Why we built Flowershow, why publishing matters, and the bigger story behind it.
+showToc: false
+showEditLink: false
+showComments: false
 ---
 
-## Why Flowershow?
+## What we built
 
-Publishing a digital garden isn't easy. As [Quartz](https://quartz.jzhao.xyz/notes/philosophy/) puts it:
+Flowershow is a markdown publishing platform. Drop your files — or connect a GitHub repo, use the CLI, or publish from Obsidian — and get a live, hosted website in seconds. No build pipelines, no CMS configuration, no deploy scripts. Just content and a URL.
 
-> There are an overwhelming number of tutorials, resources, and guides for tools like [Notion](https://www.notion.so/), [Roam](https://roamresearch.com/), and [Obsidian](https://obsidian.md/), yet none of them have super easy to use *free* tools to publish that garden to the world.
+The core promise is speed and simplicity. From file to URL in seconds, beautiful by default, zero configuration required. Your content stays in plain markdown files you own — no lock-in, Git-integrable, durable. Flowershow is infrastructure, not a silo.
 
-In our case to easy and free we'd add _elegant_ and _customizable_.
+We started building it because we needed it ourselves. We've been building content and data-driven websites for over a decade, and markdown had become our preferred medium for almost everything — internal notes, client work, research, documentation. But publishing that markdown was always painful. Too many steps, too much configuration, too much to maintain. Every project meant reinventing the same pipeline.
 
-More generally, publishing markdown isn't easy. And it should be, really easy, as easy as publishing a Facebook post, or posting a tweet.
+So we built the tool we wished existed. Flowershow started as an internal scaffold for markdown-driven sites, absorbed the features we kept wanting — Obsidian wiki links, mermaid diagrams, LaTeX, graph views — and eventually became something we thought a wider community could benefit from. So we opened it up.
 
-The goal of Flowershow is to make it easy, fast and fun to publish your digital garden -- and markdown in general -- and do it beautifully.
+---
 
-## Why the name?
+## Why now
 
-The name "Flowershow" elegantly captures our mission: just as a flower show exhibits the most beautiful blooms from gardens, Flowershow helps you showcase your digital garden to the world. Your notes, ideas, and knowledge are like carefully cultivated flowers, and we provide the perfect venue to display them beautifully for others to appreciate and learn from.
+Content is moving faster than ever. AI writes drafts in seconds. Research accumulates in tools like Obsidian overnight. Teams produce more in a day than they used to in a week.
 
-## Backstory
+Publishing infrastructure hasn't kept up. Setting up a website still means choosing a framework, configuring a build pipeline, picking a CMS, wiring up a deploy script — and that's before you've written a word. The tools we use to share ideas were designed for a world that no longer exists.
 
-We've been building content and data driven websites for over a decade.
+Flowershow is what you'd build if you started from scratch today. The whole workflow is: drop your content, get a URL. Fast because it should be. Simple because complexity is our problem, not yours.
 
-We loved markdown and had been using it internally for a long time. Over last few years, we'd found we could even start using it with some of our non-technical clients.
+And increasingly, the person publishing isn't a person at all — it's an agent, a script, a pipeline. Flowershow works for that too. The same simplicity that makes it fast for humans makes it easy to automate.
 
-As a result we have been building tooling and sites with markdown as the content layer. This formed the basis for Flowershow which started out as an internal tool focused on scaffolding generic markdown-driven websites around NextJS.
+We think of this as publishing rebuilt for the AI age. Not because AI is a feature, but because the speed and volume of content creation today demands infrastructure that can keep up.
 
-Enter Obsidian! A year and a half ago some of team started using obsidian personally. Many of us loved it and started using it for content authoring especially on wiki-like sites.
+---
 
-We then found we wanted to be able to publish resulting notes and vaults especially with some of features obsidian brings for granted -- ranging from all those markdown goodies like math, gfm etc but also the more exciting stuff like the network graph that really makes Obsidian special. So we started working on adding these features to Flowershow.
+## The bigger picture
 
-Finally, we ️thought a wider community could benefit from what we were doing. So we decided to make the effort to tidy up what we'd been doing and open source it to allow others to benefit and contribute.
+### Why publishing tools matter
 
-## The Team
+Tools matter. Not in a abstract, obvious way — in a specific, consequential way.
+
+The ability to publish and share ideas quickly, easily, and reliably shapes what gets shared and what doesn't. It shapes whose voice carries and whose gets lost to friction. It shapes whether knowledge compounds across people and time, or stays locked in private notes and internal drives.
+
+We believe that better publishing tools are part of better collective sensemaking — our shared ability to understand reality, process complexity, and build on each other's thinking.
+
+This might sound like a large claim for a markdown publisher. But the connection is direct: you can't build on ideas that aren't shared. You can't share ideas that are painful to publish. Reduce the friction, and more gets out. More gets read. More gets built on.
+
+### The markdown foundation
+
+Markdown is the right foundation for this. Not because it's the most sophisticated format — it isn't — but because it's composable, durable, and human-readable. History of computing shows that simple, open formats outlast sophisticated, proprietary ones. Markdown will still be here in twenty years. The notes you write today in Obsidian or a plain text editor will be readable by any tool that exists then.
+
+That durability matters. When you publish with Flowershow, your content isn't locked into a database or a proprietary CMS format. It's files. Yours. Forever.
+
+### Open over walled
+
+We believe the web works better as an open ecosystem than a collection of walled platforms. Publishing on your own URL — even a free flowershow.app subdomain — is meaningfully different from posting to a platform that can change its algorithm, lock you out, or disappear. It's a small act of digital independence, and it adds up.
+
+This connects to the broader mission: Flowershow is one part of what a healthy, open publishing infrastructure looks like. We're building it because we think it matters, and because nobody else was building it quite the way we wanted it to exist.
+
+---
+
+## The team
 
 ### Rufus Pollock
 
-<img className="h-20 w-20 rounded-full lg:w-24 lg:h-24" src="https://www.gravatar.com/avatar/36661def37f62e4130670ab75e06465a?s=300" alt="" />
+<img className="h-20 w-20 rounded-full lg:w-24 lg:h-24 mt-4" src="https://www.gravatar.com/avatar/36661def37f62e4130670ab75e06465a?s=300" alt="Rufus Pollock" />
 
-Rufus Pollock is an entrepreneur and technologist who has worked on data platforms and open data for over twenty years with governments, businesses and non-profits all over the world. He is Founder of Open Knowledge Foundation, Founder and President of Datopian and an Ashoka and Shuttleworth Fellow. He studied Mathematics at the University of Cambridge, going on to obtain a PhD in Economics and become a research fellow.
+Rufus is an entrepreneur and technologist who has spent twenty years working on data platforms, open knowledge, and the infrastructure of how ideas flow. He is the founder of the Open Knowledge Foundation and Datopian, and has worked with governments, businesses, and nonprofits across the world. He studied Mathematics at Cambridge and holds a PhD in Economics. He started Flowershow because publishing markdown should be as easy as sending a tweet.
 
 ### Ola Rubaj
 
-<img className="h-20 w-20 rounded-full lg:w-24 lg:h-24" src="https://secure.gravatar.com/avatar/d7dc90fd29be2f58ccaee994cf2b841a?s=300" alt="" />
+<img className="h-20 w-20 rounded-full lg:w-24 lg:h-24 mt-4" src="https://secure.gravatar.com/avatar/d7dc90fd29be2f58ccaee994cf2b841a?s=300" alt="Ola Rubaj" />
 
-Ola is a front-end developer with a keen eye for details and aesthetics. She strives for excellence and thrives on challenges. She's also an optimist who can turn any adversity into an opportunity. When not coding she spends her free time with her nose in a book or down some rabbit hole learning. She also has a "thing" for flowers.
+Ola is a front-end developer with a sharp eye for detail and a genuine love of elegant interfaces. She built most of what makes Flowershow look and feel the way it does. When she's not writing code she's reading, and she has a thing for flowers.
 
-## The Bigger Picture
+---
 
-### We need better collective sensemaking
+## Why the name?
 
-- Sensemaking is the ability to "make sense" of reality
-- We are struggling in our sensemaking individually and collectively -- just think of the debates over climate change or covid vaccinations.
-- Sensemaking is especially important right now because of the complexity of our societies and the challenges we face
+A flower show is where you exhibit your garden to the world — the carefully cultivated things you've grown, put on display for others to see and appreciate. Flowershow does that for your ideas. Your notes, your research, your writing: we give them a venue.
 
-### One part of better sensemaking is tooling for sensemaking
+---
 
-One part of better sensemaking is (technical) tools for sensemaking.[^1]
-
-[^1]: Other parts include our inner capacities for sensemaking e.g. critical thinking, open-mindedness, curiosity, questioning etc. However, these are out of scope here!
-
-- These range from tools for acquiring raw data, to tools for managing that data, to tools for analysing data and producing information, knowledge and insight
-- One important area are tools for organizing our (unstructured) information and knowledge -- and sharing and collaborating on that with others
-- Wikis and digital gardens are one major way of doing that
-
-### The markdown revolution
-
-The markdown revolution is bringing new energy and potential to "old" ideas such as wikis, zettelkastens etc.
-
-- Markdown "plus" and its toolchain are becoming a powerful and flexible "digital notepaper" on which rich digital notebooks can be written
-- History of computing shows the strength of simple, composable tools even if crude over sophisticated, complex ones especially over the long-term
-- Markdown will still be there in 10 or 20 years
-- Markdown is a great (best) basis for rich digital notes
-- More importantly, combined with something like git (and a link database) it is now a great basis for a digital _notebook_ (aka wiki)
-
-### Though much still missing for markdown to fulfil on its potential
-
-There is still a lot to be done in the markdown ecosystem to fulfil on this potential
-
-### Publishing is one important, initial area
-
-Publishing is one important, initial area
-
-- Intelligence is collective: we need to interact on and build on each others insights and ideas
-- That involves sharing content within a group or publicly.
-- It is best if that is part of an _open_ ecosystem (not e.g. facebook or even twitter)
-- The simplest way to do that is some kind of publishing.
-- Publishing markdown is still painful. It should be as easy as publishing a facebook post.
+*[Start publishing — free forever →](https://cloud.flowershow.app/)*

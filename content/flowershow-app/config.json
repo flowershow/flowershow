@@ -22,7 +22,8 @@
           { "href": "/pricing", "name": "Pricing" },
           { "href": "/docs", "name": "Docs" },
           { "href": "/blog", "name": "Blog" },
-          { "href": "/publish", "name": "Publish CLI" }
+          { "href": "/publish", "name": "Publish CLI" },
+          { "href": "/about", "name": "About" }
         ]
       },
       {
@@ -69,8 +70,7 @@
     "/notes",
     "/blog/archive",
     "/docs/self-hosted",
-    "/self-hosted.md",
-    "/about.md"
+    "/self-hosted.md"
   ],
   "showEditLink": true,
   "redirects": [
