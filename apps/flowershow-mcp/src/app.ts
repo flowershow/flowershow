@@ -50,8 +50,11 @@ export function createApp(apiBaseUrl: string) {
 
   // POST /mcp — main MCP endpoint (stateless: fresh server + transport per request)
   app.post('/mcp', async (req: Request, res: Response) => {
+    console.info(`MCP ${req.method} ${req.path}`);
+
     const pat = extractPat(req);
     if (!pat) {
+      console.warn('MCP request missing valid Authorization Bearer token');
       res.status(401).json({
         jsonrpc: '2.0',
         error: {

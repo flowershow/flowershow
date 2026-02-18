@@ -15,7 +15,19 @@ export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
       const log = (
         level: 'info' | 'debug' | 'warning' | 'error',
         data: string,
-      ) => server.sendLoggingMessage({ level, data }, extra.sessionId);
+      ) => {
+        const logger =
+          level === 'error'
+            ? console.error
+            : level === 'warning'
+              ? console.warn
+              : level === 'debug'
+                ? console.debug
+                : console.info;
+
+        logger(`[list-sites] ${data}`);
+        return server.sendLoggingMessage({ level, data }, extra.sessionId);
+      };
 
       try {
         await log('info', 'Fetching sites…');

@@ -1,6 +1,6 @@
 import http from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { createApp } from './app.js';
 
 // ---------------------------------------------------------------------------
@@ -53,6 +53,27 @@ describe('POST /mcp endpoint', () => {
       },
       id: null,
     });
+  });
+
+  it('logs incoming MCP requests to server stdout', async () => {
+    const infoSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
+
+    const res = await fetch(`${baseUrl}/mcp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'initialize',
+        id: 99,
+      }),
+    });
+
+    expect(res.status).toBe(401);
+    expect(infoSpy).toHaveBeenCalledWith(
+      expect.stringContaining('MCP POST /mcp'),
+    );
+
+    infoSpy.mockRestore();
   });
 
   it('returns 401 when Authorization uses wrong scheme', async () => {

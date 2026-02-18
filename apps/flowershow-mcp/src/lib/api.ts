@@ -58,6 +58,6 @@ export class FlowershowApi {
   }
 
   async listSites(): Promise<ListSitesResponse> {
-    return this.request<ListSitesResponse>('GET', '/api/sites');
+    return this.request<ListSitesResponse>('GET', '/sites');
   }
 }
