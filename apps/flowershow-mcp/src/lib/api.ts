@@ -174,10 +174,10 @@ export class FlowershowApi {
     return this.request<StatusResponse>('GET', `/sites/id/${siteId}/status`);
   }
 
-  async uploadToPresignedUrl(url: string, content: string): Promise<void> {
+  async uploadToPresignedUrl(url: string, content: string, contentType = 'text/markdown'): Promise<void> {
     const res = await fetch(url, {
       method: 'PUT',
-      headers: { 'Content-Type': 'text/markdown' },
+      headers: { 'Content-Type': contentType },
       body: content,
     });
     if (!res.ok) {
