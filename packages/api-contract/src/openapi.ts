@@ -5,7 +5,7 @@ import {
 } from '@asteasolutions/zod-to-openapi';
 import type { OpenAPIObject } from 'openapi3-ts/oas31';
 import { z } from 'zod';
-import { registerCliAuthRoutes } from './routes/index.js';
+import { registerCliAuthRoutes, registerUserRoutes } from './routes/index.js';
 import {
   FileMetadataSchema,
   ListSitesResponseSchema,
@@ -92,6 +92,7 @@ export function generateOpenApiDocument(): OpenAPIObject {
 
   registerSecuritySchemes(registry);
   registerCliAuthRoutes(registry);
+  registerUserRoutes(registry);
 
   const generator = new OpenApiGeneratorV31(registry.definitions);
   return generator.generateDocument({
