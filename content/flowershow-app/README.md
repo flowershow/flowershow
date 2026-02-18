@@ -84,14 +84,35 @@ showComments: false
       <h2 className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl lg:text-balance">Beautiful by default. Yours to customise.</h2>
       <p className="mt-4 text-lg text-gray-600">Four official themes — or roll your own with CSS and Tailwind.</p>
     </div>
-    <div className="mx-auto max-w-5xl">
-      <img alt="Flowershow official themes" src="/assets/official-themes.png" className="w-full rounded-xl ring-1 ring-gray-200" />
-    </div>
-    <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4 max-w-5xl mx-auto text-sm">
-      <a href="https://lessflowery.flowershow.app/" className="text-center text-orange-500 hover:text-orange-400 font-medium">LessFlowery →</a>
-      <a href="https://letterpress.flowershow.app/" className="text-center text-orange-500 hover:text-orange-400 font-medium">Letterpress →</a>
-      <a href="https://superstack.flowershow.app/" className="text-center text-orange-500 hover:text-orange-400 font-medium">Superstack →</a>
-      <a href="https://leaf.flowershow.app/" className="text-center text-orange-500 hover:text-orange-400 font-medium">Leaf →</a>
+    <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+      <a href="https://lessflowery.flowershow.app/" className="group block">
+        <div className="overflow-hidden rounded-lg ring-1 ring-gray-200 group-hover:ring-orange-300 transition">
+          <img alt="LessFlowery theme preview" src="/assets/themes/lessflowery.jpg" className="w-full aspect-video object-cover object-top" />
+        </div>
+        <p className="mt-3 font-semibold text-gray-900">LessFlowery</p>
+        <p className="mt-1 text-sm text-gray-500">Clean and editorial. Great for essays and research.</p>
+      </a>
+      <a href="https://letterpress.flowershow.app/" className="group block">
+        <div className="overflow-hidden rounded-lg ring-1 ring-gray-200 group-hover:ring-orange-300 transition">
+          <img alt="Letterpress theme preview" src="/assets/themes/letterpress.png" className="w-full aspect-video object-cover object-top" />
+        </div>
+        <p className="mt-3 font-semibold text-gray-900">Letterpress</p>
+        <p className="mt-1 text-sm text-gray-500">Modern typography and generous whitespace. Balanced and readable.</p>
+      </a>
+      <a href="https://superstack.flowershow.app/" className="group block">
+        <div className="overflow-hidden rounded-lg ring-1 ring-gray-200 group-hover:ring-orange-300 transition">
+          <img alt="Superstack theme preview" src="/assets/themes/superstack.jpg" className="w-full aspect-video object-cover object-top" />
+        </div>
+        <p className="mt-3 font-semibold text-gray-900">Superstack</p>
+        <p className="mt-1 text-sm text-gray-500">Newsletter-style layout. Perfect for blogs and subscriber content.</p>
+      </a>
+      <a href="https://leaf.flowershow.app/" className="group block">
+        <div className="overflow-hidden rounded-lg ring-1 ring-gray-200 group-hover:ring-orange-300 transition">
+          <img alt="Leaf theme preview" src="/assets/themes/leaf.png" className="w-full aspect-video object-cover object-top" />
+        </div>
+        <p className="mt-3 font-semibold text-gray-900">Leaf</p>
+        <p className="mt-1 text-sm text-gray-500">Nature-inspired with subtle greens. Warm and distinctive.</p>
+      </a>
     </div>
     <div className="mt-8 text-center">
       <a href="https://github.com/flowershow/themes" className="text-sm font-semibold text-orange-500 hover:text-orange-400">Browse all themes and usage instructions →</a>
