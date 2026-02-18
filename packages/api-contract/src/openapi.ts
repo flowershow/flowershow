@@ -6,6 +6,7 @@ import {
 import type { OpenAPIObject } from 'openapi3-ts/oas31';
 import { z } from 'zod';
 import {
+  registerAnonymousRoutes,
   registerCliAuthRoutes,
   registerSitesRoutes,
   registerUserRoutes,
@@ -98,6 +99,7 @@ export function generateOpenApiDocument(): OpenAPIObject {
   registerCliAuthRoutes(registry);
   registerUserRoutes(registry);
   registerSitesRoutes(registry);
+  registerAnonymousRoutes(registry);
 
   const generator = new OpenApiGeneratorV31(registry.definitions);
   return generator.generateDocument({
