@@ -5,7 +5,7 @@ describe('generateOpenApiDocument', () => {
   it('returns a valid OpenAPI 3.1 document', () => {
     const doc = generateOpenApiDocument();
     expect(doc.openapi).toBe('3.1.0');
-    expect(doc.info.title).toBe('Flowershow API');
+    expect(doc.info.title).toBe('Flowershow REST API');
     expect(doc.info.version).toBeDefined();
   });
 
