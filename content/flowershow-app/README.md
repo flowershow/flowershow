@@ -11,7 +11,7 @@ showComments: false
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl text-center">
       <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl">Markdown to website in seconds</h1>
-      <p className="mt-8 text-pretty text-lg text-gray-500 sm:text-xl/8">Fastest way to turn markdown into a website — from blogs to docs, landing pages to knowledgebases. For geeks who  value their time.<sup title="Yes, we know you could code your own site in NextJS, Hugo or whatever. (We did that too). But is that *really* the best use of your time? (OK, OK, if you deploy your apps to baremetal and roll your own Linux, then go for it!) But otherwise give us a try.">*</sup></p>
+      <p className="mt-8 text-pretty text-lg text-gray-500 sm:text-xl/8">Fast, simple markdown publishing — from a single file to to docs, blogs, landing pages and knowledgebases like Obsidian.</p>
       <div className="mt-10 flex items-center justify-center gap-x-6">
         <a
           href="https://cloud.flowershow.app/"
