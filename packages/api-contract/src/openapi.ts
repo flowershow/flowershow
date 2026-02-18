@@ -11,6 +11,7 @@ import {
   registerGitHubAppRoutes,
   registerSitesRoutes,
   registerUserRoutes,
+  registerWebhooksRoutes,
 } from './routes/index.js';
 import {
   FileMetadataSchema,
@@ -102,6 +103,7 @@ export function generateOpenApiDocument(): OpenAPIObject {
   registerSitesRoutes(registry);
   registerAnonymousRoutes(registry);
   registerGitHubAppRoutes(registry);
+  registerWebhooksRoutes(registry);
 
   const generator = new OpenApiGeneratorV31(registry.definitions);
   return generator.generateDocument({
