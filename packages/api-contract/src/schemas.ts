@@ -91,13 +91,14 @@ export type PublishFilesResponse = z.infer<typeof PublishFilesResponseSchema>;
 // ---------------------------------------------------------------------------
 // StatusResponse
 // ---------------------------------------------------------------------------
-const BlobStatusSchema = z.object({
+export const BlobStatusSchema = z.object({
   id: z.string(),
   path: z.string(),
   syncStatus: z.enum(['UPLOADING', 'PROCESSING', 'SUCCESS', 'ERROR']),
   syncError: z.string().nullable(),
   extension: z.string().nullable(),
 });
+export type BlobStatus = z.infer<typeof BlobStatusSchema>;
 
 export const StatusResponseSchema = z.object({
   siteId: z.string(),
