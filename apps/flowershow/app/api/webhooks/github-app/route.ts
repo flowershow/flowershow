@@ -329,7 +329,7 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
  * Handle push events for repositories in GitHub App installations
  * This eliminates the need for per-repository webhooks
  */
-export async function handlePushEvent(data: WebhookPayload) {
+async function handlePushEvent(data: WebhookPayload) {
   const { ref, repository, installation } = data;
   const posthog = PostHogClient();
 
