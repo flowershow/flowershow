@@ -6,7 +6,7 @@ This is the main Next.js application for [flowershow.app](https://flowershow.app
 
 For documentation and how-to guides, visit [https://flowershow.app/docs](https://flowershow.app/docs).
 
-REST API reference (OpenAPI 3.1): `docs/openapi.yaml`
+REST API reference (OpenAPI 3.1): `packages/api-contract`
 
 ## Project Overview
 
