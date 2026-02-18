@@ -54,18 +54,20 @@ seconds" signals the audience more specifically. Both are strong — test to dec
 
 ---
 
-**Social proof bar (between CTA and demo video):**
+**Stats bar (between CTA and demo video):**
 
-[A single quiet line of credibility — use whichever stat is honest and largest:]
+[Three numbers in a quiet horizontal row. Small text, muted — trust anchor, not hero.
+Use real numbers. Confirm exact figures before publishing.]
 
-> Trusted by X,000+ publishers worldwide.
+> **1,000+** users  ·  **[X,000]+** sites published  ·  **Free** forever
 
-*or, if user count isn't available/impressive yet:*
+*If the sites-published number isn't available or isn't impressive yet, use:*
 
-> Join a growing community of researchers, writers, and teams publishing with Flowershow.
+> **1,000+** publishers  ·  Docs, blogs, wikis, and more  ·  **Free** forever
 
-[Designer note: keep this very light — small text, muted colour. It's not the hero,
-just an anchor of trust before the video.]
+*Optionally, if recognisable organisations use Flowershow, add a logo strip below the
+stats: "Trusted by people at [Org A] · [Org B] · [Org C]" — only include logos if the
+names add genuine credibility. Real community site names/domains work too.*
 
 ---
 
@@ -107,7 +109,40 @@ Bring your own domain. Customize with CSS or Tailwind. Pick from official themes
 
 ---
 
-## Section 3: Testimonials
+## Section 3: Themes Showcase
+
+[NEW SECTION. A visual strip showing 2–3 named themes side by side with screenshots.
+This is the B layer in action — elegance *shown*, not claimed. Short section, high
+visual impact. Links to /themes for the full gallery.]
+
+---
+
+**Section heading:** Beautiful by default. Yours to customise.
+
+**Intro line:** Pick a theme, or make it your own with CSS and Tailwind.
+
+---
+
+[Three theme cards side by side — screenshot + theme name + one-line description]
+
+**[Theme name 1]**
+[One sentence describing the aesthetic/use case — e.g. "Clean and minimal. Perfect for documentation and personal sites."]
+
+**[Theme name 2]**
+[One sentence — e.g. "Bold and editorial. Built for blogs and long-form writing."]
+
+**[Theme name 3]**
+[One sentence — e.g. "Data-forward. Designed for research, notes, and knowledge bases."]
+
+→ [Browse all themes](/themes)
+
+*[NOTE: Theme names and descriptions need to be filled in from the actual theme names
+in github.com/flowershow/themes. Screenshots should be sourced from existing
+/assets/official-themes.png or per-theme screenshots.]*
+
+---
+
+## Section 4: Testimonials — Social Proof
 
 [NEW SECTION. 2–3 short quotes from real users. Real names, real sites. Pull from
 community members, GitHub discussions, Discord, or direct outreach. Format: pull quote
@@ -137,7 +172,7 @@ Even one strong real quote beats three placeholder ones.]*
 
 ---
 
-## Section 4: Ways to Publish
+## Section 5: Ways to Publish
 
 [Moved from Section 2. Visitor now understands the value — this explains the mechanism.
 Four paths as icon + label + one-line description + optional link.]
@@ -167,7 +202,7 @@ Publish directly from your vault. Wikilinks, graph, and all your Obsidian featur
 
 ---
 
-## Section 5: Why Now — The Narrative Section
+## Section 6: Why Now — The Narrative Section
 
 [The D layer. Editorial prose, not bullet points. Flowershow's perspective on the world.
 Ends with a link to the About page for the full story.]
@@ -197,7 +232,7 @@ a pipeline. Flowershow works for that too.
 
 ---
 
-## Section 6: Use Cases
+## Section 7: Use Cases
 
 [Radically trimmed to 4 priority cards on the homepage. Link to the full use cases
 index for the rest. 4 cards in a 2×2 or horizontal row — clean, scannable, no
@@ -236,7 +271,7 @@ Publish from scripts, cron jobs, or AI agents. One command. No UI required.
 
 ---
 
-## Section 7: Social Proof — Community Showcase
+## Section 8: Social Proof — Community Showcase
 
 [Existing 12-site grid. Keep as-is.]
 
@@ -256,7 +291,7 @@ Publish from scripts, cron jobs, or AI agents. One command. No UI required.
 
 ---
 
-## Section 8: FAQ — Objection Handler
+## Section 9: FAQ — Objection Handler
 
 [NEW SECTION. 3–4 short Q&A pairs. Collapsible (accordion) or inline. Positioned here
 — after the showcase, before the final CTA — to clear the last doubts before the
@@ -288,7 +323,7 @@ are all available. [See pricing →](/pricing)
 
 ---
 
-## Section 9: Newsletter
+## Section 10: Newsletter
 
 [Moved above the final CTA. Presented as a lower-commitment option for visitors who
 aren't ready to sign up yet — "not ready? stay in touch." Reduces pressure without
@@ -304,7 +339,7 @@ killing conversion momentum.]
 
 ---
 
-## Section 10: Final CTA
+## Section 11: Final CTA
 
 [Dark background banner. Mirrors the hero headline to bookend the page — a proven
 conversion pattern. Creates a satisfying loop and reinforces the core message at the
@@ -342,18 +377,20 @@ moment of decision.]
 | Change | Reason |
 |---|---|
 | Added pricing nudge near hero | Free is a major conversion driver — make it visible immediately |
-| Added social proof bar near hero | Trust is the primary blocker for unknown products |
-| Added testimonials section (Section 3) | Specific social proof beats generic; positioned before "how it works" |
-| Moved Ways to Publish to Section 4 | Build desire first (features), then explain mechanism |
+| Added stats bar near hero | Concrete numbers beat vague trust claims; 1,000+ users is confirmed |
+| Added themes showcase (Section 3) | 2–3 polished named themes deserve visual proof, not a bullet point |
+| Added testimonials section (Section 4) | Specific social proof beats generic; positioned before "how it works" |
+| Moved Ways to Publish to Section 5 | Build desire first (features + themes), then explain mechanism |
 | Restructured hero subhead | Aspiration first, pain negation second — broader appeal |
 | Trimmed use cases to 4 + overflow link | 8 equal cards creates no hierarchy; 4 is scannable |
 | Added FAQ section | Removes last objections before conversion moment |
 | Repositioned newsletter | Above final CTA as lower-commitment alternative, not interruption |
 | Rewrote final CTA heading | Mirrors hero headline — bookend pattern, stronger conversion |
 
-### Things still not decided
-- Actual testimonial quotes (need to source from real users)
-- Actual user/site count stat for social proof bar
-- Visual treatment of use cases (cards with images vs icon+text)
-- Whether /github page exists yet (Ways to Publish link is conditional)
-- Screenshot/video selection for feature deep-dives (if kept)
+### Things still not decided / need real content
+- **Theme names and descriptions** — pull from github.com/flowershow/themes
+- **Testimonial quotes** — source from GitHub Discussions, Discord, or direct outreach
+- **Sites-published count** — confirm from backend for the stats bar
+- **Logo/org bar** — only include if recognisable names are available
+- **Visual treatment of use cases** — cards with images vs icon+text
+- **Whether /github page exists yet** — Ways to Publish link is conditional on this
