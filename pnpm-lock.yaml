@@ -518,6 +518,22 @@ importers:
         specifier: ^3.2.4
         version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.13)(@vitest/browser@3.2.4)(jiti@2.6.1)(jsdom@27.4.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
 
+  packages/api-contract:
+    dependencies:
+      '@asteasolutions/zod-to-openapi':
+        specifier: ^7.3.0
+        version: 7.3.4(zod@3.25.76)
+      zod:
+        specifier: ^3.25.67
+        version: 3.25.76
+    devDependencies:
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.13)(@vitest/browser@3.2.4)(jiti@2.6.1)(jsdom@27.4.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
   packages/cloudflare-worker:
     dependencies:
       '@aws-sdk/client-s3':
@@ -681,6 +697,11 @@ packages:
 
   '@asamuzakjp/nwsapi@2.3.9':
     resolution: {integrity: sha512-n8GuYSrI9bF7FFZ/SjhwevlHc8xaVlb/7HmHelnc/PZXBD2ZR49NnN9sMMuDdEGPeeRQ5d0hqlSlEpgCX3Wl0Q==}
+
+  '@asteasolutions/zod-to-openapi@7.3.4':
+    resolution: {integrity: sha512-/2rThQ5zPi9OzVwes6U7lK1+Yvug0iXu25olp7S0XsYmOqnyMfxH7gdSQjn/+DSOHRg7wnotwGJSyL+fBKdnEA==}
+    peerDependencies:
+      zod: ^3.20.2
 
   '@aws-crypto/crc32@5.2.0':
     resolution: {integrity: sha512-nLbCWqQNgUiwwtFsen1AdzAtvuLRsQS8rYgMuxCrdKf9kOssamGLuPwyTY9wyYblNr9+1XM8v6zoDTPPSIeANg==}
@@ -8181,6 +8202,9 @@ packages:
     resolution: {integrity: sha512-YgBpdJHPyQ2UE5x+hlSXcnejzAvD0b22U2OuAP+8OnlJT+PjWPxtgmGqKKc+RgTM63U9gN0YzrYc71R2WT/hTA==}
     engines: {node: '>=18'}
 
+  openapi3-ts@4.5.0:
+    resolution: {integrity: sha512-jaL+HgTq2Gj5jRcfdutgRGLosCy/hT8sQf6VOy+P+g36cZOjI1iukdPnijC+4CmeRzg/jEllJUboEic2FhxhtQ==}
+
   openid-client@5.7.1:
     resolution: {integrity: sha512-jDBPgSVfTnkIh71Hg9pRvtJc6wTwqjRkN88+gCFtYWrlP4Yx2Dsrow8uPi3qLr/aeymPF3o2+dS+wOpglK04ew==}
 
@@ -10744,6 +10768,11 @@ snapshots:
       lru-cache: 11.2.6
 
   '@asamuzakjp/nwsapi@2.3.9': {}
+
+  '@asteasolutions/zod-to-openapi@7.3.4(zod@3.25.76)':
+    dependencies:
+      openapi3-ts: 4.5.0
+      zod: 3.25.76
 
   '@aws-crypto/crc32@5.2.0':
     dependencies:
@@ -20318,6 +20347,10 @@ snapshots:
       define-lazy-prop: 3.0.0
       is-inside-container: 1.0.0
       wsl-utils: 0.1.0
+
+  openapi3-ts@4.5.0:
+    dependencies:
+      yaml: 2.8.2
 
   openid-client@5.7.1:
     dependencies:
