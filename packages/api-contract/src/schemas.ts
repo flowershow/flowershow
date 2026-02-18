@@ -112,3 +112,267 @@ export const StatusResponseSchema = z.object({
   blobs: z.array(BlobStatusSchema).optional(),
 });
 export type StatusResponse = z.infer<typeof StatusResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// ErrorSchema
+// ---------------------------------------------------------------------------
+export const ErrorSchema = z.object({
+  error: z.string(),
+  error_description: z.string().optional(),
+  message: z.string().optional(),
+});
+export type Error = z.infer<typeof ErrorSchema>;
+
+// ---------------------------------------------------------------------------
+// CLI Auth Schemas
+// ---------------------------------------------------------------------------
+export const DeviceAuthorizeResponseSchema = z.object({
+  device_code: z.string(),
+  user_code: z.string(),
+  verification_uri: z.string(),
+  verification_uri_complete: z.string(),
+  expires_in: z.number(),
+  interval: z.number(),
+});
+export type DeviceAuthorizeResponse = z.infer<
+  typeof DeviceAuthorizeResponseSchema
+>;
+
+export const DeviceTokenRequestSchema = z.object({
+  device_code: z.string(),
+  grant_type: z.string(),
+});
+export type DeviceTokenRequest = z.infer<typeof DeviceTokenRequestSchema>;
+
+export const DeviceTokenResponseSchema = z.object({
+  access_token: z.string(),
+  token_type: z.string(),
+  expires_in: z.null(),
+});
+export type DeviceTokenResponse = z.infer<typeof DeviceTokenResponseSchema>;
+
+export const AuthorizeDeviceRequestSchema = z.object({
+  user_code: z.string(),
+});
+export type AuthorizeDeviceRequest = z.infer<
+  typeof AuthorizeDeviceRequestSchema
+>;
+
+// ---------------------------------------------------------------------------
+// User Schemas
+// ---------------------------------------------------------------------------
+export const SuccessResponseSchema = z.object({
+  success: z.literal(true),
+});
+export type SuccessResponse = z.infer<typeof SuccessResponseSchema>;
+
+export const RevokeTokenRequestSchema = z.object({
+  token_id: z.string(),
+});
+export type RevokeTokenRequest = z.infer<typeof RevokeTokenRequestSchema>;
+
+// ---------------------------------------------------------------------------
+// Sites Schemas
+// ---------------------------------------------------------------------------
+export const CreateSiteRequestSchema = z.object({
+  projectName: z.string(),
+  overwrite: z.boolean().optional(),
+});
+export type CreateSiteRequest = z.infer<typeof CreateSiteRequestSchema>;
+
+export const CreateSiteResponseSchema = z.object({
+  site: z.object({
+    id: z.string(),
+    projectName: z.string(),
+    url: z.string(),
+    userId: z.string(),
+    createdAt: z.string(),
+  }),
+});
+export type CreateSiteResponse = z.infer<typeof CreateSiteResponseSchema>;
+
+export const DeleteSiteResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+  deletedFiles: z.number(),
+});
+export type DeleteSiteResponse = z.infer<typeof DeleteSiteResponseSchema>;
+
+export const SyncRequestSchema = z.object({
+  files: z.array(FileMetadataSchema),
+});
+export type SyncRequest = z.infer<typeof SyncRequestSchema>;
+
+export const SyncResponseSchema = z.object({
+  toUpload: z.array(UploadTargetSchema),
+  toUpdate: z.array(UploadTargetSchema),
+  deleted: z.array(z.string()),
+  unchanged: z.array(z.string()),
+  summary: z.object({
+    toUpload: z.number(),
+    toUpdate: z.number(),
+    deleted: z.number(),
+    unchanged: z.number(),
+  }),
+  dryRun: z.boolean().optional(),
+});
+export type SyncResponse = z.infer<typeof SyncResponseSchema>;
+
+export const PublishFilesRequestSchema = z.object({
+  files: z.array(FileMetadataSchema).min(1),
+});
+export type PublishFilesRequest = z.infer<typeof PublishFilesRequestSchema>;
+
+export const DeleteFilesRequestSchema = z.object({
+  paths: z.array(z.string()).min(1),
+});
+export type DeleteFilesRequest = z.infer<typeof DeleteFilesRequestSchema>;
+
+export const DeleteFilesResponseSchema = z.object({
+  deleted: z.array(z.string()),
+  notFound: z.array(z.string()),
+});
+export type DeleteFilesResponse = z.infer<typeof DeleteFilesResponseSchema>;
+
+export const PublicStatusResponseSchema = z.object({
+  status: z.enum(['pending', 'complete', 'error']),
+  errors: z
+    .array(
+      z.object({
+        path: z.string(),
+        error: z.string(),
+      }),
+    )
+    .optional(),
+});
+export type PublicStatusResponse = z.infer<typeof PublicStatusResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// Anonymous Publishing Schemas
+// ---------------------------------------------------------------------------
+export const AnonPublishFileSchema = z.object({
+  fileName: z.string(),
+  fileSize: z.number(),
+  sha: z.string(),
+});
+export type AnonPublishFile = z.infer<typeof AnonPublishFileSchema>;
+
+export const AnonPublishRequestSchema = z.object({
+  files: z.array(AnonPublishFileSchema).min(1).max(5),
+  anonymousUserId: z.string().uuid(),
+});
+export type AnonPublishRequest = z.infer<typeof AnonPublishRequestSchema>;
+
+export const AnonPublishResponseSchema = z.object({
+  siteId: z.string(),
+  projectName: z.string(),
+  files: z.array(
+    z.object({
+      fileName: z.string(),
+      uploadUrl: z.string(),
+    }),
+  ),
+  liveUrl: z.string(),
+  ownershipToken: z.string(),
+});
+export type AnonPublishResponse = z.infer<typeof AnonPublishResponseSchema>;
+
+export const ClaimSiteRequestSchema = z.object({
+  siteId: z.string(),
+  ownershipToken: z.string(),
+});
+export type ClaimSiteRequest = z.infer<typeof ClaimSiteRequestSchema>;
+
+export const ClaimSiteResponseSchema = z.object({
+  success: z.literal(true),
+  site: z.object({
+    id: z.string(),
+    projectName: z.string(),
+    userId: z.string(),
+  }),
+});
+export type ClaimSiteResponse = z.infer<typeof ClaimSiteResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// GitHub App Schemas
+// ---------------------------------------------------------------------------
+export const GitHubRepositorySchema = z.object({
+  id: z.string(),
+  repositoryId: z.string(),
+  name: z.string(),
+  fullName: z.string(),
+  isPrivate: z.boolean(),
+});
+export type GitHubRepository = z.infer<typeof GitHubRepositorySchema>;
+
+export const GitHubInstallationSchema = z.object({
+  id: z.string(),
+  installationId: z.string(),
+  accountLogin: z.string(),
+  accountType: z.enum(['User', 'Organization']),
+  repositories: z.array(GitHubRepositorySchema),
+  suspendedAt: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+});
+export type GitHubInstallation = z.infer<typeof GitHubInstallationSchema>;
+
+// ---------------------------------------------------------------------------
+// Domain Schemas
+// ---------------------------------------------------------------------------
+export const DomainVerificationSchema = z.object({
+  status: z.enum([
+    'Valid Configuration',
+    'Invalid Configuration',
+    'Pending Verification',
+    'Domain Not Found',
+    'Unknown Error',
+  ]),
+  domainJson: z.object({
+    name: z.string(),
+    apexName: z.string(),
+    projectId: z.string(),
+    redirect: z.string().nullable().optional(),
+    redirectStatusCode: z
+      .union([
+        z.literal(301),
+        z.literal(302),
+        z.literal(307),
+        z.literal(308),
+        z.null(),
+      ])
+      .optional(),
+    gitBranch: z.string().nullable().optional(),
+    updatedAt: z.number().optional(),
+    createdAt: z.number().optional(),
+    verified: z.boolean(),
+    verification: z.array(
+      z.object({
+        type: z.string(),
+        domain: z.string(),
+        value: z.string(),
+        reason: z.string(),
+      }),
+    ),
+    error: z
+      .object({
+        code: z.string().optional(),
+        message: z.string().optional(),
+      })
+      .optional(),
+  }),
+});
+export type DomainVerification = z.infer<typeof DomainVerificationSchema>;
+
+// ---------------------------------------------------------------------------
+// Upgrade Required Response
+// ---------------------------------------------------------------------------
+export const UpgradeRequiredResponseSchema = z.object({
+  error: z.literal('client_outdated'),
+  message: z.string(),
+  currentVersion: z.string(),
+  minimumVersion: z.string(),
+});
+export type UpgradeRequiredResponse = z.infer<
+  typeof UpgradeRequiredResponseSchema
+>;
