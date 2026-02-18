@@ -1,0 +1,21 @@
+{
+  "title": "E2E Test Site",
+  "description": "Test site for E2E renderer tests",
+  "showSidebar": true,
+  "showToc": true,
+  "nav": {
+    "title": "E2E Test Site",
+    "links": [
+      { "name": "Home", "href": "/" },
+      { "name": "Syntax", "href": "/basic-syntax" }
+    ]
+  },
+  "footer": {
+    "navigation": [
+      {
+        "title": "Resources",
+        "links": [{ "name": "About", "href": "/index" }]
+      }
+    ]
+  }
+}

@@ -17,8 +17,8 @@ import { generateScopedCss } from '@/lib/generate-scoped-css';
 import { getSite } from '@/lib/get-site';
 import { getSiteUrl, getSiteUrlPath } from '@/lib/get-site-url';
 import { resolveHeroConfig } from '@/lib/hero-config';
-import { isEmoji } from '@/lib/is-emoji';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
+import { isEmoji } from '@/lib/is-emoji';
 import { getMdxOptions, processMarkdown } from '@/lib/markdown';
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
@@ -85,10 +85,6 @@ export async function generateMetadata(props: {
 
   let imageUrl: string | null = config.thumbnail;
   let faviconUrl: string = config.favicon;
-
-  console.log('Generate metadata');
-  console.log('Generate metadata');
-  console.log('Generate metadata');
 
   if (isFeatureEnabled(Feature.NoBranding, site)) {
     imageUrl = metadata?.image || siteConfig?.image || null;

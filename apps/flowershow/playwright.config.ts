@@ -1,124 +1,61 @@
 import { defineConfig, devices } from '@playwright/test';
+import dotenv from 'dotenv';
+import {
+  FREE_SITE_BASE_PATH,
+  PREMIUM_SITE_CUSTOM_DOMAIN,
+} from './e2e/helpers/seed';
 
-/**
- * Read environment variables from file.
- * https://github.com/motdotla/dotenv
- */
-import 'dotenv/config';
+dotenv.config();
 
-/**
- * See https://playwright.dev/docs/test-configuration.
- */
 export default defineConfig({
-  testDir: './e2e',
-  /* Run tests in files in parallel */
-  fullyParallel: false,
-  /* Fail the build on CI if you accidentally left test.only in the source code. */
+  testDir: './e2e/specs',
+  fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  /* Retry on CI only */
-  retries: process.env.CI ? 1 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
-  /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: [['list', { printSteps: true }], ['html']],
-  /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : 2,
+  timeout: process.env.CI ? 60 * 1000 : 30 * 1000,
+  expect: { timeout: process.env.CI ? 10 * 1000 : 5 * 1000 },
+  reporter: process.env.CI
+    ? [
+        ['list'], // Shows each test as it runs in CI logs
+        ['html'], // Still generates HTML report for artifacts
+        ['github'], // Adds GitHub annotations
+      ]
+    : 'html',
   use: {
-    /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: `http://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`,
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-    trace: 'on-first-retry',
+    trace: process.env.CI ? 'retain-on-failure' : 'on-first-retry',
+    screenshot: 'only-on-failure',
   },
-  /* Configure projects for major browsers */
-  /** Note: Test fixtures rely on the names, so remember to update them as well if renaming the projects below.*/
   projects: [
     {
-      name: 'home-chromium',
+      name: 'setup',
+      testDir: './e2e',
+      testMatch: 'setup.ts',
+    },
+    {
+      name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        baseURL: `http://${process.env.NEXT_PUBLIC_HOME_DOMAIN}`,
-      },
-      testMatch: /home\/.+\.spec\.ts/,
+        baseURL: `http://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`,
+        basePath: FREE_SITE_BASE_PATH,
+      } as any,
+      dependencies: ['setup'],
     },
     {
-      name: 'dashboard-setup',
-      testMatch: /dashboard\/global\.setup\.ts/,
-      teardown: 'dashboard-teardown',
-    },
-    {
-      name: 'dashboard-teardown',
-      testMatch: /dashboard\/global\.teardown\.ts/,
-    },
-    {
-      name: 'dashboard-chromium',
+      name: 'custom-domain',
       use: {
         ...devices['Desktop Chrome'],
-      },
-      testMatch: /dashboard\/.+\.spec\.ts/,
-      dependencies: ['dashboard-setup'],
+        baseURL: `http://${PREMIUM_SITE_CUSTOM_DOMAIN}`,
+        basePath: '',
+      } as any,
+      testMatch: '**/links-and-embeds.spec.ts',
+      dependencies: ['setup'],
     },
     {
-      name: 'free-site-setup',
-      testMatch: /free-site\/global\.setup\.ts/,
-      teardown: 'free-site-teardown',
+      name: 'teardown',
+      testDir: './e2e',
+      testMatch: 'teardown.ts',
+      dependencies: ['chromium', 'custom-domain'],
     },
-    {
-      name: 'free-site-teardown',
-      testMatch: /free-site\/global\.teardown\.ts/,
-    },
-    {
-      name: 'free-site-chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-      },
-      dependencies: ['free-site-setup'],
-      testMatch: /free-site\/.+\.spec\.ts/,
-    },
-    {
-      name: 'premium-site-setup',
-      testMatch: /premium-site\/global\.setup\.ts/,
-      teardown: 'premium-site-teardown',
-    },
-    {
-      name: 'premium-site-teardown',
-      testMatch: /premium-site\/global\.teardown\.ts/,
-    },
-    {
-      name: 'premium-site-chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-      },
-      dependencies: ['premium-site-setup'],
-      testMatch: /premium-site\/.+\.spec\.ts/,
-    },
-    // {
-    //   name: 'firefox',
-    //   use: { ...devices['Desktop Firefox'] },
-    // },
-
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
-
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
   ],
 });

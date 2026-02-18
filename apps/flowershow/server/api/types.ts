@@ -74,7 +74,7 @@ export interface PageMetadata {
   image?: string;
   authors?: string[];
   date?: string;
-  publish: boolean;
+  publish?: boolean;
   showSidebar?: boolean;
   showToc?: boolean;
   showHero?: boolean;
