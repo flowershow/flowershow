@@ -58,7 +58,7 @@ seconds" signals the audience more specifically. Both are strong — test to dec
 
 [Three numbers in a quiet horizontal row. Small text, muted — trust anchor, not hero.]
 
-> **1,000+** users  ·  **1,000+** sites published  ·  **Free** forever
+> **1,200+** users  ·  **950+** sites published  ·  **Free** forever
 
 *Optionally, if recognisable organisations use Flowershow, add a quiet logo/name strip
 below the stats: "Trusted by people at [Org A] · [Org B] · [Org C]" — only if the
