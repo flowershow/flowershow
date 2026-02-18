@@ -56,18 +56,13 @@ seconds" signals the audience more specifically. Both are strong — test to dec
 
 **Stats bar (between CTA and demo video):**
 
-[Three numbers in a quiet horizontal row. Small text, muted — trust anchor, not hero.
-Use real numbers. Confirm exact figures before publishing.]
+[Three numbers in a quiet horizontal row. Small text, muted — trust anchor, not hero.]
 
-> **1,000+** users  ·  **[X,000]+** sites published  ·  **Free** forever
+> **1,000+** users  ·  **1,000+** sites published  ·  **Free** forever
 
-*If the sites-published number isn't available or isn't impressive yet, use:*
-
-> **1,000+** publishers  ·  Docs, blogs, wikis, and more  ·  **Free** forever
-
-*Optionally, if recognisable organisations use Flowershow, add a logo strip below the
-stats: "Trusted by people at [Org A] · [Org B] · [Org C]" — only include logos if the
-names add genuine credibility. Real community site names/domains work too.*
+*Optionally, if recognisable organisations use Flowershow, add a quiet logo/name strip
+below the stats: "Trusted by people at [Org A] · [Org B] · [Org C]" — only if the
+names add genuine credibility. Defer until confirmed names are available.*
 
 ---
 
@@ -119,26 +114,35 @@ visual impact. Links to /themes for the full gallery.]
 
 **Section heading:** Beautiful by default. Yours to customise.
 
-**Intro line:** Pick a theme, or make it your own with CSS and Tailwind.
+**Intro line:** Four official themes, or roll your own with CSS and Tailwind.
 
 ---
 
-[Three theme cards side by side — screenshot + theme name + one-line description]
+[Four theme cards — screenshot + name + one-line description + demo link.
+Use the preview images already in the themes repo. Show all four or pick the three
+most visually distinct for the homepage strip.]
 
-**[Theme name 1]**
-[One sentence describing the aesthetic/use case — e.g. "Clean and minimal. Perfect for documentation and personal sites."]
+**LessFlowery**
+Clean and editorial. Inspired by LessWrong — great for long-form writing, essays, and research.
+→ [See demo](https://lessflowery.flowershow.app/)
 
-**[Theme name 2]**
-[One sentence — e.g. "Bold and editorial. Built for blogs and long-form writing."]
+**Letterpress**
+Modern typography with generous whitespace. Balanced and readable for any content type.
+→ [See demo](https://letterpress.flowershow.app/)
 
-**[Theme name 3]**
-[One sentence — e.g. "Data-forward. Designed for research, notes, and knowledge bases."]
+**Superstack**
+Familiar newsletter-style layout inspired by Substack. Perfect for blogs and subscriber content.
+→ [See demo](https://superstack.flowershow.app/)
 
-→ [Browse all themes](/themes)
+**Leaf**
+Nature-inspired with subtle greens. Warm and distinctive for personal sites and digital gardens.
+→ [See demo](https://leaf.flowershow.app/)
 
-*[NOTE: Theme names and descriptions need to be filled in from the actual theme names
-in github.com/flowershow/themes. Screenshots should be sourced from existing
-/assets/official-themes.png or per-theme screenshots.]*
+→ [Browse all themes and usage instructions](/themes)
+
+*[Screenshots: use the preview images from github.com/flowershow/themes — each theme
+has a preview .jpg or .png. The existing /assets/official-themes.png is a combined
+view that could work as a teaser image above the individual cards.]*
 
 ---
 
