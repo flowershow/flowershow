@@ -42,54 +42,72 @@ Open is what separates Flowershow from tools that feel like walled gardens. The 
 
 ---
 
-## The Core Tension to Hold
+## How We Sound
+
+Flowershow's voice follows from its essence. Instant means no wasted words. Elegant means every sentence earns its place. Open means we speak plainly, without jargon or posture.
+
+**Short sentences with weight.** We do not over-explain. We trust the reader to arrive.
+
+**Active and declarative.** Things happen. Results appear. We do not hedge, and we do not use the passive voice when we can avoid it.
+
+**Warm but not effusive.** We do not flatter. We do not call things "powerful" or "seamless." We describe what actually happens, specifically enough that the reader can feel it.
+
+**Occasionally a fragment. For emphasis.**
+
+The anti-pattern is corporate SaaS: *"Flowershow empowers teams to seamlessly publish content at scale."* That sentence says nothing and trusts no one. We write the way a good editor writes — cutting until what remains is true, and stopping there.
+
+In practice: prefer the concrete over the abstract. Prefer the verb over the noun. Read everything aloud. If it sounds like a press release, rewrite it.
+
+---
+
+## The Core Tension
 
 Flowershow is a tool that should feel like it disappears.
 
-The best tools are invisible — you do not think about the hammer, you think about what you are building. Flowershow's site and product should communicate: "the tool gets out of the way so your content can shine." 
+You do not think about the hammer. You think about what you are building. Everything about Flowershow — the site, the product, the writing — should say: *the tool gets out of the way so your content can shine.*
 
-This is the exact opposite of Framer, which is design-maximalist partly as a demonstration of its own capabilities. Flowershow does not need to show off. It needs to show results.
+This is the opposite of Framer, which is design-maximalist as a demonstration of its own capabilities. We do not need to show off. We need to show results.
 
 ---
 
 ## The Design Register
 
-**Vercel's confidence + Ghost's warmth + the publishing side of iA's typographic seriousness.**
+Vercel's confidence. Ghost's warmth. The publishing side of iA's typographic seriousness.
 
-- Fast and clean without being cold
+- Fast and clean, without being cold
 - Elegant without being precious
-- Light mode as default — daylight energy, outward-facing, the moment of publication
-- Warm whites over cold grays; some green or natural accent rather than the purple/indigo of dev tools
-- Typography that belongs on the *published* side of the equation: editorial, humanist, considered
-- Product screenshots as proof — show the output (beautiful published sites), not the tooling
+- Light mode as default — daylight energy, the moment of publication
+- Warm whites over cold grays; a natural accent rather than the purple and indigo of dev tools
+- Typography from the published side of the equation: editorial, humanist, considered
+- Show the output — beautiful published sites — not the tooling
 - No illustration, no heavy motion, no startup-generic decoration
 
 ---
 
-## Design Inspiration Reference
+## Design Inspiration
 
-These are the closest existing examples to the register Flowershow should aim for. None is a perfect match — the right design will synthesize across them.
+None of these is a perfect match. The right design synthesizes across them.
 
 | Site | What it contributes |
 |------|---------------------|
-| **Vercel** (vercel.com) | Confidence, speed as a felt quality, "deploy in seconds" energy, clean hero structure |
-| **Ghost** (ghost.org) | Warmth, editorial tone, real community sites as social proof, publishing-world register |
-| **iA Writer** (ia.net) | Typographic seriousness, the reading/publishing experience as the product, restraint |
-| **Linear** (linear.app) | Three-layer homepage structure (hero → narrative → proof), product screenshot as hero |
-| **Raycast** (raycast.com) | Letting the product output speak, testimonials that describe *feeling* not just features |
+| **Vercel** (vercel.com) | Confidence, speed as a felt quality, clean hero, "deploy in seconds" energy |
+| **Ghost** (ghost.org) | Warmth, editorial tone, community sites as social proof, publishing-world register |
+| **iA Writer** (ia.net) | Typographic seriousness, the reading experience as the product, restraint |
+| **Linear** (linear.app) | Three-layer homepage structure — hero, narrative, proof — product screenshot as hero |
+| **Raycast** (raycast.com) | Letting the output speak, testimonials that describe feeling not just features |
 
 ### What to avoid
 
-- **Framer**: too design-maximalist, design as demonstration rather than design as service
-- **GitBook**: increasingly corporate, generic Framer-built feel, AI narrative over clarity
-- **Notion**: overloaded, feature-dense, lost the original elegance
-- **Tailwind UI template aesthetic**: competent but forgettable, exactly what the current Flowershow site is
+- **Framer** — design as demonstration, not design as service
+- **GitBook** — corporate, generic, AI narrative over clarity
+- **Notion** — overloaded, feature-dense, the original elegance is gone
+- **Tailwind UI template aesthetic** — competent and forgettable, which is where Flowershow is now
 
 ---
 
-## The One-Sentence Test
+## The Test
 
-When evaluating any design decision — a headline, a color, a layout, a typeface — ask:
+Before any design decision — a headline, a color, a layout, a typeface — ask:
 
 > Does this feel like the moment content goes public, instantly and beautifully?
 
