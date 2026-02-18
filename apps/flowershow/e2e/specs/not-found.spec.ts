@@ -1,8 +1,7 @@
-import { expect, test } from '@playwright/test';
-import { BASE_PATH } from '../helpers/seed';
+import { expect, type Locator, test } from '../helpers/fixtures';
 
-test('non-existent page shows 404', async ({ page }) => {
-  await page.goto(`${BASE_PATH}/this-page-does-not-exist`);
+test('non-existent page shows 404', async ({ page, basePath }) => {
+  await page.goto(`${basePath}/this-page-does-not-exist`);
   const notFound = page.locator('.not-found');
   await expect(notFound).toBeVisible();
   await expect(notFound.locator('.not-found-title')).toHaveText('404');
@@ -11,8 +10,11 @@ test('non-existent page shows 404', async ({ page }) => {
   );
 });
 
-test('deeply nested non-existent page shows 404', async ({ page }) => {
-  await page.goto(`${BASE_PATH}/a/b/c/d/nope`);
+test('deeply nested non-existent page shows 404', async ({
+  page,
+  basePath,
+}) => {
+  await page.goto(`${basePath}/a/b/c/d/nope`);
   const notFound = page.locator('.not-found');
   await expect(notFound).toBeVisible();
 });

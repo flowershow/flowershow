@@ -342,7 +342,7 @@ export function getComputedProperty(
   formulaName: string,
   formulas?: Record<string, string>,
   rootDir?: string,
-): Record<string, any> {
+): any {
   if (!formulas) {
     throw new Error(`Formula not found: ${name}`);
   }
