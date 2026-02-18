@@ -23,7 +23,7 @@ import { createApp } from './app.js';
 // ---------------------------------------------------------------------------
 
 const FLOWERSHOW_API_URL =
-  process.env.FLOWERSHOW_API_URL ?? 'http://localhost:3000/';
+  process.env.FLOWERSHOW_API_URL ?? 'http://localhost:3000/api';
 const PORT = Number(process.env.PORT ?? '3456');
 
 // ---------------------------------------------------------------------------

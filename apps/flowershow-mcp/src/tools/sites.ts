@@ -3,7 +3,11 @@
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
+import {
+  createSiteInputShape,
+  deleteSiteInputShape,
+  getSiteInputShape,
+} from '../contracts.js';
 import { ApiError, type FlowershowApi } from '../lib/api.js';
 
 export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
@@ -94,7 +98,7 @@ export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
     'get-site',
     {
       description: 'Get details for a specific Flowershow site',
-      inputSchema: { siteId: z.string().describe('The site ID') },
+      inputSchema: getSiteInputShape,
     },
     async ({ siteId }, extra) => {
       const log = (
@@ -148,15 +152,7 @@ export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
     'create-site',
     {
       description: 'Create a new Flowershow site',
-      inputSchema: {
-        projectName: z
-          .string()
-          .describe('Site project name (alphanumeric, hyphens, underscores)'),
-        overwrite: z
-          .boolean()
-          .optional()
-          .describe('If true and site exists, reset its content'),
-      },
+      inputSchema: createSiteInputShape,
     },
     async ({ projectName, overwrite }, extra) => {
       const log = (
@@ -206,7 +202,7 @@ export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
     {
       description:
         'Delete a Flowershow site and all its content. This is irreversible.',
-      inputSchema: { siteId: z.string().describe('The site ID to delete') },
+      inputSchema: deleteSiteInputShape,
     },
     async ({ siteId }, extra) => {
       const log = (
@@ -228,7 +224,10 @@ export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
       try {
         await log('info', `Deleting site ${siteId}…`);
         const result = await api.deleteSite(siteId);
-        await log('info', `Site deleted: ${result.deletedFiles} file(s) removed`);
+        await log(
+          'info',
+          `Site deleted: ${result.deletedFiles} file(s) removed`,
+        );
         const text = `Site deleted successfully. ${result.deletedFiles} file${result.deletedFiles === 1 ? '' : 's'} removed.`;
         return { content: [{ type: 'text', text }] };
       } catch (err) {

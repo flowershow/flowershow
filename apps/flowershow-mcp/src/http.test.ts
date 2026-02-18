@@ -136,4 +136,29 @@ describe('POST /mcp endpoint', () => {
       },
     });
   });
+
+  it('serves machine-readable MCP tool contract generated from zod schemas', async () => {
+    const res = await fetch(`${baseUrl}/mcp/contract`);
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+
+    expect(body).toMatchObject({
+      server: {
+        name: 'flowershow',
+        version: '0.1.0',
+      },
+      tools: expect.any(Array),
+    });
+
+    const publishNote = body.tools.find(
+      (tool: { name: string }) => tool.name === 'publish-note',
+    );
+    expect(publishNote).toBeDefined();
+    expect(publishNote.inputSchema.properties).toMatchObject({
+      siteId: { type: 'string' },
+      path: { type: 'string' },
+      content: { type: 'string' },
+    });
+  });
 });

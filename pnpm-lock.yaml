@@ -498,6 +498,9 @@ importers:
       zod:
         specifier: ^3.25.67
         version: 3.25.76
+      zod-to-json-schema:
+        specifier: ^3.24.6
+        version: 3.25.1(zod@3.25.76)
     devDependencies:
       '@types/express':
         specifier: ^5.0.3
@@ -15559,7 +15562,6 @@ snapshots:
       fast-uri: 3.1.0
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
-    optional: true
 
   algoliasearch-helper@3.27.1(algoliasearch@5.48.1):
     dependencies:
@@ -17589,8 +17591,7 @@ snapshots:
 
   fast-shallow-equal@1.0.0: {}
 
-  fast-uri@3.1.0:
-    optional: true
+  fast-uri@3.1.0: {}
 
   fast-xml-parser@5.3.4:
     dependencies:
@@ -18794,8 +18795,7 @@ snapshots:
 
   json-schema-traverse@0.4.1: {}
 
-  json-schema-traverse@1.0.0:
-    optional: true
+  json-schema-traverse@1.0.0: {}
 
   json-schema-typed@8.0.2: {}
 

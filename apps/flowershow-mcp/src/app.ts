@@ -10,6 +10,7 @@ import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { Request, Response } from 'express';
+import { buildMcpToolContract } from './contracts.js';
 import { FlowershowApi } from './lib/api.js';
 import { registerNoteTools } from './tools/notes.js';
 import { registerSiteTools } from './tools/sites.js';
@@ -51,6 +52,10 @@ export function createServer(api: FlowershowApi): McpServer {
 
 export function createApp(apiBaseUrl: string) {
   const app = createMcpExpressApp();
+
+  app.get('/mcp/contract', (_req: Request, res: Response) => {
+    res.json(buildMcpToolContract());
+  });
 
   // POST /mcp — main MCP endpoint (stateless: fresh server + transport per request)
   app.post('/mcp', async (req: Request, res: Response) => {

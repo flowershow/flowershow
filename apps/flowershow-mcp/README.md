@@ -131,6 +131,7 @@ Then connect to `http://localhost:3456/mcp` and add the `Authorization` header i
 - **Auth**: PAT forwarded from client request `Authorization` header to the Flowershow REST API
 - **SDK**: `@modelcontextprotocol/sdk` v1.x (stable)
 - **Runtime**: Express via `createMcpExpressApp()` (includes DNS rebinding protection)
+- **Contract**: `GET /mcp/contract` exposes a machine-readable JSON Schema contract generated from the same Zod tool input schemas used by the server
 
 ```
 MCP Client (Claude, ChatGPT, etc.)

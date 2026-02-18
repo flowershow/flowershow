@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { z } from 'zod';
+import { publishNoteInputShape } from '../contracts.js';
 import { ApiError, type FlowershowApi } from '../lib/api.js';
 
 interface NoteToolOpts {
@@ -29,15 +29,7 @@ export function registerNoteTools(
     {
       description:
         'Publish a markdown note to a Flowershow site. Uploads the content and waits until the note is live. Use list-sites first to get the siteId.',
-      inputSchema: {
-        siteId: z.string().describe('The site ID (use list-sites to find it)'),
-        path: z
-          .string()
-          .describe(
-            'File path for the note, e.g. "notes/my-note.md". Must end in .md or .mdx.',
-          ),
-        content: z.string().describe('The markdown content to publish'),
-      },
+      inputSchema: publishNoteInputShape,
     },
     async ({ siteId, path, content }, extra) => {
       const log = (
@@ -140,12 +132,19 @@ export function registerNoteTools(
           }
           // status === 'pending' — continue polling
         } catch (err) {
-          if (err instanceof ApiError && (err.status === 401 || err.status === 403)) {
-            const message = err.status === 401
-              ? 'Authentication failed. Check that your FLOWERSHOW_PAT is valid.'
-              : `API error during status check: ${err.message}`;
+          if (
+            err instanceof ApiError &&
+            (err.status === 401 || err.status === 403)
+          ) {
+            const message =
+              err.status === 401
+                ? 'Authentication failed. Check that your FLOWERSHOW_PAT is valid.'
+                : `API error during status check: ${err.message}`;
             await log('error', message);
-            return { content: [{ type: 'text', text: message }], isError: true };
+            return {
+              content: [{ type: 'text', text: message }],
+              isError: true,
+            };
           }
           // Transient error — continue polling
         }
