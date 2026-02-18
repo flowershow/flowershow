@@ -1,20 +1,18 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { FlowershowApiClient } from '../../api-client';
+import { ApiClientError } from '../../api-client';
+import * as tokenStore from '../../token-store';
 import {
+  handleCreateSite,
+  handleDeleteSite,
+  handleGetSite,
+  handleGetSiteStatus,
   handleGetUser,
   handleListSites,
-  handleCreateSite,
-  handleGetSite,
-  handleDeleteSite,
-  handleGetSiteStatus,
 } from '../sites';
-import * as tokenStore from '../../token-store';
-import { ApiClientError } from '../../api-client';
-import type { FlowershowApiClient } from '../../api-client';
 
 function mockClient(overrides: Partial<FlowershowApiClient> = {}) {
   return {
-    deviceAuthorize: vi.fn(),
-    deviceToken: vi.fn(),
     getUser: vi.fn(),
     listSites: vi.fn(),
     createSite: vi.fn(),
@@ -32,18 +30,17 @@ function mockClient(overrides: Partial<FlowershowApiClient> = {}) {
 describe('site tools', () => {
   beforeEach(() => {
     tokenStore.clearToken();
-    tokenStore.clearDeviceCode();
   });
 
   // ── requireAuth ─────────────────────────────────────────
 
   describe('auth guard', () => {
-    it('returns auth error when not authenticated', async () => {
+    it('returns auth error when no token is set', async () => {
       const client = mockClient();
       const result = await handleGetUser(client);
 
       expect(result.isError).toBe(true);
-      expect(result.content[0].text).toContain('auth_start');
+      expect(result.content[0].text).toContain('Not authenticated');
     });
   });
 
@@ -198,9 +195,7 @@ describe('site tools', () => {
       const client = mockClient({
         deleteSite: vi
           .fn()
-          .mockRejectedValue(
-            new ApiClientError(404, { error: 'Not found' }),
-          ),
+          .mockRejectedValue(new ApiClientError(404, { error: 'Not found' })),
       });
 
       const result = await handleDeleteSite(client, {

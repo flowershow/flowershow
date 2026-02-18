@@ -20,25 +20,13 @@ function errorContent(message: string): McpErrorContent {
 
 export function notAuthenticated(): McpErrorContent {
   return errorContent(
-    'Not authenticated. Run the auth_start tool first to begin the login flow.',
+    'Not authenticated. Provide a Flowershow Personal Access Token (PAT) via the Authorization header in your MCP client config.',
   );
 }
 
-export function authPending(): McpErrorContent {
+export function tokenInvalid(): McpErrorContent {
   return errorContent(
-    'Authorization is still pending. The user has not yet approved the device code. Call auth_status again after a few seconds.',
-  );
-}
-
-export function authExpired(): McpErrorContent {
-  return errorContent(
-    'The device code has expired. Start a new login flow with auth_start.',
-  );
-}
-
-export function tokenRevoked(): McpErrorContent {
-  return errorContent(
-    'Token has been revoked or is no longer valid. Run auth_start to re-authenticate.',
+    'Token is invalid or has been revoked. Check your Flowershow PAT in your MCP client config.',
   );
 }
 
@@ -57,21 +45,14 @@ export function siteAlreadyExists(name: string): McpErrorContent {
 // ── File / upload errors ────────────────────────────────────
 
 export function fileTooLarge(path: string, maxMb: number): McpErrorContent {
-  return errorContent(
-    `File "${path}" exceeds the ${maxMb} MB per-file limit.`,
-  );
+  return errorContent(`File "${path}" exceeds the ${maxMb} MB per-file limit.`);
 }
 
 export function totalSizeExceeded(maxMb: number): McpErrorContent {
-  return errorContent(
-    `Total upload size exceeds the ${maxMb} MB site limit.`,
-  );
+  return errorContent(`Total upload size exceeds the ${maxMb} MB site limit.`);
 }
 
-export function uploadFailed(
-  path: string,
-  reason?: string,
-): McpErrorContent {
+export function uploadFailed(path: string, reason?: string): McpErrorContent {
   return errorContent(
     `Upload failed for "${path}"${reason ? `: ${reason}` : ''}.`,
   );
@@ -79,15 +60,14 @@ export function uploadFailed(
 
 // ── Generic API errors ──────────────────────────────────────
 
-export function apiError(
-  statusCode: number,
-  message: string,
-): McpErrorContent {
+export function apiError(statusCode: number, message: string): McpErrorContent {
   return errorContent(`Flowershow API error (${statusCode}): ${message}`);
 }
 
 export function networkError(message: string): McpErrorContent {
-  return errorContent(`Network error communicating with Flowershow API: ${message}`);
+  return errorContent(
+    `Network error communicating with Flowershow API: ${message}`,
+  );
 }
 
 export function unexpectedError(message: string): McpErrorContent {

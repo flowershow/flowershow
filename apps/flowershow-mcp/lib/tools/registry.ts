@@ -2,20 +2,19 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { FlowershowApiClient } from '../api-client';
 import { getConfig } from '../config';
-import { handleAuthStart, handleAuthStatus, handleAuthLogout } from './auth';
 import {
-  handleGetUser,
-  handleListSites,
-  handleCreateSite,
-  handleGetSite,
-  handleDeleteSite,
-  handleGetSiteStatus,
-} from './sites';
-import {
+  handleDeleteFiles,
   handlePublishContent,
   handleSyncSite,
-  handleDeleteFiles,
 } from './publishing';
+import {
+  handleCreateSite,
+  handleDeleteSite,
+  handleGetSite,
+  handleGetSiteStatus,
+  handleGetUser,
+  handleListSites,
+} from './sites';
 
 function makeClient(): FlowershowApiClient {
   const config = getConfig();
@@ -27,29 +26,6 @@ function makeClient(): FlowershowApiClient {
  */
 export function registerTools(server: McpServer): void {
   const client = makeClient();
-
-  // ── Auth tools ──────────────────────────────────────────
-
-  server.tool(
-    'auth_start',
-    'Start the Flowershow authentication flow via device code. Returns a URL for the user to visit.',
-    {},
-    async () => handleAuthStart(client),
-  );
-
-  server.tool(
-    'auth_status',
-    'Check authentication status. If a device code flow is pending, polls for completion.',
-    {},
-    async () => handleAuthStatus(client),
-  );
-
-  server.tool(
-    'auth_logout',
-    'Log out and clear the stored authentication token.',
-    {},
-    async () => handleAuthLogout(),
-  );
 
   // ── User tools ──────────────────────────────────────────
 
@@ -73,9 +49,7 @@ export function registerTools(server: McpServer): void {
     'create_site',
     'Create a new Flowershow site with the given project name.',
     {
-      projectName: z
-        .string()
-        .describe('Name for the new site project'),
+      projectName: z.string().describe('Name for the new site project'),
       overwrite: z
         .boolean()
         .optional()
@@ -165,9 +139,7 @@ export function registerTools(server: McpServer): void {
     'Delete specific files from a site by their paths.',
     {
       siteId: z.string().describe('The site ID to delete files from'),
-      paths: z
-        .array(z.string())
-        .describe('Array of file paths to delete'),
+      paths: z.array(z.string()).describe('Array of file paths to delete'),
     },
     async (args) => handleDeleteFiles(client, args),
   );

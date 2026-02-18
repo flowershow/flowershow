@@ -1,10 +1,10 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { FlowershowApiClient } from '../../api-client';
 import * as tokenStore from '../../token-store';
 import {
+  handleDeleteFiles,
   handlePublishContent,
   handleSyncSite,
-  handleDeleteFiles,
 } from '../publishing';
 
 // ── Helpers ─────────────────────────────────────────────────
@@ -24,7 +24,6 @@ function mockClient(overrides: Partial<FlowershowApiClient> = {}) {
 describe('handlePublishContent', () => {
   beforeEach(() => {
     tokenStore.clearToken();
-    tokenStore.clearDeviceCode();
   });
 
   test('returns not-authenticated when no token', async () => {
@@ -60,9 +59,7 @@ describe('handlePublishContent', () => {
     expect(client.publishFiles).toHaveBeenCalledWith(
       'test-token',
       'site-1',
-      expect.arrayContaining([
-        expect.objectContaining({ path: 'index.md' }),
-      ]),
+      expect.arrayContaining([expect.objectContaining({ path: 'index.md' })]),
     );
     expect(client.uploadToPresignedUrl).toHaveBeenCalledWith(
       'https://s3.example.com/index.md',
@@ -126,9 +123,11 @@ describe('handlePublishContent', () => {
 
     const { ApiClientError } = await import('../../api-client');
     const client = mockClient({
-      publishFiles: vi.fn().mockRejectedValue(
-        new ApiClientError(404, { error: 'Site not found' }),
-      ),
+      publishFiles: vi
+        .fn()
+        .mockRejectedValue(
+          new ApiClientError(404, { error: 'Site not found' }),
+        ),
     });
 
     const result = await handlePublishContent(client, {
@@ -171,7 +170,6 @@ describe('handlePublishContent', () => {
 describe('handleSyncSite', () => {
   beforeEach(() => {
     tokenStore.clearToken();
-    tokenStore.clearDeviceCode();
   });
 
   test('returns not-authenticated when no token', async () => {
@@ -251,9 +249,11 @@ describe('handleSyncSite', () => {
 
     const { ApiClientError } = await import('../../api-client');
     const client = mockClient({
-      syncSite: vi.fn().mockRejectedValue(
-        new ApiClientError(500, { error: 'Internal error' }),
-      ),
+      syncSite: vi
+        .fn()
+        .mockRejectedValue(
+          new ApiClientError(500, { error: 'Internal error' }),
+        ),
     });
 
     const result = await handleSyncSite(client, {
@@ -271,7 +271,6 @@ describe('handleSyncSite', () => {
 describe('handleDeleteFiles', () => {
   beforeEach(() => {
     tokenStore.clearToken();
-    tokenStore.clearDeviceCode();
   });
 
   test('returns not-authenticated when no token', async () => {
@@ -301,11 +300,10 @@ describe('handleDeleteFiles', () => {
 
     expect(result.isError).toBeUndefined();
     expect(result.content[0].text).toContain('Deleted 2 file(s)');
-    expect(client.deleteFiles).toHaveBeenCalledWith(
-      'test-token',
-      'site-1',
-      ['old.md', 'draft.md'],
-    );
+    expect(client.deleteFiles).toHaveBeenCalledWith('test-token', 'site-1', [
+      'old.md',
+      'draft.md',
+    ]);
   });
 
   test('reports not-found files', async () => {
@@ -334,9 +332,11 @@ describe('handleDeleteFiles', () => {
 
     const { ApiClientError } = await import('../../api-client');
     const client = mockClient({
-      deleteFiles: vi.fn().mockRejectedValue(
-        new ApiClientError(404, { error: 'Site not found' }),
-      ),
+      deleteFiles: vi
+        .fn()
+        .mockRejectedValue(
+          new ApiClientError(404, { error: 'Site not found' }),
+        ),
     });
 
     const result = await handleDeleteFiles(client, {

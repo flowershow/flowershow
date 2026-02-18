@@ -1,16 +1,13 @@
 import type {
-  DeviceAuthResponse,
-  TokenResponse,
-  AuthPendingResponse,
-  User,
-  Site,
   CreateSiteRequest,
+  DeleteFilesResponse,
   FileMetadata,
   PublishFilesResponse,
-  DeleteFilesResponse,
+  Site,
+  SiteStatus,
   SyncManifestEntry,
   SyncResponse,
-  SiteStatus,
+  User,
 } from './types';
 
 // ── Error class ─────────────────────────────────────────────
@@ -31,45 +28,6 @@ export class ApiClientError extends Error {
 export class FlowershowApiClient {
   constructor(private readonly baseUrl: string) {}
 
-  // ── Device Auth ───────────────────────────────────────
-
-  async deviceAuthorize(): Promise<DeviceAuthResponse> {
-    return this.post<DeviceAuthResponse>(
-      '/api/cli/device/authorize',
-      {},
-    );
-  }
-
-  async deviceToken(
-    deviceCode: string,
-  ): Promise<TokenResponse | AuthPendingResponse> {
-    const res = await this.rawFetch('/api/cli/device/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-        device_code: deviceCode,
-      }),
-    });
-    const json = await res.json();
-
-    // 400 with authorization_pending is an expected non-error state
-    if (
-      res.status === 400 &&
-      json &&
-      typeof json === 'object' &&
-      'error' in json &&
-      json.error === 'authorization_pending'
-    ) {
-      return json as AuthPendingResponse;
-    }
-
-    if (!res.ok) {
-      throw new ApiClientError(res.status, json);
-    }
-    return json as TokenResponse;
-  }
-
   // ── User ──────────────────────────────────────────────
 
   async getUser(token: string): Promise<User> {
@@ -82,10 +40,7 @@ export class FlowershowApiClient {
     return this.get<Site[]>('/api/sites', token);
   }
 
-  async createSite(
-    token: string,
-    data: CreateSiteRequest,
-  ): Promise<Site> {
+  async createSite(token: string, data: CreateSiteRequest): Promise<Site> {
     return this.post<Site>('/api/sites', data, token);
   }
 
@@ -118,15 +73,11 @@ export class FlowershowApiClient {
     siteId: string,
     paths: string[],
   ): Promise<DeleteFilesResponse> {
-    const res = await this.authedFetch(
-      `/api/sites/id/${siteId}/files`,
-      token,
-      {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ paths }),
-      },
-    );
+    const res = await this.authedFetch(`/api/sites/id/${siteId}/files`, token, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paths }),
+    });
     return res.json() as Promise<DeleteFilesResponse>;
   }
 
@@ -148,14 +99,8 @@ export class FlowershowApiClient {
 
   // ── Status ────────────────────────────────────────────
 
-  async getSiteStatus(
-    token: string,
-    siteId: string,
-  ): Promise<SiteStatus> {
-    return this.get<SiteStatus>(
-      `/api/sites/id/${siteId}/status`,
-      token,
-    );
+  async getSiteStatus(token: string, siteId: string): Promise<SiteStatus> {
+    return this.get<SiteStatus>(`/api/sites/id/${siteId}/status`, token);
   }
 
   // ── Upload helper ─────────────────────────────────────
@@ -185,10 +130,7 @@ export class FlowershowApiClient {
 
   // ── Internal helpers ──────────────────────────────────
 
-  private async rawFetch(
-    path: string,
-    init: RequestInit,
-  ): Promise<Response> {
+  private async rawFetch(path: string, init: RequestInit): Promise<Response> {
     return fetch(`${this.baseUrl}${path}`, init);
   }
 

@@ -1,17 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  notAuthenticated,
-  authPending,
-  authExpired,
-  tokenRevoked,
-  siteNotFound,
-  siteAlreadyExists,
-  fileTooLarge,
-  totalSizeExceeded,
-  uploadFailed,
   apiError,
+  fileTooLarge,
   networkError,
+  notAuthenticated,
+  siteAlreadyExists,
+  siteNotFound,
+  tokenInvalid,
+  totalSizeExceeded,
   unexpectedError,
+  uploadFailed,
 } from '../errors';
 
 describe('MCP error helpers', () => {
@@ -19,24 +17,20 @@ describe('MCP error helpers', () => {
     const result = notAuthenticated();
     expect(result).toEqual({
       type: 'text',
-      text: expect.stringContaining('auth_start'),
+      text: expect.stringContaining('Personal Access Token'),
     });
   });
 
-  it('notAuthenticated mentions auth_start', () => {
-    expect(notAuthenticated().text).toContain('auth_start');
+  it('notAuthenticated mentions PAT and Authorization header', () => {
+    const text = notAuthenticated().text;
+    expect(text).toContain('Personal Access Token');
+    expect(text).toContain('Authorization');
   });
 
-  it('authPending mentions auth_status', () => {
-    expect(authPending().text).toContain('auth_status');
-  });
-
-  it('authExpired mentions auth_start', () => {
-    expect(authExpired().text).toContain('auth_start');
-  });
-
-  it('tokenRevoked mentions auth_start', () => {
-    expect(tokenRevoked().text).toContain('auth_start');
+  it('tokenInvalid mentions PAT', () => {
+    const text = tokenInvalid().text;
+    expect(text).toContain('invalid');
+    expect(text).toContain('PAT');
   });
 
   it('siteNotFound includes site id', () => {

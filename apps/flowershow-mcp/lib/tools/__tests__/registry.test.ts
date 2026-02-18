@@ -1,4 +1,4 @@
-import { describe, test, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 // Mock the config module before importing anything else
 vi.mock('../../config', () => ({
@@ -29,11 +29,6 @@ describe('registerTools', () => {
 
     registerTools(mockServer as any);
 
-    // Auth tools
-    expect(registeredTools).toContain('auth_start');
-    expect(registeredTools).toContain('auth_status');
-    expect(registeredTools).toContain('auth_logout');
-
     // User/site management tools
     expect(registeredTools).toContain('get_user');
     expect(registeredTools).toContain('list_sites');
@@ -46,6 +41,11 @@ describe('registerTools', () => {
     expect(registeredTools).toContain('publish_content');
     expect(registeredTools).toContain('sync_site');
     expect(registeredTools).toContain('delete_files');
+
+    // Auth tools should NOT be registered (PAT via headers)
+    expect(registeredTools).not.toContain('auth_start');
+    expect(registeredTools).not.toContain('auth_status');
+    expect(registeredTools).not.toContain('auth_logout');
   });
 
   test('registers tools with zod schemas for parameters', async () => {
@@ -67,7 +67,6 @@ describe('registerTools', () => {
 
     registerTools(mockServer as any);
 
-    // Tools with no parameters should have empty schemas or no schema
     // Tools with parameters should have proper zod schemas
     expect(toolSchemas.get('create_site')).toBeDefined();
     expect(toolSchemas.get('get_site')).toBeDefined();
@@ -91,8 +90,9 @@ describe('registerTools', () => {
 
     registerTools(mockServer as any);
 
-    // All expected tools should have handlers
-    expect(handlers.size).toBe(12);
+    // 9 tools: get_user, list_sites, create_site, get_site, delete_site,
+    // get_site_status, publish_content, sync_site, delete_files
+    expect(handlers.size).toBe(9);
     for (const handler of handlers.values()) {
       expect(typeof handler).toBe('function');
     }

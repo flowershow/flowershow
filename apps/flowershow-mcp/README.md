@@ -12,24 +12,11 @@ The server uses MCP's **Streamable HTTP** transport. Clients must send `Accept: 
 
 ## Authentication
 
-The server uses an **OAuth 2.0 Device Authorization Grant** flow — no secrets are needed in the MCP client config.
+The server authenticates via **Personal Access Tokens (PAT)**. Generate a token from your Flowershow account settings and pass it in the `Authorization` header of your MCP client config.
 
-1. Call `auth_start` — returns a URL and user code
-2. Open the URL in a browser and enter the code
-3. Call `auth_status` to poll until authentication completes
-4. All subsequent tool calls use the stored token automatically
-
-Tokens are held in-memory per server instance. Call `auth_logout` to clear.
+No server-side secrets or OAuth flows are needed — the token is sent with every request and validated against the Flowershow API.
 
 ## Available Tools
-
-### Auth
-
-| Tool | Description | Parameters |
-|------|-------------|------------|
-| `auth_start` | Initiate device authorization flow | — |
-| `auth_status` | Check/poll authentication status | — |
-| `auth_logout` | Clear stored auth token | — |
 
 ### User
 
@@ -65,13 +52,17 @@ Add to your MCP settings:
 {
   "mcpServers": {
     "flowershow": {
-      "url": "https://mcp.flowershow.app/api/mcp"
+      "type": "http",
+      "url": "https://mcp.flowershow.app/api/mcp",
+      "headers": {
+        "Authorization": "Bearer ${FLOWERSHOW_PAT}"
+      }
     }
   }
 }
 ```
 
-No API keys required — authenticate via the device flow after connecting.
+Set the `FLOWERSHOW_PAT` environment variable to your Flowershow Personal Access Token, or replace `${FLOWERSHOW_PAT}` with the token value directly.
 
 ## Development
 
@@ -101,7 +92,7 @@ The dev server runs on `http://localhost:3100`.
 ### Testing
 
 ```bash
-pnpm test          # Run all tests (70 tests across 7 files)
+pnpm test          # Run all tests
 pnpm test:watch    # Watch mode
 ```
 
@@ -121,21 +112,20 @@ pnpm build
 
 ```
 apps/flowershow-mcp/
-├── app/api/[transport]/route.ts    # MCP route handler (Streamable HTTP)
+├── app/api/[transport]/route.ts    # MCP route handler (extracts PAT from Authorization header)
 ├── lib/
 │   ├── api-client.ts               # Typed HTTP client for Flowershow API
 │   ├── config.ts                   # Environment config
 │   ├── errors.ts                   # MCP-aware error helpers
-│   ├── token-store.ts              # In-memory auth token storage
+│   ├── token-store.ts              # Per-request token storage
 │   ├── types.ts                    # Domain types
 │   └── tools/
 │       ├── registry.ts             # Tool registration (wires all tools onto McpServer)
-│       ├── auth.ts                 # Auth tool handlers
 │       ├── sites.ts                # Site management tool handlers
 │       └── publishing.ts           # Publishing tool handlers
 ```
 
-The server is **stateless** — it acts as a thin adapter translating MCP tool calls into Flowershow REST API requests. Auth tokens are stored in-memory per server instance.
+The server is **stateless** — it acts as a thin adapter translating MCP tool calls into Flowershow REST API requests. The PAT is extracted from the `Authorization: Bearer` header on each request and set in a module-level token store for tool handlers to access via `requireAuth()`.
 
 ## Deployment
 

@@ -1,14 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FlowershowApiClient } from '../api-client';
 import type {
-  DeviceAuthResponse,
-  TokenResponse,
-  User,
-  Site,
-  SyncResponse,
-  SiteStatus,
-  PublishFilesResponse,
   DeleteFilesResponse,
+  PublishFilesResponse,
+  Site,
+  SiteStatus,
+  SyncResponse,
+  User,
 } from '../types';
 
 // ── Helpers ─────────────────────────────────────────────────
@@ -29,64 +27,6 @@ describe('FlowershowApiClient', () => {
   beforeEach(() => {
     client = new FlowershowApiClient(baseUrl);
     vi.restoreAllMocks();
-  });
-
-  // ── Device Auth ─────────────────────────────────────────
-
-  describe('deviceAuthorize', () => {
-    it('posts to /api/cli/device/authorize and returns device auth response', async () => {
-      const expected: DeviceAuthResponse = {
-        device_code: 'dev-123',
-        user_code: 'ABCD-1234',
-        verification_uri: 'https://app.flowershow.app/authorize',
-        verification_uri_complete:
-          'https://app.flowershow.app/authorize?code=ABCD-1234',
-        expires_in: 900,
-        interval: 5,
-      };
-      const fetchMock = mockFetch(expected);
-      global.fetch = fetchMock;
-
-      const result = await client.deviceAuthorize();
-
-      expect(fetchMock).toHaveBeenCalledOnce();
-      const [url, opts] = fetchMock.mock.calls[0];
-      expect(url).toBe(`${baseUrl}/api/cli/device/authorize`);
-      expect(opts.method).toBe('POST');
-      expect(result).toEqual(expected);
-    });
-  });
-
-  describe('deviceToken', () => {
-    it('posts device_code and returns token when authorized', async () => {
-      const expected: TokenResponse = {
-        access_token: 'fs_cli_abc123',
-        token_type: 'bearer',
-      };
-      const fetchMock = mockFetch(expected);
-      global.fetch = fetchMock;
-
-      const result = await client.deviceToken('dev-123');
-
-      const [url, opts] = fetchMock.mock.calls[0];
-      expect(url).toBe(`${baseUrl}/api/cli/device/token`);
-      expect(opts.method).toBe('POST');
-      expect(JSON.parse(opts.body)).toEqual({
-        grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
-        device_code: 'dev-123',
-      });
-      expect(result).toEqual(expected);
-    });
-
-    it('returns authorization_pending response when not yet approved', async () => {
-      const pending = { error: 'authorization_pending' };
-      const fetchMock = mockFetch(pending, 400);
-      global.fetch = fetchMock;
-
-      const result = await client.deviceToken('dev-123');
-
-      expect(result).toEqual(pending);
-    });
   });
 
   // ── User ────────────────────────────────────────────────
@@ -180,9 +120,7 @@ describe('FlowershowApiClient', () => {
 
       const result = await client.getSite('token-123', 'site-1');
 
-      expect(fetchMock.mock.calls[0][0]).toBe(
-        `${baseUrl}/api/sites/id/site-1`,
-      );
+      expect(fetchMock.mock.calls[0][0]).toBe(`${baseUrl}/api/sites/id/site-1`);
       expect(result).toEqual(expected);
     });
   });
@@ -205,7 +143,9 @@ describe('FlowershowApiClient', () => {
   describe('publishFiles', () => {
     it('posts file metadata for upload URLs', async () => {
       const expected: PublishFilesResponse = {
-        uploads: [{ path: 'index.md', uploadUrl: 'https://r2.example.com/upload' }],
+        uploads: [
+          { path: 'index.md', uploadUrl: 'https://r2.example.com/upload' },
+        ],
         unchanged: [],
       };
       const fetchMock = mockFetch(expected);
@@ -294,10 +234,7 @@ describe('FlowershowApiClient', () => {
 
   describe('error handling', () => {
     it('throws ApiClientError on non-ok response for authenticated endpoints', async () => {
-      const fetchMock = mockFetch(
-        { error: 'Unauthorized' },
-        401,
-      );
+      const fetchMock = mockFetch({ error: 'Unauthorized' }, 401);
       global.fetch = fetchMock;
 
       await expect(client.getUser('bad-token')).rejects.toThrow(
@@ -306,13 +243,9 @@ describe('FlowershowApiClient', () => {
     });
 
     it('throws on network failure', async () => {
-      global.fetch = vi
-        .fn()
-        .mockRejectedValue(new TypeError('fetch failed'));
+      global.fetch = vi.fn().mockRejectedValue(new TypeError('fetch failed'));
 
-      await expect(client.getUser('token-123')).rejects.toThrow(
-        'fetch failed',
-      );
+      await expect(client.getUser('token-123')).rejects.toThrow('fetch failed');
     });
   });
 });
