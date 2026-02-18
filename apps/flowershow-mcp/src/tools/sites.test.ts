@@ -102,6 +102,7 @@ describe('registerSiteTools', () => {
       expect(text).toContain('Found 1 site:');
       expect(text).toContain('**my-docs**');
       expect(text).toContain('10 files');
+      expect(text).toContain('s1');  // site ID
       expect(text).toContain('https://my-docs.flowershow.app');
       expect(text).toContain('2025-06-15T12:00:00Z');
       expect(result.isError).toBeFalsy();
@@ -405,6 +406,22 @@ describe('registerSiteTools', () => {
       expect(text).toContain('deleted');
       expect(text).toContain('17');
       expect(result.isError).toBeFalsy();
+    });
+
+    it('returns error on 404', async () => {
+      (mockApi.deleteSite as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new ApiError(404, 'Not Found', '{"error":"not_found"}'),
+      );
+
+      const { client } = await createTestClient(mockApi);
+      const result = await client.callTool({
+        name: 'delete-site',
+        arguments: { siteId: 'bad-id' },
+      });
+
+      expect(result.isError).toBe(true);
+      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      expect(text).toContain('not found');
     });
   });
 });

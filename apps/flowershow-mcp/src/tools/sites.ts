@@ -53,7 +53,7 @@ export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
 
         const lines = data.sites.map(
           (s) =>
-            `- **${s.projectName}** (${s.fileCount} files)\n  ${s.url}\n  Updated: ${s.updatedAt}`,
+            `- **${s.projectName}** (${s.fileCount} files)\n  ID: ${s.id}\n  ${s.url}\n  Updated: ${s.updatedAt}`,
         );
 
         const text = `Found ${data.total} site${data.total === 1 ? '' : 's'}:\n\n${lines.join('\n\n')}`;
@@ -96,9 +96,27 @@ export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
       description: 'Get details for a specific Flowershow site',
       inputSchema: { siteId: z.string().describe('The site ID') },
     },
-    async ({ siteId }) => {
+    async ({ siteId }, extra) => {
+      const log = (
+        level: 'info' | 'debug' | 'warning' | 'error',
+        data: string,
+      ) => {
+        const logger =
+          level === 'error'
+            ? console.error
+            : level === 'warning'
+              ? console.warn
+              : level === 'debug'
+                ? console.debug
+                : console.info;
+        logger(`[get-site] ${data}`);
+        return server.sendLoggingMessage({ level, data }, extra.sessionId);
+      };
+
       try {
+        await log('info', `Fetching site ${siteId}…`);
         const { site } = await api.getSite(siteId);
+        await log('info', `Found site: ${site.projectName}`);
         const text = [
           `**${site.projectName}**`,
           `URL: ${site.url}`,
@@ -119,6 +137,7 @@ export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
               ? `Site not found. Check the site ID.`
               : `API error: ${err.message}`
             : `Failed to get site: ${err instanceof Error ? err.message : 'Unknown error'}`;
+        await log('error', message);
         return { content: [{ type: 'text', text: message }], isError: true };
       }
     },
@@ -139,9 +158,27 @@ export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
           .describe('If true and site exists, reset its content'),
       },
     },
-    async ({ projectName, overwrite }) => {
+    async ({ projectName, overwrite }, extra) => {
+      const log = (
+        level: 'info' | 'debug' | 'warning' | 'error',
+        data: string,
+      ) => {
+        const logger =
+          level === 'error'
+            ? console.error
+            : level === 'warning'
+              ? console.warn
+              : level === 'debug'
+                ? console.debug
+                : console.info;
+        logger(`[create-site] ${data}`);
+        return server.sendLoggingMessage({ level, data }, extra.sessionId);
+      };
+
       try {
+        await log('info', `Creating site "${projectName}"…`);
         const { site } = await api.createSite(projectName, overwrite);
+        await log('info', `Site created: ${site.projectName}`);
         const text = `Site created!\n\n**${site.projectName}**\nURL: ${site.url}\nID: ${site.id}`;
         return { content: [{ type: 'text', text }] };
       } catch (err) {
@@ -157,6 +194,7 @@ export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
         } else {
           message = `Failed to create site: ${err instanceof Error ? err.message : 'Unknown error'}`;
         }
+        await log('error', message);
         return { content: [{ type: 'text', text: message }], isError: true };
       }
     },
@@ -170,9 +208,27 @@ export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
         'Delete a Flowershow site and all its content. This is irreversible.',
       inputSchema: { siteId: z.string().describe('The site ID to delete') },
     },
-    async ({ siteId }) => {
+    async ({ siteId }, extra) => {
+      const log = (
+        level: 'info' | 'debug' | 'warning' | 'error',
+        data: string,
+      ) => {
+        const logger =
+          level === 'error'
+            ? console.error
+            : level === 'warning'
+              ? console.warn
+              : level === 'debug'
+                ? console.debug
+                : console.info;
+        logger(`[delete-site] ${data}`);
+        return server.sendLoggingMessage({ level, data }, extra.sessionId);
+      };
+
       try {
+        await log('info', `Deleting site ${siteId}…`);
         const result = await api.deleteSite(siteId);
+        await log('info', `Site deleted: ${result.deletedFiles} file(s) removed`);
         const text = `Site deleted successfully. ${result.deletedFiles} file${result.deletedFiles === 1 ? '' : 's'} removed.`;
         return { content: [{ type: 'text', text }] };
       } catch (err) {
@@ -182,6 +238,7 @@ export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
               ? `Site not found. Check the site ID.`
               : `API error: ${err.message}`
             : `Failed to delete site: ${err instanceof Error ? err.message : 'Unknown error'}`;
+        await log('error', message);
         return { content: [{ type: 'text', text: message }], isError: true };
       }
     },
