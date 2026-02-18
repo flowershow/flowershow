@@ -10,7 +10,7 @@ import { Plan, PrismaClient, Status } from '@prisma/client';
 import {
   extractImageDimensions,
   parseMarkdownForSync,
-} from '../../../../packages/cloudflare-worker/src/processing-utils.js';
+} from './processing-utils';
 
 // --- Config ---
 

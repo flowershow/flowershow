@@ -161,9 +161,6 @@ importers:
       github-slugger:
         specifier: ^2.0.0
         version: 2.0.0
-      gray-matter:
-        specifier: ^4.0.3
-        version: 4.0.3(patch_hash=f99747fffebc5f7699100bb5c1d087b565fe92daccc48287872c6f4c9d9ac819)
       hast-util-from-html:
         specifier: ^2.0.3
         version: 2.0.3
@@ -435,6 +432,12 @@ importers:
       eslint-plugin-storybook:
         specifier: 10.2.0
         version: 10.2.0(eslint@9.39.2(jiti@1.21.7))(storybook@10.2.8(@testing-library/dom@10.4.1)(prettier@3.6.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(typescript@5.9.3)
+      gray-matter:
+        specifier: ^4.0.3
+        version: 4.0.3(patch_hash=f99747fffebc5f7699100bb5c1d087b565fe92daccc48287872c6f4c9d9ac819)
+      image-size:
+        specifier: ^2.0.2
+        version: 2.0.2
       jsdom:
         specifier: ^27.2.0
         version: 27.4.0
