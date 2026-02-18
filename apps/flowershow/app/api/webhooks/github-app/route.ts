@@ -226,101 +226,104 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
     return;
   }
 
-  const installationId = BigInt(installation.id);
-
-  // Find all user links to this installation (many-to-many)
-  const dbInstallations = await prisma.gitHubInstallation.findMany({
-    where: { installationId },
-  });
-
-  if (dbInstallations.length === 0) {
-    console.log(`Installation not found in database: ${installation.id}`);
-    return;
-  }
-
-  console.log(
-    `Found ${dbInstallations.length} user link(s) for installation ${installation.id}`,
-  );
+  const ghInstallationId = BigInt(installation.id);
 
   switch (action) {
-    case 'added':
+    case 'added': {
       // Repositories were added to the installation
-      if (repositories_added && repositories_added.length > 0) {
-        console.log(
-          `${repositories_added.length} repositories added to installation ${installation.id}`,
-        );
+      if (!repositories_added || repositories_added.length === 0) break;
 
-        // Add repositories for each user link
-        for (const dbInstallation of dbInstallations) {
-          await prisma.gitHubInstallationRepository.createMany({
-            data: repositories_added.map((repo) => ({
-              installationId: dbInstallation.id,
-              repositoryId: BigInt(repo.id),
-              repositoryName: repo.name,
-              repositoryFullName: repo.full_name,
-              isPrivate: repo.private,
-            })),
-            skipDuplicates: true,
-          });
-        }
+      // Find all user links to this installation by GitHub's installation ID
+      const dbInstallations = await prisma.gitHubInstallation.findMany({
+        where: { installationId: ghInstallationId },
+      });
+
+      if (dbInstallations.length === 0) {
+        console.log(`Installation not found in database: ${installation.id}`);
+        return;
+      }
+
+      console.log(
+        `${repositories_added.length} repositories added to installation ${installation.id} (${dbInstallations.length} user link(s))`,
+      );
+
+      // Add repositories for each user link
+      for (const dbInstallation of dbInstallations) {
+        await prisma.gitHubInstallationRepository.createMany({
+          data: repositories_added.map((repo) => ({
+            installationId: dbInstallation.id,
+            repositoryId: BigInt(repo.id),
+            repositoryName: repo.name,
+            repositoryFullName: repo.full_name,
+            isPrivate: repo.private,
+          })),
+          skipDuplicates: true,
+        });
       }
       break;
+    }
 
-    case 'removed':
+    case 'removed': {
       // Repositories were removed from the installation
-      if (repositories_removed && repositories_removed.length > 0) {
-        console.log(
-          `${repositories_removed.length} repositories removed from installation ${installation.id}`,
-        );
+      if (!repositories_removed || repositories_removed.length === 0) break;
 
-        const repoFullNames = repositories_removed.map(
-          (repo) => repo.full_name,
-        );
-        const repoIds = repositories_removed.map((repo) => BigInt(repo.id));
+      const repoFullNames = repositories_removed.map((repo) => repo.full_name);
+      const repoIds = repositories_removed.map((repo) => BigInt(repo.id));
 
-        // Process each user link
-        for (const dbInstallation of dbInstallations) {
-          // Find affected sites BEFORE deleting repository records
-          const affectedSites = await prisma.site.findMany({
-            where: {
-              installationId: dbInstallation.id,
-              ghRepository: { in: repoFullNames },
-            },
+      // Find all user links, eagerly loading affected sites
+      const dbInstallations = await prisma.gitHubInstallation.findMany({
+        where: { installationId: ghInstallationId },
+        include: {
+          sites: {
+            where: { ghRepository: { in: repoFullNames } },
             select: {
               id: true,
               projectName: true,
               ghRepository: true,
               userId: true,
             },
-          });
+          },
+        },
+      });
 
-          // Delete repository access records for this user link
-          await prisma.gitHubInstallationRepository.deleteMany({
+      if (dbInstallations.length === 0) {
+        console.log(`Installation not found in database: ${installation.id}`);
+        return;
+      }
+
+      console.log(
+        `${repositories_removed.length} repositories removed from installation ${installation.id} (${dbInstallations.length} user link(s))`,
+      );
+
+      // Process each user link — sites were already loaded via include
+      for (const dbInstallation of dbInstallations) {
+        // Delete repository access records for this user link
+        await prisma.gitHubInstallationRepository.deleteMany({
+          where: {
+            installationId: dbInstallation.id,
+            repositoryId: { in: repoIds },
+          },
+        });
+
+        // Clear installationId and disable autoSync for affected sites
+        if (dbInstallation.sites.length > 0) {
+          console.log(
+            `Clearing installation access for ${dbInstallation.sites.length} affected site(s) for user ${dbInstallation.userId}`,
+          );
+
+          await prisma.site.updateMany({
             where: {
-              installationId: dbInstallation.id,
-              repositoryId: { in: repoIds },
+              id: { in: dbInstallation.sites.map((s) => s.id) },
+            },
+            data: {
+              installationId: null,
+              autoSync: false,
             },
           });
-
-          // Clear installationId and disable autoSync for affected sites
-          if (affectedSites.length > 0) {
-            console.log(
-              `Clearing installation access for ${affectedSites.length} affected site(s) for user ${dbInstallation.userId}`,
-            );
-
-            await prisma.site.updateMany({
-              where: {
-                id: { in: affectedSites.map((s) => s.id) },
-              },
-              data: {
-                installationId: null,
-                autoSync: false,
-              },
-            });
-          }
         }
       }
       break;
+    }
 
     default:
       console.log(`Unhandled installation_repositories action: ${action}`);
@@ -328,7 +331,7 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
 
   // Update installation timestamps for all user links
   await prisma.gitHubInstallation.updateMany({
-    where: { installationId },
+    where: { installationId: ghInstallationId },
     data: { updatedAt: new Date() },
   });
 }
@@ -344,10 +347,12 @@ async function handlePushEvent(data: WebhookPayload) {
       name: 'Handle GitHub App Push Event',
     },
     async (span) => {
-      const { ref, repository } = data;
+      const { ref, repository, installation } = data;
 
-      if (!repository || !ref) {
-        console.error('Push event missing repository or ref data');
+      if (!repository || !ref || !installation) {
+        console.error(
+          'Push event missing repository, ref, or installation data',
+        );
         return;
       }
 
@@ -356,33 +361,50 @@ async function handlePushEvent(data: WebhookPayload) {
 
       span.setAttribute('repository', repository.full_name);
       span.setAttribute('branch', branch);
+      span.setAttribute('installation_id', installation.id);
 
       console.log(
-        `Push event received for ${repository.full_name} on branch ${branch}`,
+        `Push event received for ${repository.full_name} on branch ${branch} (installation ${installation.id})`,
       );
 
-      // Find all sites using this repository and branch with GitHub App installation
-      const sites = await prisma.site.findMany({
-        where: {
-          ghRepository: repository.full_name,
-          ghBranch: branch,
-          installationId: { not: null },
-          autoSync: true,
-        },
-        select: {
-          id: true,
-          ghRepository: true,
-          ghBranch: true,
-          rootDir: true,
-          installationId: true,
+      // Look up installations by GitHub's installation ID, including linked sites
+      const dbInstallations = await prisma.gitHubInstallation.findMany({
+        where: { installationId: BigInt(installation.id) },
+        include: {
+          sites: {
+            where: {
+              ghRepository: repository.full_name,
+              ghBranch: branch,
+              autoSync: true,
+            },
+            select: {
+              id: true,
+              ghRepository: true,
+              ghBranch: true,
+              rootDir: true,
+              installationId: true,
+            },
+          },
         },
       });
+
+      span.setAttribute('installations_found', dbInstallations.length);
+
+      if (dbInstallations.length === 0) {
+        console.log(
+          `No installations found in database for GitHub installation ${installation.id}`,
+        );
+        return;
+      }
+
+      // Collect all matching sites across all user links for this installation
+      const sites = dbInstallations.flatMap((inst) => inst.sites);
 
       span.setAttribute('sites_found', sites.length);
 
       if (sites.length === 0) {
         console.log(
-          `No sites found for ${repository.full_name}:${branch} with autoSync enabled`,
+          `No sites found for ${repository.full_name}:${branch} (installation ${installation.id})`,
         );
         return;
       }
