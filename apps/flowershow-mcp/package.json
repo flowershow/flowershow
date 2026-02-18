@@ -11,7 +11,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.25.2",
+    "@modelcontextprotocol/sdk": "1.25.2",
     "mcp-handler": "^1.0.7",
     "next": "15.5.12",
     "react": "19.2.1",
