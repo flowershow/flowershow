@@ -8,6 +8,7 @@ import { z } from 'zod';
 import {
   registerAnonymousRoutes,
   registerCliAuthRoutes,
+  registerGitHubAppRoutes,
   registerSitesRoutes,
   registerUserRoutes,
 } from './routes/index.js';
@@ -100,6 +101,7 @@ export function generateOpenApiDocument(): OpenAPIObject {
   registerUserRoutes(registry);
   registerSitesRoutes(registry);
   registerAnonymousRoutes(registry);
+  registerGitHubAppRoutes(registry);
 
   const generator = new OpenApiGeneratorV31(registry.definitions);
   return generator.generateDocument({
