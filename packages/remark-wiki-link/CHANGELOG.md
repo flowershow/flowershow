@@ -1,5 +1,11 @@
 # remark-wiki-link
 
+## 3.4.0
+
+### Minor Changes
+
+- Add data-fs-resolved-file-path attribute to all wiki-link output elements, carrying the raw matched file path before URL resolution. Replace native width/height attributes on image and video embeds with data-fs-width and data-fs-height data attributes.
+
 ## 3.3.1
 
 ### Patch Changes

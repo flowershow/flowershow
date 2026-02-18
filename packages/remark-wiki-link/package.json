@@ -1,6 +1,6 @@
 {
   "name": "@flowershow/remark-wiki-link",
-  "version": "3.3.1",
+  "version": "3.4.0",
   "description": "Parse and render wiki-style links, especially Obsidian style links.",
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean --sourcemap",
@@ -12,7 +12,12 @@
     "type": "git",
     "url": "git+https://github.com/flowershow/remark-wiki-link.git"
   },
-  "keywords": ["remark", "remark-plugin", "markdown", "obsidian"],
+  "keywords": [
+    "remark",
+    "remark-plugin",
+    "markdown",
+    "obsidian"
+  ],
   "author": "Flowershow",
   "license": "MIT",
   "bugs": {
@@ -42,7 +47,9 @@
     "vitest": "^3.2.4"
   },
   "type": "module",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/src/index.d.ts",
