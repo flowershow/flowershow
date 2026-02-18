@@ -5,83 +5,27 @@
  * and returns typed responses from the Flowershow REST API.
  */
 
-export interface SiteSummary {
-  id: string;
-  projectName: string;
-  url: string;
-  fileCount: number;
-  updatedAt: string;
-  createdAt: string;
-}
+import type {
+  FileMetadata,
+  ListSitesResponse,
+  PublishFilesResponse,
+  SiteDetail,
+  SiteSummary,
+  StatusResponse,
+  UploadTarget,
+  User,
+} from '@flowershow/api-contract';
 
-export interface ListSitesResponse {
-  sites: SiteSummary[];
-  total: number;
-}
-
-export interface SiteDetail {
-  id: string;
-  projectName: string;
-  ghRepository: string | null;
-  ghBranch: string | null;
-  customDomain: string | null;
-  rootDir: string | null;
-  autoSync: boolean;
-  plan: 'FREE' | 'PREMIUM';
-  privacyMode: 'PUBLIC' | 'PASSWORD';
-  enableComments: boolean;
-  enableSearch: boolean;
-  syntaxMode: string;
-  url: string;
-  fileCount: number;
-  totalSize: number;
-  updatedAt: string;
-  createdAt: string;
-}
-
-export interface User {
-  id: string;
-  name: string | null;
-  username: string;
-  email: string | null;
-  image: string | null;
-  role: 'USER' | 'ADMIN';
-}
-
-export interface FileMetadata {
-  path: string;
-  size: number;
-  sha: string;
-}
-
-export interface UploadTarget {
-  path: string;
-  uploadUrl: string;
-  blobId: string;
-  contentType: string;
-}
-
-export interface PublishFilesResponse {
-  files: UploadTarget[];
-}
-
-export interface StatusResponse {
-  siteId: string;
-  status: 'pending' | 'complete' | 'error';
-  files: {
-    total: number;
-    pending: number;
-    success: number;
-    failed: number;
-  };
-  blobs?: Array<{
-    id: string;
-    path: string;
-    syncStatus: 'UPLOADING' | 'PROCESSING' | 'SUCCESS' | 'ERROR';
-    syncError: string | null;
-    extension: string | null;
-  }>;
-}
+export type {
+  SiteSummary,
+  ListSitesResponse,
+  SiteDetail,
+  User,
+  FileMetadata,
+  UploadTarget,
+  PublishFilesResponse,
+  StatusResponse,
+};
 
 export class ApiError extends Error {
   constructor(
@@ -152,7 +96,9 @@ export class FlowershowApi {
     }>('POST', '/sites', { projectName, overwrite });
   }
 
-  async deleteSite(siteId: string): Promise<{ success: boolean; deletedFiles: number }> {
+  async deleteSite(
+    siteId: string,
+  ): Promise<{ success: boolean; deletedFiles: number }> {
     return this.request<{ success: boolean; deletedFiles: number }>(
       'DELETE',
       `/sites/id/${siteId}`,
@@ -174,7 +120,11 @@ export class FlowershowApi {
     return this.request<StatusResponse>('GET', `/sites/id/${siteId}/status`);
   }
 
-  async uploadToPresignedUrl(url: string, content: string, contentType = 'text/markdown'): Promise<void> {
+  async uploadToPresignedUrl(
+    url: string,
+    content: string,
+    contentType = 'text/markdown',
+  ): Promise<void> {
     const res = await fetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': contentType },

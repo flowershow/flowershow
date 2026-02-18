@@ -489,6 +489,9 @@ importers:
 
   apps/flowershow-mcp:
     dependencies:
+      '@flowershow/api-contract':
+        specifier: workspace:*
+        version: link:../../packages/api-contract
       '@modelcontextprotocol/sdk':
         specifier: ^1.12.1
         version: 1.25.2(hono@4.11.9)(zod@3.25.76)

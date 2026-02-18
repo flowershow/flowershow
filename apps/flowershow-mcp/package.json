@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@flowershow/api-contract": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "express": "^5.1.0",
     "zod": "^3.25.67",
