@@ -28,10 +28,13 @@ export function extractPat(req: Request): string | null {
 // ---------------------------------------------------------------------------
 
 export function createServer(api: FlowershowApi): McpServer {
-  const server = new McpServer({
-    name: 'flowershow',
-    version: '0.1.0',
-  });
+  const server = new McpServer(
+    {
+      name: 'flowershow',
+      version: '0.1.0',
+    },
+    { capabilities: { logging: {} } },
+  );
 
   registerSiteTools(server, api);
 

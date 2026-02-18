@@ -85,11 +85,13 @@ pnpm run --filter @flowershow/mcp start
 # In another terminal — test auth error (no token)
 curl -s -X POST http://localhost:3456/mcp \
   -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
   -d '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}},"id":1}'
 
 # Test with a real PAT (should return server capabilities)
 curl -s -X POST http://localhost:3456/mcp \
   -H 'Content-Type: application/json' \
+  -H 'Accept: application/json, text/event-stream' \
   -H 'Authorization: Bearer fs_pat_YOUR_TOKEN_HERE' \
   -d '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2025-03-26","capabilities":{},"clientInfo":{"name":"test","version":"1.0.0"}},"id":1}'
 ```

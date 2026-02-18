@@ -1,6 +1,7 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { LoggingMessageNotificationSchema } from '@modelcontextprotocol/sdk/types.js';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, type FlowershowApi } from '../lib/api.js';
 import { registerSiteTools } from './sites.js';
@@ -10,7 +11,10 @@ import { registerSiteTools } from './sites.js';
 // ---------------------------------------------------------------------------
 
 async function createTestClient(api: FlowershowApi) {
-  const server = new McpServer({ name: 'test', version: '0.0.1' });
+  const server = new McpServer(
+    { name: 'test', version: '0.0.1' },
+    { capabilities: { logging: {} } },
+  );
   registerSiteTools(server, api);
 
   const client = new Client({ name: 'test-client', version: '0.0.1' });
@@ -207,6 +211,66 @@ describe('registerSiteTools', () => {
       expect(text).toContain('Failed to list sites');
       expect(text).toContain('network timeout');
       expect(result.isError).toBe(true);
+    });
+
+    it('sends logging messages to the client during execution', async () => {
+      (mockApi.listSites as ReturnType<typeof vi.fn>).mockResolvedValue({
+        sites: [
+          {
+            id: 's1',
+            projectName: 'my-docs',
+            url: 'https://my-docs.flowershow.app',
+            fileCount: 10,
+            updatedAt: '2025-06-15T12:00:00Z',
+            createdAt: '2025-01-01T00:00:00Z',
+          },
+        ],
+        total: 1,
+      });
+
+      const { client } = await createTestClient(mockApi);
+
+      const logs: Array<{ level: string; data: unknown }> = [];
+      client.setNotificationHandler(
+        LoggingMessageNotificationSchema,
+        (notification) => {
+          logs.push({
+            level: notification.params.level,
+            data: notification.params.data,
+          });
+        },
+      );
+
+      await client.callTool({ name: 'list-sites', arguments: {} });
+
+      expect(logs.length).toBeGreaterThanOrEqual(2);
+      expect(logs[0]).toMatchObject({ level: 'info', data: 'Fetching sites…' });
+      expect(logs[1]).toMatchObject({ level: 'info', data: 'Found 1 site' });
+    });
+
+    it('sends error-level log message on failure', async () => {
+      (mockApi.listSites as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new ApiError(401, 'Unauthorized', '{"error":"bad token"}'),
+      );
+
+      const { client } = await createTestClient(mockApi);
+
+      const logs: Array<{ level: string; data: unknown }> = [];
+      client.setNotificationHandler(
+        LoggingMessageNotificationSchema,
+        (notification) => {
+          logs.push({
+            level: notification.params.level,
+            data: notification.params.data,
+          });
+        },
+      );
+
+      await client.callTool({ name: 'list-sites', arguments: {} });
+
+      const errorLog = logs.find((l) => l.level === 'error');
+      expect(errorLog).toBeDefined();
+      expect(errorLog!.data).toContain('Authentication failed');
     });
   });
 });
