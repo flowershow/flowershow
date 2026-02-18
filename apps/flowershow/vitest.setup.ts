@@ -34,8 +34,6 @@ vi.mock('@/env.mjs', () => ({
     STRIPE_SECRET_KEY: 'sk_test_xxx',
     STRIPE_WEBHOOK_SECRET: 'whsec_test',
     TYPESENSE_ADMIN_API_KEY: 'test-typesense-key',
-    SENTRY_ORG: 'test-org',
-    SENTRY_PROJECT: 'test-project',
     SITE_ACCESS_JWT_SECRET: 'test-jwt-secret',
     ANONYMOUS_JWT_SECRET: 'test-anon-jwt-secret',
     // Client env vars
@@ -52,7 +50,6 @@ vi.mock('@/env.mjs', () => ({
     NEXT_PUBLIC_TYPESENSE_HOST: 'localhost',
     NEXT_PUBLIC_TYPESENSE_PORT: '8108',
     NEXT_PUBLIC_TYPESENSE_PROTOCOL: 'http',
-    NEXT_PUBLIC_SENTRY_DSN: 'https://test@sentry.io/123',
     NEXT_PUBLIC_POSTHOG_KEY: 'test-posthog-key',
     NEXT_PUBLIC_POSTHOG_HOST: 'https://app.posthog.com',
     NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID: 'price_monthly',

@@ -1,7 +1,7 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
 import { useRouter } from 'next/navigation';
+import posthog from 'posthog-js';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { GithubIcon } from '@/components/icons';
@@ -31,7 +31,7 @@ export default function MigrateToGitHubAppForm({
     },
     onError: (error) => {
       console.error('Migration failed:', error);
-      Sentry.captureException(error);
+      posthog.captureException(error);
       toast.error(error.message || 'Failed to migrate site');
       setIsMigrating(false);
     },
@@ -69,59 +69,47 @@ export default function MigrateToGitHubAppForm({
   const handleMigrate = async () => {
     setIsMigrating(true);
 
-    Sentry.startSpan(
-      {
-        op: 'ui.click',
-        name: 'Migrate Site to GitHub App',
-      },
-      async (span) => {
-        span.setAttribute('site_id', siteId);
-        span.setAttribute('repository', repositoryName);
+    posthog.capture('migrate_site_to_github_app_clicked', {
+      site_id: siteId,
+      repository: repositoryName,
+    });
 
-        await migrateSite.mutateAsync({ siteId });
-      },
-    );
+    await migrateSite.mutateAsync({ siteId });
   };
 
   const handleConnect = async () => {
     setIsConnecting(true);
 
-    Sentry.startSpan(
-      {
-        op: 'ui.click',
-        name: 'Connect GitHub App Before Migration',
-      },
-      async (span) => {
-        span.setAttribute('site_id', siteId);
+    posthog.capture('connect_github_app_before_migration_clicked', {
+      site_id: siteId,
+    });
 
-        try {
-          const result = await getInstallationUrl.mutateAsync({});
+    try {
+      const result = await getInstallationUrl.mutateAsync({});
 
-          // Open GitHub App installation in popup window
-          const width = 800;
-          const height = 800;
-          const left = window.screenX + (window.outerWidth - width) / 2;
-          const top = window.screenY + (window.outerHeight - height) / 2;
+      // Open GitHub App installation in popup window
+      const width = 800;
+      const height = 800;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
 
-          const popup = window.open(
-            result.url,
-            'github-app-install',
-            `width=${width},height=${height},left=${left},top=${top},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`,
-          );
+      const popup = window.open(
+        result.url,
+        'github-app-install',
+        `width=${width},height=${height},left=${left},top=${top},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`,
+      );
 
-          if (!popup) {
-            toast.error('Please allow popups for this site');
-            setIsConnecting(false);
-            return;
-          }
-        } catch (error) {
-          console.error('Failed to get installation URL:', error);
-          Sentry.captureException(error);
-          toast.error('Failed to connect GitHub App');
-          setIsConnecting(false);
-        }
-      },
-    );
+      if (!popup) {
+        toast.error('Please allow popups for this site');
+        setIsConnecting(false);
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to get installation URL:', error);
+      posthog.captureException(error);
+      toast.error('Failed to connect GitHub App');
+      setIsConnecting(false);
+    }
   };
 
   return (

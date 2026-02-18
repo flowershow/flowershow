@@ -1,7 +1,7 @@
-import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { ANONYMOUS_USER_ID, verifyOwnershipToken } from '@/lib/anonymous-user';
+import { log, SeverityNumber } from '@/lib/otel-logger';
 import PostHogClient from '@/lib/server-posthog';
 import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
@@ -26,129 +26,124 @@ interface ClaimResponse {
  * Claim an anonymous site after authentication
  */
 export async function POST(request: NextRequest) {
-  return Sentry.startSpan(
-    {
-      op: 'http.server',
-      name: 'POST /api/sites/claim',
-    },
-    async (span) => {
-      try {
-        // Check authentication
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
-          return NextResponse.json(
-            { success: false, error: 'Authentication required' },
-            { status: 401 },
-          );
-        }
+  try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required' },
+        { status: 401 },
+      );
+    }
 
-        span.setAttribute('user_id', session.user.id);
+    // Parse request
+    const body = (await request.json()) as ClaimRequest;
+    const { siteId, ownershipToken } = body;
 
-        // Parse request
-        const body = (await request.json()) as ClaimRequest;
-        const { siteId, ownershipToken } = body;
+    // Validate inputs
+    if (!siteId || !ownershipToken) {
+      return NextResponse.json(
+        { success: false, error: 'siteId and ownershipToken are required' },
+        { status: 400 },
+      );
+    }
 
-        // Validate inputs
-        if (!siteId || !ownershipToken) {
-          return NextResponse.json(
-            { success: false, error: 'siteId and ownershipToken are required' },
-            { status: 400 },
-          );
-        }
+    // Verify ownership token - returns anonymousUserId if valid
+    const anonymousUserId = verifyOwnershipToken(ownershipToken);
+    if (!anonymousUserId) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid ownership token' },
+        { status: 403 },
+      );
+    }
 
-        // Verify ownership token - returns anonymousUserId if valid
-        const anonymousUserId = verifyOwnershipToken(ownershipToken);
-        if (!anonymousUserId) {
-          span.setAttribute('token_valid', false);
-          return NextResponse.json(
-            { success: false, error: 'Invalid ownership token' },
-            { status: 403 },
-          );
-        }
+    // Find the site
+    const site = await prisma.site.findUnique({
+      where: { id: siteId },
+    });
 
-        span.setAttribute('site_id', siteId);
-        span.setAttribute('token_valid', true);
+    if (!site) {
+      return NextResponse.json(
+        { success: false, error: 'Site not found' },
+        { status: 404 },
+      );
+    }
 
-        // Find the site
-        const site = await prisma.site.findUnique({
-          where: { id: siteId },
-        });
+    // Verify it's an anonymous site with matching ownership
+    if (site.userId !== ANONYMOUS_USER_ID) {
+      return NextResponse.json(
+        { success: false, error: 'Site is not anonymous' },
+        { status: 400 },
+      );
+    }
 
-        if (!site) {
-          return NextResponse.json(
-            { success: false, error: 'Site not found' },
-            { status: 404 },
-          );
-        }
+    if (site.anonymousOwnerId !== anonymousUserId) {
+      return NextResponse.json(
+        { success: false, error: 'Ownership verification failed' },
+        { status: 403 },
+      );
+    }
 
-        // Verify it's an anonymous site with matching ownership
-        if (site.userId !== ANONYMOUS_USER_ID) {
-          return NextResponse.json(
-            { success: false, error: 'Site is not anonymous' },
-            { status: 400 },
-          );
-        }
+    // Get user's site count for analytics
+    const userSitesCount = await prisma.site.count({
+      where: { userId: session.user.id },
+    });
 
-        if (site.anonymousOwnerId !== anonymousUserId) {
-          return NextResponse.json(
-            { success: false, error: 'Ownership verification failed' },
-            { status: 403 },
-          );
-        }
+    // Transfer ownership to the authenticated user
+    const updatedSite = await prisma.site.update({
+      where: { id: siteId },
+      data: {
+        userId: session.user.id,
+        isTemporary: false,
+        expiresAt: null,
+        anonymousOwnerId: null,
+      },
+    });
 
-        // Get user's site count for analytics
-        const userSitesCount = await prisma.site.count({
-          where: { userId: session.user.id },
-        });
+    log('POST /api/sites/claim', SeverityNumber.INFO, {
+      user_id: session.user.id,
+      site_id: siteId,
+      token_valid: true,
+      claim_successful: true,
+    });
 
-        // Transfer ownership to the authenticated user
-        const updatedSite = await prisma.site.update({
-          where: { id: siteId },
-          data: {
-            userId: session.user.id,
-            isTemporary: false,
-            expiresAt: null,
-            anonymousOwnerId: null,
-          },
-        });
+    // Track analytics
+    const posthog = PostHogClient();
+    posthog.capture({
+      distinctId: session.user.id,
+      event: 'anon_claim_completed',
+      properties: {
+        site_id: siteId,
+        sites_owned_count: userSitesCount + 1,
+        auth_method: 'nextauth', // Could be refined based on provider
+      },
+    });
+    await posthog.shutdown();
 
-        span.setAttribute('claim_successful', true);
+    const response: ClaimResponse = {
+      success: true,
+      site: {
+        id: updatedSite.id,
+        projectName: updatedSite.projectName,
+        userId: updatedSite.userId,
+      },
+    };
 
-        // Track analytics
-        const posthog = PostHogClient();
-        posthog.capture({
-          distinctId: session.user.id,
-          event: 'anon_claim_completed',
-          properties: {
-            site_id: siteId,
-            sites_owned_count: userSitesCount + 1,
-            auth_method: 'nextauth', // Could be refined based on provider
-          },
-        });
-        await posthog.shutdown();
+    return NextResponse.json(response);
+  } catch (error) {
+    console.error('Claim error:', error);
+    const posthog = PostHogClient();
+    posthog.captureException(error, 'system', {
+      route: 'POST /api/sites/claim',
+    });
+    await posthog.shutdown();
 
-        const response: ClaimResponse = {
-          success: true,
-          site: {
-            id: updatedSite.id,
-            projectName: updatedSite.projectName,
-            userId: updatedSite.userId,
-          },
-        };
-
-        return NextResponse.json(response);
-      } catch (error) {
-        console.error('Claim error:', error);
-        Sentry.captureException(error);
-
-        return NextResponse.json(
-          {
-            success: false,
-            error: 'Failed to claim site. Please try again.',
-          },
-          { status: 500 },
-        );
-      }
-    },
-  );
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Failed to claim site. Please try again.',
+      },
+      { status: 500 },
+    );
+  }
 }

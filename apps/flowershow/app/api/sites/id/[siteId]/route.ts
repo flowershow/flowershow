@@ -1,7 +1,7 @@
-import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
 import { deleteProject } from '@/lib/content-store';
+import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 
 /**
@@ -113,7 +113,11 @@ export async function GET(
     });
   } catch (error) {
     console.error('Error fetching site:', error);
-    Sentry.captureException(error);
+    const posthog = PostHogClient();
+    posthog.captureException(error, 'system', {
+      route: 'GET /api/sites/id/[siteId]',
+    });
+    await posthog.shutdown();
     return NextResponse.json(
       { error: 'internal_error', message: 'Failed to fetch site' },
       { status: 500 },
@@ -179,7 +183,13 @@ export async function DELETE(
       await deleteProject(siteId);
     } catch (storageError) {
       console.error('Error deleting from storage:', storageError);
-      Sentry.captureException(storageError);
+      const posthog = PostHogClient();
+      posthog.captureException(storageError, 'system', {
+        route: 'DELETE /api/sites/id/[siteId]',
+        siteId,
+        operation: 'delete_from_r2',
+      });
+      await posthog.shutdown();
       // Continue with database deletion even if storage deletion fails
     }
 
@@ -195,7 +205,11 @@ export async function DELETE(
     });
   } catch (error) {
     console.error('Error deleting site:', error);
-    Sentry.captureException(error);
+    const posthog = PostHogClient();
+    posthog.captureException(error, 'system', {
+      route: 'DELETE /api/sites/id/[siteId]',
+    });
+    await posthog.shutdown();
     return NextResponse.json(
       { error: 'internal_error', message: 'Failed to delete site' },
       { status: 500 },

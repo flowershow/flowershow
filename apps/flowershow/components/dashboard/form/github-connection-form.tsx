@@ -1,7 +1,7 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
 import { useRouter } from 'next/navigation';
+import posthog from 'posthog-js';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import GitHubConnectionCard from '@/components/dashboard/github-connection-card';
@@ -94,7 +94,7 @@ export default function GitHubConnectionForm({
     },
     onError: (error) => {
       console.error('Disconnect failed:', error);
-      Sentry.captureException(error);
+      posthog.captureException(error);
       toast.error(error.message || 'Failed to disconnect GitHub');
       setIsDisconnecting(false);
     },
@@ -108,7 +108,7 @@ export default function GitHubConnectionForm({
     },
     onError: (error) => {
       console.error('Update failed:', error);
-      Sentry.captureException(error);
+      posthog.captureException(error);
       toast.error(error.message || 'Failed to update root directory');
       setIsSavingRootDir(false);
     },
@@ -124,34 +124,22 @@ export default function GitHubConnectionForm({
     }
 
     setIsDisconnecting(true);
-    Sentry.startSpan(
-      {
-        op: 'ui.click',
-        name: 'Disconnect GitHub',
-      },
-      async (span) => {
-        span.setAttribute('site_id', siteId);
-        await disconnectGitHub.mutateAsync({ siteId });
-      },
-    );
+    posthog.capture('disconnect_github_clicked', {
+      site_id: siteId,
+    });
+    await disconnectGitHub.mutateAsync({ siteId });
   };
 
   const handleSaveRootDir = async () => {
     setIsSavingRootDir(true);
-    Sentry.startSpan(
-      {
-        op: 'ui.click',
-        name: 'Update Root Directory',
-      },
-      async (span) => {
-        span.setAttribute('site_id', siteId);
-        await updateSite.mutateAsync({
-          id: siteId,
-          key: SiteUpdateKey.rootDir,
-          value: editedRootDir,
-        });
-      },
-    );
+    posthog.capture('update_root_directory_clicked', {
+      site_id: siteId,
+    });
+    await updateSite.mutateAsync({
+      id: siteId,
+      key: SiteUpdateKey.rootDir,
+      value: editedRootDir,
+    });
   };
 
   const handleOpenConnectModal = () => {

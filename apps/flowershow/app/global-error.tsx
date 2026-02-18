@@ -1,7 +1,7 @@
 'use client';
 
-import * as Sentry from '@sentry/nextjs';
 import clsx from 'clsx';
+import posthog from 'posthog-js';
 import { useEffect } from 'react';
 import {
   fontBrand,
@@ -16,7 +16,7 @@ export default function GlobalError({
   error: Error & { digest?: string };
 }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    posthog.captureException(error);
   }, [error]);
 
   return (

@@ -1,7 +1,8 @@
-import * as Sentry from '@sentry/nextjs';
 import { TRPCError } from '@trpc/server';
 import jwt from 'jsonwebtoken';
 import { env } from '@/env.mjs';
+import { log, SeverityNumber } from '@/lib/otel-logger';
+import PostHogClient from '@/lib/server-posthog';
 import { db } from '@/server/db';
 
 const githubAPIBaseURL = 'https://api.github.com';
@@ -27,26 +28,18 @@ const refreshLocks = new Map<string, Promise<string>>();
  * Generate JWT for GitHub App authentication
  */
 async function generateGitHubAppJWT(): Promise<string> {
-  return Sentry.startSpan(
-    {
-      op: 'github.app.jwt',
-      name: 'Generate GitHub App JWT',
-    },
-    () => {
-      const now = Math.floor(Date.now() / 1000);
-      const payload = {
-        iat: now,
-        exp: now + 600, // 10 minutes
-        iss: env.GITHUB_APP_ID,
-      };
+  const now = Math.floor(Date.now() / 1000);
+  const payload = {
+    iat: now,
+    exp: now + 600, // 10 minutes
+    iss: env.GITHUB_APP_ID,
+  };
 
-      // Convert escaped newlines to actual newlines in private key
-      const privateKey = env.GITHUB_APP_PRIVATE_KEY.replace(/\\n/g, '\n');
-      return jwt.sign(payload, privateKey, {
-        algorithm: 'RS256',
-      });
-    },
-  );
+  // Convert escaped newlines to actual newlines in private key
+  const privateKey = env.GITHUB_APP_PRIVATE_KEY.replace(/\\n/g, '\n');
+  return jwt.sign(payload, privateKey, {
+    algorithm: 'RS256',
+  });
 }
 
 /**
@@ -65,61 +58,59 @@ async function refreshInstallationToken(
   // Create new refresh promise
   const refreshPromise = (async () => {
     try {
-      return await Sentry.startSpan(
+      const jwtToken = await generateGitHubAppJWT();
+
+      const response = await fetch(
+        `${githubAPIBaseURL}/app/installations/${githubInstallationId}/access_tokens`,
         {
-          op: 'github.app.token.refresh',
-          name: 'Refresh GitHub App Installation Token',
-        },
-        async (span) => {
-          span.setAttribute('installation_id', githubInstallationId);
-
-          const jwtToken = await generateGitHubAppJWT();
-
-          const response = await fetch(
-            `${githubAPIBaseURL}/app/installations/${githubInstallationId}/access_tokens`,
-            {
-              method: 'POST',
-              headers: {
-                Authorization: `Bearer ${jwtToken}`,
-                Accept: 'application/vnd.github+json',
-                'X-GitHub-Api-Version': githubAPIVersion,
-              },
-            },
-          );
-
-          if (!response.ok) {
-            const errorBody = await response.text();
-            Sentry.captureException(
-              new Error(
-                `Failed to refresh GitHub App token: ${response.status} ${response.statusText}`,
-              ),
-              {
-                extra: {
-                  installationId: githubInstallationId,
-                  status: response.status,
-                  errorBody,
-                },
-              },
-            );
-            throw new Error(`Failed to refresh token: ${response.statusText}`);
-          }
-
-          const data = await response.json();
-          const expiresAt = new Date(data.expires_at);
-
-          // Cache the token
-          tokenCache.set(githubInstallationId, {
-            token: data.token,
-            expiresAt,
-          });
-
-          span.setAttribute('expires_at', data.expires_at);
-
-          return data.token;
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${jwtToken}`,
+            Accept: 'application/vnd.github+json',
+            'X-GitHub-Api-Version': githubAPIVersion,
+          },
         },
       );
+
+      if (!response.ok) {
+        const errorBody = await response.text();
+        const error = new Error(
+          `Failed to refresh GitHub App token: ${response.status} ${response.statusText}`,
+        );
+        const posthog = PostHogClient();
+        posthog.captureException(error, 'system', {
+          source: 'lib/github.ts',
+          operation: 'refreshInstallationToken',
+          installationId: githubInstallationId,
+          status: response.status,
+          errorBody,
+        });
+        await posthog.shutdown();
+        throw new Error(`Failed to refresh token: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      const expiresAt = new Date(data.expires_at);
+
+      // Cache the token
+      tokenCache.set(githubInstallationId, {
+        token: data.token,
+        expiresAt,
+      });
+
+      log('Refresh GitHub App Installation Token', SeverityNumber.INFO, {
+        installation_id: githubInstallationId,
+        expires_at: data.expires_at,
+      });
+
+      return data.token;
     } catch (error) {
-      Sentry.captureException(error);
+      const posthog = PostHogClient();
+      posthog.captureException(error, 'system', {
+        source: 'lib/github.ts',
+        operation: 'refreshInstallationToken',
+      });
+      await posthog.shutdown();
       throw error;
     } finally {
       refreshLocks.delete(githubInstallationId);

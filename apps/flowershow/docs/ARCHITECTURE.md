@@ -4,12 +4,12 @@ Flowershow is a multitenant platform that turns markdown into published websites
 
 The platform consists of four codebases:
 
-| Component | Location | Stack |
-|-----------|----------|-------|
-| **Web App** | This repo | Next.js 15, Prisma, tRPC, Inngest |
-| **CLI** | `flowershow/cli` | TypeScript, Commander.js |
-| **Cloudflare Worker** | `flowershow/cloudflare-worker` | Cloudflare Workers, Queues |
-| **Obsidian Plugin** | `flowershow/obsidian-flowershow` | TypeScript, React, MUI |
+| Component             | Location                         | Stack                             |
+| --------------------- | -------------------------------- | --------------------------------- |
+| **Web App**           | This repo                        | Next.js 15, Prisma, tRPC, Inngest |
+| **CLI**               | `flowershow/cli`                 | TypeScript, Commander.js          |
+| **Cloudflare Worker** | `flowershow/cloudflare-worker`   | Cloudflare Workers, Queues        |
+| **Obsidian Plugin**   | `flowershow/obsidian-flowershow` | TypeScript, React, MUI            |
 
 ## System Overview
 
@@ -62,14 +62,15 @@ The platform consists of four codebases:
 
 The app serves multiple domains, resolved in `middleware.ts`:
 
-| Domain | Purpose | Rewrites to |
-|--------|---------|-------------|
-| `NEXT_PUBLIC_HOME_DOMAIN` (flowershow.app) | Landing page, marketing | `/home/*` |
-| `NEXT_PUBLIC_CLOUD_DOMAIN` (cloud.flowershow.app) | Dashboard, auth, API | `/dashboard/*` (requires auth) |
-| `NEXT_PUBLIC_ROOT_DOMAIN` (my.flowershow.app) | Published user sites | `/site/[user]/[project]/*` |
-| Custom domains | User's own domains | Resolved via `app/api/domain/` |
+| Domain                                            | Purpose                 | Rewrites to                    |
+| ------------------------------------------------- | ----------------------- | ------------------------------ |
+| `NEXT_PUBLIC_HOME_DOMAIN` (flowershow.app)        | Landing page, marketing | `/home/*`                      |
+| `NEXT_PUBLIC_CLOUD_DOMAIN` (cloud.flowershow.app) | Dashboard, auth, API    | `/dashboard/*` (requires auth) |
+| `NEXT_PUBLIC_ROOT_DOMAIN` (my.flowershow.app)     | Published user sites    | `/site/[user]/[project]/*`     |
+| Custom domains                                    | User's own domains      | Resolved via `app/api/domain/` |
 
 The middleware also handles:
+
 - CORS for the Obsidian plugin (`app://obsidian.md` origin).
 - PostHog reverse proxy at `/relay-qYYb/`.
 - Password-protected site access via JWT cookies.
@@ -134,12 +135,14 @@ This is the primary flow for users who connect a GitHub repo to their site.
 The CLI is an npm package (`publish` binary). Repo: `../cli/`.
 
 **Auth**: Uses OAuth 2.0 Device Authorization Grant (RFC 8628):
+
 1. CLI calls `POST /api/cli/device/authorize` → gets `device_code` + `user_code`.
 2. User visits `cloud.flowershow.app/cli/verify`, enters code, authorizes.
 3. CLI polls `POST /api/cli/device/token` until authorized → receives `fs_cli_*` token.
 4. Token stored at `~/.flowershow/token.json`.
 
 **Initial publish** (`publish <path>`):
+
 1. CLI discovers files (respects `.gitignore`), calculates SHA-1 hashes.
 2. Calls `POST /api/sites` to create the site.
 3. Calls `POST /api/sites/id/{siteId}/sync` with file manifest `[{ path, size, sha }]`.
@@ -148,6 +151,7 @@ The CLI is an npm package (`publish` binary). Repo: `../cli/`.
 6. CLI polls `GET /api/sites/id/{siteId}/status` until all blobs reach SUCCESS status.
 
 **Incremental sync** (`publish sync <path>`):
+
 - Same flow but the server diffs SHA hashes to determine which files are new, changed, unchanged, or deleted. Only new/changed files get upload URLs. Deletions are handled server-side.
 - Supports `--dry-run` to preview changes without applying them.
 
@@ -162,6 +166,7 @@ The Obsidian plugin (`obsidian-flowershow`, id: `flowershow`) publishes directly
 **Auth**: Uses Personal Access Tokens (PAT). User generates a `fs_pat_*` token at `cloud.flowershow.app/tokens` and pastes it into the plugin settings. Sent as `Authorization: Bearer` header.
 
 **Single note publish** (command: `publish-single-note`):
+
 1. Collects the active `.md` file + all its embeds (images, linked notes via `![[...]]`).
 2. Calculates SHA-1 hashes for each file.
 3. Calls `POST /api/sites/id/{siteId}/files` with file metadata.
@@ -169,6 +174,7 @@ The Obsidian plugin (`obsidian-flowershow`, id: `flowershow`) publishes directly
 5. Plugin uploads each file directly to R2.
 
 **Full site publish** (command: `publish-all-files`):
+
 1. Calls `POST /api/sites/id/{siteId}/sync?dryRun=true` to get the diff.
 2. Shows the diff in a React/MUI tree-view modal with checkboxes for selective publish.
 3. User selects files and clicks publish/unpublish buttons.
@@ -199,6 +205,7 @@ This is NOT a content-serving worker. It is a background queue consumer that pro
 **Trigger**: R2 upload events are sent to a Cloudflare Queue. The worker consumes batches of queue messages.
 
 **Processing pipeline**:
+
 1. Parse the R2 key: `{siteId}/{branch}/raw/{path}`.
 2. For **markdown/MDX files**:
    - Fetch raw content from R2.
@@ -238,11 +245,13 @@ When a user visits a published site:
 ## Authentication
 
 ### Web App (NextAuth v4)
+
 - GitHub OAuth and Google OAuth providers.
 - Session strategy: JWT.
 - Config: `server/auth.ts`, endpoints: `app/api/auth/[...nextauth]/route.ts`.
 
 ### CLI Tokens
+
 - OAuth 2.0 Device Authorization Grant (RFC 8628).
 - Token prefix: `fs_cli_`, stored hashed (SHA-256) in AccessToken table.
 - Never expire. Server validates by hashing the presented token and looking up the hash.
@@ -251,12 +260,15 @@ When a user visits a published site:
 - CLI version checking via `X-Flowershow-CLI-Version` header; returns HTTP 426 if outdated.
 
 ### Personal Access Tokens (PAT)
+
 - Generated in the dashboard at `/dashboard/tokens`.
 - Token prefix: `fs_pat_`, stored hashed (SHA-256) in AccessToken table.
 - Used by the Obsidian plugin and any direct API integration.
 
 ### Token Validation (`lib/cli-auth.ts`)
+
 Both CLI and PAT tokens are validated the same way:
+
 1. Extract Bearer token from Authorization header.
 2. SHA-256 hash the token.
 3. Look up hash in AccessToken table (O(1) lookup, not bcrypt).
@@ -264,6 +276,7 @@ Both CLI and PAT tokens are validated the same way:
 5. Update `lastUsedAt` (fire-and-forget).
 
 ### Password-Protected Sites
+
 - Sites with `privacyMode: PASSWORD` require a site-specific password.
 - Login via `POST /api/site/login` which sets a JWT cookie.
 - Middleware checks the cookie and redirects to `/site-access/[user]/[project]` if missing.
@@ -273,6 +286,7 @@ Both CLI and PAT tokens are validated the same way:
 ### REST Endpoints (`app/api/`)
 
 **Publishing (CLI + Plugin)**:
+
 - `POST /api/sites/id/{siteId}/sync` — Diff local files against server, return presigned upload URLs. Supports `?dryRun=true`.
 - `POST /api/sites/id/{siteId}/files` — Register files for upload, return presigned URLs.
 - `DELETE /api/sites/id/{siteId}/files` — Delete/unpublish specific files.
@@ -280,27 +294,32 @@ Both CLI and PAT tokens are validated the same way:
 - `POST /api/sites/publish-anon` — Anonymous publish (no auth, max 5 files).
 
 **CLI Auth (Device Flow)**:
+
 - `POST /api/cli/device/authorize` — Start device flow, get device_code + user_code.
 - `POST /api/cli/device/token` — Poll for token (returns authorization_pending until approved).
 - `POST /api/cli/authorize` — Web-side: approve device code (requires session).
 
 **Webhooks**:
+
 - `POST /api/webhooks/github-app` — GitHub App webhook (push events trigger sync).
 - `POST /api/webhook` — Legacy OAuth webhook.
 - `POST /api/stripe/webhook` — Stripe subscription events.
 
 **Site Lookup**:
+
 - `GET /api/sites/{username}/{siteName}` — Get site by owner + name.
 - `POST /api/sites` — Create a new site.
 - `GET /api/sites` — List current user's sites.
 - `GET /api/user` — Get current user info (also used for token validation).
 
 **Content Serving**:
+
 - `GET /api/raw/[username]/[projectName]/[[...path]]` — Redirect to R2 URL for raw assets.
 - `GET /api/sitemap/[user]/[project]` — Generate sitemap.
 - `GET /api/robots/[hostname]` — Generate robots.txt.
 
 **Domain Management**:
+
 - `GET /api/domain/[domain]/verify` — Verify custom domain DNS.
 - `GET /api/domain/[domain]/[[...slug]]` — Resolve custom domain to site.
 
@@ -367,20 +386,19 @@ middleware.ts           # Multi-domain routing, CORS, auth checks, PostHog proxy
 
 ## External Services
 
-| Service | Purpose | Config |
-|---------|---------|-------|
-| **PostgreSQL** (Neon/Vercel) | Primary database (Prisma ORM) | `DATABASE_URL` |
-| **Cloudflare R2** | File storage (S3-compatible) | `S3_*` env vars |
-| **MinIO** | Local dev replacement for R2 | `S3_*` env vars with local endpoint |
-| **Typesense** | Full-text search indexing | `TYPESENSE_*` env vars |
-| **Inngest** | Background job processing | `INNGEST_*` env vars |
-| **Stripe** | Subscription billing (FREE/PREMIUM plans) | `STRIPE_*` env vars |
-| **GitHub App** | Repo access, push webhooks | `GITHUB_APP_*` env vars |
-| **Sentry** | Error monitoring | `SENTRY_*` env vars |
-| **PostHog** | Product analytics, A/B testing | `NEXT_PUBLIC_POSTHOG_*` env vars |
-| **Brevo** | Email contacts | `BREVO_API_KEY` |
-| **Cloudflare Turnstile** | Captcha | `TURNSTILE_*` env vars |
-| **Vercel** | Hosting, DNS API for custom domains | `AUTH_BEARER_TOKEN`, `PROJECT_ID_VERCEL` |
+| Service                      | Purpose                                   | Config                                   |
+| ---------------------------- | ----------------------------------------- | ---------------------------------------- |
+| **PostgreSQL** (Neon/Vercel) | Primary database (Prisma ORM)             | `DATABASE_URL`                           |
+| **Cloudflare R2**            | File storage (S3-compatible)              | `S3_*` env vars                          |
+| **MinIO**                    | Local dev replacement for R2              | `S3_*` env vars with local endpoint      |
+| **Typesense**                | Full-text search indexing                 | `TYPESENSE_*` env vars                   |
+| **Inngest**                  | Background job processing                 | `INNGEST_*` env vars                     |
+| **Stripe**                   | Subscription billing (FREE/PREMIUM plans) | `STRIPE_*` env vars                      |
+| **GitHub App**               | Repo access, push webhooks                | `GITHUB_APP_*` env vars                  |
+| **PostHog**                  | Product analytics, A/B testing            | `NEXT_PUBLIC_POSTHOG_*` env vars         |
+| **Brevo**                    | Email contacts                            | `BREVO_API_KEY`                          |
+| **Cloudflare Turnstile**     | Captcha                                   | `TURNSTILE_*` env vars                   |
+| **Vercel**                   | Hosting, DNS API for custom domains       | `AUTH_BEARER_TOKEN`, `PROJECT_ID_VERCEL` |
 
 ## Testing
 

@@ -1,6 +1,6 @@
 'use client';
-import * as Sentry from '@sentry/nextjs';
 import { useRouter } from 'next/navigation';
+import posthog from 'posthog-js';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { GithubIcon } from '@/components/icons';
@@ -21,7 +21,7 @@ export default function GitHubSettingsPage() {
   } = api.github.listInstallations.useQuery(undefined, {
     onError: (error) => {
       console.error('Error fetching installations:', error);
-      Sentry.captureException(error);
+      posthog.captureException(error);
       toast.error('Failed to load GitHub installations');
     },
   });
@@ -36,7 +36,7 @@ export default function GitHubSettingsPage() {
     },
     onError: (error) => {
       console.error('Error syncing repositories:', error);
-      Sentry.captureException(error);
+      posthog.captureException(error);
       toast.error('Failed to sync repositories');
     },
   });
@@ -49,7 +49,7 @@ export default function GitHubSettingsPage() {
     },
     onError: (error) => {
       console.error('Error removing installation:', error);
-      Sentry.captureException(error);
+      posthog.captureException(error);
       toast.error(error.message || 'Failed to remove installation');
     },
   });
@@ -61,7 +61,7 @@ export default function GitHubSettingsPage() {
     },
     onError: (error) => {
       console.error('Failed to connect GitHub App:', error);
-      Sentry.captureException(error);
+      posthog.captureException(error);
       toast.error('Failed to connect GitHub. Please try again.');
     },
   });
@@ -103,15 +103,8 @@ export default function GitHubSettingsPage() {
   };
 
   const handleAddMore = () => {
-    Sentry.startSpan(
-      {
-        op: 'ui.click',
-        name: 'Add More Repositories Click',
-      },
-      () => {
-        getInstallationUrl.mutate({});
-      },
-    );
+    posthog.capture('add_more_repositories_click');
+    getInstallationUrl.mutate({});
   };
 
   if (isLoading) {

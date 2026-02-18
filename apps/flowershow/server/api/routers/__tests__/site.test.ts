@@ -14,13 +14,6 @@ vi.mock('next/cache', () => ({
   revalidateTag: vi.fn(),
 }));
 
-vi.mock('@sentry/nextjs', () => ({
-  trpcMiddleware:
-    () =>
-    ({ ctx, next }: any) =>
-      next({ ctx }),
-}));
-
 vi.mock('@/server/auth', () => ({
   getSession: vi.fn().mockResolvedValue(null),
 }));

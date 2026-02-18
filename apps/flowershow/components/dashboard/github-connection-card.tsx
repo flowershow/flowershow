@@ -1,5 +1,5 @@
 'use client';
-import * as Sentry from '@sentry/nextjs';
+import posthog from 'posthog-js';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { GithubIcon } from '@/components/icons';
@@ -20,85 +20,79 @@ export default function GitHubConnectionCard({
   const handleConnect = async () => {
     setIsConnecting(true);
 
-    Sentry.startSpan(
-      {
-        op: 'ui.click',
-        name: 'GitHub App Connection Initiated',
-      },
-      async (span) => {
-        try {
-          const data = await getInstallationUrl.mutateAsync({});
-          span.setAttribute('installation_url_generated', true);
+    try {
+      const data = await getInstallationUrl.mutateAsync({});
+      posthog.capture('github_app_connection_initiated', {
+        installation_url_generated: true,
+      });
 
-          // Open GitHub App installation in popup window
-          const width = 800;
-          const height = 800;
-          const left = window.screenX + (window.outerWidth - width) / 2;
-          const top = window.screenY + (window.outerHeight - height) / 2;
+      // Open GitHub App installation in popup window
+      const width = 800;
+      const height = 800;
+      const left = window.screenX + (window.outerWidth - width) / 2;
+      const top = window.screenY + (window.outerHeight - height) / 2;
 
-          const popup = window.open(
-            data.url,
-            'github-app-install',
-            `width=${width},height=${height},left=${left},top=${top},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`,
+      const popup = window.open(
+        data.url,
+        'github-app-install',
+        `width=${width},height=${height},left=${left},top=${top},toolbar=no,location=no,status=no,menubar=no,scrollbars=yes,resizable=yes`,
+      );
+
+      if (!popup) {
+        toast.error('Please allow popups for this site');
+        setIsConnecting(false);
+        return;
+      }
+
+      // Listen for messages from the popup
+      const handleMessage = (event: MessageEvent) => {
+        console.log('Handle popup message');
+        // Verify the message origin for security
+        const expectedOrigin = window.location.origin;
+        if (event.origin !== expectedOrigin) {
+          console.warn(
+            'Received message from unexpected origin:',
+            event.origin,
           );
+          return;
+        }
 
-          if (!popup) {
-            toast.error('Please allow popups for this site');
-            setIsConnecting(false);
-            return;
+        // Verify the message is from our callback
+        if (event.data?.type === 'github-app-installed') {
+          console.log('GitHub App installation completed successfully');
+          setIsConnecting(false);
+
+          // Close the popup if it's still open
+          if (popup && !popup.closed) {
+            popup.close();
           }
 
-          // Listen for messages from the popup
-          const handleMessage = (event: MessageEvent) => {
-            console.log('Handle popup message');
-            // Verify the message origin for security
-            const expectedOrigin = window.location.origin;
-            if (event.origin !== expectedOrigin) {
-              console.warn(
-                'Received message from unexpected origin:',
-                event.origin,
-              );
-              return;
-            }
+          // Refresh installations
+          if (onRefresh) {
+            onRefresh();
+          }
 
-            // Verify the message is from our callback
-            if (event.data?.type === 'github-app-installed') {
-              console.log('GitHub App installation completed successfully');
-              setIsConnecting(false);
-
-              // Close the popup if it's still open
-              if (popup && !popup.closed) {
-                popup.close();
-              }
-
-              // Refresh installations
-              if (onRefresh) {
-                onRefresh();
-              }
-
-              // Clean up listener
-              window.removeEventListener('message', handleMessage);
-            }
-          };
-
-          window.addEventListener('message', handleMessage);
-
-          // Check if popup was closed without completing installation
-          const checkPopupClosed = setInterval(() => {
-            if (popup.closed) {
-              clearInterval(checkPopupClosed);
-              setIsConnecting(false);
-              window.removeEventListener('message', handleMessage);
-            }
-          }, 500);
-        } catch (error) {
-          console.error('Failed to connect GitHub App:', error);
-          Sentry.captureException(error);
-          toast.error('Failed to connect GitHub. Please try again.');
-          setIsConnecting(false);
+          // Clean up listener
+          window.removeEventListener('message', handleMessage);
         }
-      },
-    );
+      };
+
+      window.addEventListener('message', handleMessage);
+
+      // Check if popup was closed without completing installation
+      const checkPopupClosed = setInterval(() => {
+        if (popup.closed) {
+          clearInterval(checkPopupClosed);
+          setIsConnecting(false);
+          window.removeEventListener('message', handleMessage);
+        }
+      }, 500);
+    } catch (error) {
+      console.error('Failed to connect GitHub App:', error);
+      posthog.captureException(error);
+      toast.error('Failed to connect GitHub. Please try again.');
+      setIsConnecting(false);
+    }
   };
 
   return (

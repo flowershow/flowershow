@@ -1,9 +1,10 @@
-import * as Sentry from '@sentry/nextjs';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
 import { clearInstallationTokenCache } from '@/lib/github';
+import { log, SeverityNumber } from '@/lib/otel-logger';
+import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 
 interface WebhookPayload {
@@ -70,73 +71,61 @@ function verifyWebhookSignature(
  * POST /api/webhooks/github-app
  */
 export async function POST(request: Request) {
-  return Sentry.startSpan(
-    {
-      op: 'http.server',
-      name: 'POST /api/webhooks/github-app',
-    },
-    async (span) => {
-      try {
-        const signature = request.headers.get('x-hub-signature-256');
-        const eventType = request.headers.get('x-github-event');
+  try {
+    const signature = request.headers.get('x-hub-signature-256');
+    const eventType = request.headers.get('x-github-event');
 
-        if (!signature) {
-          return NextResponse.json(
-            { error: 'Missing signature' },
-            { status: 401 },
-          );
-        }
+    if (!signature) {
+      return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
+    }
 
-        const payload = await request.text();
+    const payload = await request.text();
 
-        // Verify webhook signature
-        if (
-          !verifyWebhookSignature(
-            payload,
-            signature,
-            env.GITHUB_APP_WEBHOOK_SECRET,
-          )
-        ) {
-          return NextResponse.json(
-            { error: 'Invalid signature' },
-            { status: 401 },
-          );
-        }
+    // Verify webhook signature
+    if (
+      !verifyWebhookSignature(payload, signature, env.GITHUB_APP_WEBHOOK_SECRET)
+    ) {
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
 
-        const data = JSON.parse(payload) as WebhookPayload;
+    const data = JSON.parse(payload) as WebhookPayload;
 
-        span.setAttribute('event_type', eventType || 'unknown');
-        span.setAttribute('installation_id', data.installation?.id);
-        span.setAttribute('action', data.action);
+    switch (eventType) {
+      case 'installation':
+        await handleInstallationEvent(data);
+        break;
 
-        switch (eventType) {
-          case 'installation':
-            await handleInstallationEvent(data);
-            break;
+      case 'installation_repositories':
+        await handleInstallationRepositoriesEvent(data);
+        break;
 
-          case 'installation_repositories':
-            await handleInstallationRepositoriesEvent(data);
-            break;
+      case 'push':
+        await handlePushEvent(data);
+        break;
 
-          case 'push':
-            await handlePushEvent(data);
-            break;
+      default:
+        console.log(`Unhandled webhook event: ${eventType}`);
+    }
 
-          default:
-            console.log(`Unhandled webhook event: ${eventType}`);
-        }
+    log('POST /api/webhooks/github-app', SeverityNumber.INFO, {
+      event_type: eventType || 'unknown',
+      installation_id: data.installation?.id,
+      action: data.action,
+    });
 
-        return NextResponse.json({ success: true });
-      } catch (error) {
-        Sentry.captureException(error);
-        console.error('Error processing GitHub App webhook:', error);
-        return NextResponse.json(
-          { error: 'Webhook processing failed' },
-          { status: 500 },
-        );
-      }
-    },
-  );
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    const posthog = PostHogClient();
+    posthog.captureException(error, 'system', {
+      route: 'POST /api/webhooks/github-app',
+    });
+    await posthog.shutdown();
+    console.error('Error processing GitHub App webhook:', error);
+    return NextResponse.json(
+      { error: 'Webhook processing failed' },
+      { status: 500 },
+    );
+  }
 }
 
 /**
@@ -341,95 +330,85 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
  * This eliminates the need for per-repository webhooks
  */
 async function handlePushEvent(data: WebhookPayload) {
-  return Sentry.startSpan(
-    {
-      op: 'webhook.push',
-      name: 'Handle GitHub App Push Event',
-    },
-    async (span) => {
-      const { ref, repository, installation } = data;
+  const { ref, repository, installation } = data;
 
-      if (!repository || !ref || !installation) {
-        console.error(
-          'Push event missing repository, ref, or installation data',
-        );
-        return;
-      }
+  if (!repository || !ref || !installation) {
+    console.error('Push event missing repository, ref, or installation data');
+    return;
+  }
 
-      // Extract branch name from ref (refs/heads/main -> main)
-      const branch = ref.replace('refs/heads/', '');
+  // Extract branch name from ref (refs/heads/main -> main)
+  const branch = ref.replace('refs/heads/', '');
 
-      span.setAttribute('repository', repository.full_name);
-      span.setAttribute('branch', branch);
-      span.setAttribute('installation_id', installation.id);
-
-      console.log(
-        `Push event received for ${repository.full_name} on branch ${branch} (installation ${installation.id})`,
-      );
-
-      // Look up installations by GitHub's installation ID, including linked sites
-      const dbInstallations = await prisma.gitHubInstallation.findMany({
-        where: { installationId: BigInt(installation.id) },
-        include: {
-          sites: {
-            where: {
-              ghRepository: repository.full_name,
-              ghBranch: branch,
-              autoSync: true,
-            },
-            select: {
-              id: true,
-              ghRepository: true,
-              ghBranch: true,
-              rootDir: true,
-              installationId: true,
-            },
-          },
-        },
-      });
-
-      span.setAttribute('installations_found', dbInstallations.length);
-
-      if (dbInstallations.length === 0) {
-        console.log(
-          `No installations found in database for GitHub installation ${installation.id}`,
-        );
-        return;
-      }
-
-      // Collect all matching sites across all user links for this installation
-      const sites = dbInstallations.flatMap((inst) => inst.sites);
-
-      span.setAttribute('sites_found', sites.length);
-
-      if (sites.length === 0) {
-        console.log(
-          `No sites found for ${repository.full_name}:${branch} (installation ${installation.id})`,
-        );
-        return;
-      }
-
-      console.log(
-        `Triggering sync for ${sites.length} site(s) using ${repository.full_name}:${branch}`,
-      );
-
-      // Trigger sync for each matching site
-      const syncPromises = sites.map((site) =>
-        inngest.send({
-          name: 'site/sync',
-          data: {
-            siteId: site.id,
-            ghRepository: site.ghRepository!,
-            ghBranch: site.ghBranch!,
-            rootDir: site.rootDir,
-            installationId: site.installationId!,
-          },
-        }),
-      );
-
-      await Promise.all(syncPromises);
-
-      console.log(`Successfully triggered sync for ${sites.length} site(s)`);
-    },
+  console.log(
+    `Push event received for ${repository.full_name} on branch ${branch} (installation ${installation.id})`,
   );
+
+  // Look up installations by GitHub's installation ID, including linked sites
+  const dbInstallations = await prisma.gitHubInstallation.findMany({
+    where: { installationId: BigInt(installation.id) },
+    include: {
+      sites: {
+        where: {
+          ghRepository: repository.full_name,
+          ghBranch: branch,
+          autoSync: true,
+        },
+        select: {
+          id: true,
+          ghRepository: true,
+          ghBranch: true,
+          rootDir: true,
+          installationId: true,
+        },
+      },
+    },
+  });
+
+  if (dbInstallations.length === 0) {
+    console.log(
+      `No installations found in database for GitHub installation ${installation.id}`,
+    );
+    return;
+  }
+
+  // Collect all matching sites across all user links for this installation
+  const sites = dbInstallations.flatMap((inst) => inst.sites);
+
+  if (sites.length === 0) {
+    console.log(
+      `No sites found for ${repository.full_name}:${branch} (installation ${installation.id})`,
+    );
+    return;
+  }
+
+  console.log(
+    `Triggering sync for ${sites.length} site(s) using ${repository.full_name}:${branch}`,
+  );
+
+  // Trigger sync for each matching site
+  const syncPromises = sites.map((site) =>
+    inngest.send({
+      name: 'site/sync',
+      data: {
+        siteId: site.id,
+        ghRepository: site.ghRepository!,
+        ghBranch: site.ghBranch!,
+        rootDir: site.rootDir,
+        installationId: site.installationId!,
+      },
+    }),
+  );
+
+  await Promise.all(syncPromises);
+
+  log('Handle GitHub App Push Event', SeverityNumber.INFO, {
+    repository: repository.full_name,
+    branch,
+    installation_id: installation.id,
+    installations_found: dbInstallations.length,
+    sites_found: sites.length,
+  });
+
+  console.log(`Successfully triggered sync for ${sites.length} site(s)`);
 }

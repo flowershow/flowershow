@@ -1,6 +1,6 @@
-import * as Sentry from '@sentry/nextjs';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
+import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 
 // ─── Response Types ──────────────────────────────────────────────────────────
@@ -190,7 +190,11 @@ export async function GET(
     return NextResponse.json({ status: overallStatus });
   } catch (error) {
     console.error('Error fetching site status:', error);
-    Sentry.captureException(error);
+    const posthog = PostHogClient();
+    posthog.captureException(error, 'system', {
+      route: 'GET /api/sites/id/[siteId]/status',
+    });
+    await posthog.shutdown();
     return NextResponse.json(
       { error: 'internal_error', message: 'Failed to fetch site status' },
       { status: 500 },
