@@ -560,18 +560,55 @@ export const siteRouter = createTRPCRouter({
 
       const accessToken = ctx.session.accessToken;
 
-      await inngest.send({
-        name: 'site/sync',
-        data: {
+      const posthog = PostHogClient();
+      const syncProperties = {
+        siteId: id,
+        source: 'manual',
+        repository: ghRepository,
+        branch: ghBranch,
+        rootDir: site.rootDir,
+        forceSync: input.force,
+        hasInstallationId: Boolean(site.installationId),
+      };
+
+      try {
+        await inngest.send({
+          name: 'site/sync',
+          data: {
+            siteId: id,
+            ghRepository,
+            ghBranch,
+            rootDir: site.rootDir,
+            accessToken,
+            installationId: site.installationId ?? undefined,
+            forceSync: input.force,
+          },
+        });
+
+        posthog.capture({
+          distinctId: ctx.session.user.id,
+          event: 'site_sync_triggered',
+          properties: syncProperties,
+        });
+      } catch (error) {
+        posthog.captureException(error, 'system', {
+          route: 'site.sync',
+          source: 'manual',
           siteId: id,
-          ghRepository,
-          ghBranch,
-          rootDir: site.rootDir,
-          accessToken,
-          installationId: site.installationId ?? undefined,
+          repository: ghRepository,
+          branch: ghBranch,
           forceSync: input.force,
-        },
-      });
+          hasInstallationId: Boolean(site.installationId),
+          userId: ctx.session.user.id,
+        });
+
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to trigger site sync',
+        });
+      } finally {
+        await posthog.shutdown();
+      }
     }),
 
   getSyncStatus: protectedProcedure

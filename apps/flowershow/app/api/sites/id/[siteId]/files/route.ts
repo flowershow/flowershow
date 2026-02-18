@@ -7,7 +7,6 @@ import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
-import { log, SeverityNumber } from '@/lib/otel-logger';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import PostHogClient from '@/lib/server-posthog';
 import { ensureSiteCollection } from '@/lib/typesense';
@@ -234,10 +233,6 @@ export async function POST(
           };
         }),
       );
-
-      log('Generate presigned URLs for files', SeverityNumber.INFO, {
-        file_count: files.length,
-      });
     } finally {
       // Always invalidate cache, even on partial failures
       revalidateTag(siteId);
@@ -403,10 +398,6 @@ export async function DELETE(
               in: existingBlobs.map((b) => b.id),
             },
           },
-        });
-
-        log('Delete files from R2 and database', SeverityNumber.INFO, {
-          files_to_delete: existingBlobs.length,
         });
       } finally {
         // Always invalidate cache, even on partial failures

@@ -3,7 +3,6 @@ import { SignJWT } from 'jose';
 import { z } from 'zod';
 import { env } from '@/env.mjs';
 import { getInstallationToken } from '@/lib/github';
-import { log, SeverityNumber } from '@/lib/otel-logger';
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc';
 
 /**
@@ -29,11 +28,6 @@ export const githubRouter = createTRPCRouter({
       orderBy: {
         createdAt: 'desc',
       },
-    });
-
-    log('github.listInstallations', SeverityNumber.INFO, {
-      user_id: ctx.session.user.id,
-      installations_count: installations.length,
     });
 
     return installations.map((installation) => ({
@@ -84,10 +78,6 @@ export const githubRouter = createTRPCRouter({
         });
       }
 
-      log('github.getInstallation', SeverityNumber.INFO, {
-        installation_id: input.installationId,
-      });
-
       return {
         id: installation.id,
         installationId: installation.installationId.toString(),
@@ -137,11 +127,6 @@ export const githubRouter = createTRPCRouter({
         orderBy: {
           repositoryName: 'asc',
         },
-      });
-
-      log('github.getInstallationRepositories', SeverityNumber.INFO, {
-        installation_id: input.installationId,
-        repositories_count: repositories.length,
       });
 
       return repositories.map((repo) => ({
@@ -252,11 +237,6 @@ export const githubRouter = createTRPCRouter({
         data: { updatedAt: new Date() },
       });
 
-      log('github.syncInstallation', SeverityNumber.INFO, {
-        installation_id: input.installationId,
-        repositories_synced: allRepositories.length,
-      });
-
       return {
         success: true,
         repositoriesCount: allRepositories.length,
@@ -299,10 +279,6 @@ export const githubRouter = createTRPCRouter({
       // Delete the installation (cascade will delete repositories)
       await ctx.db.gitHubInstallation.delete({
         where: { id: input.installationId },
-      });
-
-      log('github.deleteInstallation', SeverityNumber.INFO, {
-        installation_id: input.installationId,
       });
 
       return {
@@ -348,8 +324,6 @@ export const githubRouter = createTRPCRouter({
         );
         logAttributes.suggested_target_id = input.suggestedTargetId;
       }
-
-      log('github.getInstallationUrl', SeverityNumber.INFO, logAttributes);
 
       return {
         url: installUrl.toString(),

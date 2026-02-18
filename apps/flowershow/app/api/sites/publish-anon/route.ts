@@ -8,7 +8,6 @@ import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
-import { log, SeverityNumber } from '@/lib/otel-logger';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import PostHogClient from '@/lib/server-posthog';
@@ -193,12 +192,6 @@ export async function POST(request: NextRequest) {
 
     // Ensure Typesense collection exists for search indexing
     await ensureSiteCollection(site.id);
-
-    log('POST /api/sites/publish-anon', SeverityNumber.INFO, {
-      file_count: files.length,
-      total_size: totalSize,
-      site_id: site.id,
-    });
 
     // Create blob records and generate upload URLs for all files
     const fileUploads: FileUploadInfo[] = [];

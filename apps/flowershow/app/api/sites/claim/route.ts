@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { ANONYMOUS_USER_ID, verifyOwnershipToken } from '@/lib/anonymous-user';
-import { log, SeverityNumber } from '@/lib/otel-logger';
 import PostHogClient from '@/lib/server-posthog';
 import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
@@ -98,13 +97,6 @@ export async function POST(request: NextRequest) {
         expiresAt: null,
         anonymousOwnerId: null,
       },
-    });
-
-    log('POST /api/sites/claim', SeverityNumber.INFO, {
-      user_id: session.user.id,
-      site_id: siteId,
-      token_valid: true,
-      claim_successful: true,
     });
 
     // Track analytics
