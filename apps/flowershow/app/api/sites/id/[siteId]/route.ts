@@ -1,3 +1,7 @@
+import type {
+  DeleteSiteResponse,
+  GetSiteResponse,
+} from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
 import { deleteProject } from '@/lib/content-store';
@@ -90,7 +94,7 @@ export async function GET(
       siteUrl = `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`;
     }
 
-    return NextResponse.json({
+    const response: GetSiteResponse = {
       site: {
         id: site.id,
         projectName: site.projectName,
@@ -110,7 +114,9 @@ export async function GET(
         updatedAt: site.updatedAt.toISOString(),
         createdAt: site.createdAt.toISOString(),
       },
-    });
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error fetching site:', error);
     const posthog = PostHogClient();
@@ -198,11 +204,13 @@ export async function DELETE(
       where: { id: siteId },
     });
 
-    return NextResponse.json({
+    const response: DeleteSiteResponse = {
       success: true,
       message: 'Site deleted successfully',
       deletedFiles,
-    });
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error deleting site:', error);
     const posthog = PostHogClient();

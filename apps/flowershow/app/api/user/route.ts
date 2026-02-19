@@ -1,5 +1,6 @@
-import { getServerSession } from 'next-auth';
+import type { User } from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { validateAccessToken } from '@/lib/cli-auth';
 import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
@@ -52,7 +53,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    return NextResponse.json(user);
+    return NextResponse.json(user satisfies User);
   } catch (error) {
     console.error('Error fetching user:', error);
     return NextResponse.json(

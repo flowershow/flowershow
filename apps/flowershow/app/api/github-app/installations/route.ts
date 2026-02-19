@@ -1,3 +1,7 @@
+import {
+  type GitHubInstallation,
+  GitHubInstallationSchema,
+} from '@flowershow/api-contract';
 import { NextResponse } from 'next/server';
 import { log, SeverityNumber } from '@/lib/otel-logger';
 import PostHogClient from '@/lib/server-posthog';
@@ -38,23 +42,25 @@ export async function GET() {
     });
 
     // Format response
-    const response = {
-      installations: installations.map((installation) => ({
-        id: installation.id,
-        installationId: installation.installationId.toString(),
-        accountLogin: installation.accountLogin,
-        accountType: installation.accountType,
-        repositories: installation.repositories.map((repo) => ({
-          id: repo.id,
-          repositoryId: repo.repositoryId.toString(),
-          name: repo.repositoryName,
-          fullName: repo.repositoryFullName,
-          isPrivate: repo.isPrivate,
-        })),
-        suspendedAt: installation.suspendedAt?.toISOString() || null,
-        createdAt: installation.createdAt.toISOString(),
-        updatedAt: installation.updatedAt.toISOString(),
-      })),
+    const response: { installations: GitHubInstallation[] } = {
+      installations: installations.map((installation) =>
+        GitHubInstallationSchema.parse({
+          id: installation.id,
+          installationId: installation.installationId.toString(),
+          accountLogin: installation.accountLogin,
+          accountType: installation.accountType,
+          repositories: installation.repositories.map((repo) => ({
+            id: repo.id,
+            repositoryId: repo.repositoryId.toString(),
+            name: repo.repositoryName,
+            fullName: repo.repositoryFullName,
+            isPrivate: repo.isPrivate,
+          })),
+          suspendedAt: installation.suspendedAt?.toISOString() || null,
+          createdAt: installation.createdAt.toISOString(),
+          updatedAt: installation.updatedAt.toISOString(),
+        }),
+      ),
     };
 
     return NextResponse.json(response);

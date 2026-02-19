@@ -1,3 +1,4 @@
+import { RobotsParamsSchema } from '@flowershow/api-contract';
 import { NextRequest } from 'next/server';
 import { env } from '@/env.mjs';
 import prisma from '@/server/db';
@@ -6,8 +7,12 @@ export async function GET(
   request: NextRequest,
   props: { params: Promise<{ hostname: string }> },
 ) {
-  const params = await props.params;
-  const { hostname } = params;
+  const parsedParams = RobotsParamsSchema.safeParse(await props.params);
+  if (!parsedParams.success) {
+    return new Response('Not found', { status: 404 });
+  }
+
+  const { hostname } = parsedParams.data;
 
   const site = await prisma.site.findFirst({
     where: {

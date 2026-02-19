@@ -26,6 +26,7 @@
     "@aws-sdk/s3-request-presigner": "^3.914.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@flowershow/api-contract": "workspace:*",
     "@flowershow/remark-wiki-link": "workspace:*",
     "@giscus/react": "^3.1.0",
     "@githubocto/flat-ui": "^0.14.1",

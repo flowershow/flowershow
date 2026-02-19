@@ -88,7 +88,7 @@ pnpm release                   # Build all packages and publish to npm
 ## Documentation
 
 - **Web app**: [`apps/flowershow/README.md`](apps/flowershow/README.md) — architecture, local dev setup, environment config, testing, troubleshooting
-- **REST API**: [`apps/flowershow/docs/openapi.yaml`](apps/flowershow/docs/openapi.yaml) — OpenAPI 3.1 spec
+- **REST API**: [`packages/api-contract`](packages/api-contract) — Zod-based OpenAPI 3.1 spec
 - **User docs**: [flowershow.app/docs](https://flowershow.app/docs)
 
 ## Community

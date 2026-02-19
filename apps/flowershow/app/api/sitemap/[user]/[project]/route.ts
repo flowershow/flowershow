@@ -1,3 +1,4 @@
+import { SitemapParamsSchema } from '@flowershow/api-contract';
 import { NextRequest } from 'next/server';
 import { getSiteUrl } from '@/lib/get-site-url';
 import prisma from '@/server/db';
@@ -6,8 +7,12 @@ export async function GET(
   request: NextRequest,
   props: { params: Promise<{ user: string; project: string }> },
 ) {
-  const params = await props.params;
-  const { user, project } = params;
+  const parsedParams = SitemapParamsSchema.safeParse(await props.params);
+  if (!parsedParams.success) {
+    return new Response('Not found', { status: 404 });
+  }
+
+  const { user, project } = parsedParams.data;
 
   const site = await prisma.site.findFirst({
     where: {

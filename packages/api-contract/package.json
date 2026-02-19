@@ -1,0 +1,32 @@
+{
+  "name": "@flowershow/api-contract",
+  "version": "0.1.0",
+  "description": "Shared Zod schemas, TypeScript types, and OpenAPI spec for the Flowershow REST API.",
+  "type": "module",
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean --sourcemap && node scripts/write-openapi.mjs",
+    "lint": "biome lint ."
+  },
+  "files": ["dist"],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^7.3.0",
+    "openapi3-ts": "^4.5.0",
+    "zod": "^3.25.67"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.0"
+  }
+}

@@ -1,3 +1,4 @@
+import type { SuccessResponse } from '@flowershow/api-contract';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
@@ -32,7 +33,8 @@ export async function POST(
     },
   });
 
-  if (!site) return NextResponse.json({ success: true }); // nothing to clear
+  if (!site)
+    return NextResponse.json({ success: true } satisfies SuccessResponse); // nothing to clear
 
   // must match original attributes (path, sameSite, secure, domain if set)
   (await cookies()).set({
@@ -49,5 +51,5 @@ export async function POST(
         }),
   });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true } satisfies SuccessResponse);
 }

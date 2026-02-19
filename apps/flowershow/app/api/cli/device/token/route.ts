@@ -1,6 +1,10 @@
+import {
+  DeviceTokenRequestSchema,
+  type DeviceTokenResponse,
+} from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/server/db';
 import { generateCliToken, hashToken } from '@/lib/cli-auth';
+import prisma from '@/server/db';
 
 /**
  * POST /api/cli/device/token
@@ -30,24 +34,23 @@ import { generateCliToken, hashToken } from '@/lib/cli-auth';
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { device_code, grant_type } = body;
-
-    // Validate grant_type
-    if (grant_type !== 'urn:ietf:params:oauth:grant-type:device_code') {
-      return NextResponse.json(
-        { error: 'unsupported_grant_type' },
-        { status: 400 },
-      );
-    }
-
-    // Validate device_code is provided
-    if (!device_code) {
+    const parsedBody = DeviceTokenRequestSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
       return NextResponse.json(
         {
           error: 'invalid_request',
           error_description: 'device_code is required',
         },
+        { status: 400 },
+      );
+    }
+
+    const { device_code, grant_type } = parsedBody.data;
+
+    // Validate grant_type
+    if (grant_type !== 'urn:ietf:params:oauth:grant-type:device_code') {
+      return NextResponse.json(
+        { error: 'unsupported_grant_type' },
         { status: 400 },
       );
     }
@@ -108,11 +111,13 @@ export async function POST(request: NextRequest) {
       where: { id: deviceCodeRecord.id },
     });
 
-    return NextResponse.json({
+    const response: DeviceTokenResponse = {
       access_token: cliToken,
       token_type: 'Bearer',
       expires_in: null, // No expiration by default
-    });
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error in device token:', error);
     return NextResponse.json(

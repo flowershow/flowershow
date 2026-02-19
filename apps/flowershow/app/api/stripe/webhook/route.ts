@@ -1,3 +1,4 @@
+import type { StripeWebhookReceivedResponse } from '@flowershow/api-contract';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
@@ -207,5 +208,7 @@ export async function POST(req: Request) {
   }
 
   console.log(`✅ Webhook processing completed successfully`);
-  return NextResponse.json({ received: true });
+  return NextResponse.json({
+    received: true,
+  } satisfies StripeWebhookReceivedResponse);
 }

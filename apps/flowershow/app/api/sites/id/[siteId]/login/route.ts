@@ -1,3 +1,4 @@
+import type { SuccessResponse } from '@flowershow/api-contract';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
@@ -75,5 +76,5 @@ export async function POST(
         }),
   });
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({ success: true } satisfies SuccessResponse);
 }

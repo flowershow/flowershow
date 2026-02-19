@@ -1,3 +1,7 @@
+import {
+  AnonPublishRequestSchema,
+  type AnonPublishResponse,
+} from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   ANONYMOUS_USER_ID,
@@ -17,28 +21,9 @@ import prisma from '@/server/db';
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 const MAX_FILES = 5;
 
-interface FileInfo {
-  fileName: string;
-  fileSize: number;
-  sha: string;
-}
-
-interface PublishRequest {
-  files: FileInfo[];
-  anonymousUserId: string; // Client-generated persistent ID
-}
-
 interface FileUploadInfo {
   fileName: string;
   uploadUrl: string;
-}
-
-interface PublishResponse {
-  siteId: string;
-  projectName: string;
-  files: FileUploadInfo[];
-  liveUrl: string;
-  ownershipToken: string;
 }
 
 /**
@@ -79,8 +64,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request
-    const body = (await request.json()) as PublishRequest;
-    const { files, anonymousUserId } = body;
+    const parsedBody = AnonPublishRequestSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
+      return NextResponse.json(
+        { error: 'At least one file is required' },
+        { status: 400 },
+      );
+    }
+
+    const { files, anonymousUserId } = parsedBody.data;
 
     // Validate anonymousUserId
     if (!anonymousUserId || !isValidAnonymousUserId(anonymousUserId)) {
@@ -91,13 +83,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate files array
-    if (!files || !Array.isArray(files) || files.length === 0) {
-      return NextResponse.json(
-        { error: 'At least one file is required' },
-        { status: 400 },
-      );
-    }
-
     if (files.length > MAX_FILES) {
       return NextResponse.json(
         {
@@ -262,7 +247,7 @@ export async function POST(request: NextRequest) {
     // Token is reusable across all sites for this browser
     const ownershipToken = generateOwnershipToken(anonymousUserId);
 
-    const response: PublishResponse = {
+    const response: AnonPublishResponse = {
       siteId: site.id,
       projectName,
       files: fileUploads,

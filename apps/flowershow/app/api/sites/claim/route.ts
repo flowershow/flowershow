@@ -1,24 +1,13 @@
+import {
+  ClaimSiteRequestSchema,
+  type ClaimSiteResponse,
+} from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { ANONYMOUS_USER_ID, verifyOwnershipToken } from '@/lib/anonymous-user';
 import PostHogClient from '@/lib/server-posthog';
 import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
-
-interface ClaimRequest {
-  siteId: string;
-  ownershipToken: string;
-}
-
-interface ClaimResponse {
-  success: boolean;
-  site?: {
-    id: string;
-    projectName: string;
-    userId: string;
-  };
-  error?: string;
-}
 
 /**
  * POST /api/sites/claim
@@ -36,16 +25,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request
-    const body = (await request.json()) as ClaimRequest;
-    const { siteId, ownershipToken } = body;
-
-    // Validate inputs
-    if (!siteId || !ownershipToken) {
+    const parsedBody = ClaimSiteRequestSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
       return NextResponse.json(
         { success: false, error: 'siteId and ownershipToken are required' },
         { status: 400 },
       );
     }
+
+    const { siteId, ownershipToken } = parsedBody.data;
 
     // Verify ownership token - returns anonymousUserId if valid
     const anonymousUserId = verifyOwnershipToken(ownershipToken);
@@ -112,7 +100,7 @@ export async function POST(request: NextRequest) {
     });
     await posthog.shutdown();
 
-    const response: ClaimResponse = {
+    const response: ClaimSiteResponse = {
       success: true,
       site: {
         id: updatedSite.id,

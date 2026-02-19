@@ -1,3 +1,4 @@
+import type { SuccessResponse } from '@flowershow/api-contract';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
@@ -113,7 +114,7 @@ export async function POST(request: Request) {
       action: data.action,
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true } satisfies SuccessResponse);
   } catch (error) {
     const posthog = PostHogClient();
     posthog.captureException(error, 'system', {

@@ -1,3 +1,10 @@
+import {
+  DeleteFilesRequestSchema,
+  type DeleteFilesResponse,
+  PublishFilesRequestSchema,
+  type PublishFilesResponse,
+  type UploadTarget,
+} from '@flowershow/api-contract';
 import { Blob } from '@prisma/client';
 import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
@@ -18,28 +25,6 @@ const MAX_FILE_SIZE = 100 * 1024 * 1024;
 const MAX_TOTAL_SIZE = 500 * 1024 * 1024;
 // Maximum number of files per request
 const MAX_FILES = 1000;
-
-interface FileMetadata {
-  path: string;
-  size: number;
-  sha: string;
-}
-
-interface UploadUrl {
-  path: string;
-  uploadUrl: string;
-  blobId: string;
-  contentType: string;
-}
-
-interface PublishFilesResponse {
-  files: UploadUrl[];
-}
-
-interface DeleteFilesResponse {
-  deleted: string[];
-  notFound: string[];
-}
 
 /**
  * POST /api/sites/id/:siteId/files
@@ -95,25 +80,17 @@ export async function POST(
     await ensureSiteCollection(siteId);
 
     // Parse request body
-    const body = await request.json();
-    const { files } = body as { files: FileMetadata[] };
-
-    if (!Array.isArray(files)) {
+    const parsedBody = PublishFilesRequestSchema.safeParse(
+      await request.json(),
+    );
+    if (!parsedBody.success) {
       return NextResponse.json(
         { error: 'invalid_request', message: 'Files array is required' },
         { status: 400 },
       );
     }
 
-    if (files.length === 0) {
-      return NextResponse.json(
-        {
-          error: 'invalid_request',
-          message: 'At least one file is required',
-        },
-        { status: 400 },
-      );
-    }
+    const { files } = parsedBody.data;
 
     if (files.length > MAX_FILES) {
       return NextResponse.json(
@@ -166,7 +143,7 @@ export async function POST(
     }
 
     // Generate presigned URLs for all files
-    let uploadUrls: UploadUrl[];
+    let uploadUrls: UploadTarget[];
     try {
       uploadUrls = await Promise.all(
         files.map(async (file) => {
@@ -309,25 +286,15 @@ export async function DELETE(
     }
 
     // Parse request body
-    const body = await request.json();
-    const { paths } = body as { paths: string[] };
-
-    if (!Array.isArray(paths)) {
+    const parsedBody = DeleteFilesRequestSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
       return NextResponse.json(
         { error: 'invalid_request', message: 'Paths array is required' },
         { status: 400 },
       );
     }
 
-    if (paths.length === 0) {
-      return NextResponse.json(
-        {
-          error: 'invalid_request',
-          message: 'At least one path is required',
-        },
-        { status: 400 },
-      );
-    }
+    const { paths } = parsedBody.data;
 
     if (paths.length > MAX_FILES) {
       return NextResponse.json(

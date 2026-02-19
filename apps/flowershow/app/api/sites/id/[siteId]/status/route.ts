@@ -1,48 +1,12 @@
+import type {
+  BlobStatus,
+  PublicStatusResponse,
+  StatusResponse,
+} from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
-
-// ─── Response Types ──────────────────────────────────────────────────────────
-
-/** Error response for API failures */
-type ErrorResponse = {
-  error: 'not_found' | 'forbidden' | 'internal_error';
-  message: string;
-};
-
-/** File status counts */
-type FileStatusCounts = {
-  total: number;
-  pending: number;
-  success: number;
-  failed: number;
-};
-
-/** Individual blob status info (authenticated response only) */
-type BlobStatus = {
-  id: string;
-  path: string;
-  syncStatus: string;
-  syncError: string | null;
-  extension: string | null;
-};
-
-/** Authenticated response with detailed blob information */
-type AuthenticatedStatusResponse = {
-  siteId: string;
-  status: 'pending' | 'complete' | 'error';
-  files: FileStatusCounts;
-  blobs: BlobStatus[];
-};
-
-/** Public response for unauthenticated polling */
-type PublicStatusResponse =
-  | { status: 'pending' | 'complete' }
-  | { status: 'error'; errors: Array<{ path: string; error: string }> };
-
-/** All possible successful response types */
-type StatusResponse = AuthenticatedStatusResponse | PublicStatusResponse;
 
 /**
  * GET /api/sites/id/:siteId/status
@@ -111,7 +75,7 @@ export async function GET(
     // Handle empty site
     if (blobs.length === 0) {
       if (isAuthenticated) {
-        return NextResponse.json({
+        const response: StatusResponse = {
           siteId,
           status: 'pending',
           files: {
@@ -121,9 +85,12 @@ export async function GET(
             failed: 0,
           },
           blobs: [],
-        });
+        };
+        return NextResponse.json(response);
       } else {
-        return NextResponse.json({ status: 'pending' });
+        return NextResponse.json({
+          status: 'pending',
+        } satisfies PublicStatusResponse);
       }
     }
 
@@ -162,7 +129,7 @@ export async function GET(
 
     // Return detailed response for authenticated requests
     if (isAuthenticated) {
-      return NextResponse.json({
+      const response: StatusResponse = {
         siteId,
         status: overallStatus,
         files: statusCounts,
@@ -173,7 +140,8 @@ export async function GET(
           syncError: blob.syncError,
           extension: blob.extension,
         })),
-      });
+      };
+      return NextResponse.json(response);
     }
 
     // Return simple response for public polling
@@ -184,10 +152,15 @@ export async function GET(
           path: b.path,
           error: b.syncError || 'Processing failed',
         }));
-      return NextResponse.json({ status: 'error', errors });
+      return NextResponse.json({
+        status: 'error',
+        errors,
+      } satisfies PublicStatusResponse);
     }
 
-    return NextResponse.json({ status: overallStatus });
+    return NextResponse.json({
+      status: overallStatus,
+    } satisfies PublicStatusResponse);
   } catch (error) {
     console.error('Error fetching site status:', error);
     const posthog = PostHogClient();

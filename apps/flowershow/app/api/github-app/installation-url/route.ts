@@ -1,3 +1,7 @@
+import {
+  InstallationUrlRequestSchema,
+  type InstallationUrlResponse,
+} from '@flowershow/api-contract';
 import { SignJWT } from 'jose';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
@@ -16,8 +20,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const { suggestedTargetId } = body;
+    const parsedBody = InstallationUrlRequestSchema.safeParse(
+      await request.json().catch(() => ({})),
+    );
+    const suggestedTargetId = parsedBody.success
+      ? parsedBody.data.suggestedTargetId
+      : undefined;
 
     // Create a signed JWT token with user ID
     // This allows us to identify the user in the callback without relying on cookies
@@ -39,10 +47,12 @@ export async function POST(request: Request) {
       installUrl.searchParams.set('suggested_target_id', suggestedTargetId);
     }
 
-    return NextResponse.json({
+    const response: InstallationUrlResponse = {
       url: installUrl.toString(),
       state,
-    });
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     const posthog = PostHogClient();
     posthog.captureException(error, 'system', {

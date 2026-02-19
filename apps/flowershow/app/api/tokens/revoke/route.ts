@@ -1,3 +1,7 @@
+import {
+  RevokeTokenRequestSchema,
+  type SuccessResponse,
+} from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/server/auth';
 import prisma from '@/server/db';
@@ -13,15 +17,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { token_id } = body;
-
-    if (!token_id) {
+    const parsedBody = RevokeTokenRequestSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
       return NextResponse.json(
         { error: 'invalid_request', error_description: 'token_id is required' },
         { status: 400 },
       );
     }
+
+    const { token_id } = parsedBody.data;
 
     // Find and delete the token (only if it belongs to the user)
     const token = await prisma.accessToken.findFirst({
@@ -42,7 +46,7 @@ export async function POST(request: NextRequest) {
       where: { id: token_id },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true } satisfies SuccessResponse);
   } catch (error) {
     console.error('Error revoking token:', error);
     return NextResponse.json(

@@ -1,3 +1,4 @@
+import { GitHubAppCallbackQuerySchema } from '@flowershow/api-contract';
 import { jwtVerify } from 'jose';
 import jwt from 'jsonwebtoken';
 import { NextResponse } from 'next/server';
@@ -38,21 +39,23 @@ interface GitHubRepository {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const installationId = searchParams.get('installation_id');
-    const setupAction = searchParams.get('setup_action'); // 'install' | 'update'
-    const state = searchParams.get('state');
+    const parsedQuery = GitHubAppCallbackQuerySchema.safeParse({
+      installation_id: searchParams.get('installation_id'),
+      setup_action: searchParams.get('setup_action') ?? undefined,
+      state: searchParams.get('state'),
+    });
 
-    if (!installationId) {
+    if (!parsedQuery.success) {
       return NextResponse.redirect(
         `${protocol}://${env.NEXT_PUBLIC_CLOUD_DOMAIN}?error=missing_installation_id`,
       );
     }
 
-    if (!state) {
-      return NextResponse.redirect(
-        `${protocol}://${env.NEXT_PUBLIC_CLOUD_DOMAIN}?error=missing_state`,
-      );
-    }
+    const {
+      installation_id: installationId,
+      setup_action: setupAction,
+      state,
+    } = parsedQuery.data;
 
     // Verify the JWT token from state parameter to get user ID
     let userId: string;

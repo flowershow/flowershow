@@ -1,3 +1,7 @@
+import {
+  AuthorizeDeviceRequestSchema,
+  type SuccessResponse,
+} from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/server/auth';
 import prisma from '@/server/db';
@@ -29,10 +33,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json();
-    const { user_code } = body;
-
-    if (!user_code) {
+    const parsedBody = AuthorizeDeviceRequestSchema.safeParse(
+      await request.json(),
+    );
+    if (!parsedBody.success) {
       return NextResponse.json(
         {
           error: 'invalid_request',
@@ -41,6 +45,8 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
+
+    const { user_code } = parsedBody.data;
 
     // Find the device code
     const deviceCode = await prisma.deviceCode.findUnique({
@@ -94,7 +100,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true } satisfies SuccessResponse);
   } catch (error) {
     console.error('Error in CLI authorize:', error);
     return NextResponse.json(
