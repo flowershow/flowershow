@@ -1,6 +1,3 @@
-import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
@@ -64,23 +61,16 @@ describe('registerNoteTools', () => {
     const { client } = await createTestClient(mockApi);
     const { tools } = await client.listTools();
     expect(tools.map((tool) => tool.name)).toEqual(
-      expect.arrayContaining(['publish-note', 'publish-local-files']),
+      expect.arrayContaining([
+        'publish-note',
+        'plan-file-uploads',
+        'get-publish-status',
+      ]),
     );
   });
 
-  describe('publish-local-files tool', () => {
-    it('uploads files from a local directory without requiring content in tool args', async () => {
-      const tempRoot = await mkdtemp(join(tmpdir(), 'flowershow-mcp-'));
-      const vaultDir = join(tempRoot, 'vault');
-      await mkdir(join(vaultDir, 'notes'), { recursive: true });
-      await mkdir(join(vaultDir, 'assets'), { recursive: true });
-      await writeFile(join(vaultDir, 'index.md'), '# Home\n');
-      await writeFile(join(vaultDir, 'notes', 'hello.md'), '# Hello\n');
-      await writeFile(
-        join(vaultDir, 'assets', 'logo.png'),
-        Buffer.from([137, 80, 78, 71]),
-      );
-
+  describe('plan-file-uploads tool', () => {
+    it('returns presigned upload targets for client-side uploads', async () => {
       (mockApi.publishFiles as ReturnType<typeof vi.fn>).mockResolvedValue({
         files: [
           {
@@ -103,53 +93,80 @@ describe('registerNoteTools', () => {
           },
         ],
       });
-      (
-        mockApi.uploadToPresignedUrl as ReturnType<typeof vi.fn>
-      ).mockResolvedValue(undefined);
-      (mockApi.getSiteStatus as ReturnType<typeof vi.fn>).mockResolvedValue({
-        siteId: 'site1',
-        status: 'complete',
-        files: { total: 2, pending: 0, success: 2, failed: 0 },
-      });
 
       const { client } = await createTestClient(mockApi);
       const result = await client.callTool({
-        name: 'publish-local-files',
+        name: 'plan-file-uploads',
         arguments: {
           siteId: 'site1',
-          localPath: vaultDir,
+          files: [
+            {
+              path: 'index.md',
+              size: 7,
+              sha: 'a'.repeat(64),
+            },
+            {
+              path: 'notes/hello.md',
+              size: 8,
+              sha: 'b'.repeat(64),
+            },
+            {
+              path: 'assets/logo.png',
+              size: 4,
+              sha: 'c'.repeat(64),
+            },
+          ],
         },
       });
 
       expect(result.isError).toBeFalsy();
       expect(mockApi.publishFiles).toHaveBeenCalledTimes(1);
-      expect(mockApi.uploadToPresignedUrl).toHaveBeenCalledTimes(3);
-
-      const publishArg = (mockApi.publishFiles as ReturnType<typeof vi.fn>).mock
-        .calls[0][1] as Array<{ path: string; size: number; sha: string }>;
-      expect(publishArg.map((f) => f.path).sort()).toEqual([
-        'assets/logo.png',
-        'index.md',
-        'notes/hello.md',
-      ]);
-
-      await rm(tempRoot, { recursive: true, force: true });
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
+      expect(text).toContain('Upload plan created');
+      expect(text).toContain('assets/logo.png');
     });
 
-    it('returns an error when localPath does not exist', async () => {
+    it('returns auth error message when API returns 401', async () => {
+      (mockApi.publishFiles as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new ApiError(401, 'Unauthorized', ''),
+      );
+
       const { client } = await createTestClient(mockApi);
       const result = await client.callTool({
-        name: 'publish-local-files',
+        name: 'plan-file-uploads',
         arguments: {
           siteId: 'site1',
-          localPath: '/definitely/not/a/real/path',
+          files: [{ path: 'index.md', size: 7, sha: 'a'.repeat(64) }],
         },
       });
 
       expect(result.isError).toBe(true);
       const text = (result.content as Array<{ type: string; text: string }>)[0]
         .text;
-      expect(text).toContain('local path');
+      expect(text).toContain('Authentication failed');
+    });
+  });
+
+  describe('get-publish-status tool', () => {
+    it('returns current publishing status for a site', async () => {
+      (mockApi.getSiteStatus as ReturnType<typeof vi.fn>).mockResolvedValue({
+        siteId: 'site1',
+        status: 'pending',
+        files: { total: 10, pending: 3, success: 7, failed: 0 },
+      });
+
+      const { client } = await createTestClient(mockApi);
+      const result = await client.callTool({
+        name: 'get-publish-status',
+        arguments: { siteId: 'site1' },
+      });
+
+      expect(result.isError).toBeFalsy();
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
+      expect(text).toContain('pending');
+      expect(text).toContain('"pending": 3');
     });
   });
 

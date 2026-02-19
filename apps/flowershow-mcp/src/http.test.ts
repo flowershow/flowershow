@@ -161,13 +161,21 @@ describe('POST /mcp endpoint', () => {
       content: { type: 'string' },
     });
 
-    const publishLocalFiles = body.tools.find(
-      (tool: { name: string }) => tool.name === 'publish-local-files',
+    const planFileUploads = body.tools.find(
+      (tool: { name: string }) => tool.name === 'plan-file-uploads',
     );
-    expect(publishLocalFiles).toBeDefined();
-    expect(publishLocalFiles.inputSchema.properties).toMatchObject({
+    expect(planFileUploads).toBeDefined();
+    expect(planFileUploads.inputSchema.properties).toMatchObject({
       siteId: { type: 'string' },
-      localPath: { type: 'string' },
+      files: { type: 'array' },
+    });
+
+    const getPublishStatus = body.tools.find(
+      (tool: { name: string }) => tool.name === 'get-publish-status',
+    );
+    expect(getPublishStatus).toBeDefined();
+    expect(getPublishStatus.inputSchema.properties).toMatchObject({
+      siteId: { type: 'string' },
     });
   });
 });

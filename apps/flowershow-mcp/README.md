@@ -12,7 +12,8 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes
 | `create-site`  | Create a new site                                                  |
 | `delete-site`  | Delete a site and all its content                                  |
 | `publish-note` | Publish in-memory markdown as a note to an existing site           |
-| `publish-local-files` | Publish files directly from a local folder/file path       |
+| `plan-file-uploads` | Request presigned upload URLs for metadata-only file lists    |
+| `get-publish-status` | Poll current publishing status for a site                    |
 
 ### Typical AI workflow
 
@@ -23,7 +24,14 @@ The AI agent is expected to compose tools. For example, to publish a note:
 
 The `publish-note` tool uploads the content and polls until the note is live, then returns the live URL.
 
-For larger publishing jobs (for example a whole vault), call `publish-local-files` with `siteId` and `localPath` so the MCP server reads files from disk directly instead of pushing all file content through the agent context.
+For larger publishing jobs (for example a whole vault) in remote HTTP deployments:
+
+1. Client scans local files and computes `{ path, size, sha }`
+2. Call `plan-file-uploads` with `siteId` + `files` metadata
+3. Client uploads each local file bytes directly to returned presigned `uploadUrl`
+4. Call `get-publish-status` until status becomes `complete`
+
+This keeps local filesystem access on the client machine and works with deployed MCP servers.
 
 ## Prerequisites
 

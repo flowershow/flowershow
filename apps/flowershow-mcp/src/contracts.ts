@@ -35,11 +35,24 @@ export const publishNoteInputShape = {
   content: z.string().describe('The markdown content to publish'),
 };
 
-export const publishLocalFilesInputShape = {
+export const planFileUploadsInputShape = {
   siteId: z.string().describe('The site ID (use list-sites to find it)'),
-  localPath: z
-    .string()
-    .describe('Absolute or relative local file/folder path to publish'),
+  files: z
+    .array(
+      z.object({
+        path: z.string(),
+        size: z.number(),
+        sha: z.string(),
+      }),
+    )
+    .min(1)
+    .describe(
+      'List of local files (metadata only) to request presigned URLs for',
+    ),
+};
+
+export const getPublishStatusInputShape = {
+  siteId: z.string().describe('The site ID (use list-sites to find it)'),
 };
 
 const TOOL_DEFINITIONS: ToolDefinition[] = [
@@ -74,10 +87,15 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     inputSchema: publishNoteInputShape,
   },
   {
-    name: 'publish-local-files',
+    name: 'plan-file-uploads',
     description:
-      'Publish local files from disk to a Flowershow site without passing file content through agent context.',
-    inputSchema: publishLocalFilesInputShape,
+      'Request presigned upload URLs for multiple files so clients can upload directly without server filesystem access.',
+    inputSchema: planFileUploadsInputShape,
+  },
+  {
+    name: 'get-publish-status',
+    description: 'Get current publishing/sync status for a site.',
+    inputSchema: getPublishStatusInputShape,
   },
 ];
 
