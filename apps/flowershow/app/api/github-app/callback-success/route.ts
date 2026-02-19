@@ -1,3 +1,4 @@
+import { GitHubAppCallbackSuccessQuerySchema } from '@flowershow/api-contract';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 
@@ -13,7 +14,12 @@ const protocol = isSecure ? 'https' : 'http';
  */
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const setupAction = searchParams.get('setup_action') || 'install';
+  const parsedQuery = GitHubAppCallbackSuccessQuerySchema.safeParse({
+    setup_action: searchParams.get('setup_action') ?? undefined,
+  });
+  const setupAction = parsedQuery.success
+    ? (parsedQuery.data.setup_action ?? 'install')
+    : 'install';
 
   // Return an HTML page that detects if it's in a popup and acts accordingly
   const html = `

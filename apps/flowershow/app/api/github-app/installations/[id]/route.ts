@@ -1,3 +1,4 @@
+import type { DeleteInstallationResponse } from '@flowershow/api-contract';
 import { NextResponse } from 'next/server';
 import { clearInstallationTokenCache } from '@/lib/github';
 import { log, SeverityNumber } from '@/lib/otel-logger';
@@ -61,10 +62,12 @@ export async function DELETE(
       installation_id: installationId,
     });
 
-    return NextResponse.json({
+    const response: DeleteInstallationResponse = {
       success: true,
       message: 'Installation removed successfully',
-    });
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     const posthog = PostHogClient();
     posthog.captureException(error, 'system', {

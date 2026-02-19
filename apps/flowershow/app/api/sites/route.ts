@@ -1,3 +1,8 @@
+import {
+  CreateSiteRequestSchema,
+  type CreateSiteResponse,
+  type ListSitesResponse,
+} from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
 import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
 import PostHogClient from '@/lib/server-posthog';
@@ -25,16 +30,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Parse request body
-    const body = await request.json();
-    const { projectName, overwrite = false } = body;
-
-    // Validate project name
-    if (!projectName || typeof projectName !== 'string') {
+    const parsedBody = CreateSiteRequestSchema.safeParse(await request.json());
+    if (!parsedBody.success) {
       return NextResponse.json(
-        { error: 'invalid_project_name', message: 'Project name is required' },
+        { error: 'invalid_request', message: 'Invalid request body' },
         { status: 400 },
       );
     }
+
+    const { projectName, overwrite = false } = parsedBody.data;
 
     // Sanitize project name (alphanumeric, hyphens, underscores only)
     const sanitizedName = projectName
@@ -121,18 +125,19 @@ export async function POST(request: NextRequest) {
     // Ensure Typesense collection exists for search indexing
     await ensureSiteCollection(site.id);
 
-    return NextResponse.json(
-      {
-        site: {
-          id: site.id,
-          projectName: site.projectName,
-          url: siteUrl,
-          userId: site.userId,
-          createdAt: site.createdAt.toISOString(),
-        },
+    const response: CreateSiteResponse = {
+      site: {
+        id: site.id,
+        projectName: site.projectName,
+        url: siteUrl,
+        userId: site.userId,
+        createdAt: site.createdAt.toISOString(),
       },
-      { status: existingSite && overwrite ? 200 : 201 },
-    );
+    };
+
+    return NextResponse.json(response, {
+      status: existingSite && overwrite ? 200 : 201,
+    });
   } catch (error) {
     console.error('Error creating site:', error);
     const posthog = PostHogClient();
@@ -206,10 +211,12 @@ export async function GET(request: NextRequest) {
       createdAt: site.createdAt.toISOString(),
     }));
 
-    return NextResponse.json({
+    const response: ListSitesResponse = {
       sites: formattedSites,
       total: formattedSites.length,
-    });
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error listing sites:', error);
     const posthog = PostHogClient();

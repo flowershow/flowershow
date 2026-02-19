@@ -46,6 +46,11 @@ export const SiteDetailSchema = z.object({
 });
 export type SiteDetail = z.infer<typeof SiteDetailSchema>;
 
+export const GetSiteResponseSchema = z.object({
+  site: SiteDetailSchema,
+});
+export type GetSiteResponse = z.infer<typeof GetSiteResponseSchema>;
+
 // ---------------------------------------------------------------------------
 // User
 // ---------------------------------------------------------------------------
@@ -317,6 +322,67 @@ export const GitHubInstallationSchema = z.object({
 });
 export type GitHubInstallation = z.infer<typeof GitHubInstallationSchema>;
 
+export const GitHubInstallationsResponseSchema = z.object({
+  installations: z.array(GitHubInstallationSchema),
+});
+export type GitHubInstallationsResponse = z.infer<
+  typeof GitHubInstallationsResponseSchema
+>;
+
+export const DeleteInstallationResponseSchema = z.object({
+  success: z.literal(true),
+  message: z.string(),
+});
+export type DeleteInstallationResponse = z.infer<
+  typeof DeleteInstallationResponseSchema
+>;
+
+export const InstallationUrlRequestSchema = z.object({
+  suggestedTargetId: z.string().optional(),
+});
+export type InstallationUrlRequest = z.infer<
+  typeof InstallationUrlRequestSchema
+>;
+
+export const InstallationUrlResponseSchema = z.object({
+  url: z.string(),
+  state: z.string(),
+});
+export type InstallationUrlResponse = z.infer<
+  typeof InstallationUrlResponseSchema
+>;
+
+export const SyncRepositoriesRequestSchema = z.object({
+  installationId: z.string(),
+});
+export type SyncRepositoriesRequest = z.infer<
+  typeof SyncRepositoriesRequestSchema
+>;
+
+export const SyncRepositoriesResponseSchema = z.object({
+  success: z.literal(true),
+  repositoriesCount: z.number(),
+});
+export type SyncRepositoriesResponse = z.infer<
+  typeof SyncRepositoriesResponseSchema
+>;
+
+export const GitHubAppCallbackQuerySchema = z.object({
+  installation_id: z.string(),
+  state: z.string(),
+  setup_action: z.enum(['install', 'update']).optional(),
+});
+export type GitHubAppCallbackQuery = z.infer<
+  typeof GitHubAppCallbackQuerySchema
+>;
+
+export const GitHubAppCallbackSuccessQuerySchema = z.object({
+  setup_action: z.enum(['install', 'update']).optional(),
+});
+export type GitHubAppCallbackSuccessQuery = z.infer<
+  typeof GitHubAppCallbackSuccessQuerySchema
+>;
+
 // ---------------------------------------------------------------------------
 // Domain Schemas
 // ---------------------------------------------------------------------------
@@ -363,6 +429,24 @@ export const DomainVerificationSchema = z.object({
   }),
 });
 export type DomainVerification = z.infer<typeof DomainVerificationSchema>;
+
+export const StripeWebhookReceivedResponseSchema = z.object({
+  received: z.literal(true),
+});
+export type StripeWebhookReceivedResponse = z.infer<
+  typeof StripeWebhookReceivedResponseSchema
+>;
+
+export const SitemapParamsSchema = z.object({
+  user: z.string(),
+  project: z.string(),
+});
+export type SitemapParams = z.infer<typeof SitemapParamsSchema>;
+
+export const RobotsParamsSchema = z.object({
+  hostname: z.string(),
+});
+export type RobotsParams = z.infer<typeof RobotsParamsSchema>;
 
 // ---------------------------------------------------------------------------
 // Upgrade Required Response

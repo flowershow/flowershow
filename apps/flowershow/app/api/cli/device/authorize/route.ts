@@ -1,3 +1,4 @@
+import type { DeviceAuthorizeResponse } from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { generateDeviceCode, generateUserCode } from '@/lib/cli-auth';
@@ -26,7 +27,7 @@ import prisma from '@/server/db';
  *   interval: number          // Minimum polling interval in seconds
  * }
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Generate codes
     const deviceCode = generateDeviceCode();
@@ -50,14 +51,16 @@ export async function POST(request: NextRequest) {
     const verificationUri = `${baseUrl}/cli/verify`;
     const verificationUriComplete = `${baseUrl}/cli/verify?code=${userCode}`;
 
-    return NextResponse.json({
+    const response: DeviceAuthorizeResponse = {
       device_code: deviceCode,
       user_code: userCode,
       verification_uri: verificationUri,
       verification_uri_complete: verificationUriComplete,
       expires_in: 900, // 15 minutes in seconds
       interval: 5,
-    });
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error('Error in device authorize:', error);
     return NextResponse.json(

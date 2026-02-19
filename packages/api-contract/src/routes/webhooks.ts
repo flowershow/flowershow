@@ -3,6 +3,9 @@ import { z } from 'zod';
 import {
   DomainVerificationSchema,
   ErrorSchema,
+  RobotsParamsSchema,
+  SitemapParamsSchema,
+  StripeWebhookReceivedResponseSchema,
   SuccessResponseSchema,
 } from '../schemas.js';
 
@@ -18,6 +21,12 @@ export function registerWebhooksRoutes(registry: OpenAPIRegistry) {
   const DomainVerification = registry.register(
     'DomainVerification',
     DomainVerificationSchema.openapi('DomainVerification'),
+  );
+  const StripeWebhookReceivedResponse = registry.register(
+    'StripeWebhookReceivedResponse',
+    StripeWebhookReceivedResponseSchema.openapi(
+      'StripeWebhookReceivedResponse',
+    ),
   );
 
   registry.registerPath({
@@ -151,7 +160,7 @@ export function registerWebhooksRoutes(registry: OpenAPIRegistry) {
         description: 'Event received',
         content: {
           'application/json': {
-            schema: z.object({ received: z.literal(true) }),
+            schema: StripeWebhookReceivedResponse,
           },
         },
       },
@@ -206,10 +215,7 @@ export function registerWebhooksRoutes(registry: OpenAPIRegistry) {
     tags: ['SEO'],
     security: [],
     request: {
-      params: z.object({
-        user: z.string(),
-        project: z.string(),
-      }),
+      params: SitemapParamsSchema,
     },
     responses: {
       '200': {
@@ -232,7 +238,7 @@ export function registerWebhooksRoutes(registry: OpenAPIRegistry) {
     tags: ['SEO'],
     security: [],
     request: {
-      params: z.object({ hostname: z.string() }),
+      params: RobotsParamsSchema,
     },
     responses: {
       '200': {

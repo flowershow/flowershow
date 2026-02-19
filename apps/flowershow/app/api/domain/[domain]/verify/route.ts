@@ -1,3 +1,4 @@
+import type { DomainVerification } from '@flowershow/api-contract';
 import { NextResponse } from 'next/server';
 import {
   getConfigResponse,
@@ -45,7 +46,7 @@ export async function GET(
   const response = NextResponse.json({
     status,
     domainJson,
-  });
+  } satisfies DomainVerification);
 
   // Prevent caching at all levels - CDN, Vercel, and browser
   response.headers.set('Cache-Control', 'no-store, max-age=0');

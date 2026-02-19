@@ -1,3 +1,7 @@
+import {
+  SyncRepositoriesRequestSchema,
+  type SyncRepositoriesResponse,
+} from '@flowershow/api-contract';
 import { NextResponse } from 'next/server';
 import { getInstallationToken } from '@/lib/github';
 import { log, SeverityNumber } from '@/lib/otel-logger';
@@ -24,15 +28,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await request.json();
-    const { installationId } = body;
-
-    if (!installationId) {
+    const parsedBody = SyncRepositoriesRequestSchema.safeParse(
+      await request.json(),
+    );
+    if (!parsedBody.success) {
       return NextResponse.json(
         { error: 'Installation ID is required' },
         { status: 400 },
       );
     }
+
+    const { installationId } = parsedBody.data;
 
     // Verify installation belongs to user
     const installation = await prisma.gitHubInstallation.findUnique({
@@ -108,10 +114,12 @@ export async function POST(request: Request) {
       repositories_synced: reposData.repositories.length,
     });
 
-    return NextResponse.json({
+    const response: SyncRepositoriesResponse = {
       success: true,
       repositoriesCount: reposData.repositories.length,
-    });
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     const posthog = PostHogClient();
     posthog.captureException(error, 'system', {

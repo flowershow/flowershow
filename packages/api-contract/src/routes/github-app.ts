@@ -1,23 +1,56 @@
 import type { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
 import {
+  DeleteInstallationResponseSchema,
   ErrorSchema,
+  GitHubAppCallbackQuerySchema,
+  GitHubAppCallbackSuccessQuerySchema,
   GitHubInstallationSchema,
+  GitHubInstallationsResponseSchema,
+  InstallationUrlRequestSchema,
+  InstallationUrlResponseSchema,
   SuccessResponseSchema,
+  SyncRepositoriesRequestSchema,
+  SyncRepositoriesResponseSchema,
 } from '../schemas.js';
 
 export function registerGitHubAppRoutes(registry: OpenAPIRegistry) {
-  const GitHubInstallation = registry.register(
+  registry.register(
     'GitHubInstallation',
     GitHubInstallationSchema.openapi('GitHubInstallation'),
   );
-  const SuccessResponse = registry.register(
+  registry.register(
     'SuccessResponse',
     SuccessResponseSchema.openapi('SuccessResponse'),
   );
   const ErrorResponse = registry.register(
     'Error',
     ErrorSchema.openapi('Error'),
+  );
+
+  const GitHubInstallationsResponse = registry.register(
+    'GitHubInstallationsResponse',
+    GitHubInstallationsResponseSchema.openapi('GitHubInstallationsResponse'),
+  );
+  const DeleteInstallationResponse = registry.register(
+    'DeleteInstallationResponse',
+    DeleteInstallationResponseSchema.openapi('DeleteInstallationResponse'),
+  );
+  const InstallationUrlRequest = registry.register(
+    'InstallationUrlRequest',
+    InstallationUrlRequestSchema.openapi('InstallationUrlRequest'),
+  );
+  const InstallationUrlResponse = registry.register(
+    'InstallationUrlResponse',
+    InstallationUrlResponseSchema.openapi('InstallationUrlResponse'),
+  );
+  const SyncRepositoriesRequest = registry.register(
+    'SyncRepositoriesRequest',
+    SyncRepositoriesRequestSchema.openapi('SyncRepositoriesRequest'),
+  );
+  const SyncRepositoriesResponse = registry.register(
+    'SyncRepositoriesResponse',
+    SyncRepositoriesResponseSchema.openapi('SyncRepositoriesResponse'),
   );
 
   registry.registerPath({
@@ -34,7 +67,7 @@ export function registerGitHubAppRoutes(registry: OpenAPIRegistry) {
         description: 'List of installations',
         content: {
           'application/json': {
-            schema: z.object({ installations: z.array(GitHubInstallation) }),
+            schema: GitHubInstallationsResponse,
           },
         },
       },
@@ -66,7 +99,7 @@ export function registerGitHubAppRoutes(registry: OpenAPIRegistry) {
         description: 'Installation deleted',
         content: {
           'application/json': {
-            schema: z.object({ success: z.literal(true), message: z.string() }),
+            schema: DeleteInstallationResponse,
           },
         },
       },
@@ -106,7 +139,7 @@ export function registerGitHubAppRoutes(registry: OpenAPIRegistry) {
       body: {
         content: {
           'application/json': {
-            schema: z.object({ suggestedTargetId: z.string().optional() }),
+            schema: InstallationUrlRequest,
           },
         },
       },
@@ -116,7 +149,7 @@ export function registerGitHubAppRoutes(registry: OpenAPIRegistry) {
         description: 'Installation URL generated',
         content: {
           'application/json': {
-            schema: z.object({ url: z.string(), state: z.string() }),
+            schema: InstallationUrlResponse,
           },
         },
       },
@@ -144,7 +177,7 @@ export function registerGitHubAppRoutes(registry: OpenAPIRegistry) {
       body: {
         content: {
           'application/json': {
-            schema: z.object({ installationId: z.string() }),
+            schema: SyncRepositoriesRequest,
           },
         },
       },
@@ -154,10 +187,7 @@ export function registerGitHubAppRoutes(registry: OpenAPIRegistry) {
         description: 'Repositories synced',
         content: {
           'application/json': {
-            schema: z.object({
-              success: z.literal(true),
-              repositoriesCount: z.number(),
-            }),
+            schema: SyncRepositoriesResponse,
           },
         },
       },
@@ -190,11 +220,7 @@ export function registerGitHubAppRoutes(registry: OpenAPIRegistry) {
     tags: ['GitHub App'],
     security: [],
     request: {
-      query: z.object({
-        installation_id: z.string(),
-        state: z.string(),
-        setup_action: z.enum(['install', 'update']).optional(),
-      }),
+      query: GitHubAppCallbackQuerySchema,
     },
     responses: {
       '200': {
@@ -219,9 +245,7 @@ export function registerGitHubAppRoutes(registry: OpenAPIRegistry) {
     tags: ['GitHub App'],
     security: [],
     request: {
-      query: z.object({
-        setup_action: z.enum(['install', 'update']).default('install'),
-      }),
+      query: GitHubAppCallbackSuccessQuerySchema,
     },
     responses: {
       '200': {

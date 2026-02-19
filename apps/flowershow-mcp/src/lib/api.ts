@@ -6,23 +6,35 @@
  */
 
 import type {
-  FileMetadata,
+  CreateSiteResponse,
+  DeleteSiteResponse,
+  GetSiteResponse,
   ListSitesResponse,
   PublishFilesResponse,
   SiteDetail,
-  SiteSummary,
   StatusResponse,
-  UploadTarget,
   User,
+} from '@flowershow/api-contract';
+import {
+  CreateSiteResponseSchema,
+  DeleteSiteResponseSchema,
+  FileMetadata,
+  GetSiteResponseSchema,
+  ListSitesResponseSchema,
+  PublishFilesResponseSchema,
+  SiteDetailSchema,
+  StatusResponseSchema,
+  UserSchema,
 } from '@flowershow/api-contract';
 
 export type {
-  SiteSummary,
+  CreateSiteResponse,
+  DeleteSiteResponse,
+  GetSiteResponse,
   ListSitesResponse,
   SiteDetail,
   User,
   FileMetadata,
-  UploadTarget,
   PublishFilesResponse,
   StatusResponse,
 };
@@ -51,6 +63,7 @@ export class FlowershowApi {
     method: string,
     path: string,
     requestBody?: unknown,
+    parseResponse?: (body: unknown) => T,
   ): Promise<T> {
     const url = `${this.baseUrl}${path}`;
     const res = await fetch(url, {
@@ -72,36 +85,62 @@ export class FlowershowApi {
       throw new ApiError(res.status, res.statusText, text);
     }
 
-    return (await res.json()) as T;
+    const body = (await res.json()) as unknown;
+
+    if (!parseResponse) {
+      return body as T;
+    }
+
+    try {
+      return parseResponse(body);
+    } catch (error) {
+      throw new ApiError(
+        502,
+        'Bad Gateway',
+        `Invalid API response for ${method} ${path}: ${error instanceof Error ? error.message : 'Unknown parse error'}`,
+      );
+    }
   }
 
   async listSites(): Promise<ListSitesResponse> {
-    return this.request<ListSitesResponse>('GET', '/sites');
+    return this.request<ListSitesResponse>('GET', '/sites', undefined, (body) =>
+      ListSitesResponseSchema.parse(body),
+    );
   }
 
-  async getSite(siteId: string): Promise<{ site: SiteDetail }> {
-    return this.request<{ site: SiteDetail }>('GET', `/sites/id/${siteId}`);
+  async getSite(siteId: string): Promise<GetSiteResponse> {
+    return this.request<GetSiteResponse>(
+      'GET',
+      `/sites/id/${siteId}`,
+      undefined,
+      (body) => GetSiteResponseSchema.parse(body),
+    );
   }
 
   async getUser(): Promise<User> {
-    return this.request<User>('GET', '/user');
+    return this.request<User>('GET', '/user', undefined, (body) =>
+      UserSchema.parse(body),
+    );
   }
 
   async createSite(
     projectName: string,
     overwrite = false,
-  ): Promise<{ site: { id: string; projectName: string; url: string } }> {
-    return this.request<{
-      site: { id: string; projectName: string; url: string };
-    }>('POST', '/sites', { projectName, overwrite });
+  ): Promise<CreateSiteResponse> {
+    return this.request<CreateSiteResponse>(
+      'POST',
+      '/sites',
+      { projectName, overwrite },
+      (body) => CreateSiteResponseSchema.parse(body),
+    );
   }
 
-  async deleteSite(
-    siteId: string,
-  ): Promise<{ success: boolean; deletedFiles: number }> {
-    return this.request<{ success: boolean; deletedFiles: number }>(
+  async deleteSite(siteId: string): Promise<DeleteSiteResponse> {
+    return this.request<DeleteSiteResponse>(
       'DELETE',
       `/sites/id/${siteId}`,
+      undefined,
+      (body) => DeleteSiteResponseSchema.parse(body),
     );
   }
 
@@ -113,11 +152,17 @@ export class FlowershowApi {
       'POST',
       `/sites/id/${siteId}/files`,
       { files },
+      (body) => PublishFilesResponseSchema.parse(body),
     );
   }
 
   async getSiteStatus(siteId: string): Promise<StatusResponse> {
-    return this.request<StatusResponse>('GET', `/sites/id/${siteId}/status`);
+    return this.request<StatusResponse>(
+      'GET',
+      `/sites/id/${siteId}/status`,
+      undefined,
+      (body) => StatusResponseSchema.parse(body),
+    );
   }
 
   async uploadToPresignedUrl(

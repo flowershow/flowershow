@@ -7,11 +7,11 @@ import {
   DeleteFilesResponseSchema,
   DeleteSiteResponseSchema,
   ErrorSchema,
+  GetSiteResponseSchema,
   ListSitesResponseSchema,
   PublicStatusResponseSchema,
   PublishFilesRequestSchema,
   PublishFilesResponseSchema,
-  SiteDetailSchema,
   StatusResponseSchema,
   SyncRequestSchema,
   SyncResponseSchema,
@@ -22,9 +22,9 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
     'ListSitesResponse',
     ListSitesResponseSchema.openapi('ListSitesResponse'),
   );
-  const SiteDetail = registry.register(
-    'SiteDetail',
-    SiteDetailSchema.openapi('SiteDetail'),
+  const GetSiteResponse = registry.register(
+    'GetSiteResponse',
+    GetSiteResponseSchema.openapi('GetSiteResponse'),
   );
   const CreateSiteRequest = registry.register(
     'CreateSiteRequest',
@@ -158,7 +158,7 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
       '200': {
         description: 'Site details',
         content: {
-          'application/json': { schema: z.object({ site: SiteDetail }) },
+          'application/json': { schema: GetSiteResponse },
         },
       },
       '401': {
