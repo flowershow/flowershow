@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flowershow — Option B: Kinetic</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            accent: {
+              DEFAULT: '#F97316',
+              light: '#FB923C',
+              dark: '#EA580C',
+            },
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    .gradient-text {
+      background: linear-gradient(135deg, #F97316 0%, #FBBF24 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-glow {
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(249, 115, 22, 0.15), transparent);
+    }
+    .grid-bg {
+      background-image: linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                         linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 64px 64px;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-white font-sans antialiased">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="relative min-h-screen flex items-center hero-glow grid-bg">
+    <div class="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8 text-center">
+      <div class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-slate-400 mb-8">
+        <span class="h-1.5 w-1.5 rounded-full bg-green-400"></span>
+        1,200+ users &middot; 950+ sites published
+      </div>
+      <h1 class="text-5xl sm:text-7xl lg:text-8xl font-extrabold tracking-tight leading-[0.95]">
+        Markdown to<br />
+        website in <span class="gradient-text">seconds</span>
+      </h1>
+      <p class="mx-auto mt-8 max-w-2xl text-lg sm:text-xl text-slate-400 leading-relaxed">
+        The fastest way to turn your markdown into a live, beautiful website.<br class="hidden sm:block" />
+        No repos. No build pipelines. No waiting.
+      </p>
+      <div class="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a href="#" class="w-full sm:w-auto rounded-lg bg-accent px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-accent/25 hover:bg-accent-light hover:shadow-accent/40 transition-all">
+          Start publishing free &rarr;
+        </a>
+        <a href="#demo" class="w-full sm:w-auto rounded-lg border border-white/10 bg-white/5 px-8 py-3.5 text-base font-semibold text-slate-300 hover:bg-white/10 transition-all">
+          Watch the demo
+        </a>
+      </div>
+      <p class="mt-4 text-sm text-slate-500">Free forever. No credit card required.</p>
+
+      <!-- Demo -->
+      <div id="demo" class="mt-16 max-w-5xl mx-auto">
+        <div class="rounded-xl border border-white/10 bg-white/5 p-2 shadow-2xl">
+          <div class="aspect-video w-full rounded-lg bg-slate-900 flex items-center justify-center">
+            <span class="text-slate-600 text-sm">[demo video]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FEATURES ===================== -->
+  <section class="relative py-24 sm:py-32 border-t border-white/5">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class="text-center mb-16 sm:mb-20">
+        <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight">
+          Everything you need.<br />Nothing you don't.
+        </h2>
+      </div>
+      <div class="grid grid-cols-1 gap-px sm:grid-cols-2 lg:grid-cols-3 bg-white/5 rounded-2xl overflow-hidden border border-white/5">
+        <div class="bg-slate-950 p-8 sm:p-10">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
+              <svg class="h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+            </div>
+            <h3 class="font-semibold text-white">Instant deployment</h3>
+          </div>
+          <p class="text-sm leading-relaxed text-slate-400">
+            Zero config, zero waiting. Publish in seconds and share a live URL before you've closed your editor.
+          </p>
+        </div>
+        <div class="bg-slate-950 p-8 sm:p-10">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
+              <svg class="h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" /></svg>
+            </div>
+            <h3 class="font-semibold text-white">Your content, your way</h3>
+          </div>
+          <p class="text-sm leading-relaxed text-slate-400">
+            Folder-based publishing turns any markdown directory into a structured, multi-page site — automatically.
+          </p>
+        </div>
+        <div class="bg-slate-950 p-8 sm:p-10">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
+              <svg class="h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+            </div>
+            <h3 class="font-semibold text-white">Markdown-native</h3>
+          </div>
+          <p class="text-sm leading-relaxed text-slate-400">
+            CommonMark, GFM, Obsidian wiki links, Mermaid diagrams, LaTeX math. It all just works.
+          </p>
+        </div>
+        <div class="bg-slate-950 p-8 sm:p-10">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
+              <svg class="h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" /></svg>
+            </div>
+            <h3 class="font-semibold text-white">Hosted for you</h3>
+          </div>
+          <p class="text-sm leading-relaxed text-slate-400">
+            A beautiful, fast site out of the box. No servers to manage, no build tools to configure, no maintenance.
+          </p>
+        </div>
+        <div class="bg-slate-950 p-8 sm:p-10">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
+              <svg class="h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+            </div>
+            <h3 class="font-semibold text-white">Own your content</h3>
+          </div>
+          <p class="text-sm leading-relaxed text-slate-400">
+            Your files stay in markdown. Git-integrable, portable, no lock-in. Flowershow is infrastructure, not a silo.
+          </p>
+        </div>
+        <div class="bg-slate-950 p-8 sm:p-10">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-accent/10">
+              <svg class="h-4 w-4 text-accent" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" /></svg>
+            </div>
+            <h3 class="font-semibold text-white">Custom domains &amp; themes</h3>
+          </div>
+          <p class="text-sm leading-relaxed text-slate-400">
+            Bring your own domain. Customize with CSS or Tailwind. Pick from official themes or build your own.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== THEMES SHOWCASE ===================== -->
+  <section class="py-24 sm:py-32 border-t border-white/5">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-16">
+        <div>
+          <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight">Beautiful by default.</h2>
+          <p class="mt-4 text-lg text-slate-400">Four official themes — or roll your own.</p>
+        </div>
+        <a href="#" class="mt-4 sm:mt-0 text-sm font-semibold text-accent hover:text-accent-light transition">Browse all themes &rarr;</a>
+      </div>
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="group rounded-xl border border-white/5 bg-white/[0.02] p-3 hover:border-accent/30 transition-all">
+          <div class="aspect-video rounded-lg bg-slate-900 flex items-center justify-center">
+            <span class="text-slate-700 text-xs">[LessFlowery]</span>
+          </div>
+          <div class="mt-3 px-1">
+            <p class="font-semibold text-sm text-white">LessFlowery</p>
+            <p class="mt-1 text-xs text-slate-500">Clean and editorial</p>
+          </div>
+        </div>
+        <div class="group rounded-xl border border-white/5 bg-white/[0.02] p-3 hover:border-accent/30 transition-all">
+          <div class="aspect-video rounded-lg bg-slate-900 flex items-center justify-center">
+            <span class="text-slate-700 text-xs">[Letterpress]</span>
+          </div>
+          <div class="mt-3 px-1">
+            <p class="font-semibold text-sm text-white">Letterpress</p>
+            <p class="mt-1 text-xs text-slate-500">Modern typography, generous whitespace</p>
+          </div>
+        </div>
+        <div class="group rounded-xl border border-white/5 bg-white/[0.02] p-3 hover:border-accent/30 transition-all">
+          <div class="aspect-video rounded-lg bg-slate-900 flex items-center justify-center">
+            <span class="text-slate-700 text-xs">[Superstack]</span>
+          </div>
+          <div class="mt-3 px-1">
+            <p class="font-semibold text-sm text-white">Superstack</p>
+            <p class="mt-1 text-xs text-slate-500">Newsletter-style layout</p>
+          </div>
+        </div>
+        <div class="group rounded-xl border border-white/5 bg-white/[0.02] p-3 hover:border-accent/30 transition-all">
+          <div class="aspect-video rounded-lg bg-slate-900 flex items-center justify-center">
+            <span class="text-slate-700 text-xs">[Leaf]</span>
+          </div>
+          <div class="mt-3 px-1">
+            <p class="font-semibold text-sm text-white">Leaf</p>
+            <p class="mt-1 text-xs text-slate-500">Nature-inspired, warm and distinctive</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== WAYS TO PUBLISH ===================== -->
+  <section class="py-24 sm:py-32 border-t border-white/5">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class="text-center mb-16 sm:mb-20">
+        <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight">Works however you work</h2>
+        <p class="mt-4 text-lg text-slate-400">Connect your content your way. We handle the rest.</p>
+      </div>
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-6 hover:border-white/10 transition">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 mb-4">
+            <svg class="h-5 w-5 text-accent" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" /></svg>
+          </div>
+          <h3 class="font-semibold text-white">Drag &amp; drop</h3>
+          <p class="mt-2 text-sm text-slate-400 leading-relaxed">Upload a folder or file in the browser. Live in seconds.</p>
+        </div>
+        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-6 hover:border-white/10 transition">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 mb-4">
+            <svg class="h-5 w-5 text-accent" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" /></svg>
+          </div>
+          <h3 class="font-semibold text-white">GitHub</h3>
+          <p class="mt-2 text-sm text-slate-400 leading-relaxed">Connect a repo. Every push publishes automatically.</p>
+        </div>
+        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-6 hover:border-white/10 transition">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 mb-4">
+            <svg class="h-5 w-5 text-accent" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 7.5l3 2.25-3 2.25m4.5 0h3m-9 8.25h13.5A2.25 2.25 0 0021 18V6a2.25 2.25 0 00-2.25-2.25H5.25A2.25 2.25 0 003 6v12a2.25 2.25 0 002.25 2.25z" /></svg>
+          </div>
+          <h3 class="font-semibold text-white">CLI</h3>
+          <p class="mt-2 text-sm text-slate-400 leading-relaxed"><code class="text-xs bg-white/5 px-1.5 py-0.5 rounded">publish ./my-folder</code> — built for speed, scripts, and AI agents.</p>
+        </div>
+        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-6 hover:border-white/10 transition">
+          <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-accent/10 mb-4">
+            <svg class="h-5 w-5 text-accent" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 11.25v8.25a1.5 1.5 0 01-1.5 1.5H5.25a1.5 1.5 0 01-1.5-1.5v-8.25M12 4.875A2.625 2.625 0 109.375 7.5H12m0-2.625V7.5m0-2.625A2.625 2.625 0 1114.625 7.5H12m0 0V21m-8.625-9.75h18c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125h-18c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" /></svg>
+          </div>
+          <h3 class="font-semibold text-white">Obsidian plugin</h3>
+          <p class="mt-2 text-sm text-slate-400 leading-relaxed">Publish directly from your vault. Everything works out of the box.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== WHY NOW ===================== -->
+  <section class="relative py-24 sm:py-32 border-t border-white/5">
+    <div class="absolute inset-0 hero-glow opacity-50"></div>
+    <div class="relative mx-auto max-w-3xl px-6 lg:px-8 text-center">
+      <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight">
+        Publishing rebuilt for the <span class="gradient-text">AI age</span>.
+      </h2>
+      <div class="mt-10 space-y-6 text-lg text-slate-400 leading-relaxed text-left sm:text-center">
+        <p>Content is moving faster than ever. AI writes drafts in seconds. Research accumulates in tools like Obsidian overnight. Teams produce more in a day than they used to in a week.</p>
+        <p>Publishing infrastructure hasn't kept up. Setting up a website still means choosing a framework, configuring a build pipeline, picking a CMS, wiring up a deploy script — and that's before you've written a word.</p>
+        <p>Flowershow is what you'd build if you started from scratch today. Drop your content, get a URL. That's the whole workflow.</p>
+        <p class="text-slate-300 font-medium">And increasingly, the person publishing isn't a person at all — it's an agent, a script, a pipeline. Flowershow works for that too.</p>
+      </div>
+      <p class="mt-10">
+        <a href="#" class="text-sm font-semibold text-accent hover:text-accent-light transition">Read the full story &rarr;</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== USE CASES ===================== -->
+  <section class="py-24 sm:py-32 border-t border-white/5">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class="text-center mb-16 sm:mb-20">
+        <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight">Built for how you actually work</h2>
+        <p class="mt-4 text-lg text-slate-400">Whatever your content looks like, Flowershow publishes it.</p>
+      </div>
+      <div class="grid grid-cols-1 gap-px sm:grid-cols-2 bg-white/5 rounded-2xl overflow-hidden border border-white/5">
+        <div class="bg-slate-950 p-8 sm:p-10">
+          <h3 class="text-lg font-bold text-white">Obsidian</h3>
+          <p class="mt-3 text-sm text-slate-400 leading-relaxed">Publish your vault directly. Wikilinks, graph view, and all your Obsidian flavour — live on the web.</p>
+        </div>
+        <div class="bg-slate-950 p-8 sm:p-10">
+          <h3 class="text-lg font-bold text-white">Blogs</h3>
+          <p class="mt-3 text-sm text-slate-400 leading-relaxed">A beautiful blog in minutes. Author profiles, comments, full-text search — everything you'd expect, none of the setup.</p>
+        </div>
+        <div class="bg-slate-950 p-8 sm:p-10">
+          <h3 class="text-lg font-bold text-white">Knowledge Bases &amp; Docs</h3>
+          <p class="mt-3 text-sm text-slate-400 leading-relaxed">Turn a folder of notes into a searchable, navigable knowledge base for your team or the world.</p>
+        </div>
+        <div class="bg-slate-950 p-8 sm:p-10">
+          <h3 class="text-lg font-bold text-white">AI &amp; Automated Publishing</h3>
+          <p class="mt-3 text-sm text-slate-400 leading-relaxed">Publish from scripts, cron jobs, or AI agents. One command. No UI required.</p>
+        </div>
+      </div>
+      <p class="mt-8 text-center text-sm text-slate-500">
+        Also great for: data stories &middot; landing pages &middot; wikis &middot; team handbooks
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== COMMUNITY SHOWCASE ===================== -->
+  <section class="py-24 sm:py-32 border-t border-white/5">
+    <div class="mx-auto max-w-7xl px-6 lg:px-8">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight">Built by people like you</h2>
+        <p class="mt-4 text-lg text-slate-400">Thousands of sites, across every use case imaginable.</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-slate-900 border border-white/5 group-hover:border-accent/30 transition"></div>
+          <p class="mt-2 text-xs font-medium text-slate-400">Verdantverse</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-slate-900 border border-white/5 group-hover:border-accent/30 transition"></div>
+          <p class="mt-2 text-xs font-medium text-slate-400">Back to Basic</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-slate-900 border border-white/5 group-hover:border-accent/30 transition"></div>
+          <p class="mt-2 text-xs font-medium text-slate-400">Give Wiser</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-slate-900 border border-white/5 group-hover:border-accent/30 transition"></div>
+          <p class="mt-2 text-xs font-medium text-slate-400">D&amp;D Compendium</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-slate-900 border border-white/5 group-hover:border-accent/30 transition"></div>
+          <p class="mt-2 text-xs font-medium text-slate-400">Developmental Spaces</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-slate-900 border border-white/5 group-hover:border-accent/30 transition"></div>
+          <p class="mt-2 text-xs font-medium text-slate-400">Metacrisis</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-slate-900 border border-white/5 group-hover:border-accent/30 transition"></div>
+          <p class="mt-2 text-xs font-medium text-slate-400">Rufus Pollock</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-slate-900 border border-white/5 group-hover:border-accent/30 transition"></div>
+          <p class="mt-2 text-xs font-medium text-slate-400">Life Itself Research</p>
+        </div>
+      </div>
+      <p class="mt-10 text-center text-sm text-slate-500">
+        This site is built with Flowershow. <a href="#" class="text-accent hover:text-accent-light font-semibold transition">View source on GitHub &rarr;</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== FAQ ===================== -->
+  <section class="py-24 sm:py-32 border-t border-white/5">
+    <div class="mx-auto max-w-3xl px-6 lg:px-8">
+      <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-center mb-16">Common questions</h2>
+      <dl class="space-y-8">
+        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-6">
+          <dt class="font-semibold text-white">Is it really free?</dt>
+          <dd class="mt-2 text-sm text-slate-400 leading-relaxed">
+            Yes. The free plan lets you publish one site with no time limit and no credit card required. Premium plans start at $5/month.
+          </dd>
+        </div>
+        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-6">
+          <dt class="font-semibold text-white">What markdown does it support?</dt>
+          <dd class="mt-2 text-sm text-slate-400 leading-relaxed">
+            CommonMark, GitHub Flavored Markdown, Obsidian wiki links, Mermaid diagrams, LaTeX math, and more. Your content works as-is.
+          </dd>
+        </div>
+        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-6">
+          <dt class="font-semibold text-white">What if I want to move away?</dt>
+          <dd class="mt-2 text-sm text-slate-400 leading-relaxed">
+            Your content stays in plain markdown files — you own them completely. No proprietary format, no lock-in.
+          </dd>
+        </div>
+        <div class="rounded-xl border border-white/5 bg-white/[0.02] p-6">
+          <dt class="font-semibold text-white">Can I use my own domain?</dt>
+          <dd class="mt-2 text-sm text-slate-400 leading-relaxed">
+            Yes, on the Premium plan. Custom domains, custom favicons, and custom social images are all available.
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ===================== NEWSLETTER ===================== -->
+  <section class="py-24 sm:py-32 border-t border-white/5">
+    <div class="mx-auto max-w-3xl px-6 lg:px-8 text-center">
+      <h2 class="text-3xl sm:text-4xl font-extrabold tracking-tight">Not ready yet? Stay in the loop.</h2>
+      <p class="mt-4 text-lg text-slate-400">New features, tutorials, and the occasional idea worth sharing.</p>
+      <div class="mt-8 flex gap-3 max-w-md mx-auto">
+        <input type="email" placeholder="you@example.com" class="flex-1 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-accent/50" />
+        <button class="rounded-lg bg-accent px-6 py-3 text-sm font-semibold text-white hover:bg-accent-light transition">Subscribe</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FINAL CTA ===================== -->
+  <section class="relative py-24 sm:py-32 border-t border-white/5 hero-glow">
+    <div class="relative mx-auto max-w-3xl px-6 lg:px-8 text-center">
+      <h2 class="text-4xl sm:text-6xl font-extrabold tracking-tight">
+        Markdown to website<br />in <span class="gradient-text">seconds</span>.
+      </h2>
+      <p class="mx-auto mt-6 max-w-xl text-lg text-slate-400">Join thousands of writers, researchers, and teams already publishing with Flowershow.</p>
+      <div class="mt-10">
+        <a href="#" class="inline-block rounded-lg bg-accent px-8 py-4 text-base font-semibold text-white shadow-lg shadow-accent/25 hover:bg-accent-light hover:shadow-accent/40 transition-all">
+          Start publishing free &rarr;
+        </a>
+      </div>
+      <p class="mt-4 text-sm text-slate-500">Free forever. No credit card required.</p>
+    </div>
+  </section>
+
+</body>
+</html>

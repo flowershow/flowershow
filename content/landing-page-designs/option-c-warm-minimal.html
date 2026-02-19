@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flowershow — Option C: Warm Minimal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,300;0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Source Sans 3"', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            stone: {
+              25: '#FDFCFA',
+              50: '#FAF9F6',
+              75: '#F5F3EF',
+              100: '#EDEBE6',
+              150: '#E2DFD8',
+              800: '#3D3A34',
+              900: '#27251F',
+            },
+            terracotta: {
+              DEFAULT: '#C2693D',
+              light: '#D4845C',
+              dark: '#A8552B',
+            },
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+    body {
+      background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
+    }
+  </style>
+</head>
+<body class="bg-stone-25 text-stone-900 font-sans antialiased">
+
+  <!-- ===================== NAV ===================== -->
+  <nav class="py-5 px-6 lg:px-8">
+    <div class="mx-auto max-w-6xl flex items-center justify-between">
+      <span class="text-lg font-bold tracking-tight">flowershow</span>
+      <div class="hidden sm:flex items-center gap-8 text-sm text-stone-800/60">
+        <a href="#" class="hover:text-stone-900 transition">Use Cases</a>
+        <a href="#" class="hover:text-stone-900 transition">Docs</a>
+        <a href="#" class="hover:text-stone-900 transition">Blog</a>
+        <a href="#" class="hover:text-stone-900 transition">Pricing</a>
+      </div>
+      <a href="#" class="rounded-lg bg-stone-900 px-4 py-2 text-sm font-semibold text-stone-25 hover:bg-stone-800 transition">Start free &rarr;</a>
+    </div>
+  </nav>
+
+  <!-- ===================== HERO ===================== -->
+  <section class="pt-16 pb-24 sm:pt-24 sm:pb-32">
+    <div class="mx-auto max-w-6xl px-6 lg:px-8">
+      <div class="max-w-3xl">
+        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05] text-stone-900">
+          Content to URL.<br />Instantly.
+        </h1>
+        <p class="mt-8 text-xl sm:text-2xl leading-relaxed text-stone-800/60 font-light">
+          The fastest way to turn your markdown into a live, beautiful website. No repos, no build pipelines, no waiting.
+        </p>
+        <div class="mt-10 flex flex-wrap items-center gap-5">
+          <a href="#" class="rounded-lg bg-terracotta px-7 py-3.5 text-base font-semibold text-white hover:bg-terracotta-light transition shadow-sm">
+            Start publishing free &rarr;
+          </a>
+          <a href="#demo" class="text-base font-medium text-stone-800/50 hover:text-stone-900 transition">
+            Watch the demo &darr;
+          </a>
+        </div>
+        <div class="mt-8 flex items-center gap-5 text-sm text-stone-800/40">
+          <span><strong class="text-stone-800/70 font-semibold">1,200+</strong> users</span>
+          <span aria-hidden="true">&middot;</span>
+          <span><strong class="text-stone-800/70 font-semibold">950+</strong> sites</span>
+          <span aria-hidden="true">&middot;</span>
+          <span><strong class="text-stone-800/70 font-semibold">Free</strong> forever</span>
+        </div>
+      </div>
+
+      <!-- Demo -->
+      <div id="demo" class="mt-16 sm:mt-20">
+        <div class="rounded-2xl bg-stone-100 p-3 shadow-xl shadow-stone-900/5">
+          <div class="aspect-video w-full rounded-xl bg-stone-75 flex items-center justify-center">
+            <span class="text-stone-150 text-sm">[demo video]</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FEATURES ===================== -->
+  <section class="bg-stone-50 py-24 sm:py-32">
+    <div class="mx-auto max-w-6xl px-6 lg:px-8">
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900 max-w-xl">
+        Everything you need. Nothing you don't.
+      </h2>
+      <div class="mt-14 grid grid-cols-1 gap-x-12 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="flex gap-4">
+          <div class="flex-shrink-0 h-10 w-10 rounded-lg bg-terracotta/10 flex items-center justify-center">
+            <svg class="h-5 w-5 text-terracotta" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" /></svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-stone-900">Instant deployment</h3>
+            <p class="mt-2 text-sm leading-relaxed text-stone-800/60">Zero config, zero waiting. Publish in seconds and share a live URL before you've closed your editor.</p>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <div class="flex-shrink-0 h-10 w-10 rounded-lg bg-terracotta/10 flex items-center justify-center">
+            <svg class="h-5 w-5 text-terracotta" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" /></svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-stone-900">Your content, your way</h3>
+            <p class="mt-2 text-sm leading-relaxed text-stone-800/60">Folder-based publishing turns any markdown directory into a structured, multi-page site — automatically.</p>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <div class="flex-shrink-0 h-10 w-10 rounded-lg bg-terracotta/10 flex items-center justify-center">
+            <svg class="h-5 w-5 text-terracotta" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-stone-900">Markdown-native</h3>
+            <p class="mt-2 text-sm leading-relaxed text-stone-800/60">CommonMark, GFM, Obsidian wiki links, Mermaid diagrams, LaTeX math. It all just works.</p>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <div class="flex-shrink-0 h-10 w-10 rounded-lg bg-terracotta/10 flex items-center justify-center">
+            <svg class="h-5 w-5 text-terracotta" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15a4.5 4.5 0 004.5 4.5H18a3.75 3.75 0 001.332-7.257 3 3 0 00-3.758-3.848 5.25 5.25 0 00-10.233 2.33A4.502 4.502 0 002.25 15z" /></svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-stone-900">Hosted for you</h3>
+            <p class="mt-2 text-sm leading-relaxed text-stone-800/60">A beautiful, fast site out of the box. No servers to manage, no build tools to configure, no maintenance.</p>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <div class="flex-shrink-0 h-10 w-10 rounded-lg bg-terracotta/10 flex items-center justify-center">
+            <svg class="h-5 w-5 text-terracotta" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 119 0v3.75M3.75 21.75h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H3.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-stone-900">Own your content</h3>
+            <p class="mt-2 text-sm leading-relaxed text-stone-800/60">Your files stay in markdown. Git-integrable, portable, no lock-in. Infrastructure, not a silo.</p>
+          </div>
+        </div>
+        <div class="flex gap-4">
+          <div class="flex-shrink-0 h-10 w-10 rounded-lg bg-terracotta/10 flex items-center justify-center">
+            <svg class="h-5 w-5 text-terracotta" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.649 4.763m3.42 3.42a6.776 6.776 0 00-3.42-3.42" /></svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-stone-900">Custom domains &amp; themes</h3>
+            <p class="mt-2 text-sm leading-relaxed text-stone-800/60">Bring your own domain. Customize with CSS or Tailwind. Pick from official themes or build your own.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== THEMES SHOWCASE ===================== -->
+  <section class="py-24 sm:py-32">
+    <div class="mx-auto max-w-6xl px-6 lg:px-8">
+      <div class="max-w-2xl mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">Beautiful by default. Yours to customise.</h2>
+        <p class="mt-4 text-lg text-stone-800/50 font-light">Four official themes — or roll your own with CSS and Tailwind.</p>
+      </div>
+      <!-- Gallery-style large cards -->
+      <div class="grid grid-cols-1 gap-8 sm:grid-cols-2">
+        <div class="group">
+          <div class="aspect-[4/3] rounded-xl bg-stone-75 ring-1 ring-stone-100 overflow-hidden group-hover:ring-terracotta/40 transition shadow-sm">
+            <div class="w-full h-full flex items-center justify-center text-stone-150 text-sm">[LessFlowery preview]</div>
+          </div>
+          <div class="mt-5 flex items-baseline justify-between">
+            <div>
+              <h3 class="font-bold text-stone-900">LessFlowery</h3>
+              <p class="mt-1 text-sm text-stone-800/50">Clean and editorial. Great for essays and research.</p>
+            </div>
+            <a href="#" class="text-sm font-semibold text-terracotta hover:text-terracotta-light transition">Demo &rarr;</a>
+          </div>
+        </div>
+        <div class="group">
+          <div class="aspect-[4/3] rounded-xl bg-stone-75 ring-1 ring-stone-100 overflow-hidden group-hover:ring-terracotta/40 transition shadow-sm">
+            <div class="w-full h-full flex items-center justify-center text-stone-150 text-sm">[Letterpress preview]</div>
+          </div>
+          <div class="mt-5 flex items-baseline justify-between">
+            <div>
+              <h3 class="font-bold text-stone-900">Letterpress</h3>
+              <p class="mt-1 text-sm text-stone-800/50">Modern typography and generous whitespace.</p>
+            </div>
+            <a href="#" class="text-sm font-semibold text-terracotta hover:text-terracotta-light transition">Demo &rarr;</a>
+          </div>
+        </div>
+        <div class="group">
+          <div class="aspect-[4/3] rounded-xl bg-stone-75 ring-1 ring-stone-100 overflow-hidden group-hover:ring-terracotta/40 transition shadow-sm">
+            <div class="w-full h-full flex items-center justify-center text-stone-150 text-sm">[Superstack preview]</div>
+          </div>
+          <div class="mt-5 flex items-baseline justify-between">
+            <div>
+              <h3 class="font-bold text-stone-900">Superstack</h3>
+              <p class="mt-1 text-sm text-stone-800/50">Newsletter-style layout. Perfect for blogs.</p>
+            </div>
+            <a href="#" class="text-sm font-semibold text-terracotta hover:text-terracotta-light transition">Demo &rarr;</a>
+          </div>
+        </div>
+        <div class="group">
+          <div class="aspect-[4/3] rounded-xl bg-stone-75 ring-1 ring-stone-100 overflow-hidden group-hover:ring-terracotta/40 transition shadow-sm">
+            <div class="w-full h-full flex items-center justify-center text-stone-150 text-sm">[Leaf preview]</div>
+          </div>
+          <div class="mt-5 flex items-baseline justify-between">
+            <div>
+              <h3 class="font-bold text-stone-900">Leaf</h3>
+              <p class="mt-1 text-sm text-stone-800/50">Nature-inspired, warm and distinctive.</p>
+            </div>
+            <a href="#" class="text-sm font-semibold text-terracotta hover:text-terracotta-light transition">Demo &rarr;</a>
+          </div>
+        </div>
+      </div>
+      <p class="mt-10 text-sm">
+        <a href="#" class="text-terracotta hover:text-terracotta-light font-semibold transition">Browse all themes &rarr;</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== WAYS TO PUBLISH ===================== -->
+  <section class="bg-stone-50 py-24 sm:py-32">
+    <div class="mx-auto max-w-6xl px-6 lg:px-8">
+      <div class="max-w-2xl mb-14">
+        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">Works however you work</h2>
+        <p class="mt-4 text-lg text-stone-800/50 font-light">Connect your content your way. We handle the rest.</p>
+      </div>
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div class="rounded-xl bg-stone-25 p-8 ring-1 ring-stone-100 hover:ring-stone-150 transition">
+          <h3 class="font-semibold text-stone-900">Drag &amp; drop</h3>
+          <p class="mt-3 text-sm leading-relaxed text-stone-800/60">
+            Upload a folder or file in the browser. Your site is live in seconds. No account setup beyond signing in.
+          </p>
+        </div>
+        <div class="rounded-xl bg-stone-25 p-8 ring-1 ring-stone-100 hover:ring-stone-150 transition">
+          <h3 class="font-semibold text-stone-900">GitHub</h3>
+          <p class="mt-3 text-sm leading-relaxed text-stone-800/60">
+            Connect a repo. Every push publishes automatically. Perfect for teams and version-controlled content.
+          </p>
+        </div>
+        <div class="rounded-xl bg-stone-25 p-8 ring-1 ring-stone-100 hover:ring-stone-150 transition">
+          <h3 class="font-semibold text-stone-900">CLI</h3>
+          <p class="mt-3 text-sm leading-relaxed text-stone-800/60">
+            <code class="text-sm bg-stone-100 px-1.5 py-0.5 rounded font-mono text-stone-800">publish ./my-folder</code> from the terminal. Built for speed, scripts, and AI agents.
+          </p>
+        </div>
+        <div class="rounded-xl bg-stone-25 p-8 ring-1 ring-stone-100 hover:ring-stone-150 transition">
+          <h3 class="font-semibold text-stone-900">Obsidian plugin</h3>
+          <p class="mt-3 text-sm leading-relaxed text-stone-800/60">
+            Publish directly from your vault. Wikilinks, graph, and all your Obsidian features work out of the box.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== WHY NOW ===================== -->
+  <section class="py-24 sm:py-32">
+    <div class="mx-auto max-w-6xl px-6 lg:px-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 lg:gap-20">
+        <div class="lg:col-span-4">
+          <h2 class="text-3xl sm:text-4xl font-bold tracking-tight leading-snug text-stone-900 lg:sticky lg:top-24">
+            Publishing rebuilt for the AI&nbsp;age.
+          </h2>
+          <p class="mt-6 lg:mt-8">
+            <a href="#" class="text-sm font-semibold text-terracotta hover:text-terracotta-light transition">Read the full story &rarr;</a>
+          </p>
+        </div>
+        <div class="lg:col-span-8 space-y-6 text-lg leading-relaxed text-stone-800/70 font-light">
+          <p>Content is moving faster than ever. AI writes drafts in seconds. Research accumulates in tools like Obsidian overnight. Teams produce more in a day than they used to in a week.</p>
+          <p>Publishing infrastructure hasn't kept up. Setting up a website still means choosing a framework, configuring a build pipeline, picking a CMS, wiring up a deploy script — and that's before you've written a word. The tools we use to share ideas were designed for a world that no longer exists.</p>
+          <p>Flowershow is what you'd build if you started from scratch today. Drop your content, get a URL. That's the whole workflow. Fast because it should be. Simple because complexity is our problem, not yours.</p>
+          <p class="text-stone-800/90 font-normal">And increasingly, the person publishing isn't a person at all — it's an agent, a script, a pipeline. Flowershow works for that too.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== USE CASES ===================== -->
+  <section class="bg-stone-50 py-24 sm:py-32">
+    <div class="mx-auto max-w-6xl px-6 lg:px-8">
+      <div class="max-w-2xl mb-14">
+        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">Built for how you actually work</h2>
+        <p class="mt-4 text-lg text-stone-800/50 font-light">Whatever your content looks like, Flowershow publishes it.</p>
+      </div>
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+        <div class="rounded-xl bg-stone-25 p-8 ring-1 ring-stone-100">
+          <h3 class="font-semibold text-stone-900">Obsidian</h3>
+          <p class="mt-3 text-sm leading-relaxed text-stone-800/60">Publish your vault directly. Wikilinks, graph view, and all your Obsidian flavour — live on the web.</p>
+        </div>
+        <div class="rounded-xl bg-stone-25 p-8 ring-1 ring-stone-100">
+          <h3 class="font-semibold text-stone-900">Blogs</h3>
+          <p class="mt-3 text-sm leading-relaxed text-stone-800/60">A beautiful blog in minutes. Author profiles, comments, full-text search — everything you'd expect, none of the setup.</p>
+        </div>
+        <div class="rounded-xl bg-stone-25 p-8 ring-1 ring-stone-100">
+          <h3 class="font-semibold text-stone-900">Knowledge Bases &amp; Docs</h3>
+          <p class="mt-3 text-sm leading-relaxed text-stone-800/60">Turn a folder of notes into a searchable, navigable knowledge base for your team or the world.</p>
+        </div>
+        <div class="rounded-xl bg-stone-25 p-8 ring-1 ring-stone-100">
+          <h3 class="font-semibold text-stone-900">AI &amp; Automated Publishing</h3>
+          <p class="mt-3 text-sm leading-relaxed text-stone-800/60">Publish from scripts, cron jobs, or AI agents. One command. No UI required.</p>
+        </div>
+      </div>
+      <p class="mt-8 text-sm text-stone-800/40">
+        Also great for: data stories &middot; landing pages &middot; wikis &middot; team handbooks
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== COMMUNITY SHOWCASE ===================== -->
+  <section class="py-24 sm:py-32">
+    <div class="mx-auto max-w-6xl px-6 lg:px-8">
+      <div class="max-w-2xl mb-16">
+        <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">Built by people like you</h2>
+        <p class="mt-4 text-lg text-stone-800/50 font-light">Thousands of sites, across every use case imaginable.</p>
+      </div>
+      <!-- Gallery: larger images, masonry-inspired -->
+      <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="group sm:col-span-2 lg:col-span-2 lg:row-span-2">
+          <div class="aspect-[16/10] rounded-xl bg-stone-75 ring-1 ring-stone-100 overflow-hidden group-hover:ring-terracotta/30 transition shadow-sm"></div>
+          <p class="mt-3 font-semibold text-stone-900 text-sm">Verdantverse</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-xl bg-stone-75 ring-1 ring-stone-100 overflow-hidden group-hover:ring-terracotta/30 transition shadow-sm"></div>
+          <p class="mt-3 font-semibold text-stone-900 text-sm">Back to Basic</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-xl bg-stone-75 ring-1 ring-stone-100 overflow-hidden group-hover:ring-terracotta/30 transition shadow-sm"></div>
+          <p class="mt-3 font-semibold text-stone-900 text-sm">Give Wiser</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-xl bg-stone-75 ring-1 ring-stone-100 overflow-hidden group-hover:ring-terracotta/30 transition shadow-sm"></div>
+          <p class="mt-3 font-semibold text-stone-900 text-sm">D&amp;D Compendium</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-xl bg-stone-75 ring-1 ring-stone-100 overflow-hidden group-hover:ring-terracotta/30 transition shadow-sm"></div>
+          <p class="mt-3 font-semibold text-stone-900 text-sm">Developmental Spaces</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-xl bg-stone-75 ring-1 ring-stone-100 overflow-hidden group-hover:ring-terracotta/30 transition shadow-sm"></div>
+          <p class="mt-3 font-semibold text-stone-900 text-sm">Metacrisis</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-xl bg-stone-75 ring-1 ring-stone-100 overflow-hidden group-hover:ring-terracotta/30 transition shadow-sm"></div>
+          <p class="mt-3 font-semibold text-stone-900 text-sm">Rufus Pollock</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-xl bg-stone-75 ring-1 ring-stone-100 overflow-hidden group-hover:ring-terracotta/30 transition shadow-sm"></div>
+          <p class="mt-3 font-semibold text-stone-900 text-sm">Life Itself Research</p>
+        </div>
+      </div>
+      <p class="mt-10 text-sm text-stone-800/40">
+        This site is built with Flowershow. <a href="#" class="text-terracotta hover:text-terracotta-light font-semibold transition">View source on GitHub &rarr;</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== FAQ ===================== -->
+  <section class="bg-stone-50 py-24 sm:py-32">
+    <div class="mx-auto max-w-3xl px-6 lg:px-8">
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900 mb-14">Common questions</h2>
+      <dl class="space-y-10">
+        <div class="border-b border-stone-150 pb-10">
+          <dt class="font-semibold text-stone-900">Is it really free?</dt>
+          <dd class="mt-3 text-sm leading-relaxed text-stone-800/60">
+            Yes. The free plan lets you publish one site with no time limit and no credit card required. Premium plans start at $5/month and unlock custom domains, full-text search, and more.
+          </dd>
+        </div>
+        <div class="border-b border-stone-150 pb-10">
+          <dt class="font-semibold text-stone-900">What markdown does it support?</dt>
+          <dd class="mt-3 text-sm leading-relaxed text-stone-800/60">
+            CommonMark, GitHub Flavored Markdown, Obsidian wiki links, Mermaid diagrams, LaTeX math, and more. If you're already writing in Obsidian, Typora, or any markdown editor, your content works as-is.
+          </dd>
+        </div>
+        <div class="border-b border-stone-150 pb-10">
+          <dt class="font-semibold text-stone-900">What if I want to move away?</dt>
+          <dd class="mt-3 text-sm leading-relaxed text-stone-800/60">
+            Your content stays in plain markdown files — you own them completely. No proprietary format, no lock-in. Take your files anywhere, any time.
+          </dd>
+        </div>
+        <div>
+          <dt class="font-semibold text-stone-900">Can I use my own domain?</dt>
+          <dd class="mt-3 text-sm leading-relaxed text-stone-800/60">
+            Yes, on the Premium plan. Custom domains, custom favicons, and custom social images are all available.
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ===================== NEWSLETTER ===================== -->
+  <section class="py-24 sm:py-32">
+    <div class="mx-auto max-w-3xl px-6 lg:px-8">
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight text-stone-900">Not ready yet? Stay in the loop.</h2>
+      <p class="mt-4 text-lg text-stone-800/50 font-light">New features, tutorials, and the occasional idea worth sharing. No spam, unsubscribe any time.</p>
+      <div class="mt-8 flex gap-4 max-w-md">
+        <input type="email" placeholder="you@example.com" class="flex-1 rounded-lg border border-stone-150 bg-stone-25 px-4 py-3 text-sm text-stone-900 placeholder:text-stone-800/30 focus:outline-none focus:ring-2 focus:ring-terracotta/30" />
+        <button class="rounded-lg bg-stone-900 px-6 py-3 text-sm font-semibold text-stone-25 hover:bg-stone-800 transition">Subscribe</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FINAL CTA ===================== -->
+  <section class="bg-stone-900 py-24 sm:py-32">
+    <div class="mx-auto max-w-3xl px-6 lg:px-8 text-center">
+      <h2 class="text-4xl sm:text-5xl font-bold tracking-tight text-stone-25 leading-tight">
+        Content to URL.<br />Instantly. Free.
+      </h2>
+      <p class="mt-6 text-lg text-stone-25/50 font-light">Join thousands of writers, researchers, and teams already publishing with Flowershow.</p>
+      <div class="mt-10">
+        <a href="#" class="inline-block rounded-lg bg-terracotta px-8 py-3.5 text-base font-semibold text-white hover:bg-terracotta-light transition shadow-sm">
+          Start publishing free &rarr;
+        </a>
+      </div>
+      <p class="mt-4 text-sm text-stone-25/30">No credit card required. Free plan, forever.</p>
+    </div>
+  </section>
+
+</body>
+</html>
