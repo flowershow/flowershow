@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import {
   getPublishStatusInputShape,
-  planFileUploadsInputShape,
+  publishLocalFilesInputShape,
   publishNoteInputShape,
 } from '../contracts.js';
 import { ApiError, type FileMetadata, type FlowershowApi } from '../lib/api.js';
@@ -164,11 +164,11 @@ export function registerNoteTools(
   );
 
   server.registerTool(
-    'plan-file-uploads',
+    'publish-local-files',
     {
       description:
-        'Request presigned upload URLs for client-side file uploads. This is remote-safe for HTTP-deployed MCP servers.',
-      inputSchema: planFileUploadsInputShape,
+        'Request presigned upload URLs for client-side file uploads. Use batches of up to 100 files.',
+      inputSchema: publishLocalFilesInputShape,
     },
     async ({ siteId, files }, extra) => {
       const log = (
@@ -183,7 +183,7 @@ export function registerNoteTools(
               : level === 'debug'
                 ? console.debug
                 : console.info;
-        logger(`[plan-file-uploads] ${data}`);
+        logger(`[publish-local-files] ${data}`);
         return server.sendLoggingMessage({ level, data }, extra.sessionId);
       };
 

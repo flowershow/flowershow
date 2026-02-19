@@ -35,7 +35,7 @@ export const publishNoteInputShape = {
   content: z.string().describe('The markdown content to publish'),
 };
 
-export const planFileUploadsInputShape = {
+export const publishLocalFilesInputShape = {
   siteId: z.string().describe('The site ID (use list-sites to find it)'),
   files: z
     .array(
@@ -46,8 +46,9 @@ export const planFileUploadsInputShape = {
       }),
     )
     .min(1)
+    .max(100)
     .describe(
-      'List of local files (metadata only) to request presigned URLs for',
+      'List of local files (metadata only) to request presigned URLs for. Maximum 100 files per call.',
     ),
 };
 
@@ -87,10 +88,10 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     inputSchema: publishNoteInputShape,
   },
   {
-    name: 'plan-file-uploads',
+    name: 'publish-local-files',
     description:
-      'Request presigned upload URLs for multiple files so clients can upload directly without server filesystem access.',
-    inputSchema: planFileUploadsInputShape,
+      'Request presigned upload URLs for local files metadata. Use in batches of up to 100 files and upload bytes client-side.',
+    inputSchema: publishLocalFilesInputShape,
   },
   {
     name: 'get-publish-status',

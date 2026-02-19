@@ -63,13 +63,13 @@ describe('registerNoteTools', () => {
     expect(tools.map((tool) => tool.name)).toEqual(
       expect.arrayContaining([
         'publish-note',
-        'plan-file-uploads',
+        'publish-local-files',
         'get-publish-status',
       ]),
     );
   });
 
-  describe('plan-file-uploads tool', () => {
+  describe('publish-local-files tool', () => {
     it('returns presigned upload targets for client-side uploads', async () => {
       (mockApi.publishFiles as ReturnType<typeof vi.fn>).mockResolvedValue({
         files: [
@@ -96,7 +96,7 @@ describe('registerNoteTools', () => {
 
       const { client } = await createTestClient(mockApi);
       const result = await client.callTool({
-        name: 'plan-file-uploads',
+        name: 'publish-local-files',
         arguments: {
           siteId: 'site1',
           files: [
@@ -134,7 +134,7 @@ describe('registerNoteTools', () => {
 
       const { client } = await createTestClient(mockApi);
       const result = await client.callTool({
-        name: 'plan-file-uploads',
+        name: 'publish-local-files',
         arguments: {
           siteId: 'site1',
           files: [{ path: 'index.md', size: 7, sha: 'a'.repeat(64) }],
@@ -145,6 +145,29 @@ describe('registerNoteTools', () => {
       const text = (result.content as Array<{ type: string; text: string }>)[0]
         .text;
       expect(text).toContain('Authentication failed');
+    });
+
+    it('rejects requests larger than 100 files', async () => {
+      const files = Array.from({ length: 101 }, (_, i) => ({
+        path: `notes/${i}.md`,
+        size: 10,
+        sha: 'a'.repeat(64),
+      }));
+
+      const { client } = await createTestClient(mockApi);
+      const result = await client.callTool({
+        name: 'publish-local-files',
+        arguments: {
+          siteId: 'site1',
+          files,
+        },
+      });
+
+      expect(result.isError).toBe(true);
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
+      expect(text).toContain('Invalid arguments');
+      expect(mockApi.publishFiles).not.toHaveBeenCalled();
     });
   });
 
