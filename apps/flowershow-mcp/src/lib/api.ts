@@ -22,7 +22,6 @@ import {
   GetSiteResponseSchema,
   ListSitesResponseSchema,
   PublishFilesResponseSchema,
-  SiteDetailSchema,
   StatusResponseSchema,
   UserSchema,
 } from '@flowershow/api-contract';
@@ -167,13 +166,13 @@ export class FlowershowApi {
 
   async uploadToPresignedUrl(
     url: string,
-    content: string,
+    content: string | Buffer,
     contentType = 'text/markdown',
   ): Promise<void> {
     const res = await fetch(url, {
       method: 'PUT',
       headers: { 'Content-Type': contentType },
-      body: content,
+      body: content as unknown as RequestInit['body'],
     });
     if (!res.ok) {
       const text = await res.text();

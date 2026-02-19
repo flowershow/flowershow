@@ -35,6 +35,13 @@ export const publishNoteInputShape = {
   content: z.string().describe('The markdown content to publish'),
 };
 
+export const publishLocalFilesInputShape = {
+  siteId: z.string().describe('The site ID (use list-sites to find it)'),
+  localPath: z
+    .string()
+    .describe('Absolute or relative local file/folder path to publish'),
+};
+
 const TOOL_DEFINITIONS: ToolDefinition[] = [
   {
     name: 'list-sites',
@@ -65,6 +72,12 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     description:
       'Publish a markdown note to a Flowershow site. Uploads the content and waits until the note is live. Use list-sites first to get the siteId.',
     inputSchema: publishNoteInputShape,
+  },
+  {
+    name: 'publish-local-files',
+    description:
+      'Publish local files from disk to a Flowershow site without passing file content through agent context.',
+    inputSchema: publishLocalFilesInputShape,
   },
 ];
 

@@ -160,5 +160,14 @@ describe('POST /mcp endpoint', () => {
       path: { type: 'string' },
       content: { type: 'string' },
     });
+
+    const publishLocalFiles = body.tools.find(
+      (tool: { name: string }) => tool.name === 'publish-local-files',
+    );
+    expect(publishLocalFiles).toBeDefined();
+    expect(publishLocalFiles.inputSchema.properties).toMatchObject({
+      siteId: { type: 'string' },
+      localPath: { type: 'string' },
+    });
   });
 });
