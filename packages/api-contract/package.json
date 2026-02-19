@@ -4,12 +4,10 @@
   "description": "Shared Zod schemas, TypeScript types, and OpenAPI spec for the Flowershow REST API.",
   "type": "module",
   "scripts": {
-    "build": "tsup src/index.ts --format esm,cjs --dts --clean --sourcemap",
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean --sourcemap && node scripts/write-openapi.mjs",
     "lint": "biome lint ."
   },
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
