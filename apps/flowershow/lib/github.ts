@@ -394,7 +394,7 @@ export const fetchGitHubRepoTree = async ({
   }
 
   return await githubJsonFetch<GitHubAPIRepoTree>({
-    url: `/repos/${ghRepository}/git/trees/${ghBranch}?recursive=1`,
+    url: `/repos/${ghRepository}/git/trees/${encodeURIComponent(ghBranch)}?recursive=1`,
     accessToken: token,
     cacheOptions: {
       cache: 'no-store',
@@ -416,7 +416,7 @@ export const fetchGitHubFile = async ({
   try {
     return await githubJsonFetch<GitHubAPIFileContent>({
       // https://docs.github.com/en/rest/repos/contents?apiVersion=2022-11-28#get-repository-content
-      url: `/repos/${ghRepository}/contents/${path}?ref=${ghBranch}`,
+      url: `/repos/${ghRepository}/contents/${path}?ref=${encodeURIComponent(ghBranch)}`,
       accessToken: accessToken,
       cacheOptions: {
         cache: 'no-store',
@@ -478,7 +478,7 @@ export const checkIfBranchExists = async ({
   try {
     return await githubFetch({
       // https://docs.github.com/en/rest/branches/branches?apiVersion=2022-11-28#get-a-branch
-      url: `/repos/${ghRepository}/branches/${ghBranch}`,
+      url: `/repos/${ghRepository}/branches/${encodeURIComponent(ghBranch)}`,
       accessToken: token,
       cacheOptions: {
         cache: 'no-store',
