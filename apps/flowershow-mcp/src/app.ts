@@ -46,12 +46,22 @@ export function createServer(api: FlowershowApi): McpServer {
   return server;
 }
 
+export function getExpressAppOptions(
+  env: NodeJS.ProcessEnv = process.env,
+): { host: '0.0.0.0' } | undefined {
+  if (env.VERCEL) {
+    return { host: '0.0.0.0' };
+  }
+
+  return undefined;
+}
+
 // ---------------------------------------------------------------------------
 // Express app factory
 // ---------------------------------------------------------------------------
 
 export function createApp(apiBaseUrl: string) {
-  const app = createMcpExpressApp();
+  const app = createMcpExpressApp(getExpressAppOptions());
 
   app.get('/mcp/contract', (_req: Request, res: Response) => {
     res.json(buildMcpToolContract());
@@ -109,3 +119,10 @@ export function createApp(apiBaseUrl: string) {
 
   return app;
 }
+
+const DEFAULT_FLOWERSHOW_API_URL =
+  process.env.FLOWERSHOW_API_URL ?? 'https://flowershow.app/api';
+
+const app = createApp(DEFAULT_FLOWERSHOW_API_URL);
+
+export default app;

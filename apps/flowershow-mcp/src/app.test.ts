@@ -1,6 +1,6 @@
 import type { Request } from 'express';
 import { describe, expect, it } from 'vitest';
-import { extractPat } from './app.js';
+import { extractPat, getExpressAppOptions } from './app.js';
 
 // ---------------------------------------------------------------------------
 // extractPat
@@ -40,5 +40,25 @@ describe('extractPat', () => {
 
   it('preserves the full token including special characters', () => {
     expect(extractPat(fakeReq('Bearer fs_pat_a/b+c=d'))).toBe('fs_pat_a/b+c=d');
+  });
+});
+
+describe('vercel express entrypoint compatibility', () => {
+  it('provides a default export that is an express app function', async () => {
+    const mod = await import('./app.js');
+    const exported = (mod as Record<string, unknown>).default;
+
+    expect('default' in mod).toBe(true);
+    expect(typeof exported).toBe('function');
+  });
+});
+
+describe('getExpressAppOptions', () => {
+  it('disables localhost host-header protection on Vercel', () => {
+    expect(getExpressAppOptions({ VERCEL: '1' })).toEqual({ host: '0.0.0.0' });
+  });
+
+  it('uses default localhost protection outside Vercel', () => {
+    expect(getExpressAppOptions({})).toBeUndefined();
   });
 });

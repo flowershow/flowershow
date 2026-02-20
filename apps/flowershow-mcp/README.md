@@ -134,7 +134,7 @@ Then connect to `http://localhost:3456/mcp` and add the `Authorization` header i
 | Variable             | Default                  | Description                                                                        |
 | -------------------- | ------------------------ | ---------------------------------------------------------------------------------- |
 | `PORT`               | `3456`                   | HTTP port to listen on                                                             |
-| `FLOWERSHOW_API_URL` | `https://flowershow.app` | Flowershow API base URL (useful for local dev against a local Flowershow instance) |
+| `FLOWERSHOW_API_URL` | `https://flowershow.app/api` | Flowershow API base URL (useful for local dev against a local Flowershow instance) |
 
 ## Architecture
 
@@ -194,12 +194,12 @@ COPY apps/flowershow-mcp/dist ./dist
 COPY apps/flowershow-mcp/package.json .
 RUN npm install --omit=dev
 EXPOSE 3456
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/local-dev.js"]
 ```
 
 ### Standalone
 
 ```bash
 pnpm build --filter @flowershow/mcp
-node apps/flowershow-mcp/dist/index.js
+node apps/flowershow-mcp/dist/local-dev.js
 ```

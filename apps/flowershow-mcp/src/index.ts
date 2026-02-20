@@ -23,24 +23,8 @@ import { createApp } from './app.js';
 // ---------------------------------------------------------------------------
 
 const FLOWERSHOW_API_URL =
-  process.env.FLOWERSHOW_API_URL ?? 'http://localhost:3000/api';
-const PORT = Number(process.env.PORT ?? '3456');
-
-// ---------------------------------------------------------------------------
-// Start
-// ---------------------------------------------------------------------------
+  process.env.FLOWERSHOW_API_URL ?? 'https://flowershow.app/api';
 
 const app = createApp(FLOWERSHOW_API_URL);
 
-app.listen(PORT, (error) => {
-  if (error) {
-    console.error('Failed to start server:', error);
-    process.exit(1);
-  }
-  console.log(`Flowershow MCP server listening on port ${PORT}`);
-});
-
-process.on('SIGINT', () => {
-  console.log('Shutting down...');
-  process.exit(0);
-});
+export default app;
