@@ -82,7 +82,7 @@ export const syncSite = inngest.createFunction(
           : accessToken;
 
         const config = await githubJsonFetch<GitHubAPIFileContent>({
-          url: `/repos/${ghRepository}/contents/config.json?ref=${ghBranch}`,
+          url: `/repos/${ghRepository}/contents/config.json?ref=${encodeURIComponent(ghBranch)}`,
           accessToken: token,
           cacheOptions: {
             cache: 'no-store',
