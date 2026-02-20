@@ -1,0 +1,52 @@
+{
+  "name": "@flowershow/publish",
+  "version": "1.0.1",
+  "description": "CLI tool for publishing to FlowerShow",
+  "type": "module",
+  "main": "./dist/cli.js",
+  "bin": {
+    "publish": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc && cp package.json dist/",
+    "dev": "tsx cli.ts",
+    "prepublishOnly": "pnpm run build",
+    "release": "changeset publish"
+  },
+  "keywords": [
+    "flowershow",
+    "cli",
+    "publish",
+    "markdown"
+  ],
+  "author": "Flowershow",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/flowershow/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/flowershow/flowershow/issues"
+  },
+  "homepage": "https://flowershow.app",
+  "dependencies": {
+    "@inquirer/prompts": "^8.1.0",
+    "@types/cli-progress": "^3.11.6",
+    "chalk": "^5.3.0",
+    "cli-progress": "^3.12.0",
+    "commander": "^11.0.0",
+    "dotenv": "^16.6.1",
+    "ignore": "^7.0.5",
+    "ora": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ]
+}
