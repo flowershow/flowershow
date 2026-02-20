@@ -332,7 +332,6 @@ export default function NewSitePage() {
               type="text"
               value={data.ghBranch}
               onChange={(e) => setData({ ...data, ghBranch: e.target.value })}
-              maxLength={32}
               required
               className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black     "
             />
@@ -350,7 +349,6 @@ export default function NewSitePage() {
               type="text"
               value={data.rootDir}
               onChange={(e) => setData({ ...data, rootDir: e.target.value })}
-              maxLength={32}
               className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black     "
             />
             <span className="flex items-center space-x-1 text-xs">
