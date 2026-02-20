@@ -10,7 +10,8 @@
       { "href": "/blogs", "name": "Flowershow for Blogs" },
       { "href": "/data-stories", "name": "Flowershow for Data Stories" },
       { "href": "https://demo.flowershow.app/", "name": "Demo" },
-      { "href": "https://github.com/flowershow/themes", "name": "Themes" }
+      { "href": "https://github.com/flowershow/themes", "name": "Themes" },
+      { "href": "/changelog", "name": "Changelog" }
     ],
     "cta": { "name": "Sign In", "href": "https://cloud.flowershow.app/login" }
   },

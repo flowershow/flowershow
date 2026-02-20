@@ -1,0 +1,103 @@
+name: Update Changelog
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog
+        run: |
+          CHANGELOG="content/flowershow-app/changelog.md"
+
+          cat > "$CHANGELOG" << 'HEADER'
+          ---
+          title: Changelog
+          description: Latest changes and updates to Flowershow
+          showToc: false
+          showEditLink: false
+          ---
+
+          # Changelog
+
+          Latest updates from the [Flowershow repository](https://github.com/flowershow/flowershow). This page is automatically updated via GitHub Actions.
+          HEADER
+
+          CURRENT_MONTH=""
+
+          git log --format="%H|%ad|%s" --date=short -300 main | while IFS='|' read -r hash date message; do
+            sha="${hash:0:8}"
+            month_num="${date:5:2}"
+            year="${date:0:4}"
+
+            case "$month_num" in
+              01) month_name="January" ;; 02) month_name="February" ;;
+              03) month_name="March" ;; 04) month_name="April" ;;
+              05) month_name="May" ;; 06) month_name="June" ;;
+              07) month_name="July" ;; 08) month_name="August" ;;
+              09) month_name="September" ;; 10) month_name="October" ;;
+              11) month_name="November" ;; 12) month_name="December" ;;
+            esac
+
+            year_month="${year}-${month_num}"
+            if [ "$year_month" != "$CURRENT_MONTH" ]; then
+              CURRENT_MONTH="$year_month"
+              echo "" >> "$CHANGELOG"
+              echo "## $month_name $year" >> "$CHANGELOG"
+            fi
+
+            clean_msg="$message"
+            url="https://github.com/flowershow/flowershow/commit/$hash"
+
+            case "$message" in
+              feat\(*\):*|feat:*|feat!:*)
+                clean_msg=$(echo "$message" | sed -E 's/^feat(\([^)]*\))?[!]?:\s*//')
+                echo "- **$clean_msg** — [$sha]($url)" >> "$CHANGELOG"
+                ;;
+              fix\(*\):*|fix:*|fix!:*)
+                clean_msg=$(echo "$message" | sed -E 's/^fix(\([^)]*\))?[!]?:\s*//')
+                echo "- **$clean_msg** — [$sha]($url)" >> "$CHANGELOG"
+                ;;
+              docs\(*\):*|docs:*)
+                clean_msg=$(echo "$message" | sed -E 's/^docs(\([^)]*\))?:\s*//')
+                echo "- **$clean_msg** — [$sha]($url)" >> "$CHANGELOG"
+                ;;
+              chore\(*\):*|chore:*)
+                clean_msg=$(echo "$message" | sed -E 's/^chore(\([^)]*\))?:\s*//')
+                echo "- $clean_msg — [$sha]($url)" >> "$CHANGELOG"
+                ;;
+              refactor\(*\):*|refactor:*)
+                clean_msg=$(echo "$message" | sed -E 's/^refactor(\([^)]*\))?:\s*//')
+                echo "- $clean_msg — [$sha]($url)" >> "$CHANGELOG"
+                ;;
+              perf\(*\):*|perf:*)
+                clean_msg=$(echo "$message" | sed -E 's/^perf(\([^)]*\))?:\s*//')
+                echo "- **$clean_msg** — [$sha]($url)" >> "$CHANGELOG"
+                ;;
+              *)
+                echo "- $message — [$sha]($url)" >> "$CHANGELOG"
+                ;;
+            esac
+          done
+
+      - name: Check for changes and commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add content/flowershow-app/changelog.md
+          git diff --staged --quiet && echo "No changes" && exit 0
+          git commit -m "docs: update changelog from latest commits"
+          git push
