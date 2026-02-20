@@ -1,5 +1,5 @@
 /**
- * Copied from packages/cloudflare-worker/src/processing-utils.js
+ * Copied from apps/cloudflare-worker/src/processing-utils.js
  * Keep in sync with the original when making changes.
  */
 import matter from 'gray-matter';

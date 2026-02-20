@@ -54,6 +54,34 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  apps/cloudflare-worker:
+    dependencies:
+      '@aws-sdk/client-s3':
+        specifier: ^3.0.0
+        version: 3.990.0
+      gray-matter:
+        specifier: ^4.0.3
+        version: 4.0.3(patch_hash=f99747fffebc5f7699100bb5c1d087b565fe92daccc48287872c6f4c9d9ac819)
+      image-size:
+        specifier: ^2.0.2
+        version: 2.0.2
+      postgres:
+        specifier: ^3.4.4
+        version: 3.4.8
+      remark:
+        specifier: ^15.0.1
+        version: 15.0.1
+      strip-markdown:
+        specifier: ^6.0.0
+        version: 6.0.0
+      typesense:
+        specifier: ^2.0.3
+        version: 2.1.0(@babel/runtime@7.28.6)
+    devDependencies:
+      wrangler:
+        specifier: ^4.1.0
+        version: 4.65.0
+
   apps/flowershow:
     dependencies:
       '@aws-sdk/client-s3':
@@ -539,34 +567,6 @@ importers:
       tsup:
         specifier: ^8.5.0
         version: 8.5.1(jiti@2.6.1)(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
-
-  packages/cloudflare-worker:
-    dependencies:
-      '@aws-sdk/client-s3':
-        specifier: ^3.0.0
-        version: 3.990.0
-      gray-matter:
-        specifier: ^4.0.3
-        version: 4.0.3(patch_hash=f99747fffebc5f7699100bb5c1d087b565fe92daccc48287872c6f4c9d9ac819)
-      image-size:
-        specifier: ^2.0.2
-        version: 2.0.2
-      postgres:
-        specifier: ^3.4.4
-        version: 3.4.8
-      remark:
-        specifier: ^15.0.1
-        version: 15.0.1
-      strip-markdown:
-        specifier: ^6.0.0
-        version: 6.0.0
-      typesense:
-        specifier: ^2.0.3
-        version: 2.1.0(@babel/runtime@7.28.6)
-    devDependencies:
-      wrangler:
-        specifier: ^4.1.0
-        version: 4.65.0
 
   packages/remark-wiki-link:
     dependencies:
