@@ -1,6 +1,8 @@
 import type { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
 import {
+  CreateGitHubSiteRequestSchema,
+  CreateGitHubSiteResponseSchema,
   CreateSiteRequestSchema,
   CreateSiteResponseSchema,
   DeleteFilesRequestSchema,
@@ -33,6 +35,14 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
   const CreateSiteResponse = registry.register(
     'CreateSiteResponse',
     CreateSiteResponseSchema.openapi('CreateSiteResponse'),
+  );
+  const CreateGitHubSiteRequest = registry.register(
+    'CreateGitHubSiteRequest',
+    CreateGitHubSiteRequestSchema.openapi('CreateGitHubSiteRequest'),
+  );
+  const CreateGitHubSiteResponse = registry.register(
+    'CreateGitHubSiteResponse',
+    CreateGitHubSiteResponseSchema.openapi('CreateGitHubSiteResponse'),
   );
   const DeleteSiteResponse = registry.register(
     'DeleteSiteResponse',
@@ -112,6 +122,48 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
       },
       '409': {
         description: 'Site already exists (and overwrite is false)',
+        content: { 'application/json': { schema: ErrorResponse } },
+      },
+      '500': {
+        description: 'Internal server error',
+        content: { 'application/json': { schema: ErrorResponse } },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'post',
+    path: '/api/sites/github',
+    operationId: 'createGitHubSite',
+    summary: 'Create a GitHub-connected site',
+    description:
+      'Creates a new site linked to a GitHub repository via a GitHub App installation. Kicks off an initial sync immediately. The `installationId` must refer to a GitHub App installation that the authenticated user owns and that has access to the specified repository.',
+    tags: ['Sites'],
+    security: [{ bearerToken: [] }],
+    request: {
+      body: {
+        content: {
+          'application/json': {
+            schema: CreateGitHubSiteRequest,
+          },
+        },
+      },
+    },
+    responses: {
+      '201': {
+        description: 'Site created and initial sync triggered',
+        content: { 'application/json': { schema: CreateGitHubSiteResponse } },
+      },
+      '400': {
+        description: 'Invalid request, branch not found, or user has no username',
+        content: { 'application/json': { schema: ErrorResponse } },
+      },
+      '401': {
+        description: 'Not authenticated',
+        content: { 'application/json': { schema: ErrorResponse } },
+      },
+      '404': {
+        description: 'GitHub App installation not found',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '500': {

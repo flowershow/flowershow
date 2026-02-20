@@ -449,6 +449,37 @@ export const RobotsParamsSchema = z.object({
 export type RobotsParams = z.infer<typeof RobotsParamsSchema>;
 
 // ---------------------------------------------------------------------------
+// GitHub Site Creation Schemas
+// ---------------------------------------------------------------------------
+export const CreateGitHubSiteRequestSchema = z.object({
+  ghRepository: z.string().min(1),
+  ghBranch: z.string().min(1),
+  rootDir: z.string().optional(),
+  projectName: z.string().optional(),
+  installationId: z.string().min(1),
+});
+export type CreateGitHubSiteRequest = z.infer<
+  typeof CreateGitHubSiteRequestSchema
+>;
+
+export const CreateGitHubSiteResponseSchema = z.object({
+  site: z.object({
+    id: z.string(),
+    projectName: z.string(),
+    url: z.string(),
+    ghRepository: z.string(),
+    ghBranch: z.string(),
+    rootDir: z.string().nullable(),
+    autoSync: z.boolean(),
+    userId: z.string(),
+    createdAt: z.string(),
+  }),
+});
+export type CreateGitHubSiteResponse = z.infer<
+  typeof CreateGitHubSiteResponseSchema
+>;
+
+// ---------------------------------------------------------------------------
 // Upgrade Required Response
 // ---------------------------------------------------------------------------
 export const UpgradeRequiredResponseSchema = z.object({

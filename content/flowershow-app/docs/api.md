@@ -185,7 +185,7 @@ POST /api/sites
 
 Creates a new site for direct publishing (CLI, Obsidian plugin). The project name is sanitized to lowercase letters, numbers, hyphens, and underscores.
 
-> **Note:** This endpoint is for direct file publishing only. To create a site connected to a GitHub repository, use the web UI — that flow is not yet available via the REST API.
+> **Note:** This endpoint is for direct file publishing only. To create a site connected to a GitHub repository, see [`POST /api/sites/github`](#create-a-github-connected-site) below.
 
 **Request body**
 
@@ -222,6 +222,66 @@ Creates a new site for direct publishing (CLI, Obsidian plugin). The project nam
 |---|---|
 | `400` | Invalid project name, or your account has no username set |
 | `409` | Site already exists and `overwrite` is `false` |
+
+---
+
+### Create a GitHub-connected site
+
+```
+POST /api/sites/github
+```
+
+Creates a new site linked to a GitHub repository via a GitHub App installation. An initial sync is triggered immediately — the site starts populating in the background. Use [`GET /api/sites/id/{siteId}/status`](#get-processing-status) to track progress.
+
+**Prerequisites:** You must have already installed the Flowershow GitHub App on the repository and obtained the `installationId` from [`GET /api/github-app/installations`](#list-github-app-installations).
+
+**Request body**
+
+```json
+{
+  "ghRepository": "ada/my-notes",
+  "ghBranch": "main",
+  "installationId": "inst_...",
+  "rootDir": "notes",
+  "projectName": "my-notes"
+}
+```
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `ghRepository` | string | Yes | Full repository name, e.g. `"owner/repo"` |
+| `ghBranch` | string | Yes | Branch to sync from, e.g. `"main"` |
+| `installationId` | string | Yes | ID of the GitHub App installation (from `GET /api/github-app/installations`) |
+| `rootDir` | string | No | Subdirectory within the repo to use as the site root |
+| `projectName` | string | No | Custom site name. Defaults to the repository name. A numeric suffix is added automatically if the name is already taken. |
+
+**Response `201`**
+
+```json
+{
+  "site": {
+    "id": "site_...",
+    "projectName": "my-notes",
+    "url": "https://ada.flowershow.app/my-notes",
+    "ghRepository": "ada/my-notes",
+    "ghBranch": "main",
+    "rootDir": null,
+    "autoSync": true,
+    "userId": "clxxx...",
+    "createdAt": "2026-02-19T10:00:00Z"
+  }
+}
+```
+
+`autoSync` is always `true` for GitHub-connected sites — pushes to the branch automatically trigger a re-sync via the GitHub App webhook.
+
+**Error codes**
+
+| Status | Meaning |
+|---|---|
+| `400` | Validation error, branch not found in repository, or account has no username |
+| `401` | Not authenticated |
+| `404` | `installationId` not found or does not belong to you |
 
 ---
 
