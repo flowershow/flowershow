@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flowershow — Option A: Editorial</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            serif: ['"Libre Baskerville"', 'Georgia', 'serif'],
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            cream: '#FDFBF7',
+            warm: {
+              50: '#FAF8F5',
+              100: '#F5F0EA',
+              200: '#E8DFD4',
+              300: '#D4C5B3',
+              800: '#3D3529',
+              900: '#2A241C',
+            },
+            accent: '#C8652A',
+          },
+        },
+      },
+    }
+  </script>
+  <style>
+    html { scroll-behavior: smooth; }
+  </style>
+</head>
+<body class="bg-cream text-warm-900 font-serif antialiased">
+
+  <!-- ===================== HERO ===================== -->
+  <section class="min-h-[85vh] flex items-center">
+    <div class="mx-auto max-w-4xl px-6 py-24 sm:py-32 lg:px-8">
+      <h1 class="text-5xl sm:text-6xl lg:text-7xl font-bold leading-[1.1] tracking-tight">
+        Content to URL.<br />
+        <em class="font-normal">Instantly.</em>
+      </h1>
+      <p class="mt-8 max-w-2xl text-xl sm:text-2xl leading-relaxed text-warm-800/70">
+        The fastest way to turn your markdown into a live, beautiful website. No repos, no build pipelines, no waiting.
+      </p>
+      <p class="mt-4 text-sm text-warm-300 font-sans">Free plan available — no credit card required.</p>
+      <div class="mt-10 flex flex-wrap items-center gap-6">
+        <a href="#" class="inline-block rounded-full bg-warm-900 px-8 py-3.5 text-base font-sans font-semibold text-cream shadow-sm hover:bg-warm-800 transition">
+          Start publishing free &rarr;
+        </a>
+        <a href="#demo" class="text-base font-sans font-medium text-warm-800/60 hover:text-warm-900 transition">
+          Watch the demo &darr;
+        </a>
+      </div>
+      <div class="mt-12 flex items-center gap-6 text-sm font-sans text-warm-300">
+        <span><strong class="text-warm-800">1,200+</strong> users</span>
+        <span aria-hidden="true">&middot;</span>
+        <span><strong class="text-warm-800">950+</strong> sites published</span>
+        <span aria-hidden="true">&middot;</span>
+        <span><strong class="text-warm-800">Free</strong> forever</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DEMO ===================== -->
+  <section id="demo" class="pb-24 sm:pb-32">
+    <div class="mx-auto max-w-5xl px-6 lg:px-8">
+      <div class="rounded-2xl bg-warm-900 p-3 shadow-2xl">
+        <div class="aspect-video w-full rounded-lg bg-warm-800 flex items-center justify-center">
+          <span class="text-warm-200/40 font-sans text-sm">[demo video]</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FEATURES ===================== -->
+  <section class="py-24 sm:py-32">
+    <div class="mx-auto max-w-4xl px-6 lg:px-8">
+      <h2 class="text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
+        Everything you need.<br />Nothing you don't.
+      </h2>
+      <div class="mt-16 grid grid-cols-1 gap-y-14 sm:grid-cols-2 sm:gap-x-16 sm:gap-y-16">
+        <div>
+          <h3 class="text-lg font-bold">Instant deployment</h3>
+          <p class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            Zero config, zero waiting. Publish in seconds and share a live URL before you've closed your editor.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold">Your content, your way</h3>
+          <p class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            Folder-based publishing turns any markdown directory into a structured, multi-page site — automatically.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold">Markdown-native</h3>
+          <p class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            CommonMark, GitHub Flavored Markdown, Obsidian wiki links, Mermaid diagrams, LaTeX math. It all just works.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold">Hosted for you</h3>
+          <p class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            A beautiful, fast site out of the box. No servers to manage, no build tools to configure, no maintenance.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold">Own your content</h3>
+          <p class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            Your files stay in markdown. Git-integrable, portable, no lock-in. Flowershow is infrastructure, not a silo.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold">Custom domains &amp; themes</h3>
+          <p class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            Bring your own domain. Customize with CSS or Tailwind. Pick from official themes or build your own.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== DIVIDER ===================== -->
+  <div class="mx-auto max-w-4xl px-6 lg:px-8">
+    <hr class="border-warm-200" />
+  </div>
+
+  <!-- ===================== THEMES SHOWCASE ===================== -->
+  <section class="py-24 sm:py-32">
+    <div class="mx-auto max-w-5xl px-6 lg:px-8">
+      <div class="max-w-3xl">
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
+          Beautiful by default.<br /><em class="font-normal">Yours to customise.</em>
+        </h2>
+        <p class="mt-6 text-lg text-warm-800/70 font-sans">Four official themes — or roll your own with CSS and Tailwind.</p>
+      </div>
+      <div class="mt-16 grid grid-cols-1 gap-12 sm:grid-cols-2">
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-warm-100 ring-1 ring-warm-200 overflow-hidden group-hover:ring-accent transition">
+            <div class="w-full h-full flex items-center justify-center text-warm-300 font-sans text-sm">[LessFlowery preview]</div>
+          </div>
+          <h3 class="mt-4 text-lg font-bold">LessFlowery</h3>
+          <p class="mt-1 text-sm text-warm-800/60 font-sans">Clean and editorial. Great for essays and research.</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-warm-100 ring-1 ring-warm-200 overflow-hidden group-hover:ring-accent transition">
+            <div class="w-full h-full flex items-center justify-center text-warm-300 font-sans text-sm">[Letterpress preview]</div>
+          </div>
+          <h3 class="mt-4 text-lg font-bold">Letterpress</h3>
+          <p class="mt-1 text-sm text-warm-800/60 font-sans">Modern typography and generous whitespace. Balanced and readable.</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-warm-100 ring-1 ring-warm-200 overflow-hidden group-hover:ring-accent transition">
+            <div class="w-full h-full flex items-center justify-center text-warm-300 font-sans text-sm">[Superstack preview]</div>
+          </div>
+          <h3 class="mt-4 text-lg font-bold">Superstack</h3>
+          <p class="mt-1 text-sm text-warm-800/60 font-sans">Newsletter-style layout. Perfect for blogs and subscriber content.</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-warm-100 ring-1 ring-warm-200 overflow-hidden group-hover:ring-accent transition">
+            <div class="w-full h-full flex items-center justify-center text-warm-300 font-sans text-sm">[Leaf preview]</div>
+          </div>
+          <h3 class="mt-4 text-lg font-bold">Leaf</h3>
+          <p class="mt-1 text-sm text-warm-800/60 font-sans">Nature-inspired with subtle greens. Warm and distinctive.</p>
+        </div>
+      </div>
+      <p class="mt-10 text-sm font-sans">
+        <a href="#" class="text-accent hover:text-accent/80 font-semibold transition">Browse all themes and usage instructions &rarr;</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== WAYS TO PUBLISH ===================== -->
+  <section class="bg-warm-50 py-24 sm:py-32">
+    <div class="mx-auto max-w-4xl px-6 lg:px-8">
+      <h2 class="text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
+        Works however you work.
+      </h2>
+      <p class="mt-6 text-lg text-warm-800/70 font-sans">Connect your content your way. We handle the rest.</p>
+      <div class="mt-16 grid grid-cols-1 gap-y-12 sm:grid-cols-2 sm:gap-x-16 sm:gap-y-14">
+        <div>
+          <h3 class="text-lg font-bold">Drag &amp; drop</h3>
+          <p class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            Upload a folder or file in the browser. Your site is live in seconds. No account setup beyond signing in.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold">GitHub</h3>
+          <p class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            Connect a repo. Every push publishes automatically. Perfect for teams and version-controlled content.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold">CLI</h3>
+          <p class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            <code class="text-sm bg-warm-200/60 px-1.5 py-0.5 rounded font-mono">publish ./my-folder</code> from the terminal. No repo needed. Built for speed, scripts, and AI agents.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold">Obsidian plugin</h3>
+          <p class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            Publish directly from your vault. Wikilinks, graph, and all your Obsidian features work out of the box.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== WHY NOW ===================== -->
+  <section class="py-24 sm:py-32">
+    <div class="mx-auto max-w-3xl px-6 lg:px-8">
+      <h2 class="text-4xl sm:text-5xl font-bold tracking-tight leading-tight mb-12">
+        Publishing rebuilt<br />for the AI age.
+      </h2>
+      <div class="space-y-6 text-lg sm:text-xl leading-relaxed text-warm-800/80">
+        <p>Content is moving faster than ever. AI writes drafts in seconds. Research accumulates in tools like Obsidian overnight. Teams produce more in a day than they used to in a week.</p>
+        <p>Publishing infrastructure hasn't kept up. Setting up a website still means choosing a framework, configuring a build pipeline, picking a CMS, wiring up a deploy script — and that's before you've written a word. The tools we use to share ideas were designed for a world that no longer exists.</p>
+        <p>Flowershow is what you'd build if you started from scratch today. Drop your content, get a URL. That's the whole workflow. Fast because it should be. Simple because complexity is our problem, not yours.</p>
+        <p>And increasingly, the person publishing isn't a person at all — it's an agent, a script, a pipeline. Flowershow works for that too.</p>
+      </div>
+      <p class="mt-10">
+        <a href="#" class="text-accent hover:text-accent/80 font-sans font-semibold text-sm transition">Read the full story &rarr;</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== DIVIDER ===================== -->
+  <div class="mx-auto max-w-4xl px-6 lg:px-8">
+    <hr class="border-warm-200" />
+  </div>
+
+  <!-- ===================== USE CASES ===================== -->
+  <section class="py-24 sm:py-32">
+    <div class="mx-auto max-w-4xl px-6 lg:px-8">
+      <h2 class="text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
+        Built for how you<br />actually work.
+      </h2>
+      <p class="mt-6 text-lg text-warm-800/70 font-sans">Whatever your content looks like, Flowershow publishes it.</p>
+      <div class="mt-16 grid grid-cols-1 gap-y-12 sm:grid-cols-2 sm:gap-x-16 sm:gap-y-14">
+        <div>
+          <h3 class="text-lg font-bold">Obsidian</h3>
+          <p class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            Publish your vault directly. Wikilinks, graph view, and all your Obsidian flavour — live on the web.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold">Blogs</h3>
+          <p class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            A beautiful blog in minutes. Author profiles, comments, full-text search — everything you'd expect, none of the setup.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold">Knowledge Bases &amp; Docs</h3>
+          <p class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            Turn a folder of notes into a searchable, navigable knowledge base for your team or the world.
+          </p>
+        </div>
+        <div>
+          <h3 class="text-lg font-bold">AI &amp; Automated Publishing</h3>
+          <p class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            Publish from scripts, cron jobs, or AI agents. One command. No UI required.
+          </p>
+        </div>
+      </div>
+      <p class="mt-10 text-sm text-warm-300 font-sans">
+        Also great for: data stories &middot; landing pages &middot; wikis &middot; team handbooks
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== COMMUNITY SHOWCASE ===================== -->
+  <section class="bg-warm-50 py-24 sm:py-32">
+    <div class="mx-auto max-w-6xl px-6 lg:px-8">
+      <div class="max-w-3xl mb-16">
+        <h2 class="text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
+          Built by people like you.
+        </h2>
+        <p class="mt-6 text-lg text-warm-800/70 font-sans">Thousands of sites, across every use case imaginable.</p>
+      </div>
+      <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-warm-100 ring-1 ring-warm-200 overflow-hidden group-hover:ring-accent transition"></div>
+          <p class="mt-4 text-base font-bold">Verdantverse</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-warm-100 ring-1 ring-warm-200 overflow-hidden group-hover:ring-accent transition"></div>
+          <p class="mt-4 text-base font-bold">Back to Basic</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-warm-100 ring-1 ring-warm-200 overflow-hidden group-hover:ring-accent transition"></div>
+          <p class="mt-4 text-base font-bold">Give Wiser</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-warm-100 ring-1 ring-warm-200 overflow-hidden group-hover:ring-accent transition"></div>
+          <p class="mt-4 text-base font-bold">D&amp;D Compendium</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-warm-100 ring-1 ring-warm-200 overflow-hidden group-hover:ring-accent transition"></div>
+          <p class="mt-4 text-base font-bold">Developmental Spaces</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-warm-100 ring-1 ring-warm-200 overflow-hidden group-hover:ring-accent transition"></div>
+          <p class="mt-4 text-base font-bold">Metacrisis</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-warm-100 ring-1 ring-warm-200 overflow-hidden group-hover:ring-accent transition"></div>
+          <p class="mt-4 text-base font-bold">Rufus Pollock</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-warm-100 ring-1 ring-warm-200 overflow-hidden group-hover:ring-accent transition"></div>
+          <p class="mt-4 text-base font-bold">Life Itself Research</p>
+        </div>
+        <div class="group">
+          <div class="aspect-video rounded-lg bg-warm-100 ring-1 ring-warm-200 overflow-hidden group-hover:ring-accent transition"></div>
+          <p class="mt-4 text-base font-bold">Linux &amp; Cybersecurity Hub</p>
+        </div>
+      </div>
+      <p class="mt-12 text-sm text-warm-300 font-sans">
+        This site is built with Flowershow. <a href="#" class="text-accent hover:text-accent/80 font-semibold transition">View the source on GitHub &rarr;</a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ===================== FAQ ===================== -->
+  <section class="py-24 sm:py-32">
+    <div class="mx-auto max-w-3xl px-6 lg:px-8">
+      <h2 class="text-4xl sm:text-5xl font-bold tracking-tight leading-tight mb-16">
+        Common questions.
+      </h2>
+      <dl class="space-y-12">
+        <div>
+          <dt class="text-lg font-bold">Is it really free?</dt>
+          <dd class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            Yes. The free plan lets you publish one site with no time limit and no credit card required. Premium plans start at $5/month and unlock custom domains, full-text search, and more.
+          </dd>
+        </div>
+        <div>
+          <dt class="text-lg font-bold">What markdown does it support?</dt>
+          <dd class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            CommonMark, GitHub Flavored Markdown, Obsidian wiki links, Mermaid diagrams, LaTeX math, and more. If you're already writing in Obsidian, Typora, or any markdown editor, your content works as-is.
+          </dd>
+        </div>
+        <div>
+          <dt class="text-lg font-bold">What if I want to move away?</dt>
+          <dd class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            Your content stays in plain markdown files — you own them completely. There's no proprietary format, no lock-in. Take your files anywhere, any time.
+          </dd>
+        </div>
+        <div>
+          <dt class="text-lg font-bold">Can I use my own domain?</dt>
+          <dd class="mt-3 text-base leading-relaxed text-warm-800/70 font-sans">
+            Yes, on the Premium plan. Custom domains, custom favicons, and custom social images are all available.
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- ===================== NEWSLETTER ===================== -->
+  <section class="bg-warm-50 py-24 sm:py-32">
+    <div class="mx-auto max-w-3xl px-6 lg:px-8">
+      <h2 class="text-3xl sm:text-4xl font-bold tracking-tight leading-tight">
+        Not ready yet? Stay in the loop.
+      </h2>
+      <p class="mt-4 text-lg text-warm-800/70 font-sans">New features, tutorials, and the occasional idea worth sharing. No spam, unsubscribe any time.</p>
+      <div class="mt-8 flex gap-4 max-w-md">
+        <input type="email" placeholder="you@example.com" class="flex-1 rounded-full border border-warm-200 bg-cream px-5 py-3 text-sm font-sans text-warm-900 placeholder:text-warm-300 focus:outline-none focus:ring-2 focus:ring-accent/30" />
+        <button class="rounded-full bg-warm-900 px-6 py-3 text-sm font-sans font-semibold text-cream hover:bg-warm-800 transition">Subscribe</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== FINAL CTA ===================== -->
+  <section class="bg-warm-900 py-24 sm:py-32">
+    <div class="mx-auto max-w-3xl px-6 lg:px-8 text-center">
+      <h2 class="text-4xl sm:text-5xl font-bold tracking-tight leading-tight text-cream">
+        Content to URL.<br /><em class="font-normal">Instantly. Free.</em>
+      </h2>
+      <p class="mt-6 text-lg text-warm-200/70 font-sans">Join thousands of writers, researchers, and teams already publishing with Flowershow.</p>
+      <div class="mt-10">
+        <a href="#" class="inline-block rounded-full bg-cream px-8 py-3.5 text-base font-sans font-semibold text-warm-900 shadow-sm hover:bg-warm-100 transition">
+          Start publishing free &rarr;
+        </a>
+      </div>
+      <p class="mt-4 text-sm text-warm-200/50 font-sans">No credit card required. Free plan, forever.</p>
+    </div>
+  </section>
+
+</body>
+</html>
