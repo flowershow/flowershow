@@ -1,0 +1,30 @@
+---
+title: Changelog
+description: Product updates from the Flowershow team.
+showToc: false
+syntaxMode: mdx
+---
+
+This page tracks what we ship in Flowershow.
+
+For now, each entry is a markdown file in `/changelog` and includes a short summary plus a screenshot.
+
+```base
+filters:
+  file.inFolder("changelog")
+formulas:
+  releaseDate: file.name.slice(0, 10)
+views:
+  - type: cards
+    name: "Latest updates"
+    image: "note.image"
+    imageFit: "cover"
+    imageAspectRatio: 1.8
+    order:
+      - title
+      - formula.releaseDate
+      - description
+    sort:
+      - property: file.name
+        direction: DESC
+```

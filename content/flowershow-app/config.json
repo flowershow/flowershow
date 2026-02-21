@@ -5,6 +5,7 @@
     "links": [
       { "href": "/docs", "name": "Docs" },
       { "href": "/blog", "name": "Blog" },
+      { "href": "/changelog", "name": "Changelog" },
       { "href": "/pricing", "name": "Pricing" },
       { "href": "/publish", "name": "Publish CLI" },
       { "href": "/blogs", "name": "Flowershow for Blogs" },
@@ -22,6 +23,7 @@
           { "href": "/pricing", "name": "Pricing" },
           { "href": "/docs", "name": "Docs" },
           { "href": "/blog", "name": "Blog" },
+          { "href": "/changelog", "name": "Changelog" },
           { "href": "/publish", "name": "Publish CLI" },
           { "href": "/about", "name": "About" }
         ]
