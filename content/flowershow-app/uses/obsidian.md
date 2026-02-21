@@ -124,6 +124,8 @@ showComments: false
       <img
         alt="Flowershow plugin inside Obsidian"
         src="/assets/fc-obsidian-3.png"
+        width={2432}
+        height={1442}
         className="w-[48rem] max-w-none rounded-xl shadow-xl ring-1 ring-gray-400/10 sm:w-[57rem] md:-ml-4 lg:-ml-0"
       />
     </div>
@@ -225,7 +227,7 @@ showComments: false
   <div className="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
     <div className="mx-auto max-w-2xl text-center">
       <h2 className="text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl">Your Obsidian vault, online in seconds.</h2>
-      <p className="mx-auto mt-6 max-w-xl text-pretty text-lg/8 text-slate-100">Free to start. Open source. 7,000+ Obsidian users already publishing with Flowershow.</p>
+      <p className="mx-auto mt-6 max-w-xl text-pretty text-lg/8 text-slate-100">7,000+ plugin installs · Free to start · Open source</p>
       <div className="mt-10 flex items-center justify-center gap-x-6">
         <a
           href="https://cloud.flowershow.app/"
