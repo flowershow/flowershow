@@ -77,6 +77,8 @@
   "showEditLink": true,
   "redirects": [
     { "from": "/docs/site-wide-toc", "to": "/docs/sidebar" },
-    { "from": "/blog/how-to-set-up-blog", "to": "/blog/how-to-publish-blog" }
+    { "from": "/blog/how-to-set-up-blog", "to": "/blog/how-to-publish-blog" },
+    { "from": "/docs/obsidian-bases-reference", "to": "/docs/obsidian-bases" },
+    { "from": "/docs/bases", "to": "/docs/obsidian-bases" }
   ]
 }
