@@ -68,3 +68,4 @@ packages/obsidian-plugin/main.js
 .worktrees/
 # bd worktree
 .worktrees/flowershow-kpm-2/
+.worktrees/
