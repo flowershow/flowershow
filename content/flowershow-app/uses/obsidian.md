@@ -120,6 +120,49 @@ showComments: false
   </div>
 </div>
 
+<div className="bg-purple-50 py-12 sm:py-20">
+  <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <div className="mx-auto max-w-3xl lg:text-center">
+      <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-purple-100 px-4 py-1.5 text-sm font-medium text-purple-700 ring-1 ring-purple-200">
+        New in Obsidian
+      </div>
+      <h2 className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">Obsidian Bases? We've got you.</h2>
+      <p className="mt-6 text-lg/8 text-gray-600">Most publishing tools ignore Bases. Flowershow renders them — tables, cards, lists, filters, formulas. Your database views travel with your vault.</p>
+    </div>
+    <div className="mx-auto mt-12 max-w-3xl sm:mt-16 lg:max-w-5xl">
+      <dl className="grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-3">
+        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+          <dt className="font-semibold text-gray-900">📋 Table view</dt>
+          <dd className="mt-2 text-sm text-gray-600">Display your notes as rows with property columns. Includes built-in summaries: sum, average, min, max, count, and more.</dd>
+        </div>
+        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+          <dt className="font-semibold text-gray-900">🃏 Cards view</dt>
+          <dd className="mt-2 text-sm text-gray-600">Gallery-style grid with image support, configurable card sizes, and custom background colours.</dd>
+        </div>
+        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+          <dt className="font-semibold text-gray-900">📝 List view</dt>
+          <dd className="mt-2 text-sm text-gray-600">Render your filtered note set as a clean bulleted or numbered list — simple but powerful.</dd>
+        </div>
+        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+          <dt className="font-semibold text-gray-900">🔍 Filters</dt>
+          <dd className="mt-2 text-sm text-gray-600">Narrow your dataset with conditions using and, or, and not logic. All comparison and boolean operators supported.</dd>
+        </div>
+        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+          <dt className="font-semibold text-gray-900">🧮 Formulas</dt>
+          <dd className="mt-2 text-sm text-gray-600">Compute new properties with arithmetic, date functions, string operations, and conditional logic — directly in your Base.</dd>
+        </div>
+        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-gray-200">
+          <dt className="font-semibold text-gray-900">🔗 Wiki-link aware</dt>
+          <dd className="mt-2 text-sm text-gray-600">Properties containing [[links]] resolve correctly on your published site, preserving your note graph in database views.</dd>
+        </div>
+      </dl>
+      <div className="mt-10 text-center">
+        <a href="/uses/obsidian/bases" className="text-sm font-semibold text-purple-600 hover:underline">Full Bases support guide — what works, what's coming →</a>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div className="overflow-hidden bg-gray-50 py-12 sm:py-20">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2">
