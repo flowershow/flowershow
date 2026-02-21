@@ -171,3 +171,116 @@ Organize comparison content by user job-to-be-done first, then by tool. This kee
   https://www.notion.com/compare-against/notion-vs-clickup
 - Atlassian comparison page example  
   https://www.atlassian.com/software/confluence/comparison/confluence-vs-notion
+
+## Execution Pack (Agent Handoff)
+
+Use this section as the operational contract for any AI agent implementing this plan.
+
+### Definition of Done
+
+1. Publish-ready content drafts exist for:
+   - 1 hub page: `Flowershow alternatives`
+   - 3 comparison pages (phase 1):
+     - Flowershow vs Obsidian Publish
+     - Flowershow vs GitBook
+     - Flowershow vs Docusaurus
+2. Each page contains:
+   - "Best for" summary
+   - Comparison table
+   - "Where Flowershow is better"
+   - "Where competitor is better"
+   - Migration/switching guidance
+   - FAQ
+   - CTA
+3. Every factual pricing/feature claim is backed by a source link.
+4. Each page includes a `Last reviewed` date.
+5. Internal linking is complete (hub to leaf pages, leaf pages back to hub, related-comparisons block).
+
+### Canonical Page Template
+
+Required section order:
+
+1. Hero (X alternative / X vs Flowershow framing)
+2. Who each tool is for
+3. Quick decision summary ("choose Flowershow if...")
+4. Side-by-side comparison table
+5. Detailed breakdown by category
+6. Where Flowershow wins
+7. Where competitor wins
+8. Migration guide from competitor to Flowershow
+9. FAQ
+10. CTA
+
+Suggested frontmatter fields:
+
+- `title`
+- `slug`
+- `competitor`
+- `category` (`obsidian-publishing` | `docs-platforms` | `general-markdown`)
+- `last_reviewed` (YYYY-MM-DD)
+- `sources` (array of URLs)
+
+### Evidence and Claim Rules
+
+1. Source priority:
+   - Competitor official docs/pricing pages first
+   - Reputable third-party sources second
+2. No unsourced claims:
+   - If a source is unavailable or ambiguous, label clearly as "unverified" and do not present as fact.
+3. Balance rule:
+   - Every page must include at least one meaningful area where the competitor is stronger.
+4. Freshness rule:
+   - Recheck pricing/plan details before publishing and record `last_reviewed`.
+
+### Competitor Research Sheet (Per Page)
+
+Collect and fill these fields before drafting:
+
+- Product positioning / ICP
+- Pricing model and plan constraints
+- Hosting/deployment model
+- Markdown and wiki-link support
+- Customization/theming depth
+- Collaboration/auth/workflow capabilities
+- Integrations/ecosystem
+- Migration complexity to/from Flowershow
+- Notable strengths
+- Notable weaknesses
+- Source URLs
+
+### Internal Linking Specification
+
+1. Hub page links to all phase-1 comparison pages.
+2. Each comparison page links back to the hub near top and bottom.
+3. Each comparison page includes "Related comparisons" (2-4 links).
+4. Category cross-links:
+   - Obsidian pages cross-link to Obsidian alternatives.
+   - Docs-platform pages cross-link to docs-platform alternatives.
+
+### Task Breakdown for Agent Execution
+
+1. Build page template and writing rubric.
+2. Build competitor research sheets for phase-1 pages.
+3. Draft hub page.
+4. Draft Flowershow vs Obsidian Publish.
+5. Draft Flowershow vs GitBook.
+6. Draft Flowershow vs Docusaurus.
+7. Add internal links + related comparisons.
+8. Run factual verification pass and update `last_reviewed`.
+9. Run editorial quality pass (clarity, fairness, CTA strength).
+
+### Review Checklist (Before Publish)
+
+- SEO:
+  - Intent-aligned title/H1
+  - Meta description draft
+  - Canonical URL set
+  - FAQ structured consistently if used
+- Content quality:
+  - Audience-fit framing appears in first screenful
+  - Tradeoffs are explicit and honest
+  - Migration section is actionable
+- Accuracy:
+  - Every factual claim has a source
+  - Pricing/features verified with current docs
+  - `last_reviewed` present and current
