@@ -27,6 +27,17 @@ showComments: false
         >Get the Obsidian plugin ↗</a>
       </div>
       <p className="mt-8 text-sm text-gray-400">7,000+ plugin installs · Free plan · Open source</p>
+      <div className="mt-16 max-w-5xl mx-auto flow-root">
+        <div className="-m-2 rounded-xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:-m-4 lg:rounded-2xl lg:p-4">
+          <img
+            src="/assets/showcases/verdantverse.png"
+            alt="A published Obsidian vault on Flowershow"
+            width={2432}
+            height={1442}
+            className="w-full rounded-md shadow-xl"
+          />
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -56,6 +67,19 @@ showComments: false
         </li>
       </ol>
     </div>
+    <div className="mt-16 max-w-3xl mx-auto">
+      <p className="text-center text-sm font-semibold text-gray-500 mb-6 uppercase tracking-wide">See it in action</p>
+      <div className="relative rounded-xl overflow-hidden shadow-xl ring-1 ring-gray-900/10" style={{paddingTop: "56.25%"}}>
+        <iframe
+          className="absolute inset-0 w-full h-full"
+          src="https://www.youtube.com/embed/2jOYg0wCg1s"
+          title="How to publish your Obsidian vault with Flowershow"
+          frameBorder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowFullScreen
+        />
+      </div>
+    </div>
   </div>
 </div>
 
@@ -69,35 +93,23 @@ showComments: false
       <dl className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-16">
         <div>
           <dt className="font-semibold text-gray-900">🔗 Wiki-links</dt>
-          <dd className="mt-2 text-gray-600">[[double bracket]] links resolve automatically across your published site.</dd>
+          <dd className="mt-2 text-gray-600">Your note network travels with you — every [[link]] between notes becomes a real hyperlink on your published site.</dd>
         </div>
         <div>
           <dt className="font-semibold text-gray-900">📣 Callouts</dt>
-          <dd className="mt-2 text-gray-600">{"> [!note], [!warning], [!tip]"} — all Obsidian callout types render beautifully.</dd>
+          <dd className="mt-2 text-gray-600">Every callout type renders exactly as it does in Obsidian — notes, warnings, tips, and more, styled out of the box.</dd>
         </div>
         <div>
-          <dt className="font-semibold text-gray-900">🧮 Math (KaTeX)</dt>
-          <dd className="mt-2 text-gray-600">Inline and block LaTeX math renders natively. No extra setup.</dd>
-        </div>
-        <div>
-          <dt className="font-semibold text-gray-900">📊 Mermaid diagrams</dt>
-          <dd className="mt-2 text-gray-600">Flowcharts, sequence diagrams, and more — just use a mermaid code block.</dd>
+          <dt className="font-semibold text-gray-900">🧮 Math & diagrams</dt>
+          <dd className="mt-2 text-gray-600">LaTeX math (KaTeX) and Mermaid diagrams render natively. No plugins, no extra setup, no surprises.</dd>
         </div>
         <div>
           <dt className="font-semibold text-gray-900">🖼 Embeds</dt>
-          <dd className="mt-2 text-gray-600">{"![[image.png]] and ![[note]]"} embeds work as expected.</dd>
+          <dd className="mt-2 text-gray-600">{"![[image.png]] and ![[note]]"} embeds work exactly as expected. Your vault structure is preserved.</dd>
         </div>
         <div>
-          <dt className="font-semibold text-gray-900">🏷 Tags & frontmatter</dt>
-          <dd className="mt-2 text-gray-600">Frontmatter fields (title, description, date, authors, image) all used for SEO and layout.</dd>
-        </div>
-        <div>
-          <dt className="font-semibold text-gray-900">📝 Full Markdown</dt>
-          <dd className="mt-2 text-gray-600">CommonMark + GitHub Flavored Markdown — tables, task lists, footnotes, code blocks.</dd>
-        </div>
-        <div>
-          <dt className="font-semibold text-gray-900">🎨 Themes</dt>
-          <dd className="mt-2 text-gray-600">Choose from official themes or customise with your own CSS. Your site, your look.</dd>
+          <dt className="font-semibold text-gray-900">🎨 Beautiful by default</dt>
+          <dd className="mt-2 text-gray-600">Pick from official themes or add your own CSS. Your site looks polished from day one — no design skills required.</dd>
         </div>
         <div>
           <dt className="font-semibold text-gray-900">🔓 Open source</dt>
@@ -156,10 +168,10 @@ showComments: false
             <td className="py-3 px-6 text-center text-gray-600">Free (your time + hosting)</td>
           </tr>
           <tr>
-            <td className="py-3 pr-6 text-gray-600">Setup time</td>
-            <td className="py-3 px-6 text-center bg-purple-50 font-medium text-purple-900">Minutes</td>
-            <td className="py-3 px-6 text-center text-gray-600">Minutes</td>
-            <td className="py-3 px-6 text-center text-gray-600">Hours–days</td>
+            <td className="py-3 pr-6 text-gray-600">GitHub required</td>
+            <td className="py-3 px-6 text-center bg-purple-50 font-medium text-purple-900">❌ No</td>
+            <td className="py-3 px-6 text-center text-gray-600">❌ No</td>
+            <td className="py-3 px-6 text-center text-gray-600">✅ Usually</td>
           </tr>
           <tr>
             <td className="py-3 pr-6 text-gray-600">Wiki-links</td>
@@ -216,6 +228,41 @@ showComments: false
   </div>
 </div>
 
+<div className="bg-gray-50 py-12 sm:py-20">
+  <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <div className="mx-auto max-w-3xl text-center">
+      <h2 className="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">Real vaults, live on the web</h2>
+      <p className="mt-6 text-lg/8 text-gray-600">Obsidian users publishing their knowledge, notes, and research with Flowershow — right now.</p>
+    </div>
+    <div className="mx-auto mt-16 grid max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <a href="https://my.flowershow.app/@ASingleMind/Verdantverse" className="group">
+        <img src="/assets/showcases/verdantverse.png" alt="Verdantverse" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
+        <div className="mt-3 text-base font-medium text-gray-900 group-hover:text-purple-600">Verdantverse</div>
+      </a>
+      <a href="https://my.flowershow.app/@Iwuaa/dnd-compendium" className="group">
+        <img src="/assets/showcases/dnd.png" alt="D&D Compendium" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
+        <div className="mt-3 text-base font-medium text-gray-900 group-hover:text-purple-600">D&D Compendium</div>
+      </a>
+      <a href="https://my.flowershow.app/@CCCCOOH/Note" className="group">
+        <img src="/assets/showcases/ccccooh.png" alt="Sy_Study&Note" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
+        <div className="mt-3 text-base font-medium text-gray-900 group-hover:text-purple-600">Sy_Study&Note</div>
+      </a>
+      <a href="https://my.flowershow.app/@bluedogXLII/hexxen-herr-der-fliegen" className="group">
+        <img src="/assets/showcases/hexxen.png" alt="Hexxen 1733" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
+        <div className="mt-3 text-base font-medium text-gray-900 group-hover:text-purple-600">Hexxen 1733</div>
+      </a>
+      <a href="https://my.flowershow.app/@je7remy/linuxknowledge" className="group">
+        <img src="/assets/showcases/jeremy-linux-knowledge.png" alt="Linux & Cybersecurity Knowledge Hub" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
+        <div className="mt-3 text-base font-medium text-gray-900 group-hover:text-purple-600">Linux & Cybersecurity Knowledge Hub</div>
+      </a>
+      <a href="https://my.flowershow.app/@rufuspollock/rufuspollock-com" className="group">
+        <img src="/assets/showcases/rufuspollockcom.png" alt="rufuspollock.com" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
+        <div className="mt-3 text-base font-medium text-gray-900 group-hover:text-purple-600">rufuspollock.com</div>
+      </a>
+    </div>
+  </div>
+</div>
+
 <div className="py-12 sm:py-24 my-12">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <h2 className="mb-4 text-pretty text-balance text-4xl font-semibold tracking-tight text-gray-900 sm:mb-6 sm:text-5xl">Be the first to know about new features</h2>
@@ -226,8 +273,8 @@ showComments: false
 <div className="bg-slate-900 mt-16 sm:mt-20 md:mt-24">
   <div className="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
     <div className="mx-auto max-w-2xl text-center">
-      <h2 className="text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl">Your Obsidian vault, online in seconds.</h2>
-      <p className="mx-auto mt-6 max-w-xl text-pretty text-lg/8 text-slate-100">7,000+ plugin installs · Free to start · Open source</p>
+      <h2 className="text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl">Your vault deserves to be seen.</h2>
+      <p className="mx-auto mt-6 max-w-xl text-pretty text-lg/8 text-slate-100">Ready to share your vault with the world? It takes one minute.</p>
       <div className="mt-10 flex items-center justify-center gap-x-6">
         <a
           href="https://cloud.flowershow.app/"
