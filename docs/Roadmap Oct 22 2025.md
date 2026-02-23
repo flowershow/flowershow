@@ -173,3 +173,33 @@ Extras (not sure we'll do them)
 - Dashboard toggle for “Built with Flowershow.”
 
 **Timeline:** Mar 2026
+
+---
+
+## Completion Summary
+
+**Overall completion rate: ~79%** (30 out of 38 tracked items)
+
+### By Epic:
+
+| Epic | Theme | Status | Details |
+|------|-------|--------|---------|
+| **Epic 1** | Markdown Fidelity | ✅ **100%** | All 12 items complete. Core reliability goal achieved. |
+| **Epic 2** | Obsidian Integration | ✅ **89%** | 9/10 items done. Only Obsidian Canvas support (#578) remains open. |
+| **Epic 2.b** | Publishing Enhancements | ✅ **100%** | MP4 embeds and image optimization both done. |
+| **Epic 3** | Docs & Advocacy | ⚠️ **60%** | 3/5 done. Missing: "Markdown is Awesome" boot-up (#906) and clearer open-source positioning (#product#10). |
+| **Epic 4** | Themes & Customization | ❌ **20%** | Only 1/5 done (demo showcase). Major gap: core themes (#706, #854), style adjustments (#864), and sidebar controls (#772) remain untouched. |
+| **Epic 5** | Cloud & Access Control | ⚠️ **67%** | 2/3 done. Private sites ✅ and homepage selection ✅. Missing: toggle for "Built with Flowershow" branding (#722). |
+
+### Key Achievements:
+✅ Markdown compatibility solidified (all core issues resolved)
+✅ Obsidian workflow parity largely achieved
+✅ Cloud private sites foundation laid
+
+### Key Gaps:
+❌ **Themes & customization** essentially not started (80% incomplete)
+❌ **Advocacy positioning** partially done (missing broader messaging)
+❌ **Canvas support** deferred (Obsidian extra)
+
+### Timeline Assessment:
+We've nailed the **reliability & core integrations** goals but **theme/demo launch and marketing narrative** fell behind the original schedule.
