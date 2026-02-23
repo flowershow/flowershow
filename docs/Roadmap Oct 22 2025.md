@@ -1,4 +1,3 @@
-
 Originally in: https://github.com/flowershow/flowershow/issues/918
 
 We want to go through all the issues in this repo and look at what prioritise in terms of features, marketing and positioning and make a list of the top 3-5 things to work on.
@@ -29,7 +28,7 @@ Thus the hierarchy is:
 
 ---
 
-### Epic 1: Markdown compatibility + build stability ✅
+## Epic 1: Markdown compatibility + build stability ✅
 
 **Goal:** Everything in Markdown should “just work.”
 **Why it matters:** The core value is “Markdown just works.” Any rendering or build break undermines trust.
@@ -44,22 +43,22 @@ Thus the hierarchy is:
 
 **Issues**
 
-- flowershow/flowershow#917 Normal Markdown w/ HTML 🔥🔥
-  - flowershow/flowershow#911 - will be solved by this
-- flowershow/flowershow#343 <=/>= breaks build
-- flowershow/flowershow#770 PDF embedding
-- flowershow/flowershow#912 PDF embedding pt 2
-- ✅ test.flowershow.app site where we can add a bunch of this stuff (and we can then do automated tests against that if we want!) **See https://test.flowershow.app/ from https://github.com/flowershow/flowershow-test-repo**
-- flowershow/flowershow#774 Dedicated/better error pages on 500 pages (and render errors)
-- flowershow/flowershow#894 ==Highlights== support **🚩 ADDED HERE BY OLA**
-- flowershow/flowershow#909 MDX debugging support **🚩 MOVED HERE BY OLA**
-- flowershow/flowershow#933 Incorrect wiki-links resolution **🚩 ADDED HERE BY OLA**
-- flowershow/flowershow#934 Incorrect email address auto-linking **🚩 ADDED HERE BY OLA**
-- flowershow/flowershow#935 Can't escape <, <= etc in code **🚩 ADDED HERE BY OLA**
+- [x] flowershow/flowershow#917 "Support *normal* markdown with normal html in it (no JSX) - either as option or by default"
+  - [x] flowershow/flowershow#911 "Allow the use of <color> tags into notes"
+- [x] flowershow/flowershow#343 "<= or >= in a markdown file breaks build (?)"
+- [x] flowershow/flowershow#770 "PDFs embeds don't work"
+- [x] flowershow/flowershow#912 "Do PDFs get copied across to storage?"
+- [x] test.flowershow.app site where we can add a bunch of this stuff (and we can then do automated tests against that if we want!) **See https://test.flowershow.app/ from https://github.com/flowershow/flowershow-test-repo**
+- [x] flowershow/flowershow#774 "Avoid showing 500 errors - instead show info on the error or other error page"
+- [x] flowershow/flowershow#894 "Support for markdown highlights"
+- [x] flowershow/flowershow#909 "MDX errors have link to our dedicated error page (where instructions on how to fix)"
+- [x] flowershow/flowershow#933 "Incorrect wiki-links resolution"
+- [x] flowershow/flowershow#934 "Email addresses incorrectly auto-linked"
+- [x] flowershow/flowershow#935 "Less/greater than signs shouldn't be converted to HTML entities when used in code"
 
 ❓
 
-- flowershow/flowershow#914 math formatting ❓ is this even a bug we can fix (more in latex) **Not a bug. See comments in the issue**
+- [x] flowershow/flowershow#914 "Multiple $ signs on a single line cause math formatting to turn on ..." (not_planned - no easy fix available)
 
 **Timeline:** Oct 2025
 
@@ -75,15 +74,15 @@ Track this now in the milestone: https://github.com/orgs/flowershow/projects/1/v
 
 **Issues**
 
-- flowershow/flowershow#922 Obsidian plugin v3
-  - flowershow/flowershow#717 Selective publishing
-- flowershow/obsidian-flowershow#33 Minor Obsidian plugin improvements to v2
-- flowershow/flowershow#861 Bases syntax **🚧2025-11-24 this is nearly done 🎉**
-- #904 Obsidian image resizing 🚩 ADDED HERE BY OLA
-  - DUPLICATE flowershow/flowershow#592 Image sizing
-- flowershow/flowershow#712 Case-insensitive links
-- #910 Obsidian style `%` comments 🚩 ADDED HERE BY OLA
-- #753 Wiki links in frontmatter (partially done, but only for `image` field) 🚩 ADDED HERE BY OLA
+- [x] flowershow/flowershow#922 "Flowershow Obsidian Plugin v3 with batch publish/unpublish"
+  - [x] flowershow/flowershow#717 "Obsidian plugin allows selective publishing and is clearer about what is published"
+- [x] flowershow/obsidian-flowershow#33 "[inbox] Flowershow Obsidian v3"
+- [x] flowershow/flowershow#861 "Support obsidian new Bases syntax and render the views in the frontend"
+- [x] flowershow/flowershow#904 "Support image dimensions in embeds e.g. ![[Engelbart.jpg|100x145]]"
+  - [x] flowershow/flowershow#592 "Support for Obsidian image embed size adjustment"
+- [x] flowershow/flowershow#712 "Make wiki links case-insensitive (as in Obsidan)"
+- [x] flowershow/flowershow#910 "Add support for obsdian style comments with %%"
+- [x] flowershow/flowershow#753 "Support wiki links in frontmatter e.g. [["/abc/xyz"]]"
 
 **Deliverables**
 
@@ -96,13 +95,13 @@ Track this now in the milestone: https://github.com/orgs/flowershow/projects/1/v
 
 Extras (not sure we'll do them)
 
-- flowershow/flowershow#170 Dataview **💬2025-11-24 IMO i wouldn't do DataView if we have done Bases**
-- flowershow/flowershow#578 Canvas
+- [x] flowershow/flowershow#170 "Support obsidian dataview (or equivalent)" (not_planned - replaced by Bases support)
+- [ ] flowershow/flowershow#578 "Support for Obsidian canvas files"
 
 ### Epic 2.b: general major publishing enhancements
 
-- flowershow/flowershow#738 mp4 embeds 🚩 MOVED HERE BY OLA as it's neither CommonMark nor GFM, it's extra syntax
-- flowershow/flowershow#678 image optimization
+- [x] flowershow/flowershow#738 "mp4 embeds not working"
+- [x] flowershow/flowershow#678 "Optimize images using e.g. nextjs image support plus cloudflare"
 
 ### Epic 3: Docs, advocacy, and positioning
 
@@ -112,12 +111,11 @@ Extras (not sure we'll do them)
 
 **Issues**
 
-- flowershow/flowershow#906 markdown is awesome
-- flowershow/flowershow#759 Advocacy guide
-- flowershow/flowershow#720 Docs for charts/tables
-- flowershow/flowershow#677 Docs for components
-- flowershow/product#10 Present open-source aspect
-- flowershow/product#19 - marketing plan
+- [ ] flowershow/flowershow#906 "Markdown is Awesome boot-up"
+- [x] flowershow/flowershow#759 "Where do we put our general guide/advocacy for using markdown and building markdown-based websites"
+- [x] flowershow/flowershow#720 "Docs for data features like charting and table display"
+- [ ] flowershow/product#10 "Present opensource aspect of Flowershow more clearly"
+- [x] flowershow/product#19 "Marketing plan July 2025"
 
 **Deliverables**
 
@@ -138,11 +136,11 @@ Extras (not sure we'll do them)
 
 **Issues**
 
-- flowershow/flowershow#706 Themes customization
-- flowershow/flowershow#854 Themes demo epic
-- flowershow/flowershow#864 Style adjustments
-- flowershow/flowershow#731 Showcase demo site
-- flowershow/flowershow#772 Sidebar per folder
+- [ ] flowershow/flowershow#706 "Themes and site customization"
+- [ ] flowershow/flowershow#854 "[epic] Flowershow themes to make"
+- [ ] flowershow/flowershow#864 "Style adjustments for easier theme customizations"
+- [x] flowershow/flowershow#731 "Showcase the demo site more"
+- [ ] flowershow/flowershow#772 "Allow enabling/disabling sidebar per folders"
 
 **Deliverables**
 
@@ -155,6 +153,8 @@ Extras (not sure we'll do them)
 
 ---
 
+---
+
 ### Epic 5: Cloud & access control (freemium foundation)
 
 **Goal:** Foundation for a sustainable freemium model.
@@ -163,9 +163,9 @@ Extras (not sure we'll do them)
 
 **Issues**
 
-- flowershow/flowershow#815 Private sites
-- flowershow/flowershow#722 Toggle “Built with Flowershow” ribbon
-- flowershow/flowershow#711 Configurable home page
+- [x] flowershow/flowershow#815 “Private sites with e.g. password protection”
+- [ ] flowershow/flowershow#722 “Built with Flowershow ribbon should be toggable on/off as an option in dashboard (and greyed out if not on premium)”
+- [x] flowershow/flowershow#711 “Choose homepage markdown file”
 
 **Deliverables**
 
@@ -173,19 +173,3 @@ Extras (not sure we'll do them)
 - Dashboard toggle for “Built with Flowershow.”
 
 **Timeline:** Mar 2026
-
----
-
-### Cross-cutting enhancements
-
-- **Performance polish:** flowershow/flowershow#678 image optimization (Q1 2026). **🚚2025-11-24 moved up to obsdiian section**
-- **Knowledge features:** flowershow/flowershow#37 + flowershow/flowershow#29 graph & backlinks (Q2 2026 target).
-- **Academic use case:** flowershow/flowershow#340 citations (deferred – “Someday”).
-
----
-
-### 📥 INBOX / Unassigned
-
-- flowershow/flowershow#924 YAML code blocks for components **🚩 ADDED HERE BY OLA**
-
->>>>>>> 2263254040e7aa0453392467fe2ef94f571d570b
