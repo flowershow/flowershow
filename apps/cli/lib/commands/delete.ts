@@ -4,11 +4,14 @@ import { confirm } from "@inquirer/prompts";
 import { requireAuth } from "../auth.js";
 import { getSites, deleteSite } from "../api-client.js";
 import { displayError, getSiteUrl, getDashboardUrl } from "../utils.js";
+import { capture, flushTelemetry, CLI_VERSION } from "../telemetry.js";
 
 /**
  * Delete command - remove a site and all its files
  */
 export async function deleteCommand(projectName: string): Promise<void> {
+  const startTime = Date.now();
+  capture("command_started", { command: "delete", cli_version: CLI_VERSION });
   try {
     if (!projectName) {
       displayError(
@@ -78,7 +81,19 @@ export async function deleteCommand(projectName: string): Promise<void> {
     if (result.deletedFiles) {
       console.log(chalk.gray(`  Deleted ${result.deletedFiles} file(s)\n`));
     }
+    capture("command_succeeded", {
+      command: "delete",
+      cli_version: CLI_VERSION,
+      duration_ms: Date.now() - startTime,
+    });
   } catch (error) {
+    capture("command_failed", {
+      command: "delete",
+      cli_version: CLI_VERSION,
+      duration_ms: Date.now() - startTime,
+      error_type: error instanceof Error ? error.constructor.name : "Unknown",
+      error_message: error instanceof Error ? error.message : String(error),
+    });
     if (error instanceof Error) {
       displayError(error.message);
       console.error(chalk.gray(error.stack));
@@ -86,5 +101,7 @@ export async function deleteCommand(projectName: string): Promise<void> {
       displayError("An unknown error occurred");
     }
     process.exit(1);
+  } finally {
+    await flushTelemetry();
   }
 }
