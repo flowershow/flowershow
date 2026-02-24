@@ -47,6 +47,7 @@
       "vega-functions": ">=6.1.1",
       "vega-selections": ">=6.1.2",
       "js-yaml": ">=4.1.1",
+      "read-yaml-file>js-yaml": "^3.14.1",
       "mdast-util-to-hast": ">=13.2.1",
       "diff": ">=5.2.2"
     }
