@@ -9,11 +9,7 @@ import {
 import { randomUUID } from "crypto";
 import { PostHog } from "posthog-node";
 import packageJson from "../package.json" with { type: "json" };
-
-const POSTHOG_API_KEY =
-  process.env["POSTHOG_API_KEY"] ?? "phc_QsAoymFdEUOjN9mv1yhWBXkVtbMNHTfbhJhnrzUlkke";
-const POSTHOG_HOST =
-  process.env["POSTHOG_HOST"] ?? "https://eu.i.posthog.com";
+import { POSTHOG_API_KEY, POSTHOG_HOST } from "./const.js";
 
 export const CLI_VERSION = packageJson.version;
 
@@ -92,5 +88,7 @@ export function capture(
 
 export async function flushTelemetry(): Promise<void> {
   if (!_client) return;
-  await _client.shutdown();
+  const client = _client;
+  _client = null;
+  await client.shutdown();
 }

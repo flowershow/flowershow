@@ -40,6 +40,7 @@ export async function authLogoutCommand(): Promise<void> {
     } else {
       displayError("An unknown error occurred");
     }
+    await flushTelemetry();
     process.exit(1);
   } finally {
     await flushTelemetry();

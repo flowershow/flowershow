@@ -66,6 +66,7 @@ export async function listCommand(): Promise<void> {
     } else {
       displayError("An unknown error occurred");
     }
+    await flushTelemetry();
     process.exit(1);
   } finally {
     await flushTelemetry();

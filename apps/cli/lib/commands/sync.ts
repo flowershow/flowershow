@@ -340,6 +340,7 @@ export async function syncCommand(
     } else {
       displayError("An unknown error occurred");
     }
+    await flushTelemetry();
     process.exit(1);
   } finally {
     await flushTelemetry();

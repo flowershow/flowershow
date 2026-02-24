@@ -100,6 +100,7 @@ export async function deleteCommand(projectName: string): Promise<void> {
     } else {
       displayError("An unknown error occurred");
     }
+    await flushTelemetry();
     process.exit(1);
   } finally {
     await flushTelemetry();
