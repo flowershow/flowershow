@@ -80,6 +80,9 @@ importers:
       ora:
         specifier: ^9.0.0
         version: 9.3.0
+      posthog-node:
+        specifier: ^5.24.15
+        version: 5.24.15
     devDependencies:
       tsx:
         specifier: ^4.21.0
