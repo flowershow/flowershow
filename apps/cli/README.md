@@ -310,6 +310,7 @@ cp .env.example .env
 ```bash
 API_URL="http://cloud.localhost:3000"
 APP_URL="http://my.localhost:3000"
+POSTHOG_API_KEY=abc
 ```
 
 3. **Run commands:**
