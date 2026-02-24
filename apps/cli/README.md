@@ -224,6 +224,16 @@ The CLI automatically ignores common non-content files and directories:
 
 If `.gitignore` file is present in the published folder, the Flowershow CLI will also ignore files matched by it.
 
+## Telemetry
+
+The CLI collects anonymous usage data to help improve the product. No personally identifiable information is collected.
+
+On first run, you'll see a notice about this. To opt out, set the following environment variable:
+
+```bash
+FLOWERSHOW_TELEMETRY_DISABLED=1
+```
+
 ## Site URLs
 
 All CLI-published sites are accessible at:
@@ -310,6 +320,7 @@ cp .env.example .env
 ```bash
 API_URL="http://cloud.localhost:3000"
 APP_URL="http://my.localhost:3000"
+POSTHOG_API_KEY=abc
 ```
 
 3. **Run commands:**

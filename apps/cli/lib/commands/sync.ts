@@ -7,6 +7,7 @@ import { requireAuth } from "../auth.js";
 import { syncFiles, uploadToR2, getSiteByName } from "../api-client.js";
 import { discoverFiles, getProjectName, validateFiles } from "../files.js";
 import { displayError, displayWarning, waitForSync } from "../utils.js";
+import { capture, flushTelemetry, CLI_VERSION } from "../telemetry.js";
 
 interface UploadResult {
   path: string;
@@ -137,6 +138,8 @@ export async function syncCommand(
     verbose?: boolean;
   } = {},
 ): Promise<void> {
+  const startTime = Date.now();
+  capture("command_started", { command: "sync", cli_version: CLI_VERSION });
   try {
     const spinner = ora();
 
@@ -313,18 +316,33 @@ export async function syncCommand(
     }
 
     // Display success
+    capture("command_succeeded", {
+      command: "sync",
+      cli_version: CLI_VERSION,
+      duration_ms: Date.now() - startTime,
+    });
     displaySyncSuccess(
       projectName,
       user.username || user.email || "user",
       syncPlan.summary,
     );
   } catch (error) {
+    capture("command_failed", {
+      command: "sync",
+      cli_version: CLI_VERSION,
+      duration_ms: Date.now() - startTime,
+      error_type: error instanceof Error ? error.constructor.name : "Unknown",
+      error_message: error instanceof Error ? error.message : String(error),
+    });
     if (error instanceof Error) {
       displayError(error.message);
       console.error(chalk.gray(error.stack));
     } else {
       displayError("An unknown error occurred");
     }
+    await flushTelemetry();
     process.exit(1);
+  } finally {
+    await flushTelemetry();
   }
 }

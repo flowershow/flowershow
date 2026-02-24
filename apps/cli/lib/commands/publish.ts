@@ -17,6 +17,7 @@ import {
   waitForSync,
 } from "../utils.js";
 import { requireAuth } from "../auth.js";
+import { capture, flushTelemetry, CLI_VERSION } from "../telemetry.js";
 
 interface UploadResult {
   path: string;
@@ -35,6 +36,8 @@ export async function publishCommand(
   overwrite: boolean = false,
   siteName?: string,
 ): Promise<void> {
+  const startTime = Date.now();
+  capture("command_started", { command: "publish", cli_version: CLI_VERSION });
   try {
     const spinner = ora();
     const user = await requireAuth();
@@ -177,17 +180,32 @@ export async function publishCommand(
     }
 
     // Display success
+    capture("command_succeeded", {
+      command: "publish",
+      cli_version: CLI_VERSION,
+      duration_ms: Date.now() - startTime,
+    });
     displayPublishSuccess(
       site.projectName,
       user.username || user.email || "user",
     );
   } catch (error) {
+    capture("command_failed", {
+      command: "publish",
+      cli_version: CLI_VERSION,
+      duration_ms: Date.now() - startTime,
+      error_type: error instanceof Error ? error.constructor.name : "Unknown",
+      error_message: error instanceof Error ? error.message : String(error),
+    });
     if (error instanceof Error) {
       displayError(error.message);
       console.error(chalk.gray(error.stack));
     } else {
       displayError("An unknown error occurred");
     }
+    await flushTelemetry();
     process.exit(1);
+  } finally {
+    await flushTelemetry();
   }
 }

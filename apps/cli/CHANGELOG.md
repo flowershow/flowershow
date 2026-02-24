@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 1.1.0
+
+### Minor Changes
+
+- cb191a3: The CLI now collects anonymous usage data via PostHog to help understand how commands are used and improve the product. Telemetry is sent for all commands: publish, sync, list, delete, auth login, auth logout, and auth status.
+
+  No personally identifiable information is collected. Events include the command name and basic outcome (success/error).
+
 ## 1.0.1
 
 ### Patch Changes
@@ -49,12 +57,10 @@ See [MIGRATION.md](MIGRATION.md) for complete migration instructions.
   ## What Changed
 
   ### Package Name
-
   - NPM package: `flowershow` → `flowershow-publish`
   - Binary command: `flowershow` → `publish`
 
   ### Command Structure
-
   - **Main publish command is now default**: `publish <path>` (previously `flowershow publish <path>`)
   - **All other commands updated**: Use `publish` as the base command
     - `publish auth login` (was `flowershow auth login`)

@@ -24,7 +24,7 @@
   },
   "linter": {
     "enabled": true,
-    "includes": ["packages/**"],
+    "includes": ["packages/**", "apps/**"],
     "rules": {
       "recommended": true,
       "suspicious": {

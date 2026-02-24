@@ -3,6 +3,7 @@ import ora from "ora";
 import { saveToken, pollForToken, getUserInfo } from "../auth.js";
 import { displayError } from "../utils.js";
 import { API_URL } from "../const.js";
+import { capture, flushTelemetry, CLI_VERSION } from "../telemetry.js";
 
 interface DeviceAuthResponse {
   device_code: string;
@@ -17,6 +18,8 @@ interface DeviceAuthResponse {
  * Auth login command - authenticate via OAuth Device Flow
  */
 export async function authLoginCommand(): Promise<void> {
+  const startTime = Date.now();
+  capture("command_started", { command: "auth_login", cli_version: CLI_VERSION });
   try {
     const spinner = ora("Initiating authentication...").start();
 
@@ -87,6 +90,11 @@ export async function authLoginCommand(): Promise<void> {
     spinner.succeed("Successfully authenticated!");
 
     // Step 6: Display success
+    capture("command_succeeded", {
+      command: "auth_login",
+      cli_version: CLI_VERSION,
+      duration_ms: Date.now() - startTime,
+    });
     console.log(
       chalk.gray(
         `Logged in as: ${chalk.cyan(user.username || user.email || "user")}`,
@@ -96,6 +104,13 @@ export async function authLoginCommand(): Promise<void> {
       chalk.gray("\nYou can now use the CLI to publish your sites.\n"),
     );
   } catch (error) {
+    capture("command_failed", {
+      command: "auth_login",
+      cli_version: CLI_VERSION,
+      duration_ms: Date.now() - startTime,
+      error_type: error instanceof Error ? error.constructor.name : "Unknown",
+      error_message: error instanceof Error ? error.message : String(error),
+    });
     if (error instanceof Error && error.message.includes("fetch")) {
       displayError(
         "Failed to connect to Flowershow API.\n" +
@@ -107,6 +122,9 @@ export async function authLoginCommand(): Promise<void> {
     } else {
       displayError("An unknown error occurred");
     }
+    await flushTelemetry();
     process.exit(1);
+  } finally {
+    await flushTelemetry();
   }
 }
