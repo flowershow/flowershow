@@ -4,11 +4,14 @@ import { requireAuth } from "../auth.js";
 import { getSites } from "../api-client.js";
 import { displayError, formatDate, getSiteUrl } from "../utils.js";
 import { API_URL } from "../const.js";
+import { capture, flushTelemetry, CLI_VERSION } from "../telemetry.js";
 
 /**
  * List command - show all sites for the authenticated user
  */
 export async function listCommand(): Promise<void> {
+  const startTime = Date.now();
+  capture("command_started", { command: "list", cli_version: CLI_VERSION });
   try {
     const user = await requireAuth();
 
@@ -44,7 +47,19 @@ export async function listCommand(): Promise<void> {
       );
       console.log();
     }
+    capture("command_succeeded", {
+      command: "list",
+      cli_version: CLI_VERSION,
+      duration_ms: Date.now() - startTime,
+    });
   } catch (error) {
+    capture("command_failed", {
+      command: "list",
+      cli_version: CLI_VERSION,
+      duration_ms: Date.now() - startTime,
+      error_type: error instanceof Error ? error.constructor.name : "Unknown",
+      error_message: error instanceof Error ? error.message : String(error),
+    });
     if (error instanceof Error) {
       displayError(error.message);
       console.error(chalk.gray(error.stack));
@@ -52,5 +67,7 @@ export async function listCommand(): Promise<void> {
       displayError("An unknown error occurred");
     }
     process.exit(1);
+  } finally {
+    await flushTelemetry();
   }
 }
