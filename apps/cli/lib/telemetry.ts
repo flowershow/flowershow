@@ -10,8 +10,10 @@ import { randomUUID } from "crypto";
 import { PostHog } from "posthog-node";
 import packageJson from "../package.json" with { type: "json" };
 
-const POSTHOG_API_KEY = "phc_REPLACE_WITH_YOUR_KEY";
-const POSTHOG_HOST = "https://eu.i.posthog.com";
+const POSTHOG_API_KEY =
+  process.env["POSTHOG_API_KEY"] ?? "phc_REPLACE_WITH_YOUR_KEY";
+const POSTHOG_HOST =
+  process.env["POSTHOG_HOST"] ?? "https://eu.i.posthog.com";
 
 export const CLI_VERSION = packageJson.version;
 
