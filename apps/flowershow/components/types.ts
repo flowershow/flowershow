@@ -69,6 +69,7 @@ export interface SiteConfig {
   footer?: FooterConfig;
   social?: SocialLink[];
   analytics?: string;
+  umami?: string | { websiteId: string; src?: string };
   contentInclude?: string[];
   contentExclude?: string[];
   showSidebar?: boolean;

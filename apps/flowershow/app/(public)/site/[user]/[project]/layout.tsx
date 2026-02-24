@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
+import Script from 'next/script';
 import { ReactNode } from 'react';
 import BuiltWithFloatingButton from '@/components/public/built-with-floating-button';
 import Footer from '@/components/public/footer';
@@ -305,6 +306,21 @@ export default async function PublicLayout(props: {
             {/* it should be in the head */}
             {siteConfig?.analytics && (
               <GoogleAnalytics gaId={siteConfig.analytics} />
+            )}
+            {siteConfig?.umami && (
+              <Script
+                defer
+                src={
+                  typeof siteConfig.umami === 'string'
+                    ? 'https://cloud.umami.is/script.js'
+                    : (siteConfig.umami.src ?? 'https://cloud.umami.is/script.js')
+                }
+                data-website-id={
+                  typeof siteConfig.umami === 'string'
+                    ? siteConfig.umami
+                    : siteConfig.umami.websiteId
+                }
+              />
             )}
 
             <SiteProvider

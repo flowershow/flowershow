@@ -49,6 +49,7 @@ Most features can be configured via either method. The sections below link to de
 ## Analytics & integrations
 
 - **Google Analytics** — GA4 tracking for your site. [[analytics|Analytics]]
+- **Umami analytics** — Privacy-focused analytics for your site. [[umami|Umami analytics]]
 - **Custom domain** — Use your own domain (Premium). [[custom-domain|Custom domain]]
 - **Password protection** — Restrict access with a password (Premium). [[site-settings|Site settings]]
 - **Full-text search** — Search across all site content (Premium). [[site-settings|Site settings]]
