@@ -1,6 +1,7 @@
 {
   "name": "markdown-processing-worker",
   "version": "1.0.0",
+  "private": true,
   "description": "Cloudflare worker for parsing markdown files and updating metadata in a connected database",
   "main": "src/worker.js",
   "scripts": {

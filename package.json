@@ -14,7 +14,7 @@
     "format:write": "biome format --write .",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo run build && changeset publish",
+    "release": "turbo run build --filter=./apps/cli... --filter=./packages/remark-wiki-link... && changeset publish",
     "prepare": "husky install"
   },
   "devDependencies": {
