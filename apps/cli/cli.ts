@@ -15,7 +15,7 @@ const program = new Command();
 
 program
   .name("publish")
-  .description("CLI tool for publishing to FlowerShow")
+  .description("CLI tool for publishing to Flowershow")
   .version(packageJson.version);
 
 // Default action: publish files/folders
@@ -35,7 +35,7 @@ program
         program.help();
         return;
       }
-      console.log(chalk.bold("\n💐 FlowerShow CLI - Publish\n"));
+      console.log(chalk.bold("\n💐 Flowershow CLI - Publish\n"));
       const paths = [path, ...morePaths];
       await publishCommand(paths, options.overwrite || false, options.name);
     },
@@ -51,9 +51,9 @@ const auth = program
 
 auth
   .command("login")
-  .description("Authenticate with FlowerShow via browser")
+  .description("Authenticate with Flowershow via browser")
   .action(async () => {
-    console.log(chalk.bold("\n💐 FlowerShow CLI - Authentication\n"));
+    console.log(chalk.bold("\n💐 Flowershow CLI - Authentication\n"));
     await authLoginCommand();
   });
 
@@ -61,7 +61,7 @@ auth
   .command("logout")
   .description("Remove stored authentication token")
   .action(async () => {
-    console.log(chalk.bold("\n💐 FlowerShow CLI - Logout\n"));
+    console.log(chalk.bold("\n💐 Flowershow CLI - Logout\n"));
     await authLogoutCommand();
   });
 
@@ -69,7 +69,7 @@ auth
   .command("status")
   .description("Check authentication status")
   .action(async () => {
-    console.log(chalk.bold("\n💐 FlowerShow CLI - Auth Status\n"));
+    console.log(chalk.bold("\n💐 Flowershow CLI - Auth Status\n"));
     await authStatusCommand();
   });
 
@@ -94,7 +94,7 @@ program
         verbose?: boolean;
       },
     ) => {
-      console.log(chalk.bold("\n💐 FlowerShow CLI - Sync\n"));
+      console.log(chalk.bold("\n💐 Flowershow CLI - Sync\n"));
       await syncCommand(path, options);
     },
   );
@@ -103,7 +103,7 @@ program
   .command("list")
   .description("List all published sites")
   .action(async () => {
-    console.log(chalk.bold("\n💐 FlowerShow CLI - List Sites\n"));
+    console.log(chalk.bold("\n💐 Flowershow CLI - List Sites\n"));
     await listCommand();
   });
 
@@ -111,7 +111,7 @@ program
   .command("delete <project-name>")
   .description("Delete a published site")
   .action(async (projectName: string) => {
-    console.log(chalk.bold("\n💐 FlowerShow CLI - Delete Site\n"));
+    console.log(chalk.bold("\n💐 Flowershow CLI - Delete Site\n"));
     await deleteCommand(projectName);
   });
 

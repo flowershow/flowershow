@@ -26,7 +26,7 @@ interface UploadResult {
 }
 
 /**
- * Publish command - upload files to FlowerShow
+ * Publish command - upload files to Flowershow
  * @param inputPaths - Path(s) to the file(s) or folder to publish
  * @param overwrite - Whether to overwrite existing site
  * @param siteName - Optional custom name for the site

@@ -40,7 +40,7 @@ export function checkCliVersion(request: NextRequest): NextResponse | null {
       {
         error: 'client_outdated',
         message:
-          'Your FlowerShow CLI is outdated and no longer works with the API.',
+          'Your Flowershow CLI is outdated and no longer works with the API.',
         currentVersion: cliVersion,
         minimumVersion: MIN_CLI_VERSION,
       },

@@ -24,10 +24,10 @@ async function handleOutdatedClient(response: Response): Promise<void> {
       const lines = [
         "",
         chalk.red.bold(
-          `  !  Your FlowerShow CLI is outdated (v${data.currentVersion}) `,
+          `  !  Your Flowershow CLI is outdated (v${data.currentVersion}) `,
         ),
         "",
-        `  This version no longer works with the FlowerShow API.`,
+        `  This version no longer works with the Flowershow API.`,
         `  Please upgrade to v${data.minimumVersion} or newer.`,
         "",
         chalk.cyan(`  → npm install -g @flowershow/publish`),

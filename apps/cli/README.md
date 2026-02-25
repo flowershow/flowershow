@@ -1,6 +1,6 @@
-# FlowerShow CLI (Beta 🚧)
+# Flowershow CLI (Beta 🚧)
 
-A CLI tool for publishing Markdown files and folders directly to FlowerShow with OAuth authentication.
+A CLI tool for publishing Markdown files and folders directly to Flowershow with OAuth authentication.
 
 > **Note:** This package was previously named `flowershow` (and `flowershow-publish`). If you're migrating from the old package, see the [Migration Guide](MIGRATION.md).
 
@@ -59,7 +59,7 @@ publish sync ./my-note.md
 
 #### `publish auth login`
 
-Authenticate with FlowerShow via browser OAuth flow.
+Authenticate with Flowershow via browser OAuth flow.
 
 ```bash
 publish auth login
@@ -87,7 +87,7 @@ See [Authentication Documentation](docs/authentication.md) for detailed informat
 
 #### `publish <path> [morePaths...] [options]`
 
-Publish files or folders to FlowerShow.
+Publish files or folders to Flowershow.
 
 **Options:**
 
@@ -120,7 +120,7 @@ publish ./my-notes --name my-custom-site --overwrite
 
 1. Files are discovered and filtered (ignores `.git`, `node_modules`, etc.; also supports `.gitignore` and will ignore paths listed there)
 2. Project name is derived from the first file name or the folder name
-3. Site is created via the FlowerShow API
+3. Site is created via the Flowershow API
 4. Presigned URLs are obtained for secure file uploads
 5. Files are uploaded directly to Cloudflare R2 storage
 6. CLI waits for markdown files to be processed
@@ -211,7 +211,7 @@ Delete a site and all its files.
 publish delete my-notes
 ```
 
-Removes the site and all its files via the FlowerShow API.
+Removes the site and all its files via the Flowershow API.
 
 ## File Filtering
 

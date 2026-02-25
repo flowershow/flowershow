@@ -16,8 +16,8 @@ The command name remains the same: `publish`
 ## Why the Change?
 
 1. **Scoped package** - Better namespace organization under `@flowershow`
-2. **Consistency** - Aligns with other FlowerShow packages
-3. **Better discoverability** - Easier to find all FlowerShow packages on npm
+2. **Consistency** - Aligns with other Flowershow packages
+3. **Better discoverability** - Easier to find all Flowershow packages on npm
 
 ## How to Migrate
 

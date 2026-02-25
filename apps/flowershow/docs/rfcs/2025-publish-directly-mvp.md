@@ -2,13 +2,13 @@
 created: 2025-12-18
 ---
 
-# Direct publishing to FlowerShow MVP
+# Direct publishing to Flowershow MVP
 
-This derives from the [Publish Directly RFC](2024-publish-directly.md) distilling an MVP and focusing on shaping the specific changes to *existing* Flowershow.
+This derives from the [Publish Directly RFC](2024-publish-directly.md) distilling an MVP and focusing on shaping the specific changes to _existing_ Flowershow.
 
-**Demonstrate that a local file or folder can be published to a good-looking public website in seconds, without Git or configuration, by uploading directly to FlowerShow storage.**
+**Demonstrate that a local file or folder can be published to a good-looking public website in seconds, without Git or configuration, by uploading directly to Flowershow storage.**
 
-**The MVP adds a direct, Git-free publishing path to FlowerShow: a minimal CLI that uploads files to storage and proves “file → URL in seconds” actually works.**
+**The MVP adds a direct, Git-free publishing path to Flowershow: a minimal CLI that uploads files to storage and proves “file → URL in seconds” actually works.**
 
 ## Job stories (irreducible core)
 
@@ -33,16 +33,16 @@ I do not configure anything or make workflow choices.
 
 The MVP explicitly does **not** include:
 
-* Versioning or rollback
-* Git integration
-* Presets (docs/blog/etc.)
-* Search or advanced navigation
-* Custom domains
-* FlowerShow UI/dashboard work
-* User-facing auth flows (beyond minimal)
-* Incremental or differential processing
-* Dataset publishing
-* Bring-your-own storage
+- Versioning or rollback
+- Git integration
+- Presets (docs/blog/etc.)
+- Search or advanced navigation
+- Custom domains
+- Flowershow UI/dashboard work
+- User-facing auth flows (beyond minimal)
+- Incremental or differential processing
+- Dataset publishing
+- Bring-your-own storage
 
 These remain **future extensions**, not MVP requirements.
 
@@ -52,7 +52,7 @@ These remain **future extensions**, not MVP requirements.
 
 ### 4.1 Entry point: CLI + library (two stages)
 
-The MVP introduces a **minimal CLI**, backed by a small **Node.js library**, whose sole responsibility is to get files into FlowerShow storage in the correct way.
+The MVP introduces a **minimal CLI**, backed by a small **Node.js library**, whose sole responsibility is to get files into Flowershow storage in the correct way.
 
 This happens in two conceptual stages.
 
@@ -60,13 +60,13 @@ This happens in two conceptual stages.
 
 For the initial MVP:
 
-* The CLI uploads files/folders directly to R2 using a preconfigured key.
-* No login flow.
-* No user management.
-* No API key UX.
+- The CLI uploads files/folders directly to R2 using a preconfigured key.
+- No login flow.
+- No user management.
+- No API key UX.
 
 This stage exists purely to validate the end-to-end flow:
-**files land → FlowerShow reacts → site is live**.
+**files land → Flowershow reacts → site is live**.
 
 This can be as simple as a thin wrapper around existing Cloudflare / R2 tooling.
 
@@ -76,9 +76,9 @@ This can be as simple as a thin wrapper around existing Cloudflare / R2 tooling.
 
 As a natural extension (but not required for first validation):
 
-* The same CLI/library supports a login step.
-* User receives an API key or token.
-* Uploads are authenticated and associated with a user.
+- The same CLI/library supports a login step.
+- User receives an API key or token.
+- Uploads are authenticated and associated with a user.
 
 This is intentionally deferred so it does not slow down validation.
 
@@ -88,13 +88,13 @@ This is intentionally deferred so it does not slow down validation.
 
 For the MVP:
 
-* Uploading the entire folder each time is acceptable.
-* No sync, diffing, or reconciliation logic is required.
+- Uploading the entire folder each time is acceptable.
+- No sync, diffing, or reconciliation logic is required.
 
 The only requirement is:
 
-* raw files land in the expected storage location,
-* existing FlowerShow machinery handles the rest.
+- raw files land in the expected storage location,
+- existing Flowershow machinery handles the rest.
 
 ---
 
@@ -102,10 +102,10 @@ The only requirement is:
 
 At minimum, the CLI:
 
-* accepts a file or folder path,
-* uploads contents to FlowerShow storage,
-* relies on existing FlowerShow processes to publish,
-* prints the resulting public URL.
+- accepts a file or folder path,
+- uploads contents to Flowershow storage,
+- relies on existing Flowershow processes to publish,
+- prints the resulting public URL.
 
 No dashboards.
 No project management.
@@ -115,7 +115,7 @@ No lifecycle commands.
 
 ## 5. Implementation FAQs (trimmed)
 
-### Does this appear in the FlowerShow UI?
+### Does this appear in the Flowershow UI?
 
 No. For the MVP, these direct-publish projects do not need to appear anywhere in the UI.
 
@@ -123,8 +123,8 @@ No. For the MVP, these direct-publish projects do not need to appear anywhere in
 
 That uploading files to the expected storage location results in:
 
-* a published site,
-* a working public URL.
+- a published site,
+- a working public URL.
 
 If this works via a script and key, the core idea is validated.
 
@@ -134,9 +134,9 @@ If this works via a script and key, the core idea is validated.
 
 Because it is:
 
-* the thinnest possible wrapper around the experience,
-* external to FlowerShow UI,
-* reusable later (Obsidian plugin, scripts).
+- the thinnest possible wrapper around the experience,
+- external to Flowershow UI,
+- reusable later (Obsidian plugin, scripts).
 
 The CLI defines ergonomics, not product surface.
 
@@ -146,18 +146,18 @@ The CLI defines ergonomics, not product surface.
 
 Because:
 
-* Obsidian plugins are JavaScript-based,
-* the same library can be reused,
-* it minimises iteration friction.
+- Obsidian plugins are JavaScript-based,
+- the same library can be reused,
+- it minimises iteration friction.
 
 ---
 
 ### Supported file types (MVP)
 
-* Markdown files and folders
-* images and PDFs copied verbatim
+- Markdown files and folders
+- images and PDFs copied verbatim
 
 Out of scope:
 
-* docx / Google Docs ingestion
-* datasets / CSV rendering
+- docx / Google Docs ingestion
+- datasets / CSV rendering

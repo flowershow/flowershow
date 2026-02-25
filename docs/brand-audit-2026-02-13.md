@@ -1,6 +1,6 @@
-# Brand Audit: FlowerShow Today
+# Brand Audit: Flowershow Today
 
-Current positioning: "Markdown to website in seconds" -- a tool-centric, feature-forward pitch. The landing page is essentially a feature list with a demo video. It tells you what FlowerShow does, but not why it matters or what world it's building toward.
+Current positioning: "Markdown to website in seconds" -- a tool-centric, feature-forward pitch. The landing page is essentially a feature list with a demo video. It tells you what Flowershow does, but not why it matters or what world it's building toward.
 
 ## What's working
 
@@ -21,4 +21,4 @@ Current positioning: "Markdown to website in seconds" -- a tool-centric, feature
 
 ## The core tension
 
-FlowerShow is currently about markdown but wants to be about publishing in the AI age. That's not a small pivot -- it's a category shift from "markdown converter" to "content publishing infrastructure."
+Flowershow is currently about markdown but wants to be about publishing in the AI age. That's not a small pivot -- it's a category shift from "markdown converter" to "content publishing infrastructure."
