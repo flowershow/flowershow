@@ -1,8 +1,6 @@
-# Flowershow CLI (Beta 🚧)
+# Flowershow Publish
 
-A CLI tool for publishing Markdown files and folders directly to Flowershow with OAuth authentication.
-
-> **Note:** This package was previously named `flowershow` (and `flowershow-publish`). If you're migrating from the old package, see the [Migration Guide](MIGRATION.md).
+The CLI tool for publishing Markdown files with Flowershow.
 
 ## Installation
 
