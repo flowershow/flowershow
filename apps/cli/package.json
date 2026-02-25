@@ -41,7 +41,7 @@
     "posthog-node": "^5.24.15"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": "^20.20.0 || >=22.22.0"
   },
   "devDependencies": {
     "tsx": "^4.21.0"
