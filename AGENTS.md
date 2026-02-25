@@ -82,3 +82,15 @@ pnpm turbo build --filter=@flowershow/api-contract
 # Then check the Swagger UI to verify the spec looks correct:
 # http://cloud.flowershow.local:3000/api/docs
 ```
+
+## Documentation
+
+Many packages and apps have their own `README.md` that documents public-facing behavior (tools, commands, configuration, etc.). When you add, remove, or change functionality, you MUST update the relevant README in the same commit or PR.
+
+**Checklist before finishing any task that changes behavior:**
+
+1. Search for `README.md` files in the affected package/app directory.
+2. Check whether the README documents the feature you changed (e.g. a tools table, CLI commands list, config options, architecture diagram).
+3. If it does, update it to reflect your changes.
+
+This applies to any user-visible change: adding/removing tools, renaming commands, changing defaults, altering API surface, etc.
