@@ -1,9 +1,9 @@
-import chalk from "chalk";
-import ora from "ora";
-import { saveToken, pollForToken, getUserInfo } from "../auth.js";
-import { displayError } from "../utils.js";
-import { API_URL } from "../const.js";
-import { capture, flushTelemetry, CLI_VERSION } from "../telemetry.js";
+import chalk from 'chalk';
+import ora from 'ora';
+import { saveToken, pollForToken, getUserInfo } from '../auth.js';
+import { displayError } from '../utils.js';
+import { API_URL } from '../const.js';
+import { capture, flushTelemetry, CLI_VERSION } from '../telemetry.js';
 
 interface DeviceAuthResponse {
   device_code: string;
@@ -19,18 +19,21 @@ interface DeviceAuthResponse {
  */
 export async function authLoginCommand(): Promise<void> {
   const startTime = Date.now();
-  capture("command_started", { command: "auth_login", cli_version: CLI_VERSION });
+  capture('command_started', {
+    command: 'auth_login',
+    cli_version: CLI_VERSION,
+  });
   try {
-    const spinner = ora("Initiating authentication...").start();
+    const spinner = ora('Initiating authentication...').start();
 
     // Step 1: Request device code
     const response = await fetch(`${API_URL}/api/cli/device/authorize`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        client_name: "flowershow-cli",
+        client_name: 'flowershow-cli',
       }),
     });
 
@@ -54,14 +57,14 @@ export async function authLoginCommand(): Promise<void> {
 
     // Step 2: Display instructions to user
     console.log(
-      chalk.bold("\nPlease complete authentication in your browser:\n"),
+      chalk.bold('\nPlease complete authentication in your browser:\n'),
     );
     console.log(
       chalk.cyan(`  ${verification_uri_complete || verification_uri}\n`),
     );
 
     if (!verification_uri_complete) {
-      console.log(chalk.bold("Enter this code when prompted:\n"));
+      console.log(chalk.bold('Enter this code when prompted:\n'));
       console.log(chalk.green.bold(`  ${user_code}\n`));
     }
 
@@ -71,7 +74,7 @@ export async function authLoginCommand(): Promise<void> {
       ),
     );
 
-    spinner.start("Waiting for authorization...");
+    spinner.start('Waiting for authorization...');
 
     // Step 3: Poll for token
     const accessToken = await pollForToken(
@@ -85,42 +88,42 @@ export async function authLoginCommand(): Promise<void> {
     const user = await getUserInfo(accessToken);
 
     // Step 5: Save token
-    saveToken(accessToken, user.username || user.email || "user");
+    saveToken(accessToken, user.username || user.email || 'user');
 
-    spinner.succeed("Successfully authenticated!");
+    spinner.succeed('Successfully authenticated!');
 
     // Step 6: Display success
-    capture("command_succeeded", {
-      command: "auth_login",
+    capture('command_succeeded', {
+      command: 'auth_login',
       cli_version: CLI_VERSION,
       duration_ms: Date.now() - startTime,
     });
     console.log(
       chalk.gray(
-        `Logged in as: ${chalk.cyan(user.username || user.email || "user")}`,
+        `Logged in as: ${chalk.cyan(user.username || user.email || 'user')}`,
       ),
     );
     console.log(
-      chalk.gray("\nYou can now use the CLI to publish your sites.\n"),
+      chalk.gray('\nYou can now use the CLI to publish your sites.\n'),
     );
   } catch (error) {
-    capture("command_failed", {
-      command: "auth_login",
+    capture('command_failed', {
+      command: 'auth_login',
       cli_version: CLI_VERSION,
       duration_ms: Date.now() - startTime,
-      error_type: error instanceof Error ? error.constructor.name : "Unknown",
+      error_type: error instanceof Error ? error.constructor.name : 'Unknown',
       error_message: error instanceof Error ? error.message : String(error),
     });
-    if (error instanceof Error && error.message.includes("fetch")) {
+    if (error instanceof Error && error.message.includes('fetch')) {
       displayError(
-        "Failed to connect to Flowershow API.\n" +
-          "Please check your internet connection and try again.",
+        'Failed to connect to Flowershow API.\n' +
+          'Please check your internet connection and try again.',
       );
     } else if (error instanceof Error) {
       displayError(error.message);
       console.error(chalk.gray(error.stack));
     } else {
-      displayError("An unknown error occurred");
+      displayError('An unknown error occurred');
     }
     await flushTelemetry();
     process.exit(1);

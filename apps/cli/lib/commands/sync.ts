@@ -1,13 +1,13 @@
-import { existsSync } from "fs";
-import { resolve } from "path";
-import chalk from "chalk";
-import ora from "ora";
-import cliProgress from "cli-progress";
-import { requireAuth } from "../auth.js";
-import { syncFiles, uploadToR2, getSiteByName } from "../api-client.js";
-import { discoverFiles, getProjectName, validateFiles } from "../files.js";
-import { displayError, displayWarning, waitForSync } from "../utils.js";
-import { capture, flushTelemetry, CLI_VERSION } from "../telemetry.js";
+import { existsSync } from 'fs';
+import { resolve } from 'path';
+import chalk from 'chalk';
+import ora from 'ora';
+import cliProgress from 'cli-progress';
+import { requireAuth } from '../auth.js';
+import { syncFiles, uploadToR2, getSiteByName } from '../api-client.js';
+import { discoverFiles, getProjectName, validateFiles } from '../files.js';
+import { displayError, displayWarning, waitForSync } from '../utils.js';
+import { capture, flushTelemetry, CLI_VERSION } from '../telemetry.js';
 
 interface UploadResult {
   path: string;
@@ -112,7 +112,7 @@ function displaySyncSuccess(
     unchanged: number;
   },
 ): void {
-  console.log(chalk.green.bold("\n✅ Sync complete!"));
+  console.log(chalk.green.bold('\n✅ Sync complete!'));
   console.log(
     chalk.cyan(
       `   Site: https://my.flowershow.app/@${username}/${projectName}`,
@@ -139,7 +139,7 @@ export async function syncCommand(
   } = {},
 ): Promise<void> {
   const startTime = Date.now();
-  capture("command_started", { command: "sync", cli_version: CLI_VERSION });
+  capture('command_started', { command: 'sync', cli_version: CLI_VERSION });
   try {
     const spinner = ora();
 
@@ -147,7 +147,7 @@ export async function syncCommand(
     const user = await requireAuth();
     spinner.succeed(`Syncing as: ${user.username || user.email}`);
 
-    spinner.start("Discovering files...");
+    spinner.start('Discovering files...');
 
     // Validate input path
     const absolutePath = resolve(inputPath);
@@ -182,7 +182,7 @@ export async function syncCommand(
     }));
 
     // Get sync plan from API
-    spinner.start("Analyzing changes...");
+    spinner.start('Analyzing changes...');
     const syncPlan = await syncFiles(
       existingSite.site.id,
       fileMetadata,
@@ -192,7 +192,7 @@ export async function syncCommand(
 
     // Check if there are any changes
     if (!hasChanges(syncPlan)) {
-      console.log(chalk.green.bold("\n✅ Already in sync!"));
+      console.log(chalk.green.bold('\n✅ Already in sync!'));
       console.log(chalk.gray(`   All ${files.length} file(s) are up to date.`));
       console.log(
         chalk.cyan(
@@ -211,11 +211,11 @@ export async function syncCommand(
     if (options.dryRun || syncPlan.dryRun) {
       console.log(
         chalk.yellow(
-          "\n🔍 Dry run complete - no changes were made to your site",
+          '\n🔍 Dry run complete - no changes were made to your site',
         ),
       );
       console.log(
-        chalk.gray("   Run without --dry-run to apply these changes"),
+        chalk.gray('   Run without --dry-run to apply these changes'),
       );
       return;
     }
@@ -226,11 +226,11 @@ export async function syncCommand(
       const uploadBar = new cliProgress.SingleBar(
         {
           format:
-            "Uploading |" +
-            chalk.cyan("{bar}") +
-            "| {percentage}% | {value}/{total} files",
-          barCompleteChar: "\u2588",
-          barIncompleteChar: "\u2591",
+            'Uploading |' +
+            chalk.cyan('{bar}') +
+            '| {percentage}% | {value}/{total} files',
+          barCompleteChar: '\u2588',
+          barIncompleteChar: '\u2591',
           hideCursor: true,
         },
         cliProgress.Presets.shades_classic,
@@ -248,7 +248,7 @@ export async function syncCommand(
           uploadResults.push({
             path: uploadInfo.path,
             success: false,
-            error: "File not found in local files",
+            error: 'File not found in local files',
           });
           uploadBar.increment();
           continue;
@@ -266,7 +266,7 @@ export async function syncCommand(
           uploadResults.push({
             path: file.path,
             success: false,
-            error: error instanceof Error ? error.message : "Unknown error",
+            error: error instanceof Error ? error.message : 'Unknown error',
           });
           uploadBar.increment();
         }
@@ -307,38 +307,38 @@ export async function syncCommand(
 
     if (syncResult.timeout) {
       displayWarning(
-        "Some files are still processing after 30 seconds.\n" +
-          "Your site is available but some pages may not be ready yet.\n" +
-          "Check back in a moment.",
+        'Some files are still processing after 30 seconds.\n' +
+          'Your site is available but some pages may not be ready yet.\n' +
+          'Check back in a moment.',
       );
     } else if (!syncResult.success && syncResult.errors) {
-      displayWarning("Some files had processing errors (see above).");
+      displayWarning('Some files had processing errors (see above).');
     }
 
     // Display success
-    capture("command_succeeded", {
-      command: "sync",
+    capture('command_succeeded', {
+      command: 'sync',
       cli_version: CLI_VERSION,
       duration_ms: Date.now() - startTime,
     });
     displaySyncSuccess(
       projectName,
-      user.username || user.email || "user",
+      user.username || user.email || 'user',
       syncPlan.summary,
     );
   } catch (error) {
-    capture("command_failed", {
-      command: "sync",
+    capture('command_failed', {
+      command: 'sync',
       cli_version: CLI_VERSION,
       duration_ms: Date.now() - startTime,
-      error_type: error instanceof Error ? error.constructor.name : "Unknown",
+      error_type: error instanceof Error ? error.constructor.name : 'Unknown',
       error_message: error instanceof Error ? error.message : String(error),
     });
     if (error instanceof Error) {
       displayError(error.message);
       console.error(chalk.gray(error.stack));
     } else {
-      displayError("An unknown error occurred");
+      displayError('An unknown error occurred');
     }
     await flushTelemetry();
     process.exit(1);

@@ -1,10 +1,10 @@
-import chalk from "chalk";
-import packageJson from "../package.json" with { type: "json" };
-import { getAuthHeaders } from "./auth.js";
-import { API_URL } from "./const.js";
+import chalk from 'chalk';
+import packageJson from '../package.json' with { type: 'json' };
+import { getAuthHeaders } from './auth.js';
+import { API_URL } from './const.js';
 
 interface OutdatedClientError {
-  error: "client_outdated";
+  error: 'client_outdated';
   message: string;
   currentVersion: string;
   minimumVersion: string;
@@ -20,31 +20,31 @@ async function handleOutdatedClient(response: Response): Promise<void> {
       .clone()
       .json()
       .catch(() => ({}))) as OutdatedClientError;
-    if (data.error === "client_outdated") {
+    if (data.error === 'client_outdated') {
       const lines = [
-        "",
+        '',
         chalk.red.bold(
           `  !  Your Flowershow CLI is outdated (v${data.currentVersion}) `,
         ),
-        "",
+        '',
         `  This version no longer works with the Flowershow API.`,
         `  Please upgrade to v${data.minimumVersion} or newer.`,
-        "",
+        '',
         chalk.cyan(`  → npm install -g @flowershow/publish`),
-        "",
+        '',
       ];
 
       const width = 56;
-      const top = chalk.red(`╔${"═".repeat(width)}╗`);
-      const bottom = chalk.red(`╚${"═".repeat(width)}╝`);
-      const border = chalk.red("║");
+      const top = chalk.red(`╔${'═'.repeat(width)}╗`);
+      const bottom = chalk.red(`╚${'═'.repeat(width)}╝`);
+      const border = chalk.red('║');
 
       console.error();
       console.error(top);
       for (const line of lines) {
         const padding = width - stripAnsi(line).length;
         console.error(
-          `${border}${line}${" ".repeat(Math.max(0, padding))}${border}`,
+          `${border}${line}${' '.repeat(Math.max(0, padding))}${border}`,
         );
       }
       console.error(bottom);
@@ -57,7 +57,7 @@ async function handleOutdatedClient(response: Response): Promise<void> {
 
 /** Strip ANSI codes for length calculation */
 function stripAnsi(str: string): string {
-  return str.replace(/\x1b\[[0-9;]*m/g, "");
+  return str.replace(/\x1b\[[0-9;]*m/g, '');
 }
 
 interface Site {
@@ -69,7 +69,7 @@ interface Site {
   updatedAt?: string;
   fileCount?: number;
   totalSize?: number;
-  plan?: "FREE" | "PREMIUM";
+  plan?: 'FREE' | 'PREMIUM';
 }
 
 interface CreateSiteResponse {
@@ -121,14 +121,14 @@ export interface SyncFilesResponse {
 interface BlobStatus {
   id: string;
   path: string;
-  syncStatus: "UPLOADING" | "PROCESSING" | "SUCCESS" | "ERROR";
+  syncStatus: 'UPLOADING' | 'PROCESSING' | 'SUCCESS' | 'ERROR';
   syncError: string | null;
   extension: string | null;
 }
 
 interface SiteStatusResponse {
   siteId: string;
-  status: "pending" | "complete" | "error";
+  status: 'pending' | 'complete' | 'error';
   files: {
     total: number;
     pending: number;
@@ -152,7 +152,7 @@ export async function apiRequest(
 
   const url = `${API_URL}${endpoint}`;
   const headers = {
-    "X-Flowershow-CLI-Version": packageJson.version,
+    'X-Flowershow-CLI-Version': packageJson.version,
     ...options.headers,
     ...(authHeaders || {}),
   };
@@ -177,10 +177,10 @@ export async function createSite(
   projectName: string,
   overwrite: boolean = false,
 ): Promise<CreateSiteResponse> {
-  const response = await apiRequest("/api/sites", {
-    method: "POST",
+  const response = await apiRequest('/api/sites', {
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({ projectName, overwrite }),
   });
@@ -202,7 +202,7 @@ export async function createSite(
  * @returns Sites data
  */
 export async function getSites(): Promise<GetSitesResponse> {
-  const response = await apiRequest("/api/sites");
+  const response = await apiRequest('/api/sites');
 
   if (!response.ok) {
     const error = (await response.json().catch(() => ({}))) as {
@@ -271,7 +271,7 @@ export async function getSiteByName(
  */
 export async function deleteSite(siteId: string): Promise<DeleteSiteResponse> {
   const response = await apiRequest(`/api/sites/id/${siteId}`, {
-    method: "DELETE",
+    method: 'DELETE',
   });
 
   if (!response.ok) {
@@ -298,11 +298,11 @@ export async function syncFiles(
   files: FileMetadata[],
   dryRun: boolean = false,
 ): Promise<SyncFilesResponse> {
-  const url = `/api/sites/id/${siteId}/sync${dryRun ? "?dryRun=true" : ""}`;
+  const url = `/api/sites/id/${siteId}/sync${dryRun ? '?dryRun=true' : ''}`;
   const response = await apiRequest(url, {
-    method: "POST",
+    method: 'POST',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
     body: JSON.stringify({ files }),
   });
@@ -332,10 +332,10 @@ export async function uploadToR2(
   contentType: string,
 ): Promise<boolean> {
   const response = await fetch(uploadUrl, {
-    method: "PUT",
+    method: 'PUT',
     body: content,
     headers: {
-      "Content-Type": contentType,
+      'Content-Type': contentType,
     },
   });
 

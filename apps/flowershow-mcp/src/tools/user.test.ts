@@ -53,7 +53,8 @@ describe('registerUserTools', () => {
     const { client } = await createTestClient(mockApi);
     const result = await client.callTool({ name: 'get-user', arguments: {} });
 
-    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
     expect(text).toContain('alice');
     expect(text).toContain('Alice Smith');
     expect(result.isError).toBeFalsy();
@@ -72,7 +73,8 @@ describe('registerUserTools', () => {
     const { client } = await createTestClient(mockApi);
     const result = await client.callTool({ name: 'get-user', arguments: {} });
 
-    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
     expect(text).toContain('bob');
     expect(result.isError).toBeFalsy();
   });
@@ -86,7 +88,8 @@ describe('registerUserTools', () => {
     const result = await client.callTool({ name: 'get-user', arguments: {} });
 
     expect(result.isError).toBe(true);
-    const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+    const text = (result.content as Array<{ type: string; text: string }>)[0]
+      .text;
     expect(text).toContain('Authentication failed');
   });
 });

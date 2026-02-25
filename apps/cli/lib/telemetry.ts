@@ -1,20 +1,15 @@
-import { homedir } from "os";
-import { join } from "path";
-import {
-  readFileSync,
-  writeFileSync,
-  existsSync,
-  mkdirSync,
-} from "fs";
-import { randomUUID } from "crypto";
-import { PostHog } from "posthog-node";
-import packageJson from "../package.json" with { type: "json" };
-import { POSTHOG_API_KEY, POSTHOG_HOST } from "./const.js";
+import { homedir } from 'os';
+import { join } from 'path';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import { randomUUID } from 'crypto';
+import { PostHog } from 'posthog-node';
+import packageJson from '../package.json' with { type: 'json' };
+import { POSTHOG_API_KEY, POSTHOG_HOST } from './const.js';
 
 export const CLI_VERSION = packageJson.version;
 
-const CONFIG_DIR = join(homedir(), ".flowershow");
-const CONFIG_FILE = join(CONFIG_DIR, "config.json");
+const CONFIG_DIR = join(homedir(), '.flowershow');
+const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
 
 interface CliConfig {
   distinctId?: string;
@@ -24,7 +19,7 @@ interface CliConfig {
 function readConfig(): CliConfig {
   if (!existsSync(CONFIG_FILE)) return {};
   try {
-    return JSON.parse(readFileSync(CONFIG_FILE, "utf-8")) as CliConfig;
+    return JSON.parse(readFileSync(CONFIG_FILE, 'utf-8')) as CliConfig;
   } catch {
     return {};
   }
@@ -34,7 +29,7 @@ function writeConfig(config: CliConfig): void {
   if (!existsSync(CONFIG_DIR)) {
     mkdirSync(CONFIG_DIR, { recursive: true });
   }
-  writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), "utf-8");
+  writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
 }
 
 function getOrCreateDistinctId(): string {
@@ -49,16 +44,16 @@ function showNoticeIfNeeded(): void {
   const config = readConfig();
   if (config.telemetryNoticeShown) return;
   console.log(
-    "\nTelemetry Notice: FlowerShow CLI collects anonymous usage data to improve the product.",
+    '\nTelemetry Notice: Flowershow CLI collects anonymous usage data to improve the product.',
   );
   console.log(
-    "To opt out, set the FLOWERSHOW_TELEMETRY_DISABLED=1 environment variable.\n",
+    'To opt out, set the FLOWERSHOW_TELEMETRY_DISABLED=1 environment variable.\n',
   );
   writeConfig({ ...config, telemetryNoticeShown: true });
 }
 
 export function isEnabled(): boolean {
-  return !process.env["FLOWERSHOW_TELEMETRY_DISABLED"];
+  return !process.env['FLOWERSHOW_TELEMETRY_DISABLED'];
 }
 
 let _client: PostHog | null = null;

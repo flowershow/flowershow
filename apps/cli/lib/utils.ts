@@ -1,19 +1,19 @@
-import chalk from "chalk";
-import cliProgress from "cli-progress";
-import { getSiteStatus } from "./api-client.js";
-import { API_URL, APP_URL } from "./const.js";
+import chalk from 'chalk';
+import cliProgress from 'cli-progress';
+import { getSiteStatus } from './api-client.js';
+import { API_URL, APP_URL } from './const.js';
 
 interface BlobStatus {
   id: string;
   path: string;
-  syncStatus: "UPLOADING" | "PROCESSING" | "SUCCESS" | "ERROR";
+  syncStatus: 'UPLOADING' | 'PROCESSING' | 'SUCCESS' | 'ERROR';
   syncError: string | null;
   extension: string | null;
 }
 
 interface SiteStatusData {
   siteId: string;
-  status: "pending" | "complete" | "error";
+  status: 'pending' | 'complete' | 'error';
   files: {
     total: number;
     pending: number;
@@ -85,10 +85,10 @@ export async function waitForSync(
     }
 
     const pending = blobs.filter(
-      (b) => b.syncStatus === "UPLOADING" || b.syncStatus === "PROCESSING",
+      (b) => b.syncStatus === 'UPLOADING' || b.syncStatus === 'PROCESSING',
     );
-    const errors = blobs.filter((b) => b.syncStatus === "ERROR");
-    const success = blobs.filter((b) => b.syncStatus === "SUCCESS");
+    const errors = blobs.filter((b) => b.syncStatus === 'ERROR');
+    const success = blobs.filter((b) => b.syncStatus === 'SUCCESS');
 
     // Initialize progress bar on first iteration
     if (!progressBar && blobs.length > 0) {
@@ -96,11 +96,11 @@ export async function waitForSync(
       progressBar = new cliProgress.SingleBar(
         {
           format:
-            "Processing |" +
-            chalk.cyan("{bar}") +
-            "| {percentage}% | {value}/{total} files",
-          barCompleteChar: "\u2588",
-          barIncompleteChar: "\u2591",
+            'Processing |' +
+            chalk.cyan('{bar}') +
+            '| {percentage}% | {value}/{total} files',
+          barCompleteChar: '\u2588',
+          barIncompleteChar: '\u2591',
           hideCursor: true,
         },
         cliProgress.Presets.shades_classic,
@@ -124,7 +124,7 @@ export async function waitForSync(
         for (const blob of errors) {
           console.log(
             chalk.yellow(
-              `  - ${blob.path}: ${blob.syncError || "Unknown error"}`,
+              `  - ${blob.path}: ${blob.syncError || 'Unknown error'}`,
             ),
           );
         }
@@ -146,7 +146,7 @@ export async function waitForSync(
   const statusData: SiteStatusData = await getSiteStatus(siteId);
   const blobs = statusData.blobs || [];
   const pending = blobs.filter(
-    (b) => b.syncStatus === "UPLOADING" || b.syncStatus === "PROCESSING",
+    (b) => b.syncStatus === 'UPLOADING' || b.syncStatus === 'PROCESSING',
   );
 
   console.log(

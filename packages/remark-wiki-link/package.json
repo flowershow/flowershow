@@ -12,12 +12,7 @@
     "type": "git",
     "url": "git+https://github.com/flowershow/remark-wiki-link.git"
   },
-  "keywords": [
-    "remark",
-    "remark-plugin",
-    "markdown",
-    "obsidian"
-  ],
+  "keywords": ["remark", "remark-plugin", "markdown", "obsidian"],
   "author": "Flowershow",
   "license": "MIT",
   "bugs": {
@@ -47,9 +42,7 @@
     "vitest": "^3.2.4"
   },
   "type": "module",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/src/index.d.ts",

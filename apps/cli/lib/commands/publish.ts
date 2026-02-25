@@ -1,23 +1,23 @@
-import { existsSync } from "fs";
-import { resolve } from "path";
-import chalk from "chalk";
-import ora from "ora";
-import cliProgress from "cli-progress";
+import { existsSync } from 'fs';
+import { resolve } from 'path';
+import chalk from 'chalk';
+import ora from 'ora';
+import cliProgress from 'cli-progress';
 import {
   createSite,
   syncFiles,
   uploadToR2,
   getSiteByName,
-} from "../api-client.js";
-import { discoverFiles, getProjectName, validateFiles } from "../files.js";
+} from '../api-client.js';
+import { discoverFiles, getProjectName, validateFiles } from '../files.js';
 import {
   displayPublishSuccess,
   displayError,
   displayWarning,
   waitForSync,
-} from "../utils.js";
-import { requireAuth } from "../auth.js";
-import { capture, flushTelemetry, CLI_VERSION } from "../telemetry.js";
+} from '../utils.js';
+import { requireAuth } from '../auth.js';
+import { capture, flushTelemetry, CLI_VERSION } from '../telemetry.js';
 
 interface UploadResult {
   path: string;
@@ -37,14 +37,14 @@ export async function publishCommand(
   siteName?: string,
 ): Promise<void> {
   const startTime = Date.now();
-  capture("command_started", { command: "publish", cli_version: CLI_VERSION });
+  capture('command_started', { command: 'publish', cli_version: CLI_VERSION });
   try {
     const spinner = ora();
     const user = await requireAuth();
 
     spinner.succeed(`Publishing as: ${user.username || user.email}`);
 
-    spinner.start("Discovering files...");
+    spinner.start('Discovering files...');
     // Normalize to array
     const paths = Array.isArray(inputPaths) ? inputPaths : [inputPaths];
 
@@ -80,7 +80,7 @@ export async function publishCommand(
       process.exit(1);
     }
 
-    spinner.start("Creating site...");
+    spinner.start('Creating site...');
 
     // Create site via API (with overwrite flag)
     const siteData = await createSite(projectName, overwrite);
@@ -91,11 +91,11 @@ export async function publishCommand(
     const uploadBar = new cliProgress.SingleBar(
       {
         format:
-          "Uploading |" +
-          chalk.cyan("{bar}") +
-          "| {percentage}% | {value}/{total} files",
-        barCompleteChar: "\u2588",
-        barIncompleteChar: "\u2591",
+          'Uploading |' +
+          chalk.cyan('{bar}') +
+          '| {percentage}% | {value}/{total} files',
+        barCompleteChar: '\u2588',
+        barIncompleteChar: '\u2591',
         hideCursor: true,
       },
       cliProgress.Presets.shades_classic,
@@ -128,7 +128,7 @@ export async function publishCommand(
         uploadResults.push({
           path: uploadInfo.path,
           success: false,
-          error: "File not found in local files",
+          error: 'File not found in local files',
         });
         uploadBar.increment();
         continue;
@@ -146,7 +146,7 @@ export async function publishCommand(
         uploadResults.push({
           path: file.path,
           success: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: error instanceof Error ? error.message : 'Unknown error',
         });
         uploadBar.increment();
       }
@@ -171,37 +171,37 @@ export async function publishCommand(
 
     if (syncResult.timeout) {
       displayWarning(
-        "Some files are still processing after 30 seconds.\n" +
-          "Your site is available but some pages may not be ready yet.\n" +
-          "Check back in a moment.",
+        'Some files are still processing after 30 seconds.\n' +
+          'Your site is available but some pages may not be ready yet.\n' +
+          'Check back in a moment.',
       );
     } else if (!syncResult.success && syncResult.errors) {
-      displayWarning("Some files had processing errors (see above).");
+      displayWarning('Some files had processing errors (see above).');
     }
 
     // Display success
-    capture("command_succeeded", {
-      command: "publish",
+    capture('command_succeeded', {
+      command: 'publish',
       cli_version: CLI_VERSION,
       duration_ms: Date.now() - startTime,
     });
     displayPublishSuccess(
       site.projectName,
-      user.username || user.email || "user",
+      user.username || user.email || 'user',
     );
   } catch (error) {
-    capture("command_failed", {
-      command: "publish",
+    capture('command_failed', {
+      command: 'publish',
       cli_version: CLI_VERSION,
       duration_ms: Date.now() - startTime,
-      error_type: error instanceof Error ? error.constructor.name : "Unknown",
+      error_type: error instanceof Error ? error.constructor.name : 'Unknown',
       error_message: error instanceof Error ? error.message : String(error),
     });
     if (error instanceof Error) {
       displayError(error.message);
       console.error(chalk.gray(error.stack));
     } else {
-      displayError("An unknown error occurred");
+      displayError('An unknown error occurred');
     }
     await flushTelemetry();
     process.exit(1);

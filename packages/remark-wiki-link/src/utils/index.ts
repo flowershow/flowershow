@@ -132,4 +132,3 @@ export const findMatchingFilePath = ({
   // This ensures [[test]] resolves to /test.md instead of /blog/test.md
   return matchingFiles.sort((a, b) => a.length - b.length)[0];
 };
-

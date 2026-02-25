@@ -1,21 +1,21 @@
-import chalk from "chalk";
-import ora from "ora";
-import { requireAuth } from "../auth.js";
-import { getSites } from "../api-client.js";
-import { displayError, formatDate, getSiteUrl } from "../utils.js";
-import { API_URL } from "../const.js";
-import { capture, flushTelemetry, CLI_VERSION } from "../telemetry.js";
+import chalk from 'chalk';
+import ora from 'ora';
+import { requireAuth } from '../auth.js';
+import { getSites } from '../api-client.js';
+import { displayError, formatDate, getSiteUrl } from '../utils.js';
+import { API_URL } from '../const.js';
+import { capture, flushTelemetry, CLI_VERSION } from '../telemetry.js';
 
 /**
  * List command - show all sites for the authenticated user
  */
 export async function listCommand(): Promise<void> {
   const startTime = Date.now();
-  capture("command_started", { command: "list", cli_version: CLI_VERSION });
+  capture('command_started', { command: 'list', cli_version: CLI_VERSION });
   try {
     const user = await requireAuth();
 
-    const spinner = ora("Fetching sites...").start();
+    const spinner = ora('Fetching sites...').start();
 
     // Get sites from API
     const sitesData = await getSites();
@@ -24,7 +24,7 @@ export async function listCommand(): Promise<void> {
     spinner.stop();
 
     if (sites.length === 0) {
-      console.log(chalk.gray("\nNo sites found.\n"));
+      console.log(chalk.gray('\nNo sites found.\n'));
       return;
     }
 
@@ -33,7 +33,7 @@ export async function listCommand(): Promise<void> {
     for (const site of sites) {
       const url = getSiteUrl(
         site.projectName,
-        user.username || user.email || "user",
+        user.username || user.email || 'user',
       );
       const dashboardUrl = `${API_URL}/site/${site.id}/settings`;
       console.log(chalk.cyan(`  ${site.projectName}`));
@@ -47,24 +47,24 @@ export async function listCommand(): Promise<void> {
       );
       console.log();
     }
-    capture("command_succeeded", {
-      command: "list",
+    capture('command_succeeded', {
+      command: 'list',
       cli_version: CLI_VERSION,
       duration_ms: Date.now() - startTime,
     });
   } catch (error) {
-    capture("command_failed", {
-      command: "list",
+    capture('command_failed', {
+      command: 'list',
       cli_version: CLI_VERSION,
       duration_ms: Date.now() - startTime,
-      error_type: error instanceof Error ? error.constructor.name : "Unknown",
+      error_type: error instanceof Error ? error.constructor.name : 'Unknown',
       error_message: error instanceof Error ? error.message : String(error),
     });
     if (error instanceof Error) {
       displayError(error.message);
       console.error(chalk.gray(error.stack));
     } else {
-      displayError("An unknown error occurred");
+      displayError('An unknown error occurred');
     }
     await flushTelemetry();
     process.exit(1);

@@ -1,27 +1,27 @@
-import { readFileSync, statSync, readdirSync, existsSync } from "fs";
-import { join, basename, extname, relative, sep } from "path";
-import { createHash } from "crypto";
-import ignore from "ignore";
+import { readFileSync, statSync, readdirSync, existsSync } from 'fs';
+import { join, basename, extname, relative, sep } from 'path';
+import { createHash } from 'crypto';
+import ignore from 'ignore';
 
 // Default patterns to ignore when scanning directories (fallback if no .gitignore)
 const DEFAULT_IGNORE_PATTERNS = [
-  ".git/",
-  ".gitignore",
-  "node_modules/",
-  ".DS_Store",
-  "Thumbs.db",
-  ".env",
-  ".env.*",
-  "!.env.example",
-  "*.log",
-  ".cache/",
-  "dist/",
-  "build/",
-  ".next/",
-  ".vercel/",
-  ".turbo/",
-  "coverage/",
-  ".nyc_output/",
+  '.git/',
+  '.gitignore',
+  'node_modules/',
+  '.DS_Store',
+  'Thumbs.db',
+  '.env',
+  '.env.*',
+  '!.env.example',
+  '*.log',
+  '.cache/',
+  'dist/',
+  'build/',
+  '.next/',
+  '.vercel/',
+  '.turbo/',
+  'coverage/',
+  '.nyc_output/',
 ];
 
 export interface FileInfo {
@@ -44,11 +44,11 @@ function loadGitignore(baseDir: string): ReturnType<typeof ignore> {
   ig.add(DEFAULT_IGNORE_PATTERNS);
 
   // Look for .gitignore in the base directory
-  const gitignorePath = join(baseDir, ".gitignore");
+  const gitignorePath = join(baseDir, '.gitignore');
 
   if (existsSync(gitignorePath)) {
     try {
-      const gitignoreContent = readFileSync(gitignorePath, "utf-8");
+      const gitignoreContent = readFileSync(gitignorePath, 'utf-8');
       ig.add(gitignoreContent);
     } catch (error) {
       console.warn(`Warning: Could not read .gitignore file: ${error}`);
@@ -66,7 +66,7 @@ function shouldIncludeFile(
   ig: ReturnType<typeof ignore>,
 ): boolean {
   // Normalize path separators for consistent matching
-  const normalizedPath = filePath.split(sep).join("/");
+  const normalizedPath = filePath.split(sep).join('/');
   return !ig.ignores(normalizedPath);
 }
 
@@ -74,7 +74,7 @@ function shouldIncludeFile(
  * Calculate SHA hash of file content
  */
 function calculateSha(content: Buffer): string {
-  return createHash("sha1").update(content).digest("hex");
+  return createHash('sha1').update(content).digest('hex');
 }
 
 /**
@@ -82,14 +82,14 @@ function calculateSha(content: Buffer): string {
  */
 function getExtension(filePath: string): string {
   const ext = extname(filePath);
-  return ext ? ext.slice(1).toLowerCase() : "";
+  return ext ? ext.slice(1).toLowerCase() : '';
 }
 
 /**
  * Normalize path to use forward slashes (for consistency across platforms)
  */
 function normalizePath(path: string): string {
-  return path.split(sep).join("/");
+  return path.split(sep).join('/');
 }
 
 /**
@@ -131,7 +131,7 @@ export function discoverFiles(inputPaths: string | string[]): FileInfo[] {
   const paths = Array.isArray(inputPaths) ? inputPaths : [inputPaths];
 
   if (paths.length === 0) {
-    throw new Error("No paths provided");
+    throw new Error('No paths provided');
   }
 
   const allFiles: FileInfo[] = [];
@@ -210,11 +210,11 @@ export function discoverFiles(inputPaths: string | string[]): FileInfo[] {
  */
 export function getProjectName(files: FileInfo[]): string {
   if (files.length === 0) {
-    throw new Error("No files discovered");
+    throw new Error('No files discovered');
   }
   const projectName = files[0]?.projectName;
   if (!projectName) {
-    throw new Error("Project name not found in files");
+    throw new Error('Project name not found in files');
   }
   return projectName;
 }
@@ -224,15 +224,15 @@ export function getProjectName(files: FileInfo[]): string {
  */
 export function validateFiles(files: FileInfo[]): boolean {
   if (files.length === 0) {
-    throw new Error("No files found to publish");
+    throw new Error('No files found to publish');
   }
 
   const hasMarkdownOrHtml = files.some((f) =>
-    ["md", "mdx", "html"].includes(f.extension),
+    ['md', 'mdx', 'html'].includes(f.extension),
   );
   if (!hasMarkdownOrHtml) {
     console.warn(
-      "Warning: No markdown or html files found. The site will be empty.",
+      'Warning: No markdown or html files found. The site will be empty.',
     );
   }
 

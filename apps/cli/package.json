@@ -13,12 +13,7 @@
     "prepublishOnly": "pnpm run build",
     "release": "changeset publish"
   },
-  "keywords": [
-    "flowershow",
-    "cli",
-    "publish",
-    "markdown"
-  ],
+  "keywords": ["flowershow", "cli", "publish", "markdown"],
   "author": "Flowershow",
   "license": "MIT",
   "repository": {
@@ -46,8 +41,5 @@
   "devDependencies": {
     "tsx": "^4.21.0"
   },
-  "files": [
-    "dist",
-    "README.md"
-  ]
+  "files": ["dist", "README.md"]
 }

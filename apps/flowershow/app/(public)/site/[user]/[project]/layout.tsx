@@ -313,7 +313,8 @@ export default async function PublicLayout(props: {
                 src={
                   typeof siteConfig.umami === 'string'
                     ? 'https://cloud.umami.is/script.js'
-                    : (siteConfig.umami.src ?? 'https://cloud.umami.is/script.js')
+                    : (siteConfig.umami.src ??
+                      'https://cloud.umami.is/script.js')
                 }
                 data-website-id={
                   typeof siteConfig.umami === 'string'

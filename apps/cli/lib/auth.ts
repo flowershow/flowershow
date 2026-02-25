@@ -1,11 +1,11 @@
-import { homedir } from "os";
-import { join } from "path";
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from "fs";
-import chalk from "chalk";
-import { API_URL } from "./const.js";
+import { homedir } from 'os';
+import { join } from 'path';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
+import chalk from 'chalk';
+import { API_URL } from './const.js';
 
-const CONFIG_DIR = join(homedir(), ".flowershow");
-const TOKEN_FILE = join(CONFIG_DIR, "token.json");
+const CONFIG_DIR = join(homedir(), '.flowershow');
+const TOKEN_FILE = join(CONFIG_DIR, 'token.json');
 
 interface TokenData {
   token: string;
@@ -41,7 +41,7 @@ export function saveToken(token: string, username: string): void {
     savedAt: new Date().toISOString(),
   };
 
-  writeFileSync(TOKEN_FILE, JSON.stringify(data, null, 2), "utf-8");
+  writeFileSync(TOKEN_FILE, JSON.stringify(data, null, 2), 'utf-8');
 }
 
 /**
@@ -54,10 +54,10 @@ export function getToken(): TokenData | null {
   }
 
   try {
-    const data = readFileSync(TOKEN_FILE, "utf-8");
+    const data = readFileSync(TOKEN_FILE, 'utf-8');
     return JSON.parse(data) as TokenData;
   } catch (error) {
-    console.error(chalk.yellow("Warning: Failed to read token file"));
+    console.error(chalk.yellow('Warning: Failed to read token file'));
     return null;
   }
 }
@@ -68,11 +68,11 @@ export function getToken(): TokenData | null {
 export async function removeToken(): Promise<void> {
   if (existsSync(TOKEN_FILE)) {
     try {
-      const fs = await import("fs/promises");
+      const fs = await import('fs/promises');
       await fs.unlink(TOKEN_FILE);
     } catch (error) {
       // If file doesn't exist, that's fine
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
         throw error;
       }
     }
@@ -119,13 +119,13 @@ export async function pollForToken(
 
     try {
       const response = await fetch(`${apiUrl}/api/cli/device/token`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           device_code: deviceCode,
-          grant_type: "urn:ietf:params:oauth:grant-type:device_code",
+          grant_type: 'urn:ietf:params:oauth:grant-type:device_code',
         }),
       });
 
@@ -135,32 +135,32 @@ export async function pollForToken(
         return data.access_token;
       }
 
-      if (data.error === "authorization_pending") {
+      if (data.error === 'authorization_pending') {
         // Continue polling
         continue;
       }
 
-      if (data.error === "slow_down") {
+      if (data.error === 'slow_down') {
         // Increase interval by 5 seconds
         currentInterval += 5;
         continue;
       }
 
-      if (data.error === "expired_token") {
-        throw new Error("The device code has expired. Please try again.");
+      if (data.error === 'expired_token') {
+        throw new Error('The device code has expired. Please try again.');
       }
 
-      if (data.error === "access_denied") {
-        throw new Error("Authorization was denied.");
+      if (data.error === 'access_denied') {
+        throw new Error('Authorization was denied.');
       }
 
       throw new Error(
-        data.error_description || data.error || "Unknown error occurred",
+        data.error_description || data.error || 'Unknown error occurred',
       );
     } catch (error) {
       if (
         error instanceof Error &&
-        (error.message.includes("expired") || error.message.includes("denied"))
+        (error.message.includes('expired') || error.message.includes('denied'))
       ) {
         throw error;
       }
@@ -169,7 +169,7 @@ export async function pollForToken(
     }
   }
 
-  throw new Error("Authorization timed out. Please try again.");
+  throw new Error('Authorization timed out. Please try again.');
 }
 
 /**
@@ -180,13 +180,13 @@ export async function requireAuth(): Promise<UserInfo> {
   try {
     const tokenData = getToken();
     if (!tokenData) {
-      throw new Error("Not authenticated");
+      throw new Error('Not authenticated');
     }
     return await getUserInfo(tokenData.token);
   } catch (error) {
     displayError(
-      "You must be authenticated to use this command.\n" +
-        "Run `publish auth login` to authenticate.",
+      'You must be authenticated to use this command.\n' +
+        'Run `publish auth login` to authenticate.',
     );
     process.exit(0);
   }
@@ -205,7 +205,7 @@ export async function getUserInfo(token: string): Promise<UserInfo> {
   });
 
   if (!response.ok) {
-    throw new Error("Failed to get user info");
+    throw new Error('Failed to get user info');
   }
 
   return (await response.json()) as UserInfo;

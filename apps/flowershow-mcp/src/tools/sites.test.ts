@@ -102,7 +102,7 @@ describe('registerSiteTools', () => {
       expect(text).toContain('Found 1 site:');
       expect(text).toContain('**my-docs**');
       expect(text).toContain('10 files');
-      expect(text).toContain('s1');  // site ID
+      expect(text).toContain('s1'); // site ID
       expect(text).toContain('https://my-docs.flowershow.app');
       expect(text).toContain('2025-06-15T12:00:00Z');
       expect(result.isError).toBeFalsy();
@@ -314,7 +314,8 @@ describe('registerSiteTools', () => {
         arguments: { siteId: 's1' },
       });
 
-      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
       expect(text).toContain('my-blog');
       expect(text).toContain('https://my-blog.flowershow.app');
       expect(text).toContain('42 files');
@@ -333,7 +334,8 @@ describe('registerSiteTools', () => {
       });
 
       expect(result.isError).toBe(true);
-      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
       expect(text).toContain('not found');
     });
   });
@@ -360,7 +362,8 @@ describe('registerSiteTools', () => {
         arguments: { projectName: 'my-new-blog' },
       });
 
-      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
       expect(text).toContain('my-new-blog');
       expect(text).toContain('https://flowershow.app/alice/my-new-blog');
       expect(result.isError).toBeFalsy();
@@ -378,7 +381,8 @@ describe('registerSiteTools', () => {
       });
 
       expect(result.isError).toBe(true);
-      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
       expect(text).toContain('already exists');
     });
   });
@@ -402,7 +406,8 @@ describe('registerSiteTools', () => {
         arguments: { siteId: 's1' },
       });
 
-      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
       expect(text).toContain('deleted');
       expect(text).toContain('17');
       expect(result.isError).toBeFalsy();
@@ -420,7 +425,8 @@ describe('registerSiteTools', () => {
       });
 
       expect(result.isError).toBe(true);
-      const text = (result.content as Array<{ type: string; text: string }>)[0].text;
+      const text = (result.content as Array<{ type: string; text: string }>)[0]
+        .text;
       expect(text).toContain('not found');
     });
   });
