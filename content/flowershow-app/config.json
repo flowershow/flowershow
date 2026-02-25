@@ -7,9 +7,21 @@
       { "href": "/blog", "name": "Blog" },
       { "href": "/changelog", "name": "Changelog" },
       { "href": "/pricing", "name": "Pricing" },
-      { "href": "/publish", "name": "Publish CLI" },
-      { "href": "/blogs", "name": "Flowershow for Blogs" },
-      { "href": "/data-stories", "name": "Flowershow for Data Stories" },
+      {
+        "name": "Use Cases",
+        "links": [
+          { "href": "/uses/obsidian", "name": "Obsidian Vault" },
+          { "href": "/uses/blogs", "name": "Blog" },
+          { "href": "/uses/data-stories", "name": "Data Stories" }
+        ]
+      },
+      {
+        "name": "Publish",
+        "links": [
+          { "href": "/publish", "name": "From Terminal (CLI)" },
+          { "href": "/publish-github", "name": "From GitHub" }
+        ]
+      },
       { "href": "https://demo.flowershow.app/", "name": "Demo" },
       { "href": "https://github.com/flowershow/themes", "name": "Themes" }
     ],
@@ -79,6 +91,8 @@
     { "from": "/docs/site-wide-toc", "to": "/docs/sidebar" },
     { "from": "/blog/how-to-set-up-blog", "to": "/blog/how-to-publish-blog" },
     { "from": "/docs/obsidian-bases-reference", "to": "/docs/obsidian-bases" },
-    { "from": "/docs/bases", "to": "/docs/obsidian-bases" }
+    { "from": "/docs/bases", "to": "/docs/obsidian-bases" },
+    { "from": "/blogs", "to": "/uses/blogs" },
+    { "from": "/data-stories", "to": "/uses/data-stories" }
   ]
 }
