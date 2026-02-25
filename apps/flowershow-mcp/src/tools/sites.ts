@@ -3,11 +3,7 @@
  */
 
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import {
-  createSiteInputShape,
-  deleteSiteInputShape,
-  getSiteInputShape,
-} from '../contracts.js';
+import { createSiteInputShape, getSiteInputShape } from '../contracts.js';
 import { ApiError, type FlowershowApi } from '../lib/api.js';
 
 export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
@@ -190,53 +186,6 @@ export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
         } else {
           message = `Failed to create site: ${err instanceof Error ? err.message : 'Unknown error'}`;
         }
-        await log('error', message);
-        return { content: [{ type: 'text', text: message }], isError: true };
-      }
-    },
-  );
-
-  // ── delete-site ────────────────────────────────────────────────────────────
-  server.registerTool(
-    'delete-site',
-    {
-      description:
-        'Delete a Flowershow site and all its content. This is irreversible.',
-      inputSchema: deleteSiteInputShape,
-    },
-    async ({ siteId }, extra) => {
-      const log = (
-        level: 'info' | 'debug' | 'warning' | 'error',
-        data: string,
-      ) => {
-        const logger =
-          level === 'error'
-            ? console.error
-            : level === 'warning'
-              ? console.warn
-              : level === 'debug'
-                ? console.debug
-                : console.info;
-        logger(`[delete-site] ${data}`);
-        return server.sendLoggingMessage({ level, data }, extra.sessionId);
-      };
-
-      try {
-        await log('info', `Deleting site ${siteId}…`);
-        const result = await api.deleteSite(siteId);
-        await log(
-          'info',
-          `Site deleted: ${result.deletedFiles} file(s) removed`,
-        );
-        const text = `Site deleted successfully. ${result.deletedFiles} file${result.deletedFiles === 1 ? '' : 's'} removed.`;
-        return { content: [{ type: 'text', text }] };
-      } catch (err) {
-        const message =
-          err instanceof ApiError
-            ? err.status === 404
-              ? `Site not found. Check the site ID.`
-              : `API error: ${err.message}`
-            : `Failed to delete site: ${err instanceof Error ? err.message : 'Unknown error'}`;
         await log('error', message);
         return { content: [{ type: 'text', text: message }], isError: true };
       }

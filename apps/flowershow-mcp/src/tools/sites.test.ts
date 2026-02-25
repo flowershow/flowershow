@@ -38,7 +38,6 @@ describe('registerSiteTools', () => {
     listSites: vi.fn(),
     getSite: vi.fn(),
     createSite: vi.fn(),
-    deleteSite: vi.fn(),
   } as unknown as FlowershowApi;
 
   beforeEach(() => {
@@ -384,50 +383,6 @@ describe('registerSiteTools', () => {
       const text = (result.content as Array<{ type: string; text: string }>)[0]
         .text;
       expect(text).toContain('already exists');
-    });
-  });
-
-  describe('delete-site tool', () => {
-    it('registers a delete-site tool', async () => {
-      const { client } = await createTestClient(mockApi);
-      const { tools } = await client.listTools();
-      expect(tools.map((t) => t.name)).toContain('delete-site');
-    });
-
-    it('returns success message with deleted file count', async () => {
-      (mockApi.deleteSite as ReturnType<typeof vi.fn>).mockResolvedValue({
-        success: true,
-        deletedFiles: 17,
-      });
-
-      const { client } = await createTestClient(mockApi);
-      const result = await client.callTool({
-        name: 'delete-site',
-        arguments: { siteId: 's1' },
-      });
-
-      const text = (result.content as Array<{ type: string; text: string }>)[0]
-        .text;
-      expect(text).toContain('deleted');
-      expect(text).toContain('17');
-      expect(result.isError).toBeFalsy();
-    });
-
-    it('returns error on 404', async () => {
-      (mockApi.deleteSite as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new ApiError(404, 'Not Found', '{"error":"not_found"}'),
-      );
-
-      const { client } = await createTestClient(mockApi);
-      const result = await client.callTool({
-        name: 'delete-site',
-        arguments: { siteId: 'bad-id' },
-      });
-
-      expect(result.isError).toBe(true);
-      const text = (result.content as Array<{ type: string; text: string }>)[0]
-        .text;
-      expect(text).toContain('not found');
     });
   });
 });

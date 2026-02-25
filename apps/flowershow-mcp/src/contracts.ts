@@ -21,10 +21,6 @@ export const createSiteInputShape = {
     .describe('If true and site exists, reset its content'),
 };
 
-export const deleteSiteInputShape = {
-  siteId: z.string().describe('The site ID to delete'),
-};
-
 export const publishNoteInputShape = {
   siteId: z.string().describe('The site ID (use list-sites to find it)'),
   path: z
@@ -74,12 +70,6 @@ const TOOL_DEFINITIONS: ToolDefinition[] = [
     name: 'create-site',
     description: 'Create a new Flowershow site',
     inputSchema: createSiteInputShape,
-  },
-  {
-    name: 'delete-site',
-    description:
-      'Delete a Flowershow site and all its content. This is irreversible.',
-    inputSchema: deleteSiteInputShape,
   },
   {
     name: 'publish-note',

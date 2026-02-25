@@ -7,7 +7,6 @@
 
 import type {
   CreateSiteResponse,
-  DeleteSiteResponse,
   GetSiteResponse,
   ListSitesResponse,
   PublishFilesResponse,
@@ -17,8 +16,7 @@ import type {
 } from '@flowershow/api-contract';
 import {
   CreateSiteResponseSchema,
-  DeleteSiteResponseSchema,
-  FileMetadata,
+  type FileMetadata,
   GetSiteResponseSchema,
   ListSitesResponseSchema,
   PublishFilesResponseSchema,
@@ -28,7 +26,6 @@ import {
 
 export type {
   CreateSiteResponse,
-  DeleteSiteResponse,
   GetSiteResponse,
   ListSitesResponse,
   SiteDetail,
@@ -131,15 +128,6 @@ export class FlowershowApi {
       '/sites',
       { projectName, overwrite },
       (body) => CreateSiteResponseSchema.parse(body),
-    );
-  }
-
-  async deleteSite(siteId: string): Promise<DeleteSiteResponse> {
-    return this.request<DeleteSiteResponse>(
-      'DELETE',
-      `/sites/id/${siteId}`,
-      undefined,
-      (body) => DeleteSiteResponseSchema.parse(body),
     );
   }
 
