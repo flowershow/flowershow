@@ -10,7 +10,6 @@ A [Model Context Protocol](https://modelcontextprotocol.io/) server that exposes
 | `get-site`     | Get details for a specific site (plan, privacy, file count, etc.)  |
 | `get-user`     | Get current user profile                                           |
 | `create-site`  | Create a new site                                                  |
-| `delete-site`  | Delete a site and all its content                                  |
 | `publish-note` | Publish in-memory markdown as a note to an existing site           |
 | `publish-local-files` | Request presigned upload URLs for metadata-only file lists (max 100 per call) |
 | `get-publish-status` | Poll current publishing status for a site                    |
