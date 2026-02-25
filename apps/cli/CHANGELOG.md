@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.1.1
+
+### Patch Changes
+
+- 387e62b: Update engines field to require Node ^20.20.0 || >=22.22.0 to match posthog-node peer requirements.
+
 ## 1.1.0
 
 ### Minor Changes
@@ -57,10 +63,12 @@ See [MIGRATION.md](MIGRATION.md) for complete migration instructions.
   ## What Changed
 
   ### Package Name
+
   - NPM package: `flowershow` → `flowershow-publish`
   - Binary command: `flowershow` → `publish`
 
   ### Command Structure
+
   - **Main publish command is now default**: `publish <path>` (previously `flowershow publish <path>`)
   - **All other commands updated**: Use `publish` as the base command
     - `publish auth login` (was `flowershow auth login`)
