@@ -2,6 +2,7 @@ import type { DeviceAuthorizeResponse } from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { generateDeviceCode, generateUserCode } from '@/lib/cli-auth';
+import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 
 /**
@@ -63,6 +64,11 @@ export async function POST(_request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error('Error in device authorize:', error);
+    const posthog = PostHogClient();
+    posthog.captureException(error, 'system', {
+      route: 'POST /api/cli/device/authorize',
+    });
+    await posthog.shutdown();
     return NextResponse.json(
       {
         error: 'internal_error',

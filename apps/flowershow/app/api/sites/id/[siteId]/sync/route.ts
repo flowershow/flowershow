@@ -1,7 +1,11 @@
 import { Blob } from '@prisma/client';
 import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
-import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
+import {
+  checkCliVersion,
+  getClientInfo,
+  validateAccessToken,
+} from '@/lib/cli-auth';
 import {
   deleteFile,
   generatePresignedUploadUrl,
@@ -237,11 +241,14 @@ export async function POST(
               deletedPaths.push(file.path);
             } catch (error) {
               const posthog = PostHogClient();
+              const { client_type, client_version } = getClientInfo(request);
               posthog.captureException(error, 'system', {
                 route: 'POST /api/sites/id/[siteId]/sync',
                 siteId,
                 filePath: file.path,
                 operation: 'delete_from_r2',
+                client_type,
+                client_version,
               });
               await posthog.shutdown();
               // Continue with other deletions even if one fails
@@ -393,12 +400,34 @@ export async function POST(
       ...(dryRun && { dryRun: true }),
     };
 
+    if (!dryRun) {
+      const posthog = PostHogClient();
+      const { client_type, client_version } = getClientInfo(request);
+      posthog.capture({
+        distinctId: auth.userId,
+        event: 'files_synced',
+        properties: {
+          client_type,
+          client_version,
+          siteId,
+          to_upload: uploadUrls.length,
+          to_update: updateUrls.length,
+          deleted: deletedPaths.length,
+          unchanged: unchanged.length,
+        },
+      });
+      await posthog.shutdown();
+    }
+
     return NextResponse.json(response);
   } catch (error) {
     console.error('Error syncing files:', error);
     const posthog = PostHogClient();
+    const { client_type, client_version } = getClientInfo(request);
     posthog.captureException(error, 'system', {
       route: 'POST /api/sites/id/[siteId]/sync',
+      client_type,
+      client_version,
     });
     await posthog.shutdown();
     return NextResponse.json(

@@ -23,6 +23,21 @@ function compareSemver(a: string, b: string): number {
 }
 
 /**
+ * Get client type and version from request headers
+ */
+export function getClientInfo(request: NextRequest): {
+  client_type: 'cli' | 'obsidian-plugin' | 'unknown';
+  client_version: string | null;
+} {
+  const cliVersion = request.headers.get('X-Flowershow-CLI-Version');
+  const pluginVersion = request.headers.get('X-Flowershow-Plugin-Version');
+  if (cliVersion) return { client_type: 'cli', client_version: cliVersion };
+  if (pluginVersion)
+    return { client_type: 'obsidian-plugin', client_version: pluginVersion };
+  return { client_type: 'unknown', client_version: null };
+}
+
+/**
  * Check CLI version from request header
  * Only validates if header is present (to allow PAT usage without CLI)
  * Returns error response if version is outdated, null if OK

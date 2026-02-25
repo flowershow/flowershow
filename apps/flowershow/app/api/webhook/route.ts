@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
 import PostHogClient from '@/lib/server-posthog';
@@ -15,75 +15,85 @@ export async function POST(req: NextRequest) {
     return new Response('Event processed', { status: 200 });
   }
 
-  const secret = env.GH_WEBHOOK_SECRET;
-  const signature = req.headers.get('x-hub-signature')!;
-  const payload = await req.json();
+  try {
+    const secret = env.GH_WEBHOOK_SECRET;
+    const signature = req.headers.get('x-hub-signature')!;
+    const payload = await req.json();
 
-  if (!verifySignature(secret, signature, payload)) {
-    return new Response('Invalid signature', { status: 401 });
-  }
+    if (!verifySignature(secret, signature, payload)) {
+      return new Response('Invalid signature', { status: 401 });
+    }
 
-  const webhookId = req.headers.get('x-github-hook-id');
-  const siteId = req.nextUrl.searchParams.get('siteid');
+    const webhookId = req.headers.get('x-github-hook-id');
+    const siteId = req.nextUrl.searchParams.get('siteid');
 
-  let site;
-  if (siteId) {
-    site = await prisma.site.findUnique({
+    let site;
+    if (siteId) {
+      site = await prisma.site.findUnique({
+        where: {
+          id: siteId,
+        },
+        include: {
+          user: true,
+        },
+      });
+    } else if (webhookId) {
+      // DON'T REMOVE
+      // this is for backwards compatibility for sites that had webhooks created without the siteid query param (allowed only one webhook per repo)
+      site = await prisma.site.findUnique({
+        where: {
+          webhookId,
+          autoSync: true,
+        },
+        include: {
+          user: true,
+        },
+      });
+    }
+
+    if (!site) {
+      return new Response('Site not found', { status: 404 });
+    }
+
+    if (payload.ref !== `refs/heads/${site.ghBranch}` || event !== 'push') {
+      return new Response('Incorrect branch', { status: 404 });
+    }
+
+    const account = await prisma.account.findFirst({
       where: {
-        id: siteId,
-      },
-      include: {
-        user: true,
+        userId: site.userId,
       },
     });
-  } else if (webhookId) {
-    // DON'T REMOVE
-    // this is for backwards compatibility for sites that had webhooks created without the siteid query param (allowed only one webhook per repo)
-    site = await prisma.site.findUnique({
-      where: {
-        webhookId,
-        autoSync: true,
-      },
-      include: {
-        user: true,
+
+    await inngest.send({
+      name: 'site/sync',
+      data: {
+        siteId: site.id,
+        ghRepository: site.ghRepository,
+        ghBranch: site.ghBranch,
+        rootDir: site.rootDir,
+        accessToken: account!.access_token!,
       },
     });
+
+    const posthog = PostHogClient();
+    posthog.capture({
+      distinctId: site.userId,
+      event: 'site_sync_triggered',
+      properties: { siteId: site.id, source: 'auto' },
+    });
+    await posthog.shutdown();
+
+    return new Response('Event processed', { status: 200 });
+  } catch (error) {
+    console.error('Webhook handler failed:', error);
+    const posthog = PostHogClient();
+    posthog.captureException(error, 'system', {
+      route: 'POST /api/webhook',
+    });
+    await posthog.shutdown();
+    return new Response('Webhook handler failed', { status: 500 });
   }
-
-  if (!site) {
-    return new Response('Site not found', { status: 404 });
-  }
-
-  if (payload.ref !== `refs/heads/${site.ghBranch}` || event !== 'push') {
-    return new Response('Incorrect branch', { status: 404 });
-  }
-
-  const account = await prisma.account.findFirst({
-    where: {
-      userId: site.userId,
-    },
-  });
-
-  await inngest.send({
-    name: 'site/sync',
-    data: {
-      siteId: site.id,
-      ghRepository: site.ghRepository,
-      ghBranch: site.ghBranch,
-      rootDir: site.rootDir,
-      accessToken: account!.access_token!,
-    },
-  });
-
-  const posthog = PostHogClient();
-  posthog.capture({
-    distinctId: site.userId,
-    event: 'site_sync_triggered',
-    properties: { id: site.id, source: 'auto' },
-  });
-  await posthog.shutdown();
-
-  return new Response('Event processed', { status: 200 });
 }
 
 const encoder = new TextEncoder();

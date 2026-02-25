@@ -3,7 +3,11 @@ import type {
   GetSiteResponse,
 } from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
-import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
+import {
+  checkCliVersion,
+  getClientInfo,
+  validateAccessToken,
+} from '@/lib/cli-auth';
 import { deleteProject } from '@/lib/content-store';
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
@@ -203,6 +207,20 @@ export async function DELETE(
     await prisma.site.delete({
       where: { id: siteId },
     });
+
+    const posthogDel = PostHogClient();
+    const { client_type, client_version } = getClientInfo(request);
+    posthogDel.capture({
+      distinctId: auth.userId,
+      event: 'site_deleted',
+      properties: {
+        siteId,
+        client_type,
+        client_version,
+        deleted_files: deletedFiles,
+      },
+    });
+    await posthogDel.shutdown();
 
     const response: DeleteSiteResponse = {
       success: true,

@@ -28,6 +28,12 @@ export async function POST(req: Request) {
     console.log(`✅ Webhook verified. Event type: ${event.type}`);
   } catch (err: any) {
     console.error(`❌ Webhook verification failed: ${err.message}`);
+    const posthog = PostHogClient();
+    posthog.captureException(err, 'system', {
+      route: 'POST /api/stripe/webhook',
+      step: 'webhook_verification',
+    });
+    await posthog.shutdown();
     return NextResponse.json(
       { message: `Webhook Error: ${err.message}` },
       { status: 400 },
@@ -188,6 +194,18 @@ export async function POST(req: Request) {
                 plan: 'FREE',
               },
             });
+
+            const posthog = PostHogClient();
+            posthog.capture({
+              distinctId: dbSubscription.site.userId,
+              event: 'subscription_canceled',
+              properties: {
+                siteId: dbSubscription.siteId,
+                interval: interval,
+                priceId: priceId,
+              },
+            });
+            await posthog.shutdown();
           }
 
           console.log(`✅ Subscription update processing completed`);
@@ -198,6 +216,12 @@ export async function POST(req: Request) {
       }
     } catch (error) {
       console.error(`❌ Webhook handler failed:`, error);
+      const posthog = PostHogClient();
+      posthog.captureException(error, 'system', {
+        route: 'POST /api/stripe/webhook',
+        eventType: event.type,
+      });
+      await posthog.shutdown();
       return NextResponse.json(
         { message: 'Webhook handler failed' },
         { status: 500 },

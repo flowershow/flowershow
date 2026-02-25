@@ -8,7 +8,7 @@ import {
 import { Blob } from '@prisma/client';
 import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
-import { validateAccessToken } from '@/lib/cli-auth';
+import { getClientInfo, validateAccessToken } from '@/lib/cli-auth';
 import {
   deleteFile,
   generatePresignedUploadUrl,
@@ -219,12 +219,29 @@ export async function POST(
       files: uploadUrls,
     };
 
+    const posthog = PostHogClient();
+    const { client_type, client_version } = getClientInfo(request);
+    posthog.capture({
+      distinctId: auth.userId,
+      event: 'files_published',
+      properties: {
+        client_type,
+        client_version,
+        file_count: files.length,
+        siteId,
+      },
+    });
+    await posthog.shutdown();
+
     return NextResponse.json(response);
   } catch (error) {
     console.error('Error publishing files:', error);
     const posthog = PostHogClient();
+    const { client_type, client_version } = getClientInfo(request);
     posthog.captureException(error, 'system', {
       route: 'POST /api/sites/id/[siteId]/files',
+      client_type,
+      client_version,
     });
     await posthog.shutdown();
     return NextResponse.json(
@@ -346,11 +363,14 @@ export async function DELETE(
               });
             } catch (error) {
               const posthog = PostHogClient();
+              const { client_type, client_version } = getClientInfo(request);
               posthog.captureException(error, 'system', {
                 route: 'DELETE /api/sites/id/[siteId]/files',
                 siteId,
                 filePath: blob.path,
                 operation: 'delete_from_r2',
+                client_type,
+                client_version,
               });
               await posthog.shutdown();
               // Continue with other deletions even if one fails
@@ -377,12 +397,29 @@ export async function DELETE(
       notFound,
     };
 
+    const posthog = PostHogClient();
+    const { client_type, client_version } = getClientInfo(request);
+    posthog.capture({
+      distinctId: auth.userId,
+      event: 'files_deleted',
+      properties: {
+        client_type,
+        client_version,
+        file_count: deleted.length,
+        siteId,
+      },
+    });
+    await posthog.shutdown();
+
     return NextResponse.json(response);
   } catch (error) {
     console.error('Error deleting files:', error);
     const posthog = PostHogClient();
+    const { client_type, client_version } = getClientInfo(request);
     posthog.captureException(error, 'system', {
       route: 'DELETE /api/sites/id/[siteId]/files',
+      client_type,
+      client_version,
     });
     await posthog.shutdown();
     return NextResponse.json(

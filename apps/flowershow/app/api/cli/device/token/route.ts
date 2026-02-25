@@ -4,6 +4,7 @@ import {
 } from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
 import { generateCliToken, hashToken } from '@/lib/cli-auth';
+import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 
 /**
@@ -33,6 +34,7 @@ import prisma from '@/server/db';
  * }
  */
 export async function POST(request: NextRequest) {
+  let userId: string | undefined;
   try {
     const parsedBody = DeviceTokenRequestSchema.safeParse(await request.json());
     if (!parsedBody.success) {
@@ -91,6 +93,7 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
+    userId = deviceCodeRecord.userId;
 
     // Generate CLI token
     const cliToken = generateCliToken();
@@ -111,6 +114,14 @@ export async function POST(request: NextRequest) {
       where: { id: deviceCodeRecord.id },
     });
 
+    const posthog = PostHogClient();
+    posthog.capture({
+      distinctId: userId,
+      event: 'token_created',
+      properties: { token_type: 'CLI' },
+    });
+    await posthog.shutdown();
+
     const response: DeviceTokenResponse = {
       access_token: cliToken,
       token_type: 'Bearer',
@@ -120,6 +131,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     console.error('Error in device token:', error);
+    const posthog = PostHogClient();
+    posthog.captureException(error, userId ?? 'system', {
+      route: 'POST /api/cli/device/token',
+    });
+    await posthog.shutdown();
     return NextResponse.json(
       {
         error: 'internal_error',

@@ -3,6 +3,7 @@ import {
   type SuccessResponse,
 } from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
+import PostHogClient from '@/lib/server-posthog';
 import { getSession } from '@/server/auth';
 import prisma from '@/server/db';
 
@@ -23,16 +24,16 @@ import prisma from '@/server/db';
  * Response: { success: true } or error
  */
 export async function POST(request: NextRequest) {
+  // Check authentication
+  const session = await getSession();
+  if (!session?.user?.id) {
+    return NextResponse.json(
+      { error: 'unauthorized', error_description: 'Not authenticated' },
+      { status: 401 },
+    );
+  }
+  const userId = session.user.id;
   try {
-    // Check authentication
-    const session = await getSession();
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'unauthorized', error_description: 'Not authenticated' },
-        { status: 401 },
-      );
-    }
-
     const parsedBody = AuthorizeDeviceRequestSchema.safeParse(
       await request.json(),
     );
@@ -100,9 +101,21 @@ export async function POST(request: NextRequest) {
       },
     });
 
+    const posthog = PostHogClient();
+    posthog.capture({
+      distinctId: userId,
+      event: 'device_authorized',
+    });
+    await posthog.shutdown();
+
     return NextResponse.json({ success: true } satisfies SuccessResponse);
   } catch (error) {
     console.error('Error in CLI authorize:', error);
+    const posthog = PostHogClient();
+    posthog.captureException(error, userId, {
+      route: 'POST /api/cli/authorize',
+    });
+    await posthog.shutdown();
     return NextResponse.json(
       {
         error: 'internal_error',

@@ -2,21 +2,21 @@ import {
   RevokeTokenRequestSchema,
   type SuccessResponse,
 } from '@flowershow/api-contract';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
+import PostHogClient from '@/lib/server-posthog';
 import { getSession } from '@/server/auth';
 import prisma from '@/server/db';
 
 export async function POST(request: NextRequest) {
+  const session = await getSession();
+  if (!session?.user?.id) {
+    return NextResponse.json(
+      { error: 'unauthorized', error_description: 'Not authenticated' },
+      { status: 401 },
+    );
+  }
+  const userId = session.user.id;
   try {
-    // Check authentication
-    const session = await getSession();
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'unauthorized', error_description: 'Not authenticated' },
-        { status: 401 },
-      );
-    }
-
     const parsedBody = RevokeTokenRequestSchema.safeParse(await request.json());
     if (!parsedBody.success) {
       return NextResponse.json(
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     const token = await prisma.accessToken.findFirst({
       where: {
         id: token_id,
-        userId: session.user.id,
+        userId: userId,
       },
     });
 
@@ -46,9 +46,22 @@ export async function POST(request: NextRequest) {
       where: { id: token_id },
     });
 
+    const posthog = PostHogClient();
+    posthog.capture({
+      distinctId: userId,
+      event: 'token_revoked',
+      properties: { token_id },
+    });
+    await posthog.shutdown();
+
     return NextResponse.json({ success: true } satisfies SuccessResponse);
   } catch (error) {
     console.error('Error revoking token:', error);
+    const posthog = PostHogClient();
+    posthog.captureException(error, userId, {
+      route: 'POST /api/tokens/revoke',
+    });
+    await posthog.shutdown();
     return NextResponse.json(
       { error: 'internal_error', error_description: 'Failed to revoke token' },
       { status: 500 },

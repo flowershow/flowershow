@@ -106,10 +106,19 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
+      // Look up the OAuth account that was just created to determine the auth provider
+      const account = await prisma.account.findFirst({
+        where: { userId: user.id },
+        select: { provider: true },
+      });
+
       const posthog = PostHogClient();
       posthog.capture({
         distinctId: user.id,
         event: 'sign_up',
+        properties: {
+          auth_provider: account?.provider ?? 'unknown',
+        },
       });
       await posthog.shutdown();
     },

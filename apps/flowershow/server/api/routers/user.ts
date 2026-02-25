@@ -191,6 +191,14 @@ export const userRouter = createTRPCRouter({
         },
       });
 
+      const posthog = PostHogClient();
+      posthog.capture({
+        distinctId: ctx.session.user.id,
+        event: 'token_created',
+        properties: { token_type: 'PAT' },
+      });
+      await posthog.shutdown();
+
       // Return the plaintext token ONCE
       return {
         token: patToken,

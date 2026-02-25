@@ -192,7 +192,7 @@ export const siteRouter = createTRPCRouter({
       posthog.capture({
         distinctId: created.userId!,
         event: 'site_created',
-        properties: { id: created.id },
+        properties: { siteId: created.id, client_type: 'web' },
       });
       await posthog.shutdown();
 
@@ -387,7 +387,12 @@ export const siteRouter = createTRPCRouter({
       posthog.capture({
         distinctId: site.userId,
         event: 'site_settings_changed',
-        properties: { id: site.id, config: key },
+        properties: {
+          siteId: site.id,
+          setting: key,
+          new_value:
+            key === 'customDomain' ? (value ? 'set' : 'removed') : value,
+        },
       });
       await posthog.shutdown();
       // Return canonical public shape
@@ -518,7 +523,7 @@ export const siteRouter = createTRPCRouter({
       posthog.capture({
         distinctId: site.userId,
         event: 'site_deleted',
-        properties: { id: site.id },
+        properties: { siteId: site.id, client_type: 'web' },
       });
       await posthog.shutdown();
 

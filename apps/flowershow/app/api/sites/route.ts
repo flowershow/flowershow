@@ -4,7 +4,11 @@ import {
   type ListSitesResponse,
 } from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
-import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
+import {
+  checkCliVersion,
+  getClientInfo,
+  validateAccessToken,
+} from '@/lib/cli-auth';
 import PostHogClient from '@/lib/server-posthog';
 import { ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
@@ -135,13 +139,27 @@ export async function POST(request: NextRequest) {
       },
     };
 
+    const posthog = PostHogClient();
+    const { client_type, client_version } = getClientInfo(request);
+    posthog.capture({
+      distinctId: auth.userId,
+      event: 'site_created',
+      properties: { siteId: site.id, client_type, client_version, overwrite },
+    });
+    await posthog.shutdown();
+
     return NextResponse.json(response, {
       status: existingSite && overwrite ? 200 : 201,
     });
   } catch (error) {
     console.error('Error creating site:', error);
     const posthog = PostHogClient();
-    posthog.captureException(error, 'system', { route: 'POST /api/sites' });
+    const { client_type, client_version } = getClientInfo(request);
+    posthog.captureException(error, 'system', {
+      route: 'POST /api/sites',
+      client_type,
+      client_version,
+    });
     await posthog.shutdown();
     return NextResponse.json(
       { error: 'internal_error', message: 'Failed to create site' },
@@ -220,7 +238,12 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error listing sites:', error);
     const posthog = PostHogClient();
-    posthog.captureException(error, 'system', { route: 'GET /api/sites' });
+    const { client_type, client_version } = getClientInfo(request);
+    posthog.captureException(error, 'system', {
+      route: 'GET /api/sites',
+      client_type,
+      client_version,
+    });
     await posthog.shutdown();
     return NextResponse.json(
       { error: 'internal_error', message: 'Failed to list sites' },
