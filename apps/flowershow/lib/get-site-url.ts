@@ -1,10 +1,16 @@
+import { Plan } from '@prisma/client';
 import { env } from '@/env.mjs';
-import { PublicSite } from '@/server/api/types';
-import { InternalSite } from './db/internal';
 import { Feature, isFeatureEnabled } from './feature-flags';
 import { resolveSiteAlias } from './resolve-site-alias';
 
-export function getSiteUrl(site: PublicSite | InternalSite) {
+type SiteWithUrl = {
+  projectName: string;
+  customDomain: string | null;
+  plan: Plan;
+  user: { username: string };
+};
+
+export function getSiteUrl(site: SiteWithUrl) {
   const { projectName, user, customDomain } = site;
 
   const isSecure =
@@ -21,7 +27,7 @@ export function getSiteUrl(site: PublicSite | InternalSite) {
   }
 }
 
-export function getSiteUrlPath(site: PublicSite) {
+export function getSiteUrlPath(site: SiteWithUrl) {
   const { projectName, user, customDomain } = site;
 
   if (isFeatureEnabled(Feature.CustomDomain, site) && customDomain) {

@@ -1,6 +1,7 @@
 'use client';
 import clsx from 'clsx';
 import { useEffect, useRef, useState } from 'react';
+import { getRepoFullName } from '@/lib/get-repo-full-name';
 import { api } from '@/trpc/react';
 
 export default function SitesAdminTable() {
@@ -202,7 +203,7 @@ export default function SitesAdminTable() {
                           {site.user.username}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {site.ghRepository}
+                          {getRepoFullName(site)}
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {site.ghBranch}

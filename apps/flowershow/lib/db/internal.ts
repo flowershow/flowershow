@@ -17,7 +17,10 @@ export const internalSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   syntaxMode: true,
   privacyMode: true,
   autoSync: true,
-  installationId: true,
+  installationRepositoryId: true,
+  installationRepository: {
+    select: { installationId: true, repositoryFullName: true },
+  },
   createdAt: true,
   updatedAt: true,
   user: { select: { username: true, id: true } },

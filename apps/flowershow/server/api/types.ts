@@ -16,7 +16,10 @@ export const publicSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   privacyMode: true,
   autoSync: true,
   syntaxMode: true,
-  installationId: true,
+  installationRepositoryId: true,
+  installationRepository: {
+    select: { installationId: true, repositoryFullName: true },
+  },
   createdAt: true,
   updatedAt: true,
   user: { select: { username: true, id: true } },
@@ -45,7 +48,13 @@ export const publicSiteSchema: z.ZodType<PublicSite> = z.object({
   privacyMode: z.enum(PrivacyMode),
   autoSync: z.boolean(),
   syntaxMode: z.enum(SyntaxMode),
-  installationId: z.string().nullable(),
+  installationRepositoryId: z.string().nullable(),
+  installationRepository: z
+    .object({
+      installationId: z.string(),
+      repositoryFullName: z.string(),
+    })
+    .nullable(),
   createdAt: z.date(),
   updatedAt: z.date(),
   user: z.object({ username: z.string(), id: z.string() }),

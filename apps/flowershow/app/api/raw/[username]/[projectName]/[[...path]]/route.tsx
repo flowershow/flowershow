@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { generatePresignedGetUrl } from '@/lib/content-store';
-import { PublicSite } from '@/server/api/types';
 import prisma from '@/server/db';
 
 export async function GET(
@@ -21,26 +20,16 @@ export async function GET(
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 
-  let site: PublicSite | null = null;
-
-  if (username === '_domain') {
-    site = await prisma.site.findFirst({
-      where: {
-        customDomain: projectName,
-      },
-      include: { user: true },
-    });
-  } else {
-    site = await prisma.site.findFirst({
-      where: {
-        projectName,
-        user: {
-          username,
-        },
-      },
-      include: { user: true },
-    });
-  }
+  const site =
+    username === '_domain'
+      ? await prisma.site.findFirst({
+          where: { customDomain: projectName },
+          select: { id: true, privacyMode: true },
+        })
+      : await prisma.site.findFirst({
+          where: { projectName, user: { username } },
+          select: { id: true, privacyMode: true },
+        });
 
   if (!site) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });

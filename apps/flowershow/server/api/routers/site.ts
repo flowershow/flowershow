@@ -158,7 +158,17 @@ export const siteRouter = createTRPCRouter({
         baseName,
       );
 
-      // 3) Create site
+      // 3) Look up the GitHubInstallationRepository for FK link
+      let installationRepoId: string | null = null;
+      if (installationId) {
+        const repoRecord = await ctx.db.gitHubInstallationRepository.findFirst({
+          where: { installationId, repositoryFullName: ghRepository },
+          select: { id: true },
+        });
+        installationRepoId = repoRecord?.id ?? null;
+      }
+
+      // 4) Create site
       const created = await ctx.db.site.create({
         data: {
           projectName,
@@ -168,8 +178,8 @@ export const siteRouter = createTRPCRouter({
           autoSync: true,
           webhookId: null,
           user: { connect: { id: ctx.session.user.id } },
-          ...(installationId && {
-            installation: { connect: { id: installationId } },
+          ...(installationRepoId && {
+            installationRepository: { connect: { id: installationRepoId } },
           }),
         },
       });
@@ -221,7 +231,12 @@ export const siteRouter = createTRPCRouter({
 
       const site = await ctx.db.site.findUnique({
         where: { id },
-        include: { user: true },
+        include: {
+          user: true,
+          installationRepository: {
+            select: { installationId: true, repositoryFullName: true },
+          },
+        },
       });
 
       if (!site || site.userId !== ctx.session.user.id) {
@@ -230,6 +245,9 @@ export const siteRouter = createTRPCRouter({
           message: 'Site not found',
         });
       }
+
+      const repoFullName =
+        site.installationRepository?.repositoryFullName ?? site.ghRepository;
 
       // Utils
       const parseIfBoolString = (v: string) =>
@@ -286,16 +304,17 @@ export const siteRouter = createTRPCRouter({
           data: { rootDir: newRoot },
         });
         await deleteProject(id).catch(() => {}); // TODO handle it in a better way
-        if (site.ghRepository && site.ghBranch) {
+        if (repoFullName && site.ghBranch) {
           await inngest.send({
             name: 'site/sync',
             data: {
               siteId: id,
-              ghRepository: site.ghRepository,
+              ghRepository: repoFullName,
               ghBranch: site.ghBranch,
               rootDir: newRoot,
               accessToken: ctx.session.accessToken,
-              installationId: site.installationId ?? undefined,
+              installationId:
+                site.installationRepository?.installationId ?? undefined,
             },
           });
         }
@@ -304,7 +323,7 @@ export const siteRouter = createTRPCRouter({
 
         // GitHub App installations don't need per-repository webhooks
         // They receive push events at the installation level
-        if (site.installationId) {
+        if (site.installationRepositoryId) {
           // GitHub App site: simply toggle autoSync
           await ctx.db.site.update({
             where: { id },
@@ -362,7 +381,7 @@ export const siteRouter = createTRPCRouter({
         // Note: this is a temporary solution, to make sure people who upgrade now have their
         // site's indexes updated (but we index all documents, even for non-premium users atm, which we shouldn't)
         if (
-          site.ghRepository &&
+          repoFullName &&
           site.ghBranch &&
           key === 'enableSearch' &&
           converted === true
@@ -371,11 +390,12 @@ export const siteRouter = createTRPCRouter({
             name: 'site/sync',
             data: {
               siteId: id,
-              ghRepository: site.ghRepository,
+              ghRepository: repoFullName,
               ghBranch: site.ghBranch,
               rootDir: site.rootDir,
               accessToken: ctx.session.accessToken,
-              installationId: site.installationId ?? undefined,
+              installationId:
+                site.installationRepository?.installationId ?? undefined,
               forceSync: true,
             },
           });
@@ -495,7 +515,11 @@ export const siteRouter = createTRPCRouter({
       }
 
       // Only delete webhook for OAuth sites (GitHub App sites use installation-level webhooks)
-      if (site.ghRepository && site.webhookId && !site.installationId) {
+      if (
+        site.ghRepository &&
+        site.webhookId &&
+        !site.installationRepositoryId
+      ) {
         try {
           await deleteGitHubRepoWebhook({
             ghRepository: site.ghRepository,
@@ -541,6 +565,11 @@ export const siteRouter = createTRPCRouter({
         where: {
           id: input.id,
         },
+        include: {
+          installationRepository: {
+            select: { installationId: true, repositoryFullName: true },
+          },
+        },
       });
 
       if (
@@ -554,9 +583,11 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      const { id, ghRepository, ghBranch } = site;
+      const { id, ghBranch } = site;
+      const repoFullName =
+        site.installationRepository?.repositoryFullName ?? site.ghRepository;
 
-      if (!ghRepository || !ghBranch) {
+      if (!repoFullName || !ghBranch) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: "Can't sync a site with no GitHub repository connected.",
@@ -564,16 +595,18 @@ export const siteRouter = createTRPCRouter({
       }
 
       const accessToken = ctx.session.accessToken;
+      const derivedInstallationId =
+        site.installationRepository?.installationId ?? undefined;
 
       const posthog = PostHogClient();
       const syncProperties = {
         siteId: id,
         source: 'manual',
-        repository: ghRepository,
+        repository: repoFullName,
         branch: ghBranch,
         rootDir: site.rootDir,
         forceSync: input.force,
-        hasInstallationId: Boolean(site.installationId),
+        hasInstallation: Boolean(site.installationRepositoryId),
       };
 
       try {
@@ -581,11 +614,11 @@ export const siteRouter = createTRPCRouter({
           name: 'site/sync',
           data: {
             siteId: id,
-            ghRepository,
+            ghRepository: repoFullName,
             ghBranch,
             rootDir: site.rootDir,
             accessToken,
-            installationId: site.installationId ?? undefined,
+            installationId: derivedInstallationId,
             forceSync: input.force,
           },
         });
@@ -600,10 +633,10 @@ export const siteRouter = createTRPCRouter({
           route: 'site.sync',
           source: 'manual',
           siteId: id,
-          repository: ghRepository,
+          repository: repoFullName,
           branch: ghBranch,
           forceSync: input.force,
-          hasInstallationId: Boolean(site.installationId),
+          hasInstallation: Boolean(site.installationRepositoryId),
           userId: ctx.session.user.id,
         });
 
@@ -634,6 +667,11 @@ export const siteRouter = createTRPCRouter({
         // Get site data for tree comparison
         const site = await ctx.db.site.findUnique({
           where: { id: input.id },
+          include: {
+            installationRepository: {
+              select: { installationId: true, repositoryFullName: true },
+            },
+          },
         });
 
         if (!site || site.userId !== ctx.session.user.id) {
@@ -686,7 +724,10 @@ export const siteRouter = createTRPCRouter({
                 : `[${b.path}]: Unknown error`,
             )
             .join('\n');
-        } else if (!site.ghRepository) {
+        } else if (
+          !site.installationRepository?.repositoryFullName &&
+          !site.ghRepository
+        ) {
           return {
             status: 'SUCCESS',
             lastSyncedAt,
@@ -697,11 +738,15 @@ export const siteRouter = createTRPCRouter({
               status: 'PENDING',
             };
           }
+          const repoForTree =
+            site.installationRepository?.repositoryFullName ??
+            site.ghRepository!;
           const gitHubTree = await fetchGitHubRepoTree({
-            ghRepository: site.ghRepository,
+            ghRepository: repoForTree,
             ghBranch: site.ghBranch!,
             accessToken: ctx.session.accessToken,
-            installationId: site.installationId ?? undefined,
+            installationId:
+              site.installationRepository?.installationId ?? undefined,
           });
           status =
             site.tree?.['sha'] === gitHubTree.sha ? 'SUCCESS' : 'OUTDATED';
@@ -1645,7 +1690,7 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      if (site.installationId) {
+      if (site.installationRepositoryId) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Site is already using GitHub App',
@@ -1659,30 +1704,26 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      // Find matching installation that has access to this repo
-      const installation = await ctx.db.gitHubInstallation.findFirst({
+      // Find matching installation repo record that has access to this repo
+      const repoRecord = await ctx.db.gitHubInstallationRepository.findFirst({
         where: {
-          userId: site.userId,
-          repositories: {
-            some: {
-              repositoryFullName: site.ghRepository,
-            },
-          },
+          installation: { userId: site.userId },
+          repositoryFullName: site.ghRepository,
         },
-        include: { repositories: true },
+        select: { id: true },
       });
 
-      if (!installation) {
+      if (!repoRecord) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: `No GitHub App installation found with access to ${site.ghRepository}. Please install the GitHub App and grant access to this repository first.`,
         });
       }
 
-      // Update site to use installation
+      // Update site to use installation via repo link
       await ctx.db.site.update({
         where: { id: input.siteId },
-        data: { installationId: installation.id },
+        data: { installationRepository: { connect: { id: repoRecord.id } } },
       });
 
       // If site had a webhook, it's no longer needed (GitHub App uses installation-level webhooks)
@@ -1734,31 +1775,31 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      // Get all OAuth sites for this user
+      // Get all OAuth sites for this user (no installation repo link)
       const oauthSites = await ctx.db.site.findMany({
         where: {
           userId: ctx.session.user.id,
-          installationId: null, // OAuth-only sites
+          installationRepositoryId: null,
         },
       });
 
-      // Filter sites whose repositories are accessible through this installation
-      const accessibleRepoNames = new Set(
-        installation.repositories.map((r) => r.repositoryFullName),
+      // Build a map of repo full name → repo record ID for this installation
+      const repoMap = new Map(
+        installation.repositories.map((r) => [r.repositoryFullName, r.id]),
       );
 
       const sitesToMigrate = oauthSites.filter(
-        (site) =>
-          site.ghRepository && accessibleRepoNames.has(site.ghRepository),
+        (site) => site.ghRepository && repoMap.has(site.ghRepository),
       );
 
       // Migrate each matching site
       const migratedSites: string[] = [];
       for (const site of sitesToMigrate) {
         try {
+          const repoRecordId = repoMap.get(site.ghRepository!)!;
           await ctx.db.site.update({
             where: { id: site.id },
-            data: { installationId: installation.id },
+            data: { installationRepository: { connect: { id: repoRecordId } } },
           });
 
           // Clean up old webhook if exists
@@ -1806,7 +1847,7 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      if (!site.ghRepository) {
+      if (!site.ghRepository && !site.installationRepositoryId) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'Site is not connected to a GitHub repository',
@@ -1814,7 +1855,11 @@ export const siteRouter = createTRPCRouter({
       }
 
       // Delete webhook for OAuth sites (GitHub App sites use installation-level webhooks)
-      if (site.webhookId && !site.installationId) {
+      if (
+        site.webhookId &&
+        !site.installationRepositoryId &&
+        site.ghRepository
+      ) {
         try {
           await deleteGitHubRepoWebhook({
             ghRepository: site.ghRepository,
@@ -1833,7 +1878,7 @@ export const siteRouter = createTRPCRouter({
           ghRepository: null,
           ghBranch: null,
           rootDir: null,
-          installationId: null,
+          installationRepositoryId: null,
           webhookId: null,
           autoSync: false,
           tree: Prisma.JsonNull,
@@ -1912,6 +1957,19 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
+      // Look up the GitHubInstallationRepository record for this repo
+      let installationRepoId: string | null = null;
+      if (installationId) {
+        const repoRecord = await ctx.db.gitHubInstallationRepository.findFirst({
+          where: {
+            installationId,
+            repositoryFullName: ghRepository,
+          },
+          select: { id: true },
+        });
+        installationRepoId = repoRecord?.id ?? null;
+      }
+
       // Update site with GitHub connection
       await ctx.db.site.update({
         where: { id: siteId },
@@ -1920,8 +1978,8 @@ export const siteRouter = createTRPCRouter({
           ghBranch,
           rootDir: rootDir || null,
           autoSync: true,
-          ...(installationId && {
-            installation: { connect: { id: installationId } },
+          ...(installationRepoId && {
+            installationRepository: { connect: { id: installationRepoId } },
           }),
         },
       });

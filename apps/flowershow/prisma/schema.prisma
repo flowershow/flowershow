@@ -105,6 +105,8 @@ model VerificationToken {
 
 model Site {
   id                      String        @id @default(cuid())
+  // TODO(legacy-oauth): drop once all sites are migrated to GitHub App.
+  // For GitHub App sites, repo name is derived via installationRepository relation.
   ghRepository            String?        @map("gh_repository")
   ghBranch                String?        @map("gh_branch")
   subdomain               String?       @unique
@@ -136,12 +138,12 @@ model Site {
   expiresAt               DateTime?     @map("expires_at")
   anonymousOwnerId        String?       @map("anonymous_owner_id")
 
-  // GitHub App installation for fine-grained permissions
-  installationId String?             @map("installation_id")
-  installation   GitHubInstallation? @relation(fields: [installationId], references: [id])
+  // Links to specific repo within the GitHub App installation
+  installationRepositoryId String?                       @map("installation_repository_id")
+  installationRepository   GitHubInstallationRepository? @relation(fields: [installationRepositoryId], references: [id])
 
   @@index([userId])
-  @@index([installationId])
+  @@index([installationRepositoryId])
   @@index([expiresAt])
   @@index([anonymousOwnerId])
 }
@@ -263,7 +265,6 @@ model GitHubInstallation {
   updatedAt      DateTime  @updatedAt @map("updated_at")
 
   repositories GitHubInstallationRepository[]
-  sites        Site[]
 
   @@unique([installationId, userId]) // Composite unique: each user can link once
   @@index([userId])
@@ -281,8 +282,10 @@ model GitHubInstallationRepository {
   repositoryFullName String             @map("repository_full_name") // 'owner/repo'
   isPrivate          Boolean            @default(false) @map("is_private")
   createdAt          DateTime           @default(now()) @map("created_at")
+  sites              Site[]
 
   @@unique([installationId, repositoryId])
   @@index([installationId])
   @@index([repositoryFullName])
+  @@index([repositoryId])
 }

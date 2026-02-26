@@ -26,7 +26,10 @@ const PREMIUM_FEATURES: Feature[] = [
 /**
  * Check if a feature is enabled for a site
  */
-export function isFeatureEnabled(feature: Feature, site: PublicSite): boolean {
+export function isFeatureEnabled(
+  feature: Feature,
+  site: Pick<PublicSite, 'customDomain' | 'plan'>,
+): boolean {
   switch (feature) {
     case Feature.NoBranding:
       return site.customDomain === 'flowershow.app'

@@ -256,9 +256,6 @@ export const githubRouter = createTRPCRouter({
           id: input.installationId,
           userId: ctx.session.user.id,
         },
-        include: {
-          sites: true,
-        },
       });
 
       if (!installation) {
@@ -268,11 +265,19 @@ export const githubRouter = createTRPCRouter({
         });
       }
 
-      // Check if any sites are using this installation
-      if (installation.sites.length > 0) {
+      // Check if any sites are linked to repos in this installation
+      const linkedSiteCount = await ctx.db.site.count({
+        where: {
+          installationRepository: {
+            installationId: installation.id,
+          },
+        },
+      });
+
+      if (linkedSiteCount > 0) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: `Cannot delete installation: ${installation.sites.length} site(s) are using it`,
+          message: `Cannot delete installation: ${linkedSiteCount} site(s) are using it`,
         });
       }
 

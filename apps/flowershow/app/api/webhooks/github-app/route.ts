@@ -45,6 +45,15 @@ interface WebhookPayload {
     name: string;
     full_name: string;
     private: boolean;
+    owner?: {
+      login: string;
+    };
+  };
+  // Repository renamed event fields
+  changes?: {
+    repository?: {
+      name?: { from: string };
+    };
   };
 }
 
@@ -102,6 +111,10 @@ export async function POST(request: Request) {
 
       case 'push':
         await handlePushEvent(data);
+        break;
+
+      case 'repository':
+        await handleRepositoryEvent(data);
         break;
 
       default:
@@ -257,23 +270,10 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
       // Repositories were removed from the installation
       if (!repositories_removed || repositories_removed.length === 0) break;
 
-      const repoFullNames = repositories_removed.map((repo) => repo.full_name);
       const repoIds = repositories_removed.map((repo) => BigInt(repo.id));
 
-      // Find all user links, eagerly loading affected sites
       const dbInstallations = await prisma.gitHubInstallation.findMany({
         where: { installationId: ghInstallationId },
-        include: {
-          sites: {
-            where: { ghRepository: { in: repoFullNames } },
-            select: {
-              id: true,
-              projectName: true,
-              ghRepository: true,
-              userId: true,
-            },
-          },
-        },
       });
 
       if (dbInstallations.length === 0) {
@@ -285,9 +285,24 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
         `${repositories_removed.length} repositories removed from installation ${installation.id} (${dbInstallations.length} user link(s))`,
       );
 
-      // Process each user link — sites were already loaded via include
       for (const dbInstallation of dbInstallations) {
-        // Delete repository access records for this user link
+        // Find affected sites BEFORE deleting repos (FK cascade will null the link)
+        const affectedSites = await prisma.site.findMany({
+          where: {
+            installationRepository: {
+              installationId: dbInstallation.id,
+              repositoryId: { in: repoIds },
+            },
+          },
+          select: {
+            id: true,
+            projectName: true,
+            ghRepository: true,
+            userId: true,
+          },
+        });
+
+        // Delete repository access records (cascades SET NULL on Site.installationRepositoryId)
         await prisma.gitHubInstallationRepository.deleteMany({
           where: {
             installationId: dbInstallation.id,
@@ -295,20 +310,17 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
           },
         });
 
-        // Clear installationId and disable autoSync for affected sites
-        if (dbInstallation.sites.length > 0) {
+        // Disable autoSync for affected sites
+        if (affectedSites.length > 0) {
           console.log(
-            `Clearing installation access for ${dbInstallation.sites.length} affected site(s) for user ${dbInstallation.userId}`,
+            `Clearing installation access for ${affectedSites.length} affected site(s) for user ${dbInstallation.userId}`,
           );
 
           await prisma.site.updateMany({
             where: {
-              id: { in: dbInstallation.sites.map((s) => s.id) },
+              id: { in: affectedSites.map((s) => s.id) },
             },
-            data: {
-              installationId: null,
-              autoSync: false,
-            },
+            data: { autoSync: false },
           });
         }
       }
@@ -323,6 +335,66 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
   await prisma.gitHubInstallation.updateMany({
     where: { installationId: ghInstallationId },
     data: { updatedAt: new Date() },
+  });
+}
+
+/**
+ * Handle repository events (renamed, transferred, etc.)
+ */
+async function handleRepositoryEvent(data: WebhookPayload) {
+  const { action, repository, installation, changes } = data;
+
+  if (!repository || !installation) {
+    console.error('Repository event missing required data');
+    return;
+  }
+
+  if (action !== 'renamed') {
+    console.log(`Unhandled repository action: ${action}`);
+    return;
+  }
+
+  const repositoryId = BigInt(repository.id);
+  const newFullName = repository.full_name;
+  const newName = repository.name;
+
+  // Update the authoritative source — GitHubInstallationRepository.
+  // Sites linked via installationRepositoryId FK automatically see the new name.
+  const updatedRepos = await prisma.gitHubInstallationRepository.updateMany({
+    where: { repositoryId },
+    data: {
+      repositoryFullName: newFullName,
+      repositoryName: newName,
+    },
+  });
+
+  // Fallback: update ghRepository on legacy sites that aren't linked via FK yet
+  const oldName = changes?.repository?.name?.from;
+  const oldFullName =
+    oldName && repository.owner?.login
+      ? `${repository.owner.login}/${oldName}`
+      : null;
+
+  let updatedLegacySites = { count: 0 };
+  if (oldFullName) {
+    updatedLegacySites = await prisma.site.updateMany({
+      where: {
+        installationRepositoryId: null,
+        ghRepository: oldFullName,
+      },
+      data: { ghRepository: newFullName },
+    });
+  }
+
+  log('Handle Repository Renamed Event', SeverityNumber.INFO, {
+    source: 'github_app_repository',
+    action: 'renamed',
+    repository_id: repository.id,
+    old_full_name: oldFullName ?? undefined,
+    new_full_name: newFullName,
+    installation_id: installation.id,
+    repos_updated: updatedRepos.count,
+    legacy_sites_updated: updatedLegacySites.count,
   });
 }
 
@@ -345,29 +417,15 @@ async function handlePushEvent(data: WebhookPayload) {
 
     // Extract branch name from ref (refs/heads/main -> main)
     const branch = ref.replace('refs/heads/', '');
+    const ghInstallationId = BigInt(installation.id);
 
-    // Look up installations by GitHub's installation ID, including linked sites
-    const dbInstallations = await prisma.gitHubInstallation.findMany({
-      where: { installationId: BigInt(installation.id) },
-      include: {
-        sites: {
-          where: {
-            ghRepository: repository.full_name,
-            ghBranch: branch,
-            autoSync: true,
-          },
-          select: {
-            id: true,
-            ghRepository: true,
-            ghBranch: true,
-            rootDir: true,
-            installationId: true,
-          },
-        },
-      },
+    // Look up a DB installation record to get the CUID for inngest token resolution
+    const dbInstallation = await prisma.gitHubInstallation.findFirst({
+      where: { installationId: ghInstallationId },
+      select: { id: true },
     });
 
-    if (dbInstallations.length === 0) {
+    if (!dbInstallation) {
       log('Handle GitHub App Push Event', SeverityNumber.WARN, {
         source: 'github_app_push',
         reason: 'installation_not_found',
@@ -378,8 +436,35 @@ async function handlePushEvent(data: WebhookPayload) {
       return;
     }
 
-    // Collect all matching sites across all user links for this installation
-    const sites = dbInstallations.flatMap((inst) => inst.sites);
+    // Find matching sites by stable repository ID via installationRepository FK (preferred),
+    // with fallback to ghRepository string for legacy/non-backfilled sites.
+    const sites = await prisma.site.findMany({
+      where: {
+        ghBranch: branch,
+        autoSync: true,
+        OR: [
+          {
+            installationRepository: {
+              repositoryId: BigInt(repository.id),
+              installation: { installationId: ghInstallationId },
+            },
+          },
+          {
+            installationRepositoryId: null,
+            ghRepository: repository.full_name,
+          },
+        ],
+      },
+      select: {
+        id: true,
+        ghRepository: true,
+        ghBranch: true,
+        rootDir: true,
+        installationRepository: {
+          select: { installationId: true },
+        },
+      },
+    });
 
     if (sites.length === 0) {
       log('Handle GitHub App Push Event', SeverityNumber.INFO, {
@@ -398,10 +483,13 @@ async function handlePushEvent(data: WebhookPayload) {
           name: 'site/sync',
           data: {
             siteId: site.id,
-            ghRepository: site.ghRepository!,
+            // Prefer the webhook's current repo name (always up-to-date) over the
+            // potentially-stale Site.ghRepository column.
+            ghRepository: repository.full_name,
             ghBranch: site.ghBranch!,
             rootDir: site.rootDir,
-            installationId: site.installationId!,
+            installationId:
+              site.installationRepository?.installationId ?? dbInstallation.id,
           },
         }),
       ),
@@ -440,7 +528,6 @@ async function handlePushEvent(data: WebhookPayload) {
         repository: repository.full_name,
         branch,
         installationId: installation.id,
-        installationsMatched: dbInstallations.length,
         sitesMatched: sites.length,
         sitesTriggered: triggeredSites,
         sitesFailed: failedSyncs.length,
@@ -452,7 +539,6 @@ async function handlePushEvent(data: WebhookPayload) {
       repository: repository.full_name,
       branch,
       installation_id: installation.id,
-      installations_found: dbInstallations.length,
       sites_found: sites.length,
       sites_triggered: triggeredSites,
       sites_failed: failedSyncs.length,

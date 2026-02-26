@@ -92,7 +92,7 @@ function makeSite(overrides: Partial<Record<string, unknown>> = {}) {
     privacyMode: 'PUBLIC',
     autoSync: false,
     syntaxMode: 'md',
-    installationId: null,
+    installationRepositoryId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
     userId: 'user-1',

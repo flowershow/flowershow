@@ -9,6 +9,7 @@ import SitePasswordProtectionForm from '@/components/dashboard/form/site-passwor
 import SettingsNav from '@/components/dashboard/settings-nav';
 import { validDomainRegex } from '@/lib/domains';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
+import { getRepoFullName } from '@/lib/get-repo-full-name';
 import { PLANS } from '@/lib/stripe-plans';
 import { SiteUpdateKey } from '@/server/api/types';
 import { api } from '@/trpc/server';
@@ -29,8 +30,10 @@ export default async function SiteSettingsIndex(props: {
     siteId: site.id,
   });
 
+  const repoFullName = getRepoFullName(site);
+
   // Check if site needs migration (OAuth-only, no GitHub App installation)
-  const isOAuthSite = !site.installationId && site.ghRepository;
+  const isOAuthSite = !site.installationRepositoryId && site.ghRepository;
   let hasInstallationForRepo = false;
 
   if (isOAuthSite) {
@@ -64,7 +67,7 @@ export default async function SiteSettingsIndex(props: {
     <>
       <div className="sm:grid sm:grid-cols-12 sm:space-x-6">
         <div className="sticky top-[5rem] col-span-2 hidden self-start sm:col-span-3 sm:block lg:col-span-2">
-          <SettingsNav hasGhRepository={!!site.ghRepository} />
+          <SettingsNav hasGhRepository={!!repoFullName} />
         </div>
         <div className="col-span-10 flex flex-col space-y-6 sm:col-span-9 lg:col-span-10">
           {isOAuthSite && (
@@ -120,12 +123,12 @@ export default async function SiteSettingsIndex(props: {
 
           <GitHubConnectionForm
             siteId={site.id}
-            ghRepository={site.ghRepository}
+            ghRepository={repoFullName}
             ghBranch={site.ghBranch}
             rootDir={site.rootDir}
           />
 
-          {site.ghRepository && (
+          {repoFullName && (
             <Form
               title="Auto-sync"
               description="Automatically sync your site after each change to the GitHub repository."

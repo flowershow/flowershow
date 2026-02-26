@@ -90,7 +90,9 @@ async function main() {
       },
     },
     include: {
-      installation: true,
+      installationRepository: {
+        select: { installationId: true, repositoryFullName: true },
+      },
       user: {
         include: {
           accounts: {
@@ -140,7 +142,7 @@ async function main() {
     }
 
     // GitHub App installation takes priority over OAuth
-    const hasInstallation = !!site.installationId;
+    const hasInstallation = !!site.installationRepositoryId;
     const githubAccount = site.user.accounts.find(
       (a) => a.provider === 'github',
     );
@@ -158,8 +160,11 @@ async function main() {
       continue;
     }
 
+    const repoFullName =
+      site.installationRepository?.repositoryFullName ?? site.ghRepository;
+
     // Validate required GitHub fields
-    if (!site.ghRepository || !site.ghBranch) {
+    if (!repoFullName || !site.ghBranch) {
       console.log(
         `⚠️  Skipping ${siteIdentifier}: Missing repository or branch`,
       );
@@ -174,7 +179,7 @@ async function main() {
     try {
       if (dryRun) {
         console.log(`[DRY RUN] Would sync: ${siteIdentifier}`);
-        console.log(`  Repository: ${site.ghRepository}`);
+        console.log(`  Repository: ${repoFullName}`);
         console.log(`  Branch: ${site.ghBranch}`);
         console.log(`  Root Dir: ${site.rootDir || '(none)'}`);
         console.log(
@@ -188,11 +193,12 @@ async function main() {
           name: 'site/sync',
           data: {
             siteId: site.id,
-            ghRepository: site.ghRepository,
+            ghRepository: repoFullName,
             ghBranch: site.ghBranch,
             rootDir: site.rootDir || null,
             accessToken: githubAccount?.access_token ?? undefined,
-            installationId: site.installationId ?? undefined,
+            installationId:
+              site.installationRepository?.installationId ?? undefined,
             forceSync: true,
           },
         });

@@ -1,5 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import { ReactNode } from 'react';
+import { publicSiteSelect } from '@/server/api/types';
 import { getSession } from '@/server/auth';
 import prisma from '@/server/db';
 import SiteSettingsHeader from './header';
@@ -21,8 +22,9 @@ export default async function SiteSettingsLayout(props: {
     where: {
       id: decodeURIComponent(params.id),
     },
-    include: {
-      user: true,
+    select: {
+      ...publicSiteSelect,
+      userId: true,
     },
   });
 

@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import { GithubIcon } from '@/components/icons';
 import LoadingDots from '@/components/icons/loading-dots';
 import { env } from '@/env.mjs';
+import { getRepoFullName } from '@/lib/get-repo-full-name';
 import { PublicSite } from '@/server/api/types';
 import Status from './status';
 import SyncSiteButton from './sync-button';
@@ -44,9 +45,9 @@ export default async function SiteSettingsHeader({
             <Status />
           </Suspense>
 
-          {site.ghRepository && (
+          {getRepoFullName(site) && (
             <Link
-              href={`https://github.com/${site.ghRepository}`}
+              href={`https://github.com/${getRepoFullName(site)}`}
               target="_blank"
               rel="noreferrer"
               className="mt-2 inline-flex items-center text-sm text-gray-500 hover:underline"
@@ -55,12 +56,12 @@ export default async function SiteSettingsHeader({
                 className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400"
                 aria-hidden="true"
               />
-              <span>{site.ghRepository}</span>
+              <span>{getRepoFullName(site)}</span>
             </Link>
           )}
         </div>
         <div className="mt-5 flex lg:ml-4 lg:mt-0">
-          {site.ghRepository && (
+          {getRepoFullName(site) && (
             <span className="ml-3">
               <SyncSiteButton siteId={site.id} />
             </span>
