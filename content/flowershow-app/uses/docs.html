@@ -42,11 +42,10 @@
   </div>
 
   <div class="mx-auto max-w-7xl px-6 lg:px-8">
-    <div
-      class="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2 items-center">
-      <div class="lg:ml-auto lg:pl-4 lg:pt-4">
+    <div class="mx-auto grid max-w-2xl grid-cols-1lg:mx-0 lg:max-w-none lg:grid-cols-5 items-start">
+      <div class="lg:col-span-2 p-8 lg:pl-12">
         <div class="lg:max-w-lg">
-          <h2 class="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl dark:text-white">
+          <h2 class="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl dark:text-white">
             No setup ceremony</h2>
           <img src="./frictions.png" class="mt-6"></img>
           <!-- <ul
@@ -58,45 +57,44 @@
             <li>Deploy to hosting</li>
             <li>Maintain pipeline</li>
           </ul> -->
-          <p class="mt-8 text-3xl font-semibold text-gray-900 dark:text-white">Or just upload a folder.</p>
+          <p class="mt-8 text-3xl font-semibold text-gray-900 dark:text-white">Or just upload a folder. 😌</p>
         </div>
       </div>
-      <div class="flex items-start justify-end lg:order-first">
-        <img width="2432" height="1442"
-          src="https://tailwindcss.com/plus-assets/img/component-images/project-app-screenshot.png"
-          alt="Product screenshot"
-          class="w-[48rem] max-w-none rounded-xl shadow-xl ring-1 ring-gray-400/10 sm:w-[57rem] dark:hidden dark:ring-white/10" />
-        <img width="2432" height="1442"
-          src="https://tailwindcss.com/plus-assets/img/component-images/dark-project-app-screenshot.png"
-          alt="Product screenshot"
-          class="hidden w-[48rem] max-w-none rounded-xl shadow-xl ring-1 ring-gray-400/10 sm:w-[57rem] dark:block dark:ring-white/10" />
+      <div class="lg:col-span-3 flex items-start justify-end lg:order-first aspect-video">
+        <video autoplay loop muted playsinline src="./demo.mp4"
+          class="w-full max-w-full rounded-xl shadow-xl ring-1 ring-gray-400/10 dark:ring-white/10 aspect-video object-cover">
+        </video>
       </div>
     </div>
   </div>
 
 
-  <div class="bg-gray-50 py-24 sm:py-32 dark:bg-gray-900">
+  <div class="bg-gray-50 py-6 mt-6 sm:mt-12 sm:py-12 dark:bg-gray-900">
     <div class="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
       <h2
-        class="mt-2 max-w-lg text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl dark:text-white">
-        Everything you need</h2>
-      <div class="mt-10 grid grid-cols-1 gap-4 sm:mt-16 lg:grid-cols-6 lg:grid-rows-2">
-        <div class="flex p-px lg:col-span-4">
+        class="mt-2 max-w-5xl text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl dark:text-white">
+        Everything a documentation site should have.
+      </h2>
+      <div class="mt-10 grid grid-cols-1 gap-4 sm:mt-16 lg:grid-cols-6 lg:grid-rows-4">
+        <div class="flex p-px lg:col-span-4 lg:row-span-2">
           <div
             class="w-full overflow-hidden rounded-lg bg-white shadow outline outline-1 outline-black/5 max-lg:rounded-t-[2rem] lg:rounded-tl-[2rem] dark:bg-gray-800 dark:shadow-none dark:outline-white/15">
             <img src="https://tailwindcss.com/plus-assets/img/component-images/bento-02-releases.png" alt=""
-              class="h-80 object-cover object-left dark:hidden" />
-            <img src="https://tailwindcss.com/plus-assets/img/component-images/dark-bento-02-releases.png" alt=""
-              class="hidden h-80 object-cover object-left dark:block" />
+              class="h-80 object-cover object-left" />
             <div class="p-10">
-              <h3 class="text-sm/4 font-semibold text-gray-500 dark:text-gray-400">Releases</h3>
-              <p class="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-white">Push to deploy</p>
-              <p class="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-gray-400">Lorem ipsum dolor sit amet,
-                consectetur adipiscing elit. In gravida justo et nulla efficitur, maximus egestas sem pellentesque.</p>
+              <h3 class="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-white">Clear navigation from
+                your folder structure</h3>
+              <p class="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-gray-400">
+                Your folders become sections.
+                Your files become pages.
+
+                URLs follow the same structure.
+                No separate navigation config.
+              </p>
             </div>
           </div>
         </div>
-        <div class="flex p-px lg:col-span-2">
+        <div class="flex p-px lg:col-span-2 lg:row-span-2">
           <div
             class="w-full overflow-hidden rounded-lg bg-white shadow outline outline-1 outline-black/5 lg:rounded-tr-[2rem] dark:bg-gray-800 dark:shadow-none dark:outline-white/15">
             <img src="https://tailwindcss.com/plus-assets/img/component-images/bento-02-integrations.png" alt=""
@@ -104,15 +102,14 @@
             <img src="https://tailwindcss.com/plus-assets/img/component-images/dark-bento-02-integrations.png" alt=""
               class="hidden h-80 object-cover dark:block" />
             <div class="p-10">
-              <h3 class="text-sm/4 font-semibold text-gray-500 dark:text-gray-400">Integrations</h3>
-              <p class="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-white">Connect your favorite
-                tools</p>
-              <p class="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-gray-400">Curabitur auctor, ex quis auctor
-                venenatis, eros arcu rhoncus massa.</p>
+              <p class="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-white">Built-in search</p>
+              <p class="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-gray-400">Press ⌘K and find what you need
+                instantly.
+              </p>
             </div>
           </div>
         </div>
-        <div class="flex p-px lg:col-span-2">
+        <div class="flex lg:col-span-2 lg:row-span-2">
           <div
             class="w-full overflow-hidden rounded-lg bg-white shadow outline outline-1 outline-black/5 lg:rounded-bl-[2rem] dark:bg-gray-800 dark:shadow-none dark:outline-white/15">
             <img src="https://tailwindcss.com/plus-assets/img/component-images/bento-02-security.png" alt=""
@@ -120,29 +117,65 @@
             <img src="https://tailwindcss.com/plus-assets/img/component-images/dark-bento-02-security.png" alt=""
               class="hidden h-80 object-cover dark:block" />
             <div class="p-10">
-              <h3 class="text-sm/4 font-semibold text-gray-500 dark:text-gray-400">Security</h3>
-              <p class="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-white">Advanced access control
-              </p>
-              <p class="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-gray-400">Vestibulum ante ipsum primis in
-                faucibus orci luctus et ultrices posuere cubilia.</p>
+              <h3 class="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-white">Updates in seconds</h3>
+              <p class="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-gray-400">Push to GitHub.
+                Run the CLI.
+                Sync from Obsidian.
+                Refresh the page. It&apos;s live.
+                No rebuild ritual.
+                No “deployment in progress” anxiety.</p>
             </div>
           </div>
         </div>
-        <div class="flex p-px lg:col-span-4">
+        <div class="flex lg:col-span-2 lg:row-span-2">
+          <div
+            class="w-full overflow-hidden rounded-lg bg-white shadow outline outline-1 outline-black/5 dark:bg-gray-800 dark:shadow-none dark:outline-white/15">
+            <img src="https://tailwindcss.com/plus-assets/img/component-images/bento-02-performance.png" alt=""
+              class="h-80 object-cover object-left" />
+            <div class="p-10">
+              <h3 class="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-white">GitHub integration</h3>
+              <p class="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-gray-400">
+                Keep your docs where they already live.
+
+                Your repo stays the source of truth.
+                Changes auto-sync.
+                No migration to a proprietary editor.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex lg:col-span-2 lg:row-span-1">
           <div
             class="w-full overflow-hidden rounded-lg bg-white shadow outline outline-1 outline-black/5 max-lg:rounded-b-[2rem] lg:rounded-br-[2rem] dark:bg-gray-800 dark:shadow-none dark:outline-white/15">
             <img src="https://tailwindcss.com/plus-assets/img/component-images/bento-02-performance.png" alt=""
-              class="h-80 object-cover object-left dark:hidden" />
-            <img src="https://tailwindcss.com/plus-assets/img/component-images/dark-bento-02-performance.png" alt=""
-              class="hidden h-80 object-cover object-left dark:block" />
+              class="block h-30 w-full object-cover object-left" />
             <div class="p-10">
-              <h3 class="text-sm/4 font-semibold text-gray-500 dark:text-gray-400">Performance</h3>
-              <p class="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-white">Lightning-fast builds</p>
-              <p class="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-gray-400">Sed congue eros non finibus molestie.
-                Vestibulum euismod augue vel commodo vulputate. Maecenas at augue sed elit dictum vulputate.</p>
+              <h3 class="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-white">Public or private
+              </h3>
+              <p class="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-gray-400">
+                Make your docs public.
+                Or keep them internal.
+              </p>
             </div>
           </div>
         </div>
+
+        <div class="flex lg:col-span-2 lg:row-span-1">
+          <div
+            class="w-full overflow-hidden rounded-lg bg-white shadow outline outline-1 outline-black/5 max-lg:rounded-b-[2rem] lg:rounded-br-[2rem] dark:bg-gray-800 dark:shadow-none dark:outline-white/15">
+            <div class="p-10">
+              <h3 class="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-white">Markdown stays yours
+              </h3>
+              <p class="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-gray-400">
+                No proprietary format.
+                No locked editor.
+                No migration trap.
+              </p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
