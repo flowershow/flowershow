@@ -93,6 +93,7 @@
     { "from": "/docs/obsidian-bases-reference", "to": "/docs/obsidian-bases" },
     { "from": "/docs/bases", "to": "/docs/obsidian-bases" },
     { "from": "/blogs", "to": "/uses/blogs" },
-    { "from": "/data-stories", "to": "/uses/data-stories" }
+    { "from": "/data-stories", "to": "/uses/data-stories" },
+    { "from": "/docs/site-config", "to": "/docs/config" }
   ]
 }
