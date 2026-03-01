@@ -839,9 +839,9 @@ export const siteRouter = createTRPCRouter({
             const keysToResolve = ['image', 'logo', 'favicon', 'thumbnail'];
             keysToResolve.forEach((key) => {
               if (
-                key === 'favicon' &&
-                config.favicon &&
-                isEmoji(config.favicon)
+                (key === 'favicon' || key === 'logo') &&
+                config[key] &&
+                isEmoji(config[key])
               ) {
                 return;
               }
@@ -875,7 +875,7 @@ export const siteRouter = createTRPCRouter({
               });
             }
 
-            if (config.nav?.logo) {
+            if (config.nav?.logo && !isEmoji(config.nav.logo)) {
               config.nav.logo = resolveFilePathToUrlPath({
                 target: config.nav.logo,
                 sitePrefix,

@@ -24,8 +24,19 @@ Configure your site's branding with a logo and title:
 }
 ```
 
-- `logo`: Path to your logo file (relative to site root) or external URL
+- `logo`: Path to your logo file (relative to site root), external URL, or an emoji character
 - `title`: Text displayed as your site title
+
+You can also use an emoji as your logo for a quick, no-image option:
+
+```json
+{
+  "nav": {
+    "logo": "🌸",
+    "title": "My Digital Garden"
+  }
+}
+```
 
 ## Navigation links
 

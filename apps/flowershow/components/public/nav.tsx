@@ -26,6 +26,7 @@ import {
 } from '@/components/types';
 import type { Node } from '@/lib/build-site-tree';
 import { isDir } from '@/lib/build-site-tree';
+import { isEmoji } from '@/lib/is-emoji';
 import ThemeSwitch from './theme-switch';
 
 export interface Props {
@@ -73,13 +74,23 @@ const Nav = ({
           {/* Desktop Navigation */}
           <div className="site-navbar-inner">
             <Link href={url} className="site-navbar-site-title">
-              <Image
-                className="site-navbar-site-logo"
-                alt="Logo"
-                src={logo}
-                width={32}
-                height={32}
-              />
+              {isEmoji(logo) ? (
+                <span
+                  className="site-navbar-site-logo"
+                  aria-label="Logo"
+                  role="img"
+                >
+                  {logo}
+                </span>
+              ) : (
+                <Image
+                  className="site-navbar-site-logo"
+                  alt="Logo"
+                  src={logo}
+                  width={32}
+                  height={32}
+                />
+              )}
               {title && <span className="site-navbar-site-name">{title}</span>}
             </Link>
             <div className="site-navbar-links-container">
