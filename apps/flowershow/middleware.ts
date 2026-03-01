@@ -38,7 +38,8 @@ export default async function middleware(req: NextRequest) {
         headers: {
           'Access-Control-Allow-Origin': isAllowedOrigin ? origin : '',
           'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Headers':
+            'Content-Type, Authorization, X-Flowershow-CLI-Version, X-Flowershow-Plugin-Version',
         },
       });
     }
