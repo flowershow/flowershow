@@ -29,16 +29,22 @@
             </div>
           </div>
 
-          <img width="2432" height="1442" src="./docs-placeholder.png" alt="App screenshot"
-            class="mt-8 rounded-md bg-gray-50 ring-1 ring-gray-900/10 sm:mt-12" />
+          <video src="./docs-demo.mp4" autoplay loop muted playsinline
+            class="mt-8 rounded-md ring-1 ring-gray-900/10 sm:mt-12 w-full"></video>
+
+          <p class="mt-8 text-sm text-gray-400 text-center">
+            <span class="font-medium text-gray-600">3,200+</span> users &nbsp;·&nbsp;
+            <span class="font-medium text-gray-600">5,800+</span> sites published &nbsp;·&nbsp;
+            <span class="font-medium text-gray-600">Free plan</span> <span class="text-gray-500">— forever.</span>
+          </p>
         </div>
       </div>
     </div>
   </div>
 
   <div class="mx-auto max-w-7xl px-6 lg:px-8">
-    <div class="mx-auto grid max-w-2xl grid-cols-1lg:mx-0 lg:max-w-none lg:grid-cols-5 items-start">
-      <div class="lg:col-span-2 p-8 lg:pl-12">
+    <div class="mx-auto grid max-w-2xl grid-cols-1 lg:mx-0 lg:max-w-none lg:grid-cols-8 items-start">
+      <div class="lg:col-span-3 p-8 lg:pl-12">
         <div class="lg:max-w-lg">
           <h2 class="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
             No setup ceremony.</h2>
@@ -55,7 +61,7 @@
           <p class="mt-8 text-3xl font-semibold text-gray-900">Upload your files. That&apos;s enough.</p>
         </div>
       </div>
-      <div class="lg:col-span-3 flex items-start justify-end lg:order-first aspect-video">
+      <div class="lg:col-span-5 flex items-start justify-end lg:order-first aspect-video">
         <img src="./docs-placeholder.png"
           class="w-full max-w-full rounded-xl ring-1 ring-gray-400/10 aspect-video object-cover" />
       </div>
@@ -73,13 +79,13 @@
         </p>
       </div>
 
-      <div class="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
 
         <!-- GitHub (most common) -->
         <a href="/docs/github"
-          class="group rounded-xl bg-gray-50 p-8 ring-1 ring-gray-200 transition hover:bg-white hover:ring-gray-300">
-          <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-white ring-1 ring-gray-200">
-            <svg class="h-6 w-6 text-gray-700" fill="currentColor" viewBox="0 0 24 24">
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-indigo-200">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
+            <svg class="h-6 w-6 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12a10 10 0 006.84 9.49c.5.09.68-.22.68-.48
               0-.24-.01-.87-.01-1.71-2.78.6-3.37-1.34-3.37-1.34-.45-1.14-1.1-1.44-1.1-1.44
               -.9-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.88 1.5 2.31 1.07 2.87.82
@@ -92,64 +98,71 @@
               0 .27.18.58.69.48A10 10 0 0022 12c0-5.52-4.48-10-10-10z" />
             </svg>
           </div>
-          <h3 class="mt-6 text-lg font-semibold text-gray-900">
+          <h3 class="mt-6 text-base font-semibold text-gray-900">
             Connect GitHub
           </h3>
-          <p class="mt-2 text-sm text-gray-600">
+          <p class="mt-2 text-sm text-gray-500 flex-1">
             Keep docs in your repo.<br />
             Push changes — they auto-sync.
           </p>
+          <span class="mt-5 text-sm font-medium text-indigo-600">Get started →</span>
         </a>
 
         <!-- Upload -->
         <a href="/docs/upload-folder"
-          class="group rounded-xl bg-gray-50 p-8 ring-1 ring-gray-200 transition hover:bg-white hover:ring-gray-300">
-          <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-white ring-1 ring-gray-200">
-            <svg class="h-6 w-6 text-gray-700" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-indigo-200">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
+            <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5"
+              viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M3 7.5A2.25 2.25 0 015.25 5.25H9l1.5 1.5h8.25A2.25 2.25 0 0121 9v7.5A2.25 2.25 0 0118.75 18.75H5.25A2.25 2.25 0 013 16.5V7.5z" />
             </svg>
           </div>
-          <h3 class="mt-6 text-lg font-semibold text-gray-900">
+          <h3 class="mt-6 text-base font-semibold text-gray-900">
             Upload a folder
           </h3>
-          <p class="mt-2 text-sm text-gray-600">
+          <p class="mt-2 text-sm text-gray-500 flex-1">
             Drag in your Markdown files.
             Get a site link instantly.
           </p>
+          <span class="mt-5 text-sm font-medium text-indigo-600">Get started →</span>
         </a>
 
         <!-- Obsidian -->
         <a href="/docs/obsidian"
-          class="group rounded-xl bg-gray-50 p-8 ring-1 ring-gray-200 transition hover:bg-white hover:ring-gray-300">
-          <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-white ring-1 ring-gray-200">
-            <svg class="h-6 w-6 text-gray-700" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-indigo-200">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
+            <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5"
+              viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
             </svg>
           </div>
-          <h3 class="mt-6 text-lg font-semibold text-gray-900">
+          <h3 class="mt-6 text-base font-semibold text-gray-900">
             Publish from Obsidian
           </h3>
-          <p class="mt-2 text-sm text-gray-600">
+          <p class="mt-2 text-sm text-gray-500 flex-1">
             Keep writing in your vault.
             Publish with our official Obsidian plugin.
           </p>
+          <span class="mt-5 text-sm font-medium text-indigo-600">Get started →</span>
         </a>
 
         <!-- CLI -->
         <a href="/docs/cli"
-          class="group rounded-xl bg-gray-50 p-8 ring-1 ring-gray-200 transition hover:bg-white hover:ring-gray-300">
-          <div class="flex h-12 w-12 items-center justify-center rounded-lg bg-white ring-1 ring-gray-200">
-            <svg class="h-6 w-6 text-gray-700" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-indigo-200">
+          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
+            <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5"
+              viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 8l4 4-4 4m6-4h6" />
             </svg>
           </div>
-          <h3 class="mt-6 text-lg font-semibold text-gray-900">
+          <h3 class="mt-6 text-base font-semibold text-gray-900">
             Use the CLI
           </h3>
-          <p class="mt-2 text-sm text-gray-600">
+          <p class="mt-2 text-sm text-gray-500 flex-1">
             Publish from the terminal. Script it if you want.
           </p>
+          <span class="mt-5 text-sm font-medium text-indigo-600">Get started →</span>
         </a>
 
       </div>
@@ -399,48 +412,57 @@
         </p>
       </div>
 
-      <div class="mt-16 grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
+      <div class="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
 
         <!-- Example 1 -->
-        <a href="#" class="group block">
-          <div class="overflow-hidden rounded-xl bg-white ring-1 ring-gray-900/10">
-            <img src="./docs-placeholder.png" alt="Example documentation site"
-              class="h-64 w-full object-cover transition group-hover:scale-[1.02]" />
+        <a href="#"
+          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200hover:shadow-md hover:ring-indigo-200">
+          <div class="overflow-hidden">
+            <img src="./docs-placeholder.png" alt="Example documentation site" class="h-48 w-full object-cover" />
           </div>
-          <h3 class="mt-4 text-lg font-semibold text-gray-900">
-            API Documentation
-          </h3>
-          <p class="mt-1 text-sm text-gray-600">
-            Structured reference with versioned endpoints and guides.
-          </p>
+          <div class="flex flex-col flex-1 p-6">
+            <h3 class="text-base font-semibold text-gray-900">
+              API Documentation
+            </h3>
+            <p class="mt-1 text-sm text-gray-500 flex-1">
+              Structured reference with versioned endpoints and guides.
+            </p>
+            <span class="mt-4 text-sm font-medium text-indigo-600">View site →</span>
+          </div>
         </a>
 
         <!-- Example 2 -->
-        <a href="#" class="group block">
-          <div class="overflow-hidden rounded-xl bg-white ring-1 ring-gray-900/10">
-            <img src="./docs-placeholder.png" alt="Example documentation site"
-              class="h-64 w-full object-cover transition group-hover:scale-[1.02]" />
+        <a href="#"
+          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200hover:shadow-md hover:ring-indigo-200">
+          <div class="overflow-hidden">
+            <img src="./docs-placeholder.png" alt="Example documentation site" class="h-48 w-full object-cover" />
           </div>
-          <h3 class="mt-4 text-lg font-semibold text-gray-900">
-            Product Documentation
-          </h3>
-          <p class="mt-1 text-sm text-gray-600">
-            Guides, tutorials, and structured onboarding.
-          </p>
+          <div class="flex flex-col flex-1 p-6">
+            <h3 class="text-base font-semibold text-gray-900">
+              Product Documentation
+            </h3>
+            <p class="mt-1 text-sm text-gray-500 flex-1">
+              Guides, tutorials, and structured onboarding.
+            </p>
+            <span class="mt-4 text-sm font-medium text-indigo-600">View site →</span>
+          </div>
         </a>
 
         <!-- Example 3 -->
-        <a href="#" class="group block">
-          <div class="overflow-hidden rounded-xl bg-white ring-1 ring-gray-900/10">
-            <img src="./docs-placeholder.png" alt="Example documentation site"
-              class="h-64 w-full object-cover transition group-hover:scale-[1.02]" />
+        <a href="#"
+          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200hover:shadow-md hover:ring-indigo-200">
+          <div class="overflow-hidden">
+            <img src="./docs-placeholder.png" alt="Example documentation site" class="h-48 w-full object-cover" />
           </div>
-          <h3 class="mt-4 text-lg font-semibold text-gray-900">
-            Internal Handbook
-          </h3>
-          <p class="mt-1 text-sm text-gray-600">
-            Private team documentation and processes.
-          </p>
+          <div class="flex flex-col flex-1 p-6">
+            <h3 class="text-base font-semibold text-gray-900">
+              Internal Handbook
+            </h3>
+            <p class="mt-1 text-sm text-gray-500 flex-1">
+              Private team documentation and processes.
+            </p>
+            <span class="mt-4 text-sm font-medium text-indigo-600">View site →</span>
+          </div>
         </a>
 
       </div>
