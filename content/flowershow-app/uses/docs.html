@@ -6,6 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1" type="module"></script>
+  <style>
+    :root {
+      --accent: #AB3A76ff;
+      --accent-50: color-mix(in srgb, var(--accent) 10%, white);
+      --accent-100: color-mix(in srgb, var(--accent) 20%, white);
+      --accent-200: color-mix(in srgb, var(--accent) 35%, white);
+      --accent-500: color-mix(in srgb, var(--accent) 75%, white);
+      --accent-700: color-mix(in srgb, var(--accent) 80%, black);
+    }
+  </style>
 </head>
 
 <body>
@@ -14,18 +24,28 @@
       <div class="py-12 sm:py-16">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
           <div class="mx-auto max-w-2xl text-center">
-            <h1 class="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-7xl">
+            <!-- <div class="mb-6 flex justify-center">
+              <div
+                class="relative rounded-full px-3 py-1 text-sm text-gray-600 ring-1 ring-gray-900/10 hover:ring-gray-900/20">
+                Anim aute id magna aliqua ad ad non deserunt sunt. <a href="#"
+                  class="whitespace-nowrap font-semibold text-indigo-600"><span aria-hidden="true"
+                    class="absolute inset-0"></span>Read more <span aria-hidden="true">&rarr;</span></a>
+              </div>
+            </div> -->
+            <h1 class="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl">
               Publish your docs.<br /><span
-                class="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-500">Skip the
+                class="bg-clip-text text-transparent bg-gradient-to-r from-[var(--accent)] to-[var(--accent-500)]">Skip
+                the
                 stack.</span></h1>
             <p class="mt-6 text-pretty text-md font-medium text-gray-800 sm:text-lg">Turn a folder of
               Markdown into a live docs site, in seconds.</p>
             <div class="mt-6 flex items-center justify-center gap-x-6">
               <a href="#"
-                class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Get
+                class="rounded-md bg-[var(--accent)] px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--accent-500)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">Get
                 started for free →</a>
-              <!-- <a href="#" class="text-sm/6 font-semibold text-gray-900">Learn more <span
-                  aria-hidden="true">→</span></a> -->
+              <a href="#"
+                class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50">See
+                demo</a>
             </div>
           </div>
 
@@ -83,9 +103,10 @@
 
         <!-- GitHub (most common) -->
         <a href="/docs/github"
-          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-indigo-200">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
-            <svg class="h-6 w-6 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]">
+          <div
+            class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
+            <svg class="h-6 w-6 text-[var(--accent)]" fill="currentColor" viewBox="0 0 24 24">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12a10 10 0 006.84 9.49c.5.09.68-.22.68-.48
               0-.24-.01-.87-.01-1.71-2.78.6-3.37-1.34-3.37-1.34-.45-1.14-1.1-1.44-1.1-1.44
               -.9-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.88 1.5 2.31 1.07 2.87.82
@@ -105,14 +126,15 @@
             Keep docs in your repo.<br />
             Push changes — they auto-sync.
           </p>
-          <span class="mt-5 text-sm font-medium text-indigo-600">Get started →</span>
+          <span class="mt-5 text-sm font-medium text-[var(--accent)]">Get started →</span>
         </a>
 
         <!-- Upload -->
         <a href="/docs/upload-folder"
-          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-indigo-200">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
-            <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5"
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]">
+          <div
+            class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
+            <svg class="h-6 w-6 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="1.5"
               viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M3 7.5A2.25 2.25 0 015.25 5.25H9l1.5 1.5h8.25A2.25 2.25 0 0121 9v7.5A2.25 2.25 0 0118.75 18.75H5.25A2.25 2.25 0 013 16.5V7.5z" />
@@ -125,14 +147,15 @@
             Drag in your Markdown files.
             Get a site link instantly.
           </p>
-          <span class="mt-5 text-sm font-medium text-indigo-600">Get started →</span>
+          <span class="mt-5 text-sm font-medium text-[var(--accent)]">Get started →</span>
         </a>
 
         <!-- Obsidian -->
         <a href="/docs/obsidian"
-          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-indigo-200">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
-            <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5"
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]">
+          <div
+            class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
+            <svg class="h-6 w-6 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="1.5"
               viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
             </svg>
@@ -144,14 +167,15 @@
             Keep writing in your vault.
             Publish with our official Obsidian plugin.
           </p>
-          <span class="mt-5 text-sm font-medium text-indigo-600">Get started →</span>
+          <span class="mt-5 text-sm font-medium text-[var(--accent)]">Get started →</span>
         </a>
 
         <!-- CLI -->
         <a href="/docs/cli"
-          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-indigo-200">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
-            <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5"
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]">
+          <div
+            class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
+            <svg class="h-6 w-6 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="1.5"
               viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 8l4 4-4 4m6-4h6" />
             </svg>
@@ -162,7 +186,7 @@
           <p class="mt-2 text-sm text-gray-500 flex-1">
             Publish from the terminal. Script it if you want.
           </p>
-          <span class="mt-5 text-sm font-medium text-indigo-600">Get started →</span>
+          <span class="mt-5 text-sm font-medium text-[var(--accent)]">Get started →</span>
         </a>
 
       </div>
@@ -416,7 +440,7 @@
 
         <!-- Example 1 -->
         <a href="#"
-          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200hover:shadow-md hover:ring-indigo-200">
+          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]">
           <div class="overflow-hidden">
             <img src="./docs-placeholder.png" alt="Example documentation site" class="h-48 w-full object-cover" />
           </div>
@@ -427,13 +451,13 @@
             <p class="mt-1 text-sm text-gray-500 flex-1">
               Structured reference with versioned endpoints and guides.
             </p>
-            <span class="mt-4 text-sm font-medium text-indigo-600">View site →</span>
+            <span class="mt-4 text-sm font-medium text-[var(--accent)]">View site →</span>
           </div>
         </a>
 
         <!-- Example 2 -->
         <a href="#"
-          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200hover:shadow-md hover:ring-indigo-200">
+          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]">
           <div class="overflow-hidden">
             <img src="./docs-placeholder.png" alt="Example documentation site" class="h-48 w-full object-cover" />
           </div>
@@ -444,13 +468,13 @@
             <p class="mt-1 text-sm text-gray-500 flex-1">
               Guides, tutorials, and structured onboarding.
             </p>
-            <span class="mt-4 text-sm font-medium text-indigo-600">View site →</span>
+            <span class="mt-4 text-sm font-medium text-[var(--accent)]">View site →</span>
           </div>
         </a>
 
         <!-- Example 3 -->
         <a href="#"
-          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200hover:shadow-md hover:ring-indigo-200">
+          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]">
           <div class="overflow-hidden">
             <img src="./docs-placeholder.png" alt="Example documentation site" class="h-48 w-full object-cover" />
           </div>
@@ -461,7 +485,7 @@
             <p class="mt-1 text-sm text-gray-500 flex-1">
               Private team documentation and processes.
             </p>
-            <span class="mt-4 text-sm font-medium text-indigo-600">View site →</span>
+            <span class="mt-4 text-sm font-medium text-[var(--accent)]">View site →</span>
           </div>
         </a>
 
@@ -677,7 +701,7 @@
     </div>
   </div>
 
-  <div class="bg-indigo-700">
+  <div class="bg-[var(--accent-700)]">
     <div class="px-6 py-24 sm:py-32 lg:px-8">
       <div class="mx-auto max-w-2xl text-center">
         <h2 class="text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl">Your docs are already
@@ -686,7 +710,7 @@
           consectetur sit cillum anim id veniam aliqua proident excepteur commodo do ea.</p> -->
         <div class="mt-10 flex items-center justify-center gap-x-6">
           <a href="#"
-            class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-indigo-600 shadow-sm hover:bg-indigo-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+            class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-[var(--accent)] shadow-sm hover:bg-[var(--accent-50)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
             Create your docs site →</a>
         </div>
       </div>

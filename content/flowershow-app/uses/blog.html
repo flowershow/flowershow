@@ -6,6 +6,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1" type="module"></script>
+  <style>
+    :root {
+      --accent: #AB3A76ff;
+      --accent-50: color-mix(in srgb, var(--accent) 10%, white);
+      --accent-100: color-mix(in srgb, var(--accent) 20%, white);
+      --accent-200: color-mix(in srgb, var(--accent) 35%, white);
+      --accent-500: color-mix(in srgb, var(--accent) 75%, white);
+      --accent-700: color-mix(in srgb, var(--accent) 80%, black);
+    }
+  </style>
 </head>
 
 <body>
@@ -15,9 +25,10 @@
       <div class="py-12 sm:py-16">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
           <div class="mx-auto max-w-2xl text-center">
-            <h1 class="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-7xl">
+            <h1 class="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl">
               Your personal blog.<br /><span
-                class="bg-clip-text text-transparent bg-gradient-to-r from-violet-600 to-indigo-500">Live in
+                class="bg-clip-text text-transparent bg-gradient-to-r from-[var(--accent)] to-[var(--accent-500)]">Live
+                in
                 seconds.</span>
             </h1>
             <p class="mt-6 text-pretty text-md font-medium text-gray-800 sm:text-lg">Turn your markdown notes into a
@@ -25,7 +36,7 @@
             </p>
             <div class="mt-6 flex items-center justify-center gap-x-6">
               <a href="#"
-                class="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Start
+                class="rounded-md bg-[var(--accent)] px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--accent-500)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]">Start
                 your blog for free →</a>
             </div>
           </div>
@@ -81,9 +92,10 @@
 
         <!-- GitHub -->
         <a href="/docs/github"
-          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-indigo-200">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
-            <svg class="h-6 w-6 text-indigo-600" fill="currentColor" viewBox="0 0 24 24">
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[var(--accent-200)]">
+          <div
+            class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
+            <svg class="h-6 w-6 text-[var(--accent)]" fill="currentColor" viewBox="0 0 24 24">
               <path fill-rule="evenodd" clip-rule="evenodd" d="M12 2C6.48 2 2 6.48 2 12a10 10 0 006.84 9.49c.5.09.68-.22.68-.48
               0-.24-.01-.87-.01-1.71-2.78.6-3.37-1.34-3.37-1.34-.45-1.14-1.1-1.44-1.1-1.44
               -.9-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.88 1.5 2.31 1.07 2.87.82
@@ -103,14 +115,15 @@
             Your writing stays in your repo.<br />
             Push changes — they auto-sync.
           </p>
-          <span class="mt-5 text-sm font-medium text-indigo-600">Get started →</span>
+          <span class="mt-5 text-sm font-medium text-[var(--accent)]">Get started →</span>
         </a>
 
         <!-- Upload -->
         <a href="/docs/upload-folder"
-          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-indigo-200">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
-            <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5"
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[var(--accent-200)]">
+          <div
+            class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
+            <svg class="h-6 w-6 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="1.5"
               viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round"
                 d="M3 7.5A2.25 2.25 0 015.25 5.25H9l1.5 1.5h8.25A2.25 2.25 0 0121 9v7.5A2.25 2.25 0 0118.75 18.75H5.25A2.25 2.25 0 013 16.5V7.5z" />
@@ -123,14 +136,15 @@
             Drag in your Markdown files.
             Get a blog link instantly.
           </p>
-          <span class="mt-5 text-sm font-medium text-indigo-600">Get started →</span>
+          <span class="mt-5 text-sm font-medium text-[var(--accent)]">Get started →</span>
         </a>
 
         <!-- Obsidian -->
         <a href="/docs/obsidian"
-          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-indigo-200">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
-            <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5"
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[var(--accent-200)]">
+          <div
+            class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
+            <svg class="h-6 w-6 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="1.5"
               viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
             </svg>
@@ -142,14 +156,15 @@
             Keep writing in your vault.
             Publish with our official Obsidian plugin.
           </p>
-          <span class="mt-5 text-sm font-medium text-indigo-600">Get started →</span>
+          <span class="mt-5 text-sm font-medium text-[var(--accent)]">Get started →</span>
         </a>
 
         <!-- CLI -->
         <a href="/docs/cli"
-          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-indigo-200">
-          <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-50 ring-1 ring-indigo-100">
-            <svg class="h-6 w-6 text-indigo-600" fill="none" stroke="currentColor" stroke-width="1.5"
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[var(--accent-200)]">
+          <div
+            class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
+            <svg class="h-6 w-6 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="1.5"
               viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 8l4 4-4 4m6-4h6" />
             </svg>
@@ -160,7 +175,7 @@
           <p class="mt-2 text-sm text-gray-500 flex-1">
             Publish from the terminal. Script it if you want.
           </p>
-          <span class="mt-5 text-sm font-medium text-indigo-600">Get started →</span>
+          <span class="mt-5 text-sm font-medium text-[var(--accent)]">Get started →</span>
         </a>
 
       </div>
@@ -362,7 +377,7 @@
 
         <!-- Example 1 -->
         <a href="#"
-          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200 hover:shadow-md hover:ring-indigo-200">
+          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200 hover:shadow-md hover:ring-[var(--accent-200)]">
           <div class="overflow-hidden">
             <img src="./placeholder.png" alt="Example blog" class="h-48 w-full object-cover" />
           </div>
@@ -373,13 +388,13 @@
             <p class="mt-1 text-sm text-gray-500 flex-1">
               Essays, notes, and ideas — published straight from an Obsidian vault.
             </p>
-            <span class="mt-4 text-sm font-medium text-indigo-600">View site →</span>
+            <span class="mt-4 text-sm font-medium text-[var(--accent)]">View site →</span>
           </div>
         </a>
 
         <!-- Example 2 -->
         <a href="#"
-          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200 hover:shadow-md hover:ring-indigo-200">
+          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200 hover:shadow-md hover:ring-[var(--accent-200)]">
           <div class="overflow-hidden">
             <img src="./placeholder.png" alt="Example blog" class="h-48 w-full object-cover" />
           </div>
@@ -390,13 +405,13 @@
             <p class="mt-1 text-sm text-gray-500 flex-1">
               Tutorials and deep dives, with code blocks and diagrams — on a custom domain.
             </p>
-            <span class="mt-4 text-sm font-medium text-indigo-600">View site →</span>
+            <span class="mt-4 text-sm font-medium text-[var(--accent)]">View site →</span>
           </div>
         </a>
 
         <!-- Example 3 -->
         <a href="#"
-          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200 hover:shadow-md hover:ring-indigo-200">
+          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200 hover:shadow-md hover:ring-[var(--accent-200)]">
           <div class="overflow-hidden">
             <img src="./placeholder.png" alt="Example blog" class="h-48 w-full object-cover" />
           </div>
@@ -407,7 +422,7 @@
             <p class="mt-1 text-sm text-gray-500 flex-1">
               A shared blog with author profiles, featured images, and reader comments.
             </p>
-            <span class="mt-4 text-sm font-medium text-indigo-600">View site →</span>
+            <span class="mt-4 text-sm font-medium text-[var(--accent)]">View site →</span>
           </div>
         </a>
 
@@ -619,14 +634,14 @@
   </div>
 
   <!-- CTA -->
-  <div class="bg-indigo-700">
+  <div class="bg-[var(--accent-700)]">
     <div class="px-6 py-24 sm:py-32 lg:px-8">
       <div class="mx-auto max-w-2xl text-center">
         <h2 class="text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl">Your writing is
           already there. Give it a URL.</h2>
         <div class="mt-10 flex items-center justify-center gap-x-6">
           <a href="#"
-            class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-indigo-600 shadow-sm hover:bg-indigo-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+            class="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-[var(--accent)] shadow-sm hover:bg-[var(--accent-50)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
             Start your blog for free →</a>
         </div>
       </div>
