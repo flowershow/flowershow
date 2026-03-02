@@ -24,7 +24,11 @@ const rehypeHtmlEnhancements = (options: Options) => {
         // Check if the link is external (starts with http:// or https://)
         if (/^https?:\/\//i.test(href)) {
           node.properties = node.properties || {};
-          node.properties.target = '_blank';
+
+          if (!node.properties.target) {
+            node.properties.target = '_blank';
+          }
+
           node.properties.rel = 'noopener noreferrer';
         }
       }
