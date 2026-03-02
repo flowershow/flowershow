@@ -33,17 +33,22 @@ export default function rehypeResolveHtmlUrls(options: Options) {
         }
 
         // Handle href attribute (for a, link, etc.)
-        if (
-          node.properties.href &&
-          typeof node.properties.href === 'string' &&
-          !(sitePrefix && node.properties.href.startsWith(sitePrefix))
-        ) {
-          node.properties.href = resolveFilePathToUrlPath({
-            target: node.properties.href,
-            originFilePath: filePath,
-            sitePrefix,
-            domain: customDomain,
-          });
+        // Skip hrefs already resolved by upstream remark plugins (remarkWikiLink,
+        // RemarkCommonMarkLink). On non-custom domains they start with sitePrefix;
+        // on custom domains (sitePrefix="") they are absolute paths starting with "/".
+        if (node.properties.href && typeof node.properties.href === 'string') {
+          const href = node.properties.href;
+          const alreadyResolved = sitePrefix
+            ? href.startsWith(sitePrefix)
+            : href.startsWith('/');
+          if (!alreadyResolved) {
+            node.properties.href = resolveFilePathToUrlPath({
+              target: href,
+              originFilePath: filePath,
+              sitePrefix,
+              domain: customDomain,
+            });
+          }
         }
       }
     });

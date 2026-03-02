@@ -42,6 +42,12 @@ title: Links Test
 
 [[README]]
 
+[[my file with spaces]]
+
+[[folder with spaces/my file with spaces]]
+
+[[file with spaces & special (chars)]]
+
 ## CommonMark Embeds
 
 ![CM image](assets/image.jpg)

@@ -149,6 +149,36 @@ test('Links', async ({ page, basePath }) => {
     );
   });
 
+  await test.step('wiki: file name with spaces encodes spaces as +', async () => {
+    const link = content.locator('a.internal', {
+      hasText: /^my file with spaces$/,
+    });
+    await expect(link).toHaveAttribute(
+      'href',
+      `${basePath}/my+file+with+spaces`,
+    );
+  });
+
+  await test.step('wiki: path with spaces in folder and file encodes each segment', async () => {
+    const link = content.locator('a.internal', {
+      hasText: /^folder with spaces\/my file with spaces$/,
+    });
+    await expect(link).toHaveAttribute(
+      'href',
+      `${basePath}/folder+with+spaces/my+file+with+spaces`,
+    );
+  });
+
+  await test.step('wiki: special characters in file name are percent-encoded', async () => {
+    const link = content.locator('a.internal', {
+      hasText: /^file with spaces & special \(chars\)$/,
+    });
+    await expect(link).toHaveAttribute(
+      'href',
+      `${basePath}/file+with+spaces+%26+special+(chars)`,
+    );
+  });
+
   // ── CommonMark Embeds ─────────────────────────────────────────
 
   await test.step('CM embed: image renders with alt text', async () => {
