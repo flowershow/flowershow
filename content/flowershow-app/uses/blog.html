@@ -14,6 +14,7 @@
       --accent-200: color-mix(in srgb, var(--accent) 35%, white);
       --accent-500: color-mix(in srgb, var(--accent) 75%, white);
       --accent-700: color-mix(in srgb, var(--accent) 80%, black);
+      --accent-secondary: #E761AAff;
     }
   </style>
 </head>
@@ -27,7 +28,7 @@
           <div class="mx-auto max-w-2xl text-center">
             <h1 class="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl">
               Your personal blog.<br /><span
-                class="bg-clip-text text-transparent bg-gradient-to-r from-[var(--accent)] to-[var(--accent-500)]">Live
+                class="bg-clip-text text-transparent bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)]">Live
                 in
                 seconds.</span>
             </h1>
@@ -45,8 +46,7 @@
           <img src="./placeholder.png" class="mt-8 rounded-md ring-1 ring-gray-900/10 sm:mt-12 w-full" />
 
           <p class="mt-8 text-sm text-gray-400 text-center">
-            <span class="font-medium text-gray-600">3,200+</span> users &nbsp;·&nbsp;
-            <span class="font-medium text-gray-600">5,800+</span> sites published &nbsp;·&nbsp;
+            <span class="font-medium text-gray-600">990+</span> sites published &nbsp;·&nbsp;
             <span class="font-medium text-gray-600">Free plan</span> <span class="text-gray-500">— forever.</span>
           </p>
         </div>
@@ -90,9 +90,9 @@
 
       <div class="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
 
-        <!-- GitHub -->
+        <!-- GitHub (most common) -->
         <a href="/docs/github"
-          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[var(--accent-200)]">
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]">
           <div
             class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
             <svg class="h-6 w-6 text-[var(--accent)]" fill="currentColor" viewBox="0 0 24 24">
@@ -112,7 +112,7 @@
             Connect GitHub
           </h3>
           <p class="mt-2 text-sm text-gray-500 flex-1">
-            Your writing stays in your repo.<br />
+            Keep docs in your repo.<br />
             Push changes — they auto-sync.
           </p>
           <span class="mt-5 text-sm font-medium text-[var(--accent)]">Get started →</span>
@@ -120,7 +120,7 @@
 
         <!-- Upload -->
         <a href="/docs/upload-folder"
-          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[var(--accent-200)]">
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]">
           <div
             class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
             <svg class="h-6 w-6 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="1.5"
@@ -134,19 +134,20 @@
           </h3>
           <p class="mt-2 text-sm text-gray-500 flex-1">
             Drag in your Markdown files.
-            Get a blog link instantly.
+            Get a site link instantly.
           </p>
           <span class="mt-5 text-sm font-medium text-[var(--accent)]">Get started →</span>
         </a>
 
         <!-- Obsidian -->
         <a href="/docs/obsidian"
-          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[var(--accent-200)]">
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]">
           <div
             class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
-            <svg class="h-6 w-6 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="1.5"
-              viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" />
+            <svg class="h-6 w-6 text-[var(--accent)]" aria-hidden="true" role="img" viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg" stroke="none" fill="currentColor">
+              <path
+                d="M19.355 18.538a68.967 68.959 0 0 0 1.858-2.954.81.81 0 0 0-.062-.9c-.516-.685-1.504-2.075-2.042-3.362-.553-1.321-.636-3.375-.64-4.377a1.707 1.707 0 0 0-.358-1.05l-3.198-4.064a3.744 3.744 0 0 1-.076.543c-.106.503-.307 1.004-.536 1.5-.134.29-.29.6-.446.914l-.31.626c-.516 1.068-.997 2.227-1.132 3.59-.124 1.26.046 2.73.815 4.481.128.011.257.025.386.044a6.363 6.363 0 0 1 3.326 1.505c.916.79 1.744 1.922 2.415 3.5zM8.199 22.569c.073.012.146.02.22.02.78.024 2.095.092 3.16.29.87.16 2.593.64 4.01 1.055 1.083.316 2.198-.548 2.355-1.664.114-.814.33-1.735.725-2.58l-.01.005c-.67-1.87-1.522-3.078-2.416-3.849a5.295 5.295 0 0 0-2.778-1.257c-1.54-.216-2.952.19-3.84.45.532 2.218.368 4.829-1.425 7.531zM5.533 9.938c-.023.1-.056.197-.098.29L2.82 16.059a1.602 1.602 0 0 0 .313 1.772l4.116 4.24c2.103-3.101 1.796-6.02.836-8.3-.728-1.73-1.832-3.081-2.55-3.831zM9.32 14.01c.615-.183 1.606-.465 2.745-.534-.683-1.725-.848-3.233-.716-4.577.154-1.552.7-2.847 1.235-3.95.113-.235.223-.454.328-.664.149-.297.288-.577.419-.86.217-.47.379-.885.46-1.27.08-.38.08-.72-.014-1.043-.095-.325-.297-.675-.68-1.06a1.6 1.6 0 0 0-1.475.36l-4.95 4.452a1.602 1.602 0 0 0-.513.952l-.427 2.83c.672.59 2.328 2.316 3.335 4.711.09.21.175.43.253.653z" />
             </svg>
           </div>
           <h3 class="mt-6 text-base font-semibold text-gray-900">
@@ -161,12 +162,13 @@
 
         <!-- CLI -->
         <a href="/docs/cli"
-          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[var(--accent-200)]">
+          class="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]">
           <div
             class="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
-            <svg class="h-6 w-6 text-[var(--accent)]" fill="none" stroke="currentColor" stroke-width="1.5"
-              viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 8l4 4-4 4m6-4h6" />
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" class="h-6 w-6 text-[var(--accent)]" fill="none" stroke="currentColor">
+              <path d="M12 19h8" />
+              <path d="m4 17 6-6-6-6" />
             </svg>
           </div>
           <h3 class="mt-6 text-base font-semibold text-gray-900">
@@ -327,34 +329,51 @@
             <h2 class="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
               Make it yours.</h2>
             <p class="mt-6 text-lg/8 text-gray-700">
-              Flowershow is intentionally minimal. But you get the knobs that matter —
-              a theme that fits your voice, your domain, and your own CSS if you want to go further.
+              Flowershow is intentionally minimal. But you still get the few knobs that matter —
+              branding, domains, and a place for your own CSS.
             </p>
             <dl class="mt-10 max-w-xl space-y-8 text-base/7 text-gray-600 lg:max-w-none">
-              <div class="relative">
-                <dt class="inline font-semibold text-gray-900">
-                  ✨ Choose a theme.
-                </dt>
-                <dd class="inline">Letterpress. Lessflowery. Leaf. One line in your config.</dd>
+              <div class="relative pl-9">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--accent)] absolute left-0 top-1"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" class="lucide lucide-globe-icon lucide-globe">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                  <path d="M2 12h20" />
+                </svg>
+                <dt class="inline font-semibold text-gray-900">Bring your domain.</dt>
+                <dd class="inline"> Keep links stable. Make it feel professional.</dd>
               </div>
-              <div class="relative">
-                <dt class="inline font-semibold text-gray-900">
-                  ✨ Bring your domain.
-                </dt>
-                <dd class="inline">yourname.com, not yourname.flowershow.app. Keep links stable and feel
-                  professional.</dd>
+              <div class="relative pl-9">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--accent)] absolute left-0 top-1"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" class="lucide lucide-image-icon lucide-image">
+                  <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+                  <circle cx="9" cy="9" r="2" />
+                  <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                </svg>
+                <dt class="inline font-semibold text-gray-900">Change logo, favicons, thumbnails, and more.</dt>
+                <dd class="inline"> Make your project visually distinct and recognizable.</dd>
               </div>
-              <div class="relative">
-                <dt class="inline font-semibold text-gray-900">
-                  ✨ Add custom CSS.
-                </dt>
-                <dd class="inline">Tweak fonts, spacing, colors. Or leave it as-is — the defaults are already
-                  clean.</dd>
+              <div class="relative pl-9">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-[var(--accent)] absolute left-0 top-1"
+                  viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                  stroke-linejoin="round" class="lucide lucide-palette-icon lucide-palette">
+                  <path
+                    d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" />
+                  <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+                  <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+                  <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+                  <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+                </svg>
+                <dt class="inline font-semibold text-gray-900">Add custom CSS theme.</dt>
+                <dd class="inline"> Add your own CSS for the small things: spacing, colors, typography, components.
+                  You can keep it minimal — or go further.</dd>
               </div>
             </dl>
           </div>
         </div>
-        <img width="2432" height="1442" src="./placeholder.png" alt="Blog theme screenshot"
+        <img width="2432" height="1442" src="./docs-placeholder.png" alt="Product screenshot"
           class="w-[48rem] max-w-none rounded-xl ring-1 ring-gray-400/10 sm:w-[57rem] md:-ml-4 lg:-ml-0" />
       </div>
     </div>
