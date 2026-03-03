@@ -7,8 +7,6 @@ showEditLink: false
 showComments: false
 ---
 
-{/_ ===================== HERO ===================== _/}
-
 <div className="py-12 sm:py-24">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl text-center">
@@ -40,8 +38,6 @@ showComments: false
     </div>
   </div>
 </div>
-
-{/_ ===================== FEATURES ===================== _/}
 
 <div className="py-12 sm:py-20">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -78,8 +74,6 @@ showComments: false
     </div>
   </div>
 </div>
-
-{/_ ===================== THEMES SHOWCASE ===================== _/}
 
 <div className="bg-gray-50 py-12 sm:py-20 my-4">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -123,8 +117,6 @@ showComments: false
   </div>
 </div>
 
-{/_ ===================== WAYS TO PUBLISH ===================== _/}
-
 <div className="py-12 sm:py-20">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl lg:text-center">
@@ -154,8 +146,6 @@ showComments: false
   </div>
 </div>
 
-{/_ ===================== WHY NOW ===================== _/}
-
 <div className="bg-slate-50 py-12 sm:py-20 my-4">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl">
@@ -172,8 +162,6 @@ showComments: false
     </div>
   </div>
 </div>
-
-{/_ ===================== USE CASES ===================== _/}
 
 <div className="py-12 sm:py-20">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -206,8 +194,6 @@ showComments: false
     </div>
   </div>
 </div>
-
-{/_ ===================== COMMUNITY SHOWCASE ===================== _/}
 
 <div className="bg-orange-50 py-12 sm:py-20 my-4">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
@@ -295,8 +281,6 @@ showComments: false
   </div>
 </div>
 
-{/_ ===================== FAQ ===================== _/}
-
 <div className="py-12 sm:py-20">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl">
@@ -323,8 +307,6 @@ showComments: false
   </div>
 </div>
 
-{/_ ===================== NEWSLETTER ===================== _/}
-
 <div className="bg-gray-50 py-12 sm:py-20 my-4">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <h2 className="mb-2 text-pretty text-balance text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">Stay in the loop.</h2>
@@ -332,8 +314,6 @@ showComments: false
     <CustomHtml html={`<iframe data-tally-src="https://tally.so/embed/mYy8k6?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" width="100%" height="157" frameBorder="0" marginHeight="0" marginWidth="0" title="Want product news and updates? Sign up for our newsletter."></iframe><script async src="https://tally.so/widgets/embed.js"></script>`}/>
   </div>
 </div>
-
-{/_ ===================== FINAL CTA ===================== _/}
 
 <div className="bg-slate-900 mt-4">
   <div className="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
