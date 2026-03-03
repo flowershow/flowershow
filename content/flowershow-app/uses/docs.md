@@ -7,6 +7,8 @@ showEditLink: false
 showComments: false
 ---
 
+<script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1" type="module"></script>
+
 <div className="bg-white">
   <div className="relative isolate pt-14">
     <div className="pt-12 sm:pt-16">
