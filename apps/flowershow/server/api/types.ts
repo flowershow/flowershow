@@ -13,6 +13,7 @@ export const publicSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   giscusRepoId: true,
   giscusCategoryId: true,
   enableSearch: true,
+  showSidebar: true,
   privacyMode: true,
   autoSync: true,
   syntaxMode: true,
@@ -45,6 +46,7 @@ export const publicSiteSchema: z.ZodType<PublicSite> = z.object({
   giscusRepoId: z.string().nullable(),
   giscusCategoryId: z.string().nullable(),
   enableSearch: z.boolean(),
+  showSidebar: z.boolean(),
   privacyMode: z.enum(PrivacyMode),
   autoSync: z.boolean(),
   syntaxMode: z.enum(SyntaxMode),
@@ -75,6 +77,7 @@ export enum SiteUpdateKey {
   syntaxMode = 'syntaxMode',
   giscusRepoId = 'giscusRepoId',
   giscusCategoryId = 'giscusCategoryId',
+  showSidebar = 'showSidebar',
 }
 export interface PageMetadata {
   title: string;

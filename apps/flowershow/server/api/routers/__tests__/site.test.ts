@@ -89,6 +89,7 @@ function makeSite(overrides: Partial<Record<string, unknown>> = {}) {
     giscusRepoId: null,
     giscusCategoryId: null,
     enableSearch: false,
+    showSidebar: true,
     privacyMode: 'PUBLIC',
     autoSync: false,
     syntaxMode: 'md',

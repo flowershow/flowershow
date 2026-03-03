@@ -165,7 +165,8 @@ export default async function PublicLayout(props: {
 
   let siteTree;
 
-  if (siteConfig?.showSidebar) {
+  const showSidebar = siteConfig?.showSidebar ?? site.showSidebar;
+  if (showSidebar) {
     siteTree = await api.site.getSiteTree
       .query({
         siteId: site.id,

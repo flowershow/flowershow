@@ -324,7 +324,8 @@ export default async function SitePage(props: {
     site.enableComments &&
     (metadata?.showComments ?? siteConfig?.showComments ?? site.enableComments);
   const giscusConfig = siteConfig?.giscus;
-  const showSidebar = metadata?.showSidebar ?? siteConfig?.showSidebar ?? false;
+  const showSidebar =
+    metadata?.showSidebar ?? siteConfig?.showSidebar ?? site.showSidebar;
   const showToc = metadata?.showToc ?? siteConfig?.showToc ?? true;
   const heroConfig = resolveHeroConfig(metadata, siteConfig);
   const showHero = heroConfig.showHero;

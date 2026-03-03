@@ -37,6 +37,7 @@ export const SiteDetailSchema = z.object({
   privacyMode: z.enum(['PUBLIC', 'PASSWORD']),
   enableComments: z.boolean(),
   enableSearch: z.boolean(),
+  showSidebar: z.boolean(),
   syntaxMode: z.string(),
   url: z.string(),
   fileCount: z.number(),
