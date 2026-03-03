@@ -32,6 +32,20 @@ export function SearchModal({ indexId }: SearchModalProps) {
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
 
+  const isTypingTarget = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) {
+      return false;
+    }
+
+    const tagName = target.tagName.toLowerCase();
+    return (
+      target.isContentEditable ||
+      tagName === 'input' ||
+      tagName === 'textarea' ||
+      tagName === 'select'
+    );
+  };
+
   // Close when a result is clicked (but ignore new-tab/middle/modified clicks)
   const handleHitClick = (e?: React.MouseEvent) => {
     if (
@@ -62,6 +76,26 @@ export function SearchModal({ indexId }: SearchModalProps) {
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    const handleSearchShortcut = (e: KeyboardEvent) => {
+      const isSearchShortcut =
+        (e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k';
+
+      if (!isSearchShortcut || isTypingTarget(e.target)) {
+        return;
+      }
+
+      e.preventDefault();
+      openModal();
+    };
+
+    document.addEventListener('keydown', handleSearchShortcut);
+
+    return () => {
+      document.removeEventListener('keydown', handleSearchShortcut);
+    };
+  }, []);
+
   const debounceQuery: SearchBoxProps['queryHook'] = useCallback(
     async (query, search) => {
       if (timerRef.current) {
@@ -78,6 +112,9 @@ export function SearchModal({ indexId }: SearchModalProps) {
       <button onClick={openModal} name="search" className="search-button">
         <SearchIcon className="search-icon" />
         <span className="search-placeholder">Search...</span>
+        <span aria-hidden className="search-shortcut-hint">
+          ⌘K
+        </span>
       </button>
       <AnimatePresence>
         {isOpen && (
