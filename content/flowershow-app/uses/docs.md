@@ -13,13 +13,13 @@ showComments: false
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-2xl text-center">
           <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl"> Publish your docs.<br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)]"> Skip the stack.</span>
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#AB3A76] to-[#E761AA]"> Skip the stack.</span>
           </h1>
           <p className="mt-6 text-pretty text-md font-medium text-gray-800 sm:text-lg"> Turn a folder of Markdown files into a live docs site, in seconds.</p>
           <div className="mt-6 flex items-center justify-center gap-x-6">
             <a
               href="https://cloud.flowershow.app/login"
-              className="rounded-md bg-[var(--accent)] px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-[var(--accent-500)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]"
+              className="rounded-md bg-[#AB3A76] px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-[#C06B98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#AB3A76]"
             >Get started for free →</a>
             <a
               href="https://demo-docs.flowershow.app/"
@@ -53,11 +53,11 @@ showComments: false
     <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
       <a
         href="/blog/how-to-publish-repository-with-markdown"
-        className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]"
+        className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[#E2BACF]"
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F7EBF1] ring-1 ring-[#EED8E4]">
           <svg
-            className="h-6 w-6 text-[var(--accent)]"
+            className="h-6 w-6 text-[#AB3A76]"
             fill="currentColor"
             viewBox="0 0 24 24"
           ><path
@@ -76,15 +76,15 @@ showComments: false
         </div>
         <h3 className="mt-6 text-base font-semibold text-gray-900">Connect GitHub</h3>
         <p className="mt-2 text-sm text-gray-500 flex-1"> Keep docs in your repo. <br/>Push changes — they auto-sync.</p>
-        <span className="mt-5 text-sm font-medium text-[var(--accent)]"> Get started →</span>
+        <span className="mt-5 text-sm font-medium text-[#AB3A76]"> Get started →</span>
       </a>
       <a
         href="/docs"
-        className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]"
+        className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[#E2BACF]"
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F7EBF1] ring-1 ring-[#EED8E4]">
           <svg
-            className="h-6 w-6 text-[var(--accent)]"
+            className="h-6 w-6 text-[#AB3A76]"
             fill="none"
             stroke="currentColor"
             strokeWidth="1.5"
@@ -96,16 +96,15 @@ showComments: false
         </div>
         <h3 className="mt-6 text-base font-semibold text-gray-900">Upload a folder</h3>
         <p className="mt-2 text-sm text-gray-500 flex-1">Drag in your Markdown files. Get a site link instantly.</p>
-        <span className="mt-5 text-sm font-medium text-[var(--accent)]"> Get started →</span>
+        <span className="mt-5 text-sm font-medium text-[#AB3A76]"> Get started →</span>
       </a>
-      {/* Obsidian */}
       <a
         href="/uses/obsidian"
-        className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]"
+        className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[#E2BACF]"
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F7EBF1] ring-1 ring-[#EED8E4]">
           <svg
-            className="h-6 w-6 text-[var(--accent)]"
+            className="h-6 w-6 text-[#AB3A76]"
             aria-hidden="true"
             role="img"
             viewBox="0 0 24 24"
@@ -116,27 +115,27 @@ showComments: false
         </div>
         <h3 className="mt-6 text-base font-semibold text-gray-900">Publish from Obsidian</h3>
         <p className="mt-2 text-sm text-gray-500 flex-1"> Keep writing in your vault. Publish with our official Obsidian plugin.  </p>
-        <span className="mt-5 text-sm font-medium text-[var(--accent)]"> Get started → </span>
+        <span className="mt-5 text-sm font-medium text-[#AB3A76]"> Get started → </span>
       </a>
       <a
         href="/docs/cli"
-        className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]"
+        className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200hover:shadow-md hover:ring-[#E2BACF]"
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--accent-50)] ring-1 ring-[var(--accent-100)]">
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F7EBF1] ring-1 ring-[#EED8E4]">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
             strokeWidth={2}
             strokeLinecap="round"
             strokeLinejoin="round"
-            className="h-6 w-6 text-[var(--accent)]"
+            className="h-6 w-6 text-[#AB3A76]"
             fill="none"
             stroke="currentColor"
           ><path d="M12 19h8" /><path d="m4 17 6-6-6-6" /></svg>
         </div>
         <h3 className="mt-6 text-base font-semibold text-gray-900"> Use the CLI </h3>
         <p className="mt-2 text-sm text-gray-500 flex-1">Publish from the terminal. Script it if you want.</p>
-        <span className="mt-5 text-sm font-medium text-[var(--accent)]">Get started →</span>
+        <span className="mt-5 text-sm font-medium text-[#AB3A76]">Get started →</span>
       </a>
     </div>
   </div>
@@ -186,7 +185,7 @@ showComments: false
             </p>
             <a
               href="/docs/sidebar"
-              className="mt-4 inline-block text-sm font-medium text-[var(--accent)]"
+              className="mt-4 inline-block text-sm font-medium text-[#AB3A76]"
             >Learn more →</a>
           </div>
         </div>
@@ -211,7 +210,7 @@ showComments: false
             </p>
             <a
               href="/blog/announcing-full-text-search"
-              className="mt-4 inline-block text-sm font-medium text-[var(--accent)]"
+              className="mt-4 inline-block text-sm font-medium text-[#AB3A76]"
             >Learn more →</a>
           </div>
         </div>
@@ -236,7 +235,7 @@ showComments: false
             </p>
             <a
               href="/blog/announcing-password-protection"
-              className="mt-4 inline-block text-sm font-medium text-[var(--accent)]"
+              className="mt-4 inline-block text-sm font-medium text-[#AB3A76]"
             >Learn more →</a>
           </div>
         </div>
@@ -261,8 +260,6 @@ showComments: false
               page. It's live. No rebuild ritual. No “deployment in progress”
               anxiety.
             </p>
-            {/* <a href="/docs/site-settings" class="mt-4 inline-block text-sm font-medium text-[var(--accent)]">Learn
-        more →</a> */}
           </div>
         </div>
       </div>
@@ -284,7 +281,7 @@ showComments: false
             <p className="mt-2 max-w-lg text-sm/6 text-gray-600">Feedback, questions, discussions — right on the page.</p>
             <a
               href="/docs/comments"
-              className="mt-4 inline-block text-sm font-medium text-[var(--accent)]"
+              className="mt-4 inline-block text-sm font-medium text-[#AB3A76]"
             >Learn more →</a>
           </div>
         </div>
@@ -358,56 +355,42 @@ showComments: false
             <div className="relative pl-9">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-[var(--accent)] absolute left-0 top-1"
+                className="h-6 w-6 text-[#AB3A76] absolute left-0 top-1"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-              >
-                <circle cx={12} cy={12} r={10} />
-                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-                <path d="M2 12h20" />
-              </svg>
+              ><circle cx={12} cy={12} r={10} /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /> <path d="M2 12h20" /> </svg>
               <dt className="inline font-semibold text-gray-900"> Bring your domain.</dt>
               <dd className="inline"> {" "} Keep links stable. Make it feel professional.</dd>
             </div>
             <div className="relative pl-9">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-[var(--accent)] absolute left-0 top-1"
+                className="h-6 w-6 text-[#AB3A76] absolute left-0 top-1"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-              >
-                <rect width={18} height={18} x={3} y={3} rx={2} ry={2} />
-                <circle cx={9} cy={9} r={2} />
-                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-              </svg>
+              > <rect width={18} height={18} x={3} y={3} rx={2} ry={2} /> <circle cx={9} cy={9} r={2} /> <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /> </svg>
               <dt className="inline font-semibold text-gray-900"> Change logo, favicons, thumbnails, and more.</dt>
               <dd className="inline"> {" "} Make your project visually distinct and recognizable.</dd>
             </div>
             <div className="relative pl-9">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-[var(--accent)] absolute left-0 top-1"
+                className="h-6 w-6 text-[#AB3A76] absolute left-0 top-1"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
                 strokeLinecap="round"
                 strokeLinejoin="round"
-              >
-                <path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" />
-                <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
-                <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
-                <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
-                <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
-              </svg>
+              > <path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" /> <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /> <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /> <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /> <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /> </svg>
               <dt className="inline font-semibold text-gray-900"> Custom theme.</dt>
               <dd className="inline"> {" "} Choose from official Flowershow themes or create your own CSS theme for full control over spacing, colors, typography, and components.</dd>
             </div>
@@ -743,14 +726,14 @@ showComments: false
     </div>
   </div>
 </div>
-<div className="bg-[var(--accent-700)]">
+<div className="bg-[#892E5E]">
   <div className="px-6 py-24 sm:py-32 lg:px-8">
     <div className="mx-auto max-w-2xl text-center">
       <h2 className="text-balance text-4xl font-semibold tracking-tight text-white sm:text-5xl"> Your docs are already written. Give them a URL!</h2>
       <div className="mt-10 flex items-center justify-center gap-x-6">
         <a
           href="https://cloud.flowershow.app/login"
-          className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-[var(--accent)] shadow-sm hover:bg-[var(--accent-50)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-[#AB3A76] shadow-sm hover:bg-[#F7EBF1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
         > Create your docs site →</a>
       </div>
     </div>
