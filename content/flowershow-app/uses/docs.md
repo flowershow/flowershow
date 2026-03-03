@@ -35,7 +35,7 @@ showComments: false
           loop=""
           muted=""
           playsInline=""
-          className="mt-8 rounded-md ring-1 ring-gray-900/10 sm:mt-12 w-full"
+          className="mt-8 rounded-md ring-1 ring-gray-900/10 sm:mt-12 w-full aspect-video"
         ></video>
         <p className="mt-8 text-sm text-gray-400 text-center">
           <span className="font-medium text-gray-600">990+</span> sites published &nbsp;·&nbsp;
@@ -147,7 +147,7 @@ showComments: false
     <div className="lg:col-span-3 p-8 lg:pl-12">
       <div className="lg:max-w-lg">
         <h2 className="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">No setup ceremony.</h2>
-        <img src="./frictions.png" className="mt-6" />
+        <img src="./frictions.png" className="mt-6 w-full" loading="lazy" />
         <p className="mt-8 text-3xl font-semibold text-gray-900">Upload your files. That's enough.</p>
       </div>
     </div>
@@ -174,6 +174,7 @@ showComments: false
                 src="./navigation.png"
                 className="object-top-left object-cover w-full h-full"
                 alt=""
+                loading="lazy"
               />
             </div>
           </div>
@@ -200,6 +201,7 @@ showComments: false
                 src="./search.png"
                 className="object-top object-fit rounded-lg"
                 alt=""
+                loading="lazy"
               />
             </div>
           </div>
@@ -225,6 +227,7 @@ showComments: false
                 src="./password.png"
                 className="object-contain rounded-lg"
                 alt=""
+                loading="lazy"
               />
             </div>
           </div>
@@ -250,6 +253,7 @@ showComments: false
                 src="./docs-sync.png"
                 className="object-top-left object-cover w-full h-full rounded-md"
                 alt=""
+                loading="lazy"
               />
             </div>
           </div>
@@ -273,6 +277,7 @@ showComments: false
                 src="./comments.png"
                 className="object-top-left object-cover w-full h-full"
                 alt=""
+                loading="lazy"
               />
             </div>
           </div>
@@ -306,7 +311,7 @@ showComments: false
           loop=""
           muted=""
           playsInline=""
-          className="rounded-md ring-1 ring-gray-900/10 w-full"
+          className="rounded-md ring-1 ring-gray-900/10 w-full aspect-video"
         />
       </div>
       <div className="lg:col-span-2">
@@ -412,7 +417,7 @@ showComments: false
         playsInline=""
         src="./docs-theme.mp4"
         alt="Product screenshot"
-        className="w-[48rem] max-w-none rounded-xl ring-1 ring-gray-400/10 sm:w-[57rem] md:-ml-4 lg:-ml-0"
+        className="w-[48rem] max-w-none rounded-xl ring-1 ring-gray-400/10 sm:w-[57rem] md:-ml-4 lg:-ml-0 aspect-video"
       ></video>
     </div>
   </div>
