@@ -27,7 +27,7 @@ test('Links', async ({ page, basePath }) => {
   });
 
   await test.step('CM: external link has correct href', async () => {
-    const link = content.locator('a', { hasText: 'External link' });
+    const link = content.locator('a', { hasText: /^External link$/ });
     await expect(link).toHaveAttribute('href', 'https://example.com');
   });
 
@@ -177,6 +177,44 @@ test('Links', async ({ page, basePath }) => {
       'href',
       `${basePath}/file+with+spaces+%26+special+(chars)`,
     );
+  });
+
+  // ── Raw HTML Links ──────────────────────────────────────────
+
+  await test.step('HTML: external link without explicit target gets _blank', async () => {
+    const link = content.locator('a', {
+      hasText: 'HTML external link default',
+    });
+    await expect(link).toHaveAttribute('href', 'https://example.com');
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  await test.step('HTML: external link with target="_self" keeps _self', async () => {
+    const link = content.locator('a', {
+      hasText: 'HTML external link target self',
+    });
+    await expect(link).toHaveAttribute('href', 'https://example.com');
+    await expect(link).toHaveAttribute('target', '_self');
+    await expect(link).not.toHaveAttribute('rel');
+  });
+
+  await test.step('HTML: external link with target="_top" keeps _top', async () => {
+    const link = content.locator('a', {
+      hasText: 'HTML external link target top',
+    });
+    await expect(link).toHaveAttribute('href', 'https://example.com');
+    await expect(link).toHaveAttribute('target', '_top');
+    await expect(link).not.toHaveAttribute('rel');
+  });
+
+  await test.step('HTML: internal link does not get target or rel', async () => {
+    const link = content.locator('a', {
+      hasText: 'HTML internal link',
+    });
+    await expect(link).toHaveAttribute('href', `${basePath}/local-page`);
+    await expect(link).not.toHaveAttribute('target');
+    await expect(link).not.toHaveAttribute('rel');
   });
 
   // ── CommonMark Embeds ─────────────────────────────────────────

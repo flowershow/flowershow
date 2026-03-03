@@ -27,9 +27,8 @@ const rehypeHtmlEnhancements = (options: Options) => {
 
           if (!node.properties.target) {
             node.properties.target = '_blank';
+            node.properties.rel = 'noopener noreferrer';
           }
-
-          node.properties.rel = 'noopener noreferrer';
         }
       }
 

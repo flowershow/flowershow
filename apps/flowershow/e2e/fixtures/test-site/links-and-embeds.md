@@ -48,6 +48,16 @@ title: Links Test
 
 [[file with spaces & special (chars)]]
 
+## Raw HTML Links
+
+<a href="https://example.com">HTML external link default</a>
+
+<a href="https://example.com" target="_self">HTML external link target self</a>
+
+<a href="https://example.com" target="_top">HTML external link target top</a>
+
+<a href="/local-page">HTML internal link</a>
+
 ## CommonMark Embeds
 
 ![CM image](assets/image.jpg)
