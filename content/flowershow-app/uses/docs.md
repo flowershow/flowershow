@@ -423,7 +423,7 @@ showComments: false
           playsInline
           preload="none"
           src="./docs-theme.mp4"
-          className="w-full h-full object-contain"
+          className="w-full h-full object-contain ring-1 ring-gray-400/10"
         ></video>
       </div>
     </div>
