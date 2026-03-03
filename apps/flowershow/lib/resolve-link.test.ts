@@ -54,6 +54,12 @@ describe('resolve file paths to app URL paths', () => {
     const resolved = resolveFilePathToUrlPath({ target });
     expect(resolved).toBe('/some/file');
   });
+
+  it('Spaces are encoded as +', () => {
+    const target = '/Abc Resources/Xyz Map.md';
+    const resolved = resolveFilePathToUrlPath({ target });
+    expect(resolved).toBe('/Abc+Resources/Xyz+Map');
+  });
 });
 
 describe('resolve links on a README page', () => {

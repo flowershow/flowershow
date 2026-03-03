@@ -35,6 +35,6 @@ describe('rehypeHtmlEnhancements', () => {
 
     expect(html).toContain('target="_self"');
     expect(html).not.toContain('target="_blank"');
-    expect(html).toContain('rel="noopener noreferrer"');
+    expect(html).not.toContain('rel="noopener noreferrer"');
   });
 });

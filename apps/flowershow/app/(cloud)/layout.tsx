@@ -2,6 +2,7 @@ import { GoogleTagManager } from '@next/third-parties/google';
 import clsx from 'clsx';
 import { Metadata } from 'next';
 import { headers } from 'next/headers';
+import { SessionRecording } from '@/components/dashboard/session-recording';
 import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
 import { getSession } from '@/server/auth';
@@ -72,6 +73,7 @@ export default async function CloudRootLayout({
         <TRPCReactProvider headers={await headers()}>
           <Providers>
             {children}
+            <SessionRecording />
             <GoogleTagManager
               {...(session?.user.id
                 ? { dataLayer: { user_id: session.user.id } }

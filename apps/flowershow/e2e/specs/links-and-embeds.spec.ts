@@ -27,7 +27,7 @@ test('Links', async ({ page, basePath }) => {
   });
 
   await test.step('CM: external link has correct href', async () => {
-    const link = content.locator('a', { hasText: 'External link' });
+    const link = content.locator('a', { hasText: /^External link$/ });
     await expect(link).toHaveAttribute('href', 'https://example.com');
   });
 
@@ -147,6 +147,74 @@ test('Links', async ({ page, basePath }) => {
       'href',
       new RegExp(`^${basePath}/subfolder/?$`),
     );
+  });
+
+  await test.step('wiki: file name with spaces encodes spaces as +', async () => {
+    const link = content.locator('a.internal', {
+      hasText: /^my file with spaces$/,
+    });
+    await expect(link).toHaveAttribute(
+      'href',
+      `${basePath}/my+file+with+spaces`,
+    );
+  });
+
+  await test.step('wiki: path with spaces in folder and file encodes each segment', async () => {
+    const link = content.locator('a.internal', {
+      hasText: /^folder with spaces\/my file with spaces$/,
+    });
+    await expect(link).toHaveAttribute(
+      'href',
+      `${basePath}/folder+with+spaces/my+file+with+spaces`,
+    );
+  });
+
+  await test.step('wiki: special characters in file name are percent-encoded', async () => {
+    const link = content.locator('a.internal', {
+      hasText: /^file with spaces & special \(chars\)$/,
+    });
+    await expect(link).toHaveAttribute(
+      'href',
+      `${basePath}/file+with+spaces+%26+special+(chars)`,
+    );
+  });
+
+  // ── Raw HTML Links ──────────────────────────────────────────
+
+  await test.step('HTML: external link without explicit target gets _blank', async () => {
+    const link = content.locator('a', {
+      hasText: 'HTML external link default',
+    });
+    await expect(link).toHaveAttribute('href', 'https://example.com');
+    await expect(link).toHaveAttribute('target', '_blank');
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  await test.step('HTML: external link with target="_self" keeps _self', async () => {
+    const link = content.locator('a', {
+      hasText: 'HTML external link target self',
+    });
+    await expect(link).toHaveAttribute('href', 'https://example.com');
+    await expect(link).toHaveAttribute('target', '_self');
+    await expect(link).not.toHaveAttribute('rel');
+  });
+
+  await test.step('HTML: external link with target="_top" keeps _top', async () => {
+    const link = content.locator('a', {
+      hasText: 'HTML external link target top',
+    });
+    await expect(link).toHaveAttribute('href', 'https://example.com');
+    await expect(link).toHaveAttribute('target', '_top');
+    await expect(link).not.toHaveAttribute('rel');
+  });
+
+  await test.step('HTML: internal link does not get target or rel', async () => {
+    const link = content.locator('a', {
+      hasText: 'HTML internal link',
+    });
+    await expect(link).toHaveAttribute('href', `${basePath}/local-page`);
+    await expect(link).not.toHaveAttribute('target');
+    await expect(link).not.toHaveAttribute('rel');
   });
 
   // ── CommonMark Embeds ─────────────────────────────────────────

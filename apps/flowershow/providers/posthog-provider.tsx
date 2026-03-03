@@ -24,6 +24,7 @@ export function PostHogProvider({ children }) {
       cross_subdomain_cookie: true,
       disable_web_experiments: false, // https://posthog.com/docs/experiments/no-code-web-experiments
       bootstrap: bootstrapData,
+      disable_session_recording: true, // TODO temporary patch https://github.com/flowershow/flowershow/issues/1131
     });
   }, []);
 
