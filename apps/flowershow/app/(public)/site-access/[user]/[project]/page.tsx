@@ -9,6 +9,7 @@ import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
 import { internalGetSiteById } from '@/lib/db/internal';
 import { getSite } from '@/lib/get-site';
 import { getSiteUrl, getSiteUrlPath } from '@/lib/get-site-url';
+import { isEmoji } from '@/lib/is-emoji';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { siteKeyBytes } from '@/lib/site-hmac-key';
 import {
@@ -79,19 +80,25 @@ export default async function LoginPage(props: {
   return (
     <div
       className={clsx(
-        'mx-5 border border-primary-faint p-10 sm:mx-auto sm:w-full sm:max-w-md sm:rounded-lg sm:shadow-md md:max-w-lg md:p-12',
+        'mx-5 border border-primary-faint p-10 text-center sm:mx-auto sm:w-full sm:max-w-md sm:rounded-lg sm:shadow-md md:max-w-lg md:p-12',
         fontDashboardBody.variable,
         fontDashboardHeading.variable,
         fontBrand.variable,
       )}
     >
-      <Image
-        alt="Logo"
-        width={100}
-        height={100}
-        className="relative mx-auto h-12 w-auto"
-        src={logo}
-      />
+      {siteConfig?.logo && isEmoji(siteConfig?.logo) ? (
+        <span className="text-6xl" aria-label="Logo" role="img">
+          {siteConfig.logo}
+        </span>
+      ) : (
+        <Image
+          alt="Logo"
+          width={100}
+          height={100}
+          className="relative mx-auto h-12 w-auto"
+          src={logo}
+        />
+      )}
       <h1 className="mt-6 text-center font-dashboard-heading text-3xl">
         Authentication required
       </h1>
