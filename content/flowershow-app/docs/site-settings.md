@@ -104,11 +104,11 @@ Customize your site's navigation bar. You can set the **logo**, **title**, **lin
 
 ## Sidebar
 
-Show your site's sitemap in a sidebar on the left.
+The sidebar is enabled by default. To disable it, set `showSidebar` to `false`:
 
 ```json
 {
-  "showSidebar": true
+  "showSidebar": false
 }
 ```
 

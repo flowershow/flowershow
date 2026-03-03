@@ -3,17 +3,17 @@ title: Sidebar Configuration
 description: Enable sidebar navigation that displays your site's structure and links to all pages.
 ---
 
-## Enabling the sidebar globally
+## Overview
 
-To enable the sidebar navigation, add the `showSidebar` property to your `config.json` file in the root of your repository:
+The sidebar is enabled by default. It automatically generates navigation based on your content directory structure.
+
+To disable it, set `showSidebar` to `false` in your `config.json`:
 
 ```json
 {
-  "showSidebar": true
+  "showSidebar": false
 }
 ```
-
-The sidebar will automatically generate the navigation structure based on your content directory structure.
 
 ## Sorting sidebar items
 
@@ -21,7 +21,6 @@ By default, sidebar items are sorted by their title. You can change the sorting 
 
 ```json
 {
-  "showSidebar": true,
   "sidebar": {
     "orderBy": "path"
   }
@@ -29,6 +28,7 @@ By default, sidebar items are sorted by their title. You can change the sorting 
 ```
 
 Available values:
+
 - `"title"` (default) - Sort items alphabetically by their document title
 - `"path"` - Sort items alphabetically by their file path/name
 
