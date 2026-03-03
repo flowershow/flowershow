@@ -243,8 +243,8 @@
           <div
             class="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 max-lg:rounded-b-[2rem]">
             <div class="relative h-60 w-full overflow-hidden bg-gray-100">
-              <div class="absolute left-6 top-6 right-6 h-full">
-                <img src="./password.png" class="object-top object-fit rounded-lg" alt="" />
+              <div class="absolute inset-6">
+                <img src="./password.png" class="object-contain rounded-lg" alt="" />
               </div>
             </div>
             <div class="px-10 py-8">
@@ -380,18 +380,14 @@
           </dl>
 
           <div class="mt-10 flex items-center gap-x-6">
-            <a href="/docs/markdown"
+            <a href="/docs/syntax"
               class="rounded-md bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800">
               See supported syntax
             </a>
-            <a href="/docs" class="text-sm font-semibold text-gray-900">
+            <!-- <a href="/docs" class="text-sm font-semibold text-gray-900">
               View examples →
-            </a>
+            </a> -->
           </div>
-
-          <p class="mt-6 text-xs text-gray-500">
-            Plain Markdown works out of the box. Use extensions only when they help.
-          </p>
         </div>
       </div>
     </div>
@@ -442,11 +438,22 @@
                   <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
                   <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
                 </svg>
-                <dt class="inline font-semibold text-gray-900">Add custom CSS theme.</dt>
-                <dd class="inline"> Add your own CSS for the small things: spacing, colors, typography, components.
-                  You can keep it minimal — or go further.</dd>
+                <dt class="inline font-semibold text-gray-900">Custom theme.</dt>
+                <dd class="inline"> Choose from official Flowershow themes or create your own CSS theme for full control
+                  over spacing, colors, typography, and components.</dd>
               </div>
             </dl>
+
+            <div class="mt-10 flex items-center gap-x-6">
+              <a href="https://github.com/flowershow/themes"
+                class="rounded-md bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800">
+                Browse official themes
+              </a>
+            </div>
+
+            <p class="mt-6 text-xs text-gray-500">
+              Created a theme you're proud of? Share it with the community!
+            </p>
           </div>
         </div>
         <img width="2432" height="1442" src="./docs-placeholder.png" alt="Product screenshot"
