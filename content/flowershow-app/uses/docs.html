@@ -22,7 +22,7 @@
 <body>
   <div class="bg-white">
     <div class="relative isolate pt-14">
-      <div class="py-12 sm:py-16">
+      <div class="pt-12 sm:pt-16">
         <div class="mx-auto max-w-7xl px-6 lg:px-8">
           <div class="mx-auto max-w-2xl text-center">
             <!-- <div class="mb-6 flex justify-center">
@@ -62,34 +62,8 @@
     </div>
   </div>
 
-  <div class="mx-auto max-w-7xl px-6 lg:px-8">
-    <div class="mx-auto grid max-w-2xl grid-cols-1 lg:mx-0 lg:max-w-none lg:grid-cols-8 items-start">
-      <div class="lg:col-span-3 p-8 lg:pl-12">
-        <div class="lg:max-w-lg">
-          <h2 class="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
-            No setup ceremony.</h2>
-          <img src="./frictions.png" class="mt-6" />
-          <!-- <ul
-            class="mt-8 space-y-3 text-2xl text-gray-500 line-through decoration-2 decoration-gray-500 select-none">
-            <li>Set up a static site generator</li>
-            <li>Configure theme</li>
-            <li>Write config.yml</li>
-            <li>Debug build errors</li>
-            <li>Deploy to hosting</li>
-            <li>Maintain pipeline</li>
-          </ul> -->
-          <p class="mt-8 text-3xl font-semibold text-gray-900">Upload your files. That&apos;s enough.</p>
-        </div>
-      </div>
-      <div class="lg:col-span-5 flex items-start justify-end lg:order-first aspect-video">
-        <video src="./docs-github-publish.mp4" autoplay loop muted playsinline
-          class="w-full max-w-full rounded-xl ring-1 ring-gray-400/10"></video>
-      </div>
-    </div>
-  </div>
-
   <div class="bg-white">
-    <div class="mx-auto max-w-7xl px-6 py-12 sm:py-16 lg:px-8">
+    <div class="mx-auto max-w-7xl px-6 py-8 sm:py-16 lg:px-8">
       <div class="mx-auto max-w-3xl text-center">
         <h2 class="text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
           Publish from wherever your docs live.
@@ -195,22 +169,48 @@
     </div>
   </div>
 
+  <div class="mx-auto py-8 sm:py-16 max-w-7xl px-6 lg:px-8">
+    <div class="mx-auto grid max-w-2xl grid-cols-1 lg:mx-0 lg:max-w-none lg:grid-cols-8 items-start">
+      <div class="lg:col-span-3 p-8 lg:pl-12">
+        <div class="lg:max-w-lg">
+          <h2 class="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
+            No setup ceremony.</h2>
+          <img src="./frictions.png" class="mt-6" />
+          <!-- <ul
+            class="mt-8 space-y-3 text-2xl text-gray-500 line-through decoration-2 decoration-gray-500 select-none">
+            <li>Set up a static site generator</li>
+            <li>Configure theme</li>
+            <li>Write config.yml</li>
+            <li>Debug build errors</li>
+            <li>Deploy to hosting</li>
+            <li>Maintain pipeline</li>
+          </ul> -->
+          <p class="mt-8 text-3xl font-semibold text-gray-900">Upload your files. That&apos;s enough.</p>
+        </div>
+      </div>
+      <div class="lg:col-span-5 flex items-start justify-end lg:order-first aspect-video">
+        <video src="./docs-github-publish.mp4" autoplay loop muted playsinline
+          class="w-full max-w-full rounded-xl ring-1 ring-gray-400/10"></video>
+      </div>
+    </div>
+  </div>
+
 
   <div class="bg-gray-50 py-6 mt-6 sm:mt-12 sm:py-12">
     <div class="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
       <h2 class="mt-2 max-w-5xl text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
         Everything a documentation site should have.
       </h2>
-      <div class="mt-10 grid grid-cols-1 gap-4 sm:mt-16 lg:grid-cols-6 lg:grid-rows-4">
-        <div class="flex p-px lg:col-span-4 lg:row-span-2">
+      <div class="mt-10 grid grid-cols-1 gap-4 sm:mt-16 lg:grid-cols-6">
+        <div class="flex p-px lg:col-span-4 lg:row-span-4">
           <div
-            class="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 max-lg:rounded-t-[2rem] lg:rounded-tl-[2rem]">
-            <div class="relative h-[27rem] w-full overflow-hidden bg-[#D94585]">
+            class="flex flex-col w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 max-lg:rounded-t-[2rem] lg:rounded-tl-[2rem]">
+            <div class="relative flex-1 min-h-[27rem] w-full overflow-hidden bg-[#D94585]">
               <div class="absolute left-8 top-8 w-full h-full">
                 <img src="./navigation.png" class="object-top-left object-cover w-full h-full" alt="" />
               </div>
             </div>
-            <div class="px-10 py-8">
+            <div class="p-10">
               <h3 class="mt-2 text-lg font-medium tracking-tight text-gray-900">Clear navigation from
                 your folder structure</h3>
               <p class="mt-2 max-w-lg text-sm/6 text-gray-600">
@@ -223,7 +223,7 @@
             </div>
           </div>
         </div>
-        <div class="flex p-px lg:col-span-2">
+        <div class="flex p-px lg:col-span-2 lg:row-span-2">
           <div
             class="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 lg:rounded-tr-[2rem]">
             <div class="relative h-60 w-full overflow-hidden bg-[#FAE000]">
@@ -231,7 +231,7 @@
                 <img src="./search.png" class="object-top object-fit rounded-lg" alt="" />
               </div>
             </div>
-            <div class="px-10 py-8">
+            <div class="p-10">
               <p class="mt-2 text-lg font-medium tracking-tight text-gray-900">Built-in search</p>
               <p class="mt-2 max-w-lg text-sm/6 text-gray-600">Press ⌘K and find what you need
                 instantly.
@@ -239,7 +239,7 @@
             </div>
           </div>
         </div>
-        <div class="flex lg:col-span-2">
+        <div class="flex lg:col-span-2 lg:row-span-2">
           <div
             class="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 max-lg:rounded-b-[2rem]">
             <div class="relative h-60 w-full overflow-hidden bg-gray-100">
@@ -247,7 +247,7 @@
                 <img src="./password.png" class="object-contain rounded-lg" alt="" />
               </div>
             </div>
-            <div class="px-10 py-8">
+            <div class="p-10">
               <h3 class="mt-2 text-lg font-medium tracking-tight text-gray-900">Public or private
               </h3>
               <p class="mt-2 max-w-lg text-sm/6 text-gray-600">
@@ -258,11 +258,15 @@
           </div>
         </div>
 
-        <div class="flex lg:col-span-2 lg:row-span-2">
+        <div class="flex lg:col-span-2 lg:row-span-1">
           <div
             class="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 lg:rounded-bl-[2rem]">
-            <img src="./docs-placeholder.png" alt="" class="h-80 object-cover" />
-            <div class="px-10 py-8">
+            <div class="relative h-70 w-full overflow-hidden bg-gray-100">
+              <div class="absolute left-8 top-8 w-full h-full">
+                <img src="./docs-sync.png" class="object-top-left object-cover w-full h-full rounded-md" alt="" />
+              </div>
+            </div>
+            <div class="p-10">
               <h3 class="mt-2 text-lg font-medium tracking-tight text-gray-900">Updates in seconds</h3>
               <p class="mt-2 max-w-lg text-sm/6 text-gray-600">Push to GitHub.
                 Run the CLI.
@@ -273,14 +277,14 @@
             </div>
           </div>
         </div>
-        <div class="flex lg:col-span-2 lg:row-span-2">
-          <div class="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5">
-            <div class="relative h-80 w-full overflow-hidden">
-              <div class="absolute left-6 top-6 w-full h-85">
+        <div class="flex lg:col-span-4 lg:row-span-1">
+          <div class="flex flex-col w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5">
+            <div class="relative flex-1 min-h-70 w-full overflow-hidden bg-[#C8E235]">
+              <div class="absolute left-8 top-8 w-full h-full">
                 <img src="./comments.png" class="object-top-left object-cover w-full h-full" alt="" />
               </div>
             </div>
-            <div class="px-10 py-8">
+            <div class="p-10">
               <h3 class="mt-2 text-lg font-medium tracking-tight text-gray-900">Comments
               </h3>
               <p class="mt-2 max-w-lg text-sm/6 text-gray-600">
@@ -289,11 +293,9 @@
             </div>
           </div>
         </div>
-
-        <div class="flex lg:col-span-2 lg:row-span-1">
+        <!-- <div class="flex lg:col-span-2 lg:row-span-3">
           <div
             class="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 max-lg:rounded-b-[2rem] lg:rounded-br-[2rem]">
-            <!-- <img src="./docs-placeholder.png" alt="" class="block h-30 w-full object-cover object-left" /> -->
             <div class="px-10 py-8">
               <h3 class="mt-2 text-lg font-medium tracking-tight text-gray-900">GitHub integration</h3>
               <p class="mt-2 max-w-lg text-sm/6 text-gray-600">
@@ -305,7 +307,7 @@
               </p>
             </div>
           </div>
-        </div>
+        </div> -->
 
       </div>
     </div>
@@ -463,7 +465,7 @@
 
 
   <!-- Example Docs Sites -->
-  <div class="bg-gray-50 py-8 sm:py-16">
+  <!-- <div class="bg-gray-50 py-8 sm:py-16">
     <div class="mx-auto max-w-7xl px-6 lg:px-8">
 
       <div class="mx-auto max-w-3xl text-center">
@@ -475,31 +477,28 @@
         </p>
       </div>
 
-      <!-- <div class="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"> -->
-      <div class="mt-16 flex items-center justify-center">
+      <div class="mt-16 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
 
-        <!-- Example 1 -->
         <a href="https://docs.datahub.io/datahub-cloud"
-          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200 hover:shadow-md hover:ring-[var(--accent-200)]">
-          <div class="overflow-hidden">
-            <img src="./datahub-docs.png" alt="DataHub Documentation" class="h-48 aspect-video  object-cover" />
+          class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]">
+          <div class="relative h-48 w-full overflow-hidden bg-[#D94585]">
+            <div class="absolute left-4 top-4 right-4 h-full">
+              <img src="./datahub-docs.png" alt="DataHub Documentation" class="object-top object-cover w-full rounded-t-lg" />
+            </div>
           </div>
           <div class="flex flex-col flex-1 p-6">
             <h3 class="text-base font-semibold text-gray-900">
               DataHub Documentation
             </h3>
-            <!-- <p class="mt-1 text-sm text-gray-500 flex-1">
-              Structured reference with versioned endpoints and guides.
-            </p> -->
             <span class="mt-4 text-sm font-medium text-[var(--accent)]">View site →</span>
           </div>
         </a>
-
-        <!-- Example 2 -->
-        <!-- <a href="#"
+        <a href="#"
           class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]">
-          <div class="overflow-hidden">
-            <img src="./docs-placeholder.png" alt="Example documentation site" class="h-48 w-full object-cover" />
+          <div class="relative h-48 w-full overflow-hidden bg-[#FAE000]">
+            <div class="absolute left-4 top-4 right-4 h-full">
+              <img src="./docs-placeholder.png" alt="Example documentation site" class="object-top object-cover w-full rounded-t-lg" />
+            </div>
           </div>
           <div class="flex flex-col flex-1 p-6">
             <h3 class="text-base font-semibold text-gray-900">
@@ -510,13 +509,13 @@
             </p>
             <span class="mt-4 text-sm font-medium text-[var(--accent)]">View site →</span>
           </div>
-        </a> -->
-
-        <!-- Example 3 -->
-        <!-- <a href="#"
+        </a>
+        <a href="#"
           class="group flex flex-col rounded-2xl bg-white shadow-sm ring-1 ring-gray-200/80 overflow-hidden transition duration-200hover:shadow-md hover:ring-[var(--accent-200)]">
-          <div class="overflow-hidden">
-            <img src="./docs-placeholder.png" alt="Example documentation site" class="h-48 w-full object-cover" />
+          <div class="relative h-48 w-full overflow-hidden bg-[#C8E235]">
+            <div class="absolute left-4 top-4 right-4 h-full">
+              <img src="./docs-placeholder.png" alt="Example documentation site" class="object-top object-cover w-full rounded-t-lg" />
+            </div>
           </div>
           <div class="flex flex-col flex-1 p-6">
             <h3 class="text-base font-semibold text-gray-900">
@@ -527,18 +526,18 @@
             </p>
             <span class="mt-4 text-sm font-medium text-[var(--accent)]">View site →</span>
           </div>
-        </a> -->
+        </a>
 
       </div>
 
-      <!-- <div class="mt-16 text-center">
+      <div class="mt-16 text-center">
         <a href="/examples" class="text-sm font-semibold text-gray-900">
           View more examples →
         </a>
-      </div> -->
+      </div>
 
     </div>
-  </div>
+  </div> -->
 
 
   <div class="bg-white">
