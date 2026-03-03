@@ -22,12 +22,19 @@ interface SearchModalProps {
 }
 
 export function SearchModal({ indexId }: SearchModalProps) {
+  const [isMac, setIsMac] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [showHits, setShowHits] = useState(false);
   const modalRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    setIsMac(
+      navigator.platform.startsWith('Mac') || navigator.platform === 'iPhone',
+    );
+  }, []);
 
   const openModal = () => setIsOpen(true);
   const closeModal = () => setIsOpen(false);
@@ -113,7 +120,7 @@ export function SearchModal({ indexId }: SearchModalProps) {
         <SearchIcon className="search-icon" />
         <span className="search-placeholder">Search...</span>
         <span aria-hidden className="search-shortcut-hint">
-          ⌘K
+          {isMac ? '⌘K' : 'Ctrl+K'}
         </span>
       </button>
       <AnimatePresence>

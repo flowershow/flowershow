@@ -1654,6 +1654,9 @@
       display: inline-block;
     }
   }
+  .search-shortcut-hint {
+    margin-left: auto;
+  }
   .search-modal {
     position: fixed;
     inset: 0;
