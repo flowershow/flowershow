@@ -28,7 +28,7 @@ showComments: false
             >See demo</a>
           </div>
         </div>
-        <div className="mt-8 sm:mt-12 aspect-video rounded-md ring-1 ring-gray-900/10 overflow-hidden">
+        <div className="mt-8 sm:mt-12 aspect-video rounded-md overflow-hidden">
           <video
             src="./docs-demo.mp4"
             autoPlay
@@ -162,7 +162,7 @@ showComments: false
         muted
         playsInline
         preload="none"
-        className="w-full h-full object-contain rounded-xl ring-1 ring-gray-400/10"></video>
+        className="w-full h-full object-contain rounded-xl"></video>
     </div>
   </div>
 </div>
@@ -307,7 +307,7 @@ showComments: false
       <p className="mt-6 text-lg text-gray-600">Start with plain Markdown. Add richer blocks when they help. Your docs stay readable as files — not trapped in a proprietary editor.</p>
     </div>
     <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-5 lg:items-start">
-      <div className="lg:col-span-3 overflow-hidden rounded-2xl bg-gray-50 ring-1 ring-gray-900/10">
+      <div className="lg:col-span-3 overflow-hidden rounded-2xl">
         <div className="aspect-video">
           <video
             src="./docs-syntax.mp4"
@@ -415,7 +415,7 @@ showComments: false
           <p className="mt-6 text-xs text-gray-500"> Created a theme you're proud of? Share it with the community!</p>
         </div>
       </div>
-      <div className="w-[48rem] max-w-none sm:w-[57rem] md:-ml-4 lg:-ml-0 aspect-video rounded-xl ring-1 ring-gray-400/10 overflow-hidden">
+      <div className="w-[48rem] max-w-none sm:w-[57rem] md:-ml-4 lg:-ml-0 aspect-video rounded-xl overflow-hidden">
         <video
           autoPlay
           loop
