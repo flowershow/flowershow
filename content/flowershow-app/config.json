@@ -3,41 +3,99 @@
   "nav": {
     "title": "Flowershow",
     "links": [
-      { "href": "/docs", "name": "Docs" },
-      { "href": "/blog", "name": "Blog" },
-      { "href": "/changelog", "name": "Changelog" },
-      { "href": "/pricing", "name": "Pricing" },
+      {
+        "href": "/docs",
+        "name": "Docs"
+      },
+      {
+        "href": "/blog",
+        "name": "Blog"
+      },
+      {
+        "href": "/changelog",
+        "name": "Changelog"
+      },
+      {
+        "href": "/pricing",
+        "name": "Pricing"
+      },
       {
         "name": "Use Cases",
         "links": [
-          { "href": "/uses/obsidian", "name": "Obsidian Vault" },
-          { "href": "/uses/blogs", "name": "Blog" },
-          { "href": "/uses/data-stories", "name": "Data Stories" }
+          {
+            "href": "/uses/obsidian",
+            "name": "Obsidian Vault"
+          },
+          {
+            "href": "/uses/docs",
+            "name": "Docs"
+          },
+          {
+            "href": "/uses/blogs",
+            "name": "Blog"
+          },
+          {
+            "href": "/uses/data-stories",
+            "name": "Data Stories"
+          }
         ]
       },
       {
         "name": "Publish",
         "links": [
-          { "href": "/publish", "name": "From Terminal (CLI)" },
-          { "href": "/publish-github", "name": "From GitHub" }
+          {
+            "href": "/publish",
+            "name": "From Terminal (CLI)"
+          },
+          {
+            "href": "/publish-github",
+            "name": "From GitHub"
+          }
         ]
       },
-      { "href": "https://demo.flowershow.app/", "name": "Demo" },
-      { "href": "https://github.com/flowershow/themes", "name": "Themes" }
+      {
+        "href": "https://demo.flowershow.app/",
+        "name": "Demo"
+      },
+      {
+        "href": "https://github.com/flowershow/themes",
+        "name": "Themes"
+      }
     ],
-    "cta": { "name": "Sign In", "href": "https://cloud.flowershow.app/login" }
+    "cta": {
+      "name": "Sign In",
+      "href": "https://cloud.flowershow.app/login"
+    }
   },
   "footer": {
     "navigation": [
       {
         "title": "Product",
         "links": [
-          { "href": "/pricing", "name": "Pricing" },
-          { "href": "/docs", "name": "Docs" },
-          { "href": "/blog", "name": "Blog" },
-          { "href": "/changelog", "name": "Changelog" },
-          { "href": "/publish", "name": "Publish CLI" },
-          { "href": "/about", "name": "About" }
+          {
+            "href": "/pricing",
+            "name": "Pricing"
+          },
+          {
+            "href": "/docs",
+            "name": "Docs"
+          },
+          {
+            "href": "/blog",
+            "name": "Blog"
+          },
+          {
+            "href": "/changelog",
+            "name": "Changelog"
+          },
+          {
+            "href": "/publish",
+            "name": "Publish CLI"
+          },
+          {
+            "href": "/about",
+            "name": "About"
+          }
         ]
       },
       {
@@ -47,14 +105,23 @@
             "href": "https://github.com/flowershow/flowershow",
             "name": "GitHub"
           },
-          { "href": "https://discord.gg/JChzM5VdFn", "name": "Discord" }
+          {
+            "href": "https://discord.gg/JChzM5VdFn",
+            "name": "Discord"
+          }
         ]
       },
       {
         "title": "Legal",
         "links": [
-          { "href": "/docs/terms-of-service", "name": "Terms" },
-          { "href": "/docs/privacy", "name": "Privacy" }
+          {
+            "href": "/docs/terms-of-service",
+            "name": "Terms"
+          },
+          {
+            "href": "/docs/privacy",
+            "name": "Privacy"
+          }
         ]
       }
     ]
@@ -65,7 +132,11 @@
       "href": "https://github.com/flowershow/flowershow",
       "name": "GitHub"
     },
-    { "label": "x", "href": "https://x.com/flowershowapp", "name": "X" },
+    {
+      "label": "x",
+      "href": "https://x.com/flowershowapp",
+      "name": "X"
+    },
     {
       "label": "reddit",
       "href": "https://www.reddit.com/r/flowershow/",
@@ -88,12 +159,33 @@
   ],
   "showEditLink": true,
   "redirects": [
-    { "from": "/docs/site-wide-toc", "to": "/docs/sidebar" },
-    { "from": "/blog/how-to-set-up-blog", "to": "/blog/how-to-publish-blog" },
-    { "from": "/docs/obsidian-bases-reference", "to": "/docs/obsidian-bases" },
-    { "from": "/docs/bases", "to": "/docs/obsidian-bases" },
-    { "from": "/blogs", "to": "/uses/blogs" },
-    { "from": "/data-stories", "to": "/uses/data-stories" },
-    { "from": "/docs/site-config", "to": "/docs/config" }
+    {
+      "from": "/docs/site-wide-toc",
+      "to": "/docs/sidebar"
+    },
+    {
+      "from": "/blog/how-to-set-up-blog",
+      "to": "/blog/how-to-publish-blog"
+    },
+    {
+      "from": "/docs/obsidian-bases-reference",
+      "to": "/docs/obsidian-bases"
+    },
+    {
+      "from": "/docs/bases",
+      "to": "/docs/obsidian-bases"
+    },
+    {
+      "from": "/blogs",
+      "to": "/uses/blogs"
+    },
+    {
+      "from": "/data-stories",
+      "to": "/uses/data-stories"
+    },
+    {
+      "from": "/docs/site-config",
+      "to": "/docs/config"
+    }
   ]
 }
