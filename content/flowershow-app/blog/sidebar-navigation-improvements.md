@@ -1,10 +1,10 @@
 ---
 title: "Sidebar Navigation: Now On by Default, Better on Mobile, and Route-Aware"
-description: A round-up of recent sidebar improvements — enabled by default for new sites, a redesigned mobile experience with breadcrumbs, and the ability to show the sidebar only on specific routes.
+description: "A round-up of recent sidebar improvements — enabled by default for new sites, a redesigned mobile experience with breadcrumbs, and the ability to show the sidebar only on specific routes."
 date: 2026-03-04
 authors:
   - olayway
-image: [[new-sidebar.png]]
+image: "[[new-sidebar.png]]"
 ---
 
 We've shipped a series of improvements to sidebar navigation that make it easier to set up, nicer to use on mobile, and more flexible for sites with mixed content.
