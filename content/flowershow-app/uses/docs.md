@@ -30,7 +30,7 @@ showComments: false
         </div>
         <div className="mt-8 sm:mt-12 aspect-video rounded-md overflow-hidden">
           <video
-            src="./docs-demo.mp4"
+            src="/assets/uses/docs/docs-demo.mp4"
             autoPlay
             loop
             muted
@@ -150,13 +150,13 @@ showComments: false
     <div className="lg:col-span-3 p-8 lg:pl-12">
       <div className="lg:max-w-lg">
         <h2 className="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">No setup ceremony.</h2>
-        <img src="./frictions.png" className="mt-6 w-full" loading="lazy" />
+        <img src="/assets/uses/docs/frictions.png" className="mt-6 w-full" loading="lazy" />
         <p className="mt-8 text-3xl font-semibold text-gray-900">Upload your files. That's enough.</p>
       </div>
     </div>
     <div className="lg:col-span-5 lg:order-first aspect-video">
       <video
-        src="./docs-github-publish.mp4"
+        src="/assets/uses/docs/docs-github-publish.mp4"
         autoPlay
         loop
         muted
@@ -175,7 +175,7 @@ showComments: false
           <div className="relative flex-1 min-h-[27rem] w-full overflow-hidden bg-[#D94585]">
             <div className="absolute left-8 top-8 w-full h-full">
               <img
-                src="./navigation.png"
+                src="/assets/uses/docs/navigation.png"
                 className="object-top-left object-cover w-full h-full"
                 alt=""
                 loading="lazy"
@@ -202,7 +202,7 @@ showComments: false
           <div className="relative h-60 w-full overflow-hidden bg-[#FAE000]">
             <div className="absolute left-6 top-6 right-6 h-full">
               <img
-                src="./search.png"
+                src="/assets/uses/docs/search.png"
                 className="object-top object-fit rounded-lg"
                 alt=""
                 loading="lazy"
@@ -228,7 +228,7 @@ showComments: false
           <div className="relative h-60 w-full overflow-hidden bg-gray-100">
             <div className="absolute inset-6">
               <img
-                src="./password.png"
+                src="/assets/uses/docs/password.png"
                 className="object-contain rounded-lg"
                 alt=""
                 loading="lazy"
@@ -254,7 +254,7 @@ showComments: false
           <div className="relative h-70 w-full overflow-hidden bg-gray-100">
             <div className="absolute left-8 top-8 w-full h-full">
               <img
-                src="./docs-sync.png"
+                src="/assets/uses/docs/docs-sync.png"
                 className="object-top-left object-cover w-full h-full rounded-md"
                 alt=""
                 loading="lazy"
@@ -278,7 +278,7 @@ showComments: false
           <div className="relative flex-1 min-h-70 w-full overflow-hidden bg-[#C8E235]">
             <div className="absolute left-8 top-8 w-full h-full">
               <img
-                src="./comments.png"
+                src="/assets/uses/docs/comments.png"
                 className="object-top-left object-cover w-full h-full rounded-md"
                 alt=""
                 loading="lazy"
@@ -310,7 +310,7 @@ showComments: false
       <div className="lg:col-span-3 overflow-hidden rounded-2xl">
         <div className="aspect-video">
           <video
-            src="./docs-syntax.mp4"
+            src="/assets/uses/docs/docs-syntax.mp4"
             autoPlay
             loop
             muted
@@ -422,7 +422,7 @@ showComments: false
           muted
           playsInline
           preload="none"
-          src="./docs-theme.mp4"
+          src="/assets/uses/docs/docs-theme.mp4"
           className="w-full h-full object-contain ring-1 ring-gray-400/10"
         ></video>
       </div>
