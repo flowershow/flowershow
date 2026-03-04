@@ -2,7 +2,7 @@ import { GoogleAnalytics } from '@next/third-parties/google';
 import clsx from 'clsx';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import Script from 'next/script';
 import type { ReactNode } from 'react';
 import BuiltWithFloatingButton from '@/components/public/built-with-floating-button';
@@ -15,7 +15,6 @@ import { getConfig } from '@/lib/app-config';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { getSiteUrlPath } from '@/lib/get-site-url';
 import { getThemeUrl } from '@/lib/get-theme';
-import { getSession } from '@/server/auth';
 import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
 import { TRPCReactProvider } from '@/trpc/react';
 import { api } from '@/trpc/server';
@@ -77,7 +76,6 @@ export default async function PublicLayout(props: {
 
   const { children } = props;
 
-  const session = await getSession();
   const username = decodeURIComponent(params.user); // user's github username or "_domain" if on custom domain (see middleware)
   const projectName = decodeURIComponent(params.project);
 
@@ -97,33 +95,16 @@ export default async function PublicLayout(props: {
     });
   }
 
-  // TODO This is a workaround
-  // Don't call notFound() here, return minimal layout and allow the NOT_FOUND error to be thrown from within [...slug] page
-  // so that not-found.tsx in this segment can be triggered. Otherwise Next.js will look in the parent segment, and won't find it there, showing a blank page.
-  // Why we can't have not-found.js in the parent folder:
-  // Because we have 2 separate route groups with 2 separate ROOT layouts, and root layout for user sites needs to be
-  // nested under /[user]/[project] as it's dynamic. This means we can't have any layout in any parent directory - and it is needed for a not-found page
-  // Note: in Next 15 there is a global-not-found that can be used in /app without a layout, so we should upgrade
-  // https://github.com/vercel/next.js/discussions/50034
   if (!site) {
-    return (
-      <html
-        className={clsx(fontBody.variable, fontHeading.variable)}
-        lang="en"
-        suppressHydrationWarning
-      >
-        <body>{children}</body>
-      </html>
-    );
+    notFound();
   }
 
-  // Redirect to custom domain if it exists (anonymous sites don't have custom domains)
+  // Redirect to custom domain if it exists
   if (username !== '_domain' && username !== 'anon' && site.customDomain) {
     return redirect(`https://${site.customDomain}`);
   }
 
   const sitePrefix = getSiteUrlPath(site);
-
   const appConfig = getConfig();
 
   const siteConfig = await api.site.getConfig
@@ -161,18 +142,6 @@ export default async function PublicLayout(props: {
     ) {
       defaultMode = siteConfig?.theme?.defaultMode;
     }
-  }
-
-  let siteTree;
-
-  const showSidebar = siteConfig?.showSidebar ?? site.showSidebar;
-  if (showSidebar) {
-    siteTree = await api.site.getSiteTree
-      .query({
-        siteId: site.id,
-        orderBy: siteConfig?.sidebar?.orderBy,
-      })
-      .catch(() => []);
   }
 
   const logo = siteConfig?.nav?.logo ?? siteConfig?.logo ?? appConfig.logo; // default to Flowershow logo
@@ -286,7 +255,6 @@ export default async function PublicLayout(props: {
                     title={title}
                     links={links}
                     social={social}
-                    siteTree={siteTree}
                     showSearch={showSearch}
                     searchId={site.id}
                     showThemeSwitch={showThemeModeSwitch}

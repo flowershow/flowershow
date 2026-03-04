@@ -88,7 +88,7 @@
 
     /* Start from 90% lightness to make it less likely to go lower (lighter) than the light background */
     /* Advise people to pick light background between 0-10% lightness */
-    --color-foreground-50: oklch(from var(--color-foreground) 0.9 c h);
+    --color-foreground-50: oklch(from var(--color-foreground) 0.925 c h);
     --color-foreground-100: oklch(from var(--color-foreground) 0.825 c h);
     --color-foreground-200: oklch(from var(--color-foreground) 0.75 c h);
     --color-foreground-300: oklch(from var(--color-foreground) 0.675 c h);
@@ -170,9 +170,12 @@
     z-index: 10;
     background-color: var(--color-background);
     font-family: var(--font-heading);
-  }
-  .site-navbar.is-scrolled {
-    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+
+    @media (min-width: 1024px) {
+      &.is-scrolled {
+        box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      }
+    }
   }
   .site-navbar-inner {
     height: 4rem;
@@ -340,8 +343,8 @@
     }
   }
   .site-navbar-mobile-nav-icon {
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 1.25rem;
+    height: 1.25rem;
   }
 
   /* Theme switch */
@@ -822,6 +825,142 @@
     padding-bottom: 2rem;
     font-family: var(--font-heading);
   }
+
+  /* ────────────────────────────────────────────────────
+   Sidebar - Mobile subnav & drawer
+   ──────────────────────────────────────────────────── */
+  .site-subnav {
+    position: sticky;
+    top: 4rem;
+    z-index: 9;
+    height: 3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0 1rem;
+    background-color: var(--color-background);
+    border-top: 1px solid var(--color-foreground-50);
+    border-bottom: 1px solid var(--color-foreground-50);
+    font-family: var(--font-heading);
+
+    @media (min-width: 1024px) {
+      display: none;
+    }
+  }
+
+  .site-subnav-menu-button {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    color: var(--color-foreground-200);
+    transition: color 150ms;
+
+    &:hover {
+      color: var(--color-foreground-900);
+    }
+  }
+
+  .site-subnav-menu-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .site-subnav-breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    min-width: 0;
+    overflow: hidden;
+    font-size: var(--font-size-sm);
+    color: var(--color-foreground-500);
+  }
+
+  .site-subnav-breadcrumb-item {
+    display: flex;
+    align-items: center;
+    gap: 0.125rem;
+    white-space: nowrap;
+  }
+
+  .site-subnav-breadcrumb-item:last-child {
+    color: var(--color-foreground-700);
+    font-weight: var(--font-weight-medium);
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .site-subnav-breadcrumb-link {
+    &:hover {
+      color: var(--color-foreground-900);
+      text-decoration: underline;
+    }
+  }
+
+  .site-subnav-separator {
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+    color: var(--color-foreground-300);
+  }
+
+  .sidebar-drawer-backdrop {
+    position: fixed;
+    top: 7rem; /* below navbar (4rem) + subnav (3rem) */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    background-color: color-mix(
+      in srgb,
+      var(--color-background) 60%,
+      transparent
+    );
+    backdrop-filter: blur(4px);
+    transition: opacity 300ms ease;
+  }
+
+  .sidebar-drawer-panel {
+    position: fixed;
+    top: 7rem; /* below navbar (4rem) + subnav (3rem) */
+    left: 0;
+    bottom: 0;
+    z-index: 41;
+    width: 18rem;
+    max-width: 80vw;
+    background-color: var(--color-background);
+    padding: 1rem 1.5rem;
+    overflow-y: auto;
+    transition: transform 300ms ease;
+    border-right: 1px solid var(--color-foreground-50);
+    font-family: var(--font-heading);
+  }
+
+  .sidebar-drawer-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+  }
+
+  .sidebar-drawer-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    color: var(--color-foreground-500);
+    transition: color 150ms;
+
+    &:hover {
+      color: var(--color-foreground-900);
+    }
+  }
+
+  .sidebar-drawer-close-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
   /* ────────────────────────────────────────────────────
    Footer
    ──────────────────────────────────────────────────── */

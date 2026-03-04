@@ -20,9 +20,9 @@ import { SearchModal } from '@/components/public/search-modal';
 import { socialIcons } from '@/components/public/social-icons';
 import {
   isNavDropdown,
-  NavItem,
-  NavLink,
-  SocialLink,
+  type NavItem,
+  type NavLink,
+  type SocialLink,
 } from '@/components/types';
 import type { Node } from '@/lib/build-site-tree';
 import { isDir } from '@/lib/build-site-tree';
@@ -34,7 +34,6 @@ export interface Props {
   url: string;
   title?: string;
   links?: NavItem[];
-  siteTree?: Node[];
   social?: SocialLink[];
   showThemeSwitch?: boolean;
   showSearch?: boolean;
@@ -47,7 +46,6 @@ const Nav = ({
   url,
   title,
   links,
-  siteTree,
   social,
   showThemeSwitch = true,
   showSearch = false,
@@ -221,11 +219,6 @@ const Nav = ({
                       {name}
                     </a>
                   ))}
-              </div>
-            )}
-            {siteTree && (
-              <div className="mobile-nav-tree-container">
-                <TreeView items={siteTree} onLinkClick={close} />
               </div>
             )}
             {cta && (

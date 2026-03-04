@@ -9,7 +9,7 @@ import ErrorMessage from '@/components/public/error-message';
 import Hero from '@/components/public/hero';
 import { BlogLayout } from '@/components/public/layouts/blog';
 import MDXClient from '@/components/public/mdx-client';
-import SiteTree from '@/components/public/site-tree';
+import { SidebarDesktop, SidebarMobileNav } from '@/components/public/sidebar';
 import TableOfContents from '@/components/public/table-of-contents';
 import { getConfig } from '@/lib/app-config';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
@@ -353,6 +353,8 @@ export default async function SitePage(props: {
       />
       <UrlNormalizer />
 
+      {showSidebar && <SidebarMobileNav items={siteTree} prefix={sitePrefix} />}
+
       {showHero && (
         <Hero
           siteId={site.id}
@@ -374,9 +376,7 @@ export default async function SitePage(props: {
       >
         {showSidebar && (
           <div className="layout-inner-left">
-            <aside className="site-sidebar">
-              <SiteTree items={siteTree} />
-            </aside>
+            <SidebarDesktop items={siteTree} />
           </div>
         )}
 
