@@ -114,11 +114,6 @@ export default function SitePasswordProtectionForm({
           >
             Password Protection
           </h2>
-          <div className="grow justify-start">
-            <span className="inline-flex items-center rounded-full bg-pink-100 px-1.5 py-0.5 text-xs font-medium text-pink-700 dark:bg-pink-400/10 dark:text-pink-400">
-              BETA
-            </span>
-          </div>
 
           {disabled && (
             <div className="flex flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600">
