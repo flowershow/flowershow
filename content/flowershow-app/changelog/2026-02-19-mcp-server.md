@@ -8,6 +8,8 @@ authors:
 
 AI assistants are becoming the place where a lot of writing and thinking happens. You shouldn't have to break that flow just to publish. Today we're shipping the Flowershow MCP server — connect it once, and your AI assistant can manage your Flowershow site as naturally as it edits code or answers questions.
 
+![Flowershow](https://screenshotit.app/flowershow.app@social)
+
 ## Publish notes without leaving your editor
 
 Once connected, your AI assistant can create a new site, publish a note, update existing content, and check publish status — all through natural conversation. You describe what you want; the MCP server handles the Flowershow API calls.
@@ -29,6 +31,8 @@ The server exposes seven tools your AI can compose freely:
 | `get-publish-status` | Poll the current publishing status for a site |
 
 For larger publishing jobs — like syncing a whole vault — the agent calls `publish-local-files` with file metadata, uploads directly to the returned presigned URLs, then polls `get-publish-status` until the site is live. Local file bytes never pass through the MCP server itself.
+
+![Flowershow MCP Server PR on GitHub](https://screenshotit.app/github.com/flowershow/flowershow/pull/1054)
 
 ## Getting connected
 
