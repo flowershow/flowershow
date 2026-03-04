@@ -362,6 +362,25 @@ export const DomainVerificationSchema = z.object({
       })
       .optional(),
   }),
+  configJson: z
+    .object({
+      configuredBy: z.union([
+        z.literal('A'),
+        z.literal('CNAME'),
+        z.literal('http'),
+        z.literal('dns-01'),
+        z.null(),
+      ]),
+      acceptedChallenges: z.array(z.enum(['dns-01', 'http-01'])),
+      misconfigured: z.boolean(),
+      recommendedCNAME: z.array(
+        z.object({ rank: z.number(), value: z.string() }),
+      ),
+      recommendedIPv4: z.array(
+        z.object({ rank: z.number(), value: z.array(z.string()) }),
+      ),
+    })
+    .optional(),
 });
 export type DomainVerification = z.infer<typeof DomainVerificationSchema>;
 

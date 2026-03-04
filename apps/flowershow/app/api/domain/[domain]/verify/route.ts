@@ -46,6 +46,7 @@ export async function GET(
   const response = NextResponse.json({
     status,
     domainJson,
+    configJson,
   } satisfies DomainVerification);
 
   // Prevent caching at all levels - CDN, Vercel, and browser

@@ -84,7 +84,7 @@ export const getConfigResponse = async (
   return await fetch(
     `https://api.vercel.com/v6/domains/${domain}/config${
       env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ''
-    }`,
+    }${env.PROJECT_ID_VERCEL ? `&projectId=${env.PROJECT_ID_VERCEL}` : ''}`,
     {
       method: 'GET',
       headers: {
