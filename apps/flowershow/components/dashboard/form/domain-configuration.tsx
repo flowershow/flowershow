@@ -39,6 +39,9 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
       domainJson.verification.find((x: any) => x.type === 'TXT')) ||
     null;
 
+  const cnameVerification =
+    domainJson.verification.find((x: any) => x.type === 'CNAME') || null;
+
   return (
     <div className="border-t border-stone-200 px-10 pb-5 pt-7 ">
       <div className="mb-4 flex items-center space-x-2">
@@ -147,7 +150,8 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
                 <p className="mt-2 font-mono text-sm">
                   {recordType === 'A'
                     ? `76.76.21.21`
-                    : `cname.${env.NEXT_PUBLIC_DNS_DOMAIN}.`}
+                    : (cnameVerification?.value ??
+                      `cname.${env.NEXT_PUBLIC_DNS_DOMAIN}.`)}
                 </p>
               </div>
               <div>
