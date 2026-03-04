@@ -90,6 +90,8 @@ export interface DomainConfigResponse {
   acceptedChallenges?: ('dns-01' | 'http-01')[];
   /** Whether or not the domain is configured AND we can automatically generate a TLS certificate. */
   misconfigured: boolean;
+  /** Unique CNAME targets for this project. */
+  cnames?: string[];
 }
 
 // From https://vercel.com/docs/rest-api/endpoints#verify-project-domain

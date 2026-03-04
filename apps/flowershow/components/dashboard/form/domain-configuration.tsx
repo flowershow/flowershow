@@ -1,6 +1,6 @@
 'use client';
 
-import { AlertCircle, XCircle } from 'lucide-react';
+import { AlertCircle, Info, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { env } from '@/env.mjs';
 import { getSubdomain } from '@/lib/domains';
@@ -28,7 +28,7 @@ export const InlineSnippet = ({
 export default function DomainConfiguration({ domain }: { domain: string }) {
   const [recordType, setRecordType] = useState<'A' | 'CNAME'>('A');
 
-  const { status, domainJson } = useDomainStatus({ domain });
+  const { status, domainJson, configJson } = useDomainStatus({ domain });
 
   if (!status || status === 'Valid Configuration' || !domainJson) return null;
 
@@ -38,6 +38,9 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
     (status === 'Pending Verification' &&
       domainJson.verification.find((x: any) => x.type === 'TXT')) ||
     null;
+
+  const cnameTarget =
+    configJson?.cnames?.[0] ?? `cname.${env.NEXT_PUBLIC_DNS_DOMAIN}.`;
 
   return (
     <div className="border-t border-stone-200 px-10 pb-5 pt-7 ">
@@ -145,9 +148,7 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
               <div>
                 <p className="text-sm font-bold">Value</p>
                 <p className="mt-2 font-mono text-sm">
-                  {recordType === 'A'
-                    ? `76.76.21.21`
-                    : `cname.${env.NEXT_PUBLIC_DNS_DOMAIN}.`}
+                  {recordType === 'A' ? `76.76.21.21` : cnameTarget}
                 </p>
               </div>
               <div>
@@ -160,6 +161,16 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
               available, set the highest value possible. Also, domain
               propagation can take up to an hour.
             </p>
+            <div className="mt-4 flex items-start space-x-2 rounded-md border border-blue-200 bg-blue-50 p-3">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
+              <p className="text-sm text-blue-800">
+                If you are using Cloudflare, make sure to set the proxy status
+                to <strong>&quot;DNS only&quot;</strong> (grey cloud icon)
+                instead of &quot;Proxied&quot; (orange cloud icon).
+                Cloudflare&apos;s proxy can interfere with SSL certificate
+                provisioning.
+              </p>
+            </div>
           </div>
         </>
       )}
