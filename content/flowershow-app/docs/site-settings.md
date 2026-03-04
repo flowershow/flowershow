@@ -112,6 +112,16 @@ The sidebar is enabled by default. To disable it, set `showSidebar` to `false`:
 }
 ```
 
+To show the sidebar only on specific routes (e.g. only on `/docs` pages), use `sidebar.paths`:
+
+```json
+{
+  "sidebar": {
+    "path": ["/docs"]
+  }
+}
+```
+
 👉 See [[sidebar|Sidebar]] to learn more.
 
 ## "Edit this page" links
@@ -134,10 +144,7 @@ Control which files and directories are published.
 
 ```json
 {
-  "contentExclude": [
-    "/private-folder",
-    "/draft-file.md"
-  ]
+  "contentExclude": ["/private-folder", "/draft-file.md"]
 }
 ```
 

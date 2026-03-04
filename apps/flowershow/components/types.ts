@@ -75,6 +75,7 @@ export interface SiteConfig {
   showSidebar?: boolean;
   sidebar?: {
     orderBy?: 'title' | 'path';
+    paths?: string[];
   };
   showToc?: boolean;
   showHero?: boolean;

@@ -1,4 +1,4 @@
-import { expect, type Locator, test } from '../helpers/fixtures';
+import { expect, test } from '../helpers/fixtures';
 
 test('Site Layout', async ({ page, basePath }) => {
   await page.goto(`${basePath}`);
@@ -15,22 +15,54 @@ test('Site Layout', async ({ page, basePath }) => {
     await expect(nav.locator('a', { hasText: 'Syntax' })).toBeVisible();
   });
 
-  await test.step('sidebar is visible', async () => {
-    const sidebar = page.locator('.site-sidebar');
-    await expect(sidebar).toBeVisible();
-  });
-
-  await test.step('sidebar contains links to pages', async () => {
-    const sidebar = page.locator('.site-sidebar');
-    const links = sidebar.locator('a');
-    const count = await links.count();
-    expect(count).toBeGreaterThanOrEqual(1);
-  });
-
   await test.step('footer is visible with configured content', async () => {
     const footer = page.locator('footer');
     await expect(footer).toBeVisible();
     await expect(footer).toContainText('Resources');
     await expect(footer.locator('a', { hasText: 'About' })).toBeVisible();
+  });
+});
+
+test('Sidebar', async ({ page, basePath }) => {
+  await test.step('sidebar is visible on matching routes', async () => {
+    await page.goto(`${basePath}/docs/getting-started`);
+    const sidebar = page.locator('.site-sidebar');
+    await expect(sidebar).toBeVisible();
+  });
+
+  await test.step('sidebar is hidden on non-matching routes', async () => {
+    await page.goto(`${basePath}`);
+    const sidebar = page.locator('.site-sidebar');
+    await expect(sidebar).not.toBeVisible();
+  });
+
+  await test.step('sidebar only contains pages from matching routes', async () => {
+    await page.goto(`${basePath}/docs/getting-started`);
+    const sidebar = page.locator('.site-sidebar');
+    const links = sidebar.locator('a');
+
+    // Should contain docs pages
+    await expect(links.filter({ hasText: 'Getting Started' })).toBeVisible();
+    await expect(links.filter({ hasText: 'Configuration' })).toBeVisible();
+
+    // Should not contain pages outside /docs
+    await expect(links.filter({ hasText: 'Basic Syntax' })).not.toBeVisible();
+    await expect(
+      links.filter({ hasText: 'Welcome to E2E Test Site' }),
+    ).not.toBeVisible();
+  });
+
+  await test.step('mobile sidebar subnav is visible on matching routes', async () => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto(`${basePath}/docs/getting-started`);
+    const subnav = page.locator('.site-subnav');
+    await expect(subnav).toBeVisible();
+  });
+
+  await test.step('mobile sidebar subnav is hidden on non-matching routes', async () => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto(`${basePath}`);
+    const subnav = page.locator('.site-subnav');
+    await expect(subnav).not.toBeVisible();
   });
 });

@@ -10,6 +10,7 @@ import Hero from '@/components/public/hero';
 import { BlogLayout } from '@/components/public/layouts/blog';
 import MDXClient from '@/components/public/mdx-client';
 import { SidebarDesktop, SidebarMobileNav } from '@/components/public/sidebar';
+import type { Node } from '@/lib/build-site-tree';
 import TableOfContents from '@/components/public/table-of-contents';
 import { getConfig } from '@/lib/app-config';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
@@ -324,13 +325,24 @@ export default async function SitePage(props: {
     site.enableComments &&
     (metadata?.showComments ?? siteConfig?.showComments ?? site.enableComments);
   const giscusConfig = siteConfig?.giscus;
-  const showSidebar =
-    metadata?.showSidebar ?? siteConfig?.showSidebar ?? site.showSidebar;
+  const showSidebar = (() => {
+    const enabled =
+      metadata?.showSidebar ?? siteConfig?.showSidebar ?? site.showSidebar;
+    if (!enabled) return false;
+    const paths = siteConfig?.sidebar?.paths;
+    if (!paths || paths.length === 0) return true;
+    const pagePath = '/' + blob.path;
+    return paths.some(
+      (path) =>
+        pagePath === path ||
+        pagePath.startsWith(path.endsWith('/') ? path : path + '/'),
+    );
+  })();
   const showToc = metadata?.showToc ?? siteConfig?.showToc ?? true;
   const heroConfig = resolveHeroConfig(metadata, siteConfig);
   const showHero = heroConfig.showHero;
 
-  let siteTree;
+  let siteTree: Node[] | undefined;
 
   // TODO this should be part off the project layout so that it's not computed for each page
   if (showSidebar) {
@@ -338,6 +350,7 @@ export default async function SitePage(props: {
       .query({
         siteId: site.id,
         orderBy: siteConfig?.sidebar?.orderBy,
+        paths: siteConfig?.sidebar?.paths,
       })
       .catch(() => []);
   }
@@ -353,11 +366,12 @@ export default async function SitePage(props: {
       />
       <UrlNormalizer />
 
-      {showSidebar && <SidebarMobileNav items={siteTree} prefix={sitePrefix} />}
+      {showSidebar && (
+        <SidebarMobileNav items={siteTree!} prefix={sitePrefix} />
+      )}
 
       {showHero && (
         <Hero
-          siteId={site.id}
           title={heroConfig.title}
           description={heroConfig.description}
           image={heroConfig.image}
@@ -376,7 +390,7 @@ export default async function SitePage(props: {
       >
         {showSidebar && (
           <div className="layout-inner-left">
-            <SidebarDesktop items={siteTree} />
+            <SidebarDesktop items={siteTree!} />
           </div>
         )}
 

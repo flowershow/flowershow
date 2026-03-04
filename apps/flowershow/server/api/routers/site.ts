@@ -957,6 +957,7 @@ export const siteRouter = createTRPCRouter({
       z.object({
         siteId: z.string().min(1),
         orderBy: z.enum(['path', 'title']).default('title'),
+        paths: z.array(z.string()).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -997,7 +998,18 @@ export const siteRouter = createTRPCRouter({
             },
           })) as Blob[];
 
-          return buildSiteTree(blobs, {
+          const paths = input.paths ?? [];
+          const prefixes = paths.map((p) => p.replace(/^\//, ''));
+          const filteredBlobs =
+            prefixes && prefixes.length > 0
+              ? blobs.filter((b) => {
+                  return prefixes.some(
+                    (p) => b.path === p || b.path.startsWith(`${p}/`),
+                  );
+                })
+              : blobs;
+
+          return buildSiteTree(filteredBlobs, {
             orderBy: input.orderBy,
             prefix: sitePrefix,
           }).children;

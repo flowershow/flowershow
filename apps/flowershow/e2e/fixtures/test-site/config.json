@@ -2,6 +2,9 @@
   "title": "E2E Test Site",
   "description": "Test site for E2E renderer tests",
   "showSidebar": true,
+  "sidebar": {
+    "paths": ["/docs"]
+  },
   "showToc": true,
   "nav": {
     "title": "E2E Test Site",

@@ -71,6 +71,10 @@ Here is an overview of all the site-wide configuration options that you can set 
   "analytics": "G-XXXXXXXXXX",
   "showComments": false,
   "showSidebar": true,
+  "sidebar": {
+    "orderBy": "title",
+    "paths": ["/docs"]
+  },
   "showToc": false,
   "contentInclude": ["/blog", "README.md"],
   "contentExclude": ["/blog/_archive"],
