@@ -1,15 +1,15 @@
-import { GoogleAnalytics, GoogleTagManager } from '@next/third-parties/google';
+import { GoogleAnalytics } from '@next/third-parties/google';
 import clsx from 'clsx';
-import { Metadata } from 'next';
+import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import Script from 'next/script';
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import BuiltWithFloatingButton from '@/components/public/built-with-floating-button';
 import Footer from '@/components/public/footer';
 import Nav from '@/components/public/nav';
-import { TemporarySiteBanner } from '@/components/public/temporary-site-banner';
 import { SiteProvider } from '@/components/public/site-context';
+import { TemporarySiteBanner } from '@/components/public/temporary-site-banner';
 import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
@@ -24,7 +24,7 @@ import '@/styles/prism.css';
 import '@/styles/callouts.css';
 import '@/styles/default-theme.css';
 import { THEME_PREFERENCE_STORAGE_KEY } from '@/lib/const';
-import { PublicSite } from '@/server/api/types';
+import type { PublicSite } from '@/server/api/types';
 import KatexStylesLoader from './_components/katex-loader';
 import SiteLogoutButton from './_components/site-logout-button';
 
@@ -185,52 +185,6 @@ export default async function PublicLayout(props: {
   const cta = siteConfig?.nav?.cta;
   const showNav = !!siteConfig?.nav;
 
-  // Generate CSS for custom footer and hero components
-  // let customFooterCss: string | null = null;
-  // let customHeroCss: string | null = null;
-
-  // if (site.id) {
-  //   try {
-  //     const customFooterBlob = await api.site.getBlobByPath.query({
-  //       siteId: site.id,
-  //       path: '_flowershow/components/Footer.html',
-  //     });
-
-  //     if (customFooterBlob) {
-  //       const customFooterContent = await api.site.getBlobContent.query({
-  //         id: customFooterBlob.id,
-  //       });
-  //       const footerCssResult = await generateScopedCss(
-  //         customFooterContent ?? '',
-  //         '#customfooter',
-  //       );
-  //       customFooterCss = footerCssResult.css;
-  //     }
-  //   } catch (error) {
-  //     // Custom footer doesn't exist
-  //   }
-
-  //   try {
-  //     const customHeroBlob = await api.site.getBlobByPath.query({
-  //       siteId: site.id,
-  //       path: '_flowershow/components/Hero.html',
-  //     });
-
-  //     if (customHeroBlob) {
-  //       const customHeroContent = await api.site.getBlobContent.query({
-  //         id: customHeroBlob.id,
-  //       });
-  //       const heroCssResult = await generateScopedCss(
-  //         customHeroContent ?? '',
-  //         '#customhero',
-  //       );
-  //       customHeroCss = heroCssResult.css;
-  //     }
-  //   } catch (error) {
-  //     // Custom hero doesn't exist
-  //   }
-  // }
-
   return (
     <html
       className={clsx(
@@ -255,22 +209,6 @@ export default async function PublicLayout(props: {
         )}
         {themeUrl && <link rel="stylesheet" href={themeUrl} />}
         {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
-        {/* {customFooterCss && (
-          <style
-            id="unocss-footer"
-            dangerouslySetInnerHTML={{
-              __html: customFooterCss,
-            }}
-          />
-        )}
-        {customHeroCss && (
-          <style
-            id="unocss-hero"
-            dangerouslySetInnerHTML={{
-              __html: customHeroCss,
-            }}
-          />
-        )} */}
         {showThemeModeSwitch && (
           <script
             dangerouslySetInnerHTML={{
@@ -299,32 +237,28 @@ export default async function PublicLayout(props: {
             crossOrigin="anonymous"
           />
         </noscript>
+        {siteConfig?.umami && (
+          <Script
+            defer
+            src={
+              typeof siteConfig.umami === 'string'
+                ? 'https://cloud.umami.is/script.js'
+                : (siteConfig.umami.src ?? 'https://cloud.umami.is/script.js')
+            }
+            data-website-id={
+              typeof siteConfig.umami === 'string'
+                ? siteConfig.umami
+                : siteConfig.umami.websiteId
+            }
+          />
+        )}
       </head>
       <body>
-        <KatexStylesLoader />
+        {siteConfig?.analytics && (
+          <GoogleAnalytics gaId={siteConfig.analytics} />
+        )}
         <TRPCReactProvider headers={await headers()}>
           <Providers>
-            {/* it should be in the head */}
-            {siteConfig?.analytics && (
-              <GoogleAnalytics gaId={siteConfig.analytics} />
-            )}
-            {siteConfig?.umami && (
-              <Script
-                defer
-                src={
-                  typeof siteConfig.umami === 'string'
-                    ? 'https://cloud.umami.is/script.js'
-                    : (siteConfig.umami.src ??
-                      'https://cloud.umami.is/script.js')
-                }
-                data-website-id={
-                  typeof siteConfig.umami === 'string'
-                    ? siteConfig.umami
-                    : siteConfig.umami.websiteId
-                }
-              />
-            )}
-
             <SiteProvider
               value={{
                 user: params.user,
@@ -374,15 +308,9 @@ export default async function PublicLayout(props: {
                 )}
               </div>
             </SiteProvider>
-
-            <GoogleTagManager
-              {...(session?.user.id
-                ? { dataLayer: { user_id: session.user.id } }
-                : {})}
-              gtmId={env.GTM_ID}
-            />
           </Providers>
         </TRPCReactProvider>
+        <KatexStylesLoader />
       </body>
     </html>
   );
