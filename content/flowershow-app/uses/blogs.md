@@ -231,7 +231,7 @@ showComments: false
               <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">Built-in newsletter</h3>
             </div>
             <p className="mt-2 max-w-lg text-sm/6 text-gray-600">Email new posts to subscribers directly from Flowershow. No separate newsletter tool needed.</p>
-            <p classname="mt-4">
+            <p className="mt-4">
               <span className="items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">Coming soon</span>
             </p>
           </div>
