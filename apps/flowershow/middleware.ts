@@ -127,7 +127,7 @@ export default async function middleware(req: NextRequest) {
 
   // Rewrites for home pages
   if (hostname === env.NEXT_PUBLIC_HOME_DOMAIN) {
-    if (path.startsWith('/drag-n-drop')) {
+    if (path.startsWith('/dragndrop')) {
       return NextResponse.rewrite(new URL(`/home${path}`, req.url));
     }
   }
@@ -207,7 +207,7 @@ export default async function middleware(req: NextRequest) {
         try {
           const flags = phBootstrap.value.featureFlags;
 
-          const landingPageFlagName = 'landing-page-a-b-drag-n-drop';
+          const landingPageFlagName = 'landing-page-a-b-dragndrop';
           const landingPageFlag = flags[landingPageFlagName];
           const isTestVariant = landingPageFlag === 'test';
 
