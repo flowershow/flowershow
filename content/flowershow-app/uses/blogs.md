@@ -164,12 +164,8 @@ showComments: false
     <div className="flex p-px lg:col-span-2 lg:row-span-2">
       <div className="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 lg:rounded-tr-[2rem]">
         <div className="p-10">
-          <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">
-              Official themes
-          </h3>
-          <p className="mt-2 max-w-lg text-sm/6 text-gray-600">
-              Pick a polished look designed for reading.
-              Switch with one line in your config.
+          <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">Search</h3>
+          <p className="mt-2 max-w-lg text-sm/6 text-gray-600">Help readers find any post in seconds. Search across titles, headings, and content — even as your blog grows.
           </p>
         </div>
       </div>
@@ -177,9 +173,7 @@ showComments: false
     <div className="flex lg:col-span-2 lg:row-span-2">
       <div className="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5">
         <div className="p-10">
-          <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">
-              Author profiles
-          </h3>
+          <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">Author profiles</h3>
           <p className="mt-2 max-w-lg text-sm/6 text-gray-600">
               Add an avatar, bio, and link.
               Readers know who wrote what.
@@ -326,34 +320,6 @@ showComments: false
           className="w-full h-full object-contain ring-1 ring-gray-400/10"
         ></video>
     </div>
-  </div>
-</div>
-</div>
-<div className="bg-gray-50 py-12 sm:py-16">
-<div className="mx-auto max-w-7xl px-6 lg:px-8">
-  <div className="mx-auto max-w-3xl text-center">
-    <h2 className="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">See it in the wild.</h2>
-    <p className="mt-6 text-lg text-gray-600">Real blogs published with Flowershow.</p>
-  </div>
-  <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-8 sm:grid-cols-3">
-    <div className="flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80">
-      <h3 className="text-base font-semibold text-gray-900">Personal Blog</h3>
-      <p className="mt-2 text-sm text-gray-500 flex-1">Essays, notes, and ideas — published straight from an Obsidian vault.</p>
-      <a href="#" className="mt-5 text-sm font-medium text-[#AB3A76]">View site →</a>
-    </div>
-    <div className="flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80">
-      <h3 className="text-base font-semibold text-gray-900">Technical Writing</h3>
-      <p className="mt-2 text-sm text-gray-500 flex-1">Tutorials and deep dives, with code blocks and diagrams — on a custom domain.</p>
-      <a href="#" className="mt-5 text-sm font-medium text-[#AB3A76]">View site →</a>
-    </div>
-    <div className="flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80">
-      <h3 className="text-base font-semibold text-gray-900">Multi-author Publication</h3>
-      <p className="mt-2 text-sm text-gray-500 flex-1">A shared blog with author profiles, featured images, and reader comments.</p>
-      <a href="#" className="mt-5 text-sm font-medium text-[#AB3A76]">View site →</a>
-    </div>
-  </div>
-  <div className="mt-10 text-center">
-    <a href="#" className="text-sm font-medium text-[#AB3A76]">View more examples →</a>
   </div>
 </div>
 </div>
