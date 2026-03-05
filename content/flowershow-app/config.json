@@ -1,5 +1,9 @@
 {
   "title": "Flowershow",
+  "showSidebar": true,
+  "sidebar": {
+    "paths": ["/docs"]
+  },
   "nav": {
     "title": "Flowershow",
     "links": [
