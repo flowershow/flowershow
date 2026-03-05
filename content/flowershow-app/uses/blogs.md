@@ -158,7 +158,7 @@ showComments: false
   <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
     <h2 className="mt-2 max-w-5xl text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">A real blog, out of the box.</h2>
     <div className="mt-10 grid grid-cols-1 gap-4 sm:mt-16 lg:grid-cols-6">
-      <div className="flex p-px lg:col-span-4 lg:row-span-2">
+      <div className="flex p-px lg:col-span-4 lg:row-span-3">
         <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 max-lg:rounded-t-[2rem] lg:rounded-tl-[2rem]">
           <div className="relative flex-1 min-h-[20rem] w-full overflow-hidden bg-[#D94585]">
             <div className="absolute left-8 top-8 right-8 h-full">
@@ -176,7 +176,7 @@ showComments: false
           </div>
         </div>
       </div>
-      <div className="flex p-px lg:col-span-2 lg:row-span-1">
+      <div className="flex p-px lg:col-span-2 lg:row-span-2">
         <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 lg:rounded-tr-[2rem]">
           <div className="relative flex-1 min-h-[16rem] w-full overflow-hidden bg-[#D94585]">
             <div className="absolute left-6 top-6 right-6 h-full">
@@ -194,7 +194,7 @@ showComments: false
           </div>
         </div>
       </div>
-      <div className="flex lg:col-span-2 lg:row-span-1">
+      <div className="flex lg:col-span-2 lg:row-span-2">
         <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5">
           <div className="relative flex-1 min-h-[16rem] w-full overflow-hidden bg-[#D94585]">
             <div className="absolute left-8 top-8 w-full h-full">
@@ -217,42 +217,6 @@ showComments: false
         </div>
       </div>
       <div className="flex lg:col-span-3 lg:row-span-1">
-        <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5">
-          <div className="relative flex-1 min-h-[20rem] w-full overflow-hidden bg-[#D94585]">
-            <div className="absolute left-8 top-8 w-full h-full">
-              <img
-                src="/assets/uses/blog/blog-authors.png"
-                className="object-top-left object-cover w-full h-full"
-                alt=""
-                loading="lazy"
-              />
-            </div>
-          </div>
-          <div className="p-10">
-            <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">Author profiles</h3>
-            <p className="mt-2 max-w-lg text-sm/6 text-gray-600">Add an avatar, bio, and link. Readers know who wrote what. Works for solo blogs and multi-author publications.</p>
-          </div>
-        </div>
-      </div>
-      <div className="flex lg:col-span-3 lg:row-span-1">
-        <div className="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5">
-          <div className="relative flex-1 min-h-[20rem] w-full overflow-hidden bg-[#D94585]">
-            <div className="absolute left-8 top-8 w-full h-full">
-              <img
-                src="/assets/uses/blog/blog-authors.png"
-                className="object-top-left object-cover w-full h-full"
-                alt=""
-                loading="lazy"
-              />
-            </div>
-          </div>
-          <div className="p-10">
-            <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">Featured images & social previews</h3>
-            <p className="mt-2 max-w-lg text-sm/6 text-gray-600">Every post links and shares beautifully.</p>
-          </div>
-        </div>
-      </div>
-      <div className="flex lg:col-span-3">
         <div className="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 lg:rounded-bl-[2rem]">
           <div className="p-10">
             <div className="flex items-center gap-3">
@@ -263,7 +227,7 @@ showComments: false
           </div>
         </div>
       </div>
-      <div className="flex lg:col-span-3">
+      <div className="flex lg:col-span-3 lg:row-span-1">
         <div className="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 max-lg:rounded-b-[2rem] lg:rounded-br-[2rem]">
           <div className="p-10">
             <div className="flex items-center gap-3">
