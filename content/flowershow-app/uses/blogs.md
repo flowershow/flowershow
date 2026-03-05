@@ -15,12 +15,16 @@ showComments: false
       <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl">Your personal blog.<br />
         <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#AB3A76] to-[#E761AA]">Live in seconds.</span></h1>
       <p className="mt-6 text-pretty text-md font-medium text-gray-800 sm:text-lg">Turn your markdown notes into a blog in seconds — and get back to writing.</p>
-      <div className="mt-6 flex items-center justify-center gap-x-6">
-        <a
+        <div className="mt-6 flex items-center justify-center gap-x-6">
+          <a
               href="https://cloud.flowershow.app/login"
               className="rounded-md bg-[#AB3A76] px-3.5 py-2.5 text-sm font-semibold text-white hover:bg-[#C06B98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#AB3A76]"
-            >Start your blog for free →</a>
-      </div>
+            >Get started for free →</a>
+          <a
+              href="https://demo-blog.flowershow.app/"
+              className="rounded-md bg-white px-3.5 py-2.5 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            >See demo</a>
+        </div>
     </div>
     <div className="mt-8 sm:mt-12 aspect-video rounded-md overflow-hidden">
       <video
@@ -149,6 +153,16 @@ showComments: false
 <div className="mt-10 grid grid-cols-1 gap-4 sm:mt-16 lg:grid-cols-6">
   <div className="flex p-px lg:col-span-4 lg:row-span-2">
     <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 max-lg:rounded-t-[2rem] lg:rounded-tl-[2rem]">
+      <div className="relative flex-1 min-h-[27rem] w-full overflow-hidden bg-[#D94585]">
+        <div className="absolute left-8 top-8 w-full h-full">
+          <img
+              src="/assets/uses/blog/blog-index.png"
+              className="object-top-left object-cover w-full h-full"
+              alt=""
+              loading="lazy"
+            />
+        </div>
+      </div>
       <div className="p-10">
         <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">Beautiful blog index</h3>
         <p className="mt-2 max-w-lg text-sm/6 text-gray-600">One line sets up a listing of your posts — with dates, thumbnails, and descriptions.  Sorted by date. Paginated if you want.  No separate CMS or configuration.</p>
@@ -157,6 +171,16 @@ showComments: false
   </div>
   <div className="flex p-px lg:col-span-2 lg:row-span-2">
     <div className="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 lg:rounded-tr-[2rem]">
+      <div className="relative h-60 w-full overflow-hidden bg-[#FAE000]">
+        <div className="absolute left-6 top-6 right-6 h-full">
+          <img
+              src="/assets/uses/blogs/blog-search.png"
+              className="object-top object-fit rounded-lg"
+              alt=""
+              loading="lazy"
+            />
+        </div>
+      </div>
       <div className="p-10">
         <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">Search</h3>
         <p className="mt-2 max-w-lg text-sm/6 text-gray-600">Help readers find any post in seconds. Search across titles, headings, and content — even as your blog grows.</p>
