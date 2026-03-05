@@ -216,18 +216,7 @@ showComments: false
           </div>
         </div>
       </div>
-      <div className="flex lg:col-span-3 lg:row-span-1">
-        <div className="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 lg:rounded-bl-[2rem]">
-          <div className="p-10">
-            <div className="flex items-center gap-3">
-              <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">RSS feed</h3>
-              <span className="mt-2 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">Coming soon</span>
-            </div>
-            <p className="mt-2 max-w-lg text-sm/6 text-gray-600">Readers follow your blog in their RSS reader of choice. Every new post lands in their feed automatically.</p>
-          </div>
-        </div>
-      </div>
-      <div className="flex lg:col-span-3 lg:row-span-1">
+      <div className="flex lg:col-span-4 lg:row-span-1">
         <div className="w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 max-lg:rounded-b-[2rem] lg:rounded-br-[2rem]">
           <div className="p-10">
             <div className="flex items-center gap-3">
