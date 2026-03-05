@@ -191,6 +191,10 @@ showComments: false
           <div className="p-10">
             <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">Search</h3>
             <p className="mt-2 max-w-lg text-sm/6 text-gray-600">Help readers find any post in seconds. Search across titles, headings, and content — even as your blog grows.</p>
+            <a
+              href="/docs/search"
+              className="mt-4 inline-block text-sm font-medium text-[#AB3A76]"
+            >Learn more →</a>
           </div>
         </div>
       </div>
@@ -210,7 +214,7 @@ showComments: false
             <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">Comments{' '}</h3>
             <p className="mt-2 max-w-lg text-sm/6 text-gray-600">Readers can respond via GitHub Discussions. No third-party comment service to set up or pay for.</p>
             <a
-              href="#"
+              href="/docs/comments"
               className="mt-4 inline-block text-sm font-medium text-[#AB3A76]"
             >Learn more →</a>
           </div>
@@ -325,24 +329,57 @@ showComments: false
       <p className="mt-6 text-lg text-gray-600">Real blogs published with Flowershow.</p>
     </div>
     <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-8 sm:grid-cols-3">
-      <div className="flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80">
-        <h3 className="text-base font-semibold text-gray-900">Personal Blog</h3>
-        <p className="mt-2 text-sm text-gray-500 flex-1">Essays, notes, and ideas — published straight from an Obsidian vault.</p>
-        <a href="#" className="mt-5 text-sm font-medium text-[#AB3A76]">View site →</a>
-      </div>
-      <div className="flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80">
-        <h3 className="text-base font-semibold text-gray-900">Technical Writing</h3>
-        <p className="mt-2 text-sm text-gray-500 flex-1">Tutorials and deep dives, with code blocks and diagrams — on a custom domain.</p>
-        <a href="#" className="mt-5 text-sm font-medium text-[#AB3A76]">View site →</a>
-      </div>
-      <div className="flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80">
-        <h3 className="text-base font-semibold text-gray-900">Multi-author Publication</h3>
-        <p className="mt-2 text-sm text-gray-500 flex-1">A shared blog with author profiles, featured images, and reader comments.</p>
-        <a href="#" className="mt-5 text-sm font-medium text-[#AB3A76]">View site →</a>
-      </div>
-    </div>
-    <div className="mt-10 text-center">
-      <a href="#" className="text-sm font-medium text-[#AB3A76]">View more examples →</a>
+      <a href="https://flowershow.app/blog" className="group flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#E2BACF]">
+        <div className="relative min-h-[12rem] w-full overflow-hidden bg-[#D94585]">
+          <div className="absolute left-4 top-4 right-4 bottom-0">
+            <img
+              src="/assets/uses/blog/blog-flowershow.png"
+              className="object-top object-cover w-full rounded-t-lg"
+              alt=""
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <div className="p-8">
+          <h3 className="text-base font-semibold text-gray-900">Flowershow Blog</h3>
+          <p className="mt-2 text-sm text-gray-500 flex-1">Our official Flowershow blog.</p>
+          <span className="mt-5 inline-block text-sm font-medium text-[#AB3A76]">View site →</span>
+        </div>
+      </a>
+      <a href="#" className="group flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#E2BACF]">
+        <div className="relative min-h-[12rem] w-full overflow-hidden bg-[#E8A87C]">
+          <div className="absolute left-4 top-4 right-4 bottom-0">
+            <img
+              src="/assets/uses/blog/wild-technical.png"
+              className="object-top object-cover w-full rounded-t-lg"
+              alt=""
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <div className="p-8">
+          <h3 className="text-base font-semibold text-gray-900">Technical Writing</h3>
+          <p className="mt-2 text-sm text-gray-500 flex-1">Tutorials and deep dives, with code blocks and diagrams — on a custom domain.</p>
+          <span className="mt-5 inline-block text-sm font-medium text-[#AB3A76]">View site →</span>
+        </div>
+      </a>
+      <a href="#" className="group flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#E2BACF]">
+        <div className="relative min-h-[12rem] w-full overflow-hidden bg-[#85C1E9]">
+          <div className="absolute left-4 top-4 right-4 bottom-0">
+            <img
+              src="/assets/uses/blog/wild-multiauthor.png"
+              className="object-top object-cover w-full rounded-t-lg"
+              alt=""
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <div className="p-8">
+          <h3 className="text-base font-semibold text-gray-900">Multi-author Publication</h3>
+          <p className="mt-2 text-sm text-gray-500 flex-1">A shared blog with author profiles, featured images, and reader comments.</p>
+          <span className="mt-5 inline-block text-sm font-medium text-[#AB3A76]">View site →</span>
+        </div>
+      </a>
     </div>
   </div>
 </div>
