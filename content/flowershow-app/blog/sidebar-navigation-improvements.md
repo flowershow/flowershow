@@ -9,6 +9,9 @@ image: "[[new-sidebar.png]]"
 
 We've shipped a series of improvements to sidebar navigation that make it easier to set up, nicer to use on mobile, and more flexible for sites with mixed content.
 
+https://youtu.be/46yAkBuCaRU
+
+
 ## Sidebar enabled by default
 
 Previously, new Flowershow sites launched without a sidebar — you had to opt in via `config.json`. Now, the sidebar is **enabled by default** for every new site. Existing sites are unaffected.
