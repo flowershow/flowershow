@@ -1,10 +1,10 @@
 import { jwtVerify } from 'jose';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
-import { PostHog } from 'posthog-node';
+import type { PostHog } from 'posthog-node';
 import { env } from '@/env.mjs';
 import { SITE_ACCESS_COOKIE_NAME } from './lib/const';
-import { InternalSite } from './lib/db/internal';
+import type { InternalSite } from './lib/db/internal';
 import { getSiteUrl } from './lib/get-site-url';
 import { resolveSiteAlias } from './lib/resolve-site-alias';
 import PostHogClient from './lib/server-posthog';
@@ -125,9 +125,12 @@ export default async function middleware(req: NextRequest) {
     );
   }
 
-  // // Rewrites for home pages
-  // if (hostname === env.NEXT_PUBLIC_HOME_DOMAIN)
-  //   return NextResponse.rewrite(new URL(`/home${path}`, req.url));
+  // Rewrites for home pages
+  if (hostname === env.NEXT_PUBLIC_HOME_DOMAIN) {
+    if (path.startsWith('/drag-n-drop')) {
+      return NextResponse.rewrite(new URL(`/home${path}`, req.url));
+    }
+  }
 
   // 5) Root domain (my.flowershow.app) — user sites at /@<user>/<project>
   if (hostname === env.NEXT_PUBLIC_ROOT_DOMAIN) {
