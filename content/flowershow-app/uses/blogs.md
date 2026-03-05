@@ -315,15 +315,10 @@ showComments: false
         </div>
       </div>
       <div className="w-[48rem] max-w-none sm:w-[57rem] md:-ml-4 lg:-ml-0 aspect-video rounded-xl overflow-hidden">
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="none"
-          src="/assets/uses/blog/blog-demo.mp4"
+        <img
+          src="/assets/uses/blog/blog-themes.gif"
           className="w-full h-full object-contain ring-1 ring-gray-400/10"
-        ></video>
+        ></img>
       </div>
     </div>
   </div>
