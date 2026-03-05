@@ -19,20 +19,50 @@
         "name": "Blog"
       },
       {
+        "href": "/changelog",
+        "name": "Changelog"
+      },
+      {
         "href": "/pricing",
         "name": "Pricing"
       },
       {
-        "href": "/publish",
-        "name": "Publish CLI"
+        "name": "Use Cases",
+        "links": [
+          {
+            "href": "/uses/obsidian",
+            "name": "Obsidian Vault"
+          },
+          {
+            "href": "/uses/docs",
+            "name": "Docs"
+          },
+          {
+            "href": "/uses/blogs",
+            "name": "Blog"
+          },
+          {
+            "href": "/uses/data-stories",
+            "name": "Data Stories"
+          }
+        ]
       },
       {
-        "href": "/blogs",
-        "name": "Flowershow for Blogs"
-      },
-      {
-        "href": "/data-stories",
-        "name": "Flowershow for Data Stories"
+        "name": "Publish",
+        "links": [
+          {
+            "href": "/publish",
+            "name": "From Terminal (CLI)"
+          },
+          {
+            "href": "/publish-github",
+            "name": "From GitHub"
+          },
+          {
+            "href": "/drag-n-drop",
+            "name": "Drag & Drop"
+          }
+        ]
       },
       {
         "href": "https://demo.flowershow.app/",

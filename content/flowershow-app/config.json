@@ -2,7 +2,9 @@
   "title": "Flowershow",
   "showSidebar": true,
   "sidebar": {
-    "paths": ["/docs"]
+    "paths": [
+      "/docs"
+    ]
   },
   "nav": {
     "title": "Flowershow",
@@ -54,6 +56,10 @@
           {
             "href": "/publish-github",
             "name": "From GitHub"
+          },
+          {
+            "href": "/drag-n-drop",
+            "name": "Drag & Drop"
           }
         ]
       },

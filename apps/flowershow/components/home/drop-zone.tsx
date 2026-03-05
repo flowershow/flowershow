@@ -97,8 +97,8 @@ export const DropZone: React.FC<DropZoneProps> = ({
       className={`relative group cursor-pointer transition-all duration-300 rounded-3xl border-2 border-dashed
         ${
           isDragging
-            ? 'border-orange-500 bg-orange-50/50'
-            : 'border-orange-200 bg-white hover:border-orange-400 hover:bg-orange-50'
+            ? 'border-[#7EB75B] bg-[#EBF5E7]/50'
+            : 'border-[#C5DDB8] bg-white hover:border-[#7EB75B] hover:bg-[#EBF5E7]'
         }
         ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
       `}
@@ -114,7 +114,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
 
       <div className="py-12 px-6 text-center space-y-4">
         <div
-          className={`mx-auto w-16 h-16 rounded-2xl flex items-center justify-center transition-transform duration-300 ${isDragging ? 'scale-110 bg-orange-600 text-white' : 'bg-orange-100 text-orange-600 group-hover:bg-orange-500 group-hover:text-white'}`}
+          className={`mx-auto w-16 h-16 rounded-2xl flex items-center justify-center transition-transform duration-300 ${isDragging ? 'scale-110 bg-[#043406] text-white' : 'bg-[#EBF5E7] text-[#7EB75B] group-hover:bg-[#7EB75B] group-hover:text-white'}`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -140,7 +140,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
             Markdown files with images and assets.
             <br /> Up to {MAX_FILES} files when not signed in.
           </p>
-          {error && <p className="mt-2 text-sm text-indigo-600">{error}</p>}
+          {error && <p className="mt-2 text-sm text-[#043406]">{error}</p>}
         </div>
 
         <div className="pt-4 flex items-center justify-center gap-2">
