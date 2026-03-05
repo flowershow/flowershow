@@ -350,40 +350,6 @@ showComments: false
           <span className="mt-5 inline-block text-sm font-medium text-[#AB3A76]">View site →</span>
         </div>
       </a>
-      <a href="#" className="group flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#E2BACF]">
-        <div className="relative min-h-[12rem] w-full overflow-hidden bg-[#E8A87C]">
-          <div className="absolute left-4 top-4 right-4 bottom-0">
-            <img
-              src="/assets/uses/blog/wild-technical.png"
-              className="object-top object-cover w-full rounded-t-lg"
-              alt=""
-              loading="lazy"
-            />
-          </div>
-        </div>
-        <div className="p-8">
-          <h3 className="text-base font-semibold text-gray-900">Technical Writing</h3>
-          <p className="mt-2 text-sm text-gray-500 flex-1">Tutorials and deep dives, with code blocks and diagrams — on a custom domain.</p>
-          <span className="mt-5 inline-block text-sm font-medium text-[#AB3A76]">View site →</span>
-        </div>
-      </a>
-      <a href="#" className="group flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#E2BACF]">
-        <div className="relative min-h-[12rem] w-full overflow-hidden bg-[#85C1E9]">
-          <div className="absolute left-4 top-4 right-4 bottom-0">
-            <img
-              src="/assets/uses/blog/wild-multiauthor.png"
-              className="object-top object-cover w-full rounded-t-lg"
-              alt=""
-              loading="lazy"
-            />
-          </div>
-        </div>
-        <div className="p-8">
-          <h3 className="text-base font-semibold text-gray-900">Multi-author Publication</h3>
-          <p className="mt-2 text-sm text-gray-500 flex-1">A shared blog with author profiles, featured images, and reader comments.</p>
-          <span className="mt-5 inline-block text-sm font-medium text-[#AB3A76]">View site →</span>
-        </div>
-      </a>
     </div>
   </div>
 </div>
