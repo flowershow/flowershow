@@ -7,8 +7,6 @@ showEditLink: false
 showComments: false
 ---
 
-<CustomHtml html={`<script src="https://cdn.jsdelivr.net/npm/@tailwindplus/elements@1" type="module"></script>`}/>
-
 <div className="bg-white">
   <div className="relative isolate pt-14">
     <div className="pt-12 sm:pt-16">
@@ -101,7 +99,7 @@ showComments: false
           <h3 className="text-base font-semibold text-gray-900">Upload a folder</h3>
         </div>
         <p className="mt-2 text-sm text-gray-500 flex-1">Drag in your Markdown files. Get a site link instantly.</p>
-          <span class="mt-2 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">Coming soon</span>
+          <span className="mt-2 inline-flex items-center rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-500">Coming soon</span>
       </a>
       <a
         href="/uses/obsidian"
