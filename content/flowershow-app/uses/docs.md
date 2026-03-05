@@ -470,6 +470,33 @@ showComments: false
   </dl>
 </div>
 </div>
+<div className="bg-gray-50 py-12 sm:py-16">
+  <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <div className="mx-auto max-w-3xl text-center">
+      <h2 className="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">See it in the wild.</h2>
+      <p className="mt-6 text-lg text-gray-600">Real docs published with Flowershow.</p>
+    </div>
+    <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-8 sm:grid-cols-1">
+      <a href="https://flowershow.app/docs" className="mx-auto max-w-xl group flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#E2BACF]">
+        <div className="relative min-h-[12rem] w-full overflow-hidden bg-[#C8E235]">
+          <div className="absolute left-4 top-4 right-4 bottom-0">
+            <img
+              src="/assets/uses/docs/docs-flowershow.png"
+              className="object-top object-cover w-full rounded-t-lg"
+              alt=""
+              loading="lazy"
+            />
+          </div>
+        </div>
+        <div className="p-8">
+          <h3 className="text-base font-semibold text-gray-900">Flowershow Blog</h3>
+          <p className="mt-2 text-sm text-gray-500 flex-1">Our official Flowershow blog.</p>
+          <span className="mt-5 inline-block text-sm font-medium text-[#AB3A76]">View site →</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</div>
 <div className="bg-gray-50 py-12 sm:py-20 my-4">
 <div className="mx-auto max-w-7xl px-6 lg:px-8">
   <h2 className="mb-2 text-pretty text-balance text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">Stay in the loop.</h2>
