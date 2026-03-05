@@ -37,9 +37,7 @@ showComments: false
           ></video>
     </div>
     <p className="mt-8 text-sm text-gray-400 text-center">
-      <span className="font-medium text-gray-600">990+</span>sites published &nbsp;·&nbsp;
-      <span className="font-medium text-gray-600">Free plan</span>{" "}
-      <span className="text-gray-500">— forever.</span>
+      <span className="font-medium text-gray-600">990+</span>sites published &nbsp;·&nbsp;<span className="font-medium text-gray-600">Free plan</span>{" "}<span className="text-gray-500">— forever.</span>
     </p>
   </div>
 </div>
@@ -260,14 +258,14 @@ showComments: false
 </div>
 <div className="overflow-hidden bg-white py-12 sm:py-16">
 <div className="mx-auto max-w-7xl px-6 lg:px-8">
-<div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2">
-  <div className="lg:pr-8 lg:pt-4">
-    <div className="lg:max-w-lg">
-      <h2 className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">Make it yours.</h2>
-      <p className="mt-6 text-lg/8 text-gray-700">Flowershow is intentionally minimal. But you still get the few knobs that matter — branding, domains, and a place for your own CSS.</p>
-      <dl className="mt-10 max-w-xl space-y-8 text-base/7 text-gray-600 lg:max-w-none">
-        <div className="relative pl-9">
-          <svg
+  <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2">
+    <div className="lg:pr-8 lg:pt-4">
+      <div className="lg:max-w-lg">
+        <h2 className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">Make it yours.</h2>
+        <p className="mt-6 text-lg/8 text-gray-700">Flowershow is intentionally minimal. But you still get the few knobs that matter — branding, domains, and a place for your own CSS.</p>
+        <dl className="mt-10 max-w-xl space-y-8 text-base/7 text-gray-600 lg:max-w-none">
+          <div className="relative pl-9">
+            <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 text-[#AB3A76] absolute left-0 top-1"
                 viewBox="0 0 24 24"
@@ -277,11 +275,11 @@ showComments: false
                 strokeLinecap="round"
                 strokeLinejoin="round"
               ><circle cx={12} cy={12} r={10} /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" /></svg>
-          <dt className="inline font-semibold text-gray-900">Bring your domain.</dt>
-          <dd className="inline">{" "} Keep links stable. Make it feel professional.</dd>
-        </div>
-        <div className="relative pl-9">
-          <svg
+            <dt className="inline font-semibold text-gray-900">Bring your domain.</dt>
+            <dd className="inline">{" "} Keep links stable. Make it feel professional.</dd>
+          </div>
+          <div className="relative pl-9">
+            <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 text-[#AB3A76] absolute left-0 top-1"
                 viewBox="0 0 24 24"
@@ -291,11 +289,11 @@ showComments: false
                 strokeLinecap="round"
                 strokeLinejoin="round"
               ><rect width={18} height={18} x={3} y={3} rx={2} ry={2} /><circle cx={9} cy={9} r={2} /><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" /></svg>
-          <dt className="inline font-semibold text-gray-900">Change logo, favicons, thumbnails, and more.</dt>
-          <dd className="inline">{" "} Make your project visually distinct and recognizable.</dd>
-        </div>
-        <div className="relative pl-9">
-          <svg
+            <dt className="inline font-semibold text-gray-900">Change logo, favicons, thumbnails, and more.</dt>
+            <dd className="inline">{" "} Make your project visually distinct and recognizable.</dd>
+          </div>
+          <div className="relative pl-9">
+            <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 text-[#AB3A76] absolute left-0 top-1"
                 viewBox="0 0 24 24"
@@ -305,14 +303,20 @@ showComments: false
                 strokeLinecap="round"
                 strokeLinejoin="round"
               ><path d="M12 22a1 1 0 0 1 0-20 10 9 0 0 1 10 9 5 5 0 0 1-5 5h-2.25a1.75 1.75 0 0 0-1.4 2.8l.3.4a1.75 1.75 0 0 1-1.4 2.8z" /><circle cx="13.5" cy="6.5" r=".5" fill="currentColor" /><circle cx="17.5" cy="10.5" r=".5" fill="currentColor" /><circle cx="6.5" cy="12.5" r=".5" fill="currentColor" /><circle cx="8.5" cy="7.5" r=".5" fill="currentColor" /></svg>
-          <dt className="inline font-semibold text-gray-900">Add custom CSS theme.</dt>
-          <dd className="inline">{" "} Add your own CSS for the small things: spacing, colors, typography, components. You can keep it minimal — or go further.</dd>
+            <dt className="inline font-semibold text-gray-900">Custom theme.</dt>
+            <dd className="inline">{" "} Choose from official Flowershow themes or create your own CSS theme for full control over spacing, colors, typography, and components.</dd>
+          </div>
+        </dl>
+        <div className="mt-10 flex items-center gap-x-6">
+          <a
+              href="https://github.com/flowershow/themes"
+              className="rounded-md bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-gray-800">Browse official themes</a>
         </div>
-      </dl>
+        <p className="mt-6 text-xs text-gray-500">Created a theme you're proud of? Share it with the community!</p>
+      </div>
     </div>
-  </div>
-  <div className="w-[48rem] max-w-none sm:w-[57rem] md:-ml-4 lg:-ml-0 aspect-video rounded-xl overflow-hidden">
-    <video
+    <div className="w-[48rem] max-w-none sm:w-[57rem] md:-ml-4 lg:-ml-0 aspect-video rounded-xl overflow-hidden">
+      <video
           autoPlay
           loop
           muted
@@ -321,8 +325,8 @@ showComments: false
           src="/assets/uses/blog/blog-demo.mp4"
           className="w-full h-full object-contain ring-1 ring-gray-400/10"
         ></video>
+    </div>
   </div>
-</div>
 </div>
 </div>
 <div className="bg-gray-50 py-12 sm:py-16">
@@ -353,44 +357,44 @@ showComments: false
   </div>
 </div>
 </div>
-<div className="bg-white dark:bg-gray-900">
+<div className="bg-white">
 <div className="mx-auto max-w-7xl px-6 py-24 sm:py-32 lg:px-8 lg:py-40">
-<h2 className="text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl dark:text-white">Frequently asked questions</h2>
-<dl className="mt-20 divide-y divide-gray-900/10 dark:divide-white/10">
+<h2 className="text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">Frequently asked questions</h2>
+<dl className="mt-20 divide-y divide-gray-900/10">
   <div className="py-8 first:pt-0 last:pb-0 lg:grid lg:grid-cols-12 lg:gap-8">
-    <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5 dark:text-white">Do I need to know how to code?</dt>
+    <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5">Do I need to know how to code?</dt>
     <dd className="mt-4 lg:col-span-7 lg:mt-0">
-      <p className="text-base/7 text-gray-600 dark:text-gray-400">No. If you can write in a text file and organize folders, you can publish a blog. You don't need to know what a static site generator is.</p>
+      <p className="text-base/7 text-gray-600">No. If you can write in a text file and organize folders, you can publish a blog. You don't need to know what a static site generator is.</p>
     </dd>
   </div>
   <div className="py-8 first:pt-0 last:pb-0 lg:grid lg:grid-cols-12 lg:gap-8">
-    <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5 dark:text-white">Can I write in Obsidian and publish from there?</dt>
+    <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5">Can I write in Obsidian and publish from there?</dt>
     <dd className="mt-4 lg:col-span-7 lg:mt-0">
-      <p className="text-base/7 text-gray-600 dark:text-gray-400">Yes. Our official Obsidian plugin lets you publish straight from your vault. Keep writing in Obsidian — Flowershow takes care of the rest.</p>
+      <p className="text-base/7 text-gray-600">Yes. Our official Obsidian plugin lets you publish straight from your vault. Keep writing in Obsidian — Flowershow takes care of the rest.</p>
     </dd>
   </div>
   <div className="py-8 first:pt-0 last:pb-0 lg:grid lg:grid-cols-12 lg:gap-8">
-    <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5 dark:text-white">How do readers subscribe?</dt>
+    <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5">How do readers subscribe?</dt>
     <dd className="mt-4 lg:col-span-7 lg:mt-0">
-      <p className="text-base/7 text-gray-600 dark:text-gray-400">Embed any newsletter form directly in a markdown page — Tally, Mailchimp, Substack, or anything that gives you an embed code. No separate integration needed.</p>
+      <p className="text-base/7 text-gray-600">Embed any newsletter form directly in a markdown page — Tally, Mailchimp, Substack, or anything that gives you an embed code. No separate integration needed.</p>
     </dd>
   </div>
   <div className="py-8 first:pt-0 last:pb-0 lg:grid lg:grid-cols-12 lg:gap-8">
-    <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5 dark:text-white">Can readers leave comments?</dt>
+    <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5">Can readers leave comments?</dt>
     <dd className="mt-4 lg:col-span-7 lg:mt-0">
-      <p className="text-base/7 text-gray-600 dark:text-gray-400">Yes. Comments are powered by GitHub Discussions — no third-party comment service to pay for or maintain.</p>
+      <p className="text-base/7 text-gray-600">Yes. Comments are powered by GitHub Discussions — no third-party comment service to pay for or maintain.</p>
     </dd>
   </div>
   <div className="py-8 first:pt-0 last:pb-0 lg:grid lg:grid-cols-12 lg:gap-8">
-    <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5 dark:text-white">What if I want to move my blog later?</dt>
+    <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5">What if I want to move my blog later?</dt>
     <dd className="mt-4 lg:col-span-7 lg:mt-0">
-      <p className="text-base/7 text-gray-600 dark:text-gray-400">Your posts are plain markdown files. Take them anywhere — another host, another tool, or your own infrastructure. No proprietary format, no migration trap.</p>
+      <p className="text-base/7 text-gray-600">Your posts are plain markdown files. Take them anywhere — another host, another tool, or your own infrastructure. No proprietary format, no migration trap.</p>
     </dd>
   </div>
   <div className="py-8 first:pt-0 last:pb-0 lg:grid lg:grid-cols-12 lg:gap-8">
-    <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5 dark:text-white">Is there a free plan?</dt>
+    <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5">Is there a free plan?</dt>
     <dd className="mt-4 lg:col-span-7 lg:mt-0">
-      <p className="text-base/7 text-gray-600 dark:text-gray-400">Yes — forever. You can publish a full blog on the free plan. Premium adds custom domains, full-text search, and more.</p>
+      <p className="text-base/7 text-gray-600">Yes — forever. You can publish a full blog on the free plan. Premium adds custom domains, full-text search, and more.</p>
     </dd>
   </div>
 </dl>
