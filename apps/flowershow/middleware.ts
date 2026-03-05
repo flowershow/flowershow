@@ -125,13 +125,6 @@ export default async function middleware(req: NextRequest) {
     );
   }
 
-  // Rewrites for home pages
-  if (hostname === env.NEXT_PUBLIC_HOME_DOMAIN) {
-    if (path.startsWith('/dragndrop')) {
-      return NextResponse.rewrite(new URL(`/home${path}`, req.url));
-    }
-  }
-
   // 5) Root domain (my.flowershow.app) — user sites at /@<user>/<project>
   if (hostname === env.NEXT_PUBLIC_ROOT_DOMAIN) {
     if (pathname === '/sitemap.xml')
@@ -191,63 +184,18 @@ export default async function middleware(req: NextRequest) {
     );
   }
 
-  // 6) Custom domains
+  // 6) Flowershow home domain
   if (hostname === env.NEXT_PUBLIC_HOME_DOMAIN) {
-    if (pathname === '/') {
-      // In development, always show the test variant
-      if (process.env.NODE_ENV === 'development') {
-        return withPHBootstrapCookie(
-          NextResponse.rewrite(new URL(`/home${path}`, req.url)),
-          phBootstrap,
-        );
-      }
-
-      // console.log({ phBootstrap });
-      if (phBootstrap) {
-        try {
-          const flags = phBootstrap.value.featureFlags;
-
-          const landingPageFlagName = 'landing-page-a-b-dragndrop';
-          const landingPageFlag = flags[landingPageFlagName];
-          const isTestVariant = landingPageFlag === 'test';
-
-          // This is only to send "Feature flag called event" for this flag
-          await posthog.getFeatureFlag(
-            landingPageFlagName,
-            phBootstrap.value.distinctID,
-          );
-
-          // console.log({ isVariantB });
-
-          if (isTestVariant) {
-            return withPHBootstrapCookie(
-              NextResponse.rewrite(new URL(`/home${path}`, req.url)),
-              phBootstrap,
-            );
-          } else {
-            return withPHBootstrapCookie(
-              NextResponse.rewrite(
-                new URL(`/site/_domain/${hostname}${path}`, req.url),
-              ),
-              phBootstrap,
-            );
-          }
-        } catch {
-          return withPHBootstrapCookie(
-            NextResponse.rewrite(
-              new URL(`/site/_domain/${hostname}${path}`, req.url),
-            ),
-            phBootstrap,
-          );
-        }
-      }
+    if (pathname === '/dragndrop') {
+      return rewrite(`/dragndrop`, req, phBootstrap);
     }
 
     if (pathname === '/claim') {
-      return rewrite(`/home${path}`, req, phBootstrap);
+      return rewrite(`/dragndrop${path}`, req, phBootstrap);
     }
   }
 
+  // 7) Custom domains
   if (pathname === '/robots.txt') {
     return rewrite(`/api/robots/${hostname}`, req, phBootstrap);
   }
