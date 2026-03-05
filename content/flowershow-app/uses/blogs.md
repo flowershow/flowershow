@@ -316,7 +316,7 @@ showComments: false
           muted
           playsInline
           preload="none"
-          src="/assets/uses/docs/docs-theme.mp4"
+          src="/assets/uses/blog/blog-demo.mp4"
           className="w-full h-full object-contain ring-1 ring-gray-400/10"
         ></video>
     </div>
