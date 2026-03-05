@@ -173,12 +173,16 @@ showComments: false
           <div className="p-10">
             <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">Beautiful blog index</h3>
             <p className="mt-2 max-w-lg text-sm/6 text-gray-600">One line sets up a listing of your posts — with dates, thumbnails, and descriptions. Sorted by date. Paginated if you want. No separate CMS or configuration.</p>
+            <a
+              href="/docs/list"
+              className="mt-4 inline-block text-sm font-medium text-[#AB3A76]"
+            >Learn more →</a>
           </div>
         </div>
       </div>
       <div className="flex p-px lg:col-span-2 lg:row-span-2">
         <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 lg:rounded-tr-[2rem]">
-          <div className="relative flex-1 min-h-[16rem] w-full overflow-hidden bg-[#D94585]">
+          <div className="relative flex-1 min-h-[16rem] w-full overflow-hidden bg-[#FAE000]">
             <div className="absolute left-6 top-6 right-6 h-full">
               <img
                 src="/assets/uses/blog/blog-search.png"
@@ -200,7 +204,7 @@ showComments: false
       </div>
       <div className="flex lg:col-span-2 lg:row-span-2">
         <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5">
-          <div className="relative flex-1 min-h-[16rem] w-full overflow-hidden bg-[#D94585]">
+          <div className="relative flex-1 min-h-[16rem] w-full overflow-hidden bg-gray-100">
             <div className="absolute left-8 top-8 w-full h-full">
               <img
                 src="/assets/uses/blog/blog-comments.png"
