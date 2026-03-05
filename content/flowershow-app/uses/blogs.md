@@ -78,7 +78,7 @@ showComments: false
         <span className="mt-5 text-sm font-medium text-[#AB3A76]">Get started →</span>
       </a>
       <a
-        href="/docs"
+        href="/dragndrop"
         className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#E2BACF]"
       >
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#F7EBF1] ring-1 ring-[#EED8E4]">
@@ -174,7 +174,7 @@ showComments: false
             <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">Beautiful blog index</h3>
             <p className="mt-2 max-w-lg text-sm/6 text-gray-600">One line sets up a listing of your posts — with dates, thumbnails, and descriptions. Sorted by date. Paginated if you want. No separate CMS or configuration.</p>
             <a
-              href="/docs/list"
+              href="/docs/list-component"
               className="mt-4 inline-block text-sm font-medium text-[#AB3A76]"
             >Learn more →</a>
           </div>
