@@ -314,7 +314,7 @@ showComments: false
           <p className="mt-6 text-xs text-gray-500">Created a theme you're proud of? Share it with the community!</p>
         </div>
       </div>
-      <div className="w-[48rem] max-w-none sm:w-[57rem] md:-ml-4 lg:-ml-0 aspect-video rounded-xl border border-gray-400/10 overflow-hidden">
+      <div className="w-[48rem] max-w-none sm:w-[57rem] md:-ml-4 lg:-ml-0 aspect-video rounded-xl border border-gray-100 overflow-hidden">
         <img
           src="/assets/uses/blog/blog-themes.gif"
           className="w-full h-full object-contain"
