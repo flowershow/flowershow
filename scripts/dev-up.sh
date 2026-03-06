@@ -65,4 +65,4 @@ done
 
 echo ""
 echo "▶ Starting app and worker..."
-exec pnpm turbo dev
+exec pnpm turbo dev --filter=@flowershow/app... --filter=markdown-processing-worker...

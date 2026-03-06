@@ -3,9 +3,10 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
-    "dev:up": "bash scripts/dev-up.sh",
-    "dev:up:all": "bash scripts/dev-up.sh --all",
+    "dev": "bash scripts/dev-up.sh",
+    "dev:all": "bash scripts/dev-up.sh --all",
+    "dev:local": "bash scripts/dev-local.sh",
+    "dev:local:all": "bash scripts/dev-local.sh --all",
     "dev:down": "docker compose --profile stripe --profile github --profile search down",
     "dev:nuke": "docker compose --profile stripe --profile github --profile search down -v",
     "lint": "turbo run lint",
