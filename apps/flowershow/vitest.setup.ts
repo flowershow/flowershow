@@ -33,6 +33,8 @@ vi.mock('@/env.mjs', () => ({
     INNGEST_APP_ID: 'test-inngest-app',
     STRIPE_SECRET_KEY: 'sk_test_xxx',
     STRIPE_WEBHOOK_SECRET: 'whsec_test',
+    RESEND_API_KEY: 'test-resend-key',
+    DISCORD_PREMIUM_INVITE_URL: 'https://discord.gg/test-invite',
     TYPESENSE_ADMIN_API_KEY: 'test-typesense-key',
     SITE_ACCESS_JWT_SECRET: 'test-jwt-secret',
     ANONYMOUS_JWT_SECRET: 'test-anon-jwt-secret',
