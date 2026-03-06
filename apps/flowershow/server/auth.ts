@@ -4,6 +4,7 @@ import { getServerSession, type NextAuthOptions } from 'next-auth';
 import GitHubProvider, { GithubProfile } from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import { env } from '@/env.mjs';
+import { inngest } from '@/inngest/client';
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 
@@ -121,6 +122,16 @@ export const authOptions: NextAuthOptions = {
         },
       });
       await posthog.shutdown();
+
+      // Send welcome email
+      await inngest.send({
+        name: 'email/welcome.send',
+        data: {
+          userId: user.id,
+          email: user.email!,
+          name: user.name,
+        },
+      });
     },
   },
   callbacks: {

@@ -23,11 +23,49 @@ interface SiteDelete {
   };
 }
 
+interface EmailWelcome {
+  data: {
+    userId: string;
+    email: string;
+    name: string | null;
+  };
+}
+
+interface EmailPremiumUpgrade {
+  data: {
+    userId: string;
+    email: string;
+    name: string | null;
+  };
+}
+
+interface EmailDiscordAccess {
+  data: {
+    userId: string;
+    email: string;
+    name: string | null;
+  };
+}
+
+interface EmailSiteCreated {
+  data: {
+    userId: string;
+    email: string;
+    name: string | null;
+    siteUrl: string;
+    projectName: string;
+  };
+}
+
 /* Events */
 type Events = {
   'site/sync': SiteSync;
   'site/create': SiteCreate;
   'site/delete': SiteDelete;
+  'email/welcome.send': EmailWelcome;
+  'email/premium-upgrade.send': EmailPremiumUpgrade;
+  'email/discord-access.send': EmailDiscordAccess;
+  'email/site-created.send': EmailSiteCreated;
 };
 
 /* Client */

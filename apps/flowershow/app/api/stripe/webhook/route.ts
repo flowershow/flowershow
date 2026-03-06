@@ -2,6 +2,7 @@ import type { StripeWebhookReceivedResponse } from '@flowershow/api-contract';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
+import { inngest } from '@/inngest/client';
 import PostHogClient from '@/lib/server-posthog';
 import { stripe } from '@/lib/stripe';
 import prisma from '@/server/db';
@@ -129,6 +130,16 @@ export async function POST(req: Request) {
             },
           });
           await posthog.shutdown();
+
+          // Send premium upgrade + Discord access emails
+          await inngest.send({
+            name: 'email/premium-upgrade.send',
+            data: {
+              userId: updatedSite.userId,
+              email: updatedSite.user.email!,
+              name: updatedSite.user.name,
+            },
+          });
 
           console.log(`✅ Checkout session processing completed`);
           break;
