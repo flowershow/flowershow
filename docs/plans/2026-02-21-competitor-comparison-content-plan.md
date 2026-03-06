@@ -1,4 +1,4 @@
-# Competitor Comparison Content Plan
+# Alternative / Competitor Comparison Content Plan
 
 > Status: Stub (for review before research)
 > Date: 2026-02-21
