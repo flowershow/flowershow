@@ -1009,10 +1009,23 @@ export const siteRouter = createTRPCRouter({
                 })
               : blobs;
 
-          return buildSiteTree(filteredBlobs, {
+          const tree = buildSiteTree(filteredBlobs, {
             orderBy: input.orderBy,
             prefix: sitePrefix,
-          }).children;
+          });
+
+          // When a single sidebar path is configured, flatten the tree
+          // so the sidebar and breadcrumbs aren't nested inside that one dir.
+          const onlyChild = tree.children[0];
+          if (
+            prefixes.length === 1 &&
+            tree.children.length === 1 &&
+            onlyChild?.kind === 'dir'
+          ) {
+            return onlyChild.children;
+          }
+
+          return tree.children;
         },
         undefined,
         {

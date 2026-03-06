@@ -36,6 +36,19 @@ test('Sidebar', async ({ page, basePath }) => {
     await expect(sidebar).not.toBeVisible();
   });
 
+  await test.step('sidebar flattens single configured path', async () => {
+    await page.goto(`${basePath}/docs/getting-started`);
+    const sidebar = page.locator('.site-sidebar');
+
+    // With a single sidebar.paths entry ("/docs"), the "Docs" directory
+    // wrapper should be removed and its children shown at root level.
+    await expect(
+      sidebar.locator('.site-tree > .site-tree-item > button.is-collapsible', {
+        hasText: 'Docs',
+      }),
+    ).not.toBeVisible();
+  });
+
   await test.step('sidebar only contains pages from matching routes', async () => {
     await page.goto(`${basePath}/docs/getting-started`);
     const sidebar = page.locator('.site-sidebar');

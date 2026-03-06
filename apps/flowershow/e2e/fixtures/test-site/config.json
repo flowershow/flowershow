@@ -3,21 +3,21 @@
   "description": "Test site for E2E renderer tests",
   "showSidebar": true,
   "sidebar": {
-    "paths": ["/docs"]
-  },
-  "showToc": true,
-  "nav": {
-    "title": "E2E Test Site",
-    "links": [
-      { "name": "Home", "href": "/" },
-      { "name": "Syntax", "href": "/basic-syntax" }
+    "paths": [
+      "/docs"
     ]
   },
+  "showToc": true,
   "footer": {
     "navigation": [
       {
         "title": "Resources",
-        "links": [{ "name": "About", "href": "/index" }]
+        "links": [
+          {
+            "name": "About",
+            "href": "/index"
+          }
+        ]
       }
     ]
   }

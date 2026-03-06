@@ -18,7 +18,7 @@ export interface DirNode<M = Meta> {
   label: string;
   name: string; // dir name (e.g. "guide", "quickstart")
   path: string; // full repo dir path (e.g. "guide/quickstart")
-  urlPath: string; // full URL path (e.g. "guide/quickstart/01-start-here")
+  urlPath: string; // full URL path (e.g. "guide/quickstart")
   children: Array<Node<M>>;
 }
 

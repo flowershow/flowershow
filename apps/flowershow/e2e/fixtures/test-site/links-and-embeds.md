@@ -40,7 +40,7 @@ title: Links Test
 
 [[nonexistent-page]]
 
-[[README]]
+[[subfolder/README]]
 
 [[my file with spaces]]
 

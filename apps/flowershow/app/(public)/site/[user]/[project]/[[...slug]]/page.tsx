@@ -1,4 +1,4 @@
-import { GiscusProps } from '@giscus/react';
+import type { GiscusProps } from '@giscus/react';
 import clsx from 'clsx';
 import { EditIcon } from 'lucide-react';
 import Link from 'next/link';
@@ -10,9 +10,9 @@ import Hero from '@/components/public/hero';
 import { BlogLayout } from '@/components/public/layouts/blog';
 import MDXClient from '@/components/public/mdx-client';
 import { SidebarDesktop, SidebarMobileNav } from '@/components/public/sidebar';
-import type { Node } from '@/lib/build-site-tree';
 import TableOfContents from '@/components/public/table-of-contents';
 import { getConfig } from '@/lib/app-config';
+import type { Node } from '@/lib/build-site-tree';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { generateScopedCss } from '@/lib/generate-scoped-css';
 import { getSite } from '@/lib/get-site';
@@ -23,7 +23,7 @@ import { isEmoji } from '@/lib/is-emoji';
 import { getMdxOptions, processMarkdown } from '@/lib/markdown';
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
-import { PageMetadata } from '@/server/api/types';
+import type { PageMetadata } from '@/server/api/types';
 import { api } from '@/trpc/server';
 import UrlNormalizer from './_components/url-normalizer';
 

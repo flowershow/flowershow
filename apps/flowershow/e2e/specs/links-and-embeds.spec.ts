@@ -142,7 +142,9 @@ test('Links', async ({ page, basePath }) => {
   });
 
   await test.step('wiki: README link resolves to folder path', async () => {
-    const link = content.locator('a.internal', { hasText: /^README$/ });
+    const link = content.locator('a.internal', {
+      hasText: /^subfolder\/README$/,
+    });
     await expect(link).toHaveAttribute(
       'href',
       new RegExp(`^${basePath}/subfolder/?$`),

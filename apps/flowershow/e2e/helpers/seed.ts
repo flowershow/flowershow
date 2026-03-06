@@ -337,3 +337,17 @@ export async function teardown(): Promise<void> {
   await db.user.delete({ where: { id: TEST_USER.id } }).catch(() => {});
   await db.$disconnect();
 }
+
+// Allow running standalone: npx tsx e2e/helpers/seed.ts [teardown]
+if (process.argv[1]?.endsWith('seed.ts')) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  require('dotenv').config({ path: path.resolve(__dirname, '../../.env') });
+
+  const fn = process.argv[2] === 'teardown' ? teardown : seed;
+  fn()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
+}

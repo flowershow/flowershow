@@ -849,6 +849,10 @@
     }
   }
 
+  .site-layout.no-nav .site-subnav {
+    top: 0;
+  }
+
   .site-subnav-menu-button {
     flex-shrink: 0;
     display: flex;
@@ -936,6 +940,12 @@
     transition: transform 300ms ease;
     border-right: 1px solid var(--color-foreground-50);
     font-family: var(--font-heading);
+  }
+
+  /* Dialog portals to <body>, so use :has() to detect no-nav context */
+  :root:has(.site-layout.no-nav) .sidebar-drawer-backdrop,
+  :root:has(.site-layout.no-nav) .sidebar-drawer-panel {
+    top: 3rem; /* below subnav (3rem) */
   }
 
   .sidebar-drawer-header {
