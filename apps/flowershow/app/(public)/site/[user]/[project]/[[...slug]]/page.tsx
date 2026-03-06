@@ -402,7 +402,7 @@ export default async function SitePage(props: {
               date={metadata?.date}
               showHero={heroConfig.showHero}
               authors={authors}
-              image={metadata?.image}
+
             >
               <div className="rendered-mdx" id="mdxpage">
                 {compiledContent}

@@ -5,7 +5,6 @@ import Link from 'next/link';
 interface Props extends React.PropsWithChildren {
   title: string;
   description?: string;
-  image?: string;
   showHero?: boolean;
   date?: string;
   authors?: {
@@ -20,7 +19,6 @@ export const BlogLayout: React.FC<Props> = ({
   children,
   title,
   description,
-  image,
   showHero = false,
   date,
   authors,
@@ -99,19 +97,6 @@ export const BlogLayout: React.FC<Props> = ({
             )}
           </div>
 
-          {image && (
-            <div className="page-header-image-container">
-              <Image
-                alt="Featured image"
-                src={image}
-                fill
-                objectFit="contain"
-                sizes="(min-width: 1280px) 1152px, 100vw"
-                className="page-header-image"
-                fetchPriority="high"
-              />
-            </div>
-          )}
         </header>
       )}
       <div className="page-body">{children}</div>
