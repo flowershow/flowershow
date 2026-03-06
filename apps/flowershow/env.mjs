@@ -53,6 +53,8 @@ export const env = createEnv({
     INNGEST_APP_ID: z.string(),
     STRIPE_SECRET_KEY: z.string(),
     STRIPE_WEBHOOK_SECRET: z.string(),
+    RESEND_API_KEY: z.string(),
+    DISCORD_PREMIUM_INVITE_URL: z.string().url(),
     E2E_GH_USERNAME: z.string().optional(),
     E2E_GH_PASSWORD: z.string().optional(),
     TYPESENSE_ADMIN_API_KEY: z.string(),
@@ -134,6 +136,8 @@ export const env = createEnv({
     INNGEST_APP_ID: process.env.INNGEST_APP_ID,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    DISCORD_PREMIUM_INVITE_URL: process.env.DISCORD_PREMIUM_INVITE_URL,
     NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID:
       process.env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID,
     NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID:
