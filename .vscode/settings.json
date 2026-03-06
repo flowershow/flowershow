@@ -5,5 +5,8 @@
     "source.fixAll.eslint": "explicit",
     "source.organizeImports.biome": "explicit"
   },
-  "git.ignoreLimitWarning": true
+  "git.ignoreLimitWarning": true,
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  }
 }
