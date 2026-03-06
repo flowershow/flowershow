@@ -1,8 +1,25 @@
 # Flowershow
 
-> The fast and simple way to turn markdown into a website
+> Publish markdown quickly and easily. For docs, knowledgebases, websites and more.
 
-[See Flowershow in action on flowershow.app](https://flowershow.app/)
+### Try it out now and sign up at https://flowershow.app/
+
+🎉 https://flowershow.app is published with Flowershow 💐 
+
+- 📝 Docs: https://flowershow.app/docs
+- 🤖 for AI: https://flowershow.app/publish
+- 💎 for Obsidian: https://flowershow.app/uses/obsidian
+
+Flowershow is proudly open-source.
+
+Flowershow is a product of [Datopian](https://datopian.com) -- committed to democratising the power of knowledge.
+
+---
+---
+
+# For Developers
+
+The information below is for folks interesting in contributing to or using Flowershow from source.
 
 ## Monorepo Structure
 
