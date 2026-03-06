@@ -10,8 +10,8 @@ Flowershow supports **CommonMark** and **GitHub Flavored Markdown**, but also ma
 
 ### How to publish from common sources
 
-- **Github** [[how-to-publish-repository-with-markdown|Publish Markdown in a GitHub Repository]]
-- **Obsidian** [[blog/how-to-publish-vault-quickly-and-easily|Publish an Obsidian Vault]]
+- **Github**: [[how-to-publish-repository-with-markdown|Publish Markdown in a GitHub Repository]]
+- **Obsidian**: [[blog/how-to-publish-vault-quickly-and-easily|Publish an Obsidian Vault]]
 - **Command line**: [[docs/cli|Publish from the command line]]
 - **Paste or Drag and Drop**: [Publish by drag and drop or pasting markdown](/dragndrop)
 
