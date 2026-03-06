@@ -41,6 +41,10 @@
             "name": "Blog"
           },
           {
+            "href": "/uses/wikis",
+            "name": "Wikis"
+          },
+          {
             "href": "/uses/data-stories",
             "name": "Data Stories"
           }
