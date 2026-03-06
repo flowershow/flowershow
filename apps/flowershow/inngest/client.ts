@@ -47,6 +47,16 @@ interface EmailDiscordAccess {
   };
 }
 
+interface EmailSiteCreated {
+  data: {
+    userId: string;
+    email: string;
+    name: string | null;
+    siteUrl: string;
+    projectName: string;
+  };
+}
+
 /* Events */
 type Events = {
   'site/sync': SiteSync;
@@ -55,6 +65,7 @@ type Events = {
   'email/welcome.send': EmailWelcome;
   'email/premium-upgrade.send': EmailPremiumUpgrade;
   'email/discord-access.send': EmailDiscordAccess;
+  'email/site-created.send': EmailSiteCreated;
 };
 
 /* Client */

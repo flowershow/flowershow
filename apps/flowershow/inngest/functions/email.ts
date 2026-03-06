@@ -1,6 +1,7 @@
 import { WelcomeEmail } from '@/emails/welcome';
 import { PremiumUpgradeEmail } from '@/emails/premium-upgrade';
 import { DiscordAccessEmail } from '@/emails/discord-access';
+import { SiteCreatedEmail } from '@/emails/site-created';
 import { sendEmail } from '@/lib/email';
 import { env } from '@/env.mjs';
 import { inngest } from '../client';
@@ -71,6 +72,33 @@ export const sendDiscordAccessEmail = inngest.createFunction(
 
     if (error) {
       throw new Error(`Failed to send Discord access email: ${error.message}`);
+    }
+
+    return { emailId: data?.id };
+  },
+);
+
+export const sendSiteCreatedEmail = inngest.createFunction(
+  { id: 'send-site-created-email' },
+  { event: 'email/site-created.send' },
+  async ({ event }) => {
+    const { email, name, siteUrl, projectName } = event.data;
+    const userName = name?.split(' ')[0] || 'there';
+
+    const { data, error } = await sendEmail({
+      to: email,
+      subject: `Your site "${projectName}" is live!`,
+      react: SiteCreatedEmail({
+        userName,
+        siteUrl,
+        projectName,
+        dashboardUrl: `https://${env.NEXT_PUBLIC_CLOUD_DOMAIN}`,
+        docsUrl: 'https://flowershow.app/docs',
+      }),
+    });
+
+    if (error) {
+      throw new Error(`Failed to send site created email: ${error.message}`);
     }
 
     return { emailId: data?.id };

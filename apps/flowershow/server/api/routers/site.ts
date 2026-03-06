@@ -197,7 +197,26 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      // 6) Analytics (best-effort)
+      // 6) Send site-created email (best-effort)
+      const creator = await ctx.db.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: { email: true, name: true, username: true },
+      });
+      if (creator?.email) {
+        const siteUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${creator.username}/${projectName}`;
+        await inngest.send({
+          name: 'email/site-created.send',
+          data: {
+            userId: ctx.session.user.id,
+            email: creator.email,
+            name: creator.name,
+            siteUrl,
+            projectName,
+          },
+        });
+      }
+
+      // 7) Analytics (best-effort)
       const posthog = await PostHogClient();
       posthog.capture({
         distinctId: created.userId!,
@@ -206,7 +225,7 @@ export const siteRouter = createTRPCRouter({
       });
       await posthog.shutdown();
 
-      // 7) Return canonical public shape
+      // 8) Return canonical public shape
       const fresh = await ctx.db.site.findUnique({
         where: { id: created.id },
         select: publicSiteSelect,

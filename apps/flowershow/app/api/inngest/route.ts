@@ -5,6 +5,7 @@ import {
   sendWelcomeEmail,
   sendPremiumUpgradeEmail,
   sendDiscordAccessEmail,
+  sendSiteCreatedEmail,
 } from '@/inngest/functions/email';
 
 export const { GET, POST, PUT } = serve({
@@ -16,5 +17,6 @@ export const { GET, POST, PUT } = serve({
     sendWelcomeEmail,
     sendPremiumUpgradeEmail,
     sendDiscordAccessEmail,
+    sendSiteCreatedEmail,
   ],
 });
