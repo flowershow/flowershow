@@ -2,14 +2,21 @@
 
 ## What is Flowershow?
 
-Flowershow is a cloud platform for easily converting your markdown files into an elegant website. 
+Flowershow is a cloud platform that turns markdown and html into an elegant website. Perfect for docs, knowledgebases, blogs, landing pages and more. 
 
 Flowershow supports **CommonMark** and **GitHub Flavored Markdown**, but also many **Obsidian-specific syntax elements**, like internal links or footnotes.
 
 ## Tutorials & How-Tos
 
-- [[how-to-publish-repository-with-markdown|Publish Markdown in a GitHub Repository]]
-- [[blog/how-to-publish-vault-quickly-and-easily|Publish an Obsidian Vault]]
+### How to publish from common sources
+
+- **Github** [[how-to-publish-repository-with-markdown|Publish Markdown in a GitHub Repository]]
+- **Obsidian** [[blog/how-to-publish-vault-quickly-and-easily|Publish an Obsidian Vault]]
+- **Command line**: [[docs/cli|Publish from the command line]]
+- **Paste or Drag and Drop**: [Publish by drag and drop or pasting markdown](/dragndrop)
+
+### Howtos
+
 - [[how-to-set-page-title|Set Page Title]]
 - [[blog/how-to-configure-page-headers|Configure Page Headers]]
 - [[how-to-create-author-pages|Show Authors of Your Content in Page Headers (With Links and Avatars)]]
