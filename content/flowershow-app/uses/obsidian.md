@@ -206,7 +206,7 @@ showComments: false
         <tbody className="divide-y divide-gray-100">
           <tr>
             <td className="py-3 pr-6 text-gray-600">Price</td>
-            <td className="py-3 px-6 text-center bg-purple-50 font-medium text-purple-900">Free · $5/mo premium</td>
+            <td className="py-3 px-6 text-center bg-purple-50 font-medium text-purple-900">Free · {"$"}5/mo premium</td>
             <td className="py-3 px-6 text-center text-gray-600">$8/mo per site</td>
             <td className="py-3 px-6 text-center text-gray-600">Free (your time + hosting)</td>
           </tr>
