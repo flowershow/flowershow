@@ -2,6 +2,7 @@ import { ExternalLinkIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import Billing from '@/components/dashboard/billing';
 import Form from '@/components/dashboard/form';
+import CommentsForm from '@/components/dashboard/form/comments-form';
 import DeleteSiteForm from '@/components/dashboard/form/delete-site-form';
 import GitHubConnectionForm from '@/components/dashboard/form/github-connection-form';
 import MigrateToGitHubAppForm from '@/components/dashboard/form/migrate-to-github-app-form';
@@ -154,61 +155,13 @@ export default async function SiteSettingsIndex(props: {
             />
           )}
 
-          <Form
-            title="Comments"
-            description="Enable comments at the bottom of your site's pages."
-            helpText={
-              <p>
-                Learn more about{' '}
-                <a
-                  className="underline"
-                  href="https://flowershow.app/docs/comments"
-                >
-                  Comments
-                  <ExternalLinkIcon className="inline h-4" />
-                </a>
-                .
-              </p>
-            }
-            inputAttrs={{
-              name: 'enableComments',
-              type: 'text',
-              defaultValue: Boolean(site?.enableComments!).toString(),
-            }}
+          <CommentsForm
+            siteId={site.id}
+            enableComments={Boolean(site?.enableComments)}
+            giscusRepoId={site?.giscusRepoId ?? null}
+            giscusCategoryId={site?.giscusCategoryId ?? null}
             handleSubmit={updateSite}
           />
-
-          {site?.enableComments && (
-            <>
-              <Form
-                title="Giscus Repository ID"
-                description="The ID of your GitHub repository for Giscus."
-                helpText="You can find this in your Giscus configuration at https://giscus.app. After selecting your repository, the Repository ID will be shown in the configuration section. It starts with 'R_'."
-                inputAttrs={{
-                  name: 'giscusRepoId',
-                  type: 'text',
-                  defaultValue: site?.giscusRepoId || '',
-                  placeholder: 'R_kgDOxxxxxx',
-                  required: false,
-                }}
-                handleSubmit={updateSite}
-              />
-
-              <Form
-                title="Giscus Category ID"
-                description="The ID of the discussion category in your repository."
-                helpText="You can find this in your Giscus configuration at https://giscus.app. After selecting your discussion category, the Category ID will be shown in the configuration section. It starts with 'DIC_'."
-                inputAttrs={{
-                  name: 'giscusCategoryId',
-                  type: 'text',
-                  defaultValue: site?.giscusCategoryId || '',
-                  placeholder: 'DIC_kwDOxxxxxx',
-                  required: false,
-                }}
-                handleSubmit={updateSite}
-              />
-            </>
-          )}
 
           <Form
             title="Custom Domain"
