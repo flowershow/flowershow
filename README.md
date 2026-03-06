@@ -1,10 +1,10 @@
-# Flowershow
+# Flowershow 💐🌷🌹
 
-> Publish markdown quickly and easily. For docs, knowledgebases, websites and more.
+> ## Publish markdown quickly and easily - for docs, knowledgebases, websites and more
 
 ### Try it out now and sign up at https://flowershow.app/
 
-🎉 https://flowershow.app is published with Flowershow 💐 
+Want to see it in action? 🎉 https://flowershow.app itself is built and published with Flowershow 💐
 
 - 📝 Docs: https://flowershow.app/docs
 - 🤖 for AI: https://flowershow.app/publish
@@ -12,7 +12,7 @@
 
 Flowershow is proudly open-source.
 
-Flowershow is a product of [Datopian](https://datopian.com) -- committed to democratising the power of knowledge.
+Flowershow is a product of [Datopian](https://datopian.com) - dedicated to democratising the power of data & knowledge.
 
 ---
 ---
