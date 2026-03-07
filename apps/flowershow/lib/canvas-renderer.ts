@@ -1,63 +1,106 @@
 /**
- * Canvas renderer - converts JSON Canvas data to SVG HAST elements.
+ * Canvas renderer - converts JSON Canvas data to HTML HAST elements.
  *
- * Vendored and adapted from rehype-jsoncanvas (MIT license)
- * https://github.com/lovettbarron/rehype-jsoncanvas
+ * Renders nodes as HTML divs with absolute positioning (supporting rich text,
+ * word wrap, CSS styling) and edges as an SVG overlay with bezier curves.
  *
- * Changes from upstream:
- * - Removed filesystem/fetch-based file loading (Flowershow uses blob storage)
- * - Simplified options (removed ssrPath, assetPath, mdPath)
- * - Fixed coordinate offset calculation (upstream used cW/2 which breaks for
- *   canvases with positive coordinates)
- * - Cleaned up types to use @trbn/jsoncanvas directly
+ * Originally adapted from rehype-jsoncanvas (MIT license), rewritten to use
+ * HTML/CSS rendering inspired by github.com/flowershow/flowershow/commit/231a76be.
+ *
+ * The HTML approach is superior to pure SVG for node rendering because:
+ * - Text wraps naturally in divs
+ * - Full CSS styling works (fonts, colors, sizing)
+ * - Text is selectable and copyable
+ * - Markdown content can be embedded in nodes (for standalone pages)
  */
 
-import type { Edge, GenericNode, JSONCanvas } from '@trbn/jsoncanvas';
 import type { Element } from 'hast';
-import { s } from 'hastscript';
+import { h, s } from 'hastscript';
+
+// ---- Types (replaces @trbn/jsoncanvas dependency) ----
+
+export interface CanvasNode {
+  id: string;
+  type: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  color?: string;
+  text?: string;
+  label?: string;
+  file?: string;
+}
+
+export interface CanvasEdge {
+  id: string;
+  fromNode: string;
+  toNode: string;
+  fromSide?: string;
+  toSide?: string;
+  label?: string;
+  color?: string;
+}
+
+export interface CanvasData {
+  nodes: CanvasNode[];
+  edges: CanvasEdge[];
+}
+
+export function parseCanvasData(content: string): CanvasData {
+  const raw = JSON.parse(content);
+  return {
+    nodes: raw.nodes ?? [],
+    edges: raw.edges ?? [],
+  };
+}
+
+// ---- Options ----
 
 export interface CanvasRenderOptions {
-  /** Stroke width for node borders. Default: 3 */
+  /** Stroke width for node borders. Default: 2 */
   nodeStrokeWidth?: number;
-  /** Stroke width for edge lines. Default: 5 */
+  /** Stroke width for edge lines. Default: 2 */
   lineStrokeWidth?: number;
 }
 
 const defaults: Required<CanvasRenderOptions> = {
-  nodeStrokeWidth: 3,
-  lineStrokeWidth: 5,
+  nodeStrokeWidth: 2,
+  lineStrokeWidth: 2,
 };
 
-function applyDefaults(
-  config?: Partial<CanvasRenderOptions>,
-): Required<CanvasRenderOptions> {
-  return { ...defaults, ...config };
-}
+// ---- Colors ----
 
 // Obsidian canvas color presets
-const COLOR_MAP: Record<string, { fill: string; stroke: string }> = {
-  '1': { fill: 'rgba(255, 0, 0, .5)', stroke: 'rgba(255,0,0,1)' },
-  '2': { fill: 'rgba(255, 100, 0, .5)', stroke: 'rgba(255,100,0,1)' },
-  '3': { fill: 'rgba(255, 255, 0, .5)', stroke: 'rgba(255,255,0,1)' },
-  '4': { fill: 'rgba(0, 255, 100, .5)', stroke: 'rgba(0,100,0,1)' },
-  '5': { fill: 'rgba(0, 255, 255, .5)', stroke: 'rgba(0,255,255,1)' },
-  '6': { fill: 'rgba(100, 10, 100, .5)', stroke: 'rgba(100,10,100,1)' },
+const COLOR_MAP: Record<string, { bg: string; border: string }> = {
+  '1': { bg: 'rgba(255, 0, 0, 0.15)', border: 'rgba(255, 0, 0, 0.8)' },
+  '2': { bg: 'rgba(255, 100, 0, 0.15)', border: 'rgba(255, 100, 0, 0.8)' },
+  '3': { bg: 'rgba(255, 255, 0, 0.15)', border: 'rgba(200, 180, 0, 0.8)' },
+  '4': { bg: 'rgba(0, 200, 100, 0.15)', border: 'rgba(0, 150, 50, 0.8)' },
+  '5': { bg: 'rgba(0, 200, 255, 0.15)', border: 'rgba(0, 150, 200, 0.8)' },
+  '6': { bg: 'rgba(150, 50, 200, 0.15)', border: 'rgba(150, 50, 200, 0.8)' },
 };
 
 const DEFAULT_COLOR = {
-  fill: 'rgba(255, 255, 255, .5)',
-  stroke: 'rgba(0,0,0,1)',
+  bg: 'rgba(var(--canvas-node-bg, 240, 240, 240), 0.5)',
+  border: 'rgba(var(--canvas-node-border, 180, 180, 180), 1)',
 };
 
 const PADDING = 20;
 
-function calculateCanvasSize(jsc: JSONCanvas) {
+// ---- Layout calculation ----
+
+function calculateLayout(nodes: CanvasNode[]) {
+  if (nodes.length === 0) {
+    return { width: 0, height: 0, offsetX: 0, offsetY: 0 };
+  }
+
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
   let maxY = -Infinity;
 
-  for (const node of jsc.getNodes()) {
+  for (const node of nodes) {
     minX = Math.min(minX, node.x);
     minY = Math.min(minY, node.y);
     maxX = Math.max(maxX, node.x + node.width);
@@ -72,212 +115,194 @@ function calculateCanvasSize(jsc: JSONCanvas) {
   };
 }
 
-function initSvg(
-  width: number,
-  height: number,
-  options: Required<CanvasRenderOptions>,
-): Element {
-  return s('svg', {
-    version: '1.1',
-    xmlns: 'http://www.w3.org/2000/svg',
-    'xmlns:xlink': 'http://www.w3.org/1999/xlink',
-    'stroke-linecap': 'round',
-    'stroke-linejoin': 'round',
-    'stroke-width': options.lineStrokeWidth,
-    'fill-rule': 'evenodd',
-    fill: 'currentColor',
-    stroke: 'currentColor',
-    width: '100%',
-    viewBox: `0 0 ${width} ${height}`,
-    preserveAspectRatio: 'xMidYMid meet',
-  });
+// ---- Edge coordinate helpers ----
+
+function getEdgePoint(
+  node: CanvasNode,
+  side: string | undefined,
+  offsetX: number,
+  offsetY: number,
+) {
+  const nx = node.x + offsetX;
+  const ny = node.y + offsetY;
+
+  switch (side) {
+    case 'top':
+      return { x: nx + node.width / 2, y: ny };
+    case 'bottom':
+      return { x: nx + node.width / 2, y: ny + node.height };
+    case 'left':
+      return { x: nx, y: ny + node.height / 2 };
+    case 'right':
+    default:
+      return { x: nx + node.width, y: ny + node.height / 2 };
+  }
 }
 
-function drawNode(
-  svg: Element,
-  node: GenericNode & {
-    color?: string;
-    text?: string;
-    label?: string;
-    file?: string;
-    type: string;
-  },
+// ---- HAST builders ----
+
+function buildNodeElement(
+  node: CanvasNode,
   offsetX: number,
   offsetY: number,
   options: Required<CanvasRenderOptions>,
-) {
+): Element {
   const color = COLOR_MAP[node.color ?? ''] ?? DEFAULT_COLOR;
   const nx = node.x + offsetX;
   const ny = node.y + offsetY;
 
-  const group = s('g');
+  const style = [
+    'position: absolute',
+    `left: ${nx}px`,
+    `top: ${ny}px`,
+    `width: ${node.width}px`,
+    `height: ${node.height}px`,
+    `background: ${color.bg}`,
+    `border: ${options.nodeStrokeWidth}px solid ${color.border}`,
+    'border-radius: 6px',
+    'padding: 8px 12px',
+    'overflow: auto',
+    'box-sizing: border-box',
+    'font-size: 14px',
+    'line-height: 1.5',
+  ].join('; ');
 
-  // Node rectangle
-  group.children.push(
-    s('rect', {
-      x: nx,
-      y: ny,
-      width: node.width,
-      height: node.height,
-      rx: 5,
-      ry: 5,
-      stroke: color.stroke,
-      fill: color.fill,
-      'stroke-width': options.nodeStrokeWidth,
-    }),
-  );
+  const children: Element['children'] = [];
 
-  // Label above the node
   if (node.label) {
-    group.children.push(
-      s(
-        'text',
+    children.push(
+      h(
+        'div',
         {
-          x: nx + 5,
-          y: ny - 10,
-          'font-family': 'monospace',
-          'font-size': 20,
-          'stroke-width': 1,
+          className: 'canvas-node-label',
+          style:
+            'font-size: 12px; font-weight: bold; margin-bottom: 4px; opacity: 0.7;',
         },
         node.label,
       ),
     );
   }
 
-  // Text content inside node
   if (node.type === 'text' && node.text) {
-    group.children.push(
-      s(
-        'text',
-        {
-          x: nx + 5,
-          y: ny + 5 + node.height / 2,
-          'font-family': 'monospace',
-          'font-size': 20,
-          'stroke-width': 1,
-        },
-        node.text,
-      ),
-    );
+    children.push(h('div', { className: 'canvas-node-content' }, node.text));
   }
 
-  // File embed - show filename as text
   if (node.type === 'file' && node.file) {
-    group.children.push(
-      s(
-        'text',
+    children.push(
+      h(
+        'div',
         {
-          x: nx + 10,
-          y: ny + 5 + node.height / 2,
-          'font-family': 'monospace',
-          'font-size': 16,
-          'stroke-width': 1,
-          fill: 'currentColor',
+          className: ['canvas-node-content', 'canvas-node-file'],
+          style: 'opacity: 0.7; font-style: italic;',
         },
         node.file,
       ),
     );
   }
 
-  svg.children.push(group);
+  return h(
+    'div',
+    {
+      className: 'canvas-node',
+      'data-node-id': node.id,
+      style,
+    },
+    children,
+  );
 }
 
-function drawEdge(
-  svg: Element,
-  fromNode: GenericNode,
-  toNode: GenericNode,
-  edge: Edge & { fromSide?: string; toSide?: string; color?: string },
+function buildEdgePath(
+  edge: CanvasEdge,
+  nodes: CanvasNode[],
   offsetX: number,
   offsetY: number,
   options: Required<CanvasRenderOptions>,
-) {
-  let startX = fromNode.x + fromNode.width + offsetX;
-  let startY = fromNode.y + fromNode.height / 2 + offsetY;
-  let endX = toNode.x + toNode.width + offsetX;
-  let endY = toNode.y + toNode.height / 2 + offsetY;
+): Element[] {
+  const fromNode = nodes.find((n) => n.id === edge.fromNode);
+  const toNode = nodes.find((n) => n.id === edge.toNode);
+  if (!fromNode || !toNode) return [];
 
-  // Adjust start point based on fromSide
-  if (edge.fromSide === 'left') {
-    startX = fromNode.x + offsetX;
-  } else if (edge.fromSide === 'top') {
-    startX = fromNode.x + fromNode.width / 2 + offsetX;
-    startY = fromNode.y + offsetY;
-  } else if (edge.fromSide === 'bottom') {
-    startX = fromNode.x + fromNode.width / 2 + offsetX;
-    startY = fromNode.y + fromNode.height + offsetY;
-  }
-  // right is the default (startX already set)
-
-  // Adjust end point based on toSide
-  if (edge.toSide === 'left') {
-    endX = toNode.x + offsetX;
-  } else if (edge.toSide === 'right') {
-    endX = toNode.x + toNode.width + offsetX;
-  } else if (edge.toSide === 'top') {
-    endX = toNode.x + toNode.width / 2 + offsetX;
-    endY = toNode.y + offsetY;
-  } else if (edge.toSide === 'bottom') {
-    endX = toNode.x + toNode.width / 2 + offsetX;
-    endY = toNode.y + toNode.height + offsetY;
-  }
+  const start = getEdgePoint(fromNode, edge.fromSide, offsetX, offsetY);
+  const end = getEdgePoint(toNode, edge.toSide, offsetX, offsetY);
 
   const edgeColor = edge.color
-    ? (COLOR_MAP[edge.color]?.stroke ?? 'black')
-    : 'black';
+    ? (COLOR_MAP[edge.color]?.border ?? 'currentColor')
+    : 'currentColor';
 
-  svg.children.push(
+  const elements: Element[] = [
     s('path', {
-      d: `M ${startX} ${startY} C ${startX} ${endY}, ${endX} ${startY}, ${endX} ${endY}`,
+      d: `M ${start.x} ${start.y} C ${start.x} ${end.y}, ${end.x} ${start.y}, ${end.x} ${end.y}`,
       stroke: edgeColor,
       'stroke-width': options.lineStrokeWidth,
       fill: 'none',
     }),
-  );
+  ];
 
-  // Edge label
-  if ((edge as any).label) {
-    const midX = (startX + endX) / 2;
-    const midY = (startY + endY) / 2;
-    svg.children.push(
+  if (edge.label) {
+    const midX = (start.x + end.x) / 2;
+    const midY = (start.y + end.y) / 2;
+    elements.push(
       s(
         'text',
         {
           x: midX,
-          y: midY - 10,
-          'font-family': 'monospace',
-          'font-size': 14,
-          'stroke-width': 1,
+          y: midY - 8,
+          'font-size': 13,
           'text-anchor': 'middle',
+          fill: 'currentColor',
+          'stroke-width': 0,
         },
-        (edge as any).label,
+        edge.label,
       ),
     );
   }
+
+  return elements;
 }
 
+// ---- Main render function ----
+
 /**
- * Render a JSONCanvas object to an SVG HAST Element.
+ * Render canvas data to an HTML HAST Element.
+ *
+ * Produces a container div with:
+ * - Absolutely positioned divs for each node
+ * - An SVG overlay for edges (bezier curves)
+ *
+ * Text nodes contain plain text. For rich markdown rendering in standalone
+ * pages, use processCanvas() in process-canvas.ts instead.
  */
 export function renderCanvas(
-  jsc: JSONCanvas,
+  canvas: CanvasData,
   config?: Partial<CanvasRenderOptions>,
 ): Element {
-  const options = applyDefaults(config);
-  const { width, height, offsetX, offsetY } = calculateCanvasSize(jsc);
+  const options = { ...defaults, ...config };
+  const { width, height, offsetX, offsetY } = calculateLayout(canvas.nodes);
 
-  const svg = initSvg(width, height, options);
+  const nodeElements = canvas.nodes.map((node) =>
+    buildNodeElement(node, offsetX, offsetY, options),
+  );
 
-  for (const node of jsc.getNodes()) {
-    drawNode(svg, node as any, offsetX, offsetY, options);
-  }
+  const edgeElements = canvas.edges.flatMap((edge) =>
+    buildEdgePath(edge, canvas.nodes, offsetX, offsetY, options),
+  );
 
-  for (const edge of jsc.getEdges()) {
-    const fromNode = jsc.getNodes().find((n) => n.id === edge.fromNode);
-    const toNode = jsc.getNodes().find((n) => n.id === edge.toNode);
-    if (fromNode && toNode) {
-      drawEdge(svg, fromNode, toNode, edge as any, offsetX, offsetY, options);
-    }
-  }
+  const svgOverlay = s(
+    'svg',
+    {
+      style:
+        'position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;',
+      xmlns: 'http://www.w3.org/2000/svg',
+    },
+    edgeElements,
+  );
 
-  return svg;
+  return h(
+    'div',
+    {
+      className: 'canvas-container',
+      style: `position: relative; width: 100%; height: ${height}px;`,
+    },
+    [...nodeElements, svgOverlay],
+  );
 }

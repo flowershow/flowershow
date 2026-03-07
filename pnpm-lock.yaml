@@ -188,9 +188,6 @@ importers:
       '@tanstack/react-query':
         specifier: ^4.32.6
         version: 4.43.0(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
-      '@trbn/jsoncanvas':
-        specifier: ^1.0.6
-        version: 1.0.6
       '@trpc/client':
         specifier: ^10.45.3
         version: 10.45.4(@trpc/server@10.45.4)
@@ -3999,9 +3996,6 @@ packages:
   '@traceloop/instrumentation-anthropic@0.20.0':
     resolution: {integrity: sha512-xQcPxVrKr3yT9+ZEM3skYXikJc/ocZlGDIcsBQ3mMwL3Weq1QL7jx/uGLXvrSO2Yh0DWUjWI6Q/oiRCEUM6P8w==}
     engines: {node: '>=14'}
-
-  '@trbn/jsoncanvas@1.0.6':
-    resolution: {integrity: sha512-PO/x5ASJZmdT93fB8ti4d9gLOIC+nzcN4whXWIftv/zHFZlbyC6hjcAhiyv1AXwsv/vbtBvBugY+8f/FUfGAhg==}
 
   '@trpc/client@10.45.4':
     resolution: {integrity: sha512-ItpH5FMIJFt862kbAgC8hf5NJnDLo0FwEvMEX6zSLCenzWD0UH6H/fvAX1suFo1e0wcAmMhiEU1Tl6xKk/Pd1g==}
@@ -14830,8 +14824,6 @@ snapshots:
       tslib: 2.8.1
     transitivePeerDependencies:
       - supports-color
-
-  '@trbn/jsoncanvas@1.0.6': {}
 
   '@trpc/client@10.45.4(@trpc/server@10.45.4)':
     dependencies:

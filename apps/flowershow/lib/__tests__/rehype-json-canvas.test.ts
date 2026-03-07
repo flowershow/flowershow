@@ -37,13 +37,14 @@ async function processMarkdown(
 }
 
 describe('rehypeJsonCanvas', () => {
-  it('replaces canvas image embed with SVG', async () => {
+  it('replaces canvas image embed with HTML canvas rendering', async () => {
     const html = await processMarkdown('![](diagram.canvas)', {
       'diagram.canvas': SIMPLE_CANVAS_JSON,
     });
 
     expect(html).toContain('<div class="canvas-embed">');
-    expect(html).toContain('<svg');
+    expect(html).toContain('canvas-container');
+    expect(html).toContain('canvas-node');
     expect(html).toContain('Test Node');
     expect(html).not.toContain('<img');
   });

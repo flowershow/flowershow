@@ -3,19 +3,23 @@
  *
  * When markdown contains an image embed with a .canvas extension
  * (e.g. `![](my-diagram.canvas)` or via wiki-link `![[my-diagram.canvas]]`),
- * this plugin replaces it with an inline SVG rendering of the canvas.
+ * this plugin replaces it with an inline HTML rendering of the canvas.
+ *
+ * Inline embeds render text nodes as plain text (no markdown processing).
+ * For standalone canvas pages with rich markdown in nodes, see process-canvas.ts.
  *
  * Adapted from rehype-jsoncanvas (MIT license).
- * Key difference: canvas content is passed via options (pre-fetched from blob
- * storage) instead of reading from the filesystem.
  */
 
-import JSONCanvas from '@trbn/jsoncanvas';
 import type { Element, Root } from 'hast';
 import { h } from 'hastscript';
 import type { Plugin } from 'unified';
 import { visit } from 'unist-util-visit';
-import { type CanvasRenderOptions, renderCanvas } from './canvas-renderer';
+import {
+  type CanvasRenderOptions,
+  parseCanvasData,
+  renderCanvas,
+} from './canvas-renderer';
 
 export interface RehypeJsonCanvasOptions extends CanvasRenderOptions {
   /**
@@ -54,12 +58,12 @@ const rehypeJsonCanvas: Plugin<
       }
 
       try {
-        const jsc = JSONCanvas.fromString(canvasContent);
-        const svg = renderCanvas(jsc, config);
+        const canvas = parseCanvasData(canvasContent);
+        const rendered = renderCanvas(canvas, config);
 
         node.tagName = 'div';
         node.properties = { className: ['canvas-embed'] };
-        node.children = [svg];
+        node.children = [rendered];
       } catch {
         node.tagName = 'div';
         node.properties = { className: ['canvas-embed', 'canvas-error'] };

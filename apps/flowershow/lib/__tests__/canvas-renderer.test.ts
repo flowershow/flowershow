@@ -1,9 +1,8 @@
-import JSONCanvas from '@trbn/jsoncanvas';
 import { describe, expect, it } from 'vitest';
-import { renderCanvas } from '../canvas-renderer';
+import { parseCanvasData, renderCanvas } from '../canvas-renderer';
 
 // Minimal canvas with two text nodes and an edge
-const SIMPLE_CANVAS = JSON.stringify({
+const SIMPLE_CANVAS = {
   nodes: [
     {
       id: 'node1',
@@ -33,10 +32,10 @@ const SIMPLE_CANVAS = JSON.stringify({
       toSide: 'left',
     },
   ],
-});
+};
 
 // Canvas with colored nodes
-const COLORED_CANVAS = JSON.stringify({
+const COLORED_CANVAS = {
   nodes: [
     {
       id: 'red',
@@ -60,10 +59,10 @@ const COLORED_CANVAS = JSON.stringify({
     },
   ],
   edges: [],
-});
+};
 
 // Canvas with file node
-const FILE_CANVAS = JSON.stringify({
+const FILE_CANVAS = {
   nodes: [
     {
       id: 'file1',
@@ -76,10 +75,10 @@ const FILE_CANVAS = JSON.stringify({
     },
   ],
   edges: [],
-});
+};
 
 // Canvas with labeled node and edge label
-const LABELED_CANVAS = JSON.stringify({
+const LABELED_CANVAS = {
   nodes: [
     {
       id: 'a',
@@ -109,117 +108,167 @@ const LABELED_CANVAS = JSON.stringify({
       label: 'connects to',
     },
   ],
-});
+};
 
 // Empty canvas
-const EMPTY_CANVAS = JSON.stringify({ nodes: [], edges: [] });
+const EMPTY_CANVAS = { nodes: [], edges: [] };
+
+/** Check if an element has a given class (hastscript stores className as array) */
+function hasClass(el: any, cls: string): boolean {
+  const cn = el.properties?.className;
+  if (Array.isArray(cn)) return cn.includes(cls);
+  return cn === cls;
+}
+
+describe('parseCanvasData', () => {
+  it('parses a JSON string into CanvasData', () => {
+    const data = parseCanvasData(JSON.stringify(SIMPLE_CANVAS));
+    expect(data.nodes).toHaveLength(2);
+    expect(data.edges).toHaveLength(1);
+    expect(data.nodes[0].text).toBe('Hello World');
+  });
+
+  it('handles missing nodes/edges gracefully', () => {
+    const data = parseCanvasData('{}');
+    expect(data.nodes).toEqual([]);
+    expect(data.edges).toEqual([]);
+  });
+});
 
 describe('renderCanvas', () => {
   it('renders a simple canvas with nodes and edges', () => {
-    const jsc = JSONCanvas.fromString(SIMPLE_CANVAS);
-    const svg = renderCanvas(jsc);
+    const result = renderCanvas(SIMPLE_CANVAS);
 
-    expect(svg.tagName).toBe('svg');
-    expect(svg.properties.viewBox).toBeDefined();
+    // Container is a div, not an SVG
+    expect(result.tagName).toBe('div');
+    expect(hasClass(result, 'canvas-container')).toBe(true);
 
-    // Should have children (groups for nodes + path for edge)
-    expect(svg.children.length).toBeGreaterThanOrEqual(3);
-
-    // Find text elements
-    const allText = findElements(svg, 'text');
-    const textContents = allText.map((t) =>
-      t.children
-        .filter((c): c is { type: 'text'; value: string } => c.type === 'text')
-        .map((c) => c.value)
-        .join(''),
+    // Should contain node divs
+    const nodeDivs = findElements(result, 'div').filter((el) =>
+      hasClass(el, 'canvas-node'),
     );
-    expect(textContents).toContain('Hello World');
-    expect(textContents).toContain('Second Node');
+    expect(nodeDivs).toHaveLength(2);
 
-    // Find path element (edge)
-    const paths = findElements(svg, 'path');
-    expect(paths.length).toBe(1);
+    // Check text content is in divs
+    const contentDivs = findElements(result, 'div').filter((el) =>
+      hasClass(el, 'canvas-node-content'),
+    );
+    const texts = contentDivs.flatMap((div) =>
+      div.children
+        .filter((c: any) => c.type === 'text')
+        .map((c: any) => c.value),
+    );
+    expect(texts).toContain('Hello World');
+    expect(texts).toContain('Second Node');
+
+    // SVG overlay with edge path
+    const svgs = findElements(result, 'svg');
+    expect(svgs).toHaveLength(1);
+    const paths = findElements(svgs[0], 'path');
+    expect(paths).toHaveLength(1);
     expect(paths[0].properties.d).toContain('M');
     expect(paths[0].properties.d).toContain('C');
   });
 
-  it('renders colored nodes with correct fill colors', () => {
-    const jsc = JSONCanvas.fromString(COLORED_CANVAS);
-    const svg = renderCanvas(jsc);
+  it('renders colored nodes with correct background colors', () => {
+    const result = renderCanvas(COLORED_CANVAS);
 
-    const rects = findElements(svg, 'rect');
-    expect(rects.length).toBe(2);
+    const nodeDivs = findElements(result, 'div').filter((el) =>
+      hasClass(el, 'canvas-node'),
+    );
+    expect(nodeDivs).toHaveLength(2);
 
     // Red node (color: '1')
-    expect(rects[0].properties.fill).toBe('rgba(255, 0, 0, .5)');
-    expect(rects[0].properties.stroke).toBe('rgba(255,0,0,1)');
+    const redStyle = nodeDivs[0].properties.style as string;
+    expect(redStyle).toContain('rgba(255, 0, 0');
 
     // Green node (color: '4')
-    expect(rects[1].properties.fill).toBe('rgba(0, 255, 100, .5)');
-    expect(rects[1].properties.stroke).toBe('rgba(0,100,0,1)');
+    const greenStyle = nodeDivs[1].properties.style as string;
+    expect(greenStyle).toContain('rgba(0, 200, 100');
   });
 
   it('renders file nodes with filename', () => {
-    const jsc = JSONCanvas.fromString(FILE_CANVAS);
-    const svg = renderCanvas(jsc);
+    const result = renderCanvas(FILE_CANVAS);
 
-    const texts = findElements(svg, 'text');
-    const fileText = texts.find((t) =>
-      t.children.some(
-        (c: any) => c.type === 'text' && c.value.includes('example.md'),
-      ),
+    const fileDivs = findElements(result, 'div').filter((el) =>
+      hasClass(el, 'canvas-node-file'),
     );
-    expect(fileText).toBeDefined();
+    expect(fileDivs).toHaveLength(1);
+
+    const text = fileDivs[0].children
+      .filter((c: any) => c.type === 'text')
+      .map((c: any) => c.value)
+      .join('');
+    expect(text).toContain('example.md');
   });
 
   it('renders node labels and edge labels', () => {
-    const jsc = JSONCanvas.fromString(LABELED_CANVAS);
-    const svg = renderCanvas(jsc);
+    const result = renderCanvas(LABELED_CANVAS);
 
-    const allText = findElements(svg, 'text');
-    const textValues = allText.flatMap((t) =>
-      t.children
-        .filter((c): c is any => c.type === 'text')
-        .map((c) => c.value),
+    // Node label
+    const labelDivs = findElements(result, 'div').filter((el) =>
+      hasClass(el, 'canvas-node-label'),
     );
+    const labelTexts = labelDivs.flatMap((div) =>
+      div.children
+        .filter((c: any) => c.type === 'text')
+        .map((c: any) => c.value),
+    );
+    expect(labelTexts).toContain('Start');
 
-    expect(textValues).toContain('Start');
-    expect(textValues).toContain('connects to');
+    // Edge label (in SVG)
+    const svgTexts = findElements(result, 'text');
+    const edgeLabelTexts = svgTexts.flatMap((t) =>
+      t.children.filter((c: any) => c.type === 'text').map((c: any) => c.value),
+    );
+    expect(edgeLabelTexts).toContain('connects to');
   });
 
-  it('renders an empty canvas as a valid SVG', () => {
-    const jsc = JSONCanvas.fromString(EMPTY_CANVAS);
-    const svg = renderCanvas(jsc);
+  it('renders an empty canvas as a valid container', () => {
+    const result = renderCanvas(EMPTY_CANVAS);
 
-    expect(svg.tagName).toBe('svg');
-    // Empty canvas should still produce a valid SVG element
-    expect(svg.children.length).toBe(0);
+    expect(result.tagName).toBe('div');
+    expect(hasClass(result, 'canvas-container')).toBe(true);
   });
 
   it('respects custom stroke width options', () => {
-    const jsc = JSONCanvas.fromString(SIMPLE_CANVAS);
-    const svg = renderCanvas(jsc, {
-      nodeStrokeWidth: 1,
-      lineStrokeWidth: 2,
+    const result = renderCanvas(SIMPLE_CANVAS, {
+      nodeStrokeWidth: 4,
+      lineStrokeWidth: 3,
     });
 
-    const rects = findElements(svg, 'rect');
-    // hastscript normalizes stroke-width to strokeWidth in properties
-    const rectStroke =
-      rects[0].properties['stroke-width'] ?? rects[0].properties.strokeWidth;
-    expect(rectStroke).toBe(1);
+    // Node borders use CSS style
+    const nodeDivs = findElements(result, 'div').filter((el) =>
+      hasClass(el, 'canvas-node'),
+    );
+    expect(nodeDivs.length).toBeGreaterThan(0);
+    const style = nodeDivs[0].properties.style as string;
+    expect(style).toContain('border: 4px solid');
 
-    const paths = findElements(svg, 'path');
+    // Edge paths use stroke-width attribute
+    const paths = findElements(result, 'path');
     const pathStroke =
       paths[0].properties['stroke-width'] ?? paths[0].properties.strokeWidth;
-    expect(pathStroke).toBe(2);
+    expect(pathStroke).toBe(3);
   });
 
-  it('uses responsive width', () => {
-    const jsc = JSONCanvas.fromString(SIMPLE_CANVAS);
-    const svg = renderCanvas(jsc);
+  it('nodes use absolute positioning', () => {
+    const result = renderCanvas(SIMPLE_CANVAS);
 
-    expect(svg.properties.width).toBe('100%');
+    const nodeDivs = findElements(result, 'div').filter((el) =>
+      hasClass(el, 'canvas-node'),
+    );
+    for (const node of nodeDivs) {
+      const style = node.properties.style as string;
+      expect(style).toContain('position: absolute');
+    }
+  });
+
+  it('container has pixel height for spatial layout', () => {
+    const result = renderCanvas(SIMPLE_CANVAS);
+    const style = result.properties.style as string;
+    expect(style).toContain('height:');
+    expect(style).toContain('px');
   });
 });
 

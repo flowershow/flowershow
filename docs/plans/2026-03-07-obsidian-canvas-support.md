@@ -150,3 +150,43 @@ Flowershow already has all other dependencies these packages use (`unified`, `ha
 3. **SVG rendering quality**: The SVG output is functional but basic. Text nodes show plain text (no markdown rendering within text cards). This may not match user expectations coming from Obsidian's rich canvas UI.
 4. **Async plugin**: The plugin is async, which works fine in Flowershow's unified pipeline but limits where it can be used.
 5. **Nested canvas**: The spec supports nested canvases (canvas within canvas). This would require recursive fetching and rendering - start without this and add later.
+
+## Appendix: Comparison with Ola's 2024 HTML/CSS Prototype
+
+In January 2024, Ola created a working prototype using a different rendering approach (commit `231a76be`, branch `canvas-2`, [discussed in issue #578](https://github.com/flowershow/flowershow/issues/578#issuecomment-1908755644)). This section compares the two approaches and recommends a hybrid.
+
+### Ola's Approach
+
+- **Nodes rendered as HTML `<div>` elements** with `position: absolute`, placed using the canvas JSON coordinates
+- **Edges rendered as inline SVGs** with straight lines and arrowheads
+- **Markdown content in nodes** rendered using the existing `MdxPage` component, giving full MDX support (callouts, headings, tables, etc.)
+- **Coordinate normalization** handled by offsetting all positions by the minimum x/y values
+- **Zero new dependencies** — uses only existing components
+- **~232 lines** total (147 in `Canvas.tsx`, rest in `[[...slug]].tsx` modifications)
+- Built for the old Flowershow architecture (Next.js pages router, local filesystem, mddb)
+
+### Key Differences
+
+| Aspect | This Plan (rehype-jsoncanvas) | Ola's Prototype |
+|---|---|---|
+| **Node rendering** | SVG rectangles + `<foreignObject>` | HTML `<div>` with absolute positioning |
+| **Edge rendering** | SVG bezier curves | SVG straight lines with arrowheads |
+| **Markdown in nodes** | Basic — `<text>` elements (plain strings) | Full MDX rendering via `MdxPage` (rich) |
+| **Dependencies** | 2 npm packages + vendored code | Zero new dependencies |
+| **Content fetching** | Needs adapter for S3/R2 blob storage | Direct filesystem reads |
+| **Inline embeds** | Planned (Step 3) | Not implemented |
+| **Coordinate normalization** | Not addressed | Implemented |
+| **Framework** | Rehype plugin (pipeline-based) | React component (direct rendering) |
+
+### Recommendation: Hybrid Approach
+
+**For node rendering, Ola's HTML/CSS approach is clearly better.** HTML divs can contain any web content — full MDX with callouts, headings, tables, embedded images, and interactive elements. The SVG approach is fundamentally limited:
+
+- `<text>` elements can't render rich markdown — just plain strings
+- `<foreignObject>` technically allows HTML inside SVG, but has inconsistent browser support for sizing, scrolling, and nested content, and fights the SVG coordinate system
+
+With HTML divs + absolute positioning, nodes are normal DOM elements — CSS works naturally, responsive behavior is straightforward, and you can reuse the existing markdown rendering pipeline without any conversion step.
+
+**For edge rendering, SVG bezier curves (from rehype-jsoncanvas) are better** than straight lines — they look more polished and match Obsidian's visual style.
+
+**The ideal approach is therefore a hybrid: HTML nodes + SVG bezier edges.** This gives the best of both worlds — rich content rendering in nodes, smooth visual connections between them. The architecture should follow Ola's pattern (a React component that receives parsed canvas data) adapted for the current Flowershow architecture (blob storage instead of filesystem reads).

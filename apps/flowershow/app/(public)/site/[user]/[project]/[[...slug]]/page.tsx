@@ -235,7 +235,7 @@ export default async function SitePage(props: {
     );
   } else if (isCanvas) {
     try {
-      compiledContent = processCanvas(pageContent ?? '');
+      compiledContent = await processCanvas(pageContent ?? '');
     } catch (error: any) {
       compiledContent = (
         <ErrorMessage title="Error rendering canvas" message={error.message} />
@@ -421,7 +421,6 @@ export default async function SitePage(props: {
               date={metadata?.date}
               showHero={heroConfig.showHero}
               authors={authors}
-
             >
               <div className="rendered-mdx" id="mdxpage">
                 {compiledContent}
@@ -499,9 +498,7 @@ async function fetchReferencedCanvasFiles(
   const resolvedPaths = new Map<string, string>();
   for (const ref of canvasRefs) {
     // Try exact match first (with leading slash)
-    const exactMatch = siteFilePaths.find(
-      (p) => p === `/${ref}` || p === ref,
-    );
+    const exactMatch = siteFilePaths.find((p) => p === `/${ref}` || p === ref);
     if (exactMatch) {
       resolvedPaths.set(ref, exactMatch.replace(/^\//, ''));
       continue;
