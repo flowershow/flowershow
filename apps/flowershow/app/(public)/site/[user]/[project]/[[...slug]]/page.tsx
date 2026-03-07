@@ -482,10 +482,10 @@ async function fetchReferencedCanvasFiles(
   const wikiPattern = /!\[\[([^\]]+\.canvas)\]\]/g;
 
   for (const match of content.matchAll(imgPattern)) {
-    canvasRefs.add(match[1]);
+    if (match[1]) canvasRefs.add(match[1]);
   }
   for (const match of content.matchAll(wikiPattern)) {
-    canvasRefs.add(match[1]);
+    if (match[1]) canvasRefs.add(match[1]);
   }
 
   if (canvasRefs.size === 0) return {};
