@@ -38,15 +38,18 @@ const rehypeJsonCanvas: Plugin<
       const src = node.properties?.src as string | undefined;
       if (!src?.endsWith('.canvas')) return;
 
-      // Look up the canvas content from the pre-fetched map
-      const canvasContent = canvasFiles[src];
+      // Try exact match, then match by basename
+      const basename = src.split('/').pop() ?? '';
+      const canvasContent =
+        canvasFiles[src] ??
+        Object.entries(canvasFiles).find(
+          ([key]) => key === basename || key.endsWith(`/${basename}`),
+        )?.[1];
+
       if (!canvasContent) {
-        // Replace with a placeholder if canvas content wasn't provided
         node.tagName = 'div';
         node.properties = { className: ['canvas-embed', 'canvas-missing'] };
-        node.children = [
-          h('p', `Canvas file not found: ${src}`),
-        ];
+        node.children = [h('p', `Canvas file not found: ${src}`)];
         return;
       }
 
@@ -60,9 +63,7 @@ const rehypeJsonCanvas: Plugin<
       } catch {
         node.tagName = 'div';
         node.properties = { className: ['canvas-embed', 'canvas-error'] };
-        node.children = [
-          h('p', `Error rendering canvas: ${src}`),
-        ];
+        node.children = [h('p', `Error rendering canvas: ${src}`)];
       }
     });
   };

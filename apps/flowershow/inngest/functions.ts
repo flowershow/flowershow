@@ -215,6 +215,7 @@ export const syncSite = inngest.createFunction(
                       : 'SUCCESS',
                   },
                   update: {
+                    appPath: urlPath,
                     size: ghTreeItem.size || 0,
                     sha: ghTreeItem.sha,
                   },

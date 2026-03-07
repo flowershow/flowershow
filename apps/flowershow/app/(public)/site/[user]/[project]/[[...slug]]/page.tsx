@@ -247,6 +247,7 @@ export default async function SitePage(props: {
       const canvasFiles = await fetchReferencedCanvasFiles(
         pageContent ?? '',
         site.id,
+        siteFilePaths,
       );
 
       // Determine whether to use MD or MDX rendering based on config and file extension
@@ -475,6 +476,7 @@ export default async function SitePage(props: {
 async function fetchReferencedCanvasFiles(
   content: string,
   siteId: string,
+  siteFilePaths: string[],
 ): Promise<Record<string, string>> {
   // Match ![...](*.canvas) and ![[*.canvas]]
   const canvasRefs = new Set<string>();
@@ -492,20 +494,40 @@ async function fetchReferencedCanvasFiles(
 
   const canvasFiles: Record<string, string> = {};
 
+  // Resolve refs to full blob paths using siteFilePaths
+  // siteFilePaths have leading slashes (e.g. "/docs/canvas-demo.canvas")
+  const resolvedPaths = new Map<string, string>();
+  for (const ref of canvasRefs) {
+    // Try exact match first (with leading slash)
+    const exactMatch = siteFilePaths.find(
+      (p) => p === `/${ref}` || p === ref,
+    );
+    if (exactMatch) {
+      resolvedPaths.set(ref, exactMatch.replace(/^\//, ''));
+      continue;
+    }
+    // Try basename match
+    const basenameMatch = siteFilePaths.find((p) => p.endsWith(`/${ref}`));
+    if (basenameMatch) {
+      resolvedPaths.set(ref, basenameMatch.replace(/^\//, ''));
+    }
+  }
+
   await Promise.all(
-    [...canvasRefs].map(async (ref) => {
+    [...resolvedPaths.entries()].map(async ([ref, blobPath]) => {
       try {
         const blob = await api.site.getBlobByPath
-          .query({ siteId, path: ref })
+          .query({ siteId, path: blobPath })
           .catch(() => null);
 
         if (blob) {
-          const content = await api.site.getBlobContent
+          const blobContent = await api.site.getBlobContent
             .query({ id: blob.id })
             .catch(() => null);
 
-          if (content) {
-            canvasFiles[ref] = content;
+          if (blobContent) {
+            canvasFiles[ref] = blobContent;
+            canvasFiles[blobPath] = blobContent;
           }
         }
       } catch {

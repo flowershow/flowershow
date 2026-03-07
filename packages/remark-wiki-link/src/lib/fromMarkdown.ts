@@ -180,6 +180,14 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
             value: 'Your browser does not support the audio tag.',
           },
         ];
+      } else if (extension === 'canvas') {
+        // Canvas files render as img tags so the rehype-json-canvas plugin can pick them up
+        wikiLink.data.hName = 'img';
+        wikiLink.data.hProperties = {
+          src: url,
+          alt: name,
+          className: classNames,
+        };
       } else {
         // Unsupported file formats
         wikiLink.data.hName = 'a';
