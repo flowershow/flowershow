@@ -22,6 +22,7 @@ import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import { isEmoji } from '@/lib/is-emoji';
 import { getMdxOptions, processMarkdown } from '@/lib/markdown';
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
+import { processCanvas } from '@/lib/process-canvas';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
 import type { PageMetadata } from '@/server/api/types';
 import { api } from '@/trpc/server';
@@ -225,14 +226,29 @@ export default async function SitePage(props: {
 
   const isMarkdown = blob.path.endsWith('.md');
   const isMdx = blob.path.endsWith('.mdx');
+  const isCanvas = blob.path.endsWith('.canvas');
   const renderMode = metadata?.syntaxMode ?? site.syntaxMode;
 
-  if (!isMarkdown && !isMdx) {
+  if (!isMarkdown && !isMdx && !isCanvas) {
     compiledContent = (
       <ErrorMessage title="Error" message="Unsupported file type" />
     );
+  } else if (isCanvas) {
+    try {
+      compiledContent = processCanvas(pageContent ?? '');
+    } catch (error: any) {
+      compiledContent = (
+        <ErrorMessage title="Error rendering canvas" message={error.message} />
+      );
+    }
   } else {
     try {
+      // Pre-fetch any canvas files referenced in the markdown for inline embeds
+      const canvasFiles = await fetchReferencedCanvasFiles(
+        pageContent ?? '',
+        site.id,
+      );
+
       // Determine whether to use MD or MDX rendering based on config and file extension
       const useMdRendering =
         renderMode === 'md' || (renderMode === 'auto' && isMarkdown);
@@ -252,6 +268,7 @@ export default async function SitePage(props: {
           rootDir: site.rootDir ?? undefined,
           permalinks: permalinksMapping,
           imageDimensions,
+          canvasFiles,
         });
         compiledContent = result;
       } else {
@@ -264,6 +281,7 @@ export default async function SitePage(props: {
           siteId: site.id,
           rootDir: site.rootDir ?? undefined,
           permalinks: permalinksMapping,
+          canvasFiles,
         }) as any;
 
         const mdxSource = await serialize<PageMetadata>({
@@ -448,4 +466,53 @@ export default async function SitePage(props: {
       </div>
     </>
   );
+}
+
+/**
+ * Scan markdown content for .canvas file references and pre-fetch their content.
+ * Supports both `![](file.canvas)` and `![[file.canvas]]` syntaxes.
+ */
+async function fetchReferencedCanvasFiles(
+  content: string,
+  siteId: string,
+): Promise<Record<string, string>> {
+  // Match ![...](*.canvas) and ![[*.canvas]]
+  const canvasRefs = new Set<string>();
+  const imgPattern = /!\[.*?\]\(([^)]+\.canvas)\)/g;
+  const wikiPattern = /!\[\[([^\]]+\.canvas)\]\]/g;
+
+  for (const match of content.matchAll(imgPattern)) {
+    canvasRefs.add(match[1]);
+  }
+  for (const match of content.matchAll(wikiPattern)) {
+    canvasRefs.add(match[1]);
+  }
+
+  if (canvasRefs.size === 0) return {};
+
+  const canvasFiles: Record<string, string> = {};
+
+  await Promise.all(
+    [...canvasRefs].map(async (ref) => {
+      try {
+        const blob = await api.site.getBlobByPath
+          .query({ siteId, path: ref })
+          .catch(() => null);
+
+        if (blob) {
+          const content = await api.site.getBlobContent
+            .query({ id: blob.id })
+            .catch(() => null);
+
+          if (content) {
+            canvasFiles[ref] = content;
+          }
+        }
+      } catch {
+        // Skip canvas files that can't be fetched
+      }
+    }),
+  );
+
+  return canvasFiles;
 }

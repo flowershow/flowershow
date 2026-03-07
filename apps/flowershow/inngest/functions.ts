@@ -180,7 +180,7 @@ export const syncSite = inngest.createFunction(
                 const extension = ghTreeItem.path.split('.').pop() || '';
 
                 const urlPath = (() => {
-                  if (['md', 'mdx'].includes(extension)) {
+                  if (['md', 'mdx', 'canvas'].includes(extension)) {
                     const _urlPath = resolveFilePathToUrlPath({
                       target: filePath,
                     });

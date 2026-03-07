@@ -145,6 +145,8 @@ export const getContentType = (extension: string): ContentType => {
     case 'yml':
     case 'base': // Obsidian Base files
       return 'application/yaml';
+    case 'canvas': // Obsidian Canvas files
+      return 'application/json';
     case 'css':
       return 'text/css';
     case 'js':

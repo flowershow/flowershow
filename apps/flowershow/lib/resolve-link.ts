@@ -56,7 +56,7 @@ export const resolveFilePathToUrlPath = ({
   }
 
   const [, , ext = ''] = filePath.match(/^(.+?)(?:\.([^.\/]+))?$/) ?? [];
-  const isMarkdown = ext === 'md' || ext === 'mdx' || !ext;
+  const isMarkdown = ext === 'md' || ext === 'mdx' || ext === 'canvas' || !ext;
   const useRawUrlPath = !isMarkdown;
 
   // normalize origin file path so that it always has a leading slash

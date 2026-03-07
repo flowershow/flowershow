@@ -29,6 +29,7 @@ import rehypeToReact from './rehype-to-react';
 import rehypeUnwrapParagraphsAroundMedia from './rehype-unwrap-paragraph-around-media';
 import RemarkCommonMarkLink from './remark-commonmark-link';
 import remarkObsidianBases from './remark-obsidian-bases';
+import rehypeJsonCanvas from './rehype-json-canvas';
 import { resolveFilePathToUrlPath } from './resolve-link';
 
 interface MarkdownOptions {
@@ -41,6 +42,7 @@ interface MarkdownOptions {
   rootDir?: string;
   permalinks?: Record<string, string>;
   imageDimensions?: ImageDimensionsMap;
+  canvasFiles?: Record<string, string>;
 }
 
 // Process pure markdown files using unified
@@ -78,6 +80,7 @@ export async function processMarkdown(
     .use(remarkMark)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
+    .use(rehypeJsonCanvas, { canvasFiles: options.canvasFiles ?? {} })
     .use(rehypeUnwrapParagraphsAroundMedia)
     .use(rehypeResolveHtmlUrls, { filePath, sitePrefix, customDomain })
     .use(rehypeHtmlEnhancements, { sitePrefix })
@@ -107,6 +110,7 @@ export const getMdxOptions = ({
   siteId,
   rootDir,
   permalinks,
+  canvasFiles,
 }: {
   filePath: string;
   files: string[];
@@ -116,6 +120,7 @@ export const getMdxOptions = ({
   siteId?: string;
   rootDir?: string;
   permalinks?: Record<string, string>;
+  canvasFiles?: Record<string, string>;
 }): EvaluateOptions => {
   return {
     parseFrontmatter,
@@ -146,6 +151,7 @@ export const getMdxOptions = ({
         [remarkObsidianBases, { sitePrefix, customDomain, siteId, rootDir }],
       ],
       rehypePlugins: [
+        [rehypeJsonCanvas, { canvasFiles: canvasFiles ?? {} }],
         rehypeUnwrapParagraphsAroundMedia,
         [rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain }],
         [rehypeHtmlEnhancements, { sitePrefix }],
