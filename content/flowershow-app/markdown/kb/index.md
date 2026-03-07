@@ -10,7 +10,7 @@ Practical articles, tools, and tips for using Markdown across apps and workflows
 ## Markdown in Apps
 
 - [How to use Markdown in Google Docs](google-docs) — enable Markdown, paste from Markdown, copy as Markdown
-- [Google Docs Markdown export notes](google-docs-export-notes) — anchor links, image handling in exports
+- [Google Docs Markdown export quirks](google-docs-markdown-export-quirks) — anchor links, image handling in exports
 - [Markdown for Apple Notes](apple-notes) — using ProNotes to get Markdown support in Apple Notes
 - [iPad Notes gets Markdown import/export](ipad-notes) — iPadOS adds native Markdown support
 

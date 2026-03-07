@@ -2,18 +2,35 @@
 title: Using AI to edit markdown notes in Obsidian (Claude Code, Codex)
 ---
 
-This is an alternative to using AI tool directly in Obsidian. For the bit more technically minded.
+# Using AI to edit Markdown notes in Obsidian
 
-here's a good recent thread
+Tools like [Claude Code](https://claude.ai/claude-code) and [OpenAI Codex](https://openai.com/codex) can work directly on your Obsidian vault from the command line. Since Obsidian vaults are just folders of Markdown files, AI coding tools can read, edit, and reorganize them with no plugins needed.
 
-https://www.reddit.com/r/ObsidianMD/comments/1nsija9/codex_or_claude_code_with_obsidian/
+## What can you do with it?
 
-e.g.
+- Rewrite or standardize frontmatter across all notes
+- Improve cross-linking between notes and add tags
+- Enrich notes with information fetched from external sources
+- Bulk rename, restructure, or clean up your vault
+- Generate summaries or indexes from existing content
 
-> I use Claude Code and I have been meaning to post something here about it once I have more feedback. But so far I have been blown away about how powerful it is. I already have had it rewrite front matter on all my notes. It’s improved cross linking and added more tags to some. I have also had it fetch information about certain topics to enrich some evergreen notes, for example if I have a client it can go get more info from LinkedIn and add it in the note.
+## How it works
+
+1. Open a terminal in your Obsidian vault directory
+2. Run Claude Code (or similar AI tool) pointing at the vault
+3. Ask it to do things like "add tags to all notes missing them" or "create an index of all notes in the projects folder"
+
+The AI reads and edits the Markdown files directly. Obsidian picks up the changes immediately since it watches the filesystem.
+
+## Community experience
+
+From a [popular Reddit thread](https://www.reddit.com/r/ObsidianMD/comments/1nsija9/codex_or_claude_code_with_obsidian/):
+
+> I use Claude Code and I have been blown away about how powerful it is. I already have had it rewrite front matter on all my notes. It's improved cross linking and added more tags to some. I have also had it fetch information about certain topics to enrich some evergreen notes.
 >
-> I am not super technically minded but I got it working in less than 45 minutes or so. Anthropic has a step by step guide for how to do it but I actually ran Claude app next to it because I had to trouble shoot some unexpected issues.
->
-> I also found this video super helpful - especially with the use cases.
+> I am not super technically minded but I got it working in less than 45 minutes or so.
 
-![[https://youtu.be/8V9tZwgjiRs?si=AaHNKNx3Y-W5Taiz]]
+## Resources
+
+- [Video walkthrough of Claude Code + Obsidian use cases](https://youtu.be/8V9tZwgjiRs?si=AaHNKNx3Y-W5Taiz)
+- [Reddit discussion: Codex or Claude Code with Obsidian](https://www.reddit.com/r/ObsidianMD/comments/1nsija9/codex_or_claude_code_with_obsidian/)
