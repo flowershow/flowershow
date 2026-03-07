@@ -1,49 +1,50 @@
 {
   "nodes": [
     {
-      "id": "idea",
+      "id": "obsidian",
       "type": "text",
       "x": 0,
       "y": 0,
       "width": 200,
       "height": 80,
-      "text": "Write your ideas",
-      "color": "5"
+      "text": "Create in Obsidian",
+      "color": "6"
     },
     {
       "id": "canvas",
       "type": "text",
-      "x": 320,
+      "x": 300,
       "y": -40,
-      "width": 220,
+      "width": 240,
       "height": 80,
-      "text": "Organize in Canvas",
-      "color": "4"
+      "text": "Draw on Canvas",
+      "color": "5"
     },
     {
-      "id": "publish",
+      "id": "flowershow",
       "type": "text",
       "x": 640,
       "y": 0,
-      "width": 200,
+      "width": 240,
       "height": 80,
-      "text": "Publish with Flowershow",
-      "color": "1"
+      "text": "Bloom on Flowershow",
+      "color": "4"
     },
     {
-      "id": "share",
+      "id": "world",
       "type": "text",
-      "x": 320,
+      "x": 300,
       "y": 120,
-      "width": 220,
+      "width": 240,
       "height": 80,
-      "text": "Share with the world"
+      "text": "Share with the world",
+      "color": "3"
     }
   ],
   "edges": [
     {
       "id": "e1",
-      "fromNode": "idea",
+      "fromNode": "obsidian",
       "toNode": "canvas",
       "fromSide": "right",
       "toSide": "left"
@@ -51,17 +52,18 @@
     {
       "id": "e2",
       "fromNode": "canvas",
-      "toNode": "publish",
+      "toNode": "flowershow",
       "fromSide": "right",
-      "toSide": "left"
+      "toSide": "left",
+      "label": "sync"
     },
     {
       "id": "e3",
-      "fromNode": "publish",
-      "toNode": "share",
+      "fromNode": "flowershow",
+      "toNode": "world",
       "fromSide": "bottom",
       "toSide": "right",
-      "label": "🎉"
+      "label": "🌸"
     }
   ]
 }
