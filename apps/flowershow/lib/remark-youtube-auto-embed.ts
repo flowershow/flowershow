@@ -19,9 +19,11 @@ function getYouTubeEmbedUrl(url: string): string | null {
   const start = urlParams.get('t');
   if (start) {
     // Remove 's' suffix if present and convert to number
-    const startSeconds = parseInt(start.replace(/s$/, ''));
+    const startSeconds = parseInt(start.replace(/s$/, ''), 10);
     urlParams.delete('t');
-    urlParams.set('start', startSeconds.toString());
+    if (!isNaN(startSeconds)) {
+      urlParams.set('start', startSeconds.toString());
+    }
   }
   // Remove the 'v' param – it belongs in the embed path, not the query string
   urlParams.delete('v');
