@@ -27,6 +27,7 @@ import {
   type CanvasRenderOptions,
   CANVAS_COLOR_MAP,
   CANVAS_DEFAULT_COLOR,
+  buildBezierPath,
   calculateLayout,
   getEdgePoint,
   parseCanvasData,
@@ -191,7 +192,7 @@ function buildEdgeJsx(
 
   const markers: React.ReactNode[] = [];
   const pathProps: Record<string, any> = {
-    d: `M ${start.x} ${start.y} C ${start.x} ${end.y}, ${end.x} ${start.y}, ${end.x} ${end.y}`,
+    d: buildBezierPath(start, end, edge.fromSide, edge.toSide),
     stroke: edgeColor,
     strokeWidth: options.lineStrokeWidth,
     fill: 'none',

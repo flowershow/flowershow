@@ -144,6 +144,68 @@ export function getEdgePoint(
   }
 }
 
+/**
+ * Build a cubic bezier path string with control points that extend
+ * in the direction of each edge's connection side.
+ */
+export function buildBezierPath(
+  start: { x: number; y: number },
+  end: { x: number; y: number },
+  fromSide?: string,
+  toSide?: string,
+): string {
+  const dist = Math.max(
+    Math.abs(end.x - start.x),
+    Math.abs(end.y - start.y),
+    50,
+  );
+  const offset = dist * 0.5;
+
+  // Control point 1: extend from start in the direction of fromSide
+  let cx1 = start.x;
+  let cy1 = start.y;
+  switch (fromSide) {
+    case 'right':
+      cx1 += offset;
+      break;
+    case 'left':
+      cx1 -= offset;
+      break;
+    case 'bottom':
+      cy1 += offset;
+      break;
+    case 'top':
+      cy1 -= offset;
+      break;
+    default:
+      cx1 += offset;
+      break;
+  }
+
+  // Control point 2: extend from end in the direction of toSide
+  let cx2 = end.x;
+  let cy2 = end.y;
+  switch (toSide) {
+    case 'left':
+      cx2 -= offset;
+      break;
+    case 'right':
+      cx2 += offset;
+      break;
+    case 'top':
+      cy2 -= offset;
+      break;
+    case 'bottom':
+      cy2 += offset;
+      break;
+    default:
+      cx2 -= offset;
+      break;
+  }
+
+  return `M ${start.x} ${start.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${end.x} ${end.y}`;
+}
+
 // ---- HAST builders ----
 
 function buildNodeElement(
@@ -251,7 +313,7 @@ function buildEdgePath(
     : 'currentColor';
 
   const pathProps: Record<string, any> = {
-    d: `M ${start.x} ${start.y} C ${start.x} ${end.y}, ${end.x} ${start.y}, ${end.x} ${end.y}`,
+    d: buildBezierPath(start, end, edge.fromSide, edge.toSide),
     stroke: edgeColor,
     'stroke-width': options.lineStrokeWidth,
     fill: 'none',
