@@ -220,7 +220,6 @@ describe('renderCanvas', () => {
     const svg = renderCanvas(jsc);
 
     expect(svg.properties.width).toBe('100%');
-    expect(svg.properties.height).toBe('100%');
   });
 });
 

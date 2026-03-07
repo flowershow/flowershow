@@ -7,6 +7,8 @@
  * Changes from upstream:
  * - Removed filesystem/fetch-based file loading (Flowershow uses blob storage)
  * - Simplified options (removed ssrPath, assetPath, mdPath)
+ * - Fixed coordinate offset calculation (upstream used cW/2 which breaks for
+ *   canvases with positive coordinates)
  * - Cleaned up types to use @trbn/jsoncanvas directly
  */
 
@@ -47,6 +49,8 @@ const DEFAULT_COLOR = {
   stroke: 'rgba(0,0,0,1)',
 };
 
+const PADDING = 20;
+
 function calculateCanvasSize(jsc: JSONCanvas) {
   let minX = Infinity;
   let minY = Infinity;
@@ -61,10 +65,10 @@ function calculateCanvasSize(jsc: JSONCanvas) {
   }
 
   return {
-    width: maxX - minX,
-    height: maxY - minY,
-    offsetX: -minX,
-    offsetY: -minY,
+    width: maxX - minX + PADDING * 2,
+    height: maxY - minY + PADDING * 2,
+    offsetX: -minX + PADDING,
+    offsetY: -minY + PADDING,
   };
 }
 
@@ -84,9 +88,6 @@ function initSvg(
     fill: 'currentColor',
     stroke: 'currentColor',
     width: '100%',
-    height: '100%',
-    renWidth: width,
-    renHeight: height,
     viewBox: `0 0 ${width} ${height}`,
     preserveAspectRatio: 'xMidYMid meet',
   });
@@ -94,20 +95,28 @@ function initSvg(
 
 function drawNode(
   svg: Element,
-  node: GenericNode & { color?: string; text?: string; label?: string; file?: string; type: string },
+  node: GenericNode & {
+    color?: string;
+    text?: string;
+    label?: string;
+    file?: string;
+    type: string;
+  },
+  offsetX: number,
+  offsetY: number,
   options: Required<CanvasRenderOptions>,
 ) {
   const color = COLOR_MAP[node.color ?? ''] ?? DEFAULT_COLOR;
-  const cW = svg.properties.renWidth as number;
-  const cH = svg.properties.renHeight as number;
+  const nx = node.x + offsetX;
+  const ny = node.y + offsetY;
 
   const group = s('g');
 
   // Node rectangle
   group.children.push(
     s('rect', {
-      x: node.x + cW / 2,
-      y: node.y + cH / 2,
+      x: nx,
+      y: ny,
       width: node.width,
       height: node.height,
       rx: 5,
@@ -124,8 +133,8 @@ function drawNode(
       s(
         'text',
         {
-          x: node.x + 5 + cW / 2,
-          y: node.y - 10 + cH / 2,
+          x: nx + 5,
+          y: ny - 10,
           'font-family': 'monospace',
           'font-size': 20,
           'stroke-width': 1,
@@ -141,8 +150,8 @@ function drawNode(
       s(
         'text',
         {
-          x: node.x + 5 + cW / 2,
-          y: node.y + 5 + node.height / 2 + cH / 2,
+          x: nx + 5,
+          y: ny + 5 + node.height / 2,
           'font-family': 'monospace',
           'font-size': 20,
           'stroke-width': 1,
@@ -152,20 +161,20 @@ function drawNode(
     );
   }
 
-  // File embed - show filename as text for now
+  // File embed - show filename as text
   if (node.type === 'file' && node.file) {
     group.children.push(
       s(
         'text',
         {
-          x: node.x + 10 + cW / 2,
-          y: node.y + 5 + node.height / 2 + cH / 2,
+          x: nx + 10,
+          y: ny + 5 + node.height / 2,
           'font-family': 'monospace',
           'font-size': 16,
           'stroke-width': 1,
           fill: 'currentColor',
         },
-        `📄 ${node.file}`,
+        node.file,
       ),
     );
   }
@@ -178,36 +187,39 @@ function drawEdge(
   fromNode: GenericNode,
   toNode: GenericNode,
   edge: Edge & { fromSide?: string; toSide?: string; color?: string },
+  offsetX: number,
+  offsetY: number,
   options: Required<CanvasRenderOptions>,
 ) {
-  const cW = (svg.properties.renWidth as number) || 1;
-  const cH = (svg.properties.renHeight as number) || 1;
+  let startX = fromNode.x + fromNode.width + offsetX;
+  let startY = fromNode.y + fromNode.height / 2 + offsetY;
+  let endX = toNode.x + toNode.width + offsetX;
+  let endY = toNode.y + toNode.height / 2 + offsetY;
 
-  let startX =
-    fromNode.x +
-    (edge.fromSide === 'top' || edge.fromSide === 'bottom'
-      ? fromNode.width / 2
-      : fromNode.width) +
-    cW / 2;
-  let startY = fromNode.y + fromNode.height / 2 + cH / 2;
-  let endX =
-    toNode.x +
-    (edge.toSide === 'top' || edge.toSide === 'bottom'
-      ? toNode.width / 2
-      : toNode.width) +
-    cW / 2;
-  let endY = toNode.y + toNode.height / 2 + cH / 2;
+  // Adjust start point based on fromSide
+  if (edge.fromSide === 'left') {
+    startX = fromNode.x + offsetX;
+  } else if (edge.fromSide === 'top') {
+    startX = fromNode.x + fromNode.width / 2 + offsetX;
+    startY = fromNode.y + offsetY;
+  } else if (edge.fromSide === 'bottom') {
+    startX = fromNode.x + fromNode.width / 2 + offsetX;
+    startY = fromNode.y + fromNode.height + offsetY;
+  }
+  // right is the default (startX already set)
 
-  if (edge.fromSide === 'left') startX = fromNode.x + cW / 2;
-  else if (edge.fromSide === 'top') startY = fromNode.y + cH / 2;
-  else if (edge.fromSide === 'bottom')
-    startY = fromNode.y + fromNode.height + cH / 2;
-
-  if (edge.toSide === 'right') endX = toNode.x + toNode.width + cW / 2;
-  else if (edge.toSide === 'top') endY = toNode.y + cH / 2;
-  else if (edge.toSide === 'bottom')
-    endY = toNode.y + toNode.height + cH / 2;
-  else if (edge.toSide === 'left') endX = toNode.x + cW / 2;
+  // Adjust end point based on toSide
+  if (edge.toSide === 'left') {
+    endX = toNode.x + offsetX;
+  } else if (edge.toSide === 'right') {
+    endX = toNode.x + toNode.width + offsetX;
+  } else if (edge.toSide === 'top') {
+    endX = toNode.x + toNode.width / 2 + offsetX;
+    endY = toNode.y + offsetY;
+  } else if (edge.toSide === 'bottom') {
+    endX = toNode.x + toNode.width / 2 + offsetX;
+    endY = toNode.y + toNode.height + offsetY;
+  }
 
   const edgeColor = edge.color
     ? (COLOR_MAP[edge.color]?.stroke ?? 'black')
@@ -253,17 +265,17 @@ export function renderCanvas(
   const options = applyDefaults(config);
   const { width, height, offsetX, offsetY } = calculateCanvasSize(jsc);
 
-  const svg = initSvg(width + offsetX, height + offsetY, options);
+  const svg = initSvg(width, height, options);
 
   for (const node of jsc.getNodes()) {
-    drawNode(svg, node as any, options);
+    drawNode(svg, node as any, offsetX, offsetY, options);
   }
 
   for (const edge of jsc.getEdges()) {
     const fromNode = jsc.getNodes().find((n) => n.id === edge.fromNode);
     const toNode = jsc.getNodes().find((n) => n.id === edge.toNode);
     if (fromNode && toNode) {
-      drawEdge(svg, fromNode, toNode, edge as any, options);
+      drawEdge(svg, fromNode, toNode, edge as any, offsetX, offsetY, options);
     }
   }
 
