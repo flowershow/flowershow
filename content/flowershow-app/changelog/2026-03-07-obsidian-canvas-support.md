@@ -3,7 +3,7 @@ title: "Obsidian Canvas support"
 date: 2026-03-07
 description: Flowershow now renders Obsidian Canvas (.canvas) files as SVG diagrams, both as standalone pages and inline embeds in markdown.
 authors:
-  - Rufus Pollock
+  - rufuspollock
 ---
 
 Flowershow now supports [Obsidian Canvas](https://obsidian.md/canvas) files. Canvas files (`.canvas`) are automatically rendered as visual SVG diagrams showing your nodes, connections, and colors -- no configuration needed.
