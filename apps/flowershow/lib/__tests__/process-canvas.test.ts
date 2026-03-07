@@ -101,4 +101,23 @@ describe('processCanvas', () => {
     // Bezier curve command
     expect(html).toContain(' C ');
   });
+
+  it('renders arrowheads when toEnd is "arrow"', async () => {
+    const canvas = JSON.stringify({
+      nodes: [
+        { id: 'a', type: 'text', x: 0, y: 0, width: 100, height: 50, text: 'A' },
+        { id: 'b', type: 'text', x: 200, y: 0, width: 100, height: 50, text: 'B' },
+      ],
+      edges: [
+        { id: 'e1', fromNode: 'a', toNode: 'b', fromSide: 'right', toSide: 'left', toEnd: 'arrow' },
+      ],
+    });
+
+    const element = await processCanvas(canvas);
+    const html = renderToStaticMarkup(element);
+
+    expect(html).toContain('<defs>');
+    expect(html).toContain('<marker');
+    expect(html).toContain('marker-end="url(#arrow-e1)"');
+  });
 });

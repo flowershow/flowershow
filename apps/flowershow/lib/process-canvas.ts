@@ -146,16 +146,41 @@ function buildNodeJsx(
   });
 }
 
+function buildArrowMarkerJsx(id: string, color: string): React.ReactNode {
+  return runtime.jsx(
+    'marker',
+    {
+      id,
+      markerWidth: 10,
+      markerHeight: 7,
+      refX: 9,
+      refY: 3.5,
+      orient: 'auto',
+      markerUnits: 'strokeWidth',
+      children: runtime.jsx('path', {
+        d: 'M0,0 L0,7 L10,3.5 z',
+        fill: color,
+      }),
+    },
+    `marker-${id}`,
+  );
+}
+
+interface EdgeBuildResult {
+  markers: React.ReactNode[];
+  visuals: React.ReactNode[];
+}
+
 function buildEdgeJsx(
   edge: CanvasEdge,
   nodes: CanvasNode[],
   offsetX: number,
   offsetY: number,
   options: Required<CanvasRenderOptions>,
-): React.ReactNode[] {
+): EdgeBuildResult {
   const fromNode = nodes.find((n) => n.id === edge.fromNode);
   const toNode = nodes.find((n) => n.id === edge.toNode);
-  if (!fromNode || !toNode) return [];
+  if (!fromNode || !toNode) return { markers: [], visuals: [] };
 
   const start = getEdgePoint(fromNode, edge.fromSide, offsetX, offsetY);
   const end = getEdgePoint(toNode, edge.toSide, offsetX, offsetY);
@@ -164,23 +189,34 @@ function buildEdgeJsx(
     ? (CANVAS_COLOR_MAP[edge.color]?.border ?? 'currentColor')
     : 'currentColor';
 
-  const elements: React.ReactNode[] = [
-    runtime.jsx(
-      'path',
-      {
-        d: `M ${start.x} ${start.y} C ${start.x} ${end.y}, ${end.x} ${start.y}, ${end.x} ${end.y}`,
-        stroke: edgeColor,
-        strokeWidth: options.lineStrokeWidth,
-        fill: 'none',
-      },
-      `path-${edge.id}`,
-    ),
+  const markers: React.ReactNode[] = [];
+  const pathProps: Record<string, any> = {
+    d: `M ${start.x} ${start.y} C ${start.x} ${end.y}, ${end.x} ${start.y}, ${end.x} ${end.y}`,
+    stroke: edgeColor,
+    strokeWidth: options.lineStrokeWidth,
+    fill: 'none',
+  };
+
+  if (edge.toEnd === 'arrow') {
+    const markerId = `arrow-${edge.id}`;
+    markers.push(buildArrowMarkerJsx(markerId, edgeColor));
+    pathProps.markerEnd = `url(#${markerId})`;
+  }
+
+  if (edge.fromEnd === 'arrow') {
+    const markerId = `arrow-start-${edge.id}`;
+    markers.push(buildArrowMarkerJsx(markerId, edgeColor));
+    pathProps.markerStart = `url(#${markerId})`;
+  }
+
+  const visuals: React.ReactNode[] = [
+    runtime.jsx('path', pathProps, `path-${edge.id}`),
   ];
 
   if (edge.label) {
     const midX = (start.x + end.x) / 2;
     const midY = (start.y + end.y) / 2;
-    elements.push(
+    visuals.push(
       runtime.jsx(
         'text',
         {
@@ -197,7 +233,7 @@ function buildEdgeJsx(
     );
   }
 
-  return elements;
+  return { markers, visuals };
 }
 
 /**
@@ -230,9 +266,20 @@ export async function processCanvas(
     buildNodeJsx(node, offsetX, offsetY, options),
   );
 
-  const edgeElements = canvas.edges.flatMap((edge) =>
+  const edgeResults = canvas.edges.map((edge) =>
     buildEdgeJsx(edge, canvas.nodes, offsetX, offsetY, options),
   );
+
+  const allMarkers = edgeResults.flatMap((r) => r.markers);
+  const allVisuals = edgeResults.flatMap((r) => r.visuals);
+
+  const svgChildren: React.ReactNode[] = [];
+  if (allMarkers.length > 0) {
+    svgChildren.push(
+      runtime.jsx('defs', { key: 'defs', children: allMarkers }),
+    );
+  }
+  svgChildren.push(...allVisuals);
 
   const svgOverlay = runtime.jsx('svg', {
     key: 'edges',
@@ -245,7 +292,7 @@ export async function processCanvas(
       pointerEvents: 'none' as const,
     },
     xmlns: 'http://www.w3.org/2000/svg',
-    children: edgeElements,
+    children: svgChildren,
   });
 
   return runtime.jsx('div', {

@@ -270,6 +270,53 @@ describe('renderCanvas', () => {
     expect(style).toContain('height:');
     expect(style).toContain('px');
   });
+
+  it('renders arrowheads when toEnd is "arrow"', () => {
+    const canvas = {
+      nodes: [
+        { id: 'a', type: 'text', x: 0, y: 0, width: 100, height: 50, text: 'A' },
+        { id: 'b', type: 'text', x: 200, y: 0, width: 100, height: 50, text: 'B' },
+      ],
+      edges: [
+        {
+          id: 'e1',
+          fromNode: 'a',
+          toNode: 'b',
+          fromSide: 'right',
+          toSide: 'left',
+          toEnd: 'arrow',
+        },
+      ],
+    };
+
+    const result = renderCanvas(canvas);
+
+    // Should have a marker definition inside defs
+    const defs = findElements(result, 'defs');
+    expect(defs).toHaveLength(1);
+    const markers = findElements(defs[0], 'marker');
+    expect(markers).toHaveLength(1);
+    expect(markers[0].properties.id).toBe('arrow-e1');
+
+    // Path should reference the marker (hastscript normalizes marker-end to markerEnd)
+    const paths = findElements(result, 'path').filter((p) => p.properties.d?.toString().includes('M'));
+    const edgePath = paths.find((p) => p.properties.markerEnd || p.properties['marker-end']);
+    expect(edgePath).toBeDefined();
+    const markerEnd = edgePath!.properties.markerEnd ?? edgePath!.properties['marker-end'];
+    expect(markerEnd).toBe('url(#arrow-e1)');
+  });
+
+  it('does not render arrowheads when toEnd is not set', () => {
+    const result = renderCanvas(SIMPLE_CANVAS);
+
+    const defs = findElements(result, 'defs');
+    expect(defs).toHaveLength(0);
+
+    const paths = findElements(result, 'path');
+    for (const path of paths) {
+      expect(path.properties['marker-end']).toBeUndefined();
+    }
+  });
 });
 
 // Helper to recursively find all elements with a given tag name

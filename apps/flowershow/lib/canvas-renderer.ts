@@ -38,6 +38,8 @@ export interface CanvasEdge {
   toNode: string;
   fromSide?: string;
   toSide?: string;
+  fromEnd?: string;
+  toEnd?: string;
   label?: string;
   color?: string;
 }
@@ -214,6 +216,22 @@ function buildNodeElement(
   );
 }
 
+function buildArrowMarker(id: string, color: string): Element {
+  return s(
+    'marker',
+    {
+      id,
+      markerWidth: 10,
+      markerHeight: 7,
+      refX: 9,
+      refY: 3.5,
+      orient: 'auto',
+      markerUnits: 'strokeWidth',
+    },
+    s('path', { d: 'M0,0 L0,7 L10,3.5 z', fill: color }),
+  );
+}
+
 function buildEdgePath(
   edge: CanvasEdge,
   nodes: CanvasNode[],
@@ -232,14 +250,28 @@ function buildEdgePath(
     ? (COLOR_MAP[edge.color]?.border ?? 'currentColor')
     : 'currentColor';
 
-  const elements: Element[] = [
-    s('path', {
-      d: `M ${start.x} ${start.y} C ${start.x} ${end.y}, ${end.x} ${start.y}, ${end.x} ${end.y}`,
-      stroke: edgeColor,
-      'stroke-width': options.lineStrokeWidth,
-      fill: 'none',
-    }),
-  ];
+  const pathProps: Record<string, any> = {
+    d: `M ${start.x} ${start.y} C ${start.x} ${end.y}, ${end.x} ${start.y}, ${end.x} ${end.y}`,
+    stroke: edgeColor,
+    'stroke-width': options.lineStrokeWidth,
+    fill: 'none',
+  };
+
+  const elements: Element[] = [];
+
+  if (edge.toEnd === 'arrow') {
+    const markerId = `arrow-${edge.id}`;
+    elements.push(buildArrowMarker(markerId, edgeColor));
+    pathProps['marker-end'] = `url(#${markerId})`;
+  }
+
+  if (edge.fromEnd === 'arrow') {
+    const markerId = `arrow-start-${edge.id}`;
+    elements.push(buildArrowMarker(markerId, edgeColor));
+    pathProps['marker-start'] = `url(#${markerId})`;
+  }
+
+  elements.push(s('path', pathProps));
 
   if (edge.label) {
     const midX = (start.x + end.x) / 2;
@@ -290,6 +322,20 @@ export function renderCanvas(
     buildEdgePath(edge, canvas.nodes, offsetX, offsetY, options),
   );
 
+  // Separate marker defs from paths/text
+  const markers = edgeElements.filter(
+    (el) => el.type === 'element' && el.tagName === 'marker',
+  );
+  const paths = edgeElements.filter(
+    (el) => !(el.type === 'element' && el.tagName === 'marker'),
+  );
+
+  const svgChildren: Element[] = [];
+  if (markers.length > 0) {
+    svgChildren.push(s('defs', markers));
+  }
+  svgChildren.push(...paths);
+
   const svgOverlay = s(
     'svg',
     {
@@ -297,7 +343,7 @@ export function renderCanvas(
         'position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;',
       xmlns: 'http://www.w3.org/2000/svg',
     },
-    edgeElements,
+    svgChildren,
   );
 
   return h(
