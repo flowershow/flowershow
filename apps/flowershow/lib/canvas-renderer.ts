@@ -86,11 +86,14 @@ const DEFAULT_COLOR = {
   border: 'rgba(var(--canvas-node-border, 180, 180, 180), 1)',
 };
 
+export const CANVAS_COLOR_MAP = COLOR_MAP;
+export const CANVAS_DEFAULT_COLOR = DEFAULT_COLOR;
+
 const PADDING = 20;
 
 // ---- Layout calculation ----
 
-function calculateLayout(nodes: CanvasNode[]) {
+export function calculateLayout(nodes: CanvasNode[]) {
   if (nodes.length === 0) {
     return { width: 0, height: 0, offsetX: 0, offsetY: 0 };
   }
@@ -117,7 +120,7 @@ function calculateLayout(nodes: CanvasNode[]) {
 
 // ---- Edge coordinate helpers ----
 
-function getEdgePoint(
+export function getEdgePoint(
   node: CanvasNode,
   side: string | undefined,
   offsetX: number,
