@@ -13,17 +13,18 @@ const buttonStyles: React.CSSProperties = {
   zIndex: 100,
   display: 'flex',
   alignItems: 'center',
-  backgroundColor: 'white',
+  backgroundColor: 'var(--color-background)',
   padding: '0.5rem 0.75rem',
   borderRadius: 40,
-  boxShadow: '0 8px 20px 0 rgba(0,0,0,.08)',
+  boxShadow:
+    'light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.08)) 0px 8px 20px 0px',
 };
 
 const spanStyles: React.CSSProperties = {
   fontSize: '0.875rem',
   fontWeight: 500,
   fontFamily: 'var(--font-body)',
-  color: '#18181B',
+  color: 'var(--color-foreground)',
   letterSpacing: '-0.025em',
 };
 
@@ -45,10 +46,14 @@ export default function BuiltWithFloatingButton() {
       s.setProperty('z-index', '100', 'important');
       s.setProperty('display', 'flex', 'important');
       s.setProperty('align-items', 'center', 'important');
-      s.setProperty('background-color', 'white', 'important');
+      s.setProperty('background-color', 'var(--color-background)', 'important');
       s.setProperty('padding', '0.5rem 0.75rem', 'important');
       s.setProperty('border-radius', '40px', 'important');
-      s.setProperty('box-shadow', '0 8px 20px 0 rgba(0,0,0,.08)', 'important');
+      s.setProperty(
+        'box-shadow',
+        'light-dark(rgba(0, 0, 0, 0.08), rgba(255, 255, 255, 0.08)) 0px 8px 20px 0px',
+        'important',
+      );
       const spans = btn.getElementsByTagName('span');
       for (const spanEl of spans) {
         spanEl.style.setProperty(
@@ -58,7 +63,7 @@ export default function BuiltWithFloatingButton() {
         );
         spanEl.style.setProperty('font-size', '0.875rem', 'important');
         spanEl.style.setProperty('font-weight', '500', 'important');
-        spanEl.style.setProperty('color', '#18181B', 'important');
+        spanEl.style.setProperty('color', 'var(--color-foreground)', 'important');
         spanEl.style.setProperty('letter-spacing', '-0.025em', 'important');
       }
       const logo = btn.getElementsByTagName('img').item(0)!;
