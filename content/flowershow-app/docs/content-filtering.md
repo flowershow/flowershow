@@ -73,3 +73,28 @@ This configuration will:
 1. Only publish files from the `/blog` directory and `README.md`
 2. Exclude everything in `/blog/_archive` (since exclude rules take precedence)
 3. Not publish any other files or directories
+
+## Hiding content from sidebar and search
+
+Use `contentHide` to keep pages published and accessible by URL, but hide them from the [[sidebar|sidebar navigation]] and search results. This is useful for content like author profiles, reference pages, or other pages that shouldn't clutter the sidebar or search.
+
+```json
+{
+  "contentHide": [
+    "/docs/people",
+    "/docs/internal"
+  ]
+}
+```
+
+Unlike `contentExclude`, hidden pages are still synced, published, and can be linked to — they're just not discoverable through the sidebar or search.
+
+### `contentExclude` vs `contentHide`
+
+| | `contentExclude` | `contentHide` |
+|---|---|---|
+| **Published** | No | Yes |
+| **Accessible by URL** | No | Yes |
+| **In sidebar** | No | No |
+| **In search** | No | No |
+| **Can be linked to** | No | Yes |

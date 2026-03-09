@@ -266,16 +266,26 @@ function SearchResults({
   const hasQuery = query.length > 0;
   const site = useSite();
 
+  const contentHide = site?.contentHide ?? [];
+
   const transformItems = useCallback(
     (items) =>
-      items.map((item) => ({
-        ...item,
-        path: resolveFilePathToUrlPath({
-          target: item.path,
-          sitePrefix: site?.prefix,
-        }),
-      })),
-    [site],
+      items
+        .filter((item) => {
+          if (contentHide.length === 0) return true;
+          const path = `/${item.path.replace(/^\//, '')}`;
+          return !contentHide.some(
+            (h) => path === h || path.startsWith(h.endsWith('/') ? h : `${h}/`),
+          );
+        })
+        .map((item) => ({
+          ...item,
+          path: resolveFilePathToUrlPath({
+            target: item.path,
+            sitePrefix: site?.prefix,
+          }),
+        })),
+    [site, contentHide],
   );
 
   return (

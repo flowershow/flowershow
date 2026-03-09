@@ -78,6 +78,7 @@ Here is an overview of all the site-wide configuration options that you can set 
   "showToc": false,
   "contentInclude": ["/blog", "README.md"],
   "contentExclude": ["/blog/_archive"],
+  "contentHide": ["/people"],
   "theme": {
     "theme": "superstack",
     "defaultMode": "light",

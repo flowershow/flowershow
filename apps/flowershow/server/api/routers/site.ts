@@ -958,6 +958,7 @@ export const siteRouter = createTRPCRouter({
         siteId: z.string().min(1),
         orderBy: z.enum(['path', 'title']).default('title'),
         paths: z.array(z.string()).optional(),
+        contentHide: z.array(z.string()).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -1000,14 +1001,27 @@ export const siteRouter = createTRPCRouter({
 
           const paths = input.paths ?? [];
           const prefixes = paths.map((p) => p.replace(/^\//, ''));
-          const filteredBlobs =
-            prefixes && prefixes.length > 0
-              ? blobs.filter((b) => {
-                  return prefixes.some(
-                    (p) => b.path === p || b.path.startsWith(`${p}/`),
-                  );
-                })
-              : blobs;
+          const hidePrefixes = (input.contentHide ?? []).map((p) =>
+            p.replace(/^\//, ''),
+          );
+          const filteredBlobs = blobs.filter((b) => {
+            // Include filter: if paths are configured, only include matching blobs
+            if (
+              prefixes.length > 0 &&
+              !prefixes.some((p) => b.path === p || b.path.startsWith(`${p}/`))
+            ) {
+              return false;
+            }
+            // Hide filter: remove blobs matching any contentHide prefix
+            if (
+              hidePrefixes.some(
+                (p) => b.path === p || b.path.startsWith(`${p}/`),
+              )
+            ) {
+              return false;
+            }
+            return true;
+          });
 
           const tree = buildSiteTree(filteredBlobs, {
             orderBy: input.orderBy,

@@ -53,6 +53,18 @@ In this example, the sidebar will show on `/docs`, `/docs/getting-started`, `/gu
 
 If `sidebar.paths` is not set, the sidebar shows on all pages (default behavior).
 
+## Hiding paths from the sidebar
+
+You can hide specific subfolders from the sidebar tree using the top-level `contentHide` option. Hidden pages are still accessible by URL — they just won't appear in the sidebar navigation or search results.
+
+```json
+{
+  "contentHide": ["/docs/people"]
+}
+```
+
+See [[content-filtering|Content Filtering]] for more details on `contentHide`.
+
 ## Disabling the sidebar on a page
 
 You can hide the sidebar on a specific page (e.g. the landing page) by adding this to the frontmatter:

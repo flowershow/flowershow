@@ -1,12 +1,28 @@
 {
   "title": "E2E Test Site",
   "description": "Test site for E2E renderer tests",
+  "nav": {
+    "title": "E2E Test Site",
+    "links": [
+      {
+        "href": "/index",
+        "name": "Home"
+      },
+      {
+        "href": "/about",
+        "name": "About"
+      }
+    ]
+  },
   "showSidebar": true,
   "sidebar": {
     "paths": [
       "/docs"
     ]
   },
+  "contentHide": [
+    "/docs/people"
+  ],
   "showToc": true,
   "footer": {
     "navigation": [

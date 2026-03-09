@@ -72,6 +72,7 @@ export interface SiteConfig {
   umami?: string | { websiteId: string; src?: string };
   contentInclude?: string[];
   contentExclude?: string[];
+  contentHide?: string[];
   showSidebar?: boolean;
   sidebar?: {
     orderBy?: 'title' | 'path';

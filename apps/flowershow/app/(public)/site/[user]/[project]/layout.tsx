@@ -233,6 +233,9 @@ export default async function PublicLayout(props: {
                 user: params.user,
                 project: params.project,
                 prefix: sitePrefix,
+                contentHide: siteConfig?.contentHide?.map((p) =>
+                  p.startsWith('/') ? p : `/${p}`,
+                ),
               }}
             >
               {/* TODO hacky, temp; move data-plan to root level layout (create separate one for user sites)

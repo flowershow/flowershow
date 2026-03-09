@@ -370,6 +370,7 @@ export default async function SitePage(props: {
         siteId: site.id,
         orderBy: siteConfig?.sidebar?.orderBy,
         paths: siteConfig?.sidebar?.paths,
+        contentHide: siteConfig?.contentHide,
       })
       .catch(() => []);
   }

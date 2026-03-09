@@ -1,7 +1,12 @@
 'use client';
 import { createContext, useContext } from 'react';
 
-type SiteCtx = { user: string; project: string; prefix: string } | null;
+type SiteCtx = {
+  user: string;
+  project: string;
+  prefix: string;
+  contentHide?: string[];
+} | null;
 
 const Ctx = createContext<SiteCtx>(null);
 
