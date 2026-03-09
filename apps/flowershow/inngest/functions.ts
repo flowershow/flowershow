@@ -1,7 +1,8 @@
 import { Prisma } from '@prisma/client';
 import { revalidateTag } from 'next/cache';
 import { SiteConfig } from '@/components/types';
-import { deleteFile, deleteProject, uploadFile } from '@/lib/content-store';
+import { deleteBlobs } from '@/lib/blob-cleanup';
+import { deleteProject, uploadFile } from '@/lib/content-store';
 import {
   fetchGitHubFileRaw,
   fetchGitHubRepoTree,
@@ -15,7 +16,6 @@ import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import {
   createSiteCollection,
   deleteSiteCollection,
-  deleteSiteDocument,
   siteCollectionExists,
 } from '@/lib/typesense';
 import prisma from '@/server/db';
@@ -307,25 +307,7 @@ export const syncSite = inngest.createFunction(
     await Promise.all(
       fileBatchesToDelete.map((batch, index) => {
         return step.run(`delete-files-batch-${index}`, async () => {
-          const deletedFiles = await Promise.all(
-            batch.map(async (blob) => {
-              await deleteFile({
-                projectId: siteId,
-                path: blob.path,
-              });
-
-              await deleteSiteDocument(siteId, blob.id);
-
-              await prisma.blob.delete({
-                where: {
-                  id: blob.id,
-                },
-              });
-
-              return blob.path;
-            }),
-          );
-          return deletedFiles;
+          return deleteBlobs(siteId, batch);
         });
       }),
     );

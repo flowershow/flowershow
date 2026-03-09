@@ -9,8 +9,8 @@ import { Blob } from '@prisma/client';
 import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import { getClientInfo, validateAccessToken } from '@/lib/cli-auth';
+import { deleteBlobs } from '@/lib/blob-cleanup';
 import {
-  deleteFile,
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
@@ -350,44 +350,11 @@ export async function DELETE(
       }
     }
 
-    // Delete files from R2 and database
+    // Delete files from R2, Typesense, and database
     if (existingBlobs.length > 0) {
       try {
-        // Delete from R2 storage
-        await Promise.all(
-          existingBlobs.map(async (blob) => {
-            try {
-              await deleteFile({
-                projectId: siteId,
-                path: blob.path,
-              });
-            } catch (error) {
-              const posthog = PostHogClient();
-              const { client_type, client_version } = getClientInfo(request);
-              posthog.captureException(error, 'system', {
-                route: 'DELETE /api/sites/id/[siteId]/files',
-                siteId,
-                filePath: blob.path,
-                operation: 'delete_from_r2',
-                client_type,
-                client_version,
-              });
-              await posthog.shutdown();
-              // Continue with other deletions even if one fails
-            }
-          }),
-        );
-
-        // Delete from database
-        await prisma.blob.deleteMany({
-          where: {
-            id: {
-              in: existingBlobs.map((b) => b.id),
-            },
-          },
-        });
+        await deleteBlobs(siteId, existingBlobs);
       } finally {
-        // Always invalidate cache, even on partial failures
         revalidateTag(siteId);
       }
     }

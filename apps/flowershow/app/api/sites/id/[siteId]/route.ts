@@ -10,6 +10,7 @@ import {
 } from '@/lib/cli-auth';
 import { deleteProject } from '@/lib/content-store';
 import PostHogClient from '@/lib/server-posthog';
+import { deleteSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
 /**
@@ -203,6 +204,14 @@ export async function DELETE(
       });
       await posthog.shutdown();
       // Continue with database deletion even if storage deletion fails
+    }
+
+    // Delete Typesense search collection
+    try {
+      await deleteSiteCollection(siteId);
+    } catch (typesenseError) {
+      console.error('Error deleting Typesense collection:', typesenseError);
+      // Continue with database deletion even if Typesense deletion fails
     }
 
     // Delete from database (cascades to blobs)

@@ -6,8 +6,8 @@ import {
   getClientInfo,
   validateAccessToken,
 } from '@/lib/cli-auth';
+import { deleteBlobs } from '@/lib/blob-cleanup';
 import {
-  deleteFile,
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
@@ -226,56 +226,25 @@ export async function POST(
       }
     }
 
-    // Delete files from R2 and database
-    const deletedPaths: string[] = [];
+    // Delete files from R2, Typesense, and database
+    let deletedPaths: string[] = [];
     if (toDelete.length > 0 && !dryRun) {
       try {
-        // Delete from R2 storage
-        await Promise.all(
-          toDelete.map(async (file) => {
-            try {
-              await deleteFile({
-                projectId: siteId,
-                path: file.path,
-              });
-              deletedPaths.push(file.path);
-            } catch (error) {
-              const posthog = PostHogClient();
-              const { client_type, client_version } = getClientInfo(request);
-              posthog.captureException(error, 'system', {
-                route: 'POST /api/sites/id/[siteId]/sync',
-                siteId,
-                filePath: file.path,
-                operation: 'delete_from_r2',
-                client_type,
-                client_version,
-              });
-              await posthog.shutdown();
-              // Continue with other deletions even if one fails
-            }
-          }),
-        );
+        deletedPaths = await deleteBlobs(siteId, toDelete);
 
-        // Delete from database
-        await prisma.blob.deleteMany({
-          where: {
-            id: {
-              in: toDelete.map((f) => f.id),
-            },
+        log(
+          'Delete files from R2, Typesense, and database',
+          SeverityNumber.INFO,
+          {
+            files_to_delete: toDelete.length,
+            files_deleted: deletedPaths.length,
           },
-        });
-
-        log('Delete files from R2 and database', SeverityNumber.INFO, {
-          files_to_delete: toDelete.length,
-          files_deleted: deletedPaths.length,
-        });
+        );
       } finally {
-        // Invalidate cache after deletions (even on partial failures)
         revalidateTag(siteId);
       }
     } else if (toDelete.length > 0 && dryRun) {
-      // In dry-run mode, just list what would be deleted
-      deletedPaths.push(...toDelete.map((f) => f.path));
+      deletedPaths = toDelete.map((f) => f.path);
     }
 
     // Helper function to generate presigned URLs for a list of files

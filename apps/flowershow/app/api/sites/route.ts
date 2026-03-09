@@ -10,7 +10,7 @@ import {
   validateAccessToken,
 } from '@/lib/cli-auth';
 import PostHogClient from '@/lib/server-posthog';
-import { ensureSiteCollection } from '@/lib/typesense';
+import { deleteSiteCollection, ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
 /**
@@ -100,10 +100,11 @@ export async function POST(request: NextRequest) {
     let site;
 
     if (existingSite && overwrite) {
-      // Delete existing blobs
+      // Delete existing blobs and Typesense collection
       await prisma.blob.deleteMany({
         where: { siteId: existingSite.id },
       });
+      await deleteSiteCollection(existingSite.id);
 
       // Update existing site
       site = await prisma.site.update({
