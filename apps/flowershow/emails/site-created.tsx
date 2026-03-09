@@ -1,11 +1,12 @@
 import { Button, Link, Text } from '@react-email/components';
 import { EmailLayout } from './components/email-layout';
+import { heading, paragraph, button, link } from './styles';
 
 interface SiteCreatedEmailProps {
   userName: string;
   siteUrl: string;
   projectName: string;
-  dashboardUrl: string;
+  siteDashboardUrl: string;
   docsUrl: string;
 }
 
@@ -13,65 +14,42 @@ export function SiteCreatedEmail({
   userName = 'there',
   siteUrl = 'https://flowershow.app',
   projectName = 'my-site',
-  dashboardUrl = 'https://my.flowershow.app',
+  siteDashboardUrl = 'https://cloud.flowershow.app',
   docsUrl = 'https://flowershow.app/docs',
 }: SiteCreatedEmailProps) {
   return (
     <EmailLayout previewText={`Your site "${projectName}" is live!`}>
-      <Text style={headingStyle}>Your site is live!</Text>
-      <Text style={paragraphStyle}>Hi {userName},</Text>
-      <Text style={paragraphStyle}>
+      <Text style={heading}>Your site is live 🎉</Text>
+      <Text style={paragraph}>Hi {userName},</Text>
+      <Text style={paragraph}>
         Congrats! Your site <strong>{projectName}</strong> is now live and ready
-        to share with the world.
+        to share with the world!
       </Text>
-      <Button style={buttonStyle} href={siteUrl}>
+      <Button style={button} href={siteUrl}>
         View your site
       </Button>
-      <Text style={paragraphStyle}>
-        <Link style={linkStyle} href={dashboardUrl}>
+      <Text style={paragraph}>
+        <Link style={darkLink} href={siteDashboardUrl}>
           Site settings
         </Link>
         {' · '}
-        <Link style={linkStyle} href={docsUrl}>
+        <Link style={darkLink} href={docsUrl}>
           Documentation
         </Link>
       </Text>
-      <Text style={paragraphStyle}>
-        If you have any questions, just reply to this email. We&apos;re happy to
-        help.
+      <Text style={paragraph}>
+        If you run into anything or have questions, join our Discord server,
+        post in our subreddit or submit an issue on GitHub. We&apos;re here to
+        help!
       </Text>
+      <Text style={paragraph}>— The Flowershow team</Text>
     </EmailLayout>
   );
 }
 
 export default SiteCreatedEmail;
 
-const headingStyle = {
-  fontSize: '24px',
-  fontWeight: 'bold' as const,
-  color: '#1a1a1a',
-  margin: '0 0 16px',
-};
-
-const paragraphStyle = {
-  fontSize: '16px',
-  lineHeight: '26px',
-  color: '#484848',
-};
-
-const buttonStyle = {
-  backgroundColor: '#000000',
-  borderRadius: '6px',
-  color: '#fff',
-  fontSize: '16px',
-  textDecoration: 'none',
-  textAlign: 'center' as const,
-  display: 'block',
-  padding: '12px 24px',
-  margin: '24px 0',
-};
-
-const linkStyle = {
+const darkLink = {
+  ...link,
   color: '#000000',
-  textDecoration: 'underline',
 };

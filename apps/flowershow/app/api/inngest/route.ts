@@ -4,7 +4,6 @@ import { cleanupExpiredSites, deleteSite, syncSite } from '@/inngest/functions';
 import {
   sendWelcomeEmail,
   sendPremiumUpgradeEmail,
-  sendDiscordAccessEmail,
   sendSiteCreatedEmail,
 } from '@/inngest/functions/email';
 
@@ -16,7 +15,6 @@ export const { GET, POST, PUT } = serve({
     cleanupExpiredSites,
     sendWelcomeEmail,
     sendPremiumUpgradeEmail,
-    sendDiscordAccessEmail,
     sendSiteCreatedEmail,
   ],
 });

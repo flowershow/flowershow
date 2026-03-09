@@ -39,14 +39,6 @@ interface EmailPremiumUpgrade {
   };
 }
 
-interface EmailDiscordAccess {
-  data: {
-    userId: string;
-    email: string;
-    name: string | null;
-  };
-}
-
 interface EmailSiteCreated {
   data: {
     userId: string;
@@ -64,7 +56,7 @@ type Events = {
   'site/delete': SiteDelete;
   'email/welcome.send': EmailWelcome;
   'email/premium-upgrade.send': EmailPremiumUpgrade;
-  'email/discord-access.send': EmailDiscordAccess;
+
   'email/site-created.send': EmailSiteCreated;
 };
 

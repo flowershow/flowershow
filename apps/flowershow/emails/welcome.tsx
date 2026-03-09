@@ -1,58 +1,70 @@
-import { Button, Text } from '@react-email/components';
+import { Link, Text } from '@react-email/components';
 import { EmailLayout } from './components/email-layout';
+import { heading, subheading, paragraph, list, link } from './styles';
 
 interface WelcomeEmailProps {
   userName: string;
-  dashboardUrl: string;
+  createSiteUrl: string;
 }
 
 export function WelcomeEmail({
   userName = 'there',
-  dashboardUrl = 'https://my.flowershow.app',
+  createSiteUrl = 'https://cloud.flowershow.app/',
 }: WelcomeEmailProps) {
   return (
-    <EmailLayout previewText="Publish your first site in minutes">
-      <Text style={headingStyle}>Welcome to Flowershow</Text>
-      <Text style={paragraphStyle}>Hi {userName},</Text>
-      <Text style={paragraphStyle}>
-        Thanks for signing up! Flowershow turns your Markdown files into
-        beautiful websites — connect a GitHub repo and your site is live in
-        seconds.
+    <EmailLayout previewText="Turn your Markdown into a live site in minutes">
+      <Text style={heading}>Welcome to Flowershow</Text>
+      <Text style={paragraph}>Hi {userName} 👋</Text>
+      <Text style={paragraph}>
+        Flowershow helps you turn your Markdown content into a live site in
+        minutes.
       </Text>
-      <Button style={buttonStyle} href={dashboardUrl}>
+      <Text style={subheading}>To get started, create your first site:</Text>
+      {/* <Button style={button} href={createSiteUrl}>
         Create your first site
-      </Button>
-      <Text style={paragraphStyle}>
-        If you have any questions, just reply to this email. We&apos;re happy to
-        help.
+      </Button> */}
+      <Text style={list}>
+        •{' '}
+        <Link
+          style={link}
+          href="https://flowershow.app/blog/how-to-publish-repository-with-markdown"
+        >
+          From a GitHub repository
+        </Link>
+        : Publish Markdown in a GitHub repository
       </Text>
+      <Text style={list}>
+        •{' '}
+        <Link
+          style={link}
+          href="https://flowershow.app/blog/how-to-publish-vault-quickly-and-easily"
+        >
+          From an Obsidian vault
+        </Link>
+        : Publish an Obsidian vault
+      </Text>
+      <Text style={list}>
+        •{' '}
+        <Link style={link} href="https://flowershow.app/docs/cli">
+          From the command line
+        </Link>
+        : Publish from the command line
+      </Text>
+      <Text style={list}>
+        •{' '}
+        <Link style={link} href="https://flowershow.app/dragndrop">
+          Paste or Drag and Drop
+        </Link>
+        : Publish by drag and drop or pasting Markdown
+      </Text>
+      <Text style={paragraph}>
+        If you run into anything or have questions, join our Discord server,
+        post in our subreddit or submit an issue on GitHub. We&apos;re here to
+        help!
+      </Text>
+      <Text style={paragraph}>— The Flowershow team</Text>
     </EmailLayout>
   );
 }
 
 export default WelcomeEmail;
-
-const headingStyle = {
-  fontSize: '24px',
-  fontWeight: 'bold' as const,
-  color: '#1a1a1a',
-  margin: '0 0 16px',
-};
-
-const paragraphStyle = {
-  fontSize: '16px',
-  lineHeight: '26px',
-  color: '#484848',
-};
-
-const buttonStyle = {
-  backgroundColor: '#000000',
-  borderRadius: '6px',
-  color: '#fff',
-  fontSize: '16px',
-  textDecoration: 'none',
-  textAlign: 'center' as const,
-  display: 'block',
-  padding: '12px 24px',
-  margin: '24px 0',
-};

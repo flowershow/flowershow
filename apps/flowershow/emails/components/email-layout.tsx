@@ -5,6 +5,7 @@ import {
   Hr,
   Html,
   Img,
+  Link,
   Preview,
   Section,
   Text,
@@ -25,15 +26,34 @@ export function EmailLayout({ previewText, children }: EmailLayoutProps) {
         <Container style={containerStyle}>
           <Section style={headerStyle}>
             <Img
-              src="https://flowershow.app/images/logo.svg"
-              width="140"
+              src="https://r2-assets.flowershow.app/logo.png"
+              width="32"
               height="32"
               alt="Flowershow"
             />
           </Section>
           <Section style={contentStyle}>{children}</Section>
           <Hr style={hrStyle} />
-          <Text style={footerStyle}>Flowershow · support@flowershow.app</Text>
+          <Section style={socialLinksStyle}>
+            <Link href="https://discord.gg/JChzM5VdFn" style={socialLinkStyle}>
+              Discord
+            </Link>
+            <Text style={socialSeparatorStyle}>·</Text>
+            <Link
+              href="https://github.com/flowershow/flowershow"
+              style={socialLinkStyle}
+            >
+              GitHub
+            </Link>
+            <Text style={socialSeparatorStyle}>·</Text>
+            <Link
+              href="https://www.reddit.com/r/flowershow/"
+              style={socialLinkStyle}
+            >
+              Reddit
+            </Link>
+          </Section>
+          {/* <Text style={footerStyle}>Flowershow · support@flowershow.app</Text> */}
         </Container>
       </Body>
     </Html>
@@ -59,12 +79,30 @@ const headerStyle = {
 };
 
 const contentStyle = {
-  padding: '8px 40px 32px',
+  padding: '18px 40px 32px',
 };
 
 const hrStyle = {
   borderColor: '#e6ebf1',
   margin: '0 40px',
+};
+
+const socialLinksStyle = {
+  padding: '12px 40px 0',
+  textAlign: 'center' as const,
+};
+
+const socialLinkStyle = {
+  color: '#8898aa',
+  fontSize: '12px',
+  textDecoration: 'underline',
+};
+
+const socialSeparatorStyle = {
+  color: '#8898aa',
+  fontSize: '12px',
+  display: 'inline' as const,
+  margin: '0 4px',
 };
 
 const footerStyle = {
