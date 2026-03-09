@@ -152,7 +152,7 @@ export default async function PublicLayout(props: {
   const showSearch =
     isFeatureEnabled(Feature.Search, site) && site.enableSearch;
   const cta = siteConfig?.nav?.cta;
-  const showNav = !!siteConfig?.nav;
+  const showNav = !!siteConfig?.nav || site.enableSearch || siteConfig?.social;
 
   return (
     <html
