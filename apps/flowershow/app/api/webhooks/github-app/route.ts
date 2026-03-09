@@ -3,7 +3,10 @@ import { createHmac, timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
-import { clearInstallationTokenCache } from '@/lib/github';
+import {
+  clearInstallationTokenCache,
+  getInstallationToken,
+} from '@/lib/github';
 import { log, SeverityNumber } from '@/lib/otel-logger';
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
@@ -17,6 +20,7 @@ interface WebhookPayload {
       login: string;
       type: 'User' | 'Organization';
     };
+    repository_selection: 'all' | 'selected';
     suspended_at: string | null;
     suspended_by: string | null;
   };
@@ -54,6 +58,11 @@ interface WebhookPayload {
     repository?: {
       name?: { from: string };
     };
+  };
+  // Sender (GitHub user who triggered the event)
+  sender?: {
+    id: number;
+    login: string;
   };
 }
 
@@ -156,10 +165,133 @@ async function handleInstallationEvent(data: WebhookPayload) {
   const installationId = BigInt(installation.id);
 
   switch (action) {
-    case 'created':
-      // Installation is created - typically handled by callback, but handle here too
+    case 'created': {
+      // Installation created — handle here as a fallback for when the
+      // /github-app/callback callback doesn't fire (e.g. popup blocked, browser closed, etc.)
       console.log(`Installation created: ${installation.id}`);
+
+      if (!data.sender) {
+        console.error('Installation created event missing sender data');
+        break;
+      }
+
+      // Look up the Flowershow user by their GitHub account ID
+      const account = await prisma.account.findFirst({
+        where: {
+          provider: 'github',
+          providerAccountId: String(data.sender.id),
+        },
+        select: { userId: true },
+      });
+
+      if (!account) {
+        console.log(
+          `No Flowershow user found for GitHub sender ${data.sender.login} (${data.sender.id}) — will be handled by callback`,
+        );
+        break;
+      }
+
+      const userId = account.userId;
+
+      // Upsert the installation record (callback may have already created it)
+      const dbInstallation = await prisma.gitHubInstallation.upsert({
+        where: {
+          installationId_userId: {
+            installationId,
+            userId,
+          },
+        },
+        update: {
+          accountType: installation.account.type,
+          accountLogin: installation.account.login,
+          accountId: BigInt(installation.account.id),
+          suspendedAt: installation.suspended_at
+            ? new Date(installation.suspended_at)
+            : null,
+          suspendedBy: installation.suspended_by,
+          updatedAt: new Date(),
+        },
+        create: {
+          installationId,
+          accountType: installation.account.type,
+          accountLogin: installation.account.login,
+          accountId: BigInt(installation.account.id),
+          userId,
+          suspendedAt: installation.suspended_at
+            ? new Date(installation.suspended_at)
+            : null,
+          suspendedBy: installation.suspended_by,
+        },
+      });
+
+      // Sync repositories — the webhook payload includes `repositories` for
+      // "selected" installs, but for "all repositories" it may be empty.
+      // In that case, fetch the full list via the API (same as the callback does).
+      let repos = data.repositories ?? [];
+
+      if (repos.length === 0) {
+        try {
+          const token = await getInstallationToken(dbInstallation.id);
+          let page = 1;
+          let hasMore = true;
+
+          while (hasMore) {
+            const res = await fetch(
+              `https://api.github.com/installation/repositories?per_page=100&page=${page}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  Accept: 'application/vnd.github+json',
+                  'X-GitHub-Api-Version': '2022-11-28',
+                },
+              },
+            );
+
+            if (!res.ok) {
+              console.error(
+                `Failed to fetch repositories for installation ${installation.id}: ${res.statusText}`,
+              );
+              break;
+            }
+
+            const body = (await res.json()) as {
+              repositories: Array<{
+                id: number;
+                name: string;
+                full_name: string;
+                private: boolean;
+              }>;
+            };
+            repos = [...repos, ...body.repositories];
+            hasMore = body.repositories.length === 100;
+            page++;
+          }
+        } catch (err) {
+          console.error(
+            `Error fetching repositories for installation ${installation.id}:`,
+            err,
+          );
+        }
+      }
+
+      if (repos.length > 0) {
+        await prisma.gitHubInstallationRepository.createMany({
+          data: repos.map((repo) => ({
+            installationId: dbInstallation.id,
+            repositoryId: BigInt(repo.id),
+            repositoryName: repo.name,
+            repositoryFullName: repo.full_name,
+            isPrivate: repo.private,
+          })),
+          skipDuplicates: true,
+        });
+      }
+
+      console.log(
+        `Webhook: linked installation ${installation.id} → user ${userId} with ${repos.length} repositories`,
+      );
       break;
+    }
 
     case 'deleted':
       // Installation was deleted - remove all user links to this installation
