@@ -7,6 +7,9 @@ authors:
 image: /assets/blog-showcase.png
 ---
 
+> [!info]
+> For the latest guide, see [[docs/blog-setup|Blog setup docs]].
+
 This guide walks you through the process of adding a **blog** to your Flowershow site.  
 You’ll learn how to create a dedicated blog section, set up a landing page that lists your posts, attribute content to authors, embed a subscription form, and apply a theme.
 

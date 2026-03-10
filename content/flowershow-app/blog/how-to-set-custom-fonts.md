@@ -7,6 +7,9 @@ authors:
 image: /assets/custom-fonts-featured.png
 ---
 
+> [!info]
+> For the latest guide, see [[docs/custom-fonts|Custom fonts docs]].
+
 This guide will show you how to use fonts from Google Fonts to customize your site's typography. You'll learn how to select fonts, import them using CSS, and apply them to different elements of your site.
 
 Here's the default Flowershow theme that we're going to transform:

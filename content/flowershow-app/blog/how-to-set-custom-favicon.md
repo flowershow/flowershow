@@ -7,6 +7,9 @@ authors:
 image: /assets/custom-favicon.png
 ---
 
+> [!info]
+> For the latest guide, see [[docs/custom-favicon|Custom favicon docs]].
+
 > [!note]
 > Custom favicons are a premium feature. Check out our [pricing page](https://flowershow.app/pricing) to learn more about premium features.
 

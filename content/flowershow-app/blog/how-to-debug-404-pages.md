@@ -7,6 +7,9 @@ authors:
 image: /assets/404.png
 ---
 
+> [!info]
+> For the latest guide, see [[docs/debugging-404s|Debugging 404s docs]].
+
 In this guide, I'll walk you through the most common causes of 404 errors in Flowershow and how to fix them.
 
 ## Understanding Flowershow's URL-to-file mapping

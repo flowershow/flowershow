@@ -7,6 +7,9 @@ authors:
 image: /assets/newsletter.png
 ---
 
+> [!info]
+> For the latest guide, see [[docs/forms|Forms docs]].
+
 Forms are essential for engaging with your audience - whether you're collecting newsletter signups, gathering feedback, or creating contact forms. In this guide, we'll walk through how to add forms to your Flowershow site.
 
 There are two main approaches to embedding forms, depending on the complexity of the embed code provided by your form service:
