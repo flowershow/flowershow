@@ -271,13 +271,14 @@ function SearchResults({
   const transformItems = useCallback(
     (items) =>
       items
-        .filter((item) => {
-          if (contentHide.length === 0) return true;
-          const path = `/${item.path.replace(/^\//, '')}`;
-          return !contentHide.some(
-            (h) => path === h || path.startsWith(h.endsWith('/') ? h : `${h}/`),
-          );
-        })
+        // This seems to break the search (infinite requests and site becomes unresponsive)
+        // .filter((item) => {
+        //   if (contentHide.length === 0) return true;
+        //   const path = `/${item.path.replace(/^\//, '')}`;
+        //   return !contentHide.some(
+        //     (h) => path === h || path.startsWith(h.endsWith('/') ? h : `${h}/`),
+        //   );
+        // })
         .map((item) => ({
           ...item,
           path: resolveFilePathToUrlPath({
@@ -285,7 +286,8 @@ function SearchResults({
             sitePrefix: site?.prefix,
           }),
         })),
-    [site, contentHide],
+    // [site, contentHide],
+    [site],
   );
 
   return (
