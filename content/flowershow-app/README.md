@@ -22,9 +22,9 @@ showComments: false
         <a href="#demo" className="text-sm/6 font-semibold text-gray-900">Watch the demo ↓</a>
       </div>
       <div className="mt-8 flex items-center justify-center gap-x-6 text-sm text-gray-400">
-        <span><strong className="text-gray-600">1,200+</strong> users</span>
+        <span><strong className="text-gray-600">1,300+</strong> users</span>
         <span aria-hidden="true">·</span>
-        <span><strong className="text-gray-600">950+</strong> sites published</span>
+        <span><strong className="text-gray-600">1000+</strong> sites published</span>
         <span aria-hidden="true">·</span>
         <span><strong className="text-gray-600">Free</strong> forever</span>
       </div>
