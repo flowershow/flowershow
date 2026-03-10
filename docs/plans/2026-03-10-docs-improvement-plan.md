@@ -2,6 +2,21 @@
 
 Date: 2026-03-10
 
+## Tier 0: Docs North Star
+
+The brand essence says Flowershow is **Instant, Elegant, Open**. The docs should prove it.
+
+- **Result first, explanation second.** Every page opens with the config snippet or the one thing the reader needs to do. Context comes after. If someone copies the first code block and leaves, they should succeed.
+- **One page, one job.** Each doc answers one question completely. No page should require reading another page to get a basic result.
+- **Working examples, not descriptions.** Don't say "you can configure X." Show the JSON. Show what it produces. If a feature can't be demonstrated in a code block, show a screenshot.
+- **Write for someone who arrived mid-task.** They're not reading the docs for fun. They have a site, they want to change something, they searched for the answer. Respect that energy.
+- **Plain language, short sentences.** No "leverage", no "seamlessly", no "empower". Say what happens. (See `docs/brand-essence.md` for voice guidelines.)
+- **AI-agent friendly.** Structure pages so that an LLM reading the docs can extract the right config snippet without ambiguity. This means: consistent heading structure, explicit field names, no critical information buried in prose.
+
+The test: *Can a new user, or an AI agent, go from "I want X" to a working config change in under 60 seconds by reading this page?*
+
+---
+
 ## Overall Assessment: 6.5/10
 
 The docs are **reference-heavy but onboarding-light**. Individual feature docs are generally well-written, but there's no clear path for new users, some critical pages are stubs, and tutorial content is fragmented between `/blog` and `/docs`.
@@ -56,6 +71,8 @@ A new user landing on `/docs` sees a flat list. There's no:
 - Recommended reading order
 - "Your first 5 minutes" walkthrough
 - Progression from simple → advanced
+
+The `docs/README.md` itself also doesn't embody "result first" — it's a wall of 20+ how-to links. It should lead with 3 clear paths ("Publish from Obsidian / GitHub / CLI"), then a short reference index below. The Getting Started guide addresses the gap, but the README itself needs a redesign to match.
 
 **Recommendation:** Create a short Getting Started page with 3 paths:
 1. Publish from Obsidian
