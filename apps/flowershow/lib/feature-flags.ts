@@ -32,7 +32,8 @@ export function isFeatureEnabled(
 ): boolean {
   switch (feature) {
     case Feature.NoBranding:
-      return site.customDomain === 'flowershow.app'
+      return site.customDomain === 'flowershow.app' ||
+        site.customDomain?.endsWith('.flowershow.app')
         ? false
         : site.plan === Plan.PREMIUM;
   }
