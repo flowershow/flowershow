@@ -60,9 +60,19 @@ title: Links Test
 
 ## CommonMark Embeds
 
+<div data-testid="commonmark-embeds">
+
 ![CM image](assets/image.jpg)
 
 ![CM image with title](assets/image.jpg "Image Title")
+
+![300](assets/image.jpg)
+
+![300x200](assets/image.jpg)
+
+![CM small image](assets/small-image.jpg)
+
+</div>
 
 ## Obsidian Embeds
 
@@ -73,6 +83,8 @@ title: Links Test
 ![[image.jpg|300]]
 
 ![[image.jpg|300x200]]
+
+![[small-image.jpg]]
 
 </div>
 

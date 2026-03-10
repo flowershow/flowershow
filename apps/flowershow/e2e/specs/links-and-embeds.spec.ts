@@ -221,17 +221,49 @@ test('Links', async ({ page, basePath }) => {
 
   // ── CommonMark Embeds ─────────────────────────────────────────
 
+  const cmEmbeds = content.getByTestId('commonmark-embeds');
+  await cmEmbeds.scrollIntoViewIfNeeded();
+  // Use locator('img') instead of getByRole('img') because resized images
+  // have alt="" which ARIA treats as presentational, hiding them from role queries.
+  await expect(cmEmbeds.locator('img')).toHaveCount(5);
+
   await test.step('CM embed: image renders with alt text', async () => {
-    const img = content.locator('img[alt="CM image"]');
+    const img = cmEmbeds.locator('img').nth(0);
     await expect(img).toBeVisible();
+    await expect(img).toHaveAttribute('alt', 'CM image');
     await expectOptimizedImage(img);
   });
 
   await test.step('CM embed: image with title has title attribute', async () => {
-    const img = content.locator('img[alt="CM image with title"]');
+    const img = cmEmbeds.locator('img').nth(1);
     await expect(img).toBeVisible();
+    await expect(img).toHaveAttribute('alt', 'CM image with title');
     await expect(img).toHaveAttribute('title', 'Image Title');
     await expectOptimizedImage(img);
+  });
+
+  await test.step('CM embed: image with width-only resize has data-fs-width', async () => {
+    const img = cmEmbeds.locator('img').nth(2);
+    await expect(img).toBeVisible();
+    await expect(img).toHaveAttribute('data-fs-width', '300');
+    await expect(img).not.toHaveAttribute('data-fs-height');
+    await expectOptimizedImage(img);
+  });
+
+  await test.step('CM embed: image with WxH resize has both data attributes', async () => {
+    const img = cmEmbeds.locator('img').nth(3);
+    await expect(img).toBeVisible();
+    await expect(img).toHaveAttribute('data-fs-width', '300');
+    await expect(img).toHaveAttribute('data-fs-height', '200');
+    await expectOptimizedImage(img);
+  });
+
+  await test.step('CM embed: small image is not stretched beyond intrinsic width', async () => {
+    const img = cmEmbeds.locator('img').nth(4);
+    await expect(img).toBeVisible();
+    await expectOptimizedImage(img);
+    const intrinsicWidth = await img.getAttribute('data-fs-intrinsic-width');
+    await expect(img).toHaveCSS('max-width', `${intrinsicWidth}px`);
   });
 
   // ── Obsidian Embeds ───────────────────────────────────────────
@@ -253,6 +285,14 @@ test('Links', async ({ page, basePath }) => {
     await expect(img).toHaveAttribute('data-fs-width', '300');
     await expect(img).not.toHaveAttribute('data-fs-height', '300');
     await expectOptimizedImage(img);
+  });
+
+  await test.step('wiki embed: small image is not stretched beyond intrinsic width', async () => {
+    const img = obsidianEmbeds.getByRole('img').nth(3);
+    await expect(img).toBeVisible();
+    await expectOptimizedImage(img);
+    const intrinsicWidth = await img.getAttribute('data-fs-intrinsic-width');
+    await expect(img).toHaveCSS('max-width', `${intrinsicWidth}px`);
   });
 
   await test.step('wiki embed: image with dimensions has both data attributes', async () => {

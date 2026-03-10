@@ -147,6 +147,7 @@ export default function FsImage(props: FsImageProps) {
         style={{
           width: '100%',
           height: 'auto',
+          maxWidth: `${intrinsicWidth}px`,
           margin: '0 auto',
         }}
       />
