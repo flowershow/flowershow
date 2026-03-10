@@ -1,5 +1,8 @@
 # How to quickly create a sandbox website
 
+> [!warning]
+> This guide uses the old self-hosted Flowershow template which is no longer supported. Flowershow is now a fully managed cloud platform — you can publish a site in seconds without Vercel or any setup. See [[docs/getting-started|Getting Started]].
+
 By the end of this guide you will have a working markdown site you can edit, which gets published automatically online 🎉
 
 ## Prerequisites

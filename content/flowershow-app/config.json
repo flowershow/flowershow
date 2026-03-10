@@ -167,9 +167,7 @@
     "/journal",
     "/meta",
     "/notes",
-    "/blog/archive",
-    "/docs/self-hosted",
-    "/self-hosted.md"
+    "/blog/archive"
   ],
   "showEditLink": true,
   "redirects": [

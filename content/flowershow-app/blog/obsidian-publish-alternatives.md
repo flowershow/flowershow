@@ -6,6 +6,9 @@ authors:
   - rufuspollock
 ---
 
+> [!warning]
+> This post references a self-hosted version of Flowershow which is no longer available. Flowershow is now a fully managed cloud platform. See [[docs/getting-started|Getting Started]] to publish your vault in under a minute.
+
 Here we review the existing options for publishing an Obsidian vault, including official Obsidian Publish and the major alternatives.
 
 In general, the main division is between approaches where the site creation and hosting are done for you (like Obsidian Publish and Flowershow Cloud) and approaches that are self-hosted options where you need to build and then host the published site and options.
