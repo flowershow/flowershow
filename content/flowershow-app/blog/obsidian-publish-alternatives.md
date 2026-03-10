@@ -1,29 +1,26 @@
 ---
 title: Obsidian Publish Alternatives
-description: "What options are there for publishing your Obsidian vault? We review the main ones, paid and free, cloud or self-hosted."
+description: "What options are there for publishing your Obsidian vault? We review the main ones, paid and free, cloud and self-hosted."
 date: 2023-05-22
 authors:
   - rufuspollock
 ---
 
-> [!warning]
-> This post references a self-hosted version of Flowershow which is no longer available. Flowershow is now a fully managed cloud platform. See [[docs/getting-started|Getting Started]] to publish your vault in under a minute.
-
 Here we review the existing options for publishing an Obsidian vault, including official Obsidian Publish and the major alternatives.
 
-In general, the main division is between approaches where the site creation and hosting are done for you (like Obsidian Publish and Flowershow Cloud) and approaches that are self-hosted options where you need to build and then host the published site and options.
+In general, the main division is between cloud approaches where the site creation and hosting are done for you (like Obsidian Publish and Flowershow) and self-hosted options where you build and host the published site yourself.
 
 Amongst the self-hosted options there are roughly three main methods:
 
-- NextJS or similar static site generator where you use a full service static site generator to generate the site from the markdown files in the Obsidian vault. This is the approach of Flowershow self-hosted and Quartz
+- Static site generator (e.g. Quartz) where you generate the site from the markdown files in the Obsidian vault
 - Obsidian plugin where site rendering is done within a plugin
-- Scripted conversion to a static site (usually python). This is like a simplified version of the first option where 
+- Scripted conversion to a static site (usually python)
 
 # Options
 
 ## Flowershow
 
-The software provided on this site. There's a cloud version where you can just click and publish and a self-hosted version. The cloud version is completely free with a premium upgrade for $5 a month if you want your own domain or some more advanced features.
+A cloud platform that turns your markdown into an elegant website. Publish from Obsidian, GitHub, or the terminal. Free to use with a premium upgrade for custom domains and advanced features.
 
 - 🔗 https://flowershow.app/
 - 💤 Active
