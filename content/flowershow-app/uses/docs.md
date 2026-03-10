@@ -489,8 +489,8 @@ showComments: false
           </div>
         </div>
         <div className="p-8">
-          <h3 className="text-base font-semibold text-gray-900">Flowershow Blog</h3>
-          <p className="mt-2 text-sm text-gray-500 flex-1">Our official Flowershow blog.</p>
+          <h3 className="text-base font-semibold text-gray-900">Flowershow Docs</h3>
+          <p className="mt-2 text-sm text-gray-500 flex-1">Our official Flowershow docs.</p>
           <span className="mt-5 inline-block text-sm font-medium text-[#AB3A76]">View site →</span>
         </div>
       </a>
