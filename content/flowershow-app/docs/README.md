@@ -26,6 +26,9 @@ Three ways to publish:
 - [[edit-this-page|Edit links]] — "Edit this page" buttons
 - [[content-filtering|Content filtering]] — exclude files from publishing
 - [[custom-domain|Custom domain]] — use your own domain (Premium)
+- [[custom-favicon|Custom favicon]] — browser tab icon (Premium)
+- [[custom-fonts|Custom fonts]] — Google Fonts and typography
+- [[password-protection|Password protection]] — restrict site access (Premium)
 - [[redirects|URL redirects]] — redirect old URLs to new ones
 
 ## Page content
@@ -42,10 +45,13 @@ Three ways to publish:
 - [[canvas|Canvas]] — Obsidian Canvas support
 - [[obsidian-bases|Obsidian Bases]] — database views
 - [[list-component|List component]] — content catalogs
+- [[forms|Forms]] — newsletter signups, contact forms, surveys
+- [[blog-setup|Blog setup]] — add a blog section with listings and authors
 
 ## Reference
 
 - [[cli|CLI reference]] — all CLI commands
 - [[syntax-mode|Syntax mode]] — Markdown vs MDX rendering
 - [[debug-mdx-errors|Debugging MDX errors]] — common errors and fixes
+- [[debugging-404s|Debugging 404 pages]] — URL-to-file mapping and common fixes
 - [[faq|FAQ]]
