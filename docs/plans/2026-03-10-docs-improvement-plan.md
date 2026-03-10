@@ -32,7 +32,7 @@ Pages that are missing or essentially broken:
 | **GitHub publishing** (`publish-github.md`) | Stub — says "Full documentation coming soon" | High — it's in the main nav |
 | **FAQ** (`docs/faq.md`) | 6 lines, one question | High — users expect a real FAQ |
 | **Getting Started guide** | Doesn't exist | High — no onboarding path for new users |
-| **Drag & Drop publishing** | Linked in nav, unclear if page exists | Medium — nav promises content that may not be there |
+| **Drag & Drop publishing** | Page exists (powered by core app, not docs) | Low — not a docs gap, page works |
 
 ## Tier 2: Structural Problems
 
