@@ -1,6 +1,5 @@
-import { Markdown, Text } from '@react-email/components';
+import { Markdown } from '@react-email/components';
 import { EmailLayout } from './components/email-layout';
-import { muted } from './styles';
 
 interface AccountDeletedEmailProps {
   userName: string;
@@ -34,10 +33,6 @@ We'd love to hear what we could have done better. Feel free to reply to this ema
 
 — The Flowershow team`}
       </Markdown>
-      <Text style={muted}>
-        You&apos;re receiving this because your account was recently deleted. No
-        further emails will be sent.
-      </Text>
     </EmailLayout>
   );
 }

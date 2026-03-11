@@ -13,8 +13,6 @@ export function SiteCreatedEmail({
   userName = 'there',
   siteUrl = 'https://flowershow.app',
   projectName = 'my-site',
-  siteDashboardUrl = 'https://cloud.flowershow.app',
-  docsUrl = 'https://flowershow.app/docs',
 }: SiteCreatedEmailProps) {
   return (
     <EmailLayout previewText={`Your site "${projectName}" is live!`}>
@@ -48,9 +46,7 @@ Congrats! Your site **${projectName}** is now live and ready to share with the w
           link: { color: '#000000', textDecoration: 'underline' },
         }}
       >
-        {`[Site settings](${siteDashboardUrl}) · [Documentation](${docsUrl})
-
-If you run into anything or have questions, join our Discord server, post in our subreddit or submit an issue on GitHub. We're here to help!
+        {`If you run into anything or have questions, join our Discord server, post in our subreddit or submit an issue on GitHub. We're here to help!
 
 — The Flowershow team`}
       </Markdown>

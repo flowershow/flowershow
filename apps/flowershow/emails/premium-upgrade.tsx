@@ -1,6 +1,5 @@
-import { Button, Hr, Markdown, Text } from '@react-email/components';
+import { Button, Markdown } from '@react-email/components';
 import { EmailLayout } from './components/email-layout';
-import { hr, muted } from './styles';
 
 interface PremiumUpgradeEmailProps {
   userName: string;
@@ -14,7 +13,7 @@ export function PremiumUpgradeEmail({
   discordInviteUrl = 'https://discord.gg/example',
 }: PremiumUpgradeEmailProps) {
   return (
-    <EmailLayout previewText="Custom domains, priority support, and more">
+    <EmailLayout previewText="Thanks for subscribing to Flowershow Premium">
       <Markdown
         markdownCustomStyles={{
           h1: {
@@ -24,47 +23,50 @@ export function PremiumUpgradeEmail({
             margin: '0 0 16px',
           },
           p: { fontSize: '16px', lineHeight: '26px', color: '#484848' },
-          li: { fontSize: '16px', lineHeight: '24px', color: '#484848' },
+          link: { color: '#000000', textDecoration: 'underline' },
         }}
       >
-        {`# You're now on Flowershow Premium
+        {`# Thanks for subscribing to Flowershow Premium 🌸
 
 Hi ${userName},
 
-Thank you for upgrading! Here's what's now available to you:
+Your subscription is now active.
 
-- Custom domains for your site
-- Full-text search
-- Password protection for your site
-- Priority support`}
+You now have access to premium features including custom domains, a site without Flowershow branding, and full-text search.
+
+You can manage everything from your dashboard:`}
       </Markdown>
-      <Hr style={hr} />
+      <Button
+        className="bg-black rounded-md text-white text-base text-center block py-3 px-6 my-6"
+        href={dashboardUrl}
+      >
+        Open your dashboard
+      </Button>
       <Markdown
         markdownCustomStyles={{
-          h2: {
-            fontSize: '16px',
-            fontWeight: 'bold',
-            color: '#1a1a1a',
-            margin: '16px 0 4px',
-          },
           p: { fontSize: '16px', lineHeight: '26px', color: '#484848' },
+          link: { color: '#000000', textDecoration: 'underline' },
         }}
       >
-        {`## Join the Premium Discord
-
-Connect with other Flowershow users, get early access to new features, and chat directly with the team.`}
+        {`You&apos;re also invited to join our premium Discord channel, where you can get priority support and connect with us directly:`}
       </Markdown>
       <Button
         className="rounded-md text-white text-base text-center block py-3 px-6 my-6"
         style={{ backgroundColor: '#5865F2' }}
         href={discordInviteUrl}
       >
-        Join Discord
+        Join the premium Discord
       </Button>
-      <Text style={muted}>
-        This invite link doesn&apos;t expire, so join whenever you&apos;re
-        ready.
-      </Text>
+      <Markdown
+        markdownCustomStyles={{
+          p: { fontSize: '16px', lineHeight: '26px', color: '#484848' },
+          link: { color: '#000000', textDecoration: 'underline' },
+        }}
+      >
+        {`We really appreciate your support — it helps us keep building and improving Flowershow.
+
+— The Flowershow team`}
+      </Markdown>
     </EmailLayout>
   );
 }
