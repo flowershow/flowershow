@@ -9,6 +9,7 @@ import {
   getClientInfo,
   validateAccessToken,
 } from '@/lib/cli-auth';
+import { inngest } from '@/inngest/client';
 import PostHogClient from '@/lib/server-posthog';
 import { deleteSiteCollection, ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
@@ -76,10 +77,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get user info for URL generation
+    // Get user info for URL generation and email
     const user = await prisma.user.findUnique({
       where: { id: auth.userId },
-      select: { username: true },
+      select: { username: true, email: true, name: true },
     });
 
     if (!user) {
@@ -96,6 +97,8 @@ export async function POST(request: NextRequest) {
         { status: 400 },
       );
     }
+
+    const isNewSite = !existingSite || !overwrite;
 
     let site;
 
@@ -129,6 +132,20 @@ export async function POST(request: NextRequest) {
 
     // Ensure Typesense collection exists for search indexing
     await ensureSiteCollection(site.id);
+
+    // Send site-created email for new sites
+    if (isNewSite && user.email) {
+      await inngest.send({
+        name: 'email/site-created.send',
+        data: {
+          userId: auth.userId,
+          email: user.email,
+          name: user.name,
+          siteUrl,
+          projectName: sanitizedName,
+        },
+      });
+    }
 
     const response: CreateSiteResponse = {
       site: {

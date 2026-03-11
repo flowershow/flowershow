@@ -23,11 +23,52 @@ interface SiteDelete {
   };
 }
 
+interface EmailWelcome {
+  data: {
+    userId: string;
+    email: string;
+    name: string | null;
+  };
+}
+
+interface EmailPremiumUpgrade {
+  data: {
+    userId: string;
+    email: string;
+    name: string | null;
+  };
+}
+
+interface EmailSiteCreated {
+  data: {
+    userId: string;
+    email: string;
+    name: string | null;
+    siteUrl: string;
+    projectName: string;
+  };
+}
+
+interface EmailCustomDomainCheck {
+  data: {
+    userId: string;
+    email: string;
+    name: string | null;
+    domain: string;
+    siteId: string;
+  };
+}
+
 /* Events */
 type Events = {
   'site/sync': SiteSync;
   'site/create': SiteCreate;
   'site/delete': SiteDelete;
+  'email/welcome.send': EmailWelcome;
+  'email/premium-upgrade.send': EmailPremiumUpgrade;
+
+  'email/site-created.send': EmailSiteCreated;
+  'email/custom-domain.check': EmailCustomDomainCheck;
 };
 
 /* Client */
