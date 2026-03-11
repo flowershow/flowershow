@@ -49,6 +49,16 @@ interface EmailSiteCreated {
   };
 }
 
+interface EmailCustomDomainCheck {
+  data: {
+    userId: string;
+    email: string;
+    name: string | null;
+    domain: string;
+    siteId: string;
+  };
+}
+
 /* Events */
 type Events = {
   'site/sync': SiteSync;
@@ -58,6 +68,7 @@ type Events = {
   'email/premium-upgrade.send': EmailPremiumUpgrade;
 
   'email/site-created.send': EmailSiteCreated;
+  'email/custom-domain.check': EmailCustomDomainCheck;
 };
 
 /* Client */

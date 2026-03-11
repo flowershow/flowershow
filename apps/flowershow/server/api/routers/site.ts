@@ -281,6 +281,14 @@ export const siteRouter = createTRPCRouter({
             data: { customDomain: null },
             select: publicSiteSelect,
           });
+
+          // Remove old domain from Vercel
+          if (
+            env.NEXT_PUBLIC_VERCEL_ENV === 'production' &&
+            site.customDomain
+          ) {
+            await removeDomainFromVercelProject(site.customDomain);
+          }
         } else {
           if (env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
             if (!validDomainRegex.test(newDomain)) {
@@ -300,12 +308,26 @@ export const siteRouter = createTRPCRouter({
             await Promise.all([
               addDomainToVercel(newDomain),
               // Optional: add www subdomain as well and redirect to apex domain
-              addDomainToVercel(`www.${newDomain} `),
+              addDomainToVercel(`www.${newDomain}`),
             ]);
 
             // If the site had a different customDomain before, we need to remove it from Vercel
             if (site.customDomain && site.customDomain !== newDomain) {
               await removeDomainFromVercelProject(site.customDomain);
+            }
+
+            // Send a delayed email to check if domain is properly configured
+            if (site.user.email) {
+              await inngest.send({
+                name: 'email/custom-domain.check',
+                data: {
+                  userId: ctx.session.user.id,
+                  email: site.user.email,
+                  name: site.user.name,
+                  domain: newDomain,
+                  siteId: id,
+                },
+              });
             }
           } else {
             // Non-production: only update DB

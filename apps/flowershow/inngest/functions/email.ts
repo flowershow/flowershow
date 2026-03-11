@@ -1,7 +1,10 @@
+import { CustomDomainConnectedEmail } from '@/emails/custom-domain-connected';
+import { CustomDomainMisconfiguredEmail } from '@/emails/custom-domain-misconfigured';
 import { PremiumUpgradeEmail } from '@/emails/premium-upgrade';
 import { SiteCreatedEmail } from '@/emails/site-created';
 import { WelcomeEmail } from '@/emails/welcome';
 import { env } from '@/env.mjs';
+import { getConfigResponse, getDomainResponse } from '@/lib/domains';
 import { sendEmail } from '@/lib/email';
 import { inngest } from '../client';
 
@@ -75,5 +78,72 @@ export const sendSiteCreatedEmail = inngest.createFunction(
     }
 
     return { emailId: data?.id };
+  },
+);
+
+export const checkCustomDomainAndNotify = inngest.createFunction(
+  { id: 'check-custom-domain-and-notify' },
+  { event: 'email/custom-domain.check' },
+  async ({ event, step }) => {
+    const { email, name, domain } = event.data;
+    const userName = name?.split(' ')[0] || 'there';
+
+    // Wait for DNS propagation before checking
+    await step.sleep('wait-for-dns-propagation', '30m');
+
+    // Check domain configuration via Vercel API
+    const { verified, misconfigured } = await step.run(
+      'check-domain-status',
+      async () => {
+        const [domainResponse, configResponse] = await Promise.all([
+          getDomainResponse(domain),
+          getConfigResponse(domain),
+        ]);
+
+        return {
+          verified: domainResponse.verified === true && !domainResponse.error,
+          misconfigured: configResponse.misconfigured !== false,
+        };
+      },
+    );
+
+    // Send the appropriate email
+    if (verified && !misconfigured) {
+      const { data, error } = await step.run('send-congrats-email', () =>
+        sendEmail({
+          to: email,
+          subject: `Your custom domain ${domain} is live!`,
+          react: CustomDomainConnectedEmail({ userName, domain }),
+        }),
+      );
+
+      if (error) {
+        throw new Error(
+          `Failed to send custom domain connected email: ${error.message}`,
+        );
+      }
+
+      return { emailId: data?.id, status: 'connected' };
+    } else {
+      const { data, error } = await step.run('send-warning-email', () =>
+        sendEmail({
+          to: email,
+          subject: `Action needed: ${domain} DNS configuration issue`,
+          react: CustomDomainMisconfiguredEmail({
+            userName,
+            domain,
+            dashboardUrl: `https://${env.NEXT_PUBLIC_CLOUD_DOMAIN}`,
+          }),
+        }),
+      );
+
+      if (error) {
+        throw new Error(
+          `Failed to send custom domain misconfigured email: ${error.message}`,
+        );
+      }
+
+      return { emailId: data?.id, status: 'misconfigured' };
+    }
   },
 );
