@@ -5,8 +5,6 @@ interface SiteCreatedEmailProps {
   userName: string;
   siteUrl: string;
   projectName: string;
-  siteDashboardUrl: string;
-  docsUrl: string;
 }
 
 export function SiteCreatedEmail({

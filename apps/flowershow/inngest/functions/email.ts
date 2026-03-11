@@ -17,7 +17,6 @@ export const sendWelcomeEmail = inngest.createFunction(
       subject: 'Welcome to Flowershow',
       react: WelcomeEmail({
         userName,
-        dashboardUrl: `https://${env.NEXT_PUBLIC_CLOUD_DOMAIN}`,
       }),
     });
 
@@ -68,8 +67,6 @@ export const sendSiteCreatedEmail = inngest.createFunction(
         userName,
         siteUrl,
         projectName,
-        dashboardUrl: `https://${env.NEXT_PUBLIC_CLOUD_DOMAIN}`,
-        docsUrl: 'https://flowershow.app/docs',
       }),
     });
 

@@ -1,9 +1,8 @@
-import { Button, Markdown } from '@react-email/components';
+import { Markdown } from '@react-email/components';
 import { EmailLayout } from './components/email-layout';
 
 interface WelcomeEmailProps {
   userName: string;
-  createSiteUrl: string;
 }
 
 export function WelcomeEmail({ userName = 'there' }: WelcomeEmailProps) {
