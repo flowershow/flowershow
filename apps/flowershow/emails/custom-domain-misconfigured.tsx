@@ -4,13 +4,13 @@ import { EmailLayout } from './components/email-layout';
 interface CustomDomainMisconfiguredEmailProps {
   userName: string;
   domain: string;
-  dashboardUrl: string;
+  settingsUrl: string;
 }
 
 export function CustomDomainMisconfiguredEmail({
   userName = 'there',
   domain = 'example.com',
-  dashboardUrl = 'https://flowershow.app',
+  settingsUrl = 'https://cloud.flowershow.app',
 }: CustomDomainMisconfiguredEmailProps) {
   return (
     <EmailLayout
@@ -38,7 +38,7 @@ To get your domain working, please check your DNS settings in your domain provid
       </Markdown>
       <Button
         className="bg-black rounded-md text-white text-base text-center block py-3 px-6 my-6"
-        href={dashboardUrl}
+        href={settingsUrl}
       >
         Check domain settings
       </Button>

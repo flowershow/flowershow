@@ -85,7 +85,7 @@ export const checkCustomDomainAndNotify = inngest.createFunction(
   { id: 'check-custom-domain-and-notify' },
   { event: 'email/custom-domain.check' },
   async ({ event, step }) => {
-    const { email, name, domain } = event.data;
+    const { email, name, domain, siteId } = event.data;
     const userName = name?.split(' ')[0] || 'there';
 
     // Wait for DNS propagation before checking
@@ -132,7 +132,7 @@ export const checkCustomDomainAndNotify = inngest.createFunction(
           react: CustomDomainMisconfiguredEmail({
             userName,
             domain,
-            dashboardUrl: `https://${env.NEXT_PUBLIC_CLOUD_DOMAIN}`,
+            settingsUrl: `https://${env.NEXT_PUBLIC_CLOUD_DOMAIN}/site/${siteId}/settings`,
           }),
         }),
       );
