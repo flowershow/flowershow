@@ -12,6 +12,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useSelectedLayoutSegments } from 'next/navigation';
 import { signOut } from 'next-auth/react';
+import posthog from 'posthog-js';
 import { ReactNode, useEffect, useMemo } from 'react';
 import FeedbackModal from '@/components/dashboard/feedback';
 import { getConfig } from '@/lib/app-config';
@@ -158,7 +159,10 @@ export default function Nav({ children }: { children: ReactNode }) {
                 </MenuItem>
                 <MenuItem>
                   <button
-                    onClick={() => signOut()}
+                    onClick={() => {
+                      posthog.reset();
+                      signOut();
+                    }}
                     className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
                   >
                     Sign out
