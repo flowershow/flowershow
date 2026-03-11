@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
-import { generatePresignedGetUrl } from '@/lib/content-store';
+import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
 import prisma from '@/server/db';
 
 export async function GET(
@@ -39,6 +39,29 @@ export async function GET(
     .map((segment) => encodeURIComponent(segment))
     .join('/');
   const r2Key = `${site.id}/main/raw/${encodedPath}`;
+
+  const isHtml = encodedPath.endsWith('.html');
+
+  // HTML files: proxy the content so the browser renders them
+  // instead of redirecting to R2 (which triggers a download).
+  if (isHtml) {
+    try {
+      const decodedPath = path.map(decodeURIComponent).join('/');
+      const content = await fetchFile({
+        projectId: site.id,
+        path: decodedPath,
+      });
+      if (!content) {
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+      }
+      return new NextResponse(content, {
+        status: 200,
+        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+      });
+    } catch {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+  }
 
   // For password-protected sites, use a short-lived presigned URL
   // so the asset is only accessible briefly even if the URL is shared.
