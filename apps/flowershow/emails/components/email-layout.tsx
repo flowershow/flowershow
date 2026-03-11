@@ -8,6 +8,7 @@ import {
   Link,
   Preview,
   Section,
+  Tailwind,
   Text,
 } from '@react-email/components';
 import type { ReactNode } from 'react';
@@ -21,41 +22,46 @@ export function EmailLayout({ previewText, children }: EmailLayoutProps) {
   return (
     <Html>
       <Head />
-      <Preview>{previewText}</Preview>
-      <Body style={bodyStyle}>
-        <Container style={containerStyle}>
-          <Section style={headerStyle}>
-            <Img
-              src="https://r2-assets.flowershow.app/logo.png"
-              width="32"
-              height="32"
-              alt="Flowershow"
-            />
-          </Section>
-          <Section style={contentStyle}>{children}</Section>
-          <Hr style={hrStyle} />
-          <Section style={socialLinksStyle}>
-            <Link href="https://discord.gg/JChzM5VdFn" style={socialLinkStyle}>
-              Discord
-            </Link>
-            <Text style={socialSeparatorStyle}>·</Text>
-            <Link
-              href="https://github.com/flowershow/flowershow"
-              style={socialLinkStyle}
-            >
-              GitHub
-            </Link>
-            <Text style={socialSeparatorStyle}>·</Text>
-            <Link
-              href="https://www.reddit.com/r/flowershow/"
-              style={socialLinkStyle}
-            >
-              Reddit
-            </Link>
-          </Section>
-          {/* <Text style={footerStyle}>Flowershow · support@flowershow.app</Text> */}
-        </Container>
-      </Body>
+      <Tailwind>
+        <Preview>{previewText}</Preview>
+        <Body style={bodyStyle}>
+          <Container style={containerStyle}>
+            <Section style={headerStyle}>
+              <Img
+                src="https://r2-assets.flowershow.app/logo.png"
+                width="32"
+                height="32"
+                alt="Flowershow"
+              />
+            </Section>
+            <Section style={contentStyle}>{children}</Section>
+            <Hr style={hrStyle} />
+            <Section style={socialLinksStyle}>
+              <Link
+                href="https://discord.gg/JChzM5VdFn"
+                style={socialLinkStyle}
+              >
+                Discord
+              </Link>
+              <Text style={socialSeparatorStyle}>·</Text>
+              <Link
+                href="https://github.com/flowershow/flowershow"
+                style={socialLinkStyle}
+              >
+                GitHub
+              </Link>
+              <Text style={socialSeparatorStyle}>·</Text>
+              <Link
+                href="https://www.reddit.com/r/flowershow/"
+                style={socialLinkStyle}
+              >
+                Reddit
+              </Link>
+            </Section>
+            {/* <Text style={footerStyle}>Flowershow · support@flowershow.app</Text> */}
+          </Container>
+        </Body>
+      </Tailwind>
     </Html>
   );
 }

@@ -1,14 +1,6 @@
-import { Button, Hr, Text } from '@react-email/components';
+import { Button, Hr, Markdown, Text } from '@react-email/components';
 import { EmailLayout } from './components/email-layout';
-import {
-  heading,
-  subheading,
-  paragraph,
-  list,
-  button,
-  hr,
-  muted,
-} from './styles';
+import { hr, muted } from './styles';
 
 interface PremiumUpgradeEmailProps {
   userName: string;
@@ -23,25 +15,50 @@ export function PremiumUpgradeEmail({
 }: PremiumUpgradeEmailProps) {
   return (
     <EmailLayout previewText="Custom domains, priority support, and more">
-      <Text style={heading}>You&apos;re now on Flowershow Premium</Text>
-      <Text style={paragraph}>Hi {userName},</Text>
-      <Text style={paragraph}>
-        Thank you for upgrading! Here&apos;s what&apos;s now available to you:
-      </Text>
-      <Text style={list}>• Custom domains for your site</Text>
-      <Text style={list}>• Full-text search</Text>
-      <Text style={list}>• Password protection for your site</Text>
-      <Text style={list}>• Priority support</Text>
-      {/* <Button style={button} href={dashboardUrl}>
-        Go to your dashboard
-      </Button> */}
+      <Markdown
+        markdownCustomStyles={{
+          h1: {
+            fontSize: '24px',
+            fontWeight: 'bold',
+            color: '#1a1a1a',
+            margin: '0 0 16px',
+          },
+          p: { fontSize: '16px', lineHeight: '26px', color: '#484848' },
+          li: { fontSize: '16px', lineHeight: '24px', color: '#484848' },
+        }}
+      >
+        {`# You're now on Flowershow Premium
+
+Hi ${userName},
+
+Thank you for upgrading! Here's what's now available to you:
+
+- Custom domains for your site
+- Full-text search
+- Password protection for your site
+- Priority support`}
+      </Markdown>
       <Hr style={hr} />
-      <Text style={subheading}>Join the Premium Discord</Text>
-      <Text style={paragraph}>
-        Connect with other Flowershow users, get early access to new features,
-        and chat directly with the team.
-      </Text>
-      <Button style={discordButton} href={discordInviteUrl}>
+      <Markdown
+        markdownCustomStyles={{
+          h2: {
+            fontSize: '16px',
+            fontWeight: 'bold',
+            color: '#1a1a1a',
+            margin: '16px 0 4px',
+          },
+          p: { fontSize: '16px', lineHeight: '26px', color: '#484848' },
+        }}
+      >
+        {`## Join the Premium Discord
+
+Connect with other Flowershow users, get early access to new features, and chat directly with the team.`}
+      </Markdown>
+      <Button
+        className="rounded-md text-white text-base text-center block py-3 px-6 my-6"
+        style={{ backgroundColor: '#5865F2' }}
+        href={discordInviteUrl}
+      >
         Join Discord
       </Button>
       <Text style={muted}>
@@ -53,8 +70,3 @@ export function PremiumUpgradeEmail({
 }
 
 export default PremiumUpgradeEmail;
-
-const discordButton = {
-  ...button,
-  backgroundColor: '#5865F2',
-};

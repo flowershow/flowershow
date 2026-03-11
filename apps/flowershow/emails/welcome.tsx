@@ -1,68 +1,54 @@
-import { Link, Text } from '@react-email/components';
+import { Button, Markdown } from '@react-email/components';
 import { EmailLayout } from './components/email-layout';
-import { heading, subheading, paragraph, list, link } from './styles';
 
 interface WelcomeEmailProps {
   userName: string;
   createSiteUrl: string;
 }
 
-export function WelcomeEmail({
-  userName = 'there',
-  createSiteUrl = 'https://cloud.flowershow.app/',
-}: WelcomeEmailProps) {
+export function WelcomeEmail({ userName = 'there' }: WelcomeEmailProps) {
   return (
     <EmailLayout previewText="Turn your Markdown into a live site in minutes">
-      <Text style={heading}>Welcome to Flowershow</Text>
-      <Text style={paragraph}>Hi {userName} 👋</Text>
-      <Text style={paragraph}>
-        Flowershow helps you turn your Markdown content into a live site in
-        minutes.
-      </Text>
-      <Text style={subheading}>To get started, create your first site:</Text>
-      {/* <Button style={button} href={createSiteUrl}>
-        Create your first site
-      </Button> */}
-      <Text style={list}>
-        •{' '}
-        <Link
-          style={link}
-          href="https://flowershow.app/blog/how-to-publish-repository-with-markdown"
-        >
-          From a GitHub repository
-        </Link>
-        : Publish Markdown in a GitHub repository
-      </Text>
-      <Text style={list}>
-        •{' '}
-        <Link
-          style={link}
-          href="https://flowershow.app/blog/how-to-publish-vault-quickly-and-easily"
-        >
-          From an Obsidian vault
-        </Link>
-        : Publish an Obsidian vault
-      </Text>
-      <Text style={list}>
-        •{' '}
-        <Link style={link} href="https://flowershow.app/docs/cli">
-          From the command line
-        </Link>
-        : Publish from the command line
-      </Text>
-      <Text style={list}>
-        •{' '}
-        <Link style={link} href="https://flowershow.app/dragndrop">
-          Paste or Drag and Drop
-        </Link>
-        : Publish by drag and drop or pasting Markdown
-      </Text>
-      <Text style={paragraph}>
-        If you run into anything or have questions, join our Discord server,
-        post in our subreddit or submit an issue on GitHub. We&apos;re here to
-        help!
-      </Text>
-      <Text style={paragraph}>— The Flowershow team</Text>
+      <Markdown
+        markdownCustomStyles={{
+          h1: {
+            fontSize: '24px',
+            fontWeight: 'bold',
+            color: '#1a1a1a',
+            margin: '0 0 16px',
+          },
+          h2: {
+            fontSize: '16px',
+            fontWeight: 'bold',
+            color: '#1a1a1a',
+            margin: '16px 0 4px',
+          },
+          p: { fontSize: '16px', lineHeight: '26px', color: '#484848' },
+          li: { fontSize: '16px', lineHeight: '24px', color: '#484848' },
+          link: { color: '#067df7', textDecoration: 'underline' },
+        }}
+      >
+        {`# Welcome to Flowershow!
+
+Hi ${userName} 👋
+
+You signed up — now let's get your first site live!
+
+## Choose the path that works best for you:
+
+- [From a GitHub repository](https://flowershow.app/blog/how-to-publish-repository-with-markdown) if your Markdown content already lives in a GitHub repo.
+- [From an Obsidian vault](https://flowershow.app/blog/how-to-publish-vault-quickly-and-easily) use our Obsidian plugin to publish directly from your vault.
+- [From the command line](https://flowershow.app/publish) if you prefer using a CLI tool to publish Markdown from your local machine (or to automate it).
+- [Drag and Drop](https://flowershow.app/dragndrop) if you want to quickly publish a few Markdown files without any setup.
+
+## Helpful links to get you started:
+
+- [Join our Discord community](https://discord.gg/JChzM5VdFn) to connect with other Flowershow users, ask questions, and share your sites.
+- [Documentation](https://flowershow.app/docs) for detailed guides on all publishing methods, plus tips on how to customize your site and make the most of Flowershow.
+- [Blog](https://flowershow.app/blog) for updates, tutorials, and inspiration from the Flowershow team and community.
+
+— The Flowershow team`}
+      </Markdown>
     </EmailLayout>
   );
 }

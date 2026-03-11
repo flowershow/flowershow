@@ -1,9 +1,8 @@
-import { WelcomeEmail } from '@/emails/welcome';
 import { PremiumUpgradeEmail } from '@/emails/premium-upgrade';
-
 import { SiteCreatedEmail } from '@/emails/site-created';
-import { sendEmail } from '@/lib/email';
+import { WelcomeEmail } from '@/emails/welcome';
 import { env } from '@/env.mjs';
+import { sendEmail } from '@/lib/email';
 import { inngest } from '../client';
 
 export const sendWelcomeEmail = inngest.createFunction(
