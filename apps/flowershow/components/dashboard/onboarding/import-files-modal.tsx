@@ -2,13 +2,19 @@
 
 import { CheckCircleIcon, FileIcon, ImageIcon, UploadIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Modal from '@/providers/modal';
 import { api } from '@/trpc/react';
 
-const MAX_FILES = 100;
+const MAX_FILES = 1000;
 
-type State = 'selecting' | 'ready' | 'uploading' | 'success' | 'error';
+type State =
+  | 'selecting'
+  | 'ready'
+  | 'uploading'
+  | 'syncing'
+  | 'success'
+  | 'error';
 
 interface ImportFilesOnboardingModalProps {
   siteId: string;
@@ -29,6 +35,7 @@ export default function ImportFilesOnboardingModal({
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
 
   const isContentFile = (file: File): boolean => {
     return (
@@ -71,9 +78,70 @@ export default function ImportFilesOnboardingModal({
     );
   };
 
-  const handleFilesSelected = (files: FileList | null) => {
-    if (!files || files.length === 0) return;
-    const allFiles = Array.from(files);
+  const readEntryAsFile = (fileEntry: FileSystemFileEntry): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      fileEntry.file(resolve, reject);
+    });
+  };
+
+  const readDirectoryEntries = (
+    dirReader: FileSystemDirectoryReader,
+  ): Promise<FileSystemEntry[]> => {
+    return new Promise((resolve, reject) => {
+      dirReader.readEntries(resolve, reject);
+    });
+  };
+
+  const readAllEntries = async (
+    entry: FileSystemEntry,
+    basePath: string,
+  ): Promise<File[]> => {
+    if (entry.isFile) {
+      const file = await readEntryAsFile(entry as FileSystemFileEntry);
+      const relativePath = basePath ? `${basePath}/${file.name}` : file.name;
+      // Create a new File with the relative path as its name
+      return [new File([file], relativePath, { type: file.type })];
+    }
+    if (entry.isDirectory) {
+      const dirReader = (entry as FileSystemDirectoryEntry).createReader();
+      const files: File[] = [];
+      const dirPath = basePath ? `${basePath}/${entry.name}` : entry.name;
+      // readEntries may return results in batches
+      let batch: FileSystemEntry[];
+      do {
+        batch = await readDirectoryEntries(dirReader);
+        for (const child of batch) {
+          files.push(...(await readAllEntries(child, dirPath)));
+        }
+      } while (batch.length > 0);
+      return files;
+    }
+    return [];
+  };
+
+  const handleItemsDrop = async (dataTransfer: DataTransfer) => {
+    const items = Array.from(dataTransfer.items);
+    const entries = items
+      .map((item) => item.webkitGetAsEntry?.())
+      .filter((e): e is FileSystemEntry => e != null);
+
+    if (entries.length === 0) {
+      // Fallback for browsers without webkitGetAsEntry
+      handleFilesSelected(Array.from(dataTransfer.files));
+      return;
+    }
+
+    const allFiles: File[] = [];
+    for (const entry of entries) {
+      allFiles.push(...(await readAllEntries(entry, '')));
+    }
+    handleFilesSelected(allFiles);
+  };
+
+  const handleFilesSelected = (files: File[] | FileList | null) => {
+    if (!files || (files instanceof FileList && files.length === 0)) return;
+    const allFiles = files instanceof FileList ? Array.from(files) : files;
+    if (allFiles.length === 0) return;
     const { valid, error: validationError } = validateFiles(allFiles);
     if (validationError) {
       setError(validationError);
@@ -87,6 +155,25 @@ export default function ImportFilesOnboardingModal({
   };
 
   const publishFiles = api.site.publishFiles.useMutation();
+
+  // Poll sync status while files are being processed
+  const { data: syncStatus } = api.site.getSyncStatus.useQuery(
+    { id: siteId },
+    {
+      enabled: state === 'syncing',
+      refetchInterval: 3000,
+    },
+  );
+
+  useEffect(() => {
+    if (state === 'syncing' && syncStatus?.status === 'SUCCESS') {
+      setState('success');
+    }
+    if (state === 'syncing' && syncStatus?.status === 'ERROR') {
+      setError(syncStatus.error ?? 'Failed to process files');
+      setState('error');
+    }
+  }, [syncStatus, state]);
 
   const handleStartImport = async () => {
     setState('uploading');
@@ -121,16 +208,16 @@ export default function ImportFilesOnboardingModal({
         ),
       );
 
-      setState('success');
+      setState('syncing');
     } catch (err) {
       console.error('Import error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to import');
+      setError(err instanceof Error ? err.message : 'Failed to upload files');
       setState('error');
     }
   };
 
   const handleClose = () => {
-    if (state === 'uploading') return;
+    if (state === 'uploading' || state === 'syncing') return;
     if (state === 'success') {
       router.push(`/site/${siteId}/settings`);
       router.refresh();
@@ -159,7 +246,7 @@ export default function ImportFilesOnboardingModal({
     <Modal
       showModal={showModal}
       setShowModal={handleClose}
-      closeOnClickOutside={state !== 'uploading'}
+      closeOnClickOutside={state !== 'uploading' && state !== 'syncing'}
     >
       <div className="w-full max-w-lg bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden">
         <div className="relative flex flex-col space-y-2 p-5 md:p-10 md:pb-0">
@@ -180,7 +267,7 @@ export default function ImportFilesOnboardingModal({
               onDrop={(e) => {
                 e.preventDefault();
                 setIsDragging(false);
-                handleFilesSelected(e.dataTransfer.files);
+                handleItemsDrop(e.dataTransfer);
               }}
               onClick={() => fileInputRef.current?.click()}
               className={`border border-dashed rounded-md p-8 text-center cursor-pointer transition-colors
@@ -190,8 +277,10 @@ export default function ImportFilesOnboardingModal({
                 type="file"
                 ref={fileInputRef}
                 onChange={(e) => handleFilesSelected(e.target.files)}
-                multiple
                 className="hidden"
+                webkitdirectory=""
+                directory=""
+                multiple
               />
               <UploadIcon className="mx-auto" />
               <p className="mt-2 text-sm text-stone-600">
@@ -246,7 +335,7 @@ export default function ImportFilesOnboardingModal({
             </div>
           )}
 
-          {state === 'uploading' && (
+          {(state === 'uploading' || state === 'syncing') && (
             <div className="py-8 text-center">
               <svg
                 className="mx-auto h-10 w-10 animate-spin text-stone-600"
@@ -267,7 +356,11 @@ export default function ImportFilesOnboardingModal({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              <p className="mt-3 text-sm text-stone-600">Uploading files...</p>
+              <p className="mt-3 text-sm text-stone-600">
+                {state === 'uploading'
+                  ? 'Uploading files...'
+                  : 'Processing files...'}
+              </p>
             </div>
           )}
 
@@ -316,12 +409,12 @@ export default function ImportFilesOnboardingModal({
             </>
           )}
 
-          {state === 'uploading' && (
+          {(state === 'uploading' || state === 'syncing') && (
             <button
               disabled
               className="px-4 py-2 text-sm font-medium text-stone-400 cursor-not-allowed"
             >
-              Importing...
+              {state === 'uploading' ? 'Uploading...' : 'Processing...'}
             </button>
           )}
 
