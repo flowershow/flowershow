@@ -11,8 +11,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           <Profile />
         </Suspense>
       </Nav>
-      <div>
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">{children}</div>
+      <div className="h-full">
+        <div className="h-full mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {children}
+        </div>
       </div>
       <Footer />
     </div>
