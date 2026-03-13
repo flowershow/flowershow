@@ -11,6 +11,7 @@ import {
   CircleArrowDownIcon,
   CircleCheckIcon,
   InfoIcon,
+  RocketIcon,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useSync } from '../sync-status-provider';
@@ -25,7 +26,18 @@ export default function Status() {
         data-testid="sync-status"
         className="mt-2 flex items-center text-sm text-gray-500"
       >
-        {syncStatus.status === 'LOADING' ? (
+        {syncStatus.status === 'UNPUBLISHED' ? (
+          <a
+            href={`./welcome`}
+            className="flex items-center text-pink-600 hover:underline"
+          >
+            <RocketIcon
+              className="mr-1.5 h-5 w-5 flex-shrink-0"
+              aria-hidden="true"
+            />
+            <span>Publish your first content</span>
+          </a>
+        ) : syncStatus.status === 'LOADING' ? (
           <div className="flex items-center">
             <CircleAlertIcon
               className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
@@ -99,22 +111,20 @@ export default function Status() {
           </div>
         )}
       </div>
-      <div className="mt-2 flex items-center text-sm text-gray-500">
-        <CalendarIcon
-          className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
-          aria-hidden="true"
-        />
-        {syncStatus.status === 'LOADING' ? (
-          <span>-</span>
-        ) : (
+      {syncStatus.lastSyncedAt && (
+        <div className="mt-2 flex items-center text-sm text-gray-500">
+          <CalendarIcon
+            className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
+            aria-hidden="true"
+          />
           <span>
             Last synced{' '}
             {syncStatus && syncStatus.lastSyncedAt
               ? new Date(syncStatus?.lastSyncedAt)?.toLocaleString()
               : '—'}
           </span>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

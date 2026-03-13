@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import FsImage from './fs-image';
+import { maxGeneratorDuration } from 'motion/react';
 
 vi.mock('next/image', () => ({
   default: (props: Record<string, unknown>) => (
@@ -112,6 +113,7 @@ describe('FsImage', () => {
         width: '100%',
         height: 'auto',
         margin: '0 auto',
+        maxWidth: '4000px',
       });
     });
 

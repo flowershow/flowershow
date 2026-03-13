@@ -12,7 +12,13 @@ import {
 import { api } from '@/trpc/react';
 
 // Site-level sync status (separate from blob-level Status enum)
-type SiteSyncStatus = 'SUCCESS' | 'PENDING' | 'ERROR' | 'OUTDATED' | 'LOADING';
+type SiteSyncStatus =
+  | 'UNPUBLISHED'
+  | 'SUCCESS'
+  | 'PENDING'
+  | 'ERROR'
+  | 'OUTDATED'
+  | 'LOADING';
 
 interface SyncStatus {
   status: SiteSyncStatus;
