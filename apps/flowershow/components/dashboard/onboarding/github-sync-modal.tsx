@@ -380,34 +380,36 @@ export default function GitHubSyncModal({
 
         {/* Success step */}
         {step === 'success' && (
-          <div className="p-5 md:p-10">
-            <div className="py-8 text-center">
-              <CheckCircleIcon className="mx-auto h-10 w-10 text-green-500" />
-              <p className="mt-3 text-sm font-medium text-stone-900">
-                GitHub repository connected and synced!
-              </p>
-              <p className="mt-1 text-sm text-stone-500">
-                Your site is ready to go.
-              </p>
+          <>
+            <div className="p-5 md:p-10">
+              <div className="py-8 text-center">
+                <CheckCircleIcon className="mx-auto h-10 w-10 text-green-500" />
+                <p className="mt-3 text-sm font-medium text-stone-900">
+                  GitHub repository connected and synced!
+                </p>
+                <p className="mt-1 text-sm text-stone-500">
+                  Your site is ready to go.
+                </p>
+              </div>
             </div>
-            <div className="flex justify-end gap-3">
+            <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 md:px-10 gap-3">
               <a
                 href={siteUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex h-10 items-center justify-center rounded-md border border-stone-300 bg-white px-4 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50"
+                className="flex h-10 flex-1 items-center justify-center rounded-md border border-stone-300 bg-white px-4 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50"
               >
                 View site
               </a>
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex h-10 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black"
+                className="flex h-10 flex-1 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black"
               >
                 Go to site settings
               </button>
             </div>
-          </div>
+          </>
         )}
       </div>
     </Modal>

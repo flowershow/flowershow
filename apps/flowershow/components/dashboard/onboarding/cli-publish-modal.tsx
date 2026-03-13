@@ -178,14 +178,14 @@ export default function CliPublishModal({
                 href={siteUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex h-10 items-center justify-center rounded-md border border-stone-300 bg-white px-4 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50"
+                className="flex h-10 flex-1 items-center justify-center rounded-md border border-stone-300 bg-white px-4 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50"
               >
                 View site
               </a>
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex h-10 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black"
+                className="flex h-10 flex-1 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black"
               >
                 Go to site settings
               </button>
