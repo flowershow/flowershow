@@ -2,13 +2,19 @@ import { Blob, Prisma, PrismaClient, Status } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
 import { revalidateTag, unstable_cache } from 'next/cache';
+import randomWord from 'random-word';
 import { z } from 'zod';
 import { isNavDropdown, SiteConfig } from '@/components/types';
 import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { buildSiteTree } from '@/lib/build-site-tree';
-import { deleteProject, fetchFile } from '@/lib/content-store';
+import {
+  deleteProject,
+  fetchFile,
+  generatePresignedUploadUrl,
+  getContentType,
+} from '@/lib/content-store';
 import {
   addDomainToVercel,
   removeDomainFromVercelProject,
@@ -123,81 +129,32 @@ export const siteRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
       z.object({
-        ghRepository: z.string().min(1),
-        ghBranch: z.string().min(1),
-        rootDir: z.string().optional(),
-        projectName: z.string().optional(),
-        installationId: z.string().optional(), // GitHub App installation ID
+        projectName: z.string().max(32).optional(),
       }),
     )
     .output(publicSiteSchema)
     .mutation(async ({ ctx, input }): Promise<PublicSite> => {
-      const { ghRepository, ghBranch, rootDir, installationId } = input;
-      const accessToken = ctx.session.accessToken;
+      const baseName = input.projectName?.trim()
+        ? input.projectName
+            .trim()
+            .toLowerCase()
+            .replace(/[^a-z0-9-_]/g, '-')
+        : `${randomWord()}-${randomWord()}`;
 
-      // 1) Validate remote branch exists
-      const branchExists = await checkIfBranchExists({
-        ghRepository,
-        ghBranch,
-        accessToken,
-        installationId,
-      });
-
-      if (!branchExists) {
-        throw new Error(
-          `Branch ${ghBranch} does not exist in repository ${ghRepository}`,
-        );
-      }
-
-      // 2) Decide projectName (unique per user)
-      const repoName = ghRepository.split('/')[1]!;
-      const baseName = input.projectName?.trim() || repoName;
       const projectName = await ensureUniqueProjectName(
         ctx.db,
         ctx.session.user.id,
         baseName,
       );
 
-      // 3) Look up the GitHubInstallationRepository for FK link
-      let installationRepoId: string | null = null;
-      if (installationId) {
-        const repoRecord = await ctx.db.gitHubInstallationRepository.findFirst({
-          where: { installationId, repositoryFullName: ghRepository },
-          select: { id: true },
-        });
-        installationRepoId = repoRecord?.id ?? null;
-      }
-
-      // 4) Create site
       const created = await ctx.db.site.create({
         data: {
           projectName,
-          ghRepository,
-          ghBranch,
-          rootDir,
-          autoSync: true,
-          webhookId: null,
+          autoSync: false,
           user: { connect: { id: ctx.session.user.id } },
-          ...(installationRepoId && {
-            installationRepository: { connect: { id: installationRepoId } },
-          }),
         },
       });
 
-      // 5) Kick off initial sync
-      await inngest.send({
-        name: 'site/sync',
-        data: {
-          siteId: created.id,
-          ghRepository,
-          ghBranch,
-          rootDir: created.rootDir,
-          accessToken,
-          installationId,
-        },
-      });
-
-      // 6) Send site-created email (best-effort)
       const creator = await ctx.db.user.findUnique({
         where: { id: ctx.session.user.id },
         select: { email: true, name: true, username: true },
@@ -216,22 +173,19 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      // 7) Analytics (best-effort)
       const posthog = await PostHogClient();
       posthog.capture({
-        distinctId: created.userId!,
+        distinctId: created.userId ?? ctx.session.user.id,
         event: 'site_created',
-        properties: { siteId: created.id, client_type: 'web' },
+        properties: { siteId: created.id, client_type: 'web', empty: true },
       });
       await posthog.shutdown();
 
-      // 8) Return canonical public shape
       const fresh = await ctx.db.site.findUnique({
         where: { id: created.id },
         select: publicSiteSelect,
       });
       if (!fresh) {
-        // extremely unlikely; handle defensively
         throw new Error('Site not found after creation');
       }
       return fresh;
@@ -701,7 +655,7 @@ export const siteRouter = createTRPCRouter({
         ctx,
         input,
       }): Promise<{
-        status: 'SUCCESS' | 'PENDING' | 'ERROR' | 'OUTDATED';
+        status: 'UNPUBLISHED' | 'SUCCESS' | 'PENDING' | 'ERROR' | 'OUTDATED';
         error?: string | null;
         lastSyncedAt?: Date | null;
       }> => {
@@ -737,9 +691,22 @@ export const siteRouter = createTRPCRouter({
 
         // Calculate aggregate sync status
         // Site-level status is separate from blob-level Status enum
-        let status: 'SUCCESS' | 'PENDING' | 'ERROR' | 'OUTDATED';
+        let status:
+          | 'UNPUBLISHED'
+          | 'SUCCESS'
+          | 'PENDING'
+          | 'ERROR'
+          | 'OUTDATED';
         let error: string | null = null;
         // Get the most recent update date
+
+        if (blobs.length === 0) {
+          return {
+            status: 'UNPUBLISHED',
+            lastSyncedAt: null,
+          };
+        }
+
         const lastSyncedAt =
           blobs
             .map((b) => b.updatedAt)
@@ -2100,6 +2067,143 @@ export const siteRouter = createTRPCRouter({
 
       revalidateTag(`${site.id}`);
       return fresh;
+    }),
+  publishFiles: protectedProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+        files: z.array(
+          z.object({
+            path: z.string().min(1),
+            size: z.number(),
+            sha: z.string().min(1),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { siteId, files } = input;
+
+      const site = await ctx.db.site.findUnique({
+        where: { id: siteId },
+        select: { id: true, userId: true },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      const MAX_FILES = 1000;
+      const MAX_FILE_SIZE = 100 * 1024 * 1024;
+      const MAX_TOTAL_SIZE = 500 * 1024 * 1024;
+
+      if (files.length > MAX_FILES) {
+        throw new TRPCError({
+          code: 'PAYLOAD_TOO_LARGE',
+          message: `Maximum ${MAX_FILES} files per request`,
+        });
+      }
+
+      let totalSize = 0;
+      for (const file of files) {
+        if (file.size > MAX_FILE_SIZE) {
+          throw new TRPCError({
+            code: 'PAYLOAD_TOO_LARGE',
+            message: `File ${file.path} exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+          });
+        }
+        totalSize += file.size;
+      }
+
+      if (totalSize > MAX_TOTAL_SIZE) {
+        throw new TRPCError({
+          code: 'PAYLOAD_TOO_LARGE',
+          message: `Total upload size exceeds maximum of ${MAX_TOTAL_SIZE / 1024 / 1024}MB`,
+        });
+      }
+
+      let uploadUrls: {
+        path: string;
+        uploadUrl: string;
+        blobId: string;
+        contentType: string;
+      }[];
+      try {
+        uploadUrls = await Promise.all(
+          files.map(async (file) => {
+            const extension = file.path.split('.').pop()?.toLowerCase() || '';
+
+            const urlPath = (() => {
+              if (['md', 'mdx'].includes(extension)) {
+                const _urlPath = resolveFilePathToUrlPath({
+                  target: file.path,
+                });
+                return _urlPath === '/'
+                  ? _urlPath
+                  : _urlPath.replace(/^\//, '');
+              }
+              return null;
+            })();
+
+            const blob = await ctx.db.blob.upsert({
+              where: {
+                siteId_path: { siteId, path: file.path },
+              },
+              create: {
+                siteId,
+                path: file.path,
+                appPath: urlPath,
+                size: file.size,
+                sha: file.sha,
+                metadata: {},
+                extension,
+                syncStatus: 'UPLOADING',
+              },
+              update: {
+                size: file.size,
+                sha: file.sha,
+                appPath: urlPath,
+                extension,
+                syncStatus: 'UPLOADING',
+              },
+            });
+
+            const s3Key = `${siteId}/main/raw/${file.path}`;
+            const contentType = getContentType(extension);
+            const uploadUrl = await generatePresignedUploadUrl(
+              s3Key,
+              3600,
+              contentType,
+            );
+
+            return {
+              path: file.path,
+              uploadUrl,
+              blobId: blob.id,
+              contentType,
+            };
+          }),
+        );
+      } finally {
+        revalidateTag(siteId);
+      }
+
+      const posthog = await PostHogClient();
+      posthog.capture({
+        distinctId: ctx.session.user.id,
+        event: 'files_published',
+        properties: {
+          client_type: 'web',
+          file_count: files.length,
+          siteId,
+        },
+      });
+      await posthog.shutdown();
+
+      return { files: uploadUrls };
     }),
 });
 

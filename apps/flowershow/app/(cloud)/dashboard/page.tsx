@@ -1,31 +1,55 @@
+import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
+import CreateSiteButton from '@/components/dashboard/create-site-button';
+import DashboardEmptyState from '@/components/dashboard/dashboard-empty-state';
 import MigrationBanner from '@/components/dashboard/migration-banner';
 import PlaceholderCard from '@/components/dashboard/placeholder-card';
-import SiteQuickstarts from '@/components/dashboard/site-quickstarts';
-import Sites from '@/components/dashboard/sites';
+import SiteCard from '@/components/dashboard/site-card';
+import { getSession } from '@/server/auth';
 import { api } from '@/trpc/server';
 
 export default async function AllSites() {
-  // Check if user has OAuth-only sites that need migration
+  const session = await getSession();
+  if (!session) {
+    redirect('/login');
+  }
+
+  const username = session.user?.username;
+
   const oauthSites = await api.user.hasOAuthOnlySites.query();
+  const sites = await api.user.getSites.query({});
 
   return (
-    <div className="flex flex-col space-y-6">
+    <div className="h-full flex flex-col space-y-6">
       {oauthSites.length > 0 && (
         <MigrationBanner sites={oauthSites} className="mt-6" />
       )}
-      <SiteQuickstarts />
-      <Suspense
-        fallback={
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <PlaceholderCard key={i} />
-            ))}
+      {sites.length === 0 ? (
+        <DashboardEmptyState />
+      ) : (
+        <>
+          <div className="flex justify-end pt-6">
+            <CreateSiteButton />
           </div>
-        }
-      >
-        <Sites />
-      </Suspense>
+          <Suspense
+            fallback={
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <PlaceholderCard key={i} />
+                ))}
+              </div>
+            }
+          >
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              {sites
+                .sort((a, b) => a.projectName.localeCompare(b.projectName))
+                .map((site) => (
+                  <SiteCard key={site.id} data={site} username={username} />
+                ))}
+            </div>
+          </Suspense>
+        </>
+      )}
     </div>
   );
 }

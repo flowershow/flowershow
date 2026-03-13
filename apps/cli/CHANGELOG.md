@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.1.3
+
+### Patch Changes
+
+- Add `.enablePositionalOptions().passThroughOptions()` to the root Commander program so that CLI options like `--name` on subcommands (e.g. `sync`) are no longer swallowed by the parent command's identically-named option.
+
 ## 1.1.2
 
 ### Patch Changes
@@ -69,10 +75,12 @@ See [MIGRATION.md](MIGRATION.md) for complete migration instructions.
   ## What Changed
 
   ### Package Name
+
   - NPM package: `flowershow` → `flowershow-publish`
   - Binary command: `flowershow` → `publish`
 
   ### Command Structure
+
   - **Main publish command is now default**: `publish <path>` (previously `flowershow publish <path>`)
   - **All other commands updated**: Use `publish` as the base command
     - `publish auth login` (was `flowershow auth login`)

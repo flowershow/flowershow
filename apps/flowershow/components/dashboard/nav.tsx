@@ -115,6 +115,14 @@ export default function Nav({ children }: { children: ReactNode }) {
           <div className="ml-6 flex items-center space-x-2">
             <Link
               className="flex items-center text-sm hover:underline"
+              href="https://flowershow.app/docs"
+              target="_blank"
+            >
+              <span>Docs</span>
+              <ExternalLinkIcon className="h-4" />
+            </Link>
+            <Link
+              className="flex items-center text-sm hover:underline"
               href="https://discord.gg/JChzM5VdFn"
               target="_blank"
             >

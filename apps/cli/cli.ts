@@ -16,7 +16,9 @@ const program = new Command();
 program
   .name('publish')
   .description('CLI tool for publishing to Flowershow')
-  .version(packageJson.version);
+  .version(packageJson.version)
+  .enablePositionalOptions()
+  .passThroughOptions();
 
 // Default action: publish files/folders
 program
