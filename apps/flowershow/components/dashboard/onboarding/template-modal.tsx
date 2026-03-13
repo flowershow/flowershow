@@ -345,8 +345,25 @@ export default function TemplateModal({
                 <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-xs font-medium text-stone-700">
                   3
                 </span>
+                <div>
+                  <p>Grant the Flowershow app access to your new repository.</p>
+                  <button
+                    type="button"
+                    onClick={handleChangeGitHubAppPermissions}
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs font-medium text-stone-700 transition-colors hover:border-stone-300 hover:bg-stone-100"
+                  >
+                    <GithubIcon className="h-3.5 w-3.5" />
+                    Configure GitHub App
+                    <ExternalLinkIcon className="h-3 w-3" />
+                  </button>
+                </div>
+              </li>
+              <li className="flex gap-3">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-xs font-medium text-stone-700">
+                  4
+                </span>
                 <p>
-                  Once your repository is created, click{' '}
+                  Once done, click{' '}
                   <span className="font-medium text-stone-900">
                     I&apos;ve created my repo
                   </span>{' '}

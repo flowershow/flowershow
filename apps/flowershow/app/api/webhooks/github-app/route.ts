@@ -481,53 +481,109 @@ async function handleRepositoryEvent(data: WebhookPayload) {
     return;
   }
 
-  if (action !== 'renamed') {
-    console.log(`Unhandled repository action: ${action}`);
-    return;
+  switch (action) {
+    case 'created': {
+      // A new repository was created under an "all repositories" installation.
+      // GitHub doesn't send installation_repositories for this case, so we
+      // need to add it to the DB ourselves.
+      const ghInstallationId = BigInt(installation.id);
+
+      const dbInstallations = await prisma.gitHubInstallation.findMany({
+        where: { installationId: ghInstallationId },
+      });
+
+      if (dbInstallations.length === 0) {
+        console.log(
+          `Repository created but installation ${installation.id} not found in database`,
+        );
+        break;
+      }
+
+      for (const dbInstallation of dbInstallations) {
+        await prisma.gitHubInstallationRepository.upsert({
+          where: {
+            installationId_repositoryId: {
+              installationId: dbInstallation.id,
+              repositoryId: BigInt(repository.id),
+            },
+          },
+          update: {
+            repositoryName: repository.name,
+            repositoryFullName: repository.full_name,
+            isPrivate: repository.private,
+          },
+          create: {
+            installationId: dbInstallation.id,
+            repositoryId: BigInt(repository.id),
+            repositoryName: repository.name,
+            repositoryFullName: repository.full_name,
+            isPrivate: repository.private,
+          },
+        });
+      }
+
+      log('Handle Repository Created Event', SeverityNumber.INFO, {
+        source: 'github_app_repository',
+        action: 'created',
+        repository_id: repository.id,
+        repository_full_name: repository.full_name,
+        installation_id: installation.id,
+        user_links: dbInstallations.length,
+      });
+      break;
+    }
+
+    case 'renamed': {
+      const repositoryId = BigInt(repository.id);
+      const newFullName = repository.full_name;
+      const newName = repository.name;
+
+      // Update the authoritative source — GitHubInstallationRepository.
+      // Sites linked via installationRepositoryId FK automatically see the new name.
+      const updatedRepos = await prisma.gitHubInstallationRepository.updateMany(
+        {
+          where: { repositoryId },
+          data: {
+            repositoryFullName: newFullName,
+            repositoryName: newName,
+          },
+        },
+      );
+
+      // Fallback: update ghRepository on legacy sites that aren't linked via FK yet
+      const oldName = changes?.repository?.name?.from;
+      const oldFullName =
+        oldName && repository.owner?.login
+          ? `${repository.owner.login}/${oldName}`
+          : null;
+
+      let updatedLegacySites = { count: 0 };
+      if (oldFullName) {
+        updatedLegacySites = await prisma.site.updateMany({
+          where: {
+            installationRepositoryId: null,
+            ghRepository: oldFullName,
+          },
+          data: { ghRepository: newFullName },
+        });
+      }
+
+      log('Handle Repository Renamed Event', SeverityNumber.INFO, {
+        source: 'github_app_repository',
+        action: 'renamed',
+        repository_id: repository.id,
+        old_full_name: oldFullName ?? undefined,
+        new_full_name: newFullName,
+        installation_id: installation.id,
+        repos_updated: updatedRepos.count,
+        legacy_sites_updated: updatedLegacySites.count,
+      });
+      break;
+    }
+
+    default:
+      console.log(`Unhandled repository action: ${action}`);
   }
-
-  const repositoryId = BigInt(repository.id);
-  const newFullName = repository.full_name;
-  const newName = repository.name;
-
-  // Update the authoritative source — GitHubInstallationRepository.
-  // Sites linked via installationRepositoryId FK automatically see the new name.
-  const updatedRepos = await prisma.gitHubInstallationRepository.updateMany({
-    where: { repositoryId },
-    data: {
-      repositoryFullName: newFullName,
-      repositoryName: newName,
-    },
-  });
-
-  // Fallback: update ghRepository on legacy sites that aren't linked via FK yet
-  const oldName = changes?.repository?.name?.from;
-  const oldFullName =
-    oldName && repository.owner?.login
-      ? `${repository.owner.login}/${oldName}`
-      : null;
-
-  let updatedLegacySites = { count: 0 };
-  if (oldFullName) {
-    updatedLegacySites = await prisma.site.updateMany({
-      where: {
-        installationRepositoryId: null,
-        ghRepository: oldFullName,
-      },
-      data: { ghRepository: newFullName },
-    });
-  }
-
-  log('Handle Repository Renamed Event', SeverityNumber.INFO, {
-    source: 'github_app_repository',
-    action: 'renamed',
-    repository_id: repository.id,
-    old_full_name: oldFullName ?? undefined,
-    new_full_name: newFullName,
-    installation_id: installation.id,
-    repos_updated: updatedRepos.count,
-    legacy_sites_updated: updatedLegacySites.count,
-  });
 }
 
 /**
