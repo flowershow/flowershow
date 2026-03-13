@@ -123,10 +123,11 @@ export default function CliPublishModal({
                     command={`publish sync ./my-content --name ${siteName}`}
                   />
                   <p className="mt-2 text-xs text-stone-500">
-                    To update later, run{' '}
-                    <code className="rounded bg-stone-100 px-1 py-0.5">
-                      publish sync ./my-content --name ${siteName}
-                    </code>
+                    <strong>
+                      Change the content path to the correct directory.
+                    </strong>
+                    <br />
+                    To update later, run the same command.
                   </p>
                 </div>
               </div>

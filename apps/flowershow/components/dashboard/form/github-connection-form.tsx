@@ -174,7 +174,6 @@ export default function GitHubConnectionForm({
           <h2 className="font-dashboard-heading text-xl">GitHub Integration</h2>
           <p className="text-sm text-stone-500">
             Connect a GitHub repository to automatically sync content.
-            Currently, this site is published via CLI or Obsidian plugin.
           </p>
 
           <button

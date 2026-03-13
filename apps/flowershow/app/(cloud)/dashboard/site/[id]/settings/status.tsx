@@ -16,7 +16,7 @@ import {
 import { useState } from 'react';
 import { useSync } from '../sync-status-provider';
 
-export default function Status() {
+export default function Status({ hasGithubRepo }: { hasGithubRepo: boolean }) {
   const syncStatus = useSync();
   const [showErrorDialog, setShowErrorDialog] = useState(false);
 
@@ -51,7 +51,7 @@ export default function Status() {
               className="mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"
               aria-hidden="true"
             />
-            <span>Synced</span>
+            <span>{hasGithubRepo ? 'Synced' : 'Published'}</span>
           </div>
         ) : syncStatus.status === 'PENDING' ? (
           <div className="flex items-center">
@@ -59,7 +59,7 @@ export default function Status() {
               className="mr-1.5 h-5 w-5 flex-shrink-0 text-orange-400"
               aria-hidden="true"
             />
-            <span>Syncing...</span>
+            <span>{hasGithubRepo ? 'Syncing...' : 'Publishing...'}</span>
           </div>
         ) : syncStatus.status === 'ERROR' ? (
           <div className="group flex items-center hover:cursor-default">
@@ -118,7 +118,7 @@ export default function Status() {
             aria-hidden="true"
           />
           <span>
-            Last synced{' '}
+            {hasGithubRepo ? 'Last synced' : 'Last published'}{' '}
             {syncStatus && syncStatus.lastSyncedAt
               ? new Date(syncStatus?.lastSyncedAt)?.toLocaleString()
               : '—'}

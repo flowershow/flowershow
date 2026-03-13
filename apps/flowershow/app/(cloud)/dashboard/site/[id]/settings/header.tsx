@@ -1,4 +1,4 @@
-import { SquareArrowOutUpRight } from 'lucide-react';
+import { FolderIcon, SquareArrowOutUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { Suspense } from 'react';
 
@@ -42,10 +42,10 @@ export default async function SiteSettingsHeader({
             </div>
           </h2>
           <Suspense fallback={<LoadingDots />}>
-            <Status />
+            <Status hasGithubRepo={!!getRepoFullName(site)} />
           </Suspense>
 
-          {getRepoFullName(site) && (
+          {getRepoFullName(site) ? (
             <Link
               href={`https://github.com/${getRepoFullName(site)}`}
               target="_blank"
@@ -58,6 +58,17 @@ export default async function SiteSettingsHeader({
               />
               <span>{getRepoFullName(site)}</span>
             </Link>
+          ) : (
+            <span
+              className="mt-2 inline-flex items-center text-sm text-gray-500"
+              title="Published via CLI, Obsidian plugin, or drag and drop"
+            >
+              <FolderIcon
+                className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400"
+                aria-hidden="true"
+              />
+              Direct publish
+            </span>
           )}
         </div>
         <div className="mt-5 flex lg:ml-4 lg:mt-0">
