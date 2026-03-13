@@ -26,13 +26,17 @@ export const InlineSnippet = ({
   );
 };
 export default function DomainConfiguration({ domain }: { domain: string }) {
-  const [recordType, setRecordType] = useState<'A' | 'CNAME'>('A');
+  const [recordType, setRecordType] = useState<'A' | 'CNAME' | null>(null);
 
   const { status, domainJson, configJson } = useDomainStatus({ domain });
 
   if (!status || status === 'Valid Configuration' || !domainJson) return null;
 
-  const subdomain = getSubdomain(domainJson.name, domainJson.apexName);
+  const domainName = domainJson.name ?? domain;
+  const apexName = domainJson.apexName ?? domain.split('.').slice(-2).join('.');
+  const subdomain = getSubdomain(domainName, apexName);
+
+  const activeRecordType = recordType ?? (subdomain ? 'CNAME' : 'A');
 
   const txtVerification =
     (status === 'Pending Verification' &&
@@ -69,8 +73,8 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
         <>
           <p className="text-sm ">
             Please set the following TXT record on{' '}
-            <InlineSnippet>{domainJson.apexName}</InlineSnippet> to prove
-            ownership of <InlineSnippet>{domainJson.name}</InlineSnippet>:
+            <InlineSnippet>{apexName}</InlineSnippet> to prove ownership of{' '}
+            <InlineSnippet>{domainName}</InlineSnippet>:
           </p>
           <div className="my-5 flex items-start justify-start space-x-10 rounded-md bg-stone-50 p-2  ">
             <div>
@@ -82,9 +86,7 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
               <p className="mt-2 font-mono text-sm">
                 {txtVerification.domain.slice(
                   0,
-                  txtVerification.domain.length -
-                    domainJson.apexName.length -
-                    1,
+                  txtVerification.domain.length - apexName.length - 1,
                 )}
               </p>
             </div>
@@ -110,7 +112,7 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
               type="button"
               onClick={() => setRecordType('A')}
               className={`${
-                recordType == 'A'
+                activeRecordType == 'A'
                   ? 'border-black text-black  '
                   : 'border-white text-stone-400  '
               } ease border-b-2 pb-1 text-sm transition-all duration-150`}
@@ -121,7 +123,7 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
               type="button"
               onClick={() => setRecordType('CNAME')}
               className={`${
-                recordType == 'CNAME'
+                activeRecordType == 'CNAME'
                   ? 'border-black text-black  '
                   : 'border-white text-stone-400  '
               } ease border-b-2 pb-1 text-sm transition-all duration-150`}
@@ -131,29 +133,24 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
           </div>
           <div className="my-3 text-left">
             <p className="my-5 text-sm ">
-              To configure your{' '}
-              {recordType === 'A' ? 'apex domain' : 'subdomain'} (
-              <InlineSnippet>
-                {recordType === 'A' ? domainJson.apexName : domainJson.name}
-              </InlineSnippet>
-              ), set the following {recordType} record on your DNS provider to
-              continue:
+              To configure your {subdomain ? 'subdomain' : 'apex domain'} (
+              <InlineSnippet>{domainName}</InlineSnippet>
+              ), set the following {activeRecordType} record on your DNS
+              provider to continue:
             </p>
             <div className="flex items-center justify-start space-x-10 rounded-md bg-stone-50 p-2  ">
               <div>
                 <p className="text-sm font-bold">Type</p>
-                <p className="mt-2 font-mono text-sm">{recordType}</p>
+                <p className="mt-2 font-mono text-sm">{activeRecordType}</p>
               </div>
               <div>
                 <p className="text-sm font-bold">Name</p>
-                <p className="mt-2 font-mono text-sm">
-                  {recordType === 'A' ? '@' : (subdomain ?? 'www')}
-                </p>
+                <p className="mt-2 font-mono text-sm">{subdomain ?? '@'}</p>
               </div>
               <div>
                 <p className="text-sm font-bold">Value</p>
                 <p className="mt-2 font-mono text-sm">
-                  {recordType === 'A' ? aRecordValue : cnameTarget}
+                  {activeRecordType === 'A' ? aRecordValue : cnameTarget}
                 </p>
               </div>
               <div>
