@@ -163,7 +163,6 @@
     "playwright": "^1.55.0",
     "postcss": "^8.4.31",
     "prisma": "5.5.2",
-    "random-word": "^3.0.0",
     "react-email": "^5.2.9",
     "remark-stringify": "^11.0.0",
     "storybook": "^10.2.0",

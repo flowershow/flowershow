@@ -2,7 +2,6 @@ import { Blob, Prisma, PrismaClient, Status } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
 import { revalidateTag, unstable_cache } from 'next/cache';
-import randomWord from 'random-word';
 import { z } from 'zod';
 import { isNavDropdown, SiteConfig } from '@/components/types';
 import { env } from '@/env.mjs';
@@ -129,17 +128,15 @@ export const siteRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
       z.object({
-        projectName: z.string().max(32).optional(),
+        projectName: z.string().min(1).max(32),
       }),
     )
     .output(publicSiteSchema)
     .mutation(async ({ ctx, input }): Promise<PublicSite> => {
-      const baseName = input.projectName?.trim()
-        ? input.projectName
-            .trim()
-            .toLowerCase()
-            .replace(/[^a-z0-9-_]/g, '-')
-        : `${randomWord()}-${randomWord()}`;
+      const baseName = input.projectName
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9-_]/g, '-');
 
       const projectName = await ensureUniqueProjectName(
         ctx.db,

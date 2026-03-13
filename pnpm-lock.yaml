@@ -534,9 +534,6 @@ importers:
       prisma:
         specifier: 5.5.2
         version: 5.5.2
-      random-word:
-        specifier: ^3.0.0
-        version: 3.0.0
       react-email:
         specifier: ^5.2.9
         version: 5.2.9
@@ -9235,10 +9232,6 @@ packages:
   raf@3.4.1:
     resolution: {integrity: sha512-Sq4CW4QhwOHE8ucn6J34MqtZCeWFP2aQSmrlroYgqAV1PjStIhJXxYuTgUIfkEk7zTLjmIjLmU5q+fbD1NnOJA==}
 
-  random-word@3.0.0:
-    resolution: {integrity: sha512-u7WuGBPh4KYMpzm2FRK2FtV7q28EzWULhdu0HSxWT8xTrZUpjZGmUDDi/1g15obzfCeN3avCuA4XETUzoEFotg==}
-    engines: {node: '>=18'}
-
   randombytes@2.1.0:
     resolution: {integrity: sha512-vYl3iOX+4CKUWuxGi9Ukhie6fsqXqS9FE2Zaic4tNFD2N2QQaXOMFbuKK4QmDHC0JO6B1Zp41J0LpT0oR68amQ==}
 
@@ -10582,14 +10575,6 @@ packages:
   unified@11.0.5:
     resolution: {integrity: sha512-xKvGhPWw3k84Qjh8bI3ZeJjqnyadK+GEFtazSfZv/rKeTkTjOJho6mFqh2SM96iIcZokxiOpg78GazTSg8+KHA==}
 
-  unique-random-array@3.0.0:
-    resolution: {integrity: sha512-AETNmMf8dV7VfCu4pM5SO1nKkZZp3lZsbHk9VxkvR2ZjMYy4mzWwzez0g+ZtYIr+RaVH+UN8A003E7woM/ud7Q==}
-    engines: {node: '>=12'}
-
-  unique-random@3.0.0:
-    resolution: {integrity: sha512-4vjtE3pH6xO5OmsSmjc6KPgHy2rbCw66BbMRLIyXkuq+WzOKA1oNkqQ+Y7Lh+sE0DrOrWMSpFkivhhzCF7J6HA==}
-    engines: {node: '>=12'}
-
   unist-util-filter@5.0.1:
     resolution: {integrity: sha512-pHx7D4Zt6+TsfwylH9+lYhBhzyhEnCXs/lbq/Hstxno5z4gVdyc2WEW0asfjGKPyG4pEKrnBv5hdkO6+aRnQJw==}
 
@@ -11113,10 +11098,6 @@ packages:
     resolution: {integrity: sha512-hUrmaWBdVDcxvYqnyh09zunKzROWjbZTiNy8dBEjkS7ehEDQibXJ7XvlmtbwuTclUiIyN+CyXQD4Vmko8fNm8w==}
     engines: {node: '>=8'}
     hasBin: true
-
-  word-list@4.1.0:
-    resolution: {integrity: sha512-4vtKyH8lGfaY8DHLTKQDfDxPixdK6BC/2W38TsPE07Wc8uPrMIbEO3quxBFSa2BfsDyG6pW47UEN/9tfYxN6BA==}
-    engines: {node: '>=18'}
 
   word-wrap@1.2.5:
     resolution: {integrity: sha512-BN22B5eaMMI9UMtjrGd5g5eCYPpCPDUy0FJXbYsaT5zYxjFOckS53SQDE3pWkVoWpHXVb3BrYcEN4Twa55B5cA==}
@@ -22045,11 +22026,6 @@ snapshots:
     dependencies:
       performance-now: 2.1.0
 
-  random-word@3.0.0:
-    dependencies:
-      unique-random-array: 3.0.0
-      word-list: 4.1.0
-
   randombytes@2.1.0:
     dependencies:
       safe-buffer: 5.2.1
@@ -23864,12 +23840,6 @@ snapshots:
       trough: 2.2.0
       vfile: 6.0.3
 
-  unique-random-array@3.0.0:
-    dependencies:
-      unique-random: 3.0.0
-
-  unique-random@3.0.0: {}
-
   unist-util-filter@5.0.1:
     dependencies:
       '@types/unist': 3.0.3
@@ -24767,8 +24737,6 @@ snapshots:
     dependencies:
       siginfo: 2.0.0
       stackback: 0.0.2
-
-  word-list@4.1.0: {}
 
   word-wrap@1.2.5: {}
 

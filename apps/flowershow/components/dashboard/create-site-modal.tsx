@@ -43,7 +43,12 @@ export default function CreateSiteModal({
   const handleCreate = () => {
     setState('creating');
     setError(null);
-    createSite.mutate({ projectName: name.trim() || undefined });
+    if (!name.trim()) {
+      setError('Please enter a site name');
+      setState('error');
+      return;
+    }
+    createSite.mutate({ projectName: name.trim() });
   };
 
   const handleClose = () => {
@@ -83,6 +88,7 @@ export default function CreateSiteModal({
             placeholder="my-awesome-site"
             maxLength={32}
             ref={inputElement}
+            required
             className="mt-4 w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black"
           />
           {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
