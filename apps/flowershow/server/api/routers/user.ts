@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { fetchGitHubScopeRepositories, fetchGitHubScopes } from '@/lib/github';
+import { inngest } from '@/inngest/client';
 import PostHogClient from '@/lib/server-posthog';
 import {
   createTRPCRouter,
@@ -113,12 +114,25 @@ export const userRouter = createTRPCRouter({
       };
 
       // Update user with appended feedback
-      await ctx.db.user.update({
+      const user2 = await ctx.db.user.update({
         where: { id: ctx.session.user.id },
         data: {
           feedback: [...existingFeedback, newFeedback],
         },
+        select: { email: true, name: true },
       });
+
+      if (user2.email) {
+        await inngest.send({
+          name: 'email/feedback-thank-you.send',
+          data: {
+            userId: ctx.session.user.id,
+            email: user2.email,
+            name: user2.name,
+          },
+        });
+      }
+
       return { success: true };
     }),
   hasOAuthOnlySites: protectedProcedure.query(async ({ ctx }) => {

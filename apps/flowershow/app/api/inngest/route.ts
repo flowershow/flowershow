@@ -3,6 +3,7 @@ import { inngest } from '@/inngest/client';
 import { cleanupExpiredSites, deleteSite, syncSite } from '@/inngest/functions';
 import {
   checkCustomDomainAndNotify,
+  sendFeedbackThankYouEmail,
   sendWelcomeEmail,
   sendPremiumUpgradeEmail,
   sendSiteCreatedEmail,
@@ -17,6 +18,7 @@ export const { GET, POST, PUT } = serve({
     sendWelcomeEmail,
     sendPremiumUpgradeEmail,
     sendSiteCreatedEmail,
+    sendFeedbackThankYouEmail,
     checkCustomDomainAndNotify,
   ],
 });

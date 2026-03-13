@@ -49,6 +49,14 @@ interface EmailSiteCreated {
   };
 }
 
+interface EmailFeedbackThankYou {
+  data: {
+    userId: string;
+    email: string;
+    name: string | null;
+  };
+}
+
 interface EmailCustomDomainCheck {
   data: {
     userId: string;
@@ -68,6 +76,7 @@ type Events = {
   'email/premium-upgrade.send': EmailPremiumUpgrade;
 
   'email/site-created.send': EmailSiteCreated;
+  'email/feedback-thank-you.send': EmailFeedbackThankYou;
   'email/custom-domain.check': EmailCustomDomainCheck;
 };
 

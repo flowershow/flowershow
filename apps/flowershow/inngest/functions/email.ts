@@ -1,5 +1,6 @@
 import { CustomDomainConnectedEmail } from '@/emails/custom-domain-connected';
 import { CustomDomainMisconfiguredEmail } from '@/emails/custom-domain-misconfigured';
+import { FeedbackThankYouEmail } from '@/emails/feedback-thank-you';
 import { PremiumUpgradeEmail } from '@/emails/premium-upgrade';
 import { SiteCreatedEmail } from '@/emails/site-created';
 import { WelcomeEmail } from '@/emails/welcome';
@@ -75,6 +76,31 @@ export const sendSiteCreatedEmail = inngest.createFunction(
 
     if (error) {
       throw new Error(`Failed to send site created email: ${error.message}`);
+    }
+
+    return { emailId: data?.id };
+  },
+);
+
+export const sendFeedbackThankYouEmail = inngest.createFunction(
+  { id: 'send-feedback-thank-you-email' },
+  { event: 'email/feedback-thank-you.send' },
+  async ({ event }) => {
+    const { email, name } = event.data;
+    const userName = name?.split(' ')[0] || 'there';
+
+    const { data, error } = await sendEmail({
+      to: email,
+      subject: 'Thanks for your feedback!',
+      react: FeedbackThankYouEmail({
+        userName,
+      }),
+    });
+
+    if (error) {
+      throw new Error(
+        `Failed to send feedback thank you email: ${error.message}`,
+      );
     }
 
     return { emailId: data?.id };
