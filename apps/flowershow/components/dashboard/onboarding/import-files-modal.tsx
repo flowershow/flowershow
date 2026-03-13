@@ -278,8 +278,10 @@ export default function ImportFilesOnboardingModal({
                 ref={fileInputRef}
                 onChange={(e) => handleFilesSelected(e.target.files)}
                 className="hidden"
-                webkitdirectory=""
-                directory=""
+                {...({
+                  webkitdirectory: '',
+                  directory: '',
+                } as React.InputHTMLAttributes<HTMLInputElement>)}
                 multiple
               />
               <UploadIcon className="mx-auto" />
