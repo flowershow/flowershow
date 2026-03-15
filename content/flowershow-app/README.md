@@ -1,6 +1,6 @@
 ---
-title: Markdown to website in seconds
-description: The fastest way to turn your markdown into a live website — for docs, blogs, knowledge bases, landing pages and more. Free forever.
+title: Publish Markdown as a Website — Blogs, Docs & Knowledge Bases | Flowershow
+description: Turn markdown files into beautiful websites in seconds. Publish Obsidian vaults, blogs, docs, and knowledge bases — free, no coding required.
 layout: plain
 showToc: false
 showEditLink: false
@@ -10,8 +10,8 @@ showComments: false
 <div className="py-12 sm:py-24">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl text-center">
-      <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl">Markdown to website in seconds</h1>
-      <p className="mt-6 text-pretty text-lg text-gray-500 sm:text-xl/8">The fastest way to turn your markdown into a live, beautiful website.</p>
+      <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl">Publish your markdown as a beautiful website</h1>
+      <p className="mt-6 text-pretty text-lg text-gray-500 sm:text-xl/8">Blogs, docs, knowledge bases, and Obsidian vaults — live in seconds.</p>
       <p className="mt-2 text-pretty text-lg text-gray-500 sm:text-xl/8">No repos, no build pipelines, no waiting.</p>
       <p className="mt-4 text-sm text-gray-400">Free plan available — no credit card required.</p>
       <div className="mt-8 flex items-center justify-center gap-x-6">
@@ -22,9 +22,9 @@ showComments: false
         <a href="#demo" className="text-sm/6 font-semibold text-gray-900">Watch the demo ↓</a>
       </div>
       <div className="mt-8 flex items-center justify-center gap-x-6 text-sm text-gray-400">
-        <span><strong className="text-gray-600">1,300+</strong> users</span>
+        <span><strong className="text-gray-600">1,400+</strong> users</span>
         <span aria-hidden="true">·</span>
-        <span><strong className="text-gray-600">1000+</strong> sites published</span>
+        <span><strong className="text-gray-600">1100+</strong> sites published</span>
         <span aria-hidden="true">·</span>
         <span><strong className="text-gray-600">Free</strong> forever</span>
       </div>
@@ -42,7 +42,7 @@ showComments: false
 <div className="py-12 sm:py-20">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl lg:text-center">
-      <h2 className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl lg:text-balance">Everything you need. Nothing you don't.</h2>
+      <h2 className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl lg:text-balance">Everything you need to publish markdown</h2>
     </div>
     <div className="mx-auto mt-12 max-w-3xl sm:mt-16 lg:mt-20 lg:max-w-5xl">
       <dl className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-16">
@@ -78,7 +78,7 @@ showComments: false
 <div className="bg-gray-50 py-12 sm:py-20 my-4">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl lg:text-center mb-12">
-      <h2 className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl lg:text-balance">Beautiful by default. Yours to customise.</h2>
+      <h2 className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl lg:text-balance">Beautiful themes, ready to customise</h2>
       <p className="mt-4 text-lg text-gray-600">Four official themes — or roll your own with CSS and Tailwind.</p>
     </div>
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
@@ -120,7 +120,7 @@ showComments: false
 <div className="py-12 sm:py-20">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl lg:text-center">
-      <h2 className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl lg:text-balance">Works however you work</h2>
+      <h2 className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl lg:text-balance">Publish from Obsidian, GitHub, or the terminal</h2>
       <p className="mt-4 text-lg text-gray-600">Connect your content your way. We handle the rest.</p>
     </div>
     <div className="mx-auto mt-12 max-w-3xl sm:mt-16 lg:mt-20 lg:max-w-5xl">
@@ -166,7 +166,7 @@ showComments: false
 <div className="py-12 sm:py-20">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl lg:text-center">
-      <h2 className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl lg:text-balance">Built for how you actually work</h2>
+      <h2 className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl lg:text-balance">Blogs, docs, wikis, and Obsidian vaults</h2>
       <p className="mt-4 text-lg text-gray-600">Whatever your content looks like, Flowershow publishes it.</p>
     </div>
     <div className="mx-auto mt-12 max-w-3xl sm:mt-16 lg:mt-20 lg:max-w-5xl">
@@ -198,7 +198,7 @@ showComments: false
 <div className="bg-orange-50 py-12 sm:py-20 my-4">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl lg:text-center mb-12">
-      <h2 className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl lg:text-balance">Built by people like you</h2>
+      <h2 className="mt-2 text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl lg:text-balance">Sites built with Flowershow</h2>
       <p className="mt-4 text-lg text-gray-600">Thousands of sites, across every use case imaginable.</p>
     </div>
     <div className="grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-3">

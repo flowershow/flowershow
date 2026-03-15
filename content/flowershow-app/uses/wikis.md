@@ -1,6 +1,6 @@
 ---
-title: "Markdown Wiki — Publish Instantly from Your Repository | Flowershow"
-description: "Turn your Markdown knowledge base into a fast, searchable wiki. Publish from GitHub, Obsidian, folders, or CLI. Free plan forever."
+title: "Build a Wiki from Markdown Files | Flowershow"
+description: "Publish a wiki or knowledge base from plain markdown. Wiki links, search, and navigation — all automatic. Free plan forever."
 layout: plain
 showToc: false
 showEditLink: false

@@ -1,6 +1,6 @@
 ---
-title: "Publish Your Obsidian Vault — Free"
-description: "The easiest way to turn your Obsidian vault into a beautiful website. Free plan, open source, 7,000+ plugin installs."
+title: "Publish Your Obsidian Vault as a Website — Free Obsidian Publish Alternative"
+description: "Turn your Obsidian vault into a live website with wiki links, graph view, and search. The best free alternative to Obsidian Publish."
 layout: plain
 showToc: false
 showEditLink: false

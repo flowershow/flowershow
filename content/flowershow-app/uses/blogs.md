@@ -1,6 +1,6 @@
 ---
-title: "Your Personal Blog — Live in Seconds | Flowershow"
-description: "Turn your markdown notes into a blog in seconds — and get back to writing. Free plan, forever."
+title: "Create a Markdown Blog — No Coding Required | Flowershow"
+description: "Publish a beautiful blog from markdown files. Author profiles, comments, search, custom domains. Free to start."
 layout: plain
 showToc: false
 showEditLink: false

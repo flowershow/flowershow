@@ -1,6 +1,6 @@
 ---
-title: "Publish Your Docs — Free | Flowershow"
-description: "Turn a folder of Markdown files into a live docs site, in seconds. No setup ceremony. Free plan, forever."
+title: "Markdown Documentation Site Builder | Flowershow"
+description: "Turn a folder of markdown files into a searchable documentation website. Sidebar navigation, full-text search, custom domains."
 layout: plain
 showToc: false
 showEditLink: false

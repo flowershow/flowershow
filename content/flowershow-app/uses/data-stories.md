@@ -1,6 +1,6 @@
 ---
-title: Tell data-rich stories with Markdown
-description: Mix prose with live tables and charts. Flowershow turns your markdown into beautiful, data-driven posts that render local or external CSVs with reusable table and plotting components.
+title: Publish Data Stories from Markdown | Flowershow
+description: Turn data narratives and analyses into shareable web pages. Charts, tables, and prose — published from markdown.
 layout: plain
 showToc: false
 showEditLink: false
