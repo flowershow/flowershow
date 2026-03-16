@@ -1,7 +1,9 @@
 'use client';
 
 import { Radio, RadioGroup } from '@headlessui/react';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+
 import type { Plan, PlanType } from '@/lib/stripe-plans';
 import { api } from '@/trpc/react';
 import { LoadingButton } from './loading-button';
@@ -20,18 +22,15 @@ interface BillingProps {
 export default function Billing({ siteId, subscription, plans }: BillingProps) {
   const [loading, setLoading] = useState(false);
   const [frequency, setFrequency] = useState(frequencies[0]);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const searchParams = useSearchParams();
 
-  // Check for success parameter in URL
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('success') === 'true') {
-      setShowSuccess(true);
-      // Remove success parameter from URL
-      const newUrl = window.location.pathname;
-      window.history.replaceState({}, '', newUrl);
+    if (searchParams.get('upgrade_success') === 'true') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('upgrade_success');
+      window.location.replace(url.toString());
     }
-  }, []);
+  }, [searchParams]);
 
   const getPriceString = (plan: Plan) => {
     const interval = frequency.value as 'month' | 'year';
