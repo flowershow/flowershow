@@ -1,15 +1,18 @@
 'use client';
 
 import { TerminalIcon, UploadIcon } from 'lucide-react';
-import Image from 'next/image';
 import { useState } from 'react';
-import ObsidianIcon from '@/components/icons/obsidian';
+
 import { GithubIcon } from '../icons';
+import ObsidianIcon from '@/components/icons/obsidian';
 import CliPublishModal from './onboarding/cli-publish-modal';
 import GitHubSyncModal from './onboarding/github-sync-modal';
 import ImportFilesOnboardingModal from './onboarding/import-files-modal';
 import ObsidianPublishModal from './onboarding/obsidian-publish-modal';
-import TemplateModal from './onboarding/template-modal';
+import TemplateModal, {
+  templates,
+  type TemplateId,
+} from './onboarding/template-modal';
 
 type ModalType = 'import' | 'github' | 'cli' | 'obsidian' | 'template' | null;
 
@@ -54,6 +57,7 @@ export default function WelcomeContent({
   siteUrl,
 }: WelcomeContentProps) {
   const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>('blog');
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col items-center py-12 text-center">
@@ -62,44 +66,55 @@ export default function WelcomeContent({
       </h1>
       <p className="mt-3 text-stone-500">Pick how you want to get started</p>
 
-      <div className="mt-10 grid w-full grid-cols-1 gap-4 sm:grid-cols-2">
-        <button
-          type="button"
-          onClick={() => setActiveModal('template')}
-          className="overflow-hidden group col-span-1 flex items-center gap-4 rounded-lg border border-stone-200 text-left transition-all hover:border-stone-400 hover:shadow-md sm:col-span-2"
-        >
-          <div className="m-2 relative w-1/2 aspect-video flex-shrink-0 overflow-hidden bg-stone-100">
-            <Image
-              src="https://r2-assets.flowershow.app/demo-docs.png"
-              alt="Site templates"
-              fill
-              className="object-cover"
-            />
+      <div className="mt-10 w-full space-y-6">
+        <div>
+          <h2 className="text-left text-sm font-medium text-stone-700">
+            Start from a Template
+          </h2>
+          <div className="mt-2 grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
+            {templates.map((t) => (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => {
+                  setSelectedTemplate(t.id);
+                  setActiveModal('template');
+                }}
+                className="flex flex-col items-center rounded-lg border border-stone-200 p-6 text-center transition-all hover:border-stone-400 hover:shadow-md"
+              >
+                <t.icon className="h-8 w-8 text-stone-600" />
+                <h3 className="mt-3 text-sm font-semibold text-stone-900">
+                  {t.title}
+                </h3>
+                <p className="mt-1 text-xs text-stone-500">{t.description}</p>
+              </button>
+            ))}
           </div>
-          <div className="p-4">
-            <h3 className="text-sm font-semibold text-stone-900">
-              Start from a Template
-            </h3>
-            <p className="mt-1 text-xs text-stone-500">
-              Create a site from a blog, docs, or wiki template with a single
-              click.
-            </p>
-          </div>
-        </button>
+        </div>
 
-        {options.map((option) => (
-          <button
-            key={option.id}
-            onClick={() => setActiveModal(option.id)}
-            className="flex flex-col items-center rounded-lg border border-stone-200 p-6 text-center transition-all hover:border-stone-400 hover:shadow-md"
-          >
-            <option.icon className="h-8 w-8 text-stone-600" />
-            <h3 className="mt-3 text-sm font-semibold text-stone-900">
-              {option.title}
-            </h3>
-            <p className="mt-1 text-xs text-stone-500">{option.description}</p>
-          </button>
-        ))}
+        <div>
+          <h2 className="text-left text-sm font-medium text-stone-700">
+            Or add your own content
+          </h2>
+          <div className="mt-2 grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
+            {options.map((option) => (
+              <button
+                type="button"
+                key={option.id}
+                onClick={() => setActiveModal(option.id)}
+                className="flex flex-col items-center rounded-lg border border-stone-200 p-6 text-center transition-all hover:border-stone-400 hover:shadow-md"
+              >
+                <option.icon className="h-8 w-8 text-stone-600" />
+                <h3 className="mt-3 text-sm font-semibold text-stone-900">
+                  {option.title}
+                </h3>
+                <p className="mt-1 text-xs text-stone-500">
+                  {option.description}
+                </p>
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       <ImportFilesOnboardingModal
@@ -133,6 +148,7 @@ export default function WelcomeContent({
         siteUrl={siteUrl}
         showModal={activeModal === 'template'}
         setShowModal={(show) => setActiveModal(show ? 'template' : null)}
+        initialTemplate={selectedTemplate}
       />
     </div>
   );

@@ -19,7 +19,7 @@ import { api } from '@/trpc/react';
 
 const TEMPLATE_OWNER = 'flowershow';
 
-const templates = [
+export const templates = [
   {
     id: 'blog',
     title: 'Blog',
@@ -43,7 +43,7 @@ const templates = [
   },
 ] as const;
 
-type TemplateId = (typeof templates)[number]['id'];
+export type TemplateId = (typeof templates)[number]['id'];
 type Step =
   | 'template'
   | 'instructions'
@@ -57,6 +57,7 @@ interface TemplateModalProps {
   siteUrl: string;
   showModal: boolean;
   setShowModal: (show: boolean) => void;
+  initialTemplate?: TemplateId;
 }
 
 export default function TemplateModal({
@@ -64,10 +65,15 @@ export default function TemplateModal({
   siteUrl,
   showModal,
   setShowModal,
+  initialTemplate,
 }: TemplateModalProps) {
   const router = useRouter();
-  const [step, setStep] = useState<Step>('template');
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>('blog');
+  const [step, setStep] = useState<Step>(
+    initialTemplate ? 'instructions' : 'template',
+  );
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>(
+    initialTemplate ?? 'blog',
+  );
   const [data, setData] = useState({
     selectedAccount: '',
     ghRepository: '',
@@ -75,6 +81,14 @@ export default function TemplateModal({
     rootDir: '',
     installationId: '',
   });
+
+  // Sync when a different template is selected from outside
+  useEffect(() => {
+    if (initialTemplate && showModal) {
+      setSelectedTemplate(initialTemplate);
+      setStep('instructions');
+    }
+  }, [initialTemplate, showModal]);
 
   const {
     data: installations = [],
@@ -238,8 +252,8 @@ export default function TemplateModal({
     }
     setShowModal(false);
     setTimeout(() => {
-      setStep('template');
-      setSelectedTemplate('blog');
+      setStep(initialTemplate ? 'instructions' : 'template');
+      setSelectedTemplate(initialTemplate ?? 'blog');
       setData({
         selectedAccount: '',
         ghRepository: '',
