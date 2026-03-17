@@ -1,20 +1,35 @@
-import { FolderIcon, SquareArrowOutUpRight } from 'lucide-react';
+'use client';
+
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  Transition,
+} from '@headlessui/react';
+import {
+  CalendarIcon,
+  CircleAlertIcon,
+  CircleArrowDownIcon,
+  CircleCheckIcon,
+  FolderIcon,
+  InfoIcon,
+  RocketIcon,
+  SquareArrowOutUpRight,
+} from 'lucide-react';
 import Link from 'next/link';
-import { Suspense } from 'react';
+import { useState } from 'react';
 
 import { GithubIcon } from '@/components/icons';
-import LoadingDots from '@/components/icons/loading-dots';
 import { env } from '@/env.mjs';
 import { getRepoFullName } from '@/lib/get-repo-full-name';
 import { PublicSite } from '@/server/api/types';
-import Status from './status';
+import { useSync } from '../sync-status-provider';
 import SyncSiteButton from './sync-button';
 
-export default async function SiteSettingsHeader({
-  site,
-}: {
-  site: PublicSite;
-}) {
+export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
+  const syncStatus = useSync();
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+
   // TODO move this to some lib; we have solutions like this scattered in many places
   const isSecure =
     env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
@@ -24,6 +39,9 @@ export default async function SiteSettingsHeader({
   const url = site.customDomain
     ? `${protocol}://${site.customDomain}`
     : `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user.username}/${site.projectName}`;
+
+  const repoFullName = getRepoFullName(site);
+  const hasGithubRepo = !!repoFullName;
 
   return (
     <>
@@ -41,13 +59,118 @@ export default async function SiteSettingsHeader({
               )}
             </div>
           </h2>
-          <Suspense fallback={<LoadingDots />}>
-            <Status hasGithubRepo={!!getRepoFullName(site)} />
-          </Suspense>
 
-          {getRepoFullName(site) ? (
+          {/* Sync status */}
+          <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
+            <div
+              data-testid="sync-status"
+              className="mt-2 flex items-center text-sm text-gray-500"
+            >
+              {syncStatus.status === 'UNPUBLISHED' ? (
+                <a
+                  href={`./welcome`}
+                  className="flex items-center text-pink-600 hover:underline"
+                >
+                  <RocketIcon
+                    className="mr-1.5 h-5 w-5 flex-shrink-0"
+                    aria-hidden="true"
+                  />
+                  <span>Publish your first content</span>
+                </a>
+              ) : syncStatus.status === 'LOADING' ? (
+                <div className="flex items-center">
+                  <CircleAlertIcon
+                    className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
+                    aria-hidden="true"
+                  />
+                  <span>-</span>
+                </div>
+              ) : syncStatus.status === 'SUCCESS' ? (
+                <div className="flex items-center">
+                  <CircleCheckIcon
+                    className="mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"
+                    aria-hidden="true"
+                  />
+                  <span>{hasGithubRepo ? 'Synced' : 'Published'}</span>
+                </div>
+              ) : syncStatus.status === 'PENDING' ? (
+                <div className="flex items-center">
+                  <CircleArrowDownIcon
+                    className="mr-1.5 h-5 w-5 flex-shrink-0 text-orange-400"
+                    aria-hidden="true"
+                  />
+                  <span>{hasGithubRepo ? 'Syncing...' : 'Publishing...'}</span>
+                </div>
+              ) : syncStatus.status === 'ERROR' ? (
+                <div className="group flex items-center hover:cursor-default">
+                  <CircleAlertIcon
+                    className="mr-1.5 h-5 w-5 flex-shrink-0 text-red-400"
+                    aria-hidden="true"
+                  />
+                  <Popover className="relative z-30">
+                    <PopoverButton
+                      onMouseEnter={() => setShowErrorDialog(true)}
+                      onMouseLeave={() => setShowErrorDialog(false)}
+                      className="group flex outline-none hover:text-gray-800"
+                    >
+                      <span>Error</span>
+                      <InfoIcon
+                        className="ml-1 h-5 w-5 flex-shrink-0"
+                        aria-hidden="true"
+                      />
+                    </PopoverButton>
+
+                    <Transition
+                      show={showErrorDialog}
+                      enter="transition duration-100 ease-out"
+                      enterFrom="transform scale-95 opacity-0"
+                      enterTo="transform scale-100 opacity-100"
+                      leave="transition duration-75 ease-out"
+                      leaveFrom="transform scale-100 opacity-100"
+                      leaveTo="transform scale-95 opacity-0"
+                    >
+                      <PopoverPanel className="absolute left-1/2 flex w-screen max-w-min -translate-x-1/2 px-4">
+                        <div
+                          onMouseEnter={() => setShowErrorDialog(true)}
+                          onMouseLeave={() => setShowErrorDialog(false)}
+                          className="max-h-80 w-80 shrink overflow-y-auto rounded-xl bg-white p-4 text-sm leading-6 text-gray-900 shadow-lg ring-1 ring-gray-900/5"
+                        >
+                          {syncStatus && syncStatus.error}
+                        </div>
+                      </PopoverPanel>
+                    </Transition>
+                  </Popover>
+                </div>
+              ) : (
+                <div className="flex items-center">
+                  <CircleAlertIcon
+                    className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
+                    aria-hidden="true"
+                  />
+                  <span>Outdated</span>
+                </div>
+              )}
+            </div>
+            {syncStatus.lastSyncedAt && (
+              <div className="mt-2 flex items-center text-sm text-gray-500">
+                <CalendarIcon
+                  className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
+                  aria-hidden="true"
+                />
+                <span>
+                  {hasGithubRepo ? 'Last synced' : 'Last published'}{' '}
+                  {syncStatus && syncStatus.lastSyncedAt
+                    ? new Date(syncStatus?.lastSyncedAt)?.toLocaleString()
+                    : '—'}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Publish method */}
+          {repoFullName ? (
             <Link
-              href={`https://github.com/${getRepoFullName(site)}`}
+              href={`https://github.com/${repoFullName}`}
               target="_blank"
               rel="noreferrer"
               className="mt-2 inline-flex items-center text-sm text-gray-500 hover:underline"
@@ -56,9 +179,10 @@ export default async function SiteSettingsHeader({
                 className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400"
                 aria-hidden="true"
               />
-              <span>{getRepoFullName(site)}</span>
+              <span>{repoFullName}</span>
             </Link>
-          ) : (
+          ) : syncStatus.status !== 'UNPUBLISHED' &&
+            syncStatus.status !== 'LOADING' ? (
             <span
               className="mt-2 inline-flex items-center text-sm text-gray-500"
               title="Published via CLI, Obsidian plugin, or drag and drop"
@@ -69,10 +193,10 @@ export default async function SiteSettingsHeader({
               />
               Direct publish
             </span>
-          )}
+          ) : null}
         </div>
         <div className="mt-5 flex lg:ml-4 lg:mt-0">
-          {getRepoFullName(site) && (
+          {repoFullName && (
             <span className="ml-3">
               <SyncSiteButton siteId={site.id} />
             </span>
