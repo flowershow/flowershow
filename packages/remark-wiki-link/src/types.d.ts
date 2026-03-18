@@ -25,7 +25,7 @@ declare module 'mdast' {
     // https://github.com/syntax-tree/mdast-util-to-hast?tab=readme-ov-file#fields-on-nodes
     hName?: string;
     hProperties?: { [key: string]: any };
-    hChildren?: Array<{ value: string; type: string }>;
+    hChildren?: Array<{ [key: string]: any }>;
   }
 
   type EmbedData = WikiLinkData;

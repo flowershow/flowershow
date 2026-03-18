@@ -10,6 +10,8 @@ import {
   isPdfFile,
   isAudioFile,
   isVideoFile,
+  isYouTubeUrl,
+  getYouTubeEmbedUrl,
 } from '../utils';
 import type { Embed, WikiLink } from 'mdast';
 import type { Options } from './remarkWikiLink';
@@ -114,7 +116,30 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
       const [, name = '', extension = ''] =
         value.match(/^(.+?)(?:\.([^.]+))?$/) ?? [];
 
-      if (isMarkdownFile(extension)) {
+      if (isYouTubeUrl(value)) {
+        const iframeUrl = getYouTubeEmbedUrl(value);
+        if (iframeUrl) {
+          wikiLink.data.hName = 'div';
+          wikiLink.data.hProperties = {
+            style: 'position:relative;padding-bottom:56.25%',
+          };
+          wikiLink.data.hChildren = [
+            {
+              type: 'element',
+              tagName: 'iframe',
+              properties: {
+                src: iframeUrl,
+                style:
+                  'position:absolute;top:0;left:0;width:100%;height:100%;border:0',
+                allowfullscreen: true,
+                allow:
+                  'accelerometer autoplay clipboard-write encrypted-media gyroscope picture-in-picture',
+              },
+              children: [],
+            },
+          ];
+        }
+      } else if (isMarkdownFile(extension)) {
         wikiLink.data.hName = 'a';
         wikiLink.data.hProperties = {
           className: `${classNames} transclusion`,
