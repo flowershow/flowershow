@@ -543,12 +543,27 @@ ola@example.com
 
 ### YouTube
 
-YouTube video links will be auto-embedded.
+Use the embed syntax to display a YouTube video as a player:
+
 ```
-https://youtu.be/ZbQRlNm2dww
+![](https://youtu.be/ZbQRlNm2dww)
 ```
 
-https://youtu.be/ZbQRlNm2dww
+![](https://youtu.be/ZbQRlNm2dww)
+
+You can also use the Obsidian wiki-link embed syntax:
+
+```
+![[https://youtu.be/ZbQRlNm2dww]]
+```
+
+To include a start time, add a `t` parameter to the URL:
+
+```
+![](https://www.youtube.com/watch?v=ZbQRlNm2dww&t=30s)
+```
+
+> A bare YouTube URL on its own line (e.g. `https://youtu.be/ZbQRlNm2dww`) is also auto-embedded, but `![](url)` is the recommended syntax as it clearly signals an embed rather than a plain link.
 
 ## Footnotes
 
