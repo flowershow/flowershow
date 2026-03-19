@@ -277,6 +277,59 @@ describe('remark-wiki-link', () => {
           expect(node.data.hProperties?.title).toBe('My Document');
         });
       });
+
+      test('youtube url (youtu.be)', () => {
+        const processor = unified().use(markdown).use(wikiLinkPlugin);
+
+        const ast = processor.parse('![[https://youtu.be/dQw4w9WgXcQ]]');
+
+        expect(select('embed', ast)).not.toEqual(null);
+
+        visit(ast, 'embed', (node: any) => {
+          expect(node.value).toEqual('https://youtu.be/dQw4w9WgXcQ');
+          expect(node.data?.existing).toEqual(false);
+          expect(node.data.hName).toBe('div');
+          expect(node.data.hProperties?.style).toContain('position:relative');
+          expect(node.data.hChildren).toHaveLength(1);
+          expect(node.data.hChildren[0].tagName).toBe('iframe');
+          expect(node.data.hChildren[0].properties.src).toBe(
+            'https://www.youtube.com/embed/dQw4w9WgXcQ',
+          );
+        });
+      });
+
+      test('youtube url (youtube.com/watch)', () => {
+        const processor = unified().use(markdown).use(wikiLinkPlugin);
+
+        const ast = processor.parse(
+          '![[https://www.youtube.com/watch?v=dQw4w9WgXcQ]]',
+        );
+
+        expect(select('embed', ast)).not.toEqual(null);
+
+        visit(ast, 'embed', (node: any) => {
+          expect(node.data.hName).toBe('div');
+          expect(node.data.hChildren[0].properties.src).toBe(
+            'https://www.youtube.com/embed/dQw4w9WgXcQ',
+          );
+        });
+      });
+
+      test('youtube url with start time', () => {
+        const processor = unified().use(markdown).use(wikiLinkPlugin);
+
+        const ast = processor.parse(
+          '![[https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=42s]]',
+        );
+
+        expect(select('embed', ast)).not.toEqual(null);
+
+        visit(ast, 'embed', (node: any) => {
+          expect(node.data.hName).toBe('div');
+          expect(node.data.hChildren[0].properties.src).toContain('start=42');
+          expect(node.data.hChildren[0].properties.src).not.toContain('&t=');
+        });
+      });
     });
 
     describe('Permalinks', () => {

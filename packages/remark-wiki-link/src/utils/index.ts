@@ -60,6 +60,36 @@ export function isSupportedFileType(
   );
 }
 
+const YOUTUBE_PATTERN =
+  /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/;
+
+export function isYouTubeUrl(value: string): boolean {
+  return YOUTUBE_PATTERN.test(value);
+}
+
+export function getYouTubeEmbedUrl(url: string): string | null {
+  const match = url.match(YOUTUBE_PATTERN);
+  if (!match) return null;
+  const videoId = match[1];
+
+  const qIndex = url.indexOf('?');
+  const urlParams = new URLSearchParams(
+    qIndex >= 0 ? url.slice(qIndex + 1) : '',
+  );
+  const start = urlParams.get('t');
+  if (start) {
+    const startSeconds = parseInt(start.replace(/s$/, ''), 10);
+    urlParams.delete('t');
+    if (!isNaN(startSeconds)) {
+      urlParams.set('start', startSeconds.toString());
+    }
+  }
+  urlParams.delete('v');
+
+  const qs = urlParams.toString();
+  return `https://www.youtube.com/embed/${videoId}${qs ? `?${qs}` : ''}`;
+}
+
 export const defaultUrlResolver = ({
   filePath,
   heading,
