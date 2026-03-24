@@ -30,11 +30,7 @@ showComments: false
       </div>
     </div>
     <div id="demo" className="mt-12 max-w-6xl mx-auto flow-root sm:mt-16">
-      <div className="-m-2 rounded-xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:-m-4 lg:rounded-2xl lg:p-4">
-        <video width="1920" height="1080" className="w-full rounded-md" controls autoPlay muted loop>
-          <source src="/assets/demo.mp4" type="video/mp4"/>
-        </video>
-      </div>
+      <iframe className="w-full rounded-md" width="560" height="315" src="https://www.youtube.com/embed/E9mjeskpdf8?si=3SdtS-tQE9Ug1ltU&amp;controls=0" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
     </div>
   </div>
 </div>
@@ -327,6 +323,14 @@ showComments: false
         >Start publishing free →</a>
       </div>
       <p className="mt-4 text-sm text-slate-400">No credit card required. Free plan, forever.</p>
+    </div>
+  </div>
+</div>
+
+<div className="bg-white py-6 sm:py-12 dark:bg-gray-900">
+  <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <div className="flex justify-center mx-auto mt-10 max-w-lg items-center gap-x-8 gap-y-10 sm:max-w-xl sm:gap-x-10 lg:mx-0 lg:max-w-none ">
+      <a className="max-h-12 dark:hidden" href="https://www.producthunt.com/products/flowershow?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-flowershow" target="_blank" rel="noopener noreferrer"><img className="w-full object-contain" alt="Flowershow - Publish your markdown as a beautiful website – in seconds. | Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1099959&amp;theme=neutral&amp;t=1774373000964"/></a>
     </div>
   </div>
 </div>
