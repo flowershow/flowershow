@@ -48,7 +48,7 @@ export default defineConfig({
         baseURL: `http://${PREMIUM_SITE_CUSTOM_DOMAIN}`,
         basePath: '',
       } as any,
-      testMatch: '**/links-and-embeds.spec.ts',
+      testMatch: ['**/links-and-embeds.spec.ts', '**/rss.spec.ts'],
       dependencies: ['setup'],
     },
     {

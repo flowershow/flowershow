@@ -301,9 +301,11 @@ export async function seed(): Promise<void> {
       id: FREE_SITE.id,
       projectName: FREE_SITE.projectName,
       userId: TEST_USER.id,
+      enableRss: true,
     },
     update: {
       projectName: FREE_SITE.projectName,
+      enableRss: true,
     },
   });
 
@@ -316,11 +318,13 @@ export async function seed(): Promise<void> {
       userId: TEST_USER.id,
       customDomain: PREMIUM_SITE.customDomain,
       plan: Plan.PREMIUM,
+      enableRss: true,
     },
     update: {
       projectName: PREMIUM_SITE.projectName,
       customDomain: PREMIUM_SITE.customDomain,
       plan: Plan.PREMIUM,
+      enableRss: true,
     },
   });
 

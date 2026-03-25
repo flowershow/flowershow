@@ -397,6 +397,12 @@ export const SitemapParamsSchema = z.object({
 });
 export type SitemapParams = z.infer<typeof SitemapParamsSchema>;
 
+export const RssParamsSchema = z.object({
+  user: z.string(),
+  project: z.string(),
+});
+export type RssParams = z.infer<typeof RssParamsSchema>;
+
 export const RobotsParamsSchema = z.object({
   hostname: z.string(),
 });

@@ -123,6 +123,7 @@ model Site {
   giscusRepoId            String?       @map("giscus_repo_id")
   giscusCategoryId        String?       @map("giscus_category_id")
   enableSearch            Boolean       @default(false) @map("enable_search")
+  enableRss               Boolean       @default(false) @map("enable_rss")
   showSidebar             Boolean       @default(true) @map("show_sidebar")
   plan                    Plan          @default(FREE)
   subscription            Subscription?

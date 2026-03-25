@@ -49,9 +49,12 @@ export default function Form({
 
   const required = inputAttrs.required ?? true;
 
-  const isToggleField = ['autoSync', 'enableComments', 'enableSearch'].includes(
-    inputAttrs.name,
-  );
+  const isToggleField = [
+    'autoSync',
+    'enableComments',
+    'enableSearch',
+    'enableRss',
+  ].includes(inputAttrs.name);
 
   // Controlled value for all non-toggle inputs (text, textarea, select)
   const [value, setValue] = useState(inputAttrs.defaultValue ?? '');

@@ -135,6 +135,11 @@ export async function generateMetadata(props: {
     // Maybe not needed since we redirect to a custom domain if it exists ?
     alternates: {
       canonical: url,
+      ...(site.enableRss && {
+        types: {
+          'application/rss+xml': `${siteUrl}/rss.xml`,
+        },
+      }),
     },
     // metadataBase: new URL(siteUrl),
   };

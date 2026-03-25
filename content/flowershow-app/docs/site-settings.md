@@ -59,6 +59,12 @@ Enable content indexing and display a search field in the navigation bar to help
 
 👉 See [[announcing-full-text-search|Full-text search]] to learn more.
 
+## RSS Feed
+
+Enable an RSS feed for your site so readers can subscribe to your content. Only pages with a `date` field in their frontmatter are included.
+
+👉 See [[rss-feed|RSS Feed]] to learn more.
+
 ## Password Protection (⭐️ Premium feature)
 
 Limit access to your site by requiring a password.

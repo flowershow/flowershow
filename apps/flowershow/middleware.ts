@@ -167,6 +167,11 @@ export default async function middleware(req: NextRequest) {
       );
     }
 
+    // Per-site RSS feed
+    if (slug === '/rss.xml') {
+      return rewrite(`/api/rss/${username}/${projectname}`, req, phBootstrap);
+    }
+
     // Raw asset file access
     const raw = rewriteRawIfNeeded(
       slug,
@@ -217,6 +222,11 @@ export default async function middleware(req: NextRequest) {
   if (pathname === '/sitemap.xml') {
     // For custom domains: username "_domain", project = hostname
     return rewrite(`/api/sitemap/_domain/${hostname}`, req, phBootstrap);
+  }
+
+  // Per-site RSS feed
+  if (pathname === '/rss.xml') {
+    return rewrite(`/api/rss/_domain/${hostname}`, req, phBootstrap);
   }
 
   // Raw asset file access

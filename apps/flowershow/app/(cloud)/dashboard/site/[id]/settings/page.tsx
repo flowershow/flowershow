@@ -267,6 +267,30 @@ export default async function SiteSettingsIndex(props: {
             handleSubmit={updateSite}
           />
 
+          <Form
+            title="RSS Feed"
+            description="Enable an RSS feed for your site. Only pages with a date field in the frontmatter will be included."
+            helpText={
+              <p>
+                Learn more about{' '}
+                <a
+                  className="underline"
+                  href="https://flowershow.app/docs/rss-feed"
+                >
+                  RSS Feed
+                  <ExternalLinkIcon className="inline h-4" />
+                </a>
+                .
+              </p>
+            }
+            inputAttrs={{
+              name: 'enableRss',
+              type: 'text',
+              defaultValue: Boolean(site?.enableRss).toString(),
+            }}
+            handleSubmit={updateSite}
+          />
+
           <SitePasswordProtectionForm
             disabled={!isFeatureEnabled(Feature.PasswordProtection, site)}
             siteId={site.id}
