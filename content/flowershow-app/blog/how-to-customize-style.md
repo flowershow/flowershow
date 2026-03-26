@@ -6,6 +6,9 @@ authors:
   - olayway
 ---
 
+> [!tip] Looking for a quick win?
+> Before writing custom CSS, check out [[themes|Themes]] — Flowershow offers ready-made themes (Letterpress, Superstack, LessFlowery, Leaf) you can apply in one line of config.
+
 This tutorial will guide you through the process of customizing your Flowershow Cloud site's appearance using CSS. You'll learn how to create and use a custom CSS file to modify existing styles and add new styled components like a hero section.
 
 ## What You Can Achieve
@@ -97,8 +100,8 @@ Here's an example of styling code that changes your site's background and headin
 
 ```css
 /* Change the background color of the whole site */
-.bg-background {
-    background: #f9f6f1 !important;
+:root {
+    --color-l-background: #f9f6f1;  /* light theme background */
 }
 
 /* Make all headings use a special font and be bold */
@@ -120,6 +123,9 @@ h3, h6 {
     color: #508484 !important;  /* Teal */
 }
 ```
+
+> [!note]
+> Flowershow uses CSS custom properties (variables) for colors and typography. Override them in `:root` inside `custom.css`. See [[custom-styles|Custom Styles]] for the full list of available variables.
 
 > [!note]
 > Notice how we grouped selectors like `h1, h2, h3, h4, h5, h6` and then `h1, h4`, `h2, h5`, `h3, h6` to avoid repeating CSS rules that we want to apply to multiple elements. This makes our CSS more maintainable and efficient.
