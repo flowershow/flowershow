@@ -2,7 +2,7 @@
 title: "Canvas rendering improvements"
 date: 2026-03-26
 description: Image embeds, note embeds with rendered markdown, custom hex colors, and style fixes for Obsidian Canvas rendering.
-image: "[[assets/obsidian-canvas-demo.png]]"
+image: "[[assets/canvas-v2-preview.png]]"
 showToc: false
 authors:
   - olayway
