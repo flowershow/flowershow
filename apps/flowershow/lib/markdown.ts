@@ -23,13 +23,13 @@ import remarkYouTubeAutoEmbed from '@/lib/remark-youtube-auto-embed';
 import type { ImageDimensionsMap } from './image-dimensions';
 import rehypeHtmlEnhancements from './rehype-html-enhancements';
 import rehypeInjectImageDimensions from './rehype-inject-image-dimensions';
+import rehypeJsonCanvas from './rehype-json-canvas';
 import rehypeResolveExplicitJsxUrls from './rehype-resolve-explicit-jsx-urls';
 import rehypeResolveHtmlUrls from './rehype-resolve-html-urls';
 import rehypeToReact from './rehype-to-react';
 import rehypeUnwrapParagraphsAroundMedia from './rehype-unwrap-paragraph-around-media';
-import RemarkCommonMarkLink from './remark-commonmark-link';
+import remarkCommonMarkLink from './remark-commonmark-link';
 import remarkObsidianBases from './remark-obsidian-bases';
-import rehypeJsonCanvas from './rehype-json-canvas';
 import { resolveFilePathToUrlPath } from './resolve-link';
 
 interface MarkdownOptions {
@@ -43,6 +43,7 @@ interface MarkdownOptions {
   permalinks?: Record<string, string>;
   imageDimensions?: ImageDimensionsMap;
   canvasFiles?: Record<string, string>;
+  canvasNodeFiles?: Record<string, string>;
 }
 
 // Process pure markdown files using unified
@@ -59,7 +60,7 @@ export async function processMarkdown(
     .use(remarkParse)
     .use(remarkObsidianComments)
     // run this before remark-wiki-link
-    .use(RemarkCommonMarkLink, {
+    .use(remarkCommonMarkLink, {
       filePath,
       sitePrefix,
       customDomain,
@@ -80,7 +81,14 @@ export async function processMarkdown(
     .use(remarkMark)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
-    .use(rehypeJsonCanvas, { canvasFiles: options.canvasFiles ?? {} })
+    .use(rehypeJsonCanvas, {
+      canvasFiles: options.canvasFiles ?? {},
+      canvasNodeFiles: options.canvasNodeFiles,
+      files,
+      sitePrefix,
+      customDomain,
+      permalinks,
+    })
     .use(rehypeUnwrapParagraphsAroundMedia)
     .use(rehypeResolveHtmlUrls, { filePath, sitePrefix, customDomain })
     .use(rehypeHtmlEnhancements, { sitePrefix })
@@ -111,6 +119,7 @@ export const getMdxOptions = ({
   rootDir,
   permalinks,
   canvasFiles,
+  canvasNodeFiles,
 }: {
   filePath: string;
   files: string[];
@@ -121,6 +130,7 @@ export const getMdxOptions = ({
   rootDir?: string;
   permalinks?: Record<string, string>;
   canvasFiles?: Record<string, string>;
+  canvasNodeFiles?: Record<string, string>;
 }): EvaluateOptions => {
   return {
     parseFrontmatter,
@@ -129,7 +139,7 @@ export const getMdxOptions = ({
         remarkObsidianComments,
         // run this before remark-wiki-link
         [
-          RemarkCommonMarkLink,
+          remarkCommonMarkLink,
           { filePath, sitePrefix, customDomain, files, permalinks },
         ],
         [
@@ -151,7 +161,17 @@ export const getMdxOptions = ({
         [remarkObsidianBases, { sitePrefix, customDomain, siteId, rootDir }],
       ],
       rehypePlugins: [
-        [rehypeJsonCanvas, { canvasFiles: canvasFiles ?? {} }],
+        [
+          rehypeJsonCanvas,
+          {
+            canvasFiles: canvasFiles ?? {},
+            canvasNodeFiles,
+            files,
+            sitePrefix,
+            customDomain,
+            permalinks,
+          },
+        ],
         rehypeUnwrapParagraphsAroundMedia,
         [rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain }],
         [rehypeHtmlEnhancements, { sitePrefix }],

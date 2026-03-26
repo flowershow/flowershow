@@ -4,7 +4,7 @@ import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import { unified } from 'unified';
-import rehypeJsonCanvas from '../rehype-json-canvas';
+import rehypeJsonCanvas from './rehype-json-canvas';
 
 const SIMPLE_CANVAS_JSON = JSON.stringify({
   nodes: [
@@ -73,6 +73,77 @@ describe('rehypeJsonCanvas', () => {
 
     const matches = html.match(/class="canvas-embed"/g);
     expect(matches?.length).toBe(2);
+  });
+
+  it('embeds file content in canvas file nodes when _html is set', async () => {
+    const canvasJson = JSON.stringify({
+      nodes: [
+        {
+          id: 'f1',
+          type: 'file',
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          file: 'notes/hello.md',
+          _html: '<p>Hello from embedded note</p>',
+        },
+      ],
+      edges: [],
+    });
+    const html = await processMarkdown('![](diagram.canvas)', {
+      'diagram.canvas': canvasJson,
+    });
+
+    expect(html).toContain('canvas-node-file-content');
+    expect(html).toContain('Hello from embedded note');
+  });
+
+  it('shows filename fallback when fileContents is empty', async () => {
+    const canvasJson = JSON.stringify({
+      nodes: [
+        {
+          id: 'f1',
+          type: 'file',
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          file: 'notes/missing.md',
+        },
+      ],
+      edges: [],
+    });
+    const html = await processMarkdown('![](diagram.canvas)', {
+      'diagram.canvas': canvasJson,
+    });
+
+    expect(html).toContain('canvas-node-file');
+    expect(html).toContain('notes/missing.md');
+    expect(html).not.toContain('canvas-node-file-content');
+  });
+
+  it('shows filename fallback for file nodes without _html', async () => {
+    const canvasJson = JSON.stringify({
+      nodes: [
+        {
+          id: 'f1',
+          type: 'file',
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 100,
+          file: 'page.mdx',
+        },
+      ],
+      edges: [],
+    });
+    const html = await processMarkdown('![](diagram.canvas)', {
+      'diagram.canvas': canvasJson,
+    });
+
+    expect(html).not.toContain('canvas-node-file-content');
+    expect(html).toContain('page.mdx');
   });
 
   it('handles invalid canvas JSON gracefully', async () => {

@@ -240,7 +240,18 @@ export default async function SitePage(props: {
     );
   } else if (isCanvas) {
     try {
-      compiledContent = await processCanvas(pageContent ?? '');
+      const canvasNodeFiles = await resolveCanvasFileReferences(
+        [pageContent ?? ''],
+        site.id,
+        siteFilePaths,
+      );
+      compiledContent = await processCanvas(pageContent ?? '', {
+        sitePrefix,
+        files: siteFilePaths,
+        customDomain: site.customDomain ?? undefined,
+        permalinks: permalinksMapping,
+        canvasNodeFiles,
+      });
     } catch (error: any) {
       compiledContent = (
         <ErrorMessage title="Error rendering canvas" message={error.message} />
@@ -251,6 +262,11 @@ export default async function SitePage(props: {
       // Pre-fetch any canvas files referenced in the markdown for inline embeds
       const canvasFiles = await fetchReferencedCanvasFiles(
         pageContent ?? '',
+        site.id,
+        siteFilePaths,
+      );
+      const canvasNodeFiles = await resolveCanvasFileReferences(
+        Object.values(canvasFiles),
         site.id,
         siteFilePaths,
       );
@@ -275,6 +291,7 @@ export default async function SitePage(props: {
           permalinks: permalinksMapping,
           imageDimensions,
           canvasFiles,
+          canvasNodeFiles,
         });
         compiledContent = result;
       } else {
@@ -288,6 +305,7 @@ export default async function SitePage(props: {
           rootDir: site.rootDir ?? undefined,
           permalinks: permalinksMapping,
           canvasFiles,
+          canvasNodeFiles,
         }) as any;
 
         const mdxSource = await serialize<PageMetadata>({
@@ -540,4 +558,67 @@ async function fetchReferencedCanvasFiles(
   );
 
   return canvasFiles;
+}
+
+/**
+ * Extract .md file references from canvas JSON strings and fetch their contents.
+ */
+async function resolveCanvasFileReferences(
+  canvasJsons: string[],
+  siteId: string,
+  siteFilePaths: string[],
+): Promise<Record<string, string>> {
+  const mdFileRefs = new Set<string>();
+
+  for (const canvasJson of canvasJsons) {
+    try {
+      const parsed = JSON.parse(canvasJson);
+      for (const node of parsed.nodes ?? []) {
+        if (
+          node.type === 'file' &&
+          typeof node.file === 'string' &&
+          node.file.endsWith('.md')
+        ) {
+          mdFileRefs.add(node.file);
+        }
+      }
+    } catch {
+      // Skip unparseable canvas files
+    }
+  }
+
+  if (mdFileRefs.size === 0) return {};
+
+  const canvasNodeFiles: Record<string, string> = {};
+
+  await Promise.all(
+    [...mdFileRefs].map(async (filePath) => {
+      try {
+        const matchPath = siteFilePaths.find(
+          (p) =>
+            p === `/${filePath}` ||
+            p === filePath ||
+            p.endsWith(`/${filePath}`),
+        );
+        if (!matchPath || !matchPath.endsWith('.md')) return;
+
+        const blob = await api.site.getBlobByPath
+          .query({ siteId, path: matchPath.replace(/^\//, '') })
+          .catch(() => null);
+        if (!blob) return;
+
+        const blobContent = await api.site.getBlobContent
+          .query({ id: blob.id })
+          .catch(() => null);
+        if (blobContent) {
+          canvasNodeFiles[filePath] = blobContent;
+          canvasNodeFiles[matchPath] = blobContent;
+        }
+      } catch {
+        // Skip files that can't be fetched
+      }
+    }),
+  );
+
+  return canvasNodeFiles;
 }

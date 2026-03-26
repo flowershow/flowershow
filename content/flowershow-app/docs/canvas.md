@@ -9,7 +9,7 @@ Flowershow supports rendering [Obsidian Canvas](https://obsidian.md/canvas) file
 
 Here's a simple canvas embedded inline in this page:
 
-![[canvas-demo.canvas]]
+![[canvas-demo-v2.canvas]]
 
 You can also view it as a [[canvas-demo.canvas|standalone page]].
 
@@ -40,18 +40,16 @@ The canvas renders as an inline SVG diagram within the page content.
 
 ## Supported Features
 
-- Text cards with content
-- Colored nodes (all 6 Obsidian color presets)
-- Edges (connections between nodes) with bezier curves
-- Edge colors and labels
-- Node labels
-- File embed nodes (displayed as filename references)
+- **Rich text nodes** -- text nodes render full markdown including GFM tables, wiki-links, callouts, math (KaTeX), and syntax-highlighted code
+- **Image embeds** -- file nodes referencing images (`.png`, `.jpg`, `.gif`, `.svg`, `.webp`, `.bmp`, `.ico`) display the actual image inside the node
+- **Note embeds** -- file nodes referencing `.md` files render the note's content with full markdown formatting and a title heading
+- **Colored nodes** -- all 6 Obsidian color presets plus custom hex colors (e.g. `#ff6600`)
+- **Edges** -- connections between nodes render as bezier curves with support for edge colors, labels, and arrow markers on both ends
+- **Node labels** -- optional labels displayed above node content
 
 ## Limitations
 
-- Canvas rendering is a static SVG -- no zoom, pan, or interactivity
-- Text inside nodes is plain text (no markdown formatting)
-- Embedded markdown files within canvas nodes show as filename references rather than rendered content
+- Canvas rendering is static -- no zoom, pan, or interactivity
 - Nested canvas (canvas within canvas) is not yet supported
 
 These limitations may be addressed in future updates based on user feedback.

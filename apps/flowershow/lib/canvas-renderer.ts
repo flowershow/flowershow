@@ -14,8 +14,30 @@
  * - Markdown content can be embedded in nodes (for standalone pages)
  */
 
+import { remarkWikiLink } from '@flowershow/remark-wiki-link';
+import remarkCallout from '@r4ai/remark-callout';
+import matter from 'gray-matter';
 import type { Element } from 'hast';
 import { h, s } from 'hastscript';
+import rehypeKatex from 'rehype-katex';
+import rehypePrismPlus from 'rehype-prism-plus';
+import rehypeRaw from 'rehype-raw';
+import rehypeSlug from 'rehype-slug';
+import rehypeStringify from 'rehype-stringify';
+import remarkGfm from 'remark-gfm';
+import { remarkMark } from 'remark-mark-highlight';
+import remarkMath from 'remark-math';
+import remarkParse from 'remark-parse';
+import remarkRehype from 'remark-rehype';
+import remarkSmartypants from 'remark-smartypants';
+import { unified } from 'unified';
+import { getUrlResolver } from './markdown';
+import rehypeHtmlEnhancements from './rehype-html-enhancements';
+import rehypeResolveHtmlUrls from './rehype-resolve-html-urls';
+import rehypeUnwrapParagraphsAroundMedia from './rehype-unwrap-paragraph-around-media';
+import remarkCommonMarkLink from './remark-commonmark-link';
+import remarkObsidianComments from './remark-obsidian-comments';
+import remarkYouTubeAutoEmbed from './remark-youtube-auto-embed';
 
 // ---- Types (replaces @trbn/jsoncanvas dependency) ----
 
@@ -30,6 +52,8 @@ export interface CanvasNode {
   text?: string;
   label?: string;
   file?: string;
+  _html?: string;
+  _title?: string;
 }
 
 export interface CanvasEdge {
@@ -66,7 +90,11 @@ export interface CanvasRenderOptions {
   lineStrokeWidth?: number;
 }
 
-const defaults: Required<CanvasRenderOptions> = {
+type ResolvedRenderOptions = Required<
+  Pick<CanvasRenderOptions, 'nodeStrokeWidth' | 'lineStrokeWidth'>
+>;
+
+const defaults: ResolvedRenderOptions = {
   nodeStrokeWidth: 2,
   lineStrokeWidth: 2,
 };
@@ -88,8 +116,21 @@ const DEFAULT_COLOR = {
   border: 'rgba(var(--canvas-node-border, 180, 180, 180), 1)',
 };
 
-export const CANVAS_COLOR_MAP = COLOR_MAP;
-export const CANVAS_DEFAULT_COLOR = DEFAULT_COLOR;
+function resolveColor(color: string | undefined): {
+  bg: string;
+  border: string;
+} {
+  if (!color) return DEFAULT_COLOR;
+  if (COLOR_MAP[color]) return COLOR_MAP[color];
+  const hex = color.startsWith('#') ? color : `#${color}`;
+  if (/^#[0-9a-f]{6}$/i.test(hex)) {
+    return {
+      bg: `${hex}26`,
+      border: `${hex}cc`,
+    };
+  }
+  return DEFAULT_COLOR;
+}
 
 const PADDING = 20;
 
@@ -206,15 +247,70 @@ export function buildBezierPath(
   return `M ${start.x} ${start.y} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${end.x} ${end.y}`;
 }
 
+// ---- Enrichment helper ----
+
+export interface EnrichOptions {
+  /** Convert markdown text to an HTML string. */
+  renderMarkdown?: (text: string) => Promise<string>;
+  /** Resolve a file path to its raw content string. */
+  resolveFile?: (path: string) => Promise<string | null>;
+  /** Pre-fetched file contents keyed by file path. Checked before resolveFile. */
+  canvasNodeFiles?: Record<string, string>;
+}
+
+/**
+ * Enrich canvas nodes with pre-rendered HTML content.
+ *
+ * - Text nodes with `text` are passed through `renderMarkdown` (if provided).
+ * - File nodes referencing `.md` files are resolved via `resolveFile`, then rendered.
+ * - `.mdx` and other file types are left untouched.
+ *
+ * Returns a new array of nodes with `_html` populated where applicable.
+ */
+export async function enrichCanvasNodes(
+  nodes: CanvasNode[],
+  options?: EnrichOptions,
+): Promise<CanvasNode[]> {
+  const { renderMarkdown, resolveFile, canvasNodeFiles } = options ?? {};
+  if (!renderMarkdown) return nodes;
+
+  return Promise.all(
+    nodes.map(async (node) => {
+      if (node.type === 'text' && node.text) {
+        const html = await renderMarkdown(node.text);
+        return { ...node, _html: html };
+      }
+      if (node.type === 'file' && node.file?.endsWith('.md')) {
+        // Check pre-fetched content first, then fall back to async resolver
+        const content =
+          canvasNodeFiles?.[node.file] ??
+          canvasNodeFiles?.[`/${node.file}`] ??
+          (await resolveFile?.(node.file).catch(() => null)) ??
+          null;
+        if (content) {
+          const { data } = matter(content, {});
+          const title =
+            data?.title ??
+            node.file.split('/').pop()?.replace(/\.md$/, '') ??
+            node.file;
+          const html = await renderMarkdown(content);
+          return { ...node, _html: html, _title: title };
+        }
+      }
+      return node;
+    }),
+  );
+}
+
 // ---- HAST builders ----
 
 function buildNodeElement(
   node: CanvasNode,
   offsetX: number,
   offsetY: number,
-  options: Required<CanvasRenderOptions>,
+  options: ResolvedRenderOptions,
 ): Element {
-  const color = COLOR_MAP[node.color ?? ''] ?? DEFAULT_COLOR;
+  const color = resolveColor(node.color);
   const nx = node.x + offsetX;
   const ny = node.y + offsetY;
 
@@ -250,21 +346,70 @@ function buildNodeElement(
     );
   }
 
-  if (node.type === 'text' && node.text) {
-    children.push(h('div', { className: 'canvas-node-content' }, node.text));
+  if (node.type === 'text') {
+    if (node._html) {
+      children.push({
+        type: 'element',
+        tagName: 'div',
+        properties: { className: ['canvas-node-content'] },
+        children: [{ type: 'raw', value: node._html } as any],
+      });
+    } else if (node.text) {
+      children.push(h('div', { className: 'canvas-node-content' }, node.text));
+    }
   }
 
   if (node.type === 'file' && node.file) {
-    children.push(
-      h(
-        'div',
-        {
-          className: ['canvas-node-content', 'canvas-node-file'],
-          style: 'opacity: 0.7; font-style: italic;',
+    const isImage = /\.(png|jpe?g|gif|svg|webp|bmp|ico)$/i.test(node.file);
+    if (isImage) {
+      children.push(
+        h(
+          'div',
+          {
+            className: ['canvas-node-content', 'canvas-node-media'],
+            style:
+              'overflow: hidden; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;',
+          },
+          h('img', {
+            src: node.file.startsWith('/') ? node.file : `/${node.file}`,
+            alt: node.file.split('/').pop() ?? node.file,
+            style: 'max-width: 100%; max-height: 100%; object-fit: contain;',
+            loading: 'lazy',
+          }),
+        ),
+      );
+    } else if (node._html) {
+      const fileChildren: Element['children'] = [];
+      if (node._title) {
+        fileChildren.push(
+          h(
+            'h1',
+            { className: 'canvas-node-file-title', style: 'display: block;' },
+            node._title,
+          ),
+        );
+      }
+      fileChildren.push({ type: 'raw', value: node._html } as any);
+      children.push({
+        type: 'element',
+        tagName: 'div',
+        properties: {
+          className: ['canvas-node-content', 'canvas-node-file-content'],
         },
-        node.file,
-      ),
-    );
+        children: fileChildren,
+      });
+    } else {
+      children.push(
+        h(
+          'div',
+          {
+            className: ['canvas-node-content', 'canvas-node-file'],
+            style: 'opacity: 0.7; font-style: italic;',
+          },
+          node.file,
+        ),
+      );
+    }
   }
 
   return h(
@@ -283,14 +428,14 @@ function buildArrowMarker(id: string, color: string): Element {
     'marker',
     {
       id,
-      markerWidth: 10,
-      markerHeight: 7,
-      refX: 9,
-      refY: 3.5,
+      markerWidth: 6,
+      markerHeight: 4,
+      refX: 5.5,
+      refY: 2,
       orient: 'auto',
       markerUnits: 'strokeWidth',
     },
-    s('path', { d: 'M0,0 L0,7 L10,3.5 z', fill: color }),
+    s('path', { d: 'M0,0 L0,4 L6,2 z', fill: color }),
   );
 }
 
@@ -299,7 +444,7 @@ function buildEdgePath(
   nodes: CanvasNode[],
   offsetX: number,
   offsetY: number,
-  options: Required<CanvasRenderOptions>,
+  options: ResolvedRenderOptions,
 ): Element[] {
   const fromNode = nodes.find((n) => n.id === edge.fromNode);
   const toNode = nodes.find((n) => n.id === edge.toNode);
@@ -308,9 +453,8 @@ function buildEdgePath(
   const start = getEdgePoint(fromNode, edge.fromSide, offsetX, offsetY);
   const end = getEdgePoint(toNode, edge.toSide, offsetX, offsetY);
 
-  const edgeColor = edge.color
-    ? (COLOR_MAP[edge.color]?.border ?? 'currentColor')
-    : 'currentColor';
+  const resolved = resolveColor(edge.color);
+  const edgeColor = edge.color ? resolved.border : 'currentColor';
 
   const pathProps: Record<string, any> = {
     d: buildBezierPath(start, end, edge.fromSide, edge.toSide),
@@ -321,7 +465,7 @@ function buildEdgePath(
 
   const elements: Element[] = [];
 
-  if (edge.toEnd === 'arrow') {
+  if (edge.toEnd !== 'none') {
     const markerId = `arrow-${edge.id}`;
     elements.push(buildArrowMarker(markerId, edgeColor));
     pathProps['marker-end'] = `url(#${markerId})`;
@@ -336,16 +480,79 @@ function buildEdgePath(
   elements.push(s('path', pathProps));
 
   if (edge.label) {
-    const midX = (start.x + end.x) / 2;
-    const midY = (start.y + end.y) / 2;
+    // Compute the actual midpoint of the cubic bezier curve (t=0.5)
+    // B(0.5) = 0.125*P0 + 0.375*P1 + 0.375*P2 + 0.125*P3
+    const dist = Math.max(
+      Math.abs(end.x - start.x),
+      Math.abs(end.y - start.y),
+      50,
+    );
+    const cpOffset = dist * 0.5;
+    let cx1 = start.x;
+    let cy1 = start.y;
+    switch (edge.fromSide) {
+      case 'right':
+        cx1 += cpOffset;
+        break;
+      case 'left':
+        cx1 -= cpOffset;
+        break;
+      case 'bottom':
+        cy1 += cpOffset;
+        break;
+      case 'top':
+        cy1 -= cpOffset;
+        break;
+      default:
+        cx1 += cpOffset;
+        break;
+    }
+    let cx2 = end.x;
+    let cy2 = end.y;
+    switch (edge.toSide) {
+      case 'left':
+        cx2 -= cpOffset;
+        break;
+      case 'right':
+        cx2 += cpOffset;
+        break;
+      case 'top':
+        cy2 -= cpOffset;
+        break;
+      case 'bottom':
+        cy2 += cpOffset;
+        break;
+      default:
+        cx2 -= cpOffset;
+        break;
+    }
+    const midX = 0.125 * start.x + 0.375 * cx1 + 0.375 * cx2 + 0.125 * end.x;
+    const midY = 0.125 * start.y + 0.375 * cy1 + 0.375 * cy2 + 0.125 * end.y;
+    // Background rect behind label for readability
+    const labelPadX = 6;
+    const labelPadY = 3;
+    const approxCharWidth = 7.5;
+    const labelWidth = edge.label.length * approxCharWidth + labelPadX * 2;
+    const labelHeight = 16 + labelPadY * 2;
+    elements.push(
+      s('rect', {
+        x: midX - labelWidth / 2,
+        y: midY - labelHeight / 2,
+        width: labelWidth,
+        height: labelHeight,
+        rx: 4,
+        fill: 'var(--canvas-label-bg, #fff)',
+      }),
+    );
     elements.push(
       s(
         'text',
         {
           x: midX,
-          y: midY - 8,
+          y: midY,
           'font-size': 13,
           'text-anchor': 'middle',
+          'dominant-baseline': 'middle',
           fill: 'currentColor',
           'stroke-width': 0,
         },
@@ -355,6 +562,72 @@ function buildEdgePath(
   }
 
   return elements;
+}
+
+// ---- Shared markdown pipeline ----
+
+/**
+ * Render markdown text to an HTML string using a lightweight pipeline.
+ * Supports GFM, callouts, math, and syntax highlighting.
+ *
+ * Shared by both the rehype plugin (inline canvas embeds) and the
+ * standalone page renderer (processCanvas).
+ */
+export interface RenderMarkdownOptions {
+  files?: string[];
+  sitePrefix?: string;
+  customDomain?: string;
+  permalinks?: Record<string, string>;
+}
+
+export async function renderMarkdownToHtml(
+  text: string,
+  options?: RenderMarkdownOptions,
+): Promise<string> {
+  const {
+    files = [],
+    sitePrefix = '',
+    customDomain,
+    permalinks,
+  } = options ?? {};
+
+  // this strips out frontmatter, so that it's not inlined with the rest of the markdown file
+  const { content } = matter(text, {});
+
+  const result = await unified()
+    .use(remarkParse)
+    .use(remarkObsidianComments)
+    .use(remarkCommonMarkLink, {
+      filePath: '',
+      sitePrefix,
+      customDomain,
+      files,
+      permalinks,
+    })
+    .use(remarkWikiLink, {
+      files,
+      format: 'shortestPossible',
+      urlResolver: getUrlResolver(sitePrefix, customDomain),
+      permalinks,
+    })
+    .use(remarkYouTubeAutoEmbed)
+    .use(remarkGfm)
+    .use(remarkSmartypants, { quotes: false, dashes: 'oldschool' })
+    .use(remarkMath)
+    .use(remarkCallout)
+    .use(remarkMark)
+    .use(remarkRehype, { allowDangerousHtml: true })
+    .use(rehypeRaw)
+    .use(rehypeUnwrapParagraphsAroundMedia)
+    .use(rehypeResolveHtmlUrls, { filePath: '', sitePrefix, customDomain })
+    .use(rehypeHtmlEnhancements, { sitePrefix })
+    .use(rehypeSlug)
+    .use(rehypeKatex, { output: 'htmlAndMathml' })
+    .use(rehypePrismPlus, { ignoreMissing: true })
+    .use(rehypeStringify)
+    .process(content);
+
+  return String(result);
 }
 
 // ---- Main render function ----
@@ -401,8 +674,8 @@ export function renderCanvas(
   const svgOverlay = s(
     'svg',
     {
-      style:
-        'position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;',
+      style: `position: absolute; top: 0; left: 0; width: ${width}px; height: ${height}px; pointer-events: none;`,
+      viewBox: `0 0 ${width} ${height}`,
       xmlns: 'http://www.w3.org/2000/svg',
     },
     svgChildren,
@@ -412,7 +685,7 @@ export function renderCanvas(
     'div',
     {
       className: 'canvas-container',
-      style: `position: relative; width: 100%; height: ${height}px;`,
+      style: `position: relative; width: 100%; height: ${height}px;overflow:scroll;`,
     },
     [...nodeElements, svgOverlay],
   );

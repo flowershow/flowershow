@@ -1,0 +1,20 @@
+{
+	"nodes":[
+		{"id":"obsidian","type":"text","text":"Create in Obsidian","x":0,"y":0,"width":200,"height":80,"color":"6"},
+		{"id":"canvas","type":"text","text":"Draw on Canvas","x":300,"y":-40,"width":240,"height":80,"color":"5"},
+		{"id":"flowershow","type":"text","text":"Bloom on Flowershow","x":640,"y":0,"width":240,"height":80,"color":"4"},
+		{"id":"world","type":"text","text":"Share with the world","x":300,"y":120,"width":240,"height":80,"color":"3"},
+		{"id":"c3dbaac0e13caea9","type":"text","text":"Customize","x":600,"y":260,"width":250,"height":60,"color":"#ff00bb"},
+		{"id":"bbd11c41116a1fb3","type":"file","file":"assets/blog-preview.png","x":-60,"y":290,"width":399,"height":251},
+		{"id":"664e7a456eb2729d","x":560,"y":460,"width":400,"height":400,"type":"file","file":"blog/how-to-customize-style.md"}
+	],
+	"edges":[
+		{"id":"e1","fromNode":"obsidian","fromSide":"right","toNode":"canvas","toSide":"left"},
+		{"id":"e2","fromNode":"canvas","fromSide":"right","toNode":"flowershow","toSide":"left","label":"sync"},
+		{"id":"e3","fromNode":"flowershow","fromSide":"bottom","toNode":"world","toSide":"right","label":"🌸"},
+		{"id":"dee0af6772cfd173","fromNode":"flowershow","fromSide":"bottom","toNode":"c3dbaac0e13caea9","toSide":"top"},
+		{"id":"ef9ed48758d2e8a5","fromNode":"world","fromSide":"bottom","toNode":"bbd11c41116a1fb3","toSide":"top"},
+		{"id":"014d73c4e85c715f","fromNode":"c3dbaac0e13caea9","fromSide":"bottom","toNode":"664e7a456eb2729d","toSide":"top","toEnd":"none"},
+		{"id":"76176588816188d5","fromNode":"c3dbaac0e13caea9","fromSide":"bottom","toNode":"world","toSide":"bottom"}
+	]
+}

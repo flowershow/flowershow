@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { unified } from 'unified';
+import rehypeRaw from 'rehype-raw';
+import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
-import rehypeStringify from 'rehype-stringify';
-import rehypeRaw from 'rehype-raw';
-import rehypeHtmlEnhancements from '../rehype-html-enhancements';
+import { unified } from 'unified';
+import { describe, expect, it } from 'vitest';
+import rehypeHtmlEnhancements from './rehype-html-enhancements';
 
 async function processWithRawHtml(html: string) {
   const result = await unified()

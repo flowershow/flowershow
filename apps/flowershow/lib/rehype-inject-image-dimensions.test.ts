@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vitest';
-import { unified } from 'unified';
+import rehypeRaw from 'rehype-raw';
+import rehypeStringify from 'rehype-stringify';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
-import rehypeStringify from 'rehype-stringify';
-import rehypeRaw from 'rehype-raw';
-import rehypeInjectImageDimensions from '../rehype-inject-image-dimensions';
-import type { ImageDimensionsMap } from '../image-dimensions';
+import { unified } from 'unified';
+import { describe, expect, it } from 'vitest';
+import type { ImageDimensionsMap } from './image-dimensions';
+import rehypeInjectImageDimensions from './rehype-inject-image-dimensions';
 
 async function processWithRawHtml(
   html: string,

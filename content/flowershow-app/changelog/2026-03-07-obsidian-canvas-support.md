@@ -25,6 +25,6 @@ Canvas files follow the open [JSON Canvas](https://jsoncanvas.org/) specificatio
 
 ## Current limitations
 
-Canvas rendering is static SVG -- no zoom, pan, or interactivity yet. Text inside nodes is plain text without markdown formatting. These may be improved in future updates.
+Canvas rendering is static -- no zoom, pan, or interactivity yet. ~~Text inside nodes is plain text without markdown formatting.~~ **Update:** text nodes, image embeds, and note embeds now render with full markdown formatting -- see the [[changelog/2026-03-26-canvas-rendering-improvements|March 26 update]].
 
 For full details, see the [[canvas|Canvas documentation]].

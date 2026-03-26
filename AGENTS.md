@@ -19,6 +19,8 @@ When a user asks to implement something, always check for an existing related `b
 1. Run `bd ready` and look for the most relevant item.
 2. If you find a match, review it with `bd show <id>` and claim it with `bd update <id> --status in_progress` before coding.
 
+Don't use beads for simple tasks that can be solved during one coding session. Only use it for complex tasks and only when requested.
+
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
