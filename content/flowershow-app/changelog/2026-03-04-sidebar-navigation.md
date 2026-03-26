@@ -5,6 +5,7 @@ description: The sidebar is now enabled for all new sites, has a dedicated slide
 authors:
   - Ola Rubaj
 image: "[[assets/sidebar-navigation.png]]"
+showToc: false
 ---
 
 We've shipped three improvements to sidebar navigation that make Flowershow sites easier to explore out of the box — especially on mobile — and give you more control over where the sidebar appears.

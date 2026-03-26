@@ -5,6 +5,7 @@ description: Flowershow now renders Obsidian Canvas (.canvas) files as SVG diagr
 image: "[[assets/obsidian-canvas-demo.png]]"
 authors:
   - rufuspollock
+showToc: false
 ---
 
 Flowershow now supports [Obsidian Canvas](https://obsidian.md/canvas) files. Canvas files (`.canvas`) are automatically rendered as visual SVG diagrams showing your nodes, connections, and colors -- no configuration needed.

@@ -2,6 +2,7 @@
 title: Homepage content refresh shipped
 description: Updated homepage copy structure and section flow for clearer conversion messaging.
 image: https://screenshotit.app/flowershow.app
+showToc: false
 ---
 
 We shipped a homepage content refresh focused on clearer value communication and stronger conversion flow.

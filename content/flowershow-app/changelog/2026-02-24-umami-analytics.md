@@ -2,6 +2,7 @@
 title: Umami analytics support
 description: Add Umami analytics to your site with a single line in config.json.
 image: "[[assets/umami-analytics.png]]"
+showToc: false
 ---
 
 You can now add [Umami](https://umami.is/) analytics to your Flowershow site.

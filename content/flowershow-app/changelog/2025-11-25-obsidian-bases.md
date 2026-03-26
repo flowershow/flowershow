@@ -2,6 +2,7 @@
 title: "Obsidian Bases queries now render on your published site"
 date: 2025-11-25
 description: Flowershow now renders Obsidian Bases blocks live — query your vault, display results as tables, cards, or lists, with filters and formulas intact.
+showToc: false
 authors:
   - The Flowershow Team
 image: "[[assets/obsidian-bases-cards.png]]"

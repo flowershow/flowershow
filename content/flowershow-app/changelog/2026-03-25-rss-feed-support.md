@@ -5,6 +5,7 @@ description: Your Flowershow sites can now serve an RSS feed, so readers can sub
 authors:
   - olayway
 image: "[[assets/rss-feed-xml-browser.png]]"
+showToc: false
 ---
 
 Flowershow now supports RSS feeds for published sites. Enable it with a single toggle in your dashboard settings and your site will serve a standard RSS 2.0 feed at `/rss.xml`.
