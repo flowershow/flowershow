@@ -1,7 +1,7 @@
 ---
 title: Changelog page is live
 description: Added a public /changelog page powered by Flowershow content files and Obsidian Bases.
-image: "[[assets/page_header.png]]"
+image: "[[assets/changelog-page-live.png]]"
 ---
 
 We launched `/changelog` on the Flowershow site.

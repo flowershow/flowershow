@@ -4,6 +4,7 @@ date: 2025-11-25
 description: Flowershow now renders Obsidian Bases blocks live — query your vault, display results as tables, cards, or lists, with filters and formulas intact.
 authors:
   - The Flowershow Team
+image: "[[assets/obsidian-bases-cards.png]]"
 ---
 
 Obsidian's Bases feature turns your vault into a queryable database — filter notes by frontmatter, compute formulas, and display results as tables, galleries, or lists. Now those same views render live on your published Flowershow site. No extra setup, no static exports — the query runs on your site just like it does in Obsidian.

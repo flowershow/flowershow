@@ -4,6 +4,7 @@ date: 2026-03-04
 description: The sidebar is now enabled for all new sites, has a dedicated slide-out drawer on mobile with breadcrumb navigation, and can be restricted to specific URL paths.
 authors:
   - Ola Rubaj
+image: "[[assets/sidebar-navigation.png]]"
 ---
 
 We've shipped three improvements to sidebar navigation that make Flowershow sites easier to explore out of the box — especially on mobile — and give you more control over where the sidebar appears.
