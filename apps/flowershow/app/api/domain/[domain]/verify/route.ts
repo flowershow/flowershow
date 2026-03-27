@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import {
   getConfigResponse,
   getDomainResponse,
+  validDomainRegex,
   verifyDomain,
 } from '@/lib/domains';
 import { DomainVerificationStatusProps } from '@/lib/types';
@@ -13,6 +14,11 @@ export async function GET(
 ) {
   const params = await props.params;
   const domain = decodeURIComponent(params.domain);
+
+  if (!validDomainRegex.test(domain)) {
+    return NextResponse.json({ error: 'Invalid domain' }, { status: 400 });
+  }
+
   let status: DomainVerificationStatusProps = 'Valid Configuration';
 
   const [domainJson, configJson] = await Promise.all([

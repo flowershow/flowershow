@@ -5,7 +5,14 @@ import {
   DomainVerificationResponse,
 } from '@/lib/types';
 
+const assertValidDomain = (domain: string) => {
+  if (!validDomainRegex.test(domain)) {
+    throw new Error(`Invalid domain: ${domain}`);
+  }
+};
+
 export const addDomainToVercel = async (domain: string) => {
+  assertValidDomain(domain);
   return await fetch(
     `https://api.vercel.com/v10/projects/${env.PROJECT_ID_VERCEL}/domains${
       env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ''
@@ -28,6 +35,7 @@ export const addDomainToVercel = async (domain: string) => {
 };
 
 export const removeDomainFromVercelProject = async (domain: string) => {
+  assertValidDomain(domain);
   return await fetch(
     `https://api.vercel.com/v9/projects/${
       env.PROJECT_ID_VERCEL
@@ -44,6 +52,7 @@ export const removeDomainFromVercelProject = async (domain: string) => {
 };
 
 export const removeDomainFromVercelTeam = async (domain: string) => {
+  assertValidDomain(domain);
   return await fetch(
     `https://api.vercel.com/v6/domains/${domain}${
       env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ''
@@ -60,6 +69,7 @@ export const removeDomainFromVercelTeam = async (domain: string) => {
 export const getDomainResponse = async (
   domain: string,
 ): Promise<DomainResponse & { error: { code: string; message: string } }> => {
+  assertValidDomain(domain);
   return await fetch(
     `https://api.vercel.com/v9/projects/${
       env.PROJECT_ID_VERCEL
@@ -81,6 +91,7 @@ export const getDomainResponse = async (
 export const getConfigResponse = async (
   domain: string,
 ): Promise<DomainConfigResponse> => {
+  assertValidDomain(domain);
   return await fetch(
     `https://api.vercel.com/v6/domains/${domain}/config${
       env.TEAM_ID_VERCEL ? `?teamId=${env.TEAM_ID_VERCEL}` : ''
@@ -98,6 +109,7 @@ export const getConfigResponse = async (
 export const verifyDomain = async (
   domain: string,
 ): Promise<DomainVerificationResponse> => {
+  assertValidDomain(domain);
   return await fetch(
     `https://api.vercel.com/v9/projects/${
       env.PROJECT_ID_VERCEL
