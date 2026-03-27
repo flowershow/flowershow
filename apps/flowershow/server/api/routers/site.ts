@@ -8,6 +8,7 @@ import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { buildSiteTree } from '@/lib/build-site-tree';
+import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import {
   deleteProject,
   fetchFile,
@@ -226,6 +227,12 @@ export const siteRouter = createTRPCRouter({
 
       if (key === 'customDomain') {
         const newDomain = toNullIfEmpty(value);
+        if (newDomain && !isFeatureEnabled(Feature.CustomDomain, site)) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Custom domains require a Premium plan',
+          });
+        }
         if (!newDomain) {
           await ctx.db.site.update({
             where: { id },
@@ -450,6 +457,12 @@ export const siteRouter = createTRPCRouter({
       }
 
       if (input.enabled) {
+        if (!isFeatureEnabled(Feature.PasswordProtection, site)) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Password protection requires a Premium plan',
+          });
+        }
         if (!input.password) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
