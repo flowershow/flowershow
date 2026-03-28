@@ -66,7 +66,7 @@
     "hast-util-from-html": "^2.0.3",
     "hast-util-to-jsx-runtime": "^2.3.6",
     "hastscript": "^9.0.1",
-    "inngest": "^3.44.3",
+    "inngest": "^4.1.0",
     "jose": "^6.1.0",
     "js-cookie": "^3.0.5",
     "jsep": "^1.4.0",
