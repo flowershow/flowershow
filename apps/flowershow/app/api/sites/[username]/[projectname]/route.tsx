@@ -116,5 +116,17 @@ export async function GET(
     }
   }
 
-  return NextResponse.json(site);
+  // Strip sensitive / internal-only fields before returning.
+  // The middleware only needs: id, privacyMode, tokenVersion, plan,
+  // customDomain, projectName, user.username, and a few display fields.
+  const {
+    accessPasswordHash: _hash,
+    anonymousOwnerId: _anonId,
+    installationRepository: _installRepo,
+    installationRepositoryId: _installRepoId,
+    user: { id: _userId, ...safeUser },
+    ...rest
+  } = site;
+
+  return NextResponse.json({ ...rest, user: safeUser });
 }
