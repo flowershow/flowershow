@@ -1,5 +1,7 @@
 # Collection-Driven Page Templating in Flowershow
 
+Issue: [#1222 - Clarify collection-driven page templating for Markdown content](https://github.com/flowershow/flowershow/issues/1222)
+
 ## Summary
 
 This note captures the product need for collection-driven pages in Flowershow, especially pages that render lists of Markdown content such as blog posts, projects, or people. It focuses on the problem, constraints, and desired authoring experience before deciding on implementation or syntax.
