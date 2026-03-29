@@ -182,6 +182,7 @@ Recommended v1 values:
 - `from`
 - `sortBy: date | title`
 - `sortDirection: asc | desc`
+- use a single documented collection name: `items`
 
 ### Why This Approach
 
@@ -338,6 +339,7 @@ collections:
 - That should include frontmatter fields.
 - It may also include a small set of built-in page properties that are already available, such as path, URL-like fields, and inferred values such as title.
 - Missing values should render as empty strings.
+- This should work in normal `.md` pages, not only `.mdx`.
 - The goal is not to design a perfect schema up front.
 - The goal is to use the data shape that Flowershow already has available with minimal extra complexity.
 
@@ -392,6 +394,7 @@ collections:
 - It separates iteration from data acquisition cleanly.
 - It also gives us a simple answer for pagination in v1: custom collection cards do not support pagination; authors who want pagination should use the existing `List` component.
 - In v1, the templating surface should stay narrow: only `{% for item in items %}` and `{{ item.field }}`.
+- In docs and examples, we should standardize on a single collection name: `items`.
 - This is a design choice for now, not yet an implementation commitment to Markdoc as a full rendering system.
 
 ## Markdoc And Evidence Research
@@ -416,6 +419,14 @@ collections:
 - But for now, frontmatter is the simpler and more explicit choice for Flowershow.
 - Purely predefined cards/list/grid layouts:
 - These remain useful, but they do not satisfy the actual need for custom per-item markup.
+
+## v1 Non-Goals
+
+- pagination
+- conditionals
+- nested loops
+- multiple documented collection names beyond `items`
+- broader Markdoc adoption
 
 ## References Appendix
 

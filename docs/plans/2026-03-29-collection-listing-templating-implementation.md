@@ -39,6 +39,8 @@ collections:
 - v1 supports `sortBy: date | title`
 - v1 supports `sortDirection: asc | desc`
 - v1 supports loop + interpolation only
+- docs and examples use a single collection name: `items`
+- v1 must work in normal `.md` pages
 - v1 does not support pagination
 - v1 does not replace `List`
 
@@ -211,6 +213,8 @@ collections?: Record<string, PageCollectionConfig>;
 
 to `PageMetadata`.
 
+In docs and fixtures, only use `items`.
+
 **Step 4: Re-run tests**
 
 Run:
@@ -363,6 +367,7 @@ Cover:
 - cards are ordered by date descending
 - title/description/url render correctly
 - no pagination UI appears
+- the same feature works in a normal `.md` page
 
 **Step 2: Run the focused e2e test and confirm failure**
 

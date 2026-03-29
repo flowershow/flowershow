@@ -155,6 +155,8 @@ Recommended v1 values:
 - `sortBy: date | title`
 - `sortDirection: asc | desc`
 
+For now, all examples use a single collection name: `items`.
+
 ## Why this approach
 
 The goal is to keep authoring simple and local to the page.
@@ -203,6 +205,16 @@ Those questions matter, but they are separate from the templating experience its
 - Missing values should render as empty strings.
 - There is no conditional logic in v1.
 - If a field may be missing, authors should keep their markup simple and avoid depending on that field.
+- This should work in normal `.md` pages, not only `.mdx`.
+
+## v1 non-goals
+
+- pagination
+- conditionals
+- nested loops
+- multiple documented collection names beyond `items`
+
+If you want pagination, use [[list-component|List]].
 
 ## The core idea
 
