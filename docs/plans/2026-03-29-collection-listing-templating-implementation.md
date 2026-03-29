@@ -2,159 +2,98 @@
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
 
-**Goal:** Add a minimal, HTML-first way to render folder-based collections of Markdown pages as custom listing cards on Flowershow pages.
+**Goal:** Let a page declare a folder-backed collection in frontmatter and render custom cards for it using a small loop block around normal HTML.
 
-**Architecture:** Reuse Flowershow's existing metastore-backed page metadata and MDX/Markdown rendering pipeline. Implement a new remark plugin that resolves a page-local `collection` block into rendered HTML using a shared server-side collection query utility, then expose the feature through fixtures, e2e coverage, and tutorial-first docs.
+**Architecture:** Reuse the existing folder-query logic behind `List`, move it into a shared server-side collection loader, resolve named collections from page frontmatter before rendering, and add a minimal loop/interpolation layer in the page body. Implement the selected syntax in the existing Flowershow pipeline; do not broaden scope into general Markdoc adoption. No pagination in v1.
 
-**Tech Stack:** Next.js App Router, `next-mdx-remote-client`, unified/remark, React 19, tRPC, Prisma, Vitest, Playwright
+**Tech Stack:** Next.js App Router, `next-mdx-remote-client`, unified/remark, React 19, Prisma, tRPC, Vitest, Playwright
 
 ---
 
-## Working Assumptions
+## Target Authoring Model
 
-- Phase 1 is folder-based only: "all Markdown pages under `/projects`" or `/blog`.
-- Phase 1 is page-local only: no reusable partials or shared template registry.
-- Phase 1 is HTML-first and minimal: repeat one item template for each result and interpolate scalar values like `title`, `description`, `date`, `image`, `url`, and `path`.
-- Phase 1 does not support arbitrary API/JSON data, reactive behavior, or a full query language.
-- Phase 1 should work in both Markdown and MDX rendering paths so the author experience is not blocked on JSX.
-- The existing `<List />` component remains supported. This work adds a new lower-level authoring path rather than replacing `List`.
-
-## Target User Experience
-
-The tutorial we should be able to publish after implementation:
-
-1. Create a folder such as `/projects`.
-2. Add Markdown files with frontmatter like `title`, `description`, `date`, `image`, and `status`.
-3. Create a listing page with a `collection` block:
-
-````markdown
+```md
 ---
 title: Projects
-showToc: false
+collections:
+  items:
+    from: /projects
+    sortBy: date
+    sortDirection: desc
 ---
 
-```collection
-from: /projects
-sort:
-  by: date
-  direction: desc
-template: |
-  <article class="project-card not-prose">
-    <a class="project-card__link" href="{{url}}">
-      <img class="project-card__image" src="{{image}}" alt="{{title}}" />
-      <p class="project-card__eyebrow">{{date}}</p>
-      <h3 class="project-card__title">{{title}}</h3>
-      <p class="project-card__summary">{{description}}</p>
-      <p class="project-card__status">{{status}}</p>
-    </a>
-  </article>
-```
-````
-
-4. Publish the site and see one rendered card per matching page.
-
-That tutorial is the acceptance test for the implementation.
-
-## Proposed Syntax For Phase 1
-
-Use a fenced code block with language `collection`:
-
-```yaml
-from: /projects
-sort:
-  by: date
-  direction: desc
-template: |
-  <article>
-    <a href="{{url}}">
-      <h3>{{title}}</h3>
-      <p>{{description}}</p>
-    </a>
-  </article>
+{% for item in items %}
+<article class="project-card">
+  <a href="{{ item.url }}">
+    <h3>{{ item.title }}</h3>
+    <p>{{ item.description }}</p>
+  </a>
+</article>
+{% /for %}
 ```
 
-Phase 1 supported keys:
+## Scope
 
-- `from`: folder path relative to site root
-- `sort.by`: metadata field name or `title`/`date`
-- `sort.direction`: `asc` or `desc`
-- `template`: HTML snippet rendered once per item
+- v1 supports frontmatter-defined named collections
+- v1 supports folder-based collections only
+- v1 supports `sortBy: date | title`
+- v1 supports `sortDirection: asc | desc`
+- v1 supports loop + interpolation only
+- v1 does not support pagination
+- v1 does not replace `List`
 
-Phase 1 template variables:
+### Task 1: Align docs and fixtures to the selected model
+
+**Files:**
+- Modify: `content/flowershow-app/docs/custom-collection-cards.md`
+- Modify: `docs/plans/2026-03-29-collection-listing-templating-design.md`
+- Create: `apps/flowershow/e2e/fixtures/test-site/projects/README.md`
+- Create: `apps/flowershow/e2e/fixtures/test-site/projects/alpha.md`
+- Create: `apps/flowershow/e2e/fixtures/test-site/projects/beta.md`
+- Create: `apps/flowershow/e2e/fixtures/test-site/projects/gamma.md`
+
+**Step 1: Add the fixture content**
+
+Create a realistic `/projects` folder with frontmatter fields used by the tutorial:
 
 - `title`
 - `description`
 - `date`
 - `image`
-- `authors`
-- `url`
-- `path`
-- Any frontmatter scalar already available in `PageMetadata`
+- `status`
 
-Phase 1 rendering rules:
+**Step 2: Add the example page**
 
-- Unknown or missing fields render as empty strings.
-- Values are HTML-escaped before interpolation.
-- Arrays render as comma-joined strings.
-- The plugin wraps repeated items in a predictable container such as `<div class="collection-template">...</div>`.
+Create `projects/README.md` using:
 
-## Key Codebase Constraints To Respect
+```md
+---
+title: Projects
+collections:
+  items:
+    from: /projects
+    sortBy: date
+    sortDirection: desc
+---
 
-- Public page rendering currently branches between pure Markdown and MDX in [apps/flowershow/app/(public)/site/[user]/[project]/[[...slug]]/page.tsx](/Users/rgrp/src/flowershow/flowershow/apps/flowershow/app/(public)/site/[user]/[project]/[[...slug]]/page.tsx).
-- The MDX component registry lives in [apps/flowershow/components/public/mdx/mdx-components-factory.tsx](/Users/rgrp/src/flowershow/flowershow/apps/flowershow/components/public/mdx/mdx-components-factory.tsx).
-- The current listing path is client-side and tied to tRPC in [apps/flowershow/components/public/mdx/list.tsx](/Users/rgrp/src/flowershow/flowershow/apps/flowershow/components/public/mdx/list.tsx) and [apps/flowershow/server/api/routers/site.ts](/Users/rgrp/src/flowershow/flowershow/apps/flowershow/server/api/routers/site.ts).
-- Obsidian Bases already proves the "query in markdown, turn into MDX JSX node" pattern in [apps/flowershow/lib/remark-obsidian-bases.ts](/Users/rgrp/src/flowershow/flowershow/apps/flowershow/lib/remark-obsidian-bases.ts).
-- Existing list docs and blog-setup docs already teach `<List />` in [content/flowershow-app/docs/list-component.md](/Users/rgrp/src/flowershow/flowershow/content/flowershow-app/docs/list-component.md) and [content/flowershow-app/blog/how-to-publish-blog.md](/Users/rgrp/src/flowershow/flowershow/content/flowershow-app/blog/how-to-publish-blog.md).
-
-### Task 1: Lock the feature contract in docs and fixtures first
-
-**Files:**
-- Create: `content/flowershow-app/docs/collection-templates.md`
-- Modify: `content/flowershow-app/blog/how-to-publish-blog.md`
-- Create: `apps/flowershow/e2e/fixtures/test-site/projects/index.md`
-- Create: `apps/flowershow/e2e/fixtures/test-site/projects/project-alpha.md`
-- Create: `apps/flowershow/e2e/fixtures/test-site/projects/project-beta.md`
-- Create: `apps/flowershow/e2e/fixtures/test-site/projects/project-gamma.md`
-- Create: `apps/flowershow/e2e/fixtures/test-site/projects/cards.md`
-
-**Step 1: Write the tutorial-first acceptance content**
-
-Draft the new docs page around the exact phase-1 syntax:
-
-````md
-# Collection Templates
-
-```collection
-from: /projects
-sort:
-  by: date
-  direction: desc
-template: |
-  <article class="project-card">
-    <a href="{{url}}">
-      <h3>{{title}}</h3>
-      <p>{{description}}</p>
-    </a>
-  </article>
+{% for item in items %}
+<article class="project-card">
+  <a href="{{ item.url }}">
+    <h3>{{ item.title }}</h3>
+    <p>{{ item.description }}</p>
+  </a>
+</article>
+{% /for %}
 ```
-````
 
-**Step 2: Add a realistic fixture folder**
-
-Create three project pages with complete frontmatter so the minimal syntax works without conditionals.
-
-**Step 3: Add a fixture page that uses the final syntax**
-
-`projects/cards.md` should be the canonical example used by e2e and docs writing.
-
-**Step 4: Commit**
+**Step 3: Commit**
 
 ```bash
-git add content/flowershow-app/docs/collection-templates.md content/flowershow-app/blog/how-to-publish-blog.md apps/flowershow/e2e/fixtures/test-site/projects
-git commit -m "docs: draft collection template tutorial and fixtures"
+git add content/flowershow-app/docs/custom-collection-cards.md docs/plans/2026-03-29-collection-listing-templating-design.md apps/flowershow/e2e/fixtures/test-site/projects
+git commit -m "docs: align collection cards examples with frontmatter model"
 ```
 
-### Task 2: Extract shared server-side collection query logic from the current List path
+### Task 2: Extract the current List query into a shared collection loader
 
 **Files:**
 - Create: `apps/flowershow/lib/collections.ts`
@@ -163,57 +102,56 @@ git commit -m "docs: draft collection template tutorial and fixtures"
 
 **Step 1: Write the failing unit tests**
 
-Cover a pure function that normalizes and sorts collection items:
+Cover:
 
-```ts
-it('sorts dated items descending by default', () => {
-  const items = normalizeCollectionItems(fixtures, { sortBy: 'date', direction: 'desc' });
-  expect(items.map((item) => item.metadata.title)).toEqual(['Gamma', 'Beta', 'Alpha']);
-});
+- folder inclusion
+- `README.md` / `index.md` exclusion
+- `date DESC` ordering
+- `title ASC` fallback
+- permalink-vs-appPath URL selection
+- image/wiki-link resolution
+
+**Step 2: Run the test and confirm failure**
+
+Run:
+
+```bash
+pnpm --filter @flowershow/app test:unit -- lib/collections.test.ts
 ```
 
-Also cover:
+**Step 3: Implement the loader**
 
-- `README.md` and `index.md` exclusion
-- recursive folder inclusion
-- permalink fallback over `app_path`
-- media/wiki-link resolution
-
-**Step 2: Run test to verify it fails**
-
-Run: `pnpm --filter @flowershow/app test:unit -- lib/collections.test.ts`
-
-Expected: FAIL because `lib/collections.ts` does not exist yet.
-
-**Step 3: Write minimal implementation**
-
-Implement a shared utility with roughly this shape:
+Create a shared function with a shape like:
 
 ```ts
-export type CollectionQuery = {
-  siteId: string;
-  dir: string;
-  sitePrefix: string;
-  customDomain?: string | null;
-  sortBy?: string;
-  direction?: 'asc' | 'desc';
-  mediaField?: string;
-};
+getCollectionItems({
+  db,
+  site,
+  siteId,
+  dir,
+  sortBy, // v1: date | title
+  sortDirection, // v1: asc | desc
+  mediaField,
+})
+```
 
-export async function getCollectionItems(ctx: QueryContext, query: CollectionQuery) {
-  // fetch blobs
-  // exclude directory index files
-  // normalize url + metadata
-  // sort
-  return { items };
+Return:
+
+```ts
+{
+  items: Array<{
+    url: string;
+    path: string;
+    metadata: PageMetadata | null;
+  }>
 }
 ```
 
-**Step 4: Replace router-local listing logic**
+**Step 4: Reuse it from `getListComponentItems`**
 
-Update `getListComponentItems` in [site.ts](/Users/rgrp/src/flowershow/flowershow/apps/flowershow/server/api/routers/site.ts) to call the shared utility instead of duplicating the query.
+Replace the router-local logic in `site.ts`.
 
-**Step 5: Run tests to verify they pass**
+**Step 5: Re-run tests**
 
 Run:
 
@@ -221,393 +159,305 @@ Run:
 pnpm --filter @flowershow/app test:unit -- lib/collections.test.ts components/public/mdx/list.test.tsx
 ```
 
-Expected: PASS.
-
 **Step 6: Commit**
 
 ```bash
 git add apps/flowershow/lib/collections.ts apps/flowershow/lib/collections.test.ts apps/flowershow/server/api/routers/site.ts
-git commit -m "refactor: extract shared collection query utility"
+git commit -m "refactor: extract shared collection loader"
 ```
 
-### Task 3: Build a pure template renderer before integrating it into markdown
+### Task 3: Add typed frontmatter support for named collections
 
 **Files:**
-- Create: `apps/flowershow/lib/collection-template.ts`
-- Create: `apps/flowershow/lib/collection-template.test.ts`
+- Modify: `apps/flowershow/server/api/types.ts`
+- Create: `apps/flowershow/lib/collections-config.ts`
+- Create: `apps/flowershow/lib/collections-config.test.ts`
 
 **Step 1: Write the failing unit tests**
 
 Cover:
 
-- `{{title}}` interpolation
-- empty string for missing fields
-- HTML escaping for `<`, `>`, `&`, `"`
-- arrays joined with `, `
-- wrapper generation for multiple items
+- valid `collections.items.from`
+- optional `sortBy`
+- optional `sortDirection`
+- invalid empty `from`
+- invalid unknown direction
 
-Example:
-
-```ts
-it('escapes HTML-sensitive values', () => {
-  const html = renderCollectionTemplate({
-    template: '<h3>{{title}}</h3>',
-    items: [{ title: '<Unsafe>' }],
-  });
-  expect(html).toContain('&lt;Unsafe&gt;');
-});
-```
-
-**Step 2: Run test to verify it fails**
-
-Run: `pnpm --filter @flowershow/app test:unit -- lib/collection-template.test.ts`
-
-Expected: FAIL because the renderer does not exist yet.
-
-**Step 3: Write minimal implementation**
-
-Implement:
-
-```ts
-export function renderCollectionTemplate(opts: {
-  template: string;
-  items: Array<Record<string, unknown>>;
-  wrapperClass?: string;
-}): string
-```
-
-Keep the implementation deliberately small:
-
-- regex-based `{{field}}` lookup
-- scalar normalization
-- HTML escaping helper
-- default wrapper class `collection-template`
-
-**Step 4: Run tests to verify they pass**
-
-Run: `pnpm --filter @flowershow/app test:unit -- lib/collection-template.test.ts`
-
-Expected: PASS.
-
-**Step 5: Commit**
-
-```bash
-git add apps/flowershow/lib/collection-template.ts apps/flowershow/lib/collection-template.test.ts
-git commit -m "feat: add collection template renderer"
-```
-
-### Task 4: Add a remark plugin that resolves `collection` blocks at render time
-
-**Files:**
-- Create: `apps/flowershow/lib/remark-collection-template.ts`
-- Create: `apps/flowershow/lib/remark-collection-template.test.ts`
-- Modify: `apps/flowershow/lib/markdown.ts`
-
-**Step 1: Write the failing unit tests**
-
-Test a markdown sample containing:
-
-````md
-```collection
-from: /projects
-sort:
-  by: date
-  direction: desc
-template: |
-  <article><h3>{{title}}</h3></article>
-```
-````
-
-Assertions:
-
-- the plugin replaces the code block
-- the rendered result contains one repeated card per item
-- missing `from` or `template` produces a visible error block
-
-**Step 2: Run test to verify it fails**
-
-Run: `pnpm --filter @flowershow/app test:unit -- lib/remark-collection-template.test.ts`
-
-Expected: FAIL because the plugin is not registered.
-
-**Step 3: Write minimal implementation**
-
-Follow the same traversal pattern as [remark-obsidian-bases.ts](/Users/rgrp/src/flowershow/flowershow/apps/flowershow/lib/remark-obsidian-bases.ts):
-
-- visit `code` nodes with `lang === 'collection'`
-- parse YAML via `yaml.parse`
-- call `getCollectionItems(...)`
-- call `renderCollectionTemplate(...)`
-- replace the code block with either:
-  - an HTML node in the pure Markdown path, or
-  - an `mdxJsxFlowElement` like `<CustomHtml html="..."/>` in the MDX path
-
-Prefer a dedicated component over overloaded semantics if the HTML path becomes awkward:
-
-- Create `CollectionTemplateHtml` only if `CustomHtml` proves too permissive.
-
-**Step 4: Register the plugin in both pipelines**
-
-In [markdown.ts](/Users/rgrp/src/flowershow/flowershow/apps/flowershow/lib/markdown.ts):
-
-- add the plugin to `processMarkdown(...)`
-- add the plugin to `getMdxOptions(...)`
-
-The plugin must receive `siteId`, `sitePrefix`, `customDomain`, and `rootDir`.
-
-**Step 5: Run tests to verify they pass**
+**Step 2: Run the test and confirm failure**
 
 Run:
 
 ```bash
-pnpm --filter @flowershow/app test:unit -- lib/remark-collection-template.test.ts
+pnpm --filter @flowershow/app test:unit -- lib/collections-config.test.ts
 ```
 
-Expected: PASS.
+**Step 3: Implement minimal config typing**
+
+Define:
+
+```ts
+type PageCollectionConfig = {
+  from: string;
+  sortBy?: 'date' | 'title';
+  sortDirection?: 'asc' | 'desc';
+};
+```
+
+And add:
+
+```ts
+collections?: Record<string, PageCollectionConfig>;
+```
+
+to `PageMetadata`.
+
+**Step 4: Re-run tests**
+
+Run:
+
+```bash
+pnpm --filter @flowershow/app test:unit -- lib/collections-config.test.ts
+```
+
+**Step 5: Commit**
+
+```bash
+git add apps/flowershow/server/api/types.ts apps/flowershow/lib/collections-config.ts apps/flowershow/lib/collections-config.test.ts
+git commit -m "feat: add frontmatter collection config"
+```
+
+### Task 4: Resolve frontmatter collections before page rendering
+
+**Files:**
+- Modify: `apps/flowershow/app/(public)/site/[user]/[project]/[[...slug]]/page.tsx`
+- Modify: `apps/flowershow/lib/markdown.ts`
+- Create: `apps/flowershow/lib/resolve-page-collections.ts`
+- Create: `apps/flowershow/lib/resolve-page-collections.test.ts`
+
+**Step 1: Write the failing unit tests**
+
+Cover:
+
+- a page with `collections.items`
+- multiple named collections
+- empty collections
+- missing `from`
+
+**Step 2: Run the test and confirm failure**
+
+Run:
+
+```bash
+pnpm --filter @flowershow/app test:unit -- lib/resolve-page-collections.test.ts
+```
+
+**Step 3: Implement collection resolution**
+
+In the page route:
+
+- read `metadata.collections`
+- resolve each named collection through the shared loader
+- build a render-time context such as:
+
+```ts
+{
+  items: [...]
+}
+```
+
+Pass that context into the markdown/MDX pipeline.
+
+Do not add pagination support here.
+
+**Step 4: Re-run tests**
+
+Run:
+
+```bash
+pnpm --filter @flowershow/app test:unit -- lib/resolve-page-collections.test.ts
+```
+
+**Step 5: Commit**
+
+```bash
+git add apps/flowershow/app/(public)/site/[user]/[project]/[[...slug]]/page.tsx apps/flowershow/lib/markdown.ts apps/flowershow/lib/resolve-page-collections.ts apps/flowershow/lib/resolve-page-collections.test.ts
+git commit -m "feat: resolve frontmatter collections before render"
+```
+
+### Task 5: Add the minimal loop/interpolation syntax in the existing pipeline
+
+**Files:**
+- Create: `apps/flowershow/lib/remark-collection-loop.ts`
+- Create: `apps/flowershow/lib/remark-collection-loop.test.ts`
+- Create: `apps/flowershow/lib/collection-renderer.ts`
+- Create: `apps/flowershow/lib/collection-renderer.test.ts`
+- Modify: `apps/flowershow/lib/markdown.ts`
+
+**Step 1: Write the failing tests**
+
+Cover:
+
+- `{% for item in items %}` loop expansion
+- `{{ item.title }}` interpolation
+- empty values render as empty strings
+- arrays join with `, `
+- HTML escaping
+- unknown collection name
+
+**Step 2: Run the tests and confirm failure**
+
+Run:
+
+```bash
+pnpm --filter @flowershow/app test:unit -- lib/collection-renderer.test.ts lib/remark-collection-loop.test.ts
+```
+
+**Step 3: Implement the narrow feature**
+
+Support only:
+
+- `{% for item in items %} ... {% /for %}`
+- `{{ item.field }}`
+
+Do not add:
+
+- conditionals
+- nested loops
+- expressions
+- pagination
+- arbitrary loop variable names
+- arbitrary collection names in docs examples beyond `items`
+
+**Step 4: Register it in both render paths**
+
+Update `processMarkdown(...)` and `getMdxOptions(...)` in `markdown.ts`.
+
+Run this loop/interpolation pass before downstream HTML/rehype transforms that would otherwise consume or mangle the markers.
+
+**Step 5: Re-run tests**
+
+Run:
+
+```bash
+pnpm --filter @flowershow/app test:unit -- lib/collection-renderer.test.ts lib/remark-collection-loop.test.ts
+```
 
 **Step 6: Commit**
 
 ```bash
-git add apps/flowershow/lib/remark-collection-template.ts apps/flowershow/lib/remark-collection-template.test.ts apps/flowershow/lib/markdown.ts
-git commit -m "feat: resolve collection template blocks in markdown"
+git add apps/flowershow/lib/remark-collection-loop.ts apps/flowershow/lib/remark-collection-loop.test.ts apps/flowershow/lib/collection-renderer.ts apps/flowershow/lib/collection-renderer.test.ts apps/flowershow/lib/markdown.ts
+git commit -m "feat: add collection loop rendering"
 ```
 
-### Task 5: Add the minimum presentation layer and author-safe defaults
+### Task 6: Prove the feature end-to-end
 
 **Files:**
-- Create: `apps/flowershow/components/public/mdx/collection-template-html.tsx` (only if needed)
-- Modify: `apps/flowershow/components/public/mdx/mdx-components-factory.tsx`
-- Modify: `apps/flowershow/components/public/mdx/mdx-client-components.tsx`
-- Modify: `apps/flowershow/components/public/mdx/custom-html.tsx` (only if reusing it safely)
-- Modify: `apps/flowershow/styles/default-theme.css`
+- Create: `apps/flowershow/e2e/specs/custom-collection-cards.spec.ts`
+- Modify: `apps/flowershow/e2e/specs/blog.spec.ts` (only if needed)
 
-**Step 1: Write the failing component tests**
+**Step 1: Write the failing e2e test**
 
-If a new component is introduced, test:
+Cover:
 
-- wrapper renders injected HTML
-- no script execution path is required for collection templates
-- output gets `not-prose` or equivalent wrapper when needed
+- `/projects` page renders cards from frontmatter-defined `items`
+- cards are ordered by date descending
+- title/description/url render correctly
+- no pagination UI appears
 
-**Step 2: Run test to verify it fails**
-
-Run: `pnpm --filter @flowershow/app test:unit -- components/public/mdx/*.test.tsx`
-
-Expected: FAIL for the new component or wrapper class.
-
-**Step 3: Implement the smallest rendering surface**
-
-Preferred order:
-
-1. Reuse `CustomHtml` if it is sufficient and acceptable.
-2. Otherwise create a narrower `CollectionTemplateHtml` that only renders trusted HTML and does not re-execute scripts.
-
-Add baseline CSS only for the wrapper:
-
-```css
-.collection-template {
-  display: grid;
-  gap: 1.5rem;
-}
-```
-
-Do not add an opinionated card system in phase 1. Let authors own card styling in their page HTML/CSS.
-
-**Step 4: Run tests to verify they pass**
+**Step 2: Run the focused e2e test and confirm failure**
 
 Run:
 
 ```bash
-pnpm --filter @flowershow/app test:unit -- components/public/mdx/*.test.tsx
+pnpm --filter @flowershow/app test:e2e -- custom-collection-cards.spec.ts
 ```
 
-Expected: PASS.
+**Step 3: Fix any missing integration details**
+
+Only fix what the test exposes.
+
+**Step 4: Re-run the e2e test**
+
+Run:
+
+```bash
+pnpm --filter @flowershow/app test:e2e -- custom-collection-cards.spec.ts
+```
 
 **Step 5: Commit**
 
 ```bash
-git add apps/flowershow/components/public/mdx apps/flowershow/styles/default-theme.css
-git commit -m "feat: add collection template html renderer"
+git add apps/flowershow/e2e/specs/custom-collection-cards.spec.ts apps/flowershow/e2e/fixtures/test-site/projects
+git commit -m "test: cover custom collection cards e2e"
 ```
 
-### Task 6: Prove the end-to-end flow with the test fixture site
+### Task 7: Final docs pass
 
 **Files:**
-- Modify: `apps/flowershow/e2e/specs/blog.spec.ts`
-- Create: `apps/flowershow/e2e/specs/collection-template.spec.ts`
-- Modify: `apps/flowershow/e2e/fixtures/test-site/config.json` (only if the new page path needs inclusion)
-- Modify: fixture files created in Task 1
-
-**Step 1: Write the failing e2e tests**
-
-Test cases:
-
-- `/projects/cards` renders three cards
-- cards are sorted by date desc
-- card links point to the correct project pages
-- interpolated fields appear in the custom markup
-- the same page works when saved as `.md` instead of `.mdx`
-
-Example:
-
-```ts
-await page.goto(`${basePath}/projects/cards`);
-await expect(page.locator('.project-card')).toHaveCount(3);
-await expect(page.locator('.project-card__title').nth(0)).toHaveText('Project Gamma');
-```
-
-**Step 2: Run test to verify it fails**
-
-Run:
-
-```bash
-pnpm --filter @flowershow/app test:e2e -- collection-template.spec.ts
-```
-
-Expected: FAIL because the page still renders the raw code block or an error state.
-
-**Step 3: Implement any missing fixture or route details**
-
-Only fix what the test exposes. Do not expand scope into filters, conditions, or reusable partials.
-
-**Step 4: Run the focused e2e tests**
-
-Run:
-
-```bash
-pnpm --filter @flowershow/app test:e2e -- collection-template.spec.ts blog.spec.ts
-```
-
-Expected: PASS.
-
-**Step 5: Commit**
-
-```bash
-git add apps/flowershow/e2e/specs apps/flowershow/e2e/fixtures/test-site
-git commit -m "test: cover collection template e2e flow"
-```
-
-### Task 7: Update user docs from the tutorial-first perspective
-
-**Files:**
+- Modify: `content/flowershow-app/docs/custom-collection-cards.md`
 - Modify: `content/flowershow-app/docs/list-component.md`
-- Modify: `content/flowershow-app/docs/blog-setup.md`
-- Modify: `content/flowershow-app/blog/how-to-publish-blog.md`
 - Modify: `content/flowershow-app/docs/syntax-mode.md`
-- Create: `content/flowershow-app/changelog/2026-03-29-collection-templates-alpha.md`
+- Create: `content/flowershow-app/changelog/2026-03-29-custom-collection-cards-alpha.md`
 
-**Step 1: Write the docs changes**
+**Step 1: Update docs to match reality**
 
-Required messaging:
+Required points:
 
-- `List` is still the easiest option for standard blog indexes.
-- `collection` blocks are the flexible option when the author wants custom card markup.
-- `collection` blocks work in Markdown and MDX because they are parsed as fenced blocks, not JSX.
-- Phase 1 is folder-based and page-local.
+- collections are defined in frontmatter
+- rendering uses the loop block in the page body
+- no pagination in v1
+- use `List` when you want pagination
 
-**Step 2: Verify docs examples match the fixture**
-
-Ensure the docs examples are copied from the same project fixture used by e2e so docs and tests do not drift.
-
-**Step 3: Run lightweight verification**
-
-Run:
+**Step 2: Commit**
 
 ```bash
-pnpm --filter @flowershow/app test:unit -- lib/remark-collection-template.test.ts
+git add content/flowershow-app/docs/custom-collection-cards.md content/flowershow-app/docs/list-component.md content/flowershow-app/docs/syntax-mode.md content/flowershow-app/changelog/2026-03-29-custom-collection-cards-alpha.md
+git commit -m "docs: document custom collection cards"
 ```
 
-Expected: PASS.
+### Task 8: Verification
 
-**Step 4: Commit**
+**Step 1: Run unit tests**
 
 ```bash
-git add content/flowershow-app/docs/list-component.md content/flowershow-app/docs/blog-setup.md content/flowershow-app/blog/how-to-publish-blog.md content/flowershow-app/docs/syntax-mode.md content/flowershow-app/changelog/2026-03-29-collection-templates-alpha.md
-git commit -m "docs: add collection template guide"
+pnpm --filter @flowershow/app test:unit -- lib/collections.test.ts lib/collections-config.test.ts lib/resolve-page-collections.test.ts lib/collection-renderer.test.ts lib/remark-collection-loop.test.ts components/public/mdx/list.test.tsx
 ```
 
-### Task 8: Full verification and release hygiene
-
-**Files:**
-- Modify: only files touched above
-
-**Step 1: Run the focused unit suite**
-
-Run:
+**Step 2: Run e2e**
 
 ```bash
-pnpm --filter @flowershow/app test:unit -- lib/collections.test.ts lib/collection-template.test.ts lib/remark-collection-template.test.ts components/public/mdx/list.test.tsx
+pnpm --filter @flowershow/app test:e2e -- custom-collection-cards.spec.ts
 ```
 
-Expected: PASS.
-
-**Step 2: Run the focused e2e suite**
-
-Run:
-
-```bash
-pnpm --filter @flowershow/app test:e2e -- blog.spec.ts collection-template.spec.ts
-```
-
-Expected: PASS.
-
-**Step 3: Run lint for the touched app package**
-
-Run:
+**Step 3: Run lint**
 
 ```bash
 pnpm --filter @flowershow/app lint
 ```
 
-Expected: PASS.
-
-**Step 4: Update issue and docs references**
-
-- Add implementation notes or checklist comments to [#1222](https://github.com/flowershow/flowershow/issues/1222)
-- Link the changelog entry and docs page from the issue if they exist
-
-**Step 5: Final commit**
+**Step 4: Final commit**
 
 ```bash
 git add apps/flowershow content/flowershow-app docs/plans/2026-03-29-collection-listing-templating-implementation.md
-git commit -m "feat: add html-first collection templates"
+git commit -m "feat: add custom collection cards"
 ```
 
-**Step 6: Push**
+## Appendix A: Short Justifications
 
-```bash
-git pull --rebase origin main
-git push origin main
-git status
-```
+- Frontmatter for collection binding:
+  keeps data acquisition separate from rendering and fits Flowershow's current page metadata model.
+- Reuse `List` query logic:
+  avoids duplicate folder-query behavior and keeps ordering/path rules consistent.
+- No pagination in v1:
+  pagination adds routing and UI complexity; `List` already covers that use case.
+- Small loop syntax in the existing pipeline:
+  keeps custom HTML in the page body and minimizes templating surface area without broadening scope into a new page-rendering system.
 
-Expected: `git status` shows the branch is up to date with `origin/main`.
+## Appendix B: Reference Files
 
-## Risks To Watch During Implementation
-
-- The MD and MDX pipelines differ. The plugin must be registered in both or the feature will behave inconsistently.
-- Reusing `CustomHtml` may accidentally allow script execution where we do not want it. Prefer a narrower renderer if the behavior is ambiguous.
-- Query logic currently lives partly inside the tRPC router. Extract it once and reuse it rather than duplicating SQL/normalization paths.
-- The temptation to add conditions, loops, nested templates, reusable partials, or API-backed data will appear quickly. Do not add them in phase 1.
-- If the feature only works in `.mdx`, it misses the main author experience goal.
-
-## Explicit Non-Goals For Phase 1
-
-- No `if` blocks or conditionals in templates
-- No nested loops
-- No reusable shared templates
-- No API-backed collections
-- No WYSIWYG editor support
-- No replacement of Obsidian Bases
-- No attempt to standardize card aesthetics beyond a light wrapper class
-
-## Recommended Implementation Order
-
-1. Tutorial and fixture
-2. Shared collection query utility
-3. Pure template renderer
-4. Remark plugin
-5. Presentation wrapper
-6. E2E proof
-7. Docs and changelog
-8. Verification and push
+- `apps/flowershow/components/public/mdx/list.tsx`
+- `apps/flowershow/server/api/routers/site.ts`
+- `apps/flowershow/app/(public)/site/[user]/[project]/[[...slug]]/page.tsx`
+- `apps/flowershow/lib/markdown.ts`
+- `docs/plans/2026-03-29-collection-listing-templating-design.md`
+- `content/flowershow-app/docs/custom-collection-cards.md`

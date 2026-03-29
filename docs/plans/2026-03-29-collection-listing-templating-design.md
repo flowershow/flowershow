@@ -18,6 +18,11 @@ The design should be strong enough that we can comfortably teach it with a tutor
 ---
 title: Projects
 showToc: false
+collections:
+  items:
+    from: /projects
+    sortBy: date
+    sortDirection: desc
 ---
 
 {% for item in items %}
@@ -39,7 +44,7 @@ Key properties of this example:
 - The repeated card markup lives directly in the page body.
 - AI tools can edit and generate the markup naturally.
 - The templating layer only provides loop control and variable interpolation.
-- This example assumes `items` already exists on the page. How it gets there is a separate concern.
+- The page declares `items` in frontmatter and uses it in the page body.
 
 ## Tutorial Draft
 
@@ -64,9 +69,17 @@ This feature is designed for exactly that.
 
 ### What This Looks Like
 
-The page gets access to a collection called `items`, and then you render each item using a small loop block:
+The page defines a collection called `items` in frontmatter, and then renders each item using a small loop block:
 
 ````md
+---
+collections:
+  items:
+    from: /projects
+    sortBy: date
+    sortDirection: desc
+---
+
 {% for item in items %}
 <article class="project-card">
   <a class="project-card__link" href="{{ item.url }}">
@@ -116,6 +129,11 @@ Your page might look like this:
 title: Projects
 description: A selection of current and recent projects
 showToc: false
+collections:
+  items:
+    from: /projects
+    sortBy: date
+    sortDirection: desc
 ---
 
 {% for item in items %}
@@ -149,6 +167,22 @@ For example:
 
 This means you can keep using frontmatter as the source of truth for your card content.
 
+For v1, the collection definition should stay narrow:
+
+```yaml
+collections:
+  items:
+    from: /projects
+    sortBy: date
+    sortDirection: desc
+```
+
+Recommended v1 values:
+
+- `from`
+- `sortBy: date | title`
+- `sortDirection: asc | desc`
+
 ### Why This Approach
 
 The goal is to keep authoring simple and local to the page.
@@ -164,20 +198,19 @@ This is intentionally different from putting HTML inside a quoted template strin
 
 ### What This Tutorial Assumes
 
-This tutorial assumes the page already has access to a collection called `items`.
-
-That is a separate part of the design.
+This tutorial assumes collections are defined in page frontmatter.
 
 In other words, this tutorial is about:
 
-- how to render a collection once it exists
+- how to define a simple folder-based collection
+- how to render that collection once it exists
 
 It is not yet about:
 
-- how the collection gets defined
-- whether it comes from a folder query
-- whether it is configured in frontmatter
-- whether it is created with another page-level construct
+- more advanced query syntax
+- pagination
+- multiple collection sources beyond the simple folder-based case
+- conditional rendering for missing fields
 
 Those questions matter, but they are separate from the templating experience itself.
 
@@ -265,9 +298,21 @@ That should make blog indexes, project galleries, people directories, and other 
 ### Concern 1: Getting the collection onto the page
 
 - Somehow the page gets access to a collection value such as `items`.
-- That may eventually come from folder-based querying, frontmatter configuration, page variables, MDX props, or another mechanism.
-- For now, this concern is intentionally bracketed.
-- We can assume that `items` is available on the page.
+- The selected direction for now is frontmatter-based collection binding.
+- The page declares named collections in frontmatter, for example:
+
+```yaml
+collections:
+  items:
+    from: /projects
+    sortBy: date
+    sortDirection: desc
+```
+
+- That keeps data acquisition separate from rendering.
+- It is explicit, page-local, and easy to reason about.
+- It avoids mixing query definition into the page-body loop syntax.
+- It also stays closer to Flowershow's current page metadata model.
 
 ### Concern 2: Rendering each item once `items` already exists
 
@@ -283,7 +328,8 @@ That should make blog indexes, project galleries, people directories, and other 
 
 - The first version should treat a collection primarily as "all pages in a folder".
 - That gives a simple and legible mental model for authors.
-- Filtering and sorting may exist in a basic form, but should not define the core abstraction.
+- In v1, sorting should stay narrow: `date` or `title`, `asc` or `desc`.
+- Filtering should not be part of the first version.
 - A richer query model may be added later, but it is intentionally unspecified in this note.
 
 ## Data Available To Templates
@@ -291,6 +337,7 @@ That should make blog indexes, project galleries, people directories, and other 
 - The first version should expose whatever item metadata is already easy to obtain from the backend or metastore.
 - That should include frontmatter fields.
 - It may also include a small set of built-in page properties that are already available, such as path, URL-like fields, and inferred values such as title.
+- Missing values should render as empty strings.
 - The goal is not to design a perfect schema up front.
 - The goal is to use the data shape that Flowershow already has available with minimal extra complexity.
 
@@ -305,11 +352,30 @@ That should make blog indexes, project galleries, people directories, and other 
 
 ## Selected Direction For Now
 
-- We should assume the collection already exists on the page as `items`.
+- Collections should be defined in page frontmatter.
+- The first version should allow named collections such as `items` to be declared there.
+- For example:
+
+```yaml
+collections:
+  items:
+    from: /projects
+    sortBy: date # v1: date | title
+    sortDirection: desc
+```
+
 - For the rendering concern, the selected direction is a Markdoc-style loop block wrapped around normal HTML.
 - The desired authoring shape is:
 
 ````md
+---
+collections:
+  items:
+    from: /projects
+    sortBy: date
+    sortDirection: desc
+---
+
 {% for item in items %}
 <article class="project-card">
   <a href="{{ item.url }}">
@@ -324,6 +390,8 @@ That should make blog indexes, project galleries, people directories, and other 
 - It keeps the control flow very small and explicit.
 - It gives AI tools and human authors a natural editing surface.
 - It separates iteration from data acquisition cleanly.
+- It also gives us a simple answer for pagination in v1: custom collection cards do not support pagination; authors who want pagination should use the existing `List` component.
+- In v1, the templating surface should stay narrow: only `{% for item in items %}` and `{{ item.field }}`.
 - This is a design choice for now, not yet an implementation commitment to Markdoc as a full rendering system.
 
 ## Markdoc And Evidence Research
@@ -343,16 +411,38 @@ That should make blog indexes, project galleries, people directories, and other 
 - This is possible, but it is not the preferred UX.
 - It makes authoring feel indirect and mechanical.
 - It is worse for hand editing and worse for AI-assisted authoring.
+- Defining collection queries inline in page-body code fences:
+- This is a plausible direction and Evidence shows a neat version of it.
+- But for now, frontmatter is the simpler and more explicit choice for Flowershow.
 - Purely predefined cards/list/grid layouts:
 - These remain useful, but they do not satisfy the actual need for custom per-item markup.
 
+## References Appendix
+
+- Markdoc syntax docs: https://markdoc.dev/docs/syntax
+- Evidence markdown docs: https://docs.evidence.studio/core-concepts/markdown
+- Evidence's pattern is relevant because it lets authors define a query in a fenced code block and then reference it from Markdoc components.
+- Example from Evidence docs:
+
+```text
+```sql ten_daily_orders
+select * from demo.daily_orders limit 10
+```
+
+{% table
+    data="ten_daily_orders"
+%}
+```
+
+- That is a neat model because fenced blocks make multiline query definitions easy.
+- For Flowershow, it remains a useful reference point, but the current selected direction is frontmatter-defined collections plus page-body loop rendering.
+
 ## Still To Be Specified
 
-- How `items` gets onto the page.
-- Whether the eventual collection source is configured in frontmatter, page syntax, or another page-local mechanism.
+- The exact frontmatter shape for named collections beyond the simple v1 case.
 - Whether the loop syntax is implemented by adopting Markdoc, by borrowing its syntax, or by implementing a narrow compatible subset in the existing pipeline.
 - The exact query syntax beyond the basic folder-based collection model.
 - The exact set of built-in page properties exposed to templates.
-- Whether sorting and filtering are configured inline, in frontmatter, or another page-local form.
+- Whether richer sorting should exist beyond `date` and `title`.
 - Whether the rendering model compiles to MDX, HTML, React components, Markdoc AST, or another internal representation.
 - Whether and how this evolves into reusable partials later.

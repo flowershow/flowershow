@@ -28,6 +28,14 @@ This draft describes the experience we want for that.
 The page gets access to a collection called `items`, and then you render each item with a small loop block:
 
 ````md
+---
+collections:
+  items:
+    from: /projects
+    sortBy: date
+    sortDirection: desc
+---
+
 {% for item in items %}
 <article class="project-card">
   <a class="project-card__link" href="{{ item.url }}">
@@ -77,6 +85,11 @@ Your page might look like this:
 title: Projects
 description: A selection of current and recent projects
 showToc: false
+collections:
+  items:
+    from: /projects
+    sortBy: date
+    sortDirection: desc
 ---
 
 {% for item in items %}
@@ -94,6 +107,22 @@ showToc: false
 
 This would render one card for each item in the collection.
 
+## When to use this
+
+Use custom collection cards when you want a bespoke layout for a folder of content.
+
+For example:
+
+- a projects grid with status labels
+- a custom blog card layout
+- a people directory with profile-style cards
+
+Use [[list-component|List]] when you want:
+
+- a standard listing page
+- built-in pagination
+- the quickest setup
+
 ## Available values
 
 Each `item` can expose page data that Flowershow already knows about.
@@ -110,6 +139,22 @@ For example:
 
 This means you can keep using frontmatter as the source of truth for your card content.
 
+For v1, the collection definition itself should stay simple:
+
+```yaml
+collections:
+  items:
+    from: /projects
+    sortBy: date
+    sortDirection: desc
+```
+
+Recommended v1 values:
+
+- `from`
+- `sortBy: date | title`
+- `sortDirection: asc | desc`
+
 ## Why this approach
 
 The goal is to keep authoring simple and local to the page.
@@ -123,24 +168,41 @@ This approach has a few advantages:
 
 This is intentionally different from putting HTML inside a quoted template string. That style is harder to read, harder to edit, and less natural for both people and AI tools.
 
+The tradeoff is that this draft keeps the templating feature intentionally small. If you want pagination or a standard blog index, `List` remains the better fit.
+
 ## What this assumes
 
-This draft assumes the page already has access to a collection called `items`.
+This draft assumes collections are defined in page frontmatter.
 
-That is a separate part of the design.
+For example:
+
+```yaml
+collections:
+  items:
+    from: /projects
+    sortBy: date
+    sortDirection: desc
+```
 
 In other words, this page is about:
 
-- how to render a collection once it exists
+- how to declare a simple folder-based collection
+- how to render that collection once it exists
 
 It is not yet about:
 
-- how the collection gets defined
-- whether it comes from a folder query
-- whether it is configured in frontmatter
-- whether it is created with another page-level construct
+- more advanced query syntax
+- pagination
+- multiple collection sources beyond the simple folder-based case
+- conditional rendering for missing fields
 
 Those questions matter, but they are separate from the templating experience itself.
+
+## Notes for v1
+
+- Missing values should render as empty strings.
+- There is no conditional logic in v1.
+- If a field may be missing, authors should keep their markup simple and avoid depending on that field.
 
 ## The core idea
 
