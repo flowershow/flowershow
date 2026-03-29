@@ -6,6 +6,10 @@ Issue: [#1222 - Clarify collection-driven page templating for Markdown content](
 
 This note captures the product need for collection-driven pages in Flowershow, especially pages that render lists of Markdown content such as blog posts, projects, or people. It focuses on the problem, constraints, and desired authoring experience before deciding on implementation or syntax.
 
+Related tutorial draft:
+
+- [custom-collection-cards.md](../../../content/flowershow-app/docs/custom-collection-cards.md)
+
 ## Tutorial-Shaped Example
 
 The design should be strong enough that we can comfortably teach it with a tutorial like this:

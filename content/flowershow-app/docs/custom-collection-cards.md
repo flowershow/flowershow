@@ -1,10 +1,10 @@
 ---
-title: "Draft: Custom collection cards"
-description: A draft tutorial for a proposed Flowershow feature that would let you render custom cards for a collection of pages using normal HTML in the page body.
+title: "Custom collection cards"
+description: Render custom cards for a collection of pages using normal HTML in the page body.
 ---
 
-> [!important]
-> This page is a draft for a proposed feature. It describes the authoring experience we want, not something currently available in Flowershow.
+> [!warning]
+> This is a draft tutorial describing functionality that is not yet implemented or in alpha state.
 
 Sometimes the built-in `List` component is enough.
 
