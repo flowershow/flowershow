@@ -10,6 +10,25 @@
 
 ---
 
+## Implementation Handoff
+
+- Related issue: [#1222](https://github.com/flowershow/flowershow/issues/1222)
+- Primary design doc: [2026-03-29-collection-listing-templating-design.md](./2026-03-29-collection-listing-templating-design.md)
+- Tutorial draft: [custom-collection-cards.md](../../../content/flowershow-app/docs/custom-collection-cards.md)
+- Reuse the existing folder-query behavior behind `List`; do not invent a second collection-query path.
+- Keep scope tight:
+  - frontmatter-defined collections
+  - documented collection name `items`
+  - folder-based source only
+  - `sortBy: date | title`
+  - `sortDirection: asc | desc`
+  - `{% for item in items %}` and `{{ item.field }}` only
+  - no pagination
+  - no conditionals
+  - no nested loops
+  - must work in `.md`, not just `.mdx`
+- If the user wants pagination or a standard index page, the answer remains `List`.
+
 ## Target Authoring Model
 
 ```md
