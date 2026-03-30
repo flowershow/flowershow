@@ -323,10 +323,11 @@ function buildNodeElement(
     `background: ${color.bg}`,
     `border: ${options.nodeStrokeWidth}px solid ${color.border}`,
     'border-radius: 6px',
-    'padding: 8px 12px',
+    'padding: 16px',
     'overflow: auto',
     'box-sizing: border-box',
-    'font-size: 14px',
+    'font-family: var(--font-heading, system-ui, sans-serif)',
+    'font-size: 15px',
     'line-height: 1.5',
   ].join('; ');
 
@@ -338,8 +339,13 @@ function buildNodeElement(
         'div',
         {
           className: 'canvas-node-label',
-          style:
-            'font-size: 12px; font-weight: bold; margin-bottom: 4px; opacity: 0.7;',
+          style: [
+            'font-size: 14px',
+            'font-family: var(--font-heading, system-ui, sans-serif)',
+            'font-weight: bold',
+            'margin-bottom: 4px',
+            'opacity: 0.7',
+          ].join('; '),
         },
         node.label,
       ),
@@ -550,7 +556,8 @@ function buildEdgePath(
         {
           x: midX,
           y: midY,
-          'font-size': 13,
+          'font-size': 14,
+          'font-family': 'var(--font-heading, system-ui, sans-serif)',
           'text-anchor': 'middle',
           'dominant-baseline': 'middle',
           fill: 'currentColor',
