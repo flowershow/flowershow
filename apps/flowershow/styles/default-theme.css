@@ -2281,3 +2281,13 @@
     -webkit-mask-image: -webkit-radial-gradient(white, black);
   }
 }
+
+/* ---- Canvas node content resets ---- */
+/* Strip paragraph margins so single-line text nodes don't overflow/scroll */
+.canvas-node-content p {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+.canvas-node-content p + p {
+  margin-top: 0.5em !important;
+}
