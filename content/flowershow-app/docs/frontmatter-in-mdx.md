@@ -16,49 +16,55 @@ Given this frontmatter:
 ```md
 ---
 title: My Recipe Book
-author: Theo
-version: "2.1"
+description: A collection of family recipes from around the world.
+date: 2024-06-01
 ---
 ```
 
-You can use the values anywhere in your MDX content:
+You can reference those values anywhere in the page body:
 
 ```mdx
 # {frontmatter.title}
 
-Written by **{frontmatter.author}** · Version {frontmatter.version}
+_{frontmatter.description}_
+
+Last updated: {frontmatter.date}
 ```
 
 Renders as:
 
 > # My Recipe Book
-> Written by **Theo** · Version 2.1
+> _A collection of family recipes from around the world._
+>
+> Last updated: 2024-06-01
 
 ## Common use cases
 
-### Repeat the page title
+### Show the description as a lead paragraph
 
-Avoid hardcoding the title in both frontmatter and the first heading:
-
-```mdx
----
-title: API Reference
----
-
-# {frontmatter.title}
-
-Welcome to the {frontmatter.title} page.
-```
-
-### Display a description
+Avoid duplicating your description in both frontmatter and the page body:
 
 ```mdx
 ---
 title: Getting Started
-description: Everything you need to publish your first site.
+description: Everything you need to publish your first Flowershow site.
 ---
 
-> {frontmatter.description}
+{frontmatter.description}
+
+## Step 1: ...
+```
+
+### Inline the page title in body text
+
+```mdx
+---
+title: Privacy Policy
+---
+
+# {frontmatter.title}
+
+This {frontmatter.title} was last updated on 1 January 2025.
 ```
 
 ### Render a list from a frontmatter array
@@ -67,33 +73,20 @@ Frontmatter arrays can be mapped over in JSX:
 
 ```mdx
 ---
-title: Tech Stack
-tags: [React, TypeScript, Tailwind]
+title: Reading List
+books:
+  - Deep Work
+  - The Art of Doing Science and Engineering
+  - Thinking, Fast and Slow
 ---
-
-Technologies used:
 
 <ul>
-  {frontmatter.tags.map(tag => <li key={tag}>{tag}</li>)}
+  {frontmatter.books.map(book => <li key={book}>{book}</li>)}
 </ul>
-```
-
-### Conditional content
-
-Show or hide content based on a frontmatter flag:
-
-```mdx
----
-title: My Page
-draft: true
----
-
-{frontmatter.draft && <p>⚠️ This page is a draft.</p>}
 ```
 
 ## Notes
 
-- All frontmatter values are available — strings, numbers, arrays, booleans, and objects.
-- Numeric and boolean values are used as-is in JSX expressions.
-- String values can be embedded directly in text with `{frontmatter.field}`.
-- This is a standard MDX feature — the `frontmatter` variable is injected automatically by Flowershow.
+- All frontmatter values are available — strings, numbers, booleans, and arrays.
+- This is standard MDX behaviour — the `frontmatter` variable is injected automatically by Flowershow.
+- Expressions like `{frontmatter.date}` render the raw value as a string. If you need formatting, use a JS expression: `{new Date(frontmatter.date).toLocaleDateString()}`.
