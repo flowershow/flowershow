@@ -175,6 +175,43 @@ export async function POST(req: Request) {
             throw new Error('Missing required subscription data');
           }
 
+          // Detect new cancellation: cancel_at_period_end just flipped to true
+          const justCancelled =
+            subscription.cancel_at_period_end === true &&
+            dbSubscription.cancelAtPeriodEnd === false;
+
+          console.log({ justCancelled });
+
+          // Look up the user to check if they've already received the cancel bonus
+          const user = await prisma.user.findUnique({
+            where: { id: dbSubscription.site.userId },
+          });
+
+          const bonusAlreadyGranted = user?.cancelBonusGrantedAt != null;
+          const grantBonus = justCancelled && !bonusAlreadyGranted;
+
+          // Compute period end to store:
+          // - Grant bonus (first cancellation ever for this user): extend by 3 months
+          // - Already cancelled on this sub: preserve our extended date
+          // - Otherwise: use Stripe's value
+          let periodEnd: Date;
+          if (grantBonus) {
+            periodEnd = new Date(subscription.current_period_end * 1000);
+            periodEnd.setMonth(periodEnd.getMonth() + 3);
+            console.log(
+              `⏳ Granting cancel bonus. Extending access until ${periodEnd.toISOString()}`,
+            );
+          } else if (
+            subscription.cancel_at_period_end === true &&
+            dbSubscription.cancelAtPeriodEnd === true
+          ) {
+            // Subsequent update events (e.g. cancellation reason submission) —
+            // keep the extended date we already stored
+            periodEnd = dbSubscription.currentPeriodEnd;
+          } else {
+            periodEnd = new Date(subscription.current_period_end * 1000);
+          }
+
           console.log(`📝 Updating subscription record`);
           await prisma.subscription.update({
             where: {
@@ -185,26 +222,22 @@ export async function POST(req: Request) {
               currentPeriodStart: new Date(
                 subscription.current_period_start * 1000,
               ),
-              currentPeriodEnd: new Date(
-                subscription.current_period_end * 1000,
-              ),
+              currentPeriodEnd: periodEnd,
               cancelAtPeriodEnd: subscription.cancel_at_period_end,
               stripePriceId: priceId,
               interval: interval,
             },
           });
 
-          // If subscription is cancelled/deleted, downgrade site to FREE
-          if (subscription.status === 'canceled') {
-            console.log(`⬇️ Downgrading site to FREE plan`);
-            await prisma.site.update({
-              where: {
-                id: dbSubscription.siteId,
-              },
-              data: {
-                plan: 'FREE',
-              },
-            });
+          if (justCancelled) {
+            console.log(`📧 Subscription cancelled — sending downgrade email`);
+
+            if (grantBonus) {
+              await prisma.user.update({
+                where: { id: dbSubscription.site.userId },
+                data: { cancelBonusGrantedAt: new Date() },
+              });
+            }
 
             const posthog = PostHogClient();
             posthog.capture({
@@ -214,9 +247,39 @@ export async function POST(req: Request) {
                 siteId: dbSubscription.siteId,
                 interval: interval,
                 priceId: priceId,
+                bonusGranted: grantBonus,
               },
             });
             await posthog.shutdown();
+
+            if (user?.email) {
+              const extendedEndDate = grantBonus
+                ? periodEnd.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                  })
+                : null;
+
+              await inngest.send({
+                name: 'email/premium-downgrade.send',
+                data: {
+                  userId: dbSubscription.site.userId,
+                  email: user.email,
+                  name: user.name,
+                  extendedEndDate,
+                },
+              });
+            }
+          }
+
+          // When Stripe confirms the subscription is fully cancelled, downgrade to FREE
+          if (subscription.status === 'canceled') {
+            console.log(`⬇️ Downgrading site to FREE plan`);
+            await prisma.site.update({
+              where: { id: dbSubscription.siteId },
+              data: { plan: 'FREE' },
+            });
           }
 
           console.log(`✅ Subscription update processing completed`);

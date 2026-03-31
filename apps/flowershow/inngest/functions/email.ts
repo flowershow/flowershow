@@ -1,6 +1,7 @@
 import { CustomDomainConnectedEmail } from '@/emails/custom-domain-connected';
 import { CustomDomainMisconfiguredEmail } from '@/emails/custom-domain-misconfigured';
 import { FeedbackThankYouEmail } from '@/emails/feedback-thank-you';
+import { PremiumDowngradeEmail } from '@/emails/premium-downgrade';
 import { PremiumUpgradeEmail } from '@/emails/premium-upgrade';
 import { SiteCreatedEmail } from '@/emails/site-created';
 import { WelcomeEmail } from '@/emails/welcome';
@@ -51,6 +52,32 @@ export const sendPremiumUpgradeEmail = inngest.createFunction(
 
     if (error) {
       throw new Error(`Failed to send premium upgrade email: ${error.message}`);
+    }
+
+    return { emailId: data?.id };
+  },
+);
+
+export const sendPremiumDowngradeEmail = inngest.createFunction(
+  { id: 'send-premium-downgrade-email' },
+  { event: 'email/premium-downgrade.send' },
+  async ({ event }) => {
+    const { email, name, extendedEndDate } = event.data;
+    const userName = name?.split(' ')[0] || 'there';
+
+    const { data, error } = await sendEmail({
+      to: email,
+      subject: 'Your Flowershow subscription has been cancelled',
+      react: PremiumDowngradeEmail({
+        userName,
+        extendedEndDate,
+      }),
+    });
+
+    if (error) {
+      throw new Error(
+        `Failed to send premium downgrade email: ${error.message}`,
+      );
     }
 
     return { emailId: data?.id };

@@ -145,12 +145,18 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
             {subscription.cancelAtPeriodEnd ? (
               <p className="font-medium text-amber-600">
                 Your subscription will end on{' '}
-                {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                {new Date(subscription.currentPeriodEnd).toLocaleDateString(
+                  'en-US',
+                  { year: 'numeric', month: 'long', day: 'numeric' },
+                )}
               </p>
             ) : (
               <p>
                 Next billing date:{' '}
-                {new Date(subscription.currentPeriodEnd).toLocaleDateString()}{' '}
+                {new Date(subscription.currentPeriodEnd).toLocaleDateString(
+                  'en-US',
+                  { year: 'numeric', month: 'long', day: 'numeric' },
+                )}{' '}
                 <span className="text-stone-500">
                   (Renews{' '}
                   {subscription.interval === 'month' ? 'monthly' : 'annually'})

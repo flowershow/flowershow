@@ -39,6 +39,15 @@ interface EmailPremiumUpgrade {
   };
 }
 
+interface EmailPremiumDowngrade {
+  data: {
+    userId: string;
+    email: string;
+    name: string | null;
+    extendedEndDate: string | null;
+  };
+}
+
 interface EmailSiteCreated {
   data: {
     userId: string;
@@ -74,6 +83,7 @@ type Events = {
   'site/delete': SiteDelete;
   'email/welcome.send': EmailWelcome;
   'email/premium-upgrade.send': EmailPremiumUpgrade;
+  'email/premium-downgrade.send': EmailPremiumDowngrade;
 
   'email/site-created.send': EmailSiteCreated;
   'email/feedback-thank-you.send': EmailFeedbackThankYou;
