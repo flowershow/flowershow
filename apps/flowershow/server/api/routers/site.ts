@@ -37,6 +37,9 @@ import {
   protectedProcedure,
   publicProcedure,
 } from '@/server/api/trpc';
+import { jwtVerify } from 'jose';
+import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
+import { siteKeyBytes } from '@/lib/site-hmac-key';
 import {
   PageMetadata,
   PublicSite,
@@ -44,6 +47,49 @@ import {
   publicSiteSelect,
   SiteUpdateKey,
 } from '../types';
+
+/**
+ * Throws UNAUTHORIZED if the caller does not have access to a PASSWORD-protected site.
+ * Site owners and callers with a valid site-access cookie are allowed through.
+ */
+async function assertSiteAccess(
+  site: { privacyMode: string; tokenVersion: number; userId: string } | null,
+  siteId: string,
+  ctx: {
+    session: { user?: { id: string } } | null;
+    headers: Headers;
+  },
+) {
+  if (!site || site.privacyMode !== 'PASSWORD') return;
+  if (ctx.session?.user?.id === site.userId) return;
+
+  const cookieHeader = ctx.headers.get('cookie') ?? '';
+  const cookieName = SITE_ACCESS_COOKIE_NAME(siteId);
+  let token: string | undefined;
+  for (const part of cookieHeader.split(';')) {
+    const [k, ...v] = part.trim().split('=');
+    if (k?.trim() === cookieName) {
+      token = v.join('=');
+      break;
+    }
+  }
+
+  if (!token) {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'Site access required',
+    });
+  }
+  try {
+    const secret = await siteKeyBytes(siteId, site.tokenVersion);
+    await jwtVerify(token, secret, { audience: siteId });
+  } catch {
+    throw new TRPCError({
+      code: 'UNAUTHORIZED',
+      message: 'Site access required',
+    });
+  }
+}
 
 const asciiPrintableNoEdgeSpaces = new RegExp(
   '^(?=.{8,128}$)[!-~](?:[ -~]*[!-~])?$',
@@ -1177,6 +1223,12 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      const siteForAccess = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { privacyMode: true, tokenVersion: true, userId: true },
+      });
+      await assertSiteAccess(siteForAccess, input.siteId, ctx);
+
       return await unstable_cache(
         async (input) => {
           // Try to find by permalink first, then fallback to appPath
@@ -1341,6 +1393,12 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      const siteForAccess = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { privacyMode: true, tokenVersion: true, userId: true },
+      });
+      await assertSiteAccess(siteForAccess, input.siteId, ctx);
+
       return await unstable_cache(
         async (input) => {
           const blob = await ctx.db.blob.findFirst({
@@ -1377,7 +1435,12 @@ export const siteRouter = createTRPCRouter({
       // First fetch the blob to get its siteId for proper cache tagging
       const blobForTags = await ctx.db.blob.findFirst({
         where: { id: input.id },
-        select: { siteId: true },
+        select: {
+          siteId: true,
+          site: {
+            select: { privacyMode: true, tokenVersion: true, userId: true },
+          },
+        },
       });
 
       if (!blobForTags) {
@@ -1386,6 +1449,8 @@ export const siteRouter = createTRPCRouter({
           message: 'Page not found',
         });
       }
+
+      await assertSiteAccess(blobForTags.site, blobForTags.siteId, ctx);
 
       return await unstable_cache(
         async (input) => {
@@ -1999,12 +2064,32 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
+      // Look up the GitHubInstallationRepository record for this repo,
+      // verifying that the installation belongs to the calling user so that
+      // a caller cannot use another user's installation token.
+      let installationRepoId: string | null = null;
+      let verifiedInstallationId: string | undefined;
+      if (installationId) {
+        const repoRecord = await ctx.db.gitHubInstallationRepository.findFirst({
+          where: {
+            installationId,
+            repositoryFullName: ghRepository,
+            installation: { userId: ctx.session.user.id },
+          },
+          select: { id: true },
+        });
+        if (repoRecord) {
+          installationRepoId = repoRecord.id;
+          verifiedInstallationId = installationId;
+        }
+      }
+
       // Validate remote branch exists
       const branchExists = await checkIfBranchExists({
         ghRepository,
         ghBranch,
         accessToken: ctx.session.accessToken,
-        installationId,
+        installationId: verifiedInstallationId,
       });
 
       if (!branchExists) {
@@ -2012,19 +2097,6 @@ export const siteRouter = createTRPCRouter({
           code: 'BAD_REQUEST',
           message: `Branch ${ghBranch} does not exist in repository ${ghRepository}`,
         });
-      }
-
-      // Look up the GitHubInstallationRepository record for this repo
-      let installationRepoId: string | null = null;
-      if (installationId) {
-        const repoRecord = await ctx.db.gitHubInstallationRepository.findFirst({
-          where: {
-            installationId,
-            repositoryFullName: ghRepository,
-          },
-          select: { id: true },
-        });
-        installationRepoId = repoRecord?.id ?? null;
       }
 
       // Update site with GitHub connection
@@ -2050,7 +2122,7 @@ export const siteRouter = createTRPCRouter({
           ghBranch,
           rootDir: rootDir || null,
           accessToken: ctx.session.accessToken,
-          installationId,
+          installationId: verifiedInstallationId,
         },
       });
 
