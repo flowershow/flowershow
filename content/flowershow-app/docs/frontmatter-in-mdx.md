@@ -7,69 +7,47 @@ description: Access frontmatter fields directly inside your MDX page content usi
 > This feature requires **MDX rendering**. It will not work in Markdown (`md`) mode.
 > See [[syntax-mode|Syntax Mode Configuration]] for details on how to enable MDX rendering.
 
-In MDX pages, all frontmatter fields are available as a `frontmatter` object. You can reference any field inline using `{frontmatter.fieldname}`.
+In MDX pages, all frontmatter fields are available as a `frontmatter` object. You can reference any custom field inline in your content using `{frontmatter.fieldname}`.
 
 ## Basic usage
 
-Given this frontmatter:
-
 ```md
 ---
-title: My Recipe Book
-description: A collection of family recipes from around the world.
-date: 2024-06-01
+title: API Reference
+version: "3.2.1"
+status: stable
 ---
 ```
 
-You can reference those values anywhere in the page body:
-
 ```mdx
-# {frontmatter.title}
-
-_{frontmatter.description}_
-
-Last updated: {frontmatter.date}
+> **Version:** {frontmatter.version} · **Status:** {frontmatter.status}
 ```
 
 Renders as:
 
-> # My Recipe Book
-> _A collection of family recipes from around the world._
->
-> Last updated: 2024-06-01
+> **Version:** 3.2.1 · **Status:** stable
 
 ## Common use cases
 
-### Show the description as a lead paragraph
+### Reuse a custom field across the page
 
-Avoid duplicating your description in both frontmatter and the page body:
-
-```mdx
----
-title: Getting Started
-description: Everything you need to publish your first Flowershow site.
----
-
-{frontmatter.description}
-
-## Step 1: ...
-```
-
-### Inline the page title in body text
+Useful when the same value appears in multiple places — change it once in frontmatter and it updates everywhere:
 
 ```mdx
 ---
-title: Privacy Policy
+title: Migration Guide
+from_version: "2.x"
+to_version: "3.0"
 ---
 
-# {frontmatter.title}
+This guide covers migrating from {frontmatter.from_version} to {frontmatter.to_version}.
 
-This {frontmatter.title} was last updated on 1 January 2025.
+...
+
+After completing these steps you will be running {frontmatter.to_version}.
 ```
 
 ### Render a list from a frontmatter array
-
-Frontmatter arrays can be mapped over in JSX:
 
 ```mdx
 ---
@@ -85,8 +63,19 @@ books:
 </ul>
 ```
 
+### Display a formatted date
+
+```mdx
+---
+title: Release Notes
+date: 2024-06-01
+---
+
+Released on {new Date(frontmatter.date).toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" })}.
+```
+
 ## Notes
 
-- All frontmatter values are available — strings, numbers, booleans, and arrays.
-- This is standard MDX behaviour — the `frontmatter` variable is injected automatically by Flowershow.
-- Expressions like `{frontmatter.date}` render the raw value as a string. If you need formatting, use a JS expression: `{new Date(frontmatter.date).toLocaleDateString()}`.
+- This works for any custom frontmatter field — strings, numbers, booleans, and arrays.
+- Standard fields like `title` and `description` are already rendered by Flowershow automatically; no need to use `{frontmatter.title}` in your content.
+- The `frontmatter` variable is injected automatically by Flowershow in MDX mode.
