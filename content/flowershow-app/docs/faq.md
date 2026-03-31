@@ -1,5 +1,49 @@
 # FAQs
 
+### Mermaid diagrams aren't rendering on my page — they just show as a code block
+
+Mermaid diagrams require **MDX rendering mode** to work. In Markdown (`md`) mode, Mermaid code blocks are treated as plain text and won't be processed.
+
+**Fix — enable MDX for that page:**
+
+Add `syntaxMode: mdx` to the frontmatter of any page that uses Mermaid:
+
+```md
+---
+title: My Page
+syntaxMode: mdx
+---
+```
+
+Or enable MDX globally via your site settings in the Flowershow Cloud dashboard.
+
+> [!note]
+> If your site is set to Markdown mode (e.g. because you publish from Obsidian), adding `syntaxMode: mdx` per page is the safest approach — it enables MDX only where you need it without affecting other pages.
+
+See [[mermaid|Mermaid diagrams]] and [[syntax-mode|Syntax Mode Configuration]] for more details.
+
+---
+
+### The copy button on code blocks isn't working
+
+The copy button on code blocks is a client-side feature and requires **MDX rendering mode**. In plain Markdown (`md`) mode, interactive features like the copy button may not initialise.
+
+**Fix — enable MDX for the page:**
+
+```md
+---
+title: My Page
+syntaxMode: mdx
+---
+```
+
+Or switch your site's global rendering mode to `mdx` (the default) in the Flowershow Cloud dashboard.
+
+> [!note]
+> If you are already in MDX mode and the copy button still doesn't work, this may be a known bug. Please let us know in the [Flowershow Discord](https://discord.gg/fexYm7aE3) or open an issue on [GitHub](https://github.com/flowershow/flowershow/issues).
+
+---
+
 ### Is there a way to remove the footer all together?
 
 Only with CSS. `display: none`
