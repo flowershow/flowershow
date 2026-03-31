@@ -33,7 +33,7 @@ export default async function SiteSettingsIndex(props: {
   const repoFullName = getRepoFullName(site);
 
   // Check if site needs migration (OAuth-only, no GitHub App installation)
-  const isOAuthSite = !site.installationRepositoryId && site.ghRepository;
+  const isOAuthSite = !site.installationRepository && site.ghRepository;
   let hasInstallationForRepo = false;
 
   if (isOAuthSite) {
