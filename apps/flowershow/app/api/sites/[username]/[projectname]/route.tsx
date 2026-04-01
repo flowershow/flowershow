@@ -121,7 +121,6 @@ export async function GET(
   // customDomain, projectName, user.username, and a few display fields.
   const {
     accessPasswordHash: _hash,
-    tokenVersion: _tokenVersion,
     anonymousOwnerId: _anonId,
     installationRepository: _installRepo,
     installationRepositoryId: _installRepoId,
