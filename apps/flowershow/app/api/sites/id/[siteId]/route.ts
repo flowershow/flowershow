@@ -46,6 +46,7 @@ export async function GET(
         ghRepository: true,
         ghBranch: true,
         customDomain: true,
+        subdomain: true,
         rootDir: true,
         autoSync: true,
         plan: true,
@@ -96,6 +97,8 @@ export async function GET(
     let siteUrl: string;
     if (site.customDomain) {
       siteUrl = `https://${site.customDomain}`;
+    } else if (site.subdomain) {
+      siteUrl = `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
     } else {
       siteUrl = `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`;
     }
@@ -107,6 +110,7 @@ export async function GET(
         ghRepository: site.ghRepository,
         ghBranch: site.ghBranch,
         customDomain: site.customDomain,
+        subdomain: site.subdomain,
         rootDir: site.rootDir,
         autoSync: site.autoSync,
         plan: site.plan,
