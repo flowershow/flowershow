@@ -4,11 +4,12 @@ import { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import Image from 'next/image';
 import { notFound, redirect } from 'next/navigation';
+import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
 import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
 import { internalGetSiteById } from '@/lib/db/internal';
 import { getSite } from '@/lib/get-site';
-import { getSiteUrl, getSiteUrlPath } from '@/lib/get-site-url';
+import { getSiteUrl } from '@/lib/get-site-url';
 import { isEmoji } from '@/lib/is-emoji';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { siteKeyBytes } from '@/lib/site-hmac-key';
@@ -69,12 +70,12 @@ export default async function LoginPage(props: {
       siteId: site.id,
     })
     .catch(() => null);
-  const sitePrefix = getSiteUrlPath(site);
+  const siteHostname =
+    site.customDomain ?? `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
   const logo = resolveFilePathToUrlPath({
     target: siteConfig?.nav?.logo ?? siteConfig?.logo ?? config.logo, // default to Flowershow logo
-    sitePrefix,
-    domain: site.customDomain,
+    siteHostname,
   });
 
   return (

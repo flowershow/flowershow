@@ -11,8 +11,7 @@ import { parseExpression } from './bases-parse';
 
 interface Options {
   siteId: string;
-  sitePrefix?: string;
-  customDomain?: string;
+  siteHostname: string;
   rootDir?: string;
 }
 
@@ -27,7 +26,7 @@ interface Options {
  * - Replaces the code block with an HTML node containing the query result
  */
 const remarkObsidianBases: Plugin<[Options], Root> = (options) => {
-  const { siteId, sitePrefix, customDomain, rootDir } = options;
+  const { siteId, siteHostname, rootDir } = options;
 
   return async (tree) => {
     const nodesToTransform: Array<{
@@ -54,8 +53,7 @@ const remarkObsidianBases: Plugin<[Options], Root> = (options) => {
         const resultNode = await resolveBaseQuery(
           node.value,
           siteId,
-          sitePrefix,
-          customDomain,
+          siteHostname,
           rootDir,
         );
 
@@ -124,16 +122,14 @@ interface BaseQuery {
  *
  * @param query - The YAML query string
  * @param siteId - Site ID to filter results
- * @param sitePrefix - Optional site prefix for URL generation
- * @param customDomain - Optional custom domain for URL generation
+ * @param siteHostname - Optional site hostname for URL generation
  * @param rootDir - Optional root directory for adjusting folder/path filters
  * @returns A promise that resolves to formatted HTML results
  */
 async function resolveBaseQuery(
   query: string,
   siteId: string,
-  sitePrefix?: string,
-  customDomain?: string,
+  siteHostname: string,
   rootDir?: string,
 ): Promise<any> {
   try {
@@ -151,9 +147,8 @@ async function resolveBaseQuery(
     return await createViewsNode(
       viewResults,
       parsedQuery.views,
+      siteHostname,
       parsedQuery.properties,
-      sitePrefix,
-      customDomain,
       siteId,
     );
   } catch (error) {
@@ -1233,9 +1228,8 @@ async function createViewsNode(
     order?: string[];
     [key: string]: any;
   }>,
+  siteHostname: string,
   properties?: Record<string, { displayName?: string; [key: string]: any }>,
-  sitePrefix?: string,
-  customDomain?: string,
   siteId?: string,
 ): Promise<MdxJsxFlowElement> {
   // If no views specified, default to table view
@@ -1296,13 +1290,8 @@ async function createViewsNode(
     },
     {
       type: 'mdxJsxAttribute',
-      name: 'sitePrefix',
-      value: sitePrefix || '',
-    },
-    {
-      type: 'mdxJsxAttribute',
-      name: 'customDomain',
-      value: customDomain || '',
+      name: 'siteHostname',
+      value: siteHostname || '',
     },
     {
       type: 'mdxJsxAttribute',

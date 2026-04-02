@@ -6,6 +6,7 @@ import { z } from 'zod';
 export const SiteSummarySchema = z.object({
   id: z.string(),
   projectName: z.string(),
+  subdomain: z.string(),
   url: z.string(),
   fileCount: z.number(),
   updatedAt: z.string(),
@@ -31,6 +32,7 @@ export const SiteDetailSchema = z.object({
   ghRepository: z.string().nullable(),
   ghBranch: z.string().nullable(),
   customDomain: z.string().nullable(),
+  subdomain: z.string(),
   rootDir: z.string().nullable(),
   autoSync: z.boolean(),
   plan: z.enum(['FREE', 'PREMIUM']),

@@ -41,6 +41,7 @@ vi.mock('@/env.mjs', () => ({
     // Client env vars
     NEXT_PUBLIC_AUTH_GITHUB_ID: 'test-github-id',
     NEXT_PUBLIC_ROOT_DOMAIN: 'test.localhost',
+    NEXT_PUBLIC_SITE_DOMAIN: 'test.localhost',
     NEXT_PUBLIC_CLOUD_DOMAIN: 'cloud.test.localhost',
     NEXT_PUBLIC_HOME_DOMAIN: 'test.localhost',
     NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX: 'vercel.app',

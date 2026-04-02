@@ -3,7 +3,7 @@ import ora from 'ora';
 import { confirm } from '@inquirer/prompts';
 import { requireAuth } from '../auth.js';
 import { getSites, deleteSite } from '../api-client.js';
-import { displayError, getSiteUrl, getDashboardUrl } from '../utils.js';
+import { displayError, getDashboardUrl } from '../utils.js';
 import { capture, flushTelemetry, CLI_VERSION } from '../telemetry.js';
 
 /**
@@ -20,7 +20,7 @@ export async function deleteCommand(projectName: string): Promise<void> {
       process.exit(1);
     }
 
-    const user = await requireAuth();
+    await requireAuth();
 
     const spinner = ora(`Looking for site '${projectName}'...`).start();
 
@@ -37,7 +37,7 @@ export async function deleteCommand(projectName: string): Promise<void> {
       process.exit(1);
     }
 
-    const url = getSiteUrl(projectName, user.username || user.email || 'user');
+    const url = siteToDelete.url;
     spinner.succeed(`Found site: ${projectName}`);
     console.log(chalk.gray(`URL: ${url}`));
     console.log();

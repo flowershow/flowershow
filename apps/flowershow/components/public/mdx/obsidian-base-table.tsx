@@ -18,8 +18,7 @@ type Row = {
 export interface ObsidianBaseTableProps {
   columns: string;
   rows: string;
-  sitePrefix?: string;
-  customDomain?: string;
+  siteHostname: string;
   summaries?: string;
   allSitePaths?: string;
   properties?: string;
@@ -28,8 +27,7 @@ export interface ObsidianBaseTableProps {
 export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
   const columns = JSON.parse(props.columns) as Column[];
   const rows = JSON.parse(props.rows) as Row[];
-  const sitePrefix = props.sitePrefix;
-  const customDomain = props.customDomain;
+  const siteHostname = props.siteHostname;
   const summaries = props.summaries
     ? (JSON.parse(props.summaries) as Record<
         string,
@@ -71,8 +69,7 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
       const fileName =
         pathParts[pathParts.length - 1]?.replace(/\.(md|mdx)$/, '') || '';
 
-      // Create a link using appPath with sitePrefix
-      const linkUrl = `${sitePrefix}/${row.appPath || ''}`;
+      const linkUrl = `/${row.appPath || ''}`;
 
       return (
         <Link
@@ -118,8 +115,7 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
       });
       const urlPath = resolveFilePathToUrlPath({
         target: filePath,
-        sitePrefix,
-        domain: customDomain,
+        siteHostname,
       });
 
       return (

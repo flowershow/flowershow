@@ -20,8 +20,8 @@ import Link from 'next/link';
 import { useState } from 'react';
 
 import { GithubIcon } from '@/components/icons';
-import { env } from '@/env.mjs';
 import { getRepoFullName } from '@/lib/get-repo-full-name';
+import { getSiteUrl } from '@/lib/get-site-url';
 import { PublicSite } from '@/server/api/types';
 import { useSync } from '../sync-status-provider';
 import SyncSiteButton from './sync-button';
@@ -30,15 +30,7 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
   const syncStatus = useSync();
   const [showErrorDialog, setShowErrorDialog] = useState(false);
 
-  // TODO move this to some lib; we have solutions like this scattered in many places
-  const isSecure =
-    env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
-    env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
-  const protocol = isSecure ? 'https' : 'http';
-
-  const url = site.customDomain
-    ? `${protocol}://${site.customDomain}`
-    : `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${site.user.username}/${site.projectName}`;
+  const url = getSiteUrl(site);
 
   const repoFullName = getRepoFullName(site);
   const hasGithubRepo = !!repoFullName;

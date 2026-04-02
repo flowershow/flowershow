@@ -68,7 +68,7 @@ function parseSinceArg(): Date {
     console.error('Usage: ... --since <ISO date>  e.g. --since 2025-01-01');
     process.exit(1);
   }
-  const d = new Date(process.argv[idx + 1]);
+  const d = new Date(process.argv[idx + 1] as string);
   if (isNaN(d.getTime())) {
     console.error(`Invalid date: ${process.argv[idx + 1]}`);
     process.exit(1);

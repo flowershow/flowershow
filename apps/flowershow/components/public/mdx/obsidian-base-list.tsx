@@ -16,15 +16,13 @@ type Row = {
 export interface ObsidianBaseListProps {
   rows: string;
   order?: string[];
-  sitePrefix?: string;
-  customDomain?: string;
+  siteHostname: string;
   allSitePaths?: string;
 }
 
 export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
   const rows = JSON.parse(props.rows) as Row[];
-  const sitePrefix = props.sitePrefix;
-  const customDomain = props.customDomain;
+  const siteHostname = props.siteHostname;
   const order = props.order || ['file.name'];
   const allSitePaths = props.allSitePaths
     ? (JSON.parse(props.allSitePaths) as string[])
@@ -87,8 +85,7 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
 
       const linkUrl = resolveFilePathToUrlPath({
         target: row.path,
-        sitePrefix,
-        domain: customDomain,
+        siteHostname,
       });
 
       return (
@@ -124,7 +121,7 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
       });
       const urlPath = resolveFilePathToUrlPath({
         target: filePath,
-        sitePrefix,
+        siteHostname,
       });
 
       return (

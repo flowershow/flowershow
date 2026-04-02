@@ -115,20 +115,39 @@ export async function POST(request: NextRequest) {
         data: {
           updatedAt: new Date(),
         },
+        select: {
+          id: true,
+          projectName: true,
+          subdomain: true,
+          customDomain: true,
+          userId: true,
+          createdAt: true,
+        },
       });
     } else {
       // Create new site
       site = await prisma.site.create({
         data: {
           projectName: sanitizedName,
+          subdomain: `${sanitizedName}-${username}`,
           autoSync: false,
           userId: auth.userId,
+        },
+        select: {
+          id: true,
+          projectName: true,
+          subdomain: true,
+          customDomain: true,
+          userId: true,
+          createdAt: true,
         },
       });
     }
 
-    // Generate site URL
-    const siteUrl = `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${sanitizedName}`;
+    // Generate site URL (prefer custom domain for premium sites)
+    const siteUrl = site.customDomain
+      ? `https://${site.customDomain}`
+      : `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
     // Ensure Typesense collection exists for search indexing
     await ensureSiteCollection(site.id);
@@ -228,6 +247,8 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         projectName: true,
+        subdomain: true,
+        customDomain: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -241,7 +262,10 @@ export async function GET(request: NextRequest) {
     const formattedSites = sites.map((site) => ({
       id: site.id,
       projectName: site.projectName,
-      url: `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`,
+      subdomain: site.subdomain,
+      url: site.customDomain
+        ? `https://${site.customDomain}`
+        : `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`,
       fileCount: site._count.blobs,
       updatedAt: site.updatedAt.toISOString(),
       createdAt: site.createdAt.toISOString(),

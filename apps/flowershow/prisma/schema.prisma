@@ -110,7 +110,7 @@ model Site {
   // For GitHub App sites, repo name is derived via installationRepository relation.
   ghRepository            String?        @map("gh_repository")
   ghBranch                String?        @map("gh_branch")
-  subdomain               String?       @unique
+  subdomain               String        @unique
   customDomain            String?       @unique @map("custom_domain")
   rootDir                 String?       @map("root_dir")
   projectName             String        @map("project_name")

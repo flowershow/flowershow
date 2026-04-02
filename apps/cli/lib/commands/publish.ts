@@ -185,10 +185,7 @@ export async function publishCommand(
       cli_version: CLI_VERSION,
       duration_ms: Date.now() - startTime,
     });
-    displayPublishSuccess(
-      site.projectName,
-      user.username || user.email || 'user',
-    );
+    displayPublishSuccess(site.url);
   } catch (error) {
     capture('command_failed', {
       command: 'publish',

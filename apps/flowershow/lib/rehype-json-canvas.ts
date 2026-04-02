@@ -34,10 +34,8 @@ export interface RehypeJsonCanvasOptions extends CanvasRenderOptions {
   resolveFile?: (path: string) => Promise<string | null>;
   /** List of file paths for wiki-link resolution. */
   files?: string[];
-  /** Site prefix for link resolution. */
-  sitePrefix?: string;
-  /** Custom domain for link resolution. */
-  customDomain?: string;
+  /** The serving hostname for link resolution (custom domain or subdomain.flowershow.site). */
+  siteHostname: string;
   /** Permalinks mapping for wiki-link resolution. */
   permalinks?: Record<string, string>;
 }
@@ -83,8 +81,7 @@ const rehypeJsonCanvas: Plugin<
           const canvas = parseCanvasData(canvasContent);
           const mdOptions: RenderMarkdownOptions = {
             files: config?.files,
-            sitePrefix: config?.sitePrefix,
-            customDomain: config?.customDomain,
+            siteHostname: config?.siteHostname ?? '',
             permalinks: config?.permalinks,
           };
           const enrichedNodes = await enrichCanvasNodes(canvas.nodes, {

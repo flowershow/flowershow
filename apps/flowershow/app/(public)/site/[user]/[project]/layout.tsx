@@ -13,7 +13,6 @@ import { TemporarySiteBanner } from '@/components/public/temporary-site-banner';
 import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
-import { getSiteUrlPath } from '@/lib/get-site-url';
 import { getThemeUrl } from '@/lib/get-theme';
 import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
 import { TRPCReactProvider } from '@/trpc/react';
@@ -104,7 +103,7 @@ export default async function PublicLayout(props: {
     return redirect(`https://${site.customDomain}`);
   }
 
-  const sitePrefix = getSiteUrlPath(site);
+  const sitePrefix = '';
   const appConfig = getConfig();
 
   const siteConfig = await api.site.getConfig

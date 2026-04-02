@@ -168,6 +168,7 @@ export async function POST(request: NextRequest) {
     const site = await prisma.site.create({
       data: {
         projectName,
+        subdomain: `${projectName}-anon`,
         userId: ANONYMOUS_USER_ID,
         anonymousOwnerId: anonymousUserId,
         isTemporary: true,

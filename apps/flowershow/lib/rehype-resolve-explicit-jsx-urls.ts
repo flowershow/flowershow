@@ -4,9 +4,7 @@ import { resolveFilePathToUrlPath } from './resolve-link';
 export interface Options {
   /** path to file where the link was used */
   filePath: string;
-  /** site prefix (@username/sitename or none if on custom domain) */
-  sitePrefix: string;
-  customDomain?: string;
+  siteHostname: string;
 }
 
 /**
@@ -14,7 +12,7 @@ export interface Options {
  * and prefixes their src/href URLs.
  */
 export default function rehypeResolveExplicitJsxUrls(options: Options) {
-  const { filePath, sitePrefix, customDomain } = options;
+  const { filePath, siteHostname } = options;
 
   return (tree) => {
     visit(tree, 'mdxJsxFlowElement', (node) => {
@@ -24,8 +22,7 @@ export default function rehypeResolveExplicitJsxUrls(options: Options) {
             a.value = resolveFilePathToUrlPath({
               target: a.value,
               originFilePath: filePath,
-              sitePrefix,
-              domain: customDomain,
+              siteHostname,
             });
           }
         });

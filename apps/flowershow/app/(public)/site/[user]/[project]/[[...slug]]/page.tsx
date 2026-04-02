@@ -11,12 +11,13 @@ import { BlogLayout } from '@/components/public/layouts/blog';
 import MDXClient from '@/components/public/mdx-client';
 import { SidebarDesktop, SidebarMobileNav } from '@/components/public/sidebar';
 import TableOfContents from '@/components/public/table-of-contents';
+import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
 import type { Node } from '@/lib/build-site-tree';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { generateScopedCss } from '@/lib/generate-scoped-css';
 import { getSite } from '@/lib/get-site';
-import { getSiteUrl, getSiteUrlPath } from '@/lib/get-site-url';
+import { getSiteUrl } from '@/lib/get-site-url';
 import { resolveHeroConfig } from '@/lib/hero-config';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import { isEmoji } from '@/lib/is-emoji';
@@ -155,7 +156,8 @@ export default async function SitePage(props: {
   const decodedSlug = slug.replace(/%20/g, '+');
 
   const site = await getSite(userName, projectName);
-  const sitePrefix = getSiteUrlPath(site);
+  const siteHostname =
+    site.customDomain ?? `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
   const siteConfig = await api.site.getConfig
     .query({
@@ -213,9 +215,7 @@ export default async function SitePage(props: {
   if (blob?.permalink) {
     // If current path doesn't match the permalink, redirect to permalink
     if (decodedSlug !== blob.permalink) {
-      const redirectUrl = site.customDomain
-        ? blob.permalink
-        : `${sitePrefix}/${blob.permalink}`;
+      const redirectUrl = blob.permalink;
 
       return permanentRedirect(redirectUrl);
     }
@@ -246,9 +246,8 @@ export default async function SitePage(props: {
         siteFilePaths,
       );
       compiledContent = await processCanvas(pageContent ?? '', {
-        sitePrefix,
+        siteHostname,
         files: siteFilePaths,
-        customDomain: site.customDomain ?? undefined,
         permalinks: permalinksMapping,
         canvasNodeFiles,
       });
@@ -284,8 +283,7 @@ export default async function SitePage(props: {
         const result = await processMarkdown(preprocessedContent ?? '', {
           files: siteFilePaths,
           filePath: blob.path,
-          sitePrefix,
-          customDomain: site.customDomain ?? undefined,
+          siteHostname,
           siteId: site.id,
           rootDir: site.rootDir ?? undefined,
           permalinks: permalinksMapping,
@@ -299,8 +297,7 @@ export default async function SitePage(props: {
         const mdxOptions = getMdxOptions({
           files: siteFilePaths,
           filePath: blob.path,
-          sitePrefix,
-          customDomain: site.customDomain ?? undefined,
+          siteHostname,
           siteId: site.id,
           rootDir: site.rootDir ?? undefined,
           permalinks: permalinksMapping,
@@ -409,9 +406,7 @@ export default async function SitePage(props: {
       />
       <UrlNormalizer />
 
-      {showSidebar && (
-        <SidebarMobileNav items={siteTree!} prefix={sitePrefix} />
-      )}
+      {showSidebar && <SidebarMobileNav items={siteTree!} prefix={''} />}
 
       {showHero && (
         <Hero

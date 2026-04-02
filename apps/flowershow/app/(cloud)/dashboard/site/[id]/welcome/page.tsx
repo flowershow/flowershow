@@ -1,6 +1,6 @@
 import { notFound, redirect } from 'next/navigation';
 import WelcomeContent from '@/components/dashboard/welcome-content';
-import { env } from '@/env.mjs';
+import { getSiteUrl } from '@/lib/get-site-url';
 import { getSession } from '@/server/auth';
 import { api } from '@/trpc/server';
 
@@ -19,10 +19,7 @@ export default async function WelcomePage(props: {
     notFound();
   }
 
-  const username = session.user?.username;
-  const protocol =
-    env.NEXT_PUBLIC_VERCEL_ENV === 'production' ? 'https' : 'http';
-  const siteUrl = `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`;
+  const siteUrl = getSiteUrl(site);
 
   return (
     <WelcomeContent

@@ -28,7 +28,10 @@ export const FREE_SITE = {
   projectName: 'e2e-test-site',
 };
 
-export const FREE_SITE_BASE_PATH = `/@${TEST_USER.username}/${FREE_SITE.projectName}`;
+/** @deprecated use FREE_SITE_BASE_URL instead */
+export const FREE_SITE_BASE_PATH = '';
+export const FREE_SITE_SUBDOMAIN = `${FREE_SITE.projectName}-${TEST_USER.username}`;
+export const FREE_SITE_BASE_URL = `http://${FREE_SITE_SUBDOMAIN}.${process.env.NEXT_PUBLIC_SITE_DOMAIN || 'localhost:3000'}`;
 
 export const PREMIUM_SITE_CUSTOM_DOMAIN =
   process.env.E2E_CUSTOM_DOMAIN || 'e2e-premium.localhost:3000';
@@ -300,11 +303,13 @@ export async function seed(): Promise<void> {
     create: {
       id: FREE_SITE.id,
       projectName: FREE_SITE.projectName,
+      subdomain: `${FREE_SITE.projectName}-${TEST_USER.username}`,
       userId: TEST_USER.id,
       enableRss: true,
     },
     update: {
       projectName: FREE_SITE.projectName,
+      subdomain: `${FREE_SITE.projectName}-${TEST_USER.username}`,
       enableRss: true,
     },
   });
@@ -315,6 +320,7 @@ export async function seed(): Promise<void> {
     create: {
       id: PREMIUM_SITE.id,
       projectName: PREMIUM_SITE.projectName,
+      subdomain: `${PREMIUM_SITE.projectName}-${TEST_USER.username}`,
       userId: TEST_USER.id,
       customDomain: PREMIUM_SITE.customDomain,
       plan: Plan.PREMIUM,
@@ -322,6 +328,7 @@ export async function seed(): Promise<void> {
     },
     update: {
       projectName: PREMIUM_SITE.projectName,
+      subdomain: `${PREMIUM_SITE.projectName}-${TEST_USER.username}`,
       customDomain: PREMIUM_SITE.customDomain,
       plan: Plan.PREMIUM,
       enableRss: true,

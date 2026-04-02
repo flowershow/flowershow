@@ -2,7 +2,7 @@ import type { Blob } from '@prisma/client';
 import type { MDXComponents } from 'next-mdx-remote-client/rsc';
 import { ErrorBoundary } from 'react-error-boundary';
 import ErrorMessage from '@/components/public/error-message';
-import { getSiteUrlPath } from '@/lib/get-site-url';
+import { env } from '@/env.mjs';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { PublicSite } from '@/server/api/types';
@@ -80,8 +80,9 @@ export const mdxComponentsFactory = ({
         props.data.url = resolveFilePathToUrlPath({
           target: props.data.url,
           originFilePath: blob.path,
-          sitePrefix: getSiteUrlPath(site),
-          domain: site.customDomain,
+          siteHostname:
+            site.customDomain ??
+            `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`,
         });
 
       return <FlatUiTable {...props} />;
@@ -91,8 +92,9 @@ export const mdxComponentsFactory = ({
         props.data.url = resolveFilePathToUrlPath({
           target: props.data.url,
           originFilePath: blob.path,
-          sitePrefix: getSiteUrlPath(site),
-          domain: site.customDomain,
+          siteHostname:
+            site.customDomain ??
+            `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`,
         });
       }
       return <LineChart {...props} />;
@@ -102,8 +104,9 @@ export const mdxComponentsFactory = ({
         props.data.url = resolveFilePathToUrlPath({
           target: props.data.url,
           originFilePath: blob.path,
-          sitePrefix: getSiteUrlPath(site),
-          domain: site.customDomain,
+          siteHostname:
+            site.customDomain ??
+            `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`,
         });
       }
       return <PlotlyBarChart {...props} />;
@@ -113,8 +116,9 @@ export const mdxComponentsFactory = ({
         props.data.url = resolveFilePathToUrlPath({
           target: props.data.url,
           originFilePath: blob.path,
-          sitePrefix: getSiteUrlPath(site),
-          domain: site.customDomain,
+          siteHostname:
+            site.customDomain ??
+            `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`,
         });
       }
       return <PlotlyLineChart {...props} />;
@@ -124,7 +128,7 @@ export const mdxComponentsFactory = ({
     //     target: props.data.url,
     //     originFilePath: blob.path,
     //     isSrcLink: true,
-    //     prefix: getSiteUrlPath(site),
+    //     prefix: '',
     //     domain: site.customDomain,
     //   });
     //   return <Excel {...props} />;
@@ -136,7 +140,7 @@ export const mdxComponentsFactory = ({
     //         target: layer.data.url,
     //         originFilePath: blob.path,
     //         isSrcLink: true,
-    //         prefix: getSiteUrlPath(site),
+    //         prefix: '',
     //         domain: site.customDomain,
     //       });
     //     }
@@ -150,8 +154,9 @@ export const mdxComponentsFactory = ({
           ? resolveFilePathToUrlPath({
               target: props.data,
               originFilePath: blob.path,
-              sitePrefix: getSiteUrlPath(site),
-              domain: site.customDomain,
+              siteHostname:
+                site.customDomain ??
+                `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`,
             })
           : props.data;
       return <Plotly {...props} data={data} />;
@@ -161,8 +166,9 @@ export const mdxComponentsFactory = ({
         props.spec.data.url = resolveFilePathToUrlPath({
           target: props.spec.data.url,
           originFilePath: blob.path,
-          sitePrefix: getSiteUrlPath(site),
-          domain: site.customDomain,
+          siteHostname:
+            site.customDomain ??
+            `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`,
         });
       return <Vega {...props} />;
     }, 'Vega'),
@@ -172,8 +178,9 @@ export const mdxComponentsFactory = ({
         props.spec.data.url = resolveFilePathToUrlPath({
           target: props.spec.data.url,
           originFilePath: blob.path,
-          sitePrefix: getSiteUrlPath(site),
-          domain: site.customDomain,
+          siteHostname:
+            site.customDomain ??
+            `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`,
         });
       return <Vega {...props} />;
     }, 'VegaLite'),

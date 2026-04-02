@@ -4,9 +4,7 @@ import { resolveFilePathToUrlPath } from './resolve-link';
 export interface Options {
   /** path to file where the link was used */
   filePath: string;
-  /** site prefix (@username/sitename or none if on custom domain) */
-  sitePrefix: string;
-  customDomain?: string;
+  siteHostname: string;
 }
 
 /**
@@ -17,7 +15,7 @@ export interface Options {
  * this plugin works with standard HTML elements in regular markdown.
  */
 export default function rehypeResolveHtmlUrls(options: Options) {
-  const { filePath, sitePrefix, customDomain } = options;
+  const { filePath, siteHostname } = options;
 
   return (tree) => {
     visit(tree, 'element', (node: any) => {
@@ -27,26 +25,21 @@ export default function rehypeResolveHtmlUrls(options: Options) {
           node.properties.src = resolveFilePathToUrlPath({
             target: node.properties.src,
             originFilePath: filePath,
-            sitePrefix,
-            domain: customDomain,
+            siteHostname,
           });
         }
 
         // Handle href attribute (for a, link, etc.)
         // Skip hrefs already resolved by upstream remark plugins (remarkWikiLink,
-        // RemarkCommonMarkLink). On non-custom domains they start with sitePrefix;
-        // on custom domains (sitePrefix="") they are absolute paths starting with "/".
+        // RemarkCommonMarkLink). Resolved hrefs are absolute paths starting with "/".
         if (node.properties.href && typeof node.properties.href === 'string') {
           const href = node.properties.href;
-          const alreadyResolved = sitePrefix
-            ? href.startsWith(sitePrefix)
-            : href.startsWith('/');
+          const alreadyResolved = href.startsWith('/');
           if (!alreadyResolved) {
             node.properties.href = resolveFilePathToUrlPath({
               target: href,
               originFilePath: filePath,
-              sitePrefix,
-              domain: customDomain,
+              siteHostname,
             });
           }
         }
