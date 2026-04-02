@@ -1,7 +1,7 @@
 import chalk from 'chalk';
 import cliProgress from 'cli-progress';
 import { getSiteStatus } from './api-client.js';
-import { API_URL, APP_URL } from './const.js';
+import { API_URL } from './const.js';
 
 interface BlobStatus {
   id: string;
@@ -42,13 +42,6 @@ export function sleep(ms: number): Promise<void> {
  */
 export function formatDate(date: string | Date): string {
   return new Date(date).toLocaleString();
-}
-
-/**
- * Get site URL
- */
-export function getSiteUrl(projectName: string, username: string): string {
-  return `${APP_URL}/@${username}/${projectName}`;
 }
 
 /**
@@ -162,12 +155,7 @@ export async function waitForSync(
 /**
  * Display success message with URL
  */
-export function displayPublishSuccess(
-  projectName: string,
-  username: string,
-): void {
-  const url = getSiteUrl(projectName, username);
-
+export function displayPublishSuccess(url: string): void {
   console.log(chalk.cyan(`\n💐 Visit your site at: ${url}\n`));
 }
 

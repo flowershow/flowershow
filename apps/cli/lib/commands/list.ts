@@ -2,7 +2,7 @@ import chalk from 'chalk';
 import ora from 'ora';
 import { requireAuth } from '../auth.js';
 import { getSites } from '../api-client.js';
-import { displayError, formatDate, getSiteUrl } from '../utils.js';
+import { displayError, formatDate } from '../utils.js';
 import { API_URL } from '../const.js';
 import { capture, flushTelemetry, CLI_VERSION } from '../telemetry.js';
 
@@ -13,7 +13,7 @@ export async function listCommand(): Promise<void> {
   const startTime = Date.now();
   capture('command_started', { command: 'list', cli_version: CLI_VERSION });
   try {
-    const user = await requireAuth();
+    await requireAuth();
 
     const spinner = ora('Fetching sites...').start();
 
@@ -31,10 +31,7 @@ export async function listCommand(): Promise<void> {
     console.log(chalk.bold(`\nFound ${sites.length} site(s):\n`));
 
     for (const site of sites) {
-      const url = getSiteUrl(
-        site.projectName,
-        user.username || user.email || 'user',
-      );
+      const url = site.url;
       const dashboardUrl = `${API_URL}/site/${site.id}/settings`;
       console.log(chalk.cyan(`  ${site.projectName}`));
       console.log(chalk.gray(`    URL: ${url}`));
