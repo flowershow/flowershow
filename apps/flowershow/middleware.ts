@@ -74,11 +74,33 @@ export default async function middleware(req: NextRequest) {
   // Build PostHog bootstrap cookie once for all routes
   const phBootstrap = await buildPHBootstrapCookie(req, posthog);
 
-  // 3) Legacy redirect: flowershow.app/@... → my.flowershow.app/@...
+  // 3) Legacy redirect: flowershow.app/@... → new subdomain URL
   if (hostname === 'flowershow.app' && pathname.startsWith('/@')) {
+    const aliasResolved = resolveSiteAlias(pathname, 'from');
+    const legacyMatch = aliasResolved.match(/^\/@([^/]+)\/([^/]+)(.*)/);
+    if (legacyMatch) {
+      const [, legacyUser, legacyProject, legacySlug = ''] = legacyMatch;
+      const legacySite = await fetchSite(
+        req,
+        `/api/sites/${legacyUser}/${legacyProject}`,
+      );
+      if (legacySite?.subdomain) {
+        return withPHBootstrapCookie(
+          NextResponse.redirect(
+            new URL(
+              `https://${legacySite.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}${legacySlug}${searchParams}`,
+              req.url,
+            ),
+            { status: 301 },
+          ),
+          phBootstrap,
+        );
+      }
+    }
+    // Fallback: redirect to root domain
     return withPHBootstrapCookie(
       NextResponse.redirect(
-        new URL(`https://my.flowershow.app${path}`, req.url),
+        new URL(`https://${env.NEXT_PUBLIC_ROOT_DOMAIN}${path}`, req.url),
         { status: 301 },
       ),
       phBootstrap,
@@ -125,14 +147,13 @@ export default async function middleware(req: NextRequest) {
     );
   }
 
-  // 5) Root domain (my.flowershow.app) — user sites at /@<user>/<project>
+  // 5) Root domain (my.flowershow.app) — redirect to new subdomain URL
   if (hostname === env.NEXT_PUBLIC_ROOT_DOMAIN) {
     if (pathname === '/sitemap.xml')
       return rewrite(`/sitemap.xml`, req, phBootstrap);
     if (pathname === '/robots.txt')
       return rewrite(`/robots.txt`, req, phBootstrap);
 
-    // Resolve alias to canonical /@user/project path
     const aliasResolved = resolveSiteAlias(pathname, 'from');
     const match = aliasResolved.match(/^\/@([^/]+)\/([^/]+)(.*)/);
 
@@ -140,51 +161,19 @@ export default async function middleware(req: NextRequest) {
 
     const [, username, projectname, slug = ''] = match;
 
-    // Look up site
     const site = await fetchSite(req, `/api/sites/${username}/${projectname}`);
-
     if (!site) return rewrite(`/not-found`, req, phBootstrap);
 
-    // Per-site login page
-    if (slug === '/_login') {
-      return rewrite(
-        `/site-access/${username}/${projectname}`,
-        req,
-        phBootstrap,
-      );
-    }
+    const subdomain = site.subdomain ?? `${projectname}-${username}`;
 
-    // Password gate
-    const guard = await ensureSiteAccess(req, site, phBootstrap);
-    if (guard) return guard;
-
-    // Per-site sitemap
-    if (slug === '/sitemap.xml') {
-      return rewrite(
-        `/api/sitemap/${username}/${projectname}`,
-        req,
-        phBootstrap,
-      );
-    }
-
-    // Per-site RSS feed
-    if (slug === '/rss.xml') {
-      return rewrite(`/api/rss/${username}/${projectname}`, req, phBootstrap);
-    }
-
-    // Raw asset file access
-    const raw = rewriteRawIfNeeded(
-      slug,
-      `/api/raw/${username}/${projectname}`,
-      req,
-      phBootstrap,
-    );
-    if (raw) return raw;
-
-    // All other: render the site
-    return rewrite(
-      `/site/${username}/${projectname}${slug}${searchParams}`,
-      req,
+    return withPHBootstrapCookie(
+      NextResponse.redirect(
+        new URL(
+          `https://${subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}${slug}${searchParams}`,
+          req.url,
+        ),
+        { status: 301 },
+      ),
       phBootstrap,
     );
   }
@@ -200,7 +189,62 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
-  // 7) Custom domains
+  // 7) Subdomain sites: {projectName}-{username}.flowershow.site
+  if (hostname.endsWith(`.${env.NEXT_PUBLIC_SITE_DOMAIN}`)) {
+    const subdomain = hostname.slice(
+      0,
+      -(env.NEXT_PUBLIC_SITE_DOMAIN.length + 1),
+    );
+
+    const site = await fetchSite(req, `/api/sites/_subdomain/${subdomain}`);
+    if (!site) return rewrite(`/not-found`, req, phBootstrap);
+
+    const { username } = site.user;
+    const projectname = site.projectName;
+
+    if (pathname === '/robots.txt') {
+      return rewrite(`/api/robots/${hostname}`, req, phBootstrap);
+    }
+
+    if (pathname === '/_login') {
+      return rewrite(
+        `/site-access/${username}/${projectname}`,
+        req,
+        phBootstrap,
+      );
+    }
+
+    const guard = await ensureSiteAccess(req, site, phBootstrap);
+    if (guard) return guard;
+
+    if (pathname === '/sitemap.xml') {
+      return rewrite(
+        `/api/sitemap/${username}/${projectname}`,
+        req,
+        phBootstrap,
+      );
+    }
+
+    if (pathname === '/rss.xml') {
+      return rewrite(`/api/rss/${username}/${projectname}`, req, phBootstrap);
+    }
+
+    const raw = rewriteRawIfNeeded(
+      path,
+      `/api/raw/${username}/${projectname}`,
+      req,
+      phBootstrap,
+    );
+    if (raw) return raw;
+
+    return rewrite(
+      `/site/${username}/${projectname}${pathname}${searchParams}`,
+      req,
+      phBootstrap,
+    );
+  }
+
+  // 8) Custom domains
   if (pathname === '/robots.txt') {
     return rewrite(`/api/robots/${hostname}`, req, phBootstrap);
   }
