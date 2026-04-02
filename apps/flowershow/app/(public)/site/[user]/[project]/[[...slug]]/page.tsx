@@ -16,7 +16,7 @@ import type { Node } from '@/lib/build-site-tree';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { generateScopedCss } from '@/lib/generate-scoped-css';
 import { getSite } from '@/lib/get-site';
-import { getSiteUrl, getSiteUrlPath } from '@/lib/get-site-url';
+import { getSiteUrl } from '@/lib/get-site-url';
 import { resolveHeroConfig } from '@/lib/hero-config';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import { isEmoji } from '@/lib/is-emoji';
@@ -155,7 +155,7 @@ export default async function SitePage(props: {
   const decodedSlug = slug.replace(/%20/g, '+');
 
   const site = await getSite(userName, projectName);
-  const sitePrefix = getSiteUrlPath(site);
+  const sitePrefix = '';
 
   const siteConfig = await api.site.getConfig
     .query({
