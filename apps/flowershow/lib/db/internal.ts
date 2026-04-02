@@ -8,6 +8,7 @@ export const internalSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   ghBranch: true,
   projectName: true,
   customDomain: true,
+  subdomain: true,
   rootDir: true,
   plan: true,
   enableComments: true,
