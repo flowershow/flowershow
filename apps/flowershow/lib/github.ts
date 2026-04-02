@@ -35,8 +35,9 @@ async function generateGitHubAppJWT(): Promise<string> {
     iss: env.GITHUB_APP_ID,
   };
 
-  // Convert escaped newlines to actual newlines in private key
-  const privateKey = env.GITHUB_APP_PRIVATE_KEY.replace(/\\n/g, '\n');
+  const privateKey = Buffer.from(env.GITHUB_APP_PRIVATE_KEY, 'base64').toString(
+    'utf8',
+  );
   return jwt.sign(payload, privateKey, {
     algorithm: 'RS256',
   });
