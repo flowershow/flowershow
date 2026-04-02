@@ -190,21 +190,22 @@ export const siteRouter = createTRPCRouter({
         baseName,
       );
 
+      const creator = await ctx.db.user.findUnique({
+        where: { id: ctx.session.user.id },
+        select: { email: true, name: true, username: true },
+      });
+
       const created = await ctx.db.site.create({
         data: {
           projectName,
+          subdomain: `${projectName}-${creator?.username}`,
           autoSync: false,
           user: { connect: { id: ctx.session.user.id } },
         },
       });
 
-      const creator = await ctx.db.user.findUnique({
-        where: { id: ctx.session.user.id },
-        select: { email: true, name: true, username: true },
-      });
       if (creator?.email) {
-        const newSubdomain = `${projectName}-${creator.username}`;
-        const siteUrl = `https://${newSubdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
+        const siteUrl = `https://${created.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
         await inngest.send({
           name: 'email/site-created.send',
           data: {
