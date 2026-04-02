@@ -33,4 +33,10 @@ describe('getSiteUrl', () => {
       }),
     ).toBe('https://my.custom.com');
   });
+
+  it('falls back to my.flowershow.app path when no subdomain', () => {
+    expect(getSiteUrl({ ...baseSite, subdomain: null })).toBe(
+      'https://my.flowershow.app/@johndoe/garden',
+    );
+  });
 });
