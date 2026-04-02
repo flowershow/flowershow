@@ -121,6 +121,7 @@ export async function POST(request: NextRequest) {
       site = await prisma.site.create({
         data: {
           projectName: sanitizedName,
+          subdomain: `${sanitizedName}-${username}`,
           autoSync: false,
           userId: auth.userId,
         },
@@ -128,7 +129,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate site URL
-    const siteUrl = `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${sanitizedName}`;
+    const subdomain = site.subdomain ?? `${sanitizedName}-${username}`;
+    const siteUrl = `https://${subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
     // Ensure Typesense collection exists for search indexing
     await ensureSiteCollection(site.id);
@@ -228,6 +230,7 @@ export async function GET(request: NextRequest) {
       select: {
         id: true,
         projectName: true,
+        subdomain: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -241,7 +244,10 @@ export async function GET(request: NextRequest) {
     const formattedSites = sites.map((site) => ({
       id: site.id,
       projectName: site.projectName,
-      url: `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`,
+      subdomain: site.subdomain,
+      url: site.subdomain
+        ? `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`
+        : `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`,
       fileCount: site._count.blobs,
       updatedAt: site.updatedAt.toISOString(),
       createdAt: site.createdAt.toISOString(),
