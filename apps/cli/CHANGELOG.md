@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.2.1
+
+### Patch Changes
+
+- - Update to the latest API
+
 ## 1.2.0
 
 ### Minor Changes
