@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 import {
-  FREE_SITE_BASE_PATH,
+  FREE_SITE_BASE_URL,
   PREMIUM_SITE_CUSTOM_DOMAIN,
 } from './e2e/helpers/seed';
 
@@ -36,8 +36,8 @@ export default defineConfig({
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        baseURL: `http://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}`,
-        basePath: FREE_SITE_BASE_PATH,
+        baseURL: FREE_SITE_BASE_URL,
+        basePath: '',
       } as any,
       dependencies: ['setup'],
     },
