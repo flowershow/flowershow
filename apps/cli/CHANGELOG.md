@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.2.0
+
+### Minor Changes
+
+- Update to the latest API.
+
 ## 1.1.3
 
 ### Patch Changes
@@ -75,12 +81,10 @@ See [MIGRATION.md](MIGRATION.md) for complete migration instructions.
   ## What Changed
 
   ### Package Name
-
   - NPM package: `flowershow` → `flowershow-publish`
   - Binary command: `flowershow` → `publish`
 
   ### Command Structure
-
   - **Main publish command is now default**: `publish <path>` (previously `flowershow publish <path>`)
   - **All other commands updated**: Use `publish` as the base command
     - `publish auth login` (was `flowershow auth login`)
