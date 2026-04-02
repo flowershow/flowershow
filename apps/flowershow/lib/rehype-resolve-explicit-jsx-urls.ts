@@ -4,7 +4,7 @@ import { resolveFilePathToUrlPath } from './resolve-link';
 export interface Options {
   /** path to file where the link was used */
   filePath: string;
-  siteHostname?: string;
+  siteHostname: string;
 }
 
 /**

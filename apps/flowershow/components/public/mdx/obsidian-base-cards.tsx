@@ -26,7 +26,7 @@ export interface ObsidianBaseCardsProps {
   imageFit?: 'contain' | 'cover';
   imageAspectRatio?: number;
   rows: string;
-  siteHostname?: string;
+  siteHostname: string;
   order?: string[];
   allSitePaths?: string;
   properties?: string;

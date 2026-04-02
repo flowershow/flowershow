@@ -18,7 +18,7 @@ type Row = {
 export interface ObsidianBaseTableProps {
   columns: string;
   rows: string;
-  siteHostname?: string;
+  siteHostname: string;
   summaries?: string;
   allSitePaths?: string;
   properties?: string;

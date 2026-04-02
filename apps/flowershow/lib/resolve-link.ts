@@ -22,7 +22,7 @@ export const resolveFilePathToUrlPath = ({
 }: {
   target: string;
   originFilePath?: string;
-  siteHostname?: string | null;
+  siteHostname?: string;
   commonMarkSpaceEncoded?: boolean;
   permalinks?: Record<string, string>;
 }) => {
@@ -95,7 +95,7 @@ export const resolveFilePathToUrlPath = ({
       .map((p) => encodeURIComponent(p))
       .join('/');
 
-    return `${protocol}://${siteHostname || env.NEXT_PUBLIC_ROOT_DOMAIN}${encodedUrlPath}`;
+    return `${protocol}://${siteHostname}${encodedUrlPath}`;
   }
 
   const encodedUrlPath = resolvedUrlPath

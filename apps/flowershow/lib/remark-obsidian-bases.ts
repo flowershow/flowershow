@@ -11,7 +11,7 @@ import { parseExpression } from './bases-parse';
 
 interface Options {
   siteId: string;
-  siteHostname?: string;
+  siteHostname: string;
   rootDir?: string;
 }
 
@@ -129,7 +129,7 @@ interface BaseQuery {
 async function resolveBaseQuery(
   query: string,
   siteId: string,
-  siteHostname?: string,
+  siteHostname: string,
   rootDir?: string,
 ): Promise<any> {
   try {
@@ -1229,7 +1229,7 @@ async function createViewsNode(
     [key: string]: any;
   }>,
   properties?: Record<string, { displayName?: string; [key: string]: any }>,
-  siteHostname?: string,
+  siteHostname: string,
   siteId?: string,
 ): Promise<MdxJsxFlowElement> {
   // If no views specified, default to table view

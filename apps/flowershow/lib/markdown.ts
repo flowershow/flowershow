@@ -36,7 +36,7 @@ interface MarkdownOptions {
   filePath: string;
   files: string[];
   parseFrontmatter?: boolean;
-  siteHostname?: string;
+  siteHostname: string;
   siteId?: string;
   rootDir?: string;
   permalinks?: Record<string, string>;
@@ -120,7 +120,7 @@ export const getMdxOptions = ({
   filePath: string;
   files: string[];
   parseFrontmatter?: boolean;
-  siteHostname?: string;
+  siteHostname: string;
   siteId?: string;
   rootDir?: string;
   permalinks?: Record<string, string>;
@@ -177,7 +177,7 @@ export const getMdxOptions = ({
   };
 };
 
-export const getUrlResolver = (siteHostname?: string) => {
+export const getUrlResolver = (siteHostname: string) => {
   return ({ filePath, heading }: { filePath: string; heading?: string }) => {
     // We need to concatenate filePath and heading for use with resolveFilePathToUrlPath
     return resolveFilePathToUrlPath({

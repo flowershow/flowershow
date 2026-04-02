@@ -582,15 +582,15 @@ function buildEdgePath(
  */
 export interface RenderMarkdownOptions {
   files?: string[];
-  siteHostname?: string;
+  siteHostname: string;
   permalinks?: Record<string, string>;
 }
 
 export async function renderMarkdownToHtml(
   text: string,
-  options?: RenderMarkdownOptions,
+  options: RenderMarkdownOptions,
 ): Promise<string> {
-  const { files = [], siteHostname, permalinks } = options ?? {};
+  const { files = [], siteHostname, permalinks } = options;
 
   // this strips out frontmatter, so that it's not inlined with the rest of the markdown file
   const { content } = matter(text, {});

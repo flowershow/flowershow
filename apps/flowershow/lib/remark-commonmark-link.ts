@@ -4,7 +4,7 @@ import { resolveFilePathToUrlPath } from './resolve-link';
 
 export interface Options {
   filePath: string;
-  siteHostname?: string;
+  siteHostname: string;
   files?: string[];
   permalinks?: Record<string, string>;
 }

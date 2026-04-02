@@ -16,7 +16,7 @@ type Row = {
 export interface ObsidianBaseListProps {
   rows: string;
   order?: string[];
-  siteHostname?: string;
+  siteHostname: string;
   allSitePaths?: string;
 }
 

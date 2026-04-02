@@ -27,7 +27,7 @@ type ViewData = {
 
 export interface ObsidianBasesViewsProps {
   viewData: string; // JSON string of ViewData[]
-  siteHostname?: string;
+  siteHostname: string;
   allSitePaths?: string; // JSON string of all blob paths for the site
 }
 

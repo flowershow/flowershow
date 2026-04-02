@@ -35,7 +35,7 @@ export interface RehypeJsonCanvasOptions extends CanvasRenderOptions {
   /** List of file paths for wiki-link resolution. */
   files?: string[];
   /** The serving hostname for link resolution (custom domain or subdomain.flowershow.site). */
-  siteHostname?: string;
+  siteHostname: string;
   /** Permalinks mapping for wiki-link resolution. */
   permalinks?: Record<string, string>;
 }
