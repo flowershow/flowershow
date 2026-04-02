@@ -14,7 +14,8 @@
     "test:all": "vitest",
     "test:e2e": "playwright test",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build -o ./deploy/storybook/out"
+    "build-storybook": "storybook build -o ./deploy/storybook/out",
+    "db:backfill-subdomains": "tsx scripts/backfill-subdomains.ts"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
