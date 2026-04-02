@@ -20,7 +20,6 @@ import {
   removeDomainFromVercelProject,
   validDomainRegex,
 } from '@/lib/domains';
-import { getSiteUrlPath } from '@/lib/get-site-url';
 import {
   checkIfBranchExists,
   createGitHubRepoWebhook,
@@ -204,7 +203,8 @@ export const siteRouter = createTRPCRouter({
         select: { email: true, name: true, username: true },
       });
       if (creator?.email) {
-        const siteUrl = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${creator.username}/${projectName}`;
+        const newSubdomain = `${projectName}-${creator.username}`;
+        const siteUrl = `https://${newSubdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
         await inngest.send({
           name: 'email/site-created.send',
           data: {
@@ -884,7 +884,7 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          const sitePrefix = getSiteUrlPath(site);
+          const sitePrefix = '';
 
           try {
             const configJson = await fetchFile({
@@ -1042,7 +1042,7 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          const sitePrefix = getSiteUrlPath(site);
+          const sitePrefix = '';
 
           // Get all blobs for the site
           const blobs = (await ctx.db.blob.findMany({
@@ -1144,7 +1144,7 @@ export const siteRouter = createTRPCRouter({
           const dirReadmePattern = dir + 'README.md(x)?';
           const dirIndexPattern = dir + 'index.md(x)?';
 
-          const sitePrefix = getSiteUrlPath(site);
+          const sitePrefix = '';
 
           const siteFilePaths = (
             await ctx.db.blob.findMany({
@@ -1286,7 +1286,7 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          const sitePrefix = getSiteUrlPath(site);
+          const sitePrefix = '';
 
           const metadata = blob.metadata as PageMetadata | null;
           const siteFilePaths = (
@@ -1518,7 +1518,7 @@ export const siteRouter = createTRPCRouter({
               });
             }
 
-            const sitePrefix = getSiteUrlPath(site);
+            const sitePrefix = '';
 
             const siteFilePaths = (
               await ctx.db.blob.findMany({
@@ -1622,7 +1622,7 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          const sitePrefix = getSiteUrlPath(site);
+          const sitePrefix = '';
 
           const blobs = await ctx.db.blob.findMany({
             where: {

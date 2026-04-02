@@ -5,19 +5,13 @@ import posthog from 'posthog-js';
 import { useEffect, useState } from 'react';
 import { DropZone } from '@/components/home/drop-zone';
 import { PublishModal } from '@/components/home/publish-modal';
-import { env } from '@/env.mjs';
 import {
   getOrCreateAnonymousUserId,
   setAnonymousToken,
 } from '@/lib/client-anonymous-user';
-import { getSiteUrlPath } from '@/lib/get-site-url';
+import { getSiteUrl } from '@/lib/get-site-url';
 import Modal from '@/providers/modal';
 import { api } from '@/trpc/react';
-
-const isSecure =
-  env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
-  env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
-const protocol = isSecure ? 'https' : 'http';
 
 type State = 'idle' | 'uploading' | 'published' | 'error';
 
@@ -302,7 +296,7 @@ export default function HomePage() {
             </h2>
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 divide-y divide-gray-100 max-h-[250px] overflow-y-auto">
               {sites.map((site) => {
-                const siteUrl = getSiteUrlPath(site);
+                const siteUrl = getSiteUrl(site);
                 const isOwned = !site.isTemporary && !!site.user.id;
 
                 return (
@@ -332,7 +326,7 @@ export default function HomePage() {
                         </button>
                       )}
                       <a
-                        href={`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${siteUrl}`}
+                        href={siteUrl}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
@@ -342,7 +336,7 @@ export default function HomePage() {
                       <button
                         onClick={async () => {
                           try {
-                            const fullUrl = `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${siteUrl}`;
+                            const fullUrl = siteUrl;
                             await navigator.clipboard.writeText(fullUrl);
                           } catch (err) {
                             console.error('Failed to copy URL:', err);

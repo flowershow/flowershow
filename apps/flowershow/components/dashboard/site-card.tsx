@@ -12,14 +12,16 @@ export default function SiteCard({
 }) {
   let url: string;
 
-  if (env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
-    if (site.customDomain) {
-      url = `https://${site.customDomain}`;
-    } else {
-      url = `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`;
-    }
+  const isSecure =
+    env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+    env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
+  const protocol = isSecure ? 'https' : 'http';
+  if (site.customDomain) {
+    url = `${protocol}://${site.customDomain}`;
+  } else if (site.subdomain) {
+    url = `${protocol}://${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
   } else {
-    url = `http://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`;
+    url = `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`;
   }
 
   const displayedUrl =
