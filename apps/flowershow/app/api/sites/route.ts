@@ -115,6 +115,14 @@ export async function POST(request: NextRequest) {
         data: {
           updatedAt: new Date(),
         },
+        select: {
+          id: true,
+          projectName: true,
+          subdomain: true,
+          customDomain: true,
+          userId: true,
+          createdAt: true,
+        },
       });
     } else {
       // Create new site
@@ -125,11 +133,21 @@ export async function POST(request: NextRequest) {
           autoSync: false,
           userId: auth.userId,
         },
+        select: {
+          id: true,
+          projectName: true,
+          subdomain: true,
+          customDomain: true,
+          userId: true,
+          createdAt: true,
+        },
       });
     }
 
-    // Generate site URL
-    const siteUrl = `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
+    // Generate site URL (prefer custom domain for premium sites)
+    const siteUrl = site.customDomain
+      ? `https://${site.customDomain}`
+      : `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
     // Ensure Typesense collection exists for search indexing
     await ensureSiteCollection(site.id);
@@ -230,6 +248,7 @@ export async function GET(request: NextRequest) {
         id: true,
         projectName: true,
         subdomain: true,
+        customDomain: true,
         createdAt: true,
         updatedAt: true,
         _count: {
@@ -244,7 +263,9 @@ export async function GET(request: NextRequest) {
       id: site.id,
       projectName: site.projectName,
       subdomain: site.subdomain,
-      url: `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`,
+      url: site.customDomain
+        ? `https://${site.customDomain}`
+        : `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`,
       fileCount: site._count.blobs,
       updatedAt: site.updatedAt.toISOString(),
       createdAt: site.createdAt.toISOString(),
