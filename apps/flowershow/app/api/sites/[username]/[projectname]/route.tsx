@@ -28,6 +28,13 @@ export async function GET(
       },
       select: internalSiteSelect,
     });
+  } else if (username === '_subdomain') {
+    site = await prisma.site.findUnique({
+      where: {
+        subdomain: projectname,
+      },
+      select: internalSiteSelect,
+    });
   } else if (username === 'anon') {
     site = await prisma.site.findFirst({
       where: {
@@ -62,6 +69,7 @@ export async function GET(
         ghRepository: true,
         ghBranch: true,
         customDomain: true,
+        subdomain: true,
         rootDir: true,
         plan: true,
         privacyMode: true,
@@ -93,6 +101,8 @@ export async function GET(
       let siteUrl: string;
       if (extendedSite.customDomain) {
         siteUrl = `https://${extendedSite.customDomain}`;
+      } else if (extendedSite.subdomain) {
+        siteUrl = `https://${extendedSite.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
       } else {
         siteUrl = `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/@${extendedSite.user.username}/${extendedSite.projectName}`;
       }
@@ -104,6 +114,7 @@ export async function GET(
           ghRepository: extendedSite.ghRepository,
           ghBranch: extendedSite.ghBranch,
           customDomain: extendedSite.customDomain,
+          subdomain: extendedSite.subdomain,
           rootDir: extendedSite.rootDir,
           plan: extendedSite.plan,
           url: siteUrl,
