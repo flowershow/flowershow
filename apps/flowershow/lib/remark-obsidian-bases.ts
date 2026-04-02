@@ -147,8 +147,8 @@ async function resolveBaseQuery(
     return await createViewsNode(
       viewResults,
       parsedQuery.views,
-      parsedQuery.properties,
       siteHostname,
+      parsedQuery.properties,
       siteId,
     );
   } catch (error) {
@@ -1228,8 +1228,8 @@ async function createViewsNode(
     order?: string[];
     [key: string]: any;
   }>,
-  properties?: Record<string, { displayName?: string; [key: string]: any }>,
   siteHostname: string,
+  properties?: Record<string, { displayName?: string; [key: string]: any }>,
   siteId?: string,
 ): Promise<MdxJsxFlowElement> {
   // If no views specified, default to table view

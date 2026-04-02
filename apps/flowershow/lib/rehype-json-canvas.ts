@@ -81,7 +81,7 @@ const rehypeJsonCanvas: Plugin<
           const canvas = parseCanvasData(canvasContent);
           const mdOptions: RenderMarkdownOptions = {
             files: config?.files,
-            siteHostname: config?.siteHostname,
+            siteHostname: config?.siteHostname ?? '',
             permalinks: config?.permalinks,
           };
           const enrichedNodes = await enrichCanvasNodes(canvas.nodes, {

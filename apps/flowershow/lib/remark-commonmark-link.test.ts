@@ -18,6 +18,7 @@ function processMarkdown(input: string, opts: Partial<Options> = {}) {
     .use(remarkParse)
     .use(RemarkCommonMarkLink, {
       filePath: opts.filePath ?? 'test.md',
+      siteHostname: opts.siteHostname ?? 'localhost:3000',
       files: opts.files,
       permalinks: opts.permalinks,
     })

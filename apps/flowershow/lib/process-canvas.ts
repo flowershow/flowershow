@@ -43,7 +43,7 @@ export async function processCanvas(
   // Enrich: process markdown in text nodes, resolve .md file nodes
   const mdOptions: RenderMarkdownOptions = {
     files: config?.files,
-    siteHostname: config?.siteHostname,
+    siteHostname: config?.siteHostname ?? '',
     permalinks: config?.permalinks,
   };
   const enrichedNodes = await enrichCanvasNodes(canvas.nodes, {

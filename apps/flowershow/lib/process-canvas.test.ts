@@ -99,6 +99,7 @@ describe('processCanvas', () => {
     });
 
     const element = await processCanvas(canvas, {
+      siteHostname: 'test.flowershow.site',
       resolveFile: async (path) => {
         if (path === 'notes/readme.md')
           return '# My Note\n\nSome **bold** text';
@@ -128,6 +129,7 @@ describe('processCanvas', () => {
     });
 
     const element = await processCanvas(canvas, {
+      siteHostname: 'test.flowershow.site',
       resolveFile: async () => 'Should not be called',
     });
     const html = renderToStaticMarkup(element);
@@ -154,6 +156,7 @@ describe('processCanvas', () => {
     });
 
     const element = await processCanvas(canvas, {
+      siteHostname: 'test.flowershow.site',
       resolveFile: async () => null,
     });
     const html = renderToStaticMarkup(element);
@@ -179,6 +182,7 @@ describe('processCanvas', () => {
     });
 
     const element = await processCanvas(canvas, {
+      siteHostname: 'test.flowershow.site',
       resolveFile: async () => {
         throw new Error('network error');
       },
@@ -224,6 +228,7 @@ describe('processCanvas', () => {
     });
 
     const element = await processCanvas(canvas, {
+      siteHostname: 'test.flowershow.site',
       resolveFile: async (path) => {
         if (path === 'notes/embed.md') return 'Embedded *content*';
         return null;
@@ -275,6 +280,7 @@ describe('processCanvas', () => {
     });
 
     const element = await processCanvas(canvas, {
+      siteHostname: 'test.flowershow.site',
       resolveFile: async (path) => {
         if (path === 'found.md') return 'Found **it**';
         return null;
@@ -297,6 +303,7 @@ describe('processCanvas', () => {
     });
 
     const element = await processCanvas(canvas, {
+      siteHostname: 'test.flowershow.site',
       resolveFile: async () => 'Should not be called',
     });
     const html = renderToStaticMarkup(element);

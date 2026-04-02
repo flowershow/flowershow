@@ -29,7 +29,10 @@ async function processMarkdown(
     .use(remarkParse)
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
-    .use(rehypeJsonCanvas, { canvasFiles })
+    .use(rehypeJsonCanvas, {
+      canvasFiles,
+      siteHostname: 'test.flowershow.site',
+    })
     .use(rehypeStringify)
     .process(md);
 
