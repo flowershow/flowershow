@@ -24,8 +24,7 @@ export default function SiteCard({
     url = `${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`;
   }
 
-  const displayedUrl =
-    site.customDomain || new URL(url).pathname.replace(/^\/+/, '');
+  const displayedUrl = site.customDomain || new URL(url).host;
 
   return (
     <div className="relative rounded-lg border border-stone-200 pb-10 shadow-md transition-all hover:shadow-xl  ">
