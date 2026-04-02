@@ -39,6 +39,7 @@ import {
 import { jwtVerify } from 'jose';
 import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
 import { siteKeyBytes } from '@/lib/site-hmac-key';
+import { buildSiteSubdomain } from '@/lib/site-subdomain';
 import {
   PageMetadata,
   PublicSite,
@@ -198,7 +199,7 @@ export const siteRouter = createTRPCRouter({
       const created = await ctx.db.site.create({
         data: {
           projectName,
-          subdomain: `${projectName}-${creator?.username}`,
+          subdomain: buildSiteSubdomain(projectName, creator?.username ?? ''),
           autoSync: false,
           user: { connect: { id: ctx.session.user.id } },
         },

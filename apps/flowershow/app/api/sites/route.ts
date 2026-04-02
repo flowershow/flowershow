@@ -11,6 +11,7 @@ import {
 } from '@/lib/cli-auth';
 import { inngest } from '@/inngest/client';
 import PostHogClient from '@/lib/server-posthog';
+import { buildSiteSubdomain } from '@/lib/site-subdomain';
 import { deleteSiteCollection, ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest) {
       site = await prisma.site.create({
         data: {
           projectName: sanitizedName,
-          subdomain: `${sanitizedName}-${username}`,
+          subdomain: buildSiteSubdomain(sanitizedName, username),
           autoSync: false,
           userId: auth.userId,
         },
