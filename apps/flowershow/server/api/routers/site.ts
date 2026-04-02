@@ -885,7 +885,9 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          const sitePrefix = '';
+          const siteHostname =
+            site.customDomain ??
+            `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
           try {
             const configJson = await fetchFile({
@@ -914,8 +916,7 @@ export const siteRouter = createTRPCRouter({
               if (config[key]) {
                 config[key] = resolveFilePathToUrlPath({
                   target: config[key],
-                  sitePrefix,
-                  domain: site.customDomain,
+                  siteHostname,
                 });
               }
             });
@@ -926,15 +927,13 @@ export const siteRouter = createTRPCRouter({
                   item.links.forEach((link) => {
                     link.href = resolveFilePathToUrlPath({
                       target: link.href,
-                      sitePrefix,
-                      domain: site.customDomain,
+                      siteHostname,
                     });
                   });
                 } else {
                   item.href = resolveFilePathToUrlPath({
                     target: item.href,
-                    sitePrefix,
-                    domain: site.customDomain,
+                    siteHostname,
                   });
                 }
               });
@@ -943,8 +942,7 @@ export const siteRouter = createTRPCRouter({
             if (config.nav?.logo && !isEmoji(config.nav.logo)) {
               config.nav.logo = resolveFilePathToUrlPath({
                 target: config.nav.logo,
-                sitePrefix,
-                domain: site.customDomain,
+                siteHostname,
               });
             }
 
@@ -952,8 +950,7 @@ export const siteRouter = createTRPCRouter({
               config.nav.social.forEach((social) => {
                 social.href = resolveFilePathToUrlPath({
                   target: social.href,
-                  sitePrefix,
-                  domain: site.customDomain,
+                  siteHostname,
                 });
               });
             }
@@ -961,8 +958,7 @@ export const siteRouter = createTRPCRouter({
             if (config.nav?.cta) {
               config.nav.cta.href = resolveFilePathToUrlPath({
                 target: config.nav.cta.href,
-                sitePrefix,
-                domain: site.customDomain,
+                siteHostname,
               });
             }
 
@@ -974,8 +970,7 @@ export const siteRouter = createTRPCRouter({
               if (typeof config.hero.image === 'string') {
                 config.hero.image = resolveFilePathToUrlPath({
                   target: config.hero.image,
-                  sitePrefix,
-                  domain: site.customDomain,
+                  siteHostname,
                 });
               }
 
@@ -984,8 +979,7 @@ export const siteRouter = createTRPCRouter({
                   if (typeof c?.href === 'string') {
                     c.href = resolveFilePathToUrlPath({
                       target: c.href,
-                      sitePrefix,
-                      domain: site.customDomain,
+                      siteHostname,
                     });
                   }
                 });
@@ -997,8 +991,7 @@ export const siteRouter = createTRPCRouter({
                 group.links.forEach((link) => {
                   link.href = resolveFilePathToUrlPath({
                     target: link.href,
-                    sitePrefix,
-                    domain: site.customDomain,
+                    siteHostname,
                   });
                 });
               });
@@ -1043,7 +1036,9 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          const sitePrefix = '';
+          const siteHostname =
+            site.customDomain ??
+            `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
           // Get all blobs for the site
           const blobs = (await ctx.db.blob.findMany({
@@ -1090,7 +1085,7 @@ export const siteRouter = createTRPCRouter({
 
           const tree = buildSiteTree(filteredBlobs, {
             orderBy: input.orderBy,
-            prefix: sitePrefix,
+            prefix: '',
           });
 
           // When a single sidebar path is configured, flatten the tree
@@ -1145,7 +1140,9 @@ export const siteRouter = createTRPCRouter({
           const dirReadmePattern = dir + 'README.md(x)?';
           const dirIndexPattern = dir + 'index.md(x)?';
 
-          const sitePrefix = '';
+          const siteHostname =
+            site.customDomain ??
+            `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
           const siteFilePaths = (
             await ctx.db.blob.findMany({
@@ -1192,15 +1189,14 @@ export const siteRouter = createTRPCRouter({
               }
               metadata[mediaFrontmatterField] = resolveFilePathToUrlPath({
                 target: value,
-                sitePrefix,
-                domain: site.customDomain,
+                siteHostname,
               });
             }
 
             // Use permalink if available, otherwise use app_path
             const pathToUse = blob.permalink || blob.app_path;
             return {
-              url: `${sitePrefix}/${pathToUse}`,
+              url: `/${pathToUse}`,
               metadata,
             };
           });
@@ -1287,7 +1283,9 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          const sitePrefix = '';
+          const siteHostname =
+            site.customDomain ??
+            `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
           const metadata = blob.metadata as PageMetadata | null;
           const siteFilePaths = (
@@ -1314,8 +1312,7 @@ export const siteRouter = createTRPCRouter({
 
               metadata[key] = resolveFilePathToUrlPath({
                 target: value,
-                sitePrefix,
-                domain: site.customDomain,
+                siteHostname,
               });
             }
           });
@@ -1331,8 +1328,7 @@ export const siteRouter = createTRPCRouter({
               }
               c.href = resolveFilePathToUrlPath({
                 target: value,
-                sitePrefix,
-                domain: site.customDomain,
+                siteHostname,
               });
             });
           }
@@ -1354,8 +1350,7 @@ export const siteRouter = createTRPCRouter({
 
               metadata.hero.image = resolveFilePathToUrlPath({
                 target: value,
-                sitePrefix,
-                domain: site.customDomain,
+                siteHostname,
               });
             }
 
@@ -1370,8 +1365,7 @@ export const siteRouter = createTRPCRouter({
                 }
                 c.href = resolveFilePathToUrlPath({
                   target: value,
-                  sitePrefix,
-                  domain: site.customDomain,
+                  siteHostname,
                 });
               });
             }
@@ -1519,7 +1513,9 @@ export const siteRouter = createTRPCRouter({
               });
             }
 
-            const sitePrefix = '';
+            const siteHostname =
+              site.customDomain ??
+              `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
             const siteFilePaths = (
               await ctx.db.blob.findMany({
@@ -1575,8 +1571,7 @@ export const siteRouter = createTRPCRouter({
                   }
                   metadata.avatar = resolveFilePathToUrlPath({
                     target: value,
-                    sitePrefix,
-                    domain: site.customDomain,
+                    siteHostname,
                   });
                 }
 
@@ -1623,7 +1618,9 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          const sitePrefix = '';
+          const siteHostname =
+            site.customDomain ??
+            `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
           const blobs = await ctx.db.blob.findMany({
             where: {
@@ -1643,7 +1640,7 @@ export const siteRouter = createTRPCRouter({
               // TODO prepend paths
               const path = '/' + blob.path;
               let url = blob.permalink.replace(/^\//, '');
-              url = `${sitePrefix}/${url}`;
+              url = `/${url}`;
 
               mapping[path] = url;
             }

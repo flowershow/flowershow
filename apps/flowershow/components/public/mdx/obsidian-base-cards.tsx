@@ -26,8 +26,7 @@ export interface ObsidianBaseCardsProps {
   imageFit?: 'contain' | 'cover';
   imageAspectRatio?: number;
   rows: string;
-  sitePrefix?: string;
-  customDomain?: string;
+  siteHostname?: string;
   order?: string[];
   allSitePaths?: string;
   properties?: string;
@@ -35,8 +34,7 @@ export interface ObsidianBaseCardsProps {
 
 export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
   const rows = JSON.parse(props.rows) as Row[];
-  const sitePrefix = props.sitePrefix;
-  const customDomain = props.customDomain;
+  const siteHostname = props.siteHostname;
   const cardSize = props.cardSize || 200;
   const imageField = props.image;
   const imageFit = props.imageFit || 'contain';
@@ -143,8 +141,7 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
       });
       const urlPath = resolveFilePathToUrlPath({
         target: filePath,
-        sitePrefix,
-        domain: customDomain,
+        siteHostname,
       });
 
       displayValue = (
@@ -202,8 +199,7 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
       });
       return resolveFilePathToUrlPath({
         target: filePath,
-        sitePrefix,
-        domain: customDomain,
+        siteHostname,
       });
     }
 
@@ -228,7 +224,7 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
         }}
       >
         {rows.map((row, index) => {
-          const linkUrl = `${sitePrefix}/${row.appPath || ''}`;
+          const linkUrl = `/${row.appPath || ''}`;
           const image = getImage(row);
           const isHexColor = image?.startsWith('#') && image.length === 7;
           // Prioritize images in the first 6 cards (likely above the fold)

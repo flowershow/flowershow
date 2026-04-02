@@ -283,7 +283,6 @@ function SearchResults({
           ...item,
           path: resolveFilePathToUrlPath({
             target: item.path,
-            sitePrefix: site?.prefix,
           }),
         })),
     // [site, contentHide],

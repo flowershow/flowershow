@@ -27,17 +27,15 @@ type ViewData = {
 
 export interface ObsidianBasesViewsProps {
   viewData: string; // JSON string of ViewData[]
-  sitePrefix?: string;
+  siteHostname?: string;
   allSitePaths?: string; // JSON string of all blob paths for the site
-  customDomain?: string;
 }
 
 export const ObsidianBasesViews: React.FC<ObsidianBasesViewsProps> = (
   props,
 ) => {
   const viewData = JSON.parse(props.viewData) as ViewData[];
-  const sitePrefix = props.sitePrefix;
-  const customDomain = props.customDomain;
+  const siteHostname = props.siteHostname;
 
   // Determine available view types
   const availableViews = viewData.map((vd) => vd.view.type);
@@ -71,8 +69,7 @@ export const ObsidianBasesViews: React.FC<ObsidianBasesViewsProps> = (
       return (
         <ObsidianBaseCards
           rows={rows}
-          sitePrefix={sitePrefix}
-          customDomain={customDomain}
+          siteHostname={siteHostname}
           allSitePaths={allSitePathsStr}
           cardSize={currentView.cardSize}
           image={currentView.image}
@@ -88,8 +85,7 @@ export const ObsidianBasesViews: React.FC<ObsidianBasesViewsProps> = (
       return (
         <ObsidianBaseList
           rows={rows}
-          sitePrefix={sitePrefix}
-          customDomain={customDomain}
+          siteHostname={siteHostname}
           allSitePaths={allSitePathsStr}
           order={currentView.order}
         />
@@ -101,8 +97,7 @@ export const ObsidianBasesViews: React.FC<ObsidianBasesViewsProps> = (
       <ObsidianBaseTable
         columns={columns}
         rows={rows}
-        sitePrefix={sitePrefix}
-        customDomain={customDomain}
+        siteHostname={siteHostname}
         allSitePaths={allSitePathsStr}
         summaries={summaries}
         properties={properties}

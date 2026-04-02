@@ -18,12 +18,10 @@ export interface ProcessCanvasOptions extends Partial<CanvasRenderOptions> {
   resolveFile?: (path: string) => Promise<string | null>;
   /** Pre-fetched file contents for .md files referenced by canvas nodes. */
   canvasNodeFiles?: Record<string, string>;
-  /** Prefix to prepend to image/link paths (e.g. "/@user/project"). */
-  sitePrefix?: string;
   /** List of file paths for wiki-link resolution. */
   files?: string[];
-  /** Custom domain for link resolution. */
-  customDomain?: string;
+  /** The serving hostname for link resolution (custom domain or subdomain.flowershow.site). */
+  siteHostname?: string;
   /** Permalinks mapping for wiki-link resolution. */
   permalinks?: Record<string, string>;
 }
@@ -45,8 +43,7 @@ export async function processCanvas(
   // Enrich: process markdown in text nodes, resolve .md file nodes
   const mdOptions: RenderMarkdownOptions = {
     files: config?.files,
-    sitePrefix: config?.sitePrefix,
-    customDomain: config?.customDomain,
+    siteHostname: config?.siteHostname,
     permalinks: config?.permalinks,
   };
   const enrichedNodes = await enrichCanvasNodes(canvas.nodes, {
@@ -69,13 +66,6 @@ export async function processCanvas(
     children: [hast],
   };
 
-  // Resolve image/link URLs so they point to served paths (the markdown
-  // pipeline does this via rehypeResolveHtmlUrls, but processCanvas
-  // bypasses that pipeline).
-  if (config?.sitePrefix) {
-    resolveUrls(wrappedHast, config.sitePrefix);
-  }
-
   // Pre-process: convert raw nodes to elements with dangerouslySetInnerHTML
   // since hast-util-to-jsx-runtime doesn't handle { type: 'raw' } directly.
   preprocessRawNodes(wrappedHast);
@@ -85,32 +75,6 @@ export async function processCanvas(
     jsx: runtime.jsx,
     jsxs: runtime.jsxs,
   }) as React.JSX.Element;
-}
-
-/**
- * Walk the HAST tree and resolve src/href attributes on HTML elements,
- * so images and links point to the correct serving URLs.
- */
-function resolveUrls(node: any, sitePrefix: string) {
-  if (node.type === 'element' && node.properties) {
-    if (
-      typeof node.properties.src === 'string' &&
-      node.properties.src.startsWith('/')
-    ) {
-      node.properties.src = sitePrefix + node.properties.src;
-    }
-    if (
-      typeof node.properties.href === 'string' &&
-      node.properties.href.startsWith('/')
-    ) {
-      node.properties.href = sitePrefix + node.properties.href;
-    }
-  }
-  if (node.children) {
-    for (const child of node.children) {
-      resolveUrls(child, sitePrefix);
-    }
-  }
 }
 
 /**

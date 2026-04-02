@@ -300,6 +300,7 @@ export async function seed(): Promise<void> {
     create: {
       id: FREE_SITE.id,
       projectName: FREE_SITE.projectName,
+      subdomain: `${FREE_SITE.projectName}-${TEST_USER.username}`,
       userId: TEST_USER.id,
       enableRss: true,
     },
@@ -315,6 +316,7 @@ export async function seed(): Promise<void> {
     create: {
       id: PREMIUM_SITE.id,
       projectName: PREMIUM_SITE.projectName,
+      subdomain: `${PREMIUM_SITE.projectName}-${TEST_USER.username}`,
       userId: TEST_USER.id,
       customDomain: PREMIUM_SITE.customDomain,
       plan: Plan.PREMIUM,

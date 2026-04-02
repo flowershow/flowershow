@@ -7,26 +7,22 @@ import { customEncodeUrl } from './url-encoder';
  * Resolve href (page link) or src (asset link) path to URL path (or full URL for assets)
  * @param opts.target  - Value of the href or src (relative or absolute)
  * @param opts.originFilePath  - Absolute path to the file where the link is (you can skip it if it's a root level file (e.g. top config.json))
- * @param opts.prefix  - User site prefix (/@username/sitename) if not hosted on a custom domain.
- * @param opts.isSrc  - Whether it's an asset link (src)
- * @param opts.domain  - User site custom domain (only needed if isSrc==true)
+ * @param opts.siteHostname  - The serving hostname for this site (custom domain or subdomain.flowershow.site). Required for asset src URLs.
  * @param opts.permalinks  - Map of file paths to permalinks
  * @example
- * resolveFilePathToUrlPath({ target: "blog/post-abc", originFilePath: "/README.md", prefix: "/@john/acme" })
- * resolveFilePathToUrlPath({ target: "assets/image.jpg", originFilePath: "config.json", isSrc: true, domain: "john.com" })
+ * resolveFilePathToUrlPath({ target: "blog/post-abc", originFilePath: "/README.md" })
+ * resolveFilePathToUrlPath({ target: "assets/image.jpg", originFilePath: "config.json", siteHostname: "garden-johndoe.flowershow.site" })
  */
 export const resolveFilePathToUrlPath = ({
   target,
   originFilePath = '/',
-  sitePrefix = '',
-  domain,
+  siteHostname,
   commonMarkSpaceEncoded = false,
   permalinks,
 }: {
   target: string;
   originFilePath?: string;
-  sitePrefix?: string;
-  domain?: string | null;
+  siteHostname?: string | null;
   commonMarkSpaceEncoded?: boolean;
   permalinks?: Record<string, string>;
 }) => {
@@ -83,7 +79,7 @@ export const resolveFilePathToUrlPath = ({
   }
 
   // remove trailing slash unless it's the root
-  if (resolvedUrlPath !== '/' || sitePrefix) {
+  if (resolvedUrlPath !== '/') {
     resolvedUrlPath = resolvedUrlPath.replace(/\/$/, '');
   }
 
@@ -99,14 +95,12 @@ export const resolveFilePathToUrlPath = ({
       .map((p) => encodeURIComponent(p))
       .join('/');
 
-    return `${protocol}://${
-      domain || env.NEXT_PUBLIC_ROOT_DOMAIN
-    }${sitePrefix}${encodedUrlPath}`;
+    return `${protocol}://${siteHostname || env.NEXT_PUBLIC_ROOT_DOMAIN}${encodedUrlPath}`;
   }
 
   const encodedUrlPath = resolvedUrlPath
     .split('/')
     .map((p) => customEncodeUrl(p))
     .join('/');
-  return `${sitePrefix}${encodedUrlPath}${headingId}`;
+  return `${encodedUrlPath}${headingId}`;
 };

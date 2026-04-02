@@ -582,8 +582,7 @@ function buildEdgePath(
  */
 export interface RenderMarkdownOptions {
   files?: string[];
-  sitePrefix?: string;
-  customDomain?: string;
+  siteHostname?: string;
   permalinks?: Record<string, string>;
 }
 
@@ -591,12 +590,7 @@ export async function renderMarkdownToHtml(
   text: string,
   options?: RenderMarkdownOptions,
 ): Promise<string> {
-  const {
-    files = [],
-    sitePrefix = '',
-    customDomain,
-    permalinks,
-  } = options ?? {};
+  const { files = [], siteHostname, permalinks } = options ?? {};
 
   // this strips out frontmatter, so that it's not inlined with the rest of the markdown file
   const { content } = matter(text, {});
@@ -606,15 +600,14 @@ export async function renderMarkdownToHtml(
     .use(remarkObsidianComments)
     .use(remarkCommonMarkLink, {
       filePath: '',
-      sitePrefix,
-      customDomain,
+      siteHostname,
       files,
       permalinks,
     })
     .use(remarkWikiLink, {
       files,
       format: 'shortestPossible',
-      urlResolver: getUrlResolver(sitePrefix, customDomain),
+      urlResolver: getUrlResolver(siteHostname),
       permalinks,
     })
     .use(remarkYouTubeAutoEmbed)
@@ -626,8 +619,8 @@ export async function renderMarkdownToHtml(
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeUnwrapParagraphsAroundMedia)
-    .use(rehypeResolveHtmlUrls, { filePath: '', sitePrefix, customDomain })
-    .use(rehypeHtmlEnhancements, { sitePrefix })
+    .use(rehypeResolveHtmlUrls, { filePath: '', siteHostname })
+    .use(rehypeHtmlEnhancements, {})
     .use(rehypeSlug)
     .use(rehypeKatex, { output: 'htmlAndMathml' })
     .use(rehypePrismPlus, { ignoreMissing: true })

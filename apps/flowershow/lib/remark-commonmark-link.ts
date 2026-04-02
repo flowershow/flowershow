@@ -4,8 +4,7 @@ import { resolveFilePathToUrlPath } from './resolve-link';
 
 export interface Options {
   filePath: string;
-  sitePrefix: string;
-  customDomain?: string;
+  siteHostname?: string;
   files?: string[];
   permalinks?: Record<string, string>;
 }
@@ -57,8 +56,7 @@ function findFile(resolvedPath: string, files: string[]): string | undefined {
 
 function RemarkCommonMarkLink({
   filePath,
-  sitePrefix,
-  customDomain,
+  siteHostname,
   files = [],
   permalinks,
 }: Options) {
@@ -82,8 +80,7 @@ function RemarkCommonMarkLink({
       node.url = resolveFilePathToUrlPath({
         target: node.url,
         originFilePath: filePath,
-        sitePrefix,
-        domain: customDomain,
+        siteHostname,
         commonMarkSpaceEncoded: true,
         permalinks,
       });
@@ -100,8 +97,7 @@ function RemarkCommonMarkLink({
       node.url = resolveFilePathToUrlPath({
         target: node.url,
         originFilePath: filePath,
-        sitePrefix,
-        domain: customDomain,
+        siteHostname,
         commonMarkSpaceEncoded: true,
       });
 

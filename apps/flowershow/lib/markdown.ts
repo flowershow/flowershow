@@ -35,9 +35,8 @@ import { resolveFilePathToUrlPath } from './resolve-link';
 interface MarkdownOptions {
   filePath: string;
   files: string[];
-  sitePrefix: string;
   parseFrontmatter?: boolean;
-  customDomain?: string;
+  siteHostname?: string;
   siteId?: string;
   rootDir?: string;
   permalinks?: Record<string, string>;
@@ -51,7 +50,7 @@ export async function processMarkdown(
   _content: string,
   options: MarkdownOptions,
 ) {
-  const { filePath, files, sitePrefix, customDomain, permalinks } = options;
+  const { filePath, files, siteHostname, permalinks } = options;
 
   // this strips out frontmatter, so that it's not inlined with the rest of the markdown file
   const { content } = matter(_content, {});
@@ -62,15 +61,14 @@ export async function processMarkdown(
     // run this before remark-wiki-link
     .use(remarkCommonMarkLink, {
       filePath,
-      sitePrefix,
-      customDomain,
+      siteHostname,
       files,
       permalinks,
     })
     .use(remarkWikiLink, {
       files,
       format: 'shortestPossible',
-      urlResolver: getUrlResolver(sitePrefix, customDomain),
+      urlResolver: getUrlResolver(siteHostname),
       permalinks,
     })
     .use(remarkYouTubeAutoEmbed)
@@ -85,13 +83,12 @@ export async function processMarkdown(
       canvasFiles: options.canvasFiles ?? {},
       canvasNodeFiles: options.canvasNodeFiles,
       files,
-      sitePrefix,
-      customDomain,
+      siteHostname,
       permalinks,
     })
     .use(rehypeUnwrapParagraphsAroundMedia)
-    .use(rehypeResolveHtmlUrls, { filePath, sitePrefix, customDomain })
-    .use(rehypeHtmlEnhancements, { sitePrefix })
+    .use(rehypeResolveHtmlUrls, { filePath, siteHostname })
+    .use(rehypeHtmlEnhancements, {})
     .use(rehypeSlug)
     .use(rehypeAutolinkHeadings, rehypeAutolinkHeadingsConfig)
     .use(rehypeKatex, { output: 'htmlAndMathml' })
@@ -112,9 +109,8 @@ export async function processMarkdown(
 export const getMdxOptions = ({
   filePath,
   files,
-  sitePrefix = '',
   parseFrontmatter = true,
-  customDomain,
+  siteHostname,
   siteId,
   rootDir,
   permalinks,
@@ -123,9 +119,8 @@ export const getMdxOptions = ({
 }: {
   filePath: string;
   files: string[];
-  sitePrefix: string;
   parseFrontmatter?: boolean;
-  customDomain?: string;
+  siteHostname?: string;
   siteId?: string;
   rootDir?: string;
   permalinks?: Record<string, string>;
@@ -138,16 +133,13 @@ export const getMdxOptions = ({
       remarkPlugins: [
         remarkObsidianComments,
         // run this before remark-wiki-link
-        [
-          remarkCommonMarkLink,
-          { filePath, sitePrefix, customDomain, files, permalinks },
-        ],
+        [remarkCommonMarkLink, { filePath, siteHostname, files, permalinks }],
         [
           remarkWikiLink,
           {
             files,
             format: 'shortestPossible',
-            urlResolver: getUrlResolver(sitePrefix, customDomain),
+            urlResolver: getUrlResolver(siteHostname),
             permalinks,
           },
         ],
@@ -158,7 +150,7 @@ export const getMdxOptions = ({
         remarkCallout,
         [mdxMermaid, {}],
         remarkMark,
-        [remarkObsidianBases, { sitePrefix, customDomain, siteId, rootDir }],
+        [remarkObsidianBases, { siteHostname, siteId, rootDir }],
       ],
       rehypePlugins: [
         [
@@ -167,14 +159,13 @@ export const getMdxOptions = ({
             canvasFiles: canvasFiles ?? {},
             canvasNodeFiles,
             files,
-            sitePrefix,
-            customDomain,
+            siteHostname,
             permalinks,
           },
         ],
         rehypeUnwrapParagraphsAroundMedia,
-        [rehypeResolveExplicitJsxUrls, { filePath, sitePrefix, customDomain }],
-        [rehypeHtmlEnhancements, { sitePrefix }],
+        [rehypeResolveExplicitJsxUrls, { filePath, siteHostname }],
+        [rehypeHtmlEnhancements, {}],
         rehypeSlug,
         [rehypeAutolinkHeadings, rehypeAutolinkHeadingsConfig],
         // @ts-ignore
@@ -186,13 +177,12 @@ export const getMdxOptions = ({
   };
 };
 
-export const getUrlResolver = (sitePrefix: string, domain?: string) => {
+export const getUrlResolver = (siteHostname?: string) => {
   return ({ filePath, heading }: { filePath: string; heading?: string }) => {
     // We need to concatenate filePath and heading for use with resolveFilePathToUrlPath
     return resolveFilePathToUrlPath({
       target: `${filePath}${heading ? '#' + heading : ''}`,
-      sitePrefix,
-      domain,
+      siteHostname,
     });
   };
 };
