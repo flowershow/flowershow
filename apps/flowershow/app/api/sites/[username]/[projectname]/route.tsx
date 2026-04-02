@@ -98,14 +98,9 @@ export async function GET(
         0,
       );
 
-      let siteUrl: string;
-      if (extendedSite.customDomain) {
-        siteUrl = `https://${extendedSite.customDomain}`;
-      } else if (extendedSite.subdomain) {
-        siteUrl = `https://${extendedSite.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
-      } else {
-        siteUrl = `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/@${extendedSite.user.username}/${extendedSite.projectName}`;
-      }
+      const siteUrl = extendedSite.customDomain
+        ? `https://${extendedSite.customDomain}`
+        : `https://${extendedSite.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
       return NextResponse.json({
         site: {

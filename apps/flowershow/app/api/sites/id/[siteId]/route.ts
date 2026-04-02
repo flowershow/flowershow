@@ -94,14 +94,9 @@ export async function GET(
     const username = site.user.username;
 
     // Determine site URL
-    let siteUrl: string;
-    if (site.customDomain) {
-      siteUrl = `https://${site.customDomain}`;
-    } else if (site.subdomain) {
-      siteUrl = `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
-    } else {
-      siteUrl = `https://${process.env.NEXT_PUBLIC_ROOT_DOMAIN}/@${username}/${site.projectName}`;
-    }
+    const siteUrl = site.customDomain
+      ? `https://${site.customDomain}`
+      : `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
     const response: GetSiteResponse = {
       site: {
