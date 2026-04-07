@@ -96,7 +96,6 @@ export const BlogLayout: React.FC<Props> = ({
               </div>
             )}
           </div>
-
         </header>
       )}
       <div className="page-body">{children}</div>

@@ -63,7 +63,11 @@ export default function BuiltWithFloatingButton() {
         );
         spanEl.style.setProperty('font-size', '0.875rem', 'important');
         spanEl.style.setProperty('font-weight', '500', 'important');
-        spanEl.style.setProperty('color', 'var(--color-foreground)', 'important');
+        spanEl.style.setProperty(
+          'color',
+          'var(--color-foreground)',
+          'important',
+        );
         spanEl.style.setProperty('letter-spacing', '-0.025em', 'important');
       }
       const logo = btn.getElementsByTagName('img').item(0)!;

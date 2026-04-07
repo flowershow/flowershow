@@ -16,13 +16,9 @@
   },
   "showSidebar": true,
   "sidebar": {
-    "paths": [
-      "/docs"
-    ]
+    "paths": ["/docs"]
   },
-  "contentHide": [
-    "/docs/people"
-  ],
+  "contentHide": ["/docs/people"],
   "showToc": true,
   "footer": {
     "navigation": [
