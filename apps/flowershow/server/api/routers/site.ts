@@ -1259,23 +1259,32 @@ export const siteRouter = createTRPCRouter({
             }
           }
 
-          // If on home page and still no blob found, try index.html before
-          // falling back to the first md/mdx file alphabetically
+          // Home page fallback resolution order (when no appPath="/" blob exists):
+          // 2. index.html — strong HTML convention, beats arbitrary md fallback
           if (!blob && input.slug === '/') {
             blob = await ctx.db.blob.findFirst({
-              where: {
-                siteId: input.siteId,
-                path: 'index.html',
-              },
+              where: { siteId: input.siteId, path: 'index.html' },
             });
           }
 
+          // 3. First md/mdx — sort by appPath (nulls last), then path as tiebreaker
           if (!blob && input.slug === '/') {
             blob = await ctx.db.blob.findFirst({
               where: {
                 siteId: input.siteId,
                 extension: { in: ['md', 'mdx'] },
               },
+              orderBy: [
+                { appPath: { sort: 'asc', nulls: 'last' } },
+                { path: 'asc' },
+              ],
+            });
+          }
+
+          // 4. First html file — sort by path
+          if (!blob && input.slug === '/') {
+            blob = await ctx.db.blob.findFirst({
+              where: { siteId: input.siteId, extension: 'html' },
               orderBy: { path: 'asc' },
             });
           }
