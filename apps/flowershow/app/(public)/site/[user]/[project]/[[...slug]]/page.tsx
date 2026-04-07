@@ -232,7 +232,12 @@ export default async function SitePage(props: {
   const isMarkdown = blob.path.endsWith('.md');
   const isMdx = blob.path.endsWith('.mdx');
   const isCanvas = blob.path.endsWith('.canvas');
+  const isHtml = blob.path.endsWith('.html');
   const renderMode = metadata?.syntaxMode ?? site.syntaxMode;
+
+  if (isHtml) {
+    redirect(`/${blob.path}`);
+  }
 
   if (!isMarkdown && !isMdx && !isCanvas) {
     compiledContent = (
