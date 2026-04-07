@@ -1259,12 +1259,22 @@ export const siteRouter = createTRPCRouter({
             }
           }
 
-          // If on home page and still no blob found, fall back to first md/mdx/html file alphabetically
+          // If on home page and still no blob found, try index.html before
+          // falling back to the first md/mdx file alphabetically
           if (!blob && input.slug === '/') {
             blob = await ctx.db.blob.findFirst({
               where: {
                 siteId: input.siteId,
-                extension: { in: ['md', 'mdx', 'html'] },
+                path: 'index.html',
+              },
+            });
+          }
+
+          if (!blob && input.slug === '/') {
+            blob = await ctx.db.blob.findFirst({
+              where: {
+                siteId: input.siteId,
+                extension: { in: ['md', 'mdx'] },
               },
               orderBy: { path: 'asc' },
             });
