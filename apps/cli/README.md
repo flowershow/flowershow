@@ -105,13 +105,13 @@ publish ./intro.md ./chapter1.md ./chapter2.md
 publish ./my-notes
 
 # Overwrite an existing site
-publish ./my-notes --overwrite
+publish --overwrite ./my-notes
 
 # Publish with a custom site name
-publish ./my-notes --name my-custom-site
+publish --name my-custom-site ./my-notes
 
 # Combine options
-publish ./my-notes --name my-custom-site --overwrite
+publish --name my-custom-site --overwrite ./my-notes
 ```
 
 **What happens:**
@@ -157,16 +157,16 @@ Sync changes to an existing published site. Only uploads new or modified files, 
 publish sync ./my-notes
 
 # Preview changes without syncing
-publish sync ./my-notes --dry-run
+publish sync --dry-run ./my-notes
 
 # Show detailed file lists including unchanged files
-publish sync ./my-notes --verbose
+publish sync --verbose ./my-notes
 
 # Sync to a specific site name
-publish sync ./my-notes --name my-custom-site
+publish sync --name my-custom-site ./my-notes
 
 # Combine options
-publish sync ./my-notes --dry-run --verbose
+publish sync --dry-run --verbose ./my-notes
 ```
 
 **What happens:**
@@ -260,7 +260,7 @@ publish auth login
 
 A site with that name already exists. You can:
 
-- Use the `--overwrite` flag: `publish <path> --overwrite`
+- Use the `--overwrite` flag: `publish --overwrite <path>`
 - Delete it first: `publish delete <name>`
 - Rename your file/folder
 - Use `publish list` to see all existing sites

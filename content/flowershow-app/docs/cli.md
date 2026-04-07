@@ -68,7 +68,7 @@ publish ./my-note.md
 **Example with options:**
 
 ```bash
-publish ./my-notes --name my-awesome-site --overwrite
+publish --name my-awesome-site --overwrite ./my-notes
 ```
 
 ## Syncing Changes
@@ -82,7 +82,7 @@ publish sync ./my-notes
 **Note:** If you used a custom name when publishing, remember to use it when syncing:
 
 ```bash
-publish sync ./my-notes --name my-awesome-site
+publish sync --name my-awesome-site ./my-notes
 ```
 
 ## Managing Sites
