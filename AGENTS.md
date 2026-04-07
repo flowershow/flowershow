@@ -71,6 +71,21 @@ pnpm turbo build --filter=@flowershow/api-contract
 # http://cloud.flowershow.local:3000/api/docs
 ```
 
+## Security Review
+
+Before finishing any task that modifies code, you MUST review your changes for security issues.
+
+**Checklist before finishing any task that changes code:**
+
+1. **Authentication & authorization** — Does the change touch any route, API endpoint, or action that should be protected? Verify auth checks are in place and cannot be bypassed.
+2. **Input validation** — Is all user-supplied input validated and sanitized before use? Check for injection risks (SQL, command, path traversal, XSS).
+3. **Secrets & credentials** — Are any secrets, tokens, or keys accidentally logged, exposed in responses, or hardcoded?
+4. **Privilege escalation** — Could a user access or modify another user's data? Verify tenant/ownership checks on all data operations.
+5. **Dependency on contract security** — For API routes, confirm the `security` field in the contract matches the actual auth enforcement in the route handler.
+6. **Third-party data** — Is data from external sources (GitHub, webhooks, user content) treated as untrusted?
+
+If you identify a security issue in your own changes, fix it before committing. If you find a pre-existing issue outside your change scope, file a `bd` issue with `--priority=0` (critical) or `--priority=1` (high) and note it in your hand-off.
+
 ## Documentation
 
 Many packages and apps have their own `README.md` that documents public-facing behavior (tools, commands, configuration, etc.). When you add, remove, or change functionality, you MUST update the relevant README in the same commit or PR.
