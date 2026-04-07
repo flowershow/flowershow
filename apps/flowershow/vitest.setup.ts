@@ -17,8 +17,6 @@ vi.mock('@/env.mjs', () => ({
     S3_BUCKET_NAME: 'test-bucket',
     S3_REGION: 'auto',
     S3_FORCE_PATH_STYLE: false,
-    GH_WEBHOOK_SECRET: 'test-webhook-secret',
-    GH_WEBHOOK_URL: 'https://test.com/webhook',
     GITHUB_APP_ID: 'test-app-id',
     GITHUB_APP_SLUG: 'test-app-slug',
     GITHUB_APP_CLIENT_ID: 'test-client-id',

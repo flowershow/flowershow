@@ -106,8 +106,6 @@ model VerificationToken {
 
 model Site {
   id                      String        @id @default(cuid())
-  // TODO(legacy-oauth): drop once all sites are migrated to GitHub App.
-  // For GitHub App sites, repo name is derived via installationRepository relation.
   ghRepository            String?        @map("gh_repository")
   ghBranch                String?        @map("gh_branch")
   subdomain               String        @unique
@@ -119,7 +117,6 @@ model Site {
   user                    User          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId                  String        @map("user_id")
   autoSync                Boolean       @default(false) @map("auto_sync")
-  webhookId               String?       @unique @map("webhook_id")
   enableComments          Boolean       @default(false) @map("enable_comments")
   giscusRepoId            String?       @map("giscus_repo_id")
   giscusCategoryId        String?       @map("giscus_category_id")

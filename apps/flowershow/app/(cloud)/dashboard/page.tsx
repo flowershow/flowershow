@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import CreateSiteButton from '@/components/dashboard/create-site-button';
 import DashboardEmptyState from '@/components/dashboard/dashboard-empty-state';
-import MigrationBanner from '@/components/dashboard/migration-banner';
 import PlaceholderCard from '@/components/dashboard/placeholder-card';
 import SiteCard from '@/components/dashboard/site-card';
 import { getSession } from '@/server/auth';
@@ -16,14 +15,10 @@ export default async function AllSites() {
 
   const username = session.user?.username;
 
-  const oauthSites = await api.user.hasOAuthOnlySites.query();
   const sites = await api.user.getSites.query({});
 
   return (
     <div className="h-full flex flex-col space-y-6">
-      {oauthSites.length > 0 && (
-        <MigrationBanner sites={oauthSites} className="mt-6" />
-      )}
       {sites.length === 0 ? (
         <DashboardEmptyState />
       ) : (

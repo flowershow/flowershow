@@ -98,47 +98,6 @@ export function registerWebhooksRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: 'post',
-    path: '/api/webhook',
-    operationId: 'legacyWebhook',
-    summary: 'Legacy GitHub webhook (deprecated)',
-    description:
-      'Deprecated. Legacy webhook endpoint for GitHub OAuth-based sites.',
-    tags: ['Webhooks'],
-    deprecated: true,
-    security: [{ githubWebhookSignature: [] }],
-    request: {
-      headers: z.object({
-        'x-github-event': z.string(),
-        'x-hub-signature': z.string(),
-        'x-github-hook-id': z.string().optional(),
-      }),
-      query: z.object({ siteid: z.string().optional() }),
-      body: {
-        content: {
-          'application/json': {
-            schema: z.object({ ref: z.string().optional() }),
-          },
-        },
-      },
-    },
-    responses: {
-      '200': {
-        description: 'Event processed',
-        content: { 'text/plain': { schema: z.string() } },
-      },
-      '401': {
-        description: 'Invalid signature',
-        content: { 'text/plain': { schema: z.string() } },
-      },
-      '404': {
-        description: 'Site not found or incorrect branch',
-        content: { 'text/plain': { schema: z.string() } },
-      },
-    },
-  });
-
-  registry.registerPath({
-    method: 'post',
     path: '/api/stripe/webhook',
     operationId: 'stripeWebhook',
     summary: 'Stripe webhook',

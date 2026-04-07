@@ -4,7 +4,7 @@ import Billing from '@/components/dashboard/billing';
 import Form from '@/components/dashboard/form';
 import DeleteSiteForm from '@/components/dashboard/form/delete-site-form';
 import GitHubConnectionForm from '@/components/dashboard/form/github-connection-form';
-import MigrateToGitHubAppForm from '@/components/dashboard/form/migrate-to-github-app-form';
+import RepoAccessLostForm from '@/components/dashboard/form/repo-access-lost-form';
 import SitePasswordProtectionForm from '@/components/dashboard/form/site-password-form';
 import SettingsNav from '@/components/dashboard/settings-nav';
 import { validDomainRegex } from '@/lib/domains';
@@ -33,10 +33,10 @@ export default async function SiteSettingsIndex(props: {
   const repoFullName = getRepoFullName(site);
 
   // Check if site needs migration (OAuth-only, no GitHub App installation)
-  const isOAuthSite = !site.installationRepository && site.ghRepository;
+  const isRepoAccessLost = !site.installationRepository && !!site.ghRepository;
   let hasInstallationForRepo = false;
 
-  if (isOAuthSite) {
+  if (isRepoAccessLost) {
     try {
       const installations = await api.github.listInstallations.query();
       // Check if any installation has access to this site's repository
@@ -70,8 +70,8 @@ export default async function SiteSettingsIndex(props: {
           <SettingsNav hasGhRepository={!!repoFullName} />
         </div>
         <div className="col-span-10 flex flex-col space-y-6 sm:col-span-9 lg:col-span-10">
-          {isOAuthSite && (
-            <MigrateToGitHubAppForm
+          {isRepoAccessLost && (
+            <RepoAccessLostForm
               siteId={site.id}
               repositoryName={site.ghRepository!}
               hasInstallation={hasInstallationForRepo}

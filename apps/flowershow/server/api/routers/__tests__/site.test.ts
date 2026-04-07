@@ -38,8 +38,6 @@ vi.mock('@/lib/domains', () => ({
 }));
 vi.mock('@/lib/github', () => ({
   checkIfBranchExists: vi.fn(),
-  createGitHubRepoWebhook: vi.fn(),
-  deleteGitHubRepoWebhook: vi.fn(),
   fetchGitHubRepoTree: vi.fn(),
 }));
 vi.mock('@/lib/content-store', () => ({

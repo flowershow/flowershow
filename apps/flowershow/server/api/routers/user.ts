@@ -135,30 +135,6 @@ export const userRouter = createTRPCRouter({
 
       return { success: true };
     }),
-  hasOAuthOnlySites: protectedProcedure.query(async ({ ctx }) => {
-    // Check if user has any sites that use OAuth (no GitHub App installation repo link)
-    const sites = await ctx.db.site.findMany({
-      where: {
-        userId: ctx.session.user.id,
-        installationRepositoryId: null,
-        NOT: { ghRepository: null },
-      },
-      select: {
-        id: true,
-        projectName: true,
-        ghRepository: true,
-      },
-      orderBy: {
-        projectName: 'asc',
-      },
-    });
-
-    // Filter out any sites with null ghRepository and assert the type
-    return sites.filter(
-      (site): site is typeof site & { ghRepository: string } =>
-        site.ghRepository !== null,
-    );
-  }),
   getAccessTokens: protectedProcedure.query(async ({ ctx }) => {
     return await ctx.db.accessToken.findMany({
       where: {

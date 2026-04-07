@@ -474,7 +474,7 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
  * Handle repository events (renamed, transferred, etc.)
  */
 async function handleRepositoryEvent(data: WebhookPayload) {
-  const { action, repository, installation, changes } = data;
+  const { action, repository, installation } = data;
 
   if (!repository || !installation) {
     console.error('Repository event missing required data');
@@ -550,33 +550,23 @@ async function handleRepositoryEvent(data: WebhookPayload) {
         },
       );
 
-      // Fallback: update ghRepository on legacy sites that aren't linked via FK yet
-      const oldName = changes?.repository?.name?.from;
-      const oldFullName =
-        oldName && repository.owner?.login
-          ? `${repository.owner.login}/${oldName}`
-          : null;
-
-      let updatedLegacySites = { count: 0 };
-      if (oldFullName) {
-        updatedLegacySites = await prisma.site.updateMany({
-          where: {
-            installationRepositoryId: null,
-            ghRepository: oldFullName,
-          },
-          data: { ghRepository: newFullName },
-        });
-      }
+      // Keep ghRepository in sync on all sites connected to this repo via GitHub App.
+      // This ensures the "last known repo name" stays accurate for the lost-access warning.
+      const updatedSites = await prisma.site.updateMany({
+        where: {
+          installationRepository: { repositoryId },
+        },
+        data: { ghRepository: newFullName },
+      });
 
       log('Handle Repository Renamed Event', SeverityNumber.INFO, {
         source: 'github_app_repository',
         action: 'renamed',
         repository_id: repository.id,
-        old_full_name: oldFullName ?? undefined,
         new_full_name: newFullName,
         installation_id: installation.id,
         repos_updated: updatedRepos.count,
-        legacy_sites_updated: updatedLegacySites.count,
+        sites_updated: updatedSites.count,
       });
       break;
     }
@@ -624,24 +614,14 @@ async function handlePushEvent(data: WebhookPayload) {
       return;
     }
 
-    // Find matching sites by stable repository ID via installationRepository FK (preferred),
-    // with fallback to ghRepository string for legacy/non-backfilled sites.
     const sites = await prisma.site.findMany({
       where: {
         ghBranch: branch,
         autoSync: true,
-        OR: [
-          {
-            installationRepository: {
-              repositoryId: BigInt(repository.id),
-              installation: { installationId: ghInstallationId },
-            },
-          },
-          {
-            installationRepositoryId: null,
-            ghRepository: repository.full_name,
-          },
-        ],
+        installationRepository: {
+          repositoryId: BigInt(repository.id),
+          installation: { installationId: ghInstallationId },
+        },
       },
       select: {
         id: true,

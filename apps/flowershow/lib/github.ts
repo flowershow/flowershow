@@ -533,59 +533,6 @@ export const fetchGitHubRepoContributors = async ({
   }
 };
 
-export const createGitHubRepoWebhook = async ({
-  ghRepository,
-  accessToken,
-  installationId,
-  webhookUrl,
-}: {
-  ghRepository: string;
-  accessToken: string;
-  installationId?: string; // Database CUID from GitHubInstallation table
-  webhookUrl?: string;
-}) => {
-  // Use installation token if available, otherwise use OAuth token
-  const token = installationId
-    ? await getInstallationToken(installationId)
-    : accessToken;
-
-  // Note: If you're getting "Unprocessable entity" error from GitHub,
-  // there is a chance that the webhook with the same URL already exists.
-  return await githubJsonFetch<GitHubAPIWebhook>({
-    // https://docs.github.com/en/rest/repos/webhooks?apiVersion=2022-11-28#create-a-repository-webhook
-    url: `/repos/${ghRepository}/hooks`,
-    accessToken: token,
-    method: 'POST',
-    body: {
-      name: 'web',
-      active: true,
-      events: ['push'],
-      config: {
-        content_type: 'json',
-        url: webhookUrl,
-        secret: env.GH_WEBHOOK_SECRET,
-      },
-    },
-  });
-};
-
-export const deleteGitHubRepoWebhook = async ({
-  ghRepository,
-  webhook_id,
-  accessToken,
-}: {
-  ghRepository: string;
-  webhook_id: number;
-  accessToken: string;
-}) => {
-  return await githubFetch({
-    // https://docs.github.com/en/rest/repos/webhooks?apiVersion=2022-11-28#delete-a-repository-webhook
-    url: `/repos/${ghRepository}/hooks/${webhook_id}`,
-    accessToken: accessToken,
-    method: 'DELETE',
-  });
-};
-
 // export const getGitHubRepoTreeBlobs = async (tree: GitHubAPIRepoTree) => {
 //   return tree.tree
 //     .filter((file) => file.type === "blob") // only include blobs (files) not trees (folders)
@@ -716,13 +663,6 @@ interface GitHubAPIRepository {
     login: string;
   };
   stargazers_count: number;
-}
-
-interface GitHubAPIWebhook {
-  id: number;
-  active: boolean;
-  events: string[];
-  // ...
 }
 
 interface GitHubAPIIssue {
