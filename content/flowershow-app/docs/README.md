@@ -53,5 +53,6 @@ Three ways to publish:
 - [[cli|CLI reference]] — all CLI commands
 - [[syntax-mode|Syntax mode]] — Markdown vs MDX rendering
 - [[debug-mdx-errors|Debugging MDX errors]] — common errors and fixes
+- [[home-page|Home page]] — how Flowershow picks which file to show at `/`
 - [[debugging-404s|Debugging 404 pages]] — URL-to-file mapping and common fixes
 - [[faq|FAQ]]

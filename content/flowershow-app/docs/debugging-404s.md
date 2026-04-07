@@ -11,7 +11,7 @@ When someone visits `/blog/my-post`, Flowershow looks for:
 2. `/blog/my-post/README.md`
 3. `/blog/my-post/index.md`
 
-For your homepage (`/`), it looks for `/README.md` or `/index.md`.
+For your homepage (`/`), see [[home-page|Home page resolution]] for the full fallback order.
 
 If you've set a `rootDir` in site settings (e.g. `/docs`), all paths are resolved relative to that directory.
 
