@@ -1,6 +1,5 @@
 'use client';
 
-import { CheckCircleIcon } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -11,18 +10,16 @@ import { cn } from '@/lib/utils';
 import Modal from '@/providers/modal';
 import { api } from '@/trpc/react';
 
-type Step = 'connect' | 'select' | 'syncing' | 'success';
+type Step = 'connect' | 'select';
 
 interface GitHubSyncModalProps {
   siteId: string;
-  siteUrl: string;
   showModal: boolean;
   setShowModal: (show: boolean) => void;
 }
 
 export default function GitHubSyncModal({
   siteId,
-  siteUrl,
   showModal,
   setShowModal,
 }: GitHubSyncModalProps) {
@@ -79,27 +76,17 @@ export default function GitHubSyncModal({
   const { isPending: isConnecting, mutate: connectGitHub } =
     api.site.connectGitHub.useMutation({
       onSuccess: () => {
-        setStep('syncing');
+        toast.success(
+          'GitHub repository connected! Sync is running in the background.',
+        );
+        setShowModal(false);
+        router.push(`/site/${siteId}/settings?syncStarted=1`);
+        router.refresh();
       },
       onError: (error) => {
         toast.error(error.message || 'Failed to connect repository');
       },
     });
-
-  // Poll sync status while syncing
-  const { data: syncStatus } = api.site.getSyncStatus.useQuery(
-    { id: siteId },
-    {
-      enabled: step === 'syncing',
-      refetchInterval: 3000,
-    },
-  );
-
-  useEffect(() => {
-    if (step === 'syncing' && syncStatus?.status === 'SUCCESS') {
-      setStep('success');
-    }
-  }, [syncStatus, step]);
 
   const selectedInstallation = installations.find(
     (inst) => inst.accountLogin === data.selectedAccount,
@@ -167,11 +154,7 @@ export default function GitHubSyncModal({
   };
 
   const handleClose = () => {
-    if (isConnecting || step === 'syncing') return;
-    if (step === 'success') {
-      router.push(`/site/${siteId}/settings`);
-      router.refresh();
-    }
+    if (isConnecting) return;
     setShowModal(false);
     setTimeout(() => {
       setStep(installations.length > 0 ? 'select' : 'connect');
@@ -182,7 +165,7 @@ export default function GitHubSyncModal({
     <Modal
       showModal={showModal}
       setShowModal={handleClose}
-      closeOnClickOutside={!isConnecting && step !== 'syncing'}
+      closeOnClickOutside={!isConnecting}
     >
       <div className="w-full max-w-xl bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden">
         {/* Connect step - no installations yet */}
@@ -343,73 +326,6 @@ export default function GitHubSyncModal({
               </button>
             </div>
           </form>
-        )}
-
-        {/* Syncing step */}
-        {step === 'syncing' && (
-          <div className="p-5 md:p-10">
-            <h2 className="font-dashboard-heading text-2xl text-center">
-              Syncing your content
-            </h2>
-            <div className="py-8 text-center">
-              <svg
-                className="mx-auto h-10 w-10 animate-spin text-stone-600"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                />
-              </svg>
-              <p className="mt-3 text-sm text-stone-500">
-                Waiting for sync to complete...
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Success step */}
-        {step === 'success' && (
-          <>
-            <div className="p-5 md:p-10">
-              <div className="py-8 text-center">
-                <CheckCircleIcon className="mx-auto h-10 w-10 text-green-500" />
-                <p className="mt-3 text-sm font-medium text-stone-900">
-                  GitHub repository connected and synced!
-                </p>
-                <p className="mt-1 text-sm text-stone-500">
-                  Your site is ready to go.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 md:px-10 gap-3">
-              <a
-                href={siteUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="flex h-10 flex-1 items-center justify-center rounded-md border border-stone-300 bg-white px-4 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50"
-              >
-                View site
-              </a>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="flex h-10 flex-1 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black"
-              >
-                Go to site settings
-              </button>
-            </div>
-          </>
         )}
       </div>
     </Modal>

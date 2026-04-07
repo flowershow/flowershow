@@ -125,7 +125,6 @@ export default function WelcomeContent({
       />
       <GitHubSyncModal
         siteId={siteId}
-        siteUrl={siteUrl}
         showModal={activeModal === 'github'}
         setShowModal={(show) => setActiveModal(show ? 'github' : null)}
       />

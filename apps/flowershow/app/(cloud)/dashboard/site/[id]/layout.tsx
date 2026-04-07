@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { type ReactNode, Suspense } from 'react';
 import { SyncStatusProvider } from './sync-status-provider';
 
 export default async function SiteLayout(props: {
@@ -10,10 +10,12 @@ export default async function SiteLayout(props: {
   const { children } = props;
 
   return (
-    <SyncStatusProvider siteId={params.id}>
-      <div className="flex flex-col space-y-12 py-8">
-        <div className="flex flex-col space-y-6">{children}</div>
-      </div>
-    </SyncStatusProvider>
+    <Suspense>
+      <SyncStatusProvider siteId={params.id}>
+        <div className="flex flex-col space-y-12 py-8">
+          <div className="flex flex-col space-y-6">{children}</div>
+        </div>
+      </SyncStatusProvider>
+    </Suspense>
   );
 }

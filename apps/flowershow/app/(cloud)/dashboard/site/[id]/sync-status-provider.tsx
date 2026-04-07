@@ -1,10 +1,11 @@
 'use client';
 
+import { useSearchParams } from 'next/navigation';
 import {
   createContext,
-  Dispatch,
-  ReactNode,
-  SetStateAction,
+  type Dispatch,
+  type ReactNode,
+  type SetStateAction,
   useContext,
   useEffect,
   useState,
@@ -41,11 +42,14 @@ export function SyncStatusProvider({
   children: ReactNode;
   siteId: string;
 }) {
+  const searchParams = useSearchParams();
+  const syncJustStarted = searchParams.get('syncStarted') === '1';
+
   const [syncStatus, setSyncStatus] = useState<SyncStatus>({
-    status: 'LOADING',
+    status: syncJustStarted ? 'PENDING' : 'LOADING',
   });
 
-  const { data, isLoading, refetch } = api.site.getSyncStatus.useQuery(
+  const { data } = api.site.getSyncStatus.useQuery(
     { id: siteId },
     {
       refetchInterval: 10 * 1000,
@@ -55,9 +59,15 @@ export function SyncStatusProvider({
 
   useEffect(() => {
     if (data) {
+      // If sync was just triggered, show PENDING until the API returns something
+      // other than UNPUBLISHED (blobs haven't been created yet)
+      if (syncJustStarted && data.status === 'UNPUBLISHED') {
+        setSyncStatus({ status: 'PENDING' });
+        return;
+      }
       setSyncStatus(data);
     }
-  }, [data]);
+  }, [data, syncJustStarted]);
 
   const setSyncTriggered = () => {
     setSyncStatus((prev) => ({ ...prev, status: 'PENDING' }));
