@@ -205,25 +205,24 @@ It means you can always use components without having to rename files or remembe
 
 But here’s the good news:
 
-If you’re writing simple Markdown (like a blog or notes), and MDX feels extra or confusing, you can tell Flowershow to **skip MDX entirely** and treat everything as plain Markdown.
+If you’re writing simple Markdown (like a blog or notes), and MDX feels extra or confusing, you can disable MDX in two ways:
 
-Just update your `config.json`:
-```json
-{
-  "markdownRenderer": "md"
-}
+**Option 1 — Per page**, add `syntaxMode: md` to the frontmatter:
+
+```md
+---
+title: My Page
+syntaxMode: md
+---
 ```
+
+**Option 2 — Globally**, change the default rendering mode in your site settings in the Flowershow Cloud dashboard.
 
 Now your site behaves just like a classic Markdown blog — no MDX parsing, no JSX rules, no angle bracket surprises.
 
 **Want the best of both worlds?**
 
-If you _sometimes_ want MDX but also want regular `.md` files to stay simple, use:
-```json
-{
-  "markdownRenderer": "auto"
-}
-```
+If you _sometimes_ want MDX but also want regular `.md` files to stay simple, set the global mode to `auto` in your site settings or use `syntaxMode: auto` per page.
 
 This means `.md` files will be parsed as plain Markdown, but `.mdx` files will be parsed as MDX. So you can choose per file, naturally.
 
