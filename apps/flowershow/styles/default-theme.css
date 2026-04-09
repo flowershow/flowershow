@@ -300,7 +300,7 @@
     font-size: var(--font-size-sm);
     line-height: var(--line-height-normal);
     white-space: nowrap;
-    color: var(--color-foreground-200);
+    color: var(--color-foreground);
 
     &:hover {
       background: var(--color-background-100, #f5f5f5);
