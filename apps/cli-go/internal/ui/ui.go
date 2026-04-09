@@ -127,11 +127,10 @@ type SyncResult struct {
 	Errors  []api.BlobStatus
 }
 
-// WaitForSync polls for site processing completion and shows a progress bar.
+// WaitForSync polls for site processing completion and shows an inline status line.
 func WaitForSync(siteID string, maxWaitSeconds int) SyncResult {
 	deadline := time.Now().Add(time.Duration(maxWaitSeconds) * time.Second)
-
-	var bar *progressbar.ProgressBar
+	started := false
 
 	for time.Now().Before(deadline) {
 		status, err := api.GetSiteStatus(siteID)
@@ -142,8 +141,8 @@ func WaitForSync(siteID string, maxWaitSeconds int) SyncResult {
 
 		blobs := status.Blobs
 		if len(blobs) == 0 {
-			if bar != nil {
-				bar.Finish()
+			if started {
+				fmt.Fprintln(os.Stderr)
 			}
 			return SyncResult{Success: true}
 		}
@@ -160,13 +159,13 @@ func WaitForSync(siteID string, maxWaitSeconds int) SyncResult {
 			}
 		}
 
-		if bar == nil {
-			bar = NewProgressBar(len(blobs), "Processing")
-		}
-		bar.Set(len(succeeded) + len(errored))
+		done := len(succeeded) + len(errored)
+		total := len(blobs)
+		fmt.Fprintf(os.Stderr, "\r%s Processing... %d/%d files", cyan("⣾"), done, total)
+		started = true
 
 		if len(pending) == 0 {
-			bar.Finish()
+			fmt.Fprintln(os.Stderr)
 			if len(errored) > 0 {
 				fmt.Printf("\n%s %d file(s) had errors:\n", yellow("⚠️"), len(errored))
 				for _, b := range errored {
@@ -185,8 +184,8 @@ func WaitForSync(siteID string, maxWaitSeconds int) SyncResult {
 		time.Sleep(500 * time.Millisecond)
 	}
 
-	if bar != nil {
-		bar.Finish()
+	if started {
+		fmt.Fprintln(os.Stderr)
 	}
 
 	// Timeout - get final status
