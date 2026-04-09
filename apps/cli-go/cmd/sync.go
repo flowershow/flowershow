@@ -155,22 +155,20 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 			fileByPath[discovered[i].Path] = &discovered[i]
 		}
 
-		bar := ui.NewProgressBar(len(allToUpload), "Uploading")
+		total := len(allToUpload)
 		var failedUploads []string
-		for _, uploadInfo := range allToUpload {
+		for i, uploadInfo := range allToUpload {
+			ui.PrintProgress("Uploading", i+1, total)
 			f := fileByPath[uploadInfo.Path]
 			if f == nil {
 				failedUploads = append(failedUploads, uploadInfo.Path+" (not found locally)")
-				bar.Add(1)
 				continue
 			}
 			if err := api.UploadToR2(uploadInfo.UploadURL, f.Content, uploadInfo.ContentType); err != nil {
 				failedUploads = append(failedUploads, uploadInfo.Path+": "+err.Error())
 			}
-			bar.Add(1)
 		}
-		bar.Finish()
-		fmt.Println()
+		ui.PrintProgressDone()
 
 		if len(failedUploads) > 0 {
 			fmt.Printf("%s %d file(s) failed to upload\n", ui.Yellow("⚠️"), len(failedUploads))

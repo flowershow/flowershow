@@ -7,7 +7,6 @@ require (
 	github.com/fatih/color v1.17.0
 	github.com/google/uuid v1.6.0
 	github.com/posthog/posthog-go v1.2.24
-	github.com/schollz/progressbar/v3 v3.14.4
 	github.com/spf13/cobra v1.8.1
 )
 

@@ -10,7 +10,6 @@ import (
 	"github.com/briandowns/spinner"
 	"github.com/fatih/color"
 	"github.com/flowershow/publish/internal/api"
-	"github.com/schollz/progressbar/v3"
 )
 
 var (
@@ -58,20 +57,15 @@ func (sp *Spinner) Stop() {
 	sp.s.Stop()
 }
 
-// NewProgressBar creates a progress bar with the Flowershow style.
-func NewProgressBar(total int, description string) *progressbar.ProgressBar {
-	return progressbar.NewOptions(total,
-		progressbar.OptionSetWriter(os.Stdout),
-		progressbar.OptionShowCount(),
-		progressbar.OptionSetDescription(description),
-		progressbar.OptionSetTheme(progressbar.Theme{
-			Saucer:        color.CyanString("█"),
-			SaucerPadding: "░",
-			BarStart:      "|",
-			BarEnd:        "|",
-		}),
-		progressbar.OptionClearOnFinish(),
-	)
+// PrintProgress prints an in-place progress line using \r.
+// Call PrintProgressDone when finished to move to the next line.
+func PrintProgress(description string, done, total int) {
+	fmt.Fprintf(os.Stderr, "\r%s %s... %d/%d files", cyan("⣾"), description, done, total)
+}
+
+// PrintProgressDone ends an in-place progress line.
+func PrintProgressDone() {
+	fmt.Fprintln(os.Stderr)
 }
 
 // PrintError prints a formatted error message.
