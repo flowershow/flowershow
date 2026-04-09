@@ -1,0 +1,35 @@
+version: 2
+
+project_name: publish
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - binary: publish
+    main: .
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=0
+    ldflags:
+      - -s -w -X github.com/flowershow/publish/internal/config.Version={{ .Env.CLI_VERSION }}
+
+archives:
+  - formats: [tar.gz]
+    format_overrides:
+      - goos: windows
+        formats: [zip]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: checksums.txt
+
+release:
+  name_template: "{{.Tag}}"
