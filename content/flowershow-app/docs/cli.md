@@ -13,7 +13,7 @@ The Flowershow CLI allows you to publish your Markdown files and folders to Flow
 Install the CLI globally using npm:
 
 ```bash
-npm i -g flowershow-publish
+npm i -g @flowershow/publish
 ```
 
 ## Authentication
