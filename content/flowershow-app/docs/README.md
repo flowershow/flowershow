@@ -50,7 +50,7 @@ Three ways to publish:
 
 ## Reference
 
-- [[cli|CLI reference]] — all CLI commands
+- [[docs/cli|CLI reference]] — all CLI commands
 - [[syntax-mode|Syntax mode]] — Markdown vs MDX rendering
 - [[debug-mdx-errors|Debugging MDX errors]] — common errors and fixes
 - [[home-page|Home page]] — how Flowershow picks which file to show at `/`
