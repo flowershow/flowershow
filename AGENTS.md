@@ -97,3 +97,34 @@ Many packages and apps have their own `README.md` that documents public-facing b
 3. If it does, update it to reflect your changes.
 
 This applies to any user-visible change: adding/removing tools, renaming commands, changing defaults, altering API surface, etc.
+
+## Changelog and Docs Pages
+
+For any user-facing change — new features, updated behavior, or bug fixes that affect what users can do — you MUST create a changelog entry. If the change introduces or meaningfully updates a feature that users need to understand or configure, also create or update a docs page.
+
+### Changelog entry
+
+Create a file in `content/flowershow-app/changelog/` named `YYYY-MM-DD-short-slug.md`:
+
+```markdown
+---
+title: Short title of the change
+date: YYYY-MM-DD
+description: One-sentence summary shown in the changelog list.
+authors:
+  - olayway
+showToc: false
+---
+
+Keep it short — what changed and why it matters to users. If a docs page exists, link to it rather than repeating the details: [[docs-page-slug|Docs page title]].
+```
+
+### Docs page
+
+If the change introduces a feature users need to understand or configure, create `content/flowershow-app/docs/<feature-slug>.md`. Follow the style of existing pages in that directory: frontmatter with `title` and `description`, then concise prose with practical examples.
+
+**What counts as user-facing:**
+- New configuration options or file conventions (e.g. `robots.txt`, `config.json` fields)
+- New or changed UI behavior
+- New CLI commands or flags
+- Bug fixes that change previously broken or surprising behavior users may have worked around
