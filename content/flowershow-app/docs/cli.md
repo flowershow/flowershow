@@ -26,8 +26,7 @@ This automatically detects your OS and architecture, downloads the correct binar
 
 **Windows** — download `fl_windows_amd64.zip` from the [GitHub Releases](https://github.com/flowershow/flowershow/releases) page and add the extracted binary to your `PATH`.
 
-<details>
-<summary>Manual installation</summary>
+### Manual installation
 
 **macOS (Apple Silicon)**
 

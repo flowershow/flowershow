@@ -102,14 +102,26 @@ export default function CliPublishModal({
                   <h3 className="text-sm font-semibold text-stone-900">
                     Step 1: Install the CLI
                   </h3>
-                  <CopyableCommand command="npm install -g @flowershow/publish@latest" />
+                  <CopyableCommand command="curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh" />
+                  <p className="mt-2 text-xs text-stone-500">
+                    macOS / Linux only. Windows: download from the{' '}
+                    <a
+                      href="https://github.com/flowershow/flowershow/releases"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline"
+                    >
+                      releases page
+                    </a>
+                    .
+                  </p>
                 </div>
 
                 <div className="rounded-lg border border-stone-200 p-4">
                   <h3 className="text-sm font-semibold text-stone-900">
                     Step 2: Authenticate
                   </h3>
-                  <CopyableCommand command="publish auth login" />
+                  <CopyableCommand command="fl login" />
                   <p className="mt-2 text-xs text-stone-500">
                     This will open your browser to authorize the CLI.
                   </p>
@@ -120,7 +132,7 @@ export default function CliPublishModal({
                     Step 3: Publish your content
                   </h3>
                   <CopyableCommand
-                    command={`publish sync ./my-content --name ${siteName}`}
+                    command={`fl sync ./my-content --name ${siteName}`}
                   />
                   <p className="mt-2 text-xs text-stone-500">
                     <strong>

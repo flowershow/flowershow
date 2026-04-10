@@ -1,13 +1,13 @@
 # Flowershow Platform Architecture
 
-Flowershow is a multitenant platform that turns markdown into published websites. Users can publish content via three channels: connecting a GitHub repository, using the CLI (`@flowershow/publish`), or publishing directly from Obsidian via the Flowershow plugin.
+Flowershow is a multitenant platform that turns markdown into published websites. Users can publish content via three channels: connecting a GitHub repository, using the CLI (`fl`), or publishing directly from Obsidian via the Flowershow plugin.
 
 The platform consists of four codebases:
 
 | Component             | Location                         | Stack                             |
 | --------------------- | -------------------------------- | --------------------------------- |
 | **Web App**           | This repo                        | Next.js 15, Prisma, tRPC, Inngest |
-| **CLI**               | `flowershow/cli`                 | TypeScript, Commander.js          |
+| **CLI**               | `flowershow/cli`                 | Go                                |
 | **Cloudflare Worker** | `flowershow/cloudflare-worker`   | Cloudflare Workers, Queues        |
 | **Obsidian Plugin**   | `flowershow/obsidian-flowershow` | TypeScript, React, MUI            |
 
@@ -130,9 +130,9 @@ This is the primary flow for users who connect a GitHub repo to their site.
 
 **Legacy flow**: An older OAuth-based webhook at `POST /api/webhook` also exists for sites not yet migrated to the GitHub App. Same Inngest sync, but uses user OAuth tokens instead of installation tokens.
 
-### Flow 2: CLI (`@flowershow/publish`)
+### Flow 2: CLI (`fl`)
 
-The CLI is an npm package (`publish` binary). Repo: `../cli/`.
+The CLI is a Go binary (`fl`). Repo: `../cli/`.
 
 **Auth**: Uses OAuth 2.0 Device Authorization Grant (RFC 8628):
 
@@ -141,7 +141,7 @@ The CLI is an npm package (`publish` binary). Repo: `../cli/`.
 3. CLI polls `POST /api/cli/device/token` until authorized → receives `fs_cli_*` token.
 4. Token stored at `~/.flowershow/token.json`.
 
-**Initial publish** (`publish <path>`):
+**Initial publish** (`fl <path>`):
 
 1. CLI discovers files (respects `.gitignore`), calculates SHA-1 hashes.
 2. Calls `POST /api/sites` to create the site.
@@ -150,14 +150,14 @@ The CLI is an npm package (`publish` binary). Repo: `../cli/`.
 5. CLI uploads each file directly to R2 via presigned PUT URLs.
 6. CLI polls `GET /api/sites/id/{siteId}/status` until all blobs reach SUCCESS status.
 
-**Incremental sync** (`publish sync <path>`):
+**Incremental sync** (`fl sync <path>`):
 
 - Same flow but the server diffs SHA hashes to determine which files are new, changed, unchanged, or deleted. Only new/changed files get upload URLs. Deletions are handled server-side.
 - Supports `--dry-run` to preview changes without applying them.
 
 **Limits**: Max 100MB per file, 500MB per request, 1000 files per request.
 
-**Commands**: `publish auth login|logout|status`, `publish <path>`, `publish sync <path>`, `publish list`, `publish delete <name>`.
+**Commands**: `fl login|logout|whoami`, `fl <path>`, `fl sync <path>`, `fl list`, `fl delete <name>`.
 
 ### Flow 3: Obsidian Plugin
 
