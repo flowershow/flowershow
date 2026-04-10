@@ -2,7 +2,9 @@
   "title": "Flowershow — Publish Markdown as a Website",
   "showSidebar": true,
   "sidebar": {
-    "paths": ["/docs"]
+    "paths": [
+      "/docs"
+    ]
   },
   "nav": {
     "title": "Flowershow",
@@ -196,6 +198,10 @@
     {
       "from": "/docs/site-config",
       "to": "/docs/config"
+    },
+    {
+      "from": "/publish",
+      "to": "/cli"
     }
   ]
 }
