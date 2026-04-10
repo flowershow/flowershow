@@ -2,6 +2,19 @@
 
 import { Command } from 'commander';
 import chalk from 'chalk';
+
+console.error(
+  chalk.yellow('\n⚠️  DEPRECATION NOTICE') +
+  chalk.reset(': The ') +
+  chalk.bold('@flowershow/publish') +
+  chalk.reset(' npm package is deprecated and will no longer receive updates.\n') +
+  chalk.reset('   Please switch to the new Go CLI ') +
+  chalk.bold('fl') +
+  chalk.reset(': ') +
+  chalk.cyan('https://flowershow.app/docs/cli') +
+  chalk.reset('\n') +
+  chalk.dim('   To uninstall: npm uninstall -g @flowershow/publish\n'),
+);
 import { publishCommand } from './lib/commands/publish.js';
 import { syncCommand } from './lib/commands/sync.js';
 import { listCommand } from './lib/commands/list.js';
