@@ -15,6 +15,7 @@ export const authOptions: NextAuthOptions = {
     GitHubProvider({
       clientId: env.NEXT_PUBLIC_AUTH_GITHUB_ID as string,
       clientSecret: env.AUTH_GITHUB_SECRET as string,
+      issuer: 'https://github.com/login/oauth',
       // this will be passed to signIn callback as user
       // important: the object returned will be used by prisma adapter to create the user
       // so it should include required data
