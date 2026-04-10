@@ -32,7 +32,7 @@ export const authOptions: NextAuthOptions = {
       authorization: {
         params: {
           // Removed 'repo' scope - GitHub App will handle repository access
-          scope: 'read:user user:email read:org',
+          scope: 'read:user user:email',
         },
       },
     }),
