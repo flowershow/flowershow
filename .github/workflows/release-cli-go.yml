@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: "1.22"
-          cache-dependency-path: apps/cli-go/go.sum
+          cache-dependency-path: apps/cli/go.sum
 
       - name: Extract version
         id: version
@@ -39,7 +39,7 @@ jobs:
         with:
           version: latest
           args: release --clean --skip=validate
-          workdir: apps/cli-go
+          workdir: apps/cli
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ github.ref_name }}

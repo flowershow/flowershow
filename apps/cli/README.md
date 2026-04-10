@@ -1,18 +1,36 @@
-# Flowershow Publish
+# Flowershow CLI (`fl`)
 
 The CLI tool for publishing Markdown files with Flowershow.
 
 ## Installation
 
+Download the latest binary for your platform from the [GitHub Releases](https://github.com/flowershow/flowershow/releases) page and place it on your `PATH`.
+
+**macOS (Apple Silicon)**
 ```bash
-npm install -g @flowershow/publish@latest
+curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_darwin_arm64.tar.gz | tar xz
+sudo mv fl /usr/local/bin/
 ```
 
-Then use the `publish` command anywhere:
+**macOS (Intel)**
+```bash
+curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_darwin_amd64.tar.gz | tar xz
+sudo mv fl /usr/local/bin/
+```
+
+**Linux (amd64)**
+```bash
+curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_linux_amd64.tar.gz | tar xz
+sudo mv fl /usr/local/bin/
+```
+
+**Windows** — download `fl_windows_amd64.zip` from the Releases page and add the extracted binary to your `PATH`.
+
+Then use the `fl` command anywhere:
 
 ```bash
-publish auth login
-publish ./my-notes
+fl login
+fl ./my-notes
 ```
 
 ## Quick Start
@@ -22,7 +40,7 @@ publish ./my-notes
 Before using any commands, you must authenticate:
 
 ```bash
-publish auth login
+fl login
 ```
 
 This will:
@@ -35,55 +53,53 @@ This will:
 
 ```bash
 # Publish a folder
-publish ./my-notes
+fl ./my-notes
 
 # Publish a single file
-publish ./my-note.md
+fl ./my-note.md
 ```
 
 ### 3. Sync after changes
 
 ```bash
 # Sync a folder site
-publish sync ./my-notes
+fl sync ./my-notes
 
 # Sync a single file site
-publish sync ./my-note.md
+fl sync ./my-note.md
 ```
 
 ## Commands
 
 ### Authentication
 
-#### `publish auth login`
+#### `fl login`
 
 Authenticate with Flowershow via browser OAuth flow.
 
 ```bash
-publish auth login
+fl login
 ```
 
-#### `publish auth status`
+#### `fl whoami`
 
-Check your current authentication status.
+Show the currently authenticated user.
 
 ```bash
-publish auth status
+fl whoami
 ```
 
-#### `publish auth logout`
+#### `fl logout`
 
 Remove your stored authentication token.
 
 ```bash
-publish auth logout
+fl logout
 ```
-
-See [Authentication Documentation](docs/authentication.md) for detailed information.
 
 ### Publishing
 
-#### `publish <path> [morePaths...] [options]`
+#### `fl <path> [morePaths...] [options]`
 
 Publish files or folders to Flowershow.
 
@@ -96,22 +112,22 @@ Publish files or folders to Flowershow.
 
 ```bash
 # Publish a single markdown file
-publish ./my-note.md
+fl ./my-note.md
 
 # Publish multiple files
-publish ./intro.md ./chapter1.md ./chapter2.md
+fl ./intro.md ./chapter1.md ./chapter2.md
 
 # Publish a folder
-publish ./my-notes
+fl ./my-notes
 
 # Overwrite an existing site
-publish --overwrite ./my-notes
+fl --overwrite ./my-notes
 
 # Publish with a custom site name
-publish --name my-custom-site ./my-notes
+fl --name my-custom-site ./my-notes
 
 # Combine options
-publish --name my-custom-site --overwrite ./my-notes
+fl --name my-custom-site --overwrite ./my-notes
 ```
 
 **What happens:**
@@ -126,21 +142,21 @@ publish --name my-custom-site --overwrite ./my-notes
 
 **Single file behavior:**
 
-- Filename becomes the project name (e.g. `publish about.md` will create a site named `about`)
+- Filename becomes the project name (e.g. `fl about.md` will create a site named `about`)
 - File keeps its original name
 - Site accessible at `/@{username}/{filename}` (e.g. `/@johndoe/about`)
 
 **Multiple files behavior:**
 
-- First filename becomes the project name (e.g. `publish about.md team.md abc.md` will create a site named `about`)
+- First filename becomes the project name (e.g. `fl about.md team.md abc.md` will create a site named `about`)
 - Site accessible at `/@{username}/{first-filename}` (e.g. `/@johndoe/about`)
 
 **Folder behavior:**
 
-- Folder name becomes the project name (e.g. `publish my-digital-garden/blog` will create a site named `blog`)
+- Folder name becomes the project name (e.g. `fl my-digital-garden/blog` will create a site named `blog`)
 - Site accessible at `/@{username}/{foldername}` (e.g. `/@johndoe/blog`)
 
-#### `publish sync <path> [options]`
+#### `fl sync <path> [options]`
 
 Sync changes to an existing published site. Only uploads new or modified files, and deletes files that no longer exist locally.
 
@@ -154,19 +170,19 @@ Sync changes to an existing published site. Only uploads new or modified files, 
 
 ```bash
 # Sync changes to a folder
-publish sync ./my-notes
+fl sync ./my-notes
 
 # Preview changes without syncing
-publish sync --dry-run ./my-notes
+fl sync --dry-run ./my-notes
 
 # Show detailed file lists including unchanged files
-publish sync --verbose ./my-notes
+fl sync --verbose ./my-notes
 
 # Sync to a specific site name
-publish sync --name my-custom-site ./my-notes
+fl sync --name my-custom-site ./my-notes
 
 # Combine options
-publish sync --dry-run --verbose ./my-notes
+fl sync --dry-run --verbose ./my-notes
 ```
 
 **What happens:**
@@ -186,27 +202,27 @@ publish sync --dry-run --verbose ./my-notes
 
 **When to use sync vs publish:**
 
-- **Use `publish`** for initial site creation or complete site replacement
-- **Use `sync`** for updates to existing sites
+- **Use `fl`** for initial site creation or complete site replacement
+- **Use `fl sync`** for updates to existing sites
 
 ### Site Management
 
-#### `publish list`
+#### `fl list`
 
 List all sites published by your authenticated user.
 
 ```bash
-publish list
+fl list
 ```
 
 Shows site names, URLs, and timestamps.
 
-#### `publish delete <project-name>`
+#### `fl delete <project-name>`
 
 Delete a site and all its files.
 
 ```bash
-publish delete my-notes
+fl delete my-notes
 ```
 
 Removes the site and all its files via the Flowershow API.
@@ -220,7 +236,7 @@ The CLI automatically ignores common non-content files and directories:
 - `.env*`, `*.log`
 - `.next/`, `.vercel/`, `.turbo/`
 
-If `.gitignore` file is present in the published folder, the Flowershow CLI will also ignore files matched by it.
+If a `.gitignore` file is present in the published folder, the Flowershow CLI will also ignore files matched by it.
 
 ## Telemetry
 
@@ -246,32 +262,32 @@ Where `{username}` is your authenticated username.
 
 ### "You must be authenticated to use this command"
 
-Run `publish auth login` to authenticate.
+Run `fl login` to authenticate.
 
 ### "Authentication token is invalid or expired"
 
 Your token may have been revoked. Re-authenticate:
 
 ```bash
-publish auth login
+fl login
 ```
 
 ### "Site already exists"
 
 A site with that name already exists. You can:
 
-- Use the `--overwrite` flag: `publish --overwrite <path>`
-- Delete it first: `publish delete <name>`
+- Use the `--overwrite` flag: `fl --overwrite <path>`
+- Delete it first: `fl delete <name>`
 - Rename your file/folder
-- Use `publish list` to see all existing sites
-- **Or use `publish sync`** to update an existing site incrementally
+- Use `fl list` to see all existing sites
+- **Or use `fl sync`** to update an existing site incrementally
 
 ### "Site not found" (when using sync)
 
 The sync command requires the site to already exist. If you get this error:
 
-- Use `publish` to create the site first
-- Check the site name with `publish list`
+- Use `fl` to create the site first
+- Check the site name with `fl list`
 - Specify the correct site name with `--name`
 
 ### Files still processing after timeout
@@ -292,7 +308,7 @@ All CLI commands communicate with the Flowershow API:
 - **Token Storage**: Authentication tokens are stored in `~/.flowershow/token.json`
 - **Token Format**: CLI tokens use the `fs_cli_` prefix
 - **Token Expiration**: Tokens do not expire by default
-- **Token Revocation**: Revoke tokens from the [Flowershow dashboard](https://cloud.flowershow.app/tokens) or via `publish auth logout`
+- **Token Revocation**: Revoke tokens from the [Flowershow dashboard](https://cloud.flowershow.app/tokens) or via `fl logout`
 - **Secure Uploads**: Files are uploaded using time-limited presigned URLs
 - **No Credentials**: CLI never stores database or storage credentials
 
@@ -300,39 +316,37 @@ All CLI commands communicate with the Flowershow API:
 
 ### Setup
 
-1. **Clone and install dependencies:**
+1. **Clone the repository and navigate to the CLI directory:**
 
 ```bash
-cd cli
-pnpm install
+cd apps/cli
 ```
 
-2. **Configure environment:**
-
-Use local or other non-production API and publish URLs.
+2. **Install dependencies:**
 
 ```bash
-cp .env.example .env
+go mod tidy
 ```
 
+3. **Configure environment** (optional — for using a local or non-production API):
+
 ```bash
-API_URL="http://cloud.localhost:3000"
-APP_URL="http://my.localhost:3000"
-POSTHOG_API_KEY=abc
+export API_URL="http://cloud.localhost:3000"
+export POSTHOG_API_KEY=abc
 ```
 
-3. **Run commands:**
+4. **Run commands directly:**
 
 ```bash
-pnpm dev auth login
-pnpm dev ./my-notes
-pnpm dev sync ./my-notes
+go run . login
+go run . ./my-notes
+go run . sync ./my-notes
 ```
 
-You can also build the project, link it globally and use it as you normally would the npm-installed version:
+5. **Build and install globally:**
 
 ```bash
-pnpm build
-npm link
-publish ...
+go build -o fl .
+# Move to a directory on your PATH, e.g.:
+mv fl /usr/local/bin/fl
 ```

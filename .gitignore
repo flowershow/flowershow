@@ -9,7 +9,6 @@ node_modules/
 
 # build outputs
 dist/
-apps/cli-go/publish
 .next/
 out/
 build/
