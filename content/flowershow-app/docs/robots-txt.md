@@ -9,7 +9,7 @@ By default, Flowershow serves an auto-generated `robots.txt` that allows all cra
 
 Add a `robots.txt` file to the root of your content (or your configured `rootDir`) and publish your site. Flowershow will automatically serve it at `yourdomain.com/robots.txt`.
 
-**Example `robots.txt`:**
+For example, to block AI crawlers from training on your content:
 
 ```
 User-agent: *
@@ -18,7 +18,19 @@ Allow: /
 User-agent: GPTBot
 Disallow: /
 
-Sitemap: https://yourdomain.com/sitemap.xml
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+```
+
+Or to keep a section of your site out of search engine indexes:
+
+```
+User-agent: *
+Allow: /
+Disallow: /private/
 ```
 
 ## Default behavior
