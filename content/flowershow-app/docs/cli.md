@@ -56,8 +56,6 @@ curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_lin
 sudo mv fl /usr/local/bin/
 ```
 
-</details>
-
 ## Authentication
 
 Before you can publish, you need to authenticate with your Flowershow account.
