@@ -365,6 +365,9 @@ export default async function SitePage(props: {
     : undefined;
 
   const showEditLink = metadata?.showEditLink ?? siteConfig?.showEditLink;
+  const normalizedRootDir = site?.rootDir
+    ? `${site.rootDir.replace(/^(.?\/)+|\/+$/g, '')}/`
+    : '';
   const showPageComments =
     site.enableComments &&
     (metadata?.showComments ?? siteConfig?.showComments ?? site.enableComments);
@@ -455,7 +458,7 @@ export default async function SitePage(props: {
           {showEditLink && (
             <div className="page-edit-button-container">
               <Link
-                href={`https://github.com/${site?.ghRepository}/edit/${site?.ghBranch}/${blob.path}`}
+                href={`https://github.com/${site?.ghRepository}/edit/${site?.ghBranch}/${normalizedRootDir}${blob.path}`}
                 className="page-edit-button"
                 target="_blank"
               >
