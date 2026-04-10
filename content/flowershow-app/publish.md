@@ -42,8 +42,8 @@ showEditLink: false
             Install
           </dt>
           <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-            <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">npm i -g @flowershow/publish</div>
-            <p className="mt-4">Get the global binary. Requires Node.js</p>
+            <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">curl -L .../fl_darwin_arm64.tar.gz | tar xz && sudo mv fl /usr/local/bin/</div>
+            <p className="mt-4">Download the binary for your platform from the <a href="https://github.com/flowershow/flowershow/releases">releases page</a>. No runtime required.</p>
           </dd>
         </div>
         <div>
@@ -52,7 +52,7 @@ showEditLink: false
             Login
           </dt>
           <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-            <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">publish auth login</div>
+            <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">fl login</div>
             <p className="mt-4">Authenticates via browser. You only do this once.</p>
           </dd>
         </div>
@@ -63,9 +63,9 @@ showEditLink: false
           </dt>
           <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
             <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">
-              publish ./my-folder<br/>
+              fl ./my-folder<br/>
               <span className="text-gray-500"># OR</span><br/>
-              <span className="text-gray-500"># publish ./my-file.md</span>
+              <span className="text-gray-500"># fl ./my-file.md</span>
             </div>
             <p className="mt-4">Publish your files and folders to the web.</p>
           </dd>
@@ -77,7 +77,7 @@ showEditLink: false
           </dt>
           <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
             <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">
-              publish sync ./my-folder
+              fl sync ./my-folder
             </div>
             <p className="mt-4">We diff your files and upload only what changed.</p>
           </dd>
@@ -136,7 +136,7 @@ showEditLink: false
             Stay in Flow
           </dt>
           <dd className="mt-2 text-base leading-7 text-gray-600">
-            Don't break your writing flow to switch to a browser. Write in your editor -> run `publish` -> share URL -> keep going.
+            Don't break your writing flow to switch to a browser. Write in your editor -> run `fl` -> share URL -> keep going.
           </dd>
         </div>
       </dl>

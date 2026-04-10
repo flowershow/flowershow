@@ -9,7 +9,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:     "publish",
+	Use:     "fl",
 	Short:   "CLI tool for publishing to Flowershow",
 	Version: config.Version,
 	// Args and RunE are set in publish.go via init()

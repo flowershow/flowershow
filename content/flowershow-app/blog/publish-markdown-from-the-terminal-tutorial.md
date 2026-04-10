@@ -13,32 +13,39 @@ By the end you'll know how to publish files, push updates incrementally, preview
 
 ## What you need
 
-- [Node.js](https://nodejs.org) v20 or later
 - A Flowershow account (sign up for free at [flowershow.app](https://flowershow.app))
 - Some Markdown files you want to publish
-
-Check your Node version first:
-
-```bash
-node --version
-```
-
-If it's below v20, update it before continuing.
 
 ---
 
 ## 1. Install the CLI
 
-Install the `@flowershow/publish` package globally so the `publish` command is available anywhere on your system:
+Download the `fl` binary for your platform from the [releases page](https://github.com/flowershow/flowershow/releases).
 
+**macOS (Apple Silicon)**
 ```bash
-npm i -g @flowershow/publish
+curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_darwin_arm64.tar.gz | tar xz
+sudo mv fl /usr/local/bin/
 ```
+
+**macOS (Intel)**
+```bash
+curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_darwin_amd64.tar.gz | tar xz
+sudo mv fl /usr/local/bin/
+```
+
+**Linux (amd64)**
+```bash
+curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_linux_amd64.tar.gz | tar xz
+sudo mv fl /usr/local/bin/
+```
+
+**Windows** — download `fl_windows_amd64.zip` from the Releases page and add the extracted binary to your `PATH`.
 
 Verify it worked:
 
 ```bash
-publish --version
+fl --version
 ```
 
 ---
@@ -48,13 +55,13 @@ publish --version
 Authenticate with your Flowershow account. This uses a browser-based device flow — the CLI will print a URL and a short code, you visit the URL, enter the code, and you're done.
 
 ```bash
-publish auth login
+fl login
 ```
 
 Your token is saved to `~/.flowershow/token.json`, so you only need to do this once. To check you're logged in at any point:
 
 ```bash
-publish auth status
+fl whoami
 ```
 
 ---
@@ -66,7 +73,7 @@ publish auth status
 The most common case: a folder of Markdown files.
 
 ```bash
-publish ./my-notes
+fl ./my-notes
 ```
 
 The CLI will:
@@ -81,7 +88,7 @@ The CLI will:
 You can also publish just one file:
 
 ```bash
-publish ./intro.md
+fl ./intro.md
 ```
 
 The site will be named after the file (`intro`).
@@ -91,17 +98,17 @@ The site will be named after the file (`intro`).
 If you don't want the site named after your folder, use `--name`:
 
 ```bash
-publish --name project-docs ./my-notes
+fl --name project-docs ./my-notes
 ```
 
 Remember the name you used — you'll need it when syncing.
 
 ### Overwriting an existing site
 
-If you run `publish` on a folder that already has a site, you'll get an error. Use `--overwrite` to replace it:
+If you run `fl` on a folder that already has a site, you'll get an error. Use `--overwrite` to replace it:
 
 ```bash
-publish --overwrite ./my-notes
+fl --overwrite ./my-notes
 ```
 
 > **Tip:** `--overwrite` re-uploads everything. If you're just pushing edits, `sync` (covered next) is much faster.
@@ -113,13 +120,13 @@ publish --overwrite ./my-notes
 Once your site is published, use `sync` to push updates. It compares your local files against what's on the server using SHA-1 hashes and uploads only what changed.
 
 ```bash
-publish sync ./my-notes
+fl sync ./my-notes
 ```
 
 If you used a custom name when publishing:
 
 ```bash
-publish sync --name project-docs ./my-notes
+fl sync --name project-docs ./my-notes
 ```
 
 ### Preview before syncing
@@ -127,7 +134,7 @@ publish sync --name project-docs ./my-notes
 Not sure what changed? Use `--dry-run` to see the plan without touching anything:
 
 ```bash
-publish sync --dry-run ./my-notes
+fl sync --dry-run ./my-notes
 ```
 
 You'll see which files would be uploaded, updated, or deleted.
@@ -137,7 +144,7 @@ You'll see which files would be uploaded, updated, or deleted.
 By default, sync only shows files that need attention. To see the full picture:
 
 ```bash
-publish sync --verbose ./my-notes
+fl sync --verbose ./my-notes
 ```
 
 ---
@@ -147,7 +154,7 @@ publish sync --verbose ./my-notes
 ### See all your published sites
 
 ```bash
-publish list
+fl list
 ```
 
 This shows each site name, its URL, and when it was created and last updated.
@@ -155,7 +162,7 @@ This shows each site name, its URL, and when it was created and last updated.
 ### Delete a site
 
 ```bash
-publish delete my-notes
+fl delete my-notes
 ```
 
 You'll be asked to confirm. Sites with an active premium subscription can't be deleted until the subscription is cancelled first.
@@ -179,12 +186,11 @@ Here's what a day-to-day workflow looks like once you're set up:
 
 ```bash
 # First time
-npm i -g @flowershow/publish
-publish auth login
-publish --name meeting-notes ./notes
+fl login
+fl --name meeting-notes ./notes
 
 # Every time after
-publish sync --name meeting-notes ./notes
+fl sync --name meeting-notes ./notes
 ```
 
 That's it. Write in your editor, run sync, share the URL.
@@ -195,7 +201,7 @@ That's it. Write in your editor, run sync, share the URL.
 
 | Error | What to do |
 |-------|------------|
-| "You must be authenticated" | Run `publish auth login` |
-| "Site already exists" | Add `--overwrite`, or use `publish sync` if you want to update |
-| "Site not found" during sync | Run `publish list` to check the name, then add `--name` if needed |
+| "You must be authenticated" | Run `fl login` |
+| "Site already exists" | Add `--overwrite`, or use `fl sync` if you want to update |
+| "Site not found" during sync | Run `fl list` to check the name, then add `--name` if needed |
 | "No markdown files found" | Make sure the folder has at least one `.md`, `.mdx`, or `.html` file |

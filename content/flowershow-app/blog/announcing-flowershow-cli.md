@@ -20,7 +20,7 @@ You want it accessible on the web.
 You don’t want a UI.
 You don’t want to make more decisions.
 
-With the CLI, you install it, run `publish`, and get a real URL.
+With the CLI, you install it, run `fl`, and get a real URL.
 
 Nothing else required.
 
@@ -28,35 +28,36 @@ Nothing else required.
 
 **Get started in 3 steps**
 
-1. Install
+1. Install — download the `fl` binary from the [releases page](https://github.com/flowershow/flowershow/releases), e.g.:
 ```bash
-npm i -g flowershow-publish
+curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_darwin_arm64.tar.gz | tar xz
+sudo mv fl /usr/local/bin/
 ```
 
 2. Login
 ```bash
-publish auth login
+fl login
 ```
 
 3. Publish
 ```bash
-publish ./my-folder
+fl ./my-folder
 ```
 
 And that’s it 💐
 
-You'll get a URL that's ready to share.
+You’ll get a URL that’s ready to share.
 
 ▶️ **Watch the short demo video:**
 
 https://www.youtube.com/watch?v=ou1bigOIlPk
 
-📖 **Explore the docs for all available commands and options:** https://flowershow.app/docs/cli (or run `publish --help`)
+📖 **Explore the docs for all available commands and options:** https://flowershow.app/docs/cli (or run `fl --help`)
 
 ---
 
 This isn’t meant to replace the UI.
 
-The CLI is for people who are already comfortable in the terminal and want publishing to feel lightweight, reversible, and fast. It’s currently in beta, requires a Node.js environment, and comes with a small learning curve if terminal tools are new to you.
+The CLI is for people who are already comfortable in the terminal and want publishing to feel lightweight, reversible, and fast. It’s a single binary — no runtime required.
 
 But if you’ve ever thought “I just want this file on the web”, this exists for that exact moment.

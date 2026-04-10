@@ -38,11 +38,11 @@ func runDelete(projectName string) error {
 	// Authenticate
 	tokenData, err := auth.GetToken()
 	if err != nil || tokenData == nil {
-		ui.PrintError("You must be authenticated to use this command.\nRun `publish auth login` to authenticate.")
+		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 		return nil
 	}
 	if _, err := auth.GetUserInfo(config.APIURL(), tokenData.Token); err != nil {
-		ui.PrintError("You must be authenticated to use this command.\nRun `publish auth login` to authenticate.")
+		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 		return nil
 	}
 
@@ -66,7 +66,7 @@ func runDelete(projectName string) error {
 
 	if siteToDelete == nil {
 		sp.Fail(fmt.Sprintf("Site '%s' not found", projectName))
-		ui.PrintError(fmt.Sprintf("Site '%s' not found.\nUse 'publish list' to see all sites.", projectName))
+		ui.PrintError(fmt.Sprintf("Site '%s' not found.\nUse 'fl list' to see all sites.", projectName))
 		os.Exit(1)
 	}
 
@@ -102,6 +102,7 @@ func runDelete(projectName string) error {
 			"command":       "delete",
 			"cli_version":   config.Version,
 			"duration_ms":   time.Since(startTime).Milliseconds(),
+			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
 		return nil

@@ -37,11 +37,11 @@ func runList() error {
 	// Authenticate
 	tokenData, err := auth.GetToken()
 	if err != nil || tokenData == nil {
-		ui.PrintError("You must be authenticated to use this command.\nRun `publish auth login` to authenticate.")
+		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 		return nil
 	}
 	if _, err := auth.GetUserInfo(config.APIURL(), tokenData.Token); err != nil {
-		ui.PrintError("You must be authenticated to use this command.\nRun `publish auth login` to authenticate.")
+		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 		return nil
 	}
 
@@ -56,6 +56,7 @@ func runList() error {
 			"command":       "list",
 			"cli_version":   config.Version,
 			"duration_ms":   time.Since(startTime).Milliseconds(),
+			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
 		return nil

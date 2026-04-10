@@ -36,10 +36,10 @@ Your site builds and syncs on every push. Make sure you have a `README.md` or `i
 
 Publish any folder of markdown. No repo required.
 
-1. Install: `npm i -g @flowershow/publish`
-2. Log in: `publish auth login`
-3. Publish: `publish ./my-folder`
-4. Update later: `publish sync ./my-folder`
+1. Install: download the `fl` binary from the [releases page](https://github.com/flowershow/flowershow/releases)
+2. Log in: `fl login`
+3. Publish: `fl ./my-folder`
+4. Update later: `fl sync ./my-folder`
 
 See [[cli|CLI reference]] for all commands and options.
 

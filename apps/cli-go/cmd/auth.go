@@ -14,15 +14,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var authCmd = &cobra.Command{
-	Use:   "auth",
-	Short: "Manage authentication",
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return cmd.Help()
-	},
-}
-
-var authLoginCmd = &cobra.Command{
+var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "Authenticate with Flowershow via browser",
 	Args:  cobra.NoArgs,
@@ -32,7 +24,7 @@ var authLoginCmd = &cobra.Command{
 	},
 }
 
-var authLogoutCmd = &cobra.Command{
+var logoutCmd = &cobra.Command{
 	Use:   "logout",
 	Short: "Remove stored authentication token",
 	Args:  cobra.NoArgs,
@@ -42,9 +34,9 @@ var authLogoutCmd = &cobra.Command{
 	},
 }
 
-var authStatusCmd = &cobra.Command{
-	Use:   "status",
-	Short: "Check authentication status",
+var whoamiCmd = &cobra.Command{
+	Use:   "whoami",
+	Short: "Show the currently authenticated user",
 	Args:  cobra.NoArgs,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ui.Header("Auth Status")
@@ -53,10 +45,9 @@ var authStatusCmd = &cobra.Command{
 }
 
 func init() {
-	authCmd.AddCommand(authLoginCmd)
-	authCmd.AddCommand(authLogoutCmd)
-	authCmd.AddCommand(authStatusCmd)
-	rootCmd.AddCommand(authCmd)
+	rootCmd.AddCommand(loginCmd)
+	rootCmd.AddCommand(logoutCmd)
+	rootCmd.AddCommand(whoamiCmd)
 }
 
 type deviceAuthResponse struct {
@@ -106,6 +97,7 @@ func runAuthLogin() error {
 			"command":       "auth_login",
 			"cli_version":   config.Version,
 			"duration_ms":   time.Since(startTime).Milliseconds(),
+			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
 		return nil
@@ -137,6 +129,7 @@ func runAuthLogin() error {
 			"command":       "auth_login",
 			"cli_version":   config.Version,
 			"duration_ms":   time.Since(startTime).Milliseconds(),
+			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
 		return nil
@@ -193,6 +186,7 @@ func runAuthLogout() error {
 			"command":       "auth_logout",
 			"cli_version":   config.Version,
 			"duration_ms":   time.Since(startTime).Milliseconds(),
+			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
 		return nil
@@ -224,7 +218,7 @@ func runAuthStatus() error {
 	}
 	if tokenData == nil {
 		fmt.Printf("\n%s Not authenticated\n\n", ui.Yellow("✗"))
-		fmt.Printf("%s\n", ui.Gray("Run `publish auth login` to authenticate."))
+		fmt.Printf("%s\n", ui.Gray("Run `fl login` to authenticate."))
 		return nil
 	}
 
@@ -234,7 +228,7 @@ func runAuthStatus() error {
 	userInfo, err := auth.GetUserInfo(config.APIURL(), tokenData.Token)
 	if err != nil {
 		sp.Fail("Authentication token is invalid or expired")
-		fmt.Printf("%s\n", ui.Gray("Run `publish auth login` to re-authenticate."))
+		fmt.Printf("%s\n", ui.Gray("Run `fl login` to re-authenticate."))
 		return nil
 	}
 

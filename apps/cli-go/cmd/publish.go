@@ -47,13 +47,13 @@ func runPublish(inputPaths []string, overwrite bool, siteName string) error {
 	tokenData, err := auth.GetToken()
 	if err != nil || tokenData == nil {
 		sp.Fail("Not authenticated")
-		ui.PrintError("You must be authenticated to use this command.\nRun `publish auth login` to authenticate.")
+		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 		return nil
 	}
 	userInfo, err := auth.GetUserInfo(config.APIURL(), tokenData.Token)
 	if err != nil {
 		sp.Fail("Authentication failed")
-		ui.PrintError("You must be authenticated to use this command.\nRun `publish auth login` to authenticate.")
+		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 		return nil
 	}
 	sp.Succeed(fmt.Sprintf("Publishing as: %s", userInfo.DisplayName()))
@@ -79,6 +79,7 @@ func runPublish(inputPaths []string, overwrite bool, siteName string) error {
 			"command":       "publish",
 			"cli_version":   config.Version,
 			"duration_ms":   time.Since(startTime).Milliseconds(),
+			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
 		return nil
@@ -109,7 +110,7 @@ func runPublish(inputPaths []string, overwrite bool, siteName string) error {
 		ui.PrintError(fmt.Sprintf(
 			"A site named '%s' already exists.\n"+
 				"Please choose a different name or delete the existing site first.\n"+
-				"Use 'publish list' to see all sites.\n\n"+
+				"Use 'fl list' to see all sites.\n\n"+
 				"💡 Tip: Use the --overwrite flag to publish over an existing site.",
 			existingSite.Site.ProjectName,
 		))
@@ -126,6 +127,7 @@ func runPublish(inputPaths []string, overwrite bool, siteName string) error {
 			"command":       "publish",
 			"cli_version":   config.Version,
 			"duration_ms":   time.Since(startTime).Milliseconds(),
+			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
 		return nil

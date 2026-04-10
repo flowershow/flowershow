@@ -50,13 +50,13 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 	tokenData, err := auth.GetToken()
 	if err != nil || tokenData == nil {
 		sp.Fail("Not authenticated")
-		ui.PrintError("You must be authenticated to use this command.\nRun `publish auth login` to authenticate.")
+		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 		return nil
 	}
 	userInfo, err := auth.GetUserInfo(config.APIURL(), tokenData.Token)
 	if err != nil {
 		sp.Fail("Authentication failed")
-		ui.PrintError("You must be authenticated to use this command.\nRun `publish auth login` to authenticate.")
+		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 		return nil
 	}
 	sp.Succeed(fmt.Sprintf("Syncing as: %s", userInfo.DisplayName()))
@@ -78,6 +78,7 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 			"command":       "sync",
 			"cli_version":   config.Version,
 			"duration_ms":   time.Since(startTime).Milliseconds(),
+			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
 		return nil
@@ -106,7 +107,7 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 	}
 	if existingSite == nil {
 		ui.PrintError(fmt.Sprintf(
-			"Site '%s' not found.\nUse 'publish' to create it first, or specify a different site name with --name.",
+			"Site '%s' not found.\nUse 'fl' to create it first, or specify a different site name with --name.",
 			projectName,
 		))
 		os.Exit(1)
