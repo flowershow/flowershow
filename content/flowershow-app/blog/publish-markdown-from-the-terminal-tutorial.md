@@ -20,27 +20,13 @@ By the end you'll know how to publish files, push updates incrementally, preview
 
 ## 1. Install the CLI
 
-Download the `fl` binary for your platform from the [releases page](https://github.com/flowershow/flowershow/releases).
+**macOS / Linux** — run the install script:
 
-**macOS (Apple Silicon)**
 ```bash
-curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_darwin_arm64.tar.gz | tar xz
-sudo mv fl /usr/local/bin/
+curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh
 ```
 
-**macOS (Intel)**
-```bash
-curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_darwin_amd64.tar.gz | tar xz
-sudo mv fl /usr/local/bin/
-```
-
-**Linux (amd64)**
-```bash
-curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_linux_amd64.tar.gz | tar xz
-sudo mv fl /usr/local/bin/
-```
-
-**Windows** — download `fl_windows_amd64.zip` from the Releases page and add the extracted binary to your `PATH`.
+**Windows** — download `fl_windows_amd64.zip` from the [releases page](https://github.com/flowershow/flowershow/releases) and add the extracted binary to your `PATH`.
 
 Verify it worked:
 

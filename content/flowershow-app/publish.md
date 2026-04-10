@@ -42,8 +42,8 @@ showEditLink: false
             Install
           </dt>
           <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-            <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">curl -L .../fl_darwin_arm64.tar.gz | tar xz && sudo mv fl /usr/local/bin/</div>
-            <p className="mt-4">Download the binary for your platform from the <a href="https://github.com/flowershow/flowershow/releases">releases page</a>. No runtime required.</p>
+            <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh</div>
+            <p className="mt-4">Detects your OS and architecture automatically. No runtime required. Windows users: download from the <a href="https://github.com/flowershow/flowershow/releases">releases page</a>.</p>
           </dd>
         </div>
         <div>
