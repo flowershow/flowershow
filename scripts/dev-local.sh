@@ -79,11 +79,11 @@ fi
 if $GITHUB; then
   # Load GH_WEBHOOK_URL from .env if not already set
   if [[ -z "${GH_WEBHOOK_URL:-}" ]] && [[ -f apps/flowershow/.env ]]; then
-    GH_WEBHOOK_URL=$(grep '^GH_WEBHOOK_URL=' apps/flowershow/.env | cut -d= -f2-)
+    GH_WEBHOOK_URL=$(grep '^GH_WEBHOOK_URL=' apps/flowershow/.env | cut -d= -f2- || true)
   fi
   if [[ -n "${GH_WEBHOOK_URL:-}" ]]; then
     echo "Starting GitHub webhook proxy (smee)..."
-    npx smee -u "$GH_WEBHOOK_URL" -t http://localhost:3000/api/webhook &
+    npx smee -u "$GH_WEBHOOK_URL" -t http://localhost:3000/api/webhooks/github-app &
     PIDS+=($!)
   else
     echo "Warning: GH_WEBHOOK_URL not set, skipping GitHub webhook proxy"
