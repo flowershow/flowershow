@@ -9,6 +9,6 @@ showToc: false
 
 You can now control search engine crawling by publishing a `robots.txt` file from your vault. If one is found in your content root, it takes precedence over the default auto-generated one.
 
-This is useful for blocking specific crawlers (e.g. AI bots), restricting certain paths, or pointing to a custom sitemap URL.
+This is useful for blocking specific crawlers (e.g. AI bots) or restricting certain paths from being indexed.
 
 See [[robots-txt|Custom robots.txt docs]] for details.
