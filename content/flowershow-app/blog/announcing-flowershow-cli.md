@@ -28,10 +28,9 @@ Nothing else required.
 
 **Get started in 3 steps**
 
-1. Install — download the `fl` binary from the [releases page](https://github.com/flowershow/flowershow/releases), e.g.:
+1. Install
 ```bash
-curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_darwin_arm64.tar.gz | tar xz
-sudo mv fl /usr/local/bin/
+curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh
 ```
 
 2. Login

@@ -16,7 +16,18 @@ The Flowershow CLI allows you to publish your Markdown files and folders to Flow
 
 ## Installation
 
-Download the latest binary for your platform from the [GitHub Releases](https://github.com/flowershow/flowershow/releases) page.
+**macOS / Linux** — run the install script:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh
+```
+
+This automatically detects your OS and architecture, downloads the correct binary, and installs it to `/usr/local/bin/`.
+
+**Windows** — download `fl_windows_amd64.zip` from the [GitHub Releases](https://github.com/flowershow/flowershow/releases) page and add the extracted binary to your `PATH`.
+
+<details>
+<summary>Manual installation</summary>
 
 **macOS (Apple Silicon)**
 
@@ -39,7 +50,14 @@ curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_lin
 sudo mv fl /usr/local/bin/
 ```
 
-**Windows** — download `fl_windows_amd64.zip` from the Releases page and add the extracted binary to your `PATH`.
+**Linux (arm64)**
+
+```bash
+curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_linux_arm64.tar.gz | tar xz
+sudo mv fl /usr/local/bin/
+```
+
+</details>
 
 ## Authentication
 
