@@ -83,11 +83,10 @@ func PrintPublishSuccess(url string) {
 	fmt.Printf("\n%s\n\n", cyan("💐 Visit your site at: "+url))
 }
 
-// PromptSiteName shows the proposed site name and URL and lets the user change the name.
+// PromptSiteName shows the proposed site name and lets the user change the name.
 // Returns the confirmed site name (which may differ from the proposed one).
-func PromptSiteName(proposed, siteURL string) (string, error) {
-	fmt.Printf("  Site name : %s\n", bold(proposed))
-	fmt.Printf("  URL       : %s\n\n", cyan(siteURL))
+func PromptSiteName(proposed string) (string, error) {
+	fmt.Printf("  Site name : %s\n\n", bold(proposed))
 	fmt.Printf("%s ", yellow("Change name? (press Enter to confirm, or type a new name):"))
 
 	reader := bufio.NewReader(os.Stdin)

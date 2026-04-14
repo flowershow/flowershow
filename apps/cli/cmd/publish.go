@@ -165,9 +165,8 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 	// No existing site → first publish
 	// Show confirmation prompt unless --yes or --name was provided
 	if !skipConfirm && nameFlag == "" {
-		siteURL := fmt.Sprintf("https://my.flowershow.app/@%s/%s", userInfo.Username, siteName)
 		fmt.Printf("\n%s\n\n", ui.Bold("Creating new site:"))
-		confirmed, err := ui.PromptSiteName(siteName, siteURL)
+		confirmed, err := ui.PromptSiteName(siteName)
 		if err != nil {
 			ui.PrintError("Failed to read input: " + err.Error())
 			return nil
