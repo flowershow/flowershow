@@ -12,6 +12,7 @@ import (
 var defaultIgnorePatterns = []string{
 	".git/",
 	".gitignore",
+	".flowershow",
 	"node_modules/",
 	".DS_Store",
 	"Thumbs.db",

@@ -16,9 +16,10 @@ import (
 )
 
 var syncCmd = &cobra.Command{
-	Use:   "sync <path>",
-	Short: "Sync changes to an existing published site",
-	Args:  cobra.ExactArgs(1),
+	Use:        "sync <path>",
+	Short:      "Sync changes to an existing published site",
+	Deprecated: "`fl sync` is deprecated. Use `fl` instead — it creates or syncs automatically.",
+	Args:       cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		ui.Header("Sync")
 		name, _ := cmd.Flags().GetString("name")
