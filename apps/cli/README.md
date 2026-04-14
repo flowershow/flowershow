@@ -20,24 +20,28 @@ This automatically detects your OS and architecture, downloads the correct binar
 Download the archive for your platform from the [GitHub Releases](https://github.com/flowershow/flowershow/releases) page and place the binary on your `PATH`.
 
 **macOS (Apple Silicon)**
+
 ```bash
 curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_darwin_arm64.tar.gz | tar xz
 sudo mv fl /usr/local/bin/
 ```
 
 **macOS (Intel)**
+
 ```bash
 curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_darwin_amd64.tar.gz | tar xz
 sudo mv fl /usr/local/bin/
 ```
 
 **Linux (amd64)**
+
 ```bash
 curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_linux_amd64.tar.gz | tar xz
 sudo mv fl /usr/local/bin/
 ```
 
 **Linux (arm64)**
+
 ```bash
 curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_linux_arm64.tar.gz | tar xz
 sudo mv fl /usr/local/bin/
@@ -152,7 +156,7 @@ fl --yes ./my-notes
 
 **What happens (subsequent runs):**
 
-`fl` detects the existing site (via `.flowershow` config for folders, or by API lookup) and performs a delta sync — same as `fl sync` but without the extra command.
+`fl` detects the existing site (via `.flowershow` config for folders, or by API lookup) and performs a delta sync — uploading only new or modified files and removing deleted ones.
 
 **Single file behavior:**
 
@@ -169,31 +173,6 @@ fl --yes ./my-notes
 
 - Folder name becomes the project name (e.g. `fl my-digital-garden/blog` will create a site named `blog`)
 - Site accessible at `/@{username}/{foldername}` (e.g. `/@johndoe/blog`)
-
-#### `fl sync <path> [options]`
-
-> **Deprecated.** `fl sync` still works, but you no longer need it. `fl <path>` now creates or syncs automatically — run the same command every time.
-
-Sync changes to an existing published site. Only uploads new or modified files, and deletes files that no longer exist locally.
-
-**Options:**
-
-- `--name <siteName>` - Specify site name if different from folder name
-- `--dry-run` - Show what would be synced without making changes
-- `--verbose` - Show detailed list of all files in each category
-
-**Examples:**
-
-```bash
-# Preview changes without syncing
-fl sync --dry-run ./my-notes
-
-# Show detailed file lists including unchanged files
-fl sync --verbose ./my-notes
-
-# Combine options
-fl sync --dry-run --verbose ./my-notes
-```
 
 ### Site Management
 
