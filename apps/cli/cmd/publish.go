@@ -277,6 +277,8 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 
 // doSync performs a delta sync to an existing site with already-discovered files.
 func doSync(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.Spinner, startTime time.Time) error {
+	fmt.Printf("  Publishing to: %s\n", ui.Cyan(site.URL))
+
 	var fileMetadata []api.FileMetadata
 	for _, f := range discovered {
 		fileMetadata = append(fileMetadata, api.FileMetadata{
