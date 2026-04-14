@@ -10,15 +10,13 @@ showComments: false
 <div className="py-12 sm:py-24">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl text-center">
-      <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl">Publish your markdown as a beautiful website</h1>
-      <p className="mt-6 text-pretty text-lg text-gray-500 sm:text-xl/8">Blogs, docs, knowledge bases, and Obsidian vaults — live in seconds.</p>
-      <p className="mt-2 text-pretty text-lg text-gray-500 sm:text-xl/8">No project to spin up, no pipeline to maintain, no debugging deploys.</p>
-      <p className="mt-4 text-sm text-gray-400">Free plan available — no credit card required.</p>
+      <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl">Publish markdown in seconds.</h1>
+      <p className="mt-6 text-pretty text-lg text-gray-500 sm:text-xl/8">Drop a file, folder, or whole site — get a URL. Zero config. Fully hosted.</p>
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <a
           href="https://cloud.flowershow.app/"
           className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2"
-        >Start publishing free</a>
+        >Publish a file now →</a>
         <a
         href="#demo"
         className="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm transition hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">Watch demo</a>
@@ -32,6 +30,14 @@ showComments: false
           <span>Star on GitHub</span>
         </a>
       </div>
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-500">
+        <span>🖱️ Drag &amp; drop</span>
+        <span>⌨️ CLI</span>
+        <span>🐙 GitHub</span>
+        <span>💎 Obsidian</span>
+        <span>🤖 AI agents</span>
+      </div>
+      <p className="mt-4 text-sm text-gray-400">Free forever</p>
       <div className="mt-8 flex items-center justify-center gap-x-6 text-sm text-gray-400">
         <span><strong className="text-gray-600">1,400+</strong> users</span>
         <span aria-hidden="true">·</span>
@@ -43,6 +49,13 @@ showComments: false
     <div id="demo" className="mt-12 max-w-6xl mx-auto flow-root sm:mt-16">
       <iframe className="w-full rounded-md" width="560" height="315" src="https://www.youtube.com/embed/E9mjeskpdf8?si=3SdtS-tQE9Ug1ltU&amp;controls=0" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
     </div>
+  </div>
+</div>
+
+<div className="bg-gray-900 py-6">
+  <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
+    <p className="font-semibold text-white">Your AI writes it. Flowershow publishes it.</p>
+    <p className="mt-1 text-sm text-gray-400">One CLI command. No browser, no login flow, no UI. Built for scripts, agents, and pipelines. <a href="/publish" className="text-orange-400 hover:text-orange-300">See the CLI →</a></p>
   </div>
 </div>
 

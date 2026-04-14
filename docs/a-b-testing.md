@@ -30,18 +30,34 @@ The primary CTA is `[Publish a file now →]` linking to `https://cloud.flowersh
 
 Secondary goal: scroll depth past the hero (engagement signal for visitors who don't immediately convert).
 
+## Current hero copy (live)
+
+**H1:** Publish markdown in seconds.
+**Sub:** Drop a file, folder, or whole site — get a URL. Zero config. Fully hosted.
+**CTA:** Publish a file now →
+**Micro-copy:** Free forever
+
 ## What to test
 
 Good candidates for the hero section:
 
-| Element | Variants to try |
-|---------|----------------|
-| H1 | `Content in. URL out.` vs `Markdown live in seconds.` vs audience-specific (`Your Obsidian vault on the web.`) |
-| Sub-copy | Mechanism-first vs use-case-first vs pain-first |
-| CTA | `Publish a file now →` vs `Get a URL now` vs `Try it free` |
-| Social proof | Stats row vs testimonial vs none |
+| Element | Current (control) | Variants to try |
+|---------|------------------|----------------|
+| H1 | `Publish markdown in seconds.` | `Content in. URL out.` · `Markdown live in seconds.` · `Your Obsidian vault on the web.` |
+| Sub-copy | `Drop a file, folder, or whole site — get a URL. Zero config. Fully hosted.` | mechanism-first · use-case-first · pain-first |
+| CTA | `Publish a file now →` | `Get a URL now` · `Try it free` · `Drop a file` |
+| Social proof | Stats row | testimonial · none |
 
 Test one element at a time. Start with H1 — highest leverage.
+
+### H1 hypotheses
+
+| Variant | Hypothesis |
+|---------|-----------|
+| `Publish markdown in seconds.` (control) | Verb + keyword + speed — clear and SEO-friendly |
+| `Content in. URL out.` | Mechanism clarity wins — most memorable |
+| `Markdown live in seconds.` | "Live" more evocative than "publish" |
+| `Your Obsidian vault on the web.` | Specific audience wins over general |
 
 ## Feature flags for code-level experiments
 
