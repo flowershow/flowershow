@@ -102,27 +102,37 @@ fl ./my-note.md
 
 ### Options
 
-- `--overwrite`: Overwrite an existing site if it already exists.
-- `--name <siteName>`: Specify a custom name for your site.
+- `--name <siteName>`: Specify a custom name for your site. For folder mode, the name is saved to a `.flowershow` file in the folder and remembered automatically on future runs.
+- `--yes`: Skip the site name confirmation prompt (useful for scripts and CI).
 
 **Example with options:**
 
 ```bash
-fl --name my-awesome-site --overwrite ./my-notes
+fl --name my-awesome-site ./my-notes
 ```
 
-## Syncing Changes
+## Updating a Site
 
-Once a site is published, you can use the `sync` command to update it. This is faster than re-publishing as it only uploads new or modified files.
+`fl` is idempotent — if the site already exists, it syncs changes automatically instead of creating a new one. Just run the same command every time:
 
 ```bash
-fl sync ./my-notes
+fl ./my-notes
 ```
 
-**Note:** If you used a custom name when publishing, remember to use it when syncing:
+For folder mode, the site name is stored in a `.flowershow` file inside your folder after the first publish, so you don't need `--name` on subsequent runs.
+
+### `fl sync` (deprecated)
+
+`fl sync` still works but is deprecated. The plain `fl` command now handles both creating and syncing automatically.
+
+If you need `--dry-run` or `--verbose`, `fl sync` is currently the only way to access those options:
 
 ```bash
-fl sync --name my-awesome-site ./my-notes
+# Preview changes without making them
+fl sync --dry-run ./my-notes
+
+# See all files including unchanged ones
+fl sync --verbose ./my-notes
 ```
 
 ## Managing Sites
@@ -146,5 +156,5 @@ fl delete <site-name>
 ## Troubleshooting
 
 - **"You must be authenticated..."**: Run `fl login`.
-- **"Site already exists"**: Use `--overwrite` or run `fl sync` instead.
-- **"Site not found" (during sync)**: Make sure you're using the correct site name (check with `fl list`).
+- **Site already exists**: `fl` automatically syncs existing sites — just run `fl <path>` again.
+- **"Site not found" (during `fl sync`)**: Make sure you're using the correct site name (check with `fl list`), or just use `fl <path>` which handles this automatically.

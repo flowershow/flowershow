@@ -68,24 +68,16 @@ This will:
 2. Open your browser to authorize the CLI
 3. Store your authentication token locally
 
-### 2. Publish Your Content
+### 2. Publish or Update Your Content
+
+`fl` is idempotent — the same command creates the site on first run and syncs changes on every subsequent run:
 
 ```bash
-# Publish a folder
+# Publish a folder (or sync it if already published)
 fl ./my-notes
 
-# Publish a single file
+# Publish a single file (or sync it if already published)
 fl ./my-note.md
-```
-
-### 3. Sync after changes
-
-```bash
-# Sync a folder site
-fl sync ./my-notes
-
-# Sync a single file site
-fl sync ./my-note.md
 ```
 
 ## Commands
@@ -120,12 +112,12 @@ fl logout
 
 #### `fl <path> [morePaths...] [options]`
 
-Publish files or folders to Flowershow.
+Publish files or folders to Flowershow. If the site already exists, `fl` automatically syncs changes instead of erroring — it creates or syncs in one idempotent command.
 
 **Options:**
 
-- `--overwrite` - Overwrite existing site if it already exists
-- `--name <siteName>` - Custom name for the site (defaults to file/folder name). Note: If you use it, you need to pass it also to the `sync` command later on, so that Flowershow knows content of which site you're trying to sync.
+- `--name <siteName>` - Custom name for the site (defaults to file/folder name). Only needed on the first publish; for folder mode, the name is saved to a local `.flowershow` file and remembered automatically.
+- `--yes` - Skip the site name confirmation prompt (useful for scripts and CI).
 
 **Examples:**
 
@@ -139,25 +131,28 @@ fl ./intro.md ./chapter1.md ./chapter2.md
 # Publish a folder
 fl ./my-notes
 
-# Overwrite an existing site
-fl --overwrite ./my-notes
-
 # Publish with a custom site name
 fl --name my-custom-site ./my-notes
 
-# Combine options
-fl --name my-custom-site --overwrite ./my-notes
+# Skip confirmation prompt (for automation)
+fl --yes ./my-notes
 ```
 
-**What happens:**
+**What happens (first publish):**
 
 1. Files are discovered and filtered (ignores `.git`, `node_modules`, etc.; also supports `.gitignore` and will ignore paths listed there)
 2. Project name is derived from the first file name or the folder name
-3. Site is created via the Flowershow API
-4. Presigned URLs are obtained for secure file uploads
-5. Files are uploaded directly to Cloudflare R2 storage
-6. CLI waits for markdown files to be processed
-7. Site URL is displayed
+3. A confirmation prompt shows the proposed site name and URL — you can accept or change it (skip with `--yes` or `--name`)
+4. Site is created via the Flowershow API
+5. Presigned URLs are obtained for secure file uploads
+6. Files are uploaded directly to Cloudflare R2 storage
+7. CLI waits for markdown files to be processed
+8. Site URL is displayed
+9. For folder mode, site name is saved to `.flowershow` in the folder for future runs
+
+**What happens (subsequent runs):**
+
+`fl` detects the existing site (via `.flowershow` config for folders, or by API lookup) and performs a delta sync — same as `fl sync` but without the extra command.
 
 **Single file behavior:**
 
@@ -177,6 +172,8 @@ fl --name my-custom-site --overwrite ./my-notes
 
 #### `fl sync <path> [options]`
 
+> **Deprecated.** `fl sync` still works, but you no longer need it. `fl <path>` now creates or syncs automatically — run the same command every time.
+
 Sync changes to an existing published site. Only uploads new or modified files, and deletes files that no longer exist locally.
 
 **Options:**
@@ -188,41 +185,15 @@ Sync changes to an existing published site. Only uploads new or modified files, 
 **Examples:**
 
 ```bash
-# Sync changes to a folder
-fl sync ./my-notes
-
 # Preview changes without syncing
 fl sync --dry-run ./my-notes
 
 # Show detailed file lists including unchanged files
 fl sync --verbose ./my-notes
 
-# Sync to a specific site name
-fl sync --name my-custom-site ./my-notes
-
 # Combine options
 fl sync --dry-run --verbose ./my-notes
 ```
-
-**What happens:**
-
-1. Files are discovered and SHA hashes calculated
-2. File list is sent to the API for comparison
-3. API compares with existing files and determines:
-   - New files (not in database)
-   - Modified files (different SHA hash)
-   - Deleted files (in database but not in request)
-   - Unchanged files (same SHA hash)
-4. Sync summary is displayed
-5. Only new/modified files are uploaded
-6. Deleted files are removed by the API
-7. CLI waits for markdown files to be processed
-8. Site URL is displayed
-
-**When to use sync vs publish:**
-
-- **Use `fl`** for initial site creation or complete site replacement
-- **Use `fl sync`** for updates to existing sites
 
 ### Site Management
 
@@ -291,15 +262,9 @@ Your token may have been revoked. Re-authenticate:
 fl login
 ```
 
-### "Site already exists"
+### Site already exists — `fl` auto-syncs it
 
-A site with that name already exists. You can:
-
-- Use the `--overwrite` flag: `fl --overwrite <path>`
-- Delete it first: `fl delete <name>`
-- Rename your file/folder
-- Use `fl list` to see all existing sites
-- **Or use `fl sync`** to update an existing site incrementally
+If you run `fl` on a path whose site already exists on the server, it will automatically sync changes instead of erroring. You don't need to do anything special — just run `fl <path>` every time.
 
 ### "Site not found" (when using sync)
 

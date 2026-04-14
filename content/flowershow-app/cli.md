@@ -77,9 +77,9 @@ showEditLink: false
           </dt>
           <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
             <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">
-              fl sync ./my-folder
+              fl ./my-folder
             </div>
-            <p className="mt-4">We diff your files and upload only what changed.</p>
+            <p className="mt-4">Same command every time. We diff your files and upload only what changed.</p>
           </dd>
         </div>
       </dl>

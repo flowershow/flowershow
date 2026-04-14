@@ -87,37 +87,35 @@ If you don't want the site named after your folder, use `--name`:
 fl --name project-docs ./my-notes
 ```
 
-Remember the name you used — you'll need it when syncing.
+For folder mode, the name is saved to a `.flowershow` file inside your folder after the first publish. Subsequent `fl ./my-notes` runs read it automatically — you only need `--name` once.
 
-### Overwriting an existing site
+### Skipping the confirmation prompt
 
-If you run `fl` on a folder that already has a site, you'll get an error. Use `--overwrite` to replace it:
+When creating a new site, `fl` shows a prompt with the proposed name and URL so you can accept or change it. To skip this (useful in scripts):
 
 ```bash
-fl --overwrite ./my-notes
+fl --yes ./my-notes
 ```
 
-> **Tip:** `--overwrite` re-uploads everything. If you're just pushing edits, `sync` (covered next) is much faster.
+### Running `fl` on an already-published folder
+
+`fl` is idempotent. If the site already exists, it syncs changes instead of erroring. Just run the same command every time — no special flags needed.
 
 ---
 
-## 4. Sync changes
+## 4. Push updates
 
-Once your site is published, use `sync` to push updates. It compares your local files against what's on the server using SHA-1 hashes and uploads only what changed.
-
-```bash
-fl sync ./my-notes
-```
-
-If you used a custom name when publishing:
+After making changes to your files, just run `fl` again:
 
 ```bash
-fl sync --name project-docs ./my-notes
+fl ./my-notes
 ```
 
-### Preview before syncing
+That's it. `fl` compares your local files against what's on the server using SHA-1 hashes and only uploads what changed. For folder mode it remembers the site name via the `.flowershow` file, so no flags needed.
 
-Not sure what changed? Use `--dry-run` to see the plan without touching anything:
+### Preview before publishing
+
+Not sure what changed? Use `fl sync --dry-run` to see a plan without touching anything:
 
 ```bash
 fl sync --dry-run ./my-notes
@@ -127,11 +125,11 @@ You'll see which files would be uploaded, updated, or deleted.
 
 ### See everything, including unchanged files
 
-By default, sync only shows files that need attention. To see the full picture:
-
 ```bash
 fl sync --verbose ./my-notes
 ```
+
+> **Note:** `fl sync` is deprecated. The plain `fl` command now handles both creating and syncing automatically. Use `fl sync` only when you need `--dry-run` or `--verbose`.
 
 ---
 
@@ -173,13 +171,13 @@ Here's what a day-to-day workflow looks like once you're set up:
 ```bash
 # First time
 fl login
-fl --name meeting-notes ./notes
+fl --name meeting-notes ./notes   # creates the site, saves name to .flowershow
 
 # Every time after
-fl sync --name meeting-notes ./notes
+fl ./notes                         # detects existing site and syncs changes
 ```
 
-That's it. Write in your editor, run sync, share the URL.
+That's it. Write in your editor, run `fl`, share the URL.
 
 ---
 
@@ -188,6 +186,5 @@ That's it. Write in your editor, run sync, share the URL.
 | Error | What to do |
 |-------|------------|
 | "You must be authenticated" | Run `fl login` |
-| "Site already exists" | Add `--overwrite`, or use `fl sync` if you want to update |
-| "Site not found" during sync | Run `fl list` to check the name, then add `--name` if needed |
+| "Site not found" during `fl sync` | Run `fl list` to check the name, then add `--name`. Or just use `fl <path>` — it handles this automatically |
 | "No markdown files found" | Make sure the folder has at least one `.md`, `.mdx`, or `.html` file |

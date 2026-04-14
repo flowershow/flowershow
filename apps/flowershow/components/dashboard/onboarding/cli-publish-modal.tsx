@@ -132,14 +132,15 @@ export default function CliPublishModal({
                     Step 3: Publish your content
                   </h3>
                   <CopyableCommand
-                    command={`fl sync ./my-content --name ${siteName}`}
+                    command={`fl --name ${siteName} ./my-content`}
                   />
                   <p className="mt-2 text-xs text-stone-500">
                     <strong>
                       Change the content path to the correct directory.
                     </strong>
                     <br />
-                    To update later, run the same command.
+                    To update later, run the same command — it syncs
+                    automatically.
                   </p>
                 </div>
               </div>

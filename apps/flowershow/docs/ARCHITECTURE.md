@@ -150,14 +150,14 @@ The CLI is a Go binary (`fl`). Repo: `../cli/`.
 5. CLI uploads each file directly to R2 via presigned PUT URLs.
 6. CLI polls `GET /api/sites/id/{siteId}/status` until all blobs reach SUCCESS status.
 
-**Incremental sync** (`fl sync <path>`):
+**Incremental sync** (`fl <path>` on an existing site, or deprecated `fl sync <path>`):
 
-- Same flow but the server diffs SHA hashes to determine which files are new, changed, unchanged, or deleted. Only new/changed files get upload URLs. Deletions are handled server-side.
-- Supports `--dry-run` to preview changes without applying them.
+- `fl <path>` is idempotent: creates the site if new, otherwise diffs SHA hashes to determine which files are new, changed, unchanged, or deleted. Only new/changed files get upload URLs. Deletions are handled server-side.
+- `fl sync` is deprecated but still functional; adds `--dry-run` and `--verbose` flags.
 
 **Limits**: Max 100MB per file, 500MB per request, 1000 files per request.
 
-**Commands**: `fl login|logout|whoami`, `fl <path>`, `fl sync <path>`, `fl list`, `fl delete <name>`.
+**Commands**: `fl login|logout|whoami`, `fl <path>`, `fl list`, `fl delete <name>`.
 
 ### Flow 3: Obsidian Plugin
 
