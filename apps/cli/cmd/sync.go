@@ -207,7 +207,7 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 		"duration_ms": time.Since(startTime).Milliseconds(),
 	})
 
-	fmt.Printf("\n%s Sync complete!\n", ui.Green("✅"))
+	fmt.Printf("\n%s Publish complete!\n", ui.Green("✅"))
 	fmt.Printf("   Site: %s\n", ui.Cyan(fmt.Sprintf("https://my.flowershow.app/@%s/%s", userInfo.DisplayName(), projectName)))
 	fmt.Printf("   %s\n", ui.Gray(fmt.Sprintf(
 		"New: %d | Updated: %d | Deleted: %d | Unchanged: %d",
@@ -220,7 +220,7 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 }
 
 func displaySyncSummary(plan *api.SyncFilesResponse, projectName string, verbose bool) {
-	fmt.Printf("\n%s\n", ui.Bold(fmt.Sprintf("Sync Summary for '%s':", projectName)))
+	fmt.Printf("\n%s\n", ui.Bold(fmt.Sprintf("Publish Summary for '%s':", projectName)))
 
 	if plan.Summary.ToUpload > 0 {
 		fmt.Printf("  %s New files to upload: %d\n", ui.Cyan("📝"), plan.Summary.ToUpload)
@@ -248,7 +248,6 @@ func displaySyncSummary(plan *api.SyncFilesResponse, projectName string, verbose
 			}
 		} else {
 			fmt.Printf("  %s Files unchanged: %d\n", ui.Green("✓"), plan.Summary.Unchanged)
-			fmt.Printf("\n%s\n", ui.Gray("Note: Use --verbose to see all unchanged files"))
 		}
 	}
 }

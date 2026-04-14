@@ -364,7 +364,7 @@ func doSync(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.
 		"duration_ms": time.Since(startTime).Milliseconds(),
 	})
 
-	fmt.Printf("\n%s Sync complete!\n", ui.Green("✅"))
+	fmt.Printf("\n%s Publish complete!\n", ui.Green("✅"))
 	fmt.Printf("   Site: %s\n", ui.Cyan(site.URL))
 	fmt.Printf("   %s\n", ui.Gray(fmt.Sprintf(
 		"New: %d | Updated: %d | Deleted: %d | Unchanged: %d",

@@ -146,6 +146,7 @@ type SyncResult struct {
 func WaitForSync(siteID string, maxWaitSeconds int) SyncResult {
 	deadline := time.Now().Add(time.Duration(maxWaitSeconds) * time.Second)
 	started := false
+	initialPending := -1
 
 	for time.Now().Before(deadline) {
 		status, err := api.GetSiteStatus(siteID)
@@ -162,22 +163,26 @@ func WaitForSync(siteID string, maxWaitSeconds int) SyncResult {
 			return SyncResult{Success: true}
 		}
 
-		var pending, errored, succeeded []api.BlobStatus
+		var pending, errored []api.BlobStatus
 		for _, b := range blobs {
 			switch b.SyncStatus {
 			case "UPLOADING", "PROCESSING":
 				pending = append(pending, b)
 			case "ERROR":
 				errored = append(errored, b)
-			case "SUCCESS":
-				succeeded = append(succeeded, b)
 			}
 		}
 
-		done := len(succeeded) + len(errored)
-		total := len(blobs)
-		fmt.Fprintf(os.Stderr, "\r%s Processing... %d/%d files", cyan("⣾"), done, total)
-		started = true
+		if initialPending == -1 {
+			initialPending = len(pending)
+		}
+
+		total := initialPending
+		done := initialPending - len(pending)
+		if total > 0 {
+			fmt.Fprintf(os.Stderr, "\r%s Processing... %d/%d files", cyan("⣾"), done, total)
+			started = true
+		}
 
 		if len(pending) == 0 {
 			fmt.Fprintln(os.Stderr)
