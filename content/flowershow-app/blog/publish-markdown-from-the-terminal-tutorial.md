@@ -113,24 +113,6 @@ fl ./my-notes
 
 That's it. `fl` compares your local files against what's on the server using SHA-1 hashes and only uploads what changed. For folder mode it remembers the site name via the `.flowershow` file, so no flags needed.
 
-### Preview before publishing
-
-Not sure what changed? Use `fl sync --dry-run` to see a plan without touching anything:
-
-```bash
-fl sync --dry-run ./my-notes
-```
-
-You'll see which files would be uploaded, updated, or deleted.
-
-### See everything, including unchanged files
-
-```bash
-fl sync --verbose ./my-notes
-```
-
-> **Note:** `fl sync` is deprecated. The plain `fl` command now handles both creating and syncing automatically. Use `fl sync` only when you need `--dry-run` or `--verbose`.
-
 ---
 
 ## 5. Manage your sites
