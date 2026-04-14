@@ -168,5 +168,4 @@ That's it. Write in your editor, run `fl`, share the URL.
 | Error | What to do |
 |-------|------------|
 | "You must be authenticated" | Run `fl login` |
-| "Site not found" during `fl sync` | Run `fl list` to check the name, then add `--name`. Or just use `fl <path>` — it handles this automatically |
 | "No markdown files found" | Make sure the folder has at least one `.md`, `.mdx`, or `.html` file |
