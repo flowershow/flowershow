@@ -23,7 +23,7 @@ showEditLink: false
       </div>
     </div>
     <div id="demo" className="mt-12 max-w-6xl mx-auto flow-root sm:mt-16">
-      <iframe className="w-full rounded-md" width="560" height="315" src="https://www.youtube.com/embed/ou1bigOIlPk" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
+      <iframe className="w-full rounded-md" width="560" height="315" src="https://www.youtube.com/embed/E9z0zLewoAM?si=J7LDLnPoh3tG_ZRJ" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
     </div>
   </div>
 </div>
