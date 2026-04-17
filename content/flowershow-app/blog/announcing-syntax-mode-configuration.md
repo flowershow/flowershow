@@ -35,7 +35,7 @@ With syntax mode configuration, you can:
 
 Set the default rendering mode for your entire site using the **Syntax Mode** option in your site's dashboard settings.
 
-![](syntax-mode-config.png)
+![[syntax-mode-config.png]]
 
 Options:
 - `"md"` - Use regular Markdown rendering for all pages
