@@ -613,6 +613,14 @@ export const siteRouter = createTRPCRouter({
           event: 'site_sync_triggered',
           properties: syncProperties,
         });
+        posthog.capture({
+          distinctId: ctx.session.user.id,
+          event: 'content_published',
+          properties: {
+            publish_method: 'github_sync',
+            site_id: id,
+          },
+        });
       } catch (error) {
         posthog.captureException(error, 'system', {
           route: 'site.sync',
@@ -2105,11 +2113,10 @@ export const siteRouter = createTRPCRouter({
       const posthog = await PostHogClient();
       posthog.capture({
         distinctId: ctx.session.user.id,
-        event: 'files_published',
+        event: 'content_published',
         properties: {
-          client_type: 'web',
-          file_count: files.length,
-          siteId,
+          publish_method: 'drag_drop_dashboard',
+          site_id: siteId,
         },
       });
       await posthog.shutdown();

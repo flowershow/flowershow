@@ -95,7 +95,6 @@ export async function POST(request: NextRequest) {
 
     // Validate each file
     const markdownExtensions = ['md', 'mdx'];
-    let totalSize = 0;
     let hasMarkdownFile = false;
 
     for (const file of files) {
@@ -146,8 +145,6 @@ export async function POST(request: NextRequest) {
           { status: 400 },
         );
       }
-
-      totalSize += file.fileSize;
     }
 
     // Require at least one markdown file
@@ -234,13 +231,10 @@ export async function POST(request: NextRequest) {
     const posthog = PostHogClient();
     posthog.capture({
       distinctId: site.id,
-      event: 'anon_publish_started',
+      event: 'content_published',
       properties: {
+        publish_method: 'drag_drop_anon',
         site_id: site.id,
-        file_count: files.length,
-        total_size: totalSize,
-        referrer: request.headers.get('referer') || 'direct',
-        is_authenticated: false,
       },
     });
     await posthog.shutdown();

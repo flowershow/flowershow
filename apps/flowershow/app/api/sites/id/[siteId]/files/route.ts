@@ -220,15 +220,15 @@ export async function POST(
     };
 
     const posthog = PostHogClient();
-    const { client_type, client_version } = getClientInfo(request);
+    const { client_type } = getClientInfo(request);
+    const publish_method =
+      client_type === 'obsidian-plugin' ? 'obsidian_plugin' : client_type;
     posthog.capture({
       distinctId: auth.userId,
-      event: 'files_published',
+      event: 'content_published',
       properties: {
-        client_type,
-        client_version,
-        file_count: files.length,
-        siteId,
+        publish_method,
+        site_id: siteId,
       },
     });
     await posthog.shutdown();
@@ -363,20 +363,6 @@ export async function DELETE(
       deleted,
       notFound,
     };
-
-    const posthog = PostHogClient();
-    const { client_type, client_version } = getClientInfo(request);
-    posthog.capture({
-      distinctId: auth.userId,
-      event: 'files_deleted',
-      properties: {
-        client_type,
-        client_version,
-        file_count: deleted.length,
-        siteId,
-      },
-    });
-    await posthog.shutdown();
 
     return NextResponse.json(response);
   } catch (error) {

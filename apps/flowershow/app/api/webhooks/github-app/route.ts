@@ -625,6 +625,7 @@ async function handlePushEvent(data: WebhookPayload) {
       },
       select: {
         id: true,
+        userId: true,
         ghRepository: true,
         ghBranch: true,
         rootDir: true,
@@ -701,6 +702,20 @@ async function handlePushEvent(data: WebhookPayload) {
         sitesFailed: failedSyncs.length,
       },
     });
+
+    const failedSiteIds = new Set(failedSyncs.map((fs) => fs.site.id));
+    for (const site of sites) {
+      if (!failedSiteIds.has(site.id)) {
+        posthog.capture({
+          distinctId: site.userId,
+          event: 'content_published',
+          properties: {
+            publish_method: 'github_sync',
+            site_id: site.id,
+          },
+        });
+      }
+    }
 
     log('Handle GitHub App Push Event', SeverityNumber.INFO, {
       source: 'github_app_push',
