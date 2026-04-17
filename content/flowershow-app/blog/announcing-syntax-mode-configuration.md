@@ -7,22 +7,22 @@ authors:
 image: /assets/md-and-mdx.png
 ---
 
-If you’ve ever published notes from Obsidian or another Markdown editor with Flowershow and suddenly ran into strange parsing errors — like `<a, b>` breaking your page or `{something}` causing a crash — you’re not alone.
+Flowershow now lets you control how each page is rendered — as plain Markdown or as MDX. Here’s what you need to know:
 
-Until now, Flowershow rendered everything as MDX, a powerful format that supports JSX components like `<List>` or custom JSX blocks styled with Tailwind. The trade-off? MDX is also stricter than plain Markdown. Some syntax that works fine in Obsidian or GitHub Markdown doesn’t play nicely with MDX’s JavaScript-based parsing rules.
+- **By default**, Flowershow uses `auto` mode: `.md` files render as plain Markdown, `.mdx` files render as MDX.
+- **To change the default** for your whole site, go to your site’s dashboard settings and adjust the **Syntax Mode** option.
+- **To override it for a single page**, add `syntaxMode: md` or `syntaxMode: mdx` to the page’s frontmatter.
 
-That changes today.
+If you’re an Obsidian user publishing regular notes, your `.md` files now just work — no more cryptic parsing errors from special characters or HTML.
 
-Flowershow will now automatically choose the right rendering mode for your content — Markdown or MDX — based on the file extension. Regular `.md` files are parsed as plain Markdown, while `.mdx` files use MDX rendering. And if you ever want to override this behavior, you can control it per-site or per-page.
+If you want to use Flowershow components like `<List>` or JSX on a specific page, either rename it to `.mdx` or add `syntaxMode: mdx` to its frontmatter.
 
 ## Why This Matters
 
-This update ensures that your regular Markdown notes “just work”, while still giving you the option to use JSX components whenever you need them.
-
-Markdown mode is perfect for clean, note-style content (ideal for Obsidian users). MDX mode, on the other hand, unlocks dynamic components and JSX blocks, but comes with stricter syntax rules. For example:
+Until now, Flowershow rendered everything as MDX — a powerful format that supports JSX components, but one that’s stricter than plain Markdown. Some syntax that works fine in Obsidian or GitHub Markdown doesn’t play nicely with MDX’s JavaScript-based parsing rules. For example:
 - HTML blocks may not parse if they aren’t valid JSX
-- `<a, b>` or other “non-JSX” tags (`<a` is treated as a start of a tag) will break
-- `{a}` is treated as a JavaScript expression, not plain text, so you'll get errors like "a is not defined"
+- `<a, b>` or other angle-bracket expressions (`<a` is treated as the start of a JSX tag) will break
+- `{a}` is treated as a JavaScript expression, not plain text, so you’ll get errors like “a is not defined”
 
 With syntax mode configuration, you can:
 - Use Markdown rendering for content with HTML or special characters
