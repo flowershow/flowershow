@@ -10,8 +10,8 @@ showEditLink: false
 <div className="py-12 sm:py-24">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl text-center">
-      <h1 className="text-balance text-4xl font-semibold tracking-tight text-gray-900 sm:text-6xl">Your GitHub repo is your CMS</h1>
-      <p className="mt-8 text-pretty text-lg text-gray-500 sm:text-xl/8">Connect once, push to update. No separate content system, no copy-paste, no drift — your repository is the source of truth and your site stays in sync automatically.</p>
+      <h1 className="text-balance text-4xl font-semibold tracking-tight text-gray-900 sm:text-6xl">Push to publish</h1>
+      <p className="mt-8 text-pretty text-lg text-gray-500 sm:text-xl/8">Connect your GitHub repository once and your site stays in sync automatically. No separate content system, no copy-paste, no drift — your repo is the source of truth.</p>
       <div className="mt-10 flex items-center justify-center gap-x-6">
         <a
           href="https://cloud.flowershow.app"
@@ -64,62 +64,6 @@ showEditLink: false
           </dt>
           <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
             <p>Commit and push like you always do. Your site syncs automatically on every push.</p>
-          </dd>
-        </div>
-      </dl>
-    </div>
-  </div>
-</div>
-
-<div className="py-12 sm:py-24">
-  <div className="mx-auto max-w-7xl px-6 lg:px-8">
-    <div className="mx-auto max-w-3xl lg:text-center">
-      <h2 className="mt-2 text-pretty text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl lg:text-balance">Your workflow, unchanged</h2>
-    </div>
-    <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-5xl">
-      <dl className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-2 lg:gap-y-16">
-        <div className="relative pl-16">
-          <dt className="text-base font-semibold leading-7 text-gray-900">
-            <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
-              <span className="text-2xl">✏️</span>
-            </div>
-            Edit anywhere
-          </dt>
-          <dd className="mt-2 text-base leading-7 text-gray-600">
-            Local editor, GitHub UI, or a pull request. Flowershow doesn't care how you write — it just watches for pushes.
-          </dd>
-        </div>
-        <div className="relative pl-16">
-          <dt className="text-base font-semibold leading-7 text-gray-900">
-            <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
-              <span className="text-2xl">🔄</span>
-            </div>
-            Push to publish
-          </dt>
-          <dd className="mt-2 text-base leading-7 text-gray-600">
-            Every push triggers an automatic sync. No manual deploys, no dashboard clicks, no waiting.
-          </dd>
-        </div>
-        <div className="relative pl-16">
-          <dt className="text-base font-semibold leading-7 text-gray-900">
-            <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
-              <span className="text-2xl">📁</span>
-            </div>
-            Publish part of a repo
-          </dt>
-          <dd className="mt-2 text-base leading-7 text-gray-600">
-            Set a root directory to publish only <code>/docs</code> from a code repo. Your app code stays private.
-          </dd>
-        </div>
-        <div className="relative pl-16">
-          <dt className="text-base font-semibold leading-7 text-gray-900">
-            <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
-              <span className="text-2xl">🌿</span>
-            </div>
-            Pick your branch
-          </dt>
-          <dd className="mt-2 text-base leading-7 text-gray-600">
-            Point Flowershow at any branch — main, staging, or a preview branch for drafts.
           </dd>
         </div>
       </dl>
