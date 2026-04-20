@@ -3,7 +3,7 @@
   "showSidebar": true,
   "sidebar": {
     "paths": [
-      "/docs"
+      "/docs", "/markdown"
     ]
   },
   "nav": {
