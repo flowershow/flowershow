@@ -3,7 +3,8 @@
   "showSidebar": true,
   "sidebar": {
     "paths": [
-      "/docs", "/markdown"
+      "/docs",
+      "/markdown"
     ]
   },
   "nav": {
@@ -29,10 +30,6 @@
         "name": "Use Cases",
         "links": [
           {
-            "href": "/uses/obsidian",
-            "name": "Obsidian Vault"
-          },
-          {
             "href": "/uses/docs",
             "name": "Docs"
           },
@@ -54,12 +51,16 @@
         "name": "Publish",
         "links": [
           {
-            "href": "/publish",
-            "name": "From Terminal (CLI)"
+            "href": "/publish-obsidian",
+            "name": "Obsidian Vault"
           },
           {
             "href": "/publish-github",
             "name": "From GitHub"
+          },
+          {
+            "href": "/cli",
+            "name": "From Terminal (CLI)"
           },
           {
             "href": "/dragndrop",
@@ -202,6 +203,10 @@
     {
       "from": "/publish",
       "to": "/cli"
+    },
+    {
+      "from": "/uses/obsidian",
+      "to": "/publish-obsidian"
     }
   ]
 }
