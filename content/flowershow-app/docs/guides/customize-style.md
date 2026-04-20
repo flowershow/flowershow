@@ -1,5 +1,5 @@
 ---
-title: How to Customize the Look of Your Site with CSS
+title: Customize the Look of Your Site with CSS
 description: A step-by-step guide to customizing your site's appearance using CSS, from basic styling to advanced hero sections
 date: 2025-02-11
 authors:

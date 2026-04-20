@@ -1,5 +1,5 @@
 ---
-title: How to Add Newsletter and Other Subscription Forms
+title: Add Newsletter and Other Subscription Forms
 description: Learn how to integrate newsletter signup forms, contact forms, and surveys into your Flowershow site
 date: 2025-06-12
 authors:

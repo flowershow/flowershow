@@ -1,5 +1,5 @@
 ---
-title: How to Publish a GitHub Repository with Markdown Content
+title: Publish a GitHub Repository with Markdown Content
 date: 2025-06-04
 updated: 2026-04-20
 authors:

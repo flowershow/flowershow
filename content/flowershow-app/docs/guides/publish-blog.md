@@ -1,5 +1,5 @@
 ---
-title: How to Publish a Blog
+title: Publish a Blog
 description: A comprehensive guide on setting up a blog on your Flowershow site — from creating a blog section to configuring the blog home page, adding authors, navigation, and applying themes.
 date: 2025-06-24
 authors:

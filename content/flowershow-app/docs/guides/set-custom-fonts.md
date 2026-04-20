@@ -1,5 +1,5 @@
 ---
-title: How to Customize Fonts
+title: Customize Fonts
 description: Learn how to enhance your site's typography with Google Fonts
 date: 2025-06-29
 authors:

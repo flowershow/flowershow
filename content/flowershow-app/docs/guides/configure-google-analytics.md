@@ -1,5 +1,5 @@
 ---
-title: How to Configure Google Analytics
+title: Configure Google Analytics
 description: Learn how to add Google Analytics tracking to your Flowershow site
 date: 2025-04-21
 authors:
