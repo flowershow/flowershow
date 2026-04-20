@@ -301,6 +301,8 @@
     { "from": "/docs/guides/how-to-publish-vault-quickly-and-easily", "to": "/docs/guides/publish-obsidian-vault" },
     { "from": "/docs/guides/how-to-publish-vault-with-enveloppe-plugin", "to": "/docs/guides/publish-with-enveloppe" },
     { "from": "/docs/guides/how-to-set-custom-domain", "to": "/docs/guides/set-custom-domain" },
-    { "from": "/docs/guides/how-to-set-custom-fonts", "to": "/docs/guides/set-custom-fonts" }
+    { "from": "/docs/guides/how-to-set-custom-fonts", "to": "/docs/guides/set-custom-fonts" },
+    { "from": "/docs/reference/umami", "to": "/docs/reference/analytics" },
+    { "from": "/docs/umami", "to": "/docs/reference/analytics" }
   ]
 }

@@ -12,7 +12,7 @@ Configuration options, feature docs, and CLI reference.
 - [[themes|Themes]] — switch between official themes
 - [[custom-styles|Custom styles]] — override colors, fonts, spacing
 - [[dark-mode|Dark mode]] — light/dark/system mode switching
-- [[analytics|Analytics]] — Google Analytics and Umami
+- [[analytics|Analytics]] — Google Analytics 4 and Umami
 - [[comments|Comments]] — reader comments on pages
 - [[edit-this-page|Edit links]] — "Edit this page" buttons
 - [[content-filtering|Content filtering]] — exclude files from publishing
