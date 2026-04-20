@@ -376,18 +376,23 @@ export default async function SitePage(props: {
     site.enableComments &&
     (metadata?.showComments ?? siteConfig?.showComments ?? site.enableComments);
   const giscusConfig = siteConfig?.giscus;
+  const activeSidebarPath = (() => {
+    const paths = siteConfig?.sidebar?.paths;
+    if (!paths || paths.length === 0) return undefined;
+    const pagePath = '/' + blob.path;
+    return paths.find(
+      (path) =>
+        pagePath === path ||
+        pagePath.startsWith(path.endsWith('/') ? path : path + '/'),
+    );
+  })();
   const showSidebar = (() => {
     const enabled =
       metadata?.showSidebar ?? siteConfig?.showSidebar ?? site.showSidebar;
     if (!enabled) return false;
     const paths = siteConfig?.sidebar?.paths;
     if (!paths || paths.length === 0) return true;
-    const pagePath = '/' + blob.path;
-    return paths.some(
-      (path) =>
-        pagePath === path ||
-        pagePath.startsWith(path.endsWith('/') ? path : path + '/'),
-    );
+    return activeSidebarPath !== undefined;
   })();
   const showToc = metadata?.showToc ?? siteConfig?.showToc ?? true;
   const heroConfig = resolveHeroConfig(metadata, siteConfig);
@@ -401,7 +406,9 @@ export default async function SitePage(props: {
       .query({
         siteId: site.id,
         orderBy: siteConfig?.sidebar?.orderBy,
-        paths: siteConfig?.sidebar?.paths,
+        paths: activeSidebarPath
+          ? [activeSidebarPath]
+          : siteConfig?.sidebar?.paths,
         contentHide: siteConfig?.contentHide,
       })
       .catch(() => []);
