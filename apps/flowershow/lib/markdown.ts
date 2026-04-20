@@ -51,7 +51,7 @@ const WIKI_ALIAS_DIVIDER = '\uE000';
 
 export function protectWikiLinkAliases(content: string): string {
   return content.replace(
-    /\[\[([^\[\]\n|]*)\|([^\[\]\n]*)\]\]/g,
+    /\[\[([^\[\]\n|]*?)\\?\|([^\[\]\n]*?)\]\]/g,
     `[[$1${WIKI_ALIAS_DIVIDER}$2]]`,
   );
 }

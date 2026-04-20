@@ -1,4 +1,4 @@
-import { expect, type Locator, test } from '../helpers/fixtures';
+import { expect, test } from '../helpers/fixtures';
 
 test('Tables', async ({ page, basePath }) => {
   await page.goto(`${basePath}/tables`);
@@ -25,9 +25,21 @@ test('Tables', async ({ page, basePath }) => {
     await expect(rows.last().locator('td').last()).toHaveText('Tokyo');
   });
 
-  await test.step('wiki-link with alias renders as link inside table cell', async () => {
+  await test.step('wiki-link with escaped alias (\\|) renders as link inside table cell', async () => {
     const link = content.locator('table a[href*="basic-syntax"]');
     await expect(link).toBeVisible();
     await expect(link).toHaveText('Basic Syntax Guide');
+  });
+
+  await test.step('multiple wiki-links with escaped aliases render correctly in table', async () => {
+    const link = content.locator('table a[href*="frontmatter"]');
+    await expect(link).toBeVisible();
+    await expect(link).toHaveText('Frontmatter Guide');
+  });
+
+  await test.step('wiki-link with unescaped alias (|) renders as link outside table', async () => {
+    const link = content.locator('p a[href*="basic-syntax"]');
+    await expect(link).toBeVisible();
+    await expect(link).toHaveText('Syntax Reference');
   });
 });

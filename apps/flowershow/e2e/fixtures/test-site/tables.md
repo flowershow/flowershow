@@ -14,4 +14,9 @@ title: Tables Test
 
 | Guide | Purpose |
 |-------|---------|
-| [[basic-syntax|Basic Syntax Guide]] | Markdown basics |
+| [[basic-syntax\|Basic Syntax Guide]] | Markdown basics |
+| [[frontmatter\|Frontmatter Guide]] | Frontmatter reference |
+
+## Wiki-link with alias outside table
+
+[[basic-syntax|Syntax Reference]]
