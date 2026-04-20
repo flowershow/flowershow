@@ -130,7 +130,7 @@
         "title": "Legal",
         "links": [
           {
-            "href": "/terms-of-service
+            "href": "/terms-of-service",
             "name": "Terms"
           },
           {
@@ -238,7 +238,7 @@
     },
     {
       "from": "/docs/custom-collection-cards",
-      "to": "/docs/reference/custom-collection-cards"
+      "to": "/docs/guides/custom-collection-cards"
     },
     {
       "from": "/docs/custom-domain",
@@ -262,11 +262,7 @@
     },
     {
       "from": "/docs/debug-mdx-errors",
-      "to": "/docs/reference/debug-mdx-errors"
-    },
-    {
-      "from": "/docs/debugging-404s",
-      "to": "/docs/reference/debugging-404s"
+      "to": "/docs/guides/debug-mdx-errors"
     },
     {
       "from": "/docs/edit-this-page",
@@ -434,7 +430,7 @@
     },
     {
       "from": "/blog/how-to-debug-404-pages",
-      "to": "/docs/guides/how-to-debug-404-pages"
+      "to": "/docs/guides/debug-404s"
     },
     {
       "from": "/blog/how-to-enable-page-comments",
@@ -503,10 +499,6 @@
     {
       "from": "/docs/guides/how-to-create-content-catalogs",
       "to": "/docs/reference/list-component"
-    },
-    {
-      "from": "/docs/guides/how-to-debug-404-pages",
-      "to": "/docs/reference/debugging-404s"
     },
     {
       "from": "/docs/guides/how-to-exclude-files-from-publishing",

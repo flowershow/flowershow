@@ -39,7 +39,6 @@ Configuration options, feature docs, and CLI reference.
 - [[canvas|Canvas]] — Obsidian Canvas support
 - [[obsidian-bases|Obsidian Bases]] — database views
 - [[list-component|List component]] — content catalogs
-- [[custom-collection-cards|Custom collection cards]] — card layout customization
 - [[forms|Forms]] — newsletter signups, contact forms, surveys
 
 ## Reference
@@ -47,9 +46,7 @@ Configuration options, feature docs, and CLI reference.
 - [[cli|CLI reference]] — all CLI commands and flags
 - [[syntax-mode|Syntax mode]] — Markdown vs MDX rendering
 - [[config|Config overview]] — high-level config guide
-- [[debug-mdx-errors|Debugging MDX errors]] — common errors and fixes
 - [[home-page|Home page]] — how Flowershow picks which file to show at `/`
-- [[debugging-404s|Debugging 404 pages]] — URL-to-file mapping and common fixes
 - [[faq|FAQ]]
 - [[privacy|Privacy policy]]
 - [[terms-of-service|Terms of service]]

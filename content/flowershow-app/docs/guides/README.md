@@ -24,3 +24,9 @@ Step-by-step walkthroughs for common tasks.
 - [[add-featured-images|Add featured images and social previews]]
 - [[add-forms|Add newsletter and subscription forms]]
 - [[enhance-markdown-with-styled-jsx-blocks|Enhance pages with styled JSX blocks]]
+- [[custom-collection-cards|Build custom collection cards]]
+
+## Troubleshooting
+
+- [[debug-mdx-errors|Debugging MDX errors]]
+- [[debugging-404s|Debugging 404 pages]]

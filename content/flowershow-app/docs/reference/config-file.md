@@ -1,6 +1,7 @@
 ---
 title: "`config.json` file"
 ---
+
 ## What is `config.json` file
 
 `config.json` file is the configuration file for your Flowershow site complementary to site settings in your dashboard. It allows you to customize various aspects of your site, from analytics and comments to navigation and layout options.
@@ -84,8 +85,6 @@ Here is an overview of all the site-wide configuration options that you can set 
     "defaultMode": "light",
     "showModeSwitch": true
   },
-  "redirects": [
-    { "from": "/blog/old-post", "to": "/blog/new-post" }
-  ]
+  "redirects": [{ "from": "/blog/old-post", "to": "/blog/new-post" }]
 }
 ```
