@@ -70,3 +70,97 @@ showEditLink: false
     </div>
   </div>
 </div>
+
+<div className="py-12 sm:py-24">
+  <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <div className="mx-auto max-w-3xl lg:text-center">
+      <h2 className="mt-2 text-pretty text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl lg:text-balance">Built for...</h2>
+    </div>
+    <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-5xl">
+      <dl className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-3 lg:gap-y-16">
+        <div className="relative pl-16">
+          <dt className="text-base font-semibold leading-7 text-gray-900">
+            <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
+              <span className="text-2xl">✏️</span>
+            </div>
+            Personal sites & blogs
+          </dt>
+          <dd className="mt-2 text-base leading-7 text-gray-600">
+            Write in your editor, commit, push. Your site updates while you stay in your git flow.
+          </dd>
+        </div>
+        <div className="relative pl-16">
+          <dt className="text-base font-semibold leading-7 text-gray-900">
+            <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
+              <span className="text-2xl">👥</span>
+            </div>
+            Team wikis & docs
+          </dt>
+          <dd className="mt-2 text-base leading-7 text-gray-600">
+            Collaborate via PRs and commits. No CMS accounts needed — Git is the workflow.
+          </dd>
+        </div>
+        <div className="relative pl-16">
+          <dt className="text-base font-semibold leading-7 text-gray-900">
+            <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
+              <span className="text-2xl">📦</span>
+            </div>
+            Open-source projects
+          </dt>
+          <dd className="mt-2 text-base leading-7 text-gray-600">
+            Already have a <code>/docs</code> folder in your repo? Set it as root directory and publish just your documentation.
+          </dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+</div>
+
+<div className="bg-gray-50 py-12 sm:py-24 my-12 rounded-3xl mx-6 lg:mx-8">
+  <div className="mx-auto max-w-7xl px-6 lg:px-8">
+    <div className="mx-auto max-w-3xl lg:text-center">
+      <h2 className="mt-2 text-pretty text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl lg:text-balance">Once you're live</h2>
+      <p className="mt-6 text-lg/8 text-gray-600">Your site is ready to customize. Here's what you can do next.</p>
+    </div>
+    <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-5xl">
+      <dl className="grid grid-cols-1 gap-x-8 gap-y-6 sm:grid-cols-2 lg:gap-y-8">
+        <div className="flex gap-x-4">
+          <div className="min-w-0">
+            <dt className="text-base font-semibold leading-7 text-gray-900"><a href="/docs/themes" className="hover:text-orange-400">Themes</a></dt>
+            <dd className="text-sm leading-6 text-gray-600">Choose a visual style for your site.</dd>
+          </div>
+        </div>
+        <div className="flex gap-x-4">
+          <div className="min-w-0">
+            <dt className="text-base font-semibold leading-7 text-gray-900"><a href="/docs/navbar" className="hover:text-orange-400">Navbar & sidebar</a></dt>
+            <dd className="text-sm leading-6 text-gray-600">Configure navigation links and structure.</dd>
+          </div>
+        </div>
+        <div className="flex gap-x-4">
+          <div className="min-w-0">
+            <dt className="text-base font-semibold leading-7 text-gray-900"><a href="/docs/custom-styles" className="hover:text-orange-400">Custom styles</a></dt>
+            <dd className="text-sm leading-6 text-gray-600">Tweak colors, fonts, and layout with CSS variables.</dd>
+          </div>
+        </div>
+        <div className="flex gap-x-4">
+          <div className="min-w-0">
+            <dt className="text-base font-semibold leading-7 text-gray-900"><a href="/docs/custom-domain" className="hover:text-orange-400">Custom domain</a> <span className="text-xs font-medium text-orange-400">Premium</span></dt>
+            <dd className="text-sm leading-6 text-gray-600">Publish on your own domain.</dd>
+          </div>
+        </div>
+        <div className="flex gap-x-4">
+          <div className="min-w-0">
+            <dt className="text-base font-semibold leading-7 text-gray-900"><a href="/docs/comments" className="hover:text-orange-400">Comments</a></dt>
+            <dd className="text-sm leading-6 text-gray-600">Let readers leave feedback on your pages.</dd>
+          </div>
+        </div>
+        <div className="flex gap-x-4">
+          <div className="min-w-0">
+            <dt className="text-base font-semibold leading-7 text-gray-900"><a href="/blog/announcing-full-text-search" className="hover:text-orange-400">Full-text search</a> <span className="text-xs font-medium text-orange-400">Premium</span></dt>
+            <dd className="text-sm leading-6 text-gray-600">Help visitors find anything across your site.</dd>
+          </div>
+        </div>
+      </dl>
+    </div>
+  </div>
+</div>
