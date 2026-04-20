@@ -45,6 +45,17 @@ interface MarkdownOptions {
   canvasNodeFiles?: Record<string, string>;
 }
 
+// Private Use Area char used as a temporary alias divider so GFM table block-parsing
+// (which splits on | before inline tokenization runs) doesn't break [[target|alias]] links.
+const WIKI_ALIAS_DIVIDER = '\uE000';
+
+export function protectWikiLinkAliases(content: string): string {
+  return content.replace(
+    /\[\[([^\[\]\n|]*)\|([^\[\]\n]*)\]\]/g,
+    `[[$1${WIKI_ALIAS_DIVIDER}$2]]`,
+  );
+}
+
 // Process pure markdown files using unified
 export async function processMarkdown(
   _content: string,
@@ -53,7 +64,10 @@ export async function processMarkdown(
   const { filePath, files, siteHostname, permalinks } = options;
 
   // this strips out frontmatter, so that it's not inlined with the rest of the markdown file
-  const { content } = matter(_content, {});
+  const { content: rawContent } = matter(_content, {});
+
+  // Protect [[target|alias]] from GFM table cell splitting before unified parses
+  const content = protectWikiLinkAliases(rawContent);
 
   const processor = unified()
     .use(remarkParse)
@@ -70,6 +84,7 @@ export async function processMarkdown(
       format: 'shortestPossible',
       urlResolver: getUrlResolver(siteHostname),
       permalinks,
+      aliasDivider: WIKI_ALIAS_DIVIDER,
     })
     .use(remarkYouTubeAutoEmbed)
     .use(remarkGfm)
@@ -141,6 +156,7 @@ export const getMdxOptions = ({
             format: 'shortestPossible',
             urlResolver: getUrlResolver(siteHostname),
             permalinks,
+            aliasDivider: WIKI_ALIAS_DIVIDER,
           },
         ],
         remarkYouTubeAutoEmbed,

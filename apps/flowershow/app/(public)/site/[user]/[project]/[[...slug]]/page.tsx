@@ -21,7 +21,11 @@ import { getSiteUrl } from '@/lib/get-site-url';
 import { resolveHeroConfig } from '@/lib/hero-config';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import { isEmoji } from '@/lib/is-emoji';
-import { getMdxOptions, processMarkdown } from '@/lib/markdown';
+import {
+  getMdxOptions,
+  processMarkdown,
+  protectWikiLinkAliases,
+} from '@/lib/markdown';
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { processCanvas } from '@/lib/process-canvas';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
@@ -311,7 +315,7 @@ export default async function SitePage(props: {
         }) as any;
 
         const mdxSource = await serialize<PageMetadata>({
-          source: pageContent ?? '',
+          source: protectWikiLinkAliases(pageContent ?? ''),
           options: mdxOptions,
         });
 
