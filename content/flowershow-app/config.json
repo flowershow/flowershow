@@ -209,7 +209,6 @@
       "to": "/publish-obsidian"
     },
     { "from": "/docs/analytics", "to": "/docs/reference/analytics" },
-    { "from": "/docs/blog-setup", "to": "/docs/reference/blog-setup" },
     { "from": "/docs/canvas", "to": "/docs/reference/canvas" },
     { "from": "/docs/cli", "to": "/docs/reference/cli" },
     { "from": "/docs/comments", "to": "/docs/reference/comments" },
@@ -303,6 +302,8 @@
     { "from": "/docs/guides/how-to-set-custom-domain", "to": "/docs/guides/set-custom-domain" },
     { "from": "/docs/guides/how-to-set-custom-fonts", "to": "/docs/guides/set-custom-fonts" },
     { "from": "/docs/reference/umami", "to": "/docs/reference/analytics" },
-    { "from": "/docs/umami", "to": "/docs/reference/analytics" }
+    { "from": "/docs/umami", "to": "/docs/reference/analytics" },
+    { "from": "/docs/reference/blog-setup", "to": "/docs/guides/publish-blog" },
+    { "from": "/docs/blog-setup", "to": "/docs/guides/publish-blog" }
   ]
 }

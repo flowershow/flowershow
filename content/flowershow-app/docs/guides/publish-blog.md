@@ -7,9 +7,6 @@ authors:
 image: /assets/blog-showcase.png
 ---
 
-> [!info]
-> For the latest guide, see [[docs/blog-setup|Blog setup docs]].
-
 This guide walks you through the process of adding a **blog** to your Flowershow site.  
 You’ll learn how to create a dedicated blog section, set up a landing page that lists your posts, attribute content to authors, embed a subscription form, and apply a theme.
 
@@ -140,12 +137,15 @@ The `slots` tell Flowershow which frontmatter fields to display in each part of 
 ![[Pasted image 20251007233209.png]]
 
 >[!info] `List` Component Options
-> Learn how to customize the List component in the [List Component Docs](/docs/list-component).
+> Learn how to customize the List component in the [[list-component|List component docs]].
+
+> [!info]
+> See [[list-component|List component]] for all available slots and options.
 
 > [!important]
 > Using the `List` component requires MDX rendering, since it uses JSX (like `<List />`).
 > This is why we set `syntaxMode: mdx` in the frontmatter - to make sure Flowershow parses and renders this file as MDX.
-> 📚 Read more about different syntax rendering modes and how to enable them: https://flowershow.app/blog/announcing-syntax-mode-configuration
+> 📚 Read more about different syntax rendering modes and how to enable them: [[syntax-mode|syntax mode docs]]
 
 ## Step 4: Set Up Author Pages
 
@@ -192,8 +192,8 @@ When an author page exists, the author's name in blog posts will automatically l
 > [!tip] Author Page Names
 > Use simple, URL-friendly names for author page files (e.g., `jane-smith.md`) and set the full name in the `title` field. Then use the file name as an ID in the blog post frontmatter (e.g., `authors: [jane-smith]`).
 
-> [!info] Learn more about author pages
-> For more details about author pages, profile customization, and avatars, see [How to Show Authors of Your Content in Page Headers](/blog/how-to-create-author-pages).
+> [!info]
+> See [[page-authors|Page authors]] for full details on profile customization and avatars.
 
 ## Step 5: Add Blog to Navigation
 
@@ -214,7 +214,7 @@ When an author page exists, the author's name in blog posts will automatically l
 ```
 
 > [!info] Learn more about navigation configuration
-> For more details about customizing your navigation bar, including adding logos and social links, see [How to Configure the Navigation Bar](/blog/how-to-configure-navigation-bar).
+> For more details about customizing your navigation bar, including adding logos and social links, see [[navbar|navbar docs]].
 
 ![[Pasted image 20251007233748.png]]
 ## Step 6: Control What Gets Published
@@ -251,8 +251,8 @@ This is useful for:
 - Archiving old content
 - Managing work-in-progress posts
 
-> [!info] Learn more about content filtering
-> For more details about controlling which files get published, including advanced configuration options, see [How to Exclude Files from Publishing](/blog/how-to-exclude-files-from-publishing).
+> [!info]
+> See [[content-filtering|Content filtering]] for more options.
 
 ## Step 7: Embed a Subscription Form
 
@@ -265,7 +265,7 @@ If your form provider gives you a simple `<iframe>` snippet, you can paste it di
 ```
 
 > [!info]
-> Learn more in [How to Add Newsletter and Other Subscription Forms](/blog/how-to-add-newsletter-and-other-subscription-forms).
+> Learn more in [[add-forms|forms guide]].
 
 ![[Pasted image 20251007233814.png]]
 
@@ -285,7 +285,7 @@ In your site’s config.json, you can set the theme like this:
 > For more details about using official Flowershow themes, see [[announcing-official-themes|Official Flowershow Themes]].
 
 > ![tip] You can also create a custom theme!
-> You can also style your site yourself by creating a `custom.css` file in the root of your site. To learn more, see [[how-to-customize-style|How to Customize the Style of Your Site]].
+> You can also style your site yourself by creating a `custom.css` file in the root of your site. To learn more, see [[customize-style|CSS customization guide]].
 
 ![[Pasted image 20251007233927.png]]
 ![[Pasted image 20251007233951.png]]

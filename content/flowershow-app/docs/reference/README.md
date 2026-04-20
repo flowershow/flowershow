@@ -41,7 +41,6 @@ Configuration options, feature docs, and CLI reference.
 - [[list-component|List component]] — content catalogs
 - [[custom-collection-cards|Custom collection cards]] — card layout customization
 - [[forms|Forms]] — newsletter signups, contact forms, surveys
-- [[blog-setup|Blog setup]] — add a blog section with listings and authors
 
 ## Reference
 
