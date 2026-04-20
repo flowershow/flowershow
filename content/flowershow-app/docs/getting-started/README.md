@@ -1,7 +1,6 @@
 ---
 title: Getting Started
 description: Go from markdown files to a live website in under a minute.
-showHero: true
 ---
 
 Pick the method that fits how you work.
