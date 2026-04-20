@@ -1,6 +1,7 @@
 ---
 title: How to Publish a GitHub Repository with Markdown Content
 date: 2025-06-04
+updated: 2026-04-20
 authors:
   - garance
   - rufuspollock
@@ -41,14 +42,14 @@ Before we start, you'll need:
 
 ## STEP 2: Publish Your Repository
 
-1. Go to the Flowershow Cloud dashboard
-2. Choose the "Publish your markdown from GitHub" option (or click here: https://cloud.flowershow.app/new)
-3. Select your markdown repository from the list
-4. Click **Create Website** — Flowershow will set up your site in a few moments.
-5. Once the site shows as "Synced", click **Visit** to preview your published site.
+1. In the Flowershow Cloud dashboard, click **New Site** and give your site a name
+2. Select **Sync with GitHub**
+3. Choose your repository and branch
+4. Click **Save** — Flowershow will set up your site in a few moments
+5. Once the site shows as "Synced", click **Visit** to preview your published site
 
 > [!tip] Publishing Part of Your Repository
-> If your repository contains both code and documentation (e.g., a software project), you can use the root directory option to publish only the documentation. For example, if your docs are in a `/docs` folder, just set that as the root directory and Flowershow will only publish content from there.
+> If your repository contains both code and documentation (e.g., a software project), you can set a root directory to publish only the documentation. For example, if your docs are in a `/docs` folder, set that as the root directory and Flowershow will only publish content from there.
 
 > [!info] About Auto-Sync
 > By default, auto-sync is enabled for your website. This means when you push new changes to your GitHub repository, your website will automatically update to reflect those changes.
