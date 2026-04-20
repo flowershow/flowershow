@@ -20,9 +20,6 @@ syntaxMode: mdx
 
 3. **Enable MDX globally** via your site settings in the Flowershow Cloud dashboard.
 
-> [!note]
-> If your site is set to Markdown mode (e.g. because you publish from Obsidian), the frontmatter override or `.mdx` extension are the safest approaches — they enable MDX only where you need it without affecting other pages.
-
 See [[mermaid|Mermaid diagrams]] and [[syntax-mode|Syntax Mode Configuration]] for more details.
 
 ---
@@ -31,10 +28,12 @@ See [[mermaid|Mermaid diagrams]] and [[syntax-mode|Syntax Mode Configuration]] f
 
 The copy button on code blocks is a client-side feature and requires **MDX rendering mode**. In plain Markdown (`md`) mode, interactive features like the copy button may not initialise.
 
-**Fix — enable MDX for the page:**
+**Fix — enable MDX for that page:**
 
-1. **Change the file extension** to `.mdx`.
-2. **Add `syntaxMode: mdx` to the frontmatter:**
+You have three options:
+
+1. **Change the file extension** to `.mdx` — Flowershow will automatically parse it as MDX.
+2. **Add `syntaxMode: mdx` to the frontmatter** of the page:
 
 ```md
 ---
@@ -43,10 +42,7 @@ syntaxMode: mdx
 ---
 ```
 
-3. **Or switch globally** to `mdx` (the default) in the Flowershow Cloud dashboard.
-
-> [!note]
-> If you are already in MDX mode and the copy button still doesn't work, this may be a known bug. Please let us know in the [Flowershow Discord](https://discord.gg/fexYm7aE3) or open an issue on [GitHub](https://github.com/flowershow/flowershow/issues).
+3. **Enable MDX globally** via your site settings in the Flowershow Cloud dashboard.
 
 ---
 
