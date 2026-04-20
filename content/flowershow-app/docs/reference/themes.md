@@ -1,7 +1,6 @@
 ---
 title: Themes
 description: Change the look of your site in one line of config.
-showHero: true
 ---
 
 Flowershow comes with official themes you can apply instantly. Each theme is a CSS file served from CDN — no installation required.
