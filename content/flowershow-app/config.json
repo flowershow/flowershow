@@ -278,6 +278,18 @@
     { "from": "/blog/how-to-set-page-title", "to": "/docs/guides/how-to-set-page-title" },
     { "from": "/blog/publish-markdown-from-the-terminal-tutorial", "to": "/docs/guides/publish-markdown-from-the-terminal-tutorial" },
     { "from": "/blog/enhance-markdown-with-styled-jsx-blocks", "to": "/docs/guides/enhance-markdown-with-styled-jsx-blocks" },
-    { "from": "/blog/turn-obsidian-vault-into-a-blog", "to": "/docs/guides/turn-obsidian-vault-into-a-blog" }
+    { "from": "/blog/turn-obsidian-vault-into-a-blog", "to": "/docs/guides/turn-obsidian-vault-into-a-blog" },
+    { "from": "/docs/guides/how-to-configure-page-headers", "to": "/docs/reference/page-headers" },
+    { "from": "/docs/guides/how-to-configure-seo-and-social-media-metadata", "to": "/docs/reference/seo-social-metadata" },
+    { "from": "/docs/guides/how-to-create-author-pages", "to": "/docs/reference/page-authors" },
+    { "from": "/docs/guides/how-to-create-content-catalogs", "to": "/docs/reference/list-component" },
+    { "from": "/docs/guides/how-to-debug-404-pages", "to": "/docs/reference/debugging-404s" },
+    { "from": "/docs/guides/how-to-exclude-files-from-publishing", "to": "/docs/reference/content-filtering" },
+    { "from": "/docs/guides/how-to-set-custom-favicon", "to": "/docs/reference/custom-favicon" },
+    { "from": "/docs/guides/how-to-set-page-title", "to": "/docs/reference/page-titles" },
+    { "from": "/docs/guides/how-to-configure-navigation-bar", "to": "/docs/reference/navbar" },
+    { "from": "/docs/guides/how-to-add-hero-sections", "to": "/docs/reference/hero-sections" },
+    { "from": "/docs/guides/how-to-add-edit-this-page-button", "to": "/docs/reference/edit-this-page" },
+    { "from": "/docs/guides/how-to-customize-your-footer", "to": "/docs/reference/footer" }
   ]
 }
