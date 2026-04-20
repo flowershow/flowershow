@@ -7,19 +7,17 @@ description: Access frontmatter fields directly inside your MDX page content usi
 > This feature requires **MDX rendering**. It will not work in Markdown (`md`) mode.
 > See [[syntax-mode|Syntax Mode Configuration]] for details on how to enable MDX rendering.
 
-In MDX pages, all frontmatter fields are available as a `frontmatter` object. You can reference any custom field inline in your content using `{frontmatter.fieldname}`.
+In MDX pages, all frontmatter fields are available as a `frontmatter` object you can reference anywhere in your content using `{frontmatter.fieldname}`.
 
 ## Basic usage
 
-```md
+```mdx
 ---
 title: API Reference
 version: "3.2.1"
 status: stable
 ---
-```
 
-```mdx
 > **Version:** {frontmatter.version} · **Status:** {frontmatter.status}
 ```
 
@@ -51,19 +49,25 @@ After completing these steps you will be running {frontmatter.to_version}.
 
 ```mdx
 ---
-title: Reading List
-books:
-  - Deep Work
-  - The Art of Doing Science and Engineering
-  - Thinking, Fast and Slow
+title: Getting Started
+prerequisites:
+  - Node.js 18+
+  - A GitHub account
+  - pnpm or npm
 ---
 
+Before you begin, make sure you have the following:
+
 <ul>
-  {frontmatter.books.map(book => <li key={book}>{book}</li>)}
+  {frontmatter.prerequisites.map((item) => (
+    <li key={item}>{item}</li>
+  ))}
 </ul>
 ```
 
 ### Display a formatted date
+
+For complex expressions, extract to a variable at the top of the file to keep the content readable:
 
 ```mdx
 ---
@@ -71,11 +75,15 @@ title: Release Notes
 date: 2024-06-01
 ---
 
-Released on {new Date(frontmatter.date).toLocaleDateString("en-GB", { year: "numeric", month: "long", day: "numeric" })}.
+export const releaseDate = new Date(frontmatter.date).toLocaleDateString("en-GB", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+});
+
+Released on {releaseDate}.
 ```
 
-## Notes
+## Missing or undefined fields
 
-- This works for any custom frontmatter field — strings, numbers, booleans, and arrays.
-- Standard fields like `title` and `description` are already rendered by Flowershow automatically; no need to use `{frontmatter.title}` in your content.
-- The `frontmatter` variable is injected automatically by Flowershow in MDX mode.
+If you reference a frontmatter field that isn't defined, it renders as nothing — no error, just empty output. Double-check field names if a value isn't appearing as expected.
