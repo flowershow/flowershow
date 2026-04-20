@@ -1767,8 +1767,18 @@
       }
     }
   }
+  .site-tree-item-text {
+    flex: 1;
+  }
+  .site-tree-disclosure-panel {
+    transition: opacity 150ms ease-out, transform 150ms ease-out;
+    &[data-closed] {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
   .site-tree-item-icon {
-    margin-right: 0.25rem;
+    flex-shrink: 0;
     width: 1rem;
     height: 1rem;
   }
