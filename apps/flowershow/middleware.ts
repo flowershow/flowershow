@@ -189,7 +189,18 @@ export default async function middleware(req: NextRequest) {
     }
   }
 
-  // 7) Subdomain sites: {projectName}-{username}.flowershow.site
+  // 7a) Root site domain (e.g. flowershow.me) — redirect to home
+  if (hostname === env.NEXT_PUBLIC_SITE_DOMAIN) {
+    return withPHBootstrapCookie(
+      NextResponse.redirect(
+        new URL(`https://${env.NEXT_PUBLIC_HOME_DOMAIN}`, req.url),
+        { status: 302 },
+      ),
+      phBootstrap,
+    );
+  }
+
+  // 7) Subdomain sites: {projectName}-{username}.flowershow.me
   if (hostname.endsWith(`.${env.NEXT_PUBLIC_SITE_DOMAIN}`)) {
     const subdomain = hostname.slice(
       0,
