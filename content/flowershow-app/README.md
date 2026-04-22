@@ -31,11 +31,11 @@ showComments: false
         </a>
       </div>
       <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-gray-500">
-        <span>🖱️ Drag &amp; drop</span>
-        <span>⌨️ CLI</span>
-        <span>🐙 GitHub</span>
-        <span>💎 Obsidian</span>
-        <span>🤖 AI agents</span>
+        <a href="/dragndrop" className="hover:text-orange-500">🖱️ Drag &amp; drop</a>
+        <a href="/cli" className="hover:text-orange-500">⌨️ CLI</a>
+        <a href="/publish-github" className="hover:text-orange-500">🐙 GitHub</a>
+        <a href="/publish-obsidian" className="hover:text-orange-500">💎 Obsidian</a>
+        <a href="/cli" className="hover:text-orange-500">🤖 AI agents</a>
       </div>
       <div className="mt-8 flex items-center justify-center gap-x-6 text-sm text-gray-400">
         <span><strong className="text-gray-600">1,400+</strong> users</span>
