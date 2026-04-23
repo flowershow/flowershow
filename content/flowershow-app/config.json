@@ -338,7 +338,7 @@
     },
     {
       "from": "/docs/canvas",
-      "to": "/docs/reference/canvas"
+      "to": "/docs/reference/obsidian-canvas"
     },
     {
       "from": "/docs/cli",
