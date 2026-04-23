@@ -1,6 +1,6 @@
 ---
 title: Page headers
-description: Configure page headers and SEO meta tags. 
+description: Configure page headers and SEO meta tags.
 ---
 
 ## Available configuration options
@@ -22,20 +22,22 @@ image: content/assets/my-image.jpg
 The `title` field sets your page's title and is displayed in page header.
 
 It's also used in:
+
 - Page header
 - Sidebar navigation
 - Browser tab title
 - Search engine result title
 - Social media preview title
 
->[!note]
->Instead of using `title` frontmatter field, you can just set top level markdown `# Page title`. If neither `title` frontmatter field nor level 1 markdown heading is used, title will default to the filename.
+> [!note]
+> Instead of using `title` frontmatter field, you can just set top level markdown `# Page title`. If neither `title` frontmatter field nor level 1 markdown heading is used, title will default to the filename.
 
 ### Description
 
 The `description` field provides a brief summary of your page content and is displayed in page header.
 
 It's also used in:
+
 - Search engine result snippet
 - Social media preview description
 
@@ -55,7 +57,7 @@ See [[page-authors|Page authors]] for details on creating dedicated author pages
 The `date` field sets the publication date for your page and is displayed in page header.
 
 ```yaml
-date: 2024-03-06               # YYYY-MM-DD format
+date: 2024-03-06 # YYYY-MM-DD format
 ```
 
 ### Featured image
@@ -63,7 +65,8 @@ date: 2024-03-06               # YYYY-MM-DD format
 The `image` field sets a featured image for your page.
 
 It's also is used in:
-- Social media preview cards
+
+- Social media preview cards[^1]
 
 You can specify your featured image in two ways:
 
@@ -77,7 +80,7 @@ Add the `image` field to your page's frontmatter:
 ```yaml
 ---
 title: My Page
-image: content/assets/my-image.jpg  # relative path
+image: content/assets/my-image.jpg # relative path
 ---
 ```
 
@@ -86,7 +89,7 @@ Or use an absolute path from your repository root:
 ```yaml
 ---
 title: My Page
-image: /content/assets/my-image.jpg  # absolute path
+image: /content/assets/my-image.jpg # absolute path
 ---
 ```
 
@@ -95,7 +98,7 @@ You can also use external URLs:
 ```yaml
 ---
 title: My Page
-image: https://example.com/my-image.jpg  # external URL
+image: https://example.com/my-image.jpg # external URL
 ---
 ```
 
@@ -107,5 +110,4 @@ image: https://example.com/my-image.jpg  # external URL
 - Keep image file sizes reasonable (under 1MB) for better performance
 - Use ISO date format (YYYY-MM-DD) for dates
 
-> [!info]
-> For a detailed guide including examples and step-by-step instructions, check out [[how-to-configure-page-headers|this blog post]].
+[^1]: Custom social share images are only available on premium sites.
