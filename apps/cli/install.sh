@@ -56,5 +56,14 @@ fi
 
 chmod +x "$INSTALL_DIR/$BINARY"
 
+# Create flowershow alias
+ALIAS="flowershow"
+if [ -w "$INSTALL_DIR" ]; then
+  ln -sf "$INSTALL_DIR/$BINARY" "$INSTALL_DIR/$ALIAS"
+else
+  sudo ln -sf "$INSTALL_DIR/$BINARY" "$INSTALL_DIR/$ALIAS"
+fi
+
 echo "fl installed successfully to $INSTALL_DIR/$BINARY"
+echo "Also available as '$ALIAS'."
 echo "Run 'fl login' to get started."
