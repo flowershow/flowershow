@@ -278,7 +278,7 @@
     },
     {
       "from": "/blog/how-to-set-page-title",
-      "to": "/docs/guides/page-title"
+      "to": "/docs/reference/page-title"
     },
     {
       "from": "/blog/publish-markdown-from-the-terminal-tutorial",
@@ -450,7 +450,7 @@
     },
     {
       "from": "/docs/page-titles",
-      "to": "/docs/reference/page-titles"
+      "to": "/docs/reference/page-title"
     },
     {
       "from": "/docs/password-protection",
