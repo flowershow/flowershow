@@ -86,6 +86,3 @@ showHero: false
 2. Keep descriptions concise and engaging
 3. Ensure image paths are correct relative to your site root
 4. Test how your hero sections look on different screen sizes
-
-> [!info]
-> For detailed examples and step-by-step instructions, check out [[how-to-add-hero-sections|hero headers guide]].
