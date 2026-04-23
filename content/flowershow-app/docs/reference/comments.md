@@ -95,5 +95,14 @@ showComments: true
 ```
 
 
-> [!info]
-> For a detailed guide including examples and step-by-step instructions, check out [[how-to-enable-page-comments|this blog post]].
+## Troubleshooting
+
+**Comments section not appearing?**
+- Verify GitHub Discussions is enabled in your repository
+- Check if Giscus app has correct repository permissions
+- Ensure Repository ID and Category ID are entered correctly
+
+**Users can't comment?**
+- Confirm they are logged into GitHub
+- Check if Discussions are locked in your repository
+- Verify the discussion category still exists

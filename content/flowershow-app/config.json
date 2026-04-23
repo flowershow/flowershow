@@ -242,7 +242,7 @@
     },
     {
       "from": "/blog/how-to-enable-page-comments",
-      "to": "/docs/guides/page-comments"
+      "to": "/docs/reference/comments"
     },
     {
       "from": "/blog/how-to-exclude-files-from-publishing",
