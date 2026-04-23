@@ -11,15 +11,15 @@ showEditLink: false
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl text-center">
       <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl">Publish Markdown directly from your terminal.</h1>
-      <p className="mt-6 text-pretty text-lg text-gray-500 sm:text-xl/8">A CLI tool that turns any folder of Markdown files into a website. No git repo. No dashboard. No build pipeline. Works great for writers, developers, and AI agents alike.</p>
+      <p className="mt-6 text-pretty text-lg text-gray-500 sm:text-xl/8">Open-source CLI tool to publish Markdown and HTML straight from the command line. Perfect for power users and AI agents. Get a shareable URL in seconds.</p>
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <a
           href="https://flowershow.app/docs/cli"
           className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2"
-        >Start publishing</a>
+        >Install now</a>
         <a
-        href="/blog/announcing-flowershow-cli"
-        className="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm transition hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">Read the announcement →</a>
+        href="#demo"
+        className="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm transition hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">Learn more →</a>
       </div>
     </div>
     <div id="demo" className="mt-12 max-w-6xl mx-auto flow-root sm:mt-16">
@@ -31,55 +31,29 @@ showEditLink: false
 <div className="bg-gray-50 py-12 sm:py-24 my-12 rounded-3xl mx-6 lg:mx-8">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl lg:text-center">
-      <h2 className="mt-2 text-pretty text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl lg:text-balance">Up and running in 4 commands</h2>
-      <p className="mt-6 text-lg/8 text-gray-600">You don't need a git repo or a build pipeline. You just need a folder/file.</p>
+      <h2 className="mt-2 text-pretty text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl lg:text-balance">Publish in one command</h2>
+      <p className="mt-6 text-lg/8 text-gray-600">No git repo, no build pipeline. Just run <code>fl</code> — you'll get a shareable URL in seconds.</p>
     </div>
     <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-5xl">
       <dl className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-2 lg:gap-y-16">
         <div>
           <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
             <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-orange-400 text-white font-bold">1</div>
-            Install
+            Publish
           </dt>
           <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-            <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh</div>
-            <p className="mt-4">Detects your OS and architecture automatically. No runtime required. Windows users: download from the <a href="https://github.com/flowershow/flowershow/releases">releases page</a>.</p>
+            <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">fl ./my-folder</div>
+            <p className="mt-4">Your site goes live instantly. You get a shareable URL — works with a single file too.</p>
           </dd>
         </div>
         <div>
           <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
             <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-orange-400 text-white font-bold">2</div>
-            Login
+            Republish
           </dt>
           <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-            <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">fl login</div>
-            <p className="mt-4">Authenticates via browser. You only do this once.</p>
-          </dd>
-        </div>
-        <div>
-          <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-            <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-orange-400 text-white font-bold">3</div>
-            Publish your files
-          </dt>
-          <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-            <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">
-              fl ./my-folder<br/>
-              <span className="text-gray-500"># OR</span><br/>
-              <span className="text-gray-500"># fl ./my-file.md</span>
-            </div>
-            <p className="mt-4">Publish your files and folders to the web.</p>
-          </dd>
-        </div>
-        <div>
-          <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-            <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-orange-400 text-white font-bold">4</div>
-            Update your site
-          </dt>
-          <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-            <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">
-              fl ./my-folder
-            </div>
-            <p className="mt-4">Same command every time. We diff your files and upload only what changed.</p>
+            <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">fl ./my-folder</div>
+            <p className="mt-4">Same command updates your site. We diff locally and upload only what changed.</p>
           </dd>
         </div>
       </dl>
