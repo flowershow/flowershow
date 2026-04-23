@@ -7,9 +7,6 @@ authors:
 image: /assets/custom-fonts-featured.png
 ---
 
-> [!info]
-> For the latest guide, see [[docs/custom-fonts|Custom fonts docs]].
-
 This guide will show you how to use fonts from Google Fonts to customize your site's typography. You'll learn how to select fonts, import them using CSS, and apply them to different elements of your site.
 
 Here's the default Flowershow theme that we're going to transform:
@@ -73,6 +70,15 @@ article :not(h1, h2, h3, h4, h5, h6) {
 ```
 
 ![[custom-fonts-3.png]]
+
+> [!tip] Alternative: CSS variables
+> Instead of setting `font-family` directly, you can use CSS variables:
+> ```css
+> :root {
+>   --font-heading: 'Playfair Display', Georgia, serif;
+>   --font-body: 'Source Sans 3', -apple-system, BlinkMacSystemFont, sans-serif;
+> }
+> ```
 
 > [!info] `!important` declaration
 > The default Flowershow theme uses Tailwind classes for styling your site. You can easily override these styles by using the `!important` declaration with your custom font styles. This is the recommended approach as it ensures your styles are applied reliably.

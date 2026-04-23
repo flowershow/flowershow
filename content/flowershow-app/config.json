@@ -370,7 +370,7 @@
     },
     {
       "from": "/docs/custom-fonts",
-      "to": "/docs/reference/custom-fonts"
+      "to": "/docs/guides/custom-fonts"
     },
     {
       "from": "/docs/custom-styles",
