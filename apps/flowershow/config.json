@@ -4,7 +4,7 @@
   "logo": "https://r2-assets.flowershow.app/logo.png",
   "favicon": "https://r2-assets.flowershow.app/favicon.ico",
   "thumbnail": "https://r2-assets.flowershow.app/thumbnail.png",
-  "termsOfService": "https://flowershow.app/docs/terms-of-service",
+  "termsOfService": "https://flowershow.app/terms-of-service",
   "githubTemplateUrl": "https://github.com/datopian/flowershow-cloud-template",
   "landingPageUrl": "https://flowershow.app/",
   "nav": {
@@ -118,11 +118,11 @@
         "title": "Legal",
         "links": [
           {
-            "href": "/docs/terms-of-service",
+            "href": "/terms-of-service",
             "name": "Terms"
           },
           {
-            "href": "/docs/privacy",
+            "href": "/privacy",
             "name": "Privacy"
           }
         ]
