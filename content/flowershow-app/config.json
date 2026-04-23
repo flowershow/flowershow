@@ -310,7 +310,11 @@
     },
     {
       "from": "/docs/site-config",
-      "to": "/docs/reference/config"
+      "to": "/docs"
+    },
+    {
+      "from": "/docs/site-settings",
+      "to": "/docs"
     },
     {
       "from": "/publish",
@@ -354,7 +358,7 @@
     },
     {
       "from": "/docs/config",
-      "to": "/docs/reference/config"
+      "to": "/docs"
     },
     {
       "from": "/docs/content-filtering",

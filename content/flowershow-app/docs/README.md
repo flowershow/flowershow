@@ -6,53 +6,60 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
 
 **[[getting-started|Getting Started]]** — go from markdown files to a live site in under a minute.
 
-Three ways to publish:
-- **[[getting-started#From Obsidian|From Obsidian]]** — publish directly from your vault
-- **[[getting-started#From GitHub|From GitHub]]** — auto-sync a repo to your site
-- **[[getting-started#From the Terminal (CLI)|From the CLI]]** — publish any folder, no repo needed
+## Site setup
 
-## Configure your site
+- [[home-page|Home page]] — How Flowershow picks which file to show at `/`.
+- [[content-filtering|Content filtering]] — Include/exclude files and directories.
+- [[redirects|Redirects]] — URL redirects for moved or renamed pages.
+- [[rss-feed|RSS feed]] — Subscribe feed for pages with a `date` field.
+- [[robots-txt|robots.txt]] — Control how search engines crawl your site.
+- [[custom-domain|Custom domain]] — Use your own domain (Premium).
+- [[password-protection|Password protection]] — Restrict access with a password (Premium).
+- [[custom-favicon|Favicon]] — Custom favicon image or emoji (Premium).
 
-- [[config-file|Config file reference]] — all `config.json` options
-- [[site-settings|Site settings dashboard]] — configure from the UI
-- [[navbar|Navbar]] — links, dropdowns, CTA button
-- [[footer|Footer]] — footer links and layout
-- [[sidebar|Sidebar]] — table of contents navigation
-- [[themes|Themes]] — switch between official themes
-- [[custom-styles|Custom styles]] — override colors, fonts, spacing
-- [[dark-mode|Dark mode]] — light/dark/system mode switching
-- [[analytics|Analytics]] — Google Analytics and Umami
-- [[comments|Comments]] — reader comments on pages
-- [[edit-this-page|Edit links]] — "Edit this page" buttons
-- [[content-filtering|Content filtering]] — exclude files from publishing
-- [[custom-domain|Custom domain]] — use your own domain (Premium)
-- [[custom-favicon|Custom favicon]] — browser tab icon (Premium)
-- [[custom-fonts|Custom fonts]] — Google Fonts and typography
-- [[password-protection|Password protection]] — restrict site access (Premium)
-- [[redirects|URL redirects]] — redirect old URLs to new ones
+## Layout & navigation
 
-## Page content
+- [[navbar|Navbar]] — Logo, title, nav links and social links.
+- [[footer|Footer]] — Footer navigation columns and links.
+- [[sidebar|Sidebar]] — Show site structure in a left sidebar.
+- [[table-of-contents|Table of contents]] — Per-page table of contents.
 
-- [[syntax|Markdown syntax]] — full syntax reference
-- [[page-headers|Page headers]] — titles, descriptions, images
-- [[page-authors|Page authors]] — author attribution
-- [[page-titles|Page titles]] — how titles are resolved
-- [[hero-sections|Hero sections]] — full-width banners
-- [[seo-social-metadata|SEO and social metadata]] — Open Graph, Twitter cards
-- [[table-of-contents|Table of contents]] — per-page TOC
-- [[math|Math equations]] — LaTeX with KaTeX
-- [[mermaid|Mermaid diagrams]] — flowcharts and sequence diagrams
-- [[canvas|Canvas]] — Obsidian Canvas support
-- [[obsidian-bases|Obsidian Bases]] — database views
-- [[list-component|List component]] — content catalogs
-- [[forms|Forms]] — newsletter signups, contact forms, surveys
-- [[blog-setup|Blog setup]] — add a blog section with listings and authors
+## Pages & content
+
+- [[blog-setup|Blog setup]] — Add a blog section with listings and authors.
+- [[page-title|Page titles]] — Control how page titles display and appear in search.
+- [[page-headers|Page headers]] — Configure headers and meta tags.
+- [[page-authors|Page authors]] — Author profiles with avatars and links.
+- [[hero-sections|Hero sections]] — Full-width banners with images and CTAs.
+- [[list-component|List component]] — Auto-generated content catalogs.
+- [[seo-social-metadata|SEO & social metadata]] — Open Graph images, descriptions, titles.
+- [[edit-this-page|"Edit this page" links]] — Link to source file on GitHub.
+- [[comments|Comments]] — Page comments via Giscus / GitHub Discussions.
+- [[forms|Forms]] — Newsletter signups, contact forms, surveys.
+
+## Appearance
+
+- [[themes|Themes]] — Switch between official themes.
+- [[custom-styles|Custom styles]] — Override default styles with CSS.
+- [[custom-fonts|Custom fonts]] — Google Fonts and typography.
+- [[dark-mode|Dark mode]] — Light/dark theme and mode switcher.
+
+## Writing & syntax
+
+- [[frontmatter-variables|Frontmatter variables]] — All supported frontmatter fields.
+- [[syntax|Supported syntax]] — Markdown, GFM, and Obsidian syntax.
+- [[syntax-mode|Syntax mode]] — Markdown vs MDX rendering.
+- [[math|Math equations]] — LaTeX math via KaTeX.
+- [[mermaid|Mermaid diagrams]] — Text-based diagrams and charts.
+- [[obsidian-canvas|Canvas]] — Obsidian Canvas support.
+- [[obsidian-bases|Obsidian Bases]] — Database views from Obsidian.
+
+## Troubleshooting
+
+- [[debug-mdx-errors|Debugging MDX errors]] — Common errors and fixes.
+- [[debug-404s|Debugging 404 pages]] — URL-to-file mapping and common fixes.
 
 ## Reference
 
-- [[docs/cli|CLI reference]] — all CLI commands
-- [[syntax-mode|Syntax mode]] — Markdown vs MDX rendering
-- [[debug-mdx-errors|Debugging MDX errors]] — common errors and fixes
-- [[home-page|Home page]] — how Flowershow picks which file to show at `/`
-- [[debugging-404s|Debugging 404 pages]] — URL-to-file mapping and common fixes
-- [[faq|FAQ]]
+- [[reference/cli|CLI]] — All CLI commands and options.
+- [[config-file|config.json]] — All config file options and types.
