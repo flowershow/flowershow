@@ -11,9 +11,9 @@ When someone visits `/blog/my-post`, Flowershow looks for:
 2. `/blog/my-post/README.md`
 3. `/blog/my-post/index.md`
 
-For your homepage (`/`), see [[home-page|Home page resolution]] for the full fallback order.
+For your homepage (`/`), Flowershow looks for `/README.md` or `/index.md` at the root of your repository. See [[home-page|Home page resolution]] for the full fallback order.
 
-If you've set a `rootDir` in site settings (e.g. `/docs`), all paths are resolved relative to that directory.
+If you've set a `rootDir` in site settings (e.g. `/docs`), all paths are resolved relative to that directory. For example, visiting `/quick-start` resolves to `/docs/quick-start.md`, `/docs/quick-start/README.md`, or `/docs/quick-start/index.md`.
 
 ## Common causes
 
@@ -22,6 +22,9 @@ If you've set a `rootDir` in site settings (e.g. `/docs`), all paths are resolve
 You have a `/blog/` directory but no `blog/README.md` or `blog/index.md` inside it.
 
 **Fix:** Create a `README.md` in the directory.
+
+> [!note]
+> This also applies to the root URL. If your homepage returns a 404, your repository is missing a top-level `/README.md` or `/index.md`.
 
 ### Case mismatch
 
@@ -49,10 +52,11 @@ The file is in a `contentExclude` path or has `publish: false` in frontmatter.
 
 ## File name encoding
 
+- `.md` and `.mdx` extensions are stripped: `my-post.md` → `/my-post`
+- `README.md` and `index.md` resolve to the parent directory URL: `/blog/README.md` → `/blog`
 - Spaces become `+` in URLs: `my post.md` → `/my+post`
-- Special characters are URL-encoded: `café.md` → `/caf%C3%A9`
-- `.md` and `.mdx` extensions are stripped
-- `README.md` and `index.md` resolve to the parent directory URL
+- Other special characters are URL-encoded via `encodeURIComponent()`: `café.md` → `/caf%C3%A9`
+- Letter casing is preserved
 
 ## Debugging checklist
 

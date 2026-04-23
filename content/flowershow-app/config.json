@@ -238,7 +238,7 @@
     },
     {
       "from": "/blog/how-to-debug-404-pages",
-      "to": "/docs/guides/debug-404-pages"
+      "to": "/docs/reference/debug-404s"
     },
     {
       "from": "/blog/how-to-enable-page-comments",
@@ -386,7 +386,7 @@
     },
     {
       "from": "/docs/debugging-404s",
-      "to": "/docs/reference/debugging-404s"
+      "to": "/docs/reference/debug-404s"
     },
     {
       "from": "/docs/edit-this-page",
