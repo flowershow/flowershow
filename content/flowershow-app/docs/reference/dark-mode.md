@@ -48,9 +48,6 @@ You can combine both options to set a default theme and allow users to change it
 > [!important]
 > If you're using one of the official Flowershow themes (other than the default theme), check the [flowershow/themes](https://github.com/flowershow/themes) repository first to ensure your chosen theme supports dark mode.
 
-> [!note]
-> The legacy API where `theme` was a top-level string (e.g. `"theme": "superstack"`) is still supported, but to use dark mode you must switch to the new API where the theme name is nested inside the `theme` object (see example below).
-
 When using an official theme with dark mode support, include the theme name in your configuration:
 
 ```json
