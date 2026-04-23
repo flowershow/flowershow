@@ -5,7 +5,7 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
 ## Start here
 
 <div class="not-prose my-6 font-heading">
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="getting-started">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="getting-started">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Getting Started</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Go from markdown files to a live site in under a minute.</div>
   </a>
@@ -14,35 +14,35 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
 ## Site setup
 
 <div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="home-page">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="home-page">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Home page</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">How Flowershow picks which file to show at /.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="content-filtering">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="content-filtering">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Content filtering</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Include/exclude files and directories.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="redirects">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="redirects">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Redirects</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">URL redirects for moved or renamed pages.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="rss-feed">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="rss-feed">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">RSS feed</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Subscribe feed for pages with a <code>date</code> field.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="robots-txt">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="robots-txt">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">robots.txt</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Control how search engines crawl your site.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="custom-domain">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="custom-domain">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Custom domain</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Use your own domain (Premium).</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="password-protection">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="password-protection">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Password protection</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Restrict access with a password (Premium).</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="custom-favicon">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="custom-favicon">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Favicon</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Custom favicon image or emoji (Premium).</div>
   </a>
@@ -51,19 +51,19 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
 ## Layout & navigation
 
 <div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="navbar">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="navbar">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Navbar</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Logo, title, nav links and social links.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="footer">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="footer">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Footer</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Footer navigation columns and links.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="sidebar">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="sidebar">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Sidebar</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Show site structure in a left sidebar.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="table-of-contents">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="table-of-contents">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Table of contents</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Per-page table of contents.</div>
   </a>
@@ -72,43 +72,43 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
 ## Pages & content
 
 <div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="blog-setup">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="blog-setup">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Blog setup</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Add a blog section with listings and authors.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="page-title">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="page-title">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Page titles</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Control how page titles display and appear in search.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="page-headers">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="page-headers">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Page headers</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Configure headers and meta tags.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="page-authors">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="page-authors">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Page authors</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Author profiles with avatars and links.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="hero-sections">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="hero-sections">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Hero sections</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Full-width banners with images and CTAs.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="list-component">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="list-component">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">List component</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Auto-generated content catalogs.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="seo-social-metadata">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="seo-social-metadata">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">SEO &amp; social metadata</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Open Graph images, descriptions, titles.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="edit-this-page">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="edit-this-page">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">"Edit this page" links</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Link to source file on GitHub.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="comments">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="comments">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Comments</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Page comments via Giscus / GitHub Discussions.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="forms">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="forms">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Forms</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Newsletter signups, contact forms, surveys.</div>
   </a>
@@ -117,19 +117,19 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
 ## Appearance
 
 <div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="themes">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="themes">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Themes</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Switch between official themes.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="custom-styles">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="custom-styles">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Custom styles</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Override default styles with CSS.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="custom-fonts">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="custom-fonts">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Custom fonts</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Google Fonts and typography.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="dark-mode">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="dark-mode">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Dark mode</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Light/dark theme and mode switcher.</div>
   </a>
@@ -138,31 +138,31 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
 ## Writing & syntax
 
 <div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="frontmatter-variables">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="frontmatter-variables">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Frontmatter variables</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">All supported frontmatter fields.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="syntax">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="syntax">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Supported syntax</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Markdown, GFM, and Obsidian syntax.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="syntax-mode">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="syntax-mode">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Syntax mode</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Markdown vs MDX rendering.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="math">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="math">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Math equations</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">LaTeX math via KaTeX.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="mermaid">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="mermaid">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Mermaid diagrams</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Text-based diagrams and charts.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="obsidian-canvas">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="obsidian-canvas">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Canvas</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Obsidian Canvas support.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="obsidian-bases">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="obsidian-bases">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Obsidian Bases</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Database views from Obsidian.</div>
   </a>
@@ -171,11 +171,11 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
 ## Troubleshooting
 
 <div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="debug-mdx-errors">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="debug-mdx-errors">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Debugging MDX errors</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Common errors and fixes.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="debug-404s">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="debug-404s">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Debugging 404 pages</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">URL-to-file mapping and common fixes.</div>
   </a>
@@ -184,11 +184,11 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
 ## Reference
 
 <div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="reference/cli">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="reference/cli">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">CLI</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">All CLI commands and options.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="config-file">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="config-file">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">config.json</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">All config file options and types.</div>
   </a>
