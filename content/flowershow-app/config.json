@@ -246,7 +246,11 @@
     },
     {
       "from": "/blog/how-to-exclude-files-from-publishing",
-      "to": "/docs/guides/exclude-files"
+      "to": "/docs/reference/content-filtering"
+    },
+    {
+      "from": "/docs/guides/exclude-files",
+      "to": "/docs/reference/content-filtering"
     },
     {
       "from": "/blog/how-to-publish-blog",

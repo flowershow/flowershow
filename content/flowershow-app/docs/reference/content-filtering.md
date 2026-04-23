@@ -19,7 +19,7 @@ Array of paths to include in your published site:
 }
 ```
 
-If not specified, includes all files by default (except those in `contentExclude`).
+If not specified, all files are included by default (except those in `contentExclude`). If set, only the listed paths are published — no other files or directories will be included.
 
 ### `contentExclude`
 

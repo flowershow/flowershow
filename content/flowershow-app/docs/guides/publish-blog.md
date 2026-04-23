@@ -257,7 +257,7 @@ This is useful for:
 - Managing work-in-progress posts
 
 > [!info] Learn more about content filtering
-> For more details about controlling which files get published, including advanced configuration options, see [How to Exclude Files from Publishing](/blog/how-to-exclude-files-from-publishing).
+> For more details about controlling which files get published, including advanced configuration options, see [[content-filtering|Content Filtering]].
 
 ## Step 7: Embed a Subscription Form
 
