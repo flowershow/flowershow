@@ -10,12 +10,13 @@ You can set the default theme mode for your site using the `defaultMode` option 
 ```json
 {
   "theme": {
-    "defaultMode": "dark"  // or "light" or "system"
+    "defaultMode": "dark" // or "light" or "system"
   }
 }
 ```
 
 This setting determines how your site will be displayed:
+
 - `"light"`: Always use light theme (default if not specified)
 - `"dark"`: Always use dark theme
 - `"system"`: Follow the user's system preferences
@@ -53,9 +54,9 @@ When using an official theme with dark mode support, include the theme name in y
 ```json
 {
   "theme": {
-    "theme": "superstack",    // name of the official theme
-    "defaultMode": "light",   // optional: set initial theme
-    "showModeSwitch": true    // optional: allow theme switching
+    "theme": "superstack", // name of the official theme
+    "defaultMode": "light", // optional: set initial theme
+    "showModeSwitch": true // optional: allow theme switching
   }
 }
 ```
@@ -66,7 +67,7 @@ Here's the complete theme configuration interface:
 
 ```typescript
 export interface ThemeConfig {
-  theme?: string;            // name of the official theme to use
+  theme?: string; // name of the official theme to use
   defaultMode?: "light" | "dark" | "system";
   showModeSwitch?: boolean;
 }
@@ -95,7 +96,7 @@ If you're using custom CSS, you can support dark mode by using the `data-theme="
 
 ## Default Behavior
 
-- If `defaultMode` is not specified, the site uses light theme 
+- If `defaultMode` is not specified, the site uses light theme
 - If `showModeSwitch` is not specified, the theme toggle button is hidden
 - The theme selection persists across page reloads
 
