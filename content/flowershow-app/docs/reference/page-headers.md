@@ -68,6 +68,12 @@ It's also is used in:
 
 - Social media preview cards[^1]
 
+When someone shares your page on platforms like Twitter, LinkedIn, or Facebook, the featured image will be used to create a rich preview card, making your content stand out in social feeds.
+
+For example:
+
+![[cloud-featured-image.png]]
+
 You can specify your featured image in two ways:
 
 1. **Repository Path**: Use a relative or absolute path to an image in your repository
@@ -102,12 +108,25 @@ image: https://example.com/my-image.jpg # external URL
 ---
 ```
 
-## Best practices
+> [!tip]
+> Using images from your repository gives you more control and ensures they're always available. External URLs are convenient but depend on the external source staying available.
+
+#### Best practices
 
 - Use descriptive titles and descriptions for better SEO
 - Include featured images when possible for better social sharing
-- Recommended image dimensions: 1200x630 pixels for optimal social media sharing
+- Recommended image dimensions: 1200x630 pixels (1.91:1 ratio) for optimal social media sharing
 - Keep image file sizes reasonable (under 1MB) for better performance
+- Use high-quality, relevant images with good contrast; avoid text in images as social platforms may add their own
+- Respect image copyright: use your own images, properly licensed photos, or images from free stock photo sites
 - Use ISO date format (YYYY-MM-DD) for dates
+
+#### Testing featured images
+
+After adding a featured image:
+
+1. Wait for your site to sync
+2. View your page to see the featured image
+3. Test how it looks when shared using social media preview tools or by sharing the page on a test account
 
 [^1]: Custom social share images are only available on premium sites.
