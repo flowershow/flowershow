@@ -210,7 +210,7 @@
     },
     {
       "from": "/blog/how-to-configure-navigation-bar",
-      "to": "/docs/guides/navigation-bar"
+      "to": "/docs/reference/navbar"
     },
     {
       "from": "/blog/how-to-configure-page-headers",

@@ -220,7 +220,7 @@ When an author page exists, the author's name in blog posts will automatically l
 ```
 
 > [!info] Learn more about navigation configuration
-> For more details about customizing your navigation bar, including adding logos and social links, see [How to Configure the Navigation Bar](/blog/how-to-configure-navigation-bar).
+> For more details about customizing your navigation bar, including adding logos and social links, see [Navbar configuration](/docs/reference/navbar).
 
 ![[Pasted image 20251007233748.png]]
 

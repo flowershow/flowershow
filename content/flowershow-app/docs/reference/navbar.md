@@ -3,9 +3,6 @@ title: Navbar configuration
 description: Set logo, title, links and socials in your navigation bar.
 ---
 
-> [!info]
-> [[how-to-configure-navigation-bar|Tutorial with examples and step-by-step instructions]].
-
 The navigation bar configuration is defined under the `nav` object in your `config.json`.
 
 > [!note]
@@ -38,6 +35,11 @@ You can also use an emoji as your logo for a quick, no-image option:
 }
 ```
 
+![[nav-config.png]]
+
+The result:
+![[nav-config-1.png]]
+
 ## Navigation links
 
 Add navigation links using the `links` array. Each link requires:
@@ -62,6 +64,9 @@ Add navigation links using the `links` array. Each link requires:
 Properties:
 - `href`: URL or path the link points to
 - `name`: Display text for the link
+
+The result:
+![[nav-config-2.png]]
 
 ### Dropdown menus
 
@@ -141,8 +146,14 @@ Supported social platforms:
 - `youtube`
 
 > [!info] Is your favorite platform missing from the list?
-> If the social platform you want to use isn’t listed above, you can skip the `label` and Flowershow will display a generic 🌐 icon.
-We encourage you to submit an issue, too. 😉
+> If the social platform you want to use isn't listed above, you can skip the `label` and Flowershow will display a generic 🌐 icon.
+> We encourage you to submit an issue, too. 😉
+
+The result:
+![[nav-config-3.png]]
+
+On smaller screens:
+![[nav-config-4.png]]
 
 ## Complete example
 
@@ -190,10 +201,10 @@ Here's a comprehensive configuration example:
 
 Common issues and solutions:
 
-1. **Logo Not Displaying**
+1. **Logo not displaying**
    - Verify the logo path is correct relative to your site's root directory
    - Ensure the image file exists at the specified path
 
-2. **Social Icons Not Showing**
+2. **Social icons not showing**
    - Confirm you're using supported platform labels
    - Check that the `label` value matches exactly (case-sensitive)
