@@ -174,7 +174,7 @@
   "redirects": [
     {
       "from": "/docs/site-wide-toc",
-      "to": "/docs/sidebar"
+      "to": "/docs/reference/sidebar"
     },
     {
       "from": "/blog/how-to-set-up-blog",
@@ -290,11 +290,11 @@
     },
     {
       "from": "/docs/obsidian-bases-reference",
-      "to": "/docs/obsidian-bases"
+      "to": "/docs/reference/obsidian-bases"
     },
     {
       "from": "/docs/bases",
-      "to": "/docs/obsidian-bases"
+      "to": "/docs/reference/obsidian-bases"
     },
     {
       "from": "/blogs",
@@ -306,7 +306,7 @@
     },
     {
       "from": "/docs/site-config",
-      "to": "/docs/config"
+      "to": "/docs/reference/config"
     },
     {
       "from": "/publish",
@@ -315,6 +315,198 @@
     {
       "from": "/uses/obsidian",
       "to": "/publish-obsidian"
+    },
+    {
+      "from": "/docs/analytics",
+      "to": "/docs/reference/analytics"
+    },
+    {
+      "from": "/docs/blog-setup",
+      "to": "/docs/reference/blog-setup"
+    },
+    {
+      "from": "/docs/canvas-demo-v2",
+      "to": "/docs/reference/canvas-demo-v2"
+    },
+    {
+      "from": "/docs/canvas-demo",
+      "to": "/docs/reference/canvas-demo"
+    },
+    {
+      "from": "/docs/canvas",
+      "to": "/docs/reference/canvas"
+    },
+    {
+      "from": "/docs/cli",
+      "to": "/docs/reference/cli"
+    },
+    {
+      "from": "/docs/comments",
+      "to": "/docs/reference/comments"
+    },
+    {
+      "from": "/docs/config-file",
+      "to": "/docs/reference/config-file"
+    },
+    {
+      "from": "/docs/config",
+      "to": "/docs/reference/config"
+    },
+    {
+      "from": "/docs/content-filtering",
+      "to": "/docs/reference/content-filtering"
+    },
+    {
+      "from": "/docs/custom-collection-cards",
+      "to": "/docs/reference/custom-collection-cards"
+    },
+    {
+      "from": "/docs/custom-domain",
+      "to": "/docs/reference/custom-domain"
+    },
+    {
+      "from": "/docs/custom-favicon",
+      "to": "/docs/reference/custom-favicon"
+    },
+    {
+      "from": "/docs/custom-fonts",
+      "to": "/docs/reference/custom-fonts"
+    },
+    {
+      "from": "/docs/custom-styles",
+      "to": "/docs/reference/custom-styles"
+    },
+    {
+      "from": "/docs/dark-mode",
+      "to": "/docs/reference/dark-mode"
+    },
+    {
+      "from": "/docs/debug-mdx-errors",
+      "to": "/docs/reference/debug-mdx-errors"
+    },
+    {
+      "from": "/docs/debugging-404s",
+      "to": "/docs/reference/debugging-404s"
+    },
+    {
+      "from": "/docs/edit-this-page",
+      "to": "/docs/reference/edit-this-page"
+    },
+    {
+      "from": "/docs/faq",
+      "to": "/docs/reference/faq"
+    },
+    {
+      "from": "/docs/footer",
+      "to": "/docs/reference/footer"
+    },
+    {
+      "from": "/docs/forms",
+      "to": "/docs/reference/forms"
+    },
+    {
+      "from": "/docs/frontmatter-variables",
+      "to": "/docs/reference/frontmatter-variables"
+    },
+    {
+      "from": "/docs/getting-started",
+      "to": "/docs/reference/getting-started"
+    },
+    {
+      "from": "/docs/hero-sections",
+      "to": "/docs/reference/hero-sections"
+    },
+    {
+      "from": "/docs/home-page",
+      "to": "/docs/reference/home-page"
+    },
+    {
+      "from": "/docs/list-component",
+      "to": "/docs/reference/list-component"
+    },
+    {
+      "from": "/docs/math",
+      "to": "/docs/reference/math"
+    },
+    {
+      "from": "/docs/mermaid",
+      "to": "/docs/reference/mermaid"
+    },
+    {
+      "from": "/docs/navbar",
+      "to": "/docs/reference/navbar"
+    },
+    {
+      "from": "/docs/obsidian-bases",
+      "to": "/docs/reference/obsidian-bases"
+    },
+    {
+      "from": "/docs/page-authors",
+      "to": "/docs/reference/page-authors"
+    },
+    {
+      "from": "/docs/page-headers",
+      "to": "/docs/reference/page-headers"
+    },
+    {
+      "from": "/docs/page-titles",
+      "to": "/docs/reference/page-titles"
+    },
+    {
+      "from": "/docs/password-protection",
+      "to": "/docs/reference/password-protection"
+    },
+    {
+      "from": "/docs/privacy",
+      "to": "/docs/reference/privacy"
+    },
+    {
+      "from": "/docs/redirects",
+      "to": "/docs/reference/redirects"
+    },
+    {
+      "from": "/docs/robots-txt",
+      "to": "/docs/reference/robots-txt"
+    },
+    {
+      "from": "/docs/rss-feed",
+      "to": "/docs/reference/rss-feed"
+    },
+    {
+      "from": "/docs/seo-social-metadata",
+      "to": "/docs/reference/seo-social-metadata"
+    },
+    {
+      "from": "/docs/sidebar",
+      "to": "/docs/reference/sidebar"
+    },
+    {
+      "from": "/docs/site-settings",
+      "to": "/docs/reference/site-settings"
+    },
+    {
+      "from": "/docs/syntax-mode",
+      "to": "/docs/reference/syntax-mode"
+    },
+    {
+      "from": "/docs/syntax",
+      "to": "/docs/reference/syntax"
+    },
+    {
+      "from": "/docs/table-of-contents",
+      "to": "/docs/reference/table-of-contents"
+    },
+    {
+      "from": "/docs/terms-of-service",
+      "to": "/docs/reference/terms-of-service"
+    },
+    {
+      "from": "/docs/themes",
+      "to": "/docs/reference/themes"
+    },
+    {
+      "from": "/docs/umami",
+      "to": "/docs/reference/umami"
     }
   ]
 }
