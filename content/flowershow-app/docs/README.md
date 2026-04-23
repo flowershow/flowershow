@@ -4,192 +4,192 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
 
 ## Start here
 
-<div class="not-prose my-6">
-  <a href="getting-started" class="inline-flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Getting Started</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Go from markdown files to a live site in under a minute.</span>
+<div class="not-prose my-6 font-heading">
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="getting-started">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Getting Started</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Go from markdown files to a live site in under a minute.</div>
   </a>
 </div>
 
 ## Site setup
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 not-prose my-6">
-  <a href="home-page" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Home page</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">How Flowershow picks which file to show at /.</span>
+<div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="home-page">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Home page</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">How Flowershow picks which file to show at /.</div>
   </a>
-  <a href="content-filtering" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Content filtering</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Include/exclude files and directories.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="content-filtering">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Content filtering</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Include/exclude files and directories.</div>
   </a>
-  <a href="redirects" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Redirects</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">URL redirects for moved or renamed pages.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="redirects">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Redirects</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">URL redirects for moved or renamed pages.</div>
   </a>
-  <a href="rss-feed" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">RSS feed</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Subscribe feed for pages with a <code>date</code> field.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="rss-feed">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">RSS feed</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Subscribe feed for pages with a <code>date</code> field.</div>
   </a>
-  <a href="robots-txt" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">robots.txt</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Control how search engines crawl your site.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="robots-txt">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">robots.txt</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Control how search engines crawl your site.</div>
   </a>
-  <a href="custom-domain" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Custom domain</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Use your own domain (Premium).</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="custom-domain">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Custom domain</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Use your own domain (Premium).</div>
   </a>
-  <a href="password-protection" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Password protection</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Restrict access with a password (Premium).</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="password-protection">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Password protection</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Restrict access with a password (Premium).</div>
   </a>
-  <a href="custom-favicon" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Favicon</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Custom favicon image or emoji (Premium).</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="custom-favicon">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Favicon</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Custom favicon image or emoji (Premium).</div>
   </a>
 </div>
 
 ## Layout & navigation
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 not-prose my-6">
-  <a href="navbar" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Navbar</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Logo, title, nav links and social links.</span>
+<div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="navbar">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Navbar</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Logo, title, nav links and social links.</div>
   </a>
-  <a href="footer" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Footer</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Footer navigation columns and links.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="footer">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Footer</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Footer navigation columns and links.</div>
   </a>
-  <a href="sidebar" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Sidebar</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Show site structure in a left sidebar.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="sidebar">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Sidebar</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Show site structure in a left sidebar.</div>
   </a>
-  <a href="table-of-contents" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Table of contents</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Per-page table of contents.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="table-of-contents">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Table of contents</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Per-page table of contents.</div>
   </a>
 </div>
 
 ## Pages & content
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 not-prose my-6">
-  <a href="blog-setup" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Blog setup</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Add a blog section with listings and authors.</span>
+<div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="blog-setup">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Blog setup</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Add a blog section with listings and authors.</div>
   </a>
-  <a href="page-title" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Page titles</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Control how page titles display and appear in search.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="page-title">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Page titles</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Control how page titles display and appear in search.</div>
   </a>
-  <a href="page-headers" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Page headers</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Configure headers and meta tags.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="page-headers">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Page headers</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Configure headers and meta tags.</div>
   </a>
-  <a href="page-authors" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Page authors</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Author profiles with avatars and links.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="page-authors">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Page authors</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Author profiles with avatars and links.</div>
   </a>
-  <a href="hero-sections" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Hero sections</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Full-width banners with images and CTAs.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="hero-sections">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Hero sections</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Full-width banners with images and CTAs.</div>
   </a>
-  <a href="list-component" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">List component</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Auto-generated content catalogs.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="list-component">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">List component</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Auto-generated content catalogs.</div>
   </a>
-  <a href="seo-social-metadata" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">SEO &amp; social metadata</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Open Graph images, descriptions, titles.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="seo-social-metadata">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">SEO &amp; social metadata</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Open Graph images, descriptions, titles.</div>
   </a>
-  <a href="edit-this-page" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">"Edit this page" links</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Link to source file on GitHub.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="edit-this-page">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">"Edit this page" links</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Link to source file on GitHub.</div>
   </a>
-  <a href="comments" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Comments</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Page comments via Giscus / GitHub Discussions.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="comments">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Comments</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Page comments via Giscus / GitHub Discussions.</div>
   </a>
-  <a href="forms" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Forms</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Newsletter signups, contact forms, surveys.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="forms">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Forms</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Newsletter signups, contact forms, surveys.</div>
   </a>
 </div>
 
 ## Appearance
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 not-prose my-6">
-  <a href="themes" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Themes</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Switch between official themes.</span>
+<div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="themes">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Themes</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Switch between official themes.</div>
   </a>
-  <a href="custom-styles" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Custom styles</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Override default styles with CSS.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="custom-styles">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Custom styles</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Override default styles with CSS.</div>
   </a>
-  <a href="custom-fonts" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Custom fonts</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Google Fonts and typography.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="custom-fonts">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Custom fonts</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Google Fonts and typography.</div>
   </a>
-  <a href="dark-mode" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Dark mode</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Light/dark theme and mode switcher.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="dark-mode">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Dark mode</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Light/dark theme and mode switcher.</div>
   </a>
 </div>
 
 ## Writing & syntax
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 not-prose my-6">
-  <a href="frontmatter-variables" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Frontmatter variables</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">All supported frontmatter fields.</span>
+<div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="frontmatter-variables">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Frontmatter variables</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">All supported frontmatter fields.</div>
   </a>
-  <a href="syntax" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Supported syntax</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Markdown, GFM, and Obsidian syntax.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="syntax">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Supported syntax</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Markdown, GFM, and Obsidian syntax.</div>
   </a>
-  <a href="syntax-mode" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Syntax mode</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Markdown vs MDX rendering.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="syntax-mode">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Syntax mode</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Markdown vs MDX rendering.</div>
   </a>
-  <a href="math" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Math equations</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">LaTeX math via KaTeX.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="math">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Math equations</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">LaTeX math via KaTeX.</div>
   </a>
-  <a href="mermaid" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Mermaid diagrams</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Text-based diagrams and charts.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="mermaid">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Mermaid diagrams</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Text-based diagrams and charts.</div>
   </a>
-  <a href="obsidian-canvas" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Canvas</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Obsidian Canvas support.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="obsidian-canvas">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Canvas</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Obsidian Canvas support.</div>
   </a>
-  <a href="obsidian-bases" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Obsidian Bases</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Database views from Obsidian.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="obsidian-bases">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Obsidian Bases</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Database views from Obsidian.</div>
   </a>
 </div>
 
 ## Troubleshooting
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 not-prose my-6">
-  <a href="debug-mdx-errors" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Debugging MDX errors</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">Common errors and fixes.</span>
+<div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="debug-mdx-errors">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Debugging MDX errors</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Common errors and fixes.</div>
   </a>
-  <a href="debug-404s" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">Debugging 404 pages</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">URL-to-file mapping and common fixes.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="debug-404s">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Debugging 404 pages</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">URL-to-file mapping and common fixes.</div>
   </a>
 </div>
 
 ## Reference
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 not-prose my-6">
-  <a href="reference/cli" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">CLI</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">All CLI commands and options.</span>
+<div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="reference/cli">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">CLI</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">All CLI commands and options.</div>
   </a>
-  <a href="config-file" class="flex flex-col p-4 border rounded-lg border-gray-200 dark:border-gray-700 hover:border-sky-400 dark:hover:border-sky-500 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors no-underline">
-    <span class="font-semibold text-gray-900 dark:text-white text-sm">config.json</span>
-    <span class="text-gray-500 dark:text-gray-400 text-xs mt-1">All config file options and types.</span>
+  <a class="not-prose bg-gray-0 shadow-(--ds-shadow-border) group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-(--ds-shadow-border-large)" href="config-file">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">config.json</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">All config file options and types.</div>
   </a>
 </div>
