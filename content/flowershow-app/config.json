@@ -206,7 +206,7 @@
     },
     {
       "from": "/blog/how-to-configure-google-analytics",
-      "to": "/docs/guides/google-analytics"
+      "to": "/docs/referece/analytics"
     },
     {
       "from": "/blog/how-to-configure-navigation-bar",
@@ -506,7 +506,7 @@
     },
     {
       "from": "/docs/umami",
-      "to": "/docs/reference/umami"
+      "to": "/docs/reference/analytics"
     }
   ]
 }
