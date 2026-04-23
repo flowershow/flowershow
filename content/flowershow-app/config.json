@@ -413,10 +413,6 @@
       "to": "/docs/reference/frontmatter-variables"
     },
     {
-      "from": "/docs/getting-started",
-      "to": "/docs/reference/getting-started"
-    },
-    {
       "from": "/docs/hero-sections",
       "to": "/docs/reference/hero-sections"
     },
