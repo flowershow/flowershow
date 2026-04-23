@@ -266,7 +266,7 @@
     },
     {
       "from": "/blog/how-to-set-custom-domain",
-      "to": "/docs/guides/custom-domain"
+      "to": "/docs/reference/custom-domain"
     },
     {
       "from": "/blog/how-to-set-custom-favicon",
