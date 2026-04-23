@@ -177,6 +177,10 @@
       "to": "/docs/reference/sidebar"
     },
     {
+      "from": "/blog/light-dark-theme-switch",
+      "to": "/docs/reference/dark-mode"
+    },
+    {
       "from": "/blog/how-to-set-up-blog",
       "to": "/docs/guides/publish-blog"
     },

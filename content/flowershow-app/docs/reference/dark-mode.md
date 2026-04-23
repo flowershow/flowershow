@@ -16,9 +16,9 @@ You can set the default theme mode for your site using the `defaultMode` option 
 ```
 
 This setting determines how your site will be displayed:
-- `"light"`: Always use light theme
+- `"light"`: Always use light theme (default if not specified)
 - `"dark"`: Always use dark theme
-- `"system"`: Follow the user's system preferences (default if not specified)
+- `"system"`: Follow the user's system preferences
 
 ## Enabling Theme Switch
 
@@ -47,6 +47,9 @@ You can combine both options to set a default theme and allow users to change it
 
 > [!important]
 > If you're using one of the official Flowershow themes (other than the default theme), check the [flowershow/themes](https://github.com/flowershow/themes) repository first to ensure your chosen theme supports dark mode.
+
+> [!note]
+> The legacy API where `theme` was a top-level string (e.g. `"theme": "superstack"`) is still supported, but to use dark mode you must switch to the new API where the theme name is nested inside the `theme` object (see example below).
 
 When using an official theme with dark mode support, include the theme name in your configuration:
 
