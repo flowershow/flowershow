@@ -1,5 +1,5 @@
 ---
-title: "`List` component"
+title: "List component"
 description: Create organized lists and content catalogs by automatically listing files in a specified directory.
 ---
 
@@ -20,24 +20,26 @@ By default, it shows the title as the headline and the description as the summar
 ## Properties
 
 The `List` component accepts the following props:
+
 - **dir** (optional)
   Directory (relative to site root) to list items from.  
   Default: `""` (root folder)  
   Type: `string`
 
 - **slots** (optional)
-  Lets you decide what information should appear in each part of the list item.  
+  Lets you decide what information should appear in each part of the list item.
 
-  Available slots:  
-  - **media** → usually an image  
-  - **eyebrow** → small text shown above the title (for example, a date)  
-  - **headline** → the main title  
-  - **summary** → a short description  
-  - **footnote** → small text shown below (for example, authors)  
+  Available slots:
+  - **media** → usually an image
+  - **eyebrow** → small text shown above the title (for example, a date)
+  - **headline** → the main title
+  - **summary** → a short description
+  - **footnote** → small text shown below (for example, authors)
 
-  Each slot can be connected to a field from your page’s frontmatter (like `title`, `description`, `date`, `authors`, `image`).  
+  Each slot can be connected to a field from your page’s frontmatter (like `title`, `description`, `date`, `authors`, `image`).
 
-  Default:  
+  Default:
+
   ```js
   {
     headline: "title",
@@ -50,17 +52,18 @@ The `List` component accepts the following props:
   Type: `number`
 
 Example:
+
 ```md
-<List 
-  dir="/blog" 
-  slots={{
+<List
+dir="/blog"
+slots={{
     headline: "title",
     summary: "description",
     eyebrow: "date",
     footnote: "authors",
     media: "image"
   }}
-  pageSize={5}
+pageSize={5}
 />
 ```
 
@@ -69,6 +72,7 @@ Example:
 ## Behavior
 
 The List component:
+
 - Ignores `README.md` and `index.md` files
 - Is recursive (includes files in subdirectories)
 - Sorts by date if available, otherwise by title
