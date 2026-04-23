@@ -1,5 +1,5 @@
 ---
-title: How to Configure Page Headers
+title: Page Headers
 description: Learn how to customize your page headers in Flowershow Cloud with frontmatter configuration options for titles, descriptions, authors, dates, and featured images.
 date: 2025-03-06
 modified: 2025-06-16
@@ -21,12 +21,14 @@ The title is perhaps the most important element of your page header. You have 3 
 3. Not setting any of the above and allowing Flowershow to use file name as the title.
 
 Your title doesn't just appear in the page header - it's also used in:
+
 - Search results
 - Social media previews
 - Sidebar navigation
 - Browser tabs
 
 Example:
+
 ```yaml
 title: Chasing Auroras in Norway
 ```
@@ -46,6 +48,7 @@ Or just name your file `Chasing Auroras in Norway.md`.
 A good description helps visitors understand what your page is about and improves SEO. It appears in your page header and is also used for search engine results and social media previews. You can set it using `description` frontmatter field.
 
 Example:
+
 ```yaml
 description: "Join me on a mesmerizing journey beneath the Arctic skies, where nature's most enchanting spectacle dances."
 ```
@@ -57,8 +60,9 @@ description: "Join me on a mesmerizing journey beneath the Arctic skies, where n
 Adding publication dates helps visitors understand when content was created. You can configure it with `date` frontmatter field.
 
 Example:
+
 ```yaml
-date: 2024-04-17               # Use YYYY-MM-DD format
+date: 2024-04-17 # Use YYYY-MM-DD format
 ```
 
 ![[header-date.png]]
@@ -70,12 +74,14 @@ Featured images make your content more engaging and improve social sharing[^1]. 
 You have several options for adding them:
 
 1. **Repository Images**:
+
 ```yaml
 image: my-image.jpg    # relative path
 image: /blog/my-image.jpg   # absolute path
 ```
 
 2. **External Images**:
+
 ```yaml
 image: https://example.com/my-image.jpg
 ```

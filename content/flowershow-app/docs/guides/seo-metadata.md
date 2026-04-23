@@ -1,5 +1,5 @@
 ---
-title: How to Configure SEO and Social Media Metadata
+title: SEO and Social Media Metadata
 description: Learn how to configure title, description, and social media images for better SEO and social sharing.
 date: 2025-06-10
 authors:
@@ -21,6 +21,7 @@ As covered in our [page title guide](./how-to-set-page-title.md), you can set in
 3. **Filename** (fallback)
 
 For example:
+
 ```markdown
 ---
 title: Complete Guide to Docker Containers
@@ -46,6 +47,7 @@ Complete Guide to Docker Containers - MyProduct
 ```
 
 This appears in:
+
 - Browser tabs
 - Search engine results
 - Social media shares
@@ -54,6 +56,7 @@ This appears in:
 Note: The suffix doesn't change how the title displays on your page.
 
 **Best practices:**
+
 - Keep the combined title under 60 characters for optimal search results
 - Use a consistent brand name or site identifier
 - Consider how the combination reads naturally
@@ -85,11 +88,13 @@ Provide a fallback description in your `config.json` for pages without specific 
 ```
 
 **How it works:**
+
 - If a page has a `description` in frontmatter → uses that description
 - If no page description → uses the site-wide default from config
 - Unlike titles, descriptions are **not** appended together
 
 **SEO impact:**
+
 - Descriptions appear in search engine results below the title
 - They influence click-through rates from search results
 - Should be 150-160 characters for optimal display
@@ -105,12 +110,12 @@ description: "Docker guide"
 
 ## Social Media Image Configuration
 
->[!note] Premium Feature
->Social media image configuration is a premium feature available to Flowershow subscribers. However, images set in your frontmatter will still appear in your page header as described in the [page header guide](./how-to-configure-page-headers.md).
+> [!note] Premium Feature
+> Social media image configuration is a premium feature available to Flowershow subscribers. However, images set in your frontmatter will still appear in your page header as described in the [page header guide](./how-to-configure-page-headers.md).
 >
->**For free sites:** You'll always get a default Flowershow thumbnail image for social media sharing, regardless of your image settings.
+> **For free sites:** You'll always get a default Flowershow thumbnail image for social media sharing, regardless of your image settings.
 >
->**For premium sites:** As part of removing Flowershow branding, the default Flowershow thumbnail is never used. You'll have either no social image, your page-specific image, or your custom site-wide fallback image.
+> **For premium sites:** As part of removing Flowershow branding, the default Flowershow thumbnail is never used. You'll have either no social image, your page-specific image, or your custom site-wide fallback image.
 
 ### Page-Level Social Images
 
@@ -139,11 +144,13 @@ Configure a default social media image in your `config.json`:
 ```
 
 **How it works:**
+
 - If a page has an `image` in frontmatter → uses that image
 - If no page image → uses the site-wide default from config
 - Images are **not** combined or appended
 
 **Image requirements:**
+
 - Recommended size: 1200x630 pixels (1.91:1 aspect ratio)
 - Format: JPG or PNG
 - File size: Under 1MB for faster loading
@@ -179,6 +186,7 @@ With this config.json:
 ```
 
 **Final SEO results:**
+
 - **SEO Title:** "Complete Guide to Docker Containers - DevTutorials"
 - **Description:** "Learn how to create, manage, and deploy Docker containers with practical examples, best practices, and troubleshooting tips."
 - **Social Image:** "/assets/docker-guide-social.jpg"

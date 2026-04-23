@@ -1,5 +1,5 @@
 ---
-title: How to Publish a Blog
+title: Publishing a Blog
 description: A comprehensive guide on setting up a blog on your Flowershow site — from creating a blog section to configuring the blog home page, adding authors, navigation, and applying themes.
 date: 2025-06-24
 authors:
@@ -53,12 +53,14 @@ While you can name and place your blog content anywhere in your site's structure
 1. Choose a location for your blog content. Common options include: `/blog`, `/posts` or `/articles`.
 
 This folder will contain:
-  - Individual blog post files (e.g., `my-first-post.md`)
-  - A landing page (`README.md` or `index.md`)
-  - Optional subdirectories for organization
+
+- Individual blog post files (e.g., `my-first-post.md`)
+- A landing page (`README.md` or `index.md`)
+- Optional subdirectories for organization
 
 > [!tip] Organizing Blog Posts
 > You can use subdirectories to organize your posts by:
+>
 > - Categories (e.g., `/blog/tutorials`, `/blog/news`)
 > - Date (e.g., `/blog/2025/06` for June 2025 posts)
 > - Status (e.g., `/blog/drafts`, `/blog/archive`) and then exclude unfinished work from publishing.
@@ -90,6 +92,7 @@ If you can see this, everything’s working perfectly.
 ```
 
 The frontmatter fields explained:
+
 - `title`: The post's title
 - `description`: A brief summary
 - `date`: Publication date in YYYY-MM-DD format (also used for sorting)
@@ -115,9 +118,9 @@ showToc: false
 syntaxMode: mdx
 ---
 
-<List 
-  dir="/blog" 
-  slots={{
+<List
+dir="/blog"
+slots={{
     headline: "title",
     summary: "description",
     eyebrow: "date",
@@ -129,6 +132,7 @@ syntaxMode: mdx
 The List component automatically scans the directory specified in the dir property and lists all the markdown files inside.
 
 The `slots` tell Flowershow which frontmatter fields to display in each part of the list item:
+
 - **headline**: the main title (title field)
 - **summary**: short description (description field)
 - **eyebrow**: smaller text above the title (often the date)
@@ -139,7 +143,7 @@ The `slots` tell Flowershow which frontmatter fields to display in each part of 
 
 ![[Pasted image 20251007233209.png]]
 
->[!info] `List` Component Options
+> [!info] `List` Component Options
 > Learn how to customize the List component in the [List Component Docs](/docs/list-component).
 
 > [!important]
@@ -167,6 +171,7 @@ authors:
 1. Create a directory for profile pages, e.g. `/team`.
 
 2. Create profile pages for your authors. For example:
+
    ```
    team/
    ├── jane-smith.md
@@ -174,6 +179,7 @@ authors:
    ```
 
 3. Create an author profile, e.g., `team/jane-smith.md`:
+
 ```markdown
 ---
 title: Jane Elizabeth Smith
@@ -217,6 +223,7 @@ When an author page exists, the author's name in blog posts will automatically l
 > For more details about customizing your navigation bar, including adding logos and social links, see [How to Configure the Navigation Bar](/blog/how-to-configure-navigation-bar).
 
 ![[Pasted image 20251007233748.png]]
+
 ## Step 6: Control What Gets Published
 
 You can control which blog posts get published using either site-wide settings or page-level control:
@@ -227,10 +234,7 @@ Add `contentExclude` to your `config.json` to exclude entire directories:
 
 ```json
 {
-  "contentExclude": [
-    "/blog/drafts",
-    "/blog/archive"
-  ]
+  "contentExclude": ["/blog/drafts", "/blog/archive"]
 }
 ```
 
@@ -247,6 +251,7 @@ publish: false
 ```
 
 This is useful for:
+
 - Keeping draft posts private
 - Archiving old content
 - Managing work-in-progress posts
@@ -277,7 +282,7 @@ In your site’s config.json, you can set the theme like this:
 
 ```md
 {
-  "theme": "lessflowery"
+"theme": "lessflowery"
 }
 ```
 

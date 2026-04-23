@@ -1,5 +1,5 @@
 ---
-title: How to Add Hero Sections
+title: Hero Sections
 description: Learn how to enhance your pages with eye-catching hero sections using a simple configuration option
 date: 2025-03-05
 authors:
@@ -14,6 +14,7 @@ Flowershow now allows to set hero sections transform your page headers into eleg
 ## What is a Hero Section?
 
 A hero section is a prominent area at the top of a page that typically includes:
+
 - A compelling title
 - A descriptive subtitle
 - Call-to-action buttons
@@ -116,6 +117,7 @@ This sets default hero content for all pages. You can still customize heros on i
 Even with site-wide heroes enabled, you can customize specific pages:
 
 1. Override the default content:
+
 ```yaml
 ---
 title: Custom Page
@@ -125,6 +127,7 @@ image: /assets/custom-hero.jpg
 ```
 
 2. Or disable the hero completely:
+
 ```yaml
 ---
 showHero: false

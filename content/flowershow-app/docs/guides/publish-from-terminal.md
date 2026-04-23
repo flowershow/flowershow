@@ -1,5 +1,5 @@
 ---
-title: How to publish Markdown files from the terminal with the Flowershow CLI
+title: Publishing from the Terminal
 description: A step-by-step tutorial covering installation, publishing, syncing changes, and managing your sites from the command line.
 date: 2026-04-10
 authors:

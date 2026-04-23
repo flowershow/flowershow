@@ -1,5 +1,5 @@
 ---
-title: How to Connect Your Own Domain
+title: Custom Domain
 description: A complete guide for setting up a custom domain on your Flowershow site
 date: 2025-06-11
 authors:

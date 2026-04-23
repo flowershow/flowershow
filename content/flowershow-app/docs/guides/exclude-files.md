@@ -1,5 +1,5 @@
 ---
-title: How to Exclude Files from Publishing
+title: Excluding Files from Publishing
 description: Learn how to control which files get published in your Flowershow site.
 date: 2025-05-28
 authors:
@@ -64,7 +64,7 @@ Sometimes you might want to exclude just a specific page. You can do this by add
 
 ```md
 ---
-title: "Draft Post"
+title: Draft Post
 publish: false
 ---
 

@@ -1,5 +1,5 @@
 ---
-title: Customize Your Site Footer with config.json
+title: Footer
 description: Add navigation links and social media icons to your site footer for a more professional look and better navigation.
 date: 2026-01-09
 authors:

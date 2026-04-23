@@ -1,5 +1,5 @@
 ---
-title: How to Configure the Navigation Bar
+title: Navigation Bar
 description: A step-by-step guide to customizing your site's navigation bar with logos, links, and social media
 date: 2025-02-09
 authors:

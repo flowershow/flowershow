@@ -1,5 +1,5 @@
 ---
-title: Show Authors of Your Content in Page Headers (With Links and Avatars)
+title: Author Pages
 description: Learn how to set up author pages to attribute content to your creators with links to custom profiles page and avatars.
 date: 2025-06-11
 image: /assets/page-headers.png

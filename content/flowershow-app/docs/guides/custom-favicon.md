@@ -1,5 +1,5 @@
 ---
-title: How to Set a Custom Favicon
+title: Custom Favicon
 description: Learn how to set a custom favicon for your Flowershow site
 date: 2025-06-12
 authors:

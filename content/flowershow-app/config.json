@@ -178,7 +178,115 @@
     },
     {
       "from": "/blog/how-to-set-up-blog",
-      "to": "/blog/how-to-publish-blog"
+      "to": "/docs/guides/publish-blog"
+    },
+    {
+      "from": "/blog/contribute-improvements-to-flowershow-docs-and-website-is-easy",
+      "to": "/docs/guides/contribute-improvements-to-flowershow-docs-and-website-is-easy"
+    },
+    {
+      "from": "/blog/enhance-markdown-with-styled-jsx-blocks",
+      "to": "/docs/guides/enhance-markdown-with-styled-jsx-blocks"
+    },
+    {
+      "from": "/blog/how-to-add-edit-this-page-button",
+      "to": "/docs/guides/edit-this-page-button"
+    },
+    {
+      "from": "/blog/how-to-add-featured-images",
+      "to": "/docs/guides/featured-images"
+    },
+    {
+      "from": "/blog/how-to-add-forms",
+      "to": "/docs/guides/forms"
+    },
+    {
+      "from": "/blog/how-to-add-hero-sections",
+      "to": "/docs/guides/hero-sections"
+    },
+    {
+      "from": "/blog/how-to-configure-google-analytics",
+      "to": "/docs/guides/google-analytics"
+    },
+    {
+      "from": "/blog/how-to-configure-navigation-bar",
+      "to": "/docs/guides/navigation-bar"
+    },
+    {
+      "from": "/blog/how-to-configure-page-headers",
+      "to": "/docs/guides/page-headers"
+    },
+    {
+      "from": "/blog/how-to-configure-seo-and-social-media-metadata",
+      "to": "/docs/guides/seo-metadata"
+    },
+    {
+      "from": "/blog/how-to-create-author-pages",
+      "to": "/docs/guides/author-pages"
+    },
+    {
+      "from": "/blog/how-to-create-content-catalogs",
+      "to": "/docs/guides/content-catalogs"
+    },
+    {
+      "from": "/blog/how-to-customize-style",
+      "to": "/docs/guides/custom-styles"
+    },
+    {
+      "from": "/blog/how-to-customize-your-footer",
+      "to": "/docs/guides/footer"
+    },
+    {
+      "from": "/blog/how-to-debug-404-pages",
+      "to": "/docs/guides/debug-404-pages"
+    },
+    {
+      "from": "/blog/how-to-enable-page-comments",
+      "to": "/docs/guides/page-comments"
+    },
+    {
+      "from": "/blog/how-to-exclude-files-from-publishing",
+      "to": "/docs/guides/exclude-files"
+    },
+    {
+      "from": "/blog/how-to-publish-blog",
+      "to": "/docs/guides/publish-blog"
+    },
+    {
+      "from": "/blog/how-to-publish-repository-with-markdown",
+      "to": "/docs/guides/publish-github-repo"
+    },
+    {
+      "from": "/blog/how-to-publish-vault-quickly-and-easily",
+      "to": "/docs/guides/publish-obsidian-vault"
+    },
+    {
+      "from": "/blog/how-to-publish-vault-with-enveloppe-plugin",
+      "to": "/docs/guides/publish-vault-with-enveloppe"
+    },
+    {
+      "from": "/blog/how-to-set-custom-domain",
+      "to": "/docs/guides/custom-domain"
+    },
+    {
+      "from": "/blog/how-to-set-custom-favicon",
+      "to": "/docs/guides/custom-favicon"
+    },
+    {
+      "from": "/blog/how-to-set-custom-fonts",
+      "to": "/docs/guides/custom-fonts"
+    },
+    {
+      "from": "/blog/how-to-set-page-title",
+      "to": "/docs/guides/page-title"
+    },
+    {
+      "from": "/blog/publish-markdown-from-the-terminal-tutorial",
+      "to": "/docs/guides/publish-from-terminal"
+    },
+    {
+      "from": "/blog/turn-obsidian-vault-into-a-blog",
+      "to": "/docs/guides/turn-obsidian-vault-into-a-blog"
     },
     {
       "from": "/docs/obsidian-bases-reference",

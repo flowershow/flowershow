@@ -1,5 +1,5 @@
 ---
-title: How to Add Featured Images (and Set Social Previews)
+title: Featured Images and Social Previews
 description: Learn how to enhance your pages with featured images that look great on your site and social media
 date: 2025-03-05
 authors:
@@ -13,6 +13,7 @@ Flowershow Cloud now supports featured images! This guide will show you how to a
 ## Why Use Featured Images?
 
 Featured images serve two important purposes:
+
 - They make your content more visually engaging
 - They create attractive previews when your content is shared on social media
 
@@ -40,6 +41,7 @@ image: /assets/my-featured-image.jpg
 Flowershow Cloud gives you flexibility in where your featured images come from:
 
 1. **From Your Repository**
+
    ```yaml
    ---
    title: My Page

@@ -1,5 +1,5 @@
 ---
-title: How to Publish Your Obsidian Vault Quickly and Easily with Flowershow
+title: Publishing Your Obsidian Vault
 date: 2025-03-11
 updated: 2026-01-31
 authors:
