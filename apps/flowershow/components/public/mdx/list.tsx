@@ -139,16 +139,18 @@ export default function List({
         <article key={url} className="list-component-item">
           {slotsMap.media && (
             <div className="list-component-item-media">
-              <Image
-                alt="Image"
-                src={
-                  (getValue('media', metadata, slotsMap) as string) ??
-                  'https://r2-assets.flowershow.app/placeholder.png'
-                }
-                width={1200}
-                height={800}
-                className="list-component-item-media-img"
-              />
+              <a href={url ?? undefined}>
+                <Image
+                  alt="Image"
+                  src={
+                    (getValue('media', metadata, slotsMap) as string) ??
+                    'https://r2-assets.flowershow.app/placeholder.png'
+                  }
+                  width={1200}
+                  height={800}
+                  className="list-component-item-media-img"
+                />
+              </a>
             </div>
           )}
 
