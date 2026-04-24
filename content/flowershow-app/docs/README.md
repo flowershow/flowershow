@@ -180,7 +180,7 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
 ## Reference
 
 <div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
-  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="/docs/reference/reference/cli">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="/docs/reference/cli">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">CLI</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">All CLI commands and options.</div>
   </a>

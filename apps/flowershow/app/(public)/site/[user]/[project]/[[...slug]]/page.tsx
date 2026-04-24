@@ -484,7 +484,7 @@ export default async function SitePage(props: {
                   className="page-edit-button"
                   target="_blank"
                 >
-                  Get raw markdown <CodeIcon width={16} />
+                  View raw markdown <CodeIcon width={16} />
                 </Link>
               )}
             </div>
