@@ -30,14 +30,6 @@ export function isFeatureEnabled(
   feature: Feature,
   site: Pick<PublicSite, 'customDomain' | 'plan'>,
 ): boolean {
-  switch (feature) {
-    case Feature.NoBranding:
-      return site.customDomain === 'flowershow.app' ||
-        site.customDomain?.endsWith('.flowershow.app')
-        ? false
-        : site.plan === Plan.PREMIUM;
-  }
-
   if (PREMIUM_FEATURES.includes(feature)) {
     return site.plan === Plan.PREMIUM;
   }

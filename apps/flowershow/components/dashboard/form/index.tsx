@@ -3,11 +3,11 @@
 import { Switch } from '@headlessui/react';
 import clsx from 'clsx';
 import { useParams, useRouter } from 'next/navigation';
-import { FormEvent, ReactNode, useState } from 'react';
+import { type FormEvent, type ReactNode, useState } from 'react';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
 import { cn } from '@/lib/utils';
-import { SiteUpdateKey } from '@/server/api/types';
+import type { SiteUpdateKey } from '@/server/api/types';
 import DomainConfiguration from './domain-configuration';
 import DomainStatus from './domain-status';
 
@@ -54,6 +54,7 @@ export default function Form({
     'enableComments',
     'enableSearch',
     'enableRss',
+    'showBuiltWithButton',
   ].includes(inputAttrs.name);
 
   // Controlled value for all non-toggle inputs (text, textarea, select)
@@ -90,8 +91,6 @@ export default function Form({
       });
 
       router.refresh();
-
-      toast.success(`Successfully updated ${inputAttrs.name}!`);
     } catch (error: any) {
       toast.error(`Error: ${error?.message ?? 'Failed to update setting.'}`);
     } finally {
@@ -116,7 +115,7 @@ export default function Form({
       router.refresh();
 
       toast.success(`Successfully updated ${inputAttrs.name}!`);
-    } catch (error) {
+    } catch {
       toast.error(
         inputAttrs.name === 'autoSync'
           ? 'Failed to create webhook. Check if the repository has a webhook for this application already installed.'
@@ -154,25 +153,29 @@ export default function Form({
         <p className="text-sm text-stone-500">{description}</p>
 
         {isToggleField ? (
-          <Switch
-            disabled={disabled || pending}
-            checked={toggleValue}
-            onChange={onToggleChange}
-            className={clsx(
-              toggleValue ? 'bg-indigo-600' : 'bg-gray-200',
-              'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2',
-              (disabled || pending) && 'cursor-auto opacity-70',
-            )}
-          >
-            <span className="sr-only">Use setting</span>
-            <span
-              aria-hidden="true"
+          <span className={disabled || pending ? 'cursor-not-allowed' : ''}>
+            <Switch
+              disabled={disabled || pending}
+              checked={toggleValue}
+              onChange={onToggleChange}
               className={clsx(
-                toggleValue ? 'translate-x-5' : 'translate-x-0',
-                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                !disabled && !pending && toggleValue
+                  ? 'bg-indigo-600'
+                  : 'bg-gray-200',
+                'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2',
+                (disabled || pending) && 'pointer-events-none opacity-70',
               )}
-            />
-          </Switch>
+            >
+              <span className="sr-only">Use setting</span>
+              <span
+                aria-hidden="true"
+                className={clsx(
+                  toggleValue ? 'translate-x-5' : 'translate-x-0',
+                  'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out',
+                )}
+              />
+            </Switch>
+          </span>
         ) : inputAttrs.name === 'customDomain' ? (
           <div className="relative flex w-full max-w-md">
             <input
@@ -239,12 +242,14 @@ export default function Form({
         <DomainConfiguration domain={value} />
       )}
 
-      <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
-        <div className="w-full text-sm text-stone-500">{helpText}</div>
-        {!isToggleField && !disabled && (
-          <FormButton name={inputAttrs.name} pending={pending} />
-        )}
-      </div>
+      {(helpText || (!isToggleField && !disabled)) && (
+        <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
+          <div className="w-full text-sm text-stone-500">{helpText}</div>
+          {!isToggleField && !disabled && (
+            <FormButton name={inputAttrs.name} pending={pending} />
+          )}
+        </div>
+      )}
     </form>
   );
 }
@@ -252,6 +257,7 @@ export default function Form({
 function FormButton({ name, pending }: { name: string; pending: boolean }) {
   return (
     <button
+      type="submit"
       className={cn(
         'flex h-8 w-32 shrink-0 items-center justify-center space-x-2 rounded-md border px-2 py-1 text-sm transition-all focus:outline-none sm:h-10',
         pending
