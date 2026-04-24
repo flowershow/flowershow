@@ -1,6 +1,6 @@
 import type { GiscusProps } from '@giscus/react';
 import clsx from 'clsx';
-import { EditIcon } from 'lucide-react';
+import { CodeIcon, EditIcon } from 'lucide-react';
 import Link from 'next/link';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import { serialize } from 'next-mdx-remote-client/serialize';
@@ -369,6 +369,7 @@ export default async function SitePage(props: {
     : undefined;
 
   const showEditLink = metadata?.showEditLink ?? siteConfig?.showEditLink;
+  const showRawLink = site.showRawLink;
   const normalizedRootDir = site?.rootDir
     ? `${site.rootDir.replace(/^(.?\/)+|\/+$/g, '')}/`
     : '';
@@ -466,15 +467,26 @@ export default async function SitePage(props: {
             </BlogLayout>
           </main>
 
-          {showEditLink && (
+          {(showEditLink || showRawLink) && (
             <div className="page-edit-button-container">
-              <Link
-                href={`https://github.com/${site?.ghRepository}/edit/${site?.ghBranch}/${normalizedRootDir}${blob.path}`}
-                className="page-edit-button"
-                target="_blank"
-              >
-                Edit this page <EditIcon width={16} />
-              </Link>
+              {showEditLink && (
+                <Link
+                  href={`https://github.com/${site?.ghRepository}/edit/${site?.ghBranch}/${normalizedRootDir}${blob.path}`}
+                  className="page-edit-button"
+                  target="_blank"
+                >
+                  Edit this page <EditIcon width={16} />
+                </Link>
+              )}
+              {showRawLink && (
+                <Link
+                  href={`/api/raw/${encodeURIComponent(userName)}/${encodeURIComponent(projectName)}/${blob.path}`}
+                  className="page-edit-button"
+                  target="_blank"
+                >
+                  View raw <CodeIcon width={16} />
+                </Link>
+              )}
             </div>
           )}
           {showPageComments && (

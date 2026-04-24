@@ -304,6 +304,17 @@ export default async function SiteSettingsIndex(props: {
           handleSubmit={updateSite}
         />
 
+        <Form
+          title="Show Raw Link"
+          description="Show a 'View raw' link at the bottom of each page, linking to the raw Markdown source."
+          inputAttrs={{
+            name: 'showRawLink',
+            type: 'text',
+            defaultValue: Boolean(site?.showRawLink).toString(),
+          }}
+          handleSubmit={updateSite}
+        />
+
         <SitePasswordProtectionForm
           disabled={!isFeatureEnabled(Feature.PasswordProtection, site)}
           siteId={site.id}

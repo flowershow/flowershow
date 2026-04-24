@@ -55,6 +55,7 @@ export default function Form({
     'enableSearch',
     'enableRss',
     'showBuiltWithButton',
+    'showRawLink',
   ].includes(inputAttrs.name);
 
   // Controlled value for all non-toggle inputs (text, textarea, select)
