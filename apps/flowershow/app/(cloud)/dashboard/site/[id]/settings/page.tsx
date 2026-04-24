@@ -306,7 +306,7 @@ export default async function SiteSettingsIndex(props: {
 
         <Form
           title="Show Raw Link"
-          description="Show a 'View raw' link at the bottom of each page, linking to the raw Markdown source."
+          description="Show a 'View raw markdown' link at the bottom of each page, linking to the raw Markdown source."
           inputAttrs={{
             name: 'showRawLink',
             type: 'text',
