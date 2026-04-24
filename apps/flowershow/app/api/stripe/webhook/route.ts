@@ -3,6 +3,7 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
+import { removeDomainFromVercelProject } from '@/lib/domains';
 import PostHogClient from '@/lib/server-posthog';
 import { stripe } from '@/lib/stripe';
 import prisma from '@/server/db';
@@ -276,9 +277,30 @@ export async function POST(req: Request) {
           // When Stripe confirms the subscription is fully cancelled, downgrade to FREE
           if (subscription.status === 'canceled') {
             console.log(`⬇️ Downgrading site to FREE plan`);
+            const site = dbSubscription.site;
+
+            if (
+              site.customDomain &&
+              env.NEXT_PUBLIC_VERCEL_ENV === 'production'
+            ) {
+              console.log(
+                `🌐 Removing custom domain ${site.customDomain} from Vercel`,
+              );
+              await removeDomainFromVercelProject(site.customDomain);
+            }
+
             await prisma.site.update({
               where: { id: dbSubscription.siteId },
-              data: { plan: 'FREE' },
+              data: {
+                plan: 'FREE',
+                ...(site.customDomain && { customDomain: null }),
+                ...(site.privacyMode === 'PASSWORD' && {
+                  privacyMode: 'PUBLIC',
+                  accessPasswordHash: null,
+                  accessPasswordUpdatedAt: new Date(),
+                  tokenVersion: { increment: 1 },
+                }),
+              },
             });
           }
 
