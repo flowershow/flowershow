@@ -322,6 +322,24 @@ export default async function SiteSettingsIndex(props: {
 
         <Billing siteId={site.id} subscription={subscription} plans={PLANS} />
 
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-950">
+          <p className="text-sm text-blue-700 dark:text-blue-300">
+            Not all site configuration is controlled via the dashboard. Some
+            features are configured via <code>config.json</code> file. To find
+            all available features, and learn how to configure them, visit the{' '}
+            <a
+              href="https://flowershow.app/docs"
+              className="underline"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Flowershow docs
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
+            .
+          </p>
+        </div>
+
         <DeleteSiteForm siteName={site.projectName} />
       </div>
     </div>
