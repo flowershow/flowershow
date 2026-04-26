@@ -37,7 +37,7 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
 
   return (
     <>
-      <div className="border-b border-stone-200 pb-4 lg:flex lg:items-start lg:justify-between">
+      <div className="border-b border-stone-200 pb-4 sm:flex sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1">
           <h2 className="mb-2 text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
             <div className="flex items-center gap-2">
@@ -187,12 +187,8 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
             </span>
           ) : null}
         </div>
-        <div className="mt-5 flex lg:ml-4 lg:mt-0">
-          {repoFullName && (
-            <span className="ml-3">
-              <SyncSiteButton siteId={site.id} />
-            </span>
-          )}
+        <div className="mt-3 flex sm:mt-0">
+          {repoFullName && <SyncSiteButton siteId={site.id} />}
           <span className="ml-3 block">
             <a
               href={url}
