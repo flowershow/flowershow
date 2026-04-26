@@ -140,13 +140,15 @@ export default function Form({
       )}
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
-        <div className="flex justify-between gap-2">
+        <div className="flex flex-wrap justify-between gap-2">
           <h2 id={inputAttrs.name} className="font-dashboard-heading text-xl">
             {title}
           </h2>
           {disabled && (
-            <div className="flex flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600">
-              <span>Available on premium plan</span>
+            <div className="flex shrink-0 flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600">
+              <span className="whitespace-nowrap">
+                Available on premium plan
+              </span>
             </div>
           )}
         </div>
