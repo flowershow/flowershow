@@ -83,14 +83,6 @@ export default function Nav({ children }: { children: ReactNode }) {
               className="flex items-center space-x-2 text-lg font-semibold tracking-tight text-primary-strong md:text-xl"
             >
               <Image src={config.logo} width={32} height={32} alt="Logo" />
-              <span
-                className={cn(
-                  'ml-2 font-brand text-lg font-extrabold md:text-xl',
-                  pages.length && 'hidden',
-                )}
-              >
-                Flowershow
-              </span>
             </Link>
             {pages.map((page) => (
               <div key={page.name} className="flex items-center">
