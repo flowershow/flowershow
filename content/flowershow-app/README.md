@@ -48,7 +48,9 @@ showComments: false
       </div>
     </div>
     <div id="demo" className="mt-12 max-w-6xl mx-auto flow-root sm:mt-16">
-      <iframe className="w-full rounded-md" width="560" height="315" src="https://www.youtube.com/embed/E9mjeskpdf8?si=3SdtS-tQE9Ug1ltU&amp;controls=0" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
+      <div className="relative aspect-video w-full">
+        <iframe className="absolute inset-0 w-full h-full rounded-md" src="https://www.youtube.com/embed/E9mjeskpdf8?si=3SdtS-tQE9Ug1ltU&amp;controls=0" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
+      </div>
     </div>
   </div>
 </div>
