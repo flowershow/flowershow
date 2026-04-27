@@ -23,7 +23,9 @@ showEditLink: false
       </div>
     </div>
     <div id="demo" className="mt-12 max-w-6xl mx-auto flow-root sm:mt-16">
-      <iframe className="w-full rounded-md" width="560" height="315" src="https://www.youtube.com/embed/E9z0zLewoAM?si=J7LDLnPoh3tG_ZRJ" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
+      <div className="relative aspect-video w-full">
+        <iframe className="absolute inset-0 w-full h-full rounded-md" src="https://www.youtube.com/embed/x6XsC2njFnU?si=zpgL-9BCrDWw6lS0" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
+      </div>
     </div>
   </div>
 </div>
@@ -58,7 +60,12 @@ showEditLink: false
         </div>
       </dl>
     </div>
+  </div>
+</div>
 
+<div className="mx-auto max-w-7xl px-6 lg:px-8">
+  <div id="demo" className="mt-12 max-w-6xl mx-auto flow-root sm:mt-16">
+    <iframe className="w-full rounded-md" width="560" height="315" src="https://www.youtube.com/embed/E9z0zLewoAM?si=J7LDLnPoh3tG_ZRJ" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
   </div>
 </div>
 
