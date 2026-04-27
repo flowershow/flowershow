@@ -8,4 +8,4 @@ description: Publish any folder of markdown from the terminal. No repo required.
 3. Publish: `fl ./my-folder`
 4. Update later: `fl ./my-folder`
 
-See [[cli|CLI reference]] for all commands and options.
+See [[reference/cli|CLI reference]] for all commands and options.
