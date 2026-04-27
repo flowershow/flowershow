@@ -56,6 +56,16 @@ curl -L https://github.com/flowershow/flowershow/releases/latest/download/fl_lin
 sudo mv fl /usr/local/bin/
 ```
 
+## Upgrade
+
+**macOS / Linux** — re-run the install script:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh
+```
+
+**Windows** — download the latest `fl_windows_amd64.zip` from the [GitHub Releases](https://github.com/flowershow/flowershow/releases) page and replace your existing binary.
+
 ## Authentication
 
 Before you can publish, you need to authenticate with your Flowershow account.
