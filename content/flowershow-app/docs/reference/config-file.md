@@ -20,6 +20,7 @@ Here is an overview of all the site-wide configuration options that you can set 
 {
   "title": "Your Site Title",
   "description": "Your site description",
+  "image": "/assets/default-social.jpg",
   "favicon": "/path/to/favicon.png",
   "nav": {
     "logo": "logo.jpeg",
@@ -29,15 +30,18 @@ Here is an overview of all the site-wide configuration options that you can set 
         "href": "/blog",
         "name": "Blog"
       }
-    ],
-    "social": [
-      {
-        "label": "github",
-        "name": "GitHub Profile",
-        "href": "https://github.com/yourusername"
-      }
     ]
   },
+  "social": [
+    {
+      "label": "github",
+      "href": "https://github.com/yourusername"
+    },
+    {
+      "label": "twitter",
+      "href": "https://twitter.com/yourusername"
+    }
+  ],
   "footer": {
     "navigation": [
       {
@@ -69,7 +73,24 @@ Here is an overview of all the site-wide configuration options that you can set 
     ]
   },
   "analytics": "G-XXXXXXXXXX",
+  "umami": {
+    "websiteId": "your-website-id",
+    "src": "https://your-umami.example.com/script.js"
+  },
   "showComments": false,
+  "giscus": {
+    "repo": "username/repo",
+    "repoId": "R_xxx",
+    "category": "Discussions",
+    "categoryId": "DIC_xxx",
+    "theme": "transparent_dark",
+    "lang": "en",
+    "mapping": "title",
+    "strict": "0",
+    "reactionsEnabled": "1",
+    "inputPosition": "top"
+  },
+  "showEditLink": true,
   "showSidebar": true,
   "sidebar": {
     "orderBy": "title",
