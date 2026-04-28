@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/flowershow-flowershow-badge.png)](https://mseep.ai/app/flowershow-flowershow)
+
 # Flowershow 💐🌷🌹
 
 > ## Publish markdown quickly and easily - for docs, knowledgebases, websites and more
