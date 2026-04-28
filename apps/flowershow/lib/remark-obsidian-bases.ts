@@ -536,11 +536,11 @@ function compileExpressionToPrisma(
       if (folder.startsWith('/')) {
         folder = folder.slice(1);
       }
-      // If folder is now empty (was just the rootDir), match all files
-      if (folder === '') {
-        // Return a condition that matches all paths (no filter)
-        return {};
-      }
+    }
+
+    // Empty folder means match all files (e.g. inFolder("") or inFolder("/"))
+    if (folder === '' || folder === '/') {
+      return {};
     }
 
     return {
