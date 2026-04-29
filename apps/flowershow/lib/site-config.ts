@@ -1,12 +1,10 @@
-import type { SiteConfig, SiteConfigJson } from '@/components/types';
-
-type ResolvableConfig = SiteConfigJson | SiteConfig | null | undefined;
+import type { SiteConfig } from '@/components/types';
 
 function isPlainObject(val: unknown): val is Record<string, unknown> {
   return typeof val === 'object' && val !== null && !Array.isArray(val);
 }
 
-function deepMerge<T extends Record<string, unknown>>(
+export function deepMerge<T extends Record<string, unknown>>(
   base: T,
   override: Partial<T>,
 ): T {
@@ -32,18 +30,15 @@ function deepMerge<T extends Record<string, unknown>>(
  * Nested objects are deep-merged; arrays are replaced wholesale.
  */
 export function resolveSiteConfig(
-  dbConfig: ResolvableConfig,
-  fileConfig: ResolvableConfig,
-): SiteConfigJson {
-  const base = (dbConfig ?? {}) as SiteConfigJson;
-  const override = (fileConfig ?? {}) as SiteConfigJson;
-
+  dbConfig: SiteConfig | null | undefined,
+  fileConfig: SiteConfig | null | undefined,
+): SiteConfig {
   if (!dbConfig && !fileConfig) return {};
-  if (!dbConfig) return override;
-  if (!fileConfig) return base;
+  if (!dbConfig) return fileConfig ?? {};
+  if (!fileConfig) return dbConfig;
 
   return deepMerge(
-    base as Record<string, unknown>,
-    override as Record<string, unknown>,
-  ) as SiteConfigJson;
+    dbConfig as Record<string, unknown>,
+    fileConfig as Record<string, unknown>,
+  ) as SiteConfig;
 }

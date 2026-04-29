@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { revalidateTag, unstable_cache } from 'next/cache';
 import { z } from 'zod';
 import { isNavDropdown, SiteConfig } from '@/components/types';
+import { deepMerge, resolveSiteConfig } from '@/lib/site-config';
 import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
@@ -502,6 +503,40 @@ export const siteRouter = createTRPCRouter({
 
       return fresh;
     }),
+
+  updateConfigJson: protectedProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+        config: z.record(z.string(), z.unknown()),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { id: true, userId: true, configJson: true },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      const existing = (site.configJson ?? {}) as Record<string, unknown>;
+      const patch = input.config as Record<string, unknown>;
+      const merged = deepMerge(existing, patch);
+
+      await ctx.db.site.update({
+        where: { id: input.siteId },
+        data: { configJson: merged as Prisma.InputJsonValue },
+      });
+
+      revalidateTag(input.siteId);
+      revalidateTag(`${input.siteId}-config`);
+    }),
+
   delete: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
@@ -820,7 +855,13 @@ export const siteRouter = createTRPCRouter({
         async (input) => {
           const site = await ctx.db.site.findUnique({
             where: { id: input.siteId },
-            include: { user: true },
+            select: {
+              id: true,
+              customDomain: true,
+              subdomain: true,
+              configJson: true,
+              user: { select: { username: true } },
+            },
           });
 
           if (!site) {
@@ -843,7 +884,11 @@ export const siteRouter = createTRPCRouter({
               ? (JSON.parse(configJson) as SiteConfig)
               : null;
 
-            if (!config) return null;
+            const dbConfigJson = (site.configJson ?? null) as SiteConfig | null;
+            if (!config)
+              return dbConfigJson
+                ? resolveSiteConfig(dbConfigJson, null)
+                : null;
 
             console.log({ config });
 
@@ -942,7 +987,7 @@ export const siteRouter = createTRPCRouter({
               });
             }
 
-            return config;
+            return resolveSiteConfig(dbConfigJson, config);
           } catch {
             return null;
           }
