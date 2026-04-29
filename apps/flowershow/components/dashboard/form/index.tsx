@@ -56,6 +56,10 @@ export default function Form({
     'enableRss',
     'showBuiltWithButton',
     'showRawLink',
+    'showSidebar',
+    'showToc',
+    'showEditLink',
+    'showModeSwitch',
   ].includes(inputAttrs.name);
 
   // Controlled value for all non-toggle inputs (text, textarea, select)
