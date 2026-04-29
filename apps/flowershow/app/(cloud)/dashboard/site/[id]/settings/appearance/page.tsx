@@ -75,6 +75,22 @@ export default async function AppearanceSettingsPage(props: {
       </div>
       <div className="col-span-10 flex flex-col space-y-6 sm:col-span-9 lg:col-span-10">
         <Form
+          title="Nav Logo"
+          description="URL or path to the logo image shown in the navigation bar."
+          inputAttrs={{
+            name: 'logo',
+            type: 'text',
+            defaultValue:
+              (typeof siteConfig?.nav === 'object'
+                ? siteConfig.nav?.logo
+                : undefined) ?? '',
+            placeholder: '/logo.png',
+            required: false,
+          }}
+          handleSubmit={updateNavConfig}
+        />
+
+        <Form
           title="Nav Title"
           description="The title shown in the site navigation bar."
           inputAttrs={{

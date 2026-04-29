@@ -65,9 +65,10 @@ export default async function IntegrationsSettingsPage(props: {
   }) => {
     'use server';
     const parsed = value === 'true' ? true : value === 'false' ? false : value;
+    const configValue = parsed === '' ? undefined : parsed;
     await api.site.updateConfigJson.mutate({
       siteId: id,
-      config: { [key]: parsed || undefined },
+      config: { [key]: configValue },
     });
   };
 
@@ -203,12 +204,30 @@ export default async function IntegrationsSettingsPage(props: {
 
         <Form
           title="Analytics"
-          description="Google Analytics measurement ID (e.g. G-XXXXXXXXXX) or any script src to include."
+          description="Google Analytics measurement ID (e.g. G-XXXXXXXXXX)."
           inputAttrs={{
             name: 'analytics',
             type: 'text',
             defaultValue: siteConfig?.analytics ?? '',
             placeholder: 'G-XXXXXXXXXX',
+            required: false,
+          }}
+          handleSubmit={updateConfigJson}
+        />
+
+        <Form
+          title="Umami Analytics"
+          description="Umami website ID for privacy-friendly analytics."
+          helpText="Find your website ID in your Umami dashboard. Self-hosted instances also need to configure the script src in config.json."
+          inputAttrs={{
+            name: 'umami',
+            type: 'text',
+            defaultValue:
+              typeof siteConfig?.umami === 'string'
+                ? siteConfig.umami
+                : ((siteConfig?.umami as { websiteId?: string } | undefined)
+                    ?.websiteId ?? ''),
+            placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
             required: false,
           }}
           handleSubmit={updateConfigJson}

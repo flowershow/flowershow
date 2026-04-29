@@ -43,9 +43,26 @@ export default async function ContentSettingsPage(props: {
   }) => {
     'use server';
     const parsed = value === 'true' ? true : value === 'false' ? false : value;
+    const configValue = parsed === '' ? undefined : parsed;
     await api.site.updateConfigJson.mutate({
       siteId: id,
-      config: { [key]: parsed },
+      config: { [key]: configValue },
+    });
+  };
+
+  const updateSidebarConfig = async ({
+    id,
+    key,
+    value,
+  }: {
+    id: string;
+    key: string;
+    value: string;
+  }) => {
+    'use server';
+    await api.site.updateConfigJson.mutate({
+      siteId: id,
+      config: { sidebar: { [key]: value || undefined } },
     });
   };
 
@@ -55,6 +72,21 @@ export default async function ContentSettingsPage(props: {
         <SettingsNav hasGhRepository={!!site.ghRepository} />
       </div>
       <div className="col-span-10 flex flex-col space-y-6 sm:col-span-9 lg:col-span-10">
+        <Form
+          title="Sidebar Order"
+          description="How to order items in the file-tree sidebar."
+          inputAttrs={{
+            name: 'orderBy',
+            type: 'select',
+            defaultValue: siteConfig?.sidebar?.orderBy ?? 'path',
+            options: [
+              { value: 'path', label: 'Path (default)' },
+              { value: 'title', label: 'Title' },
+            ],
+          }}
+          handleSubmit={updateSidebarConfig}
+        />
+
         <Form
           title="Show Table of Contents"
           description="Show a table of contents on pages that have headings."
