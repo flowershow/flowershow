@@ -19,7 +19,7 @@ interface SettingsNavProps {
 export default function SettingsNav({ hasGhRepository: _ }: SettingsNavProps) {
   const { id } = useParams() as { id: string };
   const pathname = usePathname();
-  const base = `/dashboard/site/${id}/settings`;
+  const base = `/site/${id}/settings`;
 
   return (
     <ul className="border-primary-silent space-y-2 rounded-md border px-4 py-5">
