@@ -1,16 +1,7 @@
 import { ExternalLinkIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
-import Billing from '@/components/dashboard/billing';
 import Form from '@/components/dashboard/form';
-import DeleteSiteForm from '@/components/dashboard/form/delete-site-form';
-import GitHubConnectionForm from '@/components/dashboard/form/github-connection-form';
-import RepoAccessLostForm from '@/components/dashboard/form/repo-access-lost-form';
-import SitePasswordProtectionForm from '@/components/dashboard/form/site-password-form';
 import SettingsNav from '@/components/dashboard/settings-nav';
-import { validDomainRegex } from '@/lib/domains';
-import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
-import { getRepoFullName } from '@/lib/get-repo-full-name';
-import { PLANS } from '@/lib/stripe-plans';
 import type { SiteUpdateKey } from '@/server/api/types';
 import { api } from '@/trpc/server';
 
@@ -26,30 +17,9 @@ export default async function SiteSettingsIndex(props: {
     notFound();
   }
 
-  const subscription = await api.stripe.getSiteSubscription.query({
-    siteId: site.id,
-  });
-
-  const repoFullName = getRepoFullName(site);
-
-  // Check if site needs migration (OAuth-only, no GitHub App installation)
-  const isRepoAccessLost = !site.installationRepository && !!site.ghRepository;
-  let hasInstallationForRepo = false;
-
-  if (isRepoAccessLost) {
-    try {
-      const installations = await api.github.listInstallations.query();
-      // Check if any installation has access to this site's repository
-      hasInstallationForRepo = installations.some((installation) =>
-        installation.repositories.some(
-          (repo) => repo.repositoryFullName === site.ghRepository,
-        ),
-      );
-    } catch (error) {
-      // If installations can't be fetched, assume no installation
-      console.error('Failed to fetch installations:', error);
-    }
-  }
+  const siteConfig = await api.site.getConfig
+    .query({ siteId: site.id })
+    .catch(() => null);
 
   const updateSite = async ({
     id,
@@ -63,20 +33,29 @@ export default async function SiteSettingsIndex(props: {
     'use server';
     await api.site.update.mutate({ id, key, value });
   };
+
+  const updateConfigJson = async ({
+    id,
+    key,
+    value,
+  }: {
+    id: string;
+    key: string;
+    value: string;
+  }) => {
+    'use server';
+    await api.site.updateConfigJson.mutate({
+      siteId: id,
+      config: { [key]: value || undefined },
+    });
+  };
+
   return (
     <div className="sm:grid sm:grid-cols-12 sm:space-x-6">
       <div className="sticky top-[5rem] col-span-2 hidden self-start sm:col-span-3 sm:block lg:col-span-2">
-        <SettingsNav hasGhRepository={!!repoFullName} />
+        <SettingsNav hasGhRepository={!!site.ghRepository} />
       </div>
       <div className="col-span-10 flex flex-col space-y-6 sm:col-span-9 lg:col-span-10">
-        {isRepoAccessLost && (
-          <RepoAccessLostForm
-            siteId={site.id}
-            repositoryName={site.ghRepository ?? ''}
-            hasInstallation={hasInstallationForRepo}
-          />
-        )}
-
         <Form
           title="Name"
           description="The name of your site. It can only consist of ASCII letters, digits, and characters ., -, and _. Maximum 32 characters can be used."
@@ -120,227 +99,53 @@ export default async function SiteSettingsIndex(props: {
           handleSubmit={updateSite}
         />
 
-        <GitHubConnectionForm
-          siteId={site.id}
-          ghRepository={repoFullName}
-          ghBranch={site.ghBranch}
-          rootDir={site.rootDir}
-        />
-
-        {repoFullName && (
-          <Form
-            title="Auto-sync"
-            description="Automatically sync your site after each change to the GitHub repository."
-            helpText={
-              <p>
-                Learn more about{' '}
-                <a
-                  className="underline"
-                  href="https://flowershow.app/docs/site-settings#auto-sync"
-                >
-                  Auto-Sync
-                  <ExternalLinkIcon className="inline h-4" />
-                </a>
-                .
-              </p>
-            }
-            inputAttrs={{
-              name: 'autoSync',
-              type: 'text',
-              defaultValue: Boolean(site.autoSync).toString(),
-            }}
-            handleSubmit={updateSite}
-          />
-        )}
-
         <Form
-          title="Comments"
-          description="Enable comments at the bottom of your site's pages."
-          helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/comments"
-              >
-                Comments
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
-          }
+          title="Site Title"
+          description="The display title of your site, used in the browser tab and social previews."
           inputAttrs={{
-            name: 'enableComments',
+            name: 'title',
             type: 'text',
-            defaultValue: Boolean(site.enableComments).toString(),
+            defaultValue: siteConfig?.title ?? '',
+            placeholder: 'My Awesome Site',
           }}
-          handleSubmit={updateSite}
-        />
-
-        {site?.enableComments && (
-          <>
-            <Form
-              title="Giscus Repository ID"
-              description="The ID of your GitHub repository for Giscus."
-              helpText="You can find this in your Giscus configuration at https://giscus.app. After selecting your repository, the Repository ID will be shown in the configuration section. It starts with 'R_'."
-              inputAttrs={{
-                name: 'giscusRepoId',
-                type: 'text',
-                defaultValue: site?.giscusRepoId || '',
-                placeholder: 'R_kgDOxxxxxx',
-                required: false,
-              }}
-              handleSubmit={updateSite}
-            />
-
-            <Form
-              title="Giscus Category ID"
-              description="The ID of the discussion category in your repository."
-              helpText="You can find this in your Giscus configuration at https://giscus.app. After selecting your discussion category, the Category ID will be shown in the configuration section. It starts with 'DIC_'."
-              inputAttrs={{
-                name: 'giscusCategoryId',
-                type: 'text',
-                defaultValue: site?.giscusCategoryId || '',
-                placeholder: 'DIC_kwDOxxxxxx',
-                required: false,
-              }}
-              handleSubmit={updateSite}
-            />
-          </>
-        )}
-
-        <Form
-          title="Custom Domain"
-          description="The custom domain for your site."
-          disabled={!isFeatureEnabled(Feature.CustomDomain, site)}
-          helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/site-settings#custom-domain-%EF%B8%8F-premium-feature"
-              >
-                Custom domain
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
-          }
-          inputAttrs={{
-            name: 'customDomain',
-            type: 'text',
-            defaultValue: isFeatureEnabled(Feature.CustomDomain, site)
-              ? (site.customDomain ?? '')
-              : '',
-            placeholder: 'yourdomain.com',
-            maxLength: 64,
-            pattern: validDomainRegex.toString(),
-          }}
-          handleSubmit={updateSite}
+          handleSubmit={updateConfigJson}
         />
 
         <Form
-          title="Full-Text Search"
-          description="Enable full-text search functionality for your site."
-          helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/blog/announcing-full-text-search"
-              >
-                Full-text search
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
-          }
-          disabled={!isFeatureEnabled(Feature.Search, site)}
+          title="Description"
+          description="A short description of your site, used in search results and social previews."
           inputAttrs={{
-            name: 'enableSearch',
+            name: 'description',
             type: 'text',
-            defaultValue: isFeatureEnabled(Feature.Search, site)
-              ? Boolean(site?.enableSearch).toString()
-              : 'false',
+            defaultValue: siteConfig?.description ?? '',
+            placeholder: 'A site about...',
           }}
-          handleSubmit={updateSite}
+          handleSubmit={updateConfigJson}
         />
 
         <Form
-          title="RSS Feed"
-          description="Enable an RSS feed for your site. Only pages with a date field in the frontmatter will be included."
-          helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/rss-feed"
-              >
-                RSS Feed
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
-          }
+          title="Favicon"
+          description="URL or emoji to use as the site favicon. Accepts a path to an image or a single emoji character."
           inputAttrs={{
-            name: 'enableRss',
+            name: 'favicon',
             type: 'text',
-            defaultValue: Boolean(site?.enableRss).toString(),
+            defaultValue: siteConfig?.favicon ?? '',
+            placeholder: '🌸 or /favicon.ico',
           }}
-          handleSubmit={updateSite}
+          handleSubmit={updateConfigJson}
         />
 
         <Form
-          title="Show Flowershow Branding"
-          description="Show 'Built with Flowershow' button on your site."
-          disabled={!isFeatureEnabled(Feature.NoBranding, site)}
+          title="Social Image"
+          description="URL of the default social preview image shown when sharing links."
           inputAttrs={{
-            name: 'showBuiltWithButton',
+            name: 'image',
             type: 'text',
-            defaultValue: isFeatureEnabled(Feature.NoBranding, site)
-              ? Boolean(site?.showBuiltWithButton).toString()
-              : 'true',
+            defaultValue: siteConfig?.image ?? '',
+            placeholder: '/social.png',
           }}
-          handleSubmit={updateSite}
+          handleSubmit={updateConfigJson}
         />
-
-        <Form
-          title="Show Raw Link"
-          description="Show a 'View raw markdown' link at the bottom of each page, linking to the raw Markdown source."
-          inputAttrs={{
-            name: 'showRawLink',
-            type: 'text',
-            defaultValue: Boolean(site?.showRawLink).toString(),
-          }}
-          handleSubmit={updateSite}
-        />
-
-        <SitePasswordProtectionForm
-          disabled={!isFeatureEnabled(Feature.PasswordProtection, site)}
-          siteId={site.id}
-        />
-
-        <Billing siteId={site.id} subscription={subscription} plans={PLANS} />
-
-        <div className="rounded-lg border border-blue-200 bg-blue-50 p-6 dark:border-blue-800 dark:bg-blue-950">
-          <p className="text-sm text-blue-700 dark:text-blue-300">
-            Not all site configuration is controlled via the dashboard. Some
-            features are configured via <code>config.json</code> file. To find
-            all available features, and learn how to configure them, visit the{' '}
-            <a
-              href="https://flowershow.app/docs"
-              className="underline"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Flowershow docs
-              <ExternalLinkIcon className="inline h-4" />
-            </a>
-            .
-          </p>
-        </div>
-
-        <DeleteSiteForm siteName={site.projectName} />
       </div>
     </div>
   );
