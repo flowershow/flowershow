@@ -113,6 +113,39 @@ export interface ThemeConfig {
   showModeSwitch?: boolean;
 }
 
+/**
+ * Subset of SiteConfig that can be stored as dashboard configuration in the DB.
+ * Does NOT include fields already covered by dedicated Site columns
+ * (enableComments, enableSearch, enableRss, showSidebar, showBuiltWithButton,
+ * showRawLink, syntaxMode, giscusRepoId, giscusCategoryId).
+ */
+export interface SiteConfigJson {
+  title?: string;
+  description?: string;
+  image?: string;
+  favicon?: string;
+  nav?: NavConfig;
+  footer?: FooterConfig;
+  social?: SocialLink[];
+  analytics?: string;
+  umami?: string | { websiteId: string; src?: string };
+  showToc?: boolean;
+  sidebar?: {
+    orderBy?: 'title' | 'path';
+    paths?: string[];
+  };
+  showEditLink?: boolean;
+  theme?: string | ThemeConfig;
+  redirects?: Array<{
+    from: string;
+    to: string;
+    permanent?: boolean;
+  }>;
+  contentInclude?: string[];
+  contentExclude?: string[];
+  contentHide?: string[];
+}
+
 export interface SiteAlias {
   origin: string;
   alias: string;
