@@ -699,6 +699,10 @@ export const siteRouter = createTRPCRouter({
         // Get the most recent update date
 
         if (blobs.length === 0) {
+          // If tree is set, sync already ran but found no files (e.g. rootDir doesn't exist)
+          if (site.tree) {
+            return { status: 'SUCCESS', lastSyncedAt: null };
+          }
           return {
             status: 'UNPUBLISHED',
             lastSyncedAt: null,

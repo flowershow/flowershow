@@ -107,7 +107,7 @@ export default function SitePasswordProtectionForm({
       )}
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
-        <div className="flex justify-between gap-2">
+        <div className="flex flex-wrap justify-between gap-2">
           <h2
             id="passwordProtection"
             className="font-dashboard-heading text-xl"
@@ -115,8 +115,10 @@ export default function SitePasswordProtectionForm({
             Password Protection
           </h2>
           {disabled && (
-            <div className="flex flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600">
-              <span>Available on premium plan</span>
+            <div className="flex shrink-0 flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600">
+              <span className="whitespace-nowrap">
+                Available on premium plan
+              </span>
             </div>
           )}
         </div>
@@ -131,9 +133,11 @@ export default function SitePasswordProtectionForm({
             checked={isProtectionOn}
             onChange={handleProtectionToggle}
             className={clsx(
-              isProtectionOn ? 'bg-indigo-600' : 'bg-gray-200',
+              !inputDisabled && isProtectionOn
+                ? 'bg-indigo-600'
+                : 'bg-gray-200',
               'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2',
-              inputDisabled && 'cursor-auto',
+              inputDisabled && 'pointer-events-none opacity-70',
             )}
           >
             <span className="sr-only">Enable password protection</span>

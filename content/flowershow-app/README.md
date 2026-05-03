@@ -37,17 +37,20 @@ showComments: false
         <span>💎 Obsidian</span>
         <span>🤖 AI agents</span>
       </div>
-      <p className="mt-4 text-sm text-gray-400">Free forever</p>
       <div className="mt-8 flex items-center justify-center gap-x-6 text-sm text-gray-400">
         <span><strong className="text-gray-600">1,400+</strong> users</span>
         <span aria-hidden="true">·</span>
         <span><strong className="text-gray-600">1100+</strong> sites published</span>
         <span aria-hidden="true">·</span>
-        <span><strong className="text-gray-600">Free & open source</strong></span>
+        <span><strong className="text-gray-600">Free forever</strong></span>
+        <span aria-hidden="true">·</span>
+        <span><strong className="text-gray-600">Open source</strong></span>
       </div>
     </div>
     <div id="demo" className="mt-12 max-w-6xl mx-auto flow-root sm:mt-16">
-      <iframe className="w-full rounded-md" width="560" height="315" src="https://www.youtube.com/embed/E9mjeskpdf8?si=3SdtS-tQE9Ug1ltU&amp;controls=0" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
+      <div className="relative aspect-video w-full">
+        <iframe className="absolute inset-0 w-full h-full rounded-md" src="https://www.youtube.com/embed/E9mjeskpdf8?si=3SdtS-tQE9Ug1ltU&amp;controls=0" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
+      </div>
     </div>
   </div>
 </div>

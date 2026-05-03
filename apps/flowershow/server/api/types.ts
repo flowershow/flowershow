@@ -19,6 +19,8 @@ export const publicSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   privacyMode: true,
   autoSync: true,
   syntaxMode: true,
+  showBuiltWithButton: true,
+  showRawLink: true,
   installationRepository: {
     select: { repositoryFullName: true },
   },
@@ -53,6 +55,8 @@ export const publicSiteSchema: z.ZodType<PublicSite> = z.object({
   privacyMode: z.enum(PrivacyMode),
   autoSync: z.boolean(),
   syntaxMode: z.enum(SyntaxMode),
+  showBuiltWithButton: z.boolean(),
+  showRawLink: z.boolean(),
   installationRepository: z
     .object({
       repositoryFullName: z.string(),
@@ -80,6 +84,9 @@ export enum SiteUpdateKey {
   giscusRepoId = 'giscusRepoId',
   giscusCategoryId = 'giscusCategoryId',
   showSidebar = 'showSidebar',
+  showBuiltWithButton = 'showBuiltWithButton',
+  showRawLink = 'showRawLink',
+  hideBranding = 'hideBranding',
 }
 export interface PageMetadata {
   title: string;

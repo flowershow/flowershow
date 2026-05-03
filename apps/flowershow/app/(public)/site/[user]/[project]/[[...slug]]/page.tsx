@@ -1,6 +1,6 @@
 import type { GiscusProps } from '@giscus/react';
 import clsx from 'clsx';
-import { EditIcon } from 'lucide-react';
+import { CodeIcon, EditIcon } from 'lucide-react';
 import Link from 'next/link';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import { serialize } from 'next-mdx-remote-client/serialize';
@@ -21,7 +21,11 @@ import { getSiteUrl } from '@/lib/get-site-url';
 import { resolveHeroConfig } from '@/lib/hero-config';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import { isEmoji } from '@/lib/is-emoji';
-import { getMdxOptions, processMarkdown } from '@/lib/markdown';
+import {
+  getMdxOptions,
+  processMarkdown,
+  protectWikiLinkAliases,
+} from '@/lib/markdown';
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { processCanvas } from '@/lib/process-canvas';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
@@ -311,7 +315,7 @@ export default async function SitePage(props: {
         }) as any;
 
         const mdxSource = await serialize<PageMetadata>({
-          source: pageContent ?? '',
+          source: protectWikiLinkAliases(pageContent ?? ''),
           options: mdxOptions,
         });
 
@@ -365,6 +369,7 @@ export default async function SitePage(props: {
     : undefined;
 
   const showEditLink = metadata?.showEditLink ?? siteConfig?.showEditLink;
+  const showRawLink = site.showRawLink;
   const normalizedRootDir = site?.rootDir
     ? `${site.rootDir.replace(/^(.?\/)+|\/+$/g, '')}/`
     : '';
@@ -372,18 +377,23 @@ export default async function SitePage(props: {
     site.enableComments &&
     (metadata?.showComments ?? siteConfig?.showComments ?? site.enableComments);
   const giscusConfig = siteConfig?.giscus;
+  const activeSidebarPath = (() => {
+    const paths = siteConfig?.sidebar?.paths;
+    if (!paths || paths.length === 0) return undefined;
+    const pagePath = '/' + blob.path;
+    return paths.find(
+      (path) =>
+        pagePath === path ||
+        pagePath.startsWith(path.endsWith('/') ? path : path + '/'),
+    );
+  })();
   const showSidebar = (() => {
     const enabled =
       metadata?.showSidebar ?? siteConfig?.showSidebar ?? site.showSidebar;
     if (!enabled) return false;
     const paths = siteConfig?.sidebar?.paths;
     if (!paths || paths.length === 0) return true;
-    const pagePath = '/' + blob.path;
-    return paths.some(
-      (path) =>
-        pagePath === path ||
-        pagePath.startsWith(path.endsWith('/') ? path : path + '/'),
-    );
+    return activeSidebarPath !== undefined;
   })();
   const showToc = metadata?.showToc ?? siteConfig?.showToc ?? true;
   const heroConfig = resolveHeroConfig(metadata, siteConfig);
@@ -397,7 +407,9 @@ export default async function SitePage(props: {
       .query({
         siteId: site.id,
         orderBy: siteConfig?.sidebar?.orderBy,
-        paths: siteConfig?.sidebar?.paths,
+        paths: activeSidebarPath
+          ? [activeSidebarPath]
+          : siteConfig?.sidebar?.paths,
         contentHide: siteConfig?.contentHide,
       })
       .catch(() => []);
@@ -455,15 +467,26 @@ export default async function SitePage(props: {
             </BlogLayout>
           </main>
 
-          {showEditLink && (
+          {(showEditLink || showRawLink) && (
             <div className="page-edit-button-container">
-              <Link
-                href={`https://github.com/${site?.ghRepository}/edit/${site?.ghBranch}/${normalizedRootDir}${blob.path}`}
-                className="page-edit-button"
-                target="_blank"
-              >
-                Edit this page <EditIcon width={16} />
-              </Link>
+              {showEditLink && (
+                <Link
+                  href={`https://github.com/${site?.ghRepository}/edit/${site?.ghBranch}/${normalizedRootDir}${blob.path}`}
+                  className="page-edit-button"
+                  target="_blank"
+                >
+                  Edit this page <EditIcon width={16} />
+                </Link>
+              )}
+              {showRawLink && (
+                <Link
+                  href={`/api/raw/${encodeURIComponent(userName)}/${encodeURIComponent(projectName)}/${blob.path}`}
+                  className="page-edit-button"
+                  target="_blank"
+                >
+                  View raw markdown <CodeIcon width={16} />
+                </Link>
+              )}
             </div>
           )}
           {showPageComments && (

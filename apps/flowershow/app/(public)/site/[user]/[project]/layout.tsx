@@ -147,7 +147,8 @@ export default async function PublicLayout(props: {
   const title = siteConfig?.nav?.title;
   const links = siteConfig?.nav?.links;
   const social = siteConfig?.social || siteConfig?.nav?.social;
-  const showBuiltWithButton = !isFeatureEnabled(Feature.NoBranding, site);
+  const canHideBuiltWith = isFeatureEnabled(Feature.NoBranding, site);
+  const showBuiltWithButton = !canHideBuiltWith || site.showBuiltWithButton;
   const showSearch =
     isFeatureEnabled(Feature.Search, site) && site.enableSearch;
   const cta = siteConfig?.nav?.cta;

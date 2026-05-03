@@ -132,6 +132,8 @@ model Site {
   accessPasswordUpdatedAt DateTime?     @map("access_password_updated_at")
   tokenVersion            Int           @default(0) @map("token_version")
   syntaxMode              SyntaxMode    @default(auto) @map("syntax_mode")
+  showBuiltWithButton     Boolean       @default(true) @map("show_built_with_button")
+  showRawLink             Boolean       @default(false) @map("show_raw_link")
 
   // Anonymous/temporary site fields for claim flow
   isTemporary             Boolean       @default(false) @map("is_temporary")

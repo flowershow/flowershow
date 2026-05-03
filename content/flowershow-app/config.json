@@ -3,7 +3,8 @@
   "showSidebar": true,
   "sidebar": {
     "paths": [
-      "/docs"
+      "/docs",
+      "/markdown"
     ]
   },
   "nav": {
@@ -29,10 +30,6 @@
         "name": "Use Cases",
         "links": [
           {
-            "href": "/uses/obsidian",
-            "name": "Obsidian Vault"
-          },
-          {
             "href": "/uses/docs",
             "name": "Docs"
           },
@@ -54,12 +51,16 @@
         "name": "Publish",
         "links": [
           {
-            "href": "/publish",
-            "name": "From Terminal (CLI)"
+            "href": "/publish-obsidian",
+            "name": "Obsidian Vault"
           },
           {
             "href": "/publish-github",
             "name": "From GitHub"
+          },
+          {
+            "href": "/cli",
+            "name": "From Terminal (CLI)"
           },
           {
             "href": "/dragndrop",
@@ -129,11 +130,11 @@
         "title": "Legal",
         "links": [
           {
-            "href": "/docs/terms-of-service",
+            "href": "/terms-of-service",
             "name": "Terms"
           },
           {
-            "href": "/docs/privacy",
+            "href": "/privacy",
             "name": "Privacy"
           }
         ]
@@ -173,19 +174,135 @@
   "redirects": [
     {
       "from": "/docs/site-wide-toc",
-      "to": "/docs/sidebar"
+      "to": "/docs/reference/sidebar"
+    },
+    {
+      "from": "/blog/light-dark-theme-switch",
+      "to": "/docs/reference/dark-mode"
     },
     {
       "from": "/blog/how-to-set-up-blog",
-      "to": "/blog/how-to-publish-blog"
+      "to": "/docs/guides/publish-blog"
+    },
+    {
+      "from": "/blog/contribute-improvements-to-flowershow-docs-and-website-is-easy",
+      "to": "/docs/guides/contribute-improvements-to-flowershow-docs-and-website-is-easy"
+    },
+    {
+      "from": "/blog/enhance-markdown-with-styled-jsx-blocks",
+      "to": "/docs/guides/enhance-markdown-with-styled-jsx-blocks"
+    },
+    {
+      "from": "/blog/how-to-add-edit-this-page-button",
+      "to": "/docs/reference/edit-this-page"
+    },
+    {
+      "from": "/blog/how-to-add-featured-images",
+      "to": "/docs/reference/page-headers"
+    },
+    {
+      "from": "/blog/how-to-add-forms",
+      "to": "/docs/guides/forms"
+    },
+    {
+      "from": "/blog/how-to-add-hero-sections",
+      "to": "/docs/reference/hero-sections"
+    },
+    {
+      "from": "/blog/how-to-configure-google-analytics",
+      "to": "/docs/referece/analytics"
+    },
+    {
+      "from": "/blog/how-to-configure-navigation-bar",
+      "to": "/docs/reference/navbar"
+    },
+    {
+      "from": "/blog/how-to-configure-page-headers",
+      "to": "/docs/reference/page-headers"
+    },
+    {
+      "from": "/blog/how-to-configure-seo-and-social-media-metadata",
+      "to": "/docs/reference/seo-social-metadata"
+    },
+    {
+      "from": "/blog/how-to-create-author-pages",
+      "to": "/docs/guides/author-pages"
+    },
+    {
+      "from": "/blog/how-to-create-content-catalogs",
+      "to": "/docs/guides/content-catalogs"
+    },
+    {
+      "from": "/blog/how-to-customize-style",
+      "to": "/docs/guides/custom-styles"
+    },
+    {
+      "from": "/blog/how-to-customize-your-footer",
+      "to": "/docs/reference/footer"
+    },
+    {
+      "from": "/blog/how-to-debug-404-pages",
+      "to": "/docs/reference/debug-404s"
+    },
+    {
+      "from": "/blog/how-to-enable-page-comments",
+      "to": "/docs/reference/comments"
+    },
+    {
+      "from": "/blog/how-to-exclude-files-from-publishing",
+      "to": "/docs/reference/content-filtering"
+    },
+    {
+      "from": "/docs/guides/exclude-files",
+      "to": "/docs/reference/content-filtering"
+    },
+    {
+      "from": "/blog/how-to-publish-blog",
+      "to": "/docs/guides/publish-blog"
+    },
+    {
+      "from": "/blog/how-to-publish-repository-with-markdown",
+      "to": "/docs/guides/publish-github-repo"
+    },
+    {
+      "from": "/blog/how-to-publish-vault-quickly-and-easily",
+      "to": "/docs/guides/publish-obsidian-vault"
+    },
+    {
+      "from": "/blog/how-to-publish-vault-with-enveloppe-plugin",
+      "to": "/docs/guides/publish-vault-with-enveloppe"
+    },
+    {
+      "from": "/blog/how-to-set-custom-domain",
+      "to": "/docs/reference/custom-domain"
+    },
+    {
+      "from": "/blog/how-to-set-custom-favicon",
+      "to": "/docs/reference/custom-favicon"
+    },
+    {
+      "from": "/blog/how-to-set-custom-fonts",
+      "to": "/docs/guides/custom-fonts"
+    },
+    {
+      "from": "/blog/how-to-set-page-title",
+      "to": "/docs/reference/page-title"
+    },
+    {
+      "from": "/blog/publish-markdown-from-the-terminal-tutorial",
+      "to": "/docs/guides/publish-from-terminal"
+    },
+    {
+      "from": "/blog/turn-obsidian-vault-into-a-blog",
+      "to": "/docs/guides/turn-obsidian-vault-into-a-blog"
     },
     {
       "from": "/docs/obsidian-bases-reference",
-      "to": "/docs/obsidian-bases"
+      "to": "/docs/reference/obsidian-bases"
     },
     {
       "from": "/docs/bases",
-      "to": "/docs/obsidian-bases"
+      "to": "/docs/reference/obsidian-bases"
     },
     {
       "from": "/blogs",
@@ -197,11 +314,207 @@
     },
     {
       "from": "/docs/site-config",
-      "to": "/docs/config"
+      "to": "/docs"
+    },
+    {
+      "from": "/docs/site-settings",
+      "to": "/docs"
     },
     {
       "from": "/publish",
       "to": "/cli"
+    },
+    {
+      "from": "/uses/obsidian",
+      "to": "/publish-obsidian"
+    },
+    {
+      "from": "/docs/analytics",
+      "to": "/docs/reference/analytics"
+    },
+    {
+      "from": "/docs/blog-setup",
+      "to": "/docs/reference/blog-setup"
+    },
+    {
+      "from": "/docs/canvas-demo-v2",
+      "to": "/docs/reference/canvas-demo-v2"
+    },
+    {
+      "from": "/docs/canvas-demo",
+      "to": "/docs/reference/canvas-demo"
+    },
+    {
+      "from": "/docs/canvas",
+      "to": "/docs/reference/obsidian-canvas"
+    },
+    {
+      "from": "/docs/cli",
+      "to": "/docs/reference/cli"
+    },
+    {
+      "from": "/docs/comments",
+      "to": "/docs/reference/comments"
+    },
+    {
+      "from": "/docs/config-file",
+      "to": "/docs/reference/config-file"
+    },
+    {
+      "from": "/docs/config",
+      "to": "/docs"
+    },
+    {
+      "from": "/docs/content-filtering",
+      "to": "/docs/reference/content-filtering"
+    },
+    {
+      "from": "/docs/custom-collection-cards",
+      "to": "/docs/reference/custom-collection-cards"
+    },
+    {
+      "from": "/docs/custom-domain",
+      "to": "/docs/reference/custom-domain"
+    },
+    {
+      "from": "/docs/custom-favicon",
+      "to": "/docs/reference/custom-favicon"
+    },
+    {
+      "from": "/docs/custom-fonts",
+      "to": "/docs/guides/custom-fonts"
+    },
+    {
+      "from": "/docs/custom-styles",
+      "to": "/docs/reference/custom-styles"
+    },
+    {
+      "from": "/docs/dark-mode",
+      "to": "/docs/reference/dark-mode"
+    },
+    {
+      "from": "/docs/debug-mdx-errors",
+      "to": "/docs/reference/debug-mdx-errors"
+    },
+    {
+      "from": "/docs/debugging-404s",
+      "to": "/docs/reference/debug-404s"
+    },
+    {
+      "from": "/docs/edit-this-page",
+      "to": "/docs/reference/edit-this-page"
+    },
+    {
+      "from": "/docs/faq",
+      "to": "/docs/reference/faq"
+    },
+    {
+      "from": "/docs/footer",
+      "to": "/docs/reference/footer"
+    },
+    {
+      "from": "/docs/forms",
+      "to": "/docs/reference/forms"
+    },
+    {
+      "from": "/docs/frontmatter-variables",
+      "to": "/docs/reference/frontmatter-variables"
+    },
+    {
+      "from": "/docs/hero-sections",
+      "to": "/docs/reference/hero-sections"
+    },
+    {
+      "from": "/docs/home-page",
+      "to": "/docs/reference/home-page"
+    },
+    {
+      "from": "/docs/list-component",
+      "to": "/docs/reference/list-component"
+    },
+    {
+      "from": "/docs/math",
+      "to": "/docs/reference/math"
+    },
+    {
+      "from": "/docs/mermaid",
+      "to": "/docs/reference/mermaid"
+    },
+    {
+      "from": "/docs/navbar",
+      "to": "/docs/reference/navbar"
+    },
+    {
+      "from": "/docs/obsidian-bases",
+      "to": "/docs/reference/obsidian-bases"
+    },
+    {
+      "from": "/docs/page-authors",
+      "to": "/docs/reference/page-authors"
+    },
+    {
+      "from": "/docs/page-headers",
+      "to": "/docs/reference/page-headers"
+    },
+    {
+      "from": "/docs/page-titles",
+      "to": "/docs/reference/page-title"
+    },
+    {
+      "from": "/docs/password-protection",
+      "to": "/docs/reference/password-protection"
+    },
+    {
+      "from": "/privacy",
+      "to": "/docs/reference/privacy"
+    },
+    {
+      "from": "/docs/redirects",
+      "to": "/docs/reference/redirects"
+    },
+    {
+      "from": "/docs/robots-txt",
+      "to": "/docs/reference/robots-txt"
+    },
+    {
+      "from": "/docs/rss-feed",
+      "to": "/docs/reference/rss-feed"
+    },
+    {
+      "from": "/docs/seo-social-metadata",
+      "to": "/docs/reference/seo-social-metadata"
+    },
+    {
+      "from": "/docs/sidebar",
+      "to": "/docs/reference/sidebar"
+    },
+    {
+      "from": "/docs/site-settings",
+      "to": "/docs/reference/site-settings"
+    },
+    {
+      "from": "/docs/syntax-mode",
+      "to": "/docs/reference/syntax-mode"
+    },
+    {
+      "from": "/docs/syntax",
+      "to": "/docs/reference/syntax"
+    },
+    {
+      "from": "/docs/table-of-contents",
+      "to": "/docs/reference/table-of-contents"
+    },
+    {
+      "from": "/terms-of-service",
+      "to": "/docs/reference/terms-of-service"
+    },
+    {
+      "from": "/docs/themes",
+      "to": "/docs/reference/themes"
+    },
+    {
+      "from": "/docs/umami",
+      "to": "/docs/reference/analytics"
     }
   ]
 }

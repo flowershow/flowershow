@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/flowershow/publish/internal/config"
+	"github.com/flowershow/publish/internal/updater"
 	"github.com/spf13/cobra"
 )
 
@@ -13,6 +14,9 @@ var rootCmd = &cobra.Command{
 	Short:   "CLI tool for publishing to Flowershow",
 	Version: config.Version,
 	// Args and RunE are set in publish.go via init()
+	PersistentPostRun: func(cmd *cobra.Command, args []string) {
+		updater.PrintIfAvailable(config.Version)
+	},
 }
 
 // Execute runs the root command.

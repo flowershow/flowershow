@@ -270,6 +270,20 @@ describe('buildPrismaComparison', () => {
       expect(where).toEqual({});
     });
 
+    it('should return empty where clause for inFolder("")', () => {
+      const filter = 'file.inFolder("")';
+      const { where } = buildFilterStrategy(filter);
+
+      expect(where).toEqual({});
+    });
+
+    it('should return empty where clause for inFolder("/") ', () => {
+      const filter = 'file.inFolder("/")';
+      const { where } = buildFilterStrategy(filter);
+
+      expect(where).toEqual({});
+    });
+
     it('should build where clause for file.hasProperty', () => {
       const filter = 'file.hasProperty("tags")';
       const { where } = buildFilterStrategy(filter);

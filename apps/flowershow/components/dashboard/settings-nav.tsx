@@ -9,6 +9,8 @@ const navItems = [
   { name: 'Custom Domain', href: '#customDomain' },
   { name: 'Full-Text Search', href: '#enableSearch' },
   { name: 'RSS Feed', href: '#enableRss' },
+  { name: 'Branding', href: '#showBuiltWithButton' },
+  { name: 'Raw Markdown Link', href: '#showRawLink' },
   { name: 'Password Protection', href: '#passwordProtection' },
   { name: 'Billing', href: '#billing' },
   { name: 'Delete Site', href: '#deleteSite' },

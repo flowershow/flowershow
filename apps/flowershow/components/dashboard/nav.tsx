@@ -83,14 +83,6 @@ export default function Nav({ children }: { children: ReactNode }) {
               className="flex items-center space-x-2 text-lg font-semibold tracking-tight text-primary-strong md:text-xl"
             >
               <Image src={config.logo} width={32} height={32} alt="Logo" />
-              <span
-                className={cn(
-                  'ml-2 font-brand text-lg font-extrabold md:text-xl',
-                  pages.length && 'hidden',
-                )}
-              >
-                Flowershow
-              </span>
             </Link>
             {pages.map((page) => (
               <div key={page.name} className="flex items-center">
@@ -114,7 +106,7 @@ export default function Nav({ children }: { children: ReactNode }) {
           </div>
           <div className="ml-6 flex items-center space-x-2">
             <Link
-              className="flex items-center text-sm hover:underline"
+              className="hidden items-center text-sm hover:underline sm:flex"
               href="https://flowershow.app/docs"
               target="_blank"
             >
@@ -122,7 +114,7 @@ export default function Nav({ children }: { children: ReactNode }) {
               <ExternalLinkIcon className="h-4" />
             </Link>
             <Link
-              className="flex items-center text-sm hover:underline"
+              className="hidden items-center text-sm hover:underline sm:flex"
               href="https://discord.gg/JChzM5VdFn"
               target="_blank"
             >
@@ -131,7 +123,7 @@ export default function Nav({ children }: { children: ReactNode }) {
             </Link>
             <button
               type="button"
-              className="rounded-md bg-pink-50 px-2.5 py-1.5 text-sm font-semibold text-pink-600 shadow-sm hover:bg-pink-100"
+              className="hidden rounded-md bg-pink-50 px-2.5 py-1.5 text-sm font-semibold text-pink-600 shadow-sm hover:bg-pink-100 sm:block"
               onClick={() => modal?.show(<FeedbackModal onSubmit={refetch} />)}
             >
               Send feedback
@@ -174,6 +166,38 @@ export default function Nav({ children }: { children: ReactNode }) {
                     className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
                   >
                     Sign out
+                  </button>
+                </MenuItem>
+                <div className="my-1 border-t border-gray-100 sm:hidden" />
+                <MenuItem>
+                  <Link
+                    href="https://flowershow.app/docs"
+                    target="_blank"
+                    className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none sm:hidden"
+                  >
+                    <span>Docs</span>
+                    <ExternalLinkIcon className="ml-1 h-4" />
+                  </Link>
+                </MenuItem>
+                <MenuItem>
+                  <Link
+                    href="https://discord.gg/JChzM5VdFn"
+                    target="_blank"
+                    className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none sm:hidden"
+                  >
+                    <span>Support</span>
+                    <ExternalLinkIcon className="ml-1 h-4" />
+                  </Link>
+                </MenuItem>
+                <MenuItem>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      modal?.show(<FeedbackModal onSubmit={refetch} />)
+                    }
+                    className="block w-full px-4 py-2 text-left text-sm text-pink-600 data-[focus]:bg-gray-100 data-[focus]:outline-none sm:hidden"
+                  >
+                    Send feedback
                   </button>
                 </MenuItem>
               </MenuItems>
