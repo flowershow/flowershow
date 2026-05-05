@@ -75,6 +75,16 @@ comment%% and this is also visible`;
     expect(output).toBe('Text  more text');
   });
 
+  it('should remove multi-paragraph comments with blank lines', async () => {
+    const input = `%%
+SHOULD BE INVISIBLE
+
+this also should be invisible
+%%`;
+    const output = await processMarkdown(input);
+    expect(output).toBe('');
+  });
+
   it('should handle text without comments', async () => {
     const input = 'This text has no comments at all';
     const output = await processMarkdown(input);
