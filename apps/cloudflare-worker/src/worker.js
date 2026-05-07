@@ -249,7 +249,11 @@ async function handleMessage({ msg, storage, sql, typesense }) {
       try {
         await processNonMarkdownFile({ storage, sql, siteId, branch, path });
       } catch (e) {
-        console.error('Error processing non-markdown file:', e.message);
+        console.error('Error processing non-markdown file:', {
+          siteId,
+          path,
+          error: { message: e.message, stack: e.stack, name: e.name },
+        });
       }
       return msg.ack();
     }
