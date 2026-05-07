@@ -10,8 +10,15 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:     "fl",
-	Short:   "CLI tool for publishing to Flowershow",
+	Use:   "fl [paths...]",
+	Short: "Publish files to Flowershow",
+	Long: `Publish markdown files or folders to Flowershow.
+
+Pass one or more file paths or a directory to publish. On first run a new
+site is created; subsequent runs sync only the changed files.`,
+	Example: `  fl .                     publish the current directory
+  fl ~/notes               publish a folder
+  fl file1.md file2.md     publish specific files`,
 	Version: config.Version,
 	// Args and RunE are set in publish.go via init()
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {

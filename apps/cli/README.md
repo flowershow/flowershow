@@ -323,3 +323,24 @@ go build -o fl .
 # Move to a directory on your PATH, e.g.:
 mv fl /usr/local/bin/fl
 ```
+
+### Releasing
+
+Releases are triggered by pushing a `cli/v*` tag. GoReleaser then builds binaries for all platforms and creates a GitHub release automatically — no manual artifact uploads needed.
+
+**Steps:**
+
+1. Pick the next version by checking the latest tag:
+
+```bash
+git tag --sort=-version:refname | grep '^cli/v' | head -5
+```
+
+2. Create and push the tag (use semver, e.g. `cli/v2.0.5`):
+
+```bash
+git tag cli/v2.0.5
+git push origin cli/v2.0.5
+```
+
+That's it. The [`release-cli-go.yml`](../../.github/workflows/release-cli-go.yml) workflow picks up the tag, extracts the version number, and passes it to GoReleaser which embeds it in the binary via `ldflags`.
