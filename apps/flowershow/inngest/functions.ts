@@ -6,11 +6,12 @@ import { deleteProject, uploadFile } from '@/lib/content-store';
 import {
   fetchGitHubFileRaw,
   fetchGitHubRepoTree,
-  GitHubAPIFileContent,
-  GitHubAPIRepoTreeItem,
+  type GitHubAPIFileContent,
+  type GitHubAPIRepoTreeItem,
   getInstallationToken,
   githubJsonFetch,
 } from '@/lib/github';
+import { log, SeverityNumber } from '@/lib/otel-logger';
 import { isPathVisible } from '@/lib/path-validator';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import {
@@ -237,7 +238,12 @@ export const syncSite = inngest.createFunction(
 
                 return { filePath, status: 'SUCCESS', message: '' }; // Return path of successfully processed file
               } catch (error: any) {
-                console.error(error);
+                log('Sync file error', SeverityNumber.ERROR, {
+                  siteId,
+                  file_path: filePath,
+                  error_message: error.message,
+                  error_name: error.name,
+                });
 
                 await prisma.blob.upsert({
                   where: {

@@ -233,8 +233,28 @@ async function processFile({ storage, sql, typesense, siteId, branch, path }) {
   }
 }
 
+// --- POSTHOG ERROR REPORTING ---
+async function captureError(env, properties) {
+  if (!env.POSTHOG_KEY) return;
+  try {
+    const host = env.POSTHOG_HOST || 'https://eu.i.posthog.com';
+    await fetch(`${host}/capture/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        api_key: env.POSTHOG_KEY,
+        event: '$exception',
+        distinct_id: 'system',
+        properties,
+      }),
+    });
+  } catch {
+    // Never let PostHog errors affect the worker
+  }
+}
+
 // --- MESSAGE HANDLER ---
-async function handleMessage({ msg, storage, sql, typesense }) {
+async function handleMessage({ msg, storage, sql, typesense, env }) {
   try {
     const rawKey = msg.body.object.key;
 
@@ -254,6 +274,13 @@ async function handleMessage({ msg, storage, sql, typesense }) {
           path,
           error: { message: e.message, stack: e.stack, name: e.name },
         });
+        await captureError(env, {
+          siteId,
+          path,
+          error_message: e.message,
+          error_name: e.name,
+          source: 'worker_non_markdown',
+        });
       }
       return msg.ack();
     }
@@ -261,9 +288,12 @@ async function handleMessage({ msg, storage, sql, typesense }) {
     await processFile({ storage, sql, typesense, siteId, branch, path });
     msg.ack();
   } catch (err) {
+    const rawKey = msg.body.object.key;
+    const km = rawKey.match(/^([^/]+)\/([^/]+)\/raw\/(.+)$/);
+    const [, siteId, , path] = km || [];
     console.error(
       {
-        key: msg.body.object.key,
+        key: rawKey,
         error: {
           message: err.message,
           stack: err.stack,
@@ -272,6 +302,13 @@ async function handleMessage({ msg, storage, sql, typesense }) {
       },
       'Error processing message',
     );
+    await captureError(env, {
+      siteId,
+      path,
+      error_message: err.message,
+      error_name: err.name,
+      source: 'worker_process_file',
+    });
     // Let Cloudflare handle retries
   }
 }
@@ -315,7 +352,7 @@ export default {
     // Process all messages in parallel
     await Promise.all(
       batch.messages.map((msg) =>
-        handleMessage({ msg, storage, sql, typesense }),
+        handleMessage({ msg, storage, sql, typesense, env }),
       ),
     );
   },

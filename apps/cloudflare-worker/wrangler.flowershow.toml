@@ -10,6 +10,7 @@ head_sampling_rate = 1
 # PRODUCTION
 [env.production.vars]
 ENVIRONMENT = "production"
+POSTHOG_HOST = "https://eu.i.posthog.com"
 
 [[env.production.queues.consumers]]
 queue = "flowershow-markdown-queue"
@@ -24,6 +25,7 @@ bucket_name = "flowershow-cloud"
 # STAGING
 [env.staging.vars]
 ENVIRONMENT = "staging"
+POSTHOG_HOST = "https://eu.i.posthog.com"
 
 [[env.staging.queues.consumers]]
 queue = "flowershow-markdown-queue-staging"
