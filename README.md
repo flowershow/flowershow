@@ -53,7 +53,7 @@ pnpm install
 cp apps/flowershow/.env.example apps/flowershow/.env
 
 # Start everything: Postgres, MinIO, Inngest, Cloudflare Worker, Next.js app
-pnpm dev:up
+pnpm dev
 ```
 
 Visit `http://cloud.localhost:3000` once it's running.
@@ -64,12 +64,13 @@ Visit `http://cloud.localhost:3000` once it's running.
 ### Commands
 
 ```bash
-pnpm dev:up --stripe           # Also start Stripe webhook forwarding
-pnpm dev:up --github           # Also start Smee (GitHub webhook proxy)
-pnpm dev:up --search           # Also start Typesense
-pnpm dev:up:all                # Start everything including all optional services
+pnpm dev --stripe              # Also start Stripe webhook forwarding
+pnpm dev --github              # Also start Smee (GitHub webhook proxy)
+pnpm dev --search              # Also start Typesense
+pnpm dev:all                   # Start everything including all optional services
 
-pnpm dev                       # Start dev servers only (no Docker infrastructure)
+pnpm dev:local                 # Start dev servers only (no Docker infrastructure)
+pnpm dev:local:all             # Start dev servers only + all optional services
 pnpm dev:down                  # Stop Docker containers (keep data)
 pnpm dev:nuke                  # Stop containers + delete all data volumes
 
