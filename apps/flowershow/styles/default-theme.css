@@ -1771,7 +1771,9 @@
     flex: 1;
   }
   .site-tree-disclosure-panel {
-    transition: opacity 150ms ease-out, transform 150ms ease-out;
+    transition:
+      opacity 150ms ease-out,
+      transform 150ms ease-out;
     &[data-closed] {
       opacity: 0;
       transform: translateY(-4px);
@@ -2194,9 +2196,9 @@
   }
 
   /* Heading links with # icons on hover */
-  /* .unstyled .heading-link {
+  .is-plain .heading-link {
     visibility: hidden;
-  } */
+  }
 
   /* ────────────────────────────────────────────────────
    Other
