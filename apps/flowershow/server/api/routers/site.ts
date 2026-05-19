@@ -950,8 +950,6 @@ export const siteRouter = createTRPCRouter({
                 ? resolveSiteConfig(dbConfigJson, null)
                 : null;
 
-            console.log({ config });
-
             // Resolve media paths to full URLs
             const keysToResolve = ['image', 'logo', 'favicon', 'thumbnail'];
             keysToResolve.forEach((key) => {

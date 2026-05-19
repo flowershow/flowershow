@@ -50,9 +50,10 @@ export default async function AppearanceSettingsPage(props: {
   }) => {
     'use server';
     const parsed = value === 'true' ? true : value === 'false' ? false : value;
+    const configValue = parsed === '' ? null : parsed;
     await api.site.updateConfigJson.mutate({
       siteId: id,
-      config: { theme: { [key]: parsed || undefined } },
+      config: { theme: { [key]: configValue } },
     });
   };
 
@@ -67,13 +68,18 @@ export default async function AppearanceSettingsPage(props: {
           description="Name of the theme to apply to your site."
           inputAttrs={{
             name: 'theme',
-            type: 'text',
+            type: 'select',
             defaultValue:
               (typeof siteConfig?.theme === 'string'
                 ? siteConfig.theme
                 : themeConfig?.theme) ?? '',
-            placeholder: 'default',
-            required: false,
+            options: [
+              { value: '', label: 'Default' },
+              { value: 'letterpress', label: 'Letterpress' },
+              { value: 'superstack', label: 'Superstack' },
+              { value: 'lessflowery', label: 'Lessflowery' },
+              { value: 'leaf', label: 'Leaf' },
+            ],
           }}
           handleSubmit={updateThemeConfig}
         />

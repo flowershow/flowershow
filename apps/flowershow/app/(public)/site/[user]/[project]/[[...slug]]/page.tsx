@@ -375,10 +375,7 @@ export default async function SitePage(props: {
     : '';
   const showPageComments =
     (siteConfig?.enableComments ?? false) &&
-    (metadata?.showComments ??
-      siteConfig?.showComments ??
-      siteConfig?.enableComments ??
-      false);
+    (metadata?.showComments ?? siteConfig?.showComments ?? false);
   const giscusConfig = siteConfig?.giscus;
   const activeSidebarPath = (() => {
     const paths = siteConfig?.sidebar?.paths;
