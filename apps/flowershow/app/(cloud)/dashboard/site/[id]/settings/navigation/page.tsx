@@ -30,7 +30,7 @@ export default async function NavigationSettingsPage(props: {
     'use server';
     await api.site.updateConfigJson.mutate({
       siteId: id,
-      config: { nav: { [key]: value || undefined } },
+      config: { nav: { [key]: value || null } },
     });
   };
 

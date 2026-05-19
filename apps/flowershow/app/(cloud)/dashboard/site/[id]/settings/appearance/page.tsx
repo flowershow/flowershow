@@ -32,7 +32,7 @@ export default async function AppearanceSettingsPage(props: {
   }) => {
     'use server';
     const parsed = value === 'true' ? true : value === 'false' ? false : value;
-    const configValue = parsed === '' ? undefined : parsed;
+    const configValue = parsed === '' ? null : parsed;
     await api.site.updateConfigJson.mutate({
       siteId: id,
       config: { [key]: configValue },

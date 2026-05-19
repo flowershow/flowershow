@@ -45,7 +45,7 @@ export default async function SiteSettingsIndex(props: {
     'use server';
     await api.site.updateConfigJson.mutate({
       siteId: id,
-      config: { [key]: value || undefined },
+      config: { [key]: value || null },
     });
   };
 

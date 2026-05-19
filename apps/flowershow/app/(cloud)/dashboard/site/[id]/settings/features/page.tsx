@@ -30,7 +30,7 @@ export default async function FeaturesSettingsPage(props: {
   }) => {
     'use server';
     const parsed = value === 'true' ? true : value === 'false' ? false : value;
-    const configValue = parsed === '' ? undefined : parsed;
+    const configValue = parsed === '' ? null : parsed;
     await api.site.updateConfigJson.mutate({
       siteId: id,
       config: { [key]: configValue },
@@ -49,7 +49,7 @@ export default async function FeaturesSettingsPage(props: {
     'use server';
     await api.site.updateConfigJson.mutate({
       siteId: id,
-      config: { giscus: { [key]: value || undefined } },
+      config: { giscus: { [key]: value || null } },
     });
   };
 

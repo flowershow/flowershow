@@ -27,7 +27,7 @@ export default async function AnalyticsSettingsPage(props: {
     value: string;
   }) => {
     'use server';
-    const configValue = value === '' ? undefined : value;
+    const configValue = value === '' ? null : value;
     await api.site.updateConfigJson.mutate({
       siteId: id,
       config: { [key]: configValue },
