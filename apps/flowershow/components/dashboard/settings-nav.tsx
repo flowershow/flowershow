@@ -6,8 +6,11 @@ import { useParams, usePathname } from 'next/navigation';
 const navSections = [
   { name: 'General', href: '' },
   { name: 'Appearance', href: '/appearance' },
+  { name: 'Navigation', href: '/navigation' },
   { name: 'Content', href: '/content' },
-  { name: 'Integrations', href: '/integrations' },
+  { name: 'Features', href: '/features' },
+  { name: 'Analytics', href: '/analytics' },
+  { name: 'GitHub', href: '/github' },
   { name: 'Access & Domains', href: '/access' },
   { name: 'Billing', href: '/billing' },
 ];

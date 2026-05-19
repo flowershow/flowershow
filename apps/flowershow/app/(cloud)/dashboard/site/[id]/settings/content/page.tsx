@@ -100,6 +100,35 @@ export default async function ContentSettingsPage(props: {
       </div>
       <div className="col-span-10 flex flex-col space-y-6 sm:col-span-9 lg:col-span-10">
         <Form
+          title="Markdown or MDX"
+          description="Choose how to process your markdown files: Markdown (md), MDX (mdx), or auto-detect based on file extension (auto)."
+          helpText={
+            <p>
+              Learn more about{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/blog/announcing-syntax-mode-configuration"
+              >
+                Syntax mode
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
+          inputAttrs={{
+            name: 'syntaxMode',
+            type: 'select',
+            defaultValue: siteConfig?.syntaxMode ?? 'auto',
+            options: [
+              { value: 'auto', label: 'Auto-detect' },
+              { value: 'md', label: 'Markdown (md)' },
+              { value: 'mdx', label: 'MDX (mdx)' },
+            ],
+          }}
+          handleSubmit={updateConfigJson}
+        />
+
+        <Form
           title="Sidebar Order"
           description="How to order items in the file-tree sidebar."
           inputAttrs={{

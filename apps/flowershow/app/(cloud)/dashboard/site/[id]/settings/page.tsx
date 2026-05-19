@@ -1,4 +1,3 @@
-import { ExternalLinkIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import Form from '@/components/dashboard/form';
 import SettingsNav from '@/components/dashboard/settings-nav';
@@ -68,35 +67,6 @@ export default async function SiteSettingsIndex(props: {
             pattern: '^[a-zA-Z0-9_.-]+$',
           }}
           handleSubmit={updateSite}
-        />
-
-        <Form
-          title="Markdown or MDX"
-          description="Choose how to process your markdown files: Markdown (md), MDX (mdx), or auto-detect based on file extension (auto)."
-          helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/blog/announcing-syntax-mode-configuration"
-              >
-                Syntax mode
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
-          }
-          inputAttrs={{
-            name: 'syntaxMode',
-            type: 'select',
-            defaultValue: siteConfig?.syntaxMode ?? 'auto',
-            options: [
-              { value: 'auto', label: 'Auto-detect' },
-              { value: 'md', label: 'Markdown (md)' },
-              { value: 'mdx', label: 'MDX (mdx)' },
-            ],
-          }}
-          handleSubmit={updateConfigJson}
         />
 
         <Form
