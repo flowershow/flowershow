@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Form from '@/components/dashboard/form';
+import DeleteSiteForm from '@/components/dashboard/form/delete-site-form';
 import SettingsNav from '@/components/dashboard/settings-nav';
 import type { SiteUpdateKey } from '@/server/api/types';
 import { api } from '@/trpc/server';
@@ -116,6 +117,8 @@ export default async function SiteSettingsIndex(props: {
           }}
           handleSubmit={updateConfigJson}
         />
+
+        <DeleteSiteForm siteName={site.projectName} />
       </div>
     </div>
   );
