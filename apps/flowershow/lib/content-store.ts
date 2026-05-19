@@ -30,7 +30,7 @@ const s3Client = new S3Client({
   forcePathStyle: S3_FORCE_PATH_STYLE,
 });
 
-type ContentType =
+export type ContentType =
   | 'text/markdown'
   | 'text/csv'
   | 'text/plain'

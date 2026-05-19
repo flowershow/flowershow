@@ -11,6 +11,7 @@ import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { buildSiteTree } from '@/lib/build-site-tree';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import {
+  type ContentType,
   deleteProject,
   fetchFile,
   generatePresignedUploadUrl,
@@ -553,6 +554,47 @@ export const siteRouter = createTRPCRouter({
       }
 
       return (site.configJson ?? null) as SiteConfig | null;
+    }),
+
+  getAssetUploadUrl: protectedProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+        field: z.enum(['favicon', 'image']),
+        contentType: z.enum([
+          'image/webp',
+          'image/png',
+          'image/jpeg',
+          'image/x-icon',
+          'image/svg+xml',
+        ]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { id: true, userId: true },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      const ext = (input.contentType.split('/')[1] ?? 'webp')
+        .replace('x-icon', 'ico')
+        .replace('svg+xml', 'svg');
+      const key = `${input.siteId}/assets/${input.field}.${ext}`;
+      const uploadUrl = await generatePresignedUploadUrl(
+        key,
+        3600,
+        input.contentType as ContentType,
+      );
+      const publicUrl = `https://${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${key}`;
+
+      return { uploadUrl, publicUrl };
     }),
 
   delete: protectedProcedure

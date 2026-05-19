@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import Form from '@/components/dashboard/form';
 import DeleteSiteForm from '@/components/dashboard/form/delete-site-form';
+import ImageUploadForm from '@/components/dashboard/form/image-upload-form';
 import SettingsNav from '@/components/dashboard/settings-nav';
 import type { SiteUpdateKey } from '@/server/api/types';
 import { api } from '@/trpc/server';
@@ -94,28 +95,20 @@ export default async function SiteSettingsIndex(props: {
           handleSubmit={updateConfigJson}
         />
 
-        <Form
+        <ImageUploadForm
           title="Favicon"
-          description="URL or emoji to use as the site favicon. Accepts a path to an image or a single emoji character."
-          inputAttrs={{
-            name: 'favicon',
-            type: 'text',
-            defaultValue: siteConfig?.favicon ?? '',
-            placeholder: '🌸 or /favicon.ico',
-          }}
-          handleSubmit={updateConfigJson}
+          description="Image shown as the browser tab icon. Upload a PNG, JPG, or WebP — or set an emoji via config.json."
+          field="favicon"
+          configKey="favicon"
+          currentValue={siteConfig?.favicon ?? null}
         />
 
-        <Form
+        <ImageUploadForm
           title="Social Image"
-          description="URL of the default social preview image shown when sharing links."
-          inputAttrs={{
-            name: 'image',
-            type: 'text',
-            defaultValue: siteConfig?.image ?? '',
-            placeholder: '/social.png',
-          }}
-          handleSubmit={updateConfigJson}
+          description="Default image shown when sharing links on social media."
+          field="image"
+          configKey="image"
+          currentValue={siteConfig?.image ?? null}
         />
 
         <DeleteSiteForm siteName={site.projectName} />
