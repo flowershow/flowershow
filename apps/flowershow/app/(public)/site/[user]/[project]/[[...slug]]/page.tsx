@@ -140,7 +140,7 @@ export async function generateMetadata(props: {
     // Maybe not needed since we redirect to a custom domain if it exists ?
     alternates: {
       canonical: url,
-      ...(site.enableRss && {
+      ...((siteConfig?.enableRss ?? false) && {
         types: {
           'application/rss+xml': `${siteUrl}/rss.xml`,
         },
@@ -237,7 +237,7 @@ export default async function SitePage(props: {
   const isMdx = blob.path.endsWith('.mdx');
   const isCanvas = blob.path.endsWith('.canvas');
   const isHtml = blob.path.endsWith('.html');
-  const renderMode = metadata?.syntaxMode ?? site.syntaxMode;
+  const renderMode = metadata?.syntaxMode ?? siteConfig?.syntaxMode ?? 'auto';
 
   if (isHtml) {
     redirect(`/${blob.path}`);
@@ -369,13 +369,16 @@ export default async function SitePage(props: {
     : undefined;
 
   const showEditLink = metadata?.showEditLink ?? siteConfig?.showEditLink;
-  const showRawLink = site.showRawLink;
+  const showRawLink = siteConfig?.showRawLink ?? false;
   const normalizedRootDir = site?.rootDir
     ? `${site.rootDir.replace(/^(.?\/)+|\/+$/g, '')}/`
     : '';
   const showPageComments =
-    site.enableComments &&
-    (metadata?.showComments ?? siteConfig?.showComments ?? site.enableComments);
+    (siteConfig?.enableComments ?? false) &&
+    (metadata?.showComments ??
+      siteConfig?.showComments ??
+      siteConfig?.enableComments ??
+      false);
   const giscusConfig = siteConfig?.giscus;
   const activeSidebarPath = (() => {
     const paths = siteConfig?.sidebar?.paths;
@@ -388,8 +391,7 @@ export default async function SitePage(props: {
     );
   })();
   const showSidebar = (() => {
-    const enabled =
-      metadata?.showSidebar ?? siteConfig?.showSidebar ?? site.showSidebar;
+    const enabled = metadata?.showSidebar ?? siteConfig?.showSidebar ?? true;
     if (!enabled) return false;
     const paths = siteConfig?.sidebar?.paths;
     if (!paths || paths.length === 0) return true;
@@ -497,10 +499,8 @@ export default async function SitePage(props: {
                   giscusConfig?.repo ??
                   (site.ghRepository as GiscusProps['repo'])
                 }
-                repoId={giscusConfig?.repoId ?? site.giscusRepoId ?? undefined}
-                categoryId={
-                  giscusConfig?.categoryId ?? site.giscusCategoryId ?? undefined
-                }
+                repoId={giscusConfig?.repoId ?? undefined}
+                categoryId={giscusConfig?.categoryId ?? undefined}
               />
             </div>
           )}

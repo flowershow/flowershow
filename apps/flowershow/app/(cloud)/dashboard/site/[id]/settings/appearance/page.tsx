@@ -1,8 +1,8 @@
 import { notFound } from 'next/navigation';
 import Form from '@/components/dashboard/form';
+import JsonForm from '@/components/dashboard/json-form';
 import SettingsNav from '@/components/dashboard/settings-nav';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
-import type { SiteUpdateKey } from '@/server/api/types';
 import { api } from '@/trpc/server';
 
 export default async function AppearanceSettingsPage(props: {
@@ -22,17 +22,22 @@ export default async function AppearanceSettingsPage(props: {
   const themeConfig =
     typeof siteConfig?.theme === 'object' ? siteConfig.theme : undefined;
 
-  const updateSite = async ({
+  const updateConfigJson = async ({
     id,
     key,
     value,
   }: {
     id: string;
-    key: SiteUpdateKey;
+    key: string;
     value: string;
   }) => {
     'use server';
-    await api.site.update.mutate({ id, key, value });
+    const parsed = value === 'true' ? true : value === 'false' ? false : value;
+    const configValue = parsed === '' ? undefined : parsed;
+    await api.site.updateConfigJson.mutate({
+      siteId: id,
+      config: { [key]: configValue },
+    });
   };
 
   const updateNavConfig = async ({
@@ -65,6 +70,30 @@ export default async function AppearanceSettingsPage(props: {
     await api.site.updateConfigJson.mutate({
       siteId: id,
       config: { theme: { [key]: parsed || undefined } },
+    });
+  };
+
+  const updateNavLinks = async (id: string, value: unknown) => {
+    'use server';
+    await api.site.updateConfigJson.mutate({
+      siteId: id,
+      config: { nav: { links: value as never } },
+    });
+  };
+
+  const updateSocial = async (id: string, value: unknown) => {
+    'use server';
+    await api.site.updateConfigJson.mutate({
+      siteId: id,
+      config: { social: value as never },
+    });
+  };
+
+  const updateFooterNavigation = async (id: string, value: unknown) => {
+    'use server';
+    await api.site.updateConfigJson.mutate({
+      siteId: id,
+      config: { footer: { navigation: value as never } },
     });
   };
 
@@ -157,10 +186,37 @@ export default async function AppearanceSettingsPage(props: {
             name: 'showBuiltWithButton',
             type: 'text',
             defaultValue: isFeatureEnabled(Feature.NoBranding, site)
-              ? Boolean(site?.showBuiltWithButton).toString()
+              ? Boolean(siteConfig?.showBuiltWithButton ?? true).toString()
               : 'true',
           }}
-          handleSubmit={updateSite}
+          handleSubmit={updateConfigJson}
+        />
+
+        <JsonForm
+          title="Nav Links"
+          description="Navigation items shown in the header. Each item needs 'name' and 'href'. Dropdowns use 'name' and 'links' (array of {name, href})."
+          helpText='Example: [{"name":"Blog","href":"/blog"}]'
+          fieldName="nav.links"
+          defaultValue={siteConfig?.nav?.links ?? null}
+          handleSubmit={updateNavLinks}
+        />
+
+        <JsonForm
+          title="Social Links"
+          description='Social platform links shown in the nav and footer. Each item needs "name", "href", and optionally "label" (platform, e.g. "github", "twitter").'
+          helpText='Example: [{"name":"GitHub","href":"https://github.com/you","label":"github"}]'
+          fieldName="social"
+          defaultValue={siteConfig?.social ?? null}
+          handleSubmit={updateSocial}
+        />
+
+        <JsonForm
+          title="Footer Navigation"
+          description='Navigation groups in the footer. Each group needs "title" and "links" (array of {name, href}).'
+          helpText='Example: [{"title":"Docs","links":[{"name":"Getting Started","href":"/docs"}]}]'
+          fieldName="footer.navigation"
+          defaultValue={siteConfig?.footer?.navigation ?? null}
+          handleSubmit={updateFooterNavigation}
         />
       </div>
     </div>

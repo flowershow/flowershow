@@ -72,6 +72,22 @@ export default async function IntegrationsSettingsPage(props: {
     });
   };
 
+  const updateGiscusConfig = async ({
+    id,
+    key,
+    value,
+  }: {
+    id: string;
+    key: string;
+    value: string;
+  }) => {
+    'use server';
+    await api.site.updateConfigJson.mutate({
+      siteId: id,
+      config: { giscus: { [key]: value || undefined } },
+    });
+  };
+
   return (
     <div className="sm:grid sm:grid-cols-12 sm:space-x-6">
       <div className="sticky top-[5rem] col-span-2 hidden self-start sm:col-span-3 sm:block lg:col-span-2">
@@ -138,25 +154,27 @@ export default async function IntegrationsSettingsPage(props: {
           inputAttrs={{
             name: 'enableComments',
             type: 'text',
-            defaultValue: Boolean(site.enableComments).toString(),
+            defaultValue: Boolean(
+              siteConfig?.enableComments ?? false,
+            ).toString(),
           }}
-          handleSubmit={updateSite}
+          handleSubmit={updateConfigJson}
         />
 
-        {site?.enableComments && (
+        {(siteConfig?.enableComments ?? false) && (
           <>
             <Form
               title="Giscus Repository ID"
               description="The ID of your GitHub repository for Giscus."
               helpText="You can find this in your Giscus configuration at https://giscus.app. After selecting your repository, the Repository ID will be shown in the configuration section. It starts with 'R_'."
               inputAttrs={{
-                name: 'giscusRepoId',
+                name: 'repoId',
                 type: 'text',
-                defaultValue: site?.giscusRepoId || '',
+                defaultValue: siteConfig?.giscus?.repoId ?? '',
                 placeholder: 'R_kgDOxxxxxx',
                 required: false,
               }}
-              handleSubmit={updateSite}
+              handleSubmit={updateGiscusConfig}
             />
 
             <Form
@@ -164,13 +182,13 @@ export default async function IntegrationsSettingsPage(props: {
               description="The ID of the discussion category in your repository."
               helpText="You can find this in your Giscus configuration at https://giscus.app. After selecting your discussion category, the Category ID will be shown in the configuration section. It starts with 'DIC_'."
               inputAttrs={{
-                name: 'giscusCategoryId',
+                name: 'categoryId',
                 type: 'text',
-                defaultValue: site?.giscusCategoryId || '',
+                defaultValue: siteConfig?.giscus?.categoryId ?? '',
                 placeholder: 'DIC_kwDOxxxxxx',
                 required: false,
               }}
-              handleSubmit={updateSite}
+              handleSubmit={updateGiscusConfig}
             />
           </>
         )}
@@ -196,10 +214,10 @@ export default async function IntegrationsSettingsPage(props: {
             name: 'enableSearch',
             type: 'text',
             defaultValue: isFeatureEnabled(Feature.Search, site)
-              ? Boolean(site?.enableSearch).toString()
+              ? Boolean(siteConfig?.enableSearch ?? false).toString()
               : 'false',
           }}
-          handleSubmit={updateSite}
+          handleSubmit={updateConfigJson}
         />
 
         <Form

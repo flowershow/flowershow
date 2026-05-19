@@ -1,5 +1,6 @@
 import { RssParamsSchema } from '@flowershow/api-contract';
 import type { NextRequest } from 'next/server';
+import type { SiteConfig } from '@/components/types';
 import { fetchFile } from '@/lib/content-store';
 import { getSiteUrl } from '@/lib/get-site-url';
 import { buildRssFeed } from '@/lib/rss';
@@ -55,14 +56,17 @@ export async function GET(
     return new Response('Not found', { status: 404 });
   }
 
-  if (!site.enableRss) {
+  const dbConfig = (site.configJson ?? {}) as SiteConfig;
+
+  if (!(dbConfig.enableRss ?? false)) {
     return new Response('Not found', { status: 404 });
   }
 
   const siteUrl = getSiteUrl(site);
 
-  let siteTitle = site.projectName;
-  let siteDescription = `${siteTitle} RSS Feed`;
+  // Start with dashboard config, then let config.json override (matches resolveSiteConfig precedence)
+  let siteTitle = dbConfig.title ?? site.projectName;
+  let siteDescription = dbConfig.description ?? `${site.projectName} RSS Feed`;
   try {
     const configJson = await fetchFile({
       projectId: site.id,

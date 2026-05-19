@@ -89,14 +89,14 @@ export default async function SiteSettingsIndex(props: {
           inputAttrs={{
             name: 'syntaxMode',
             type: 'select',
-            defaultValue: site.syntaxMode,
+            defaultValue: siteConfig?.syntaxMode ?? 'auto',
             options: [
               { value: 'auto', label: 'Auto-detect' },
               { value: 'md', label: 'Markdown (md)' },
               { value: 'mdx', label: 'MDX (mdx)' },
             ],
           }}
-          handleSubmit={updateSite}
+          handleSubmit={updateConfigJson}
         />
 
         <Form

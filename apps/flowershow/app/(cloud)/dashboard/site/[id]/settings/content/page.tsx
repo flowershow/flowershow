@@ -1,8 +1,8 @@
 import { ExternalLinkIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import Form from '@/components/dashboard/form';
+import JsonForm from '@/components/dashboard/json-form';
 import SettingsNav from '@/components/dashboard/settings-nav';
-import type { SiteUpdateKey } from '@/server/api/types';
 import { api } from '@/trpc/server';
 
 export default async function ContentSettingsPage(props: {
@@ -19,19 +19,6 @@ export default async function ContentSettingsPage(props: {
     .query({ siteId: site.id })
     .catch(() => null);
 
-  const updateSite = async ({
-    id,
-    key,
-    value,
-  }: {
-    id: string;
-    key: SiteUpdateKey;
-    value: string;
-  }) => {
-    'use server';
-    await api.site.update.mutate({ id, key, value });
-  };
-
   const updateConfigJson = async ({
     id,
     key,
@@ -47,6 +34,46 @@ export default async function ContentSettingsPage(props: {
     await api.site.updateConfigJson.mutate({
       siteId: id,
       config: { [key]: configValue },
+    });
+  };
+
+  const updateContentInclude = async (id: string, value: unknown) => {
+    'use server';
+    await api.site.updateConfigJson.mutate({
+      siteId: id,
+      config: { contentInclude: value as never },
+    });
+  };
+
+  const updateContentExclude = async (id: string, value: unknown) => {
+    'use server';
+    await api.site.updateConfigJson.mutate({
+      siteId: id,
+      config: { contentExclude: value as never },
+    });
+  };
+
+  const updateContentHide = async (id: string, value: unknown) => {
+    'use server';
+    await api.site.updateConfigJson.mutate({
+      siteId: id,
+      config: { contentHide: value as never },
+    });
+  };
+
+  const updateSidebarPaths = async (id: string, value: unknown) => {
+    'use server';
+    await api.site.updateConfigJson.mutate({
+      siteId: id,
+      config: { sidebar: { paths: value as never } },
+    });
+  };
+
+  const updateRedirects = async (id: string, value: unknown) => {
+    'use server';
+    await api.site.updateConfigJson.mutate({
+      siteId: id,
+      config: { redirects: value as never },
     });
   };
 
@@ -104,9 +131,9 @@ export default async function ContentSettingsPage(props: {
           inputAttrs={{
             name: 'showSidebar',
             type: 'text',
-            defaultValue: Boolean(site.showSidebar).toString(),
+            defaultValue: Boolean(siteConfig?.showSidebar ?? true).toString(),
           }}
-          handleSubmit={updateSite}
+          handleSubmit={updateConfigJson}
         />
 
         <Form
@@ -128,9 +155,9 @@ export default async function ContentSettingsPage(props: {
           inputAttrs={{
             name: 'enableRss',
             type: 'text',
-            defaultValue: Boolean(site?.enableRss).toString(),
+            defaultValue: Boolean(siteConfig?.enableRss ?? false).toString(),
           }}
-          handleSubmit={updateSite}
+          handleSubmit={updateConfigJson}
         />
 
         <Form
@@ -139,9 +166,54 @@ export default async function ContentSettingsPage(props: {
           inputAttrs={{
             name: 'showRawLink',
             type: 'text',
-            defaultValue: Boolean(site?.showRawLink).toString(),
+            defaultValue: Boolean(siteConfig?.showRawLink ?? false).toString(),
           }}
-          handleSubmit={updateSite}
+          handleSubmit={updateConfigJson}
+        />
+
+        <JsonForm
+          title="Content Include"
+          description="Glob patterns for paths to include in the site. Leave empty to include everything."
+          helpText='Example: ["notes/","blog/"]'
+          fieldName="contentInclude"
+          defaultValue={siteConfig?.contentInclude ?? null}
+          handleSubmit={updateContentInclude}
+        />
+
+        <JsonForm
+          title="Content Exclude"
+          description="Glob patterns for paths to exclude from the site entirely."
+          helpText='Example: ["drafts/","private/"]'
+          fieldName="contentExclude"
+          defaultValue={siteConfig?.contentExclude ?? null}
+          handleSubmit={updateContentExclude}
+        />
+
+        <JsonForm
+          title="Content Hide"
+          description="Glob patterns for paths to hide from navigation and search but still serve."
+          helpText='Example: ["_assets/","_templates/"]'
+          fieldName="contentHide"
+          defaultValue={siteConfig?.contentHide ?? null}
+          handleSubmit={updateContentHide}
+        />
+
+        <JsonForm
+          title="Sidebar Paths"
+          description="Limit the sidebar to specific subpaths. Leave empty to show all content."
+          helpText='Example: ["docs/","guides/"]'
+          fieldName="sidebar.paths"
+          defaultValue={siteConfig?.sidebar?.paths ?? null}
+          handleSubmit={updateSidebarPaths}
+        />
+
+        <JsonForm
+          title="Redirects"
+          description='URL redirects. Each entry needs "from" and "to" paths, and optionally "permanent" (true for 301, false for 302).'
+          helpText='Example: [{"from":"/old-page","to":"/new-page","permanent":true}]'
+          fieldName="redirects"
+          defaultValue={siteConfig?.redirects ?? null}
+          handleSubmit={updateRedirects}
         />
       </div>
     </div>
