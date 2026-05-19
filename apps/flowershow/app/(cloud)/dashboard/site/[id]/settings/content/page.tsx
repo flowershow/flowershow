@@ -15,7 +15,7 @@ export default async function ContentSettingsPage(props: {
 
   if (!site) notFound();
 
-  const siteConfig = await api.site.getConfig
+  const siteConfig = await api.site.getDbConfig
     .query({ siteId: site.id })
     .catch(() => null);
 

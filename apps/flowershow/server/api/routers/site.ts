@@ -537,6 +537,24 @@ export const siteRouter = createTRPCRouter({
       revalidateTag(`${input.siteId}-config`);
     }),
 
+  getDbConfig: protectedProcedure
+    .input(z.object({ siteId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { id: true, userId: true, configJson: true },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      return (site.configJson ?? null) as SiteConfig | null;
+    }),
+
   delete: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
