@@ -149,7 +149,7 @@ export default async function ContentSettingsPage(props: {
           inputAttrs={{
             name: 'showToc',
             type: 'text',
-            defaultValue: Boolean(siteConfig?.showToc).toString(),
+            defaultValue: Boolean(siteConfig?.showToc ?? true).toString(),
           }}
           handleSubmit={updateConfigJson}
         />
