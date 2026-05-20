@@ -121,10 +121,6 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Custom styles</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Override default styles with CSS.</div>
   </a>
-  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="/docs/reference/custom-fonts">
-    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Custom fonts</h3>
-    <div class="line-clamp-3 text-sm font-normal text-gray-900">Google Fonts and typography.</div>
-  </a>
   <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="/docs/reference/dark-mode">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Dark mode</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Light/dark theme and mode switcher.</div>
