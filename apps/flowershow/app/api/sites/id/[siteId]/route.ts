@@ -1,4 +1,5 @@
 import type { SiteConfig } from '@/components/types';
+import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import type {
   DeleteSiteResponse,
   GetSiteResponse,
@@ -109,10 +110,14 @@ export async function GET(
         autoSync: site.autoSync,
         plan: site.plan,
         privacyMode: site.privacyMode,
-        enableComments: siteConfigJson.enableComments ?? false,
-        enableSearch: siteConfigJson.enableSearch ?? false,
-        showSidebar: siteConfigJson.showSidebar ?? true,
-        syntaxMode: siteConfigJson.syntaxMode ?? 'auto',
+        enableComments:
+          siteConfigJson.enableComments ?? SITE_CONFIG_DEFAULTS.enableComments,
+        enableSearch:
+          siteConfigJson.enableSearch ?? SITE_CONFIG_DEFAULTS.enableSearch,
+        showSidebar:
+          siteConfigJson.showSidebar ?? SITE_CONFIG_DEFAULTS.showSidebar,
+        syntaxMode:
+          siteConfigJson.syntaxMode ?? SITE_CONFIG_DEFAULTS.syntaxMode,
         url: siteUrl,
         fileCount: site._count.blobs,
         totalSize,

@@ -1,5 +1,17 @@
 import type { SiteConfig } from '@/components/types';
 
+export const SITE_CONFIG_DEFAULTS = {
+  showToc: true,
+  showSidebar: true,
+  enableComments: false,
+  enableSearch: false,
+  enableRss: false,
+  showBuiltWithButton: true,
+  showRawLink: false,
+  showEditLink: false,
+  syntaxMode: 'auto' as const,
+} satisfies Partial<SiteConfig>;
+
 function isPlainObject(val: unknown): val is Record<string, unknown> {
   return typeof val === 'object' && val !== null && !Array.isArray(val);
 }

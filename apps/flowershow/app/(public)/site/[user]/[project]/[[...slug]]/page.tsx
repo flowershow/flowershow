@@ -29,6 +29,7 @@ import {
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { processCanvas } from '@/lib/process-canvas';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
+import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import type { PageMetadata } from '@/server/api/types';
 import { api } from '@/trpc/server';
 import UrlNormalizer from './_components/url-normalizer';
@@ -140,7 +141,7 @@ export async function generateMetadata(props: {
     // Maybe not needed since we redirect to a custom domain if it exists ?
     alternates: {
       canonical: url,
-      ...((siteConfig?.enableRss ?? false) && {
+      ...((siteConfig?.enableRss ?? SITE_CONFIG_DEFAULTS.enableRss) && {
         types: {
           'application/rss+xml': `${siteUrl}/rss.xml`,
         },
@@ -237,7 +238,10 @@ export default async function SitePage(props: {
   const isMdx = blob.path.endsWith('.mdx');
   const isCanvas = blob.path.endsWith('.canvas');
   const isHtml = blob.path.endsWith('.html');
-  const renderMode = metadata?.syntaxMode ?? siteConfig?.syntaxMode ?? 'auto';
+  const renderMode =
+    metadata?.syntaxMode ??
+    siteConfig?.syntaxMode ??
+    SITE_CONFIG_DEFAULTS.syntaxMode;
 
   if (isHtml) {
     redirect(`/${blob.path}`);
@@ -369,12 +373,13 @@ export default async function SitePage(props: {
     : undefined;
 
   const showEditLink = metadata?.showEditLink ?? siteConfig?.showEditLink;
-  const showRawLink = siteConfig?.showRawLink ?? false;
+  const showRawLink =
+    siteConfig?.showRawLink ?? SITE_CONFIG_DEFAULTS.showRawLink;
   const normalizedRootDir = site?.rootDir
     ? `${site.rootDir.replace(/^(.?\/)+|\/+$/g, '')}/`
     : '';
   const showPageComments =
-    (siteConfig?.enableComments ?? false) &&
+    (siteConfig?.enableComments ?? SITE_CONFIG_DEFAULTS.enableComments) &&
     (metadata?.showComments ?? siteConfig?.showComments ?? false);
   const giscusConfig = siteConfig?.giscus;
   const activeSidebarPath = (() => {
@@ -388,13 +393,17 @@ export default async function SitePage(props: {
     );
   })();
   const showSidebar = (() => {
-    const enabled = metadata?.showSidebar ?? siteConfig?.showSidebar ?? true;
+    const enabled =
+      metadata?.showSidebar ??
+      siteConfig?.showSidebar ??
+      SITE_CONFIG_DEFAULTS.showSidebar;
     if (!enabled) return false;
     const paths = siteConfig?.sidebar?.paths;
     if (!paths || paths.length === 0) return true;
     return activeSidebarPath !== undefined;
   })();
-  const showToc = metadata?.showToc ?? siteConfig?.showToc ?? true;
+  const showToc =
+    metadata?.showToc ?? siteConfig?.showToc ?? SITE_CONFIG_DEFAULTS.showToc;
   const heroConfig = resolveHeroConfig(metadata, siteConfig);
   const showHero = heroConfig.showHero;
 
