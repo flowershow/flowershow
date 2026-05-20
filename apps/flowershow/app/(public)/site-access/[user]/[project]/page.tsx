@@ -73,8 +73,9 @@ export default async function LoginPage(props: {
   const siteHostname =
     site.customDomain ?? `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
+  const resolvedLogo = siteConfig?.nav?.logo ?? siteConfig?.logo ?? config.logo;
   const logo = resolveFilePathToUrlPath({
-    target: siteConfig?.nav?.logo ?? siteConfig?.logo ?? config.logo, // default to Flowershow logo
+    target: resolvedLogo,
     siteHostname,
   });
 
@@ -87,9 +88,9 @@ export default async function LoginPage(props: {
         fontBrand.variable,
       )}
     >
-      {siteConfig?.logo && isEmoji(siteConfig?.logo) ? (
+      {resolvedLogo && isEmoji(resolvedLogo) ? (
         <span className="text-6xl" aria-label="Logo" role="img">
-          {siteConfig.logo}
+          {resolvedLogo}
         </span>
       ) : (
         <Image
