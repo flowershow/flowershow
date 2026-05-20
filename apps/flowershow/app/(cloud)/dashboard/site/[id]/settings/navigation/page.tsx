@@ -29,7 +29,7 @@ export default async function NavigationSettingsPage(props: {
     value: string;
   }) => {
     'use server';
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { nav: { [key]: value || null } },
     });
@@ -37,7 +37,7 @@ export default async function NavigationSettingsPage(props: {
 
   const updateNavLinks = async (id: string, value: unknown) => {
     'use server';
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { nav: { links: value as never } },
     });
@@ -45,7 +45,7 @@ export default async function NavigationSettingsPage(props: {
 
   const updateSocial = async (id: string, value: unknown) => {
     'use server';
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { social: value as never },
     });
@@ -53,7 +53,7 @@ export default async function NavigationSettingsPage(props: {
 
   const updateFooterNavigation = async (id: string, value: unknown) => {
     'use server';
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { footer: { navigation: value as never } },
     });

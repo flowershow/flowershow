@@ -1,7 +1,7 @@
 'use client';
 
-import Image from 'next/image';
 import { ImageIcon, Loader2, X } from 'lucide-react';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -78,7 +78,7 @@ export default function ImageUploadForm({
   const [isUploading, setIsUploading] = useState(false);
 
   const getUploadUrl = api.site.getAssetUploadUrl.useMutation();
-  const updateConfig = api.site.updateConfigJson.useMutation();
+  const updateConfig = api.site.updateDbConfig.useMutation();
 
   const displayValue = preview ?? currentValue;
   const isEmojiValue = !preview && !!currentValue && isEmoji(currentValue);

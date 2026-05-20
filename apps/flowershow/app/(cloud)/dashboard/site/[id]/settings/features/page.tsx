@@ -20,7 +20,7 @@ export default async function FeaturesSettingsPage(props: {
     .query({ siteId: site.id })
     .catch(() => null);
 
-  const updateConfigJson = async ({
+  const updateDbConfig = async ({
     id,
     key,
     value,
@@ -32,7 +32,7 @@ export default async function FeaturesSettingsPage(props: {
     'use server';
     const parsed = value === 'true' ? true : value === 'false' ? false : value;
     const configValue = parsed === '' ? null : parsed;
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { [key]: configValue },
     });
@@ -48,7 +48,7 @@ export default async function FeaturesSettingsPage(props: {
     value: string;
   }) => {
     'use server';
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { giscus: { [key]: value || null } },
     });
@@ -86,7 +86,7 @@ export default async function FeaturesSettingsPage(props: {
                 ).toString()
               : 'false',
           }}
-          handleSubmit={updateConfigJson}
+          handleSubmit={updateDbConfig}
         />
 
         <Form
@@ -112,7 +112,7 @@ export default async function FeaturesSettingsPage(props: {
               siteConfig?.showComments ?? SITE_CONFIG_DEFAULTS.showComments,
             ).toString(),
           }}
-          handleSubmit={updateConfigJson}
+          handleSubmit={updateDbConfig}
         />
 
         {(siteConfig?.showComments ?? SITE_CONFIG_DEFAULTS.showComments) && (
@@ -157,7 +157,7 @@ export default async function FeaturesSettingsPage(props: {
               siteConfig?.showEditLink ?? SITE_CONFIG_DEFAULTS.showEditLink,
             ).toString(),
           }}
-          handleSubmit={updateConfigJson}
+          handleSubmit={updateDbConfig}
         />
       </div>
     </div>

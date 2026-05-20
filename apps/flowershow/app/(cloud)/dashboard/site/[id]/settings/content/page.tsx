@@ -20,7 +20,7 @@ export default async function ContentSettingsPage(props: {
     .query({ siteId: site.id })
     .catch(() => null);
 
-  const updateConfigJson = async ({
+  const updateDbConfig = async ({
     id,
     key,
     value,
@@ -32,7 +32,7 @@ export default async function ContentSettingsPage(props: {
     'use server';
     const parsed = value === 'true' ? true : value === 'false' ? false : value;
     const configValue = parsed === '' ? null : parsed;
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { [key]: configValue },
     });
@@ -40,7 +40,7 @@ export default async function ContentSettingsPage(props: {
 
   const updateContentInclude = async (id: string, value: unknown) => {
     'use server';
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { contentInclude: value as never },
     });
@@ -48,7 +48,7 @@ export default async function ContentSettingsPage(props: {
 
   const updateContentExclude = async (id: string, value: unknown) => {
     'use server';
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { contentExclude: value as never },
     });
@@ -56,7 +56,7 @@ export default async function ContentSettingsPage(props: {
 
   const updateContentHide = async (id: string, value: unknown) => {
     'use server';
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { contentHide: value as never },
     });
@@ -64,7 +64,7 @@ export default async function ContentSettingsPage(props: {
 
   const updateSidebarPaths = async (id: string, value: unknown) => {
     'use server';
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { sidebar: { paths: value as never } },
     });
@@ -72,7 +72,7 @@ export default async function ContentSettingsPage(props: {
 
   const updateRedirects = async (id: string, value: unknown) => {
     'use server';
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { redirects: value as never },
     });
@@ -88,7 +88,7 @@ export default async function ContentSettingsPage(props: {
     value: string;
   }) => {
     'use server';
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { sidebar: { [key]: value || undefined } },
     });
@@ -127,7 +127,7 @@ export default async function ContentSettingsPage(props: {
               { value: 'mdx', label: 'MDX (mdx)' },
             ],
           }}
-          handleSubmit={updateConfigJson}
+          handleSubmit={updateDbConfig}
         />
 
         <Form
@@ -155,7 +155,7 @@ export default async function ContentSettingsPage(props: {
               siteConfig?.showToc ?? SITE_CONFIG_DEFAULTS.showToc,
             ).toString(),
           }}
-          handleSubmit={updateConfigJson}
+          handleSubmit={updateDbConfig}
         />
 
         <Form
@@ -168,7 +168,7 @@ export default async function ContentSettingsPage(props: {
               siteConfig?.showSidebar ?? SITE_CONFIG_DEFAULTS.showSidebar,
             ).toString(),
           }}
-          handleSubmit={updateConfigJson}
+          handleSubmit={updateDbConfig}
         />
 
         <Form
@@ -194,7 +194,7 @@ export default async function ContentSettingsPage(props: {
               siteConfig?.enableRss ?? SITE_CONFIG_DEFAULTS.enableRss,
             ).toString(),
           }}
-          handleSubmit={updateConfigJson}
+          handleSubmit={updateDbConfig}
         />
 
         <Form
@@ -207,7 +207,7 @@ export default async function ContentSettingsPage(props: {
               siteConfig?.showRawLink ?? SITE_CONFIG_DEFAULTS.showRawLink,
             ).toString(),
           }}
-          handleSubmit={updateConfigJson}
+          handleSubmit={updateDbConfig}
         />
 
         <JsonForm

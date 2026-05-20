@@ -22,7 +22,7 @@ export default async function AppearanceSettingsPage(props: {
   const themeConfig =
     typeof siteConfig?.theme === 'object' ? siteConfig.theme : undefined;
 
-  const updateConfigJson = async ({
+  const updateDbConfig = async ({
     id,
     key,
     value,
@@ -34,7 +34,7 @@ export default async function AppearanceSettingsPage(props: {
     'use server';
     const parsed = value === 'true' ? true : value === 'false' ? false : value;
     const configValue = parsed === '' ? null : parsed;
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { [key]: configValue },
     });
@@ -52,7 +52,7 @@ export default async function AppearanceSettingsPage(props: {
     'use server';
     const parsed = value === 'true' ? true : value === 'false' ? false : value;
     const configValue = parsed === '' ? null : parsed;
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { theme: { [key]: configValue } },
     });
@@ -127,7 +127,7 @@ export default async function AppearanceSettingsPage(props: {
                 ).toString()
               : 'true',
           }}
-          handleSubmit={updateConfigJson}
+          handleSubmit={updateDbConfig}
         />
       </div>
     </div>

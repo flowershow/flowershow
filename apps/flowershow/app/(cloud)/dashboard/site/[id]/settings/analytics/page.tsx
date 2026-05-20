@@ -17,7 +17,7 @@ export default async function AnalyticsSettingsPage(props: {
     .query({ siteId: site.id })
     .catch(() => null);
 
-  const updateConfigJson = async ({
+  const updateDbConfig = async ({
     id,
     key,
     value,
@@ -28,7 +28,7 @@ export default async function AnalyticsSettingsPage(props: {
   }) => {
     'use server';
     const configValue = value === '' ? null : value;
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { [key]: configValue },
     });
@@ -50,7 +50,7 @@ export default async function AnalyticsSettingsPage(props: {
             placeholder: 'G-XXXXXXXXXX',
             required: false,
           }}
-          handleSubmit={updateConfigJson}
+          handleSubmit={updateDbConfig}
         />
 
         <Form
@@ -68,7 +68,7 @@ export default async function AnalyticsSettingsPage(props: {
             placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
             required: false,
           }}
-          handleSubmit={updateConfigJson}
+          handleSubmit={updateDbConfig}
         />
       </div>
     </div>

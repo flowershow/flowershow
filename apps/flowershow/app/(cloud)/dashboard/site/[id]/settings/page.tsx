@@ -35,7 +35,7 @@ export default async function SiteSettingsIndex(props: {
     await api.site.update.mutate({ id, key, value });
   };
 
-  const updateConfigJson = async ({
+  const updateDbConfig = async ({
     id,
     key,
     value,
@@ -45,7 +45,7 @@ export default async function SiteSettingsIndex(props: {
     value: string;
   }) => {
     'use server';
-    await api.site.updateConfigJson.mutate({
+    await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { [key]: value || null },
     });
@@ -80,7 +80,7 @@ export default async function SiteSettingsIndex(props: {
             defaultValue: siteConfig?.title ?? '',
             placeholder: 'My Awesome Site',
           }}
-          handleSubmit={updateConfigJson}
+          handleSubmit={updateDbConfig}
         />
 
         <Form
@@ -92,7 +92,7 @@ export default async function SiteSettingsIndex(props: {
             defaultValue: siteConfig?.description ?? '',
             placeholder: 'A site about...',
           }}
-          handleSubmit={updateConfigJson}
+          handleSubmit={updateDbConfig}
         />
 
         <ImageUploadForm

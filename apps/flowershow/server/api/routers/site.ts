@@ -1,15 +1,15 @@
 import { Blob, Prisma, PrismaClient, Status } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
+import { jwtVerify } from 'jose';
 import { revalidateTag, unstable_cache } from 'next/cache';
 import { z } from 'zod';
 import { isNavDropdown, SiteConfig } from '@/components/types';
-import { deepMerge, resolveSiteConfig } from '@/lib/site-config';
 import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { buildSiteTree } from '@/lib/build-site-tree';
-import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
+import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
 import {
   type ContentType,
   deleteProject,
@@ -22,21 +22,21 @@ import {
   removeDomainFromVercelProject,
   validDomainRegex,
 } from '@/lib/domains';
+import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { checkIfBranchExists, fetchGitHubRepoTree } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
 import PostHogClient from '@/lib/server-posthog';
+import { deepMerge, resolveSiteConfig } from '@/lib/site-config';
+import { siteKeyBytes } from '@/lib/site-hmac-key';
+import { buildSiteSubdomain } from '@/lib/site-subdomain';
 import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
 import {
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
 } from '@/server/api/trpc';
-import { jwtVerify } from 'jose';
-import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
-import { siteKeyBytes } from '@/lib/site-hmac-key';
-import { buildSiteSubdomain } from '@/lib/site-subdomain';
 import {
   PageMetadata,
   PublicSite,
@@ -505,7 +505,7 @@ export const siteRouter = createTRPCRouter({
       return fresh;
     }),
 
-  updateConfigJson: protectedProcedure
+  updateDbConfig: protectedProcedure
     .input(
       z.object({
         siteId: z.string().min(1),
