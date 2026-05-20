@@ -4,7 +4,7 @@
 UPDATE "Site"
 SET "config_json" =
   jsonb_strip_nulls(jsonb_build_object(
-    'enableComments',      "enable_comments",
+    'showComments',        "enable_comments",
     'enableSearch',        "enable_search",
     'enableRss',           "enable_rss",
     'showSidebar',         "show_sidebar",
