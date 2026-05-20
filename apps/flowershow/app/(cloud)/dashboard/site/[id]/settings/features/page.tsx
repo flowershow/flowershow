@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import Form from '@/components/dashboard/form';
 import SettingsNav from '@/components/dashboard/settings-nav';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
-import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { api } from '@/trpc/server';
 
 export default async function FeaturesSettingsPage(props: {
@@ -81,9 +80,7 @@ export default async function FeaturesSettingsPage(props: {
             name: 'enableSearch',
             type: 'text',
             defaultValue: isFeatureEnabled(Feature.Search, site)
-              ? Boolean(
-                  siteConfig?.enableSearch ?? SITE_CONFIG_DEFAULTS.enableSearch,
-                ).toString()
+              ? Boolean(siteConfig?.enableSearch).toString()
               : 'false',
           }}
           handleSubmit={updateDbConfig}
@@ -108,14 +105,12 @@ export default async function FeaturesSettingsPage(props: {
           inputAttrs={{
             name: 'showComments',
             type: 'text',
-            defaultValue: Boolean(
-              siteConfig?.showComments ?? SITE_CONFIG_DEFAULTS.showComments,
-            ).toString(),
+            defaultValue: Boolean(siteConfig?.showComments).toString(),
           }}
           handleSubmit={updateDbConfig}
         />
 
-        {(siteConfig?.showComments ?? SITE_CONFIG_DEFAULTS.showComments) && (
+        {siteConfig?.showComments && (
           <>
             <Form
               title="Giscus Repository ID"
@@ -153,9 +148,7 @@ export default async function FeaturesSettingsPage(props: {
           inputAttrs={{
             name: 'showEditLink',
             type: 'text',
-            defaultValue: Boolean(
-              siteConfig?.showEditLink ?? SITE_CONFIG_DEFAULTS.showEditLink,
-            ).toString(),
+            defaultValue: Boolean(siteConfig?.showEditLink).toString(),
           }}
           handleSubmit={updateDbConfig}
         />

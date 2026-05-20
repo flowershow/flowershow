@@ -2,7 +2,6 @@ import { notFound } from 'next/navigation';
 import Form from '@/components/dashboard/form';
 import SettingsNav from '@/components/dashboard/settings-nav';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
-import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { api } from '@/trpc/server';
 
 export default async function AppearanceSettingsPage(props: {
@@ -121,10 +120,7 @@ export default async function AppearanceSettingsPage(props: {
             name: 'showBuiltWithButton',
             type: 'text',
             defaultValue: isFeatureEnabled(Feature.NoBranding, site)
-              ? Boolean(
-                  siteConfig?.showBuiltWithButton ??
-                    SITE_CONFIG_DEFAULTS.showBuiltWithButton,
-                ).toString()
+              ? Boolean(siteConfig?.showBuiltWithButton).toString()
               : 'true',
           }}
           handleSubmit={updateDbConfig}

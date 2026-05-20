@@ -3,7 +3,6 @@ import { notFound } from 'next/navigation';
 import Form from '@/components/dashboard/form';
 import JsonForm from '@/components/dashboard/json-form';
 import SettingsNav from '@/components/dashboard/settings-nav';
-import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { api } from '@/trpc/server';
 
 export default async function ContentSettingsPage(props: {
@@ -119,8 +118,7 @@ export default async function ContentSettingsPage(props: {
           inputAttrs={{
             name: 'syntaxMode',
             type: 'select',
-            defaultValue:
-              siteConfig?.syntaxMode ?? SITE_CONFIG_DEFAULTS.syntaxMode,
+            defaultValue: siteConfig?.syntaxMode,
             options: [
               { value: 'auto', label: 'Auto-detect' },
               { value: 'md', label: 'Markdown (md)' },
@@ -151,9 +149,7 @@ export default async function ContentSettingsPage(props: {
           inputAttrs={{
             name: 'showToc',
             type: 'text',
-            defaultValue: Boolean(
-              siteConfig?.showToc ?? SITE_CONFIG_DEFAULTS.showToc,
-            ).toString(),
+            defaultValue: Boolean(siteConfig?.showToc).toString(),
           }}
           handleSubmit={updateDbConfig}
         />
@@ -164,9 +160,7 @@ export default async function ContentSettingsPage(props: {
           inputAttrs={{
             name: 'showSidebar',
             type: 'text',
-            defaultValue: Boolean(
-              siteConfig?.showSidebar ?? SITE_CONFIG_DEFAULTS.showSidebar,
-            ).toString(),
+            defaultValue: Boolean(siteConfig?.showSidebar).toString(),
           }}
           handleSubmit={updateDbConfig}
         />
@@ -190,9 +184,7 @@ export default async function ContentSettingsPage(props: {
           inputAttrs={{
             name: 'enableRss',
             type: 'text',
-            defaultValue: Boolean(
-              siteConfig?.enableRss ?? SITE_CONFIG_DEFAULTS.enableRss,
-            ).toString(),
+            defaultValue: Boolean(siteConfig?.enableRss).toString(),
           }}
           handleSubmit={updateDbConfig}
         />
@@ -203,9 +195,7 @@ export default async function ContentSettingsPage(props: {
           inputAttrs={{
             name: 'showRawLink',
             type: 'text',
-            defaultValue: Boolean(
-              siteConfig?.showRawLink ?? SITE_CONFIG_DEFAULTS.showRawLink,
-            ).toString(),
+            defaultValue: Boolean(siteConfig?.showRawLink).toString(),
           }}
           handleSubmit={updateDbConfig}
         />

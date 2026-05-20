@@ -14,7 +14,6 @@ import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { getThemeUrl } from '@/lib/get-theme';
-import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
 import { TRPCReactProvider } from '@/trpc/react';
 import { api } from '@/trpc/server';
@@ -151,17 +150,12 @@ export default async function PublicLayout(props: {
   const social = siteConfig?.social || siteConfig?.nav?.social;
   const canHideBuiltWith = isFeatureEnabled(Feature.NoBranding, site);
   const showBuiltWithButton =
-    !canHideBuiltWith ||
-    (siteConfig?.showBuiltWithButton ??
-      SITE_CONFIG_DEFAULTS.showBuiltWithButton);
+    !canHideBuiltWith || !!siteConfig?.showBuiltWithButton;
   const showSearch =
-    isFeatureEnabled(Feature.Search, site) &&
-    (siteConfig?.enableSearch ?? SITE_CONFIG_DEFAULTS.enableSearch);
+    isFeatureEnabled(Feature.Search, site) && !!siteConfig?.enableSearch;
   const cta = siteConfig?.nav?.cta;
   const showNav =
-    !!siteConfig?.nav ||
-    (siteConfig?.enableSearch ?? SITE_CONFIG_DEFAULTS.enableSearch) ||
-    !!siteConfig?.social;
+    !!siteConfig?.nav || !!siteConfig?.enableSearch || !!siteConfig?.social;
 
   return (
     <html

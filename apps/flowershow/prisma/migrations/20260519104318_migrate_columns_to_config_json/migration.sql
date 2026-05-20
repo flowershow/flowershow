@@ -25,5 +25,4 @@ SET "config_json" =
       ELSE NULL
     END
   ))
-  -- 3. Any values already explicitly set via the dashboard
-  || COALESCE("config_json", '{}')::jsonb;
+;

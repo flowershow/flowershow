@@ -11,7 +11,6 @@ import {
 } from '@/lib/cli-auth';
 import { deleteProject } from '@/lib/content-store';
 import PostHogClient from '@/lib/server-posthog';
-import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { deleteSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
@@ -110,14 +109,10 @@ export async function GET(
         autoSync: site.autoSync,
         plan: site.plan,
         privacyMode: site.privacyMode,
-        showComments:
-          siteConfigJson.showComments ?? SITE_CONFIG_DEFAULTS.showComments,
-        enableSearch:
-          siteConfigJson.enableSearch ?? SITE_CONFIG_DEFAULTS.enableSearch,
-        showSidebar:
-          siteConfigJson.showSidebar ?? SITE_CONFIG_DEFAULTS.showSidebar,
-        syntaxMode:
-          siteConfigJson.syntaxMode ?? SITE_CONFIG_DEFAULTS.syntaxMode,
+        showComments: siteConfigJson.showComments,
+        enableSearch: siteConfigJson.enableSearch,
+        showSidebar: siteConfigJson.showSidebar,
+        syntaxMode: siteConfigJson.syntaxMode,
         url: siteUrl,
         fileCount: site._count.blobs,
         totalSize,

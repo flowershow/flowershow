@@ -4,7 +4,7 @@ import type { SiteConfig } from '@/components/types';
 import { fetchFile } from '@/lib/content-store';
 import { getSiteUrl } from '@/lib/get-site-url';
 import { buildRssFeed } from '@/lib/rss';
-import { resolveSiteConfig, SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
+import { resolveSiteConfig } from '@/lib/site-config';
 import prisma from '@/server/db';
 import { Prisma } from '@prisma/client';
 
@@ -69,7 +69,7 @@ export async function GET(
 
   const siteConfig = resolveSiteConfig(dbConfig, fileConfig);
 
-  if (!(siteConfig.enableRss ?? SITE_CONFIG_DEFAULTS.enableRss)) {
+  if (!siteConfig.enableRss) {
     return new Response('Not found', { status: 404 });
   }
 
