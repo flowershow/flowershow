@@ -51,7 +51,7 @@ export default function Leaflet({
       <motion.div
         ref={scope}
         key="leaflet"
-        className="group fixed inset-x-0 bottom-0 z-40 w-screen cursor-grab bg-white pb-5 active:cursor-grabbing sm:hidden"
+        className="group fixed inset-x-0 bottom-0 z-40 w-screen cursor-grab bg-white pb-5 active:cursor-grabbing md:hidden"
         initial={{ y: '100%' }}
         exit={{ y: '100%' }}
         drag="y"

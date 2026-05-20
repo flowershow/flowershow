@@ -73,7 +73,7 @@ export default function CreateSiteModal({
       setShowModal={handleClose}
       closeOnClickOutside={state !== 'creating'}
     >
-      <div className="w-full max-w-md bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden">
+      <div className="w-full md:max-w-md bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden">
         <div className="p-5 md:p-8">
           <h2 className="font-dashboard-heading text-2xl">Create a new site</h2>
           <p className="mt-2 text-sm text-stone-500">
