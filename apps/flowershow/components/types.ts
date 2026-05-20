@@ -93,7 +93,6 @@ export interface SiteConfig {
         imagelayout?: 'right' | 'full';
       };
   showEditLink?: boolean;
-  showComments?: boolean;
   giscus?: Partial<GiscusProps>;
   cta?: Array<{
     href: string;
