@@ -11,6 +11,7 @@ import {
 } from '@/lib/cli-auth';
 import { inngest } from '@/inngest/client';
 import PostHogClient from '@/lib/server-posthog';
+import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { buildSiteSubdomain } from '@/lib/site-subdomain';
 import { deleteSiteCollection, ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
@@ -133,6 +134,7 @@ export async function POST(request: NextRequest) {
           subdomain: buildSiteSubdomain(sanitizedName, username),
           autoSync: false,
           userId: auth.userId,
+          configJson: SITE_CONFIG_DEFAULTS,
         },
         select: {
           id: true,
