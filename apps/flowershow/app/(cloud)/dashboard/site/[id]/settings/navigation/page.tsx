@@ -66,17 +66,12 @@ export default async function NavigationSettingsPage(props: {
       </div>
       <div className="col-span-10 flex flex-col space-y-6 sm:col-span-9 lg:col-span-10">
         <ImageUploadForm
-          title="Nav Logo"
+          title="Logo"
           description="Logo image shown in the navigation bar."
           helpText="PNG, JPG, or WebP. Will be resized to 400×100."
           field="logo"
           configKey="logo"
-          parentKey="nav"
-          currentValue={
-            (typeof siteConfig?.nav === 'object'
-              ? siteConfig.nav?.logo
-              : undefined) ?? null
-          }
+          currentValue={siteConfig?.logo ?? null}
         />
 
         <Form

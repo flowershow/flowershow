@@ -144,7 +144,8 @@ export default async function PublicLayout(props: {
     }
   }
 
-  const logo = siteConfig?.nav?.logo ?? siteConfig?.logo ?? appConfig.logo; // default to Flowershow logo
+  // TODO: nav.logo is deprecated in favour of root logo — remove nav.logo fallback once migration period ends
+  const logo = siteConfig?.logo ?? siteConfig?.nav?.logo ?? appConfig.logo;
   const title = siteConfig?.nav?.title;
   const links = siteConfig?.nav?.links;
   const social = siteConfig?.social || siteConfig?.nav?.social;

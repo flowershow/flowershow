@@ -43,10 +43,12 @@ export function isNavDropdown(item: NavItem): item is NavDropdown {
 }
 
 export interface NavConfig {
+  /** @deprecated Use root `logo` in SiteConfig instead */
   logo?: string;
   title?: string;
   links?: NavItem[];
-  social?: SocialLink[]; // DEPRECATED, moved to the root of the config as it's used in both navbar and footer
+  /** @deprecated Use root `social` in SiteConfig instead */
+  social?: SocialLink[];
   cta?: NavLink;
 }
 
@@ -63,6 +65,7 @@ export interface SiteConfig {
   title?: string;
   description?: string;
   image?: string;
+  logo?: string;
   favicon?: string;
   nav?: NavConfig;
   footer?: FooterConfig;
@@ -94,7 +97,6 @@ export interface SiteConfig {
   syntaxMode?: 'auto' | 'md' | 'mdx';
 
   // Not configurable via dashboard — set in config.json only
-  logo?: string;
   showHero?: boolean;
   hero?:
     | boolean

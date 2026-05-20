@@ -73,7 +73,8 @@ export default async function LoginPage(props: {
   const siteHostname =
     site.customDomain ?? `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
-  const resolvedLogo = siteConfig?.nav?.logo ?? siteConfig?.logo ?? config.logo;
+  // TODO: nav.logo is deprecated in favour of root logo — remove nav.logo fallback once migration period ends
+  const resolvedLogo = siteConfig?.logo ?? siteConfig?.nav?.logo ?? config.logo;
   const logo = resolveFilePathToUrlPath({
     target: resolvedLogo,
     siteHostname,
