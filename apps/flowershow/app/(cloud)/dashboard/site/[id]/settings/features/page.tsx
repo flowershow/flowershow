@@ -91,7 +91,7 @@ export default async function FeaturesSettingsPage(props: {
 
         <Form
           title="Comments"
-          description="Enable comments at the bottom of your site's pages."
+          description="Show comments at the bottom of your site's pages. Individual pages can override this with showComments in their frontmatter."
           helpText={
             <p>
               Learn more about{' '}
@@ -106,17 +106,16 @@ export default async function FeaturesSettingsPage(props: {
             </p>
           }
           inputAttrs={{
-            name: 'enableComments',
+            name: 'showComments',
             type: 'text',
             defaultValue: Boolean(
-              siteConfig?.enableComments ?? SITE_CONFIG_DEFAULTS.enableComments,
+              siteConfig?.showComments ?? SITE_CONFIG_DEFAULTS.showComments,
             ).toString(),
           }}
           handleSubmit={updateConfigJson}
         />
 
-        {(siteConfig?.enableComments ??
-          SITE_CONFIG_DEFAULTS.enableComments) && (
+        {(siteConfig?.showComments ?? SITE_CONFIG_DEFAULTS.showComments) && (
           <>
             <Form
               title="Giscus Repository ID"

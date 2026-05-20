@@ -3,7 +3,7 @@ import type { SiteConfig } from '@/components/types';
 export const SITE_CONFIG_DEFAULTS = {
   showToc: true,
   showSidebar: true,
-  enableComments: false,
+  showComments: false,
   enableSearch: false,
   enableRss: false,
   showBuiltWithButton: true,

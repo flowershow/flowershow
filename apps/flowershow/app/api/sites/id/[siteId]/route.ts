@@ -1,10 +1,9 @@
-import type { SiteConfig } from '@/components/types';
-import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import type {
   DeleteSiteResponse,
   GetSiteResponse,
 } from '@flowershow/api-contract';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
+import type { SiteConfig } from '@/components/types';
 import {
   checkCliVersion,
   getClientInfo,
@@ -12,6 +11,7 @@ import {
 } from '@/lib/cli-auth';
 import { deleteProject } from '@/lib/content-store';
 import PostHogClient from '@/lib/server-posthog';
+import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { deleteSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
@@ -110,8 +110,8 @@ export async function GET(
         autoSync: site.autoSync,
         plan: site.plan,
         privacyMode: site.privacyMode,
-        enableComments:
-          siteConfigJson.enableComments ?? SITE_CONFIG_DEFAULTS.enableComments,
+        showComments:
+          siteConfigJson.showComments ?? SITE_CONFIG_DEFAULTS.showComments,
         enableSearch:
           siteConfigJson.enableSearch ?? SITE_CONFIG_DEFAULTS.enableSearch,
         showSidebar:

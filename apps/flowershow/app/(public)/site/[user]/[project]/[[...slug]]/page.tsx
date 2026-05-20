@@ -379,8 +379,9 @@ export default async function SitePage(props: {
     ? `${site.rootDir.replace(/^(.?\/)+|\/+$/g, '')}/`
     : '';
   const showPageComments =
-    (siteConfig?.enableComments ?? SITE_CONFIG_DEFAULTS.enableComments) &&
-    (metadata?.showComments ?? true);
+    metadata?.showComments ??
+    siteConfig?.showComments ??
+    SITE_CONFIG_DEFAULTS.showComments;
   const giscusConfig = siteConfig?.giscus;
   const activeSidebarPath = (() => {
     const paths = siteConfig?.sidebar?.paths;

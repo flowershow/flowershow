@@ -51,7 +51,7 @@ export default function Form({
 
   const isToggleField = [
     'autoSync',
-    'enableComments',
+    'showComments',
     'enableSearch',
     'enableRss',
     'showBuiltWithButton',
