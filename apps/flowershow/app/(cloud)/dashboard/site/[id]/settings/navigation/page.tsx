@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import Form from '@/components/dashboard/form';
+import ImageUploadForm from '@/components/dashboard/form/image-upload-form';
 import JsonForm from '@/components/dashboard/json-form';
 import SettingsNav from '@/components/dashboard/settings-nav';
 import { api } from '@/trpc/server';
@@ -64,20 +65,18 @@ export default async function NavigationSettingsPage(props: {
         <SettingsNav hasGhRepository={!!site.ghRepository} />
       </div>
       <div className="col-span-10 flex flex-col space-y-6 sm:col-span-9 lg:col-span-10">
-        <Form
+        <ImageUploadForm
           title="Nav Logo"
-          description="URL or path to the logo image shown in the navigation bar."
-          inputAttrs={{
-            name: 'logo',
-            type: 'text',
-            defaultValue:
-              (typeof siteConfig?.nav === 'object'
-                ? siteConfig.nav?.logo
-                : undefined) ?? '',
-            placeholder: '/logo.png',
-            required: false,
-          }}
-          handleSubmit={updateNavConfig}
+          description="Logo image shown in the navigation bar."
+          helpText="PNG, JPG, or WebP. Will be resized to 400×100."
+          field="logo"
+          configKey="logo"
+          parentKey="nav"
+          currentValue={
+            (typeof siteConfig?.nav === 'object'
+              ? siteConfig.nav?.logo
+              : undefined) ?? null
+          }
         />
 
         <Form

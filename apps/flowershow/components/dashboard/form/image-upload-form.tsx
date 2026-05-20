@@ -8,11 +8,12 @@ import { toast } from 'sonner';
 import { isEmoji } from '@/lib/is-emoji';
 import { api } from '@/trpc/react';
 
-type Field = 'image' | 'favicon';
+type Field = 'image' | 'favicon' | 'logo';
 
 const DIMENSIONS: Record<Field, [number, number]> = {
   image: [1200, 630],
   favicon: [128, 128],
+  logo: [400, 100],
 };
 
 function processImage(file: File, field: Field): Promise<Blob> {
@@ -59,6 +60,7 @@ export default function ImageUploadForm({
   helpText,
   field,
   configKey,
+  parentKey,
   currentValue,
 }: {
   title: string;
@@ -66,6 +68,7 @@ export default function ImageUploadForm({
   helpText?: string;
   field: Field;
   configKey: string;
+  parentKey?: string;
   currentValue: string | null;
 }) {
   const { id } = useParams() as { id: string };
@@ -105,10 +108,10 @@ export default function ImageUploadForm({
       });
       if (!res.ok) throw new Error('Upload failed');
 
-      await updateConfig.mutateAsync({
-        siteId: id,
-        config: { [configKey]: publicUrl },
-      });
+      const patch = parentKey
+        ? { [parentKey]: { [configKey]: publicUrl } }
+        : { [configKey]: publicUrl };
+      await updateConfig.mutateAsync({ siteId: id, config: patch });
 
       URL.revokeObjectURL(previewUrl);
       setPreview(null);
@@ -125,10 +128,10 @@ export default function ImageUploadForm({
   const handleRemove = async () => {
     setIsUploading(true);
     try {
-      await updateConfig.mutateAsync({
-        siteId: id,
-        config: { [configKey]: null },
-      });
+      const patch = parentKey
+        ? { [parentKey]: { [configKey]: null } }
+        : { [configKey]: null };
+      await updateConfig.mutateAsync({ siteId: id, config: patch });
       router.refresh();
       toast.success(`${title} removed.`);
     } catch (err) {

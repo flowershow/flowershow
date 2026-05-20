@@ -560,7 +560,7 @@ export const siteRouter = createTRPCRouter({
     .input(
       z.object({
         siteId: z.string().min(1),
-        field: z.enum(['favicon', 'image']),
+        field: z.enum(['favicon', 'image', 'logo']),
         contentType: z.enum([
           'image/webp',
           'image/png',
