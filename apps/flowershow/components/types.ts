@@ -63,7 +63,6 @@ export interface SiteConfig {
   title?: string;
   description?: string;
   image?: string;
-  logo?: string;
   favicon?: string;
   nav?: NavConfig;
   footer?: FooterConfig;
@@ -79,6 +78,23 @@ export interface SiteConfig {
     paths?: string[];
   };
   showToc?: boolean;
+  showEditLink?: boolean;
+  showComments?: boolean;
+  giscus?: Partial<GiscusProps>;
+  redirects?: Array<{
+    from: string;
+    to: string;
+    permanent?: boolean;
+  }>;
+  theme?: string | ThemeConfig;
+  enableSearch?: boolean;
+  enableRss?: boolean;
+  showBuiltWithButton?: boolean;
+  showRawLink?: boolean;
+  syntaxMode?: 'auto' | 'md' | 'mdx';
+
+  // Not configurable via dashboard — set in config.json only
+  logo?: string;
   showHero?: boolean;
   hero?:
     | boolean
@@ -92,24 +108,10 @@ export interface SiteConfig {
         }>;
         imagelayout?: 'right' | 'full';
       };
-  showEditLink?: boolean;
-  showComments?: boolean;
-  giscus?: Partial<GiscusProps>;
   cta?: Array<{
     href: string;
     label: string;
-  }>; // CTAs used if hero is enabled (only 2 supported)
-  redirects?: Array<{
-    from: string; // Exact path to match (e.g. "/old-page")
-    to: string; // Path to redirect to (e.g. "/new-page")
-    permanent?: boolean; // Whether to use 301 (true) or 302 (false) redirect
   }>;
-  theme?: string | ThemeConfig;
-  enableSearch?: boolean;
-  enableRss?: boolean;
-  showBuiltWithButton?: boolean;
-  showRawLink?: boolean;
-  syntaxMode?: 'auto' | 'md' | 'mdx';
 }
 
 export interface ThemeConfig {
