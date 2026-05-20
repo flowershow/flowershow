@@ -73,6 +73,7 @@ export default async function AppearanceSettingsPage(props: {
               (typeof siteConfig?.theme === 'string'
                 ? siteConfig.theme
                 : themeConfig?.theme) ?? '',
+            required: false,
             options: [
               { value: '', label: 'Default' },
               { value: 'letterpress', label: 'Letterpress' },
