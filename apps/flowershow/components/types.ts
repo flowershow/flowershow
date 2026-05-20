@@ -105,7 +105,6 @@ export interface SiteConfig {
     permanent?: boolean; // Whether to use 301 (true) or 302 (false) redirect
   }>;
   theme?: string | ThemeConfig;
-  enableComments?: boolean;
   enableSearch?: boolean;
   enableRss?: boolean;
   showBuiltWithButton?: boolean;
