@@ -43,13 +43,13 @@ export function isNavDropdown(item: NavItem): item is NavDropdown {
 }
 
 export interface NavConfig {
-  /** @deprecated Use root `logo` in SiteConfig instead */
-  logo?: string;
   title?: string;
   links?: NavItem[];
+  cta?: NavLink;
+  /** @deprecated Use root `logo` in SiteConfig instead */
+  logo?: string;
   /** @deprecated Use root `social` in SiteConfig instead */
   social?: SocialLink[];
-  cta?: NavLink;
 }
 
 export interface FooterNavigationGroup {
