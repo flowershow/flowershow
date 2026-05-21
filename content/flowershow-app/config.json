@@ -242,7 +242,7 @@
     },
     {
       "from": "/blog/how-to-debug-404-pages",
-      "to": "/docs/reference/debug-404s"
+      "to": "/docs/guides/debug-404s"
     },
     {
       "from": "/blog/how-to-enable-page-comments",
@@ -398,11 +398,19 @@
     },
     {
       "from": "/docs/debug-mdx-errors",
-      "to": "/docs/reference/debug-mdx-errors"
+      "to": "/docs/guides/debug-mdx-errors"
+    },
+    {
+      "from": "/docs/reference/debug-mdx-errors",
+      "to": "/docs/guides/debug-mdx-errors"
     },
     {
       "from": "/docs/debugging-404s",
-      "to": "/docs/reference/debug-404s"
+      "to": "/docs/guides/debug-404s"
+    },
+    {
+      "from": "/docs/reference/debug-404s",
+      "to": "/docs/guides/debug-404s"
     },
     {
       "from": "/docs/edit-this-page",
