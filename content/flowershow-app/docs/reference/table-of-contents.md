@@ -3,18 +3,16 @@ title: Table of contents
 description: Control visibility of the page table of contents
 ---
 
-The table of contents visible on the right hand side of the page is enabled by default.
+Configure the table of contents from the **Flowershow dashboard** under **Site Settings → Content**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
 
-> [!tip] Dashboard
-> The table of contents can be toggled in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Content** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+> [!note]
+> The table of contents is enabled by default and appears on the right-hand side of pages that have headings.
 
-To disable it globally, set the `showToc` variable to `false` in your [[config-file|`config.json`]]:
+## Show or hide the table of contents
 
-```json
-showToc: false
-```
+Go to **Settings → Content → Show Table of Contents** and set it to `true` or `false`.
 
-You can also disable it on per-page basis or override your global config, by setting `showToc` to **true** or **false** in the frontmatter, like so:
+You can also override this on a per-page basis using frontmatter:
 
 ```md
 ---
@@ -23,3 +21,15 @@ showToc: false
 
 Page content
 ```
+
+## Using config.json
+
+If you want to version-control your configuration, or have your editor's AI agent manage settings without touching the dashboard, you can define everything in `config.json` instead. Values set in `config.json` take precedence over dashboard settings.
+
+```json
+{
+  "showToc": false
+}
+```
+
+- `showToc`: Set to `false` to disable the table of contents globally. Defaults to `true`.
