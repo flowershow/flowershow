@@ -1884,7 +1884,8 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      // Clear all GitHub-related fields
+      // Clear all GitHub-related fields and disable features that require a repo
+      const existingConfig = (site.configJson ?? {}) as Record<string, unknown>;
       await ctx.db.site.update({
         where: { id: input.siteId },
         data: {
@@ -1894,6 +1895,10 @@ export const siteRouter = createTRPCRouter({
           installationRepositoryId: null,
           autoSync: false,
           tree: Prisma.JsonNull,
+          configJson: {
+            ...existingConfig,
+            showEditLink: false,
+          } as Prisma.InputJsonValue,
         },
       });
 

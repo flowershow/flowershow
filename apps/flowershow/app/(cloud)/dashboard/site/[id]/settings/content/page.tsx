@@ -37,6 +37,30 @@ export default async function ContentSettingsPage(props: {
     });
   };
 
+  const updateSidebarConfig = async ({
+    id,
+    key,
+    value,
+  }: {
+    id: string;
+    key: string;
+    value: string;
+  }) => {
+    'use server';
+    await api.site.updateDbConfig.mutate({
+      siteId: id,
+      config: { sidebar: { [key]: value || undefined } },
+    });
+  };
+
+  const updateSidebarPaths = async (id: string, value: unknown) => {
+    'use server';
+    await api.site.updateDbConfig.mutate({
+      siteId: id,
+      config: { sidebar: { paths: value as never } },
+    });
+  };
+
   const updateContentInclude = async (id: string, value: unknown) => {
     'use server';
     await api.site.updateDbConfig.mutate({
@@ -61,35 +85,11 @@ export default async function ContentSettingsPage(props: {
     });
   };
 
-  const updateSidebarPaths = async (id: string, value: unknown) => {
-    'use server';
-    await api.site.updateDbConfig.mutate({
-      siteId: id,
-      config: { sidebar: { paths: value as never } },
-    });
-  };
-
   const updateRedirects = async (id: string, value: unknown) => {
     'use server';
     await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { redirects: value as never },
-    });
-  };
-
-  const updateSidebarConfig = async ({
-    id,
-    key,
-    value,
-  }: {
-    id: string;
-    key: string;
-    value: string;
-  }) => {
-    'use server';
-    await api.site.updateDbConfig.mutate({
-      siteId: id,
-      config: { sidebar: { [key]: value || undefined } },
     });
   };
 
@@ -118,12 +118,36 @@ export default async function ContentSettingsPage(props: {
           inputAttrs={{
             name: 'syntaxMode',
             type: 'select',
-            defaultValue: siteConfig?.syntaxMode,
+            defaultValue: siteConfig?.syntaxMode ?? 'auto',
             options: [
               { value: 'auto', label: 'Auto-detect' },
               { value: 'md', label: 'Markdown (md)' },
               { value: 'mdx', label: 'MDX (mdx)' },
             ],
+          }}
+          handleSubmit={updateDbConfig}
+        />
+
+        <Form
+          title="Show Sidebar"
+          description="Show the file-tree sidebar on your site."
+          helpText={
+            <p>
+              Learn more about{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/sidebar"
+              >
+                Sidebar
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
+          inputAttrs={{
+            name: 'showSidebar',
+            type: 'text',
+            defaultValue: Boolean(siteConfig?.showSidebar).toString(),
           }}
           handleSubmit={updateDbConfig}
         />
@@ -156,6 +180,27 @@ export default async function ContentSettingsPage(props: {
           handleSubmit={updateSidebarConfig}
         />
 
+        <JsonForm
+          title="Sidebar Paths"
+          description="Limit the sidebar to specific subpaths. Leave empty to show all content."
+          helpText={
+            <>
+              {'Example: ["docs/","guides/"]'}
+              {' · '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/sidebar"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            </>
+          }
+          fieldName="sidebar.paths"
+          defaultValue={siteConfig?.sidebar?.paths ?? null}
+          handleSubmit={updateSidebarPaths}
+        />
+
         <Form
           title="Show Table of Contents"
           description="Show a table of contents on pages that have headings."
@@ -176,65 +221,6 @@ export default async function ContentSettingsPage(props: {
             name: 'showToc',
             type: 'text',
             defaultValue: Boolean(siteConfig?.showToc).toString(),
-          }}
-          handleSubmit={updateDbConfig}
-        />
-
-        <Form
-          title="Show Sidebar"
-          description="Show the file-tree sidebar on your site."
-          helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/sidebar"
-              >
-                Sidebar
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
-          }
-          inputAttrs={{
-            name: 'showSidebar',
-            type: 'text',
-            defaultValue: Boolean(siteConfig?.showSidebar).toString(),
-          }}
-          handleSubmit={updateDbConfig}
-        />
-
-        <Form
-          title="RSS Feed"
-          description="Enable an RSS feed for your site. Only pages with a date field in the frontmatter will be included."
-          helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/rss-feed"
-              >
-                RSS Feed
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
-          }
-          inputAttrs={{
-            name: 'enableRss',
-            type: 'text',
-            defaultValue: Boolean(siteConfig?.enableRss).toString(),
-          }}
-          handleSubmit={updateDbConfig}
-        />
-
-        <Form
-          title="Show Raw Markdown Link"
-          description="Show a 'View raw markdown' link at the bottom of each page, linking to the raw Markdown source."
-          inputAttrs={{
-            name: 'showRawLink',
-            type: 'text',
-            defaultValue: Boolean(siteConfig?.showRawLink).toString(),
           }}
           handleSubmit={updateDbConfig}
         />
@@ -300,27 +286,6 @@ export default async function ContentSettingsPage(props: {
           fieldName="contentHide"
           defaultValue={siteConfig?.contentHide ?? null}
           handleSubmit={updateContentHide}
-        />
-
-        <JsonForm
-          title="Sidebar Paths"
-          description="Limit the sidebar to specific subpaths. Leave empty to show all content."
-          helpText={
-            <>
-              {'Example: ["docs/","guides/"]'}
-              {' · '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/sidebar"
-              >
-                Learn more
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-            </>
-          }
-          fieldName="sidebar.paths"
-          defaultValue={siteConfig?.sidebar?.paths ?? null}
-          handleSubmit={updateSidebarPaths}
         />
 
         <JsonForm

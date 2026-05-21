@@ -87,6 +87,30 @@ export default async function FeaturesSettingsPage(props: {
         />
 
         <Form
+          title="RSS Feed"
+          description="Enable an RSS feed for your site. Only pages with a date field in the frontmatter will be included."
+          helpText={
+            <p>
+              Learn more about{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/rss-feed"
+              >
+                RSS Feed
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
+          inputAttrs={{
+            name: 'enableRss',
+            type: 'text',
+            defaultValue: Boolean(siteConfig?.enableRss).toString(),
+          }}
+          handleSubmit={updateDbConfig}
+        />
+
+        <Form
           title="Comments"
           description="Show comments at the bottom of your site's pages. Individual pages can override this with showComments in their frontmatter."
           helpText={
@@ -145,6 +169,8 @@ export default async function FeaturesSettingsPage(props: {
         <Form
           title="Show Edit Link"
           description="Show a link at the bottom of each page for readers to edit the source on GitHub."
+          disabled={!site.ghRepository}
+          disabledLabel="Requires GitHub integration"
           helpText={
             <p>
               Learn more about{' '}
@@ -161,7 +187,20 @@ export default async function FeaturesSettingsPage(props: {
           inputAttrs={{
             name: 'showEditLink',
             type: 'text',
-            defaultValue: Boolean(siteConfig?.showEditLink).toString(),
+            defaultValue: site.ghRepository
+              ? Boolean(siteConfig?.showEditLink).toString()
+              : 'false',
+          }}
+          handleSubmit={updateDbConfig}
+        />
+
+        <Form
+          title="Show Raw Markdown Link"
+          description="Show a 'View raw markdown' link at the bottom of each page, linking to the raw Markdown source."
+          inputAttrs={{
+            name: 'showRawLink',
+            type: 'text',
+            defaultValue: Boolean(siteConfig?.showRawLink).toString(),
           }}
           handleSubmit={updateDbConfig}
         />

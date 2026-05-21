@@ -76,8 +76,8 @@ export default async function AnalyticsSettingsPage(props: {
       </div>
       <div className="col-span-10 flex flex-col space-y-6 sm:col-span-9 lg:col-span-10">
         <Form
-          title="Analytics"
-          description="Google Analytics measurement ID (e.g. G-XXXXXXXXXX)."
+          title="Google Analytics"
+          description="Google Analytics measurement ID."
           helpText={
             <p>
               Learn more about{' '}
