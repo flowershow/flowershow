@@ -9,6 +9,7 @@ import {
   getClientInfo,
   validateAccessToken,
 } from '@/lib/cli-auth';
+import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { deleteProject } from '@/lib/content-store';
 import PostHogClient from '@/lib/server-posthog';
 import { deleteSiteCollection } from '@/lib/typesense';
@@ -95,7 +96,8 @@ export async function GET(
       ? `https://${site.customDomain}`
       : `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
-    const siteConfigJson = (site.configJson ?? {}) as SiteConfig;
+    const siteConfigJson = (site.configJson ?? {}) as unknown as SiteConfig &
+      typeof SITE_CONFIG_DEFAULTS;
 
     const response: GetSiteResponse = {
       site: {
