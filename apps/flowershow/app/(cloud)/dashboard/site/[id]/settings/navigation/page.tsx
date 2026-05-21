@@ -70,17 +70,13 @@ export default async function NavigationSettingsPage(props: {
           title="Logo"
           description="Logo image shown in the navigation bar."
           helpText={
-            <p>
-              PNG, JPG, or WebP. Will be resized to 400×100.{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/navbar"
-              >
-                Learn more
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/navbar"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
           }
           field="logo"
           configKey="logo"
@@ -91,17 +87,13 @@ export default async function NavigationSettingsPage(props: {
           title="Nav Title"
           description="The title shown in the site navigation bar."
           helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/navbar"
-              >
-                Navbar configuration
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/navbar"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
           }
           inputAttrs={{
             name: 'title',
@@ -120,18 +112,15 @@ export default async function NavigationSettingsPage(props: {
           title="Nav Links"
           description="Navigation items shown in the header. Each item needs 'name' and 'href'. Dropdowns use 'name' and 'links' (array of {name, href})."
           helpText={
-            <>
-              {'Example: [{"name":"Blog","href":"/blog"}]'}
-              {' · '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/navbar"
-              >
-                Learn more
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-            </>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/navbar"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
           }
+          placeholder={'[{"name":"Blog","href":"/blog"}]'}
           fieldName="nav.links"
           defaultValue={siteConfig?.nav?.links ?? null}
           handleSubmit={updateNavLinks}
@@ -141,19 +130,16 @@ export default async function NavigationSettingsPage(props: {
           title="Social Links"
           description='Social platform links shown in the nav and footer. Each item needs "name", "href", and optionally "label" (platform, e.g. "github", "twitter").'
           helpText={
-            <>
-              {
-                'Example: [{"name":"GitHub","href":"https://github.com/you","label":"github"}]'
-              }
-              {' · '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/navbar"
-              >
-                Learn more
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-            </>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/navbar"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
+          }
+          placeholder={
+            '[{"name":"GitHub","href":"https://github.com/you","label":"github"}]'
           }
           fieldName="social"
           defaultValue={siteConfig?.social ?? null}
@@ -164,19 +150,16 @@ export default async function NavigationSettingsPage(props: {
           title="Footer Navigation"
           description='Navigation groups in the footer. Each group needs "title" and "links" (array of {name, href}).'
           helpText={
-            <>
-              {
-                'Example: [{"title":"Docs","links":[{"name":"Getting Started","href":"/docs"}]}]'
-              }
-              {' · '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/footer"
-              >
-                Learn more
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-            </>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/footer"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
+          }
+          placeholder={
+            '[{"title":"Docs","links":[{"name":"Getting Started","href":"/docs"}]}]'
           }
           fieldName="footer.navigation"
           defaultValue={siteConfig?.footer?.navigation ?? null}

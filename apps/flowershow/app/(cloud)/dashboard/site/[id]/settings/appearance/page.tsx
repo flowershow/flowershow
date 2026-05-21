@@ -68,17 +68,13 @@ export default async function AppearanceSettingsPage(props: {
           title="Theme"
           description="Name of the theme to apply to your site."
           helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/themes"
-              >
-                Themes
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/themes"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
           }
           inputAttrs={{
             name: 'theme',
@@ -103,17 +99,13 @@ export default async function AppearanceSettingsPage(props: {
           title="Default Color Mode"
           description="The default color mode for your site."
           helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/dark-mode"
-              >
-                Dark mode
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/dark-mode"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
           }
           inputAttrs={{
             name: 'defaultMode',
@@ -132,17 +124,13 @@ export default async function AppearanceSettingsPage(props: {
           title="Show Mode Switch"
           description="Show a toggle that lets visitors switch between light and dark mode."
           helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/dark-mode"
-              >
-                Dark mode
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/dark-mode"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
           }
           inputAttrs={{
             name: 'showModeSwitch',

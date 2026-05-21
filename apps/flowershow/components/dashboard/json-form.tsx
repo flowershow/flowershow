@@ -10,6 +10,7 @@ export default function JsonForm({
   title,
   description,
   helpText,
+  placeholder,
   fieldName,
   defaultValue,
   handleSubmit,
@@ -17,6 +18,7 @@ export default function JsonForm({
   title: string;
   description: string;
   helpText?: ReactNode;
+  placeholder?: string;
   fieldName: string;
   defaultValue: unknown;
   handleSubmit: (id: string, value: unknown) => Promise<void>;
@@ -78,7 +80,7 @@ export default function JsonForm({
             setError(null);
           }}
           disabled={pending}
-          placeholder="null"
+          placeholder={placeholder ?? 'null'}
           className="w-full rounded-md border border-stone-300 font-mono text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500"
         />
         {error && <p className="text-sm text-red-500">{error}</p>}

@@ -42,17 +42,13 @@ export default async function AccessSettingsPage(props: {
           description="The custom domain for your site."
           disabled={!isFeatureEnabled(Feature.CustomDomain, site)}
           helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/custom-domain"
-              >
-                Custom domain
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/custom-domain"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
           }
           inputAttrs={{
             name: 'customDomain',

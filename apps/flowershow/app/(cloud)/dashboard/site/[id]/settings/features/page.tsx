@@ -63,17 +63,13 @@ export default async function FeaturesSettingsPage(props: {
           title="Full-Text Search"
           description="Enable full-text search functionality for your site."
           helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/blog/announcing-full-text-search"
-              >
-                Full-text search
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
+            <a
+              className="underline"
+              href="https://flowershow.app/blog/announcing-full-text-search"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
           }
           disabled={!isFeatureEnabled(Feature.Search, site)}
           inputAttrs={{
@@ -90,17 +86,13 @@ export default async function FeaturesSettingsPage(props: {
           title="RSS Feed"
           description="Enable an RSS feed for your site. Only pages with a date field in the frontmatter will be included."
           helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/rss-feed"
-              >
-                RSS Feed
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/rss-feed"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
           }
           inputAttrs={{
             name: 'enableRss',
@@ -114,17 +106,13 @@ export default async function FeaturesSettingsPage(props: {
           title="Comments"
           description="Show comments at the bottom of your site's pages. Individual pages can override this with showComments in their frontmatter."
           helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/comments"
-              >
-                Comments
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/comments"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
           }
           inputAttrs={{
             name: 'showComments',
@@ -172,17 +160,13 @@ export default async function FeaturesSettingsPage(props: {
           disabled={!site.ghRepository}
           disabledLabel="Requires GitHub integration"
           helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/edit-this-page"
-              >
-                Edit this page
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/edit-this-page"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
           }
           inputAttrs={{
             name: 'showEditLink',

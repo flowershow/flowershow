@@ -75,17 +75,13 @@ export default async function GitHubSettingsPage(props: {
             title="Auto-sync"
             description="Automatically sync your site after each change to the GitHub repository."
             helpText={
-              <p>
-                Learn more about{' '}
-                <a
-                  className="underline"
-                  href="https://flowershow.app/docs/getting-started/from-github"
-                >
-                  Publishing from GitHub
-                  <ExternalLinkIcon className="inline h-4" />
-                </a>
-                .
-              </p>
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/getting-started/from-github"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
             }
             inputAttrs={{
               name: 'autoSync',

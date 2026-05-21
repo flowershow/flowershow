@@ -79,17 +79,13 @@ export default async function AnalyticsSettingsPage(props: {
           title="Google Analytics"
           description="Google Analytics measurement ID."
           helpText={
-            <p>
-              Learn more about{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/analytics"
-              >
-                Analytics
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/analytics"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
           }
           inputAttrs={{
             name: 'analytics',
@@ -105,17 +101,13 @@ export default async function AnalyticsSettingsPage(props: {
           title="Umami Analytics"
           description="Umami website ID for privacy-friendly analytics."
           helpText={
-            <p>
-              Find your website ID in your Umami dashboard.{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/analytics"
-              >
-                Learn more
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/analytics"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
           }
           inputAttrs={{
             name: 'umami',
@@ -131,17 +123,13 @@ export default async function AnalyticsSettingsPage(props: {
           title="Umami Script URL"
           description="Custom script URL for self-hosted Umami instances. Leave blank to use the default Umami Cloud script."
           helpText={
-            <p>
-              Only needed for self-hosted Umami.{' '}
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/analytics"
-              >
-                Learn more
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-              .
-            </p>
+            <a
+              className="underline"
+              href="https://flowershow.app/docs/reference/analytics"
+            >
+              Learn more
+              <ExternalLinkIcon className="inline h-4" />
+            </a>
           }
           inputAttrs={{
             name: 'umamiSrc',
