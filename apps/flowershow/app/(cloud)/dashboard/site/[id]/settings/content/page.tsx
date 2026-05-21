@@ -241,7 +241,7 @@ export default async function ContentSettingsPage(props: {
 
         <JsonForm
           title="Content Include"
-          description="Glob patterns for paths to include in the site. Leave empty to include everything."
+          description="Paths to include in the site (e.g. directories or specific files). Leave empty to include everything."
           helpText={
             <>
               {'Example: ["notes/","blog/"]'}
@@ -262,7 +262,7 @@ export default async function ContentSettingsPage(props: {
 
         <JsonForm
           title="Content Exclude"
-          description="Glob patterns for paths to exclude from the site entirely."
+          description="Paths to exclude from the site entirely (directories or specific files). Exclude rules take precedence over include rules."
           helpText={
             <>
               {'Example: ["drafts/","private/"]'}
@@ -283,7 +283,7 @@ export default async function ContentSettingsPage(props: {
 
         <JsonForm
           title="Content Hide"
-          description="Glob patterns for paths to hide from navigation and search but still serve."
+          description="Paths to hide from sidebar and search, but still published and accessible by URL."
           helpText={
             <>
               {'Example: ["_assets/","_templates/"]'}

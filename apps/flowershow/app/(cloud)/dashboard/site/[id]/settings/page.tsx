@@ -74,7 +74,7 @@ export default async function SiteSettingsIndex(props: {
 
         <Form
           title="Site Title"
-          description="The display title of your site, used in the browser tab and social previews."
+          description="Your site name, appended as a suffix to every page title. Appears in browser tabs, search results, social shares, and bookmarks."
           helpText={
             <p>
               Learn more about{' '}
