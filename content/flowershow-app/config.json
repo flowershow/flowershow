@@ -334,7 +334,11 @@
     },
     {
       "from": "/docs/blog-setup",
-      "to": "/docs/reference/blog-setup"
+      "to": "/docs/guides/publish-blog"
+    },
+    {
+      "from": "/docs/reference/blog-setup",
+      "to": "/docs/guides/publish-blog"
     },
     {
       "from": "/docs/canvas-demo-v2",
