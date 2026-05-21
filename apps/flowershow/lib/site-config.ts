@@ -1,5 +1,14 @@
 import type { SiteConfig } from '@/components/types';
 
+// Coerces the legacy string form of umami config (plain website ID) to the
+// canonical object form. The string form is deprecated — use { websiteId, src? }.
+function normalizeUmamiConfig(
+  umami: SiteConfig['umami'] | string,
+): SiteConfig['umami'] {
+  if (typeof umami === 'string') return { websiteId: umami };
+  return umami;
+}
+
 export const SITE_CONFIG_DEFAULTS = {
   showToc: true,
   showSidebar: true,
@@ -45,12 +54,18 @@ export function resolveSiteConfig(
   dbConfig: SiteConfig | null | undefined,
   fileConfig: SiteConfig | null | undefined,
 ): SiteConfig {
+  let resolved: SiteConfig;
   if (!dbConfig && !fileConfig) return {};
-  if (!dbConfig) return fileConfig ?? {};
-  if (!fileConfig) return dbConfig;
+  if (!dbConfig) resolved = fileConfig ?? {};
+  else if (!fileConfig) resolved = dbConfig;
+  else
+    resolved = deepMerge(
+      dbConfig as Record<string, unknown>,
+      fileConfig as Record<string, unknown>,
+    ) as SiteConfig;
 
-  return deepMerge(
-    dbConfig as Record<string, unknown>,
-    fileConfig as Record<string, unknown>,
-  ) as SiteConfig;
+  if (resolved.umami !== undefined) {
+    resolved = { ...resolved, umami: normalizeUmamiConfig(resolved.umami) };
+  }
+  return resolved;
 }

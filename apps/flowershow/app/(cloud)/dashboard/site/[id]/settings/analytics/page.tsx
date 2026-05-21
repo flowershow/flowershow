@@ -35,6 +35,40 @@ export default async function AnalyticsSettingsPage(props: {
     });
   };
 
+  const updateUmamiWebsiteId = async ({
+    id,
+    value,
+  }: {
+    id: string;
+    key: string;
+    value: string;
+  }) => {
+    'use server';
+    // Clearing the website ID disables umami entirely (nulls the whole object).
+    const configValue = value === '' ? null : { websiteId: value };
+    await api.site.updateDbConfig.mutate({
+      siteId: id,
+      config: { umami: configValue },
+    });
+  };
+
+  const updateUmamiSrc = async ({
+    id,
+    value,
+  }: {
+    id: string;
+    key: string;
+    value: string;
+  }) => {
+    'use server';
+    // Deep-merge preserves the existing websiteId; null src falls back to the
+    // default cloud script URL at render time.
+    await api.site.updateDbConfig.mutate({
+      siteId: id,
+      config: { umami: { src: value === '' ? null : value } },
+    });
+  };
+
   return (
     <div className="sm:grid sm:grid-cols-12 sm:space-x-6">
       <div className="sticky top-[5rem] col-span-2 hidden self-start sm:col-span-3 sm:block lg:col-span-2">
@@ -72,8 +106,7 @@ export default async function AnalyticsSettingsPage(props: {
           description="Umami website ID for privacy-friendly analytics."
           helpText={
             <p>
-              Find your website ID in your Umami dashboard. Self-hosted
-              instances also need to configure the script src in config.json.{' '}
+              Find your website ID in your Umami dashboard.{' '}
               <a
                 className="underline"
                 href="https://flowershow.app/docs/reference/analytics"
@@ -87,15 +120,37 @@ export default async function AnalyticsSettingsPage(props: {
           inputAttrs={{
             name: 'umami',
             type: 'text',
-            defaultValue:
-              typeof siteConfig?.umami === 'string'
-                ? siteConfig.umami
-                : ((siteConfig?.umami as { websiteId?: string } | undefined)
-                    ?.websiteId ?? ''),
+            defaultValue: siteConfig?.umami?.websiteId ?? '',
             placeholder: 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx',
             required: false,
           }}
-          handleSubmit={updateDbConfig}
+          handleSubmit={updateUmamiWebsiteId}
+        />
+
+        <Form
+          title="Umami Script URL"
+          description="Custom script URL for self-hosted Umami instances. Leave blank to use the default Umami Cloud script."
+          helpText={
+            <p>
+              Only needed for self-hosted Umami.{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/analytics"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
+          inputAttrs={{
+            name: 'umamiSrc',
+            type: 'url',
+            defaultValue: siteConfig?.umami?.src ?? '',
+            placeholder: 'https://your-umami.example.com/script.js',
+            required: false,
+          }}
+          handleSubmit={updateUmamiSrc}
         />
       </div>
     </div>
