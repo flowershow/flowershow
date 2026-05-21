@@ -138,6 +138,7 @@ export default async function SiteSettingsIndex(props: {
           field="favicon"
           configKey="favicon"
           currentValue={siteConfig?.favicon ?? null}
+          disabled={site.plan !== 'PREMIUM'}
         />
 
         <ImageUploadForm
@@ -155,6 +156,7 @@ export default async function SiteSettingsIndex(props: {
           field="image"
           configKey="image"
           currentValue={siteConfig?.image ?? null}
+          disabled={site.plan !== 'PREMIUM'}
         />
 
         <DeleteSiteForm siteName={site.projectName} />

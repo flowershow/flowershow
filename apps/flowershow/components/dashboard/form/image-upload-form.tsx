@@ -62,6 +62,7 @@ export default function ImageUploadForm({
   configKey,
   parentKey,
   currentValue,
+  disabled = false,
 }: {
   title: string;
   description: string;
@@ -70,6 +71,7 @@ export default function ImageUploadForm({
   configKey: string;
   parentKey?: string;
   currentValue: string | null;
+  disabled?: boolean;
 }) {
   const { id } = useParams() as { id: string };
   const router = useRouter();
@@ -142,9 +144,20 @@ export default function ImageUploadForm({
   };
 
   return (
-    <div className="isolate rounded-lg border border-stone-200 bg-white">
+    <div
+      className={`isolate rounded-lg border border-stone-200 ${disabled ? 'bg-stone-50' : 'bg-white'}`}
+    >
       <div className="flex flex-col space-y-4 p-5 sm:p-10">
-        <h2 className="font-dashboard-heading text-xl">{title}</h2>
+        <div className="flex flex-wrap justify-between gap-2">
+          <h2 className="font-dashboard-heading text-xl">{title}</h2>
+          {disabled && (
+            <div className="flex shrink-0 flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600">
+              <span className="whitespace-nowrap">
+                Available on premium plan
+              </span>
+            </div>
+          )}
+        </div>
         <p className="text-sm text-stone-500">{description}</p>
 
         <input
@@ -158,8 +171,8 @@ export default function ImageUploadForm({
         <div className="flex flex-col gap-3">
           <button
             type="button"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={isUploading}
+            onClick={() => !disabled && fileInputRef.current?.click()}
+            disabled={isUploading || disabled}
             className={`group relative overflow-hidden rounded-md border border-stone-300 bg-stone-50 transition-colors hover:bg-stone-100 ${
               isSocial
                 ? 'aspect-[1200/630] w-full max-w-lg'
@@ -201,7 +214,7 @@ export default function ImageUploadForm({
             </div>
           </button>
 
-          {currentValue && !isUploading && (
+          {currentValue && !isUploading && !disabled && (
             <button
               type="button"
               onClick={handleRemove}
