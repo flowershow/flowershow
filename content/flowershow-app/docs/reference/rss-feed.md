@@ -3,18 +3,11 @@ title: RSS Feed
 description: Enable an RSS feed for your site so readers can subscribe to your content.
 ---
 
+Configure the RSS feed for your site from the **Flowershow dashboard** under **Site Settings → Features**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
+
 ## Enabling the RSS feed
 
-Toggle the "RSS Feed" setting in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Content**, or add it to your `config.json`:
-
-```json
-{
-  "enableRss": true
-}
-```
-
-> [!note]
-> Values set in `config.json` take precedence over the dashboard toggle.
+Go to **Settings → Features → RSS Feed** and toggle it on.
 
 Once enabled, your feed will be available at:
 
@@ -42,16 +35,23 @@ Pages without a `date` field (e.g. documentation pages, landing pages) are exclu
 
 ## Feed metadata
 
-The feed's title and description are taken from your site's [[config-file|config.json]]:
+The feed's title and description are taken from your site's title and description settings. If no title is configured, the feed title defaults to your site's project name.
+
+## Using config.json
+
+If you want to version-control your configuration, or have your editor's AI agent manage settings without touching the dashboard, you can define everything in `config.json` instead. Values set in `config.json` take precedence over dashboard settings.
 
 ```json
 {
+  "enableRss": true,
   "title": "My Site",
   "description": "A site about interesting things"
 }
 ```
 
-If no config is set, the feed title defaults to your site's project name.
+- `enableRss`: Set to `true` to enable the RSS feed
+- `title`: Feed title (falls back to your site's project name if not set)
+- `description`: Feed description
 
 ## Frontmatter fields used
 
