@@ -93,20 +93,22 @@ export default function ImageUploadForm({
     setIsUploading(true);
 
     try {
-      const blob = await processImage(file, field);
+      const isSvg = file.type === 'image/svg+xml';
+      const blob = isSvg ? file : await processImage(file, field);
+      const contentType = isSvg ? 'image/svg+xml' : 'image/webp';
       const previewUrl = URL.createObjectURL(blob);
       setPreview(previewUrl);
 
       const { uploadUrl, publicUrl } = await getUploadUrl.mutateAsync({
         siteId: id,
         field,
-        contentType: 'image/webp',
+        contentType,
       });
 
       const res = await fetch(uploadUrl, {
         method: 'PUT',
         body: blob,
-        headers: { 'Content-Type': 'image/webp' },
+        headers: { 'Content-Type': contentType },
       });
       if (!res.ok) throw new Error('Upload failed');
 
@@ -163,7 +165,7 @@ export default function ImageUploadForm({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/jpeg,image/png,image/webp"
+          accept={`image/jpeg,image/png,image/webp${field === 'favicon' ? ',image/svg+xml' : ''}`}
           className="hidden"
           onChange={handleFileSelect}
         />

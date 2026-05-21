@@ -125,7 +125,7 @@ export default async function SiteSettingsIndex(props: {
 
         <ImageUploadForm
           title="Favicon"
-          description="Image shown as the browser tab icon. Upload a PNG, JPG, or WebP — or set an emoji via config.json."
+          description="Image shown as the browser tab icon. Upload a PNG, JPG, WebP, or SVG — or set an emoji via config.json."
           helpText={
             <a
               className="underline"
