@@ -3,6 +3,35 @@ title: SEO and social media metadata
 description: Configure SEO titles, descriptions, and social media images for better search and sharing.
 ---
 
+## Site-wide defaults
+
+> [!tip] Dashboard
+> Site title, description, and social image can be configured in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → General** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+
+Configure fallback values in your `config.json`:
+
+```json
+{
+  "title": "My Site Name",
+  "description": "Default site description.",
+  "image": "/assets/default-social.jpg"
+}
+```
+
+### Title suffix
+
+The `title` in `config.json` is appended to every page title as an SEO suffix:
+
+**Page title:** "My Guide"  
+**Config title:** "My Site"  
+**Final SEO title:** "My Guide - My Site"
+
+This appears in browser tabs, search results, social shares, and bookmarks. It doesn't affect how the title displays on the page itself. Keep the combined title under 60 characters for best results.
+
+### Fallback description and image
+
+If a page doesn't set `description` or `image` in frontmatter, the site-wide defaults from `config.json` are used. Unlike titles, descriptions and images are not combined — the page value replaces the site default entirely.
+
 ## Page-level configuration
 
 ### Title
@@ -33,41 +62,9 @@ Aim for 150–160 characters for optimal display in search results.
 >
 > **Premium sites:** Your custom images are used. The default Flowershow thumbnail is never used, even if you don't set your own.
 
-The `image` field sets a featured image for:
-
-- Page headers
-- Social media preview cards (premium feature)
+The `image` field sets the image used for social media preview cards (premium feature).
 
 Recommended size: 1200×630 pixels (JPG or PNG, under 1MB).
-
-## Site-wide defaults
-
-> [!tip] Dashboard
-> Site title, description, and social image can be configured in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → General** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
-
-Configure fallback values in your `config.json`:
-
-```json
-{
-  "title": "My Site Name",
-  "description": "Default site description.",
-  "image": "/assets/default-social.jpg"
-}
-```
-
-### Title suffix
-
-The `title` in `config.json` is appended to every page title as an SEO suffix:
-
-**Page title:** "My Guide"  
-**Config title:** "My Site"  
-**Final SEO title:** "My Guide - My Site"
-
-This appears in browser tabs, search results, social shares, and bookmarks. It doesn't affect how the title displays on the page itself. Keep the combined title under 60 characters for best results.
-
-### Fallback description and image
-
-If a page doesn't set `description` or `image` in frontmatter, the site-wide defaults from `config.json` are used. Unlike titles, descriptions and images are not combined — the page value replaces the site default entirely.
 
 ## Complete example
 
