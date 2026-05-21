@@ -3,9 +3,9 @@ title: Themes
 description: Change the look of your site in one line of config.
 ---
 
-Flowershow comes with official themes you can apply instantly. Each theme is a CSS file served from CDN — no installation required.
+Configure your site's theme from the **Flowershow dashboard** under **Site Settings → Appearance**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
 
-## Available Themes
+## Available themes
 
 | Theme           | Description                                                 |
 | --------------- | ----------------------------------------------------------- |
@@ -16,12 +16,13 @@ Flowershow comes with official themes you can apply instantly. Each theme is a C
 
 Browse all themes with previews on the [flowershow/themes](https://github.com/flowershow/themes) repository.
 
-## Quick Start
+## Select a theme
 
-> [!tip] Dashboard
-> Theme can be selected in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Appearance** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+Go to **Settings → Appearance → Theme** and choose a theme from the dropdown. Your site will use the selected theme on next publish.
 
-Add a `theme` field to your `config.json`:
+## Using config.json
+
+If you want to version-control your configuration, or have your editor's AI agent manage settings without touching the dashboard, you can define everything in `config.json` instead. Values set in `config.json` take precedence over dashboard settings.
 
 ```json
 {
@@ -29,9 +30,9 @@ Add a `theme` field to your `config.json`:
 }
 ```
 
-That's it. Your site will use the selected theme on next publish.
+- `theme`: Name of the theme to apply. One of `letterpress`, `superstack`, `lessflowery`, `leaf`.
 
-## Customizing Further
+## Customizing further
 
 Want to tweak colors, fonts, or spacing beyond what a theme provides? Create a `custom.css` file in your site root. See [[custom-styles|Custom Styles]] for available CSS variables and examples.
 
