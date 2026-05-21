@@ -3,36 +3,45 @@ title: SEO and social media metadata
 description: Configure SEO titles, descriptions, and social media images for better search and sharing.
 ---
 
-## Site-wide defaults
+Configure site-wide SEO defaults from the **Flowershow dashboard** under **Site Settings → General**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
 
-> [!tip] Dashboard
-> Site title, description, and social image can be configured in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → General** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+## Site title
 
-Configure fallback values in your `config.json`:
+Go to **Settings → General → Site Title** and enter your site name.
 
-```json
-{
-  "title": "My Site Name",
-  "description": "Default site description.",
-  "image": "/assets/default-social.jpg"
-}
-```
-
-### Title suffix
-
-The `title` in `config.json` is appended to every page title as an SEO suffix:
+This value is appended as a suffix to every page title and appears in browser tabs, search results, social shares, and bookmarks. It doesn't affect how the title displays on the page itself. Keep the combined title under 60 characters for best results.
 
 **Page title:** "My Guide"  
-**Config title:** "My Site"  
+**Site title:** "My Site"  
 **Final SEO title:** "My Guide - My Site"
 
-This appears in browser tabs, search results, social shares, and bookmarks. It doesn't affect how the title displays on the page itself. Keep the combined title under 60 characters for best results.
+## Default description
 
-### Fallback description and image
+Go to **Settings → General → Description** and enter a fallback description for your site.
 
-If a page doesn't set `description` or `image` in frontmatter, the site-wide defaults from `config.json` are used. Unlike titles, descriptions and images are not combined — the page value replaces the site default entirely.
+This is used in search results and social previews when a page has no `description` set in its frontmatter. Unlike titles, descriptions are not combined — the page value replaces the site default entirely.
 
-## Page-level configuration
+Aim for 150–160 characters for optimal display in search results.
+
+## Default social image
+
+Go to **Settings → General → Social Image** and upload your default social sharing image.
+
+> [!note] Premium Feature
+> Social media image configuration is a premium feature.
+>
+> **Free sites:** The default Flowershow thumbnail is always used for social sharing, regardless of your image settings.
+>
+> **Premium sites:** Your custom images are used. The default Flowershow thumbnail is never used, even if you don't set your own.
+
+Recommended size: 1200×630 pixels (JPG or PNG, under 1MB).
+
+> [!note]
+> To use a file path or external URL as your social image, use `config.json` — the dashboard social image field accepts image uploads only.
+
+## Per-page configuration
+
+Site-wide defaults can be overridden on individual pages using frontmatter fields.
 
 ### Title
 
@@ -46,27 +55,41 @@ Read more about [[page-titles|Page titles]].
 
 ### Description
 
-The `description` field provides a summary used in:
+Set `description` in frontmatter to override the site-wide default for that page:
 
-- Search engine result snippets
-- Social media preview descriptions
-
-Aim for 150–160 characters for optimal display in search results.
+```markdown
+---
+description: Learn how to create, manage, and deploy Docker containers.
+---
+```
 
 ### Image
 
-> [!note] Premium Feature
-> Social media image configuration is a premium feature.
->
-> **Free sites:** The default Flowershow thumbnail is always used for social sharing, regardless of your image settings.
->
-> **Premium sites:** Your custom images are used. The default Flowershow thumbnail is never used, even if you don't set your own.
+Set `image` in frontmatter to use a custom social image for that page:
 
-The `image` field sets the image used for social media preview cards (premium feature).
+```markdown
+---
+image: /assets/docker-guide-social.jpg
+---
+```
 
-Recommended size: 1200×630 pixels (JPG or PNG, under 1MB).
+## Using config.json
 
-## Complete example
+If you want to version-control your configuration, or have your editor's AI agent manage settings without touching the dashboard, you can define everything in `config.json` instead. Values set in `config.json` take precedence over dashboard settings.
+
+```json
+{
+  "title": "My Site Name",
+  "description": "Default site description.",
+  "image": "/assets/default-social.jpg"
+}
+```
+
+- `title`: Site name appended as a suffix to every page title
+- `description`: Fallback description for pages with no frontmatter description
+- `image`: Path to the default social image (relative to site root) or an external URL
+
+### Complete example
 
 Frontmatter:
 
