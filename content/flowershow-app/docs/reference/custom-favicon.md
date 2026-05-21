@@ -6,6 +6,9 @@ description: Set a custom favicon for your site using an image file or an emoji.
 > [!note]
 > Custom favicons are a premium feature. See [pricing](/pricing) for details.
 
+> [!tip] Dashboard
+> You can upload a favicon image in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → General** — no `config.json` edits needed. For emoji favicons or `.ico` files, use `config.json` instead. Values set in `config.json` take precedence over dashboard settings.
+
 Add a `favicon` field to your `config.json`:
 
 ```json

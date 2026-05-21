@@ -1,6 +1,7 @@
 import { Blob, Prisma, PrismaClient, Status } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
+import { jwtVerify } from 'jose';
 import { revalidateTag, unstable_cache } from 'next/cache';
 import { z } from 'zod';
 import { isNavDropdown, SiteConfig } from '@/components/types';
@@ -8,8 +9,9 @@ import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { buildSiteTree } from '@/lib/build-site-tree';
-import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
+import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
 import {
+  type ContentType,
   deleteProject,
   fetchFile,
   generatePresignedUploadUrl,
@@ -20,21 +22,25 @@ import {
   removeDomainFromVercelProject,
   validDomainRegex,
 } from '@/lib/domains';
+import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { checkIfBranchExists, fetchGitHubRepoTree } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
 import PostHogClient from '@/lib/server-posthog';
+import {
+  deepMerge,
+  resolveSiteConfig,
+  SITE_CONFIG_DEFAULTS,
+} from '@/lib/site-config';
+import { siteKeyBytes } from '@/lib/site-hmac-key';
+import { buildSiteSubdomain } from '@/lib/site-subdomain';
 import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
 import {
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
 } from '@/server/api/trpc';
-import { jwtVerify } from 'jose';
-import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
-import { siteKeyBytes } from '@/lib/site-hmac-key';
-import { buildSiteSubdomain } from '@/lib/site-subdomain';
 import {
   PageMetadata,
   PublicSite,
@@ -197,6 +203,7 @@ export const siteRouter = createTRPCRouter({
           subdomain: buildSiteSubdomain(projectName, creator?.username ?? ''),
           autoSync: false,
           user: { connect: { id: ctx.session.user.id } },
+          configJson: SITE_CONFIG_DEFAULTS,
         },
       });
 
@@ -502,6 +509,99 @@ export const siteRouter = createTRPCRouter({
 
       return fresh;
     }),
+
+  updateDbConfig: protectedProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+        config: z.record(z.string(), z.unknown()),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { id: true, userId: true, configJson: true },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      const existing = (site.configJson ?? {}) as Record<string, unknown>;
+      const patch = input.config as Record<string, unknown>;
+      const merged = deepMerge(existing, patch);
+
+      await ctx.db.site.update({
+        where: { id: input.siteId },
+        data: { configJson: merged as Prisma.InputJsonValue },
+      });
+
+      revalidateTag(input.siteId);
+      revalidateTag(`${input.siteId}-config`);
+    }),
+
+  getDbConfig: protectedProcedure
+    .input(z.object({ siteId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { id: true, userId: true, configJson: true },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      return (site.configJson ?? null) as SiteConfig | null;
+    }),
+
+  getAssetUploadUrl: protectedProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+        field: z.enum(['favicon', 'image', 'logo']),
+        contentType: z.enum([
+          'image/webp',
+          'image/png',
+          'image/jpeg',
+          'image/x-icon',
+          'image/svg+xml',
+        ]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { id: true, userId: true },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      const ext = (input.contentType.split('/')[1] ?? 'webp')
+        .replace('x-icon', 'ico')
+        .replace('svg+xml', 'svg');
+      const key = `${input.siteId}/assets/${input.field}.${ext}`;
+      const uploadUrl = await generatePresignedUploadUrl(
+        key,
+        3600,
+        input.contentType as ContentType,
+      );
+      const publicUrl = `https://${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${key}`;
+
+      return { uploadUrl, publicUrl };
+    }),
+
   delete: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
@@ -820,7 +920,13 @@ export const siteRouter = createTRPCRouter({
         async (input) => {
           const site = await ctx.db.site.findUnique({
             where: { id: input.siteId },
-            include: { user: true },
+            select: {
+              id: true,
+              customDomain: true,
+              subdomain: true,
+              configJson: true,
+              user: { select: { username: true } },
+            },
           });
 
           if (!site) {
@@ -843,9 +949,11 @@ export const siteRouter = createTRPCRouter({
               ? (JSON.parse(configJson) as SiteConfig)
               : null;
 
-            if (!config) return null;
-
-            console.log({ config });
+            const dbConfigJson = (site.configJson ?? null) as SiteConfig | null;
+            if (!config)
+              return dbConfigJson
+                ? resolveSiteConfig(dbConfigJson, null)
+                : null;
 
             // Resolve media paths to full URLs
             const keysToResolve = ['image', 'logo', 'favicon', 'thumbnail'];
@@ -942,7 +1050,7 @@ export const siteRouter = createTRPCRouter({
               });
             }
 
-            return config;
+            return resolveSiteConfig(dbConfigJson, config);
           } catch {
             return null;
           }
@@ -1005,9 +1113,11 @@ export const siteRouter = createTRPCRouter({
           })) as Blob[];
 
           const paths = input.paths ?? [];
-          const prefixes = paths.map((p) => p.replace(/^\//, ''));
+          const prefixes = paths.map((p) =>
+            p.replace(/^\//, '').replace(/\/$/, ''),
+          );
           const hidePrefixes = (input.contentHide ?? []).map((p) =>
-            p.replace(/^\//, ''),
+            p.replace(/^\//, '').replace(/\/$/, ''),
           );
           const filteredBlobs = blobs.filter((b) => {
             // Include filter: if paths are configured, only include matching blobs
@@ -1781,7 +1891,8 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      // Clear all GitHub-related fields
+      // Clear all GitHub-related fields and disable features that require a repo
+      const existingConfig = (site.configJson ?? {}) as Record<string, unknown>;
       await ctx.db.site.update({
         where: { id: input.siteId },
         data: {
@@ -1791,6 +1902,10 @@ export const siteRouter = createTRPCRouter({
           installationRepositoryId: null,
           autoSync: false,
           tree: Prisma.JsonNull,
+          configJson: {
+            ...existingConfig,
+            showEditLink: false,
+          } as Prisma.InputJsonValue,
         },
       });
 

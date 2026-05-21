@@ -1,8 +1,10 @@
 import { RssParamsSchema } from '@flowershow/api-contract';
 import type { NextRequest } from 'next/server';
+import type { SiteConfig } from '@/components/types';
 import { fetchFile } from '@/lib/content-store';
 import { getSiteUrl } from '@/lib/get-site-url';
 import { buildRssFeed } from '@/lib/rss';
+import { resolveSiteConfig } from '@/lib/site-config';
 import prisma from '@/server/db';
 import { Prisma } from '@prisma/client';
 
@@ -55,27 +57,26 @@ export async function GET(
     return new Response('Not found', { status: 404 });
   }
 
-  if (!site.enableRss) {
+  const dbConfig = (site.configJson ?? null) as SiteConfig | null;
+
+  let fileConfig: SiteConfig | null = null;
+  try {
+    const raw = await fetchFile({ projectId: site.id, path: 'config.json' });
+    if (raw) fileConfig = JSON.parse(raw);
+  } catch {
+    // missing or invalid config.json — fall back to DB config only
+  }
+
+  const siteConfig = resolveSiteConfig(dbConfig, fileConfig);
+
+  if (!siteConfig.enableRss) {
     return new Response('Not found', { status: 404 });
   }
 
   const siteUrl = getSiteUrl(site);
-
-  let siteTitle = site.projectName;
-  let siteDescription = `${siteTitle} RSS Feed`;
-  try {
-    const configJson = await fetchFile({
-      projectId: site.id,
-      path: 'config.json',
-    });
-    if (configJson) {
-      const config = JSON.parse(configJson) as Record<string, unknown>;
-      if (config.title) siteTitle = config.title as string;
-      if (config.description) siteDescription = config.description as string;
-    }
-  } catch {
-    // Fall back to defaults if config.json is missing or invalid
-  }
+  const siteTitle = siteConfig.title ?? site.projectName;
+  const siteDescription =
+    siteConfig.description ?? `${site.projectName} RSS Feed`;
 
   const xml = buildRssFeed(
     { siteUrl, title: siteTitle, description: siteDescription },

@@ -1,5 +1,6 @@
 const normalizeUrl = (path: string) => {
-  return path?.startsWith('/') ? path : '/' + path;
+  const withLeading = path?.startsWith('/') ? path : `/${path}`;
+  return withLeading.replace(/\/$/, '');
 };
 
 const isPathIncluded = (path: string, collection: string[]) => {

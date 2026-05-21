@@ -2,12 +2,14 @@ import type {
   DeleteSiteResponse,
   GetSiteResponse,
 } from '@flowershow/api-contract';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
+import type { SiteConfig } from '@/components/types';
 import {
   checkCliVersion,
   getClientInfo,
   validateAccessToken,
 } from '@/lib/cli-auth';
+import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { deleteProject } from '@/lib/content-store';
 import PostHogClient from '@/lib/server-posthog';
 import { deleteSiteCollection } from '@/lib/typesense';
@@ -51,10 +53,7 @@ export async function GET(
         autoSync: true,
         plan: true,
         privacyMode: true,
-        enableComments: true,
-        enableSearch: true,
-        showSidebar: true,
-        syntaxMode: true,
+        configJson: true,
         createdAt: true,
         updatedAt: true,
         userId: true,
@@ -91,12 +90,14 @@ export async function GET(
 
     // Calculate total size
     const totalSize = site.blobs.reduce((sum, blob) => sum + blob.size, 0);
-    const username = site.user.username;
 
     // Determine site URL
     const siteUrl = site.customDomain
       ? `https://${site.customDomain}`
       : `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
+
+    const siteConfigJson = (site.configJson ?? {}) as unknown as SiteConfig &
+      typeof SITE_CONFIG_DEFAULTS;
 
     const response: GetSiteResponse = {
       site: {
@@ -110,10 +111,10 @@ export async function GET(
         autoSync: site.autoSync,
         plan: site.plan,
         privacyMode: site.privacyMode,
-        enableComments: site.enableComments,
-        enableSearch: site.enableSearch,
-        showSidebar: site.showSidebar,
-        syntaxMode: site.syntaxMode,
+        showComments: siteConfigJson.showComments,
+        enableSearch: siteConfigJson.enableSearch,
+        showSidebar: siteConfigJson.showSidebar,
+        syntaxMode: siteConfigJson.syntaxMode,
         url: siteUrl,
         fileCount: site._count.blobs,
         totalSize,

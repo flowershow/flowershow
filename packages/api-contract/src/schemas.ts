@@ -37,7 +37,7 @@ export const SiteDetailSchema = z.object({
   autoSync: z.boolean(),
   plan: z.enum(['FREE', 'PREMIUM']),
   privacyMode: z.enum(['PUBLIC', 'PASSWORD']),
-  enableComments: z.boolean(),
+  showComments: z.boolean(),
   enableSearch: z.boolean(),
   showSidebar: z.boolean(),
   syntaxMode: z.string(),

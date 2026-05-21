@@ -5,6 +5,9 @@ description: Enable and configure light/dark theme switching for your Flowershow
 
 ## Setting Default Theme Mode
 
+> [!tip] Dashboard
+> Default color mode and the mode switch toggle can be configured in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Appearance** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+
 You can set the default theme mode for your site using the `defaultMode` option in your `config.json`:
 
 ```json

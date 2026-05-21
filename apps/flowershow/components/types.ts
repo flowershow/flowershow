@@ -43,11 +43,13 @@ export function isNavDropdown(item: NavItem): item is NavDropdown {
 }
 
 export interface NavConfig {
-  logo?: string;
   title?: string;
   links?: NavItem[];
-  social?: SocialLink[]; // DEPRECATED, moved to the root of the config as it's used in both navbar and footer
   cta?: NavLink;
+  /** @deprecated Use root `logo` in SiteConfig instead */
+  logo?: string;
+  /** @deprecated Use root `social` in SiteConfig instead */
+  social?: SocialLink[];
 }
 
 export interface FooterNavigationGroup {
@@ -69,7 +71,7 @@ export interface SiteConfig {
   footer?: FooterConfig;
   social?: SocialLink[];
   analytics?: string;
-  umami?: string | { websiteId: string; src?: string };
+  umami?: { websiteId: string; src?: string };
   contentInclude?: string[];
   contentExclude?: string[];
   contentHide?: string[];
@@ -79,6 +81,22 @@ export interface SiteConfig {
     paths?: string[];
   };
   showToc?: boolean;
+  showEditLink?: boolean;
+  showComments?: boolean;
+  giscus?: Partial<GiscusProps>;
+  redirects?: Array<{
+    from: string;
+    to: string;
+    permanent?: boolean;
+  }>;
+  theme?: string | ThemeConfig;
+  enableSearch?: boolean;
+  enableRss?: boolean;
+  showBuiltWithButton?: boolean;
+  showRawLink?: boolean;
+  syntaxMode?: 'auto' | 'md' | 'mdx';
+
+  // Not configurable via dashboard — set in config.json only
   showHero?: boolean;
   hero?:
     | boolean
@@ -92,19 +110,10 @@ export interface SiteConfig {
         }>;
         imagelayout?: 'right' | 'full';
       };
-  showEditLink?: boolean;
-  showComments?: boolean;
-  giscus?: Partial<GiscusProps>;
   cta?: Array<{
     href: string;
     label: string;
-  }>; // CTAs used if hero is enabled (only 2 supported)
-  redirects?: Array<{
-    from: string; // Exact path to match (e.g. "/old-page")
-    to: string; // Path to redirect to (e.g. "/new-page")
-    permanent?: boolean; // Whether to use 301 (true) or 302 (false) redirect
   }>;
-  theme?: string | ThemeConfig;
 }
 
 export interface ThemeConfig {

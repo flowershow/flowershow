@@ -5,7 +5,16 @@ description: Enable an RSS feed for your site so readers can subscribe to your c
 
 ## Enabling the RSS feed
 
-To enable the RSS feed, turn on the "RSS Feed" toggle in your site's settings in the dashboard.
+Toggle the "RSS Feed" setting in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Content**, or add it to your `config.json`:
+
+```json
+{
+  "enableRss": true
+}
+```
+
+> [!note]
+> Values set in `config.json` take precedence over the dashboard toggle.
 
 Once enabled, your feed will be available at:
 

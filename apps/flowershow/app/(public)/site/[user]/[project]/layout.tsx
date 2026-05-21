@@ -143,16 +143,19 @@ export default async function PublicLayout(props: {
     }
   }
 
-  const logo = siteConfig?.nav?.logo ?? siteConfig?.logo ?? appConfig.logo; // default to Flowershow logo
+  // TODO: nav.logo is deprecated in favour of root logo — remove nav.logo fallback once migration period ends
+  const logo = siteConfig?.logo ?? siteConfig?.nav?.logo ?? appConfig.logo;
   const title = siteConfig?.nav?.title;
   const links = siteConfig?.nav?.links;
   const social = siteConfig?.social || siteConfig?.nav?.social;
   const canHideBuiltWith = isFeatureEnabled(Feature.NoBranding, site);
-  const showBuiltWithButton = !canHideBuiltWith || site.showBuiltWithButton;
+  const showBuiltWithButton =
+    !canHideBuiltWith || !!siteConfig?.showBuiltWithButton;
   const showSearch =
-    isFeatureEnabled(Feature.Search, site) && site.enableSearch;
+    isFeatureEnabled(Feature.Search, site) && !!siteConfig?.enableSearch;
   const cta = siteConfig?.nav?.cta;
-  const showNav = !!siteConfig?.nav || site.enableSearch || siteConfig?.social;
+  const showNav =
+    !!siteConfig?.nav || !!siteConfig?.enableSearch || !!siteConfig?.social;
 
   return (
     <html
@@ -209,16 +212,8 @@ export default async function PublicLayout(props: {
         {siteConfig?.umami && (
           <Script
             defer
-            src={
-              typeof siteConfig.umami === 'string'
-                ? 'https://cloud.umami.is/script.js'
-                : (siteConfig.umami.src ?? 'https://cloud.umami.is/script.js')
-            }
-            data-website-id={
-              typeof siteConfig.umami === 'string'
-                ? siteConfig.umami
-                : siteConfig.umami.websiteId
-            }
+            src={siteConfig.umami.src ?? 'https://cloud.umami.is/script.js'}
+            data-website-id={siteConfig.umami.websiteId}
           />
         )}
       </head>

@@ -173,13 +173,13 @@ export default function SitePasswordProtectionForm({
       </div>
 
       <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
-        <p className="w-full text-sm text-stone-500">
-          Learn more about{' '}
-          <a className="underline" href="#">
-            Password protection <ExternalLinkIcon className="inline h-4" />
-          </a>
-          .
-        </p>
+        <a
+          className="w-full text-sm text-stone-500 underline"
+          href="https://flowershow.app/docs/reference/password-protection"
+        >
+          Learn more
+          <ExternalLinkIcon className="inline h-4" />
+        </a>
 
         {!disabled && (
           <button

@@ -73,8 +73,10 @@ export default async function LoginPage(props: {
   const siteHostname =
     site.customDomain ?? `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
+  // TODO: nav.logo is deprecated in favour of root logo — remove nav.logo fallback once migration period ends
+  const resolvedLogo = siteConfig?.logo ?? siteConfig?.nav?.logo ?? config.logo;
   const logo = resolveFilePathToUrlPath({
-    target: siteConfig?.nav?.logo ?? siteConfig?.logo ?? config.logo, // default to Flowershow logo
+    target: resolvedLogo,
     siteHostname,
   });
 
@@ -87,9 +89,9 @@ export default async function LoginPage(props: {
         fontBrand.variable,
       )}
     >
-      {siteConfig?.logo && isEmoji(siteConfig?.logo) ? (
+      {resolvedLogo && isEmoji(resolvedLogo) ? (
         <span className="text-6xl" aria-label="Logo" role="img">
-          {siteConfig.logo}
+          {resolvedLogo}
         </span>
       ) : (
         <Image

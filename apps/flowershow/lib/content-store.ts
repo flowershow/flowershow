@@ -4,6 +4,7 @@ import {
   DeleteObjectsCommand,
   GetObjectCommand,
   ListObjectsV2Command,
+  NoSuchKey,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
@@ -30,7 +31,7 @@ const s3Client = new S3Client({
   forcePathStyle: S3_FORCE_PATH_STYLE,
 });
 
-type ContentType =
+export type ContentType =
   | 'text/markdown'
   | 'text/csv'
   | 'text/plain'
@@ -213,8 +214,13 @@ export const fetchFile = async ({
   projectId: string;
   path: string;
 }) => {
-  const response = await fetchS3Object(`${projectId}/main/raw/${path}`);
-  return (await response.Body?.transformToString()) || null;
+  try {
+    const response = await fetchS3Object(`${projectId}/main/raw/${path}`);
+    return (await response.Body?.transformToString()) || null;
+  } catch (err) {
+    if (err instanceof NoSuchKey) return null;
+    throw err;
+  }
 };
 
 export const deleteFile = async ({

@@ -134,6 +134,7 @@ model Site {
   syntaxMode              SyntaxMode    @default(auto) @map("syntax_mode")
   showBuiltWithButton     Boolean       @default(true) @map("show_built_with_button")
   showRawLink             Boolean       @default(false) @map("show_raw_link")
+  configJson              Json?         @default("{}") @map("config_json") @db.JsonB
 
   // Anonymous/temporary site fields for claim flow
   isTemporary             Boolean       @default(false) @map("is_temporary")

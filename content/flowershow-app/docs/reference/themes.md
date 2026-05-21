@@ -18,6 +18,9 @@ Browse all themes with previews on the [flowershow/themes](https://github.com/fl
 
 ## Quick Start
 
+> [!tip] Dashboard
+> Theme can be selected in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Appearance** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+
 Add a `theme` field to your `config.json`:
 
 ```json

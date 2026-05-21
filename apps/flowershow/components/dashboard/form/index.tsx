@@ -15,6 +15,7 @@ export default function Form({
   title,
   description,
   disabled = false,
+  disabledLabel = 'Available on premium plan',
   helpText,
   inputAttrs,
   handleSubmit,
@@ -22,6 +23,7 @@ export default function Form({
   title: string;
   description: string;
   disabled?: boolean;
+  disabledLabel?: string;
   helpText?: string | ReactNode;
   inputAttrs: {
     name: string;
@@ -51,11 +53,15 @@ export default function Form({
 
   const isToggleField = [
     'autoSync',
-    'enableComments',
+    'showComments',
     'enableSearch',
     'enableRss',
     'showBuiltWithButton',
     'showRawLink',
+    'showSidebar',
+    'showToc',
+    'showEditLink',
+    'showModeSwitch',
   ].includes(inputAttrs.name);
 
   // Controlled value for all non-toggle inputs (text, textarea, select)
@@ -146,9 +152,7 @@ export default function Form({
           </h2>
           {disabled && (
             <div className="flex shrink-0 flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600">
-              <span className="whitespace-nowrap">
-                Available on premium plan
-              </span>
+              <span className="whitespace-nowrap">{disabledLabel}</span>
             </div>
           )}
         </div>

@@ -123,7 +123,7 @@ export function registerSiteTools(server: McpServer, api: FlowershowApi): void {
           `Plan: ${site.plan}`,
           `Privacy: ${site.privacyMode}`,
           `Files: ${site.fileCount} files (${(site.totalSize / 1024).toFixed(1)} KB)`,
-          `Comments: ${site.enableComments ? 'enabled' : 'disabled'}`,
+          `Comments: ${site.showComments ? 'enabled' : 'disabled'}`,
           `Search: ${site.enableSearch ? 'enabled' : 'disabled'}`,
           `GitHub: ${site.ghRepository ?? 'not connected'}`,
           `Custom domain: ${site.customDomain ?? 'none'}`,

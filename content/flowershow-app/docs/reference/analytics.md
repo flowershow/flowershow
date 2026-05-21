@@ -7,6 +7,9 @@ description: Configure analytics for your Flowershow site using Google Analytics
 
 ### Configuration
 
+> [!tip] Dashboard
+> Your GA4 Measurement ID can be entered in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Analytics** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+
 Add your GA4 Measurement ID to `config.json`:
 
 ```json
@@ -55,11 +58,16 @@ Add your GA4 Measurement ID to `config.json`:
 
 ### Configuration
 
-Add your Umami website ID to `config.json`:
+> [!tip] Dashboard
+> Your Umami website ID and script URL (for self-hosted instances) can be entered in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Analytics** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+
+Add your Umami config to `config.json`:
 
 ```json
 {
-  "umami": "your-website-id"
+  "umami": {
+    "websiteId": "your-website-id"
+  }
 }
 ```
 
@@ -67,7 +75,7 @@ Flowershow will inject the Umami tracking script into every page of your site.
 
 ### Self-hosted Umami
 
-If you run your own Umami instance, use the extended form to specify the script URL:
+If you run your own Umami instance, also provide the script URL:
 
 ```json
 {
