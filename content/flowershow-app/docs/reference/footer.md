@@ -3,205 +3,74 @@ title: Footer configuration
 description: Customize your site footer with navigation links and social media icons.
 ---
 
-The footer appears at the bottom of every page on your site. You can configure it to display your site name, social media links, and organized navigation groups.
-
-> [!tip] Dashboard
-> Footer navigation groups and social links can be configured in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Navigation** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
-
-## Site name and copyright
-
-The footer automatically displays your site name and copyright notice using the `title` from your `config.json`:
-
-```json
-{
-  "title": "My Digital Garden"
-}
-```
-
-This will display:
-- Your site name as a heading
-- Copyright notice: "© 2026 My Digital Garden. All rights reserved."
-
-The year updates automatically.
+Configure your site footer from the **Flowershow dashboard** under **Site Settings → Navigation**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
 
 > [!note]
-> If you don't set a `title` in your config.json, the footer will fall back to displaying your project name instead.
+> The footer automatically displays your site name and a copyright notice. If no title is configured, it falls back to your project name. The year updates automatically.
 
 ## Social media links
 
-Add social media links to your footer using the `social` array at the root of your `config.json`. These links display as icons:
+Go to **Settings → Navigation → Social Links** and enter your links as a JSON array. Social links appear in both the navbar and footer.
 
-```json
-{
-  "social": [
-    {
-      "label": "github",
-      "href": "https://github.com/yourusername"
-    },
-    {
-      "label": "twitter",
-      "href": "https://twitter.com/yourusername"
-    },
-    {
-      "label": "linkedin",
-      "href": "https://linkedin.com/in/yourusername"
-    }
-  ]
-}
-```
-
-Properties:
-- `label`: Platform identifier (see supported platforms below)
-- `href`: Your social media profile URL
-
-> [!note]
-> Social links are shared between the navbar and footer. Configure them once at the root level, and they'll appear in both locations.
-
-Supported social platforms:
-- `bluesky` (or `bsky`)
-- `discord`
-- `facebook`
-- `github`
-- `instagram`
-- `linkedin`
-- `mastodon`
-- `pinterest`
-- `reddit`
-- `spotify`
-- `substack`
-- `telegram`
-- `threads`
-- `tiktok`
-- `twitter` (or `x`)
-- `whatsapp`
-- `youtube`
-
-> [!info] Missing your favorite platform?
-> If your platform isn't listed, skip the `label` and Flowershow will display a generic 🌐 icon. Consider submitting an issue to request support for your platform!
+See [[social-links]] for the full field reference and list of supported platforms.
 
 ## Footer navigation
 
-Organize footer links into groups using the `footer.navigation` array. Each group has a title and a list of links:
+Go to **Settings → Navigation → Footer Navigation** and enter your navigation groups as a JSON array:
 
 ```json
-{
-  "footer": {
-    "navigation": [
-      {
-        "title": "Resources",
-        "links": [
-          {
-            "name": "Documentation",
-            "href": "/docs"
-          },
-          {
-            "name": "Guides",
-            "href": "/guides"
-          },
-          {
-            "name": "Blog",
-            "href": "/blog"
-          }
-        ]
-      },
-      {
-        "title": "Company",
-        "links": [
-          {
-            "name": "About",
-            "href": "/about"
-          },
-          {
-            "name": "Contact",
-            "href": "/contact"
-          },
-          {
-            "name": "Privacy Policy",
-            "href": "/privacy"
-          }
-        ]
-      }
+[
+  {
+    "title": "Resources",
+    "links": [
+      { "name": "Documentation", "href": "/docs" },
+      { "name": "Guides", "href": "/guides" },
+      { "name": "Blog", "href": "/blog" }
+    ]
+  },
+  {
+    "title": "Company",
+    "links": [
+      { "name": "About", "href": "/about" },
+      { "name": "Contact", "href": "/contact" },
+      { "name": "Privacy Policy", "href": "/privacy" }
     ]
   }
-}
+]
 ```
 
-Each navigation group requires:
+Each group requires:
 - `title`: Heading for the group
-- `links`: Array of link objects
+- `links`: Array of link objects, each with `name` (display text) and `href` (URL or path)
 
-Each link requires:
-- `name`: Display text for the link
-- `href`: URL or path the link points to
+## Using config.json
 
-## Complete example
-
-Here's a comprehensive footer configuration:
+If you want to version-control your configuration, or have your editor's AI agent manage settings without touching the dashboard, you can define everything in `config.json` instead. Values set in `config.json` take precedence over dashboard settings.
 
 ```json
 {
   "title": "My Digital Garden",
   "social": [
-    {
-      "label": "github",
-      "href": "https://github.com/yourusername"
-    },
-    {
-      "label": "twitter",
-      "href": "https://twitter.com/yourusername"
-    },
-    {
-      "label": "linkedin",
-      "href": "https://linkedin.com/in/yourusername"
-    }
+    { "label": "github", "href": "https://github.com/yourusername" },
+    { "label": "twitter", "href": "https://twitter.com/yourusername" },
+    { "label": "linkedin", "href": "https://linkedin.com/in/yourusername" }
   ],
   "footer": {
     "navigation": [
       {
         "title": "Resources",
         "links": [
-          {
-            "name": "Documentation",
-            "href": "/docs"
-          },
-          {
-            "name": "Guides",
-            "href": "/guides"
-          },
-          {
-            "name": "Blog",
-            "href": "/blog"
-          }
+          { "name": "Documentation", "href": "/docs" },
+          { "name": "Guides", "href": "/guides" },
+          { "name": "Blog", "href": "/blog" }
         ]
       },
       {
         "title": "Company",
         "links": [
-          {
-            "name": "About",
-            "href": "/about"
-          },
-          {
-            "name": "Contact",
-            "href": "/contact"
-          },
-          {
-            "name": "Privacy Policy",
-            "href": "/privacy"
-          }
-        ]
-      },
-      {
-        "title": "Community",
-        "links": [
-          {
-            "name": "Discord",
-            "href": "https://discord.gg/yourserver"
-          },
-          {
-            "name": "GitHub Discussions",
-            "href": "https://github.com/yourusername/yourrepo/discussions"
-          }
+          { "name": "About", "href": "/about" },
+          { "name": "Contact", "href": "/contact" },
+          { "name": "Privacy Policy", "href": "/privacy" }
         ]
       }
     ]
@@ -209,25 +78,26 @@ Here's a comprehensive footer configuration:
 }
 ```
 
+- `title`: Site name shown in the footer copyright — this is only configurable via `config.json`, not from the dashboard
+- `social`: Array of social link objects (same format as the dashboard JSON editor) — see [[social-links]]
+- `footer.navigation`: Array of navigation group objects (same format as the dashboard JSON editor)
 
 ## Troubleshooting
 
-Common issues and solutions:
-
-1. **Footer Not Appearing**
+1. **Footer not appearing**
    - Ensure your `config.json` is valid JSON (use a JSON validator, e.g. https://jsonlint.com/)
    - Check that navigation groups have both `title` and `links` properties
 
-2. **Social Icons Not Showing**
+2. **Social icons not showing**
    - Verify you're using supported platform labels
    - Confirm the `label` value matches exactly (case-sensitive)
    - Ensure `social` is at the root level of `config.json`, not inside `footer`
 
-3. **Links Not Working**
+3. **Links not working**
    - For internal links, use paths starting with `/` (e.g., `/about`)
    - For external links, include the full URL with protocol (e.g., `https://example.com`)
 
-4. **Footer Navigation Not Displaying**
+4. **Footer navigation not displaying**
    - Confirm `navigation` is inside the `footer` object
    - Each group must have at least one link
    - Verify all required properties are present

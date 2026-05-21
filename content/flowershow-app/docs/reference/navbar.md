@@ -63,55 +63,9 @@ A dropdown item has:
 
 ## Social links
 
-Go to **Settings → Navigation → Social Links** and enter your social links as a JSON array:
+Go to **Settings → Navigation → Social Links** and enter your links as a JSON array. Social links appear in both the navbar and footer.
 
-```json
-[
-  {
-    "label": "github",
-    "name": "GitHub Profile",
-    "href": "https://github.com/yourusername"
-  },
-  {
-    "label": "twitter",
-    "name": "Follow me on Twitter",
-    "href": "https://twitter.com/yourusername"
-  }
-]
-```
-
-Properties:
-
-- `label`: Platform identifier (see supported platforms below)
-- `name`: Text label (used in sidebar mode)
-- `href`: Your social media profile URL
-
-> [!note]
-> Social links are shared between the navbar and footer. Configure them once and they'll appear in both locations.
-
-Supported social platforms:
-
-- `bluesky` (or `bsky`)
-- `discord`
-- `facebook`
-- `github`
-- `instagram`
-- `linkedin`
-- `mastodon`
-- `pinterest`
-- `reddit`
-- `spotify`
-- `substack`
-- `telegram`
-- `threads`
-- `tiktok`
-- `twitter` (or `x`)
-- `whatsapp`
-- `youtube`
-
-> [!info] Is your favorite platform missing from the list?
-> If the social platform you want to use isn't listed above, you can skip the `label` and Flowershow will display a generic 🌐 icon.
-> We encourage you to submit an issue, too. 😉
+See [[social-links]] for the full field reference and list of supported platforms.
 
 ## Using config.json
 
@@ -150,7 +104,7 @@ If you want to version-control your configuration, or have your editor's AI agen
 ```
 
 - `logo`: Path to your logo file (relative to site root), external URL, or an emoji character (root-level key)
-- `social`: Array of social link objects (root-level key, shared with footer)
+- `social`: Array of social link objects (root-level key, shared with footer) — see [[social-links]]
 - `nav.title`: Text displayed as your site title
 - `nav.links`: Array of navigation link objects (same format as the dashboard JSON editor)
 
