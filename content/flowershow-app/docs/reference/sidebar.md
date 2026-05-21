@@ -3,74 +3,16 @@ title: Sidebar Configuration
 description: Enable sidebar navigation that displays your site's structure.
 ---
 
-## Overview
+Configure the sidebar from the **Flowershow dashboard** under **Site Settings → Content**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
 
-The sidebar is enabled by default. It automatically generates navigation based on your content directory structure.
+> [!note]
+> The sidebar is enabled by default and automatically generates navigation based on your content directory structure.
 
-> [!tip] Dashboard
-> Sidebar visibility, sort order, and paths can be configured in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Content** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+## Showing and hiding the sidebar
 
-To disable it, set `showSidebar` to `false` in your `config.json`:
+Go to **Settings → Content → Show Sidebar** and set it to `true` or `false`.
 
-```json
-{
-  "showSidebar": false
-}
-```
-
-## Sorting sidebar items
-
-By default, sidebar items are sorted by their title. You can change the sorting order using the `sidebar.orderBy` option:
-
-```json
-{
-  "sidebar": {
-    "orderBy": "path"
-  }
-}
-```
-
-Available values:
-
-- `"title"` (default) - Sort items alphabetically by their document title
-- `"path"` - Sort items alphabetically by their file path/name
-
-## Mobile breadcrumbs
-
-On mobile, the sidebar is replaced by a slide-out drawer with a breadcrumb bar showing your current location in the site tree. Folder names in the breadcrumbs are clickable links if the folder has an index page (e.g. `README.md` or `index.md` (or `.mdx`)). Folders without an index page are shown as plain text.
-
-## Showing the sidebar only on specific routes
-
-You can restrict the sidebar to specific sections of your site using the `sidebar.paths` option. When set, the sidebar will only appear on pages whose path starts with one of the listed prefixes, and will only display pages within those paths.
-
-```json
-{
-  "showSidebar": true,
-  "sidebar": {
-    "paths": ["/docs", "/guides"]
-  }
-}
-```
-
-In this example, the sidebar will show on `/docs`, `/docs/getting-started`, `/guides/intro`, etc., but not on `/`, `/blog`, or other pages.
-
-If `sidebar.paths` is not set, the sidebar shows on all pages (default behavior).
-
-## Hiding paths from the sidebar
-
-You can hide specific subfolders from the sidebar tree using the top-level `contentHide` option. Hidden pages are still accessible by URL — they just won't appear in the sidebar navigation or search results.
-
-```json
-{
-  "contentHide": ["/docs/people"]
-}
-```
-
-See [[content-filtering|Content Filtering]] for more details on `contentHide`.
-
-## Disabling the sidebar on a page
-
-You can hide the sidebar on a specific page (e.g. the landing page) by adding this to the frontmatter:
+You can also hide the sidebar on a specific page (e.g. a landing page) by adding `showSidebar: false` to that page's frontmatter:
 
 ```md
 ---
@@ -78,4 +20,53 @@ showSidebar: false
 ---
 ```
 
-This overrides both the site-wide `showSidebar` setting and `sidebar.paths`.
+This overrides both the site-wide **Show Sidebar** setting and **Sidebar Paths**.
+
+## Sorting sidebar items
+
+Go to **Settings → Content → Sidebar Order** and choose how items are sorted:
+
+- **Path** — sort items alphabetically by their file path/name
+- **Title** — sort items alphabetically by their document title
+
+## Showing the sidebar only on specific routes
+
+Go to **Settings → Content → Sidebar Paths** and enter a JSON array of path prefixes. When set, the sidebar only appears on pages whose path starts with one of the listed prefixes, and only displays content within those paths.
+
+```json
+["/docs", "/guides"]
+```
+
+With this configuration, the sidebar shows on `/docs`, `/docs/getting-started`, `/guides/intro`, etc., but not on `/`, `/blog`, or other pages.
+
+If **Sidebar Paths** is not set, the sidebar shows on all pages (default behavior).
+
+## Hiding paths from the sidebar
+
+To hide specific subfolders from the sidebar tree, use the **Content Hide** setting under **Settings → Content**. Hidden pages are still accessible by URL — they just won't appear in the sidebar navigation or search results.
+
+See [[content-filtering|Content Filtering]] for details.
+
+## Mobile breadcrumbs
+
+On mobile, the sidebar is replaced by a slide-out drawer with a breadcrumb bar showing your current location in the site tree. Folder names in the breadcrumbs are clickable links if the folder has an index page (e.g. `README.md` or `index.md`). Folders without an index page are shown as plain text.
+
+## Using config.json
+
+If you want to version-control your configuration, or have your editor's AI agent manage settings without touching the dashboard, you can define everything in `config.json` instead. Values set in `config.json` take precedence over dashboard settings.
+
+```json
+{
+  "showSidebar": true,
+  "sidebar": {
+    "orderBy": "title",
+    "paths": ["/docs", "/guides"]
+  }
+}
+```
+
+- `showSidebar`: Set to `false` to hide the sidebar site-wide
+- `sidebar.orderBy`: Sort order for sidebar items — `"title"` (alphabetical by document title) or `"path"` (alphabetical by file path)
+- `sidebar.paths`: Array of path prefixes — when set, the sidebar only appears on pages matching one of the listed prefixes
+
+To disable the sidebar on a single page, add `showSidebar: false` to that page's frontmatter — this works regardless of how you configure the site-wide setting.
