@@ -3,133 +3,94 @@ title: Navbar configuration
 description: Set logo, title, links and socials in your navigation bar.
 ---
 
-The navigation bar configuration is defined under the `nav` object in your `config.json`.
-
-> [!tip] Dashboard
-> Logo, nav title, nav links, and social links can be configured in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Navigation** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+Configure your site's navigation bar from the **Flowershow dashboard**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
 
 > [!note]
-> If you omit the `nav` key from your `config.json` entirely, the navbar will not be displayed. A `no-nav` CSS class is added to the page layout in this case, which you can use in custom themes to adjust styling.
+> The navbar is only displayed if at least one of the following is configured: nav title, nav links, CTA, social links, or full text search.
 
 ## Logo and title
 
-Configure your site's branding with a logo and title:
+Go to **Settings → Navigation** and set:
 
-```json
-{
-  "nav": {
-    "logo": "logo.jpeg",
-    "title": "My Digital Garden"
-  }
-}
-```
+- **Logo** — upload an image file
+- **Nav Title** — the text shown as your site title in the navbar
 
-- `logo`: Path to your logo file (relative to site root), external URL, or an emoji character
-- `title`: Text displayed as your site title
-
-You can also use an emoji as your logo for a quick, no-image option:
-
-```json
-{
-  "nav": {
-    "logo": "🌸",
-    "title": "My Digital Garden"
-  }
-}
-```
-
-![[nav-config.png]]
-
-The result:
-![[nav-config-1.png]]
+> [!note]
+> To use a file path, external URL, or emoji as your logo, use `config.json` — the dashboard logo field accepts image uploads only.
 
 ## Navigation links
 
-Add navigation links using the `links` array. Each link requires:
+Go to **Settings → Navigation → Nav Links** and enter your links as a JSON array:
 
 ```json
-{
-  "nav": {
-    "links": [
-      {
-        "href": "/blog",
-        "name": "Blog"
-      },
-      {
-        "href": "/about",
-        "name": "About"
-      }
-    ]
-  }
-}
+[
+  { "href": "/blog", "name": "Blog" },
+  { "href": "/about", "name": "About" }
+]
 ```
 
-Properties:
+Each link requires:
+
 - `href`: URL or path the link points to
 - `name`: Display text for the link
 
-The result:
-![[nav-config-2.png]]
-
 ### Dropdown menus
 
-You can group links under a dropdown by using a `links` array instead of an `href`. On desktop, the dropdown opens on hover; on mobile, it expands as a collapsible section. Only one level of nesting is supported.
+To group links under a dropdown, use a `links` array instead of `href`. On desktop, the dropdown opens on hover; on mobile, it expands as a collapsible section. Only one level of nesting is supported.
 
 ```json
-{
-  "nav": {
+[
+  { "href": "/blog", "name": "Blog" },
+  { "href": "/about", "name": "About" },
+  {
+    "name": "Docs",
     "links": [
-      { "href": "/about", "name": "About" },
-      {
-        "name": "Docs",
-        "links": [
-          { "href": "/docs/getting-started", "name": "Getting Started" },
-          { "href": "/docs/config", "name": "Configuration" },
-          { "href": "/docs/themes", "name": "Themes" }
-        ]
-      },
-      { "href": "/blog", "name": "Blog" }
+      { "href": "/docs/getting-started", "name": "Getting Started" },
+      { "href": "/docs/config", "name": "Configuration" },
+      { "href": "/docs/themes", "name": "Themes" }
     ]
   }
-}
+]
 ```
 
 A dropdown item has:
+
 - `name`: Label displayed as the dropdown trigger
 - `links`: Array of plain links (each with `href` and `name`)
 
 > [!tip]
 > If you want the dropdown label to also link to a page (e.g. "Docs" linking to `/docs`), add it as the first item in the `links` array.
 
-## Social media links
+## Social links
 
-Add social media links using the `social` array. Each social link requires:
+Go to **Settings → Navigation → Social Links** and enter your social links as a JSON array:
 
 ```json
-{
-  "nav": {
-    "social": [
-      {
-        "label": "github",
-        "name": "GitHub Profile",
-        "href": "https://github.com/yourusername"
-      },
-      {
-        "label": "twitter",
-        "name": "Follow me on Twitter",
-        "href": "https://twitter.com/yourusername"
-      }
-    ]
+[
+  {
+    "label": "github",
+    "name": "GitHub Profile",
+    "href": "https://github.com/yourusername"
+  },
+  {
+    "label": "twitter",
+    "name": "Follow me on Twitter",
+    "href": "https://twitter.com/yourusername"
   }
-}
+]
 ```
 
 Properties:
+
 - `label`: Platform identifier (see supported platforms below)
 - `name`: Text label (used in sidebar mode)
 - `href`: Your social media profile URL
 
+> [!note]
+> Social links are shared between the navbar and footer. Configure them once and they'll appear in both locations.
+
 Supported social platforms:
+
 - `bluesky` (or `bsky`)
 - `discord`
 - `facebook`
@@ -152,26 +113,29 @@ Supported social platforms:
 > If the social platform you want to use isn't listed above, you can skip the `label` and Flowershow will display a generic 🌐 icon.
 > We encourage you to submit an issue, too. 😉
 
-The result:
-![[nav-config-3.png]]
+## Using config.json
 
-On smaller screens:
-![[nav-config-4.png]]
-
-## Complete example
-
-Here's a comprehensive configuration example:
+If you want to version-control your configuration, or have your editor's AI agent manage settings without touching the dashboard, you can define everything in `config.json` instead. Values set in `config.json` take precedence over dashboard settings.
 
 ```json
 {
+  "logo": "logo.jpeg",
+  "social": [
+    {
+      "label": "github",
+      "name": "GitHub Profile",
+      "href": "https://github.com/yourusername"
+    },
+    {
+      "label": "twitter",
+      "name": "Follow me on Twitter",
+      "href": "https://twitter.com/yourusername"
+    }
+  ],
   "nav": {
-    "logo": "logo.jpeg",
     "title": "My Digital Garden",
     "links": [
-      {
-        "href": "/blog",
-        "name": "Blog"
-      },
+      { "href": "/blog", "name": "Blog" },
       {
         "name": "Docs",
         "links": [
@@ -179,26 +143,16 @@ Here's a comprehensive configuration example:
           { "href": "/docs/config", "name": "Configuration" }
         ]
       },
-      {
-        "href": "/about",
-        "name": "About"
-      }
-    ],
-    "social": [
-      {
-        "label": "github",
-        "name": "GitHub Profile",
-        "href": "https://github.com/yourusername"
-      },
-      {
-        "label": "twitter",
-        "name": "Follow me on Twitter",
-        "href": "https://twitter.com/yourusername"
-      }
+      { "href": "/about", "name": "About" }
     ]
   }
 }
 ```
+
+- `logo`: Path to your logo file (relative to site root), external URL, or an emoji character (root-level key)
+- `social`: Array of social link objects (root-level key, shared with footer)
+- `nav.title`: Text displayed as your site title
+- `nav.links`: Array of navigation link objects (same format as the dashboard JSON editor)
 
 ## Troubleshooting
 
