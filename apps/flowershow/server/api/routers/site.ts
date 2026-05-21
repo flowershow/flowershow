@@ -28,7 +28,11 @@ import { isEmoji } from '@/lib/is-emoji';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
 import PostHogClient from '@/lib/server-posthog';
-import { deepMerge, resolveSiteConfig } from '@/lib/site-config';
+import {
+  deepMerge,
+  resolveSiteConfig,
+  SITE_CONFIG_DEFAULTS,
+} from '@/lib/site-config';
 import { siteKeyBytes } from '@/lib/site-hmac-key';
 import { buildSiteSubdomain } from '@/lib/site-subdomain';
 import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
@@ -199,6 +203,7 @@ export const siteRouter = createTRPCRouter({
           subdomain: buildSiteSubdomain(projectName, creator?.username ?? ''),
           autoSync: false,
           user: { connect: { id: ctx.session.user.id } },
+          configJson: SITE_CONFIG_DEFAULTS,
         },
       });
 
