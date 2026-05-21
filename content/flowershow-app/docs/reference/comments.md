@@ -1,7 +1,12 @@
 ---
 title: Comments
-description: Enable comments on yout site's pages. Powered by Giscus and GitHub Discussions.
+description: Enable comments on your site's pages. Powered by Giscus and GitHub Discussions.
 ---
+
+Configure comments from the **Flowershow dashboard** under **Site Settings → Features**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
+
+> [!note]
+> Comments require a public GitHub repository — but it doesn't have to be the one your site content lives in. See [Using a dedicated comments repository](#using-a-dedicated-comments-repository) if you publish without GitHub integration or your content repo is private.
 
 ## Requirements
 
@@ -9,33 +14,73 @@ description: Enable comments on yout site's pages. Powered by Giscus and GitHub 
 2. [GitHub Discussions](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/enabling-or-disabling-github-discussions-for-a-repository) enabled in your repository
 3. [Giscus](https://github.com/apps/giscus) GitHub App installed in your repository
 
-## Getting giscus configuration IDs
+## Getting your Giscus IDs
 
 Visit [giscus.app](https://giscus.app):
 1. Enter your repository name
 2. Select your preferred discussion category
 3. Find the Repository ID (R_...) and Category ID (DIC_...) in the `script` snippet at the bottom of the page.
 
-## Basic Configuration
+## Enabling comments
 
-To enable comments, turn on the "Comments" option in your site's settings in the dashboard.
+Go to **Settings → Features → Comments** and toggle it on. Once enabled, two additional fields appear:
 
-![[comments-option.png]]
+- **Giscus Repository ID** — the ID of your GitHub repository (starts with `R_`)
+- **Giscus Category ID** — the ID of the discussion category (starts with `DIC_`)
 
-Then, enter your Giscus Repository ID and Category ID.
+> [!note]
+> By default, comments are shown on all pages once enabled. Individual pages can override this with `showComments` in their frontmatter.
 
-![[giscus-config.png]]
+## Using a dedicated comments repository
 
-## Advanced Configuration
+There are a few situations where you need or want a dedicated public repository just for discussions:
 
-For more control over your comment section, you can configure additional Giscus settings through your site's [[config-file|config.json]] file:
+- **No GitHub integration** (publishing via Obsidian, CLI, or direct upload) — there is no content repository connected to your site, so Giscus has nowhere to point without one.
+- **Private content repository** — Giscus requires a public repository, so if your content repo is private you need a separate public one for comments.
+- **Preference for separation** — you simply want to keep discussions in a dedicated repo, independent of where your content lives.
+
+1. Create a new public GitHub repository (e.g. `username/my-site-comments`)
+2. Enable [GitHub Discussions](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/enabling-features-for-your-repository/enabling-or-disabling-github-discussions-for-a-repository) in that repository
+3. Install the [Giscus](https://github.com/apps/giscus) GitHub App on that repository
+4. Visit [giscus.app](https://giscus.app) to get the Repository ID and Category ID for that repository
+
+Then enable comments in the dashboard (**Settings → Features → Comments**) and add `giscus.repo` to your `config.json`. This is required — without it, Flowershow has no repository to point Giscus at and comments will not appear. The dashboard has no field for this, so it must be set in `config.json`:
 
 ```json
 {
   "giscus": {
-    "repo": "username/different-repo",
+    "repo": "username/my-site-comments",
     "repoId": "R_xxx",
-    "category": "Discussions",
+    "categoryId": "DIC_xxx"
+  }
+}
+```
+
+## Controlling comments per page
+
+### Hide comments on a specific page
+
+Add `showComments: false` to that page's frontmatter:
+
+```yaml
+---
+title: Page Without Comments
+showComments: false
+---
+```
+
+## Using config.json
+
+If you want to version-control your configuration, or have your editor's AI agent manage settings without touching the dashboard, you can define everything in `config.json` instead. Values set in `config.json` take precedence over dashboard settings.
+
+`config.json` also exposes advanced Giscus options not available in the dashboard:
+
+```json
+{
+  "showComments": true,
+  "giscus": {
+    "repo": "username/repo",
+    "repoId": "R_xxx",
     "categoryId": "DIC_xxx",
     "theme": "transparent_dark",
     "lang": "en",
@@ -47,53 +92,16 @@ For more control over your comment section, you can configure additional Giscus 
 }
 ```
 
-This advanced configuration allows you to customize:
-- Theme appearance
-- Language preferences
-- Reaction settings
-- Comment input position
-- Category configuration
-- and more...
-
-> [!important]
-> Any settings in your `config.json` will override the defaults and values configured in the site dashboard.
-
-## Default behavior and customization
-
-By default, comments will be enabled on all pages. You have two ways to customize this behavior:
-
-### Hide comments on specific pages
-
-To hide comments on a single page, add `showComments: false` to the page's frontmatter:
-
-```yaml
----
-title: Page Without Comments Section
-showComments: false
----
-```
-
-### Show comments only on specific pages
-
-If you prefer to enable comments only on specific pages, you can:
-
-1. Hide comments site-wide by setting `showComments: false` in your site's [[config-file|config file]]:
-
-```json
-{
-  "showComments": false  // Disable comments site-wide (if you want to enable them only on specific pages)
-}
-```
-
-2. Enable comments on specific pages by setting `showComments: true` in their frontmatter:
-
-```yaml
----
-title: My Page With Comments Section
-showComments: true
----
-```
-
+- `showComments`: `true` to enable comments site-wide, `false` to disable
+- `giscus.repo`: GitHub repository in `username/repo` format. Required if your site has no GitHub integration (e.g. publishing from Obsidian or CLI); optional otherwise, where it defaults to your connected content repository.
+- `giscus.repoId`: Repository ID (starts with `R_`)
+- `giscus.categoryId`: Discussion category ID (starts with `DIC_`)
+- `giscus.theme`: Giscus theme (e.g. `light`, `dark`, `transparent_dark`)
+- `giscus.lang`: Language code (e.g. `en`, `fr`)
+- `giscus.mapping`: How pages are mapped to discussions (`pathname`, `title`, `url`, etc.)
+- `giscus.strict`: Strict title matching (`"0"` or `"1"`)
+- `giscus.reactionsEnabled`: Enable reactions (`"0"` or `"1"`)
+- `giscus.inputPosition`: Comment box position (`"top"` or `"bottom"`)
 
 ## Troubleshooting
 
