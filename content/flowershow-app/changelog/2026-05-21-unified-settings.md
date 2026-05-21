@@ -50,6 +50,13 @@ That changes today. Every major config option is now available in the dashboard,
 
 **Settings are split into sections** — General, Appearance, Navigation, Content, Features, Analytics, GitHub, Access & Domains, and Billing replace the single long form.
 
+## What's still config.json only
+
+A handful of options aren't in the dashboard yet:
+
+- **`showHero`, `hero`, `cta`** — homepage hero section and call-to-action. We're still evaluating whether to keep these in their current form before surfacing them as dashboard settings.
+- **Advanced Giscus config** — `repoId` and `categoryId` are manageable from the dashboard, but other Giscus options (`mapping`, `theme`, `lang`, `inputPosition`, `reactionsEnabled`, etc.) are still config.json only.
+
 ## config.json format changes
 
 Two fields have been updated. Old forms still work for now but are deprecated:
