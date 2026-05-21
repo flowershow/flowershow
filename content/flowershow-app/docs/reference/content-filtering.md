@@ -3,94 +3,58 @@ title: Content filtering
 description: Control which files and directories get published
 ---
 
-## General Configuration
+Configure content filtering from the **Flowershow dashboard** under **Site Settings → Content**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
 
-> [!tip] Dashboard
-> Content include, exclude, and hide patterns can be configured in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Content** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+## Include paths
 
-Control which files are included in your published site using `contentInclude` and `contentExclude` in your [[config-file|`config.json`]]:
-
-### `contentInclude`
-
-Array of paths to include in your published site:
-```json
-{
-  "contentInclude": [
-    "/blog",           // Include entire blog directory
-    "README.md"        // Include specific file
-  ]
-}
-```
-
-If not specified, all files are included by default (except those in `contentExclude`). If set, only the listed paths are published — no other files or directories will be included.
-
-### `contentExclude`
-
-Array of paths to exclude from your published site:
-```json
-{
-  "contentExclude": [
-    "/drafts",          // Exclude entire drafts directory
-    "private.md"        // Exclude specific file
-  ]
-}
-```
-
-### Page-level Control
-
-Exclude a specific page using `publish: false` in frontmatter:
-
-```md
----
-title: "Draft Post"
-publish: false
----
-```
-
-Note: `publish: false` takes precedence over site-wide settings, but `publish: true` cannot override site-wide exclusion rules, and doesn't have any meaning in practice. You can't use it to publish only the files marked with it.
-
-### Rules
-
-- Exclude rules take precedence over include rules
-- Paths are relative to content root directory
-- Directory paths include all subdirectories
-- Glob patterns not supported
-
-### Example: Combined Usage
-
-Here's how to combine `contentInclude` and `contentExclude` to publish only specific content while excluding certain subdirectories:
+Go to **Settings → Content → Content Include** and enter an array of paths to include in your published site:
 
 ```json
-{
-  "contentInclude": [
-    "/blog",           // Include entire blog directory
-    "README.md"        // Include specific file
-  ],
-  "contentExclude": [
-    "/blog/_archive"   // Exclude archive subdirectory from blog
-  ]
-}
+[
+  "/blog",
+  "README.md"
+]
 ```
 
-This configuration will:
-1. Only publish files from the `/blog` directory and `README.md`
-2. Exclude everything in `/blog/_archive` (since exclude rules take precedence)
-3. Not publish any other files or directories
+Leave this field empty to include all files by default. If set, only the listed paths are published — no other files or directories will be included.
 
-## Hiding content from sidebar and search
+## Exclude paths
 
-Use `contentHide` to keep pages published and accessible by URL, but hide them from the [[sidebar|sidebar navigation]] and search results. This is useful for content like author profiles, reference pages, or other pages that shouldn't clutter the sidebar or search.
+Go to **Settings → Content → Content Exclude** and enter an array of paths to exclude from your published site:
 
 ```json
-{
-  "contentHide": [
-    "/docs/people",
-    "/docs/internal"
-  ]
-}
+[
+  "/drafts",
+  "private.md"
+]
 ```
 
-Unlike `contentExclude`, hidden pages are still synced, published, and can be linked to — they're just not discoverable through the sidebar or search.
+Exclude rules take precedence over include rules, so you can use both fields together — for example, to publish only `/blog` while excluding a subdirectory within it:
+
+**Content Include:**
+```json
+["/blog", "README.md"]
+```
+
+**Content Exclude:**
+```json
+["/blog/_archive"]
+```
+
+This publishes everything in `/blog` and `README.md`, but skips `/blog/_archive`.
+
+## Hide paths
+
+Go to **Settings → Content → Content Hide** and enter an array of paths to keep published but hidden from the [[sidebar|sidebar]] and search results:
+
+```json
+[
+  "/docs/people",
+  "/docs/internal"
+]
+```
+
+Hidden pages are still synced, published, and accessible by URL — they just won't appear in the sidebar or search. This is useful for content like author profiles or reference pages that shouldn't clutter navigation.
 
 ### `contentExclude` vs `contentHide`
 
@@ -101,3 +65,49 @@ Unlike `contentExclude`, hidden pages are still synced, published, and can be li
 | **In sidebar** | No | No |
 | **In search** | No | No |
 | **Can be linked to** | No | Yes |
+
+## Page-level control
+
+Exclude a specific page using `publish: false` in its frontmatter:
+
+```md
+---
+title: "Draft Post"
+publish: false
+---
+```
+
+> [!note]
+> `publish: false` takes precedence over site-wide settings. `publish: true` cannot override site-wide exclusion rules and has no practical effect — you cannot use it to publish only files marked with it.
+
+## Rules
+
+- Exclude rules take precedence over include rules
+- Paths are relative to the content root directory
+- Directory paths include all subdirectories
+- Glob patterns are not supported
+
+## Using config.json
+
+If you want to version-control your configuration, or have your editor's AI agent manage settings without touching the dashboard, you can define everything in `config.json` instead. Values set in `config.json` take precedence over dashboard settings.
+
+```json
+{
+  "contentInclude": [
+    "/blog",
+    "README.md"
+  ],
+  "contentExclude": [
+    "/blog/_archive",
+    "private.md"
+  ],
+  "contentHide": [
+    "/docs/people",
+    "/docs/internal"
+  ]
+}
+```
+
+- `contentInclude`: Array of paths to include. If omitted, all files are included by default.
+- `contentExclude`: Array of paths to exclude entirely. Exclude rules take precedence over include rules.
+- `contentHide`: Array of paths to keep published but hidden from sidebar and search.
