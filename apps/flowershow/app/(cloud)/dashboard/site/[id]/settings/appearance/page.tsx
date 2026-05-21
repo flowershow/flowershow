@@ -1,3 +1,4 @@
+import { ExternalLinkIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import Form from '@/components/dashboard/form';
 import SettingsNav from '@/components/dashboard/settings-nav';
@@ -66,6 +67,19 @@ export default async function AppearanceSettingsPage(props: {
         <Form
           title="Theme"
           description="Name of the theme to apply to your site."
+          helpText={
+            <p>
+              Learn more about{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/themes"
+              >
+                Themes
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: 'theme',
             type: 'select',
@@ -88,6 +102,19 @@ export default async function AppearanceSettingsPage(props: {
         <Form
           title="Default Color Mode"
           description="The default color mode for your site."
+          helpText={
+            <p>
+              Learn more about{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/dark-mode"
+              >
+                Dark mode
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: 'defaultMode',
             type: 'select',
@@ -104,6 +131,19 @@ export default async function AppearanceSettingsPage(props: {
         <Form
           title="Show Mode Switch"
           description="Show a toggle that lets visitors switch between light and dark mode."
+          helpText={
+            <p>
+              Learn more about{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/dark-mode"
+              >
+                Dark mode
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: 'showModeSwitch',
             type: 'text',

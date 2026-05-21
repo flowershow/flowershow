@@ -107,7 +107,7 @@ export default async function ContentSettingsPage(props: {
               Learn more about{' '}
               <a
                 className="underline"
-                href="https://flowershow.app/blog/announcing-syntax-mode-configuration"
+                href="https://flowershow.app/docs/reference/syntax-mode"
               >
                 Syntax mode
                 <ExternalLinkIcon className="inline h-4" />
@@ -131,6 +131,19 @@ export default async function ContentSettingsPage(props: {
         <Form
           title="Sidebar Order"
           description="How to order items in the file-tree sidebar."
+          helpText={
+            <p>
+              Learn more about{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/sidebar"
+              >
+                Sidebar
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: 'orderBy',
             type: 'select',
@@ -146,6 +159,19 @@ export default async function ContentSettingsPage(props: {
         <Form
           title="Show Table of Contents"
           description="Show a table of contents on pages that have headings."
+          helpText={
+            <p>
+              Learn more about{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/table-of-contents"
+              >
+                Table of contents
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: 'showToc',
             type: 'text',
@@ -157,6 +183,19 @@ export default async function ContentSettingsPage(props: {
         <Form
           title="Show Sidebar"
           description="Show the file-tree sidebar on your site."
+          helpText={
+            <p>
+              Learn more about{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/sidebar"
+              >
+                Sidebar
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: 'showSidebar',
             type: 'text',
@@ -173,7 +212,7 @@ export default async function ContentSettingsPage(props: {
               Learn more about{' '}
               <a
                 className="underline"
-                href="https://flowershow.app/docs/rss-feed"
+                href="https://flowershow.app/docs/reference/rss-feed"
               >
                 RSS Feed
                 <ExternalLinkIcon className="inline h-4" />
@@ -203,7 +242,19 @@ export default async function ContentSettingsPage(props: {
         <JsonForm
           title="Content Include"
           description="Glob patterns for paths to include in the site. Leave empty to include everything."
-          helpText='Example: ["notes/","blog/"]'
+          helpText={
+            <>
+              {'Example: ["notes/","blog/"]'}
+              {' · '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/content-filtering"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            </>
+          }
           fieldName="contentInclude"
           defaultValue={siteConfig?.contentInclude ?? null}
           handleSubmit={updateContentInclude}
@@ -212,7 +263,19 @@ export default async function ContentSettingsPage(props: {
         <JsonForm
           title="Content Exclude"
           description="Glob patterns for paths to exclude from the site entirely."
-          helpText='Example: ["drafts/","private/"]'
+          helpText={
+            <>
+              {'Example: ["drafts/","private/"]'}
+              {' · '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/content-filtering"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            </>
+          }
           fieldName="contentExclude"
           defaultValue={siteConfig?.contentExclude ?? null}
           handleSubmit={updateContentExclude}
@@ -221,7 +284,19 @@ export default async function ContentSettingsPage(props: {
         <JsonForm
           title="Content Hide"
           description="Glob patterns for paths to hide from navigation and search but still serve."
-          helpText='Example: ["_assets/","_templates/"]'
+          helpText={
+            <>
+              {'Example: ["_assets/","_templates/"]'}
+              {' · '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/content-filtering"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            </>
+          }
           fieldName="contentHide"
           defaultValue={siteConfig?.contentHide ?? null}
           handleSubmit={updateContentHide}
@@ -230,7 +305,19 @@ export default async function ContentSettingsPage(props: {
         <JsonForm
           title="Sidebar Paths"
           description="Limit the sidebar to specific subpaths. Leave empty to show all content."
-          helpText='Example: ["docs/","guides/"]'
+          helpText={
+            <>
+              {'Example: ["docs/","guides/"]'}
+              {' · '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/sidebar"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            </>
+          }
           fieldName="sidebar.paths"
           defaultValue={siteConfig?.sidebar?.paths ?? null}
           handleSubmit={updateSidebarPaths}
@@ -239,7 +326,21 @@ export default async function ContentSettingsPage(props: {
         <JsonForm
           title="Redirects"
           description='URL redirects. Each entry needs "from" and "to" paths, and optionally "permanent" (true for 301, false for 302).'
-          helpText='Example: [{"from":"/old-page","to":"/new-page","permanent":true}]'
+          helpText={
+            <>
+              {
+                'Example: [{"from":"/old-page","to":"/new-page","permanent":true}]'
+              }
+              {' · '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/redirects"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            </>
+          }
           fieldName="redirects"
           defaultValue={siteConfig?.redirects ?? null}
           handleSubmit={updateRedirects}

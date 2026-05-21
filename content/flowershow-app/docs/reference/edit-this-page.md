@@ -8,6 +8,9 @@ description: Display an "Edit this page" link at the bottom of each page that ta
 > [!important]
 > Your GitHub repository must be **public**
 
+> [!tip] Dashboard
+> The edit link can be toggled in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Features** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+
 To enable the button **on all pages**, add this to your site's [[config-file|config file]]:
 
 ```json

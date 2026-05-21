@@ -3,8 +3,8 @@ import { notFound } from 'next/navigation';
 import Form from '@/components/dashboard/form';
 import SitePasswordProtectionForm from '@/components/dashboard/form/site-password-form';
 import SettingsNav from '@/components/dashboard/settings-nav';
-import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { validDomainRegex } from '@/lib/domains';
+import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import type { SiteUpdateKey } from '@/server/api/types';
 import { api } from '@/trpc/server';
 
@@ -46,7 +46,7 @@ export default async function AccessSettingsPage(props: {
               Learn more about{' '}
               <a
                 className="underline"
-                href="https://flowershow.app/docs/site-settings#custom-domain-%EF%B8%8F-premium-feature"
+                href="https://flowershow.app/docs/reference/custom-domain"
               >
                 Custom domain
                 <ExternalLinkIcon className="inline h-4" />

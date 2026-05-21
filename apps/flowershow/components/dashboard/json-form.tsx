@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,7 @@ export default function JsonForm({
 }: {
   title: string;
   description: string;
-  helpText?: string;
+  helpText?: ReactNode;
   fieldName: string;
   defaultValue: unknown;
   handleSubmit: (id: string, value: unknown) => Promise<void>;

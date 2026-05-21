@@ -42,6 +42,9 @@ Recommended size: 1200×630 pixels (JPG or PNG, under 1MB).
 
 ## Site-wide defaults
 
+> [!tip] Dashboard
+> Site title, description, and social image can be configured in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → General** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+
 Configure fallback values in your `config.json`:
 
 ```json

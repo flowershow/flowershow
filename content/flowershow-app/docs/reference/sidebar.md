@@ -7,6 +7,9 @@ description: Enable sidebar navigation that displays your site's structure.
 
 The sidebar is enabled by default. It automatically generates navigation based on your content directory structure.
 
+> [!tip] Dashboard
+> Sidebar visibility, sort order, and paths can be configured in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Content** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+
 To disable it, set `showSidebar` to `false` in your `config.json`:
 
 ```json

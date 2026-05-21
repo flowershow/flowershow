@@ -3,7 +3,7 @@
 import { ImageIcon, Loader2, X } from 'lucide-react';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { type ReactNode, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { isEmoji } from '@/lib/is-emoji';
 import { api } from '@/trpc/react';
@@ -65,7 +65,7 @@ export default function ImageUploadForm({
 }: {
   title: string;
   description: string;
-  helpText?: string;
+  helpText?: ReactNode;
   field: Field;
   configKey: string;
   parentKey?: string;

@@ -5,6 +5,9 @@ description: Configure URL redirects to maintain backwards compatibility when mo
 
 ## Basic example
 
+> [!tip] Dashboard
+> Redirects can be configured in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Content** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+
 ```json
 {
   "redirects": [

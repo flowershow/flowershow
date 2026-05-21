@@ -5,6 +5,9 @@ description: Control which files and directories get published
 
 ## General Configuration
 
+> [!tip] Dashboard
+> Content include, exclude, and hide patterns can be configured in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Content** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+
 Control which files are included in your published site using `contentInclude` and `contentExclude` in your [[config-file|`config.json`]]:
 
 ### `contentInclude`

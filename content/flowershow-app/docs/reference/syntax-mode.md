@@ -8,7 +8,16 @@ Flowershow lets you choose how your content is parsed: Markdown or MDX. This is 
 
 ### Global Setting
 
-Set the default rendering mode in site settings in your dashboard.
+Set the default rendering mode in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Content**, or via `config.json`:
+
+```json
+{
+  "syntaxMode": "md"
+}
+```
+
+> [!note]
+> Values set in `config.json` take precedence over the dashboard setting.
 
 **Options:**
 - `"md"` - Regular Markdown rendering

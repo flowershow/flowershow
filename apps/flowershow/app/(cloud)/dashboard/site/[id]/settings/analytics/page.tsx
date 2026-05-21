@@ -1,3 +1,4 @@
+import { ExternalLinkIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import Form from '@/components/dashboard/form';
 import SettingsNav from '@/components/dashboard/settings-nav';
@@ -43,6 +44,19 @@ export default async function AnalyticsSettingsPage(props: {
         <Form
           title="Analytics"
           description="Google Analytics measurement ID (e.g. G-XXXXXXXXXX)."
+          helpText={
+            <p>
+              Learn more about{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/analytics"
+              >
+                Analytics
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: 'analytics',
             type: 'text',
@@ -56,7 +70,20 @@ export default async function AnalyticsSettingsPage(props: {
         <Form
           title="Umami Analytics"
           description="Umami website ID for privacy-friendly analytics."
-          helpText="Find your website ID in your Umami dashboard. Self-hosted instances also need to configure the script src in config.json."
+          helpText={
+            <p>
+              Find your website ID in your Umami dashboard. Self-hosted
+              instances also need to configure the script src in config.json.{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/analytics"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: 'umami',
             type: 'text',

@@ -5,6 +5,9 @@ description: Customize your site footer with navigation links and social media i
 
 The footer appears at the bottom of every page on your site. You can configure it to display your site name, social media links, and organized navigation groups.
 
+> [!tip] Dashboard
+> Footer navigation groups and social links can be configured in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Navigation** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+
 ## Site name and copyright
 
 The footer automatically displays your site name and copyright notice using the `title` from your `config.json`:

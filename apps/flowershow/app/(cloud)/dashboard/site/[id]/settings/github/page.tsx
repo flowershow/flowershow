@@ -79,9 +79,9 @@ export default async function GitHubSettingsPage(props: {
                 Learn more about{' '}
                 <a
                   className="underline"
-                  href="https://flowershow.app/docs/site-settings#auto-sync"
+                  href="https://flowershow.app/docs/getting-started/from-github"
                 >
-                  Auto-Sync
+                  Publishing from GitHub
                   <ExternalLinkIcon className="inline h-4" />
                 </a>
                 .

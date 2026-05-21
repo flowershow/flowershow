@@ -94,7 +94,7 @@ export default async function FeaturesSettingsPage(props: {
               Learn more about{' '}
               <a
                 className="underline"
-                href="https://flowershow.app/docs/comments"
+                href="https://flowershow.app/docs/reference/comments"
               >
                 Comments
                 <ExternalLinkIcon className="inline h-4" />
@@ -145,6 +145,19 @@ export default async function FeaturesSettingsPage(props: {
         <Form
           title="Show Edit Link"
           description="Show a link at the bottom of each page for readers to edit the source on GitHub."
+          helpText={
+            <p>
+              Learn more about{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/edit-this-page"
+              >
+                Edit this page
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: 'showEditLink',
             type: 'text',

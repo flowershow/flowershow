@@ -1,3 +1,4 @@
+import { ExternalLinkIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import Form from '@/components/dashboard/form';
 import DeleteSiteForm from '@/components/dashboard/form/delete-site-form';
@@ -74,6 +75,19 @@ export default async function SiteSettingsIndex(props: {
         <Form
           title="Site Title"
           description="The display title of your site, used in the browser tab and social previews."
+          helpText={
+            <p>
+              Learn more about{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/seo-social-metadata"
+              >
+                SEO &amp; social metadata
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: 'title',
             type: 'text',
@@ -86,6 +100,19 @@ export default async function SiteSettingsIndex(props: {
         <Form
           title="Description"
           description="A short description of your site, used in search results and social previews."
+          helpText={
+            <p>
+              Learn more about{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/seo-social-metadata"
+              >
+                SEO &amp; social metadata
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: 'description',
             type: 'text',
@@ -98,6 +125,19 @@ export default async function SiteSettingsIndex(props: {
         <ImageUploadForm
           title="Favicon"
           description="Image shown as the browser tab icon. Upload a PNG, JPG, or WebP — or set an emoji via config.json."
+          helpText={
+            <p>
+              PNG, JPG, or WebP. Will be resized to 128×128.{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/custom-favicon"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           field="favicon"
           configKey="favicon"
           currentValue={siteConfig?.favicon ?? null}
@@ -106,6 +146,19 @@ export default async function SiteSettingsIndex(props: {
         <ImageUploadForm
           title="Social Image"
           description="Default image shown when sharing links on social media."
+          helpText={
+            <p>
+              Recommended: 1200×630px. PNG, JPG, or WebP.{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/seo-social-metadata"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           field="image"
           configKey="image"
           currentValue={siteConfig?.image ?? null}

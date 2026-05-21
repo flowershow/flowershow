@@ -1,3 +1,4 @@
+import { ExternalLinkIcon } from 'lucide-react';
 import { notFound } from 'next/navigation';
 import Form from '@/components/dashboard/form';
 import ImageUploadForm from '@/components/dashboard/form/image-upload-form';
@@ -68,7 +69,19 @@ export default async function NavigationSettingsPage(props: {
         <ImageUploadForm
           title="Logo"
           description="Logo image shown in the navigation bar."
-          helpText="PNG, JPG, or WebP. Will be resized to 400×100."
+          helpText={
+            <p>
+              PNG, JPG, or WebP. Will be resized to 400×100.{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/navbar"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           field="logo"
           configKey="logo"
           currentValue={siteConfig?.logo ?? null}
@@ -77,6 +90,19 @@ export default async function NavigationSettingsPage(props: {
         <Form
           title="Nav Title"
           description="The title shown in the site navigation bar."
+          helpText={
+            <p>
+              Learn more about{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/navbar"
+              >
+                Navbar configuration
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+              .
+            </p>
+          }
           inputAttrs={{
             name: 'title',
             type: 'text',
@@ -93,7 +119,19 @@ export default async function NavigationSettingsPage(props: {
         <JsonForm
           title="Nav Links"
           description="Navigation items shown in the header. Each item needs 'name' and 'href'. Dropdowns use 'name' and 'links' (array of {name, href})."
-          helpText='Example: [{"name":"Blog","href":"/blog"}]'
+          helpText={
+            <>
+              {'Example: [{"name":"Blog","href":"/blog"}]'}
+              {' · '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/navbar"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            </>
+          }
           fieldName="nav.links"
           defaultValue={siteConfig?.nav?.links ?? null}
           handleSubmit={updateNavLinks}
@@ -102,7 +140,21 @@ export default async function NavigationSettingsPage(props: {
         <JsonForm
           title="Social Links"
           description='Social platform links shown in the nav and footer. Each item needs "name", "href", and optionally "label" (platform, e.g. "github", "twitter").'
-          helpText='Example: [{"name":"GitHub","href":"https://github.com/you","label":"github"}]'
+          helpText={
+            <>
+              {
+                'Example: [{"name":"GitHub","href":"https://github.com/you","label":"github"}]'
+              }
+              {' · '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/navbar"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            </>
+          }
           fieldName="social"
           defaultValue={siteConfig?.social ?? null}
           handleSubmit={updateSocial}
@@ -111,7 +163,21 @@ export default async function NavigationSettingsPage(props: {
         <JsonForm
           title="Footer Navigation"
           description='Navigation groups in the footer. Each group needs "title" and "links" (array of {name, href}).'
-          helpText='Example: [{"title":"Docs","links":[{"name":"Getting Started","href":"/docs"}]}]'
+          helpText={
+            <>
+              {
+                'Example: [{"title":"Docs","links":[{"name":"Getting Started","href":"/docs"}]}]'
+              }
+              {' · '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/footer"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            </>
+          }
           fieldName="footer.navigation"
           defaultValue={siteConfig?.footer?.navigation ?? null}
           handleSubmit={updateFooterNavigation}
