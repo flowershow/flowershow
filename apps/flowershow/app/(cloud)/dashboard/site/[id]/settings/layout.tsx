@@ -42,8 +42,14 @@ export default async function SiteSettingsLayout(props: {
           <code className="rounded bg-blue-100 px-1 py-0.5 font-mono text-xs">
             config.json
           </code>{' '}
-          still works — values in your config file always take precedence over
-          dashboard settings. But most options no longer require it.{' '}
+          still works and always takes precedence over dashboard settings. These
+          fields only reflect what&apos;s stored in the database — they
+          won&apos;t show values from your config file. To manage an option
+          here, remove it from{' '}
+          <code className="rounded bg-blue-100 px-1 py-0.5 font-mono text-xs">
+            config.json
+          </code>{' '}
+          first.{' '}
           <a
             href="https://flowershow.app/changelog/2026-05-21-unified-settings"
             target="_blank"
