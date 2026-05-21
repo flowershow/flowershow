@@ -1,5 +1,6 @@
 ---
 title: Markdown syntax support
+description: Overview of Markdown syntax supported by Flowershow, including CommonMark, GitHub Flavored Markdown, and Obsidian extensions.
 ---
 
 > [!tip] Choose Markdown or MDX rendering mode

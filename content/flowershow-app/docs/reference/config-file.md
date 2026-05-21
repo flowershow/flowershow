@@ -1,5 +1,6 @@
 ---
 title: "`config.json` file"
+description: Reference for all available options in the config.json site configuration file.
 ---
 ## What is `config.json` file
 

@@ -1,5 +1,6 @@
 ---
 title: Syntax Mode Configuration
+description: Configure whether your content is parsed as Markdown or MDX, globally or per page.
 ---
 
 Configure how your content is parsed from the **Flowershow dashboard** under **Site Settings → Content**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
