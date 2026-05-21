@@ -1113,9 +1113,11 @@ export const siteRouter = createTRPCRouter({
           })) as Blob[];
 
           const paths = input.paths ?? [];
-          const prefixes = paths.map((p) => p.replace(/^\//, ''));
+          const prefixes = paths.map((p) =>
+            p.replace(/^\//, '').replace(/\/$/, ''),
+          );
           const hidePrefixes = (input.contentHide ?? []).map((p) =>
-            p.replace(/^\//, ''),
+            p.replace(/^\//, '').replace(/\/$/, ''),
           );
           const filteredBlobs = blobs.filter((b) => {
             // Include filter: if paths are configured, only include matching blobs
