@@ -6,7 +6,7 @@ description: Connect your own domain to your Flowershow site
 > [!note]
 > Custom domains are a premium feature. Check out our [pricing page](https://flowershow.app/pricing) to learn more about premium features.
 
-Instead of using a default Flowershow URL like `{sitename}-{username}.flowershow.me`, you can connect your own domain (e.g. `myblog.com` or `docs.mycompany.com`) to give your site a professional appearance.
+Connect your own domain (e.g. `myblog.com` or `docs.mycompany.com`) to your Flowershow site from the **Flowershow dashboard** under **Site Settings → Access**, instead of using the default `{sitename}-{username}.flowershow.me` URL.
 
 ## What you'll need
 
@@ -16,13 +16,9 @@ Instead of using a default Flowershow URL like `{sitename}-{username}.flowershow
 
 ## Setup
 
-### 1. Add domain in your site settings
+### 1. Add your domain
 
-1. Log into [Flowershow dashboard](https://cloud.flowershow.app/)
-2. Go to site settings
-3. Find "Custom Domain" section
-4. Enter domain name (e.g., `mysite.com` or `docs.mysite.com`)
-5. Click "Save Changes"
+Go to **Settings → Access → Custom Domain**, enter your domain name (e.g., `mysite.com` or `docs.mysite.com`), and click **Save Changes**.
 
 You can use either an **apex domain** (e.g. `myblog.com`) or a **subdomain** (e.g. `docs.mycompany.com`). Subdomains are useful when your main domain is used for another purpose (e.g. your company website).
 
