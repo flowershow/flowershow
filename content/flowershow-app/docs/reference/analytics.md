@@ -3,26 +3,15 @@ title: Analytics
 description: Configure analytics for your Flowershow site using Google Analytics 4 or Umami.
 ---
 
+Configure analytics for your site from the **Flowershow dashboard** under **Site Settings → Analytics**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
+
 ## Google Analytics 4
 
-### Configuration
+Go to **Settings → Analytics → Google Analytics** and enter your GA4 Measurement ID (e.g. `G-XXXXXXXXXX`).
 
-> [!tip] Dashboard
-> Your GA4 Measurement ID can be entered in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Analytics** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
+### Setting up a data stream
 
-Add your GA4 Measurement ID to `config.json`:
-
-```json
-{
-  "analytics": "G-XXXXXXXXXX"
-}
-```
-
-### Properties
-
-- `analytics`: Your Google Analytics 4 Measurement ID (starts with "G-")
-
-### Data stream setup
+If you don't have a Measurement ID yet:
 
 1. Go to Google Analytics **Admin > Data Streams**
 2. Click **Add Stream > Web**
@@ -47,7 +36,7 @@ Add your GA4 Measurement ID to `config.json`:
 
 ### Troubleshooting
 
-- **No data in Real-Time reports:** verify your Measurement ID is correct, disable any ad blockers, and ensure `config.json` is valid JSON
+- **No data in Real-Time reports:** verify your Measurement ID is correct, disable any ad blockers, and ensure your configuration is valid
 - **Console errors:** confirm you're using a GA4 ID (starts with `G-`), not a Universal Analytics ID
 
 ---
@@ -56,35 +45,7 @@ Add your GA4 Measurement ID to `config.json`:
 
 [Umami](https://umami.is/) is a simple, privacy-focused analytics tool. Works with [Umami Cloud](https://cloud.umami.is/) or a self-hosted instance.
 
-### Configuration
-
-> [!tip] Dashboard
-> Your Umami website ID and script URL (for self-hosted instances) can be entered in the [Flowershow dashboard](https://cloud.flowershow.app) under **Site Settings → Analytics** — no `config.json` edits needed. Values set in `config.json` take precedence over dashboard settings.
-
-Add your Umami config to `config.json`:
-
-```json
-{
-  "umami": {
-    "websiteId": "your-website-id"
-  }
-}
-```
-
-Flowershow will inject the Umami tracking script into every page of your site.
-
-### Self-hosted Umami
-
-If you run your own Umami instance, also provide the script URL:
-
-```json
-{
-  "umami": {
-    "websiteId": "your-website-id",
-    "src": "https://your-umami.example.com/script.js"
-  }
-}
-```
+Go to **Settings → Analytics → Umami Analytics** and enter your Umami Website ID (e.g. `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`).
 
 ### Getting your website ID
 
@@ -93,9 +54,26 @@ If you run your own Umami instance, also provide the script URL:
 3. Add your site or select an existing one
 4. Copy the **Website ID** from the website details
 
-### Properties
+### Self-hosted Umami
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `websiteId` | string | Yes (extended form) | Your Umami website ID |
-| `src` | string | No | Script URL — only needed for self-hosted instances |
+If you run your own Umami instance, also go to **Settings → Analytics → Umami Script URL** and enter your custom script URL (e.g. `https://your-umami.example.com/script.js`). Leave blank to use the default Umami Cloud script.
+
+---
+
+## Using config.json
+
+If you want to version-control your configuration, or have your editor's AI agent manage settings without touching the dashboard, you can define everything in `config.json` instead. Values set in `config.json` take precedence over dashboard settings.
+
+```json
+{
+  "analytics": "G-XXXXXXXXXX",
+  "umami": {
+    "websiteId": "your-website-id",
+    "src": "https://your-umami.example.com/script.js"
+  }
+}
+```
+
+- `analytics`: Your Google Analytics 4 Measurement ID (starts with `G-`)
+- `umami.websiteId`: Your Umami website ID
+- `umami.src`: Script URL for self-hosted Umami instances — omit to use the default Umami Cloud script
