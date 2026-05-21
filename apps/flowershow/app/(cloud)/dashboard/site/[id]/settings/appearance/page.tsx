@@ -147,7 +147,7 @@ export default async function AppearanceSettingsPage(props: {
         />
 
         <Form
-          title="Show Flowershow Branding"
+          title="Flowershow Branding"
           description="Show 'Built with Flowershow' button on your site."
           disabled={!isFeatureEnabled(Feature.NoBranding, site)}
           inputAttrs={{
