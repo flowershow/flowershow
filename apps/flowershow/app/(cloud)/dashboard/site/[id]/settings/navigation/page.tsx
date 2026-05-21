@@ -110,15 +110,20 @@ export default async function NavigationSettingsPage(props: {
 
         <JsonForm
           title="Nav Links"
-          description="Navigation items shown in the header. Each item needs 'name' and 'href'. Dropdowns use 'name' and 'links' (array of {name, href})."
+          description="Navigation items shown in the header."
           helpText={
-            <a
-              className="underline"
-              href="https://flowershow.app/docs/reference/navbar"
-            >
-              Learn more
-              <ExternalLinkIcon className="inline h-4" />
-            </a>
+            <>
+              {
+                "Each item needs 'name' and 'href'. Dropdowns use 'name' and 'links' (array of {name, href})."
+              }{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/navbar"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            </>
           }
           placeholder={'[{"name":"Blog","href":"/blog"}]'}
           fieldName="nav.links"
@@ -128,15 +133,20 @@ export default async function NavigationSettingsPage(props: {
 
         <JsonForm
           title="Social Links"
-          description='Social platform links shown in the nav and footer. Each item needs "name", "href", and optionally "label" (platform, e.g. "github", "twitter").'
+          description="Social platform links shown in the nav and footer."
           helpText={
-            <a
-              className="underline"
-              href="https://flowershow.app/docs/reference/navbar"
-            >
-              Learn more
-              <ExternalLinkIcon className="inline h-4" />
-            </a>
+            <>
+              {
+                'Each item needs "name", "href", and optionally "label" (platform, e.g. "github", "twitter").'
+              }{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/navbar"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            </>
           }
           placeholder={
             '[{"name":"GitHub","href":"https://github.com/you","label":"github"}]'
@@ -148,15 +158,18 @@ export default async function NavigationSettingsPage(props: {
 
         <JsonForm
           title="Footer Navigation"
-          description='Navigation groups in the footer. Each group needs "title" and "links" (array of {name, href}).'
+          description="Navigation groups in the footer."
           helpText={
-            <a
-              className="underline"
-              href="https://flowershow.app/docs/reference/footer"
-            >
-              Learn more
-              <ExternalLinkIcon className="inline h-4" />
-            </a>
+            <>
+              {'Each group needs "title" and "links" (array of {name, href}).'}{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/footer"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            </>
           }
           placeholder={
             '[{"title":"Docs","links":[{"name":"Getting Started","href":"/docs"}]}]'

@@ -99,13 +99,16 @@ export default async function AppearanceSettingsPage(props: {
           title="Default Color Mode"
           description="The default color mode for your site."
           helpText={
-            <a
-              className="underline"
-              href="https://flowershow.app/docs/reference/dark-mode"
-            >
-              Learn more
-              <ExternalLinkIcon className="inline h-4" />
-            </a>
+            <>
+              Dark mode support varies by theme.{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/dark-mode"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            </>
           }
           inputAttrs={{
             name: 'defaultMode',
@@ -124,13 +127,16 @@ export default async function AppearanceSettingsPage(props: {
           title="Show Mode Switch"
           description="Show a toggle that lets visitors switch between light and dark mode."
           helpText={
-            <a
-              className="underline"
-              href="https://flowershow.app/docs/reference/dark-mode"
-            >
-              Learn more
-              <ExternalLinkIcon className="inline h-4" />
-            </a>
+            <>
+              Dark mode support varies by theme.{' '}
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/dark-mode"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            </>
           }
           inputAttrs={{
             name: 'showModeSwitch',

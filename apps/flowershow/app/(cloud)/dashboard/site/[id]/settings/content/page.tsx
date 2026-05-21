@@ -254,7 +254,7 @@ export default async function ContentSettingsPage(props: {
               <ExternalLinkIcon className="inline h-4" />
             </a>
           }
-          placeholder={'["/authors"]'}
+          placeholder={'["authors/"]'}
           fieldName="contentHide"
           defaultValue={siteConfig?.contentHide ?? null}
           handleSubmit={updateContentHide}
