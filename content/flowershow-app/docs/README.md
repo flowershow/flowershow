@@ -68,10 +68,6 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
 ## Pages & content
 
 <div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
-  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="/docs/guides/publish-blog">
-    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Blog setup</h3>
-    <div class="line-clamp-3 text-sm font-normal text-gray-900">Add a blog section with listings and authors.</div>
-  </a>
   <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="/docs/reference/page-title">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Page titles</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Control how page titles display and appear in search.</div>
@@ -107,6 +103,10 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
   <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="/docs/reference/forms">
     <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Forms</h3>
     <div class="line-clamp-3 text-sm font-normal text-gray-900">Newsletter signups, contact forms, surveys.</div>
+  </a>
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="/docs/guides/publish-blog">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Blog setup</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Add a blog section with listings and authors.</div>
   </a>
 </div>
 
