@@ -169,9 +169,21 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
 
       <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
         <p className="w-full text-sm text-stone-500">
-          {subscription?.status === 'active'
-            ? 'Manage your subscription and payment method.'
-            : 'Select billing interval and upgrade to Premium.'}
+          {subscription?.status === 'active' ? (
+            'Manage your subscription and payment method.'
+          ) : (
+            <>
+              Select billing interval and upgrade to Premium.{' '}
+              <a
+                href="https://flowershow.app/pricing"
+                target="_blank"
+                rel="noreferrer"
+                className="underline hover:text-stone-700"
+              >
+                See pricing
+              </a>
+            </>
+          )}
         </p>
         <LoadingButton
           onClick={
