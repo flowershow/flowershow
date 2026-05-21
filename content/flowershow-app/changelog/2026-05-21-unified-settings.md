@@ -56,6 +56,7 @@ A handful of options aren't in the dashboard yet:
 
 - **`showHero`, `hero`, `cta`** — homepage hero section and call-to-action. We're still evaluating whether to keep these in their current form before surfacing them as dashboard settings.
 - **Advanced Giscus config** — `repoId` and `categoryId` are manageable from the dashboard, but other Giscus options (`mapping`, `theme`, `lang`, `inputPosition`, `reactionsEnabled`, etc.) are still config.json only.
+- **Emoji favicon** — the dashboard favicon upload only accepts image files. To use an emoji as your favicon, set it via `config.json`: `{ "favicon": "🌸" }`.
 
 ## config.json format changes
 
