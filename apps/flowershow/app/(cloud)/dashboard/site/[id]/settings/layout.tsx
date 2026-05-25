@@ -1,4 +1,4 @@
-import { InfoIcon, ExternalLinkIcon } from 'lucide-react';
+import { InfoIcon } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
 import { ReactNode } from 'react';
 import { publicSiteSelect } from '@/server/api/types';
@@ -39,26 +39,18 @@ export default async function SiteSettingsLayout(props: {
       <div className="mb-4 mt-6 flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
         <InfoIcon className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
         <span>
+          These dashboard settings control how your site looks and behaves. If
+          your site also uses{' '}
+          <code className="rounded bg-blue-100 px-1 py-0.5 font-mono text-xs">
+            config.json
+          </code>
+          , matching values from that file will override the dashboard settings
+          and may not appear here. To control a setting from the dashboard,
+          remove that setting from{' '}
           <code className="rounded bg-blue-100 px-1 py-0.5 font-mono text-xs">
             config.json
           </code>{' '}
-          still works and always takes precedence over dashboard settings. These
-          fields only reflect what&apos;s stored in the database — they
-          won&apos;t show values from your config file. To manage an option
-          here, remove it from{' '}
-          <code className="rounded bg-blue-100 px-1 py-0.5 font-mono text-xs">
-            config.json
-          </code>{' '}
-          first.{' '}
-          <a
-            href="https://flowershow.app/changelog/2026-05-21-unified-settings"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-0.5 underline hover:text-blue-900"
-          >
-            Learn more
-            <ExternalLinkIcon className="h-3 w-3" />
-          </a>
+          first.
         </span>
       </div>
       {children}
