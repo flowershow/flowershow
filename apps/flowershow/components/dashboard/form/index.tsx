@@ -79,14 +79,15 @@ export default function Form({
     event.preventDefault();
     if (disabled || isToggleField) return;
 
-    // Extra validation for projectName
-    if (inputAttrs.name === 'projectName') {
-      if (inputAttrs.pattern && !RegExp(inputAttrs.pattern).test(value)) {
+    if (inputAttrs.pattern && !RegExp(inputAttrs.pattern).test(value)) {
+      if (inputAttrs.name === 'customDomain') {
+        toast.error('Please enter a valid domain (e.g. yourdomain.com)');
+      } else if (inputAttrs.name === 'projectName') {
         toast.error(
           'Error: Project name can only contain ASCII letters, digits, and the characters -, and _',
         );
-        return;
       }
+      return;
     }
 
     try {

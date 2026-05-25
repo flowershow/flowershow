@@ -58,7 +58,7 @@ export default async function AccessSettingsPage(props: {
               : '',
             placeholder: 'yourdomain.com',
             maxLength: 64,
-            pattern: validDomainRegex.toString(),
+            pattern: validDomainRegex.source,
           }}
           handleSubmit={updateSite}
         />
