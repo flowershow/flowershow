@@ -11,8 +11,10 @@ import {
 } from '@/lib/cli-auth';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { deleteProject } from '@/lib/content-store';
+import { removeDomainFromVercelProject } from '@/lib/domains';
 import PostHogClient from '@/lib/server-posthog';
 import { deleteSiteCollection } from '@/lib/typesense';
+import { env } from '@/env.mjs';
 import prisma from '@/server/db';
 
 /**
@@ -168,6 +170,7 @@ export async function DELETE(
       select: {
         id: true,
         userId: true,
+        customDomain: true,
         _count: {
           select: { blobs: true },
         },
@@ -218,6 +221,14 @@ export async function DELETE(
     await prisma.site.delete({
       where: { id: siteId },
     });
+
+    if (site.customDomain && env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
+      try {
+        await removeDomainFromVercelProject(site.customDomain);
+      } catch (domainError) {
+        console.error('Error removing custom domain from Vercel:', domainError);
+      }
+    }
 
     const posthogDel = PostHogClient();
     const { client_type, client_version } = getClientInfo(request);

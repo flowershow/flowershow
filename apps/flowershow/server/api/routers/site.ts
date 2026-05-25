@@ -620,6 +620,10 @@ export const siteRouter = createTRPCRouter({
         where: { id: site.id },
       });
 
+      if (site.customDomain && env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
+        await removeDomainFromVercelProject(site.customDomain);
+      }
+
       await inngest.send({
         name: 'site/delete',
         data: {
