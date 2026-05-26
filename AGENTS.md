@@ -98,6 +98,20 @@ Many packages and apps have their own `README.md` that documents public-facing b
 
 This applies to any user-visible change: adding/removing tools, renaming commands, changing defaults, altering API surface, etc.
 
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues is primary (external/public issues); beads (`bd`) is used for internal session-level tracking. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default canonical label strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Multi-context monorepo — `CONTEXT-MAP.md` at root points to per-context `CONTEXT.md` files. See `docs/agents/domain.md`.
+
 ## Changelog and Docs Pages
 
 For any user-facing change — new features, updated behavior, or bug fixes that affect what users can do — you MUST create a changelog entry. If the change introduces or meaningfully updates a feature that users need to understand or configure, also create or update a docs page.
