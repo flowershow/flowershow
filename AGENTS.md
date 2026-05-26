@@ -1,35 +1,14 @@
 # Agent Instructions
 
-This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
-
-## Quick Reference
-
-```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --status in_progress  # Claim work
-bd close <id>         # Complete work
-bd sync               # Sync with git
-```
-
-## Starting Implementation Work
-
-When a user asks to implement something, always check for an existing related `bd` issue first.
-
-1. Run `bd ready` and look for the most relevant item.
-2. If you find a match, review it with `bd show <id>` and claim it with `bd update <id> --status in_progress` before coding.
-
-Don't use beads for simple tasks that can be solved during one coding session. Only use it for complex tasks and only when requested.
-
 ## Landing the Plane (Session Completion)
 
 **When ending a work session**, you MUST complete ALL steps below.
 
 **MANDATORY WORKFLOW:**
 
-1. **File issues for remaining work** - Create issues for anything that needs follow-up
+1. **Note remaining work** - Summarise anything that needs follow-up in the hand-off; only file GitHub issues if explicitly asked
 2. **Run quality gates** (if code changed) - Tests, linters, builds
-3. **Update issue status** - Close finished work, update in-progress items
+3. **Update issue status** - Close finished GitHub issues, update in-progress items
 4. **Clean up** - Clear stashes, prune remote branches
 5. **Verify** - All changes committed
 6. **Hand off** - Provide context for next session
@@ -84,7 +63,7 @@ Before finishing any task that modifies code, you MUST review your changes for s
 5. **Dependency on contract security** — For API routes, confirm the `security` field in the contract matches the actual auth enforcement in the route handler.
 6. **Third-party data** — Is data from external sources (GitHub, webhooks, user content) treated as untrusted?
 
-If you identify a security issue in your own changes, fix it before committing. If you find a pre-existing issue outside your change scope, file a `bd` issue with `--priority=0` (critical) or `--priority=1` (high) and note it in your hand-off.
+If you identify a security issue in your own changes, fix it before committing. If you find a pre-existing issue outside your change scope, note it in your hand-off with its severity (critical / high).
 
 ## Documentation
 
@@ -142,3 +121,17 @@ If the change introduces a feature users need to understand or configure, create
 - New or changed UI behavior
 - New CLI commands or flags
 - Bug fixes that change previously broken or surprising behavior users may have worked around
+
+## Beads (optional session task tracking)
+
+This repo has `bd` (beads) available for tracking complex, multi-session work. It is **rarely used** — only reach for it when explicitly asked or when a task spans multiple sessions and needs persistent state.
+
+```bash
+bd ready              # Find available work
+bd show <id>          # View issue details
+bd update <id> --status in_progress  # Claim work
+bd close <id>         # Complete work
+bd sync               # Sync with git
+```
+
+Don't use beads for simple tasks that can be completed in one session.
