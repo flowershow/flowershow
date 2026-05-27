@@ -132,7 +132,6 @@ export async function POST(request: NextRequest) {
         data: {
           projectName: sanitizedName,
           subdomain: buildSiteSubdomain(sanitizedName, username),
-          autoSync: false,
           userId: auth.userId,
           configJson: SITE_CONFIG_DEFAULTS,
         },

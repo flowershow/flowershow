@@ -1,4 +1,4 @@
-import { Blob, Prisma, PrismaClient, Status } from '@prisma/client';
+import { Blob, Prisma, PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
 import { jwtVerify } from 'jose';
@@ -23,7 +23,7 @@ import {
   validDomainRegex,
 } from '@/lib/domains';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
-import { checkIfBranchExists, fetchGitHubRepoTree } from '@/lib/github';
+import { checkIfBranchExists } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
@@ -201,7 +201,6 @@ export const siteRouter = createTRPCRouter({
         data: {
           projectName,
           subdomain: buildSiteSubdomain(projectName, creator?.username ?? ''),
-          autoSync: false,
           user: { connect: { id: ctx.session.user.id } },
           configJson: SITE_CONFIG_DEFAULTS,
         },
@@ -367,12 +366,6 @@ export const siteRouter = createTRPCRouter({
             },
           });
         }
-      } else if (key === 'autoSync') {
-        const enable = value === 'true';
-        await ctx.db.site.update({
-          where: { id },
-          data: { autoSync: enable },
-        });
       } else {
         const converted = parseIfBoolString(value);
         await ctx.db.site.update({
@@ -747,28 +740,19 @@ export const siteRouter = createTRPCRouter({
     }),
 
   getSyncStatus: protectedProcedure
-    .input(
-      z.object({
-        id: z.string().min(1),
-      }),
-    )
+    .input(z.object({ id: z.string().min(1) }))
     .query(
       async ({
         ctx,
         input,
       }): Promise<{
-        status: 'UNPUBLISHED' | 'SUCCESS' | 'PENDING' | 'ERROR' | 'OUTDATED';
+        status: 'UNPUBLISHED' | 'SUCCESS' | 'PENDING' | 'ERROR';
         error?: string | null;
         lastSyncedAt?: Date | null;
       }> => {
-        // Get site data for tree comparison
         const site = await ctx.db.site.findUnique({
           where: { id: input.id },
-          include: {
-            installationRepository: {
-              select: { installationId: true, repositoryFullName: true },
-            },
-          },
+          select: { id: true, userId: true },
         });
 
         if (!site || site.userId !== ctx.session.user.id) {
@@ -778,99 +762,46 @@ export const siteRouter = createTRPCRouter({
           });
         }
 
-        // Get all blobs for the site
-        const blobs = await ctx.db.blob.findMany({
-          where: {
-            siteId: site.id,
-          },
-          select: {
-            syncStatus: true,
-            syncError: true,
-            updatedAt: true,
-            path: true,
-          },
+        const latestPublish = await ctx.db.publish.findFirst({
+          where: { siteId: site.id },
+          orderBy: { startedAt: 'desc' },
+          select: { id: true, startedAt: true },
         });
 
-        // Calculate aggregate sync status
-        // Site-level status is separate from blob-level Status enum
-        let status:
-          | 'UNPUBLISHED'
-          | 'SUCCESS'
-          | 'PENDING'
-          | 'ERROR'
-          | 'OUTDATED';
-        let error: string | null = null;
-        // Get the most recent update date
-
-        if (blobs.length === 0) {
-          // If tree is set, sync already ran but found no files (e.g. rootDir doesn't exist)
-          if (site.tree) {
-            return { status: 'SUCCESS', lastSyncedAt: null };
-          }
-          return {
-            status: 'UNPUBLISHED',
-            lastSyncedAt: null,
-          };
+        if (!latestPublish) {
+          return { status: 'UNPUBLISHED', lastSyncedAt: null };
         }
 
-        const lastSyncedAt =
-          blobs
-            .map((b) => b.updatedAt)
-            .sort((a, b) => b.getTime() - a.getTime())[0] || null;
+        const publishFiles = await ctx.db.publishFile.findMany({
+          where: { publishId: latestPublish.id },
+          select: { status: true, error: true, path: true },
+        });
 
-        // If any blob is UPLOADING or PROCESSING, site sync is PENDING
-        if (
-          blobs.some(
-            (b) =>
-              b.syncStatus === 'UPLOADING' || b.syncStatus === 'PROCESSING',
-          )
-        ) {
-          status = 'PENDING';
+        if (publishFiles.length === 0) {
+          return { status: 'PENDING', lastSyncedAt: latestPublish.startedAt };
         }
-        // If any blob is ERROR, site is ERROR
-        else if (blobs.some((b) => b.syncStatus === 'ERROR')) {
-          status = 'ERROR';
-          error = blobs
-            .filter((b) => b.syncStatus === 'ERROR')
-            .map((b) =>
-              b.syncError
-                ? `[${b.path}]: ${b.syncError}`
-                : `[${b.path}]: Unknown error`,
+
+        if (publishFiles.some((f) => f.status === 'uploading')) {
+          return { status: 'PENDING', lastSyncedAt: latestPublish.startedAt };
+        }
+
+        const errorFiles = publishFiles.filter((f) => f.status === 'error');
+        if (errorFiles.length > 0) {
+          const error = errorFiles
+            .map((f) =>
+              f.error
+                ? `[${f.path}]: ${f.error}`
+                : `[${f.path}]: Unknown error`,
             )
             .join('\n');
-        } else if (
-          !site.installationRepository?.repositoryFullName &&
-          !site.ghRepository
-        ) {
           return {
-            status: 'SUCCESS',
-            lastSyncedAt,
+            status: 'ERROR',
+            error,
+            lastSyncedAt: latestPublish.startedAt,
           };
-        } else {
-          if (!site.tree) {
-            return {
-              status: 'PENDING',
-            };
-          }
-          const repoForTree =
-            site.installationRepository?.repositoryFullName ??
-            site.ghRepository!;
-          const gitHubTree = await fetchGitHubRepoTree({
-            ghRepository: repoForTree,
-            ghBranch: site.ghBranch!,
-            accessToken: ctx.session.accessToken,
-            installationId:
-              site.installationRepository?.installationId ?? undefined,
-          });
-          status =
-            site.tree?.['sha'] === gitHubTree.sha ? 'SUCCESS' : 'OUTDATED';
         }
 
-        return {
-          status,
-          error,
-          lastSyncedAt,
-        };
+        return { status: 'SUCCESS', lastSyncedAt: latestPublish.startedAt };
       },
     ),
   getCustomStyles: publicProcedure
@@ -1904,7 +1835,6 @@ export const siteRouter = createTRPCRouter({
           ghBranch: null,
           rootDir: null,
           installationRepositoryId: null,
-          autoSync: false,
           tree: Prisma.JsonNull,
           configJson: {
             ...existingConfig,
@@ -1984,7 +1914,6 @@ export const siteRouter = createTRPCRouter({
         where: { id: input.siteId },
         data: {
           installationRepositoryId: repoRecord.id,
-          autoSync: true,
         },
         select: publicSiteSelect,
       });
@@ -2066,7 +1995,6 @@ export const siteRouter = createTRPCRouter({
           ghRepository,
           ghBranch,
           rootDir: rootDir || null,
-          autoSync: true,
           ...(installationRepoId && {
             installationRepository: { connect: { id: installationRepoId } },
           }),
@@ -2200,16 +2128,14 @@ export const siteRouter = createTRPCRouter({
                 appPath: urlPath,
                 size: file.size,
                 sha: file.sha,
-                metadata: {},
+                metadata: Prisma.JsonNull,
                 extension,
-                syncStatus: 'UPLOADING',
               },
               update: {
                 size: file.size,
                 sha: file.sha,
                 appPath: urlPath,
                 extension,
-                syncStatus: 'UPLOADING',
               },
             });
 

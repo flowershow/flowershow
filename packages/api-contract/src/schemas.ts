@@ -34,7 +34,6 @@ export const SiteDetailSchema = z.object({
   customDomain: z.string().nullable(),
   subdomain: z.string(),
   rootDir: z.string().nullable(),
-  autoSync: z.boolean(),
   plan: z.enum(['FREE', 'PREMIUM']),
   privacyMode: z.enum(['PUBLIC', 'PASSWORD']),
   showComments: z.boolean(),
@@ -102,8 +101,8 @@ export type PublishFilesResponse = z.infer<typeof PublishFilesResponseSchema>;
 export const BlobStatusSchema = z.object({
   id: z.string(),
   path: z.string(),
-  syncStatus: z.enum(['UPLOADING', 'PROCESSING', 'SUCCESS', 'ERROR']),
-  syncError: z.string().nullable(),
+  status: z.enum(['uploading', 'success', 'error']),
+  error: z.string().nullable(),
   extension: z.string().nullable(),
 });
 export type BlobStatus = z.infer<typeof BlobStatusSchema>;

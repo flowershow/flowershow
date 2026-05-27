@@ -211,9 +211,6 @@ export const syncSite = inngest.createFunction(
                     sha: ghTreeItem.sha,
                     metadata: Prisma.JsonNull,
                     extension,
-                    syncStatus: ['md', 'mdx'].includes(extension)
-                      ? 'PROCESSING'
-                      : 'SUCCESS',
                   },
                   update: {
                     appPath: urlPath,
@@ -258,13 +255,8 @@ export const syncSite = inngest.createFunction(
                     size: 0,
                     sha: '',
                     metadata: Prisma.JsonNull,
-                    syncStatus: 'ERROR',
-                    syncError: error.message,
                   },
-                  update: {
-                    syncStatus: 'ERROR',
-                    syncError: error.message,
-                  },
+                  update: {},
                 });
                 return { filePath, status: 'ERROR', message: error };
               }

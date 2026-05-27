@@ -18,7 +18,6 @@ type SiteSyncStatus =
   | 'SUCCESS'
   | 'PENDING'
   | 'ERROR'
-  | 'OUTDATED'
   | 'LOADING';
 
 interface SyncStatus {

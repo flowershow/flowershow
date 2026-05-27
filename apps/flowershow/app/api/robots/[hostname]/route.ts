@@ -32,7 +32,7 @@ export async function GET(
 
   // Check if the user has published a robots.txt file
   const robotsBlob = await prisma.blob.findFirst({
-    where: { siteId: site.id, path: 'robots.txt', syncStatus: 'SUCCESS' },
+    where: { siteId: site.id, path: 'robots.txt' },
     select: { path: true },
   });
 

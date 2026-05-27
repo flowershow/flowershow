@@ -17,7 +17,6 @@ export const publicSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   enableRss: true,
   showSidebar: true,
   privacyMode: true,
-  autoSync: true,
   syntaxMode: true,
   showBuiltWithButton: true,
   showRawLink: true,
@@ -53,7 +52,6 @@ export const publicSiteSchema: z.ZodType<PublicSite> = z.object({
   enableRss: z.boolean(),
   showSidebar: z.boolean(),
   privacyMode: z.enum(PrivacyMode),
-  autoSync: z.boolean(),
   syntaxMode: z.enum(SyntaxMode),
   showBuiltWithButton: z.boolean(),
   showRawLink: z.boolean(),
@@ -74,7 +72,6 @@ export const publicSiteSchema: z.ZodType<PublicSite> = z.object({
 export enum SiteUpdateKey {
   customDomain = 'customDomain',
   rootDir = 'rootDir',
-  autoSync = 'autoSync',
   enableComments = 'enableComments',
   enableSearch = 'enableSearch',
   enableRss = 'enableRss',
