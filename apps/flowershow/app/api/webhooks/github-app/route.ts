@@ -44,6 +44,8 @@ interface WebhookPayload {
   }>;
   // Push event fields
   ref?: string;
+  after?: string; // SHA of the HEAD commit after the push
+  head_commit?: { message?: string };
   repository?: {
     id: number;
     name: string;
@@ -645,6 +647,9 @@ async function handlePushEvent(data: WebhookPayload) {
       return;
     }
 
+    const gitCommitSha = data.after ?? null;
+    const gitCommitMessage = data.head_commit?.message ?? null;
+
     const syncResults = await Promise.allSettled(
       sites.map((site) =>
         inngest.send({
@@ -658,6 +663,8 @@ async function handlePushEvent(data: WebhookPayload) {
             rootDir: site.rootDir,
             installationId:
               site.installationRepository?.installationId ?? dbInstallation.id,
+            gitCommitSha,
+            gitCommitMessage,
           },
         }),
       ),
