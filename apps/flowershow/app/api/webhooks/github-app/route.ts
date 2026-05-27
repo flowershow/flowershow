@@ -444,7 +444,6 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
           },
         });
 
-        // Disable autoSync for affected sites
         if (affectedSites.length > 0) {
           console.log(
             `Clearing installation access for ${affectedSites.length} affected site(s) for user ${dbInstallation.userId}`,

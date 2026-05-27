@@ -24,7 +24,6 @@ import { getRepoFullName } from '@/lib/get-repo-full-name';
 import { getSiteUrl } from '@/lib/get-site-url';
 import { PublicSite } from '@/server/api/types';
 import { useSync } from '../sync-status-provider';
-import SyncSiteButton from './sync-button';
 
 export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
   const syncStatus = useSync();
@@ -188,7 +187,6 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
           ) : null}
         </div>
         <div className="mt-3 flex sm:mt-0">
-          {repoFullName && <SyncSiteButton siteId={site.id} />}
           <span className="ml-3 block">
             <a
               href={url}

@@ -18,21 +18,6 @@ export default function SitesAdminTable() {
     refetchInterval: 5 * 1000,
     refetchOnWindowFocus: 'always',
   });
-  const { mutate: syncSite } = api.site.sync.useMutation();
-
-  const forceSyncSite = (id: string) =>
-    syncSite({
-      id,
-      force: true,
-    });
-
-  const syncSelectedSites = () => {
-    selectedSites.forEach((siteId) => forceSyncSite(siteId));
-  };
-
-  const syncSingleSite = (id: string) => {
-    forceSyncSite(id);
-  };
 
   useEffect(() => {
     const isIndeterminate =
@@ -65,17 +50,6 @@ export default function SitesAdminTable() {
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
             <div className="relative">
-              {selectedSites.length > 0 && (
-                <div className="absolute left-14 top-0 flex h-12 items-center space-x-3 bg-white sm:left-12">
-                  <button
-                    type="button"
-                    className="inline-flex items-center rounded bg-white px-2 py-1 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-white"
-                    onClick={() => syncSelectedSites()}
-                  >
-                    Bulk sync
-                  </button>
-                </div>
-              )}
               <table className="min-w-full table-fixed divide-y divide-gray-300">
                 <thead>
                   <tr>
@@ -111,12 +85,6 @@ export default function SitesAdminTable() {
                       className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
                     >
                       Branch
-                    </th>
-                    <th
-                      scope="col"
-                      className="relative py-3.5 pl-3 pr-4 sm:pr-3"
-                    >
-                      <span className="sr-only">Edit</span>
                     </th>
                   </tr>
                 </thead>
@@ -207,15 +175,6 @@ export default function SitesAdminTable() {
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {site.ghBranch}
-                        </td>
-                        <td className="whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-3">
-                          <button
-                            className="text-indigo-600 hover:text-indigo-900"
-                            type="button"
-                            onClick={() => syncSingleSite(site.id)}
-                          >
-                            Sync<span className="sr-only"></span>
-                          </button>
                         </td>
                       </tr>
                     ))}
