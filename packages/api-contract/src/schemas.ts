@@ -92,6 +92,7 @@ export type UploadTarget = z.infer<typeof UploadTargetSchema>;
 // ---------------------------------------------------------------------------
 export const PublishFilesResponseSchema = z.object({
   files: z.array(UploadTargetSchema),
+  publishId: z.string().optional(),
 });
 export type PublishFilesResponse = z.infer<typeof PublishFilesResponseSchema>;
 
@@ -222,6 +223,7 @@ export const SyncResponseSchema = z.object({
     unchanged: z.number(),
   }),
   dryRun: z.boolean().optional(),
+  publishId: z.string().optional(),
 });
 export type SyncResponse = z.infer<typeof SyncResponseSchema>;
 
