@@ -371,6 +371,29 @@ export const deleteSite = inngest.createFunction(
   },
 );
 
+export const cleanupExpiredPublishFiles = inngest.createFunction(
+  {
+    id: 'cleanup-expired-publish-files',
+  },
+  { cron: '*/15 * * * *' }, // Every 15 minutes
+  async ({ step }) => {
+    const result = await step.run('expire-stale-uploading-files', async () => {
+      return prisma.publishFile.updateMany({
+        where: {
+          status: 'uploading',
+          presignedUrlExpiresAt: { lt: new Date() },
+        },
+        data: {
+          status: 'error',
+          error: 'upload expired',
+        },
+      });
+    });
+
+    return { expired: result.count };
+  },
+);
+
 export const cleanupExpiredSites = inngest.createFunction(
   {
     id: 'cleanup-expired-sites',

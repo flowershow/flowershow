@@ -7,12 +7,12 @@ load 'test_helper.bash'
 # Run once before all tests
 setup_file() {
     docker compose up -d --remove-orphans
-    
+
     echo "Waiting for services to be healthy..."
     while ! docker compose ps | grep -q "healthy"; do
         sleep 1
     done
-    
+
     echo "Setting up environment variables for the worker..."
     cat > .dev.vars << EOF
 DATABASE_URL=postgresql://postgres:postgres@localhost:15432/postgres
@@ -24,11 +24,11 @@ S3_ENDPOINT=http://localhost:19000
 S3_FORCE_PATH_STYLE=true
 FILE_PROCESSOR_QUEUE=markdown-processing-queue-dev
 EOF
-    
+
     # Ensure worker is not running
     pkill -f "wrangler dev" || true
     sleep 2
-    
+
     echo "Starting worker..."
     npm run dev &
 
@@ -47,10 +47,10 @@ EOF
         echo "Worker failed to become ready"
         exit 1
     fi
-    
+
     echo "Configuring MinIO..."
     docker compose exec minio mc alias set local http://localhost:9000 minioadmin minioadmin
-    
+
     echo "Creating bucket..."
     if ! docker compose exec minio mc ls local/flowershow &>/dev/null; then
         docker compose exec minio mc mb local/flowershow
@@ -68,10 +68,10 @@ EOF
     while ! docker compose ps minio | grep -q "healthy"; do
         sleep 1
     done
-    
+
     echo "Adding event configuration..."
     docker compose exec minio mc event add local/flowershow arn:minio:sqs::worker:webhook --event put
- 
+
     if ! docker compose exec minio mc event list local/flowershow | grep -q "arn:minio:sqs::worker:webhook"; then
         echo "Failed to verify event configuration"
         exit 1
@@ -93,9 +93,11 @@ setup() {
     export PATH_IN_REPO="articles/Test Article.md"
     export APP_PATH="articles/Test Article"
     export BLOB_ID="test-blob-123"
-    
+    export PUBLISH_ID="ctest0000000000000000000"
+    export PUBLISH_FILE_ID="cpf00000000000000000000"
+
     echo "Setting up test data..."
-    setup_test_data "$SITE_ID" "$BLOB_ID" "$PATH_IN_REPO" "$APP_PATH"
+    setup_test_data "$SITE_ID" "$BLOB_ID" "$PATH_IN_REPO" "$APP_PATH" "$PUBLISH_ID" "$PUBLISH_FILE_ID"
 }
 
 # Run after each test
@@ -108,87 +110,102 @@ teardown() {
     echo "Testing initial upload..."
     create_test_content "Initial Article" "First version" "2024-03-20"
     docker compose cp test_content.md minio:/test_content.md
-    docker compose exec minio mc cp /test_content.md "local/flowershow/$SITE_ID/$BRANCH/raw/$PATH_IN_REPO"
+    docker compose exec minio mc cp /test_content.md "local/flowershow/$SITE_ID/$BRANCH/raw/$PUBLISH_ID/$PATH_IN_REPO"
     rm test_content.md
-    
+
     echo "Waiting for initial processing..."
     sleep 10
-    
+
     result=$(docker compose exec postgres psql postgresql://postgres:postgres@localhost:5432/postgres -t -c \
         "SELECT json_build_object(
-            'metadata', metadata,
-            'syncStatus', \"syncStatus\",
-            'syncError', \"syncError\"
+            'metadata', b.metadata,
+            'publishFileStatus', pf.status,
+            'publishFileError', pf.error
          ) as result
-         FROM \"Blob\"
-         WHERE \"siteId\" = '$SITE_ID'
-         AND path = '$PATH_IN_REPO'
+         FROM \"Blob\" b
+         JOIN \"PublishFile\" pf ON pf.publish_id = '$PUBLISH_ID' AND pf.path = b.path
+         WHERE b.\"site_id\" = '$SITE_ID'
+         AND b.path = '$PATH_IN_REPO'
          LIMIT 1;")
-    
+
     assert [ ! -z "$result" ]
-    
+
     # Parse the JSON result
     parsed=$(echo "$result" | sed -e 's/^[[:space:]]*//' | jq '.')
-    
+
     # Extract metadata fields
     title=$(echo "$parsed" | jq -r '.metadata.title')
     description=$(echo "$parsed" | jq -r '.metadata.description')
     date=$(echo "$parsed" | jq -r '.metadata.date')
-    
-    # Extract status fields
-    sync_status=$(echo "$parsed" | jq -r '.syncStatus')
-    sync_error=$(echo "$parsed" | jq -r '.syncError')
-    
+
+    # Extract PublishFile status
+    publish_file_status=$(echo "$parsed" | jq -r '.publishFileStatus')
+    publish_file_error=$(echo "$parsed" | jq -r '.publishFileError')
+
     # Assert metadata
     assert_equal "$title" "Initial Article"
     assert_equal "$description" "First version"
     assert_equal "$date" "2024-03-20T00:00:00.000Z"
-    
-    # Assert status
-    assert_equal "$sync_status" "SUCCESS"
-    assert_equal "$sync_error" "null"
-    
-    echo "Testing update..."
+
+    # Assert PublishFile status
+    assert_equal "$publish_file_status" "success"
+    assert_equal "$publish_file_error" "null"
+
+    echo "Testing update with new publish ID..."
+    export PUBLISH_ID_2="ctest0000000000000000001"
+    export PUBLISH_FILE_ID_2="cpf00000000000000000001"
+
+    # Create second publish + publish file records
+    docker compose exec postgres psql postgresql://postgres:postgres@localhost:5432/postgres -c \
+        "INSERT INTO \"Publish\" (id, site_id, source, started_at)
+         VALUES ('$PUBLISH_ID_2', '$SITE_ID', 'github_webhook', NOW())
+         ON CONFLICT (id) DO NOTHING;"
+    docker compose exec postgres psql postgresql://postgres:postgres@localhost:5432/postgres -c \
+        "INSERT INTO \"PublishFile\" (id, publish_id, path, change_type, status)
+         VALUES ('$PUBLISH_FILE_ID_2', '$PUBLISH_ID_2', '$PATH_IN_REPO', 'updated', 'uploading')
+         ON CONFLICT (id) DO NOTHING;"
+
     # Upload updated file
     create_test_content "Updated Article" "Second version" "2024-03-21"
     docker compose cp test_content.md minio:/test_content.md
-    docker compose exec minio mc cp /test_content.md "local/flowershow/$SITE_ID/$BRANCH/raw/$PATH_IN_REPO"
+    docker compose exec minio mc cp /test_content.md "local/flowershow/$SITE_ID/$BRANCH/raw/$PUBLISH_ID_2/$PATH_IN_REPO"
     rm test_content.md
-    
+
     echo "Waiting for update processing..."
     sleep 5
-    
+
     result=$(docker compose exec postgres psql postgresql://postgres:postgres@localhost:5432/postgres -t -c \
         "SELECT json_build_object(
-            'metadata', metadata,
-            'syncStatus', \"syncStatus\",
-            'syncError', \"syncError\"
+            'metadata', b.metadata,
+            'publishFileStatus', pf.status,
+            'publishFileError', pf.error
          ) as result
-         FROM \"Blob\"
-         WHERE \"siteId\" = '$SITE_ID'
-         AND path = '$PATH_IN_REPO'
+         FROM \"Blob\" b
+         JOIN \"PublishFile\" pf ON pf.publish_id = '$PUBLISH_ID_2' AND pf.path = b.path
+         WHERE b.\"site_id\" = '$SITE_ID'
+         AND b.path = '$PATH_IN_REPO'
          LIMIT 1;")
-    
+
     assert [ ! -z "$result" ]
-    
+
     # Parse the JSON result
     parsed=$(echo "$result" | sed -e 's/^[[:space:]]*//' | jq '.')
-    
+
     # Extract metadata fields
     title=$(echo "$parsed" | jq -r '.metadata.title')
     description=$(echo "$parsed" | jq -r '.metadata.description')
     date=$(echo "$parsed" | jq -r '.metadata.date')
-    
-    # Extract status fields
-    sync_status=$(echo "$parsed" | jq -r '.syncStatus')
-    sync_error=$(echo "$parsed" | jq -r '.syncError')
-    
+
+    # Extract PublishFile status
+    publish_file_status=$(echo "$parsed" | jq -r '.publishFileStatus')
+    publish_file_error=$(echo "$parsed" | jq -r '.publishFileError')
+
     # Assert metadata
     assert_equal "$title" "Updated Article"
     assert_equal "$description" "Second version"
     assert_equal "$date" "2024-03-21T00:00:00.000Z"
-    
-    # Assert status
-    assert_equal "$sync_status" "SUCCESS"
-    assert_equal "$sync_error" "null"
+
+    # Assert PublishFile status
+    assert_equal "$publish_file_status" "success"
+    assert_equal "$publish_file_error" "null"
 }
