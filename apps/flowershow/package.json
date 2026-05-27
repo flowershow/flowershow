@@ -162,7 +162,7 @@
     "jsdom": "^27.2.0",
     "lint-staged": "^15.2.2",
     "playwright": "^1.55.0",
-    "postcss": "^8.4.31",
+    "postcss": "^8.5.10",
     "prisma": "5.5.2",
     "react-email": "^5.2.9",
     "remark-stringify": "^11.0.0",
