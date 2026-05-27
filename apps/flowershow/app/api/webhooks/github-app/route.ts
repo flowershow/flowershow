@@ -452,7 +452,7 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
             where: {
               id: { in: affectedSites.map((s) => s.id) },
             },
-            data: { autoSync: false },
+            data: { updatedAt: new Date() },
           });
         }
       }
@@ -617,7 +617,6 @@ async function handlePushEvent(data: WebhookPayload) {
     const sites = await prisma.site.findMany({
       where: {
         ghBranch: branch,
-        autoSync: true,
         installationRepository: {
           repositoryId: BigInt(repository.id),
           installation: { installationId: ghInstallationId },

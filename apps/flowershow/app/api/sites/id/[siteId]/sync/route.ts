@@ -1,4 +1,4 @@
-import { Blob } from '@prisma/client';
+import { Blob, Prisma } from '@prisma/client';
 import { revalidateTag } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import {
@@ -282,16 +282,14 @@ export async function POST(
               appPath: urlPath,
               size: file.size,
               sha: file.sha,
-              metadata: {},
+              metadata: Prisma.JsonNull,
               extension,
-              syncStatus: 'UPLOADING',
             },
             update: {
               size: file.size,
               sha: file.sha,
               appPath: urlPath,
               extension,
-              syncStatus: 'UPLOADING',
             },
           });
 

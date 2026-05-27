@@ -1,4 +1,5 @@
 import { SitemapParamsSchema } from '@flowershow/api-contract';
+import { Prisma } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { getSiteUrl } from '@/lib/get-site-url';
 import prisma from '@/server/db';
@@ -32,8 +33,8 @@ export async function GET(
       user: true,
       blobs: {
         where: {
-          syncStatus: 'SUCCESS',
           OR: [{ path: { endsWith: '.md' } }, { path: { endsWith: '.mdx' } }],
+          metadata: { not: Prisma.AnyNull },
         },
         select: {
           appPath: true,

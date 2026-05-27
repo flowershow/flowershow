@@ -52,7 +52,6 @@ export default function Form({
   const required = inputAttrs.required ?? true;
 
   const isToggleField = [
-    'autoSync',
     'showComments',
     'enableSearch',
     'enableRss',
@@ -125,11 +124,9 @@ export default function Form({
       toast.success(`Successfully updated ${inputAttrs.name}!`);
     } catch {
       toast.error(
-        inputAttrs.name === 'autoSync'
-          ? 'Failed to create webhook. Check if the repository has a webhook for this application already installed.'
-          : inputAttrs.name === 'enableComments'
-            ? 'Failed to enable comments.'
-            : 'Failed to enable search.',
+        inputAttrs.name === 'enableComments'
+          ? 'Failed to enable comments.'
+          : 'Failed to enable search.',
       );
     } finally {
       setPending(false);

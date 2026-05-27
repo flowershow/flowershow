@@ -2,6 +2,7 @@ import {
   AnonPublishRequestSchema,
   type AnonPublishResponse,
 } from '@flowershow/api-contract';
+import { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   ANONYMOUS_USER_ID,
@@ -205,9 +206,8 @@ export async function POST(request: NextRequest) {
           appPath,
           size: file.fileSize,
           sha: file.sha,
-          metadata: {},
+          metadata: Prisma.JsonNull,
           extension,
-          syncStatus: 'UPLOADING',
         },
       });
 
