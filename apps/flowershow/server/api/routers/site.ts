@@ -701,6 +701,75 @@ export const siteRouter = createTRPCRouter({
         return { status: 'SUCCESS', lastSyncedAt: latestPublish.startedAt };
       },
     ),
+
+  getPublishHistory: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        limit: z.number().int().min(1).max(50).default(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.id },
+        select: { id: true, userId: true },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Site not found' });
+      }
+
+      const publishes = await ctx.db.publish.findMany({
+        where: { siteId: site.id },
+        orderBy: { startedAt: 'desc' },
+        take: input.limit,
+        select: {
+          id: true,
+          startedAt: true,
+          source: true,
+          gitCommitSha: true,
+          gitCommitMessage: true,
+          files: {
+            select: {
+              id: true,
+              path: true,
+              changeType: true,
+              status: true,
+              error: true,
+            },
+          },
+        },
+      });
+
+      return publishes.map((p) => {
+        const files = p.files;
+        const hasPending =
+          files.length === 0 || files.some((f) => f.status === 'uploading');
+        const hasError = !hasPending && files.some((f) => f.status === 'error');
+        const status: 'PENDING' | 'SUCCESS' | 'ERROR' = hasPending
+          ? 'PENDING'
+          : hasError
+            ? 'ERROR'
+            : 'SUCCESS';
+
+        return {
+          id: p.id,
+          startedAt: p.startedAt,
+          source: p.source,
+          gitCommitSha: p.gitCommitSha,
+          gitCommitMessage: p.gitCommitMessage,
+          status,
+          counts: {
+            added: files.filter((f) => f.changeType === 'added').length,
+            updated: files.filter((f) => f.changeType === 'updated').length,
+            deleted: files.filter((f) => f.changeType === 'deleted').length,
+            errors: files.filter((f) => f.status === 'error').length,
+          },
+          files,
+        };
+      });
+    }),
+
   getCustomStyles: publicProcedure
     .input(
       z.object({
