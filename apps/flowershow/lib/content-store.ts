@@ -194,14 +194,19 @@ export const uploadFile = async ({
   path,
   content,
   extension,
+  publishId,
 }: {
   projectId: string;
   path: string;
   content: Buffer;
   extension: string;
+  publishId?: string;
 }) => {
+  const key = publishId
+    ? `${projectId}/main/raw/${publishId}/${path}`
+    : `${projectId}/main/raw/${path}`;
   return uploadS3Object({
-    key: `${projectId}/main/raw/${path}`,
+    key,
     file: content,
     contentType: getContentType(extension),
   });
