@@ -39,7 +39,7 @@ Each `PublishFile` row has two orthogonal fields:
 
 Deleted files skip the `uploading` state entirely — their `status` is written directly to `success` or `error` by whoever handles the deletion (Inngest or server), with no CF Worker involvement.
 
-The aggregate file counts (`filesAdded`, `filesUpdated`, `filesDeleted`) are derived from `PublishFile` rows rather than stored on `Publish`. `filesUnchanged` is dropped entirely — unchanged files have no `PublishFile` rows and the count is not worth storing.
+The aggregate file counts (`filesAdded`, `filesUpdated`, `filesDeleted`) are derived from `PublishFile` rows rather than stored on `Publish`.
 
 A `processing` intermediate state was considered and rejected. Once the CF Worker starts on a file it completes immediately — there is no observable window between "Worker started" and "Worker finished" that warrants a separate state.
 
