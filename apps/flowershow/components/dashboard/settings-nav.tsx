@@ -13,6 +13,7 @@ const navSections = [
   { name: 'GitHub', href: '/github' },
   { name: 'Access & Domains', href: '/access' },
   { name: 'Billing', href: '/billing' },
+  { name: 'History', href: '/history' },
 ];
 
 interface SettingsNavProps {
