@@ -1,17 +1,22 @@
-# Explicit create + finalize lifecycle for direct upload publishes
+# Two-step direct upload lifecycle
 
-Direct upload clients (CLI, Obsidian plugin, dashboard) now follow an explicit three-step protocol:
+Direct upload clients (CLI, Obsidian plugin, dashboard) follow a two-step protocol:
 
 1. **Create**: call `POST /sites/:id/publishes` → server creates a `Publish` record and returns a `publishId`
-2. **Upload**: call the existing sync/files endpoint with `publishId` → server creates `PublishFile` records in `uploading` status and returns presigned URLs; client uploads files directly to R2
-3. **Finalize**: call `PATCH /sites/:id/publishes/:publishId/finalize` → signals that all uploads are complete
+2. **Upload**: call the existing sync/files endpoint with `publishId` → server creates `PublishFile` records in `uploading` status, embeds `publishId` in the R2 object key when generating presigned URLs, and returns those URLs; client uploads files directly to R2
 
-Finalize marks the end of the *upload phase*, not the end of the publish. The `Publish` stays `in_progress` after finalize — the Cloudflare Worker drives it to `completed` or `failed` as it processes each file (see ADR-0001). The `Publish` is only truly done when the last `PublishFile` reaches a terminal state.
+There is no finalize step. The Cloudflare Worker is R2-event-driven — when a file lands in R2, R2 fires an event that triggers the Worker, which processes the file and writes the `PublishFile` result. No client callback is needed to signal that uploads are complete.
 
-This is a breaking change to the CLI and Obsidian plugin APIs, requiring coordinated releases.
+The create step is a breaking change for the CLI and Obsidian plugin, which currently call sync/files without a `publishId`. Coordinated releases are required.
 
-## Why explicit finalize rather than inferring completion
+## Why no finalize step
 
-Previously, there was no server-side record of a publish starting or completing for direct upload paths. The only signal was blob states transitioning from `UPLOADING → PROCESSING → SUCCESS`, which made it impossible to distinguish "publish in progress" from "publish abandoned mid-upload."
+A finalize endpoint was considered to give the server a clear signal that all uploads had completed. It is unnecessary for two reasons:
 
-Inferring completion lazily from blob states was rejected for two reasons: it provides no reliable "uploads done" signal independent of async Cloudflare Worker processing, and it leaves the publish history ambiguous for clients that crash mid-upload. The explicit finalize call gives the server a clear boundary between the upload phase and the processing phase.
+First, `Publish` has no stored status field — status is derived from `PublishFile` rows on read (see ADR-0001). There is nothing to "close."
+
+Second, the Cloudflare Worker is R2-event-driven. When a file lands in R2, R2 fires an event that triggers the Worker almost immediately. The Worker transitions the `PublishFile` from `uploading` to `success` or `error` in that same operation. There is no gap between "file arrived in R2" and "Worker processing it" that a finalize call could usefully bridge.
+
+## Why the create step is still required
+
+The `publishId` must be known before calling sync/files so the server can embed it in the R2 object keys when generating presigned URLs. The Cloudflare Worker extracts `publishId` from the object key when it processes a file, allowing it to locate the correct `PublishFile` row to update. Without an explicit create step, the server could generate a `publishId` inside sync/files and return it alongside the presigned URLs — but this would conflate two distinct operations (registering a publish intent and uploading files) into a single call.
