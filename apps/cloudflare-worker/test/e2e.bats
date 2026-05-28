@@ -110,7 +110,7 @@ teardown() {
     echo "Testing initial upload..."
     create_test_content "Initial Article" "First version" "2024-03-20"
     docker compose cp test_content.md minio:/test_content.md
-    docker compose exec minio mc cp /test_content.md "local/flowershow/$SITE_ID/$BRANCH/raw/$PUBLISH_ID/$PATH_IN_REPO"
+    docker compose exec minio mc cp --attr "publish-id=$PUBLISH_ID" /test_content.md "local/flowershow/$SITE_ID/$BRANCH/raw/$PATH_IN_REPO"
     rm test_content.md
 
     echo "Waiting for initial processing..."
@@ -168,7 +168,7 @@ teardown() {
     # Upload updated file
     create_test_content "Updated Article" "Second version" "2024-03-21"
     docker compose cp test_content.md minio:/test_content.md
-    docker compose exec minio mc cp /test_content.md "local/flowershow/$SITE_ID/$BRANCH/raw/$PUBLISH_ID_2/$PATH_IN_REPO"
+    docker compose exec minio mc cp --attr "publish-id=$PUBLISH_ID_2" /test_content.md "local/flowershow/$SITE_ID/$BRANCH/raw/$PATH_IN_REPO"
     rm test_content.md
 
     echo "Waiting for update processing..."
