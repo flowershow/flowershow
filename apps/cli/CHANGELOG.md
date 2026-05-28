@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.0.6
+
+- Fix file change detection: use Git blob SHA format so CLI publishes after a GitHub publish no longer mark all files as updated.
+
 ## 2.0.5
 
 - Improve `fl --help` output: add long description, usage pattern, and examples.
