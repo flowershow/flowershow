@@ -1,10 +1,28 @@
 # Direct upload publish lifecycle
 
-Direct upload clients (CLI, Obsidian plugin, dashboard) call the existing sync/files endpoint as they do today. The server creates the `Publish` and `PublishFile` records internally as part of handling that request, embeds the `publishId` in the R2 object keys when generating presigned URLs, and returns the `publishId` alongside the presigned URLs in the response.
+Direct upload clients (CLI, Obsidian plugin, dashboard) call the existing sync/files endpoint as they do today. The server creates the `Publish` and `PublishFile` records internally as part of handling that request, embeds the `publishId` in the R2 object's custom metadata (`x-amz-meta-publish-id`) when generating presigned URLs, and returns the `publishId` alongside the presigned URLs in the response.
 
-The client uploads files directly to R2 using the presigned URLs — unchanged from the current behaviour. The `publishId` in the response is available for the CLI to display or use for status polling; no further calls are required.
+The R2 object key remains canonical: `{siteId}/main/raw/{path}`. Every publish of the same file overwrites the same key. The `publishId` travels as a signed metadata header, not as part of the key.
 
-There is no separate create endpoint and no finalize step. This is a non-breaking change for the CLI and Obsidian plugin.
+The client uploads files directly to R2 using the presigned URLs. Because the metadata header is signed into the presigned URL, the client **must** include `x-amz-meta-publish-id: {publishId}` in the PUT request — R2 will reject the upload with 403 if the header is absent or mismatched. The `publishId` is available in the sync/files response for this purpose.
+
+There is no separate create endpoint and no finalize step.
+
+## Why metadata, not the key
+
+Embedding the publishId in the key (`…/raw/{publishId}/{path}`) was the initial approach, but it creates a separate R2 "folder" per publish. Each publish only uploads the files that changed, so files from different publishes end up scattered across different key prefixes. The serving layer — and any code using `fetchFile` — expects all site files under a single canonical prefix (`{siteId}/main/raw/{path}`), making the key-based approach unworkable without an additional copy-to-canonical step after processing.
+
+Using object metadata keeps the key canonical and lets the Cloudflare Worker retrieve the publishId by doing a lightweight HEAD request on the object before dispatching to the appropriate processor.
+
+## How the Cloudflare Worker reads publishId
+
+When the Worker receives an R2 event, it performs a HEAD request on the canonical object key and reads `customMetadata['publish-id']` (R2 native) or `Metadata['publish-id']` (S3/dev). This is a single cheap call with no body transfer. The publishId is then threaded into the file processor to update the correct `PublishFile` row.
+
+If the metadata is absent (legacy objects uploaded before this scheme), `publishId` is null and the `updatePublishFile` call is a no-op — the cleanup job will eventually mark those `PublishFile` rows as `error`.
+
+## Breaking change for clients
+
+This is a breaking change for the CLI and Obsidian plugin. Older clients that do not include `x-amz-meta-publish-id` in their PUT request will receive a 403 from R2 and the upload will fail. The minimum CLI version check on the sync endpoint is bumped accordingly.
 
 ## Why no finalize step
 

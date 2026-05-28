@@ -94,12 +94,13 @@ async function generateUrlsForFiles(
         update: { size: file.size, sha: file.sha, appPath: urlPath, extension },
       });
 
-      const s3Key = `${siteId}/main/raw/${publishId}/${file.path}`;
+      const s3Key = `${siteId}/main/raw/${file.path}`;
       const contentType = getContentType(extension);
       const uploadUrl = await generatePresignedUploadUrl(
         s3Key,
         PRESIGNED_URL_TTL,
         contentType,
+        { 'publish-id': publishId },
       );
 
       return { path: file.path, uploadUrl, blobId: blob.id, contentType };

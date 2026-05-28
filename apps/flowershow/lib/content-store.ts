@@ -59,10 +59,12 @@ const uploadS3Object = async ({
   key,
   file,
   contentType,
+  metadata,
 }: {
   key: string;
   file: Buffer;
   contentType: ContentType;
+  metadata?: Record<string, string>;
 }) => {
   const isMedia =
     contentType.startsWith('image/') ||
@@ -76,6 +78,7 @@ const uploadS3Object = async ({
       Body: file,
       ContentType: contentType,
       CacheControl: `max-age=${maxAge}, must-revalidate`,
+      ...(metadata && { Metadata: metadata }),
     }),
   );
 };
@@ -202,13 +205,11 @@ export const uploadFile = async ({
   extension: string;
   publishId?: string;
 }) => {
-  const key = publishId
-    ? `${projectId}/main/raw/${publishId}/${path}`
-    : `${projectId}/main/raw/${path}`;
   return uploadS3Object({
-    key,
+    key: `${projectId}/main/raw/${path}`,
     file: content,
     contentType: getContentType(extension),
+    metadata: publishId ? { 'publish-id': publishId } : undefined,
   });
 };
 
@@ -273,6 +274,7 @@ export const generatePresignedUploadUrl = async (
   key: string,
   expiresIn: number = 3600,
   contentType?: ContentType,
+  metadata?: Record<string, string>,
 ): Promise<string> => {
   const isMedia =
     contentType?.startsWith('image/') ||
@@ -287,6 +289,7 @@ export const generatePresignedUploadUrl = async (
       ContentType: contentType,
       CacheControl: `max-age=${maxAge}, must-revalidate`,
     }),
+    ...(metadata && { Metadata: metadata }),
   });
 
   return getSignedUrl(s3Client, command, { expiresIn });

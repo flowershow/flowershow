@@ -315,7 +315,7 @@ describe('POST /api/sites/id/:siteId/sync', () => {
       expect(body.dryRun).toBe(true);
     });
 
-    it('embeds publishId in the R2 object key', async () => {
+    it('passes publishId as R2 object metadata', async () => {
       const req = makeRequest({
         files: [{ path: 'docs/a.md', size: 100, sha: 'sha1' }],
       });
@@ -323,9 +323,10 @@ describe('POST /api/sites/id/:siteId/sync', () => {
       await POST(req, { params: Promise.resolve({ siteId: 'site-1' }) });
 
       expect(mocks.generatePresignedUploadUrl).toHaveBeenCalledWith(
-        'site-1/main/raw/publish-abc/docs/a.md',
+        'site-1/main/raw/docs/a.md',
         3600,
         expect.any(String),
+        { 'publish-id': 'publish-abc' },
       );
     });
   });

@@ -188,12 +188,13 @@ export async function POST(
             },
           });
 
-          const s3Key = `${siteId}/main/raw/${publish.id}/${file.path}`;
+          const s3Key = `${siteId}/main/raw/${file.path}`;
           const contentType = getContentType(extension);
           const uploadUrl = await generatePresignedUploadUrl(
             s3Key,
             PRESIGNED_URL_TTL,
             contentType,
+            { 'publish-id': publish.id },
           );
 
           const existing = existingBlobMap.get(file.path);
