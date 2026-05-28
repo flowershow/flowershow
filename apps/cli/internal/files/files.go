@@ -159,6 +159,8 @@ func loadIgnore(baseDir string) *ignoreList {
 
 func sha1Hex(content []byte) string {
 	h := sha1.New()
+	// Git blob SHA format: "blob {size}\0{content}"
+	fmt.Fprintf(h, "blob %d\x00", len(content))
 	h.Write(content)
 	return fmt.Sprintf("%x", h.Sum(nil))
 }
