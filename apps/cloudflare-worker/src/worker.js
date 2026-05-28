@@ -1,6 +1,7 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
 import postgres from 'postgres';
@@ -64,23 +65,32 @@ function getTypesenseClient(env) {
 
 /**
  * Parse the R2/S3 object key into its components.
- * Supports two formats:
- *   - {siteId}/{branch}/raw/{publishId}/{path}  (new, publishId embedded)
- *   - {siteId}/{branch}/raw/{path}              (legacy, no publishId)
- *
- * publishId is a cuid (25 chars, starts with 'c', lowercase alphanumeric).
+ * Expected format: {siteId}/{branch}/raw/{path}
  */
 function parseObjectKey(rawKey) {
   const m = rawKey.match(/^([^/]+)\/([^/]+)\/raw\/(.+)$/);
   if (!m) throw new Error(`Invalid key format: ${rawKey}`);
-  const [, siteId, branch, rest] = m;
+  const [, siteId, branch, path] = m;
+  return { siteId, branch, path };
+}
 
-  // Detect publishId: cuid format — 'c' followed by 24 lowercase alphanumeric chars
-  const publishIdM = rest.match(/^(c[a-z0-9]{24})\/(.+)$/);
-  const publishId = publishIdM ? publishIdM[1] : null;
-  const path = publishIdM ? publishIdM[2] : rest;
-
-  return { siteId, branch, path, publishId };
+/**
+ * Read the publish-id from an R2/S3 object's custom metadata.
+ * Returns null if the metadata is absent or the object is not found.
+ */
+async function getPublishIdFromMetadata(storage, key) {
+  try {
+    if (storage.type === 's3') {
+      const resp = await storage.client.send(
+        new HeadObjectCommand({ Bucket: storage.bucket, Key: key }),
+      );
+      return resp.Metadata?.['publish-id'] ?? null;
+    }
+    const obj = await storage.client.head(key);
+    return obj?.customMetadata?.['publish-id'] ?? null;
+  } catch {
+    return null;
+  }
 }
 
 async function getBlobId(sql, siteId, path) {
@@ -203,9 +213,7 @@ async function processFile({
   const blobId = await getBlobId(sql, siteId, path);
 
   try {
-    const key = publishId
-      ? `${siteId}/${branch}/raw/${publishId}/${path}`
-      : `${siteId}/${branch}/raw/${path}`;
+    const key = `${siteId}/${branch}/raw/${path}`;
 
     let markdown;
     if (storage.type === 's3') {
@@ -305,11 +313,15 @@ async function captureError(env, properties) {
 async function handleMessage({ msg, storage, sql, typesense, env }) {
   try {
     const rawKey = msg.body.object.key;
-    const { siteId, branch, path, publishId } = parseObjectKey(rawKey);
+    const { siteId, branch, path } = parseObjectKey(rawKey);
 
     if (!/^[\w-]+$/.test(siteId) || !/^[\w-]+$/.test(branch)) {
       throw new Error(`Invalid siteId or branch: ${siteId}, ${branch}`);
     }
+
+    const key = `${siteId}/${branch}/raw/${path}`;
+    const publishId = await getPublishIdFromMetadata(storage, key);
+
     if (!path.match(/\.(md|mdx)$/i)) {
       try {
         await processNonMarkdownFile({

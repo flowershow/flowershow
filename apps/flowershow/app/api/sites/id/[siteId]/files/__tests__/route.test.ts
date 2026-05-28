@@ -261,7 +261,7 @@ describe('POST /api/sites/id/:siteId/files', () => {
       expect(body.files).toHaveLength(1);
     });
 
-    it('embeds publishId in the R2 object key for presigned URL generation', async () => {
+    it('passes publishId as R2 object metadata for presigned URL generation', async () => {
       const req = makeRequest({
         files: [{ path: 'docs/page.md', size: 100, sha: 'sha1' }],
       });
@@ -269,9 +269,10 @@ describe('POST /api/sites/id/:siteId/files', () => {
       await POST(req, { params: Promise.resolve({ siteId: 'site-1' }) });
 
       expect(mocks.generatePresignedUploadUrl).toHaveBeenCalledWith(
-        'site-1/main/raw/publish-xyz/docs/page.md',
+        'site-1/main/raw/docs/page.md',
         3600,
         expect.any(String),
+        { 'publish-id': 'publish-xyz' },
       );
     });
   });
