@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 // ---------------------------------------------------------------------------
-// SiteSummary
+// SiteSummary / ListSitesResponse
+// GET /api/sites
 // ---------------------------------------------------------------------------
 export const SiteSummarySchema = z.object({
   id: z.string(),
@@ -14,9 +15,6 @@ export const SiteSummarySchema = z.object({
 });
 export type SiteSummary = z.infer<typeof SiteSummarySchema>;
 
-// ---------------------------------------------------------------------------
-// ListSitesResponse
-// ---------------------------------------------------------------------------
 export const ListSitesResponseSchema = z.object({
   sites: z.array(SiteSummarySchema),
   total: z.number(),
@@ -24,7 +22,8 @@ export const ListSitesResponseSchema = z.object({
 export type ListSitesResponse = z.infer<typeof ListSitesResponseSchema>;
 
 // ---------------------------------------------------------------------------
-// SiteDetail
+// SiteDetail / GetSiteResponse
+// GET /api/sites/id/:siteId
 // ---------------------------------------------------------------------------
 export const SiteDetailSchema = z.object({
   id: z.string(),
@@ -55,6 +54,7 @@ export type GetSiteResponse = z.infer<typeof GetSiteResponseSchema>;
 
 // ---------------------------------------------------------------------------
 // User
+// GET /api/user
 // ---------------------------------------------------------------------------
 export const UserSchema = z.object({
   id: z.string(),
@@ -68,6 +68,7 @@ export type User = z.infer<typeof UserSchema>;
 
 // ---------------------------------------------------------------------------
 // FileMetadata
+// per-file metadata in sync/publish request bodies
 // ---------------------------------------------------------------------------
 export const FileMetadataSchema = z.object({
   path: z.string(),
@@ -78,6 +79,7 @@ export type FileMetadata = z.infer<typeof FileMetadataSchema>;
 
 // ---------------------------------------------------------------------------
 // UploadTarget
+// presigned upload URL in sync/publish responses
 // ---------------------------------------------------------------------------
 export const UploadTargetSchema = z.object({
   path: z.string(),
@@ -89,6 +91,7 @@ export type UploadTarget = z.infer<typeof UploadTargetSchema>;
 
 // ---------------------------------------------------------------------------
 // PublishFilesResponse
+// POST /api/sites/id/:siteId/files
 // ---------------------------------------------------------------------------
 export const PublishFilesResponseSchema = z.object({
   files: z.array(UploadTargetSchema),
@@ -97,16 +100,17 @@ export const PublishFilesResponseSchema = z.object({
 export type PublishFilesResponse = z.infer<typeof PublishFilesResponseSchema>;
 
 // ---------------------------------------------------------------------------
-// StatusResponse
+// PublishFileStatus / StatusResponse / PublicStatusResponse
+// GET /api/sites/id/:siteId/status
 // ---------------------------------------------------------------------------
-export const BlobStatusSchema = z.object({
+export const PublishFileStatusSchema = z.object({
   id: z.string(),
   path: z.string(),
   status: z.enum(['uploading', 'success', 'error']),
   error: z.string().nullable(),
   extension: z.string().nullable(),
 });
-export type BlobStatus = z.infer<typeof BlobStatusSchema>;
+export type PublishFileStatus = z.infer<typeof PublishFileStatusSchema>;
 
 export const StatusResponseSchema = z.object({
   siteId: z.string(),
@@ -117,12 +121,26 @@ export const StatusResponseSchema = z.object({
     success: z.number(),
     failed: z.number(),
   }),
-  blobs: z.array(BlobStatusSchema).optional(),
+  blobs: z.array(PublishFileStatusSchema).optional(),
 });
 export type StatusResponse = z.infer<typeof StatusResponseSchema>;
 
+export const PublicStatusResponseSchema = z.object({
+  status: z.enum(['pending', 'complete', 'error']),
+  errors: z
+    .array(
+      z.object({
+        path: z.string(),
+        error: z.string(),
+      }),
+    )
+    .optional(),
+});
+export type PublicStatusResponse = z.infer<typeof PublicStatusResponseSchema>;
+
 // ---------------------------------------------------------------------------
 // ErrorSchema
+// generic error shape returned by most routes on 4xx/5xx
 // ---------------------------------------------------------------------------
 export const ErrorSchema = z.object({
   error: z.string(),
@@ -133,6 +151,9 @@ export type Error = z.infer<typeof ErrorSchema>;
 
 // ---------------------------------------------------------------------------
 // CLI Auth Schemas
+// POST /api/cli/device/authorize
+// POST /api/cli/device/token
+// POST /api/cli/authorize
 // ---------------------------------------------------------------------------
 export const DeviceAuthorizeResponseSchema = z.object({
   device_code: z.string(),
@@ -167,7 +188,9 @@ export type AuthorizeDeviceRequest = z.infer<
 >;
 
 // ---------------------------------------------------------------------------
-// User Schemas
+// SuccessResponse / RevokeTokenRequest
+// POST /api/cli/authorize
+// POST /api/tokens/revoke
 // ---------------------------------------------------------------------------
 export const SuccessResponseSchema = z.object({
   success: z.literal(true),
@@ -181,6 +204,11 @@ export type RevokeTokenRequest = z.infer<typeof RevokeTokenRequestSchema>;
 
 // ---------------------------------------------------------------------------
 // Sites Schemas
+// POST /api/sites
+// DELETE /api/sites/id/:siteId
+// POST /api/sites/id/:siteId/sync
+// POST /api/sites/id/:siteId/files
+// DELETE /api/sites/id/:siteId/files
 // ---------------------------------------------------------------------------
 export const CreateSiteRequestSchema = z.object({
   projectName: z.string(),
@@ -243,21 +271,10 @@ export const DeleteFilesResponseSchema = z.object({
 });
 export type DeleteFilesResponse = z.infer<typeof DeleteFilesResponseSchema>;
 
-export const PublicStatusResponseSchema = z.object({
-  status: z.enum(['pending', 'complete', 'error']),
-  errors: z
-    .array(
-      z.object({
-        path: z.string(),
-        error: z.string(),
-      }),
-    )
-    .optional(),
-});
-export type PublicStatusResponse = z.infer<typeof PublicStatusResponseSchema>;
-
 // ---------------------------------------------------------------------------
 // Anonymous Publishing Schemas
+// POST /api/sites/publish-anon
+// POST /api/sites/claim
 // ---------------------------------------------------------------------------
 export const AnonPublishFileSchema = z.object({
   fileName: z.string(),
@@ -304,6 +321,8 @@ export type ClaimSiteResponse = z.infer<typeof ClaimSiteResponseSchema>;
 
 // ---------------------------------------------------------------------------
 // GitHub App Schemas
+// GET /api/github-app/callback
+// GET /api/github-app/callback-success
 // ---------------------------------------------------------------------------
 export const GitHubAppCallbackQuerySchema = z.object({
   installation_id: z.string(),
@@ -323,6 +342,7 @@ export type GitHubAppCallbackSuccessQuery = z.infer<
 
 // ---------------------------------------------------------------------------
 // Domain Schemas
+// GET /api/domain/:domain/verify
 // ---------------------------------------------------------------------------
 export const DomainVerificationSchema = z.object({
   status: z.enum([
@@ -387,6 +407,10 @@ export const DomainVerificationSchema = z.object({
 });
 export type DomainVerification = z.infer<typeof DomainVerificationSchema>;
 
+// ---------------------------------------------------------------------------
+// StripeWebhookReceivedResponse
+// POST /api/stripe/webhook
+// ---------------------------------------------------------------------------
 export const StripeWebhookReceivedResponseSchema = z.object({
   received: z.literal(true),
 });
@@ -394,6 +418,12 @@ export type StripeWebhookReceivedResponse = z.infer<
   typeof StripeWebhookReceivedResponseSchema
 >;
 
+// ---------------------------------------------------------------------------
+// SitemapParams / RssParams / RobotsParams
+// GET /api/sitemap/:user/:project
+// GET /api/rss/:user/:project
+// GET /api/robots/:hostname
+// ---------------------------------------------------------------------------
 export const SitemapParamsSchema = z.object({
   user: z.string(),
   project: z.string(),
@@ -412,7 +442,8 @@ export const RobotsParamsSchema = z.object({
 export type RobotsParams = z.infer<typeof RobotsParamsSchema>;
 
 // ---------------------------------------------------------------------------
-// Upgrade Required Response
+// UpgradeRequiredResponse
+// returned by version-check middleware when CLI is outdated
 // ---------------------------------------------------------------------------
 export const UpgradeRequiredResponseSchema = z.object({
   error: z.literal('client_outdated'),
