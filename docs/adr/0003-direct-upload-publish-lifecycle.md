@@ -20,9 +20,21 @@ When the Worker receives an R2 event, it performs a HEAD request on the canonica
 
 If the metadata is absent (legacy objects uploaded before this scheme), `publishId` is null and the `updatePublishFile` call is a no-op — the cleanup job will eventually mark those `PublishFile` rows as `error`.
 
-## Breaking change for clients
+## Backward compatibility with legacy clients
 
-This is a breaking change for the CLI and Obsidian plugin. Older clients that do not include `x-amz-meta-publish-id` in their PUT request will receive a 403 from R2 and the upload will fail. The minimum CLI version check on the sync endpoint is bumped accordingly.
+Older versions of the CLI and Obsidian plugin that predate this scheme are not broken. The minimum version check on the sync/files endpoint is **not** bumped for this change.
+
+When the server detects a legacy client (version header below the threshold, or absent), it takes a different path:
+
+1. Creates a `Publish` record with `legacy = true`.
+2. Does **not** create any `PublishFile` rows.
+3. Generates presigned URLs **without** signing in the `x-amz-meta-publish-id` header condition — R2 will accept the PUT regardless of whether the header is present.
+
+The Cloudflare Worker receives the R2 event, performs the HEAD request, finds no `publish-id` in the object metadata, and falls through to its existing no-op path: it skips the `updatePublishFile` call and writes directly to `Blob` as it did before this scheme was introduced.
+
+The result: the legacy client's files are processed and served correctly. The `Publish` record appears in history but has no `PublishFile` rows, which the dashboard renders as a limited entry with a prompt to upgrade (see ADR-0001). There are no false errors.
+
+The `legacy` column on `Publish` is temporary. Once legacy client usage drops to negligible levels it will be removed along with the legacy branch in the sync/files handler.
 
 ## Why no finalize step
 

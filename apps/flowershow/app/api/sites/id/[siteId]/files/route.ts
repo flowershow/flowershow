@@ -9,7 +9,11 @@ import { Prisma, PublishSource } from '@prisma/client';
 import { revalidateTag } from 'next/cache';
 import { type NextRequest, NextResponse } from 'next/server';
 import { deleteBlobs } from '@/lib/blob-cleanup';
-import { getClientInfo, validateAccessToken } from '@/lib/cli-auth';
+import {
+  getClientInfo,
+  isLegacyPublishClient,
+  validateAccessToken,
+} from '@/lib/cli-auth';
 import {
   generatePresignedUploadUrl,
   getContentType,
@@ -142,11 +146,14 @@ export async function POST(
     });
     const existingBlobMap = new Map(existingBlobs.map((b) => [b.path, b]));
 
+    const isLegacy = isLegacyPublishClient(request);
+
     // Create Publish record
     const publish = await prisma.publish.create({
       data: {
         siteId,
         source: clientTypeToPublishSource(getClientInfo(request).client_type),
+        legacy: isLegacy,
       },
     });
 
@@ -194,23 +201,25 @@ export async function POST(
             s3Key,
             PRESIGNED_URL_TTL,
             contentType,
-            { 'publish-id': publish.id },
+            isLegacy ? undefined : { 'publish-id': publish.id },
           );
 
-          const existing = existingBlobMap.get(file.path);
-          const changeType = (
-            !existing || existing.sha !== file.sha ? 'added' : 'updated'
-          ) as 'added' | 'updated';
+          if (!isLegacy) {
+            const existing = existingBlobMap.get(file.path);
+            const changeType = (
+              !existing || existing.sha !== file.sha ? 'added' : 'updated'
+            ) as 'added' | 'updated';
 
-          await prisma.publishFile.create({
-            data: {
-              publishId: publish.id,
-              path: file.path,
-              changeType,
-              status: 'uploading',
-              presignedUrlExpiresAt,
-            },
-          });
+            await prisma.publishFile.create({
+              data: {
+                publishId: publish.id,
+                path: file.path,
+                changeType,
+                status: 'uploading',
+                presignedUrlExpiresAt,
+              },
+            });
+          }
 
           return { path: file.path, uploadUrl, blobId: blob.id, contentType };
         }),

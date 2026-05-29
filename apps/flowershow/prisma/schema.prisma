@@ -199,6 +199,7 @@ model Publish {
   startedAt         DateTime      @default(now()) @map("started_at")
   gitCommitSha      String?       @map("git_commit_sha")
   gitCommitMessage  String?       @map("git_commit_message")
+  legacy            Boolean       @default(false)
   files             PublishFile[]
 
   @@index([siteId, startedAt(sort: Desc)])

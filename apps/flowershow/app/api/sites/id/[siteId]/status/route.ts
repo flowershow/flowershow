@@ -60,7 +60,7 @@ export async function GET(
     const latestPublish = await prisma.publish.findFirst({
       where: { siteId },
       orderBy: { startedAt: 'desc' },
-      select: { id: true },
+      select: { id: true, legacy: true },
     });
 
     const emptyResponse = (
@@ -90,6 +90,19 @@ export async function GET(
     });
 
     if (publishFiles.length === 0) {
+      if (latestPublish.legacy) {
+        if (isAuthenticated) {
+          return NextResponse.json({
+            siteId,
+            status: 'complete',
+            files: { total: 0, pending: 0, success: 0, failed: 0 },
+            blobs: [],
+          } satisfies StatusResponse);
+        }
+        return NextResponse.json({
+          status: 'complete',
+        } satisfies PublicStatusResponse);
+      }
       return emptyResponse(isAuthenticated);
     }
 
