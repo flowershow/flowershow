@@ -5,6 +5,7 @@ import { deleteBlobs } from '@/lib/blob-cleanup';
 import {
   checkCliVersion,
   getClientInfo,
+  isLegacyPublishClient,
   validateAccessToken,
 } from '@/lib/cli-auth';
 import {
@@ -65,7 +66,7 @@ function clientTypeToPublishSource(
 async function generateUrlsForFiles(
   filesToProcess: FileMetadata[],
   siteId: string,
-  publishId: string,
+  publishId: string | null,
 ): Promise<UploadUrl[]> {
   return Promise.all(
     filesToProcess.map(async (file) => {
@@ -100,7 +101,7 @@ async function generateUrlsForFiles(
         s3Key,
         PRESIGNED_URL_TTL,
         contentType,
-        { 'publish-id': publishId },
+        publishId ? { 'publish-id': publishId } : undefined,
       );
 
       return { path: file.path, uploadUrl, blobId: blob.id, contentType };
@@ -273,10 +274,13 @@ export async function POST(
       updateUrls = generateDryRunPlaceholders(toUpdate);
       deletedPaths = toDelete.map((f) => f.path);
     } else {
+      const isLegacy = isLegacyPublishClient(request);
+
       const publish = await prisma.publish.create({
         data: {
           siteId,
           source: clientTypeToPublishSource(getClientInfo(request).client_type),
+          legacy: isLegacy,
         },
       });
       publishId = publish.id;
@@ -293,17 +297,19 @@ export async function POST(
             },
           );
 
-          const deletedSet = new Set(deletedPaths);
-          await prisma.publishFile.createMany({
-            data: toDelete.map((f) => ({
-              publishId: publish.id,
-              path: f.path,
-              changeType: 'deleted' as const,
-              status: (deletedSet.has(f.path) ? 'success' : 'error') as
-                | 'success'
-                | 'error',
-            })),
-          });
+          if (!isLegacy) {
+            const deletedSet = new Set(deletedPaths);
+            await prisma.publishFile.createMany({
+              data: toDelete.map((f) => ({
+                publishId: publish.id,
+                path: f.path,
+                changeType: 'deleted' as const,
+                status: (deletedSet.has(f.path) ? 'success' : 'error') as
+                  | 'success'
+                  | 'error',
+              })),
+            });
+          }
         } finally {
           revalidateTag(siteId);
         }
@@ -311,8 +317,8 @@ export async function POST(
 
       try {
         [uploadUrls, updateUrls] = await Promise.all([
-          generateUrlsForFiles(toUpload, siteId, publish.id),
-          generateUrlsForFiles(toUpdate, siteId, publish.id),
+          generateUrlsForFiles(toUpload, siteId, isLegacy ? null : publish.id),
+          generateUrlsForFiles(toUpdate, siteId, isLegacy ? null : publish.id),
         ]);
 
         log('Generate presigned URLs', SeverityNumber.INFO, {
@@ -320,27 +326,29 @@ export async function POST(
           files_to_update: toUpdate.length,
         });
 
-        const presignedUrlExpiresAt = new Date(
-          Date.now() + PRESIGNED_URL_TTL * 1000,
-        );
-        const uploadFileRows = [
-          ...toUpload.map((f) => ({
-            publishId: publish.id,
-            path: f.path,
-            changeType: 'added' as const,
-            status: 'uploading' as const,
-            presignedUrlExpiresAt,
-          })),
-          ...toUpdate.map((f) => ({
-            publishId: publish.id,
-            path: f.path,
-            changeType: 'updated' as const,
-            status: 'uploading' as const,
-            presignedUrlExpiresAt,
-          })),
-        ];
-        if (uploadFileRows.length > 0) {
-          await prisma.publishFile.createMany({ data: uploadFileRows });
+        if (!isLegacy) {
+          const presignedUrlExpiresAt = new Date(
+            Date.now() + PRESIGNED_URL_TTL * 1000,
+          );
+          const uploadFileRows = [
+            ...toUpload.map((f) => ({
+              publishId: publish.id,
+              path: f.path,
+              changeType: 'added' as const,
+              status: 'uploading' as const,
+              presignedUrlExpiresAt,
+            })),
+            ...toUpdate.map((f) => ({
+              publishId: publish.id,
+              path: f.path,
+              changeType: 'updated' as const,
+              status: 'uploading' as const,
+              presignedUrlExpiresAt,
+            })),
+          ];
+          if (uploadFileRows.length > 0) {
+            await prisma.publishFile.createMany({ data: uploadFileRows });
+          }
         }
       } finally {
         revalidateTag(siteId);

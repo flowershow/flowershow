@@ -17,7 +17,7 @@ Blob-level status (`UPLOADING`, `PROCESSING`, `SUCCESS`, `ERROR`) was designed t
 
 ## What replaced it
 
-- `Publish` has no stored status field. Dashboard status is derived from the latest `Publish`'s `PublishFile` rows: any file in `uploading` → PENDING; all terminal, none errored → SUCCESS; all terminal, at least one errored → ERROR; no `PublishFile` rows yet → PENDING.
+- `Publish` has no stored status field. Dashboard status is derived from the latest `Publish`'s `PublishFile` rows: any file in `uploading` → PENDING; all terminal, none errored → SUCCESS; all terminal, at least one errored → ERROR; no `PublishFile` rows and `legacy = false` → PENDING; no `PublishFile` rows and `legacy = true` → LEGACY (dashboard renders a prompt to upgrade the client).
 - `Publish` stores `gitCommitSha` and `gitCommitMessage` (both nullable) for GitHub webhook publishes, populated from the push event payload. The commit URL is constructed on the frontend from the site's repo URL and the SHA — not stored. This gives a Vercel-style commit reference in the publish history without any live GitHub API calls. The previous mechanism (storing a tree SHA for OUTDATED comparison) is removed.
 - `PublishFile` records per-file outcomes for the changed files in each publish; errors are permanently associated with the publish that caused them, not overwritten
 - `Blob.syncStatus` and `Blob.syncError` are removed (see ADR-0004)

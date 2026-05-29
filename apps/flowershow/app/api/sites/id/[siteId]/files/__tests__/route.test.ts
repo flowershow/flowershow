@@ -6,6 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   validateAccessToken: vi.fn(),
   getClientInfo: vi.fn(),
+  isLegacyPublishClient: vi.fn(),
   generatePresignedUploadUrl: vi.fn(),
   prisma: {
     site: { findUnique: vi.fn() },
@@ -32,6 +33,7 @@ vi.mock('@/server/db', () => ({ default: mocks.prisma }));
 vi.mock('@/lib/cli-auth', () => ({
   validateAccessToken: mocks.validateAccessToken,
   getClientInfo: mocks.getClientInfo,
+  isLegacyPublishClient: mocks.isLegacyPublishClient,
 }));
 
 vi.mock('@/lib/content-store', () => ({
@@ -89,6 +91,7 @@ beforeEach(() => {
     client_type: 'cli',
     client_version: '1.0.0',
   });
+  mocks.isLegacyPublishClient.mockReturnValue(false);
   mocks.prisma.site.findUnique.mockResolvedValue(SITE);
   mocks.prisma.blob.findMany.mockResolvedValue([]);
   mocks.prisma.blob.upsert.mockResolvedValue(BLOB_UPSERT);
@@ -115,7 +118,7 @@ describe('POST /api/sites/id/:siteId/files', () => {
 
       expect(res.status).toBe(200);
       expect(mocks.prisma.publish.create).toHaveBeenCalledWith({
-        data: { siteId: 'site-1', source: 'cli' },
+        data: { siteId: 'site-1', source: 'cli', legacy: false },
       });
     });
 
@@ -132,7 +135,7 @@ describe('POST /api/sites/id/:siteId/files', () => {
       await POST(req, { params: Promise.resolve({ siteId: 'site-1' }) });
 
       expect(mocks.prisma.publish.create).toHaveBeenCalledWith({
-        data: { siteId: 'site-1', source: 'obsidian_plugin' },
+        data: { siteId: 'site-1', source: 'obsidian_plugin', legacy: false },
       });
     });
 
@@ -149,8 +152,25 @@ describe('POST /api/sites/id/:siteId/files', () => {
       await POST(req, { params: Promise.resolve({ siteId: 'site-1' }) });
 
       expect(mocks.prisma.publish.create).toHaveBeenCalledWith({
-        data: { siteId: 'site-1', source: 'dashboard_upload' },
+        data: { siteId: 'site-1', source: 'dashboard_upload', legacy: false },
       });
+    });
+
+    it('creates a legacy Publish record and skips PublishFile rows for legacy clients', async () => {
+      mocks.isLegacyPublishClient.mockReturnValue(true);
+      const req = makeRequest({
+        files: [{ path: 'a.md', size: 100, sha: 'sha1' }],
+      });
+
+      const res = await POST(req, {
+        params: Promise.resolve({ siteId: 'site-1' }),
+      });
+
+      expect(res.status).toBe(200);
+      expect(mocks.prisma.publish.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ legacy: true }),
+      });
+      expect(mocks.prisma.publishFile.create).not.toHaveBeenCalled();
     });
   });
 
@@ -273,6 +293,22 @@ describe('POST /api/sites/id/:siteId/files', () => {
         3600,
         expect.any(String),
         { 'publish-id': 'publish-xyz' },
+      );
+    });
+
+    it('omits publish-id metadata for legacy clients', async () => {
+      mocks.isLegacyPublishClient.mockReturnValue(true);
+      const req = makeRequest({
+        files: [{ path: 'docs/page.md', size: 100, sha: 'sha1' }],
+      });
+
+      await POST(req, { params: Promise.resolve({ siteId: 'site-1' }) });
+
+      expect(mocks.generatePresignedUploadUrl).toHaveBeenCalledWith(
+        'site-1/main/raw/docs/page.md',
+        3600,
+        expect.any(String),
+        undefined,
       );
     });
   });

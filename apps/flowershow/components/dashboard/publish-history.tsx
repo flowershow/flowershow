@@ -7,6 +7,7 @@ import {
   CircleDotDashedIcon,
   CircleXIcon,
   GitCommitHorizontalIcon,
+  InfoIcon,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -16,7 +17,7 @@ type PublishSource =
   | 'cli'
   | 'obsidian_plugin'
   | 'dashboard_upload';
-type PublishStatus = 'PENDING' | 'SUCCESS' | 'ERROR';
+type PublishStatus = 'PENDING' | 'SUCCESS' | 'ERROR' | 'LEGACY';
 type ChangeType = 'added' | 'updated' | 'deleted';
 type FileStatus = 'uploading' | 'success' | 'error';
 
@@ -65,6 +66,14 @@ function StatusBadge({ status }: { status: PublishStatus }) {
       <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
         <CircleXIcon className="h-3 w-3" />
         Error
+      </span>
+    );
+  }
+  if (status === 'LEGACY') {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500">
+        <InfoIcon className="h-3 w-3" />
+        Published
       </span>
     );
   }
@@ -184,6 +193,12 @@ function PublishRow({
                 </span>
               )}
             </div>
+          )}
+
+          {entry.status === 'LEGACY' && (
+            <p className="mt-1 text-xs text-stone-400">
+              Upgrade your CLI or Obsidian plugin for detailed publish logs.
+            </p>
           )}
 
           {hasFiles && (

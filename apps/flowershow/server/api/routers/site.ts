@@ -662,11 +662,15 @@ export const siteRouter = createTRPCRouter({
         const latestPublish = await ctx.db.publish.findFirst({
           where: { siteId: site.id },
           orderBy: { startedAt: 'desc' },
-          select: { id: true, startedAt: true },
+          select: { id: true, startedAt: true, legacy: true },
         });
 
         if (!latestPublish) {
           return { status: 'UNPUBLISHED', lastSyncedAt: null };
+        }
+
+        if (latestPublish.legacy) {
+          return { status: 'SUCCESS', lastSyncedAt: latestPublish.startedAt };
         }
 
         const publishFiles = await ctx.db.publishFile.findMany({
@@ -729,6 +733,7 @@ export const siteRouter = createTRPCRouter({
           source: true,
           gitCommitSha: true,
           gitCommitMessage: true,
+          legacy: true,
           files: {
             select: {
               id: true,
@@ -742,6 +747,19 @@ export const siteRouter = createTRPCRouter({
       });
 
       return publishes.map((p) => {
+        if (p.legacy) {
+          return {
+            id: p.id,
+            startedAt: p.startedAt,
+            source: p.source,
+            gitCommitSha: p.gitCommitSha,
+            gitCommitMessage: p.gitCommitMessage,
+            status: 'LEGACY' as const,
+            counts: { added: 0, updated: 0, deleted: 0, errors: 0 },
+            files: [],
+          };
+        }
+
         const files = p.files;
         const hasPending =
           files.length === 0 || files.some((f) => f.status === 'uploading');
