@@ -7,8 +7,8 @@ import { randomBytes, createHash } from 'crypto';
 const MIN_CLI_VERSION = '1.0.0';
 
 /** Minimum CLI/plugin version that includes publish-id header support */
-const MIN_PUBLISH_TRACKING_CLI_VERSION = '2.0.7';
-const MIN_PUBLISH_TRACKING_PLUGIN_VERSION = '4.0.18';
+const MIN_PUBLISH_TRACKING_CLI_VERSION = '2.1.0';
+const MIN_PUBLISH_TRACKING_PLUGIN_VERSION = '4.1.0';
 
 /**
  * Compare semver versions
