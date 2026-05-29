@@ -6,7 +6,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { Plan, PrismaClient, Status } from '@prisma/client';
+import { Plan, PrismaClient } from '@prisma/client';
 import {
   extractImageDimensions,
   parseMarkdownForSync,
@@ -231,7 +231,6 @@ async function uploadFixturesForSite(
         extension: ext || null,
         width: dimensions.width,
         height: dimensions.height,
-        syncStatus: 'SUCCESS' as Status,
       },
       update: {
         appPath,
@@ -242,7 +241,6 @@ async function uploadFixturesForSite(
         extension: ext || null,
         width: dimensions.width,
         height: dimensions.height,
-        syncStatus: 'SUCCESS' as Status,
       },
     });
   }

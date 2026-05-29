@@ -166,7 +166,7 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 				failedUploads = append(failedUploads, uploadInfo.Path+" (not found locally)")
 				continue
 			}
-			if err := api.UploadToR2(uploadInfo.UploadURL, f.Content, uploadInfo.ContentType); err != nil {
+			if err := api.UploadToR2(uploadInfo.UploadURL, f.Content, uploadInfo.ContentType, syncPlan.PublishId); err != nil {
 				failedUploads = append(failedUploads, uploadInfo.Path+": "+err.Error())
 			}
 		}

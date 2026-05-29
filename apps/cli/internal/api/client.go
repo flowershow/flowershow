@@ -70,7 +70,8 @@ type SyncFilesResponse struct {
 		Deleted   int `json:"deleted"`
 		Unchanged int `json:"unchanged"`
 	} `json:"summary"`
-	DryRun bool `json:"dryRun,omitempty"`
+	DryRun    bool   `json:"dryRun,omitempty"`
+	PublishId string `json:"publishId,omitempty"`
 }
 
 type BlobStatus struct {
@@ -306,12 +307,15 @@ func SyncFiles(siteID string, files []FileMetadata, dryRun bool) (*SyncFilesResp
 	return &result, nil
 }
 
-func UploadToR2(uploadURL string, content []byte, contentType string) error {
+func UploadToR2(uploadURL string, content []byte, contentType string, publishId string) error {
 	req, err := http.NewRequest("PUT", uploadURL, bytes.NewReader(content))
 	if err != nil {
 		return err
 	}
 	req.Header.Set("Content-Type", contentType)
+	if publishId != "" {
+		req.Header.Set("x-amz-meta-publish-id", publishId)
+	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return fmt.Errorf("failed to upload file: %w", err)

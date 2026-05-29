@@ -1,6 +1,7 @@
 import {
   DeleteObjectCommand,
   GetObjectCommand,
+  HeadObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
 import postgres from 'postgres';
@@ -61,6 +62,37 @@ function getTypesenseClient(env) {
 }
 
 // --- HELPERS ---
+
+/**
+ * Parse the R2/S3 object key into its components.
+ * Expected format: {siteId}/{branch}/raw/{path}
+ */
+function parseObjectKey(rawKey) {
+  const m = rawKey.match(/^([^/]+)\/([^/]+)\/raw\/(.+)$/);
+  if (!m) throw new Error(`Invalid key format: ${rawKey}`);
+  const [, siteId, branch, path] = m;
+  return { siteId, branch, path };
+}
+
+/**
+ * Read the publish-id from an R2/S3 object's custom metadata.
+ * Returns null if the metadata is absent or the object is not found.
+ */
+async function getPublishIdFromMetadata(storage, key) {
+  try {
+    if (storage.type === 's3') {
+      const resp = await storage.client.send(
+        new HeadObjectCommand({ Bucket: storage.bucket, Key: key }),
+      );
+      return resp.Metadata?.['publish-id'] ?? null;
+    }
+    const obj = await storage.client.head(key);
+    return obj?.customMetadata?.['publish-id'] ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function getBlobId(sql, siteId, path) {
   const rows = await sql`
     SELECT id FROM \"Blob\"
@@ -71,6 +103,23 @@ async function getBlobId(sql, siteId, path) {
   `;
   if (rows.length === 0) throw new Error(`No blob found for path: ${path}`);
   return rows[0].id;
+}
+
+async function updatePublishFile(sql, publishId, path, status, errorMsg) {
+  if (!publishId) return;
+  if (status === 'error') {
+    await sql`
+      UPDATE "PublishFile"
+      SET status = 'error', error = ${errorMsg ?? null}
+      WHERE publish_id = ${publishId} AND path = ${path}
+    `;
+  } else {
+    await sql`
+      UPDATE "PublishFile"
+      SET status = 'success'
+      WHERE publish_id = ${publishId} AND path = ${path}
+    `;
+  }
 }
 
 async function indexInTypesense({
@@ -100,55 +149,68 @@ async function indexInTypesense({
   }
 }
 
-async function processNonMarkdownFile({ storage, sql, siteId, branch, path }) {
-  const blobId = await getBlobId(sql, siteId, path);
-  let width = null;
-  let height = null;
+async function processNonMarkdownFile({
+  storage,
+  sql,
+  siteId,
+  branch,
+  path,
+  publishId,
+}) {
+  try {
+    if (isSupportedImagePath(path)) {
+      const blobId = await getBlobId(sql, siteId, path);
+      let width = null;
+      let height = null;
 
-  if (isSupportedImagePath(path)) {
-    try {
-      const key = `${siteId}/${branch}/raw/${path}`;
-      let buffer;
-      if (storage.type === 's3') {
-        const resp = await storage.client.send(
-          new GetObjectCommand({ Bucket: storage.bucket, Key: key }),
-        );
-        buffer = Buffer.from(await resp.Body.transformToByteArray());
-      } else {
-        const obj = await storage.client.get(key);
-        if (obj) {
-          buffer = new Uint8Array(await obj.arrayBuffer());
+      try {
+        const key = `${siteId}/${branch}/raw/${path}`;
+        let buffer;
+        if (storage.type === 's3') {
+          const resp = await storage.client.send(
+            new GetObjectCommand({ Bucket: storage.bucket, Key: key }),
+          );
+          buffer = Buffer.from(await resp.Body.transformToByteArray());
+        } else {
+          const obj = await storage.client.get(key);
+          if (obj) {
+            buffer = new Uint8Array(await obj.arrayBuffer());
+          }
         }
+        if (buffer) {
+          const dimensions = extractImageDimensions(path, buffer);
+          width = dimensions.width;
+          height = dimensions.height;
+        }
+      } catch (dimError) {
+        console.error('Could not extract dimensions:', dimError.message);
       }
-      if (buffer) {
-        const dimensions = extractImageDimensions(path, buffer);
-        width = dimensions.width;
-        height = dimensions.height;
-      }
-    } catch (dimError) {
-      console.error('Could not extract dimensions:', dimError.message);
-    }
-  }
 
-  await sql`
-		UPDATE "Blob"
-		SET "sync_status" = 'SUCCESS',
-		    "sync_error" = NULL,
-		    width = ${width},
-		    height = ${height}
-		WHERE id = ${blobId};
-	`;
+      await sql`
+        UPDATE "Blob"
+        SET width = ${width},
+            height = ${height}
+        WHERE id = ${blobId};
+      `;
+    }
+
+    await updatePublishFile(sql, publishId, path, 'success');
+  } catch (e) {
+    await updatePublishFile(sql, publishId, path, 'error', e.message);
+    throw e;
+  }
 }
 
-async function processFile({ storage, sql, typesense, siteId, branch, path }) {
+async function processFile({
+  storage,
+  sql,
+  typesense,
+  siteId,
+  branch,
+  path,
+  publishId,
+}) {
   const blobId = await getBlobId(sql, siteId, path);
-
-  // Mark as PROCESSING before we start parsing
-  await sql`
-		UPDATE "Blob"
-		SET "sync_status" = 'PROCESSING'
-		WHERE id = ${blobId};
-	`;
 
   try {
     const key = `${siteId}/${branch}/raw/${path}`;
@@ -169,7 +231,7 @@ async function processFile({ storage, sql, typesense, siteId, branch, path }) {
       markdown = await obj.text();
     }
 
-    // 3) Parse markdown
+    // Parse markdown
     const { metadata, body, permalink, shouldPublish } =
       await parseMarkdownForSync({ markdown, path });
 
@@ -190,9 +252,9 @@ async function processFile({ storage, sql, typesense, siteId, branch, path }) {
 
       // Remove from database
       await sql`
-				DELETE FROM \"Blob\"
-				WHERE id = ${blobId};
-			`;
+        DELETE FROM \"Blob\"
+        WHERE id = ${blobId};
+      `;
 
       // Remove from Typesense index if it exists
       try {
@@ -201,19 +263,19 @@ async function processFile({ storage, sql, typesense, siteId, branch, path }) {
         // Document might not exist in index, which is fine
       }
 
-      return; // Exit early, don't process further
+      await updatePublishFile(sql, publishId, path, 'success');
+      return;
     }
 
-    // 4) Update DB metadata (only if publish is not false)
+    // Update Blob metadata
     await sql`
-		    UPDATE \"Blob\"
-		    SET metadata = ${sql.json(metadata)},
-		        permalink = ${permalink},
-		        \"sync_status\" = 'SUCCESS',
-		        \"sync_error\"  = NULL
-		    WHERE id = ${blobId};
-		  `;
+      UPDATE \"Blob\"
+      SET metadata  = ${sql.json(metadata)},
+          permalink = ${permalink}
+      WHERE id = ${blobId};
+    `;
     await indexInTypesense({ typesense, siteId, blobId, path, body, metadata });
+    await updatePublishFile(sql, publishId, path, 'success');
   } catch (e) {
     console.error('Error in processFile:', {
       error: {
@@ -222,13 +284,7 @@ async function processFile({ storage, sql, typesense, siteId, branch, path }) {
         name: e.name,
       },
     });
-    // 4) Update DB metadata
-    await sql`
-      UPDATE \"Blob\"
-      SET \"sync_status\" = 'ERROR',
-          \"sync_error\"  = ${e.message}
-      WHERE id = ${blobId};
-    `;
+    await updatePublishFile(sql, publishId, path, 'error', e.message);
     throw e; // Re-throw to be caught by handleMessage
   }
 }
@@ -257,17 +313,25 @@ async function captureError(env, properties) {
 async function handleMessage({ msg, storage, sql, typesense, env }) {
   try {
     const rawKey = msg.body.object.key;
-
-    const m = rawKey.match(/^([^/]+)\/([^/]+)\/raw\/(.+)$/);
-    if (!m) throw new Error(`Invalid key format: ${rawKey}`);
-    const [, siteId, branch, path] = m;
+    const { siteId, branch, path } = parseObjectKey(rawKey);
 
     if (!/^[\w-]+$/.test(siteId) || !/^[\w-]+$/.test(branch)) {
       throw new Error(`Invalid siteId or branch: ${siteId}, ${branch}`);
     }
+
+    const key = `${siteId}/${branch}/raw/${path}`;
+    const publishId = await getPublishIdFromMetadata(storage, key);
+
     if (!path.match(/\.(md|mdx)$/i)) {
       try {
-        await processNonMarkdownFile({ storage, sql, siteId, branch, path });
+        await processNonMarkdownFile({
+          storage,
+          sql,
+          siteId,
+          branch,
+          path,
+          publishId,
+        });
       } catch (e) {
         console.error('Error processing non-markdown file:', {
           siteId,
@@ -285,12 +349,16 @@ async function handleMessage({ msg, storage, sql, typesense, env }) {
       return msg.ack();
     }
 
-    await processFile({ storage, sql, typesense, siteId, branch, path });
+    await processFile({ storage, sql, typesense, siteId, branch, path, publishId });
     msg.ack();
   } catch (err) {
     const rawKey = msg.body.object.key;
-    const km = rawKey.match(/^([^/]+)\/([^/]+)\/raw\/(.+)$/);
-    const [, siteId, , path] = km || [];
+    let siteId, path;
+    try {
+      ({ siteId, path } = parseObjectKey(rawKey));
+    } catch {
+      // key parse failed; use raw key for logging
+    }
     console.error(
       {
         key: rawKey,

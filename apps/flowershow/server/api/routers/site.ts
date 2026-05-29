@@ -1,4 +1,4 @@
-import { Blob, Prisma, PrismaClient, Status } from '@prisma/client';
+import { Blob, Prisma, PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
 import { jwtVerify } from 'jose';
@@ -23,7 +23,7 @@ import {
   validDomainRegex,
 } from '@/lib/domains';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
-import { checkIfBranchExists, fetchGitHubRepoTree } from '@/lib/github';
+import { checkIfBranchExists } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
@@ -201,7 +201,6 @@ export const siteRouter = createTRPCRouter({
         data: {
           projectName,
           subdomain: buildSiteSubdomain(projectName, creator?.username ?? ''),
-          autoSync: false,
           user: { connect: { id: ctx.session.user.id } },
           configJson: SITE_CONFIG_DEFAULTS,
         },
@@ -367,12 +366,6 @@ export const siteRouter = createTRPCRouter({
             },
           });
         }
-      } else if (key === 'autoSync') {
-        const enable = value === 'true';
-        await ctx.db.site.update({
-          where: { id },
-          data: { autoSync: enable },
-        });
       } else {
         const converted = parseIfBoolString(value);
         await ctx.db.site.update({
@@ -642,133 +635,21 @@ export const siteRouter = createTRPCRouter({
 
       return { id: site.id };
     }),
-  sync: protectedProcedure
-    .input(
-      z.object({
-        id: z.string().min(1),
-        force: z.boolean().default(false),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const site = await ctx.db.site.findFirst({
-        where: {
-          id: input.id,
-        },
-        include: {
-          installationRepository: {
-            select: { installationId: true, repositoryFullName: true },
-          },
-        },
-      });
-
-      if (
-        !site ||
-        (ctx.session.user.role !== 'ADMIN' &&
-          site.userId !== ctx.session.user.id)
-      ) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Site not found',
-        });
-      }
-
-      const { id, ghBranch } = site;
-      const repoFullName =
-        site.installationRepository?.repositoryFullName ?? site.ghRepository;
-
-      if (!repoFullName || !ghBranch) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: "Can't sync a site with no GitHub repository connected.",
-        });
-      }
-
-      const accessToken = ctx.session.accessToken;
-      const derivedInstallationId =
-        site.installationRepository?.installationId ?? undefined;
-
-      const posthog = PostHogClient();
-      const syncProperties = {
-        siteId: id,
-        source: 'manual',
-        repository: repoFullName,
-        branch: ghBranch,
-        rootDir: site.rootDir,
-        forceSync: input.force,
-        hasInstallation: Boolean(site.installationRepositoryId),
-      };
-
-      try {
-        await inngest.send({
-          name: 'site/sync',
-          data: {
-            siteId: id,
-            ghRepository: repoFullName,
-            ghBranch,
-            rootDir: site.rootDir,
-            accessToken,
-            installationId: derivedInstallationId,
-            forceSync: input.force,
-          },
-        });
-
-        posthog.capture({
-          distinctId: ctx.session.user.id,
-          event: 'site_sync_triggered',
-          properties: syncProperties,
-        });
-        posthog.capture({
-          distinctId: ctx.session.user.id,
-          event: 'content_published',
-          properties: {
-            publish_method: 'github_sync',
-            site_id: id,
-          },
-        });
-      } catch (error) {
-        posthog.captureException(error, 'system', {
-          route: 'site.sync',
-          source: 'manual',
-          siteId: id,
-          repository: repoFullName,
-          branch: ghBranch,
-          forceSync: input.force,
-          hasInstallation: Boolean(site.installationRepositoryId),
-          userId: ctx.session.user.id,
-        });
-
-        throw new TRPCError({
-          code: 'INTERNAL_SERVER_ERROR',
-          message: 'Failed to trigger site sync',
-        });
-      } finally {
-        await posthog.shutdown();
-      }
-    }),
 
   getSyncStatus: protectedProcedure
-    .input(
-      z.object({
-        id: z.string().min(1),
-      }),
-    )
+    .input(z.object({ id: z.string().min(1) }))
     .query(
       async ({
         ctx,
         input,
       }): Promise<{
-        status: 'UNPUBLISHED' | 'SUCCESS' | 'PENDING' | 'ERROR' | 'OUTDATED';
+        status: 'UNPUBLISHED' | 'SUCCESS' | 'PENDING' | 'ERROR';
         error?: string | null;
         lastSyncedAt?: Date | null;
       }> => {
-        // Get site data for tree comparison
         const site = await ctx.db.site.findUnique({
           where: { id: input.id },
-          include: {
-            installationRepository: {
-              select: { installationId: true, repositoryFullName: true },
-            },
-          },
+          select: { id: true, userId: true },
         });
 
         if (!site || site.userId !== ctx.session.user.id) {
@@ -778,101 +659,135 @@ export const siteRouter = createTRPCRouter({
           });
         }
 
-        // Get all blobs for the site
-        const blobs = await ctx.db.blob.findMany({
-          where: {
-            siteId: site.id,
-          },
-          select: {
-            syncStatus: true,
-            syncError: true,
-            updatedAt: true,
-            path: true,
-          },
+        const latestPublish = await ctx.db.publish.findFirst({
+          where: { siteId: site.id },
+          orderBy: { startedAt: 'desc' },
+          select: { id: true, startedAt: true, legacy: true },
         });
 
-        // Calculate aggregate sync status
-        // Site-level status is separate from blob-level Status enum
-        let status:
-          | 'UNPUBLISHED'
-          | 'SUCCESS'
-          | 'PENDING'
-          | 'ERROR'
-          | 'OUTDATED';
-        let error: string | null = null;
-        // Get the most recent update date
-
-        if (blobs.length === 0) {
-          // If tree is set, sync already ran but found no files (e.g. rootDir doesn't exist)
-          if (site.tree) {
-            return { status: 'SUCCESS', lastSyncedAt: null };
-          }
-          return {
-            status: 'UNPUBLISHED',
-            lastSyncedAt: null,
-          };
+        if (!latestPublish) {
+          return { status: 'UNPUBLISHED', lastSyncedAt: null };
         }
 
-        const lastSyncedAt =
-          blobs
-            .map((b) => b.updatedAt)
-            .sort((a, b) => b.getTime() - a.getTime())[0] || null;
-
-        // If any blob is UPLOADING or PROCESSING, site sync is PENDING
-        if (
-          blobs.some(
-            (b) =>
-              b.syncStatus === 'UPLOADING' || b.syncStatus === 'PROCESSING',
-          )
-        ) {
-          status = 'PENDING';
+        if (latestPublish.legacy) {
+          return { status: 'SUCCESS', lastSyncedAt: latestPublish.startedAt };
         }
-        // If any blob is ERROR, site is ERROR
-        else if (blobs.some((b) => b.syncStatus === 'ERROR')) {
-          status = 'ERROR';
-          error = blobs
-            .filter((b) => b.syncStatus === 'ERROR')
-            .map((b) =>
-              b.syncError
-                ? `[${b.path}]: ${b.syncError}`
-                : `[${b.path}]: Unknown error`,
+
+        const publishFiles = await ctx.db.publishFile.findMany({
+          where: { publishId: latestPublish.id },
+          select: { status: true, error: true, path: true },
+        });
+
+        if (publishFiles.length === 0) {
+          return { status: 'PENDING', lastSyncedAt: latestPublish.startedAt };
+        }
+
+        if (publishFiles.some((f) => f.status === 'uploading')) {
+          return { status: 'PENDING', lastSyncedAt: latestPublish.startedAt };
+        }
+
+        const errorFiles = publishFiles.filter((f) => f.status === 'error');
+        if (errorFiles.length > 0) {
+          const error = errorFiles
+            .map((f) =>
+              f.error
+                ? `[${f.path}]: ${f.error}`
+                : `[${f.path}]: Unknown error`,
             )
             .join('\n');
-        } else if (
-          !site.installationRepository?.repositoryFullName &&
-          !site.ghRepository
-        ) {
           return {
-            status: 'SUCCESS',
-            lastSyncedAt,
+            status: 'ERROR',
+            error,
+            lastSyncedAt: latestPublish.startedAt,
           };
-        } else {
-          if (!site.tree) {
-            return {
-              status: 'PENDING',
-            };
-          }
-          const repoForTree =
-            site.installationRepository?.repositoryFullName ??
-            site.ghRepository!;
-          const gitHubTree = await fetchGitHubRepoTree({
-            ghRepository: repoForTree,
-            ghBranch: site.ghBranch!,
-            accessToken: ctx.session.accessToken,
-            installationId:
-              site.installationRepository?.installationId ?? undefined,
-          });
-          status =
-            site.tree?.['sha'] === gitHubTree.sha ? 'SUCCESS' : 'OUTDATED';
         }
 
-        return {
-          status,
-          error,
-          lastSyncedAt,
-        };
+        return { status: 'SUCCESS', lastSyncedAt: latestPublish.startedAt };
       },
     ),
+
+  getPublishHistory: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        limit: z.number().int().min(1).max(50).default(10),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.id },
+        select: { id: true, userId: true },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Site not found' });
+      }
+
+      const publishes = await ctx.db.publish.findMany({
+        where: { siteId: site.id },
+        orderBy: { startedAt: 'desc' },
+        take: input.limit,
+        select: {
+          id: true,
+          startedAt: true,
+          source: true,
+          gitCommitSha: true,
+          gitCommitMessage: true,
+          legacy: true,
+          files: {
+            select: {
+              id: true,
+              path: true,
+              changeType: true,
+              status: true,
+              error: true,
+            },
+          },
+        },
+      });
+
+      return publishes.map((p) => {
+        if (p.legacy) {
+          return {
+            id: p.id,
+            startedAt: p.startedAt,
+            source: p.source,
+            gitCommitSha: p.gitCommitSha,
+            gitCommitMessage: p.gitCommitMessage,
+            status: 'LEGACY' as const,
+            counts: { added: 0, updated: 0, deleted: 0, errors: 0 },
+            files: [],
+          };
+        }
+
+        const files = p.files;
+        const hasPending =
+          files.length === 0 || files.some((f) => f.status === 'uploading');
+        const hasError = !hasPending && files.some((f) => f.status === 'error');
+        const status: 'PENDING' | 'SUCCESS' | 'ERROR' = hasPending
+          ? 'PENDING'
+          : hasError
+            ? 'ERROR'
+            : 'SUCCESS';
+
+        return {
+          id: p.id,
+          startedAt: p.startedAt,
+          source: p.source,
+          gitCommitSha: p.gitCommitSha,
+          gitCommitMessage: p.gitCommitMessage,
+          status,
+          counts: {
+            added: files.filter((f) => f.changeType === 'added').length,
+            updated: files.filter((f) => f.changeType === 'updated').length,
+            deleted: files.filter((f) => f.changeType === 'deleted').length,
+            errors: files.filter((f) => f.status === 'error').length,
+          },
+          files,
+        };
+      });
+    }),
+
   getCustomStyles: publicProcedure
     .input(
       z.object({
@@ -1904,7 +1819,6 @@ export const siteRouter = createTRPCRouter({
           ghBranch: null,
           rootDir: null,
           installationRepositoryId: null,
-          autoSync: false,
           tree: Prisma.JsonNull,
           configJson: {
             ...existingConfig,
@@ -1984,7 +1898,6 @@ export const siteRouter = createTRPCRouter({
         where: { id: input.siteId },
         data: {
           installationRepositoryId: repoRecord.id,
-          autoSync: true,
         },
         select: publicSiteSelect,
       });
@@ -2066,7 +1979,6 @@ export const siteRouter = createTRPCRouter({
           ghRepository,
           ghBranch,
           rootDir: rootDir || null,
-          autoSync: true,
           ...(installationRepoId && {
             installationRepository: { connect: { id: installationRepoId } },
           }),
@@ -2200,16 +2112,14 @@ export const siteRouter = createTRPCRouter({
                 appPath: urlPath,
                 size: file.size,
                 sha: file.sha,
-                metadata: {},
+                metadata: Prisma.JsonNull,
                 extension,
-                syncStatus: 'UPLOADING',
               },
               update: {
                 size: file.size,
                 sha: file.sha,
                 appPath: urlPath,
                 extension,
-                syncStatus: 'UPLOADING',
               },
             });
 
