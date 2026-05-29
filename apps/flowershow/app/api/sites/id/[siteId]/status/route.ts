@@ -1,5 +1,5 @@
 import type {
-  BlobStatus,
+  PublishFileStatus,
   PublicStatusResponse,
   StatusResponse,
 } from '@flowershow/api-contract';
@@ -117,7 +117,7 @@ export async function GET(
         status: overallStatus,
         files: statusCounts,
         blobs: publishFiles.map(
-          (pf): BlobStatus => ({
+          (pf): PublishFileStatus => ({
             id: pf.id,
             path: pf.path,
             status: pf.status,
