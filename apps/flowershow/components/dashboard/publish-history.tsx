@@ -221,10 +221,10 @@ function PublishRow({
       </button>
 
       {expanded && hasFiles && (
-        <div className="border-t border-stone-100 bg-stone-50 px-4 py-2">
+        <div className="max-h-64 overflow-y-auto border-t border-stone-100 bg-stone-50 px-4 py-2">
           <ul className="divide-y divide-stone-100">
             {entry.files.map((file) => (
-              <li key={file.id} className="flex items-start gap-2 py-1.5">
+              <li key={file.id} className="flex items-center gap-2 py-1.5">
                 <FileStatusDot status={file.status} />
                 <ChangeTypeBadge changeType={file.changeType} />
                 <span className="min-w-0 flex-1 break-all font-mono text-xs text-stone-600">
