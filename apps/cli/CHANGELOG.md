@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.1.0
+
+- Publish history tracking: the CLI now sends a `publish-id` header with every R2 upload, enabling per-file status tracking and a full publish history in the Flowershow dashboard.
+
 ## 2.0.6
 
 - Fix file change detection: use Git blob SHA format so CLI publishes after a GitHub publish no longer mark all files as updated.
