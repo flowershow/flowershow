@@ -197,8 +197,11 @@ function PublishRow({
 
           {entry.status === 'LEGACY' && (
             <p className="mt-1 text-xs text-stone-400">
-              Upgrade to CLI v2.1.0+ or Obsidian plugin v4.1.0+ for detailed
-              publish logs.
+              {entry.source === 'cli'
+                ? 'Upgrade to CLI v2.1.0+ for detailed publish logs.'
+                : entry.source === 'obsidian_plugin'
+                  ? 'Upgrade to Obsidian plugin v4.1.0+ for detailed publish logs.'
+                  : 'Upgrade your client for detailed publish logs.'}
             </p>
           )}
 
