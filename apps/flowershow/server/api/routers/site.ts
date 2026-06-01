@@ -756,7 +756,13 @@ export const siteRouter = createTRPCRouter({
             gitCommitSha: p.gitCommitSha,
             gitCommitMessage: p.gitCommitMessage,
             status: 'LEGACY' as const,
-            counts: { added: 0, updated: 0, deleted: 0, errors: 0 },
+            counts: {
+              added: 0,
+              updated: 0,
+              deleted: 0,
+              errors: 0,
+              canceled: 0,
+            },
             files: [],
           };
         }
@@ -765,15 +771,13 @@ export const siteRouter = createTRPCRouter({
         const hasPending =
           files.length === 0 || files.some((f) => f.status === 'uploading');
         const hasError = !hasPending && files.some((f) => f.status === 'error');
-        const allCanceled =
-          !hasPending &&
-          files.length > 0 &&
-          files.every((f) => f.status === 'canceled');
+        const hasCanceled =
+          !hasPending && files.some((f) => f.status === 'canceled');
         const status: 'PENDING' | 'SUCCESS' | 'ERROR' | 'CANCELED' = hasPending
           ? 'PENDING'
           : hasError
             ? 'ERROR'
-            : allCanceled
+            : hasCanceled
               ? 'CANCELED'
               : 'SUCCESS';
 
@@ -789,6 +793,7 @@ export const siteRouter = createTRPCRouter({
             updated: files.filter((f) => f.changeType === 'updated').length,
             deleted: files.filter((f) => f.changeType === 'deleted').length,
             errors: files.filter((f) => f.status === 'error').length,
+            canceled: files.filter((f) => f.status === 'canceled').length,
           },
           files,
         };

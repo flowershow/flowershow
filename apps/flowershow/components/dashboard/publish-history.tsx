@@ -41,6 +41,7 @@ interface PublishEntry {
     updated: number;
     deleted: number;
     errors: number;
+    canceled: number;
   };
   files: PublishFile[];
 }
@@ -148,7 +149,7 @@ function PublishRow({
       ? `https://github.com/${ghRepository}/commit/${entry.gitCommitSha}`
       : null;
 
-  const { added, updated, deleted, errors } = entry.counts;
+  const { added, updated, deleted, errors, canceled } = entry.counts;
   const hasFiles = entry.files.length > 0;
 
   return (
@@ -228,6 +229,9 @@ function PublishRow({
                   {errors} error{errors !== 1 ? 's' : ''}
                 </span>
               )}
+              {canceled > 0 && (
+                <span className="text-stone-400">{canceled} canceled</span>
+              )}
             </div>
           )}
         </div>
@@ -243,6 +247,11 @@ function PublishRow({
                 <span className="min-w-0 flex-1 break-all font-mono text-xs text-stone-600">
                   {file.path}
                 </span>
+                {file.status === 'canceled' && (
+                  <span className="ml-2 shrink-0 text-xs text-stone-400">
+                    canceled
+                  </span>
+                )}
                 {file.error && (
                   <span
                     className="ml-2 shrink-0 max-w-xs truncate text-xs text-red-500"
