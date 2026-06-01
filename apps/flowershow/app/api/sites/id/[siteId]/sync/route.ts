@@ -285,6 +285,20 @@ export async function POST(
       });
       publishId = publish.id;
 
+      const previousPublishIds = await prisma.publish.findMany({
+        where: { siteId, id: { not: publish.id } },
+        select: { id: true },
+      });
+      if (previousPublishIds.length > 0) {
+        await prisma.publishFile.updateMany({
+          where: {
+            publishId: { in: previousPublishIds.map((p) => p.id) },
+            status: 'uploading',
+          },
+          data: { status: 'error', error: 'superseded by newer publish' },
+        });
+      }
+
       if (toDelete.length > 0) {
         try {
           deletedPaths = await deleteBlobs(siteId, toDelete);

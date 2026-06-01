@@ -72,6 +72,21 @@ export const syncSite = inngest.createFunction(
       });
     });
 
+    await step.run('cancel-superseded-publish-files', async () => {
+      const previous = await prisma.publish.findMany({
+        where: { siteId, id: { not: publish.id } },
+        select: { id: true },
+      });
+      if (previous.length === 0) return;
+      await prisma.publishFile.updateMany({
+        where: {
+          publishId: { in: previous.map((p) => p.id) },
+          status: 'uploading',
+        },
+        data: { status: 'error', error: 'superseded by newer publish' },
+      });
+    });
+
     const site = await step.run('fetch-site', async () => {
       const site = await prisma.site.findUnique({
         where: { id: siteId },
@@ -377,20 +392,43 @@ export const cleanupExpiredPublishFiles = inngest.createFunction(
   },
   { cron: '*/15 * * * *' }, // Every 15 minutes
   async ({ step }) => {
-    const result = await step.run('expire-stale-uploading-files', async () => {
-      return prisma.publishFile.updateMany({
-        where: {
-          status: 'uploading',
-          presignedUrlExpiresAt: { lt: new Date() },
-        },
-        data: {
-          status: 'error',
-          error: 'upload expired',
-        },
-      });
-    });
+    const directUploadExpired = await step.run(
+      'expire-stale-uploading-files',
+      async () => {
+        return prisma.publishFile.updateMany({
+          where: {
+            status: 'uploading',
+            presignedUrlExpiresAt: { lt: new Date() },
+          },
+          data: {
+            status: 'error',
+            error: 'upload expired',
+          },
+        });
+      },
+    );
 
-    return { expired: result.count };
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const githubPathExpired = await step.run(
+      'expire-stale-github-path-files',
+      async () => {
+        return prisma.publishFile.updateMany({
+          where: {
+            status: 'uploading',
+            presignedUrlExpiresAt: null,
+            publish: { startedAt: { lt: twoHoursAgo } },
+          },
+          data: {
+            status: 'error',
+            error: 'upload timeout',
+          },
+        });
+      },
+    );
+
+    return {
+      expired: directUploadExpired.count + githubPathExpired.count,
+    };
   },
 );
 
