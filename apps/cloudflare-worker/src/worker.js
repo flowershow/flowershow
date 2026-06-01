@@ -10,13 +10,14 @@ import {
   extractImageDimensions,
   isSupportedImagePath,
   parseMarkdownForSync,
+  parseObjectKey,
 } from './processing-utils.js';
 
 // --- CONFIGURATION & VALIDATION ---
 const REQUIRED_ENV_VARS = ['DATABASE_URL'];
 const MAX_FILE_BYTES = 5 * 1024 * 1024; // 5 MB max for safety
 
-function validateEnv(env) {
+export function validateEnv(env) {
   for (const v of REQUIRED_ENV_VARS) {
     if (!env[v]) throw new Error(`Missing required env var: ${v}`);
   }
@@ -63,17 +64,6 @@ function getTypesenseClient(env) {
 }
 
 // --- HELPERS ---
-
-/**
- * Parse the R2/S3 object key into its components.
- * Expected format: {siteId}/{branch}/raw/{path}
- */
-function parseObjectKey(rawKey) {
-  const m = rawKey.match(/^([^/]+)\/([^/]+)\/raw\/(.+)$/);
-  if (!m) throw new Error(`Invalid key format: ${rawKey}`);
-  const [, siteId, branch, path] = m;
-  return { siteId, branch, path };
-}
 
 /**
  * Read the publish-id from an R2/S3 object's custom metadata.

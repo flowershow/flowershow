@@ -16,6 +16,17 @@ globalThis.Buffer = globalThis.Buffer || {
   },
 };
 
+/**
+ * Parse the R2/S3 object key into its components.
+ * Expected format: {siteId}/{branch}/raw/{path}
+ */
+export function parseObjectKey(rawKey) {
+  const m = rawKey.match(/^([^/]+)\/([^/]+)\/raw\/(.+)$/);
+  if (!m) throw new Error(`Invalid key format: ${rawKey}`);
+  const [, siteId, branch, path] = m;
+  return { siteId, branch, path };
+}
+
 export function normalizePermalink(permalink) {
   if (typeof permalink !== 'string') {
     return null;
