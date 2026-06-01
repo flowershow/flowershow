@@ -50,7 +50,6 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
   const url = getSiteUrl(site);
 
   const repoFullName = getRepoFullName(site);
-  const hasGithubRepo = !!repoFullName;
 
   return (
     <div className="border-b border-stone-200 pb-4 sm:flex sm:items-start sm:justify-between">
@@ -99,7 +98,7 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
                   className="mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"
                   aria-hidden="true"
                 />
-                <span>{hasGithubRepo ? 'Synced' : 'Published'}</span>
+                <span>Published</span>
               </div>
             ) : syncStatus.status === 'PENDING' ? (
               <div className="flex items-center">
@@ -107,7 +106,7 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
                   className="mr-1.5 h-5 w-5 flex-shrink-0 text-orange-400"
                   aria-hidden="true"
                 />
-                <span>{hasGithubRepo ? 'Syncing...' : 'Publishing...'}</span>
+                <span>Publishing...</span>
               </div>
             ) : syncStatus.status === 'ERROR' ? (
               <div className="group flex items-center hover:cursor-default">
