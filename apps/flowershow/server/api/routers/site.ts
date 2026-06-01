@@ -1,4 +1,4 @@
-import { Blob, Prisma, PrismaClient } from '@prisma/client';
+import { Blob, Prisma, PrismaClient, PublishSource } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
 import { jwtVerify } from 'jose';
@@ -2106,6 +2106,18 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
+      const PRESIGNED_URL_TTL = 3600;
+
+      const existingBlobs = await ctx.db.blob.findMany({
+        where: { siteId, path: { in: files.map((f) => f.path) } },
+        select: { path: true, sha: true },
+      });
+      const existingBlobMap = new Map(existingBlobs.map((b) => [b.path, b]));
+
+      const publish = await ctx.db.publish.create({
+        data: { siteId, source: PublishSource.dashboard_upload },
+      });
+
       let uploadUrls: {
         path: string;
         uploadUrl: string;
@@ -2113,6 +2125,10 @@ export const siteRouter = createTRPCRouter({
         contentType: string;
       }[];
       try {
+        const presignedUrlExpiresAt = new Date(
+          Date.now() + PRESIGNED_URL_TTL * 1000,
+        );
+
         uploadUrls = await Promise.all(
           files.map(async (file) => {
             const extension = file.path.split('.').pop()?.toLowerCase() || '';
@@ -2154,9 +2170,25 @@ export const siteRouter = createTRPCRouter({
             const contentType = getContentType(extension);
             const uploadUrl = await generatePresignedUploadUrl(
               s3Key,
-              3600,
+              PRESIGNED_URL_TTL,
               contentType,
+              { 'publish-id': publish.id },
             );
+
+            const existing = existingBlobMap.get(file.path);
+            const changeType = (
+              !existing || existing.sha !== file.sha ? 'added' : 'updated'
+            ) as 'added' | 'updated';
+
+            await ctx.db.publishFile.create({
+              data: {
+                publishId: publish.id,
+                path: file.path,
+                changeType,
+                status: 'uploading',
+                presignedUrlExpiresAt,
+              },
+            });
 
             return {
               path: file.path,
@@ -2181,7 +2213,7 @@ export const siteRouter = createTRPCRouter({
       });
       await posthog.shutdown();
 
-      return { files: uploadUrls };
+      return { files: uploadUrls, publishId: publish.id };
     }),
 });
 
