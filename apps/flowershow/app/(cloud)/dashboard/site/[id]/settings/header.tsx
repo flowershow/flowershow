@@ -36,12 +36,13 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
 
   const syncStatus = data
     ? syncJustStarted && data.status === 'UNPUBLISHED'
-      ? { status: 'PENDING' as const }
+      ? { status: 'PENDING' as const, lastSyncedAt: undefined }
       : data
     : {
         status: (syncJustStarted ? 'PENDING' : 'LOADING') as
           | 'PENDING'
           | 'LOADING',
+        lastSyncedAt: undefined,
       };
 
   const [showErrorDialog, setShowErrorDialog] = useState(false);
@@ -166,9 +167,7 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
               />
               <span>
                 Last published{' '}
-                {syncStatus && syncStatus.lastSyncedAt
-                  ? new Date(syncStatus?.lastSyncedAt)?.toLocaleString()
-                  : '—'}
+                {new Date(syncStatus.lastSyncedAt).toLocaleString()}
               </span>
             </div>
           )}
