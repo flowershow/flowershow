@@ -789,9 +789,24 @@ export const siteRouter = createTRPCRouter({
           gitCommitMessage: p.gitCommitMessage,
           status,
           counts: {
-            added: files.filter((f) => f.changeType === 'added').length,
-            updated: files.filter((f) => f.changeType === 'updated').length,
-            deleted: files.filter((f) => f.changeType === 'deleted').length,
+            added: files.filter(
+              (f) =>
+                f.changeType === 'added' &&
+                f.status !== 'canceled' &&
+                f.status !== 'error',
+            ).length,
+            updated: files.filter(
+              (f) =>
+                f.changeType === 'updated' &&
+                f.status !== 'canceled' &&
+                f.status !== 'error',
+            ).length,
+            deleted: files.filter(
+              (f) =>
+                f.changeType === 'deleted' &&
+                f.status !== 'canceled' &&
+                f.status !== 'error',
+            ).length,
             errors: files.filter((f) => f.status === 'error').length,
             canceled: files.filter((f) => f.status === 'canceled').length,
           },
