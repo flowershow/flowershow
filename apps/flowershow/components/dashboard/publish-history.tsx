@@ -17,9 +17,9 @@ type PublishSource =
   | 'cli'
   | 'obsidian_plugin'
   | 'dashboard_upload';
-type PublishStatus = 'PENDING' | 'SUCCESS' | 'ERROR' | 'LEGACY';
+type PublishStatus = 'PENDING' | 'SUCCESS' | 'ERROR' | 'CANCELED' | 'LEGACY';
 type ChangeType = 'added' | 'updated' | 'deleted';
-type FileStatus = 'uploading' | 'success' | 'error';
+type FileStatus = 'uploading' | 'success' | 'error' | 'canceled';
 
 interface PublishFile {
   id: string;
@@ -69,6 +69,14 @@ function StatusBadge({ status }: { status: PublishStatus }) {
       </span>
     );
   }
+  if (status === 'CANCELED') {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500">
+        <CircleDotDashedIcon className="h-3 w-3" />
+        Canceled
+      </span>
+    );
+  }
   if (status === 'LEGACY') {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500">
@@ -93,6 +101,7 @@ function FileStatusDot({ status }: { status: FileStatus }) {
         status === 'success' && 'bg-green-500',
         status === 'error' && 'bg-red-500',
         status === 'uploading' && 'bg-yellow-400',
+        status === 'canceled' && 'bg-stone-300',
       )}
     />
   );

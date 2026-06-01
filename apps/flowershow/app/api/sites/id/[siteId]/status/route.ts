@@ -115,8 +115,8 @@ export async function GET(
     };
     for (const pf of publishFiles) {
       if (pf.status === 'uploading') statusCounts.pending++;
-      else if (pf.status === 'success') statusCounts.success++;
-      else statusCounts.failed++;
+      else if (pf.status === 'error') statusCounts.failed++;
+      else statusCounts.success++; // 'success' or 'canceled'
     }
 
     let overallStatus: 'pending' | 'complete' | 'error';

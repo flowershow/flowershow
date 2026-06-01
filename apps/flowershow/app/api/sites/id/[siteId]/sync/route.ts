@@ -295,7 +295,7 @@ export async function POST(
             publishId: { in: previousPublishIds.map((p) => p.id) },
             status: 'uploading',
           },
-          data: { status: 'error', error: 'superseded by newer publish' },
+          data: { status: 'canceled' },
         });
       }
 

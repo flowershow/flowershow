@@ -702,6 +702,7 @@ export const siteRouter = createTRPCRouter({
           };
         }
 
+        // All terminal with no errors (may include canceled files) → SUCCESS
         return { status: 'SUCCESS', lastSyncedAt: latestPublish.startedAt };
       },
     ),
@@ -764,11 +765,17 @@ export const siteRouter = createTRPCRouter({
         const hasPending =
           files.length === 0 || files.some((f) => f.status === 'uploading');
         const hasError = !hasPending && files.some((f) => f.status === 'error');
-        const status: 'PENDING' | 'SUCCESS' | 'ERROR' = hasPending
+        const allCanceled =
+          !hasPending &&
+          files.length > 0 &&
+          files.every((f) => f.status === 'canceled');
+        const status: 'PENDING' | 'SUCCESS' | 'ERROR' | 'CANCELED' = hasPending
           ? 'PENDING'
           : hasError
             ? 'ERROR'
-            : 'SUCCESS';
+            : allCanceled
+              ? 'CANCELED'
+              : 'SUCCESS';
 
         return {
           id: p.id,

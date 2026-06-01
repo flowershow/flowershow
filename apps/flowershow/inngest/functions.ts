@@ -83,7 +83,7 @@ export const syncSite = inngest.createFunction(
           publishId: { in: previous.map((p) => p.id) },
           status: 'uploading',
         },
-        data: { status: 'error', error: 'superseded by newer publish' },
+        data: { status: 'canceled' },
       });
     });
 
@@ -419,8 +419,7 @@ export const cleanupExpiredPublishFiles = inngest.createFunction(
             publish: { startedAt: { lt: twoHoursAgo } },
           },
           data: {
-            status: 'error',
-            error: 'upload timeout',
+            status: 'canceled',
           },
         });
       },
