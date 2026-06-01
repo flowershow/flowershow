@@ -1,1 +1,0 @@
-parallel1.bats

@@ -48,6 +48,7 @@ function getPostgresClient(env) {
 }
 
 function getTypesenseClient(env) {
+  if (!env.TYPESENSE_API_KEY || !env.TYPESENSE_HOST) return null;
   return new Client({
     nodes: [
       {
@@ -130,6 +131,7 @@ async function indexInTypesense({
   body,
   metadata,
 }) {
+  if (!typesense) return;
   try {
     // Create document for indexing
     const document = {

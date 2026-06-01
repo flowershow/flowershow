@@ -9,7 +9,7 @@
     "lint": "biome lint .",
     "deploy:staging": "npx wrangler deploy --config wrangler.flowershow.toml --keep-vars --env staging",
     "deploy:production": "npx wrangler deploy --config wrangler.flowershow.toml --keep-vars --env production",
-    "test": "echo 'worker tests disabled (outdated bats suite)'"
+    "test": "node --test test/processing-utils.test.js"
   },
   "keywords": [],
   "author": "",
