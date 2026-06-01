@@ -209,6 +209,7 @@ export async function POST(
             PRESIGNED_URL_TTL,
             contentType,
             isLegacy ? undefined : { 'publish-id': publish.id },
+            isLegacy ? undefined : new Set(['x-amz-meta-publish-id']),
           );
 
           if (!isLegacy) {

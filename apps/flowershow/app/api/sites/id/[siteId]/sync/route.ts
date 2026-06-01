@@ -102,6 +102,7 @@ async function generateUrlsForFiles(
         PRESIGNED_URL_TTL,
         contentType,
         publishId ? { 'publish-id': publishId } : undefined,
+        publishId ? new Set(['x-amz-meta-publish-id']) : undefined,
       );
 
       return { path: file.path, uploadUrl, blobId: blob.id, contentType };
