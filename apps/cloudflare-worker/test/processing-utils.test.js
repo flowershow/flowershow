@@ -6,6 +6,7 @@ import {
   isSupportedImagePath,
   normalizePermalink,
   parseMarkdownForSync,
+  parseObjectKey,
 } from '../src/processing-utils.js';
 
 const TINY_PNG_BASE64 =
@@ -133,4 +134,57 @@ test('extractImageDimensions returns nulls for unsupported file type', () => {
   const result = extractImageDimensions('README.md', Buffer.from('# Hello'));
 
   assert.deepStrictEqual(result, { width: null, height: null });
+});
+
+test('parseMarkdownForSync falls back to filename when no frontmatter title and no H1', async () => {
+  const { metadata } = await parseMarkdownForSync({
+    markdown: 'Just some content without a heading.',
+    path: 'docs/my-page.md',
+  });
+
+  assert.strictEqual(metadata.title, 'my-page');
+});
+
+test('parseMarkdownForSync prefers frontmatter title over H1', async () => {
+  const markdown = '---\ntitle: Frontmatter Title\n---\n# H1 Title';
+  const { metadata } = await parseMarkdownForSync({
+    markdown,
+    path: 'page.md',
+  });
+
+  assert.strictEqual(metadata.title, 'Frontmatter Title');
+});
+
+test('parseObjectKey parses valid key format', () => {
+  const result = parseObjectKey('site-1/main/raw/docs/intro.md');
+
+  assert.deepStrictEqual(result, {
+    siteId: 'site-1',
+    branch: 'main',
+    path: 'docs/intro.md',
+  });
+});
+
+test('parseObjectKey parses key with nested path', () => {
+  const result = parseObjectKey('mysite/feat-branch/raw/a/b/c/file.md');
+
+  assert.deepStrictEqual(result, {
+    siteId: 'mysite',
+    branch: 'feat-branch',
+    path: 'a/b/c/file.md',
+  });
+});
+
+test('parseObjectKey throws on invalid format', () => {
+  assert.throws(
+    () => parseObjectKey('invalid-key-without-raw-segment'),
+    /Invalid key format/,
+  );
+});
+
+test('parseObjectKey throws when raw segment is missing', () => {
+  assert.throws(
+    () => parseObjectKey('site/branch/notraw/file.md'),
+    /Invalid key format/,
+  );
 });

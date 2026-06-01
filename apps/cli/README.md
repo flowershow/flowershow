@@ -194,7 +194,7 @@ List all sites published by your authenticated user.
 fl list
 ```
 
-Shows site names, URLs, and timestamps.
+Shows site names, URLs, dashboard URLs, and timestamps.
 
 #### `fl delete <project-name>`
 
@@ -204,7 +204,7 @@ Delete a site and all its files.
 fl delete my-notes
 ```
 
-Removes the site and all its files via the Flowershow API.
+Prompts for confirmation before deleting. Sites with an active premium subscription cannot be deleted until the subscription is cancelled from the dashboard.
 
 ## File Filtering
 
@@ -212,8 +212,10 @@ The CLI automatically ignores common non-content files and directories:
 
 - `.git/`, `node_modules/`, `.cache/`, `dist/`, `build/`
 - `.DS_Store`, `Thumbs.db`
-- `.env*`, `*.log`
+- `.env`, `.env.*`, `*.log`
 - `.next/`, `.vercel/`, `.turbo/`
+- `coverage/`, `.nyc_output/`
+- `.gitignore`, `.flowershow`
 
 If a `.gitignore` file is present in the published folder, the Flowershow CLI will also ignore files matched by it.
 
@@ -257,9 +259,8 @@ If you run `fl` on a path whose site already exists on the server, it will autom
 
 ### "Site not found" (when using sync)
 
-The sync command requires the site to already exist. If you get this error:
+`fl sync` is deprecated — use `fl <path>` instead, which creates or syncs automatically. If you still see this error:
 
-- Use `fl` to create the site first
 - Check the site name with `fl list`
 - Specify the correct site name with `--name`
 
@@ -313,7 +314,6 @@ export POSTHOG_API_KEY=abc
 ```bash
 go run . login
 go run . ./my-notes
-go run . sync ./my-notes
 ```
 
 5. **Build and install globally:**

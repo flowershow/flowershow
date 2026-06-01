@@ -6,6 +6,10 @@ import { randomBytes, createHash } from 'crypto';
 /** Minimum CLI version required to use the API */
 const MIN_CLI_VERSION = '1.0.0';
 
+/** Minimum CLI/plugin version that includes publish-id header support */
+const MIN_PUBLISH_TRACKING_CLI_VERSION = '2.1.0';
+const MIN_PUBLISH_TRACKING_PLUGIN_VERSION = '4.1.0';
+
 /**
  * Compare semver versions
  * Returns: -1 if a < b, 0 if a == b, 1 if a > b
@@ -20,6 +24,24 @@ function compareSemver(a: string, b: string): number {
     if (na > nb) return 1;
   }
   return 0;
+}
+
+/**
+ * Returns true if the client predates publish tracking (publish-id header support).
+ * Legacy clients still upload successfully but Publish records have no PublishFile rows.
+ */
+export function isLegacyPublishClient(request: NextRequest): boolean {
+  const cliVersion = request.headers.get('X-Flowershow-CLI-Version');
+  const pluginVersion = request.headers.get('X-Flowershow-Plugin-Version');
+  if (cliVersion) {
+    return compareSemver(cliVersion, MIN_PUBLISH_TRACKING_CLI_VERSION) < 0;
+  }
+  if (pluginVersion) {
+    return (
+      compareSemver(pluginVersion, MIN_PUBLISH_TRACKING_PLUGIN_VERSION) < 0
+    );
+  }
+  return false;
 }
 
 /**

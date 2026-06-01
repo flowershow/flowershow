@@ -1,5 +1,5 @@
 import type {
-  BlobStatus,
+  PublishFileStatus,
   PublicStatusResponse,
   StatusResponse,
 } from '@flowershow/api-contract';
@@ -10,10 +10,10 @@ import prisma from '@/server/db';
 
 /**
  * GET /api/sites/id/:siteId/status
- * Get processing status of site files
+ * Get processing status derived from the latest Publish record
  *
  * @returns {ErrorResponse} - 404/403/500 error responses
- * @returns {AuthenticatedStatusResponse} - Detailed status when authenticated
+ * @returns {StatusResponse} - Detailed status when authenticated
  * @returns {PublicStatusResponse} - Simple ready/not-ready for public polling
  */
 export async function GET(
@@ -35,10 +35,7 @@ export async function GET(
     if (isAuthenticated) {
       const site = await prisma.site.findUnique({
         where: { id: siteId },
-        select: {
-          id: true,
-          userId: true,
-        },
+        select: { id: true, userId: true },
       });
 
       if (!site) {
@@ -59,102 +56,100 @@ export async function GET(
       }
     }
 
-    // Get all blobs for this site with their status
-    const blobs = await prisma.blob.findMany({
+    // Get latest publish for this site
+    const latestPublish = await prisma.publish.findFirst({
       where: { siteId },
-      select: {
-        id: true,
-        path: true,
-        extension: true,
-        syncStatus: true,
-        syncError: true,
-      },
-      orderBy: { createdAt: 'asc' },
+      orderBy: { startedAt: 'desc' },
+      select: { id: true, legacy: true },
     });
 
-    // Handle empty site
-    if (blobs.length === 0) {
-      if (isAuthenticated) {
-        const response: StatusResponse = {
+    const emptyResponse = (
+      isAuth: boolean,
+    ): NextResponse<StatusResponse | PublicStatusResponse> => {
+      if (isAuth) {
+        return NextResponse.json({
           siteId,
           status: 'pending',
-          files: {
-            total: 0,
-            pending: 0,
-            success: 0,
-            failed: 0,
-          },
+          files: { total: 0, pending: 0, success: 0, failed: 0 },
           blobs: [],
-        };
-        return NextResponse.json(response);
-      } else {
-        return NextResponse.json({
-          status: 'pending',
-        } satisfies PublicStatusResponse);
+        } satisfies StatusResponse);
       }
+      return NextResponse.json({
+        status: 'pending',
+      } satisfies PublicStatusResponse);
+    };
+
+    if (!latestPublish) {
+      return emptyResponse(isAuthenticated);
     }
 
-    // Count files by status
+    const publishFiles = await prisma.publishFile.findMany({
+      where: { publishId: latestPublish.id },
+      select: { id: true, path: true, status: true, error: true },
+      orderBy: { path: 'asc' },
+    });
+
+    if (publishFiles.length === 0) {
+      if (latestPublish.legacy) {
+        if (isAuthenticated) {
+          return NextResponse.json({
+            siteId,
+            status: 'complete',
+            files: { total: 0, pending: 0, success: 0, failed: 0 },
+            blobs: [],
+          } satisfies StatusResponse);
+        }
+        return NextResponse.json({
+          status: 'complete',
+        } satisfies PublicStatusResponse);
+      }
+      return emptyResponse(isAuthenticated);
+    }
+
+    // Tally statuses
     const statusCounts = {
-      total: blobs.length,
+      total: publishFiles.length,
       pending: 0,
       success: 0,
       failed: 0,
     };
-
-    for (const blob of blobs) {
-      switch (blob.syncStatus) {
-        case 'UPLOADING':
-        case 'PROCESSING':
-          statusCounts.pending++;
-          break;
-        case 'SUCCESS':
-          statusCounts.success++;
-          break;
-        case 'ERROR':
-          statusCounts.failed++;
-          break;
-      }
+    for (const pf of publishFiles) {
+      if (pf.status === 'uploading') statusCounts.pending++;
+      else if (pf.status === 'error') statusCounts.failed++;
+      else statusCounts.success++; // 'success' or 'canceled'
     }
 
-    // Determine overall status
     let overallStatus: 'pending' | 'complete' | 'error';
-    if (statusCounts.failed > 0) {
-      overallStatus = 'error';
-    } else if (statusCounts.pending > 0) {
-      overallStatus = 'pending';
-    } else {
-      overallStatus = 'complete';
-    }
+    if (statusCounts.pending > 0) overallStatus = 'pending';
+    else if (statusCounts.failed > 0) overallStatus = 'error';
+    else overallStatus = 'complete';
 
-    // Return detailed response for authenticated requests
     if (isAuthenticated) {
-      const response: StatusResponse = {
+      return NextResponse.json({
         siteId,
         status: overallStatus,
         files: statusCounts,
-        blobs: blobs.map((blob) => ({
-          id: blob.id,
-          path: blob.path,
-          syncStatus: blob.syncStatus,
-          syncError: blob.syncError,
-          extension: blob.extension,
-        })),
-      };
-      return NextResponse.json(response);
+        blobs: publishFiles.map(
+          (pf): PublishFileStatus => ({
+            id: pf.id,
+            path: pf.path,
+            status: pf.status,
+            error: pf.error ?? null,
+            extension: pf.path.split('.').pop() ?? null,
+          }),
+        ),
+      } satisfies StatusResponse);
     }
 
-    // Return simple response for public polling
     if (overallStatus === 'error') {
-      const errors = blobs
-        .filter((b) => b.syncStatus === 'ERROR')
-        .map((b) => ({
-          path: b.path,
-          error: b.syncError || 'Processing failed',
-        }));
       return NextResponse.json({
         status: 'error',
-        errors,
+        errors: publishFiles
+          .filter((pf) => pf.status === 'error')
+          .map((pf) => ({
+            path: pf.path,
+            error: pf.error ?? 'Processing failed',
+          })),
       } satisfies PublicStatusResponse);
     }
 

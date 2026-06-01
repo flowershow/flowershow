@@ -37,7 +37,6 @@ export async function GET(
       user: true,
       blobs: {
         where: {
-          syncStatus: 'SUCCESS',
           OR: [{ path: { endsWith: '.md' } }, { path: { endsWith: '.mdx' } }],
           metadata: {
             not: Prisma.AnyNull,

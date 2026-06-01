@@ -237,7 +237,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 			failedUploads = append(failedUploads, uploadInfo.Path+" (not found locally)")
 			continue
 		}
-		if err := api.UploadToR2(uploadInfo.UploadURL, f.Content, uploadInfo.ContentType); err != nil {
+		if err := api.UploadToR2(uploadInfo.UploadURL, f.Content, uploadInfo.ContentType, syncPlan.PublishId); err != nil {
 			failedUploads = append(failedUploads, uploadInfo.Path+": "+err.Error())
 		}
 	}
@@ -324,7 +324,7 @@ func doSync(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.
 				failedUploads = append(failedUploads, uploadInfo.Path+" (not found locally)")
 				continue
 			}
-			if err := api.UploadToR2(uploadInfo.UploadURL, f.Content, uploadInfo.ContentType); err != nil {
+			if err := api.UploadToR2(uploadInfo.UploadURL, f.Content, uploadInfo.ContentType, syncPlan.PublishId); err != nil {
 				failedUploads = append(failedUploads, uploadInfo.Path+": "+err.Error())
 			}
 		}

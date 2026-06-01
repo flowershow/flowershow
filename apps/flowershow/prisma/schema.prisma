@@ -116,7 +116,6 @@ model Site {
   updatedAt               DateTime      @updatedAt @map("updated_at")
   user                    User          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
   userId                  String        @map("user_id")
-  autoSync                Boolean       @default(false) @map("auto_sync")
   enableComments          Boolean       @default(false) @map("enable_comments")
   giscusRepoId            String?       @map("giscus_repo_id")
   giscusCategoryId        String?       @map("giscus_category_id")
@@ -126,6 +125,7 @@ model Site {
   plan                    Plan          @default(FREE)
   subscription            Subscription?
   blobs                   Blob[]
+  publishes               Publish[]
   tree                    Json?         @db.JsonB // GitHub tree data
   privacyMode             PrivacyMode   @default(PUBLIC) @map("privacy_mode")
   accessPasswordHash      String?       @map("access_password_hash")
@@ -152,33 +152,71 @@ model Site {
 }
 
 model Blob {
-  id         String   @id @default(cuid())
-  site       Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
-  siteId     String   @map("site_id")
-  path       String // Original file path
-  appPath    String?  @map("app_path") // URL slug
-  permalink  String? // Obsidian permalink from frontmatter
-  size       Int
-  sha        String
-  metadata   Json     @db.JsonB
-  extension  String? // File extension
-  width      Int? // Original image width in pixels
-  height     Int? // Original image height in pixels
-  syncStatus Status   @default(UPLOADING) @map("sync_status")
-  syncError  String?  @map("sync_error")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  id        String   @id @default(cuid())
+  site      Site     @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  siteId    String   @map("site_id")
+  path      String // Original file path
+  appPath   String?  @map("app_path") // URL slug
+  permalink String? // Obsidian permalink from frontmatter
+  size      Int
+  sha       String
+  metadata  Json?    @db.JsonB
+  extension String? // File extension
+  width     Int? // Original image width in pixels
+  height    Int? // Original image height in pixels
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@unique([siteId, path])
   @@index([siteId])
   @@index([siteId, permalink])
 }
 
-enum Status {
-  UPLOADING  // Presigned URL generated, awaiting upload to R2
-  PROCESSING // Upload complete, content being processed (md/mdx parsing)
-  SUCCESS    // Fully complete and ready to serve
-  ERROR      // Failed at some stage
+enum PublishSource {
+  github_webhook
+  cli
+  obsidian_plugin
+  dashboard_upload
+}
+
+enum PublishFileChangeType {
+  added
+  updated
+  deleted
+}
+
+enum PublishFileStatus {
+  uploading
+  success
+  error
+  canceled
+}
+
+model Publish {
+  id                String        @id @default(cuid())
+  site              Site          @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  siteId            String        @map("site_id")
+  source            PublishSource
+  startedAt         DateTime      @default(now()) @map("started_at")
+  gitCommitSha      String?       @map("git_commit_sha")
+  gitCommitMessage  String?       @map("git_commit_message")
+  legacy            Boolean       @default(false)
+  files             PublishFile[]
+
+  @@index([siteId, startedAt(sort: Desc)])
+}
+
+model PublishFile {
+  id                    String                @id @default(cuid())
+  publish               Publish               @relation(fields: [publishId], references: [id], onDelete: Cascade)
+  publishId             String                @map("publish_id")
+  path                  String
+  changeType            PublishFileChangeType @map("change_type")
+  status                PublishFileStatus     @default(uploading)
+  error                 String?
+  presignedUrlExpiresAt DateTime?             @map("presigned_url_expires_at")
+
+  @@index([publishId, status])
 }
 
 enum Plan {

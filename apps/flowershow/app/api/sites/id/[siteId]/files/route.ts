@@ -5,11 +5,15 @@ import {
   type PublishFilesResponse,
   type UploadTarget,
 } from '@flowershow/api-contract';
-import { Blob } from '@prisma/client';
+import { Prisma, PublishSource } from '@prisma/client';
 import { revalidateTag } from 'next/cache';
-import { NextRequest, NextResponse } from 'next/server';
-import { getClientInfo, validateAccessToken } from '@/lib/cli-auth';
+import { type NextRequest, NextResponse } from 'next/server';
 import { deleteBlobs } from '@/lib/blob-cleanup';
+import {
+  getClientInfo,
+  isLegacyPublishClient,
+  validateAccessToken,
+} from '@/lib/cli-auth';
 import {
   generatePresignedUploadUrl,
   getContentType,
@@ -25,6 +29,16 @@ const MAX_FILE_SIZE = 100 * 1024 * 1024;
 const MAX_TOTAL_SIZE = 500 * 1024 * 1024;
 // Maximum number of files per request
 const MAX_FILES = 1000;
+// Presigned URL TTL in seconds
+const PRESIGNED_URL_TTL = 3600;
+
+function clientTypeToPublishSource(
+  clientType: 'cli' | 'obsidian-plugin' | 'unknown',
+): PublishSource {
+  if (clientType === 'cli') return PublishSource.cli;
+  if (clientType === 'obsidian-plugin') return PublishSource.obsidian_plugin;
+  return PublishSource.dashboard_upload;
+}
 
 /**
  * POST /api/sites/id/:siteId/files
@@ -39,7 +53,6 @@ export async function POST(
   props: { params: Promise<{ siteId: string }> },
 ) {
   try {
-    // Validate access token (CLI or PAT)
     const auth = await validateAccessToken(request);
     if (!auth?.userId) {
       return NextResponse.json(
@@ -50,13 +63,9 @@ export async function POST(
 
     const { siteId } = await props.params;
 
-    // Verify site exists and user owns it
     const site = await prisma.site.findUnique({
       where: { id: siteId },
-      select: {
-        id: true,
-        userId: true,
-      },
+      select: { id: true, userId: true },
     });
 
     if (!site) {
@@ -68,18 +77,13 @@ export async function POST(
 
     if (site.userId !== auth.userId) {
       return NextResponse.json(
-        {
-          error: 'forbidden',
-          message: 'You do not have access to this site',
-        },
+        { error: 'forbidden', message: 'You do not have access to this site' },
         { status: 403 },
       );
     }
 
-    // Ensure Typesense collection exists for search indexing
     await ensureSiteCollection(siteId);
 
-    // Parse request body
     const parsedBody = PublishFilesRequestSchema.safeParse(
       await request.json(),
     );
@@ -102,7 +106,6 @@ export async function POST(
       );
     }
 
-    // Validate files
     let totalSize = 0;
     for (const file of files) {
       if (!file.path || typeof file.size !== 'number' || !file.sha) {
@@ -114,19 +117,15 @@ export async function POST(
           { status: 400 },
         );
       }
-
       if (file.size > MAX_FILE_SIZE) {
         return NextResponse.json(
           {
             error: 'file_too_large',
-            message: `File ${file.path} exceeds maximum size of ${
-              MAX_FILE_SIZE / 1024 / 1024
-            }MB`,
+            message: `File ${file.path} exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
           },
           { status: 413 },
         );
       }
-
       totalSize += file.size;
     }
 
@@ -134,89 +133,104 @@ export async function POST(
       return NextResponse.json(
         {
           error: 'payload_too_large',
-          message: `Total upload size exceeds maximum of ${
-            MAX_TOTAL_SIZE / 1024 / 1024
-          }MB`,
+          message: `Total upload size exceeds maximum of ${MAX_TOTAL_SIZE / 1024 / 1024}MB`,
         },
         { status: 413 },
       );
     }
 
-    // Generate presigned URLs for all files
+    // Fetch existing blobs to determine changeType (added vs updated)
+    const existingBlobs = await prisma.blob.findMany({
+      where: { siteId, path: { in: files.map((f) => f.path) } },
+      select: { path: true, sha: true },
+    });
+    const existingBlobMap = new Map(existingBlobs.map((b) => [b.path, b]));
+
+    const isLegacy = isLegacyPublishClient(request);
+
+    // Create Publish record
+    const publish = await prisma.publish.create({
+      data: {
+        siteId,
+        source: clientTypeToPublishSource(getClientInfo(request).client_type),
+        legacy: isLegacy,
+      },
+    });
+
     let uploadUrls: UploadTarget[];
     try {
+      const presignedUrlExpiresAt = new Date(
+        Date.now() + PRESIGNED_URL_TTL * 1000,
+      );
+
       uploadUrls = await Promise.all(
         files.map(async (file) => {
-          // Extract file extension
-          const extension = file.path.split('.').pop()?.toLowerCase() || '';
+          const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
 
           const urlPath = (() => {
             if (['md', 'mdx'].includes(extension)) {
-              const _urlPath = resolveFilePathToUrlPath({
-                target: file.path,
-              });
+              const _urlPath = resolveFilePathToUrlPath({ target: file.path });
               // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / )
               return _urlPath === '/' ? _urlPath : _urlPath.replace(/^\//, '');
-            } else {
-              return null;
             }
+            return null;
           })();
 
-          // Create or update blob record
           const blob = await prisma.blob.upsert({
-            where: {
-              siteId_path: {
-                siteId,
-                path: file.path,
-              },
-            },
+            where: { siteId_path: { siteId, path: file.path } },
             create: {
               siteId,
               path: file.path,
               appPath: urlPath,
               size: file.size,
               sha: file.sha,
-              metadata: {},
+              metadata: Prisma.JsonNull,
               extension,
-              syncStatus: 'UPLOADING',
             },
             update: {
               size: file.size,
               sha: file.sha,
               appPath: urlPath,
               extension,
-              syncStatus: 'UPLOADING',
             },
           });
 
-          // Generate S3 key: siteId/main/raw/path
           const s3Key = `${siteId}/main/raw/${file.path}`;
-
-          // Get content type for the file
           const contentType = getContentType(extension);
-
-          // Generate presigned URL (valid for 1 hour) with content type
           const uploadUrl = await generatePresignedUploadUrl(
             s3Key,
-            3600,
+            PRESIGNED_URL_TTL,
             contentType,
+            isLegacy ? undefined : { 'publish-id': publish.id },
           );
 
-          return {
-            path: file.path,
-            uploadUrl,
-            blobId: blob.id,
-            contentType,
-          };
+          if (!isLegacy) {
+            const existing = existingBlobMap.get(file.path);
+            const changeType = (
+              !existing || existing.sha !== file.sha ? 'added' : 'updated'
+            ) as 'added' | 'updated';
+
+            await prisma.publishFile.create({
+              data: {
+                publishId: publish.id,
+                path: file.path,
+                changeType,
+                status: 'uploading',
+                presignedUrlExpiresAt,
+              },
+            });
+          }
+
+          return { path: file.path, uploadUrl, blobId: blob.id, contentType };
         }),
       );
     } finally {
-      // Always invalidate cache, even on partial failures
       revalidateTag(siteId);
     }
 
     const response: PublishFilesResponse = {
       files: uploadUrls,
+      publishId: publish.id,
     };
 
     const posthog = PostHogClient();
@@ -226,10 +240,7 @@ export async function POST(
     posthog.capture({
       distinctId: auth.userId,
       event: 'content_published',
-      properties: {
-        publish_method,
-        site_id: siteId,
-      },
+      properties: { publish_method, site_id: siteId },
     });
     await posthog.shutdown();
 
@@ -265,7 +276,6 @@ export async function DELETE(
   props: { params: Promise<{ siteId: string }> },
 ) {
   try {
-    // Validate access token (CLI or PAT)
     const auth = await validateAccessToken(request);
     if (!auth?.userId) {
       return NextResponse.json(
@@ -276,13 +286,9 @@ export async function DELETE(
 
     const { siteId } = await props.params;
 
-    // Verify site exists and user owns it
     const site = await prisma.site.findUnique({
       where: { id: siteId },
-      select: {
-        id: true,
-        userId: true,
-      },
+      select: { id: true, userId: true },
     });
 
     if (!site) {
@@ -294,15 +300,11 @@ export async function DELETE(
 
     if (site.userId !== auth.userId) {
       return NextResponse.json(
-        {
-          error: 'forbidden',
-          message: 'You do not have access to this site',
-        },
+        { error: 'forbidden', message: 'You do not have access to this site' },
         { status: 403 },
       );
     }
 
-    // Parse request body
     const parsedBody = DeleteFilesRequestSchema.safeParse(await request.json());
     if (!parsedBody.success) {
       return NextResponse.json(
@@ -323,25 +325,15 @@ export async function DELETE(
       );
     }
 
-    // Find existing blobs
-    const existingBlobs = (await prisma.blob.findMany({
-      where: {
-        siteId,
-        path: {
-          in: paths,
-        },
-      },
-      select: {
-        id: true,
-        path: true,
-      },
-    })) as Blob[];
+    const existingBlobs = await prisma.blob.findMany({
+      where: { siteId, path: { in: paths } },
+      select: { id: true, path: true },
+    });
 
     const existingPaths = new Set(existingBlobs.map((b) => b.path));
     const deleted: string[] = [];
     const notFound: string[] = [];
 
-    // Identify which paths were found and which weren't
     for (const path of paths) {
       if (existingPaths.has(path)) {
         deleted.push(path);
@@ -350,7 +342,6 @@ export async function DELETE(
       }
     }
 
-    // Delete files from R2, Typesense, and database
     if (existingBlobs.length > 0) {
       try {
         await deleteBlobs(siteId, existingBlobs);
@@ -359,10 +350,7 @@ export async function DELETE(
       }
     }
 
-    const response: DeleteFilesResponse = {
-      deleted,
-      notFound,
-    };
+    const response: DeleteFilesResponse = { deleted, notFound };
 
     return NextResponse.json(response);
   } catch (error) {

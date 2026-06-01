@@ -44,6 +44,8 @@ interface WebhookPayload {
   }>;
   // Push event fields
   ref?: string;
+  after?: string; // SHA of the HEAD commit after the push
+  head_commit?: { message?: string };
   repository?: {
     id: number;
     name: string;
@@ -442,7 +444,6 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
           },
         });
 
-        // Disable autoSync for affected sites
         if (affectedSites.length > 0) {
           console.log(
             `Clearing installation access for ${affectedSites.length} affected site(s) for user ${dbInstallation.userId}`,
@@ -452,7 +453,7 @@ async function handleInstallationRepositoriesEvent(data: WebhookPayload) {
             where: {
               id: { in: affectedSites.map((s) => s.id) },
             },
-            data: { autoSync: false },
+            data: { updatedAt: new Date() },
           });
         }
       }
@@ -617,7 +618,6 @@ async function handlePushEvent(data: WebhookPayload) {
     const sites = await prisma.site.findMany({
       where: {
         ghBranch: branch,
-        autoSync: true,
         installationRepository: {
           repositoryId: BigInt(repository.id),
           installation: { installationId: ghInstallationId },
@@ -646,6 +646,9 @@ async function handlePushEvent(data: WebhookPayload) {
       return;
     }
 
+    const gitCommitSha = data.after ?? null;
+    const gitCommitMessage = data.head_commit?.message ?? null;
+
     const syncResults = await Promise.allSettled(
       sites.map((site) =>
         inngest.send({
@@ -659,6 +662,8 @@ async function handlePushEvent(data: WebhookPayload) {
             rootDir: site.rootDir,
             installationId:
               site.installationRepository?.installationId ?? dbInstallation.id,
+            gitCommitSha,
+            gitCommitMessage,
           },
         }),
       ),

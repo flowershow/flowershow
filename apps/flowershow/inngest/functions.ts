@@ -56,7 +56,36 @@ export const syncSite = inngest.createFunction(
       accessToken,
       installationId,
       forceSync,
+      gitCommitSha,
+      gitCommitMessage,
     } = event.data;
+
+    const publish = await step.run('create-publish', async () => {
+      return prisma.publish.create({
+        data: {
+          siteId,
+          source: 'github_webhook',
+          ...(gitCommitSha && { gitCommitSha }),
+          ...(gitCommitMessage && { gitCommitMessage }),
+        },
+        select: { id: true },
+      });
+    });
+
+    await step.run('cancel-superseded-publish-files', async () => {
+      const previous = await prisma.publish.findMany({
+        where: { siteId, id: { not: publish.id } },
+        select: { id: true },
+      });
+      if (previous.length === 0) return;
+      await prisma.publishFile.updateMany({
+        where: {
+          publishId: { in: previous.map((p) => p.id) },
+          status: 'uploading',
+        },
+        data: { status: 'canceled' },
+      });
+    });
 
     const site = await step.run('fetch-site', async () => {
       const site = await prisma.site.findUnique({
@@ -92,7 +121,7 @@ export const syncSite = inngest.createFunction(
         return JSON.parse(
           Buffer.from(config.content, 'base64').toString('utf-8'),
         );
-      } catch (e: any) {
+      } catch {
         return {};
       }
     });
@@ -106,14 +135,12 @@ export const syncSite = inngest.createFunction(
 
     // Fetch latest GitHub repository tree
     const gitHubTree = await step.run('fetch-github-tree', async () => {
-      const repoTree = await fetchGitHubRepoTree({
+      return fetchGitHubRepoTree({
         ghRepository,
         ghBranch,
         accessToken,
         installationId,
       });
-
-      return repoTree;
     });
 
     const normalizedRootDir = rootDir
@@ -135,22 +162,18 @@ export const syncSite = inngest.createFunction(
         const items = gitHubTree.tree
           .filter(
             (ghTreeItem) =>
-              // Keep only files (not directories)
               ghTreeItem.type !== 'tree' &&
-              // Check if file is in the root directory
               ghTreeItem.path.startsWith(normalizedRootDir) &&
-              // Validate against includes/excludes
               isPathVisible(ghTreeItem.path, includes, excludes),
           )
           .map((ghTreeItem) => {
             const filePath = ghTreeItem.path.replace(normalizedRootDir, '');
-            return { ghTreeItem, filePath };
+            const changeType: 'added' | 'updated' = blobShaMap.has(filePath)
+              ? 'updated'
+              : 'added';
+            return { ghTreeItem, filePath, changeType };
           })
           .filter(({ ghTreeItem, filePath }) => {
-            // Include file if:
-            // 1. It's not in the blob map (new file)
-            // 2. SHA doesn't match (modified file)
-            // 3. Force sync is enabled
             return (
               forceSync ||
               !blobShaMap.has(filePath) ||
@@ -161,6 +184,7 @@ export const syncSite = inngest.createFunction(
         type FileToUpsert = {
           ghTreeItem: GitHubAPIRepoTreeItem;
           filePath: string;
+          changeType: 'added' | 'updated';
         };
 
         const fileBatches: FileToUpsert[][] = [];
@@ -171,6 +195,20 @@ export const syncSite = inngest.createFunction(
         return fileBatches;
       },
     );
+
+    await step.run('create-publish-files-for-upsert', async () => {
+      const allItems = fileBatchesToUpsert.flat();
+      if (allItems.length > 0) {
+        await prisma.publishFile.createMany({
+          data: allItems.map(({ filePath, changeType }) => ({
+            publishId: publish.id,
+            path: filePath,
+            changeType,
+            status: 'uploading' as const,
+          })),
+        });
+      }
+    });
 
     await Promise.all(
       fileBatchesToUpsert.map((batch, index) => {
@@ -185,7 +223,6 @@ export const syncSite = inngest.createFunction(
                     const _urlPath = resolveFilePathToUrlPath({
                       target: filePath,
                     });
-                    // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / 🤦‍♀️)
                     return _urlPath === '/'
                       ? _urlPath
                       : _urlPath.replace(/^\//, '');
@@ -211,9 +248,6 @@ export const syncSite = inngest.createFunction(
                     sha: ghTreeItem.sha,
                     metadata: Prisma.JsonNull,
                     extension,
-                    syncStatus: ['md', 'mdx'].includes(extension)
-                      ? 'PROCESSING'
-                      : 'SUCCESS',
                   },
                   update: {
                     appPath: urlPath,
@@ -234,9 +268,10 @@ export const syncSite = inngest.createFunction(
                   path: filePath,
                   content: Buffer.from(await gitHubFile.arrayBuffer()),
                   extension,
+                  publishId: publish.id,
                 });
 
-                return { filePath, status: 'SUCCESS', message: '' }; // Return path of successfully processed file
+                return { filePath, status: 'SUCCESS', message: '' };
               } catch (error: any) {
                 log('Sync file error', SeverityNumber.ERROR, {
                   siteId,
@@ -258,13 +293,8 @@ export const syncSite = inngest.createFunction(
                     size: 0,
                     sha: '',
                     metadata: Prisma.JsonNull,
-                    syncStatus: 'ERROR',
-                    syncError: error.message,
                   },
-                  update: {
-                    syncStatus: 'ERROR',
-                    syncError: error.message,
-                  },
+                  update: {},
                 });
                 return { filePath, status: 'ERROR', message: error };
               }
@@ -278,27 +308,26 @@ export const syncSite = inngest.createFunction(
     const fileBatchesToDelete = await step.run(
       'get-file-batches-to-delete',
       async () => {
-        // existing site files
         const existingBlobs = await prisma.blob.findMany({
           where: { siteId },
           select: { path: true, id: true },
         });
 
-        // files that should be included in the site after sync
-        const items = gitHubTree.tree
-          .filter(
-            (ghTreeItem) =>
-              // Keep only files (not directories)
-              ghTreeItem.type !== 'tree' &&
-              // Check if file is in the root directory
-              ghTreeItem.path.startsWith(normalizedRootDir) &&
-              // Validate against includes/excludes
-              isPathVisible(ghTreeItem.path, includes, excludes),
-          )
-          .map((ghTreeItem) => ghTreeItem.path.replace(normalizedRootDir, ''));
+        const visiblePaths = new Set(
+          gitHubTree.tree
+            .filter(
+              (ghTreeItem) =>
+                ghTreeItem.type !== 'tree' &&
+                ghTreeItem.path.startsWith(normalizedRootDir) &&
+                isPathVisible(ghTreeItem.path, includes, excludes),
+            )
+            .map((ghTreeItem) =>
+              ghTreeItem.path.replace(normalizedRootDir, ''),
+            ),
+        );
 
         const filesToDelete = existingBlobs.filter(
-          (blob) => !items.includes(blob.path),
+          (blob) => !visiblePaths.has(blob.path),
         );
 
         const deleteBatches: (typeof filesToDelete)[] = [];
@@ -313,17 +342,20 @@ export const syncSite = inngest.createFunction(
     await Promise.all(
       fileBatchesToDelete.map((batch, index) => {
         return step.run(`delete-files-batch-${index}`, async () => {
-          return deleteBlobs(siteId, batch);
+          const deletedPaths = await deleteBlobs(siteId, batch);
+          const deletedSet = new Set(deletedPaths);
+          await prisma.publishFile.createMany({
+            data: batch.map((f) => ({
+              publishId: publish.id,
+              path: f.path,
+              changeType: 'deleted' as const,
+              status: (deletedSet.has(f.path) ? 'success' : 'error') as
+                | 'success'
+                | 'error',
+            })),
+          });
+          return deletedPaths;
         });
-      }),
-    );
-
-    await step.run('update-tree', async () =>
-      prisma.site.update({
-        where: { id: siteId },
-        data: {
-          tree: gitHubTree as any,
-        },
       }),
     );
 
@@ -351,6 +383,51 @@ export const deleteSite = inngest.createFunction(
     const { siteId } = event.data;
     await deleteProject(siteId);
     await deleteSiteCollection(siteId);
+  },
+);
+
+export const cleanupExpiredPublishFiles = inngest.createFunction(
+  {
+    id: 'cleanup-expired-publish-files',
+  },
+  { cron: '*/15 * * * *' }, // Every 15 minutes
+  async ({ step }) => {
+    const directUploadExpired = await step.run(
+      'expire-stale-uploading-files',
+      async () => {
+        return prisma.publishFile.updateMany({
+          where: {
+            status: 'uploading',
+            presignedUrlExpiresAt: { lt: new Date() },
+          },
+          data: {
+            status: 'error',
+            error: 'upload expired',
+          },
+        });
+      },
+    );
+
+    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
+    const githubPathExpired = await step.run(
+      'expire-stale-github-path-files',
+      async () => {
+        return prisma.publishFile.updateMany({
+          where: {
+            status: 'uploading',
+            presignedUrlExpiresAt: null,
+            publish: { startedAt: { lt: twoHoursAgo } },
+          },
+          data: {
+            status: 'canceled',
+          },
+        });
+      },
+    );
+
+    return {
+      expired: directUploadExpired.count + githubPathExpired.count,
+    };
   },
 );
 

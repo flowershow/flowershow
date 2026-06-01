@@ -188,10 +188,11 @@ export default function ImportFilesOnboardingModal({
         })),
       );
 
-      const { files: uploadTargets } = await publishFiles.mutateAsync({
-        siteId,
-        files: filesInfo,
-      });
+      const { files: uploadTargets, publishId } =
+        await publishFiles.mutateAsync({
+          siteId,
+          files: filesInfo,
+        });
 
       await Promise.all(
         uploadTargets.map(
@@ -201,6 +202,7 @@ export default function ImportFilesOnboardingModal({
             const uploadResponse = await fetch(target.uploadUrl, {
               method: 'PUT',
               body: file,
+              headers: { 'x-amz-meta-publish-id': publishId },
             });
             if (!uploadResponse.ok)
               throw new Error(`Failed to upload: ${target.path}`);

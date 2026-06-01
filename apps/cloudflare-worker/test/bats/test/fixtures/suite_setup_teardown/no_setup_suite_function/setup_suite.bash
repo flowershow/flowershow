@@ -1,3 +1,0 @@
-teardown_suite() {
-  :
-}

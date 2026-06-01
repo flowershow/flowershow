@@ -11,6 +11,8 @@ interface SiteSync {
     accessToken?: string; // Optional for GitHub App installations
     installationId?: string; // For GitHub App installations
     forceSync?: boolean;
+    gitCommitSha?: string | null;
+    gitCommitMessage?: string | null;
   };
 }
 
