@@ -248,11 +248,10 @@ That should make blog indexes, project galleries, people directories, and other 
 - Predefined layouts such as cards, lists, and grids are helpful, but they stop being sufficient once a collection has custom fields or needs a non-standard presentation.
 - Flowershow already supports HTML in pages and has a styling model that makes custom visual design feasible.
 - The missing capability is not mainly styling. The missing capability is a lightweight way to:
-- query a collection of Markdown items
-- iterate over those items
-- insert item values into markup
-- keep the authoring model close to normal HTML
-- The author preference is to avoid MDX or JSX-heavy authoring where possible.
+    - query a collection of Markdown items
+    - iterate over those items
+    - insert item values into markup
+- The author preference is to avoid MDX or JSX-heavy authoring where possible. And keep the authoring model close to normal HTML
 - The desired feel is closer to Vue, Svelte, Handlebars, or other HTML-first templating styles.
 - At the same time, Flowershow runs on Next.js and React, so there is tension between the simplest author experience and the underlying implementation model.
 - The key product concern is not primarily security. The key concern is product fit, renderer complexity, and avoiding an awkward reinvention of React or a full template engine.
@@ -262,9 +261,9 @@ That should make blog indexes, project galleries, people directories, and other 
 
 - What is the right author-facing abstraction for Flowershow to support collection-driven pages for Markdown content?
 - More specifically, how should Flowershow let authors:
-- obtain a collection of content items
-- iterate over those items
-- render custom HTML for each item
+    - obtain a collection of content items
+    - iterate over those items
+    - render custom HTML for each item
 - do so in a way that feels simple, page-local, and close to normal HTML
 - The question is how to provide this without making the renderer too heavy or pushing Flowershow beyond its natural scope.
 
@@ -295,7 +294,7 @@ That should make blog indexes, project galleries, people directories, and other 
 ## Two Concerns
 
 - This problem should be treated as two separate concerns.
-
+kkkkkkkkkkk
 ### Concern 1: Getting the collection onto the page
 
 - Somehow the page gets access to a collection value such as `items`.
