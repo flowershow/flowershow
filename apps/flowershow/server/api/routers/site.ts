@@ -666,6 +666,20 @@ export const siteRouter = createTRPCRouter({
         });
 
         if (!latestPublish) {
+          // Temporary patch: sites published before Publish record tracking was
+          // introduced have content (blobs) but no Publish rows. For these sites
+          // we infer the last-synced time from the most recently updated blob so
+          // the header doesn't falsely show "Publish your first content".
+          const latestBlob = await ctx.db.blob.aggregate({
+            where: { siteId: site.id },
+            _max: { updatedAt: true },
+          });
+          if (latestBlob._max.updatedAt) {
+            return {
+              status: 'SUCCESS',
+              lastSyncedAt: latestBlob._max.updatedAt,
+            };
+          }
           return { status: 'UNPUBLISHED', lastSyncedAt: null };
         }
 
