@@ -1,4 +1,4 @@
-# Flowershow 💐🌷🌹
+# Flowershow 💐
 
 > ## Publish markdown quickly and easily - for docs, knowledgebases, websites and more
 
@@ -7,7 +7,7 @@
 Want to see it in action? 🎉 https://flowershow.app itself is built and published with Flowershow 💐
 
 - 📝 Docs: https://flowershow.app/docs
-- 🤖 for AI: https://flowershow.app/publish
+- 🤖 for AI: https://flowershow.app/cli
 - 💎 for Obsidian: https://flowershow.app/uses/obsidian
 
 Flowershow is proudly open-source.
