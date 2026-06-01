@@ -96,6 +96,13 @@ export async function POST(
 
     const { files } = parsedBody.data;
 
+    if (files.length === 0) {
+      return NextResponse.json(
+        { error: 'invalid_request', message: 'Files array must not be empty' },
+        { status: 400 },
+      );
+    }
+
     if (files.length > MAX_FILES) {
       return NextResponse.json(
         {

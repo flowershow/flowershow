@@ -364,6 +364,17 @@ export const syncSite = inngest.createFunction(
     await step.run('revalidate-tags', async () => {
       revalidateTag(`${site.id}`);
     });
+
+    // If the sync produced no file changes, delete the empty Publish record so
+    // it doesn't show as PENDING forever in getSyncStatus.
+    await step.run('cleanup-empty-publish', async () => {
+      const fileCount = await prisma.publishFile.count({
+        where: { publishId: publish.id },
+      });
+      if (fileCount === 0) {
+        await prisma.publish.delete({ where: { id: publish.id } });
+      }
+    });
   },
 );
 

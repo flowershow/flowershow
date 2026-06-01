@@ -264,8 +264,8 @@ export async function POST(
       }
     }
 
-    let uploadUrls: UploadUrl[];
-    let updateUrls: UploadUrl[];
+    let uploadUrls: UploadUrl[] = [];
+    let updateUrls: UploadUrl[] = [];
     let deletedPaths: string[] = [];
     let publishId: string | undefined;
 
@@ -273,7 +273,11 @@ export async function POST(
       uploadUrls = generateDryRunPlaceholders(toUpload);
       updateUrls = generateDryRunPlaceholders(toUpdate);
       deletedPaths = toDelete.map((f) => f.path);
-    } else {
+    } else if (
+      toUpload.length > 0 ||
+      toUpdate.length > 0 ||
+      toDelete.length > 0
+    ) {
       const isLegacy = isLegacyPublishClient(request);
 
       const publish = await prisma.publish.create({
