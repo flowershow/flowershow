@@ -17,8 +17,7 @@ Everything derives from the Zod schemas. There is no hand-written OpenAPI YAML. 
 | Consumer | How it uses the contract |
 |----------|------------------------|
 | **`apps/flowershow`** (Next.js API routes) | Imports schemas for request validation (`.safeParse()`) and types for response typing (`satisfies`/`: Type`). The API implementation lives here. |
-| **`apps/flowershow-mcp`** (MCP server) | Imports schemas to validate API responses at runtime (`.parse()`) and types for its typed HTTP client. |
-| **CLI** *(planned)* | Will import schemas and types to build a typed API client. See `bd show flowershow-9em`. |
+| **CLI** (`apps/cli`) | Uses the contract as the source of truth for API shapes; the Go client mirrors the TypeScript types. |
 | **Obsidian plugin** *(planned)* | Same as CLI. See `bd show flowershow-xrf`. |
 | **`/api/docs`** | Calls `generateOpenApiDocument()` to serve the interactive Swagger UI and raw JSON spec. |
 

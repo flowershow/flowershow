@@ -28,7 +28,7 @@ This is a [Turborepo](https://turbo.build/) monorepo managed with [pnpm](https:/
 ```
 apps/
   flowershow/           # Next.js web application (flowershow.app)
-  flowershow-mcp/       # MCP server for AI assistants (uses api-contract for typed API calls)
+  cli/                  # Go CLI (`fl`) — publish markdown files from the terminal or AI agents
 packages/
   api-contract/         # @flowershow/api-contract — Zod schemas, TS types, OpenAPI 3.1 spec
   cloudflare-worker/    # Markdown processing Cloudflare worker
@@ -108,9 +108,9 @@ pnpm release                   # Build all packages and publish to npm
 ## Documentation
 
 - **Web app**: [`apps/flowershow/README.md`](apps/flowershow/README.md) — architecture, local dev setup, environment config, testing, troubleshooting
-- **REST API contract**: [`packages/api-contract/README.md`](packages/api-contract/README.md) — Zod schemas, TypeScript types, and OpenAPI 3.1 spec for the Flowershow REST API. The contract is the single source of truth for the API surface; the Next.js API routes, MCP server, and (soon) the CLI and Obsidian plugin all consume it.
+- **REST API contract**: [`packages/api-contract/README.md`](packages/api-contract/README.md) — Zod schemas, TypeScript types, and OpenAPI 3.1 spec for the Flowershow REST API. The contract is the single source of truth for the API surface; the Next.js API routes, CLI, and Obsidian plugin all consume it.
 - **Interactive API docs**: With the dev server running, visit `http://cloud.flowershow.local:3000/api/docs` for Swagger UI, or `/api/docs/openapi.json` for the raw spec. In production: [flowershow.app/api/docs](https://flowershow.app/api/docs).
-- **MCP server**: [`apps/flowershow-mcp/`](apps/flowershow-mcp/) — Model Context Protocol server that exposes Flowershow operations as AI-assistant tools.
+- **CLI**: [`apps/cli/README.md`](apps/cli/README.md) — Go CLI for publishing markdown files. Also the interface for AI agent integration — see the [Flowershow skill](skills/flowershow/SKILL.md).
 - **User docs**: [flowershow.app/docs](https://flowershow.app/docs)
 
 ## Community

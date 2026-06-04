@@ -24,9 +24,6 @@ This is a multi-context monorepo:
 │   ├── cli/
 │   │   ├── CONTEXT.md
 │   │   └── docs/adr/
-│   ├── flowershow-mcp/
-│   │   ├── CONTEXT.md
-│   │   └── docs/adr/
 │   └── cloudflare-worker/
 │       ├── CONTEXT.md
 │       └── docs/adr/

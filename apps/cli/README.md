@@ -196,15 +196,27 @@ fl list
 
 Shows site names, URLs, dashboard URLs, and timestamps.
 
+#### `fl settings [options]`
+
+Show the settings for a site: privacy mode, comments, search, GitHub connection, custom domain, and plan.
+
+```bash
+fl settings                     # uses .flowershow config in current directory
+fl settings --name my-notes     # explicit site name
+```
+
+If you have multiple sites and no `--name` is given, the command lists them and exits.
+
 #### `fl delete <project-name>`
 
 Delete a site and all its files.
 
 ```bash
 fl delete my-notes
+fl delete my-notes --yes    # skip confirmation prompt (for scripts and AI agents)
 ```
 
-Prompts for confirmation before deleting. Sites with an active premium subscription cannot be deleted until the subscription is cancelled from the dashboard.
+Prompts for confirmation before deleting unless `--yes` is provided. Sites with an active premium subscription cannot be deleted until the subscription is cancelled from the dashboard.
 
 ## File Filtering
 
@@ -218,6 +230,33 @@ The CLI automatically ignores common non-content files and directories:
 - `.gitignore`, `.flowershow`
 
 If a `.gitignore` file is present in the published folder, the Flowershow CLI will also ignore files matched by it.
+
+## Using with AI agents
+
+The Flowershow CLI is designed to work with local AI coding agents (Claude Code, Cursor, Windsurf, and others). Install the Flowershow skill so your agent knows how to publish and manage your sites:
+
+**With Node.js:**
+```bash
+npx skills add flowershow/flowershow --skill flowershow --global
+```
+
+**Without Node.js (Windows or manual setup):**
+
+Copy the following into your agent's config file:
+
+- Claude Code: `~/.claude/CLAUDE.md`
+- Cursor: `.cursor/rules`
+- Windsurf: `.windsurfrules`
+
+```markdown
+## Flowershow
+
+Use the `fl` CLI to publish markdown files and manage Flowershow sites.
+Run `fl --help` for available commands.
+Key commands: `fl whoami`, `fl login`, `fl --yes <path>`, `fl list`, `fl settings`, `fl delete --yes <name>`.
+New users must create an account at https://flowershow.app before authenticating.
+For publishing workflows and edge cases, refer to the Flowershow skill: https://github.com/flowershow/flowershow/blob/main/skills/flowershow/SKILL.md
+```
 
 ## Telemetry
 

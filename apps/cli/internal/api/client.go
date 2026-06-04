@@ -40,6 +40,31 @@ type GetSiteResponse struct {
 	Site Site `json:"site"`
 }
 
+type SiteDetail struct {
+	ID           string  `json:"id"`
+	ProjectName  string  `json:"projectName"`
+	GhRepository *string `json:"ghRepository"`
+	GhBranch     *string `json:"ghBranch"`
+	CustomDomain *string `json:"customDomain"`
+	Subdomain    string  `json:"subdomain"`
+	RootDir      *string `json:"rootDir"`
+	Plan         string  `json:"plan"`
+	PrivacyMode  string  `json:"privacyMode"`
+	ShowComments bool    `json:"showComments"`
+	EnableSearch bool    `json:"enableSearch"`
+	ShowSidebar  bool    `json:"showSidebar"`
+	SyntaxMode   string  `json:"syntaxMode"`
+	URL          string  `json:"url"`
+	FileCount    int     `json:"fileCount"`
+	TotalSize    int64   `json:"totalSize"`
+	UpdatedAt    string  `json:"updatedAt"`
+	CreatedAt    string  `json:"createdAt"`
+}
+
+type GetSiteDetailResponse struct {
+	Site SiteDetail `json:"site"`
+}
+
 type DeleteSiteResponse struct {
 	Success      bool   `json:"success"`
 	Message      string `json:"message"`
@@ -263,6 +288,22 @@ func GetSiteByName(username, siteName string) (*GetSiteResponse, error) {
 		return nil, fmt.Errorf("failed to fetch site: %w", apiError(resp))
 	}
 	var result GetSiteResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func GetSiteByID(siteID string) (*GetSiteDetailResponse, error) {
+	resp, err := Request("GET", fmt.Sprintf("/api/sites/id/%s", siteID), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch site: %w", err)
+	}
+	defer resp.Body.Close()
+	if !isOK(resp) {
+		return nil, fmt.Errorf("failed to fetch site: %w", apiError(resp))
+	}
+	var result GetSiteDetailResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
