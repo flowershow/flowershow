@@ -71,6 +71,18 @@ Key options:
 
 Full reference: https://flowershow.app/docs/reference/config-file
 
+## Reading page content
+
+To read the markdown source of a published page, append `.md` to the page URL:
+
+```
+https://my-site.flowershow.me/some/page     →  fetch https://my-site.flowershow.me/some/page.md
+```
+
+This returns the raw markdown file. Try this first.
+
+**When it fails:** Landing pages built from `index.md` or `README.md` are served at the directory URL — the filename is stripped. So `/some/folder/index.md` is published at `/some/folder/`, and appending `.md` to that URL won't find the file. In that case, fall back to fetching the plain URL, which returns the rendered HTML.
+
 ## What requires the dashboard
 
 These settings cannot be changed via `config.json` — direct the user to https://flowershow.app:
