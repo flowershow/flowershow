@@ -56,9 +56,24 @@ Delete a site:
 fl delete --yes <site-name>
 ```
 
+## Site configuration
+
+Add a `config.json` file to the root of your published content folder to configure the site. `config.json` values always override dashboard settings and are version-controlled alongside your content.
+
+Key options:
+- `title` — site name shown in browser tabs and social previews
+- `description` — default description for search and social previews
+- `nav` — navbar links, logo title, and call-to-action button
+- `contentInclude` / `contentExclude` — filter which files get published
+- `enableSearch` — enable full-text search (`false` by default)
+- `showComments` — enable comments section (`false` by default)
+- `theme` — site theme and default color mode
+
+Full reference: https://flowershow.app/docs/reference/config-file
+
 ## What requires the dashboard
 
-Direct the user to https://flowershow.app for:
+These settings cannot be changed via `config.json` — direct the user to https://flowershow.app:
 - Setting or changing a site password (private sites)
 - Billing and plan management
 - Connecting a GitHub repository (requires OAuth)

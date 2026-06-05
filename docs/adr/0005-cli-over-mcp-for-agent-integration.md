@@ -22,7 +22,7 @@ Auto-adding the snippet via the installer was considered but deferred — a futu
 
 ## CLI gaps
 
-`fl settings get` and `fl settings set` are the remaining capability gaps relative to the MCP server. `fl settings get` can be added immediately (the `GET /api/sites/id/{siteId}` endpoint already exists). `fl settings set` requires a new `PATCH /api/sites/id/{siteId}` API endpoint (contract-first per AGENTS.md) and is lower priority.
+`fl settings` (read-only) was added as part of this change. A writable counterpart (`fl settings set`) is not needed: Flowershow supports file-based configuration via `config.json`, which agents can create or edit directly alongside content. `config.json` values override dashboard settings, so a `PATCH /api/sites/id/{siteId}` API endpoint adds no value for the agent use case. Settings that cannot be changed via `config.json` (privacy/password, billing, GitHub OAuth, custom domain DNS) also cannot be changed via API and require the dashboard regardless.
 
 ## Consequences
 
