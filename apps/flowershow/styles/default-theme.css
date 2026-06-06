@@ -13,7 +13,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer reset, base, components, utilities, overrides;
+@layer reset, base, components, utilities;
 
 /* ────────────────────────────────────────────────────
    Design‑tokens (CSS custom properties)
@@ -51,13 +51,13 @@
     --font-size-xxs: calc(var(--font-size-base) * 0.5);
     --font-size-xs: calc(var(--font-size-base) * 0.75);
     --font-size-sm: calc(var(--font-size-base) * 0.85);
-    --font-size-h5: calc(var(--font-size-base) * 1.125);
-    --font-size-h4: calc(var(--font-size-base) * 1.25);
-    --font-size-h3: calc(var(--font-size-base) * 1.5);
-    --font-size-h2: calc(var(--font-size-base) * 1.75);
-    --font-size-h1: calc(var(--font-size-base) * 2.25);
-    --font-size-xl: calc(var(--font-size-base) * 2.6);
-    --font-size-xxl: calc(var(--font-size-base) * 3.1);
+    --font-size-lg: calc(var(--font-size-base) * 1.125);
+    --font-size-xl: calc(var(--font-size-base) * 1.25);
+    --font-size-2xl: calc(var(--font-size-base) * 1.5);
+    --font-size-3xl: calc(var(--font-size-base) * 1.75);
+    --font-size-4xl: calc(var(--font-size-base) * 2.25);
+    --font-size-5xl: calc(var(--font-size-base) * 2.6);
+    --font-size-6xl: calc(var(--font-size-base) * 3.1);
 
     /* FONT LINE HEIGHTS */
     --line-height-none: 1;
@@ -66,6 +66,25 @@
     --line-height-normal: 1.5;
     --line-height-relaxed: 1.625;
     --line-height-loose: 2;
+
+    /* BORDER RADIUS — set --radius to 0 for sharp corners everywhere */
+    --radius: 0.375rem;
+    --radius-xs: calc(var(--radius) * 0.67);
+    --radius-md: calc(var(--radius) * 1.33);
+    --radius-lg: calc(var(--radius) * 2);
+    --radius-xl: calc(var(--radius) * 2.67);
+
+    /* LAYOUT HEIGHTS — override these to change sticky positioning throughout */
+    --navbar-height: 4rem;
+    --subnav-height: 3rem;
+
+    /* SEMANTIC STATE COLORS */
+    --color-danger: #dc2626;
+    --color-warning: #d97706;
+
+    /* CODE BLOCK BACKGROUNDS — defaults match the bundled Prism theme */
+    --color-code-bg: #fafafa;
+    --color-code-bg-dark: #2f2f2f;
   }
 
   :root {
@@ -86,8 +105,8 @@
     --color-background: var(--color-l-background);
     --color-accent: var(--color-l-accent);
 
-    /* Start from 90% lightness to make it less likely to go lower (lighter) than the light background */
-    /* Advise people to pick light background between 0-10% lightness */
+    /* Scale uses absolute lightness values. Foreground should be dark (oklch L < ~0.5) so
+       the steps cover a useful range on a light background. See ADR-0006. */
     --color-foreground-50: oklch(from var(--color-foreground) 0.925 c h);
     --color-foreground-100: oklch(from var(--color-foreground) 0.825 c h);
     --color-foreground-200: oklch(from var(--color-foreground) 0.75 c h);
@@ -113,8 +132,8 @@
     --color-background: var(--color-d-background);
     --color-accent: var(--color-d-accent);
 
-    /* Start from 20% lightness to make it less likely to go lower (darker) than the dark background */
-    /* Advise people to pick dark backgound between 0-20% lightness */
+    /* Scale uses absolute lightness values. Background should be very dark (oklch L < 0.2) so
+       the steps cover a useful range. See ADR-0006. */
     --color-foreground-50: oklch(from var(--color-foreground) 0.2 c h);
     --color-foreground-100: oklch(from var(--color-foreground) 0.275 c h);
     --color-foreground-200: oklch(from var(--color-foreground) 0.35 c h);
@@ -216,13 +235,13 @@
   }
   .site-navbar-site-name {
     color: var(--color-foreground-900);
-    font-size: var(--font-size-h5);
+    font-size: var(--font-size-lg);
     line-height: var(--line-height-none);
     font-weight: var(--font-weight-bold);
     letter-spacing: -0.025em;
 
     @media (min-width: 768px) {
-      font-size: var(--font-size-h4);
+      font-size: var(--font-size-xl);
     }
   }
 
@@ -243,7 +262,7 @@
   .site-navbar-link {
     font-size: var(--font-size-sm);
     line-height: var(--line-height-none);
-    font-weight: 400;
+    font-weight: var(--font-weight-normal);
     letter-spacing: -0.025em;
   }
 
@@ -263,7 +282,7 @@
     gap: 0.25rem;
     font-size: var(--font-size-sm);
     line-height: var(--line-height-none);
-    font-weight: 400;
+    font-weight: var(--font-weight-normal);
     letter-spacing: -0.025em;
     cursor: pointer;
     background: none;
@@ -291,7 +310,7 @@
     padding: 0.25rem 0;
     background: var(--color-background);
     border: 1px solid var(--color-foreground-100);
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   }
   .site-navbar-dropdown-item {
@@ -303,7 +322,7 @@
     color: var(--color-foreground);
 
     &:hover {
-      background: var(--color-background-100, #f5f5f5);
+      background: var(--color-foreground-50);
     }
   }
 
@@ -336,7 +355,7 @@
     justify-content: center;
     align-items: center;
     position: relative;
-    border-radius: 0.375rem;
+    border-radius: var(--radius);
     color: var(--color-foreground-200);
 
     &:hover {
@@ -380,12 +399,12 @@
   /* CTA button */
   .site-navbar-cta-button,
   .mobile-nav-cta-button {
-    border-radius: 0.375rem;
+    border-radius: var(--radius);
     background-color: var(--color-cta-bg, var(--color-foreground-700));
     padding: 0.375rem 0.625rem;
     font-size: 0.875rem;
     line-height: 1.25rem;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     color: var(--color-cta-text, #ffffff);
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 
@@ -407,8 +426,8 @@
     position: fixed;
     right: 0;
     left: 0;
-    top: 4rem;
-    height: calc(100vh - 4rem);
+    top: var(--navbar-height);
+    height: calc(100vh - var(--navbar-height));
     overflow: scroll;
     overscroll-behavior: none;
     background-color: var(--color-background);
@@ -432,10 +451,10 @@
   .mobile-nav-social-link {
     display: block;
     padding: 0.25rem 0;
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
 
     &:hover {
-      font-weight: 600;
+      font-weight: var(--font-weight-semibold);
       color: var(--color-foreground-600);
     }
   }
@@ -450,7 +469,7 @@
     justify-content: space-between;
     width: 100%;
     padding: 0.25rem 0;
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     background: none;
     border: none;
     color: inherit;
@@ -458,7 +477,7 @@
     text-align: left;
 
     &:hover {
-      font-weight: 600;
+      font-weight: var(--font-weight-semibold);
       color: var(--color-foreground-600);
     }
   }
@@ -520,7 +539,7 @@
     text-align: left;
 
     &:hover {
-      font-weight: 600;
+      font-weight: var(--font-weight-semibold);
       color: var(--color-foreground-700);
     }
 
@@ -648,7 +667,7 @@
   .page-hero-title {
     margin-top: 6rem;
     text-wrap: pretty;
-    font-size: var(--font-size-xxl);
+    font-size: var(--font-size-6xl);
     line-height: var(--line-height-none);
     font-weight: var(--font-weight-semibold);
     letter-spacing: -0.025em;
@@ -663,12 +682,12 @@
   .page-hero-description {
     margin-top: 2rem;
     text-wrap: pretty;
-    font-size: var(--font-size-h5);
+    font-size: var(--font-size-lg);
     line-height: var(--line-height-relaxed);
     font-weight: var(--font-weight-medium);
 
     @media (min-width: 640px) {
-      font-size: var(--font-size-h4);
+      font-size: var(--font-size-xl);
     }
   }
 
@@ -715,7 +734,7 @@
   }
 
   .page-hero-cta:nth-of-type(1) {
-    border-radius: 0.375rem;
+    border-radius: var(--radius);
     background-color: var(--color-accent);
     padding: 0.625rem 0.875rem;
     font-size: var(--font-size-sm);
@@ -825,8 +844,8 @@
 
   .site-sidebar {
     position: sticky;
-    top: 6rem;
-    max-height: calc(100vh - 6rem);
+    top: calc(var(--navbar-height) + 2rem);
+    max-height: calc(100vh - var(--navbar-height) - 2rem);
     overflow-y: auto;
     padding-right: 1rem;
     padding-bottom: 2rem;
@@ -838,7 +857,7 @@
    ──────────────────────────────────────────────────── */
   .site-subnav {
     position: sticky;
-    top: 4rem;
+    top: var(--navbar-height);
     z-index: 9;
     height: 3rem;
     display: flex;
@@ -918,7 +937,7 @@
 
   .sidebar-drawer-backdrop {
     position: fixed;
-    top: 7rem; /* below navbar (4rem) + subnav (3rem) */
+    top: calc(var(--navbar-height) + var(--subnav-height));
     left: 0;
     right: 0;
     bottom: 0;
@@ -934,7 +953,7 @@
 
   .sidebar-drawer-panel {
     position: fixed;
-    top: 7rem; /* below navbar (4rem) + subnav (3rem) */
+    top: calc(var(--navbar-height) + var(--subnav-height));
     left: 0;
     bottom: 0;
     z-index: 41;
@@ -951,7 +970,7 @@
   /* Dialog portals to <body>, so use :has() to detect no-nav context */
   :root:has(.site-layout.no-nav) .sidebar-drawer-backdrop,
   :root:has(.site-layout.no-nav) .sidebar-drawer-panel {
-    top: 3rem; /* below subnav (3rem) */
+    top: var(--subnav-height);
   }
 
   .sidebar-drawer-header {
@@ -1026,7 +1045,7 @@
   }
 
   .site-footer-publication-name {
-    font-size: var(--font-size-h5);
+    font-size: var(--font-size-lg);
     line-height: var(--line-height-tight);
     font-weight: var(--font-weight-bold);
     color: var(--color-foreground-900);
@@ -1127,8 +1146,8 @@
    ──────────────────────────────────────────────────── */
   .page-toc-container {
     position: sticky;
-    top: 6rem;
-    max-height: calc(100vh - 6rem);
+    top: calc(var(--navbar-height) + 2rem);
+    max-height: calc(100vh - var(--navbar-height) - 2rem);
     overflow-y: auto;
     padding-left: 1rem;
     padding-bottom: 4.25rem;
@@ -1178,8 +1197,8 @@
   .error-card {
     display: flex;
     overflow: scroll;
-    border-radius: 0.375rem;
-    background-color: #fef2f2;
+    border-radius: var(--radius);
+    background-color: oklch(from var(--color-danger) 0.97 c h);
     padding: 1rem;
     text-align: left;
 
@@ -1190,26 +1209,26 @@
   .error-card-icon {
     width: 1.25rem;
     height: 1.25rem;
-    color: #f87171;
+    color: oklch(from var(--color-danger) 0.7 c h);
   }
   .error-card-title {
     margin: 0;
     font-size: var(--font-size-sm);
     line-height: var(--line-height-relaxed);
     font-weight: var(--font-weight-medium);
-    color: #991b1b;
+    color: oklch(from var(--color-danger) 0.3 c h);
   }
   .error-card-message {
     margin-top: 0.5rem;
     white-space: pre-wrap;
     font-size: var(--font-size-sm);
     line-height: var(--line-height-relaxed);
-    color: #b91c1c;
+    color: oklch(from var(--color-danger) 0.35 c h);
   }
   .error-card-stack {
     margin-top: 0.5rem;
-    border-radius: 0.375rem;
-    background-color: #ffffff;
+    border-radius: var(--radius);
+    background-color: var(--color-background);
     padding: 1rem;
     font-size: var(--font-size-sm);
     line-height: var(--line-height-relaxed);
@@ -1253,7 +1272,7 @@
     inset: 0;
     height: 100%;
     width: 100%;
-    border-radius: 1rem;
+    border-radius: var(--radius-xl);
     background-color: oklch(from var(--color-background) calc(l - 0.025) c h);
     object-fit: cover;
   }
@@ -1286,7 +1305,7 @@
     line-height: 1.75rem;
     font-weight: var(--font-weight-semibold);
     color: var(--color-foreground-900);
-    font-size: var(--font-size-h5);
+    font-size: var(--font-size-lg);
 
     &:hover {
       color: var(--color-foreground-800);
@@ -1312,7 +1331,7 @@
     font-size: var(--font-size-sm);
     color: var(--color-foreground-900);
     border-top-width: 1px;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
   }
 
   /* List component skeleton */
@@ -1351,7 +1370,7 @@
     inset: 0;
     height: 100%;
     width: 100%;
-    border-radius: 1rem;
+    border-radius: var(--radius-xl);
     background-color: oklch(from var(--color-background) calc(l - 0.025) c h);
   }
 
@@ -1376,7 +1395,7 @@
     max-width: 48rem;
     line-height: 1.75rem;
     font-weight: var(--font-weight-semibold);
-    font-size: var(--font-size-h5);
+    font-size: var(--font-size-lg);
   }
   .list-component-skeleton-summary {
     margin-bottom: 0.5rem;
@@ -1477,7 +1496,7 @@
     color: var(--color-foreground-300);
 
     &:hover {
-      border-color: #d1d5db;
+      border-color: var(--color-foreground-200);
       color: var(--color-foreground-400);
     }
   }
@@ -1500,7 +1519,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    border-radius: 0.75rem;
+    border-radius: var(--radius-lg);
     border: 1px solid var(--color-foreground-100);
     background-color: oklch(from var(--color-background) calc(l - 0.025) c h);
     box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -1547,7 +1566,7 @@
     display: flex;
     justify-content: center;
     overflow: hidden;
-    border-radius: 0.375rem;
+    border-radius: var(--radius);
     border: 1px solid var(--color-foreground-100);
     background-color: var(--color-background);
   }
@@ -1566,7 +1585,7 @@
   .pdf-error {
     padding: 2rem;
     font-size: var(--font-size-sm);
-    color: #ef4444;
+    color: var(--color-danger);
   }
 
   /* ────────────────────────────────────────────────────
@@ -1583,11 +1602,11 @@
     right: 0.5rem;
     height: 1.75rem;
     width: 1.75rem;
-    border-radius: 0.25rem;
+    border-radius: var(--radius-xs);
     border-width: 1px;
-    border-color: #d1d5db;
+    border-color: var(--color-foreground-200);
     padding: 0.25rem;
-    background-color: #e5e7eb;
+    background-color: var(--color-foreground-100);
     transition-property: opacity;
     transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
     transition-duration: 300ms;
@@ -1607,7 +1626,7 @@
   }
 
   .pre-icon {
-    color: #6b7280;
+    color: var(--color-foreground-300);
   }
   .pre-copy-button[data-copied="true"] .pre-icon {
     color: #34d399;
@@ -1641,24 +1660,24 @@
     }
   }
   .page-header-title {
-    font-size: var(--font-size-xxl);
+    font-size: var(--font-size-6xl);
     font-weight: var(--font-weight-semibold);
     line-height: var(--line-height-none);
     letter-spacing: -0.025em;
     color: var(--color-foreground-900);
 
     @media (min-width: 640px) {
-      font-size: calc(var(--font-size-xxl) * 1.2);
+      font-size: calc(var(--font-size-6xl) * 1.2);
     }
   }
   .page-header-description {
-    font-size: var(--font-size-h5);
+    font-size: var(--font-size-lg);
     line-height: var(--line-height-tight);
     font-weight: var(--font-weight-light);
     color: var(--color-foreground-500);
 
     @media (min-width: 640px) {
-      font-size: var(--font-size-h4);
+      font-size: var(--font-size-xl);
     }
   }
   .page-header-metadata-container {
@@ -1721,7 +1740,7 @@
     padding: 0.75rem 0;
   }
   .page-header-image {
-    border-radius: 0.375rem;
+    border-radius: var(--radius);
     object-fit: contain;
   }
 
@@ -1792,7 +1811,7 @@
     display: flex;
     cursor: text;
     align-items: center;
-    border-radius: 0.375rem;
+    border-radius: var(--radius);
     background-color: var(--color-background);
     color: var(--color-foreground-300);
     padding: 0.375rem 0.5rem;
@@ -1856,7 +1875,7 @@
     width: 100%;
     max-width: 42rem;
     flex-direction: column;
-    border-radius: 0.5rem;
+    border-radius: var(--radius-md);
     border-width: 1px;
     border-color: var(--color-foreground-100);
     background-color: var(--color-background);
@@ -1985,7 +2004,7 @@
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     border-width: 2px;
     border-radius: 9999px;
-    border-color: #d97706;
+    border-color: var(--color-warning);
     border-top: transparent;
 
     @keyframes pulse {
@@ -2005,7 +2024,7 @@
 
   .search-modal-hits-item {
     padding: 0.75rem 1rem;
-    border-radius: 0.375rem;
+    border-radius: var(--radius);
 
     &:hover {
       background-color: oklch(from var(--color-background) calc(l - 0.025) c h);
@@ -2027,7 +2046,7 @@
     height: 1.5rem;
     align-items: center;
     justify-content: center;
-    color: #d97706;
+    color: var(--color-warning);
   }
 
   .search-modal-error-icon-text {
@@ -2036,6 +2055,7 @@
     font-weight: var(--font-weight-bold);
   }
 
+  /* search library injects inline styles — !important required to override them */
   .search-modal-highlight {
     background-color: var(--color-accent-lighter) !important;
   }
@@ -2074,14 +2094,14 @@
   }
   .not-found-title {
     margin-bottom: 1rem;
-    font-size: var(--font-size-xxl);
+    font-size: var(--font-size-6xl);
     line-height: var(--line-height-none);
     font-weight: var(--font-weight-bold);
     color: var(--color-foreground-700);
   }
   .not-found-subtitle {
     margin-bottom: 2rem;
-    font-size: var(--font-size-h4);
+    font-size: var(--font-size-xl);
     line-height: var(--line-height-tight);
     color: var(--color-foreground-500);
   }
@@ -2114,13 +2134,13 @@
   }
   .error-page-title {
     margin-bottom: 1rem;
-    font-size: var(--font-size-xxl);
+    font-size: var(--font-size-6xl);
     font-weight: var(--font-weight-bold);
     color: var(--color-foreground-800);
   }
   .error-page-subtitle {
     margin-bottom: 2rem;
-    font-size: var(--font-size-h4);
+    font-size: var(--font-size-xl);
     line-height: var(--line-height-relaxed);
     color: var(--color-foreground-500);
   }
@@ -2155,8 +2175,8 @@
     top: 50%;
     transform: translateY(-50%);
     margin: auto 0;
-    border-radius: 5px;
-    background: #e2e8f0;
+    border-radius: var(--radius);
+    background: var(--color-foreground-100);
     opacity: 0;
     transition: opacity 0.2s;
   }
@@ -2272,7 +2292,7 @@
     --tw-prose-kbd-shadows: var(--color-foreground-800);
     --tw-prose-code: var(--color-foreground-800);
     --tw-prose-pre-code: var(--color-foreground-300);
-    --tw-prose-pre-bg: #fafafa; /* Same as in prism theme */
+    --tw-prose-pre-bg: var(--color-code-bg);
     --tw-prose-th-borders: var(--color-foreground-100);
     --tw-prose-td-borders: var(--color-foreground-100);
 
@@ -2291,7 +2311,7 @@
     --tw-prose-invert-kbd-shadows: var(--color-foreground-800);
     --tw-prose-invert-code: var(--color-foreground-800);
     --tw-prose-invert-pre-code: var(--color-foreground-300);
-    --tw-prose-invert-pre-bg: #2f2f2f; /* Same as in dark prism theme */
+    --tw-prose-invert-pre-bg: var(--color-code-bg-dark);
     --tw-prose-invert-th-borders: var(--color-foreground-100);
     --tw-prose-invert-td-borders: var(--color-foreground-100);
   }

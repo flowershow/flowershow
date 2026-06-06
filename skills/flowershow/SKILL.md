@@ -90,3 +90,23 @@ These settings cannot be changed via `config.json` — direct the user to https:
 - Billing and plan management
 - Connecting a GitHub repository (requires OAuth)
 - Custom domain DNS verification
+
+## Custom styles
+
+Add a `custom.css` file to the root of the published content folder to override any visual aspect of the site. Flowershow uses CSS cascade layers, so rules in `custom.css` win over the default theme without needing `!important`.
+
+The main entry point is CSS custom properties in `:root`. Key variables to know about:
+
+- **Colors:** `--color-l-background`, `--color-l-foreground`, `--color-l-accent` (light theme) and the `--color-d-*` equivalents for dark theme
+- **Typography:** `--font-heading`, `--font-body`, `--font-size-base` (all sizes scale from this), `--font-weight-*`, `--line-height-*`
+- **Border radius:** `--radius` (set to `0` for sharp corners everywhere; derived steps `--radius-xs/md/lg/xl` scale with it)
+- **Layout:** `--navbar-height`, `--subnav-height` (used for sticky positioning)
+- **Callout colors:** `--callout-note-color`, `--callout-tip-color`, `--callout-success-color`, `--callout-warning-color`, `--callout-danger-color`, `--callout-example-color`, `--callout-quote-color`
+- **CTA button:** `--color-cta-bg`, `--color-cta-bg-hover`, `--color-cta-text`
+- **Code blocks:** `--color-code-bg` (light), `--color-code-bg-dark`
+
+Full variable reference: https://flowershow.app/docs/reference/custom-styles
+
+Source CSS files for the complete picture:
+- https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css
+- https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/callouts.css
