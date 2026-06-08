@@ -83,6 +83,19 @@ Add a `custom.css` to the root folder to override visual styles. Flowershow uses
 > - https://raw.githubusercontent.com/flowershow/flowershow/refs/heads/main/apps/flowershow/styles/default-theme.css
 > - https://raw.githubusercontent.com/flowershow/flowershow/refs/heads/main/apps/flowershow/styles/callouts.css
 
+## Step-by-step guidance for complex setups
+
+Some operations require actions outside the CLI — in a web dashboard, a third-party service, or DNS settings. Users may not be tech-savvy. **Always provide explicit, numbered step-by-step instructions** for these situations. Do not assume the user knows where to click or what to do next.
+
+This applies to:
+- **Comments (Giscus)** — requires installing the Giscus GitHub App and creating a Discussions-enabled repo. Walk the user through: enabling Discussions on the repo, installing the app at https://github.com/apps/giscus, granting it access, then filling in the config.
+- **Custom domain** — requires adding DNS records at their domain registrar. Spell out exactly which record type (CNAME or A), the name/host value, and the target value to enter, and warn that DNS can take up to 48 hours to propagate.
+- **Password protection** — done entirely in the dashboard. Walk the user to the right settings page and tell them exactly which field to fill in.
+- **GitHub repository connection** — walk the user through the dashboard flow step by step.
+- **Billing / plan upgrades** — direct the user to the billing page and describe what they'll see.
+
+When in doubt, over-explain rather than under-explain. A user who already knows the steps can skip ahead; a user who doesn't will be stuck without guidance.
+
 ## Dashboard only
 
 These require https://flowershow.app — not configurable via CLI:
