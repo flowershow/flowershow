@@ -8,26 +8,29 @@ metadata:
 
 # Flowershow
 
-Use the `fl` CLI to help users publish markdown files and manage their Flowershow sites.
+Use the `fl` CLI to publish markdown files and manage Flowershow sites. When unsure about a command, run `fl --help` or `fl <command> --help` rather than guessing.
 
-## Before anything else: check authentication
+## Quick start
 
+```bash
+fl whoami          # 1. check auth (see Authentication if not logged in)
+fl --yes ./notes   # 2. publish
 ```
+
+## Authentication
+
+```bash
 fl whoami
 ```
 
 If not authenticated:
 1. Run `fl login` and capture its output
-2. Show the user the URL and code it prints — for example: "Please visit https://... and enter code XXXX to connect your Flowershow account"
+2. Show the user the URL and code it prints — e.g. "Please visit https://... and enter code XXXX"
 3. Wait for the command to complete
 
-If the user doesn't have an account yet, direct them to https://cloud.flowershow.app to sign up first, then come back to authenticate.
-
-When unsure about a command or its flags, run `fl --help` or `fl <command> --help` rather than guessing.
+No account yet? Direct the user to https://cloud.flowershow.app to sign up first.
 
 ## Publishing content
-
-Publish a folder or file. Creates a new site on first run, syncs only changes on subsequent runs:
 
 ```bash
 fl --yes ./my-notes                    # publish a folder
@@ -35,70 +38,56 @@ fl --yes ./note.md                     # publish a single file
 fl --name my-site --yes ./my-notes     # set a custom site name on first publish
 ```
 
-- Always use `--yes` when running on behalf of a user — it skips the interactive site name confirmation prompt
-- Site names default to the folder/file name and are saved in `.flowershow` for future runs (only for folders)
-- Re-running `fl --yes <path>` on the same path syncs only new/modified/deleted files (delta sync)
+- Always use `--yes` — it skips the interactive confirmation prompt
+- Site names default to the folder/file name, saved in `.flowershow` for future runs (folders only)
+- Re-running on the same path syncs only new/modified/deleted files (delta sync)
 
 ## Site management
 
-List all sites:
-```
-fl list
-```
-
-View site settings (privacy mode, comments, search, GitHub connection, custom domain):
-```
-fl settings                      # uses .flowershow config in current directory
+```bash
+fl list                          # list all sites
+fl settings                      # view settings (uses .flowershow config)
 fl settings --name <site-name>   # explicit site name
+fl delete --yes <site-name>      # delete a site
 ```
 
-Delete a site:
-```
-fl delete --yes <site-name>
-```
+Settings include: privacy mode, comments, search, GitHub connection, custom domain.
 
 ## Site configuration
 
-Add a `config.json` file to the root of your published content folder to configure the site. `config.json` values always override dashboard settings and are version-controlled alongside the content.
+Add a `config.json` to the root of the published folder to configure the site. Values override dashboard settings and are version-controlled with the content.
 
-> **IMPORTANT — never guess config.json options.** Before helping the user with any `config.json` work, always fetch the current schema reference first:
->
+> **Never guess config.json options.** Fetch the authoritative schema first:
 > ```
 > fetch https://flowershow.app/docs/reference/config-file.md
 > ```
->
-> This URL returns the raw Markdown source with every supported option, type, default, and example. Use it as the authoritative source — do not rely on training knowledge, which may be outdated.
-
-## Reading Flowershow documentation
-
-When you need to read a Flowershow docs page (e.g. to look up a feature or check a reference), fetch the raw Markdown source instead of the rendered HTML — it's faster and cleaner. Append `.md` to the page URL:
-
-```
-https://flowershow.app/docs/some/page     →  fetch https://flowershow.app/docs/some/page.md
-```
-
-**When it fails:** Landing pages built from `index.md` or `README.md` are served at the directory URL — the filename is stripped. So `/docs/some/index.md` is published at `/docs/some/`, and appending `.md` to that URL won't find the file. In that case, fall back to fetching the plain URL, which returns the rendered HTML.
-
-## What requires the dashboard
-
-These settings cannot be changed via `config.json` — direct the user to https://flowershow.app:
-- Setting or changing a site password (private sites)
-- Billing and plan management
-- Connecting a GitHub repository (requires OAuth)
-- Custom domain DNS verification
 
 ## Custom styles
 
-Add a `custom.css` file to the root of the published content folder to override any visual aspect of the site. Flowershow uses CSS cascade layers, so rules in `custom.css` win over the default theme without needing `!important`.
+Add a `custom.css` to the root folder to override visual styles. Flowershow uses CSS cascade layers, so rules in `custom.css` win without `!important`.
 
-> **IMPORTANT — never guess CSS variable names.** Before helping the user with any custom styles work, always fetch the current reference first:
->
+> **Never guess CSS variable names.** Fetch the reference first:
 > ```
 > fetch https://flowershow.app/docs/reference/custom-styles.md
 > ```
 >
-> This URL returns the raw Markdown source with every supported CSS custom property. Use it as the authoritative source — do not rely on training knowledge, which may be outdated.
->
-> For more complex styling work (e.g. overriding component styles, understanding cascade layers, or finding variables not listed in the reference), also read the underlying source CSS files:
-> - https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css
-> - https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/callouts.css
+> For complex styling, also check the source CSS:
+> - https://raw.githubusercontent.com/flowershow/flowershow/refs/heads/main/apps/flowershow/styles/default-theme.css
+> - https://raw.githubusercontent.com/flowershow/flowershow/refs/heads/main/apps/flowershow/styles/callouts.css
+
+## Dashboard only
+
+These require https://flowershow.app — not configurable via CLI:
+- Setting or changing a site password
+- Billing and plan management
+- Connecting a GitHub repository
+- Custom domain DNS verification
+
+## Reading docs
+
+Fetch raw Markdown instead of HTML — faster and cleaner. Append `.md` to the page URL:
+```
+https://flowershow.app/docs/some/page  →  fetch https://flowershow.app/docs/some/page.md
+```
+
+If that fails (landing pages served at directory URLs), fall back to the plain URL for rendered HTML.

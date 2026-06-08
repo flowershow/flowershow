@@ -236,27 +236,12 @@ If a `.gitignore` file is present in the published folder, the Flowershow CLI wi
 The Flowershow CLI is designed to work with local AI coding agents (Claude Code, Cursor, Windsurf, and others). Install the Flowershow skill so your agent knows how to publish and manage your sites:
 
 **With Node.js:**
+
 ```bash
 npx skills add flowershow/flowershow --skill flowershow --global
 ```
 
-**Without Node.js (Windows or manual setup):**
-
-Copy the following into your agent's config file:
-
-- Claude Code: `~/.claude/CLAUDE.md`
-- Cursor: `.cursor/rules`
-- Windsurf: `.windsurfrules`
-
-```markdown
-## Flowershow
-
-Use the `fl` CLI to publish markdown files and manage Flowershow sites.
-Run `fl --help` for available commands.
-Key commands: `fl whoami`, `fl login`, `fl --yes <path>`, `fl list`, `fl settings`, `fl delete --yes <name>`.
-New users must create an account at https://flowershow.app before authenticating.
-For publishing workflows and edge cases, refer to the Flowershow skill: https://github.com/flowershow/flowershow/blob/main/skills/flowershow/SKILL.md
-```
+**Without Node.js:** Refer to your agent's documentation for adding custom skills or instructions, then point it to the skill source at `https://raw.githubusercontent.com/flowershow/flowershow/main/skills/flowershow/SKILL.md`.
 
 ## Telemetry
 
