@@ -5,6 +5,7 @@ import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import Script from 'next/script';
 import type { ReactNode } from 'react';
+import { AiChatPanel } from '@/components/public/ai-chat-panel';
 import BuiltWithFloatingButton from '@/components/public/built-with-floating-button';
 import Footer from '@/components/public/footer';
 import Nav from '@/components/public/nav';
@@ -266,6 +267,7 @@ export default async function PublicLayout(props: {
                   navigation={siteConfig?.footer?.navigation}
                 />
                 {showBuiltWithButton && <BuiltWithFloatingButton />}
+                {site.enableAiChat && <AiChatPanel siteId={site.id} />}
                 {site.privacyMode === 'PASSWORD' && (
                   <SiteLogoutButton
                     siteId={site.id}
