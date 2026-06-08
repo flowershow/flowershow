@@ -160,6 +160,19 @@ Flowershow turns markdown into elegant websites. Docs, blogs, knowledge bases, l
   </a>
 </div>
 
+## Agents
+
+<div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="/docs/agents/markdown-access">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Markdown access</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Fetch any page as raw markdown by appending .md to the URL.</div>
+  </a>
+  <a class="not-prose bg-gray-0 shadow group block space-y-2 rounded-md p-6 pt-5 transition-shadow duration-300 hover:shadow-md" href="/docs/agents/skills">
+    <h3 class="group-hover:text-gray-1000 truncate text-lg font-medium leading-snug">Skills</h3>
+    <div class="line-clamp-3 text-sm font-normal text-gray-900">Install the Flowershow skill so your AI assistant can publish and manage sites.</div>
+  </a>
+</div>
+
 ## Troubleshooting
 
 <div class="not-prose my-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 font-heading">

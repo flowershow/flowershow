@@ -113,4 +113,11 @@ https://flowershow.app/docs/some/page  →  fetch https://flowershow.app/docs/so
 
 If that fails (landing pages served at directory URLs), fall back to the plain URL for rendered HTML.
 
-Flowershow has many page-level and content features beyond CLI and config. **Never guess — always fetch the relevant doc first.** See [REFERENCE.md](REFERENCE.md) for a complete index of all guides and reference docs with fetch paths.
+Flowershow has many page-level and content features beyond CLI and config. **Never guess — always fetch the relevant doc first.**
+
+To discover all available docs, fetch the sitemap:
+```
+fetch https://flowershow.app/docs/sitemap.md
+```
+
+This is an auto-generated index of every docs page with titles and descriptions. Use it to find the right page, then fetch that page's `.md` URL for full details.

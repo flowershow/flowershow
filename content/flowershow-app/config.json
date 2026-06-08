@@ -170,6 +170,10 @@
     "/notes",
     "/blog/archive"
   ],
+  "contentHide": [
+    "/docs/sitemap.md",
+    "/people"
+  ],
   "showEditLink": true,
   "redirects": [
     {

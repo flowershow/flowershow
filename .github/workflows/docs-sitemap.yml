@@ -1,0 +1,31 @@
+name: Regenerate docs sitemap
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sitemap:
+    name: Regenerate docs sitemap
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: "pnpm"
+      - name: Install dependencies
+        run: pnpm install
+      - name: Regenerate sitemap
+        run: pnpm docs:sitemap
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add content/flowershow-app/docs/sitemap.md
+          git diff --cached --quiet || git commit -m "chore(docs): regenerate docs sitemap"
+          git push
