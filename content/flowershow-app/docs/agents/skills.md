@@ -1,20 +1,18 @@
 ---
 title: Skills
-description: Install the Flowershow skill to let your AI assistant publish and manage Flowershow sites directly from the terminal.
+description: Install the Flowershow skill to let your AI assistant publish and manage Flowershow sites — whether you publish via the fl CLI, a GitHub repository, or the Obsidian plugin.
 ---
 
-A **skill** is a packaged set of instructions that teaches an AI coding assistant how to use a tool. The Flowershow skill gives AI agents everything they needs to publish content and manage sites using the `fl` CLI.
+A **skill** is a packaged set of instructions that teaches an AI coding assistant how to use a tool. The Flowershow skill gives AI agents everything they need to help you publish content and manage sites — regardless of how you publish.
 
 ## What the skill does
 
 Once installed, your assistant can:
 
-- Authenticate with `fl login`
-- Publish a folder or file with `fl --yes ./path`
-- List, update, and delete sites
 - Configure your site with `config.json`
 - Style your site with `custom.css`
 - Walk you through complex setups (custom domain, comments, GitHub connection) step by step
+- **If you use the `fl` CLI:** authenticate, publish a folder or file, list, update, and delete sites
 
 ## Installation
 

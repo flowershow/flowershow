@@ -1,23 +1,40 @@
 ---
 name: flowershow
-description: Publish markdown files and manage Flowershow sites using the fl CLI. Use when the user wants to publish notes, a digital garden, or any markdown content to Flowershow, or when they want to list, view, update, or delete a site, change site settings or styles, configure a custom domain, or do anything else with an existing Flowershow site.
+description: Help users publish and manage Flowershow sites. Use when the user wants to publish notes, a digital garden, or any markdown content to Flowershow, or when they want to configure their site (config.json, custom CSS, custom domain, comments, search, etc.), regardless of how they publish — via the fl CLI, a GitHub repository, or the Obsidian plugin.
 metadata:
   author: flowershow
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Flowershow
 
-Use the `fl` CLI to publish markdown files and manage Flowershow sites. When unsure about a command, run `fl --help` or `fl <command> --help` rather than guessing.
+## Detect publishing method first
 
-## Quick start
+Before doing anything else, establish how the user publishes their site. There are three paths:
+
+| Method | Description | CLI needed? |
+|--------|-------------|-------------|
+| **CLI** | User runs `fl` locally to push a local folder | Yes |
+| **GitHub** | Site is connected to a GitHub repo; Flowershow builds on push | No |
+| **Obsidian plugin** | User publishes from inside an Obsidian vault | No |
+
+If it's not obvious from context, ask: *"Do you publish from a local folder using the fl CLI, from a GitHub repository, or from Obsidian?"*
+
+- For **GitHub** and **Obsidian** users: skip all CLI sections below. Work only with `config.json`, `custom.css`, and the dashboard. Provide instructions they can follow directly in their repo or vault.
+- For **CLI** users: proceed with the full skill.
+
+---
+
+## CLI only — skip for GitHub/Obsidian users
+
+### Quick start
 
 ```bash
 fl whoami          # 1. check auth (see Authentication if not logged in)
 fl --yes ./notes   # 2. publish
 ```
 
-## Authentication
+### Authentication
 
 ```bash
 fl whoami
@@ -30,7 +47,7 @@ If not authenticated:
 
 No account yet? Direct the user to https://cloud.flowershow.app to sign up first.
 
-## Publishing content
+### Publishing content
 
 ```bash
 fl --yes ./my-notes                    # publish a folder
@@ -42,7 +59,7 @@ fl --name my-site --yes ./my-notes     # set a custom site name on first publish
 - Site names default to the folder/file name, saved in `.flowershow` for future runs (folders only)
 - Re-running on the same path syncs only new/modified/deleted files (delta sync)
 
-## Site management
+### Site management
 
 ```bash
 fl list                          # list all sites
@@ -53,7 +70,9 @@ fl delete --yes <site-name>      # delete a site
 
 Settings include: privacy mode, comments, search, GitHub connection, custom domain.
 
-## Site configuration
+---
+
+## Site configuration — all publishing methods
 
 Add a `config.json` to the root of the published folder to configure the site. Values override dashboard settings and are version-controlled with the content.
 
@@ -85,7 +104,7 @@ Add a `custom.css` to the root folder to override visual styles. Flowershow uses
 
 ## Step-by-step guidance for complex setups
 
-Some operations require actions outside the CLI — in a web dashboard, a third-party service, or DNS settings. Users may not be tech-savvy. **Always provide explicit, numbered step-by-step instructions** for these situations. Do not assume the user knows where to click or what to do next.
+Some operations require actions in a web dashboard, a third-party service, or DNS settings — not something the agent can do directly. Users may not be tech-savvy. **Always provide explicit, numbered step-by-step instructions** for these situations. Do not assume the user knows where to click or what to do next.
 
 This applies to:
 - **Comments (Giscus)** — requires installing the Giscus GitHub App and creating a Discussions-enabled repo. Walk the user through: enabling Discussions on the repo, installing the app at https://github.com/apps/giscus, granting it access, then filling in the config.
@@ -98,7 +117,7 @@ When in doubt, over-explain rather than under-explain. A user who already knows 
 
 ## Dashboard only
 
-These require https://flowershow.app — not configurable via CLI:
+These require https://flowershow.app — not available in config files or the CLI:
 - Setting or changing a site password ⭐ premium
 - Billing and plan management
 - Connecting a GitHub repository
