@@ -65,6 +65,19 @@ _Avoid_: Incoming link, reverse link
 **Link Resolution**:
 The post-publish step (run in the PublishFinalizerWorkflow) that walks all unresolved Links for a site, matches `targetPath` against current Blob records, and fills in `targetBlobId`. Also cleans up Links whose source or target Blob was deleted.
 _Avoid_: Link indexing, link building
+### AI Chat
+
+**AI Chat**:
+A RAG-based conversational Q&A feature on a published site. Visitors ask questions in natural language; the platform retrieves relevant pages from the site's Typesense index and returns a synthesized answer with source citations. Separate from keyword search.
+_Avoid_: Conversational search, AI search, chatbot
+
+**Chat Session**:
+A single in-browser AI Chat conversation. Multi-turn within the session — history is held in client-side React state and sent with each request. Not persisted; lost on page refresh.
+_Avoid_: Chat history, conversation
+
+**AI Chat Key**:
+The Anthropic API key a site owner configures to enable AI Chat on their site. Stored in site settings. AI Chat is disabled for any site without a configured key.
+_Avoid_: AI API key, AI key, LLM key
 
 ## Example dialogue
 
