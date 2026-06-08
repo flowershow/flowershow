@@ -169,9 +169,9 @@ export function AiChatPanel({ siteId }: AiChatPanelProps) {
         type="button"
         onClick={() => setIsOpen(true)}
         aria-label="Open AI Chat"
-        className="fixed bottom-20 right-8 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg transition-colors hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2"
+        className="ai-chat-toggle"
       >
-        <BotMessageSquare className="h-5 w-5" />
+        <BotMessageSquare className="ai-chat-toggle-icon" />
       </button>
 
       <AnimatePresence>
@@ -190,23 +190,15 @@ export function AiChatPanel({ siteId }: AiChatPanelProps) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 16, scale: 0.97 }}
               transition={{ duration: 0.18 }}
-              className={cn(
-                'fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-2xl',
-                // Desktop: anchored above the button
-                'bottom-36 right-8 h-[480px] w-[360px]',
-                // Mobile: full-width sheet from bottom
-                'max-sm:bottom-0 max-sm:left-0 max-sm:right-0 max-sm:h-[70dvh] max-sm:w-full max-sm:rounded-b-none',
-              )}
+              className="ai-chat-panel"
             >
               {/* Header */}
-              <div className="flex shrink-0 items-center justify-between border-b border-stone-200 px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <BotMessageSquare className="h-4 w-4 text-indigo-600" />
-                  <span className="text-sm font-semibold text-stone-800">
-                    Ask AI
-                  </span>
+              <div className="ai-chat-header">
+                <div className="ai-chat-header-title">
+                  <BotMessageSquare className="ai-chat-header-icon" />
+                  <span className="ai-chat-header-label">Ask AI</span>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className="ai-chat-header-actions">
                   {messages.length > 0 && (
                     <button
                       type="button"
@@ -215,28 +207,28 @@ export function AiChatPanel({ siteId }: AiChatPanelProps) {
                         setError(null);
                       }}
                       aria-label="Clear conversation"
-                      className="rounded-md p-1 text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800"
+                      className="ai-chat-icon-button"
                     >
-                      <Trash2Icon className="h-4 w-4" />
+                      <Trash2Icon className="ai-chat-icon-button-icon" />
                     </button>
                   )}
                   <button
                     type="button"
                     onClick={() => setIsOpen(false)}
                     aria-label="Close AI Chat"
-                    className="rounded-md p-1 text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800"
+                    className="ai-chat-icon-button"
                   >
-                    <XIcon className="h-4 w-4" />
+                    <XIcon className="ai-chat-icon-button-icon" />
                   </button>
                 </div>
               </div>
 
               {/* Messages */}
-              <div className="flex-1 space-y-4 overflow-y-auto p-4">
+              <div className="ai-chat-messages">
                 {messages.length === 0 && (
-                  <div className="flex h-full flex-col items-center justify-center text-center text-stone-400">
-                    <BotMessageSquare className="mb-3 h-8 w-8" />
-                    <p className="text-sm">
+                  <div className="ai-chat-empty">
+                    <BotMessageSquare className="ai-chat-empty-icon" />
+                    <p className="ai-chat-empty-text">
                       Ask anything about this site&apos;s content.
                     </p>
                   </div>
@@ -246,31 +238,29 @@ export function AiChatPanel({ siteId }: AiChatPanelProps) {
                   <div
                     key={msg.id}
                     className={cn(
-                      'flex flex-col gap-1.5',
-                      msg.role === 'user' ? 'items-end' : 'items-start',
+                      'ai-chat-message',
+                      msg.role === 'user' ? 'is-user' : 'is-assistant',
                     )}
                   >
                     <div
                       className={cn(
-                        'max-w-[85%] whitespace-pre-wrap rounded-2xl px-3 py-2 text-sm leading-relaxed',
-                        msg.role === 'user'
-                          ? 'bg-indigo-600 text-white'
-                          : 'bg-stone-100 text-stone-800',
+                        'ai-chat-bubble',
+                        msg.role === 'user' ? 'is-user' : 'is-assistant',
                       )}
                     >
                       {msg.content}
                       {msg.isStreaming && (
-                        <span className="ml-1 inline-block h-2 w-2 animate-pulse rounded-full bg-stone-400" />
+                        <span className="ai-chat-streaming-cursor" />
                       )}
                     </div>
 
                     {msg.sources.length > 0 && (
-                      <div className="flex max-w-[85%] flex-wrap gap-1">
+                      <div className="ai-chat-sources">
                         {msg.sources.map((path) => (
                           <Link
                             key={path}
                             href={resolveFilePathToUrlPath({ target: path })}
-                            className="rounded-full border border-stone-200 px-2 py-0.5 text-xs text-stone-500 transition-colors hover:border-indigo-300 hover:text-indigo-600"
+                            className="ai-chat-source-link"
                           >
                             {path
                               .replace(/^\//, '')
@@ -284,31 +274,24 @@ export function AiChatPanel({ siteId }: AiChatPanelProps) {
                 ))}
 
                 {isLoading && (
-                  <div className="flex items-start">
-                    <div className="rounded-2xl bg-stone-100 px-3 py-2.5">
-                      <span className="flex gap-1">
-                        <span className="h-2 w-2 animate-bounce rounded-full bg-stone-400 [animation-delay:-0.3s]" />
-                        <span className="h-2 w-2 animate-bounce rounded-full bg-stone-400 [animation-delay:-0.15s]" />
-                        <span className="h-2 w-2 animate-bounce rounded-full bg-stone-400" />
+                  <div className="ai-chat-loading">
+                    <div className="ai-chat-loading-bubble">
+                      <span className="ai-chat-loading-dots">
+                        <span className="ai-chat-loading-dot" />
+                        <span className="ai-chat-loading-dot" />
+                        <span className="ai-chat-loading-dot" />
                       </span>
                     </div>
                   </div>
                 )}
 
-                {error && (
-                  <div className="rounded-lg bg-red-50 px-3 py-2 text-xs text-red-600">
-                    {error}
-                  </div>
-                )}
+                {error && <div className="ai-chat-error">{error}</div>}
 
                 <div ref={messagesEndRef} />
               </div>
 
               {/* Input */}
-              <form
-                onSubmit={handleSubmit}
-                className="flex shrink-0 items-end gap-2 border-t border-stone-200 p-3"
-              >
+              <form onSubmit={handleSubmit} className="ai-chat-form">
                 <textarea
                   ref={inputRef}
                   value={input}
@@ -322,20 +305,18 @@ export function AiChatPanel({ siteId }: AiChatPanelProps) {
                   placeholder="Ask a question… (Enter to send)"
                   rows={1}
                   disabled={isLoading}
-                  className="flex-1 resize-none rounded-lg border border-stone-200 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 disabled:opacity-50"
+                  className="ai-chat-input"
                 />
                 <button
                   type="submit"
                   disabled={!input.trim() || isLoading}
                   aria-label="Send message"
                   className={cn(
-                    'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors focus:outline-none',
-                    !input.trim() || isLoading
-                      ? 'cursor-not-allowed bg-stone-100 text-stone-300'
-                      : 'bg-indigo-600 text-white hover:bg-indigo-700',
+                    'ai-chat-submit',
+                    !input.trim() || isLoading ? 'is-disabled' : 'is-active',
                   )}
                 >
-                  <SendIcon className="h-4 w-4" />
+                  <SendIcon className="ai-chat-submit-icon" />
                 </button>
               </form>
             </motion.div>
