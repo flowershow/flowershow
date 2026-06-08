@@ -1,6 +1,6 @@
 'use client';
 import FocusTrap from 'focus-trap-react';
-import { BotMessageSquare, SendIcon, XIcon } from 'lucide-react';
+import { BotMessageSquare, SendIcon, Trash2Icon, XIcon } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
@@ -206,14 +206,29 @@ export function AiChatPanel({ siteId }: AiChatPanelProps) {
                     Ask AI
                   </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  aria-label="Close AI Chat"
-                  className="rounded-md p-1 text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800"
-                >
-                  <XIcon className="h-4 w-4" />
-                </button>
+                <div className="flex items-center gap-1">
+                  {messages.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMessages([]);
+                        setError(null);
+                      }}
+                      aria-label="Clear conversation"
+                      className="rounded-md p-1 text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800"
+                    >
+                      <Trash2Icon className="h-4 w-4" />
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setIsOpen(false)}
+                    aria-label="Close AI Chat"
+                    className="rounded-md p-1 text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-800"
+                  >
+                    <XIcon className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
 
               {/* Messages */}

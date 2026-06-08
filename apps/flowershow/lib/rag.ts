@@ -7,84 +7,6 @@ export type ContextDocument = {
   path: string;
 };
 
-// Filler words that hurt BM25 retrieval when included in a natural-language question
-const STOP_WORDS = new Set([
-  'a',
-  'an',
-  'the',
-  'and',
-  'or',
-  'but',
-  'in',
-  'on',
-  'at',
-  'to',
-  'for',
-  'of',
-  'with',
-  'by',
-  'from',
-  'about',
-  'into',
-  'through',
-  'is',
-  'are',
-  'was',
-  'were',
-  'be',
-  'been',
-  'being',
-  'have',
-  'has',
-  'had',
-  'do',
-  'does',
-  'did',
-  'will',
-  'would',
-  'could',
-  'should',
-  'can',
-  'may',
-  'might',
-  'shall',
-  'how',
-  'what',
-  'where',
-  'when',
-  'why',
-  'which',
-  'who',
-  'whose',
-  'i',
-  'me',
-  'my',
-  'you',
-  'your',
-  'it',
-  'its',
-  'we',
-  'our',
-  'they',
-  'their',
-  'this',
-  'that',
-  'these',
-  'those',
-  'get',
-  'set',
-]);
-
-export function extractKeywords(question: string): string {
-  const keywords = question
-    .toLowerCase()
-    .replace(/[?!.,;:'"]/g, ' ')
-    .split(/\s+/)
-    .filter((w) => w.length > 2 && !STOP_WORDS.has(w));
-  // Fall back to original question if every word was stripped
-  return keywords.length > 0 ? keywords.join(' ') : question;
-}
-
 export async function retrieveContext(
   siteId: string,
   question: string,
@@ -94,10 +16,12 @@ export async function retrieveContext(
       .collections(siteId)
       .documents()
       .search({
-        q: extractKeywords(question),
-        query_by: 'title,content',
-        per_page: 5,
-      });
+        q: question,
+        query_by: 'embedding,title,content',
+        vector_query: 'embedding:([], k:3, alpha:0.7)',
+        exclude_fields: 'embedding',
+        per_page: 3,
+      } as any);
 
     return (results.hits ?? []).map((hit: any) => ({
       title: (hit.document.title as string) ?? '',

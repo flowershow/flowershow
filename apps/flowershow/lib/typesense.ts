@@ -16,9 +16,15 @@ export const typesense = new Client({
 
 type TypesenseField = {
   name: string;
-  type: 'string' | 'string[]' | 'int64';
+  type: 'string' | 'string[]' | 'int64' | 'float[]';
   facet?: boolean;
   optional?: boolean;
+  embed?: {
+    from: string[];
+    model_config: {
+      model_name: string;
+    };
+  };
 };
 
 type TypesenseSchema = {
@@ -37,6 +43,14 @@ const siteCollectionSchema: Omit<TypesenseSchema, 'name'> = {
     { name: 'authors', type: 'string[]', facet: false, optional: true },
     // Date must be provided as Unix timestamp
     { name: 'date', type: 'int64', facet: false, optional: true },
+    {
+      name: 'embedding',
+      type: 'float[]',
+      embed: {
+        from: ['title', 'content'],
+        model_config: { model_name: 'ts/all-MiniLM-L12-v2' },
+      },
+    },
   ],
 };
 
