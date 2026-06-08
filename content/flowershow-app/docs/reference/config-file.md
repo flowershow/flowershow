@@ -300,7 +300,7 @@ Umami analytics configuration. [[analytics|Learn more →]]
 **Type:** `boolean`  
 **Default:** `false`
 
-Enable or disable the comments section on pages. [[comments|Learn more →]]
+Enable or disable the comments section on pages. To fully set up comments, you must also configure `repoId` and `categoryId` in the [`giscus`](#giscus) object — comments won't work without them. [[comments|Learn more →]]
 
 ```json
 "showComments": true
@@ -318,9 +318,9 @@ Advanced Giscus options. Required when your site has no GitHub integration (e.g.
 | Field              | Type                | Description                                          |
 | ------------------ | ------------------- | ---------------------------------------------------- |
 | `repo`             | `string`            | GitHub repo in `owner/repo` format                   |
-| `repoId`           | `string`            | GitHub repo ID                                       |
+| `repoId`           | `string`            | GitHub repo ID (**required**)                        |
 | `category`         | `string`            | Discussion category name                             |
-| `categoryId`       | `string`            | Discussion category ID                               |
+| `categoryId`       | `string`            | Discussion category ID (**required**)                |
 | `theme`            | `string`            | Giscus theme name                                    |
 | `lang`             | `string`            | Language code (e.g. `"en"`)                          |
 | `mapping`          | `string`            | How discussions are mapped to pages (e.g. `"title"`) |
