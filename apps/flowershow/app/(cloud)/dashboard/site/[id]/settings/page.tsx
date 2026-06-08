@@ -913,6 +913,7 @@ export default async function SiteSettingsPage(props: {
             }}
             handleSubmit={updateDbConfig}
           />
+          <SiteAiChatForm siteId={site.id} />
         </section>
 
         <hr className="border-stone-200" />
@@ -1050,7 +1051,6 @@ export default async function SiteSettingsPage(props: {
             disabled={!isFeatureEnabled(Feature.PasswordProtection, site)}
             siteId={site.id}
           />
-          <SiteAiChatForm siteId={site.id} />
         </section>
 
         <hr className="border-stone-200" />
