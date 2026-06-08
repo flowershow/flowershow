@@ -25,18 +25,42 @@ vi.mock('@/lib/typesense', () => ({
 
 // ── Import after mocks ────────────────────────────────────────────
 
-import { buildPrompt, retrieveContext } from '../rag';
+import { buildPrompt, extractKeywords, retrieveContext } from '../rag';
+
+// ── extractKeywords ───────────────────────────────────────────────
+
+describe('extractKeywords', () => {
+  it('strips question and stop words', () => {
+    expect(extractKeywords('how do I enable comments?')).toBe(
+      'enable comments',
+    );
+  });
+
+  it('handles multi-word conversational questions', () => {
+    expect(extractKeywords('what is the syntax for callouts?')).toBe(
+      'syntax callouts',
+    );
+  });
+
+  it('falls back to original question when nothing survives stripping', () => {
+    expect(extractKeywords('how do I?')).toBe('how do I?');
+  });
+
+  it('preserves meaningful short words longer than 2 chars', () => {
+    expect(extractKeywords('configure nav links')).toBe('configure nav links');
+  });
+});
 
 // ── retrieveContext ───────────────────────────────────────────────
 
 describe('retrieveContext', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it('searches the collection named after siteId', async () => {
+  it('sends extracted keywords to Typesense, not the raw question', async () => {
     mocks.search.mockResolvedValue({ hits: [] });
-    await retrieveContext('site-abc', 'what is flowershow?');
+    await retrieveContext('site-abc', 'how do I enable comments?');
     expect(mocks.search).toHaveBeenCalledWith(
-      expect.objectContaining({ q: 'what is flowershow?' }),
+      expect.objectContaining({ q: 'enable comments' }),
     );
   });
 
