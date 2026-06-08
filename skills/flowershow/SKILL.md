@@ -1,6 +1,6 @@
 ---
 name: flowershow
-description: Publish markdown files and manage Flowershow sites using the fl CLI. Use when the user wants to publish notes, a digital garden, or any markdown content to Flowershow, or when they want to list, view settings for, or delete a site.
+description: Publish markdown files and manage Flowershow sites using the fl CLI. Use when the user wants to publish notes, a digital garden, or any markdown content to Flowershow, or when they want to list, view, update, or delete a site, change site settings or styles, configure a custom domain, or do anything else with an existing Flowershow site.
 metadata:
   author: flowershow
   version: "1.0.0"
@@ -62,6 +62,14 @@ Add a `config.json` to the root of the published folder to configure the site. V
 > fetch https://flowershow.app/docs/reference/config-file.md
 > ```
 
+> **Some features are premium-only.** Even if a feature is correctly configured in `config.json`, it will silently have no effect unless the user is on a paid plan. If a configured feature isn't working, check whether the site has a premium subscription before debugging the config.
+>
+> Premium `config.json` keys:
+> - `enableSearch` — full-text search
+> - `showBuiltWithButton: false` — hide "Built with Flowershow" branding
+> - `favicon` — custom favicon
+> - `image` — social share image
+>
 ## Custom styles
 
 Add a `custom.css` to the root folder to override visual styles. Flowershow uses CSS cascade layers, so rules in `custom.css` win without `!important`.
@@ -78,10 +86,10 @@ Add a `custom.css` to the root folder to override visual styles. Flowershow uses
 ## Dashboard only
 
 These require https://flowershow.app — not configurable via CLI:
-- Setting or changing a site password
+- Setting or changing a site password ⭐ premium
 - Billing and plan management
 - Connecting a GitHub repository
-- Custom domain DNS verification
+- Custom domain DNS verification ⭐ premium
 
 ## Reading docs
 
