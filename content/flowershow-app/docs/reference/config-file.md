@@ -42,7 +42,7 @@ Fallback description used in search results and social previews when a page has 
 
 ---
 
-### `image`
+### `image` (⭐️ Premium feature)
 
 **Type:** `string`  
 **Default:** —
@@ -68,7 +68,7 @@ Path to a logo image shown in the navbar. Relative to your content root.
 
 ---
 
-### `favicon`
+### `favicon` (⭐️ Premium feature)
 
 **Type:** `string`  
 **Default:** —
@@ -352,7 +352,7 @@ Show an "Edit this page" link at the bottom of each page. [[edit-this-page|Learn
 
 ---
 
-### `enableSearch`
+### `enableSearch` (⭐️ Premium feature)
 
 **Type:** `boolean`  
 **Default:** `false`
@@ -378,12 +378,12 @@ Enable an RSS feed for your site. [[rss-feed|Learn more →]]
 
 ---
 
-### `showBuiltWithButton`
+### `showBuiltWithButton` (⭐️ Premium feature)
 
 **Type:** `boolean`  
 **Default:** `true`
 
-Show the "Built with Flowershow" button in the footer.
+Hide the "Built with Flowershow" button in the footer.
 
 ```json
 "showBuiltWithButton": false
