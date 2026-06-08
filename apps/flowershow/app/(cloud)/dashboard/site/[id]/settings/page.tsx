@@ -6,6 +6,7 @@ import DeleteSiteForm from '@/components/dashboard/form/delete-site-form';
 import GitHubConnectionForm from '@/components/dashboard/form/github-connection-form';
 import ImageUploadForm from '@/components/dashboard/form/image-upload-form';
 import RepoAccessLostForm from '@/components/dashboard/form/repo-access-lost-form';
+import SiteAiChatForm from '@/components/dashboard/form/site-ai-chat-form';
 import SitePasswordProtectionForm from '@/components/dashboard/form/site-password-form';
 import JsonForm from '@/components/dashboard/json-form';
 import SettingsNav from '@/components/dashboard/settings-nav';
@@ -1049,6 +1050,7 @@ export default async function SiteSettingsPage(props: {
             disabled={!isFeatureEnabled(Feature.PasswordProtection, site)}
             siteId={site.id}
           />
+          <SiteAiChatForm siteId={site.id} />
         </section>
 
         <hr className="border-stone-200" />

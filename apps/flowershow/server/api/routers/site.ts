@@ -466,6 +466,49 @@ export const siteRouter = createTRPCRouter({
       return fresh;
     }),
 
+  setAiChatApiKey: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        apiKey: z.string().optional(),
+      }),
+    )
+    .output(publicSiteSchema)
+    .mutation(async ({ ctx, input }): Promise<PublicSite> => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.id },
+      });
+
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      const hasKey = !!input.apiKey;
+      await ctx.db.site.update({
+        where: { id: input.id },
+        data: {
+          aiChatApiKey: hasKey ? input.apiKey : null,
+          enableAiChat: hasKey,
+        },
+      });
+
+      const fresh = await ctx.db.site.findUnique({
+        where: { id: input.id },
+        select: publicSiteSelect,
+      });
+      if (!fresh) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found after update',
+        });
+      }
+
+      return fresh;
+    }),
+
   updateDbConfig: protectedProcedure
     .input(
       z.object({

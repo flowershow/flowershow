@@ -137,6 +137,9 @@ model Site {
   showRawLink             Boolean       @default(false) @map("show_raw_link")
   configJson              Json?         @default("{}") @map("config_json") @db.JsonB
 
+  aiChatApiKey            String?       @map("ai_chat_api_key")
+  enableAiChat            Boolean       @default(false) @map("enable_ai_chat")
+
   // Anonymous/temporary site fields for claim flow
   isTemporary             Boolean       @default(false) @map("is_temporary")
   expiresAt               DateTime?     @map("expires_at")
