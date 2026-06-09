@@ -14,6 +14,12 @@ _Avoid_: Project, blog, workspace
 A single tracked file within a site, always reflecting its current state (path, SHA, processing status). Not a version snapshot — mutated in place on each publish.
 _Avoid_: File record, asset
 
+### Appearance
+
+**Theme**:
+A curated CSS file that changes a site's visual appearance by overriding CSS custom properties and, optionally, specific semantic class names. Themes stack on top of `default-theme.css` and beneath any user custom CSS. Managed by Flowershow; users select a theme from the dashboard.
+_Avoid_: Skin, style, template, stylesheet
+
 ### Publishing
 
 **Publish**:

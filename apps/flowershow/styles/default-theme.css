@@ -105,8 +105,9 @@
     --color-background: var(--color-l-background);
     --color-accent: var(--color-l-accent);
 
-    /* Scale uses absolute lightness values. Foreground should be dark (oklch L < ~0.5) so
-       the steps cover a useful range on a light background. See ADR-0006. */
+    /* Light-mode foreground-tinted ramp. Each step overrides the source OKLCH
+      lightness; --color-foreground only contributes chroma and hue. High chroma
+      may be gamut-mapped/clipped at some steps. */
     --color-foreground-50: oklch(from var(--color-foreground) 0.925 c h);
     --color-foreground-100: oklch(from var(--color-foreground) 0.825 c h);
     --color-foreground-200: oklch(from var(--color-foreground) 0.75 c h);
@@ -132,8 +133,9 @@
     --color-background: var(--color-d-background);
     --color-accent: var(--color-d-accent);
 
-    /* Scale uses absolute lightness values. Background should be very dark (oklch L < 0.2) so
-       the steps cover a useful range. See ADR-0006. */
+    /* Dark-mode foreground-tinted ramp. Each step overrides the source OKLCH
+      lightness; --color-foreground only contributes chroma and hue. High chroma
+      may be gamut-mapped/clipped at some steps. */
     --color-foreground-50: oklch(from var(--color-foreground) 0.2 c h);
     --color-foreground-100: oklch(from var(--color-foreground) 0.275 c h);
     --color-foreground-200: oklch(from var(--color-foreground) 0.35 c h);
