@@ -1,10 +1,13 @@
 ---
-title: Custom Styles
+title: Styling your site
 description: Customize your site's appearance — colors, fonts, and more — using CSS variables and a single custom.css file.
 date: 2026-06-09
 authors:
   - olayway
 ---
+
+> [!info]
+> Looking for a quick style change without writing CSS? Check out the [[themes|official themes]] — you can switch your site's look in one line of config.
 
 Flowershow gives you a single file — `custom.css` — where all your style overrides live. There are three levels of customization, depending on how much you need to change:
 
@@ -18,9 +21,6 @@ Flowershow gives you a single file — `custom.css` — where all your style ove
 ## Create custom.css
 
 Create a file named `custom.css` in the root of your repository (or your site's root directory if you publish from a subfolder). Add your CSS there and publish it alongside your content.
-
-> [!note]
-> Flowershow uses CSS cascade layers, so rules in `custom.css` automatically win over the default theme. You don't need `!important`.
 
 ---
 
@@ -94,6 +94,9 @@ Flowershow exposes variables for border radius, callout colors, navbar height, a
 
 - [default-theme.css](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css) — layout, typography, colors, border radius
 - [callouts.css](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/callouts.css) — callout color tokens
+
+> [!note]
+> Flowershow uses CSS cascade layers, so rules in `custom.css` automatically win over the default theme. You don't need `!important`.
 
 ---
 
