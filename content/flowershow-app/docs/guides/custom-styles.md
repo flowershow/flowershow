@@ -1,215 +1,181 @@
 ---
 title: Custom Styles
-description: A step-by-step guide to customizing your site's appearance using CSS, from basic styling to advanced hero sections
-date: 2025-02-11
+description: Customize your site's appearance — colors, fonts, and more — using CSS variables and a single custom.css file.
+date: 2026-06-09
 authors:
   - olayway
 ---
 
-This tutorial will guide you through the process of customizing your Flowershow Cloud site's appearance using CSS. You'll learn how to create and use a custom CSS file to modify existing styles and add new styled components like a hero section.
+Flowershow gives you a single file — `custom.css` — where all your style overrides live. There are three levels of customization, depending on how much you need to change:
 
-## What You Can Achieve
-
-Before we dive into the how-to, here's what you can do with custom styling:
-
-- Change colors of text and backgrounds
-- Use different fonts for headings and text
-- Add beautiful header sections (called "hero sections")
-- Customize the look of buttons and links
-- And much more!
-
-Here's an example of what we'll transform:
-
-![[custom-css.png]]
-
-Into this:
-
-![[custom-css-4.png]]
-
-## What You'll Need
-
-Before you begin, make sure you have:
-- A Flowershow Cloud site set up
-- Basic knowledge of GitHub UI
-- Basic knowledge of CSS
-- Basic knowledge of browser developer tools
-
-We're going to start with the following example site:
-
-![[custom-css.png]]
-
-## Step 1: Create Your Custom Styles File
-
-1. Go to your site's main folder on GitHub
-2. Create a new file named `custom.css` (this is where we'll put all our styling code)
-
-> [!important]
-> If you set up your site to publish from a specific folder (in your "Root Directory" setting), make sure to create the `custom.css` file in that same folder.
-
-## Step 2: Find What You Want to Change
-
-Modern web browsers come with powerful tools that help you see and experiment with styles. Here's how to use them:
-
-1. Open your site in your web browser
-2. Find something you want to change (like a heading or background)
-3. Right-click on it and select "Inspect" 
+1. **CSS variables** — the easiest path. Flowershow exposes variables for colors, fonts, border radius, and more. Changing a variable affects the whole site consistently.
+2. **CSS rules** — for tweaking specific elements that variables don't cover (e.g. navbar).
+3. **Custom components** — write HTML directly in your markdown and style it from scratch.
 
 > [!tip]
-> Use "hover-over" inspect mode by pressing Cmd+Shift+C (Mac) or Ctrl+Shift+C (Windows/Linux). Your cursor will change, allowing you to hover over any element on the page and click to inspect it. This makes it much easier to find exactly what you want to style!
+> Want help writing the CSS? Install the [[skills|Flowershow skill]] and your AI assistant can generate styles for you.
 
-This opens the "Developer Tools" window, which might look intimidating at first but is super helpful!
+## Create custom.css
 
-![[custom-css-1.png]]
+Create a file named `custom.css` in the root of your repository (or your site's root directory if you publish from a subfolder). Add your CSS there and publish it alongside your content.
 
-> [!tip]
-> Keep the developer tools open while working on your styles. This allows you to see changes in real-time and experiment before committing to your `custom.css` file.
+> [!note]
+> Flowershow uses CSS cascade layers, so rules in `custom.css` automatically win over the default theme. You don't need `!important`.
 
-## Step 3: Experiment with Changes
+---
 
-Now comes the fun part - trying out different styles:
+## The common cases
 
-1. In the Developer Tools window that opened:
-   - Look for the "Styles" section (usually on the right or bottom)
-   - Click the "+" button to add new styles
-   - Type in a CSS selector of what you want to change (like `h2` for all level-2 headings)
-   - Press Enter and start adding your changes
+### Change background and text colors
 
-![[custom-css-2.png]]
-
-> [!tip]
-> Learn more about CSS selectors:
-> - [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) for comprehensive documentation
-> - [CSS Diner](https://flukeout.github.io) for an interactive game to practice selectors
-
-2. Try changing things like:
-   - `color` for text color (you can use a color picker!)
-   - `background-color` for background colors
-   - `font-family` for different fonts
-   - `font-size` to make text bigger or smaller
-   - `font-weight` to adjust font's thickness
-
-3. When you like how it looks:
-   - Copy the styling code you created
-   - Paste it into your `custom.css` file
-   - Save and sync your site to see the changes live
-
-Here's an example of styling code that changes your site's background and headings:
+The foreground color drives the full shade scale used across text, borders, and subtle backgrounds — so changing it affects more than just body text. `--color-l-*` variables apply in light mode, `--color-d-*` in dark mode.
 
 ```css
-/* Change the background color of the whole site */
-.bg-background {
-    background: #f9f6f1 !important;
-}
+:root {
+  /* Light theme */
+  --color-l-background: #faf9f7;
+  --color-l-foreground: #374151;
 
-/* Make all headings use a special font and be bold */
-h1, h2, h3, h4, h5, h6 {
-    font-family: "Lucida Console", "Courier New", monospace !important;
-    font-weight: bold !important;
-}
-
-/* Give different heading levels different colors */
-h1, h4 {
-    color: #d30c7b !important;  /* Pink */
-}
-
-h2, h5 {
-    color: #ba5a31 !important;  /* Orange */
-}
-
-h3, h6 {
-    color: #508484 !important;  /* Teal */
+  /* Dark theme */
+  --color-d-background: #0f0f0f;
+  --color-d-foreground: #d1d5db;
 }
 ```
 
-> [!note]
-> Notice how we grouped selectors like `h1, h2, h3, h4, h5, h6` and then `h1, h4`, `h2, h5`, `h3, h6` to avoid repeating CSS rules that we want to apply to multiple elements. This makes our CSS more maintainable and efficient.
+### Change the accent color
 
-The result:
+The accent color is used for links, active states, and highlighted UI.
 
-![[custom-css-3.png]]
+```css
+:root {
+  --color-l-accent: #0ea5e9; /* light theme */
+  --color-d-accent: #38bdf8; /* dark theme  */
+}
+```
 
-## Step 4: Add a Welcome Section (Hero)
+### Change fonts
 
-Want to add a beautiful welcome section to your main page? Here's how:
+Set separate fonts for headings and body text. The values are passed directly to `font-family`, so any valid CSS font stack works — including system fonts:
 
-1. Open your main `README.md` file
-2. Replace the title and description with this code:
+```css
+:root {
+  --font-heading: "Georgia", serif;
+  --font-body: "system-ui", sans-serif;
+}
+```
+
+To use a Google Font, add an `@import` at the top of `custom.css` before your `:root` block:
+
+```css
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Source+Sans+3&display=swap");
+
+:root {
+  --font-heading: "Playfair Display", serif;
+  --font-body: "Source Sans 3", sans-serif;
+}
+```
+
+### Increase readability
+
+Make body text slightly larger and give it more breathing room:
+
+```css
+:root {
+  --font-size-base: 1.0625rem; /* 17px instead of 16px */
+  --line-height-normal: 1.65;
+}
+```
+
+All font size steps (`--font-size-sm`, `--font-size-lg`, etc.) scale with `--font-size-base`, so this one change proportionally adjusts the whole type scale.
+
+### Other available variables
+
+Flowershow exposes variables for border radius, callout colors, navbar height, and more. See the [[custom-styles|Custom styles reference]] for the full list, or browse the source files directly:
+
+- [default-theme.css](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css) — layout, typography, colors, border radius
+- [callouts.css](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/callouts.css) — callout color tokens
+
+---
+
+## Going further
+
+Beyond variables, there are two more levels of customization.
+
+### Overriding existing element styles
+
+You can write CSS rules that target Flowershow's own HTML elements directly — useful when no variable covers what you want to change.
+
+For example, giving the navbar a distinct background color:
+
+```css
+.site-navbar {
+  background-color: #1e293b;
+}
+```
+
+For other elements, you'll need to find the selector first:
+
+> [!tip]
+> Use your browser's built-in developer tools to find the right selectors. Right-click any element and choose **Inspect** (or press `Cmd+Shift+C` / `Ctrl+Shift+C` to enter hover-inspect mode). The Styles panel lets you experiment live before committing to `custom.css`.
+
+### Styling your own custom components
+
+You can write raw HTML anywhere in your markdown files and style it however you like. This is for things that don't exist in Flowershow at all — you're building and styling the component yourself.
+
+#### Example: hero section
+
+For a full-width welcome section on your home page, add HTML directly to your `README.md`:
 
 ```html
 <div class="hero">
-    <h1 class="hero-title">My Musings & Memories<br/>🧘‍♀️🏄‍♀️🏔️</h1>
-    <p class="hero-description">Welcome to my personal corner of the web, where I'll be sharing my thoughts, travel experiences, coding projects, and much more!</p>
-    <a href="/blog" class="hero-button">See my blog</a>
+  <h1 class="hero-title">My Site</h1>
+  <p class="hero-description">A short description of what this is about.</p>
+  <a href="/blog" class="hero-button">Read the blog</a>
 </div>
 ```
 
-> [!info]
-> We add specific classes to each element (`hero`, `hero-title`, `hero-description`, `hero-button`) so we can target them individually in our CSS. This makes styling much easier than using generic selectors like `div` or `h1`, and allows us to apply different styles to each component of the hero section without affecting other elements on the page.
-
-> [!important]
-> When using an h1 tag in a custom component (like our hero section), you must explicitly set `display: block !important;` in your CSS. This is required due to how Flowershow Cloud handles page titles internally. You can see this in the `.hero-title` CSS rule below.
-
-3. Commit your changes and sync your site in the Flowershow Cloud dashboard.
-4. Use developer tools to experiment with hero styles like we did earlier.
-5. Once you're satisfied, add the styles to your `custom.css`, for example:
+Then style it in `custom.css`:
 
 ```css
-/* The main welcome section container */
 .hero {
-  background-color: #508484;
-  height: 500px;
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
   text-align: center;
+  padding: 4rem 2rem;
+  background-color: var(--color-accent);
   color: #fff;
-  padding: 0 36px;
 }
 
-/* The main title */
 .hero-title {
-  font-size: 4rem;
-  color: #E35AA6 !important;
-  margin-bottom: 0px;
-  display: block !important;  /* Required for h1 tags in custom components */
+  display: block; /* required when using h1 inside a custom component */
+  font-size: 3rem;
 }
 
-/* The description text */
 .hero-description {
-  font-size: 1.5rem;
-  margin-bottom: 30px;
+  margin-top: 0.5rem;
 }
 
-/* The button style */
 .hero-button {
-  background-color: #fff;
+  margin-top: 1.5rem;
+  padding: 0.6rem 1.4rem;
+  background: #fff;
   color: #333;
-  padding: 10px 20px;
-  border-radius: 5px;
+  border-radius: var(--radius);
   text-decoration: none;
-  font-weight: bold;
-  transition: all 0.3s ease-in-out;
-}
-
-/* What happens when you hover over the button */
-.hero-button:hover {
-  background-color: #D679AC;
-  color: #fff;
+  font-weight: 600;
 }
 ```
 
-The result:
-![[custom-css-4.png]]
+---
 
-## Having Problems?
+## Troubleshooting
 
-If your changes aren't showing up:
+**Changes not showing up?**
 
-1. Make sure you've saved and synced your site
-2. Try clearing your browser's cache (press Ctrl+F5 or Cmd+Shift+R)
-3. Double-check your `custom.css` file is in the right folder
-4. Look at the Developer Tools to see if other styles are overriding yours (you might need to add `!important` to your styles)
+- Make sure `custom.css` is published (committed and synced)
+- Hard-refresh your browser: `Cmd+Shift+R` / `Ctrl+F5`
+- Check that the file is in the correct root directory
 
-> [!tip]
-> Keep the Developer Tools open while you work - it's the easiest way to see what's happening with your styles in real-time!
+**A rule still being overridden?**  
+Open DevTools and check which stylesheet is winning in the Styles panel. In rare cases involving third-party component styles you may need to increase specificity with a more targeted selector rather than `!important`.
