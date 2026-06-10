@@ -2074,10 +2074,11 @@ export const siteRouter = createTRPCRouter({
             sha: z.string().min(1),
           }),
         ),
+        publishMethod: z.string().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const { siteId, files } = input;
+      const { siteId, files, publishMethod = 'drag_drop_dashboard' } = input;
 
       const site = await ctx.db.site.findUnique({
         where: { id: siteId },
@@ -2210,7 +2211,7 @@ export const siteRouter = createTRPCRouter({
         distinctId: ctx.session.user.id,
         event: 'content_published',
         properties: {
-          publish_method: 'drag_drop_dashboard',
+          publish_method: publishMethod,
           site_id: siteId,
         },
       });

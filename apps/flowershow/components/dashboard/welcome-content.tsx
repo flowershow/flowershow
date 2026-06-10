@@ -1,20 +1,27 @@
 'use client';
 
-import { TerminalIcon, UploadIcon } from 'lucide-react';
+import { FileTextIcon, TerminalIcon, UploadIcon } from 'lucide-react';
 import { useState } from 'react';
-
-import { GithubIcon } from '../icons';
 import ObsidianIcon from '@/components/icons/obsidian';
+import { GithubIcon } from '../icons';
 import CliPublishModal from './onboarding/cli-publish-modal';
 import GitHubSyncModal from './onboarding/github-sync-modal';
 import ImportFilesOnboardingModal from './onboarding/import-files-modal';
 import ObsidianPublishModal from './onboarding/obsidian-publish-modal';
+import PasteMarkdownModal from './onboarding/paste-markdown-modal';
 import TemplateModal, {
-  templates,
   type TemplateId,
+  templates,
 } from './onboarding/template-modal';
 
-type ModalType = 'import' | 'github' | 'cli' | 'obsidian' | 'template' | null;
+type ModalType =
+  | 'import'
+  | 'github'
+  | 'cli'
+  | 'obsidian'
+  | 'template'
+  | 'paste'
+  | null;
 
 const options = [
   {
@@ -42,6 +49,13 @@ const options = [
     icon: ({ className }: { className?: string }) => (
       <ObsidianIcon className={className} fill="#8b1bd5" />
     ),
+  },
+  {
+    id: 'paste' as const,
+    title: 'Paste Markdown',
+    description: 'Paste markdown content and publish it instantly.',
+    icon: FileTextIcon,
+    beta: true,
   },
 ];
 
@@ -102,8 +116,13 @@ export default function WelcomeContent({
                 type="button"
                 key={option.id}
                 onClick={() => setActiveModal(option.id)}
-                className="flex flex-col items-center rounded-lg border border-stone-200 p-6 text-center transition-all hover:border-stone-400 hover:shadow-md"
+                className="relative flex flex-col items-center rounded-lg border border-stone-200 p-6 text-center transition-all hover:border-stone-400 hover:shadow-md"
               >
+                {'beta' in option && option.beta && (
+                  <span className="absolute right-2 top-2 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                    Experimental
+                  </span>
+                )}
                 <option.icon className="h-8 w-8 text-stone-600" />
                 <h3 className="mt-3 text-sm font-semibold text-stone-900">
                   {option.title}
@@ -148,6 +167,12 @@ export default function WelcomeContent({
         showModal={activeModal === 'template'}
         setShowModal={(show) => setActiveModal(show ? 'template' : null)}
         initialTemplate={selectedTemplate}
+      />
+      <PasteMarkdownModal
+        siteId={siteId}
+        siteUrl={siteUrl}
+        showModal={activeModal === 'paste'}
+        setShowModal={(show) => setActiveModal(show ? 'paste' : null)}
       />
     </div>
   );
