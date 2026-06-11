@@ -1,0 +1,38 @@
+name: Changelog to Notion
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'content/flowershow-app/changelog/**.md'
+
+jobs:
+  create-content-idea:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install 'notion-client>=3,<4' PyYAML
+
+      - name: Find new changelog files and create Notion entries
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        run: |
+          NEW_FILES=$(git diff --name-only --diff-filter=A HEAD~1 HEAD -- 'content/flowershow-app/changelog/*.md')
+          if [ -z "$NEW_FILES" ]; then
+            echo "No new changelog files found."
+            exit 0
+          fi
+          echo "$NEW_FILES" | while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            echo "Creating Notion entry for: $file"
+            python3 .github/scripts/changelog_to_notion.py "$file"
+          done
