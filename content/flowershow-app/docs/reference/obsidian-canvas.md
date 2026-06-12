@@ -11,7 +11,7 @@ Here's a simple canvas embedded inline in this page:
 
 ![[canvas-demo-v2.canvas]]
 
-You can also view it as a [[canvas-demo.canvas|standalone page]].
+You can also view it as a [[canvas-demo-v2.canvas|standalone page]].
 
 ## How It Works
 
