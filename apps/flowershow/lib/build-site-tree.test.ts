@@ -336,4 +336,49 @@ describe('Site Tree', () => {
     const siteMap = buildSiteTree(blobs, { orderBy: 'title' });
     expect(siteMap).toMatchObject(expectedSiteTree);
   });
+
+  it('includes canvas files, preserving the .canvas extension in the URL and stripping it from the label', () => {
+    const canvasBlobs: any[] = [
+      {
+        path: 'Roadmap.canvas',
+        appPath: 'Roadmap.canvas',
+        permalink: null,
+        metadata: null,
+      },
+      {
+        path: 'notes/architecture.canvas',
+        appPath: 'notes/architecture.canvas',
+        permalink: null,
+        metadata: null,
+      },
+    ];
+
+    const siteMap = buildSiteTree(canvasBlobs, { orderBy: 'title' });
+
+    expect(siteMap).toMatchObject({
+      kind: 'root',
+      children: [
+        {
+          kind: 'dir',
+          name: 'notes',
+          children: [
+            {
+              kind: 'file',
+              label: 'architecture',
+              name: 'architecture.canvas',
+              path: 'notes/architecture.canvas',
+              urlPath: '/notes/architecture.canvas',
+            },
+          ],
+        },
+        {
+          kind: 'file',
+          label: 'Roadmap',
+          name: 'Roadmap.canvas',
+          path: 'Roadmap.canvas',
+          urlPath: '/Roadmap.canvas',
+        },
+      ],
+    });
+  });
 });

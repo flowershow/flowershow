@@ -1057,11 +1057,21 @@ export const siteRouter = createTRPCRouter({
           const blobs = (await ctx.db.blob.findMany({
             where: {
               siteId: site.id,
-              extension: { in: ['md', 'mdx'] },
-              metadata: { not: Prisma.AnyNull }, // metadata must exist
               OR: [
-                { metadata: { path: ['publish'], equals: true } }, // explicitly published
-                { metadata: { path: ['publish'], equals: Prisma.AnyNull } }, // no publish field
+                // Markdown pages: must be processed (metadata present) and
+                // not explicitly unpublished.
+                {
+                  extension: { in: ['md', 'mdx'] },
+                  metadata: { not: Prisma.AnyNull }, // metadata must exist
+                  OR: [
+                    { metadata: { path: ['publish'], equals: true } }, // explicitly published
+                    { metadata: { path: ['publish'], equals: Prisma.AnyNull } }, // no publish field
+                  ],
+                },
+                // Canvas files render as standalone pages, so they appear in
+                // the sidebar nav too. They carry no frontmatter (metadata is
+                // null), but need an appPath to be linkable.
+                { extension: 'canvas', appPath: { not: null } },
               ],
             },
             select: {
@@ -2142,7 +2152,7 @@ export const siteRouter = createTRPCRouter({
             const extension = file.path.split('.').pop()?.toLowerCase() || '';
 
             const urlPath = (() => {
-              if (['md', 'mdx'].includes(extension)) {
+              if (['md', 'mdx', 'canvas'].includes(extension)) {
                 const _urlPath = resolveFilePathToUrlPath({
                   target: file.path,
                 });

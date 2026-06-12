@@ -175,7 +175,7 @@ export async function POST(
           const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
 
           const urlPath = (() => {
-            if (['md', 'mdx'].includes(extension)) {
+            if (['md', 'mdx', 'canvas'].includes(extension)) {
               const _urlPath = resolveFilePathToUrlPath({ target: file.path });
               // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / )
               return _urlPath === '/' ? _urlPath : _urlPath.replace(/^\//, '');
