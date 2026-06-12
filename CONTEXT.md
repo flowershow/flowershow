@@ -34,6 +34,16 @@ _Avoid_: Sync source, publish method, trigger type, client type
 The current state of a site as shown to the user, derived from its latest Publish: `UNPUBLISHED` (no publishes yet), `PENDING` (publish in progress), `SUCCESS` (last publish completed), `ERROR` (last publish failed).
 _Avoid_: Sync status, site status, deployment status
 
+### Links
+
+**Forward link**:
+A reference from one page to another page within the same site — authored as a wikilink (`[[Page]]`), an internal markdown link (`[text](page.md)`), or a page transclusion (`![[Page]]`). References to images or other assets are not links.
+_Avoid_: Outgoing link, reference, citation
+
+**Backlink**:
+The inverse of a forward link — a page that contains a forward link to the current page. "The backlinks of page B" is the set of pages whose forward links resolve to B.
+_Avoid_: Incoming link, inbound link, referrer
+
 ## Example dialogue
 
 > **Dev**: A user says their site shows PENDING even though the publish finished an hour ago.
