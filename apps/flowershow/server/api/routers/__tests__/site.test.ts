@@ -33,7 +33,10 @@ vi.mock('@/lib/server-posthog', () => {
 });
 vi.mock('@/lib/domains', () => ({
   addDomainToVercel: vi.fn(),
-  removeDomainFromVercelProject: vi.fn(),
+  getDomainVariant: vi.fn((domain: string) =>
+    domain.startsWith('www.') ? domain.slice(4) : `www.${domain}`,
+  ),
+  removeDomainAndVariantFromVercelProject: vi.fn(),
   validDomainRegex: /./,
 }));
 vi.mock('@/lib/github', () => ({

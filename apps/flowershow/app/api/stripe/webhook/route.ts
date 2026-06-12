@@ -3,7 +3,7 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
-import { removeDomainFromVercelProject } from '@/lib/domains';
+import { removeDomainAndVariantFromVercelProject } from '@/lib/domains';
 import PostHogClient from '@/lib/server-posthog';
 import { stripe } from '@/lib/stripe';
 import prisma from '@/server/db';
@@ -286,7 +286,7 @@ export async function POST(req: Request) {
               console.log(
                 `🌐 Removing custom domain ${site.customDomain} from Vercel`,
               );
-              await removeDomainFromVercelProject(site.customDomain);
+              await removeDomainAndVariantFromVercelProject(site.customDomain);
             }
 
             await prisma.site.update({

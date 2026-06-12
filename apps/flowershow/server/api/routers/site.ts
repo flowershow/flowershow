@@ -19,7 +19,8 @@ import {
 } from '@/lib/content-store';
 import {
   addDomainToVercel,
-  removeDomainFromVercelProject,
+  getDomainVariant,
+  removeDomainAndVariantFromVercelProject,
   validDomainRegex,
 } from '@/lib/domains';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
@@ -294,7 +295,7 @@ export const siteRouter = createTRPCRouter({
             env.NEXT_PUBLIC_VERCEL_ENV === 'production' &&
             site.customDomain
           ) {
-            await removeDomainFromVercelProject(site.customDomain);
+            await removeDomainAndVariantFromVercelProject(site.customDomain);
           }
         } else {
           if (env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
@@ -314,13 +315,13 @@ export const siteRouter = createTRPCRouter({
             // Provision domain(s) in Vercel (best-effort)
             await Promise.all([
               addDomainToVercel(newDomain),
-              // Optional: add www subdomain as well and redirect to apex domain
-              addDomainToVercel(`www.${newDomain}`),
+              // www ↔ apex variant redirects to the registered domain at Vercel's edge
+              addDomainToVercel(getDomainVariant(newDomain), newDomain),
             ]);
 
             // If the site had a different customDomain before, we need to remove it from Vercel
             if (site.customDomain && site.customDomain !== newDomain) {
-              await removeDomainFromVercelProject(site.customDomain);
+              await removeDomainAndVariantFromVercelProject(site.customDomain);
             }
 
             // Send a delayed email to check if domain is properly configured
@@ -614,7 +615,7 @@ export const siteRouter = createTRPCRouter({
       });
 
       if (site.customDomain && env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
-        await removeDomainFromVercelProject(site.customDomain);
+        await removeDomainAndVariantFromVercelProject(site.customDomain);
       }
 
       await inngest.send({

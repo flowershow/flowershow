@@ -11,7 +11,7 @@ const assertValidDomain = (domain: string) => {
   }
 };
 
-export const addDomainToVercel = async (domain: string) => {
+export const addDomainToVercel = async (domain: string, redirect?: string) => {
   assertValidDomain(domain);
   return await fetch(
     `https://api.vercel.com/v10/projects/${env.PROJECT_ID_VERCEL}/domains${
@@ -25,13 +25,23 @@ export const addDomainToVercel = async (domain: string) => {
       },
       body: JSON.stringify({
         name: domain,
-        // Optional: Redirect www. to root domain
-        // ...(domain.startsWith("www.") && {
-        //   redirect: domain.replace("www.", ""),
-        // }),
+        ...(redirect && { redirect, redirectStatusCode: 301 }),
       }),
     },
   ).then((res) => res.json());
+};
+
+// www.example.com ↔ example.com
+export const getDomainVariant = (domain: string) =>
+  domain.startsWith('www.') ? domain.slice(4) : `www.${domain}`;
+
+export const removeDomainAndVariantFromVercelProject = async (
+  domain: string,
+) => {
+  return await Promise.all([
+    removeDomainFromVercelProject(domain),
+    removeDomainFromVercelProject(getDomainVariant(domain)),
+  ]);
 };
 
 export const removeDomainFromVercelProject = async (domain: string) => {
