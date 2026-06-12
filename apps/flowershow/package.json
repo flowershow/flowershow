@@ -68,7 +68,7 @@
     "hastscript": "^9.0.1",
     "inngest": "^3.54.0",
     "jose": "^6.1.0",
-    "js-cookie": "^3.0.5",
+    "js-cookie": "^3.0.7",
     "jsep": "^1.4.0",
     "jsonwebtoken": "^9.0.3",
     "leaflet": "^1.9.4",
