@@ -318,7 +318,8 @@ function normalizePath(url: URL) {
 // TODO types
 async function fetchSite(req: NextRequest, apiPath: string) {
   try {
-    const res = await fetch(new URL(apiPath, req.nextUrl.origin), {
+    const apiOrigin = `${req.nextUrl.protocol}//${env.NEXT_PUBLIC_ROOT_DOMAIN}`;
+    const res = await fetch(new URL(apiPath, apiOrigin), {
       cache: 'no-store',
     });
     if (!res.ok) throw new Error('Site fetch failed');
