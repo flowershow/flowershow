@@ -172,7 +172,9 @@
   ],
   "contentHide": [
     "/docs/sitemap.md",
-    "/people"
+    "/people",
+    "/docs/reference/canvas-demo.canvas",
+    "/docs/reference/canvas-demo-v2.canvas"
   ],
   "showEditLink": true,
   "redirects": [
