@@ -644,7 +644,7 @@ export const siteRouter = createTRPCRouter({
         ctx,
         input,
       }): Promise<{
-        status: 'UNPUBLISHED' | 'SUCCESS' | 'PENDING' | 'ERROR';
+        status: 'UNPUBLISHED' | 'SUCCESS' | 'PENDING' | 'ERROR' | 'SUPERSEDED';
         error?: string | null;
         lastSyncedAt?: Date | null;
       }> => {
@@ -663,7 +663,13 @@ export const siteRouter = createTRPCRouter({
         const latestPublish = await ctx.db.publish.findFirst({
           where: { siteId: site.id },
           orderBy: { startedAt: 'desc' },
-          select: { id: true, startedAt: true, legacy: true },
+          select: {
+            id: true,
+            startedAt: true,
+            legacy: true,
+            status: true,
+            completedAt: true,
+          },
         });
 
         if (!latestPublish) {
@@ -688,37 +694,20 @@ export const siteRouter = createTRPCRouter({
           return { status: 'SUCCESS', lastSyncedAt: latestPublish.startedAt };
         }
 
-        const publishFiles = await ctx.db.publishFile.findMany({
-          where: { publishId: latestPublish.id },
-          select: { status: true, error: true, path: true },
-        });
+        const lastSyncedAt =
+          latestPublish.completedAt ?? latestPublish.startedAt;
 
-        if (publishFiles.length === 0) {
-          return { status: 'PENDING', lastSyncedAt: latestPublish.startedAt };
+        switch (latestPublish.status) {
+          case 'success':
+            return { status: 'SUCCESS', lastSyncedAt };
+          case 'superseded':
+            return { status: 'SUPERSEDED', lastSyncedAt };
+          case 'error':
+            return { status: 'ERROR', lastSyncedAt };
+          default:
+            // in_progress or finalizing
+            return { status: 'PENDING', lastSyncedAt: latestPublish.startedAt };
         }
-
-        if (publishFiles.some((f) => f.status === 'uploading')) {
-          return { status: 'PENDING', lastSyncedAt: latestPublish.startedAt };
-        }
-
-        const errorFiles = publishFiles.filter((f) => f.status === 'error');
-        if (errorFiles.length > 0) {
-          const error = errorFiles
-            .map((f) =>
-              f.error
-                ? `[${f.path}]: ${f.error}`
-                : `[${f.path}]: Unknown error`,
-            )
-            .join('\n');
-          return {
-            status: 'ERROR',
-            error,
-            lastSyncedAt: latestPublish.startedAt,
-          };
-        }
-
-        // All terminal with no errors (may include canceled files) → SUCCESS
-        return { status: 'SUCCESS', lastSyncedAt: latestPublish.startedAt };
       },
     ),
 
