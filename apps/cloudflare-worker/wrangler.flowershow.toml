@@ -12,6 +12,11 @@ binding = "PUBLISH_WORKFLOW"
 name = "publish-workflow"
 class_name = "PublishWorkflow"
 
+[[workflows]]
+binding = "GITHUB_SYNC_WORKFLOW"
+name = "github-sync-workflow"
+class_name = "GithubSyncWorkflow"
+
 # PRODUCTION
 [env.production.vars]
 ENVIRONMENT = "production"
