@@ -17,6 +17,11 @@ binding = "GITHUB_SYNC_WORKFLOW"
 name = "github-sync-workflow"
 class_name = "GithubSyncWorkflow"
 
+[[workflows]]
+binding = "CUSTOM_DOMAIN_WORKFLOW"
+name = "custom-domain-workflow"
+class_name = "CustomDomainWorkflow"
+
 # PRODUCTION
 [env.production.triggers]
 crons = ["0 3 * * *"]

@@ -6,8 +6,10 @@ import { revalidateTag, unstable_cache } from 'next/cache';
 import { z } from 'zod';
 import { isNavDropdown, SiteConfig } from '@/components/types';
 import { env } from '@/env.mjs';
-import { inngest } from '@/inngest/client';
+import { SiteCreatedEmail } from '@/emails/site-created';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
+import { startCustomDomainWorkflow } from '@/lib/custom-domain-workflow';
+import { sendEmail } from '@/lib/email';
 import { buildSiteTree } from '@/lib/build-site-tree';
 import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
 import {
@@ -211,15 +213,15 @@ export const siteRouter = createTRPCRouter({
 
       if (creator?.email) {
         const siteUrl = `https://${created.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
-        await inngest.send({
-          name: 'email/site-created.send',
-          data: {
-            userId: ctx.session.user.id,
-            email: creator.email,
-            name: creator.name,
+        const siteCreatorName = creator.name?.split(' ')[0] || 'there';
+        await sendEmail({
+          to: creator.email,
+          subject: `Your site "${projectName}" is live!`,
+          react: SiteCreatedEmail({
+            userName: siteCreatorName,
             siteUrl,
             projectName,
-          },
+          }),
         });
       }
 
@@ -326,17 +328,13 @@ export const siteRouter = createTRPCRouter({
               await removeDomainAndVariantFromVercelProject(site.customDomain);
             }
 
-            // Send a delayed email to check if domain is properly configured
+            // Start a delayed workflow to check if domain is properly configured
             if (site.user.email) {
-              await inngest.send({
-                name: 'email/custom-domain.check',
-                data: {
-                  userId: ctx.session.user.id,
-                  email: site.user.email,
-                  name: site.user.name,
-                  domain: newDomain,
-                  siteId: id,
-                },
+              await startCustomDomainWorkflow(`${id}-domain-${Date.now()}`, {
+                email: site.user.email,
+                name: site.user.name,
+                domain: newDomain,
+                siteId: id,
               });
             }
           } else {

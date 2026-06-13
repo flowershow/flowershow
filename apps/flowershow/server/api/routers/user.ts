@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
+import { FeedbackThankYouEmail } from '@/emails/feedback-thank-you';
 import { fetchGitHubScopeRepositories, fetchGitHubScopes } from '@/lib/github';
-import { inngest } from '@/inngest/client';
+import { sendEmail } from '@/lib/email';
 import PostHogClient from '@/lib/server-posthog';
 import {
   createTRPCRouter,
@@ -123,13 +124,11 @@ export const userRouter = createTRPCRouter({
       });
 
       if (user2.email) {
-        await inngest.send({
-          name: 'email/feedback-thank-you.send',
-          data: {
-            userId: ctx.session.user.id,
-            email: user2.email,
-            name: user2.name,
-          },
+        const userName = user2.name?.split(' ')[0] || 'there';
+        await sendEmail({
+          to: user2.email,
+          subject: 'Thanks for your feedback!',
+          react: FeedbackThankYouEmail({ userName }),
         });
       }
 

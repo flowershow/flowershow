@@ -2,8 +2,10 @@ import type { StripeWebhookReceivedResponse } from '@flowershow/api-contract';
 import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
-import { inngest } from '@/inngest/client';
+import { PremiumDowngradeEmail } from '@/emails/premium-downgrade';
+import { PremiumUpgradeEmail } from '@/emails/premium-upgrade';
 import { removeDomainAndVariantFromVercelProject } from '@/lib/domains';
+import { sendEmail } from '@/lib/email';
 import PostHogClient from '@/lib/server-posthog';
 import { stripe } from '@/lib/stripe';
 import prisma from '@/server/db';
@@ -132,14 +134,16 @@ export async function POST(req: Request) {
           });
           await posthog.shutdown();
 
-          // Send premium upgrade + Discord access emails
-          await inngest.send({
-            name: 'email/premium-upgrade.send',
-            data: {
-              userId: updatedSite.userId,
-              email: updatedSite.user.email!,
-              name: updatedSite.user.name,
-            },
+          // Send premium upgrade email
+          const upgradeName = updatedSite.user.name?.split(' ')[0] || 'there';
+          await sendEmail({
+            to: updatedSite.user.email!,
+            subject: "You're now on Flowershow Premium",
+            react: PremiumUpgradeEmail({
+              userName: upgradeName,
+              dashboardUrl: `https://${env.NEXT_PUBLIC_CLOUD_DOMAIN}`,
+              discordInviteUrl: env.DISCORD_PREMIUM_INVITE_URL,
+            }),
           });
 
           console.log(`✅ Checkout session processing completed`);
@@ -262,14 +266,14 @@ export async function POST(req: Request) {
                   })
                 : null;
 
-              await inngest.send({
-                name: 'email/premium-downgrade.send',
-                data: {
-                  userId: dbSubscription.site.userId,
-                  email: user.email,
-                  name: user.name,
+              const downgradeName = user.name?.split(' ')[0] || 'there';
+              await sendEmail({
+                to: user.email,
+                subject: 'Your Flowershow subscription has been cancelled',
+                react: PremiumDowngradeEmail({
+                  userName: downgradeName,
                   extendedEndDate,
-                },
+                }),
               });
             }
           }
