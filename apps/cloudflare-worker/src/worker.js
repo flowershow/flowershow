@@ -12,6 +12,7 @@ import {
   parseMarkdownForSync,
   parseObjectKey,
 } from './processing-utils.js';
+import { checkPublishCompletion } from './publish-completion.js';
 
 // --- CONFIGURATION & VALIDATION ---
 const REQUIRED_ENV_VARS = ['DATABASE_URL'];
@@ -281,6 +282,14 @@ async function processFile({
   }
 }
 
+async function notifyWorkflowIfComplete(sql, publishId) {
+  const won = await checkPublishCompletion(sql, publishId);
+  if (won) {
+    console.log(`publish-complete: ${publishId}`);
+    // TODO Step 3: env.PUBLISH_WORKFLOW.get(publishId).sendEvent('publish-complete', {})
+  }
+}
+
 // --- POSTHOG ERROR REPORTING ---
 async function captureError(env, properties) {
   if (!env.POSTHOG_KEY) return;
@@ -338,10 +347,12 @@ async function handleMessage({ msg, storage, sql, typesense, env }) {
           source: 'worker_non_markdown',
         });
       }
+      if (publishId) await notifyWorkflowIfComplete(sql, publishId);
       return msg.ack();
     }
 
     await processFile({ storage, sql, typesense, siteId, branch, path, publishId });
+    if (publishId) await notifyWorkflowIfComplete(sql, publishId);
     msg.ack();
   } catch (err) {
     const rawKey = msg.body.object.key;
