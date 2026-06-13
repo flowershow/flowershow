@@ -30,6 +30,10 @@ crons = ["0 3 * * *"]
 #                  wrangler secret put GITHUB_APP_PRIVATE_KEY --env production
 # GITHUB_APP_PRIVATE_KEY must be base64-encoded PEM: base64 -w0 < github-app-private-key.pem
 # (PKCS#1 or PKCS#8 — github-api.js auto-converts PKCS#1 at runtime)
+#
+# Custom domain workflow secrets:
+#   wrangler secret put NEXT_APP_URL --env production      # e.g. https://app.flowershow.app
+#   wrangler secret put INTERNAL_API_SECRET --env production  # must match Next.js INTERNAL_API_SECRET
 
 [env.production.vars]
 ENVIRONMENT = "production"
