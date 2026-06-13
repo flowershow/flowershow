@@ -47,6 +47,10 @@ vi.mock('@/lib/content-store', () => ({
   deleteProject: vi.fn(),
   fetchFile: vi.fn(),
 }));
+vi.mock('@/lib/typesense', () => ({ deleteSiteCollection: vi.fn() }));
+vi.mock('@/lib/github-sync-workflow', () => ({
+  startGithubSyncWorkflow: vi.fn(),
+}));
 
 // ── Imports ───────────────────────────────────────────────────────
 

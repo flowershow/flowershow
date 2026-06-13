@@ -598,7 +598,7 @@ async function handlePushEvent(data: WebhookPayload) {
     const branch = ref.replace('refs/heads/', '');
     const ghInstallationId = BigInt(installation.id);
 
-    // Look up a DB installation record to get the CUID for inngest token resolution
+    // Look up the DB installation record to get the CUID (installationDbId for GithubSyncWorkflow)
     const dbInstallation = await prisma.gitHubInstallation.findFirst({
       where: { installationId: ghInstallationId },
       select: { id: true },

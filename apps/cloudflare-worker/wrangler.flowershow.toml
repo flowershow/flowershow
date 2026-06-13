@@ -21,6 +21,11 @@ class_name = "GithubSyncWorkflow"
 [env.production.triggers]
 crons = ["0 3 * * *"]
 
+# Secrets set via: wrangler secret put GITHUB_APP_ID --env production
+#                  wrangler secret put GITHUB_APP_PRIVATE_KEY --env production
+# GITHUB_APP_PRIVATE_KEY must be base64-encoded PEM: base64 -w0 < github-app-private-key.pem
+# (PKCS#1 or PKCS#8 — github-api.js auto-converts PKCS#1 at runtime)
+
 [env.production.vars]
 ENVIRONMENT = "production"
 POSTHOG_HOST = "https://eu.i.posthog.com"

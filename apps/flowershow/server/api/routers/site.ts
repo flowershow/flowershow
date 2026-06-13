@@ -25,6 +25,7 @@ import {
 } from '@/lib/domains';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { checkIfBranchExists } from '@/lib/github';
+import { startGithubSyncWorkflow } from '@/lib/github-sync-workflow';
 import { isEmoji } from '@/lib/is-emoji';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
@@ -36,6 +37,7 @@ import {
 } from '@/lib/site-config';
 import { siteKeyBytes } from '@/lib/site-hmac-key';
 import { buildSiteSubdomain } from '@/lib/site-subdomain';
+import { deleteSiteCollection } from '@/lib/typesense';
 import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
 import {
   createTRPCRouter,
@@ -353,18 +355,22 @@ export const siteRouter = createTRPCRouter({
           data: { rootDir: newRoot },
         });
         await deleteProject(id).catch(() => {}); // TODO handle it in a better way
-        if (repoFullName && site.ghBranch) {
-          await inngest.send({
-            name: 'site/sync',
-            data: {
-              siteId: id,
-              ghRepository: repoFullName,
-              ghBranch: site.ghBranch,
-              rootDir: newRoot,
-              accessToken: ctx.session.accessToken,
-              installationId:
-                site.installationRepository?.installationId ?? undefined,
-            },
+        if (
+          repoFullName &&
+          site.ghBranch &&
+          site.installationRepository?.installationId
+        ) {
+          const publish = await ctx.db.publish.create({
+            data: { siteId: id, source: 'github_webhook' },
+            select: { id: true },
+          });
+          await startGithubSyncWorkflow({
+            publishId: publish.id,
+            siteId: id,
+            ghRepository: repoFullName,
+            ghBranch: site.ghBranch,
+            rootDir: newRoot ?? undefined,
+            installationDbId: site.installationRepository.installationId,
           });
         }
       } else {
@@ -380,21 +386,21 @@ export const siteRouter = createTRPCRouter({
         if (
           repoFullName &&
           site.ghBranch &&
+          site.installationRepository?.installationId &&
           key === 'enableSearch' &&
           converted === true
         ) {
-          await inngest.send({
-            name: 'site/sync',
-            data: {
-              siteId: id,
-              ghRepository: repoFullName,
-              ghBranch: site.ghBranch,
-              rootDir: site.rootDir,
-              accessToken: ctx.session.accessToken,
-              installationId:
-                site.installationRepository?.installationId ?? undefined,
-              forceSync: true,
-            },
+          const publish = await ctx.db.publish.create({
+            data: { siteId: id, source: 'github_webhook' },
+            select: { id: true },
+          });
+          await startGithubSyncWorkflow({
+            publishId: publish.id,
+            siteId: id,
+            ghRepository: repoFullName,
+            ghBranch: site.ghBranch,
+            rootDir: site.rootDir ?? undefined,
+            installationDbId: site.installationRepository.installationId,
           });
         }
       }
@@ -618,13 +624,8 @@ export const siteRouter = createTRPCRouter({
         await removeDomainAndVariantFromVercelProject(site.customDomain);
       }
 
-      await inngest.send({
-        name: 'site/delete',
-        data: {
-          siteId: site.id,
-          accessToken: ctx.session.accessToken,
-        },
-      });
+      await deleteProject(site.id);
+      await deleteSiteCollection(site.id);
 
       const posthog = PostHogClient();
       posthog.capture({
