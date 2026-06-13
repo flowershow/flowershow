@@ -1,3 +1,5 @@
+[![skills.sh](https://skills.sh/b/flowershow/flowershow)](https://skills.sh/flowershow/flowershow)
+
 # Flowershow 💐
 
 > ## Publish markdown quickly and easily - for docs, knowledgebases, websites and more
