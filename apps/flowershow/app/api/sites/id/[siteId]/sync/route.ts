@@ -13,6 +13,7 @@ import {
   getContentType,
 } from '@/lib/content-store';
 import { log, SeverityNumber } from '@/lib/otel-logger';
+import { startPublishWorkflow } from '@/lib/publish-workflow';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import PostHogClient from '@/lib/server-posthog';
 import { ensureSiteCollection } from '@/lib/typesense';
@@ -289,6 +290,7 @@ export async function POST(
         },
       });
       publishId = publish.id;
+      await startPublishWorkflow(publish.id);
 
       const previousPublishIds = await prisma.publish.findMany({
         where: { siteId, id: { not: publish.id } },

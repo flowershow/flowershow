@@ -1,11 +1,16 @@
 name = "flowershow-markdown-worker"
-main = "src/worker.js"
+main = "src/index.js"
 compatibility_date = "2024-03-18"
 compatibility_flags = ["nodejs_compat"]
 
 [observability]
 enabled = true
 head_sampling_rate = 1
+
+[[workflows]]
+binding = "PUBLISH_WORKFLOW"
+name = "publish-workflow"
+class_name = "PublishWorkflow"
 
 # PRODUCTION
 [env.production.vars]

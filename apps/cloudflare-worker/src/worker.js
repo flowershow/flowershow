@@ -282,11 +282,15 @@ async function processFile({
   }
 }
 
-async function notifyWorkflowIfComplete(sql, publishId) {
+async function notifyWorkflowIfComplete(sql, publishId, env) {
   const won = await checkPublishCompletion(sql, publishId);
   if (won) {
-    console.log(`publish-complete: ${publishId}`);
-    // TODO Step 3: env.PUBLISH_WORKFLOW.get(publishId).sendEvent('publish-complete', {})
+    if (env.PUBLISH_WORKFLOW) {
+      const instance = await env.PUBLISH_WORKFLOW.get(publishId);
+      await instance.sendEvent({ type: 'publish-complete', payload: {} });
+    } else {
+      console.log(`publish-complete: ${publishId}`);
+    }
   }
 }
 
@@ -347,12 +351,20 @@ async function handleMessage({ msg, storage, sql, typesense, env }) {
           source: 'worker_non_markdown',
         });
       }
-      if (publishId) await notifyWorkflowIfComplete(sql, publishId);
+      if (publishId) await notifyWorkflowIfComplete(sql, publishId, env);
       return msg.ack();
     }
 
-    await processFile({ storage, sql, typesense, siteId, branch, path, publishId });
-    if (publishId) await notifyWorkflowIfComplete(sql, publishId);
+    await processFile({
+      storage,
+      sql,
+      typesense,
+      siteId,
+      branch,
+      path,
+      publishId,
+    });
+    if (publishId) await notifyWorkflowIfComplete(sql, publishId, env);
     msg.ack();
   } catch (err) {
     const rawKey = msg.body.object.key;

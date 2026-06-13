@@ -18,6 +18,7 @@ import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
+import { startPublishWorkflow } from '@/lib/publish-workflow';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import PostHogClient from '@/lib/server-posthog';
 import { ensureSiteCollection } from '@/lib/typesense';
@@ -155,7 +156,7 @@ export async function POST(
 
     const isLegacy = isLegacyPublishClient(request);
 
-    // Create Publish record
+    // Create Publish record and start Workflow lifecycle
     const publish = await prisma.publish.create({
       data: {
         siteId,
@@ -163,6 +164,7 @@ export async function POST(
         legacy: isLegacy,
       },
     });
+    await startPublishWorkflow(publish.id);
 
     let uploadUrls: UploadTarget[];
     try {

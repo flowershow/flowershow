@@ -2,7 +2,7 @@ import {
   AnonPublishRequestSchema,
   type AnonPublishResponse,
 } from '@flowershow/api-contract';
-import { Prisma } from '@prisma/client';
+import { Prisma, PublishSource } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   ANONYMOUS_USER_ID,
@@ -13,6 +13,7 @@ import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
+import { startPublishWorkflow } from '@/lib/publish-workflow';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import PostHogClient from '@/lib/server-posthog';
@@ -180,7 +181,13 @@ export async function POST(request: NextRequest) {
     // Ensure Typesense collection exists for search indexing
     await ensureSiteCollection(site.id);
 
-    // Create blob records and generate upload URLs for all files
+    // Create Publish record and start Workflow lifecycle
+    const publish = await prisma.publish.create({
+      data: { siteId: site.id, source: PublishSource.anonymous },
+    });
+    const presignedUrlExpiresAt = new Date(Date.now() + 3600 * 1000);
+
+    // Create blob records, PublishFile rows, and generate upload URLs
     const fileUploads: FileUploadInfo[] = [];
 
     for (let i = 0; i < files.length; i++) {
@@ -211,13 +218,24 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Generate presigned upload URL
+      await prisma.publishFile.create({
+        data: {
+          publishId: publish.id,
+          path: file.fileName,
+          changeType: 'added',
+          status: 'uploading',
+          presignedUrlExpiresAt,
+        },
+      });
+
       const s3Key = `${site.id}/main/raw/${file.fileName}`;
       const contentType = getContentType(extension);
       const uploadUrl = await generatePresignedUploadUrl(
         s3Key,
-        3600, // 1 hour expiry
+        3600,
         contentType,
+        { 'publish-id': publish.id },
+        new Set(['x-amz-meta-publish-id']),
       );
 
       fileUploads.push({
@@ -225,6 +243,8 @@ export async function POST(request: NextRequest) {
         uploadUrl,
       });
     }
+
+    await startPublishWorkflow(publish.id);
 
     // Construct live URL
     const liveUrl = `/@anon/${projectName}`;
