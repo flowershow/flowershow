@@ -37,7 +37,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { inngest } from '../inngest/client';
+import { startGithubSyncWorkflow } from '../lib/github-sync-workflow';
 
 const prisma = new PrismaClient();
 
@@ -188,19 +188,30 @@ async function main() {
         console.log();
         successCount++;
       } else {
-        // Send sync event to Inngest with forceSync flag
-        await inngest.send({
-          name: 'site/sync',
-          data: {
-            siteId: site.id,
-            ghRepository: repoFullName,
-            ghBranch: site.ghBranch,
-            rootDir: site.rootDir || null,
-            accessToken: githubAccount?.access_token ?? undefined,
-            installationId:
-              site.installationRepository?.installationId ?? undefined,
-            forceSync: true,
-          },
+        const installationDbId = site.installationRepository?.installationId;
+        if (!installationDbId) {
+          console.log(
+            `⚠️  Skipping ${siteIdentifier}: OAuth-only sites are not supported by CF Workflow sync`,
+          );
+          errorCount++;
+          errors.push({
+            site: siteIdentifier,
+            error: 'OAuth-only site — requires GitHub App installation',
+          });
+          continue;
+        }
+
+        const publish = await prisma.publish.create({
+          data: { siteId: site.id, source: 'github_webhook' },
+          select: { id: true },
+        });
+        await startGithubSyncWorkflow({
+          publishId: publish.id,
+          siteId: site.id,
+          ghRepository: repoFullName,
+          ghBranch: site.ghBranch,
+          rootDir: site.rootDir || undefined,
+          installationDbId,
         });
 
         console.log(`✓ Triggered force sync for: ${siteIdentifier}`);

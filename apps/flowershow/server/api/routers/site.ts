@@ -2027,18 +2027,21 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      // Trigger initial sync
-      await inngest.send({
-        name: 'site/sync',
-        data: {
+      // Trigger initial sync (GitHub App only — OAuth sites have no CF Workflow path)
+      if (verifiedInstallationId) {
+        const publish = await ctx.db.publish.create({
+          data: { siteId, source: 'github_webhook' },
+          select: { id: true },
+        });
+        await startGithubSyncWorkflow({
+          publishId: publish.id,
           siteId,
           ghRepository,
           ghBranch,
-          rootDir: rootDir || null,
-          accessToken: ctx.session.accessToken,
-          installationId: verifiedInstallationId,
-        },
-      });
+          rootDir: rootDir || undefined,
+          installationDbId: verifiedInstallationId,
+        });
+      }
 
       // Analytics
       const posthog = PostHogClient();
