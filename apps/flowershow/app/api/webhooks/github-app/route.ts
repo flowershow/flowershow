@@ -2,11 +2,11 @@ import type { SuccessResponse } from '@flowershow/api-contract';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
-import { inngest } from '@/inngest/client';
 import {
   clearInstallationTokenCache,
   getInstallationToken,
 } from '@/lib/github';
+import { startGithubSyncWorkflow } from '@/lib/github-sync-workflow';
 import { log, SeverityNumber } from '@/lib/otel-logger';
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
@@ -650,23 +650,30 @@ async function handlePushEvent(data: WebhookPayload) {
     const gitCommitMessage = data.head_commit?.message ?? null;
 
     const syncResults = await Promise.allSettled(
-      sites.map((site) =>
-        inngest.send({
-          name: 'site/sync',
+      sites.map(async (site) => {
+        const publish = await prisma.publish.create({
           data: {
             siteId: site.id,
-            // Prefer the webhook's current repo name (always up-to-date) over the
-            // potentially-stale Site.ghRepository column.
-            ghRepository: repository.full_name,
-            ghBranch: site.ghBranch!,
-            rootDir: site.rootDir,
-            installationId:
-              site.installationRepository?.installationId ?? dbInstallation.id,
-            gitCommitSha,
-            gitCommitMessage,
+            source: 'github_webhook',
+            ...(gitCommitSha && { gitCommitSha }),
+            ...(gitCommitMessage && { gitCommitMessage }),
           },
-        }),
-      ),
+          select: { id: true },
+        });
+        await startGithubSyncWorkflow({
+          publishId: publish.id,
+          siteId: site.id,
+          // Prefer the webhook's current repo name (always up-to-date) over the
+          // potentially-stale Site.ghRepository column.
+          ghRepository: repository.full_name,
+          ghBranch: site.ghBranch ?? branch,
+          rootDir: site.rootDir ?? undefined,
+          installationDbId:
+            site.installationRepository?.installationId ?? dbInstallation.id,
+          gitCommitSha: gitCommitSha ?? undefined,
+          gitCommitMessage: gitCommitMessage ?? undefined,
+        });
+      }),
     );
 
     const failedSyncs = syncResults
