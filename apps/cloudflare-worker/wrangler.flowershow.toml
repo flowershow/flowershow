@@ -18,6 +18,9 @@ name = "github-sync-workflow"
 class_name = "GithubSyncWorkflow"
 
 # PRODUCTION
+[env.production.triggers]
+crons = ["0 3 * * *"]
+
 [env.production.vars]
 ENVIRONMENT = "production"
 POSTHOG_HOST = "https://eu.i.posthog.com"
@@ -33,6 +36,9 @@ binding = "BUCKET"
 bucket_name = "flowershow-cloud"
 
 # STAGING
+[env.staging.triggers]
+crons = ["0 3 * * *"]
+
 [env.staging.vars]
 ENVIRONMENT = "staging"
 POSTHOG_HOST = "https://eu.i.posthog.com"

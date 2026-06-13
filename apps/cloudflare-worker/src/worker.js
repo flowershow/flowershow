@@ -6,13 +6,14 @@ import {
 } from '@aws-sdk/client-s3';
 import postgres from 'postgres';
 import { Client } from 'typesense';
+import { cleanupExpiredSites } from './cleanup-expired-sites.js';
+import { checkPublishCompletion } from './publish-completion.js';
 import {
   extractImageDimensions,
   isSupportedImagePath,
   parseMarkdownForSync,
   parseObjectKey,
 } from './processing-utils.js';
-import { checkPublishCompletion } from './publish-completion.js';
 
 // --- CONFIGURATION & VALIDATION ---
 const REQUIRED_ENV_VARS = ['DATABASE_URL'];
@@ -438,5 +439,14 @@ export default {
         handleMessage({ msg, storage, sql, typesense, env }),
       ),
     );
+  },
+
+  // Cron trigger — daily at 3 AM UTC (configured in wrangler.flowershow.toml)
+  async scheduled(_event, env, _ctx) {
+    validateEnv(env);
+    const sql = getPostgresClient(env);
+    const typesense = getTypesenseClient(env);
+    await cleanupExpiredSites(sql, env.BUCKET ?? null, typesense);
+    await sql.end();
   },
 };
