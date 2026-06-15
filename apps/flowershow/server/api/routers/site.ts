@@ -28,6 +28,7 @@ import {
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { checkIfBranchExists } from '@/lib/github';
 import { startGithubSyncWorkflow } from '@/lib/github-sync-workflow';
+import { startPublishWorkflow } from '@/lib/publish-workflow';
 import { isEmoji } from '@/lib/is-emoji';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
@@ -2207,6 +2208,8 @@ export const siteRouter = createTRPCRouter({
       } finally {
         revalidateTag(siteId);
       }
+
+      await startPublishWorkflow(publish.id, siteId);
 
       const posthog = await PostHogClient();
       posthog.capture({

@@ -115,6 +115,24 @@ async function updatePublishFile(sql, publishId, path, status, errorMsg) {
   }
 }
 
+async function ensureTypesenseCollection(typesense, siteId) {
+  try {
+    await typesense.collections().create({
+      name: `${siteId}`,
+      fields: [
+        { name: 'title', type: 'string', facet: false },
+        { name: 'content', type: 'string', facet: false },
+        { name: 'path', type: 'string', facet: false },
+        { name: 'description', type: 'string', facet: false, optional: true },
+        { name: 'authors', type: 'string[]', facet: false, optional: true },
+        { name: 'date', type: 'int64', facet: false, optional: true },
+      ],
+    });
+  } catch (err) {
+    if (err?.httpStatus !== 409) throw err; // 409 = already exists
+  }
+}
+
 async function indexInTypesense({
   typesense,
   siteId,
@@ -125,7 +143,6 @@ async function indexInTypesense({
 }) {
   if (!typesense) return;
   try {
-    // Create document for indexing
     const document = {
       title: metadata.title,
       content: body,
@@ -133,13 +150,18 @@ async function indexInTypesense({
       description: metadata.description,
       authors: metadata.authors,
       date: metadata.date ? new Date(metadata.date).getTime() / 1000 : null,
-      id: `${blobId}`, // Unique ID for the document
+      id: `${blobId}`,
     };
-
-    // Index the document
-    await typesense.collections(siteId).documents().upsert(document);
-  } catch {
-    console.error(`Failed indexing document: ${`${siteId} - ${path}`}`);
+    try {
+      await typesense.collections(siteId).documents().upsert(document);
+    } catch (err) {
+      if (err?.httpStatus !== 404) throw err;
+      // Collection not yet created by the Workflow (race condition) — create and retry.
+      await ensureTypesenseCollection(typesense, siteId);
+      await typesense.collections(siteId).documents().upsert(document);
+    }
+  } catch (err) {
+    console.error(`Failed indexing document: ${`${siteId} - ${path}`}`, err);
   }
 }
 
@@ -285,13 +307,18 @@ async function processFile({
 
 async function notifyWorkflowIfComplete(sql, publishId, env) {
   const won = await checkPublishCompletion(sql, publishId);
-  if (won) {
-    if (env.PUBLISH_WORKFLOW) {
-      const instance = await env.PUBLISH_WORKFLOW.get(publishId);
-      await instance.sendEvent({ type: 'publish-complete', payload: {} });
-    } else {
-      console.log(`publish-complete: ${publishId}`);
-    }
+
+  if (!won) {
+    // checkPublishCompletion only wins when status is 'in_progress'.
+    // If a prior sendEvent attempt failed after it set the status to 'finalizing',
+    // the event was never delivered. Allow a retry in that case.
+    const rows = await sql`SELECT status FROM "Publish" WHERE id = ${publishId} LIMIT 1`;
+    if (rows[0]?.status !== 'finalizing') return;
+  }
+
+  if (env.PUBLISH_WORKFLOW) {
+    const instance = await env.PUBLISH_WORKFLOW.get(publishId);
+    await instance.sendEvent({ type: 'publish-complete', payload: {} });
   }
 }
 
@@ -423,6 +450,29 @@ export default {
     if (url.pathname === '/health') {
       return new Response('OK', { status: 200 });
     }
+
+    if (request.method === 'POST' && url.pathname === '/internal/workflows/publish/start') {
+      const secret = env.INTERNAL_API_SECRET;
+      if (!secret || request.headers.get('Authorization') !== `Bearer ${secret}`) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+      if (!env.PUBLISH_WORKFLOW) {
+        return new Response('Workflow binding not available', { status: 503 });
+      }
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return new Response('Invalid JSON', { status: 400 });
+      }
+      const { publishId, siteId } = body;
+      if (!publishId || !siteId) {
+        return new Response('Missing publishId or siteId', { status: 400 });
+      }
+      await env.PUBLISH_WORKFLOW.create({ id: publishId, params: { publishId, siteId } });
+      return new Response('OK', { status: 200 });
+    }
+
     return new Response('Not Found', { status: 404 });
   },
 

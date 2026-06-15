@@ -290,7 +290,7 @@ export async function POST(
         },
       });
       publishId = publish.id;
-      await startPublishWorkflow(publish.id);
+      await startPublishWorkflow(publish.id, siteId);
 
       const previousPublishIds = await prisma.publish.findMany({
         where: { siteId, id: { not: publish.id } },

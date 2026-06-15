@@ -1,5 +1,6 @@
 import { WorkflowEntrypoint } from 'cloudflare:workers';
 import postgres from 'postgres';
+import { Client as TypesenseClient } from 'typesense';
 import { checkPublishCompletion } from './publish-completion.js';
 import {
   finalizePublishSuccess,
@@ -40,11 +41,43 @@ function getPostgresClient(env) {
   });
 }
 
+function getTypesenseClient(env) {
+  if (!env.TYPESENSE_API_KEY || !env.TYPESENSE_HOST) return null;
+  return new TypesenseClient({
+    nodes: [{ host: env.TYPESENSE_HOST, port: Number.parseInt(env.TYPESENSE_PORT, 10), protocol: env.TYPESENSE_PROTOCOL }],
+    apiKey: env.TYPESENSE_API_KEY,
+    connectionTimeoutSeconds: 2,
+  });
+}
+
+async function ensureTypesenseCollection(typesense, siteId) {
+  if (!typesense) return;
+  try {
+    await typesense.collections().create({
+      name: `${siteId}`,
+      fields: [
+        { name: 'title', type: 'string', facet: false },
+        { name: 'content', type: 'string', facet: false },
+        { name: 'path', type: 'string', facet: false },
+        { name: 'description', type: 'string', facet: false, optional: true },
+        { name: 'authors', type: 'string[]', facet: false, optional: true },
+        { name: 'date', type: 'int64', facet: false, optional: true },
+      ],
+    });
+  } catch (err) {
+    if (err?.httpStatus !== 409) throw err; // 409 = already exists
+  }
+}
+
 // ─── Presigned-path Workflow (CLI, Obsidian, dashboard, anonymous) ────────────
 
 export class PublishWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
-    const { publishId } = event.payload;
+    const { publishId, siteId } = event.payload;
+
+    await step.do('ensure-typesense-collection', async () => {
+      await ensureTypesenseCollection(getTypesenseClient(this.env), siteId);
+    });
 
     const result = await step.waitForEvent('publish-complete', {
       type: 'publish-complete',
@@ -128,7 +161,12 @@ export class GithubSyncWorkflow extends WorkflowEntrypoint {
       });
     }
 
-    // ── Step 2: get a fresh installation token ────────────────────────────────
+    // ── Step 2: ensure Typesense collection exists ────────────────────────────
+    await step.do('ensure-typesense-collection', async () => {
+      await ensureTypesenseCollection(getTypesenseClient(this.env), siteId);
+    });
+
+    // ── Step 3: get a fresh installation token ────────────────────────────────
     const token = await step.do('get-installation-token', async () => {
       const sql = getPostgresClient(this.env);
       try {
@@ -143,7 +181,7 @@ export class GithubSyncWorkflow extends WorkflowEntrypoint {
       }
     });
 
-    // ── Step 3: fetch site config (includes/excludes) from GitHub ─────────────
+    // ── Step 4: fetch site config (includes/excludes) from GitHub ─────────────
     const { contentInclude: includes = [], contentExclude: excludes = [] } =
       await step.do('fetch-site-config', async () => {
         try {

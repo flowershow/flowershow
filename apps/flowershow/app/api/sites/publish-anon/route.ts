@@ -244,7 +244,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    await startPublishWorkflow(publish.id);
+    await startPublishWorkflow(publish.id, site.id);
 
     // Construct live URL
     const liveUrl = `/@anon/${projectName}`;

@@ -164,7 +164,7 @@ export async function POST(
         legacy: isLegacy,
       },
     });
-    await startPublishWorkflow(publish.id);
+    await startPublishWorkflow(publish.id, siteId);
 
     let uploadUrls: UploadTarget[];
     try {
