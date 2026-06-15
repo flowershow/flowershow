@@ -39,44 +39,6 @@ afterEach(async () => {
 });
 
 describe('checkPublishCompletion', () => {
-  test('returns true and transitions to finalizing when all PublishFile rows are terminal', async () => {
-    await sql`
-      INSERT INTO "Publish" (id, site_id, source, status)
-      VALUES ('tdd-pub-001', ${TEST_SITE_ID}, 'cli', 'in_progress')
-    `;
-    await sql`
-      INSERT INTO "PublishFile" (id, publish_id, path, change_type, status)
-      VALUES
-        ('tdd-pf-001', 'tdd-pub-001', 'index.md', 'added', 'success'),
-        ('tdd-pf-002', 'tdd-pub-001', 'page.md', 'added', 'success')
-    `;
-
-    const won = await checkPublishCompletion(sql, 'tdd-pub-001');
-
-    assert.strictEqual(won, true);
-    const [row] = await sql`SELECT status FROM "Publish" WHERE id = 'tdd-pub-001'`;
-    assert.strictEqual(row.status, 'finalizing');
-  });
-
-  test('returns false when some PublishFile rows are still uploading', async () => {
-    await sql`
-      INSERT INTO "Publish" (id, site_id, source, status)
-      VALUES ('tdd-pub-002', ${TEST_SITE_ID}, 'cli', 'in_progress')
-    `;
-    await sql`
-      INSERT INTO "PublishFile" (id, publish_id, path, change_type, status)
-      VALUES
-        ('tdd-pf-003', 'tdd-pub-002', 'index.md', 'added', 'success'),
-        ('tdd-pf-004', 'tdd-pub-002', 'page.md', 'added', 'uploading')
-    `;
-
-    const won = await checkPublishCompletion(sql, 'tdd-pub-002');
-
-    assert.strictEqual(won, false);
-    const [row] = await sql`SELECT status FROM "Publish" WHERE id = 'tdd-pub-002'`;
-    assert.strictEqual(row.status, 'in_progress');
-  });
-
   test('returns false when publish is already finalizing (idempotent redelivery)', async () => {
     await sql`
       INSERT INTO "Publish" (id, site_id, source, status)

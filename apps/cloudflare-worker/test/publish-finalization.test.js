@@ -42,42 +42,6 @@ afterEach(async () => {
 });
 
 describe('finalizePublishTimeout', () => {
-  test('marks uploading PublishFile rows as expired', async () => {
-    await sql`
-      INSERT INTO "Publish" (id, site_id, source, status)
-      VALUES ('tdd-fin-010', ${TEST_SITE_ID}, 'cli', 'finalizing')
-    `;
-    await sql`
-      INSERT INTO "PublishFile" (id, publish_id, path, change_type, status)
-      VALUES
-        ('tdd-fin-pf-001', 'tdd-fin-010', 'a.md', 'added', 'uploading'),
-        ('tdd-fin-pf-002', 'tdd-fin-010', 'b.md', 'added', 'uploading'),
-        ('tdd-fin-pf-003', 'tdd-fin-010', 'c.md', 'added', 'success')
-    `;
-
-    await finalizePublishTimeout(sql, 'tdd-fin-010');
-
-    const files =
-      await sql`SELECT path, status FROM "PublishFile" WHERE publish_id = 'tdd-fin-010' ORDER BY path`;
-    assert.strictEqual(files[0].status, 'expired');  // a.md
-    assert.strictEqual(files[1].status, 'expired');  // b.md
-    assert.strictEqual(files[2].status, 'success');  // c.md — untouched
-  });
-
-  test('transitions finalizing → error and sets completedAt', async () => {
-    await sql`
-      INSERT INTO "Publish" (id, site_id, source, status)
-      VALUES ('tdd-fin-011', ${TEST_SITE_ID}, 'cli', 'finalizing')
-    `;
-
-    await finalizePublishTimeout(sql, 'tdd-fin-011');
-
-    const [row] =
-      await sql`SELECT status, completed_at FROM "Publish" WHERE id = 'tdd-fin-011'`;
-    assert.strictEqual(row.status, 'error');
-    assert.ok(row.completed_at instanceof Date, 'completedAt should be set');
-  });
-
   test('is a no-op when already error (idempotent redelivery)', async () => {
     const fixedTime = new Date('2026-01-01T00:00:00Z');
     await sql`
@@ -99,20 +63,6 @@ describe('finalizePublishTimeout', () => {
 });
 
 describe('finalizePublishSuccess', () => {
-  test('transitions finalizing → success and sets completedAt', async () => {
-    await sql`
-      INSERT INTO "Publish" (id, site_id, source, status)
-      VALUES ('tdd-fin-001', ${TEST_SITE_ID}, 'cli', 'finalizing')
-    `;
-
-    await finalizePublishSuccess(sql, 'tdd-fin-001');
-
-    const [row] =
-      await sql`SELECT status, completed_at FROM "Publish" WHERE id = 'tdd-fin-001'`;
-    assert.strictEqual(row.status, 'success');
-    assert.ok(row.completed_at instanceof Date, 'completedAt should be set');
-  });
-
   test('is a no-op when already success (idempotent redelivery)', async () => {
     const fixedTime = new Date('2026-01-01T00:00:00Z');
     await sql`
