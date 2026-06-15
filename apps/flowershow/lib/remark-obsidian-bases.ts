@@ -538,6 +538,11 @@ function compileExpressionToPrisma(
       }
     }
 
+    // Strip leading slash — DB paths are stored without one
+    if (folder.startsWith('/')) {
+      folder = folder.slice(1);
+    }
+
     // Empty folder means match all files (e.g. inFolder("") or inFolder("/"))
     if (folder === '' || folder === '/') {
       return {};
