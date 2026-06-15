@@ -16,8 +16,8 @@ S3_FORCE_PATH_STYLE=true
 # Optional S3 settings
 S3_REGION=us-east-1  # Defaults to us-east-1 for MinIO if not set
 
-# Worker → Next.js internal callbacks (used when the worker calls /api/internal/* routes)
-# NEXT_APP_URL: base URL of the Next.js app (e.g. https://app.flowershow.app)
-# INTERNAL_API_SECRET: must match INTERNAL_API_SECRET in the Next.js app
+# Worker ↔ Next.js internal callbacks (both directions share the same secret)
+# NEXT_APP_URL: base URL of Next.js app (worker → Next.js direction)
+# INTERNAL_API_SECRET: must match INTERNAL_API_SECRET in the Next.js app (both directions)
 # NEXT_APP_URL=http://localhost:3000
-# INTERNAL_API_SECRET=your-random-secret-here
+INTERNAL_API_SECRET=your-random-secret-here

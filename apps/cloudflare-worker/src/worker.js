@@ -8,6 +8,7 @@ import postgres from 'postgres';
 import { Client } from 'typesense';
 import { cleanupExpiredSites } from './cleanup-expired-sites.js';
 import { checkPublishCompletion } from './publish-completion.js';
+import { finalizePublishSuccess } from './publish-finalization.js';
 import {
   extractImageDimensions,
   isSupportedImagePath,
@@ -317,8 +318,19 @@ async function notifyWorkflowIfComplete(sql, publishId, env) {
   }
 
   if (env.PUBLISH_WORKFLOW) {
-    const instance = await env.PUBLISH_WORKFLOW.get(publishId);
-    await instance.sendEvent({ type: 'publish-complete', payload: {} });
+    try {
+      const instance = await env.PUBLISH_WORKFLOW.get(publishId);
+      await instance.sendEvent({ type: 'publish-complete', payload: {} });
+    } catch (err) {
+      // Workflow instance may not exist (e.g. dev without a running workflow, or the
+      // startPublishWorkflow call silently failed). Finalize directly so the publish
+      // doesn't get stuck at 'finalizing' indefinitely.
+      console.warn(`[publish] sendEvent failed for ${publishId}, finalizing directly: ${err.message}`);
+      await finalizePublishSuccess(sql, publishId);
+    }
+  } else {
+    // No workflow binding at all — finalize directly.
+    await finalizePublishSuccess(sql, publishId);
   }
 }
 
