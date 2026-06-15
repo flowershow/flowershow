@@ -481,7 +481,13 @@ export default {
       if (!publishId || !siteId) {
         return new Response('Missing publishId or siteId', { status: 400 });
       }
-      await env.PUBLISH_WORKFLOW.create({ id: publishId, params: { publishId, siteId } });
+      try {
+        await env.PUBLISH_WORKFLOW.create({ id: publishId, params: { publishId, siteId } });
+      } catch (err) {
+        // miniflare/wrangler dev may not fully implement the workflow binding.
+        // The queue consumer will still finalize the publish directly via the fallback path.
+        console.warn(`[publish] PUBLISH_WORKFLOW.create failed (${err.message}) — files will finalize directly`);
+      }
       return new Response('OK', { status: 200 });
     }
 
