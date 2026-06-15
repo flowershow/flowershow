@@ -36,6 +36,7 @@ function pemToDer(pem) {
 }
 
 async function importRsaPrivateKey(pemOrBase64Pem) {
+  if (!pemOrBase64Pem) throw new Error('GITHUB_APP_PRIVATE_KEY is not set — add it to .dev.vars');
   const decoded = pemOrBase64Pem.includes('-----')
     ? pemOrBase64Pem
     : atob(pemOrBase64Pem);
@@ -103,12 +104,14 @@ export async function getGitHubInstallationToken(githubInstallationId, appId, pr
         Authorization: `Bearer ${jwt}`,
         Accept: 'application/vnd.github+json',
         'X-GitHub-Api-Version': GITHUB_API_VERSION,
+        'User-Agent': 'flowershow-worker',
       },
     },
   );
   if (!res.ok) {
+    const body = await res.text().catch(() => '');
     throw new Error(
-      `Failed to get GitHub installation token: ${res.status} ${res.statusText}`,
+      `Failed to get GitHub installation token: ${res.status} ${res.statusText} — ${body}`,
     );
   }
   const data = await res.json();
@@ -123,6 +126,7 @@ async function githubFetch(url, token, { accept = 'application/vnd.github+json' 
       Authorization: `Bearer ${token}`,
       Accept: accept,
       'X-GitHub-Api-Version': GITHUB_API_VERSION,
+      'User-Agent': 'flowershow-worker',
     },
   });
   if (!res.ok) {

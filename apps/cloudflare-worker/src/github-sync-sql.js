@@ -39,13 +39,12 @@ export async function upsertBlob(sql, siteId, { path, sha, size, appPath, extens
  */
 export async function createPublishFilesUploading(sql, publishId, items) {
   if (items.length === 0) return;
-  const paths = items.map((i) => i.filePath);
-  const changeTypes = items.map((i) => i.changeType);
-  await sql`
-    INSERT INTO "PublishFile" (id, publish_id, path, change_type, status)
-    SELECT gen_random_uuid(), ${publishId}, path, change_type::"PublishFileChangeType", 'uploading'::"PublishFileStatus"
-    FROM unnest(${paths}::text[], ${changeTypes}::text[]) AS t(path, change_type)
-  `;
+  await Promise.all(
+    items.map(({ filePath, changeType }) => sql`
+      INSERT INTO "PublishFile" (id, publish_id, path, change_type, status)
+      VALUES (gen_random_uuid(), ${publishId}, ${filePath}, ${changeType}::"PublishFileChangeType", 'uploading'::"PublishFileStatus")
+    `),
+  );
 }
 
 /**
@@ -63,7 +62,7 @@ export async function deleteBlobsByPath(sql, siteId, paths) {
   if (paths.length === 0) return;
   await sql`
     DELETE FROM "Blob"
-    WHERE site_id = ${siteId} AND path = ANY(${paths}::text[])
+    WHERE site_id = ${siteId} AND path IN ${sql(paths)}
   `;
 }
 
@@ -78,9 +77,10 @@ export async function createTerminalPublishFilesForDeletions(sql, publishId, { d
     ...deleted.map(() => 'success'),
     ...failed.map(() => 'error'),
   ];
-  await sql`
-    INSERT INTO "PublishFile" (id, publish_id, path, change_type, status)
-    SELECT gen_random_uuid(), ${publishId}, path, 'deleted'::"PublishFileChangeType", status::"PublishFileStatus"
-    FROM unnest(${allPaths}::text[], ${statuses}::text[]) AS t(path, status)
-  `;
+  await Promise.all(
+    allPaths.map((path, i) => sql`
+      INSERT INTO "PublishFile" (id, publish_id, path, change_type, status)
+      VALUES (gen_random_uuid(), ${publishId}, ${path}, 'deleted'::"PublishFileChangeType", ${statuses[i]}::"PublishFileStatus")
+    `),
+  );
 }

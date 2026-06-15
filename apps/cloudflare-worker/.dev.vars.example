@@ -21,3 +21,8 @@ S3_REGION=us-east-1  # Defaults to us-east-1 for MinIO if not set
 # INTERNAL_API_SECRET: must match INTERNAL_API_SECRET in the Next.js app (both directions)
 # NEXT_APP_URL=http://localhost:3000
 INTERNAL_API_SECRET=your-random-secret-here
+
+# GitHub App credentials (required for GitHub sync / publishing from GitHub)
+# Create a GitHub App at https://github.com/settings/apps and install it on your repo.
+# GITHUB_APP_ID=123456
+# GITHUB_APP_PRIVATE_KEY=<base64-encoded PEM or raw PEM string>
