@@ -7,6 +7,7 @@ import {
 import postgres from 'postgres';
 import { Client } from 'typesense';
 import { cleanupExpiredSites } from './cleanup-expired-sites.js';
+import { runGithubSyncDirect } from './github-sync-direct.js';
 import { checkPublishCompletion } from './publish-completion.js';
 import { finalizePublishSuccess } from './publish-finalization.js';
 import {
@@ -438,7 +439,7 @@ async function handleMessage({ msg, storage, sql, typesense, env }) {
 
 export default {
   // HTTP endpoint (health + dev adapter)
-  async fetch(request, env, _ctx) {
+  async fetch(request, env, ctx) {
     validateEnv(env);
     const url = new URL(request.url);
 
@@ -489,6 +490,47 @@ export default {
         console.warn(`[publish] PUBLISH_WORKFLOW.create failed (${err.message}) — files will finalize directly`);
       }
       return new Response('OK', { status: 200 });
+    }
+
+    if (request.method === 'POST' && url.pathname === '/internal/workflows/github-sync/start') {
+      const secret = env.INTERNAL_API_SECRET;
+      if (!secret || request.headers.get('Authorization') !== `Bearer ${secret}`) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+      let params;
+      try {
+        params = await request.json();
+      } catch {
+        return new Response('Invalid JSON', { status: 400 });
+      }
+      const { publishId, siteId } = params;
+      if (!publishId || !siteId) {
+        return new Response('Missing publishId or siteId', { status: 400 });
+      }
+
+      if (env.GITHUB_SYNC_WORKFLOW) {
+        try {
+          await env.GITHUB_SYNC_WORKFLOW.create({ id: publishId, params });
+          return new Response('OK', { status: 200 });
+        } catch (err) {
+          if (env.ENVIRONMENT !== 'dev') {
+            return new Response(`Workflow creation failed: ${err.message}`, { status: 500 });
+          }
+          // Dev fallback: miniflare can't create workflow instances.
+          // Run the GitHub sync steps directly as a background task.
+          console.warn(`[github-sync] GITHUB_SYNC_WORKFLOW.create failed (${err.message}) — running directly`);
+          ctx.waitUntil(runGithubSyncDirect(params, env));
+          return new Response('OK', { status: 200 });
+        }
+      }
+
+      if (env.ENVIRONMENT === 'dev') {
+        // No workflow binding at all in dev — run directly.
+        ctx.waitUntil(runGithubSyncDirect(params, env));
+        return new Response('OK', { status: 200 });
+      }
+
+      return new Response('Workflow binding not available', { status: 503 });
     }
 
     return new Response('Not Found', { status: 404 });
