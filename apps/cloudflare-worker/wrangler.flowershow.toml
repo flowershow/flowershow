@@ -75,6 +75,21 @@ local_protocol = "http"
 [env.dev.vars]
 ENVIRONMENT = "dev"
 
+[[env.dev.workflows]]
+binding = "PUBLISH_WORKFLOW"
+name = "publish-workflow"
+class_name = "PublishWorkflow"
+
+[[env.dev.workflows]]
+binding = "GITHUB_SYNC_WORKFLOW"
+name = "github-sync-workflow"
+class_name = "GithubSyncWorkflow"
+
+[[env.dev.workflows]]
+binding = "CUSTOM_DOMAIN_WORKFLOW"
+name = "custom-domain-workflow"
+class_name = "CustomDomainWorkflow"
+
 [[env.dev.queues.producers]]
 binding = "FILE_PROCESSOR_QUEUE"
 queue = "markdown-processing-queue-dev"
