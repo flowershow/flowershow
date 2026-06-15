@@ -1,17 +1,17 @@
 ---
 title: "AI assistant skill"
 date: 2026-06-08
-description: A skill for AI coding assistants that lets them publish and manage Flowershow sites using the fl CLI — without guessing commands or hallucinating config options.
+description: A skill for AI coding assistants that helps them configure and manage Flowershow sites — regardless of how you publish.
 authors:
   - olayway
 showToc: false
 ---
 
-You can now install a Flowershow skill for your AI coding assistant that gives it everything it needs to publish your notes and manage your sites without hand-holding.
+You can now install a Flowershow skill for your AI coding assistant that gives it everything it needs to configure and manage your sites — regardless of whether you publish via the `fl` CLI, a GitHub repository, or the Obsidian plugin.
 
 ## What it does
 
-The skill instructs your AI assistant how to use the `fl` CLI correctly: how to authenticate, publish a folder or a single file, manage site settings, configure `config.json`, add custom styles, and walk you through operations that require the dashboard (custom domains, GitHub connections, comments via Giscus, billing).
+The skill teaches your AI assistant how to configure your site, add custom styles, and walk you through complex operations that require the dashboard (custom domains, GitHub connections, comments via Giscus, billing). If you publish with the `fl` CLI, it also knows how to authenticate, publish a folder or a single file, and manage sites from the terminal.
 
 A few things it gets right that a plain LLM wouldn't:
 
@@ -28,6 +28,6 @@ Install the skill with one command:
 npx skills add flowershow/flowershow --skill flowershow --global
 ```
 
-This registers the `flowershow` skill. Your AI assistant will then use it automatically whenever you ask to publish notes or manage a site.
+This registers the `flowershow` skill. Your AI assistant will then use it automatically whenever you ask to configure or manage a Flowershow site.
 
 If you don't have Node.js, refer to your agent's documentation for adding custom skills or instructions, then point it to the [skill source](https://raw.githubusercontent.com/flowershow/flowershow/main/skills/flowershow/SKILL.md) directly.

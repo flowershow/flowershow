@@ -3,7 +3,7 @@ title: Skills
 description: Install the Flowershow skill to let your AI assistant publish and manage Flowershow sites — whether you publish via the fl CLI, a GitHub repository, or the Obsidian plugin.
 ---
 
-A **skill** is a packaged set of instructions that teaches an AI coding assistant how to use a tool. The Flowershow skill gives AI agents everything they need to help you publish content and manage sites — regardless of how you publish.
+The Flowershow skill gives AI agents everything they need to help you publish content and manage sites — regardless of how you publish.
 
 ## What the skill does
 
