@@ -4,7 +4,7 @@ import { Box, Typography } from '@mui/material';
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import Link from 'next/link';
 import React from 'react';
-import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { resolveContentLink } from '@/lib/resolve-link';
 import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
 import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
 
@@ -113,7 +113,7 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
         wikiLink: value,
         filePaths: allSitePaths,
       });
-      const urlPath = resolveFilePathToUrlPath({
+      const urlPath = resolveContentLink({
         target: filePath,
         siteHostname,
       });

@@ -4,7 +4,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import ErrorMessage from '@/components/public/error-message';
 import { env } from '@/env.mjs';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
-import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { resolveContentLink } from '@/lib/resolve-link';
 import { PublicSite } from '@/server/api/types';
 import type { CustomHtmlProps } from './custom-html';
 import type { FlatUiTableProps } from './flatui-table';
@@ -77,7 +77,7 @@ export const mdxComponentsFactory = ({
     mermaid: Mermaid as any,
     FlatUiTable: withErrorBoundary((props: FlatUiTableProps) => {
       if (props.data?.url)
-        props.data.url = resolveFilePathToUrlPath({
+        props.data.url = resolveContentLink({
           target: props.data.url,
           originFilePath: blob.path,
           siteHostname:
@@ -89,7 +89,7 @@ export const mdxComponentsFactory = ({
     }, 'FlatUiTable'),
     LineChart: withErrorBoundary((props: LineChartProps) => {
       if (props.data?.url) {
-        props.data.url = resolveFilePathToUrlPath({
+        props.data.url = resolveContentLink({
           target: props.data.url,
           originFilePath: blob.path,
           siteHostname:
@@ -101,7 +101,7 @@ export const mdxComponentsFactory = ({
     }, 'LineChart'),
     PlotlyBarChart: withErrorBoundary((props: PlotlyBarChartProps) => {
       if (props.data.url) {
-        props.data.url = resolveFilePathToUrlPath({
+        props.data.url = resolveContentLink({
           target: props.data.url,
           originFilePath: blob.path,
           siteHostname:
@@ -113,7 +113,7 @@ export const mdxComponentsFactory = ({
     }, 'PlotlyBarChart'),
     PlotlyLineChart: withErrorBoundary((props: PlotlyLineChartProps) => {
       if (props.data.url) {
-        props.data.url = resolveFilePathToUrlPath({
+        props.data.url = resolveContentLink({
           target: props.data.url,
           originFilePath: blob.path,
           siteHostname:
@@ -124,7 +124,7 @@ export const mdxComponentsFactory = ({
       return <PlotlyLineChart {...props} />;
     }, 'PlotlyLineChart'),
     // Excel: withErrorBoundary((props: ExcelProps) => {
-    //   props.data.url = resolveFilePathToUrlPath({
+    //   props.data.url = resolveContentLink({
     //     target: props.data.url,
     //     originFilePath: blob.path,
     //     isSrcLink: true,
@@ -136,7 +136,7 @@ export const mdxComponentsFactory = ({
     // Map: withErrorBoundary((props: MapProps) => {
     //   const layers = props.layers.map((layer) => {
     //     if (layer.data.url) {
-    //       layer.data.url = resolveFilePathToUrlPath({
+    //       layer.data.url = resolveContentLink({
     //         target: layer.data.url,
     //         originFilePath: blob.path,
     //         isSrcLink: true,
@@ -151,7 +151,7 @@ export const mdxComponentsFactory = ({
     Plotly: withErrorBoundary((props) => {
       const data =
         typeof props.data === 'string'
-          ? resolveFilePathToUrlPath({
+          ? resolveContentLink({
               target: props.data,
               originFilePath: blob.path,
               siteHostname:
@@ -163,7 +163,7 @@ export const mdxComponentsFactory = ({
     }, 'Plotly'),
     Vega: withErrorBoundary((props) => {
       if (props.spec.data.url)
-        props.spec.data.url = resolveFilePathToUrlPath({
+        props.spec.data.url = resolveContentLink({
           target: props.spec.data.url,
           originFilePath: blob.path,
           siteHostname:
@@ -175,7 +175,7 @@ export const mdxComponentsFactory = ({
     // TODO this is not needed
     VegaLite: withErrorBoundary((props) => {
       if (props.spec.data.url)
-        props.spec.data.url = resolveFilePathToUrlPath({
+        props.spec.data.url = resolveContentLink({
           target: props.spec.data.url,
           originFilePath: blob.path,
           siteHostname:

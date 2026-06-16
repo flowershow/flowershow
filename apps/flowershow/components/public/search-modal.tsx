@@ -13,7 +13,7 @@ import {
   Snippet,
   useInstantSearch,
 } from 'react-instantsearch';
-import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { resolveContentLink } from '@/lib/resolve-link';
 import { searchClient } from '@/lib/typesense-client';
 import { useSite } from './site-context';
 
@@ -281,7 +281,7 @@ function SearchResults({
         // })
         .map((item) => ({
           ...item,
-          path: resolveFilePathToUrlPath({
+          path: resolveContentLink({
             target: item.path,
           }),
         })),
