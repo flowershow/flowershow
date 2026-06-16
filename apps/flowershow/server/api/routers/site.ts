@@ -362,7 +362,6 @@ export const siteRouter = createTRPCRouter({
             ghRepository: repoFullName,
             ghBranch: site.ghBranch,
             rootDir: newRoot,
-            accessToken: ctx.session.accessToken,
             installationId:
               site.installationRepository?.installationId ?? undefined,
           });
@@ -388,7 +387,6 @@ export const siteRouter = createTRPCRouter({
             ghRepository: repoFullName,
             ghBranch: site.ghBranch,
             rootDir: site.rootDir,
-            accessToken: ctx.session.accessToken,
             installationId:
               site.installationRepository?.installationId ?? undefined,
             forceSync: true,
@@ -2032,7 +2030,6 @@ export const siteRouter = createTRPCRouter({
         ghRepository,
         ghBranch,
         rootDir: rootDir || null,
-        accessToken: ctx.session.accessToken,
         installationId: verifiedInstallationId,
       });
 

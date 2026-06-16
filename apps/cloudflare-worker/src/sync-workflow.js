@@ -143,6 +143,78 @@ function getContentType(extension) {
   return types[extension] || 'application/json';
 }
 
+// --- GitHub App token generation ---
+async function generateGitHubAppJWT(appId, privateKeyBase64) {
+  const now = Math.floor(Date.now() / 1000);
+
+  const toB64Url = (str) =>
+    btoa(str).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const objToB64Url = (obj) => toB64Url(JSON.stringify(obj));
+
+  const header = objToB64Url({ alg: 'RS256', typ: 'JWT' });
+  // iat is back-dated 60s to account for clock skew
+  const payload = objToB64Url({ iat: now - 60, exp: now + 600, iss: appId });
+  const message = `${header}.${payload}`;
+
+  const pemStr = atob(privateKeyBase64);
+  const pemBody = pemStr
+    .replace(/-----BEGIN[^-]+-----/g, '')
+    .replace(/-----END[^-]+-----/g, '')
+    .replace(/\s/g, '');
+  const keyDer = Uint8Array.from(atob(pemBody), (c) => c.charCodeAt(0));
+
+  const cryptoKey = await crypto.subtle.importKey(
+    'pkcs8',
+    keyDer.buffer,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign'],
+  );
+
+  const signature = await crypto.subtle.sign(
+    'RSASSA-PKCS1-v1_5',
+    cryptoKey,
+    new TextEncoder().encode(message),
+  );
+
+  const sigB64Url = btoa(
+    String.fromCharCode(...new Uint8Array(signature)),
+  )
+    .replace(/=/g, '')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_');
+
+  return `${message}.${sigB64Url}`;
+}
+
+async function getGitHubInstallationToken(githubInstallationId, env) {
+  const jwt = await generateGitHubAppJWT(
+    env.GITHUB_APP_ID,
+    env.GITHUB_APP_PRIVATE_KEY,
+  );
+
+  const response = await fetch(
+    `https://api.github.com/app/installations/${githubInstallationId}/access_tokens`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+      },
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to get GitHub installation token: ${response.status} ${response.statusText}`,
+    );
+  }
+
+  const data = await response.json();
+  return data.token;
+}
+
 // --- GitHub API ---
 async function githubFetch(url, token, accept = 'application/vnd.github+json') {
   const response = await fetch(`https://api.github.com${url}`, {
@@ -269,13 +341,18 @@ export class SyncSiteWorkflow extends WorkflowEntrypoint {
       ghRepository,
       ghBranch,
       rootDir,
-      accessToken,
+      githubInstallationId,
       forceSync = false,
       gitCommitSha = null,
       gitCommitMessage = null,
     } = event.payload;
 
-    console.log({ accessToken });
+    // Generate a fresh token on every run (outside any step so retries don't reuse a cached
+    // expired value — GitHub App installation tokens expire in 1h).
+    const accessToken = await getGitHubInstallationToken(
+      githubInstallationId,
+      this.env,
+    );
 
     const sql = getPostgresClient(this.env);
     const storage = getStorageClient(this.env);

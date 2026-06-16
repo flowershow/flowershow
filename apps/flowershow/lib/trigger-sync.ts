@@ -1,13 +1,12 @@
 import { env } from '@/env.mjs';
-import { getInstallationToken } from '@/lib/github';
+import { getGithubInstallationId } from '@/lib/github';
 
 interface SyncParams {
   siteId: string;
   ghRepository: string;
   ghBranch: string;
   rootDir?: string | null;
-  accessToken?: string;
-  installationId?: string;
+  installationId: string;
   forceSync?: boolean;
   gitCommitSha?: string | null;
   gitCommitMessage?: string | null;
@@ -25,20 +24,13 @@ export async function triggerSiteSync(params: SyncParams): Promise<void> {
     ghRepository,
     ghBranch,
     rootDir,
-    accessToken,
     installationId,
     forceSync = false,
     gitCommitSha = null,
     gitCommitMessage = null,
   } = params;
 
-  const resolvedToken = installationId
-    ? await getInstallationToken(installationId)
-    : accessToken;
-
-  if (!resolvedToken) {
-    throw new Error('Either accessToken or installationId must be provided');
-  }
+  const githubInstallationId = await getGithubInstallationId(installationId);
 
   const response = await fetch(`${env.CF_SYNC_WORKER_URL}/sync`, {
     method: 'POST',
@@ -51,7 +43,7 @@ export async function triggerSiteSync(params: SyncParams): Promise<void> {
       ghRepository,
       ghBranch,
       rootDir: rootDir ?? null,
-      accessToken: resolvedToken,
+      githubInstallationId,
       forceSync,
       gitCommitSha,
       gitCommitMessage,

@@ -192,7 +192,6 @@ async function main() {
           ghRepository: repoFullName,
           ghBranch: site.ghBranch,
           rootDir: site.rootDir || null,
-          accessToken: githubAccount?.access_token ?? undefined,
           installationId:
             site.installationRepository?.installationId ?? undefined,
           forceSync: true,

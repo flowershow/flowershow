@@ -396,15 +396,15 @@ export default {
         return new Response('Invalid JSON', { status: 400 });
       }
 
-      const { siteId, ghRepository, ghBranch, rootDir, accessToken, forceSync, gitCommitSha, gitCommitMessage } = body;
-      if (!siteId || !ghRepository || !ghBranch || !accessToken) {
-        return new Response('Missing required fields: siteId, ghRepository, ghBranch, accessToken', { status: 400 });
+      const { siteId, ghRepository, ghBranch, rootDir, githubInstallationId, forceSync, gitCommitSha, gitCommitMessage } = body;
+      if (!siteId || !ghRepository || !ghBranch || !githubInstallationId) {
+        return new Response('Missing required fields: siteId, ghRepository, ghBranch, githubInstallationId', { status: 400 });
       }
 
       const instanceId = `sync-${siteId}-${Date.now()}`;
       const instance = await env.SYNC_WORKFLOW.create({
         id: instanceId,
-        params: { siteId, ghRepository, ghBranch, rootDir, accessToken, forceSync, gitCommitSha, gitCommitMessage },
+        params: { siteId, ghRepository, ghBranch, rootDir, githubInstallationId, forceSync, gitCommitSha, gitCommitMessage },
       });
 
       return Response.json({ instanceId: instance.id }, { status: 202 });
