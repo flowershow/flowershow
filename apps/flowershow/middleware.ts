@@ -315,7 +315,6 @@ function normalizePath(url: URL) {
   return { pathname, search };
 }
 
-// TODO types
 async function fetchSite(req: NextRequest, apiPath: string) {
   try {
     const apiOrigin = `${req.nextUrl.protocol}//${env.NEXT_PUBLIC_ROOT_DOMAIN}`;

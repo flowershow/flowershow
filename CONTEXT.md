@@ -4,6 +4,20 @@ Flowershow is a multitenant platform that turns markdown files into published we
 
 ## Language
 
+### Routing and URLs
+
+**URL Slug**:
+The URL path derived from a Page File's vault path. Always has a leading `/`. Spaces are encoded as `+` (not `%20`) — matching Obsidian Publish convention for readability. Stored in `blob.appPath`. The middleware normalises `+` → `%20` before Next.js routing; the page component prepends `/` to `params.slug` and reverses `%20` → `+` for DB lookups.
+_Avoid_: URL path, encoded path, app path (appPath is the DB column name, not the concept)
+
+**Page File**:
+A vault file that the app renders inside the site layout. Current types: `.md`, `.mdx`, `.canvas`. Page files produce a URL slug (the file path with extension stripped and index/README normalised to `/`).
+_Avoid_: Markdown file (canvas is not markdown), renderable file
+
+**Raw Asset**:
+Any vault file that is not a Page File (e.g. `.html`, `.jpg`, `.pdf`, everything else). Raw assets are served directly via `/api/raw/...` and produce a full absolute URL, not a slug.
+_Avoid_: Asset (overloaded with the Blob term above), media file
+
 ### Sites and Content
 
 **Site**:
