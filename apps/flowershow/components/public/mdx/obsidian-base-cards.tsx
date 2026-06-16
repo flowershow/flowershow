@@ -10,7 +10,7 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
-import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { resolveContentLink } from '@/lib/resolve-link';
 import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
 import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
 
@@ -139,7 +139,7 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
         wikiLink: value,
         filePaths: allSitePaths,
       });
-      const urlPath = resolveFilePathToUrlPath({
+      const urlPath = resolveContentLink({
         target: filePath,
         siteHostname,
       });
@@ -197,7 +197,7 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
         wikiLink: imageValue,
         filePaths: allSitePaths,
       });
-      return resolveFilePathToUrlPath({
+      return resolveContentLink({
         target: filePath,
         siteHostname,
       });

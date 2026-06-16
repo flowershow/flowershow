@@ -1,19 +1,21 @@
 import { slug } from 'github-slugger';
 import * as path from 'path';
 import { env } from '../env.mjs';
-import { customEncodeUrl } from './url-encoder';
+import { customEncodeUrl, ensureLeadingSlash } from './url-encoder';
+
+const PAGE_FILE_EXTENSIONS = new Set(['md', 'mdx', 'canvas']);
 
 /**
- * Resolve href (page link) or src (asset link) path to URL path (or full URL for assets)
+ * Resolve a render-time link target (href or src) to a URL path or full asset URL.
  * @param opts.target  - Value of the href or src (relative or absolute)
  * @param opts.originFilePath  - Absolute path to the file where the link is (you can skip it if it's a root level file (e.g. top config.json))
  * @param opts.siteHostname  - The serving hostname for this site (custom domain or subdomain.flowershow.site). Required for asset src URLs.
  * @param opts.permalinks  - Map of file paths to permalinks
  * @example
- * resolveFilePathToUrlPath({ target: "blog/post-abc", originFilePath: "/README.md" })
- * resolveFilePathToUrlPath({ target: "assets/image.jpg", originFilePath: "config.json", siteHostname: "garden-johndoe.flowershow.site" })
+ * resolveContentLink({ target: "blog/post-abc", originFilePath: "/README.md" })
+ * resolveContentLink({ target: "assets/image.jpg", originFilePath: "config.json", siteHostname: "garden-johndoe.flowershow.site" })
  */
-export const resolveFilePathToUrlPath = ({
+export const resolveContentLink = ({
   target,
   originFilePath = '/',
   siteHostname,
@@ -26,14 +28,15 @@ export const resolveFilePathToUrlPath = ({
   commonMarkSpaceEncoded?: boolean;
   permalinks?: Record<string, string>;
 }) => {
-  if (target.startsWith('http')) {
-    return target;
-  }
-  if (target.startsWith('mailto:') || target.startsWith('tel:')) {
+  if (
+    target.startsWith('http') ||
+    target.startsWith('mailto:') ||
+    target.startsWith('tel:')
+  ) {
     return target;
   }
 
-  // remove space encoding (required in CommonMark links)
+  // Remove space encoding (required in CommonMark links)
   if (commonMarkSpaceEncoded) {
     target = target
       .split('/')
@@ -44,63 +47,58 @@ export const resolveFilePathToUrlPath = ({
   const [, filePath = '', heading = ''] =
     target.match(/^(.*?)(?:#(.*))?$/u) || [];
 
-  // Generate heading id if present
   const headingId = heading ? `#${slug(heading)}` : '';
 
-  if (!filePath && headingId) {
-    return headingId;
-  }
+  if (!filePath && headingId) return headingId;
 
-  const [, , ext = ''] = filePath.match(/^(.+?)(?:\.([^.\/]+))?$/) ?? [];
-  const isMarkdown = ext === 'md' || ext === 'mdx' || ext === 'canvas' || !ext;
-  const useRawUrlPath = !isMarkdown;
+  const origin = ensureLeadingSlash(originFilePath);
 
-  // normalize origin file path so that it always has a leading slash
-  if (!originFilePath.startsWith('/')) {
-    originFilePath = `/${originFilePath}`;
-  }
+  // Resolve relative path to absolute path
+  const resolvedPath = filePath.startsWith('/')
+    ? filePath
+    : path.resolve(path.dirname(origin), filePath);
 
-  let resolvedPath = filePath;
+  // Classify: page file (render as slug) vs raw asset (render as full URL)
+  // (Specifically: full URL is required for Next.js Image compatibility)
+  const extWithDot = path.extname(resolvedPath);
+  const ext = extWithDot.slice(1);
+  const isPageFile = PAGE_FILE_EXTENSIONS.has(ext) || !ext;
 
-  if (!filePath.startsWith('/')) {
-    // convert relative link to absolute
-    resolvedPath = path.resolve(path.dirname(originFilePath), filePath);
-  }
-
-  let resolvedUrlPath: string;
-
-  if (permalinks && permalinks[resolvedPath]) {
-    resolvedUrlPath = permalinks[resolvedPath]!;
-  } else {
-    resolvedUrlPath =
-      resolvedPath
-        .replace(/\.(mdx?|md)/, '')
-        .replace(/\/?(index|README)$/, '') || '/';
-  }
-
-  // remove trailing slash unless it's the root
-  if (resolvedUrlPath !== '/') {
-    resolvedUrlPath = resolvedUrlPath.replace(/\/$/, '');
-  }
-
-  // For src need to use full path so that it works with Next.js Image
-  // otherwise Next.js will expect the file to be located in /public folder
-  if (useRawUrlPath) {
+  if (!isPageFile) {
     const isSecure =
       env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
       env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
-    const protocol = isSecure ? 'https' : 'http';
-    const encodedUrlPath = resolvedUrlPath
+    const encoded = resolvedPath
       .split('/')
       .map((p) => encodeURIComponent(p))
       .join('/');
-
-    return `${protocol}://${siteHostname}${encodedUrlPath}`;
+    return `${isSecure ? 'https' : 'http'}://${siteHostname}${encoded}`;
   }
 
-  const encodedUrlPath = resolvedUrlPath
+  // Page file — compute URL slug
+  const permalink = permalinks?.[resolvedPath];
+  let urlPath: string;
+  if (permalink) {
+    urlPath = permalink;
+  } else {
+    // Strip page file extension
+    const withoutExt = PAGE_FILE_EXTENSIONS.has(ext)
+      ? resolvedPath.slice(0, resolvedPath.length - extWithDot.length)
+      : resolvedPath;
+
+    // Normalise README/index to directory root
+    const base = path.basename(withoutExt);
+    urlPath =
+      base === 'README' || base === 'index'
+        ? path.dirname(withoutExt)
+        : withoutExt;
+
+    urlPath = !urlPath || urlPath === '/' ? '/' : urlPath.replace(/\/$/, '');
+  }
+
+  const encoded = urlPath
     .split('/')
     .map((p) => customEncodeUrl(p))
     .join('/');
-  return `${encodedUrlPath}${headingId}`;
+  return `${encoded}${headingId}`;
 };

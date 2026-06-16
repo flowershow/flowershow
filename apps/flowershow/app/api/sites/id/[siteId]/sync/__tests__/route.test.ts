@@ -13,8 +13,8 @@ const mocks = vi.hoisted(() => ({
   prisma: {
     site: { findUnique: vi.fn() },
     blob: { findMany: vi.fn(), upsert: vi.fn() },
-    publish: { create: vi.fn() },
-    publishFile: { createMany: vi.fn() },
+    publish: { create: vi.fn(), findMany: vi.fn() },
+    publishFile: { createMany: vi.fn(), updateMany: vi.fn() },
   },
 }));
 
@@ -58,8 +58,8 @@ vi.mock('@/lib/server-posthog', () => {
   };
   return { default: () => client };
 });
-vi.mock('@/lib/resolve-link', () => ({
-  resolveFilePathToUrlPath: ({ target }: { target: string }) => `/${target}`,
+vi.mock('@/lib/file-path-to-slug', () => ({
+  filePathToSlug: (filePath: string) => `/${filePath.replace(/^\//, '')}`,
 }));
 
 // ── Import after mocks ─────────────────────────────────────────────
@@ -103,7 +103,9 @@ beforeEach(() => {
   mocks.prisma.blob.findMany.mockResolvedValue([]);
   mocks.prisma.blob.upsert.mockResolvedValue(BLOB_UPSERT);
   mocks.prisma.publish.create.mockResolvedValue(PUBLISH);
+  mocks.prisma.publish.findMany.mockResolvedValue([]);
   mocks.prisma.publishFile.createMany.mockResolvedValue({ count: 0 });
+  mocks.prisma.publishFile.updateMany.mockResolvedValue({ count: 0 });
   mocks.generatePresignedUploadUrl.mockResolvedValue(
     'https://s3.example.com/upload-url',
   );
@@ -347,6 +349,7 @@ describe('POST /api/sites/id/:siteId/sync', () => {
         3600,
         expect.any(String),
         { 'publish-id': 'publish-abc' },
+        expect.any(Set),
       );
     });
 
@@ -362,6 +365,7 @@ describe('POST /api/sites/id/:siteId/sync', () => {
         'site-1/main/raw/docs/a.md',
         3600,
         expect.any(String),
+        undefined,
         undefined,
       );
     });

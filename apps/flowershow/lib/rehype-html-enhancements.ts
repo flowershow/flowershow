@@ -1,8 +1,6 @@
 import { visit } from 'unist-util-visit';
 
-interface Options {
-  sitePrefix?: string;
-}
+type MdxAttr = { type: string; name: string; value: any };
 
 /**
  * Rehype plugin to enhance HTML elements with additional attributes and classes.
@@ -11,17 +9,17 @@ interface Options {
  * - External links: Adds target="_blank" and rel="noopener noreferrer" to links starting with http(s)://
  * - Code elements: Adds language-auto class to inline code without a language class
  * - Table elements: Wraps tables in a div with overflow-x-auto for horizontal scrolling
+ *
+ * Handles both `element` nodes (markdown pipeline, rehypeRaw) and
+ * `mdxJsxFlowElement`/`mdxJsxTextElement` nodes (MDX pipeline).
  */
-const rehypeHtmlEnhancements = (options: Options) => {
-  const { sitePrefix } = options || { sitePrefix: '' };
-
+const rehypeHtmlEnhancements = (_options?: { sitePrefix?: string }) => {
   return (tree) => {
+    // --- Standard rehype element nodes (remark → rehypeRaw pipeline) ---
     visit(tree, 'element', (node: any, index, parent) => {
-      // Handle anchor tags (external links)
       if (node.tagName === 'a') {
         const href = (node.properties?.href || '') as string;
 
-        // Check if the link is external (starts with http:// or https://)
         if (/^https?:\/\//i.test(href)) {
           node.properties = node.properties || {};
 
@@ -32,15 +30,12 @@ const rehypeHtmlEnhancements = (options: Options) => {
         }
       }
 
-      // Handle code tags
       if (node.tagName === 'code') {
         node.properties = node.properties || {};
         const className = node.properties.className;
 
-        // Check if className exists and is an array
         const classArray = Array.isArray(className) ? className : [];
 
-        // Only add language-auto if no language- class is present
         const hasLanguageClass = classArray.some(
           (cls) => typeof cls === 'string' && cls.startsWith('language-'),
         );
@@ -50,9 +45,7 @@ const rehypeHtmlEnhancements = (options: Options) => {
         }
       }
 
-      // Handle table tags - wrap in div with overflow-x-auto
       if (node.tagName === 'table' && parent && typeof index === 'number') {
-        // Check if parent is already a div with overflow-x-auto
         const isAlreadyWrapped =
           parent.type === 'element' &&
           parent.tagName === 'div' &&
@@ -60,7 +53,6 @@ const rehypeHtmlEnhancements = (options: Options) => {
           parent.properties.className.includes('overflow-x-auto');
 
         if (!isAlreadyWrapped) {
-          // Create wrapper div
           const wrapper = {
             type: 'element',
             tagName: 'div',
@@ -70,8 +62,30 @@ const rehypeHtmlEnhancements = (options: Options) => {
             children: [node],
           };
 
-          // Replace table with wrapper
           parent.children[index] = wrapper;
+        }
+      }
+    });
+
+    // --- MDX JSX element nodes (MDX pipeline, no rehypeRaw) ---
+    visit(tree, ['mdxJsxFlowElement', 'mdxJsxTextElement'], (node: any) => {
+      if (node.name !== 'a') return;
+
+      const attrs: MdxAttr[] = node.attributes || [];
+      const href = attrs.find((a) => a.name === 'href')?.value ?? '';
+
+      if (/^https?:\/\//i.test(href)) {
+        const hasTarget = attrs.some((a) => a.name === 'target');
+        if (!hasTarget) {
+          node.attributes = [
+            ...attrs,
+            { type: 'mdxJsxAttribute', name: 'target', value: '_blank' },
+            {
+              type: 'mdxJsxAttribute',
+              name: 'rel',
+              value: 'noopener noreferrer',
+            },
+          ];
         }
       }
     });

@@ -30,7 +30,7 @@ import rehypeToReact from './rehype-to-react';
 import rehypeUnwrapParagraphsAroundMedia from './rehype-unwrap-paragraph-around-media';
 import remarkCommonMarkLink from './remark-commonmark-link';
 import remarkObsidianBases from './remark-obsidian-bases';
-import { resolveFilePathToUrlPath } from './resolve-link';
+import { resolveContentLink } from './resolve-link';
 
 interface MarkdownOptions {
   filePath: string;
@@ -195,8 +195,8 @@ export const getMdxOptions = ({
 
 export const getUrlResolver = (siteHostname: string) => {
   return ({ filePath, heading }: { filePath: string; heading?: string }) => {
-    // We need to concatenate filePath and heading for use with resolveFilePathToUrlPath
-    return resolveFilePathToUrlPath({
+    // We need to concatenate filePath and heading for use with resolveContentLink
+    return resolveContentLink({
       target: `${filePath}${heading ? '#' + heading : ''}`,
       siteHostname,
     });

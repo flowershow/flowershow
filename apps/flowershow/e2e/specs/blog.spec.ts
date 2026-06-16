@@ -2,6 +2,7 @@ import { expect, type Locator, test } from '../helpers/fixtures';
 
 test('Blog List Component', async ({ page, basePath }) => {
   await page.goto(`${basePath}/blog`);
+  await page.waitForLoadState('networkidle');
   const list = page.locator('.list-component');
 
   await test.step('renders the list component with all blog posts', async () => {
@@ -39,6 +40,7 @@ test('Blog List Component', async ({ page, basePath }) => {
 
 test('Blog Post Page', async ({ page, basePath }) => {
   await page.goto(`${basePath}/blog/first-post`);
+  await page.waitForLoadState('networkidle');
   const content = page.locator('#mdxpage');
 
   await test.step('renders the blog post content', async () => {
@@ -51,6 +53,7 @@ test('Blog Post Page', async ({ page, basePath }) => {
 
 test('Blog Post Navigation from List', async ({ page, basePath }) => {
   await page.goto(`${basePath}/blog`);
+  await page.waitForLoadState('networkidle');
   const list = page.locator('.list-component');
 
   await test.step('clicking a post title navigates to the post', async () => {

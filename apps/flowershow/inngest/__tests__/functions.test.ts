@@ -40,7 +40,7 @@ vi.mock('@/lib/github', () => ({
 }));
 vi.mock('@/lib/otel-logger', () => ({ log: vi.fn(), SeverityNumber: {} }));
 vi.mock('@/lib/path-validator', () => ({ isPathVisible: vi.fn() }));
-vi.mock('@/lib/resolve-link', () => ({ resolveFilePathToUrlPath: vi.fn() }));
+vi.mock('@/lib/file-path-to-slug', () => ({ filePathToSlug: vi.fn() }));
 
 vi.mock('@/inngest/client', () => ({
   inngest: {
@@ -77,13 +77,15 @@ describe('cleanupExpiredPublishFiles', () => {
   });
 
   it('marks uploading rows past presignedUrlExpiresAt as error', async () => {
-    mocks.prisma.publishFile.updateMany.mockResolvedValue({ count: 3 });
+    mocks.prisma.publishFile.updateMany
+      .mockResolvedValueOnce({ count: 3 })
+      .mockResolvedValueOnce({ count: 0 });
 
     const result = await (cleanupExpiredPublishFiles as InngestHandler)({
       step: makeStep(),
     });
 
-    expect(mocks.prisma.publishFile.updateMany).toHaveBeenCalledOnce();
+    expect(mocks.prisma.publishFile.updateMany).toHaveBeenCalledTimes(2);
 
     const call = mocks.prisma.publishFile.updateMany.mock.calls[0][0];
     expect(call.where.status).toBe('uploading');

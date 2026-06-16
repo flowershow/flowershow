@@ -3,7 +3,7 @@
 import { Box, Typography } from '@mui/material';
 import Link from 'next/link';
 import React from 'react';
-import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { resolveContentLink } from '@/lib/resolve-link';
 import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
 import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
 
@@ -83,7 +83,7 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
         return null;
       }
 
-      const linkUrl = resolveFilePathToUrlPath({
+      const linkUrl = resolveContentLink({
         target: row.path,
         siteHostname,
       });
@@ -119,7 +119,7 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
         wikiLink: value,
         filePaths: allSitePaths,
       });
-      const urlPath = resolveFilePathToUrlPath({
+      const urlPath = resolveContentLink({
         target: filePath,
         siteHostname,
       });

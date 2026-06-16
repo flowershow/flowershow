@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { visit } from 'unist-util-visit';
-import { resolveFilePathToUrlPath } from './resolve-link';
+import { resolveContentLink } from './resolve-link';
 
 export interface Options {
   filePath: string;
@@ -13,7 +13,7 @@ const dimensionOnlyPattern = /^\s*(\d+)(?:x(\d+))?\s*$/;
 
 /**
  * Resolve a commonmark relative path to an absolute content path.
- * Replicates the resolution logic from resolveFilePathToUrlPath
+ * Replicates the resolution logic from resolveContentLink
  * so we can match against the files list before URL conversion.
  */
 function resolveToContentPath(target: string, originFilePath: string): string {
@@ -77,7 +77,7 @@ function RemarkCommonMarkLink({
         node.data.hProperties['data-fs-resolved-file-path'] = matchingFile;
       }
 
-      node.url = resolveFilePathToUrlPath({
+      node.url = resolveContentLink({
         target: node.url,
         originFilePath: filePath,
         siteHostname,
@@ -94,7 +94,7 @@ function RemarkCommonMarkLink({
         ? findFile(contentPath, files)
         : undefined;
 
-      node.url = resolveFilePathToUrlPath({
+      node.url = resolveContentLink({
         target: node.url,
         originFilePath: filePath,
         siteHostname,

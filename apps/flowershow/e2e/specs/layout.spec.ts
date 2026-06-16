@@ -91,6 +91,24 @@ test('Sidebar', async ({ page, basePath }) => {
     await expect(page.locator('h1')).toHaveText('Alice Johnson');
   });
 
+  await test.step('canvas file appears in sidebar with filename as label', async () => {
+    await page.goto(`${basePath}/docs/getting-started`);
+    const sidebar = page.locator('.site-sidebar');
+    const links = sidebar.locator('a');
+
+    // docs/some graph.canvas should be listed as "some graph.canvas"
+    await expect(links.filter({ hasText: 'some graph.canvas' })).toBeVisible();
+  });
+
+  await test.step('html file appears in sidebar with filename as label', async () => {
+    await page.goto(`${basePath}/docs/getting-started`);
+    const sidebar = page.locator('.site-sidebar');
+    const links = sidebar.locator('a');
+
+    // docs/test.html should be listed as "test.html"
+    await expect(links.filter({ hasText: 'test.html' })).toBeVisible();
+  });
+
   await test.step('mobile sidebar subnav is visible on matching routes', async () => {
     await page.setViewportSize({ width: 375, height: 667 });
     await page.goto(`${basePath}/docs/getting-started`);

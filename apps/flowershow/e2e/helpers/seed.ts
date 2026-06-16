@@ -7,6 +7,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { Plan, PrismaClient } from '@prisma/client';
+import { filePathToSlug } from '../../lib/file-path-to-slug';
 import {
   extractImageDimensions,
   parseMarkdownForSync,
@@ -70,23 +71,6 @@ function getS3Client(): S3Client {
 const BUCKET = process.env.S3_BUCKET_NAME || 'flowershow';
 
 // --- Helpers ---
-
-/** Compute appPath from a file path (mirrors Inngest sync logic) */
-function computeAppPath(filePath: string): string | null {
-  const ext = path.extname(filePath).slice(1);
-  if (!['md', 'mdx'].includes(ext)) return null;
-
-  const urlPath = filePath
-    .replace(/\.(md|mdx)$/, '') // strip extension
-    .replace(/\/(index|README)$/, '') // strip trailing index/README
-    .replace(/^(index|README)$/, ''); // root index/README → empty
-
-  // Root becomes '/'
-  if (urlPath === '') return '/';
-
-  // Other paths have no leading slash (matching Inngest behavior)
-  return urlPath.replace(/^\//, '');
-}
 
 function getContentType(ext: string): string {
   const map: Record<string, string> = {
@@ -178,8 +162,9 @@ async function uploadFixturesForSite(
     const ext = path.extname(filePath).slice(1);
     const s3Key = `${siteId}/main/raw/${filePath}`;
 
-    // Compute metadata for markdown files
-    const appPath = computeAppPath(filePath);
+    const appPath = ['md', 'mdx', 'canvas'].includes(ext)
+      ? filePathToSlug(filePath)
+      : null;
     let metadata: Record<string, unknown> = {};
     let permalink: string | null = null;
     let shouldPublish = true;
@@ -250,8 +235,7 @@ async function uploadFixturesForSite(
 
 // --- Cache invalidation ---
 
-const ROOT_DOMAIN =
-  process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'my.flowershow.local:3000';
+const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'cloud.local:3000';
 
 async function revalidateCache(): Promise<void> {
   const url = `http://${ROOT_DOMAIN}/api/e2e/revalidate`;

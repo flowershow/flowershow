@@ -16,56 +16,56 @@ const blobs: any[] = [
   },
   {
     path: 'notes/abc.md',
-    appPath: 'notes/abc',
+    appPath: '/notes/abc',
     metadata: {
       title: 'ABC Note',
     },
   },
   {
     path: 'notes/xyz.md',
-    appPath: 'notes/xyz',
+    appPath: '/notes/xyz',
     metadata: {
       title: 'XYZ Note',
     },
   },
   {
     path: 'notes/README.md',
-    appPath: 'notes',
+    appPath: '/notes',
     metadata: {
       title: 'README Note',
     },
   },
   {
     path: 'guide/README.md',
-    appPath: 'guide',
+    appPath: '/guide',
     metadata: {
       title: 'Guide README',
     },
   },
   {
     path: 'guide/quickstart/README.md',
-    appPath: 'guide/quickstart',
+    appPath: '/guide/quickstart',
     metadata: {
       title: 'Quickstart README',
     },
   },
   {
     path: 'guide/quickstart/01-start-here.md',
-    appPath: 'guide/quickstart/01-start-here',
+    appPath: '/guide/quickstart/01-start-here',
     metadata: {
       title: 'BBB Start Here',
     },
   },
   {
     path: 'guide/quickstart/02-next-go-here.md',
-    appPath: 'guide/quickstart/02-next-go-here',
+    appPath: '/guide/quickstart/02-next-go-here',
     metadata: {
       title: 'AAA Next Go Here',
     },
   },
   {
     path: 'guide/quickstart/03-and-then-here.md',
-    appPath: 'guide/quickstart/03-and-then-here',
+    appPath: '/guide/quickstart/03-and-then-here',
     metadata: {
       title: 'CCC End Here',
     },
@@ -337,17 +337,17 @@ describe('Site Tree', () => {
     expect(siteMap).toMatchObject(expectedSiteTree);
   });
 
-  it('includes canvas files, preserving the .canvas extension in the URL and stripping it from the label', () => {
+  it('includes canvas files using appPath (extension-stripped) for the URL and filename as label', () => {
     const canvasBlobs: any[] = [
       {
         path: 'Roadmap.canvas',
-        appPath: 'Roadmap.canvas',
+        appPath: '/Roadmap',
         permalink: null,
         metadata: null,
       },
       {
         path: 'notes/architecture.canvas',
-        appPath: 'notes/architecture.canvas',
+        appPath: '/notes/architecture',
         permalink: null,
         metadata: null,
       },
@@ -367,7 +367,7 @@ describe('Site Tree', () => {
               label: 'architecture.canvas',
               name: 'architecture.canvas',
               path: 'notes/architecture.canvas',
-              urlPath: '/notes/architecture.canvas',
+              urlPath: '/notes/architecture',
             },
           ],
         },
@@ -376,7 +376,52 @@ describe('Site Tree', () => {
           label: 'Roadmap.canvas',
           name: 'Roadmap.canvas',
           path: 'Roadmap.canvas',
-          urlPath: '/Roadmap.canvas',
+          urlPath: '/Roadmap',
+        },
+      ],
+    });
+  });
+
+  it('includes html files using path as URL (no appPath) and filename as label', () => {
+    const htmlBlobs: any[] = [
+      {
+        path: 'report.html',
+        appPath: null,
+        permalink: null,
+        metadata: null,
+      },
+      {
+        path: 'docs/test.html',
+        appPath: null,
+        permalink: null,
+        metadata: null,
+      },
+    ];
+
+    const siteMap = buildSiteTree(htmlBlobs, { orderBy: 'title' });
+
+    expect(siteMap).toMatchObject({
+      kind: 'root',
+      children: [
+        {
+          kind: 'dir',
+          name: 'docs',
+          children: [
+            {
+              kind: 'file',
+              label: 'test.html',
+              name: 'test.html',
+              path: 'docs/test.html',
+              urlPath: '/docs/test.html',
+            },
+          ],
+        },
+        {
+          kind: 'file',
+          label: 'report.html',
+          name: 'report.html',
+          path: 'report.html',
+          urlPath: '/report.html',
         },
       ],
     });

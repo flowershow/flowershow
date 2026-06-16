@@ -11,7 +11,7 @@ import { internalGetSiteById } from '@/lib/db/internal';
 import { getSite } from '@/lib/get-site';
 import { getSiteUrl } from '@/lib/get-site-url';
 import { isEmoji } from '@/lib/is-emoji';
-import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { resolveContentLink } from '@/lib/resolve-link';
 import { siteKeyBytes } from '@/lib/site-hmac-key';
 import {
   fontBrand,
@@ -75,7 +75,7 @@ export default async function LoginPage(props: {
 
   // TODO: nav.logo is deprecated in favour of root logo — remove nav.logo fallback once migration period ends
   const resolvedLogo = siteConfig?.logo ?? siteConfig?.nav?.logo ?? config.logo;
-  const logo = resolveFilePathToUrlPath({
+  const logo = resolveContentLink({
     target: resolvedLogo,
     siteHostname,
   });
