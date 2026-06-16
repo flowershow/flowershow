@@ -24,9 +24,10 @@ import {
   validDomainRegex,
 } from '@/lib/domains';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
+import { filePathToSlug } from '@/lib/file-path-to-slug';
 import { checkIfBranchExists } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
-import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { resolveContentLink } from '@/lib/resolve-link';
 import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
 import PostHogClient from '@/lib/server-posthog';
 import {
@@ -36,6 +37,7 @@ import {
 } from '@/lib/site-config';
 import { siteKeyBytes } from '@/lib/site-hmac-key';
 import { buildSiteSubdomain } from '@/lib/site-subdomain';
+import { ensureLeadingSlash } from '@/lib/url-encoder';
 import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
 import {
   createTRPCRouter,
@@ -928,7 +930,7 @@ export const siteRouter = createTRPCRouter({
               }
 
               if (config[key]) {
-                config[key] = resolveFilePathToUrlPath({
+                config[key] = resolveContentLink({
                   target: config[key],
                   siteHostname,
                 });
@@ -939,13 +941,13 @@ export const siteRouter = createTRPCRouter({
               config.nav.links.forEach((item) => {
                 if (isNavDropdown(item)) {
                   item.links.forEach((link) => {
-                    link.href = resolveFilePathToUrlPath({
+                    link.href = resolveContentLink({
                       target: link.href,
                       siteHostname,
                     });
                   });
                 } else {
-                  item.href = resolveFilePathToUrlPath({
+                  item.href = resolveContentLink({
                     target: item.href,
                     siteHostname,
                   });
@@ -954,7 +956,7 @@ export const siteRouter = createTRPCRouter({
             }
 
             if (config.nav?.logo && !isEmoji(config.nav.logo)) {
-              config.nav.logo = resolveFilePathToUrlPath({
+              config.nav.logo = resolveContentLink({
                 target: config.nav.logo,
                 siteHostname,
               });
@@ -962,7 +964,7 @@ export const siteRouter = createTRPCRouter({
 
             if (config.nav?.social) {
               config.nav.social.forEach((social) => {
-                social.href = resolveFilePathToUrlPath({
+                social.href = resolveContentLink({
                   target: social.href,
                   siteHostname,
                 });
@@ -970,7 +972,7 @@ export const siteRouter = createTRPCRouter({
             }
 
             if (config.nav?.cta) {
-              config.nav.cta.href = resolveFilePathToUrlPath({
+              config.nav.cta.href = resolveContentLink({
                 target: config.nav.cta.href,
                 siteHostname,
               });
@@ -982,7 +984,7 @@ export const siteRouter = createTRPCRouter({
               !Array.isArray(config.hero)
             ) {
               if (typeof config.hero.image === 'string') {
-                config.hero.image = resolveFilePathToUrlPath({
+                config.hero.image = resolveContentLink({
                   target: config.hero.image,
                   siteHostname,
                 });
@@ -991,7 +993,7 @@ export const siteRouter = createTRPCRouter({
               if (Array.isArray(config.hero.cta)) {
                 config.hero.cta.forEach((c) => {
                   if (typeof c?.href === 'string') {
-                    c.href = resolveFilePathToUrlPath({
+                    c.href = resolveContentLink({
                       target: c.href,
                       siteHostname,
                     });
@@ -1003,7 +1005,7 @@ export const siteRouter = createTRPCRouter({
             if (config.footer?.navigation) {
               config.footer.navigation.forEach((group) => {
                 group.links.forEach((link) => {
-                  link.href = resolveFilePathToUrlPath({
+                  link.href = resolveContentLink({
                     target: link.href,
                     siteHostname,
                   });
@@ -1213,7 +1215,7 @@ export const siteRouter = createTRPCRouter({
                   filePaths: siteFilePaths,
                 });
               }
-              metadata[mediaFrontmatterField] = resolveFilePathToUrlPath({
+              metadata[mediaFrontmatterField] = resolveContentLink({
                 target: value,
                 siteHostname,
               });
@@ -1355,7 +1357,7 @@ export const siteRouter = createTRPCRouter({
                 });
               }
 
-              metadata[key] = resolveFilePathToUrlPath({
+              metadata[key] = resolveContentLink({
                 target: value,
                 siteHostname,
               });
@@ -1371,7 +1373,7 @@ export const siteRouter = createTRPCRouter({
                   filePaths: siteFilePaths,
                 });
               }
-              c.href = resolveFilePathToUrlPath({
+              c.href = resolveContentLink({
                 target: value,
                 siteHostname,
               });
@@ -1393,7 +1395,7 @@ export const siteRouter = createTRPCRouter({
                 });
               }
 
-              metadata.hero.image = resolveFilePathToUrlPath({
+              metadata.hero.image = resolveContentLink({
                 target: value,
                 siteHostname,
               });
@@ -1408,7 +1410,7 @@ export const siteRouter = createTRPCRouter({
                     filePaths: siteFilePaths,
                   });
                 }
-                c.href = resolveFilePathToUrlPath({
+                c.href = resolveContentLink({
                   target: value,
                   siteHostname,
                 });
@@ -1601,10 +1603,9 @@ export const siteRouter = createTRPCRouter({
                 const metadata = authorBlob.metadata as PageMetadata | null;
 
                 // Use permalink if available, otherwise use appPath
-                const pathToUse = authorBlob.permalink || authorBlob.appPath;
-                const url = site.customDomain
-                  ? `/${pathToUse}`
-                  : `/@${site.user?.username}/${site.projectName}/${pathToUse}`;
+                const authorUrl = ensureLeadingSlash(
+                  authorBlob.permalink || authorBlob.appPath || '',
+                );
 
                 if (metadata?.avatar) {
                   let value = metadata.avatar;
@@ -1614,7 +1615,7 @@ export const siteRouter = createTRPCRouter({
                       filePaths: siteFilePaths,
                     });
                   }
-                  metadata.avatar = resolveFilePathToUrlPath({
+                  metadata.avatar = resolveContentLink({
                     target: value,
                     siteHostname,
                   });
@@ -1624,7 +1625,7 @@ export const siteRouter = createTRPCRouter({
                   key: authorBlob.id,
                   name: metadata?.title ?? author,
                   avatar: metadata?.avatar,
-                  url,
+                  url: authorUrl,
                 };
               },
             );
@@ -1744,7 +1745,7 @@ export const siteRouter = createTRPCRouter({
 
             return (
               (blob.appPath
-                ? prefix + (blob.appPath === '/' ? '' : '/' + blob.appPath)
+                ? prefix + (blob.appPath === '/' ? '' : blob.appPath)
                 : prefix + '/' + blob.path) || '/'
             );
           });
@@ -2152,17 +2153,9 @@ export const siteRouter = createTRPCRouter({
           files.map(async (file) => {
             const extension = file.path.split('.').pop()?.toLowerCase() || '';
 
-            const urlPath = (() => {
-              if (['md', 'mdx', 'canvas'].includes(extension)) {
-                const _urlPath = resolveFilePathToUrlPath({
-                  target: file.path,
-                });
-                return _urlPath === '/'
-                  ? _urlPath
-                  : _urlPath.replace(/^\//, '');
-              }
-              return null;
-            })();
+            const urlPath = ['md', 'mdx', 'canvas'].includes(extension)
+              ? filePathToSlug(file.path)
+              : null;
 
             const blob = await ctx.db.blob.upsert({
               where: {

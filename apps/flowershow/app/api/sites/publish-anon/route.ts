@@ -13,8 +13,8 @@ import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
+import { filePathToSlug } from '@/lib/file-path-to-slug';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
-import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import PostHogClient from '@/lib/server-posthog';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { buildAnonSiteSubdomain } from '@/lib/site-subdomain';
@@ -187,17 +187,9 @@ export async function POST(request: NextRequest) {
       const file = files[i]!;
       const extension = file.fileName.split('.').pop()?.toLowerCase()!;
 
-      const appPath = (() => {
-        if (['md', 'mdx'].includes(extension)) {
-          const _urlPath = resolveFilePathToUrlPath({
-            target: file.fileName,
-          });
-          // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / 🤦‍♀️)
-          return _urlPath === '/' ? _urlPath : _urlPath.replace(/^\//, '');
-        } else {
-          return null;
-        }
-      })();
+      const appPath = ['md', 'mdx', 'canvas'].includes(extension)
+        ? filePathToSlug(file.fileName)
+        : null;
 
       await prisma.blob.create({
         data: {

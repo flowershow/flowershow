@@ -16,56 +16,56 @@ const blobs: any[] = [
   },
   {
     path: 'notes/abc.md',
-    appPath: 'notes/abc',
+    appPath: '/notes/abc',
     metadata: {
       title: 'ABC Note',
     },
   },
   {
     path: 'notes/xyz.md',
-    appPath: 'notes/xyz',
+    appPath: '/notes/xyz',
     metadata: {
       title: 'XYZ Note',
     },
   },
   {
     path: 'notes/README.md',
-    appPath: 'notes',
+    appPath: '/notes',
     metadata: {
       title: 'README Note',
     },
   },
   {
     path: 'guide/README.md',
-    appPath: 'guide',
+    appPath: '/guide',
     metadata: {
       title: 'Guide README',
     },
   },
   {
     path: 'guide/quickstart/README.md',
-    appPath: 'guide/quickstart',
+    appPath: '/guide/quickstart',
     metadata: {
       title: 'Quickstart README',
     },
   },
   {
     path: 'guide/quickstart/01-start-here.md',
-    appPath: 'guide/quickstart/01-start-here',
+    appPath: '/guide/quickstart/01-start-here',
     metadata: {
       title: 'BBB Start Here',
     },
   },
   {
     path: 'guide/quickstart/02-next-go-here.md',
-    appPath: 'guide/quickstart/02-next-go-here',
+    appPath: '/guide/quickstart/02-next-go-here',
     metadata: {
       title: 'AAA Next Go Here',
     },
   },
   {
     path: 'guide/quickstart/03-and-then-here.md',
-    appPath: 'guide/quickstart/03-and-then-here',
+    appPath: '/guide/quickstart/03-and-then-here',
     metadata: {
       title: 'CCC End Here',
     },

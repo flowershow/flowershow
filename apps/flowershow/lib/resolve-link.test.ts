@@ -7,7 +7,7 @@ vi.mock('@/env.mjs', () => ({
   },
 }));
 
-import { resolveFilePathToUrlPath } from './resolve-link';
+import { resolveContentLink } from './resolve-link';
 
 /* example site file tree:
  * /README.md
@@ -27,38 +27,52 @@ import { resolveFilePathToUrlPath } from './resolve-link';
 describe('resolve file paths to app URL paths', () => {
   it('Root README.md', () => {
     const target = 'README.md';
-    const resolved = resolveFilePathToUrlPath({ target });
+    const resolved = resolveContentLink({ target });
     expect(resolved).toBe('/');
   });
 
   it('Root index.md', () => {
     const target = 'index.md';
-    const resolved = resolveFilePathToUrlPath({ target });
+    const resolved = resolveContentLink({ target });
     expect(resolved).toBe('/');
   });
 
   it('Directory README.md', () => {
     const target = 'blog/README.md';
-    const resolved = resolveFilePathToUrlPath({ target });
+    const resolved = resolveContentLink({ target });
     expect(resolved).toBe('/blog');
   });
 
   it('Directory index.md', () => {
     const target = 'blog/index.md';
-    const resolved = resolveFilePathToUrlPath({ target });
+    const resolved = resolveContentLink({ target });
     expect(resolved).toBe('/blog');
   });
 
   it('Other', () => {
     const target = 'some/file.md';
-    const resolved = resolveFilePathToUrlPath({ target });
+    const resolved = resolveContentLink({ target });
     expect(resolved).toBe('/some/file');
   });
 
   it('Spaces are encoded as +', () => {
     const target = '/Abc Resources/Xyz Map.md';
-    const resolved = resolveFilePathToUrlPath({ target });
+    const resolved = resolveContentLink({ target });
     expect(resolved).toBe('/Abc+Resources/Xyz+Map');
+  });
+});
+
+describe('resolve file paths to app URL paths', () => {
+  it('canvas link resolves to extension-free slug', () => {
+    const target = 'My Canvas.canvas';
+    const resolved = resolveContentLink({ target });
+    expect(resolved).toBe('/My+Canvas');
+  });
+
+  it('extension-less link is treated as a page link (supports Obsidian wikilinks)', () => {
+    const target = 'blog/post-2';
+    const resolved = resolveContentLink({ target });
+    expect(resolved).toBe('/blog/post-2');
   });
 });
 
@@ -67,14 +81,14 @@ describe('resolve links on a README page', () => {
 
   it('external link', () => {
     const target = 'https://example.com';
-    const resolved = resolveFilePathToUrlPath({ target, originFilePath });
+    const resolved = resolveContentLink({ target, originFilePath });
     expect(resolved).toBe(target);
   });
 
   it('absolute link', () => {
     const target = '/blog/post-1';
     const expected = `/blog/post-1`;
-    const resolved = resolveFilePathToUrlPath({
+    const resolved = resolveContentLink({
       target,
       originFilePath,
     });
@@ -84,7 +98,7 @@ describe('resolve links on a README page', () => {
   it('link to home page', () => {
     const target = '/';
     const expected = `/`;
-    const resolved = resolveFilePathToUrlPath({
+    const resolved = resolveContentLink({
       target,
       originFilePath,
     });
@@ -94,7 +108,7 @@ describe('resolve links on a README page', () => {
   it('link ending with README', () => {
     const target = '/README';
     const expected = `/`;
-    const resolved = resolveFilePathToUrlPath({
+    const resolved = resolveContentLink({
       target,
       originFilePath,
     });
@@ -104,7 +118,7 @@ describe('resolve links on a README page', () => {
   it('link ending with .md extension', () => {
     const target = 'post-2.md';
     const expected = `/blog/post-2`;
-    const resolved = resolveFilePathToUrlPath({
+    const resolved = resolveContentLink({
       target,
       originFilePath,
     });
@@ -114,7 +128,7 @@ describe('resolve links on a README page', () => {
   it('link with no sitePrefix', () => {
     const target = 'post-2';
     const expected = `/blog/post-2`;
-    const resolved = resolveFilePathToUrlPath({ target, originFilePath });
+    const resolved = resolveContentLink({ target, originFilePath });
     expect(resolved).toBe(expected);
   });
 
@@ -122,7 +136,7 @@ describe('resolve links on a README page', () => {
     it('same directory, no dot', () => {
       const target = 'post-1';
       const expected = `/blog/post-1`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -132,7 +146,7 @@ describe('resolve links on a README page', () => {
     it('same directory, with dot', () => {
       const target = './post-1';
       const expected = `/blog/post-1`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -142,7 +156,7 @@ describe('resolve links on a README page', () => {
     it('up a directory', () => {
       const target = '../about';
       const expected = `/about`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -152,7 +166,7 @@ describe('resolve links on a README page', () => {
     it('to sibling directory', () => {
       const target = '../projects/project-1';
       const expected = `/projects/project-1`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -164,7 +178,7 @@ describe('resolve links on a README page', () => {
     it('absolute link with heading', () => {
       const target = '/blog/post-1#introduction';
       const expected = `/blog/post-1#introduction`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -174,7 +188,7 @@ describe('resolve links on a README page', () => {
     it('relative link with heading', () => {
       const target = 'post-1#getting-started';
       const expected = `/blog/post-1#getting-started`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -184,7 +198,7 @@ describe('resolve links on a README page', () => {
     it('link with heading containing spaces', () => {
       const target = '/blog/post-1#My Section Title';
       const expected = `/blog/post-1#my-section-title`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -194,7 +208,7 @@ describe('resolve links on a README page', () => {
     it('only heading (same page)', () => {
       const target = '#conclusion';
       const expected = target;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -204,7 +218,7 @@ describe('resolve links on a README page', () => {
     it('relative link up directory with heading', () => {
       const target = '../about#contact-info';
       const expected = `/about#contact-info`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -214,7 +228,7 @@ describe('resolve links on a README page', () => {
     it('link with .md extension and heading', () => {
       const target = 'post-2.md#summary';
       const expected = `/blog/post-2#summary`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -228,14 +242,14 @@ describe('resolve links on non-README page', () => {
 
   it('external link', () => {
     const target = 'https://example.com';
-    const resolved = resolveFilePathToUrlPath({ target, originFilePath });
+    const resolved = resolveContentLink({ target, originFilePath });
     expect(resolved).toBe(target);
   });
 
   it('absolute link', () => {
     const target = '/blog/post-2';
     const expected = `/blog/post-2`;
-    const resolved = resolveFilePathToUrlPath({
+    const resolved = resolveContentLink({
       target,
       originFilePath,
     });
@@ -245,7 +259,7 @@ describe('resolve links on non-README page', () => {
   it('link to home page', () => {
     const target = '/';
     const expected = `/`;
-    const resolved = resolveFilePathToUrlPath({
+    const resolved = resolveContentLink({
       target,
       originFilePath,
     });
@@ -255,7 +269,7 @@ describe('resolve links on non-README page', () => {
   it('link ending with README', () => {
     const target = '/README';
     const expected = `/`;
-    const resolved = resolveFilePathToUrlPath({
+    const resolved = resolveContentLink({
       target,
       originFilePath,
     });
@@ -265,7 +279,7 @@ describe('resolve links on non-README page', () => {
   it('link ending with .md extension', () => {
     const target = 'post-2.md';
     const expected = `/blog/post-2`;
-    const resolved = resolveFilePathToUrlPath({
+    const resolved = resolveContentLink({
       target,
       originFilePath,
     });
@@ -275,7 +289,7 @@ describe('resolve links on non-README page', () => {
   it('link with no sitePrefix', () => {
     const target = 'post-2';
     const expected = `/blog/post-2`;
-    const resolved = resolveFilePathToUrlPath({ target, originFilePath });
+    const resolved = resolveContentLink({ target, originFilePath });
     expect(resolved).toBe(expected);
   });
 
@@ -283,7 +297,7 @@ describe('resolve links on non-README page', () => {
     it('same directory, no dot', () => {
       const target = 'post-2';
       const expected = `/blog/post-2`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -293,7 +307,7 @@ describe('resolve links on non-README page', () => {
     it('same directory, with dot', () => {
       const target = './post-2';
       const expected = `/blog/post-2`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -303,7 +317,7 @@ describe('resolve links on non-README page', () => {
     it('up a directory', () => {
       const target = '../about';
       const expected = `/about`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -313,7 +327,7 @@ describe('resolve links on non-README page', () => {
     it('to sibling directory', () => {
       const target = '../projects/project-1';
       const expected = `/projects/project-1`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -325,7 +339,7 @@ describe('resolve links on non-README page', () => {
     it('absolute link with heading', () => {
       const target = '/blog/post-2#introduction';
       const expected = `/blog/post-2#introduction`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -335,7 +349,7 @@ describe('resolve links on non-README page', () => {
     it('only heading (same page)', () => {
       const target = '#conclusion';
       const expected = target;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });
@@ -345,7 +359,7 @@ describe('resolve links on non-README page', () => {
     it('relative link up directory with heading', () => {
       const target = '../about#contact-info';
       const expected = `/about#contact-info`;
-      const resolved = resolveFilePathToUrlPath({
+      const resolved = resolveContentLink({
         target,
         originFilePath,
       });

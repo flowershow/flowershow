@@ -1,6 +1,6 @@
 import type { Blob as DbBlob } from '@prisma/client';
 import { PageMetadata } from '@/server/api/types';
-import { customEncodeUrl } from './url-encoder';
+import { customEncodeUrl, ensureLeadingSlash } from './url-encoder';
 
 type Meta = PageMetadata | null;
 
@@ -105,11 +105,9 @@ export function buildSiteTree(
     // (without the `.canvas` extension) when there's no title.
     const label = (blob.metadata as PageMetadata | null)?.title || filename;
 
-    // Use permalink if available, otherwise use appPath
-    const pathToUse = blob.permalink || blob.appPath;
-    const urlPath = `${prefix}${
-      pathToUse === '/' ? pathToUse : '/' + pathToUse
-    }`;
+    // Use permalink if available, otherwise use appPath (always has leading slash after migration)
+    const rawPath = blob.permalink || blob.appPath;
+    const urlPath = `${prefix}${ensureLeadingSlash(rawPath ?? '')}`;
 
     parent.children.push({
       kind: 'file',

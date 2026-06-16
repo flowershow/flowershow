@@ -53,8 +53,8 @@ vi.mock('@/lib/server-posthog', () => {
   };
   return { default: () => client };
 });
-vi.mock('@/lib/resolve-link', () => ({
-  resolveFilePathToUrlPath: ({ target }: { target: string }) => `/${target}`,
+vi.mock('@/lib/file-path-to-slug', () => ({
+  filePathToSlug: (filePath: string) => `/${filePath.replace(/^\//, '')}`,
 }));
 
 // ── Import after mocks ─────────────────────────────────────────────

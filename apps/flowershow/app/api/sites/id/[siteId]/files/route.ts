@@ -18,7 +18,7 @@ import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
-import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { filePathToSlug } from '@/lib/file-path-to-slug';
 import PostHogClient from '@/lib/server-posthog';
 import { ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
@@ -174,14 +174,9 @@ export async function POST(
         files.map(async (file) => {
           const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
 
-          const urlPath = (() => {
-            if (['md', 'mdx', 'canvas'].includes(extension)) {
-              const _urlPath = resolveFilePathToUrlPath({ target: file.path });
-              // TODO dirty, temporary patch; instead, make sure all appPaths in the db start with / (currently only root is / )
-              return _urlPath === '/' ? _urlPath : _urlPath.replace(/^\//, '');
-            }
-            return null;
-          })();
+          const urlPath = ['md', 'mdx', 'canvas'].includes(extension)
+            ? filePathToSlug(file.path)
+            : null;
 
           const blob = await prisma.blob.upsert({
             where: { siteId_path: { siteId, path: file.path } },

@@ -1,5 +1,5 @@
 import { visit } from 'unist-util-visit';
-import { resolveFilePathToUrlPath } from './resolve-link';
+import { resolveContentLink } from './resolve-link';
 
 export interface Options {
   /** path to file where the link was used */
@@ -22,7 +22,7 @@ export default function rehypeResolveHtmlUrls(options: Options) {
       if (node.properties) {
         // Handle src attribute (for img, video, audio, iframe, etc.)
         if (node.properties.src && typeof node.properties.src === 'string') {
-          node.properties.src = resolveFilePathToUrlPath({
+          node.properties.src = resolveContentLink({
             target: node.properties.src,
             originFilePath: filePath,
             siteHostname,
@@ -36,7 +36,7 @@ export default function rehypeResolveHtmlUrls(options: Options) {
           const href = node.properties.href;
           const alreadyResolved = href.startsWith('/');
           if (!alreadyResolved) {
-            node.properties.href = resolveFilePathToUrlPath({
+            node.properties.href = resolveContentLink({
               target: href,
               originFilePath: filePath,
               siteHostname,

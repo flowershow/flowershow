@@ -376,6 +376,7 @@ const KNOWN_FILE_EXTENSIONS = new Set([
   // Documents
   'md',
   'mdx',
+  'canvas',
   'pdf',
   'txt',
   'html',

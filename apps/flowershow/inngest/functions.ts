@@ -3,6 +3,7 @@ import { revalidateTag } from 'next/cache';
 import { SiteConfig } from '@/components/types';
 import { deleteBlobs } from '@/lib/blob-cleanup';
 import { deleteProject, uploadFile } from '@/lib/content-store';
+import { filePathToSlug } from '@/lib/file-path-to-slug';
 import {
   fetchGitHubFileRaw,
   fetchGitHubRepoTree,
@@ -13,7 +14,6 @@ import {
 } from '@/lib/github';
 import { log, SeverityNumber } from '@/lib/otel-logger';
 import { isPathVisible } from '@/lib/path-validator';
-import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
 import {
   createSiteCollection,
   deleteSiteCollection,
@@ -218,18 +218,9 @@ export const syncSite = inngest.createFunction(
               try {
                 const extension = ghTreeItem.path.split('.').pop() || '';
 
-                const urlPath = (() => {
-                  if (['md', 'mdx', 'canvas'].includes(extension)) {
-                    const _urlPath = resolveFilePathToUrlPath({
-                      target: filePath,
-                    });
-                    return _urlPath === '/'
-                      ? _urlPath
-                      : _urlPath.replace(/^\//, '');
-                  } else {
-                    return null;
-                  }
-                })();
+                const urlPath = ['md', 'mdx', 'canvas'].includes(extension)
+                  ? filePathToSlug(filePath)
+                  : null;
 
                 // Create/update blob record BEFORE uploading to S3
                 // This ensures the record exists when the S3 worker is triggered

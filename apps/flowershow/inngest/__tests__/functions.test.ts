@@ -40,7 +40,7 @@ vi.mock('@/lib/github', () => ({
 }));
 vi.mock('@/lib/otel-logger', () => ({ log: vi.fn(), SeverityNumber: {} }));
 vi.mock('@/lib/path-validator', () => ({ isPathVisible: vi.fn() }));
-vi.mock('@/lib/resolve-link', () => ({ resolveFilePathToUrlPath: vi.fn() }));
+vi.mock('@/lib/file-path-to-slug', () => ({ filePathToSlug: vi.fn() }));
 
 vi.mock('@/inngest/client', () => ({
   inngest: {

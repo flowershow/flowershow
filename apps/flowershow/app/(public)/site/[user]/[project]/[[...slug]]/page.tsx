@@ -29,6 +29,7 @@ import {
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { processCanvas } from '@/lib/process-canvas';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
+import { ensureLeadingSlash } from '@/lib/url-encoder';
 import type { PageMetadata } from '@/server/api/types';
 import { api } from '@/trpc/server';
 import UrlNormalizer from './_components/url-normalizer';
@@ -47,7 +48,7 @@ export async function generateMetadata(props: {
   const params = await props.params;
   const projectName = decodeURIComponent(params.project);
   const userName = decodeURIComponent(params.user);
-  const slug = params.slug ? params.slug.join('/') : '/';
+  const slug = params.slug ? '/' + params.slug.join('/') : '/';
   const decodedSlug = slug.replace(/%20/g, '+');
 
   const site = await getSite(userName, projectName);
@@ -156,7 +157,7 @@ export default async function SitePage(props: {
   const params = await props.params;
   const projectName = decodeURIComponent(params.project);
   const userName = decodeURIComponent(params.user);
-  const slug = params.slug ? params.slug.join('/') : '/';
+  const slug = params.slug ? '/' + params.slug.join('/') : '/';
   const decodedSlug = slug.replace(/%20/g, '+');
 
   const site = await getSite(userName, projectName);
@@ -173,7 +174,7 @@ export default async function SitePage(props: {
   if (siteConfig?.redirects) {
     for (const r of siteConfig.redirects) {
       // Simple string comparison for exact path matching
-      if ('/' + decodedSlug === r.from) {
+      if (decodedSlug === ensureLeadingSlash(r.from)) {
         const redirectUrl = site.customDomain
           ? r.to
           : `${resolveSiteAlias(
