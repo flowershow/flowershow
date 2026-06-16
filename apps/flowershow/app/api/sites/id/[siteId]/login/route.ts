@@ -69,11 +69,8 @@ export async function POST(
     secure: true,
     sameSite: 'lax',
     maxAge: MAX_AGE,
-    ...(site.customDomain
-      ? { domain: site.customDomain }
-      : {
-          path: `/@${site.user.username}/${site.projectName}`, // scope to this site segment
-        }),
+    path: '/',
+    ...(site.customDomain ? { domain: site.customDomain } : {}),
   });
 
   return NextResponse.json({ success: true } satisfies SuccessResponse);

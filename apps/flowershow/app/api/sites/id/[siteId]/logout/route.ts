@@ -44,11 +44,8 @@ export async function POST(
     secure: true,
     sameSite: 'lax',
     maxAge: 0, // delete
-    ...(site.customDomain
-      ? { domain: site.customDomain }
-      : {
-          path: `/@${site.user.username}/${site.projectName}`, // scope to this site segment
-        }),
+    path: '/',
+    ...(site.customDomain ? { domain: site.customDomain } : {}),
   });
 
   return NextResponse.json({ success: true } satisfies SuccessResponse);
