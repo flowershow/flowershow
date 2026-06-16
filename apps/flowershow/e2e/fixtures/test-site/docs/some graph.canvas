@@ -1,0 +1,72 @@
+{
+  "nodes": [
+    {
+      "id": "obsidian",
+      "type": "text",
+      "x": 0,
+      "y": 0,
+      "width": 200,
+      "height": 80,
+      "text": "Create in Obsidian",
+      "color": "6"
+    },
+    {
+      "id": "canvas",
+      "type": "text",
+      "x": 300,
+      "y": -40,
+      "width": 240,
+      "height": 80,
+      "text": "Draw on Canvas",
+      "color": "5"
+    },
+    {
+      "id": "flowershow",
+      "type": "text",
+      "x": 640,
+      "y": 0,
+      "width": 240,
+      "height": 80,
+      "text": "Bloom on Flowershow",
+      "color": "4"
+    },
+    {
+      "id": "world",
+      "type": "text",
+      "x": 300,
+      "y": 120,
+      "width": 240,
+      "height": 80,
+      "text": "Share with the world",
+      "color": "3"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "fromNode": "obsidian",
+      "toNode": "canvas",
+      "fromSide": "right",
+      "toSide": "left",
+      "toEnd": "arrow"
+    },
+    {
+      "id": "e2",
+      "fromNode": "canvas",
+      "toNode": "flowershow",
+      "fromSide": "right",
+      "toSide": "left",
+      "toEnd": "arrow",
+      "label": "sync"
+    },
+    {
+      "id": "e3",
+      "fromNode": "flowershow",
+      "toNode": "world",
+      "fromSide": "bottom",
+      "toSide": "right",
+      "toEnd": "arrow",
+      "label": "🌸"
+    }
+  ]
+}

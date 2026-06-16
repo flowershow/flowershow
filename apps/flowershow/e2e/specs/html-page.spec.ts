@@ -1,7 +1,7 @@
 import { expect, test } from '../helpers/fixtures';
 
 test('HTML Page Rendering', async ({ page, basePath }) => {
-  await page.goto(`${basePath}/test.html`);
+  await page.goto(`${basePath}/docs/test.html`);
 
   await test.step('renders the page title', async () => {
     await expect(page).toHaveTitle('Test HTML Page');

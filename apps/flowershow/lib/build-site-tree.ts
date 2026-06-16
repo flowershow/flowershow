@@ -44,7 +44,6 @@ type BuildOptions = {
   group?: Grouping; // default: "dirs-first"
   caseInsensitive?: boolean; // default: true
   numeric?: boolean; // default: true
-  prefix?: string; // link prefix to use (/@username/sitename or none for custom domain sites)
 };
 
 export function buildSiteTree(
@@ -56,7 +55,6 @@ export function buildSiteTree(
     group = 'dirs-first',
     caseInsensitive = true,
     numeric = true,
-    prefix = '',
   } = options;
 
   const root: SiteTree = {
@@ -81,7 +79,7 @@ export function buildSiteTree(
         label: toLabel(name),
         name,
         path: nodePath,
-        urlPath: `${prefix}/${customEncodeUrl(nodePath)}`,
+        urlPath: `/${customEncodeUrl(nodePath)}`,
         children: [],
       };
       parent.children.push(node);
@@ -101,13 +99,12 @@ export function buildSiteTree(
 
     // create file node (leaf)
     const filename = parts[parts.length - 1]!;
-    // Canvas files carry no frontmatter, so fall back to a clean filename
-    // (without the `.canvas` extension) when there's no title.
     const label = (blob.metadata as PageMetadata | null)?.title || filename;
 
-    // Use permalink if available, otherwise use appPath (always has leading slash after migration)
+    // Use permalink → appPath → fallback to path (for files like .html that
+    // are served at their raw path URL and never receive an appPath).
     const rawPath = blob.permalink || blob.appPath;
-    const urlPath = `${prefix}${ensureLeadingSlash(rawPath ?? '')}`;
+    const urlPath = rawPath ?? `/${parts.map(customEncodeUrl).join('/')}`;
 
     parent.children.push({
       kind: 'file',
@@ -119,7 +116,7 @@ export function buildSiteTree(
     });
   }
 
-  sortTreeInPlace(root, { orderBy, group, caseInsensitive, numeric, prefix });
+  sortTreeInPlace(root, { orderBy, group, caseInsensitive, numeric });
 
   return root;
 }
@@ -157,7 +154,6 @@ function compareNodes<M>(
   if (isFile(a) && isFile(b)) {
     const ka = orderBy === 'title' ? a.label : a.name;
     const kb = orderBy === 'title' ? b.label : b.name;
-    // Ensure we're comparing strings
     const kaStr = String(ka ?? '');
     const kbStr = String(kb ?? '');
     return kaStr.localeCompare(kbStr, undefined, opts);

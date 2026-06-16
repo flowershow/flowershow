@@ -1071,10 +1071,7 @@ export const siteRouter = createTRPCRouter({
                     { metadata: { path: ['publish'], equals: Prisma.AnyNull } }, // no publish field
                   ],
                 },
-                // Canvas files render as standalone pages, so they appear in
-                // the sidebar nav too. They carry no frontmatter (metadata is
-                // null), but need an appPath to be linkable.
-                { extension: 'canvas', appPath: { not: null } },
+                { extension: { in: ['canvas', 'html'] } },
               ],
             },
             select: {
@@ -1113,7 +1110,6 @@ export const siteRouter = createTRPCRouter({
 
           const tree = buildSiteTree(filteredBlobs, {
             orderBy: input.orderBy,
-            prefix: '',
           });
 
           // When a single sidebar path is configured, flatten the tree

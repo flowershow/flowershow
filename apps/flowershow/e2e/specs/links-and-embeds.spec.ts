@@ -16,7 +16,7 @@ test('Links', async ({ page, basePath }) => {
 
   await test.step('CM: internal link to home resolves to site path', async () => {
     const link = content.locator('a', { hasText: 'Internal link to home' });
-    await expect(link).toHaveAttribute('href', basePath);
+    await expect(link).toHaveAttribute('href', basePath + '/');
   });
 
   await test.step('CM: internal link to page resolves to site path', async () => {
