@@ -103,9 +103,7 @@ export function buildSiteTree(
     const filename = parts[parts.length - 1]!;
     // Canvas files carry no frontmatter, so fall back to a clean filename
     // (without the `.canvas` extension) when there's no title.
-    const label =
-      (blob.metadata as PageMetadata | null)?.title ||
-      filename.replace(/\.canvas$/, '');
+    const label = (blob.metadata as PageMetadata | null)?.title || filename;
 
     // Use permalink if available, otherwise use appPath
     const pathToUse = blob.permalink || blob.appPath;

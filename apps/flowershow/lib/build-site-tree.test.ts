@@ -364,7 +364,7 @@ describe('Site Tree', () => {
           children: [
             {
               kind: 'file',
-              label: 'architecture',
+              label: 'architecture.canvas',
               name: 'architecture.canvas',
               path: 'notes/architecture.canvas',
               urlPath: '/notes/architecture.canvas',
@@ -373,7 +373,7 @@ describe('Site Tree', () => {
         },
         {
           kind: 'file',
-          label: 'Roadmap',
+          label: 'Roadmap.canvas',
           name: 'Roadmap.canvas',
           path: 'Roadmap.canvas',
           urlPath: '/Roadmap.canvas',
