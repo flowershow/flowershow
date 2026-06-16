@@ -160,6 +160,17 @@ function createMockDb({
         }
         return matches;
       }),
+      aggregate: vi.fn(async () => {
+        const dates = blobs.map((b) => b.updatedAt).filter(Boolean);
+        return {
+          _max: {
+            updatedAt:
+              dates.length > 0
+                ? new Date(Math.max(...dates.map((d) => d.getTime())))
+                : null,
+          },
+        };
+      }),
     },
     site: {
       findFirst: vi.fn(async () => site),

@@ -293,6 +293,7 @@ describe('POST /api/sites/id/:siteId/files', () => {
         3600,
         expect.any(String),
         { 'publish-id': 'publish-xyz' },
+        expect.any(Set),
       );
     });
 
@@ -308,6 +309,7 @@ describe('POST /api/sites/id/:siteId/files', () => {
         'site-1/main/raw/docs/page.md',
         3600,
         expect.any(String),
+        undefined,
         undefined,
       );
     });
