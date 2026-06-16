@@ -302,8 +302,8 @@ describe('site.getBlob', () => {
         makeBlob({
           id: 'permalink-blob',
           path: 'some/deep/page.md',
-          appPath: 'some/deep/page',
-          permalink: 'my-page',
+          appPath: '/some/deep/page',
+          permalink: '/my-page',
         }),
       ];
       const db = createMockDb({ blobs });
@@ -311,7 +311,7 @@ describe('site.getBlob', () => {
 
       const result = await caller.site.getBlob({
         siteId: 'site-1',
-        slug: 'my-page',
+        slug: '/my-page',
       });
 
       expect(result.id).toBe('permalink-blob');

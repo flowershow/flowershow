@@ -32,7 +32,8 @@ export function normalizePermalink(permalink) {
     return null;
   }
 
-  return permalink.replace(/^\/+/, '').replace(/\/+$/, '');
+  const trimmed = permalink.replace(/^\/+/, '').replace(/\/+$/, '');
+  return trimmed ? `/${trimmed}` : null;
 }
 
 function normalizeImageExtension(ext) {

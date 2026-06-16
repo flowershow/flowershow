@@ -1224,7 +1224,7 @@ export const siteRouter = createTRPCRouter({
             // Use permalink if available, otherwise use app_path
             const pathToUse = blob.permalink || blob.app_path;
             return {
-              url: `/${pathToUse}`,
+              url: pathToUse,
               metadata,
             };
           });
@@ -1685,10 +1685,7 @@ export const siteRouter = createTRPCRouter({
             if (blob.permalink) {
               // TODO prepend paths
               const path = '/' + blob.path;
-              let url = blob.permalink.replace(/^\//, '');
-              url = `/${url}`;
-
-              mapping[path] = url;
+              mapping[path] = blob.permalink;
             }
           }
 
