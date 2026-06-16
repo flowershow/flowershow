@@ -1,7 +1,7 @@
 name = "flowershow-markdown-worker"
 main = "src/worker.js"
 compatibility_date = "2024-03-18"
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = ["nodejs_compat", "rpc"]
 
 [observability]
 enabled = true
@@ -22,6 +22,11 @@ max_retries = 3
 binding = "BUCKET"
 bucket_name = "flowershow-cloud"
 
+[[env.production.workflows]]
+binding = "SYNC_WORKFLOW"
+name = "flowershow-sync-workflow"
+class_name = "SyncSiteWorkflow"
+
 # STAGING
 [env.staging.vars]
 ENVIRONMENT = "staging"
@@ -36,6 +41,11 @@ max_retries = 3
 [[env.staging.r2_buckets]]
 binding = "BUCKET"
 bucket_name = "flowershow-cloud-staging"
+
+[[env.staging.workflows]]
+binding = "SYNC_WORKFLOW"
+name = "flowershow-sync-workflow-staging"
+class_name = "SyncSiteWorkflow"
 
 # DEV
 [env.dev]
@@ -54,3 +64,8 @@ queue = "markdown-processing-queue-dev"
 max_batch_size = 10
 max_batch_timeout = 1
 max_retries = 3
+
+[[env.dev.workflows]]
+binding = "SYNC_WORKFLOW"
+name = "flowershow-sync-workflow-dev"
+class_name = "SyncSiteWorkflow"

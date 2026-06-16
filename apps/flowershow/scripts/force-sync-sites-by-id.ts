@@ -19,25 +19,24 @@
  * REQUIREMENTS:
  *   - The script must be run from the datahub-next directory
  *   - Database connection must be configured (.env file)
- *   - Inngest must be properly configured
+ *   - CF_SYNC_WORKER_URL and CF_SYNC_WORKER_SECRET must be configured
  *   - At least one site ID must be provided
  *
  * WHAT IT DOES:
  *   1. Parses the provided site IDs from command-line arguments
  *   2. Fetches the specified sites from the database
- *   3. For each site, sends an Inngest event to trigger force sync
+ *   3. For each site, triggers a force sync via Cloudflare Workflows
  *   4. Supports both GitHub App installations and OAuth access tokens
  *   5. Skips sites without valid authentication
  *   6. Provides a summary of successful and failed syncs
  *
  * NOTE:
- *   - Syncs run asynchronously via Inngest
- *   - Monitor progress in the Inngest dashboard
+ *   - Syncs run asynchronously via Cloudflare Workflows
  *   - Use DRY_RUN mode first to preview the operation
  */
 
 import { PrismaClient } from '@prisma/client';
-import { inngest } from '../inngest/client';
+import { triggerSiteSync } from '../lib/trigger-sync';
 
 const prisma = new PrismaClient();
 
@@ -188,19 +187,15 @@ async function main() {
         console.log();
         successCount++;
       } else {
-        // Send sync event to Inngest with forceSync flag
-        await inngest.send({
-          name: 'site/sync',
-          data: {
-            siteId: site.id,
-            ghRepository: repoFullName,
-            ghBranch: site.ghBranch,
-            rootDir: site.rootDir || null,
-            accessToken: githubAccount?.access_token ?? undefined,
-            installationId:
-              site.installationRepository?.installationId ?? undefined,
-            forceSync: true,
-          },
+        await triggerSiteSync({
+          siteId: site.id,
+          ghRepository: repoFullName,
+          ghBranch: site.ghBranch,
+          rootDir: site.rootDir || null,
+          accessToken: githubAccount?.access_token ?? undefined,
+          installationId:
+            site.installationRepository?.installationId ?? undefined,
+          forceSync: true,
         });
 
         console.log(`✓ Triggered force sync for: ${siteIdentifier}`);
@@ -234,8 +229,9 @@ async function main() {
   }
 
   if (!dryRun && successCount > 0) {
-    console.log('\n⚠️  Note: Syncs are running in the background via Inngest.');
-    console.log('Check the Inngest dashboard to monitor progress.');
+    console.log(
+      '\n⚠️  Note: Syncs are running in the background via Cloudflare Workflows.',
+    );
   }
 }
 

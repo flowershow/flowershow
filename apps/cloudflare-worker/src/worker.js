@@ -12,6 +12,9 @@ import {
   parseMarkdownForSync,
   parseObjectKey,
 } from './processing-utils.js';
+import { SyncSiteWorkflow } from './sync-workflow.js';
+
+export { SyncSiteWorkflow };
 
 // --- CONFIGURATION & VALIDATION ---
 const REQUIRED_ENV_VARS = ['DATABASE_URL'];
@@ -374,10 +377,38 @@ async function handleMessage({ msg, storage, sql, typesense, env }) {
 }
 
 export default {
-  // HTTP endpoint (health + dev adapter)
+  // HTTP endpoint (health + dev adapter + sync trigger)
   async fetch(request, env, _ctx) {
     validateEnv(env);
     const url = new URL(request.url);
+
+    if (request.method === 'POST' && url.pathname === '/sync') {
+      const authHeader = request.headers.get('Authorization');
+      const expectedToken = `Bearer ${env.SYNC_TRIGGER_SECRET}`;
+      if (!env.SYNC_TRIGGER_SECRET || authHeader !== expectedToken) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return new Response('Invalid JSON', { status: 400 });
+      }
+
+      const { siteId, ghRepository, ghBranch, rootDir, accessToken, forceSync, gitCommitSha, gitCommitMessage } = body;
+      if (!siteId || !ghRepository || !ghBranch || !accessToken) {
+        return new Response('Missing required fields: siteId, ghRepository, ghBranch, accessToken', { status: 400 });
+      }
+
+      const instanceId = `sync-${siteId}-${Date.now()}`;
+      const instance = await env.SYNC_WORKFLOW.create({
+        id: instanceId,
+        params: { siteId, ghRepository, ghBranch, rootDir, accessToken, forceSync, gitCommitSha, gitCommitMessage },
+      });
+
+      return Response.json({ instanceId: instance.id }, { status: 202 });
+    }
 
     if (env.ENVIRONMENT === 'dev' && url.pathname === '/queue') {
       let event;

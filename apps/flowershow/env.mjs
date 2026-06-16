@@ -58,6 +58,9 @@ export const env = createEnv({
     TYPESENSE_ADMIN_API_KEY: z.string(),
     SITE_ACCESS_JWT_SECRET: z.string(),
     ANONYMOUS_JWT_SECRET: z.string(),
+    CF_SYNC_WORKER_URL: z.string().url().optional(),
+    CF_SYNC_WORKER_SECRET: z.string().optional(),
+    INTERNAL_API_SECRET: z.string().optional(),
   },
 
   /**
@@ -152,6 +155,9 @@ export const env = createEnv({
     NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
     SITE_ACCESS_JWT_SECRET: process.env.SITE_ACCESS_JWT_SECRET,
     ANONYMOUS_JWT_SECRET: process.env.ANONYMOUS_JWT_SECRET,
+    CF_SYNC_WORKER_URL: process.env.CF_SYNC_WORKER_URL,
+    CF_SYNC_WORKER_SECRET: process.env.CF_SYNC_WORKER_SECRET,
+    INTERNAL_API_SECRET: process.env.INTERNAL_API_SECRET,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
   emptyStringAsUndefined: true,

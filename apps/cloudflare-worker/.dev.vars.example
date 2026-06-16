@@ -15,3 +15,11 @@ S3_FORCE_PATH_STYLE=true
 
 # Optional S3 settings
 S3_REGION=us-east-1  # Defaults to us-east-1 for MinIO if not set
+
+# Sync workflow secrets
+# SYNC_TRIGGER_SECRET: authenticates /sync requests from the Next.js app (same value as CF_SYNC_WORKER_SECRET in .env)
+SYNC_TRIGGER_SECRET=some-shared-secret-between-nextjs-and-worker
+# INTERNAL_API_SECRET: authenticates revalidation callbacks from the worker to Next.js
+INTERNAL_API_SECRET=some-secret-the-worker-uses-to-call-back-nextjs
+# NEXTJS_APP_URL: base URL of the Next.js app for revalidation callbacks
+NEXTJS_APP_URL=http://localhost:3000

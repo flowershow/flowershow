@@ -2,22 +2,6 @@ import { EventSchemas, Inngest } from 'inngest';
 import { env } from '@/env.mjs';
 
 /* Types */
-interface SiteSync {
-  data: {
-    siteId: string;
-    ghRepository: string;
-    ghBranch: string;
-    rootDir: string | null;
-    accessToken?: string; // Optional for GitHub App installations
-    installationId?: string; // For GitHub App installations
-    forceSync?: boolean;
-    gitCommitSha?: string | null;
-    gitCommitMessage?: string | null;
-  };
-}
-
-interface SiteCreate extends SiteSync {}
-
 interface SiteDelete {
   data: {
     siteId: string;
@@ -80,8 +64,6 @@ interface EmailCustomDomainCheck {
 
 /* Events */
 type Events = {
-  'site/sync': SiteSync;
-  'site/create': SiteCreate;
   'site/delete': SiteDelete;
   'email/welcome.send': EmailWelcome;
   'email/premium-upgrade.send': EmailPremiumUpgrade;

@@ -4,7 +4,6 @@ import {
   cleanupExpiredPublishFiles,
   cleanupExpiredSites,
   deleteSite,
-  syncSite,
 } from '@/inngest/functions';
 import {
   checkCustomDomainAndNotify,
@@ -18,7 +17,6 @@ import {
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [
-    syncSite,
     deleteSite,
     cleanupExpiredSites,
     cleanupExpiredPublishFiles,

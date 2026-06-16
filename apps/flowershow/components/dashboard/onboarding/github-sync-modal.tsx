@@ -167,7 +167,7 @@ export default function GitHubSyncModal({
       setShowModal={handleClose}
       closeOnClickOutside={!isConnecting}
     >
-      <div className="w-full max-w-xl bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden">
+      <div className="w-full bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden">
         {/* Connect step - no installations yet */}
         {step === 'connect' && (
           <div className="relative flex flex-col space-y-6 p-5 md:p-10">

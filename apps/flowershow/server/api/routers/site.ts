@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { isNavDropdown, SiteConfig } from '@/components/types';
 import { env } from '@/env.mjs';
 import { inngest } from '@/inngest/client';
+import { triggerSiteSync } from '@/lib/trigger-sync';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { buildSiteTree } from '@/lib/build-site-tree';
 import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
@@ -356,17 +357,14 @@ export const siteRouter = createTRPCRouter({
         });
         await deleteProject(id).catch(() => {}); // TODO handle it in a better way
         if (repoFullName && site.ghBranch) {
-          await inngest.send({
-            name: 'site/sync',
-            data: {
-              siteId: id,
-              ghRepository: repoFullName,
-              ghBranch: site.ghBranch,
-              rootDir: newRoot,
-              accessToken: ctx.session.accessToken,
-              installationId:
-                site.installationRepository?.installationId ?? undefined,
-            },
+          await triggerSiteSync({
+            siteId: id,
+            ghRepository: repoFullName,
+            ghBranch: site.ghBranch,
+            rootDir: newRoot,
+            accessToken: ctx.session.accessToken,
+            installationId:
+              site.installationRepository?.installationId ?? undefined,
           });
         }
       } else {
@@ -385,18 +383,15 @@ export const siteRouter = createTRPCRouter({
           key === 'enableSearch' &&
           converted === true
         ) {
-          await inngest.send({
-            name: 'site/sync',
-            data: {
-              siteId: id,
-              ghRepository: repoFullName,
-              ghBranch: site.ghBranch,
-              rootDir: site.rootDir,
-              accessToken: ctx.session.accessToken,
-              installationId:
-                site.installationRepository?.installationId ?? undefined,
-              forceSync: true,
-            },
+          await triggerSiteSync({
+            siteId: id,
+            ghRepository: repoFullName,
+            ghBranch: site.ghBranch,
+            rootDir: site.rootDir,
+            accessToken: ctx.session.accessToken,
+            installationId:
+              site.installationRepository?.installationId ?? undefined,
+            forceSync: true,
           });
         }
       }
@@ -2032,16 +2027,13 @@ export const siteRouter = createTRPCRouter({
       });
 
       // Trigger initial sync
-      await inngest.send({
-        name: 'site/sync',
-        data: {
-          siteId,
-          ghRepository,
-          ghBranch,
-          rootDir: rootDir || null,
-          accessToken: ctx.session.accessToken,
-          installationId: verifiedInstallationId,
-        },
+      await triggerSiteSync({
+        siteId,
+        ghRepository,
+        ghBranch,
+        rootDir: rootDir || null,
+        accessToken: ctx.session.accessToken,
+        installationId: verifiedInstallationId,
       });
 
       // Analytics

@@ -2,13 +2,13 @@ import type { SuccessResponse } from '@flowershow/api-contract';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
-import { inngest } from '@/inngest/client';
 import {
   clearInstallationTokenCache,
   getInstallationToken,
 } from '@/lib/github';
 import { log, SeverityNumber } from '@/lib/otel-logger';
 import PostHogClient from '@/lib/server-posthog';
+import { triggerSiteSync } from '@/lib/trigger-sync';
 import prisma from '@/server/db';
 
 interface WebhookPayload {
@@ -598,7 +598,7 @@ async function handlePushEvent(data: WebhookPayload) {
     const branch = ref.replace('refs/heads/', '');
     const ghInstallationId = BigInt(installation.id);
 
-    // Look up a DB installation record to get the CUID for inngest token resolution
+    // Look up a DB installation record to get the CUID for token resolution
     const dbInstallation = await prisma.gitHubInstallation.findFirst({
       where: { installationId: ghInstallationId },
       select: { id: true },
@@ -651,20 +651,17 @@ async function handlePushEvent(data: WebhookPayload) {
 
     const syncResults = await Promise.allSettled(
       sites.map((site) =>
-        inngest.send({
-          name: 'site/sync',
-          data: {
-            siteId: site.id,
-            // Prefer the webhook's current repo name (always up-to-date) over the
-            // potentially-stale Site.ghRepository column.
-            ghRepository: repository.full_name,
-            ghBranch: site.ghBranch!,
-            rootDir: site.rootDir,
-            installationId:
-              site.installationRepository?.installationId ?? dbInstallation.id,
-            gitCommitSha,
-            gitCommitMessage,
-          },
+        triggerSiteSync({
+          siteId: site.id,
+          // Prefer the webhook's current repo name (always up-to-date) over the
+          // potentially-stale Site.ghRepository column.
+          ghRepository: repository.full_name,
+          ghBranch: site.ghBranch!,
+          rootDir: site.rootDir,
+          installationId:
+            site.installationRepository?.installationId ?? dbInstallation.id,
+          gitCommitSha,
+          gitCommitMessage,
         }),
       ),
     );
