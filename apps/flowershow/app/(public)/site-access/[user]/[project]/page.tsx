@@ -74,11 +74,13 @@ export default async function LoginPage(props: {
     site.customDomain ?? `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
   // TODO: nav.logo is deprecated in favour of root logo — remove nav.logo fallback once migration period ends
-  const resolvedLogo = siteConfig?.logo ?? siteConfig?.nav?.logo ?? config.logo;
-  const logo = resolveContentLink({
-    target: resolvedLogo,
-    siteHostname,
-  });
+  const logo = siteConfig?.logo ?? siteConfig?.nav?.logo ?? config.logo;
+  // Use the raw API endpoint instead of the site URL so _next/image can fetch the
+  // logo server-side without hitting the password gate on the site domain.
+  const resolvedLogo =
+    logo && !logo.startsWith('http') && !isEmoji(logo)
+      ? `https://${siteHostname}/api/raw/${userName}/${projectName}/${logo.replace(/^\//, '')}`
+      : logo;
 
   return (
     <div
@@ -89,9 +91,9 @@ export default async function LoginPage(props: {
         fontBrand.variable,
       )}
     >
-      {resolvedLogo && isEmoji(resolvedLogo) ? (
+      {logo && isEmoji(logo) ? (
         <span className="text-6xl" aria-label="Logo" role="img">
-          {resolvedLogo}
+          {logo}
         </span>
       ) : (
         <Image
@@ -99,7 +101,7 @@ export default async function LoginPage(props: {
           width={100}
           height={100}
           className="relative mx-auto h-12 w-auto"
-          src={logo}
+          src={resolvedLogo}
         />
       )}
       <h1 className="mt-6 text-center font-dashboard-heading text-3xl">
