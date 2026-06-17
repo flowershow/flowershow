@@ -16,10 +16,11 @@ type PublishSource =
   | 'github_webhook'
   | 'cli'
   | 'obsidian_plugin'
-  | 'dashboard_upload';
+  | 'dashboard_upload'
+  | 'anonymous';
 type PublishStatus = 'PENDING' | 'SUCCESS' | 'ERROR' | 'CANCELED' | 'LEGACY';
 type ChangeType = 'added' | 'updated' | 'deleted';
-type FileStatus = 'uploading' | 'success' | 'error' | 'canceled';
+type FileStatus = 'uploading' | 'success' | 'error' | 'canceled' | 'expired';
 
 interface PublishFile {
   id: string;
@@ -51,6 +52,7 @@ const SOURCE_LABELS: Record<PublishSource, string> = {
   cli: 'CLI',
   obsidian_plugin: 'Obsidian',
   dashboard_upload: 'Dashboard',
+  anonymous: 'Anonymous',
 };
 
 function StatusBadge({ status }: { status: PublishStatus }) {

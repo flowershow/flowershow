@@ -106,7 +106,7 @@ export type PublishFilesResponse = z.infer<typeof PublishFilesResponseSchema>;
 export const PublishFileStatusSchema = z.object({
   id: z.string(),
   path: z.string(),
-  status: z.enum(['uploading', 'success', 'error', 'canceled']),
+  status: z.enum(['uploading', 'success', 'error', 'canceled', 'expired']),
   error: z.string().nullable(),
   extension: z.string().nullable(),
 });

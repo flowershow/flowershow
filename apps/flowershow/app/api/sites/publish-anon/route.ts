@@ -18,6 +18,7 @@ import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import PostHogClient from '@/lib/server-posthog';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { buildAnonSiteSubdomain } from '@/lib/site-subdomain';
+import { startPublishLifecycle } from '@/lib/trigger-lifecycle';
 import { ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
@@ -180,6 +181,16 @@ export async function POST(request: NextRequest) {
     // Ensure Typesense collection exists for search indexing
     await ensureSiteCollection(site.id);
 
+    // Create Publish record for lifecycle tracking (fixes missing history for anon publishes)
+    const publish = await prisma.publish.create({
+      data: {
+        siteId: site.id,
+        source: 'anonymous',
+      },
+    });
+
+    const presignedUrlExpiresAt = new Date(Date.now() + 3600 * 1000);
+
     // Create blob records and generate upload URLs for all files
     const fileUploads: FileUploadInfo[] = [];
 
@@ -203,19 +214,42 @@ export async function POST(request: NextRequest) {
         },
       });
 
-      // Generate presigned upload URL
+      await prisma.publishFile.create({
+        data: {
+          publishId: publish.id,
+          path: file.fileName,
+          changeType: 'added',
+          status: 'uploading',
+          presignedUrlExpiresAt,
+        },
+      });
+
+      // Generate presigned upload URL — embed publishId so the queue consumer
+      // can credit this publish when the file is processed
       const s3Key = `${site.id}/main/raw/${file.fileName}`;
       const contentType = getContentType(extension);
       const uploadUrl = await generatePresignedUploadUrl(
         s3Key,
         3600, // 1 hour expiry
         contentType,
+        { 'publish-id': publish.id },
+        new Set(['x-amz-meta-publish-id']),
       );
 
       fileUploads.push({
         fileName: file.fileName,
         uploadUrl,
       });
+    }
+
+    // Start lifecycle workflow — waits for queue consumer to signal completion
+    try {
+      await startPublishLifecycle(publish.id, site.id);
+    } catch (lifecycleErr) {
+      console.error(
+        'Failed to start lifecycle workflow for anon publish:',
+        lifecycleErr,
+      );
     }
 
     // Construct live URL

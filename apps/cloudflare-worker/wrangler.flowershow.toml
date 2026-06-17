@@ -13,7 +13,7 @@ ENVIRONMENT = "production"
 POSTHOG_HOST = "https://eu.i.posthog.com"
 
 [env.production.triggers]
-crons = ["*/15 * * * *", "0 3 * * *"]
+crons = ["0 3 * * *"]
 
 [[env.production.queues.consumers]]
 queue = "flowershow-markdown-queue"
@@ -26,9 +26,9 @@ binding = "BUCKET"
 bucket_name = "flowershow-cloud"
 
 [[env.production.workflows]]
-binding = "SYNC_WORKFLOW"
-name = "flowershow-sync-workflow"
-class_name = "SyncSiteWorkflow"
+binding = "PUBLISH_WORKFLOW"
+name = "flowershow-publish-workflow"
+class_name = "PublishWorkflow"
 
 # STAGING
 [env.staging.vars]
@@ -36,7 +36,7 @@ ENVIRONMENT = "staging"
 POSTHOG_HOST = "https://eu.i.posthog.com"
 
 [env.staging.triggers]
-crons = ["*/15 * * * *", "0 3 * * *"]
+crons = ["0 3 * * *"]
 
 [[env.staging.queues.consumers]]
 queue = "flowershow-markdown-queue-staging"
@@ -49,9 +49,9 @@ binding = "BUCKET"
 bucket_name = "flowershow-cloud-staging"
 
 [[env.staging.workflows]]
-binding = "SYNC_WORKFLOW"
-name = "flowershow-sync-workflow-staging"
-class_name = "SyncSiteWorkflow"
+binding = "PUBLISH_WORKFLOW"
+name = "flowershow-publish-workflow-staging"
+class_name = "PublishWorkflow"
 
 # DEV
 [env.dev]
@@ -72,6 +72,6 @@ max_batch_timeout = 1
 max_retries = 3
 
 [[env.dev.workflows]]
-binding = "SYNC_WORKFLOW"
-name = "flowershow-sync-workflow-dev"
-class_name = "SyncSiteWorkflow"
+binding = "PUBLISH_WORKFLOW"
+name = "flowershow-publish-workflow-dev"
+class_name = "PublishWorkflow"

@@ -177,6 +177,15 @@ enum PublishSource {
   cli
   obsidian_plugin
   dashboard_upload
+  anonymous
+}
+
+enum PublishStatus {
+  in_progress
+  finalizing
+  success
+  error
+  superseded
 }
 
 enum PublishFileChangeType {
@@ -190,6 +199,7 @@ enum PublishFileStatus {
   success
   error
   canceled
+  expired
 }
 
 model Publish {
@@ -197,7 +207,9 @@ model Publish {
   site              Site          @relation(fields: [siteId], references: [id], onDelete: Cascade)
   siteId            String        @map("site_id")
   source            PublishSource
+  status            PublishStatus @default(in_progress)
   startedAt         DateTime      @default(now()) @map("started_at")
+  completedAt       DateTime?     @map("completed_at")
   gitCommitSha      String?       @map("git_commit_sha")
   gitCommitMessage  String?       @map("git_commit_message")
   legacy            Boolean       @default(false)

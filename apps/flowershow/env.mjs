@@ -57,8 +57,8 @@ export const env = createEnv({
     TYPESENSE_ADMIN_API_KEY: z.string(),
     SITE_ACCESS_JWT_SECRET: z.string(),
     ANONYMOUS_JWT_SECRET: z.string(),
-    CF_SYNC_WORKER_URL: z.string().url().optional(),
-    CF_SYNC_WORKER_SECRET: z.string().optional(),
+    CF_SYNC_WORKER_URL: z.string(),
+    CF_SYNC_WORKER_SECRET: z.string(),
     INTERNAL_API_SECRET: z.string().optional(),
   },
 

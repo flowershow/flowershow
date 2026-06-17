@@ -15,6 +15,7 @@ import {
 import { filePathToSlug } from '@/lib/file-path-to-slug';
 import { log, SeverityNumber } from '@/lib/otel-logger';
 import PostHogClient from '@/lib/server-posthog';
+import { startPublishLifecycle } from '@/lib/trigger-lifecycle';
 import { ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
@@ -366,6 +367,24 @@ export async function POST(
         }
       } finally {
         revalidateTag(siteId);
+      }
+
+      if (!isLegacy) {
+        const hasUploadingFiles = toUpload.length + toUpdate.length > 0;
+        if (hasUploadingFiles) {
+          // Start lifecycle workflow — waits for queue consumer to signal completion
+          try {
+            await startPublishLifecycle(publish.id, siteId);
+          } catch (lifecycleErr) {
+            console.error('Failed to start lifecycle workflow:', lifecycleErr);
+          }
+        } else {
+          // Deletions only — all PublishFile rows are already terminal; finalize now
+          await prisma.publish.update({
+            where: { id: publish.id },
+            data: { status: 'success', completedAt: new Date() },
+          });
+        }
       }
     }
 

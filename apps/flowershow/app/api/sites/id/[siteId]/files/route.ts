@@ -20,6 +20,7 @@ import {
 } from '@/lib/content-store';
 import { filePathToSlug } from '@/lib/file-path-to-slug';
 import PostHogClient from '@/lib/server-posthog';
+import { startPublishLifecycle } from '@/lib/trigger-lifecycle';
 import { ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
@@ -229,6 +230,14 @@ export async function POST(
       );
     } finally {
       revalidateTag(siteId);
+    }
+
+    if (!isLegacy) {
+      try {
+        await startPublishLifecycle(publish.id, siteId);
+      } catch (lifecycleErr) {
+        console.error('Failed to start lifecycle workflow:', lifecycleErr);
+      }
     }
 
     const response: PublishFilesResponse = {
