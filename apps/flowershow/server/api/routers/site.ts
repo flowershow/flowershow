@@ -6,7 +6,9 @@ import { revalidateTag, unstable_cache } from 'next/cache';
 import { z } from 'zod';
 import { isNavDropdown, SiteConfig } from '@/components/types';
 import { env } from '@/env.mjs';
+import { SiteCreatedEmail } from '@/emails/site-created';
 import { inngest } from '@/inngest/client';
+import { sendEmail } from '@/lib/email';
 import { triggerSiteSync } from '@/lib/trigger-sync';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { buildSiteTree } from '@/lib/build-site-tree';
@@ -212,15 +214,11 @@ export const siteRouter = createTRPCRouter({
 
       if (creator?.email) {
         const siteUrl = `https://${created.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
-        await inngest.send({
-          name: 'email/site-created.send',
-          data: {
-            userId: ctx.session.user.id,
-            email: creator.email,
-            name: creator.name,
-            siteUrl,
-            projectName,
-          },
+        const userName = creator.name?.split(' ')[0] || 'there';
+        await sendEmail({
+          to: creator.email,
+          subject: `Your site "${projectName}" is live!`,
+          react: SiteCreatedEmail({ userName, siteUrl, projectName }),
         });
       }
 
@@ -325,20 +323,6 @@ export const siteRouter = createTRPCRouter({
             // If the site had a different customDomain before, we need to remove it from Vercel
             if (site.customDomain && site.customDomain !== newDomain) {
               await removeDomainAndVariantFromVercelProject(site.customDomain);
-            }
-
-            // Send a delayed email to check if domain is properly configured
-            if (site.user.email) {
-              await inngest.send({
-                name: 'email/custom-domain.check',
-                data: {
-                  userId: ctx.session.user.id,
-                  email: site.user.email,
-                  name: site.user.name,
-                  domain: newDomain,
-                  siteId: id,
-                },
-              });
             }
           } else {
             // Non-production: only update DB
