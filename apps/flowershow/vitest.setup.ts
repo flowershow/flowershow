@@ -28,7 +28,6 @@ vi.mock('@/env.mjs', () => ({
     BREVO_API_KEY: 'test-brevo-key',
     BREVO_CONTACT_LISTID: '1',
     TURNSTILE_SECRET_KEY: 'test-turnstile-secret',
-    INNGEST_APP_ID: 'test-inngest-app',
     STRIPE_SECRET_KEY: 'sk_test_xxx',
     STRIPE_WEBHOOK_SECRET: 'whsec_test',
     RESEND_API_KEY: 'test-resend-key',

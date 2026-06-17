@@ -12,6 +12,9 @@ head_sampling_rate = 1
 ENVIRONMENT = "production"
 POSTHOG_HOST = "https://eu.i.posthog.com"
 
+[env.production.triggers]
+crons = ["*/15 * * * *", "0 3 * * *"]
+
 [[env.production.queues.consumers]]
 queue = "flowershow-markdown-queue"
 max_batch_size = 10
@@ -31,6 +34,9 @@ class_name = "SyncSiteWorkflow"
 [env.staging.vars]
 ENVIRONMENT = "staging"
 POSTHOG_HOST = "https://eu.i.posthog.com"
+
+[env.staging.triggers]
+crons = ["*/15 * * * *", "0 3 * * *"]
 
 [[env.staging.queues.consumers]]
 queue = "flowershow-markdown-queue-staging"

@@ -23,7 +23,7 @@ vi.mock('@/server/db', () => ({
 }));
 
 vi.mock('@/lib/stripe', () => ({ stripe: {} }));
-vi.mock('@/inngest/client', () => ({ inngest: { send: vi.fn() } }));
+vi.mock('@/lib/typesense', () => ({ deleteSiteCollection: vi.fn() }));
 vi.mock('@/lib/server-posthog', () => {
   const client = {
     capture: vi.fn(),

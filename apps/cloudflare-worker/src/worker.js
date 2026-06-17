@@ -376,6 +376,98 @@ async function handleMessage({ msg, storage, sql, typesense, env }) {
   }
 }
 
+// --- CLEANUP HELPERS ---
+
+async function deleteSiteStorage(storage, siteId) {
+  const prefix = `${siteId}/`;
+  if (storage.type === 's3') {
+    let truncated = true;
+    while (truncated) {
+      const listed = await storage.client.send(
+        new ListObjectsV2Command({ Bucket: storage.bucket, Prefix: prefix }),
+      );
+      if (!listed.Contents || listed.Contents.length === 0) break;
+      await storage.client.send(
+        new DeleteObjectsCommand({
+          Bucket: storage.bucket,
+          Delete: {
+            Objects: listed.Contents.map(({ Key }) => ({ Key })),
+            Quiet: true,
+          },
+        }),
+      );
+      truncated = listed.IsTruncated;
+    }
+  } else {
+    let cursor;
+    do {
+      const listed = await storage.client.list({ prefix, cursor, limit: 1000 });
+      const keys = listed.objects.map((o) => o.key);
+      if (keys.length > 0) {
+        await storage.client.delete(keys);
+      }
+      cursor = listed.truncated ? listed.cursor : undefined;
+    } while (cursor);
+  }
+}
+
+async function cleanupExpiredPublishFiles(sql) {
+  await sql`
+    UPDATE "PublishFile"
+    SET status = 'error', error = 'upload expired'
+    WHERE status = 'uploading'
+      AND presigned_url_expires_at IS NOT NULL
+      AND presigned_url_expires_at < NOW()
+  `;
+
+  await sql`
+    UPDATE "PublishFile"
+    SET status = 'canceled'
+    WHERE status = 'uploading'
+      AND presigned_url_expires_at IS NULL
+      AND publish_id IN (
+        SELECT id FROM "Publish"
+        WHERE started_at < NOW() - INTERVAL '2 hours'
+      )
+  `;
+
+  console.log('cleanupExpiredPublishFiles: done');
+}
+
+async function cleanupExpiredSites({ sql, storage, typesense }) {
+  const expiredSites = await sql`
+    SELECT id FROM "Site"
+    WHERE is_temporary = true
+      AND expires_at <= NOW()
+  `;
+
+  if (expiredSites.length === 0) {
+    console.log('cleanupExpiredSites: no expired sites');
+    return;
+  }
+
+  console.log(`cleanupExpiredSites: deleting ${expiredSites.length} sites`);
+
+  for (const site of expiredSites) {
+    try {
+      await sql`DELETE FROM "Site" WHERE id = ${site.id}`;
+      await deleteSiteStorage(storage, site.id);
+      if (typesense) {
+        try {
+          await typesense.collections(`${site.id}`).delete();
+        } catch (err) {
+          if (err?.httpStatus !== 404) {
+            console.error(`Failed to delete Typesense collection ${site.id}:`, err.message);
+          }
+        }
+      }
+      console.log(`cleanupExpiredSites: deleted site ${site.id}`);
+    } catch (err) {
+      console.error(`cleanupExpiredSites: failed for site ${site.id}:`, err.message);
+    }
+  }
+}
+
 export default {
   // HTTP endpoint (health + dev adapter + sync trigger)
   async fetch(request, env, _ctx) {
@@ -431,6 +523,23 @@ export default {
       return new Response('OK', { status: 200 });
     }
     return new Response('Not Found', { status: 404 });
+  },
+
+  // Cron triggers
+  async scheduled(controller, env, _ctx) {
+    validateEnv(env);
+    const sql = getPostgresClient(env);
+    try {
+      if (controller.cron === '*/15 * * * *') {
+        await cleanupExpiredPublishFiles(sql);
+      } else if (controller.cron === '0 3 * * *') {
+        const storage = getStorageClient(env);
+        const typesense = getTypesenseClient(env);
+        await cleanupExpiredSites({ sql, storage, typesense });
+      }
+    } finally {
+      await sql.end();
+    }
   },
 
   // Queue consumer entry point

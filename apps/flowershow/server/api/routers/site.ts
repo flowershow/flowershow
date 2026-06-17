@@ -7,7 +7,6 @@ import { z } from 'zod';
 import { isNavDropdown, SiteConfig } from '@/components/types';
 import { env } from '@/env.mjs';
 import { SiteCreatedEmail } from '@/emails/site-created';
-import { inngest } from '@/inngest/client';
 import { sendEmail } from '@/lib/email';
 import { triggerSiteSync } from '@/lib/trigger-sync';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
@@ -20,6 +19,7 @@ import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
+import { deleteSiteCollection } from '@/lib/typesense';
 import {
   addDomainToVercel,
   getDomainVariant,
@@ -597,13 +597,8 @@ export const siteRouter = createTRPCRouter({
         await removeDomainAndVariantFromVercelProject(site.customDomain);
       }
 
-      await inngest.send({
-        name: 'site/delete',
-        data: {
-          siteId: site.id,
-          accessToken: ctx.session.accessToken,
-        },
-      });
+      await deleteProject(site.id);
+      await deleteSiteCollection(site.id);
 
       const posthog = PostHogClient();
       posthog.capture({
