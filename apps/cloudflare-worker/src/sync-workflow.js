@@ -242,6 +242,7 @@ async function getGitHubInstallationToken(githubInstallationId, env) {
         Authorization: `Bearer ${jwt}`,
         Accept: 'application/vnd.github+json',
         'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'flowershow-worker',
       },
     },
   );
@@ -264,6 +265,7 @@ async function githubFetch(url, token, accept = 'application/vnd.github+json') {
       Authorization: `Bearer ${token}`,
       Accept: accept,
       'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'flowershow-worker',
     },
   });
   if (!response.ok) {
@@ -523,7 +525,7 @@ export class SyncSiteWorkflow extends WorkflowEntrypoint {
 
                 // Upsert Blob record before uploading so the queue worker can find it
                 await sql`
-                  INSERT INTO "Blob" (id, site_id, path, app_path, size, sha, metadata, extension)
+                  INSERT INTO "Blob" (id, site_id, path, app_path, size, sha, metadata, extension, updated_at)
                   VALUES (
                     ${generateId()},
                     ${siteId},
@@ -532,12 +534,14 @@ export class SyncSiteWorkflow extends WorkflowEntrypoint {
                     ${ghTreeItem.size || 0},
                     ${ghTreeItem.sha},
                     ${null},
-                    ${extension}
+                    ${extension},
+                    NOW()
                   )
                   ON CONFLICT (site_id, path) DO UPDATE SET
                     app_path = EXCLUDED.app_path,
                     size = EXCLUDED.size,
-                    sha = EXCLUDED.sha
+                    sha = EXCLUDED.sha,
+                    updated_at = NOW()
                 `;
 
                 const fileBuffer = await fetchGitHubFileRaw(
@@ -559,8 +563,8 @@ export class SyncSiteWorkflow extends WorkflowEntrypoint {
                 );
                 // Ensure a Blob record exists even on failure so the site isn't broken
                 await sql`
-                  INSERT INTO "Blob" (id, site_id, path, size, sha, metadata)
-                  VALUES (${generateId()}, ${siteId}, ${filePath}, 0, '', ${null})
+                  INSERT INTO "Blob" (id, site_id, path, size, sha, metadata, updated_at)
+                  VALUES (${generateId()}, ${siteId}, ${filePath}, 0, '', ${null}, NOW())
                   ON CONFLICT (site_id, path) DO NOTHING
                 `;
               }
