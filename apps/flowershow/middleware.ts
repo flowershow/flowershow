@@ -225,6 +225,18 @@ export default async function middleware(req: NextRequest) {
       );
     }
 
+    // Check for raw asset files before the password gate so that
+    // Next.js image optimizer (which fetches server-side without cookies)
+    // can still load images. Password-protected sites use presigned URLs
+    // in the raw route, so assets remain time-limited.
+    const raw = rewriteRawIfNeeded(
+      path,
+      `/api/raw/${username}/${projectname}`,
+      req,
+      phBootstrap,
+    );
+    if (raw) return raw;
+
     const guard = await ensureSiteAccess(req, site, phBootstrap);
     if (guard) return guard;
 
@@ -239,14 +251,6 @@ export default async function middleware(req: NextRequest) {
     if (pathname === '/rss.xml') {
       return rewrite(`/api/rss/${username}/${projectname}`, req, phBootstrap);
     }
-
-    const raw = rewriteRawIfNeeded(
-      path,
-      `/api/raw/${username}/${projectname}`,
-      req,
-      phBootstrap,
-    );
-    if (raw) return raw;
 
     return rewrite(
       `/site/${username}/${projectname}${pathname}${searchParams}`,
@@ -269,6 +273,15 @@ export default async function middleware(req: NextRequest) {
     return rewrite(`/site-access/_domain/${hostname}`, req, phBootstrap);
   }
 
+  // Check for raw asset files before the password gate (same reason as subdomain path above).
+  const raw = rewriteRawIfNeeded(
+    path,
+    `/api/raw/_domain/${hostname}`,
+    req,
+    phBootstrap,
+  );
+  if (raw) return raw;
+
   // Password gate
   const guard = await ensureSiteAccess(req, site, phBootstrap);
   if (guard) return guard;
@@ -283,15 +296,6 @@ export default async function middleware(req: NextRequest) {
   if (pathname === '/rss.xml') {
     return rewrite(`/api/rss/_domain/${hostname}`, req, phBootstrap);
   }
-
-  // Raw asset file access
-  const raw = rewriteRawIfNeeded(
-    path,
-    `/api/raw/_domain/${hostname}`,
-    req,
-    phBootstrap,
-  );
-  if (raw) return raw;
 
   // Render custom-domain site (path already includes search params)
   return withPHBootstrapCookie(
