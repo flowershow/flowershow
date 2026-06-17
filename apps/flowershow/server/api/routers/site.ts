@@ -637,7 +637,13 @@ export const siteRouter = createTRPCRouter({
         const latestPublish = await ctx.db.publish.findFirst({
           where: { siteId: site.id },
           orderBy: { startedAt: 'desc' },
-          select: { id: true, startedAt: true, legacy: true },
+          select: {
+            id: true,
+            startedAt: true,
+            completedAt: true,
+            legacy: true,
+            status: true,
+          },
         });
 
         if (!latestPublish) {
@@ -662,21 +668,18 @@ export const siteRouter = createTRPCRouter({
           return { status: 'SUCCESS', lastSyncedAt: latestPublish.startedAt };
         }
 
-        const publishFiles = await ctx.db.publishFile.findMany({
-          where: { publishId: latestPublish.id },
-          select: { status: true, error: true, path: true },
-        });
-
-        if (publishFiles.length === 0) {
+        if (
+          latestPublish.status === 'in_progress' ||
+          latestPublish.status === 'finalizing'
+        ) {
           return { status: 'PENDING', lastSyncedAt: latestPublish.startedAt };
         }
 
-        if (publishFiles.some((f) => f.status === 'uploading')) {
-          return { status: 'PENDING', lastSyncedAt: latestPublish.startedAt };
-        }
-
-        const errorFiles = publishFiles.filter((f) => f.status === 'error');
-        if (errorFiles.length > 0) {
+        if (latestPublish.status === 'error') {
+          const errorFiles = await ctx.db.publishFile.findMany({
+            where: { publishId: latestPublish.id, status: 'error' },
+            select: { path: true, error: true },
+          });
           const error = errorFiles
             .map((f) =>
               f.error
@@ -686,13 +689,16 @@ export const siteRouter = createTRPCRouter({
             .join('\n');
           return {
             status: 'ERROR',
-            error,
-            lastSyncedAt: latestPublish.startedAt,
+            error: error || null,
+            lastSyncedAt: latestPublish.completedAt ?? latestPublish.startedAt,
           };
         }
 
-        // All terminal with no errors (may include canceled files) → SUCCESS
-        return { status: 'SUCCESS', lastSyncedAt: latestPublish.startedAt };
+        // success or superseded → SUCCESS
+        return {
+          status: 'SUCCESS',
+          lastSyncedAt: latestPublish.completedAt ?? latestPublish.startedAt,
+        };
       },
     ),
 
@@ -724,6 +730,7 @@ export const siteRouter = createTRPCRouter({
           gitCommitSha: true,
           gitCommitMessage: true,
           legacy: true,
+          status: true,
           files: {
             select: {
               id: true,
@@ -757,18 +764,14 @@ export const siteRouter = createTRPCRouter({
         }
 
         const files = p.files;
-        const hasPending =
-          files.length === 0 || files.some((f) => f.status === 'uploading');
-        const hasError = !hasPending && files.some((f) => f.status === 'error');
-        const hasCanceled =
-          !hasPending && files.some((f) => f.status === 'canceled');
-        const status: 'PENDING' | 'SUCCESS' | 'ERROR' | 'CANCELED' = hasPending
-          ? 'PENDING'
-          : hasError
-            ? 'ERROR'
-            : hasCanceled
-              ? 'CANCELED'
-              : 'SUCCESS';
+        const status: 'PENDING' | 'SUCCESS' | 'ERROR' | 'CANCELED' =
+          p.status === 'in_progress' || p.status === 'finalizing'
+            ? 'PENDING'
+            : p.status === 'error'
+              ? 'ERROR'
+              : p.status === 'superseded'
+                ? 'CANCELED'
+                : 'SUCCESS';
 
         return {
           id: p.id,

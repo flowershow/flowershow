@@ -22,9 +22,13 @@ GITHUB_APP_ID=your_github_app_id
 GITHUB_APP_PRIVATE_KEY=base64_encoded_pem_private_key
 
 # Sync workflow secrets
-# SYNC_TRIGGER_SECRET: authenticates /sync requests from the Next.js app (same value as CF_SYNC_WORKER_SECRET in .env)
+# SYNC_TRIGGER_SECRET: authenticates /sync requests from the Next.js app — must match CF_SYNC_WORKER_SECRET in Next.js .env
 SYNC_TRIGGER_SECRET=some-shared-secret-between-nextjs-and-worker
-# INTERNAL_API_SECRET: authenticates revalidation callbacks from the worker to Next.js
+# INTERNAL_API_SECRET: authenticates revalidation callbacks from the worker to Next.js — must match INTERNAL_API_SECRET in Next.js .env
 INTERNAL_API_SECRET=some-secret-the-worker-uses-to-call-back-nextjs
-# NEXTJS_APP_URL: base URL of the Next.js app for revalidation callbacks
+# NEXTJS_APP_URL: base URL of the Next.js app for revalidation callbacks after a publish completes
 NEXTJS_APP_URL=http://localhost:3000
+
+# PostHog error tracking (optional — worker reports errors without it)
+# POSTHOG_KEY=your-posthog-project-api-key
+# POSTHOG_HOST=https://eu.i.posthog.com
