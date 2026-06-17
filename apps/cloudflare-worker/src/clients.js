@@ -2,7 +2,12 @@ import { S3Client } from '@aws-sdk/client-s3';
 import postgres from 'postgres';
 import { Client } from 'typesense';
 
-const REQUIRED_ENV_VARS = ['DATABASE_URL'];
+const REQUIRED_ENV_VARS = [
+  'DATABASE_URL',
+  'GITHUB_APP_ID',
+  'GITHUB_APP_PRIVATE_KEY',
+  'SYNC_TRIGGER_SECRET',
+];
 
 export function validateEnv(env) {
   for (const v of REQUIRED_ENV_VARS) {
