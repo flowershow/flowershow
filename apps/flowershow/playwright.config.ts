@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 import {
   FREE_SITE_BASE_URL,
+  PASSWORD_SITE_BASE_URL,
   PREMIUM_SITE_CUSTOM_DOMAIN,
 } from './e2e/helpers/seed';
 
@@ -52,10 +53,20 @@ export default defineConfig({
       dependencies: ['setup'],
     },
     {
+      name: 'password-protection',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: PASSWORD_SITE_BASE_URL,
+        basePath: '',
+      } as any,
+      testMatch: ['**/password-protection.spec.ts'],
+      dependencies: ['setup'],
+    },
+    {
       name: 'teardown',
       testDir: './e2e',
       testMatch: 'teardown.ts',
-      dependencies: ['chromium', 'custom-domain'],
+      dependencies: ['chromium', 'custom-domain', 'password-protection'],
     },
   ],
 });

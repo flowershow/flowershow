@@ -7,6 +7,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import { Plan, PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import { filePathToSlug } from '../../lib/file-path-to-slug';
 import {
   extractImageDimensions,
@@ -42,6 +43,14 @@ export const PREMIUM_SITE = {
   projectName: 'e2e-premium-site',
   customDomain: PREMIUM_SITE_CUSTOM_DOMAIN,
 };
+
+export const PASSWORD_SITE = {
+  id: 'e2e-password-site-id',
+  projectName: 'e2e-password-site',
+};
+export const PASSWORD_SITE_PASSWORD = 'test-password-123';
+export const PASSWORD_SITE_SUBDOMAIN = `${PASSWORD_SITE.projectName}-${TEST_USER.username}`;
+export const PASSWORD_SITE_BASE_URL = `http://${PASSWORD_SITE_SUBDOMAIN}.${process.env.NEXT_PUBLIC_SITE_DOMAIN || 'localhost:3000'}`;
 
 // --- Prisma ---
 
@@ -317,9 +326,32 @@ export async function seed(): Promise<void> {
     },
   });
 
-  // 4. Upload fixtures to MinIO and create Blob records for both sites
+  // 4. Upsert Password Site
+  const accessPasswordHash = await bcrypt.hash(PASSWORD_SITE_PASSWORD, 10);
+  await db.site.upsert({
+    where: { id: PASSWORD_SITE.id },
+    create: {
+      id: PASSWORD_SITE.id,
+      projectName: PASSWORD_SITE.projectName,
+      subdomain: PASSWORD_SITE_SUBDOMAIN,
+      userId: TEST_USER.id,
+      privacyMode: 'PASSWORD',
+      accessPasswordHash,
+      tokenVersion: 1,
+    },
+    update: {
+      projectName: PASSWORD_SITE.projectName,
+      subdomain: PASSWORD_SITE_SUBDOMAIN,
+      privacyMode: 'PASSWORD',
+      accessPasswordHash,
+      tokenVersion: 1,
+    },
+  });
+
+  // 5. Upload fixtures to MinIO and create Blob records for all sites
   await uploadFixturesForSite(FREE_SITE.id, db, s3);
   await uploadFixturesForSite(PREMIUM_SITE.id, db, s3);
+  await uploadFixturesForSite(PASSWORD_SITE.id, db, s3);
 }
 
 // --- Teardown ---

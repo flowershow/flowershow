@@ -225,10 +225,23 @@ export default async function middleware(req: NextRequest) {
       );
     }
 
-    // Check for raw asset files before the password gate so that
-    // Next.js image optimizer (which fetches server-side without cookies)
-    // can still load images. Password-protected sites use presigned URLs
-    // in the raw route, so assets remain time-limited.
+    // Images bypass the password gate so the Next.js image optimizer
+    // (which runs server-side without cookies) can still fetch them.
+    // The raw handler issues a short-lived presigned URL for these.
+    const rawImage = rewriteRawIfNeeded(
+      path,
+      `/api/raw/${username}/${projectname}`,
+      req,
+      phBootstrap,
+      IMAGE_FILE_EXTENSIONS,
+    );
+    if (rawImage) return rawImage;
+
+    const guard = await ensureSiteAccess(req, site, phBootstrap);
+    if (guard) return guard;
+
+    // Non-image raw files (e.g. .md, .pdf, .html) are served after the
+    // password gate so password-protected sites redirect to login here.
     const raw = rewriteRawIfNeeded(
       path,
       `/api/raw/${username}/${projectname}`,
@@ -236,9 +249,6 @@ export default async function middleware(req: NextRequest) {
       phBootstrap,
     );
     if (raw) return raw;
-
-    const guard = await ensureSiteAccess(req, site, phBootstrap);
-    if (guard) return guard;
 
     if (pathname === '/sitemap.xml') {
       return rewrite(
@@ -273,7 +283,21 @@ export default async function middleware(req: NextRequest) {
     return rewrite(`/site-access/_domain/${hostname}`, req, phBootstrap);
   }
 
-  // Check for raw asset files before the password gate (same reason as subdomain path above).
+  // Images bypass the password gate (same reason as subdomain path above).
+  const rawImage = rewriteRawIfNeeded(
+    path,
+    `/api/raw/_domain/${hostname}`,
+    req,
+    phBootstrap,
+    IMAGE_FILE_EXTENSIONS,
+  );
+  if (rawImage) return rawImage;
+
+  // Password gate
+  const guard = await ensureSiteAccess(req, site, phBootstrap);
+  if (guard) return guard;
+
+  // Non-image raw files served after the password gate.
   const raw = rewriteRawIfNeeded(
     path,
     `/api/raw/_domain/${hostname}`,
@@ -281,10 +305,6 @@ export default async function middleware(req: NextRequest) {
     phBootstrap,
   );
   if (raw) return raw;
-
-  // Password gate
-  const guard = await ensureSiteAccess(req, site, phBootstrap);
-  if (guard) return guard;
 
   // Per-site sitemap
   if (pathname === '/sitemap.xml') {
@@ -376,6 +396,15 @@ function redirectToSiteLogin(
  * NOTE: Multi-part extensions (e.g., .tar.gz, .d.ts) are not currently supported.
  * Only the last segment after the final dot is checked against this whitelist.
  */
+const IMAGE_FILE_EXTENSIONS = new Set([
+  'png',
+  'jpg',
+  'jpeg',
+  'gif',
+  'svg',
+  'webp',
+]);
+
 const KNOWN_FILE_EXTENSIONS = new Set([
   // Documents
   'md',
@@ -435,6 +464,7 @@ function rewriteRawIfNeeded(
   apiBase: string,
   req: NextRequest,
   ph: PHBootstrap,
+  allowedExtensions: Set<string> = KNOWN_FILE_EXTENSIONS,
 ) {
   // Extract the path before query parameters
   const [pathPart] = inputPath.split('&');
@@ -455,7 +485,7 @@ function rewriteRawIfNeeded(
   // Check if the extension is in our whitelist of known file types
   // This prevents false positives where dots are part of the filename
   // (e.g., "my.data.file" won't be treated as having a "file" extension)
-  if (!KNOWN_FILE_EXTENSIONS.has(potentialExt)) {
+  if (!allowedExtensions.has(potentialExt)) {
     return null; // Not a recognized file extension, treat as regular path
   }
 

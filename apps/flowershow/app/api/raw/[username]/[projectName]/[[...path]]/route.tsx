@@ -1,7 +1,12 @@
+import { jwtVerify } from 'jose';
 import { NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
+import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
 import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
+import { siteKeyBytes } from '@/lib/site-hmac-key';
 import prisma from '@/server/db';
+
+const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp']);
 
 export async function GET(
   req: NextRequest,
@@ -24,26 +29,40 @@ export async function GET(
     username === '_domain'
       ? await prisma.site.findFirst({
           where: { customDomain: projectName },
-          select: { id: true, privacyMode: true },
+          select: { id: true, privacyMode: true, tokenVersion: true },
         })
       : await prisma.site.findFirst({
           where: { projectName, user: { username } },
-          select: { id: true, privacyMode: true },
+          select: { id: true, privacyMode: true, tokenVersion: true },
         });
 
   if (!site) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  // R2 keys use the literal path (matching how uploadFile stores them — no URL encoding).
-  // URL-encoding is only needed when constructing HTTP redirect URLs, not the key itself.
   const rawPath = path.join('/');
   const r2Key = `${site.id}/main/raw/${rawPath}`;
 
-  const isHtml = rawPath.endsWith('.html');
+  const ext = rawPath.slice(rawPath.lastIndexOf('.') + 1).toLowerCase();
+  const isImage = IMAGE_EXTENSIONS.has(ext);
+  const isHtml = ext === 'html';
 
-  // HTML files: proxy the content so the browser renders them
-  // instead of redirecting to R2 (which triggers a download).
+  // Non-image files on password-protected sites require a valid session cookie.
+  // Images are exempt so the Next.js image optimizer (server-side, no cookie) still works.
+  if (site.privacyMode === 'PASSWORD' && !isImage) {
+    const cookie = req.cookies.get(SITE_ACCESS_COOKIE_NAME(site.id));
+    if (!cookie || !site.tokenVersion) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    try {
+      const secret = await siteKeyBytes(site.id, site.tokenVersion);
+      await jwtVerify(cookie.value, secret, { audience: site.id });
+    } catch {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+  }
+
+  // HTML files: proxy content so the browser renders rather than downloads.
   if (isHtml) {
     try {
       const content = await fetchFile({
@@ -62,15 +81,15 @@ export async function GET(
     }
   }
 
-  // For password-protected sites, use a short-lived presigned URL
-  // so the asset is only accessible briefly even if the URL is shared.
+  // Password-protected sites: short-lived presigned URL.
+  // Images: presigned URL replaces cookie auth for the image optimizer.
+  // Non-images: cookie already verified above; presigned URL still limits URL sharing.
   if (site.privacyMode === 'PASSWORD') {
     const signedUrl = await generatePresignedGetUrl(r2Key, 300); // 5 minutes
     return NextResponse.redirect(signedUrl, 302);
   }
 
-  // For public sites, redirect directly to the R2 public domain.
-  // If Cloudflare CDN is in front of this domain, images are cached at edge.
+  // Public sites: redirect to the R2 public domain (CDN-cached at edge).
   const encodedPath = path
     .map((segment) => encodeURIComponent(segment))
     .join('/');
