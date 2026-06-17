@@ -35,21 +35,20 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  const encodedPath = path
-    .map((segment) => encodeURIComponent(segment))
-    .join('/');
-  const r2Key = `${site.id}/main/raw/${encodedPath}`;
+  // R2 keys use the literal path (matching how uploadFile stores them — no URL encoding).
+  // URL-encoding is only needed when constructing HTTP redirect URLs, not the key itself.
+  const rawPath = path.join('/');
+  const r2Key = `${site.id}/main/raw/${rawPath}`;
 
-  const isHtml = encodedPath.endsWith('.html');
+  const isHtml = rawPath.endsWith('.html');
 
   // HTML files: proxy the content so the browser renders them
   // instead of redirecting to R2 (which triggers a download).
   if (isHtml) {
     try {
-      const decodedPath = path.map(decodeURIComponent).join('/');
       const content = await fetchFile({
         projectId: site.id,
-        path: decodedPath,
+        path: rawPath,
       });
       if (!content) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -72,11 +71,15 @@ export async function GET(
 
   // For public sites, redirect directly to the R2 public domain.
   // If Cloudflare CDN is in front of this domain, images are cached at edge.
+  const encodedPath = path
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+
   const isSecure =
     env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
     env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
   const protocol = isSecure ? 'https' : 'http';
-  const publicUrl = `${protocol}://${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${r2Key}`;
+  const publicUrl = `${protocol}://${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${site.id}/main/raw/${encodedPath}`;
 
   return NextResponse.redirect(publicUrl, 302);
 }
