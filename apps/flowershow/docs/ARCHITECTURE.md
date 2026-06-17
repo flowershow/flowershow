@@ -116,8 +116,8 @@ This is the primary flow for users who connect a GitHub repo to their site.
 
 1. User installs the Flowershow GitHub App on their repo.
 2. On push, GitHub sends a webhook to `POST /api/webhooks/github-app`.
-3. The webhook handler validates the payload, looks up the site by installationId + repo, and sends an Inngest `site/sync` event.
-4. The Inngest sync function (`inngest/functions.ts`):
+3. The webhook handler validates the payload, looks up the site by installationId + repo, and calls the Cloudflare Worker `/sync` endpoint to start a `SyncSiteWorkflow`.
+4. The Cloudflare Worker sync workflow (`apps/cloudflare-worker/src/sync-workflow.js`):
    - Fetches the GitHub tree via API (uses installationId for auth).
    - Compares tree SHA against the stored tree to detect changes.
    - Diffs remote files against existing Blob records.
@@ -367,10 +367,6 @@ lib/
   actions.ts            # Server actions (site lookup, blob queries)
   remark-*.ts           # Custom remark plugins (wiki-links, callouts, etc.)
 
-inngest/
-  client.ts             # Inngest client init
-  functions.ts          # Background jobs: site/sync, site/delete, cleanupExpiredSites
-
 components/
   dashboard/            # Dashboard UI (23 files): site cards, settings forms, token management
   public/               # Public site UI (20+ files): layout, nav, sidebar, TOC, search
@@ -392,7 +388,6 @@ middleware.ts           # Multi-domain routing, CORS, auth checks, PostHog proxy
 | **Cloudflare R2**            | File storage (S3-compatible)              | `S3_*` env vars                          |
 | **MinIO**                    | Local dev replacement for R2              | `S3_*` env vars with local endpoint      |
 | **Typesense**                | Full-text search indexing                 | `TYPESENSE_*` env vars                   |
-| **Inngest**                  | Background job processing                 | `INNGEST_*` env vars                     |
 | **Stripe**                   | Subscription billing (FREE/PREMIUM plans) | `STRIPE_*` env vars                      |
 | **GitHub App**               | Repo access, push webhooks                | `GITHUB_APP_*` env vars                  |
 | **PostHog**                  | Product analytics, A/B testing            | `NEXT_PUBLIC_POSTHOG_*` env vars         |

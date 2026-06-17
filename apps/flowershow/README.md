@@ -62,30 +62,29 @@ The site creation process follows these steps:
 
 ## Content Synchronization Architecture
 
-### Inngest Configuration
+### Sync Configuration
 
-The synchronization process is managed by Inngest, with configuration files located in:
+The synchronization process is handled by the Cloudflare Worker (`apps/cloudflare-worker`), triggered via:
 
-- `inngest/client.ts` - Event definitions and client setup
-- `inngest/functions.ts` - Sync and delete functions implementation
+- GitHub webhooks → `POST /api/webhooks/github-app` → Cloudflare Worker `/sync` endpoint
+- Manual UI trigger → tRPC `site.syncSite` → Cloudflare Worker `/sync` endpoint
 
 ```mermaid
 graph TD
     subgraph "Trigger Sources"
         GH[GitHub Push] -->|Webhook| WH[Webhook Handler]
-        UI[Manual UI Trigger] -->|Direct| IE[Inngest Event]
-        WH -->|Validate & Filter| IE
+        UI[Manual UI Trigger] -->|Direct| CW[Cloudflare Worker]
+        WH -->|Validate & Filter| CW
     end
 
-    subgraph "Event Processing"
-        IE -->|site/sync| SF[Sync Function]
-        IE -->|site/delete| DF[Delete Function]
+    subgraph "Processing"
+        CW -->|SyncSiteWorkflow| SF[Sync Workflow]
+        CW -->|Cron: daily| DF[cleanupExpiredSites]
+        CW -->|Cron: every 15min| PF[cleanupExpiredPublishFiles]
     end
 ```
 
 ### Sync Process Details
-
-![](./inngest.webp)
 
 1. **Event Handling and Routes**
 
@@ -93,20 +92,11 @@ graph TD
   - Receives GitHub push events
   - Validates webhook signatures
   - Filters events by branch
-  - Triggers Inngest sync events
+  - Triggers Cloudflare Worker sync
 
-- Inngest Handler (`app/api/inngest/route.ts`):
-  - Serves Inngest webhook endpoints
-  - Registers sync and delete functions
-  - Handles function execution and retries
-
-- Function Configuration (`inngest/functions.ts`):
-  - Concurrency limit: 10 per account
-  - Cancellation on: new sync or delete events
-  - Error handling with specific error types:
-    - BLOB_SYNC_ERROR
-    - INVALID_ROOT_DIR
-    - INTERNAL_ERROR
+- Sync Trigger (`lib/trigger-sync.ts`):
+  - Calls Cloudflare Worker `/sync` endpoint
+  - Creates a `SyncSiteWorkflow` instance
 
 2. **Sync Trigger Points**
    - Automatic (via GitHub webhooks):
@@ -192,19 +182,11 @@ graph TD
      - Network timeouts
      - Storage upload failures
    - Error status visible in site dashboard
-   - Detailed error logs in Inngest dashboard
+   - Error logs in Cloudflare Worker observability dashboard
 
 ### Monitoring and Debugging
 
-The sync process can be monitored through the Inngest Dashboard:
-
-[Inngest Dashboard](https://app.inngest.com) (you need an invite to the organization)
-
-Key metrics available:
-
-- Success/failure rates
-- Processing times
-- Error distribution
+The sync process can be monitored through the Cloudflare Workers dashboard under the `flowershow-markdown-worker` worker.
 - Event queues
 
 ### Local Development
