@@ -1,10 +1,11 @@
 import { getPostgresClient, getStorageClient, getTypesenseClient, validateEnv } from './clients.js';
+import { GitHubSyncWorkflow } from './github-sync-workflow.js';
 import { generateId } from './helpers.js';
 import { handleMessage } from './message-handler.js';
-import { PublishWorkflow } from './publish-workflow.js';
+import { PublishFinalizerWorkflow } from './publish-finalizer-workflow.js';
 import { cleanupExpiredSites } from './storage.js';
 
-export { PublishWorkflow };
+export { GitHubSyncWorkflow, PublishFinalizerWorkflow };
 
 export default {
   // HTTP endpoint (health + dev adapter + sync trigger)
@@ -62,19 +63,30 @@ export default {
             WHERE id = ${prev.id} AND status = 'in_progress'
           `;
           try {
-            const prevInstance = await env.PUBLISH_WORKFLOW.get(prev.id);
-            await prevInstance.terminate();
+            const prevFinalizer = await env.PUBLISH_FINALIZER_WORKFLOW.get(prev.id);
+            await prevFinalizer.terminate();
           } catch (termErr) {
-            console.error(`Failed to terminate workflow ${prev.id}: ${termErr.message}`);
+            console.error(`Failed to terminate finalizer workflow ${prev.id}: ${termErr.message}`);
+          }
+          try {
+            const prevSync = await env.GITHUB_SYNC_WORKFLOW.get(`${prev.id}-github`);
+            await prevSync.terminate();
+          } catch (termErr) {
+            console.error(`Failed to terminate sync workflow ${prev.id}: ${termErr.message}`);
           }
         }
       } finally {
         await sql.end();
       }
 
-      const instance = await env.PUBLISH_WORKFLOW.create({
+      const instance = await env.PUBLISH_FINALIZER_WORKFLOW.create({
         id: publishId,
-        params: { mode: 'github', publishId, siteId, ghRepository, ghBranch, rootDir: rootDir ?? null, githubInstallationId, forceSync: forceSync ?? false, gitCommitSha: gitCommitSha ?? null, gitCommitMessage: gitCommitMessage ?? null },
+        params: { publishId, siteId },
+      });
+
+      await env.GITHUB_SYNC_WORKFLOW.create({
+        id: `${publishId}-github`,
+        params: { publishId, siteId, ghRepository, ghBranch, rootDir: rootDir ?? null, githubInstallationId, forceSync: forceSync ?? false },
       });
 
       return Response.json({ instanceId: instance.id }, { status: 202 });
@@ -99,9 +111,9 @@ export default {
         return new Response('Missing required fields: publishId, siteId', { status: 400 });
       }
 
-      const instance = await env.PUBLISH_WORKFLOW.create({
+      const instance = await env.PUBLISH_FINALIZER_WORKFLOW.create({
         id: publishId,
-        params: { mode: 'presigned', publishId, siteId },
+        params: { publishId, siteId },
       });
 
       return Response.json({ instanceId: instance.id }, { status: 202 });

@@ -36,35 +36,48 @@ The publish pipeline has two pain points:
 
 ## Decision
 
-Replace Inngest with **Cloudflare Workflows** as the durable orchestrator for every publish. One Workflow instance per `Publish` record, with `instanceId = publishId`.
+Replace Inngest with **Cloudflare Workflows** as the durable orchestrator for every publish. Two workflow classes handle distinct responsibilities:
 
-The Queue consumer handles file processing for **all** paths unchanged — R2 event notifications fire on every PUT regardless of origin. The Workflow's role is lifecycle ownership only: it differs between paths solely in how files get into R2.
+- **`PublishFinalizerWorkflow`** — lifecycle owner for all publish paths. `instanceId = publishId` so the Queue consumer can address it by ID. Waits for completion, finalizes the `Publish` record, revalidates cache tags.
+- **`GitHubSyncWorkflow`** — GitHub-only uploader. Replaces `syncSite`. Fetches, diffs, and uploads files; auto-generated instance ID (no external actor needs to address it by ID).
+
+The Queue consumer handles file processing for **all** paths unchanged — R2 event notifications fire on every PUT regardless of origin.
 
 ### Per-path workflow roles
 
-**GitHub path** — the Workflow replaces `syncSite`:
+**GitHub path** — `worker.js` creates both workflows when a GitHub publish triggers:
 
-(`Publish` record is created by the webhook handler before the Workflow starts; `publishId` is passed as a payload param.)
+(`Publish` record is created by the webhook handler before either Workflow starts; `publishId` is passed to both as a payload param.)
+
+`GitHubSyncWorkflow`:
 
 1. Fetch site config (includes/excludes) from GitHub.
 2. Fetch GitHub repo tree; diff against stored Blobs to determine files to upsert and delete.
-3. Create `PublishFile` rows (status=`uploading`) for all files to upsert — in a single step before any uploads begin.
-4. In batches: download files from GitHub, upload to R2 with `publishId` embedded in object metadata.
-5. Handle deletions: remove from R2; create terminal `PublishFile` rows immediately. Blob/Typesense cleanup follows async via `DeleteObject` → queue consumer.
-6. `step.waitForEvent('publish-complete', { timeout: '1h' })`.
-7. On event received: finalize publish (set `Publish.status`, `completedAt`), then revalidate cache tags.
-8. On timeout: mark remaining `uploading` rows as `expired`, finalize as error.
+3. If zero files to process: send `publish-complete` directly to `PublishFinalizerWorkflow` and return.
+4. Create `PublishFile` rows (status=`uploading`) for all files to upsert — in a single step before any uploads begin.
+5. In batches: download files from GitHub, upload to R2 with `publishId` embedded in object metadata.
+6. Handle deletions: remove from R2; create terminal `PublishFile` rows immediately. Blob/Typesense cleanup follows async via `DeleteObject` → queue consumer.
 
-**Presigned paths** (CLI, Obsidian, dashboard) — the API route does the work; the Workflow is a lifecycle owner only:
+`PublishFinalizerWorkflow` (runs concurrently with `GitHubSyncWorkflow`):
+
+1. `step.waitForEvent('publish-complete', { timeout: '1h' })`.
+2. On event received: finalize publish (set `Publish.status`, `completedAt`), then revalidate cache tags.
+3. On timeout: mark remaining `uploading` rows as `expired`, finalize as error.
+
+The `publish-complete` event is sent either by the Queue consumer (normal path, when all files are processed) or by `GitHubSyncWorkflow` itself (zero-files edge case). `PublishFinalizerWorkflow` does not care which actor sends it.
+
+`GitHubSyncWorkflow` requires a `PUBLISH_FINALIZER_WORKFLOW` binding in wrangler config — used only for the zero-files `sendEvent` call.
+
+**Presigned paths** (CLI, Obsidian, dashboard) — the API route does the work; only `PublishFinalizerWorkflow` is created:
 
 The API route (`/sync`, `/files`) — before the Workflow starts:
 
 1. Creates `Publish` record; cancels any `uploading` `PublishFile` rows from prior publishes for the same site (supersession).
 2. Deletes removed files from R2 (Blob/Typesense cleanup async via `DeleteObject` → queue consumer); creates terminal `PublishFile` rows for deletions.
 3. Generates presigned R2 PUT URLs; creates `PublishFile` rows (status=`uploading`, `presignedUrlExpiresAt` set) for files to upload.
-4. If there are uploading files: starts the Workflow. If deletions-only: finalizes the `Publish` immediately — no Workflow needed.
+4. If there are uploading files: starts `PublishFinalizerWorkflow`. If deletions-only: finalizes the `Publish` immediately — no Workflow needed.
 
-The Workflow (started only when there are uploading files):
+`PublishFinalizerWorkflow` (started only when there are uploading files):
 
 1. `step.waitForEvent('publish-complete', { timeout: '1h' })`.
 2. On event received: finalize publish, revalidate cache tags.
@@ -192,7 +205,7 @@ The Queue consumer is robust to the underlying race: both queue events for the s
 
 - Must implement supersession / `cancelOn` manually — Inngest handled this declaratively.
 - Local dev adds a Workflows emulator moving part alongside the existing MinIO + wrangler dev setup.
-- Workflows caps ~1024 steps per instance. At batch size 20, this accommodates ~20k files per GitHub sync — sufficient, but needs a guard and the batch size should not be reduced without rechecking.
+- Workflows caps ~1024 steps per instance. At batch size 20, this accommodates ~20k files per GitHub sync — sufficient for `GitHubSyncWorkflow`, but needs a guard and the batch size should not be reduced without rechecking. `PublishFinalizerWorkflow` uses a small fixed number of steps and is not affected.
 - Queue delivery is at-least-once; the completion check and finalization must remain idempotent (they are, by the atomic UPDATE guard).
 - For non-markdown/non-image file types (PDFs, fonts, HTML, etc.) the consumer now performs one additional R2 GET per file to compute sha. These file types are typically a small fraction of a site's content.
 

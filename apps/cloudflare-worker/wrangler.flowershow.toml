@@ -26,9 +26,14 @@ binding = "BUCKET"
 bucket_name = "flowershow-cloud"
 
 [[env.production.workflows]]
-binding = "PUBLISH_WORKFLOW"
-name = "flowershow-publish-workflow"
-class_name = "PublishWorkflow"
+binding = "PUBLISH_FINALIZER_WORKFLOW"
+name = "flowershow-publish-finalizer-workflow"
+class_name = "PublishFinalizerWorkflow"
+
+[[env.production.workflows]]
+binding = "GITHUB_SYNC_WORKFLOW"
+name = "flowershow-github-sync-workflow"
+class_name = "GitHubSyncWorkflow"
 
 # STAGING
 [env.staging.vars]
@@ -49,9 +54,14 @@ binding = "BUCKET"
 bucket_name = "flowershow-cloud-staging"
 
 [[env.staging.workflows]]
-binding = "PUBLISH_WORKFLOW"
-name = "flowershow-publish-workflow-staging"
-class_name = "PublishWorkflow"
+binding = "PUBLISH_FINALIZER_WORKFLOW"
+name = "flowershow-publish-finalizer-workflow-staging"
+class_name = "PublishFinalizerWorkflow"
+
+[[env.staging.workflows]]
+binding = "GITHUB_SYNC_WORKFLOW"
+name = "flowershow-github-sync-workflow-staging"
+class_name = "GitHubSyncWorkflow"
 
 # DEV
 [env.dev]
@@ -72,6 +82,11 @@ max_batch_timeout = 1
 max_retries = 3
 
 [[env.dev.workflows]]
-binding = "PUBLISH_WORKFLOW"
-name = "flowershow-publish-workflow-dev"
-class_name = "PublishWorkflow"
+binding = "PUBLISH_FINALIZER_WORKFLOW"
+name = "flowershow-publish-finalizer-workflow-dev"
+class_name = "PublishFinalizerWorkflow"
+
+[[env.dev.workflows]]
+binding = "GITHUB_SYNC_WORKFLOW"
+name = "flowershow-github-sync-workflow-dev"
+class_name = "GitHubSyncWorkflow"

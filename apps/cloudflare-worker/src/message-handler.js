@@ -127,7 +127,7 @@ async function checkAndFinalizePublish(sql, env, publishId, siteId) {
   if (result.count !== 1) return;
 
   if (env.ENVIRONMENT === 'dev') {
-    // env.PUBLISH_WORKFLOW.get() is broken in local dev (Miniflare bug — workflow
+    // env.PUBLISH_FINALIZER_WORKFLOW.get() is broken in local dev (Miniflare bug — workflow
     // service URL doesn't resolve in either fetch or queue handler contexts).
     // Replicate what the workflow's finalize-publish step does directly.
     try {
@@ -154,7 +154,7 @@ async function checkAndFinalizePublish(sql, env, publishId, siteId) {
   }
 
   try {
-    const instance = await env.PUBLISH_WORKFLOW.get(publishId);
+    const instance = await env.PUBLISH_FINALIZER_WORKFLOW.get(publishId);
     await instance.sendEvent({ name: 'publish-complete', payload: {} });
   } catch (err) {
     console.error(`Failed to send publish-complete for ${publishId}: ${err.message}`);
