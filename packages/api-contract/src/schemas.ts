@@ -442,6 +442,30 @@ export const RobotsParamsSchema = z.object({
 export type RobotsParams = z.infer<typeof RobotsParamsSchema>;
 
 // ---------------------------------------------------------------------------
+// HeadlessUpload
+// POST /api/sites/id/:siteId/files/headless
+// Upload files directly without creating Publish/PublishFile records.
+// The queue consumer handles Blob upsert and Typesense indexing as normal;
+// no publish lifecycle or cache revalidation is triggered.
+// sha is omitted — with no PublishFile record there is nothing to diff against.
+// ---------------------------------------------------------------------------
+export const HeadlessUploadFileSchema = z.object({
+  path: z.string(),
+  size: z.number(),
+});
+export type HeadlessUploadFile = z.infer<typeof HeadlessUploadFileSchema>;
+
+export const HeadlessUploadRequestSchema = z.object({
+  files: z.array(HeadlessUploadFileSchema).min(1),
+});
+export type HeadlessUploadRequest = z.infer<typeof HeadlessUploadRequestSchema>;
+
+export const HeadlessUploadResponseSchema = z.object({
+  files: z.array(UploadTargetSchema),
+});
+export type HeadlessUploadResponse = z.infer<typeof HeadlessUploadResponseSchema>;
+
+// ---------------------------------------------------------------------------
 // UpgradeRequiredResponse
 // returned by version-check middleware when CLI is outdated
 // ---------------------------------------------------------------------------
