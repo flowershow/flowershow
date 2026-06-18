@@ -84,10 +84,10 @@ test('extractTitle - H1 with only hash symbol returns null', async () => {
   assert.strictEqual(result, null);
 });
 
-test('normalizePermalink trims leading and trailing slashes', () => {
-  assert.strictEqual(normalizePermalink('/docs/page/'), 'docs/page');
-  assert.strictEqual(normalizePermalink('docs/page'), 'docs/page');
-  assert.strictEqual(normalizePermalink('/'), '');
+test('normalizePermalink normalizes to leading slash, no trailing slash', () => {
+  assert.strictEqual(normalizePermalink('/docs/page/'), '/docs/page');
+  assert.strictEqual(normalizePermalink('docs/page'), '/docs/page');
+  assert.strictEqual(normalizePermalink('/'), null);
   assert.strictEqual(normalizePermalink(undefined), null);
 });
 
@@ -111,7 +111,7 @@ test('parseMarkdownForSync preserves explicit publish false and normalizes perma
   });
 
   assert.strictEqual(metadata.publish, false);
-  assert.strictEqual(permalink, 'posts/intro');
+  assert.strictEqual(permalink, '/posts/intro');
   assert.strictEqual(shouldPublish, false);
 });
 

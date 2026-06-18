@@ -1,6 +1,6 @@
-# ADR 008: Replace Inngest with Cloudflare Workflows for the Publish Pipeline
+# ADR 009: Replace Inngest with Cloudflare Workflows for the Publish Pipeline
 
-**Status:** Proposed  
+**Status:** Accepted
 **Date:** 2026-06-13
 
 ## Context
@@ -44,19 +44,31 @@ The Queue consumer handles file processing for **all** paths unchanged — R2 ev
 
 **GitHub path** — the Workflow replaces `syncSite`:
 
-1. Fetch GitHub tree, diff against stored Blobs.
-2. In batches: download files from GitHub, upload to R2 (with `publishId` in object metadata), create `PublishFile` rows (status=`uploading`).
-3. Handle deletions (remove from R2, Typesense, and DB; create terminal `PublishFile` rows immediately).
-4. `step.waitForEvent('publish-complete', { timeout: '1h' })`.
-5. On event received: revalidate cache tags, finalize publish (set `Publish.status`, `completedAt`).
-6. On timeout: mark remaining `uploading` rows as `expired`, finalize as partial/error.
+(`Publish` record is created by the webhook handler before the Workflow starts; `publishId` is passed as a payload param.)
 
-**Presigned paths** (CLI, Obsidian, dashboard) — the Workflow is a lifecycle owner only:
+1. Fetch site config (includes/excludes) from GitHub.
+2. Fetch GitHub repo tree; diff against stored Blobs to determine files to upsert and delete.
+3. Create `PublishFile` rows (status=`uploading`) for all files to upsert — in a single step before any uploads begin.
+4. In batches: download files from GitHub, upload to R2 with `publishId` embedded in object metadata.
+5. Handle deletions: remove from R2; create terminal `PublishFile` rows immediately. Blob/Typesense cleanup follows async via `DeleteObject` → queue consumer.
+6. `step.waitForEvent('publish-complete', { timeout: '1h' })`.
+7. On event received: finalize publish (set `Publish.status`, `completedAt`), then revalidate cache tags.
+8. On timeout: mark remaining `uploading` rows as `expired`, finalize as error.
 
-1. Create `Publish` record and `PublishFile` rows; return presigned URLs to the caller.
-2. `step.waitForEvent('publish-complete', { timeout: '1h' })`.
-3. On event received: finalize publish.
-4. On timeout: mark remaining `uploading` rows as `expired`, finalize as partial/error.
+**Presigned paths** (CLI, Obsidian, dashboard) — the API route does the work; the Workflow is a lifecycle owner only:
+
+The API route (`/sync`, `/files`) — before the Workflow starts:
+
+1. Creates `Publish` record; cancels any `uploading` `PublishFile` rows from prior publishes for the same site (supersession).
+2. Deletes removed files from R2 (Blob/Typesense cleanup async via `DeleteObject` → queue consumer); creates terminal `PublishFile` rows for deletions.
+3. Generates presigned R2 PUT URLs; creates `PublishFile` rows (status=`uploading`, `presignedUrlExpiresAt` set) for files to upload.
+4. If there are uploading files: starts the Workflow. If deletions-only: finalizes the `Publish` immediately — no Workflow needed.
+
+The Workflow (started only when there are uploading files):
+
+1. `step.waitForEvent('publish-complete', { timeout: '1h' })`.
+2. On event received: finalize publish, revalidate cache tags.
+3. On timeout: mark remaining `uploading` rows as `expired`, finalize as error.
 
 ### Blob creation — queue consumer owns the full lifecycle
 
@@ -67,6 +79,7 @@ Blob records are created **lazily** by the queue consumer, not eagerly by the AP
 **How the consumer creates a Blob:**
 
 When a file arrives in R2, the consumer:
+
 1. Derives `path`, `extension`, and `appPath` (URL slug) from the R2 object key.
 2. Reads the file content (GET). For markdown and image files this read already happens for other reasons; for all other file types it is an additional fetch.
 3. Computes `sha` as a git blob SHA: `SHA1("blob {size}\0{content}")`. This matches the format used by the GitHub tree API and by the CLI, so the diff logic on both paths remains correct.
@@ -82,6 +95,35 @@ When a file arrives in R2, the consumer:
 - `blobId` is removed from API responses (`/sync`, `/files`) — the Blob does not exist at response time. The CLI struct field was already unused.
 
 **Anonymous path** — treated identically to the presigned paths. `/api/sites/publish-anon` will be updated to create a `Publish` record (source=`anonymous`) and `PublishFile` rows, start a Workflow instance, and embed `publishId` in presigned URL metadata — the same as the authenticated presigned flow. This also fixes the existing bug where anonymous publishes are not tracked in publish history at all.
+
+### Blob deletion — queue consumer owns the full lifecycle
+
+Blob records and Typesense documents are deleted **lazily** by the queue consumer, not eagerly by the Workflow or API routes.
+
+**Rationale:** Mirrors the creation decision. The Workflow can only confirm that an R2 delete was issued — it cannot know whether the object actually existed, so it is not the right place to reason about Blob state. Delegating to the DeleteObject event keeps ownership of Blob lifecycle (create and delete) in one actor.
+
+**How it works:**
+
+When a file is deleted from R2, the bucket emits a `DeleteObject` event to the same queue that handles `PutObject` events. The consumer's `processDeleteEvent` handler:
+
+1. Derives `siteId` and `path` from the R2 object key.
+2. Fetches the `Blob` row by `(site_id, path)` to get `id`.
+3. Deletes the Typesense document by `blob.id` (no-op if not indexed).
+4. Deletes the `Blob` record from DB.
+
+**Consequences for the Workflow and API routes:**
+
+- The GitHub Workflow's delete batch steps remove files from R2 only — no Typesense or DB deletion code.
+- `/sync` and `/files` DELETE handlers call `deleteBlobs(siteId, paths)` which removes from R2 only (no DB or Typesense).
+- `publishFiles` tRPC procedure removed; dashboard components call the REST `/files` endpoint directly.
+
+**Infrastructure requirement:**
+
+R2 buckets must be configured to emit `DeleteObject` events to the same queue as `PutObject` events:
+- Production: `flowershow-markdown-queue`
+- Staging: `flowershow-markdown-queue-staging`
+
+This is configured in the Cloudflare dashboard (R2 → bucket → Event notifications). No `wrangler.toml` changes needed.
 
 ### Publish completion signal (all tracked paths)
 
