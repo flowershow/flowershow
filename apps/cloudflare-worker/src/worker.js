@@ -114,13 +114,18 @@ export default {
       } catch {
         return new Response('Invalid JSON', { status: 400 });
       }
-      const rawKey = event.Records?.[0]?.s3?.object?.key;
+      const record = event.Records?.[0];
+      const rawKey = record?.s3?.object?.key;
       if (!rawKey) {
         return new Response('Bad S3 event', { status: 400 });
       }
       // Spaces in object keys from Minio are encoded as +
       const decodedKey = decodeURIComponent(rawKey.replace(/\+/g, ' '));
-      await env.FILE_PROCESSOR_QUEUE.send({ object: { key: decodedKey } });
+      const isDelete = record?.eventName?.startsWith('s3:ObjectRemoved');
+      await env.FILE_PROCESSOR_QUEUE.send({
+        ...(isDelete ? { action: 'DeleteObject' } : {}),
+        object: { key: decodedKey },
+      });
       return new Response('Queued', { status: 200 });
     }
 

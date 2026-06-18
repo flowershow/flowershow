@@ -114,63 +114,54 @@ For installation instructions, see the [Typesense Installation Guide](https://ty
 
 > Note: Before running the worker, ensure that the Typesense collection exists. The worker will attempt to index documents into this collection, so it must be created beforehand with the appropriate schema. If the collection doesn't exist, document indexing will fail.
 
-### Testing with MinIO
+### Manual testing with MinIO
 
-You can test the worker by uploading files.
-
-Make sure the worker is running and upload the test file:
+With the worker running (`npm run dev`) and the MinIO bucket set up, you can upload a file manually to observe the full processing flow:
 
 ```bash
-# Upload a markdown file
-mc cp test/test.md local/flowershow/test-site/main/raw/test.md
+mc cp myfile.md local/flowershow/{siteId}/main/raw/myfile.md
 ```
 
-The worker will:
+MinIO fires a webhook to the worker's `/queue` endpoint, which enqueues the event and triggers the queue consumer. Watch the worker terminal for processing logs.
 
-1. Receive the MinIO event at /queue endpoint
-2. Queue the file for processing
-3. Process the queued event
-4. Update the blob metadata in the database
+### Unit tests
 
-You can monitor the worker logs in the development terminal to track processing status and any errors.
+Unit tests cover pure utility functions and run entirely in Node.js — no external services needed.
 
-Note: Ensure your database has a blob record for the test file path before testing.
+```bash
+npm test
+```
 
-### Running E2E Tests
+This runs `test/processing-utils.test.js`, `test/worker.test.js`, and `test/workflow-utils.test.js` via `node --test`.
 
-The project includes end-to-end tests that verify the complete flow from file upload to database updates. The tests are self-sufficient and will automatically set up all required dependencies. To run the tests:
+### E2E tests
 
-1. Clone the test dependencies:
+E2E tests spin up the actual worker via Wrangler's `unstable_dev()` API and exercise the full queue consumer → database pipeline against real Postgres and MinIO instances.
 
-   ```bash
-   git submodule update --init
-   ```
+**Prerequisites:** Postgres and MinIO must be running. From the repo root:
 
-2. Run the tests:
-   ```bash
-   npm test
-   ```
+```bash
+docker compose up -d postgres minio   # starts Postgres (port 5432) + MinIO (port 9000)
+```
 
-The tests will:
+**Run the tests:**
 
-1. Start MinIO and PostgreSQL using Docker Compose
-2. Initialize the database schema
-3. Set up test data:
-   - Create a test site in the database
-   - Create a blob record for the test file
-4. Upload test/test.md to MinIO
-5. Start the worker locally
-6. Verify that the file is processed and metadata is correctly updated:
-   - Title from frontmatter
-   - Description from frontmatter
-   - Additional metadata like date
-7. Clean up all test data and stop Docker services when done
+```bash
+npm run test:e2e
+```
 
-Requirements:
+Each test creates a unique `siteId`-scoped dataset and cleans up after itself, so tests are safe to run against the shared dev database.
 
-- Docker and Docker Compose
-- MinIO client (mc)
-- Node.js and npm
+**What the E2E tests cover:**
+
+| Scenario | What it verifies |
+|----------|-----------------|
+| Presigned happy path | Markdown file processed → `Blob` created, `Publish` finalized as `success` |
+| `publish: false` frontmatter | File suppressed, `PublishFile` still flipped to `success`, no `Blob` created |
+| Image file | PNG dimensions extracted, `Blob` created with `width`/`height` |
+| Multi-file publish | 3 files processed concurrently, atomic completion fires exactly once |
+| Anonymous upload | No `publishId` in metadata → `Blob` created, no `Publish` record touched |
+| Delete event | `DeleteObject` queue event → `Blob` removed from database |
 
 ## File Processing
 
@@ -258,13 +249,32 @@ npm run deploy
 
 ## Project Structure
 
-- `src/worker.js` - Main worker file that handles storage events and queue processing
-- `src/parser.js` - Markdown parsing and metadata extraction
-- `test/test.md` - Sample markdown file for testing
-- `test/e2e.bats` - End-to-end tests
-- `wrangler.flowershow.toml` - Cloudflare Workers configuration
-- `.dev.vars.example` - Example environment variables
-- `.github/workflows/test.yml` - GitHub Actions workflow configuration
+```
+src/
+  worker.js            — HTTP endpoints (/sync, /start-lifecycle, /queue dev adapter, /health),
+                         queue consumer entry, cron handler
+  publish-workflow.js  — Cloudflare Workflow: GitHub sync and presigned-path lifecycle ownership
+  message-handler.js   — Queue consumer: file processing, Blob upsert, atomic publish completion
+  workflow-utils.js    — Pure functions: diff/batch logic extracted from the Workflow (unit-testable)
+  clients.js           — Factory functions for Postgres, S3/R2, and Typesense clients
+  github.js            — GitHub App token generation, tree fetch, file download
+  helpers.js           — ID generation, PostHog error capture
+  path-utils.js        — URL slug generation, path visibility (include/exclude patterns)
+  processing-utils.js  — Markdown parsing (gray-matter), title extraction, image dimensions
+  storage.js           — R2/S3 upload, delete, bulk delete, site cleanup
+  typesense.js         — Typesense document upsert and collection management
+
+test/
+  processing-utils.test.js   — Unit tests for markdown parsing and image processing
+  worker.test.js             — Unit tests for env validation
+  workflow-utils.test.js     — Unit tests for diff/batch pure functions
+  e2e/
+    queue-consumer.test.js   — E2E tests for the full queue consumer pipeline
+
+vitest.e2e.config.js   — Vitest config for E2E tests
+wrangler.flowershow.toml — Cloudflare Workers configuration (queues, workflows, crons)
+.dev.vars.example      — Example environment variables for local development
+```
 
 ## Metadata Extraction
 
@@ -281,7 +291,7 @@ The worker extracts the following metadata from markdown files:
 1. Uses frontmatter `description` field if present
 2. Falls back to extracting first 200 characters of content
 
-To extract additional metadata, modify the `parseMarkdownFile` function in `src/parser.js`.
+To extract additional metadata, modify `parseMarkdownForSync` in `src/processing-utils.js`.
 
 ### Other frontmatter fields
 

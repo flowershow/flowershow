@@ -223,7 +223,7 @@ Monitor local events at: http://localhost:8288/
    ```
 
    This single command:
-    - Starts **PostgreSQL** (localhost:5433), **MinIO** (localhost:9000), and **Inngest** (localhost:8288) via Docker
+    - Starts **PostgreSQL** (localhost:5432), **MinIO** (localhost:9000), and **Inngest** (localhost:8288) via Docker
    - Auto-creates the MinIO `flowershow` bucket with public access
    - Configures MinIO webhook notifications to the Cloudflare Worker
    - Runs Prisma migrations
@@ -262,7 +262,7 @@ pnpm dev:nuke   # stop containers + delete all data (fresh start)
 |------------|------------------------|------------------------|
 | Next.js    | http://localhost:3000   |                        |
 | Worker     | http://localhost:8787   |                        |
-| PostgreSQL | localhost:5433         | postgres / postgres    |
+| PostgreSQL | localhost:5432         | postgres / postgres    |
 | MinIO API  | http://localhost:9000   | minioadmin / minioadmin |
 | MinIO Console | http://localhost:9001 | minioadmin / minioadmin |
 | Inngest    | http://localhost:8288   |                        |
@@ -463,7 +463,7 @@ npx playwright test --ui
 ### Common Issues
 
 1. **Docker containers won't start**
-   - Check if ports are already in use: `lsof -i :5433 -i :9000 -i :8288`
+   - Check if ports are already in use: `lsof -i :5432 -i :9000 -i :8288`
    - Try a clean restart: `pnpm dev:nuke && pnpm dev:up`
    - Check container logs: `docker compose logs <service>`
 

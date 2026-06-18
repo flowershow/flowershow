@@ -7,9 +7,14 @@ import {
   getGitHubInstallationToken,
 } from './github.js';
 import { generateId } from './helpers.js';
-import { isPathVisible } from './path-utils.js';
 import { deleteFile, uploadFile } from './storage.js';
 import { ensureTypesenseCollection } from './typesense.js';
+import {
+  computeFilesToDelete,
+  computeFilesToUpsert,
+  createBatches,
+  normalizeRootDir,
+} from './workflow-utils.js';
 
 const BATCH_SIZE = 20;
 
@@ -64,9 +69,7 @@ export class PublishWorkflow extends WorkflowEntrypoint {
         return fetchGitHubRepoTree(ghRepository, ghBranch, accessToken);
       });
 
-      const normalizedRootDir = rootDir
-        ? `${rootDir.replace(/^(.?\/)+|\/+$/g, '')}/`
-        : '';
+      const normalizedRoot = normalizeRootDir(rootDir);
 
       // Determine which files need to be upserted
       const fileBatchesToUpsert = await step.do(
@@ -75,35 +78,8 @@ export class PublishWorkflow extends WorkflowEntrypoint {
           const existingBlobs = await sql`
             SELECT path, sha FROM "Blob" WHERE site_id = ${siteId}
           `;
-          const blobShaMap = new Map(existingBlobs.map((b) => [b.path, b.sha]));
-
-          const items = gitHubTree.tree
-            .filter(
-              (item) =>
-                item.type !== 'tree' &&
-                item.path.startsWith(normalizedRootDir) &&
-                isPathVisible(item.path, includes, excludes),
-            )
-            .map((item) => {
-              const filePath = item.path.replace(normalizedRootDir, '');
-              return {
-                ghTreeItem: item,
-                filePath,
-                changeType: blobShaMap.has(filePath) ? 'updated' : 'added',
-              };
-            })
-            .filter(
-              ({ ghTreeItem, filePath }) =>
-                forceSync ||
-                !blobShaMap.has(filePath) ||
-                blobShaMap.get(filePath) !== ghTreeItem.sha,
-            );
-
-          const batches = [];
-          for (let i = 0; i < items.length; i += BATCH_SIZE) {
-            batches.push(items.slice(i, i + BATCH_SIZE));
-          }
-          return batches;
+          const items = computeFilesToUpsert(existingBlobs, gitHubTree, normalizedRoot, includes, excludes, forceSync);
+          return createBatches(items, BATCH_SIZE);
         },
       );
 
@@ -114,24 +90,8 @@ export class PublishWorkflow extends WorkflowEntrypoint {
           const existingBlobs = await sql`
             SELECT path FROM "Blob" WHERE site_id = ${siteId}
           `;
-
-          const visiblePaths = new Set(
-            gitHubTree.tree
-              .filter(
-                (item) =>
-                  item.type !== 'tree' &&
-                  item.path.startsWith(normalizedRootDir) &&
-                  isPathVisible(item.path, includes, excludes),
-              )
-              .map((item) => item.path.replace(normalizedRootDir, '')),
-          );
-
-          const toDelete = existingBlobs.filter((b) => !visiblePaths.has(b.path));
-          const batches = [];
-          for (let i = 0; i < toDelete.length; i += BATCH_SIZE) {
-            batches.push(toDelete.slice(i, i + BATCH_SIZE));
-          }
-          return batches;
+          const toDelete = computeFilesToDelete(existingBlobs, gitHubTree, normalizedRoot, includes, excludes);
+          return createBatches(toDelete, BATCH_SIZE);
         },
       );
 
