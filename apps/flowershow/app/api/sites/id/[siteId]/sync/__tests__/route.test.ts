@@ -12,7 +12,7 @@ const mocks = vi.hoisted(() => ({
   deleteBlobs: vi.fn(),
   prisma: {
     site: { findUnique: vi.fn() },
-    blob: { findMany: vi.fn(), upsert: vi.fn() },
+    blob: { findMany: vi.fn() },
     publish: { create: vi.fn(), findMany: vi.fn() },
     publishFile: { createMany: vi.fn(), updateMany: vi.fn() },
   },
@@ -58,9 +58,6 @@ vi.mock('@/lib/server-posthog', () => {
   };
   return { default: () => client };
 });
-vi.mock('@/lib/file-path-to-slug', () => ({
-  filePathToSlug: (filePath: string) => `/${filePath.replace(/^\//, '')}`,
-}));
 
 // ── Import after mocks ─────────────────────────────────────────────
 
@@ -88,7 +85,6 @@ function makeRequest(
 
 const SITE = { id: 'site-1', userId: 'user-1' };
 const PUBLISH = { id: 'publish-abc', siteId: 'site-1', source: 'cli' };
-const BLOB_UPSERT = { id: 'blob-1', path: 'file.md' };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -101,7 +97,6 @@ beforeEach(() => {
   mocks.isLegacyPublishClient.mockReturnValue(false);
   mocks.prisma.site.findUnique.mockResolvedValue(SITE);
   mocks.prisma.blob.findMany.mockResolvedValue([]);
-  mocks.prisma.blob.upsert.mockResolvedValue(BLOB_UPSERT);
   mocks.prisma.publish.create.mockResolvedValue(PUBLISH);
   mocks.prisma.publish.findMany.mockResolvedValue([]);
   mocks.prisma.publishFile.createMany.mockResolvedValue({ count: 0 });

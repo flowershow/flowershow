@@ -7,7 +7,7 @@ import {
   getGitHubInstallationToken,
 } from './github.js';
 import { generateId } from './helpers.js';
-import { filePathToSlug, isPathVisible, PAGE_EXTENSIONS } from './path-utils.js';
+import { isPathVisible } from './path-utils.js';
 import { deleteFile, uploadFile } from './storage.js';
 import { ensureTypesenseCollection } from './typesense.js';
 
@@ -112,7 +112,7 @@ export class PublishWorkflow extends WorkflowEntrypoint {
         'get-file-batches-to-delete',
         async () => {
           const existingBlobs = await sql`
-            SELECT path, id FROM "Blob" WHERE site_id = ${siteId}
+            SELECT path FROM "Blob" WHERE site_id = ${siteId}
           `;
 
           const visiblePaths = new Set(
@@ -169,31 +169,6 @@ export class PublishWorkflow extends WorkflowEntrypoint {
               batch.map(async ({ ghTreeItem, filePath }) => {
                 try {
                   const extension = ghTreeItem.path.split('.').pop() || '';
-                  const urlPath = PAGE_EXTENSIONS.has(extension)
-                    ? filePathToSlug(filePath)
-                    : null;
-
-                  // Upsert Blob record before uploading so the queue worker can find it
-                  await sql`
-                    INSERT INTO "Blob" (id, site_id, path, app_path, size, sha, metadata, extension, updated_at)
-                    VALUES (
-                      ${generateId()},
-                      ${siteId},
-                      ${filePath},
-                      ${urlPath},
-                      ${ghTreeItem.size || 0},
-                      ${ghTreeItem.sha},
-                      ${null},
-                      ${extension},
-                      NOW()
-                    )
-                    ON CONFLICT (site_id, path) DO UPDATE SET
-                      app_path = EXCLUDED.app_path,
-                      size = EXCLUDED.size,
-                      sha = EXCLUDED.sha,
-                      updated_at = NOW()
-                  `;
-
                   const fileBuffer = await fetchGitHubFileRaw(
                     ghRepository,
                     ghTreeItem.sha,
@@ -211,12 +186,7 @@ export class PublishWorkflow extends WorkflowEntrypoint {
                   console.error(
                     `Sync file error ${siteId}/${filePath}: ${error.message}`,
                   );
-                  // Ensure a Blob record exists even on failure
-                  await sql`
-                    INSERT INTO "Blob" (id, site_id, path, size, sha, metadata, updated_at)
-                    VALUES (${generateId()}, ${siteId}, ${filePath}, 0, '', ${null}, NOW())
-                    ON CONFLICT (site_id, path) DO NOTHING
-                  `;
+                  // If upload fails no R2 event fires, so no Blob record is needed
                 }
               }),
             );
@@ -224,7 +194,7 @@ export class PublishWorkflow extends WorkflowEntrypoint {
         ),
       );
 
-      // Delete file batches from storage, Typesense, and DB
+      // Delete file batches from R2; worker handles Blob/Typesense cleanup via DeleteObject events
       await Promise.all(
         fileBatchesToDelete.map((batch, index) =>
           step.do(`delete-files-batch-${index}`, async () => {
@@ -242,26 +212,6 @@ export class PublishWorkflow extends WorkflowEntrypoint {
                 }
               }),
             );
-
-            if (typesense) {
-              await Promise.all(
-                batch.map(async (blob) => {
-                  try {
-                    await typesense
-                      .collections(siteId)
-                      .documents(blob.id)
-                      .delete({ ignore_not_found: true });
-                  } catch (err) {
-                    console.error(
-                      `Typesense deletion failed ${siteId}/${blob.id}: ${err.message}`,
-                    );
-                  }
-                }),
-              );
-            }
-
-            const ids = batch.map((b) => b.id);
-            await sql`DELETE FROM "Blob" WHERE id = ANY(${ids})`;
 
             const deletedSet = new Set(deletedPaths);
             for (const blob of batch) {

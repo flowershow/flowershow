@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
   generatePresignedUploadUrl: vi.fn(),
   prisma: {
     site: { findUnique: vi.fn() },
-    blob: { findMany: vi.fn(), upsert: vi.fn() },
+    blob: { findMany: vi.fn() },
     publish: { create: vi.fn() },
     publishFile: { create: vi.fn() },
   },
@@ -27,6 +27,10 @@ vi.mock('@/env.mjs', () => ({
 }));
 
 vi.mock('next/cache', () => ({ revalidateTag: vi.fn() }));
+vi.mock('next-auth', () => ({
+  getServerSession: vi.fn().mockResolvedValue(null),
+}));
+vi.mock('@/server/auth', () => ({ authOptions: {} }));
 
 vi.mock('@/server/db', () => ({ default: mocks.prisma }));
 
@@ -53,9 +57,6 @@ vi.mock('@/lib/server-posthog', () => {
   };
   return { default: () => client };
 });
-vi.mock('@/lib/file-path-to-slug', () => ({
-  filePathToSlug: (filePath: string) => `/${filePath.replace(/^\//, '')}`,
-}));
 
 // ── Import after mocks ─────────────────────────────────────────────
 
@@ -82,7 +83,6 @@ function makeRequest(
 
 const SITE = { id: 'site-1', userId: 'user-1' };
 const PUBLISH = { id: 'publish-xyz', siteId: 'site-1', source: 'cli' };
-const BLOB_UPSERT = { id: 'blob-1', path: 'file.md' };
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -94,7 +94,6 @@ beforeEach(() => {
   mocks.isLegacyPublishClient.mockReturnValue(false);
   mocks.prisma.site.findUnique.mockResolvedValue(SITE);
   mocks.prisma.blob.findMany.mockResolvedValue([]);
-  mocks.prisma.blob.upsert.mockResolvedValue(BLOB_UPSERT);
   mocks.prisma.publish.create.mockResolvedValue(PUBLISH);
   mocks.prisma.publishFile.create.mockResolvedValue({ id: 'pf-1' });
   mocks.generatePresignedUploadUrl.mockResolvedValue(

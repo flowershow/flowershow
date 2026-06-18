@@ -1,4 +1,4 @@
-import { Blob, Prisma, PrismaClient, PublishSource } from '@prisma/client';
+import { Blob, Prisma, PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
 import { jwtVerify } from 'jose';
@@ -17,7 +17,6 @@ import {
   deleteProject,
   fetchFile,
   generatePresignedUploadUrl,
-  getContentType,
 } from '@/lib/content-store';
 import { deleteSiteCollection } from '@/lib/typesense';
 import {
@@ -27,7 +26,6 @@ import {
   validDomainRegex,
 } from '@/lib/domains';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
-import { filePathToSlug } from '@/lib/file-path-to-slug';
 import { checkIfBranchExists } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
 import { resolveContentLink } from '@/lib/resolve-link';
@@ -2038,154 +2036,6 @@ export const siteRouter = createTRPCRouter({
 
       revalidateTag(`${site.id}`);
       return fresh;
-    }),
-  publishFiles: protectedProcedure
-    .input(
-      z.object({
-        siteId: z.string().min(1),
-        files: z.array(
-          z.object({
-            path: z.string().min(1),
-            size: z.number(),
-            sha: z.string().min(1),
-          }),
-        ),
-        publishMethod: z.string().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { siteId, files, publishMethod = 'drag_drop_dashboard' } = input;
-
-      const site = await ctx.db.site.findUnique({
-        where: { id: siteId },
-        select: { id: true, userId: true },
-      });
-
-      if (!site || site.userId !== ctx.session.user.id) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Site not found',
-        });
-      }
-
-      const MAX_FILES = 1000;
-      const MAX_FILE_SIZE = 100 * 1024 * 1024;
-      const MAX_TOTAL_SIZE = 500 * 1024 * 1024;
-
-      if (files.length > MAX_FILES) {
-        throw new TRPCError({
-          code: 'PAYLOAD_TOO_LARGE',
-          message: `Maximum ${MAX_FILES} files per request`,
-        });
-      }
-
-      let totalSize = 0;
-      for (const file of files) {
-        if (file.size > MAX_FILE_SIZE) {
-          throw new TRPCError({
-            code: 'PAYLOAD_TOO_LARGE',
-            message: `File ${file.path} exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-          });
-        }
-        totalSize += file.size;
-      }
-
-      if (totalSize > MAX_TOTAL_SIZE) {
-        throw new TRPCError({
-          code: 'PAYLOAD_TOO_LARGE',
-          message: `Total upload size exceeds maximum of ${MAX_TOTAL_SIZE / 1024 / 1024}MB`,
-        });
-      }
-
-      const PRESIGNED_URL_TTL = 3600;
-
-      const publish = await ctx.db.publish.create({
-        data: { siteId, source: PublishSource.dashboard_upload },
-      });
-
-      let uploadUrls: {
-        path: string;
-        uploadUrl: string;
-        blobId: string;
-        contentType: string;
-      }[];
-      try {
-        const presignedUrlExpiresAt = new Date(
-          Date.now() + PRESIGNED_URL_TTL * 1000,
-        );
-        uploadUrls = await Promise.all(
-          files.map(async (file) => {
-            const extension = file.path.split('.').pop()?.toLowerCase() || '';
-
-            const urlPath = ['md', 'mdx', 'canvas'].includes(extension)
-              ? filePathToSlug(file.path)
-              : null;
-
-            const blob = await ctx.db.blob.upsert({
-              where: {
-                siteId_path: { siteId, path: file.path },
-              },
-              create: {
-                siteId,
-                path: file.path,
-                appPath: urlPath,
-                size: file.size,
-                sha: file.sha,
-                metadata: Prisma.JsonNull,
-                extension,
-              },
-              update: {
-                size: file.size,
-                sha: file.sha,
-                appPath: urlPath,
-                extension,
-              },
-            });
-
-            const s3Key = `${siteId}/main/raw/${file.path}`;
-            const contentType = getContentType(extension);
-            const uploadUrl = await generatePresignedUploadUrl(
-              s3Key,
-              PRESIGNED_URL_TTL,
-              contentType,
-              { 'publish-id': publish.id },
-              new Set(['x-amz-meta-publish-id']),
-            );
-
-            await ctx.db.publishFile.create({
-              data: {
-                publishId: publish.id,
-                path: file.path,
-                changeType: 'added',
-                status: 'uploading',
-                presignedUrlExpiresAt,
-              },
-            });
-
-            return {
-              path: file.path,
-              uploadUrl,
-              blobId: blob.id,
-              contentType,
-            };
-          }),
-        );
-      } finally {
-        revalidateTag(siteId);
-      }
-
-      const posthog = await PostHogClient();
-      posthog.capture({
-        distinctId: ctx.session.user.id,
-        event: 'content_published',
-        properties: {
-          publish_method: publishMethod,
-          site_id: siteId,
-        },
-      });
-      await posthog.shutdown();
-
-      return { files: uploadUrls, publishId: publish.id };
     }),
 });
 

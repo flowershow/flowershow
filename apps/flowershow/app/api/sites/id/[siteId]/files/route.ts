@@ -5,41 +5,30 @@ import {
   type PublishFilesResponse,
   type UploadTarget,
 } from '@flowershow/api-contract';
-import { Prisma, PublishSource } from '@prisma/client';
 import { revalidateTag } from 'next/cache';
 import { type NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth';
 import { deleteBlobs } from '@/lib/blob-cleanup';
 import {
   getClientInfo,
   isLegacyPublishClient,
   validateAccessToken,
 } from '@/lib/cli-auth';
+import { authOptions } from '@/server/auth';
 import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
-import { filePathToSlug } from '@/lib/file-path-to-slug';
+import {
+  clientTypeToPublishSource,
+  MAX_FILES,
+  PRESIGNED_URL_TTL,
+  validatePublishFiles,
+} from '@/lib/publish-limits';
 import PostHogClient from '@/lib/server-posthog';
 import { startPublishLifecycle } from '@/lib/trigger-lifecycle';
 import { ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
-
-// Maximum file size: 100MB
-const MAX_FILE_SIZE = 100 * 1024 * 1024;
-// Maximum total upload size: 500MB
-const MAX_TOTAL_SIZE = 500 * 1024 * 1024;
-// Maximum number of files per request
-const MAX_FILES = 1000;
-// Presigned URL TTL in seconds
-const PRESIGNED_URL_TTL = 3600;
-
-function clientTypeToPublishSource(
-  clientType: 'cli' | 'obsidian-plugin' | 'unknown',
-): PublishSource {
-  if (clientType === 'cli') return PublishSource.cli;
-  if (clientType === 'obsidian-plugin') return PublishSource.obsidian_plugin;
-  return PublishSource.dashboard_upload;
-}
 
 /**
  * POST /api/sites/id/:siteId/files
@@ -54,8 +43,17 @@ export async function POST(
   props: { params: Promise<{ siteId: string }> },
 ) {
   try {
-    const auth = await validateAccessToken(request);
-    if (!auth?.userId) {
+    let userId: string | null = null;
+    const tokenAuth = await validateAccessToken(request);
+    if (tokenAuth?.userId) {
+      userId = tokenAuth.userId;
+    } else {
+      const session = await getServerSession(authOptions);
+      if (session?.user?.id) {
+        userId = session.user.id;
+      }
+    }
+    if (!userId) {
       return NextResponse.json(
         { error: 'unauthorized', message: 'Not authenticated' },
         { status: 401 },
@@ -76,7 +74,7 @@ export async function POST(
       );
     }
 
-    if (site.userId !== auth.userId) {
+    if (site.userId !== userId) {
       return NextResponse.json(
         { error: 'forbidden', message: 'You do not have access to this site' },
         { status: 403 },
@@ -104,48 +102,8 @@ export async function POST(
       );
     }
 
-    if (files.length > MAX_FILES) {
-      return NextResponse.json(
-        {
-          error: 'payload_too_large',
-          message: `Maximum ${MAX_FILES} files per request`,
-        },
-        { status: 413 },
-      );
-    }
-
-    let totalSize = 0;
-    for (const file of files) {
-      if (!file.path || typeof file.size !== 'number' || !file.sha) {
-        return NextResponse.json(
-          {
-            error: 'invalid_request',
-            message: 'Each file must have path, size, and sha',
-          },
-          { status: 400 },
-        );
-      }
-      if (file.size > MAX_FILE_SIZE) {
-        return NextResponse.json(
-          {
-            error: 'file_too_large',
-            message: `File ${file.path} exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-          },
-          { status: 413 },
-        );
-      }
-      totalSize += file.size;
-    }
-
-    if (totalSize > MAX_TOTAL_SIZE) {
-      return NextResponse.json(
-        {
-          error: 'payload_too_large',
-          message: `Total upload size exceeds maximum of ${MAX_TOTAL_SIZE / 1024 / 1024}MB`,
-        },
-        { status: 413 },
-      );
-    }
+    const validationError = validatePublishFiles(files);
+    if (validationError) return validationError;
 
     // Fetch existing blobs to determine changeType (added vs updated)
     const existingBlobs = await prisma.blob.findMany({
@@ -174,30 +132,6 @@ export async function POST(
       uploadUrls = await Promise.all(
         files.map(async (file) => {
           const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
-
-          const urlPath = ['md', 'mdx', 'canvas'].includes(extension)
-            ? filePathToSlug(file.path)
-            : null;
-
-          const blob = await prisma.blob.upsert({
-            where: { siteId_path: { siteId, path: file.path } },
-            create: {
-              siteId,
-              path: file.path,
-              appPath: urlPath,
-              size: file.size,
-              sha: file.sha,
-              metadata: Prisma.JsonNull,
-              extension,
-            },
-            update: {
-              size: file.size,
-              sha: file.sha,
-              appPath: urlPath,
-              extension,
-            },
-          });
-
           const s3Key = `${siteId}/main/raw/${file.path}`;
           const contentType = getContentType(extension);
           const uploadUrl = await generatePresignedUploadUrl(
@@ -225,7 +159,7 @@ export async function POST(
             });
           }
 
-          return { path: file.path, uploadUrl, blobId: blob.id, contentType };
+          return { path: file.path, uploadUrl, contentType };
         }),
       );
     } finally {
@@ -250,7 +184,7 @@ export async function POST(
     const publish_method =
       client_type === 'obsidian-plugin' ? 'obsidian_plugin' : client_type;
     posthog.capture({
-      distinctId: auth.userId,
+      distinctId: userId,
       event: 'content_published',
       properties: { publish_method, site_id: siteId },
     });
@@ -339,7 +273,7 @@ export async function DELETE(
 
     const existingBlobs = await prisma.blob.findMany({
       where: { siteId, path: { in: paths } },
-      select: { id: true, path: true },
+      select: { path: true },
     });
 
     const existingPaths = new Set(existingBlobs.map((b) => b.path));
@@ -354,9 +288,9 @@ export async function DELETE(
       }
     }
 
-    if (existingBlobs.length > 0) {
+    if (deleted.length > 0) {
       try {
-        await deleteBlobs(siteId, existingBlobs);
+        await deleteBlobs(siteId, deleted);
       } finally {
         revalidateTag(siteId);
       }

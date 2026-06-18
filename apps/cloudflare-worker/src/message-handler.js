@@ -9,15 +9,12 @@ import {
   parseMarkdownForSync,
   parseObjectKey,
 } from './processing-utils.js';
+import { filePathToSlug, PAGE_EXTENSIONS } from './path-utils.js';
 import { indexInTypesense } from './typesense.js';
-import { captureError } from './helpers.js';
+import { captureError, generateId } from './helpers.js';
 
 const MAX_FILE_BYTES = 5 * 1024 * 1024;
 
-/**
- * Read the publish-id from an R2/S3 object's custom metadata.
- * Returns null if the metadata is absent or the object is not found.
- */
 async function getPublishIdFromMetadata(storage, key) {
   try {
     if (storage.type === 's3') {
@@ -33,15 +30,54 @@ async function getPublishIdFromMetadata(storage, key) {
   }
 }
 
-async function getBlobId(sql, siteId, path) {
+async function computeGitBlobSha(content) {
+  const header = new TextEncoder().encode(`blob ${content.length}\0`);
+  const combined = new Uint8Array(header.length + content.length);
+  combined.set(header);
+  combined.set(content, header.length);
+  const hashBuffer = await crypto.subtle.digest('SHA-1', combined);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
+async function readFileBytes(storage, key) {
+  if (storage.type === 's3') {
+    const resp = await storage.client.send(
+      new GetObjectCommand({ Bucket: storage.bucket, Key: key }),
+    );
+    const length = resp.ContentLength;
+    if (length > MAX_FILE_BYTES) throw new Error(`File too large: ${length}`);
+    return new Uint8Array(await resp.Body.transformToByteArray());
+  }
+  const obj = await storage.client.get(key);
+  if (!obj) throw new Error(`Object not found: ${key}`);
+  if (obj.size > MAX_FILE_BYTES) throw new Error(`File too large: ${obj.size}`);
+  return new Uint8Array(await obj.arrayBuffer());
+}
+
+async function upsertBlob(sql, siteId, path, { sha, size, metadata, permalink, width, height }) {
+  const extension = path.split('.').pop()?.toLowerCase() ?? '';
+  const appPath = PAGE_EXTENSIONS.has(extension) ? filePathToSlug(path) : null;
   const rows = await sql`
-    SELECT id FROM "Blob"
-    WHERE "site_id" = ${siteId}
-      AND path     = ${path}
-    ORDER BY "created_at" DESC
-    LIMIT 1
+    INSERT INTO "Blob" (id, site_id, path, app_path, extension, sha, size, metadata, permalink, width, height, updated_at)
+    VALUES (
+      ${generateId()}, ${siteId}, ${path}, ${appPath}, ${extension},
+      ${sha}, ${size}, ${metadata ?? null}, ${permalink ?? null},
+      ${width ?? null}, ${height ?? null}, NOW()
+    )
+    ON CONFLICT (site_id, path) DO UPDATE SET
+      app_path   = EXCLUDED.app_path,
+      extension  = EXCLUDED.extension,
+      sha        = EXCLUDED.sha,
+      size       = EXCLUDED.size,
+      metadata   = EXCLUDED.metadata,
+      permalink  = EXCLUDED.permalink,
+      width      = EXCLUDED.width,
+      height     = EXCLUDED.height,
+      updated_at = NOW()
+    RETURNING id
   `;
-  if (rows.length === 0) throw new Error(`No blob found for path: ${path}`);
   return rows[0].id;
 }
 
@@ -62,7 +98,21 @@ async function updatePublishFile(sql, publishId, path, status, errorMsg) {
   }
 }
 
-// Atomic completion check: only the worker that processes the last file wins the
+async function processDeleteEvent({ sql, typesense, siteId, path }) {
+  const deleted = await sql`
+    DELETE FROM "Blob"
+    WHERE site_id = ${siteId} AND path = ${path}
+    RETURNING id
+  `;
+  if (deleted.length === 0) return;
+  try {
+    await typesense.collections(siteId).documents(`${deleted[0].id}`).delete();
+  } catch (_) {
+    // Document may not exist in Typesense (e.g. non-indexed file type)
+  }
+}
+
+// Atomic completion check: only the worker that processes the last file wins this
 // UPDATE and sends publish-complete. All concurrent workers get 0 rows affected.
 async function checkAndFinalizePublish(sql, env, publishId, siteId) {
   if (!publishId) return;
@@ -111,77 +161,20 @@ async function checkAndFinalizePublish(sql, env, publishId, siteId) {
   }
 }
 
-async function processNonMarkdownFile({ storage, sql, siteId, branch, path, publishId }) {
-  try {
-    if (isSupportedImagePath(path)) {
-      const blobId = await getBlobId(sql, siteId, path);
-      let width = null;
-      let height = null;
-
-      try {
-        const key = `${siteId}/${branch}/raw/${path}`;
-        let buffer;
-        if (storage.type === 's3') {
-          const resp = await storage.client.send(
-            new GetObjectCommand({ Bucket: storage.bucket, Key: key }),
-          );
-          buffer = Buffer.from(await resp.Body.transformToByteArray());
-        } else {
-          const obj = await storage.client.get(key);
-          if (obj) {
-            buffer = new Uint8Array(await obj.arrayBuffer());
-          }
-        }
-        if (buffer) {
-          const dimensions = extractImageDimensions(path, buffer);
-          width = dimensions.width;
-          height = dimensions.height;
-        }
-      } catch (dimError) {
-        console.error('Could not extract dimensions:', dimError.message);
-      }
-
-      await sql`
-        UPDATE "Blob"
-        SET width = ${width},
-            height = ${height}
-        WHERE id = ${blobId};
-      `;
-    }
-
-    await updatePublishFile(sql, publishId, path, 'success');
-  } catch (e) {
-    await updatePublishFile(sql, publishId, path, 'error', e.message);
-    throw e;
-  }
-}
-
-async function processFile({ storage, sql, typesense, siteId, branch, path, publishId }) {
-  const blobId = await getBlobId(sql, siteId, path);
+async function processMarkdownFile({ storage, sql, typesense, siteId, branch, path, publishId }) {
+  const key = `${siteId}/${branch}/raw/${path}`;
 
   try {
-    const key = `${siteId}/${branch}/raw/${path}`;
-
-    let markdown;
-    if (storage.type === 's3') {
-      const resp = await storage.client.send(
-        new GetObjectCommand({ Bucket: storage.bucket, Key: key }),
-      );
-      const length = resp.ContentLength;
-      if (length > MAX_FILE_BYTES) throw new Error(`File too large: ${length}`);
-      markdown = await resp.Body.transformToString();
-    } else {
-      const obj = await storage.client.get(key);
-      if (!obj) throw new Error(`Object not found: ${key}`);
-      const length = obj.size;
-      if (length > MAX_FILE_BYTES) throw new Error(`File too large: ${length}`);
-      markdown = await obj.text();
-    }
+    const contentBytes = await readFileBytes(storage, key);
+    const markdown = new TextDecoder().decode(contentBytes);
+    const sha = await computeGitBlobSha(contentBytes);
+    const size = contentBytes.length;
 
     const { metadata, body, permalink, shouldPublish } =
       await parseMarkdownForSync({ markdown, path });
 
     if (!shouldPublish) {
+      // Delete from R2; the resulting DeleteObject event drives Blob/Typesense cleanup.
       try {
         if (storage.type === 's3') {
           await storage.client.send(
@@ -193,32 +186,15 @@ async function processFile({ storage, sql, typesense, siteId, branch, path, publ
       } catch (deleteError) {
         console.error('Error deleting from storage:', deleteError.message);
       }
-
-      await sql`
-        DELETE FROM "Blob"
-        WHERE id = ${blobId};
-      `;
-
-      try {
-        await typesense.collections(siteId).documents(`${blobId}`).delete();
-      } catch (_typesenseError) {
-        // Document might not exist in index, which is fine
-      }
-
       await updatePublishFile(sql, publishId, path, 'success');
       return;
     }
 
-    await sql`
-      UPDATE "Blob"
-      SET metadata  = ${sql.json(metadata)},
-          permalink = ${permalink}
-      WHERE id = ${blobId};
-    `;
+    const blobId = await upsertBlob(sql, siteId, path, { sha, size, metadata, permalink });
     await indexInTypesense({ typesense, siteId, blobId, path, body, metadata });
     await updatePublishFile(sql, publishId, path, 'success');
   } catch (e) {
-    console.error('Error in processFile:', {
+    console.error('Error in processMarkdownFile:', {
       error: { message: e.message, stack: e.stack, name: e.name },
     });
     await updatePublishFile(sql, publishId, path, 'error', e.message);
@@ -226,12 +202,48 @@ async function processFile({ storage, sql, typesense, siteId, branch, path, publ
   }
 }
 
+async function processNonMarkdownFile({ storage, sql, siteId, branch, path, publishId }) {
+  const key = `${siteId}/${branch}/raw/${path}`;
+
+  try {
+    const contentBytes = await readFileBytes(storage, key);
+    const sha = await computeGitBlobSha(contentBytes);
+    const size = contentBytes.length;
+
+    let width = null;
+    let height = null;
+    if (isSupportedImagePath(path)) {
+      try {
+        const dimensions = extractImageDimensions(path, contentBytes);
+        width = dimensions.width;
+        height = dimensions.height;
+      } catch (dimError) {
+        console.error('Could not extract dimensions:', dimError.message);
+      }
+    }
+
+    await upsertBlob(sql, siteId, path, { sha, size, width, height });
+    await updatePublishFile(sql, publishId, path, 'success');
+  } catch (e) {
+    await updatePublishFile(sql, publishId, path, 'error', e.message);
+    throw e;
+  }
+}
+
 export async function handleMessage({ msg, storage, sql, typesense, env }) {
-  // Hoisted so the outer catch can still run the completion check if processFile
+  const rawKey = msg.body.object.key;
+
+  if (msg.body.action === 'DeleteObject') {
+    const { siteId, path } = parseObjectKey(rawKey);
+    if (!/^[\w-]+$/.test(siteId)) throw new Error(`Invalid siteId: ${siteId}`);
+    await processDeleteEvent({ sql, typesense, siteId, path });
+    return msg.ack();
+  }
+
+  // Hoisted so the outer catch can still run the completion check if processMarkdownFile
   // marked the PublishFile as 'error' before re-throwing.
   let publishId = null;
   try {
-    const rawKey = msg.body.object.key;
     const { siteId, branch, path } = parseObjectKey(rawKey);
 
     if (!/^[\w-]+$/.test(siteId) || !/^[\w-]+$/.test(branch)) {
@@ -262,7 +274,7 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
       return msg.ack();
     }
 
-    await processFile({ storage, sql, typesense, siteId, branch, path, publishId });
+    await processMarkdownFile({ storage, sql, typesense, siteId, branch, path, publishId });
     await checkAndFinalizePublish(sql, env, publishId, siteId);
     msg.ack();
   } catch (err) {
@@ -287,9 +299,8 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
       error_name: err.name,
       source: 'worker_process_file',
     });
-    // processFile marks PublishFile 'error' before re-throwing, so this may be
-    // the last file. Run the check idempotently — the atomic UPDATE guards against
-    // duplicates. Message will be retried if not acked.
+    // processMarkdownFile marks PublishFile 'error' before re-throwing, so this may be
+    // the last file. Run the check idempotently — the atomic UPDATE guards against duplicates.
     await checkAndFinalizePublish(sql, env, publishId, siteId);
   }
 }

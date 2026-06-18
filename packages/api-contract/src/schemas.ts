@@ -84,7 +84,7 @@ export type FileMetadata = z.infer<typeof FileMetadataSchema>;
 export const UploadTargetSchema = z.object({
   path: z.string(),
   uploadUrl: z.string(),
-  blobId: z.string(),
+  blobId: z.string().optional(),
   contentType: z.string(),
 });
 export type UploadTarget = z.infer<typeof UploadTargetSchema>;

@@ -45,8 +45,8 @@ The Queue consumer handles file processing for **all** paths unchanged — R2 ev
 **GitHub path** — the Workflow replaces `syncSite`:
 
 1. Fetch GitHub tree, diff against stored Blobs.
-2. In batches: download files from GitHub, upload to R2, upsert Blob records, create `PublishFile` rows (status=`uploading`).
-3. Handle deletions (create terminal `PublishFile` rows immediately).
+2. In batches: download files from GitHub, upload to R2 (with `publishId` in object metadata), create `PublishFile` rows (status=`uploading`).
+3. Handle deletions (remove from R2, Typesense, and DB; create terminal `PublishFile` rows immediately).
 4. `step.waitForEvent('publish-complete', { timeout: '1h' })`.
 5. On event received: revalidate cache tags, finalize publish (set `Publish.status`, `completedAt`).
 6. On timeout: mark remaining `uploading` rows as `expired`, finalize as partial/error.
@@ -57,6 +57,29 @@ The Queue consumer handles file processing for **all** paths unchanged — R2 ev
 2. `step.waitForEvent('publish-complete', { timeout: '1h' })`.
 3. On event received: finalize publish.
 4. On timeout: mark remaining `uploading` rows as `expired`, finalize as partial/error.
+
+### Blob creation — queue consumer owns the full lifecycle
+
+Blob records are created **lazily** by the queue consumer, not eagerly by the API routes or Workflow.
+
+**Rationale:** Creating Blobs eagerly (before the file lands in R2) produces ghost records when uploads are abandoned. The consumer is the only actor that has seen the file content, so it is the natural place to derive all Blob fields. The API routes and Workflow have no information that isn't also available to the consumer.
+
+**How the consumer creates a Blob:**
+
+When a file arrives in R2, the consumer:
+1. Derives `path`, `extension`, and `appPath` (URL slug) from the R2 object key.
+2. Reads the file content (GET). For markdown and image files this read already happens for other reasons; for all other file types it is an additional fetch.
+3. Computes `sha` as a git blob SHA: `SHA1("blob {size}\0{content}")`. This matches the format used by the GitHub tree API and by the CLI, so the diff logic on both paths remains correct.
+4. Derives `size` from the content length.
+5. For markdown: parses frontmatter → sets `metadata` and `permalink`. Removes file from R2 and DB if `publish: false` in frontmatter.
+6. For images: extracts pixel dimensions → sets `width` and `height`.
+7. Upserts the Blob (`INSERT ... ON CONFLICT (site_id, path) DO UPDATE`).
+
+**Consequences for API routes and Workflow:**
+
+- `/sync` and `/files` routes no longer upsert Blobs. They create `Publish`, `PublishFile` records and presigned URLs only.
+- The GitHub Workflow no longer upserts Blobs before uploading to R2. It also drops the error-fallback ghost Blob insert — if an R2 upload fails, no queue event fires and no Blob record is needed.
+- `blobId` is removed from API responses (`/sync`, `/files`) — the Blob does not exist at response time. The CLI struct field was already unused.
 
 **Anonymous path** — treated identically to the presigned paths. `/api/sites/publish-anon` will be updated to create a `Publish` record (source=`anonymous`) and `PublishFile` rows, start a Workflow instance, and embed `publishId` in presigned URL metadata — the same as the authenticated presigned flow. This also fixes the existing bug where anonymous publishes are not tracked in publish history at all.
 
@@ -129,6 +152,11 @@ The Queue consumer is robust to the underlying race: both queue events for the s
 - Local dev adds a Workflows emulator moving part alongside the existing MinIO + wrangler dev setup.
 - Workflows caps ~1024 steps per instance. At batch size 20, this accommodates ~20k files per GitHub sync — sufficient, but needs a guard and the batch size should not be reduced without rechecking.
 - Queue delivery is at-least-once; the completion check and finalization must remain idempotent (they are, by the atomic UPDATE guard).
+- For non-markdown/non-image file types (PDFs, fonts, HTML, etc.) the consumer now performs one additional R2 GET per file to compute sha. These file types are typically a small fraction of a site's content.
+
+**Emergent: headless upload**
+
+Because the consumer owns the full Blob lifecycle and short-circuits gracefully when `publishId` is absent, any file PUT directly into R2 at the correct key (`{siteId}/main/raw/{path}`) for an existing site will be fully processed — Blob upserted, frontmatter parsed, Typesense indexed — without going through the API or Workflow. Cache revalidation and publish history are not triggered (those require a Workflow instance). This "headless upload" mode is a natural consequence of the design and could be formalised into a supported path for future clients or bulk import tooling.
 
 ## Migration order
 

@@ -154,8 +154,6 @@ export default function ImportFilesOnboardingModal({
     }
   };
 
-  const publishFiles = api.site.publishFiles.useMutation();
-
   // Poll sync status while files are being processed
   const { data: syncStatus } = api.site.getSyncStatus.useQuery(
     { id: siteId },
@@ -188,11 +186,13 @@ export default function ImportFilesOnboardingModal({
         })),
       );
 
-      const { files: uploadTargets, publishId } =
-        await publishFiles.mutateAsync({
-          siteId,
-          files: filesInfo,
-        });
+      const res = await fetch(`/api/sites/id/${siteId}/files`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ files: filesInfo }),
+      });
+      if (!res.ok) throw new Error('Failed to get upload URLs');
+      const { files: uploadTargets, publishId } = await res.json();
 
       await Promise.all(
         uploadTargets.map(

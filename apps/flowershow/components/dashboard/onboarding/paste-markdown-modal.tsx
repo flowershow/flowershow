@@ -45,8 +45,6 @@ export default function PasteMarkdownModal({
   const [error, setError] = useState<string | null>(null);
   const [markdown, setMarkdown] = useState('');
 
-  const publishFiles = api.site.publishFiles.useMutation();
-
   const { data: syncStatus } = api.site.getSyncStatus.useQuery(
     { id: siteId },
     { enabled: state === 'syncing', refetchInterval: 3000 },
@@ -76,12 +74,15 @@ export default function PasteMarkdownModal({
       const bytes = encoder.encode(markdown);
       const sha = await calculateSHA256(markdown);
 
-      const { files: uploadTargets, publishId } =
-        await publishFiles.mutateAsync({
-          siteId,
+      const res = await fetch(`/api/sites/id/${siteId}/files`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
           files: [{ path: 'README.md', size: bytes.length, sha }],
-          publishMethod: 'paste_markdown',
-        });
+        }),
+      });
+      if (!res.ok) throw new Error('Failed to get upload URLs');
+      const { files: uploadTargets, publishId } = await res.json();
 
       await Promise.all(
         uploadTargets.map(

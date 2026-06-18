@@ -2,7 +2,6 @@ import {
   AnonPublishRequestSchema,
   type AnonPublishResponse,
 } from '@flowershow/api-contract';
-import { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   ANONYMOUS_USER_ID,
@@ -13,7 +12,6 @@ import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
-import { filePathToSlug } from '@/lib/file-path-to-slug';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import PostHogClient from '@/lib/server-posthog';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
@@ -197,22 +195,6 @@ export async function POST(request: NextRequest) {
     for (let i = 0; i < files.length; i++) {
       const file = files[i]!;
       const extension = file.fileName.split('.').pop()?.toLowerCase()!;
-
-      const appPath = ['md', 'mdx', 'canvas'].includes(extension)
-        ? filePathToSlug(file.fileName)
-        : null;
-
-      await prisma.blob.create({
-        data: {
-          siteId: site.id,
-          path: file.fileName,
-          appPath,
-          size: file.fileSize,
-          sha: file.sha,
-          metadata: Prisma.JsonNull,
-          extension,
-        },
-      });
 
       await prisma.publishFile.create({
         data: {
