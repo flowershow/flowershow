@@ -38,18 +38,20 @@ function makeId() {
   return `t${randomUUID().replace(/-/g, '').slice(0, 24)}`;
 }
 
-async function waitForPublish(publishId, timeoutMs = 8_000) {
+// Poll until no PublishFile rows for this publish are still 'uploading'.
+// The queue consumer is responsible for flipping rows to success/error;
+// Publish.status is managed by PublishFinalizerWorkflow (not the consumer).
+async function waitForPublishFiles(publishId, timeoutMs = 8_000) {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
-    const rows =
-      await sql`SELECT status FROM "Publish" WHERE id = ${publishId}`;
-    const status = rows[0]?.status;
-    if (status && status !== 'in_progress') {
-      return status;
-    }
+    const [{ count }] = await sql`
+      SELECT COUNT(*) AS count FROM "PublishFile"
+      WHERE publish_id = ${publishId} AND status = 'uploading'
+    `;
+    if (Number(count) === 0) return;
     await new Promise((r) => setTimeout(r, 150));
   }
-  throw new Error(`Publish ${publishId} did not complete within ${timeoutMs}ms`);
+  throw new Error(`PublishFiles for ${publishId} did not complete within ${timeoutMs}ms`);
 }
 
 async function waitForBlob(siteId, path, timeoutMs = 8_000) {
@@ -188,14 +190,10 @@ describe('A — presigned happy path (markdown)', () => {
     publishId = await seedSiteAndPublish(siteId, [{ path }]);
     await uploadToMinIO(key, content, publishId);
     await triggerQueue(key);
+    await waitForPublishFiles(publishId);
   });
 
   afterAll(() => cleanupSite(siteId));
-
-  it('finalizes Publish as success', async () => {
-    const status = await waitForPublish(publishId);
-    expect(status).toBe('success');
-  });
 
   it('flips PublishFile to success', async () => {
     const rows = await sql`
@@ -203,6 +201,11 @@ describe('A — presigned happy path (markdown)', () => {
       WHERE publish_id = ${publishId} AND path = ${path}
     `;
     expect(rows[0]?.status).toBe('success');
+  });
+
+  it('leaves Publish.status as in_progress (workflow finalizes, not the consumer)', async () => {
+    const rows = await sql`SELECT status FROM "Publish" WHERE id = ${publishId}`;
+    expect(rows[0]?.status).toBe('in_progress');
   });
 
   it('creates Blob with sha, size, and metadata', async () => {
@@ -224,14 +227,10 @@ describe('B — publish:false frontmatter', () => {
     publishId = await seedSiteAndPublish(siteId, [{ path }]);
     await uploadToMinIO(key, content, publishId);
     await triggerQueue(key);
+    await waitForPublishFiles(publishId);
   });
 
   afterAll(() => cleanupSite(siteId));
-
-  it('finalizes Publish as success', async () => {
-    const status = await waitForPublish(publishId);
-    expect(status).toBe('success');
-  });
 
   it('flips PublishFile to success', async () => {
     const rows = await sql`
@@ -242,8 +241,6 @@ describe('B — publish:false frontmatter', () => {
   });
 
   it('does not create a Blob for the suppressed file', async () => {
-    // Give the consumer a moment to settle, then assert no blob
-    await new Promise((r) => setTimeout(r, 500));
     const rows = await sql`
       SELECT id FROM "Blob" WHERE site_id = ${siteId} AND path = ${path}
     `;
@@ -261,13 +258,17 @@ describe('C — image file (dimensions extracted)', () => {
     publishId = await seedSiteAndPublish(siteId, [{ path }]);
     await uploadToMinIO(key, MINIMAL_PNG, publishId);
     await triggerQueue(key);
+    await waitForPublishFiles(publishId);
   });
 
   afterAll(() => cleanupSite(siteId));
 
-  it('finalizes Publish as success', async () => {
-    const status = await waitForPublish(publishId);
-    expect(status).toBe('success');
+  it('flips PublishFile to success', async () => {
+    const rows = await sql`
+      SELECT status FROM "PublishFile"
+      WHERE publish_id = ${publishId} AND path = ${path}
+    `;
+    expect(rows[0]?.status).toBe('success');
   });
 
   it('creates Blob with pixel dimensions', async () => {
@@ -278,7 +279,7 @@ describe('C — image file (dimensions extracted)', () => {
   });
 });
 
-describe('D — multi-file publish, atomic completion', () => {
+describe('D — multi-file publish', () => {
   const siteId = makeId();
   const files = ['notes/a.md', 'notes/b.md', 'notes/c.md'];
   let publishId;
@@ -296,19 +297,10 @@ describe('D — multi-file publish, atomic completion', () => {
         await triggerQueue(key);
       }),
     );
+    await waitForPublishFiles(publishId);
   });
 
   afterAll(() => cleanupSite(siteId));
-
-  it('finalizes Publish as success exactly once', async () => {
-    const status = await waitForPublish(publishId);
-    expect(status).toBe('success');
-
-    const rows = await sql`
-      SELECT completed_at FROM "Publish" WHERE id = ${publishId}
-    `;
-    expect(rows[0]?.completed_at).toBeTruthy();
-  });
 
   it('marks all PublishFiles as success', async () => {
     const rows = await sql`
