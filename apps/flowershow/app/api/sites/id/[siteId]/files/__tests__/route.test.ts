@@ -43,10 +43,7 @@ vi.mock('@/lib/cli-auth', () => ({
 vi.mock('@/lib/content-store', () => ({
   generatePresignedUploadUrl: mocks.generatePresignedUploadUrl,
   getContentType: (ext: string) => `text/${ext}`,
-}));
-
-vi.mock('@/lib/blob-cleanup', () => ({
-  deleteBlobs: vi.fn().mockResolvedValue([]),
+  deleteFile: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock('@/lib/typesense', () => ({ ensureSiteCollection: vi.fn() }));
 vi.mock('@/lib/server-posthog', () => {

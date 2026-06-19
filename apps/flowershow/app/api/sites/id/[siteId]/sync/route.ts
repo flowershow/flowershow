@@ -1,6 +1,5 @@
 import { revalidateTag } from 'next/cache';
 import { type NextRequest, NextResponse } from 'next/server';
-import { deleteBlobs } from '@/lib/blob-cleanup';
 import {
   checkCliVersion,
   getClientInfo,
@@ -8,6 +7,7 @@ import {
   validateAccessToken,
 } from '@/lib/cli-auth';
 import {
+  deleteFile,
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
@@ -15,7 +15,6 @@ import { log, SeverityNumber } from '@/lib/otel-logger';
 import {
   clientTypeToPublishSource,
   type FileMetadata,
-  MAX_FILES,
   PRESIGNED_URL_TTL,
   validatePublishFiles,
 } from '@/lib/publish-limits';
@@ -90,7 +89,7 @@ function generateDryRunPlaceholders(
  *
  * Compares local files with existing files in the database:
  * - Returns presigned URLs for new or modified files
- * - Deletes files from R2 and database that no longer exist locally
+ * - Deletes files that no longer exist from R2
  * - Identifies unchanged files
  *
  * Query parameters:
@@ -225,7 +224,21 @@ export async function POST(
 
       if (toDelete.length > 0) {
         try {
-          deletedPaths = await deleteBlobs(siteId, toDelete);
+          deletedPaths = (
+            await Promise.all(
+              toDelete.map((path) =>
+                deleteFile({ projectId: siteId, path })
+                  .then(() => path)
+                  .catch((error) => {
+                    console.error(
+                      `[sync] R2 deletion failed for ${siteId}/${path}:`,
+                      error,
+                    );
+                    return null;
+                  }),
+              ),
+            )
+          ).filter((p): p is string => p !== null);
           log('Delete files from R2', SeverityNumber.INFO, {
             files_to_delete: toDelete.length,
             files_deleted: deletedPaths.length,

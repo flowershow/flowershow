@@ -8,7 +8,6 @@ import {
 import { revalidateTag } from 'next/cache';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { deleteBlobs } from '@/lib/blob-cleanup';
 import {
   getClientInfo,
   isLegacyPublishClient,
@@ -16,6 +15,7 @@ import {
 } from '@/lib/cli-auth';
 import { authOptions } from '@/server/auth';
 import {
+  deleteFile,
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
@@ -34,9 +34,6 @@ import prisma from '@/server/db';
  * POST /api/sites/id/:siteId/files
  * Publish specific files without affecting other files
  * Returns presigned URLs for uploading the specified files
- *
- * Use this endpoint when you want to publish only selected files,
- * as opposed to the /sync endpoint which syncs the entire state.
  */
 export async function POST(
   request: NextRequest,
@@ -290,7 +287,16 @@ export async function DELETE(
 
     if (deleted.length > 0) {
       try {
-        await deleteBlobs(siteId, deleted);
+        await Promise.all(
+          deleted.map((path) =>
+            deleteFile({ projectId: siteId, path }).catch((error) => {
+              console.error(
+                `[DELETE /files] R2 deletion failed for ${siteId}/${path}:`,
+                error,
+              );
+            }),
+          ),
+        );
       } finally {
         revalidateTag(siteId);
       }

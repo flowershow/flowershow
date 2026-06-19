@@ -9,7 +9,7 @@ const mocks = vi.hoisted(() => ({
   getClientInfo: vi.fn(),
   isLegacyPublishClient: vi.fn(),
   generatePresignedUploadUrl: vi.fn(),
-  deleteBlobs: vi.fn(),
+  deleteFile: vi.fn(),
   prisma: {
     site: { findUnique: vi.fn() },
     blob: { findMany: vi.fn() },
@@ -42,9 +42,8 @@ vi.mock('@/lib/cli-auth', () => ({
 vi.mock('@/lib/content-store', () => ({
   generatePresignedUploadUrl: mocks.generatePresignedUploadUrl,
   getContentType: (ext: string) => `text/${ext}`,
+  deleteFile: mocks.deleteFile,
 }));
-
-vi.mock('@/lib/blob-cleanup', () => ({ deleteBlobs: mocks.deleteBlobs }));
 vi.mock('@/lib/otel-logger', () => ({
   log: vi.fn(),
   SeverityNumber: { INFO: 9 },
@@ -104,7 +103,7 @@ beforeEach(() => {
   mocks.generatePresignedUploadUrl.mockResolvedValue(
     'https://s3.example.com/upload-url',
   );
-  mocks.deleteBlobs.mockResolvedValue([]);
+  mocks.deleteFile.mockResolvedValue(undefined);
 });
 
 // ── Tests ──────────────────────────────────────────────────────────
@@ -246,7 +245,7 @@ describe('POST /api/sites/id/:siteId/sync', () => {
       mocks.prisma.blob.findMany.mockResolvedValue([
         { id: 'blob-1', path: 'to-delete.md', sha: 'sha1' },
       ]);
-      mocks.deleteBlobs.mockResolvedValue(['to-delete.md']); // successfully deleted
+      mocks.deleteFile.mockResolvedValue(undefined); // successfully deleted
       const req = makeRequest({ files: [] }); // no local files → delete existing
 
       await POST(req, { params: Promise.resolve({ siteId: 'site-1' }) });
@@ -268,7 +267,7 @@ describe('POST /api/sites/id/:siteId/sync', () => {
       mocks.prisma.blob.findMany.mockResolvedValue([
         { id: 'blob-1', path: 'to-delete.md', sha: 'sha1' },
       ]);
-      mocks.deleteBlobs.mockResolvedValue([]); // R2 deletion failed
+      mocks.deleteFile.mockRejectedValue(new Error('R2 error')); // R2 deletion failed
       const req = makeRequest({ files: [] });
 
       await POST(req, { params: Promise.resolve({ siteId: 'site-1' }) });
