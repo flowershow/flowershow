@@ -8,6 +8,7 @@ import {
   generateOwnershipToken,
   isValidAnonymousUserId,
 } from '@/lib/anonymous-user';
+import { startPublishLifecycle } from '@/lib/cloudflare-worker';
 import {
   generatePresignedUploadUrl,
   getContentType,
@@ -16,7 +17,6 @@ import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import PostHogClient from '@/lib/server-posthog';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { buildAnonSiteSubdomain } from '@/lib/site-subdomain';
-import { startPublishLifecycle } from '@/lib/trigger-lifecycle';
 import { createSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 

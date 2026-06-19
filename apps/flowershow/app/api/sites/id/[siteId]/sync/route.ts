@@ -1,3 +1,4 @@
+import type { PresignedUrl } from '@flowershow/api-contract';
 import { revalidateTag } from 'next/cache';
 import { type NextRequest, NextResponse } from 'next/server';
 import {
@@ -6,6 +7,10 @@ import {
   isLegacyPublishClient,
   validateAccessToken,
 } from '@/lib/cli-auth';
+import {
+  startPublishLifecycle,
+  terminatePublishLifecycle,
+} from '@/lib/cloudflare-worker';
 import {
   deleteFile,
   generatePresignedUploadUrl,
@@ -19,38 +24,13 @@ import {
   validatePublishFiles,
 } from '@/lib/publish-limits';
 import PostHogClient from '@/lib/server-posthog';
-import {
-  startPublishLifecycle,
-  terminatePublishLifecycle,
-} from '@/lib/trigger-lifecycle';
 import prisma from '@/server/db';
-
-interface UploadUrl {
-  path: string;
-  uploadUrl: string;
-  contentType: string;
-}
-
-interface SyncResponse {
-  toUpload: UploadUrl[];
-  toUpdate: UploadUrl[];
-  deleted: string[];
-  unchanged: string[];
-  summary: {
-    toUpload: number;
-    toUpdate: number;
-    deleted: number;
-    unchanged: number;
-  };
-  dryRun?: boolean;
-  publishId?: string;
-}
 
 async function generateUrlsForFiles(
   filesToProcess: FileMetadata[],
   siteId: string,
   publishId: string | null,
-): Promise<UploadUrl[]> {
+): Promise<PresignedUrl[]> {
   return Promise.all(
     filesToProcess.map(async (file) => {
       const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
@@ -72,7 +52,7 @@ async function generateUrlsForFiles(
 
 function generateDryRunPlaceholders(
   filesToProcess: FileMetadata[],
-): UploadUrl[] {
+): PresignedUrl[] {
   return filesToProcess.map((file) => {
     const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
     return {
@@ -105,6 +85,8 @@ export async function POST(
     // Check CLI version
     const versionError = checkCliVersion(request);
     if (versionError) return versionError;
+
+    const isLegacy = isLegacyPublishClient(request);
 
     // Validate access token (CLI or PAT)
     const auth = await validateAccessToken(request);
@@ -183,8 +165,8 @@ export async function POST(
       }
     }
 
-    let uploadUrls: UploadUrl[] = [];
-    let updateUrls: UploadUrl[] = [];
+    let uploadUrls: PresignedUrl[] = [];
+    let updateUrls: PresignedUrl[] = [];
     let deletedPaths: string[] = [];
     let publishId: string | undefined;
 
@@ -197,8 +179,6 @@ export async function POST(
       toUpdate.length > 0 ||
       toDelete.length > 0
     ) {
-      const isLegacy = isLegacyPublishClient(request);
-
       const publish = await prisma.publish.create({
         data: {
           siteId,
@@ -226,7 +206,7 @@ export async function POST(
         });
       }
 
-      // Full-site sync supersedes any prior in-progress publish — terminate their finalizers
+      // Cancel any in-progress Publish
       const previousInProgress = await prisma.publish.findMany({
         where: { siteId, id: { not: publish.id }, status: 'in_progress' },
         select: { id: true },

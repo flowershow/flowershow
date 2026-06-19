@@ -36,7 +36,7 @@
  */
 
 import { PrismaClient } from '@prisma/client';
-import { triggerSiteSync } from '../lib/trigger-sync';
+import { triggerGitHubSyncWorkflow } from '../lib/cloudflare-worker';
 
 const prisma = new PrismaClient();
 
@@ -187,7 +187,7 @@ async function main() {
         console.log();
         successCount++;
       } else {
-        await triggerSiteSync({
+        await triggerGitHubSyncWorkflow({
           siteId: site.id,
           ghRepository: repoFullName,
           ghBranch: site.ghBranch,

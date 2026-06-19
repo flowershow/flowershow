@@ -13,7 +13,7 @@ import {
   isLegacyPublishClient,
   validateAccessToken,
 } from '@/lib/cli-auth';
-import { authOptions } from '@/server/auth';
+import { startPublishLifecycle } from '@/lib/cloudflare-worker';
 import {
   deleteFile,
   generatePresignedUploadUrl,
@@ -26,7 +26,7 @@ import {
   validatePublishFiles,
 } from '@/lib/publish-limits';
 import PostHogClient from '@/lib/server-posthog';
-import { startPublishLifecycle } from '@/lib/trigger-lifecycle';
+import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
 
 /**

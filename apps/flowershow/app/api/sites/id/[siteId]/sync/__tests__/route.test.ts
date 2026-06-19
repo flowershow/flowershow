@@ -51,7 +51,7 @@ vi.mock('@/lib/otel-logger', () => ({
   SeverityNumber: { INFO: 9 },
 }));
 vi.mock('@/lib/typesense', () => ({ ensureSiteCollection: vi.fn() }));
-vi.mock('@/lib/trigger-lifecycle', () => ({
+vi.mock('@/lib/cloudflare-worker', () => ({
   startPublishLifecycle: mocks.startPublishLifecycle,
   terminatePublishLifecycle: mocks.terminatePublishLifecycle,
 }));

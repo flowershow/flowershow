@@ -5,12 +5,11 @@ import { jwtVerify } from 'jose';
 import { revalidateTag, unstable_cache } from 'next/cache';
 import { z } from 'zod';
 import { isNavDropdown, SiteConfig } from '@/components/types';
-import { env } from '@/env.mjs';
 import { SiteCreatedEmail } from '@/emails/site-created';
-import { sendEmail } from '@/lib/email';
-import { triggerSiteSync } from '@/lib/trigger-sync';
+import { env } from '@/env.mjs';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { buildSiteTree } from '@/lib/build-site-tree';
+import { triggerGitHubSyncWorkflow } from '@/lib/cloudflare-worker';
 import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
 import {
   type ContentType,
@@ -18,13 +17,13 @@ import {
   fetchFile,
   generatePresignedUploadUrl,
 } from '@/lib/content-store';
-import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
 import {
   addDomainToVercel,
   getDomainVariant,
   removeDomainAndVariantFromVercelProject,
   validDomainRegex,
 } from '@/lib/domains';
+import { sendEmail } from '@/lib/email';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { checkIfBranchExists } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
@@ -38,6 +37,7 @@ import {
 } from '@/lib/site-config';
 import { siteKeyBytes } from '@/lib/site-hmac-key';
 import { buildSiteSubdomain } from '@/lib/site-subdomain';
+import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
 import { ensureLeadingSlash } from '@/lib/url-encoder';
 import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
 import {
@@ -341,7 +341,7 @@ export const siteRouter = createTRPCRouter({
         });
         await deleteProject(id).catch(() => {}); // TODO handle it in a better way
         if (repoFullName && site.ghBranch) {
-          await triggerSiteSync({
+          await triggerGitHubSyncWorkflow({
             siteId: id,
             ghRepository: repoFullName,
             ghBranch: site.ghBranch,
@@ -366,7 +366,7 @@ export const siteRouter = createTRPCRouter({
           key === 'enableSearch' &&
           converted === true
         ) {
-          await triggerSiteSync({
+          await triggerGitHubSyncWorkflow({
             siteId: id,
             ghRepository: repoFullName,
             ghBranch: site.ghBranch,
@@ -2004,7 +2004,7 @@ export const siteRouter = createTRPCRouter({
       });
 
       // Trigger initial sync
-      await triggerSiteSync({
+      await triggerGitHubSyncWorkflow({
         siteId,
         ghRepository,
         ghBranch,

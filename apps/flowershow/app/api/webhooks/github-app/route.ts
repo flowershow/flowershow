@@ -2,13 +2,13 @@ import type { SuccessResponse } from '@flowershow/api-contract';
 import { createHmac, timingSafeEqual } from 'crypto';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
+import { triggerGitHubSyncWorkflow } from '@/lib/cloudflare-worker';
 import {
   clearInstallationTokenCache,
   getInstallationToken,
 } from '@/lib/github';
 import { log, SeverityNumber } from '@/lib/otel-logger';
 import PostHogClient from '@/lib/server-posthog';
-import { triggerSiteSync } from '@/lib/trigger-sync';
 import prisma from '@/server/db';
 
 interface WebhookPayload {
@@ -651,7 +651,7 @@ async function handlePushEvent(data: WebhookPayload) {
 
     const syncResults = await Promise.allSettled(
       sites.map((site) =>
-        triggerSiteSync({
+        triggerGitHubSyncWorkflow({
           siteId: site.id,
           // Prefer the webhook's current repo name (always up-to-date) over the
           // potentially-stale Site.ghRepository column.

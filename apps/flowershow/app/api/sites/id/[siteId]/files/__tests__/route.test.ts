@@ -47,7 +47,7 @@ vi.mock('@/lib/content-store', () => ({
   deleteFile: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock('@/lib/typesense', () => ({ ensureSiteCollection: vi.fn() }));
-vi.mock('@/lib/trigger-lifecycle', () => ({
+vi.mock('@/lib/cloudflare-worker', () => ({
   startPublishLifecycle: mocks.startPublishLifecycle,
 }));
 vi.mock('@/lib/server-posthog', () => {

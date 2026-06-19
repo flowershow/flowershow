@@ -78,23 +78,22 @@ export const FileMetadataSchema = z.object({
 export type FileMetadata = z.infer<typeof FileMetadataSchema>;
 
 // ---------------------------------------------------------------------------
-// UploadTarget
+// PresignedUrl
 // presigned upload URL in sync/publish responses
 // ---------------------------------------------------------------------------
-export const UploadTargetSchema = z.object({
+export const PresignedUrlSchema = z.object({
   path: z.string(),
   uploadUrl: z.string(),
-  blobId: z.string().optional(),
   contentType: z.string(),
 });
-export type UploadTarget = z.infer<typeof UploadTargetSchema>;
+export type PresignedUrl = z.infer<typeof PresignedUrlSchema>;
 
 // ---------------------------------------------------------------------------
 // PublishFilesResponse
 // POST /api/sites/id/:siteId/files
 // ---------------------------------------------------------------------------
 export const PublishFilesResponseSchema = z.object({
-  files: z.array(UploadTargetSchema),
+  files: z.array(PresignedUrlSchema),
   publishId: z.string().optional(),
 });
 export type PublishFilesResponse = z.infer<typeof PublishFilesResponseSchema>;
@@ -240,8 +239,8 @@ export const SyncRequestSchema = z.object({
 export type SyncRequest = z.infer<typeof SyncRequestSchema>;
 
 export const SyncResponseSchema = z.object({
-  toUpload: z.array(UploadTargetSchema),
-  toUpdate: z.array(UploadTargetSchema),
+  toUpload: z.array(PresignedUrlSchema),
+  toUpdate: z.array(PresignedUrlSchema),
   deleted: z.array(z.string()),
   unchanged: z.array(z.string()),
   summary: z.object({
