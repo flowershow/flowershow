@@ -182,7 +182,6 @@ enum PublishSource {
 
 enum PublishStatus {
   in_progress
-  finalizing
   success
   error
   superseded

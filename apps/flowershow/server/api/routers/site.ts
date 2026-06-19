@@ -666,10 +666,7 @@ export const siteRouter = createTRPCRouter({
           return { status: 'SUCCESS', lastSyncedAt: latestPublish.startedAt };
         }
 
-        if (
-          latestPublish.status === 'in_progress' ||
-          latestPublish.status === 'finalizing'
-        ) {
+        if (latestPublish.status === 'in_progress') {
           return { status: 'PENDING', lastSyncedAt: latestPublish.startedAt };
         }
 
@@ -763,7 +760,7 @@ export const siteRouter = createTRPCRouter({
 
         const files = p.files;
         const status: 'PENDING' | 'SUCCESS' | 'ERROR' | 'CANCELED' =
-          p.status === 'in_progress' || p.status === 'finalizing'
+          p.status === 'in_progress'
             ? 'PENDING'
             : p.status === 'error'
               ? 'ERROR'

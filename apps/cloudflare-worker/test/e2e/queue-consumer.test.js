@@ -44,7 +44,7 @@ async function waitForPublish(publishId, timeoutMs = 8_000) {
     const rows =
       await sql`SELECT status FROM "Publish" WHERE id = ${publishId}`;
     const status = rows[0]?.status;
-    if (status && status !== 'in_progress' && status !== 'finalizing') {
+    if (status && status !== 'in_progress') {
       return status;
     }
     await new Promise((r) => setTimeout(r, 150));
