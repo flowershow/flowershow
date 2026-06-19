@@ -1,46 +1,68 @@
 import { WorkflowEntrypoint } from 'cloudflare:workers';
 import { getPostgresClient } from './clients.js';
 
+const MAX_POLL_ATTEMPTS = 360; // 1 hour at 10s intervals
+
 export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
     const { publishId, siteId } = event.payload;
 
     const sql = getPostgresClient(this.env);
 
-    // Wait for queue consumer to signal all files are processed.
-    // The queue consumer runs the atomic completion check and sends this event.
-    // For GitHub publishes, GitHubSyncWorkflow sends this event directly when there
-    // are zero files to process.
-    const completionEvent = await step.waitForEvent('publish-complete', {
-      timeout: '1h',
-    });
+    let timedOut = false;
+    for (let i = 0; i < MAX_POLL_ATTEMPTS; i++) {
+      const done = await step.do(`check-completion-${i}`, async () => {
+        const [{ count }] = await sql`
+          SELECT COUNT(*) AS count FROM "PublishFile"
+          WHERE publish_id = ${publishId} AND status = 'uploading'
+        `;
+        return Number(count) === 0;
+      });
+      if (done) break;
+      if (i === MAX_POLL_ATTEMPTS - 1) {
+        timedOut = true;
+      } else {
+        await step.sleep(`poll-interval-${i}`, '10 seconds');
+      }
+    }
 
-    // Finalize the publish record
     await step.do('finalize-publish', async () => {
-      if (completionEvent === null) {
-        // Timeout — mark remaining uploading files as expired
+      if (timedOut) {
         await sql`
           UPDATE "PublishFile" SET status = 'expired'
           WHERE publish_id = ${publishId} AND status = 'uploading'
         `;
         await sql`
           UPDATE "Publish" SET status = 'error', completed_at = NOW()
-          WHERE id = ${publishId} AND status IN ('in_progress', 'finalizing')
+          WHERE id = ${publishId} AND status = 'in_progress'
         `;
-      } else {
-        const errorRows = await sql`
-          SELECT COUNT(*) as count FROM "PublishFile"
-          WHERE publish_id = ${publishId} AND status = 'error'
-        `;
-        const status = Number(errorRows[0].count) > 0 ? 'error' : 'success';
-        await sql`
-          UPDATE "Publish" SET status = ${status}, completed_at = NOW()
-          WHERE id = ${publishId}
-        `;
+        return;
       }
+
+      const [{ total, canceled, errors }] = await sql`
+        SELECT
+          COUNT(*) AS total,
+          COUNT(*) FILTER (WHERE status = 'canceled') AS canceled,
+          COUNT(*) FILTER (WHERE status = 'error') AS errors
+        FROM "PublishFile"
+        WHERE publish_id = ${publishId}
+      `;
+
+      let status;
+      if (Number(total) > 0 && Number(canceled) === Number(total)) {
+        status = 'superseded';
+      } else if (Number(errors) > 0) {
+        status = 'error';
+      } else {
+        status = 'success';
+      }
+
+      await sql`
+        UPDATE "Publish" SET status = ${status}, completed_at = NOW()
+        WHERE id = ${publishId}
+      `;
     });
 
-    // Revalidate Next.js cache tags
     await step.do('revalidate-tags', async () => {
       if (!this.env.NEXTJS_APP_URL || !this.env.INTERNAL_API_SECRET) return;
       try {

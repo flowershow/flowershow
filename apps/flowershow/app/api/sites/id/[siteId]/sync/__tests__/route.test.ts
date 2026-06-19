@@ -10,10 +10,12 @@ const mocks = vi.hoisted(() => ({
   isLegacyPublishClient: vi.fn(),
   generatePresignedUploadUrl: vi.fn(),
   deleteFile: vi.fn(),
+  startPublishLifecycle: vi.fn(),
+  terminatePublishLifecycle: vi.fn(),
   prisma: {
     site: { findUnique: vi.fn() },
     blob: { findMany: vi.fn() },
-    publish: { create: vi.fn(), findMany: vi.fn() },
+    publish: { create: vi.fn(), findMany: vi.fn(), update: vi.fn() },
     publishFile: { createMany: vi.fn(), updateMany: vi.fn() },
   },
 }));
@@ -49,6 +51,10 @@ vi.mock('@/lib/otel-logger', () => ({
   SeverityNumber: { INFO: 9 },
 }));
 vi.mock('@/lib/typesense', () => ({ ensureSiteCollection: vi.fn() }));
+vi.mock('@/lib/trigger-lifecycle', () => ({
+  startPublishLifecycle: mocks.startPublishLifecycle,
+  terminatePublishLifecycle: mocks.terminatePublishLifecycle,
+}));
 vi.mock('@/lib/server-posthog', () => {
   const client = {
     capture: vi.fn(),
@@ -98,8 +104,11 @@ beforeEach(() => {
   mocks.prisma.blob.findMany.mockResolvedValue([]);
   mocks.prisma.publish.create.mockResolvedValue(PUBLISH);
   mocks.prisma.publish.findMany.mockResolvedValue([]);
+  mocks.prisma.publish.update.mockResolvedValue(PUBLISH);
   mocks.prisma.publishFile.createMany.mockResolvedValue({ count: 0 });
   mocks.prisma.publishFile.updateMany.mockResolvedValue({ count: 0 });
+  mocks.startPublishLifecycle.mockResolvedValue(undefined);
+  mocks.terminatePublishLifecycle.mockResolvedValue(undefined);
   mocks.generatePresignedUploadUrl.mockResolvedValue(
     'https://s3.example.com/upload-url',
   );
@@ -400,6 +409,77 @@ describe('POST /api/sites/id/:siteId/sync', () => {
       });
 
       expect(res.status).toBe(404);
+    });
+  });
+
+  describe('Lifecycle workflow', () => {
+    it('starts lifecycle workflow for uploads', async () => {
+      const req = makeRequest({
+        files: [{ path: 'a.md', size: 100, sha: 'sha1' }],
+      });
+
+      await POST(req, { params: Promise.resolve({ siteId: 'site-1' }) });
+
+      expect(mocks.startPublishLifecycle).toHaveBeenCalledWith(
+        'publish-abc',
+        'site-1',
+      );
+    });
+
+    it('starts lifecycle workflow even when there are only deletions', async () => {
+      mocks.prisma.blob.findMany.mockResolvedValue([
+        { path: 'to-delete.md', sha: 'sha1' },
+      ]);
+      const req = makeRequest({ files: [] }); // delete-only
+
+      await POST(req, { params: Promise.resolve({ siteId: 'site-1' }) });
+
+      expect(mocks.startPublishLifecycle).toHaveBeenCalledWith(
+        'publish-abc',
+        'site-1',
+      );
+    });
+
+    it('does not start lifecycle for legacy clients', async () => {
+      mocks.isLegacyPublishClient.mockReturnValue(true);
+      const req = makeRequest({
+        files: [{ path: 'a.md', size: 100, sha: 'sha1' }],
+      });
+
+      await POST(req, { params: Promise.resolve({ siteId: 'site-1' }) });
+
+      expect(mocks.startPublishLifecycle).not.toHaveBeenCalled();
+    });
+
+    it('terminates previous in-progress finalizers on sync', async () => {
+      mocks.prisma.publish.findMany.mockResolvedValue([{ id: 'prev-pub-1' }]);
+      const req = makeRequest({
+        files: [{ path: 'a.md', size: 100, sha: 'sha1' }],
+      });
+
+      await POST(req, { params: Promise.resolve({ siteId: 'site-1' }) });
+
+      expect(mocks.terminatePublishLifecycle).toHaveBeenCalledWith([
+        'prev-pub-1',
+      ]);
+    });
+
+    it('cancels overlapping uploading PublishFile rows from previous publishes', async () => {
+      const req = makeRequest({
+        files: [{ path: 'a.md', size: 100, sha: 'sha1' }],
+      });
+
+      await POST(req, { params: Promise.resolve({ siteId: 'site-1' }) });
+
+      expect(mocks.prisma.publishFile.updateMany).toHaveBeenCalledWith({
+        where: {
+          publish: { siteId: 'site-1' },
+          path: { in: ['a.md'] },
+          status: 'uploading',
+          publishId: { not: 'publish-abc' },
+        },
+        data: { status: 'canceled' },
+      });
     });
   });
 });

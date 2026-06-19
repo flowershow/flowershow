@@ -37,17 +37,10 @@ export default {
       try {
         publishId = generateId();
 
-        // Create the Publish record before starting the workflow so instanceId = publishId
-        await sql`
-          INSERT INTO "Publish" (id, site_id, source, status, started_at, git_commit_sha, git_commit_message)
-          VALUES (${publishId}, ${siteId}, 'github_webhook', 'in_progress', NOW(), ${gitCommitSha ?? null}, ${gitCommitMessage ?? null})
-        `;
-
         // Supersede any in-progress GitHub publishes for this site
         const previous = await sql`
           SELECT id FROM "Publish"
           WHERE site_id = ${siteId}
-            AND id != ${publishId}
             AND status = 'in_progress'
             AND source = 'github_webhook'
           ORDER BY started_at DESC
@@ -79,17 +72,44 @@ export default {
         await sql.end();
       }
 
-      const instance = await env.PUBLISH_FINALIZER_WORKFLOW.create({
-        id: publishId,
-        params: { publishId, siteId },
-      });
-
-      await env.GITHUB_SYNC_WORKFLOW.create({
+      // Publish record creation and finalizer start are handled inside the workflow
+      const syncInstance = await env.GITHUB_SYNC_WORKFLOW.create({
         id: `${publishId}-github`,
-        params: { publishId, siteId, ghRepository, ghBranch, rootDir: rootDir ?? null, githubInstallationId, forceSync: forceSync ?? false },
+        params: { publishId, siteId, ghRepository, ghBranch, rootDir: rootDir ?? null, githubInstallationId, forceSync: forceSync ?? false, gitCommitSha: gitCommitSha ?? null, gitCommitMessage: gitCommitMessage ?? null },
       });
 
-      return Response.json({ instanceId: instance.id }, { status: 202 });
+      return Response.json({ instanceId: syncInstance.id }, { status: 202 });
+    }
+
+    if (request.method === 'POST' && url.pathname === '/terminate-lifecycle') {
+      const authHeader = request.headers.get('Authorization');
+      const expectedToken = `Bearer ${env.SYNC_TRIGGER_SECRET}`;
+      if (!env.SYNC_TRIGGER_SECRET || authHeader !== expectedToken) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+
+      let body;
+      try {
+        body = await request.json();
+      } catch {
+        return new Response('Invalid JSON', { status: 400 });
+      }
+
+      const { publishIds } = body;
+      if (!Array.isArray(publishIds)) {
+        return new Response('Missing required field: publishIds', { status: 400 });
+      }
+
+      for (const pid of publishIds) {
+        try {
+          const instance = await env.PUBLISH_FINALIZER_WORKFLOW.get(pid);
+          await instance.terminate();
+        } catch (termErr) {
+          console.error(`Failed to terminate finalizer workflow ${pid}: ${termErr.message}`);
+        }
+      }
+
+      return new Response(null, { status: 204 });
     }
 
     if (request.method === 'POST' && url.pathname === '/start-lifecycle') {

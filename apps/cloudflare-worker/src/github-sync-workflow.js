@@ -28,6 +28,8 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       rootDir,
       githubInstallationId,
       forceSync = false,
+      gitCommitSha = null,
+      gitCommitMessage = null,
     } = event.payload;
 
     // Generate a fresh token on every run (outside any step so retries don't reuse
@@ -45,6 +47,14 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
     await step.do('fetch-site', async () => {
       const rows = await sql`SELECT id FROM "Site" WHERE id = ${siteId}`;
       if (rows.length === 0) throw new Error(`Site ${siteId} not found.`);
+    });
+
+    // Create the Publish record as the first durable step
+    await step.do('create-publish-record', async () => {
+      await sql`
+        INSERT INTO "Publish" (id, site_id, source, status, started_at, git_commit_sha, git_commit_message)
+        VALUES (${publishId}, ${siteId}, 'github_webhook', 'in_progress', NOW(), ${gitCommitSha}, ${gitCommitMessage})
+      `;
     });
 
     // Fetch site config (contentInclude / contentExclude)
@@ -89,17 +99,6 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       },
     );
 
-    const totalFiles =
-      fileBatchesToUpsert.flat().length + fileBatchesToDelete.flat().length;
-
-    if (totalFiles === 0) {
-      await step.do('send-publish-complete', async () => {
-        const instance = await this.env.PUBLISH_FINALIZER_WORKFLOW.get(publishId);
-        await instance.sendEvent({ name: 'publish-complete', payload: {} });
-      });
-      return;
-    }
-
     // Create PublishFile rows for all files to upsert
     await step.do('create-publish-files-for-upsert', async () => {
       const allItems = fileBatchesToUpsert.flat();
@@ -112,39 +111,8 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       }
     });
 
-    // Download from GitHub and upload to R2 in batches
-    await Promise.all(
-      fileBatchesToUpsert.map((batch, index) =>
-        step.do(`process-files-to-upsert-batch-${index}`, async () => {
-          await Promise.all(
-            batch.map(async ({ ghTreeItem, filePath }) => {
-              try {
-                const extension = ghTreeItem.path.split('.').pop() || '';
-                const fileBuffer = await fetchGitHubFileRaw(
-                  ghRepository,
-                  ghTreeItem.sha,
-                  accessToken,
-                );
-                await uploadFile(
-                  storage,
-                  siteId,
-                  filePath,
-                  fileBuffer,
-                  extension,
-                  publishId,
-                );
-              } catch (error) {
-                console.error(
-                  `Sync file error ${siteId}/${filePath}: ${error.message}`,
-                );
-              }
-            }),
-          );
-        }),
-      ),
-    );
-
-    // Delete file batches from R2; worker handles Blob/Typesense cleanup via DeleteObject events
+    // Delete file batches from R2; create terminal PublishFile rows for each deletion.
+    // Worker handles Blob/Typesense cleanup via DeleteObject events.
     await Promise.all(
       fileBatchesToDelete.map((batch, index) =>
         step.do(`delete-files-batch-${index}`, async () => {
@@ -182,14 +150,47 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       ),
     );
 
-    // Deletions create terminal PublishFile rows immediately — no PutObject events
-    // fire, so checkAndFinalizePublish in the queue consumer will never be called.
-    // Signal the finalizer directly when there are no uploads.
-    if (fileBatchesToUpsert.flat().length === 0) {
-      await step.do('send-publish-complete', async () => {
-        const instance = await this.env.PUBLISH_FINALIZER_WORKFLOW.get(publishId);
-        await instance.sendEvent({ name: 'publish-complete', payload: {} });
+    // Start the finalizer after all PublishFile rows exist (uploading + terminal).
+    // The finalizer polls until all uploading rows reach a terminal state, then
+    // finalizes the Publish record. It naturally handles the zero-files and
+    // delete-only cases without any special signaling.
+    await step.do('start-publish-finalizer', async () => {
+      await this.env.PUBLISH_FINALIZER_WORKFLOW.create({
+        id: publishId,
+        params: { publishId, siteId },
       });
-    }
+    });
+
+    // Download from GitHub and upload to R2 in batches
+    await Promise.all(
+      fileBatchesToUpsert.map((batch, index) =>
+        step.do(`process-files-to-upsert-batch-${index}`, async () => {
+          await Promise.all(
+            batch.map(async ({ ghTreeItem, filePath }) => {
+              try {
+                const extension = ghTreeItem.path.split('.').pop() || '';
+                const fileBuffer = await fetchGitHubFileRaw(
+                  ghRepository,
+                  ghTreeItem.sha,
+                  accessToken,
+                );
+                await uploadFile(
+                  storage,
+                  siteId,
+                  filePath,
+                  fileBuffer,
+                  extension,
+                  publishId,
+                );
+              } catch (error) {
+                console.error(
+                  `Sync file error ${siteId}/${filePath}: ${error.message}`,
+                );
+              }
+            }),
+          );
+        }),
+      ),
+    );
   }
 }

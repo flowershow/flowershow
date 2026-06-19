@@ -19,7 +19,10 @@ import {
   validatePublishFiles,
 } from '@/lib/publish-limits';
 import PostHogClient from '@/lib/server-posthog';
-import { startPublishLifecycle } from '@/lib/trigger-lifecycle';
+import {
+  startPublishLifecycle,
+  terminatePublishLifecycle,
+} from '@/lib/trigger-lifecycle';
 import { ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
@@ -208,18 +211,38 @@ export async function POST(
       });
       publishId = publish.id;
 
-      const previousPublishIds = await prisma.publish.findMany({
-        where: { siteId, id: { not: publish.id } },
-        select: { id: true },
-      });
-      if (previousPublishIds.length > 0) {
+      // Cancel in-flight PublishFile rows from any prior publish for overlapping paths
+      const newPaths = [
+        ...toUpload.map((f) => f.path),
+        ...toUpdate.map((f) => f.path),
+        ...toDelete,
+      ];
+      if (newPaths.length > 0) {
         await prisma.publishFile.updateMany({
           where: {
-            publishId: { in: previousPublishIds.map((p) => p.id) },
+            publish: { siteId },
+            path: { in: newPaths },
             status: 'uploading',
+            publishId: { not: publish.id },
           },
           data: { status: 'canceled' },
         });
+      }
+
+      // Full-site sync supersedes any prior in-progress publish — terminate their finalizers
+      const previousInProgress = await prisma.publish.findMany({
+        where: { siteId, id: { not: publish.id }, status: 'in_progress' },
+        select: { id: true },
+      });
+      if (previousInProgress.length > 0) {
+        try {
+          await terminatePublishLifecycle(previousInProgress.map((p) => p.id));
+        } catch (termErr) {
+          console.error(
+            'Failed to terminate previous lifecycle workflows:',
+            termErr,
+          );
+        }
       }
 
       if (toDelete.length > 0) {
@@ -302,20 +325,12 @@ export async function POST(
       }
 
       if (!isLegacy) {
-        const hasUploadingFiles = toUpload.length + toUpdate.length > 0;
-        if (hasUploadingFiles) {
-          // Start lifecycle workflow — waits for queue consumer to signal completion
-          try {
-            await startPublishLifecycle(publish.id, siteId);
-          } catch (lifecycleErr) {
-            console.error('Failed to start lifecycle workflow:', lifecycleErr);
-          }
-        } else {
-          // Deletions only — all PublishFile rows are already terminal; finalize now
-          await prisma.publish.update({
-            where: { id: publish.id },
-            data: { status: 'success', completedAt: new Date() },
-          });
+        // Start lifecycle workflow — polls until all PublishFile rows are terminal,
+        // then finalizes the Publish record. Handles all cases including delete-only.
+        try {
+          await startPublishLifecycle(publish.id, siteId);
+        } catch (lifecycleErr) {
+          console.error('Failed to start lifecycle workflow:', lifecycleErr);
         }
       }
     }

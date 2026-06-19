@@ -120,6 +120,22 @@ export async function POST(
       },
     });
 
+    // Cancel in-flight PublishFile rows from any prior publish for overlapping paths.
+    // Unlike /sync, we do NOT terminate previous finalizers — concurrent /files
+    // publishes may cover completely different paths and can coexist.
+    const newPaths = files.map((f) => f.path);
+    if (!isLegacy && newPaths.length > 0) {
+      await prisma.publishFile.updateMany({
+        where: {
+          publish: { siteId },
+          path: { in: newPaths },
+          status: 'uploading',
+          publishId: { not: publish.id },
+        },
+        data: { status: 'canceled' },
+      });
+    }
+
     let uploadUrls: UploadTarget[];
     try {
       const presignedUrlExpiresAt = new Date(

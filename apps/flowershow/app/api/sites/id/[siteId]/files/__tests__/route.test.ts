@@ -8,11 +8,12 @@ const mocks = vi.hoisted(() => ({
   getClientInfo: vi.fn(),
   isLegacyPublishClient: vi.fn(),
   generatePresignedUploadUrl: vi.fn(),
+  startPublishLifecycle: vi.fn(),
   prisma: {
     site: { findUnique: vi.fn() },
     blob: { findMany: vi.fn() },
     publish: { create: vi.fn() },
-    publishFile: { create: vi.fn() },
+    publishFile: { create: vi.fn(), updateMany: vi.fn() },
   },
 }));
 
@@ -46,6 +47,9 @@ vi.mock('@/lib/content-store', () => ({
   deleteFile: vi.fn().mockResolvedValue(undefined),
 }));
 vi.mock('@/lib/typesense', () => ({ ensureSiteCollection: vi.fn() }));
+vi.mock('@/lib/trigger-lifecycle', () => ({
+  startPublishLifecycle: mocks.startPublishLifecycle,
+}));
 vi.mock('@/lib/server-posthog', () => {
   const client = {
     capture: vi.fn(),
@@ -93,6 +97,8 @@ beforeEach(() => {
   mocks.prisma.blob.findMany.mockResolvedValue([]);
   mocks.prisma.publish.create.mockResolvedValue(PUBLISH);
   mocks.prisma.publishFile.create.mockResolvedValue({ id: 'pf-1' });
+  mocks.prisma.publishFile.updateMany.mockResolvedValue({ count: 0 });
+  mocks.startPublishLifecycle.mockResolvedValue(undefined);
   mocks.generatePresignedUploadUrl.mockResolvedValue(
     'https://s3.example.com/upload-url',
   );
@@ -350,6 +356,37 @@ describe('POST /api/sites/id/:siteId/files', () => {
 
       expect(res.status).toBe(400);
       expect(mocks.prisma.publish.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('Supersession', () => {
+    it('cancels overlapping uploading PublishFile rows from previous publishes', async () => {
+      const req = makeRequest({
+        files: [{ path: 'a.md', size: 100, sha: 'sha1' }],
+      });
+
+      await POST(req, { params: Promise.resolve({ siteId: 'site-1' }) });
+
+      expect(mocks.prisma.publishFile.updateMany).toHaveBeenCalledWith({
+        where: {
+          publish: { siteId: 'site-1' },
+          path: { in: ['a.md'] },
+          status: 'uploading',
+          publishId: { not: 'publish-xyz' },
+        },
+        data: { status: 'canceled' },
+      });
+    });
+
+    it('does not cancel rows for legacy clients', async () => {
+      mocks.isLegacyPublishClient.mockReturnValue(true);
+      const req = makeRequest({
+        files: [{ path: 'a.md', size: 100, sha: 'sha1' }],
+      });
+
+      await POST(req, { params: Promise.resolve({ siteId: 'site-1' }) });
+
+      expect(mocks.prisma.publishFile.updateMany).not.toHaveBeenCalled();
     });
   });
 });

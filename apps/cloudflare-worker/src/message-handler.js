@@ -112,55 +112,6 @@ async function processDeleteEvent({ sql, typesense, siteId, path }) {
   }
 }
 
-// Atomic completion check: only the worker that processes the last file wins this
-// UPDATE and sends publish-complete. All concurrent workers get 0 rows affected.
-async function checkAndFinalizePublish(sql, env, publishId, siteId) {
-  if (!publishId) return;
-  const result = await sql`
-    UPDATE "Publish" SET status = 'finalizing'
-    WHERE id = ${publishId} AND status = 'in_progress'
-      AND NOT EXISTS (
-        SELECT 1 FROM "PublishFile"
-        WHERE publish_id = ${publishId} AND status = 'uploading'
-      )
-  `;
-  if (result.count !== 1) return;
-
-  if (env.ENVIRONMENT === 'dev') {
-    // env.PUBLISH_FINALIZER_WORKFLOW.get() is broken in local dev (Miniflare bug — workflow
-    // service URL doesn't resolve in either fetch or queue handler contexts).
-    // Replicate what the workflow's finalize-publish step does directly.
-    try {
-      const errorRows = await sql`
-        SELECT COUNT(*) as count FROM "PublishFile"
-        WHERE publish_id = ${publishId} AND status = 'error'
-      `;
-      const status = Number(errorRows[0].count) > 0 ? 'error' : 'success';
-      await sql`
-        UPDATE "Publish" SET status = ${status}, completed_at = NOW()
-        WHERE id = ${publishId} AND status = 'finalizing'
-      `;
-      if (siteId && env.NEXTJS_APP_URL && env.INTERNAL_API_SECRET) {
-        fetch(`${env.NEXTJS_APP_URL}/api/internal/revalidate`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-internal-secret': env.INTERNAL_API_SECRET },
-          body: JSON.stringify({ tag: siteId }),
-        }).catch((err) => console.error(`Revalidate error for site ${siteId}: ${err.message}`));
-      }
-    } catch (err) {
-      console.error(`Failed to finalize publish ${publishId}: ${err.message}`);
-    }
-    return;
-  }
-
-  try {
-    const instance = await env.PUBLISH_FINALIZER_WORKFLOW.get(publishId);
-    await instance.sendEvent({ name: 'publish-complete', payload: {} });
-  } catch (err) {
-    console.error(`Failed to send publish-complete for ${publishId}: ${err.message}`);
-  }
-}
-
 async function processMarkdownFile({ storage, sql, typesense, siteId, branch, path, publishId }) {
   const key = `${siteId}/${branch}/raw/${path}`;
 
@@ -240,9 +191,6 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
     return msg.ack();
   }
 
-  // Hoisted so the outer catch can still run the completion check if processMarkdownFile
-  // marked the PublishFile as 'error' before re-throwing.
-  let publishId = null;
   try {
     const { siteId, branch, path } = parseObjectKey(rawKey);
 
@@ -251,7 +199,7 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
     }
 
     const key = `${siteId}/${branch}/raw/${path}`;
-    publishId = await getPublishIdFromMetadata(storage, key);
+    const publishId = await getPublishIdFromMetadata(storage, key);
 
     if (!path.match(/\.(md|mdx)$/i)) {
       try {
@@ -270,12 +218,10 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
           source: 'worker_non_markdown',
         });
       }
-      await checkAndFinalizePublish(sql, env, publishId, siteId);
       return msg.ack();
     }
 
     await processMarkdownFile({ storage, sql, typesense, siteId, branch, path, publishId });
-    await checkAndFinalizePublish(sql, env, publishId, siteId);
     msg.ack();
   } catch (err) {
     const rawKey = msg.body.object.key;
@@ -299,8 +245,5 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
       error_name: err.name,
       source: 'worker_process_file',
     });
-    // processMarkdownFile marks PublishFile 'error' before re-throwing, so this may be
-    // the last file. Run the check idempotently — the atomic UPDATE guards against duplicates.
-    await checkAndFinalizePublish(sql, env, publishId, siteId);
   }
 }
