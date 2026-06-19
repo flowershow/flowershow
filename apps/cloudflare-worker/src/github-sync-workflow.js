@@ -8,7 +8,6 @@ import {
 } from './github.js';
 import { generateId } from './helpers.js';
 import { deleteFile, uploadFile } from './storage.js';
-import { ensureTypesenseCollection } from './typesense.js';
 import {
   computeFilesToDelete,
   computeFilesToUpsert,
@@ -62,11 +61,6 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       await step.do('fetch-site-config', async () => {
         return fetchGitHubConfig(ghRepository, ghBranch, accessToken);
       });
-
-    // Ensure Typesense collection exists
-    await step.do('check-typesense-collection', async () => {
-      await ensureTypesenseCollection(typesense, siteId);
-    });
 
     // Fetch GitHub repo tree
     const gitHubTree = await step.do('fetch-github-tree', async () => {

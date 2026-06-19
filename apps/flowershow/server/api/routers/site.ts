@@ -18,7 +18,7 @@ import {
   fetchFile,
   generatePresignedUploadUrl,
 } from '@/lib/content-store';
-import { deleteSiteCollection } from '@/lib/typesense';
+import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
 import {
   addDomainToVercel,
   getDomainVariant,
@@ -219,6 +219,8 @@ export const siteRouter = createTRPCRouter({
           react: SiteCreatedEmail({ userName, siteUrl, projectName }),
         });
       }
+
+      await createSiteCollection(created.id);
 
       const posthog = await PostHogClient();
       posthog.capture({

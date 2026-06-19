@@ -23,7 +23,6 @@ import {
   startPublishLifecycle,
   terminatePublishLifecycle,
 } from '@/lib/trigger-lifecycle';
-import { ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
 interface UploadUrl {
@@ -136,8 +135,6 @@ export async function POST(
         { status: 403 },
       );
     }
-
-    await ensureSiteCollection(siteId);
 
     const dryRun = request.nextUrl.searchParams.get('dryRun') === 'true';
 

@@ -33,6 +33,8 @@ export default {
       }
 
       const sql = getPostgresClient(env);
+      
+      // TODO is this the right place to create 
       let publishId;
       try {
         publishId = generateId();

@@ -17,7 +17,7 @@ import PostHogClient from '@/lib/server-posthog';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { buildAnonSiteSubdomain } from '@/lib/site-subdomain';
 import { startPublishLifecycle } from '@/lib/trigger-lifecycle';
-import { ensureSiteCollection } from '@/lib/typesense';
+import { createSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
@@ -176,8 +176,8 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Ensure Typesense collection exists for search indexing
-    await ensureSiteCollection(site.id);
+    // Create Typesense collection exists for search indexing
+    await createSiteCollection(site.id);
 
     // Create Publish record for lifecycle tracking (fixes missing history for anon publishes)
     const publish = await prisma.publish.create({

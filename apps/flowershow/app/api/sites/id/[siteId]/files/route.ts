@@ -27,7 +27,6 @@ import {
 } from '@/lib/publish-limits';
 import PostHogClient from '@/lib/server-posthog';
 import { startPublishLifecycle } from '@/lib/trigger-lifecycle';
-import { ensureSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
 /**
@@ -77,8 +76,6 @@ export async function POST(
         { status: 403 },
       );
     }
-
-    await ensureSiteCollection(siteId);
 
     const parsedBody = PublishFilesRequestSchema.safeParse(
       await request.json(),
