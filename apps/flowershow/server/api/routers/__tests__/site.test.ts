@@ -2,13 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ── Mocks (must come before imports that depend on them) ──────────
 
-vi.mock('@/env.mjs', () => ({
-  env: {
-    NEXT_PUBLIC_VERCEL_ENV: 'test',
-    NEXT_PUBLIC_ROOT_DOMAIN: 'localhost:3000',
-  },
-}));
-
 vi.mock('next/cache', () => ({
   unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
   revalidateTag: vi.fn(),
