@@ -40,6 +40,10 @@ _Avoid_: Skin, style, template, stylesheet
 A single end-to-end publishing event for a site. Records when it started, what triggered it (publish source), its outcome (publish status), and any errors. The source of truth for a site's current status — not blob states, not live GitHub API calls.
 _Avoid_: Sync, sync run, deployment, deploy
 
+**PublishFile**:
+A per-file record within a Publish, tracking the outcome of one file operation (upsert or delete). Created upfront for all files before any work begins; status starts as `uploading` for files to be uploaded, or a terminal status for files already deleted. Terminal statuses: `success`, `error`, `expired`, `canceled`.
+_Avoid_: File record, publish item
+
 **Publish Source**:
 The channel that triggered a publish. Canonical values: `github_webhook`, `cli`, `obsidian_plugin`, `dashboard_upload`.
 _Avoid_: Sync source, publish method, trigger type, client type
