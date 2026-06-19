@@ -10,14 +10,14 @@ REST API reference (OpenAPI 3.1): `packages/api-contract`
 
 ## Project Overview
 
-Flowershow Cloud is a NextJS multitenant application designed for seamlessly publishing markdown content from GitHub repositories.
+Flowershow Cloud is a NextJS multitenant application that lets users publish markdown content from GitHub repositories or via direct file uploads (CLI, Obsidian plugin, dashboard).
 
 The application provides:
 
 - Multi-tenant architecture supporting multiple users and sites
 - Built-in authentication via GitHub
-- Markdown content publishing from GitHub repositories
-- Automatic content synchronization
+- Markdown content publishing from GitHub repositories and direct uploads
+- Automatic content synchronization via Cloudflare Workflows
 
 ## Architecture
 
@@ -28,176 +28,73 @@ The application is built with:
 - **Storage**: R2 Cloudflare buckets for content storage
 - **Authentication**: NextAuth with GitHub OAuth
 - **Deployment**: Vercel
-- **Background Jobs**: Inngest + Cloudflare worker
+- **Background Jobs**: Cloudflare Workflows + Cloudflare Worker (Queues)
 - **Content indexing**: Typesense
 - **Subscriptions**: Stripe
 
-## Site Creation and Data Flow
+## Publish Pipeline
 
-The site creation process follows these steps:
+Every publish goes through the same lifecycle regardless of how it was triggered.
 
-1. **GitHub Authentication**
+### Actors
 
-- Users authenticate with GitHub OAuth
-- Application requests necessary repository access permissions
+**`GitHubSyncWorkflow`** (`apps/cloudflare-worker`) — GitHub path only. Creates the `Publish` record, diffs the GitHub tree against stored Blobs, creates all `PublishFile` records, starts `PublishFinalizerWorkflow`, then uploads files to R2.
 
-2. **Site Configuration**
+**`PublishFinalizerWorkflow`** (`apps/cloudflare-worker`) — all paths, `instanceId = publishId`. Polls every 10 seconds until all `PublishFile` rows for the publish reach a terminal state, then sets `Publish.status` (`success` / `error` / `superseded`) and revalidates Next.js cache tags.
 
-- User selects:
-  - Repository to publish from
-  - Branch to track (defaults to 'main')
-  - Root directory (optional, for publishing specific folder)
-- User creates a new site with the selected configurations
+**Queue consumer** (`apps/cloudflare-worker`) — all paths. Processes one file per message: upserts the Blob record, updates Typesense, flips the `PublishFile` row to `success` or `error`. Blob deletion is driven by R2 `DeleteObject` events handled by the same consumer. No coordination logic — the consumer does not signal the finalizer.
 
-3. **Site Content Processing**
+### Step order (every publish)
 
-- Initial site synchronization triggered
-  - Inngest sync function fetches files from GitHub, creates Blob records in the database and uploads the files to R2 storage
-  - Each markdown file uploaded to R2 triggers the Cloudflare worker, which processes it and updates associated Blob records in the db with the extracted data (e.g. frontmatter fields)
+1. Create `Publish` record.
+2. Create `PublishFile` rows (`uploading`) for files to upsert.
+3. Delete files from R2; create terminal `PublishFile` rows (`success`/`error`) for each deletion.
+4. Start `PublishFinalizerWorkflow`.
+5. Upload files to R2 (GitHub path) or return presigned URLs to client (presigned paths).
 
-4. **Consecutive Site Content Synchronization**
+### Per-path implementation
 
-- Automatic sync triggered with GitHub webhooks (default)
-- Manual sync option available
+**GitHub path** — Worker `/sync` endpoint handles supersession and starts `GitHubSyncWorkflow`, which owns steps 1–5.
 
-## Content Synchronization Architecture
+**Presigned paths (CLI, Obsidian, dashboard)** — Next.js API routes (`/sync`, `/files`) own steps 1–4 directly, then return presigned R2 PUT URLs to the client.
 
-### Sync Configuration
-
-The synchronization process is handled by the Cloudflare Worker (`apps/cloudflare-worker`), triggered via:
-
-- GitHub webhooks → `POST /api/webhooks/github-app` → Cloudflare Worker `/sync` endpoint
-- Manual UI trigger → tRPC `site.syncSite` → Cloudflare Worker `/sync` endpoint
+### Sync trigger points
 
 ```mermaid
 graph TD
     subgraph "Trigger Sources"
         GH[GitHub Push] -->|Webhook| WH[Webhook Handler]
-        UI[Manual UI Trigger] -->|Direct| CW[Cloudflare Worker]
-        WH -->|Validate & Filter| CW
+        CLI[CLI / Obsidian / Dashboard] -->|API routes| NX[Next.js app]
+        UI[Manual UI Trigger] -->|tRPC syncSite| NX
+        WH -->|Validate & Filter| CW[Cloudflare Worker /sync]
+        NX -->|/start-lifecycle| CW
     end
 
     subgraph "Processing"
-        CW -->|SyncSiteWorkflow| SF[Sync Workflow]
+        CW -->|GitHubSyncWorkflow| SF[GitHub Sync + Finalizer]
+        CW -->|PublishFinalizerWorkflow| PF[Poll → finalize Publish]
         CW -->|Cron: daily| DF[cleanupExpiredSites]
-        CW -->|Cron: every 15min| PF[cleanupExpiredPublishFiles]
+        CW -->|Queue| QC[Queue consumer: Blob + Typesense + PublishFile]
     end
 ```
 
-### Sync Process Details
+### Supersession
 
-1. **Event Handling and Routes**
+When a new publish starts, any in-flight `PublishFile` rows from previous publishes for the same paths are canceled (`status = 'canceled'`). The finalizer for those publishes naturally exits when it polls and finds no `uploading` rows remaining, setting `Publish.status = 'superseded'`.
 
-- Webhook Handler (`app/api/webhook/route.ts`):
-  - Receives GitHub push events
-  - Validates webhook signatures
-  - Filters events by branch
-  - Triggers Cloudflare Worker sync
+Full-site syncs (`/sync` for both GitHub and presigned paths) also explicitly terminate the previous `PublishFinalizerWorkflow` instance. Concurrent `/files` (subset) publishes leave previous finalizers running — they poll independently and exit when their rows are done.
 
-- Sync Trigger (`lib/trigger-sync.ts`):
-  - Calls Cloudflare Worker `/sync` endpoint
-  - Creates a `SyncSiteWorkflow` instance
+## Site Creation and Data Flow
 
-2. **Sync Trigger Points**
-   - Automatic (via GitHub webhooks):
-     - Push events to tracked branch
-     - Validated using webhook secret
-     - Branch-specific filtering
-   - Manual (via UI):
-     - User-initiated sync
-     - Force sync option available
-   - Initial sync:
-     - On site creation
-     - Full repository processing
+1. **GitHub Authentication** — Users authenticate with GitHub OAuth.
 
-3. **Detailed Sync Steps**
-   When a site sync is triggered (either automatically or manually), the following steps occur in sequence:
+2. **Site Configuration** — User selects repository, branch (defaults to `main`), and optional root directory.
 
-   a. **Initial Setup**
-   - Fetch site details and user information from PostgreSQL
-   - Update site's sync status to "PENDING"
-   - Load site configuration from repository's config.json
-   - Parse content include/exclude patterns from config
-   - Validate root directory exists (if specified)
+3. **Initial Sync** — Triggered on site creation. `GitHubSyncWorkflow` fetches files from GitHub, creates `Publish` + `PublishFile` records, and uploads files to R2. R2 events drive the queue consumer, which creates/updates `Blob` records and indexes content in Typesense. `PublishFinalizerWorkflow` sets the final `Publish.status`.
 
-   b. **Tree Comparison**
-   - Fetch current content tree from R2 storage
-   - Fetch repository tree from GitHub API
-   - Compare SHA hashes to detect changes
-   - If trees match (no changes):
-     - Update sync status to "SUCCESS"
-     - Exit sync process early
+4. **Consecutive Syncs** — Automatic (GitHub webhooks) or manual (UI). Same pipeline as above, with path-scoped supersession of any in-progress publish.
 
-   c. **File Processing**
-   For each changed file:
-   - Filter by supported extensions (.md, .json, .yaml)
-   - Apply content include/exclude patterns
-   - Download file content from GitHub
-   - Upload raw file to R2 storage
-   - For markdown files:
-     - Parse YAML frontmatter for metadata
-     - Look for associated datapackage file
-     - If README.md/index.md, check directory for datapackage
-     - Compute metadata (URL, title, description)
-     - Store metadata in PostgreSQL
-   - For datapackage files:
-     - Find associated README.md/index.md
-     - Parse package metadata
-     - Update linked markdown file metadata
-     - Store combined metadata in PostgreSQL
-
-   d. **Deletion Handling**
-   - Compare old and new trees to find deleted files
-   - Remove deleted files from R2 storage
-   - Clean up associated metadata from PostgreSQL
-   - For deleted datapackage files:
-     - Recompute metadata for associated markdown files
-     - Update database records accordingly
-
-   e. **Final Steps**
-   - Upload new tree structure to R2
-   - Update site metadata in PostgreSQL
-   - Update sync status to "SUCCESS"
-   - Clear any previous sync errors
-   - Update sync timestamp
-   - Revalidate Next.js cache tags for:
-     - Site metadata
-     - Site permalinks
-     - Site tree
-     - Page content
-
-4. **Content Storage**
-   - Files stored in R2 Cloudflare buckets
-   - Tree structure maintained for efficient diffing
-   - Metadata stored in PostgreSQL for quick access
-
-5. **Error Handling**
-   - Detailed error messages stored in database
-   - Non-retriable errors marked permanent:
-     - Invalid root directory
-     - YAML frontmatter parsing errors
-     - Invalid datapackage format
-   - Retriable errors with automatic retry:
-     - GitHub API rate limits
-     - Network timeouts
-     - Storage upload failures
-   - Error status visible in site dashboard
-   - Error logs in Cloudflare Worker observability dashboard
-
-### Monitoring and Debugging
-
-The sync process can be monitored through the Cloudflare Workers dashboard under the `flowershow-markdown-worker` worker.
-- Event queues
-
-### Local Development
-
-The Inngest dev server starts automatically as part of `pnpm dev:up`.
-
-Monitor local events at: http://localhost:8288/
-
-## Environment Setup
-
-### Local Development Setup
+## Local Development
 
 **Prerequisites:** Docker and pnpm installed.
 
@@ -223,7 +120,7 @@ Monitor local events at: http://localhost:8288/
    ```
 
    This single command:
-    - Starts **PostgreSQL** (localhost:5432), **MinIO** (localhost:9000), and **Inngest** (localhost:8288) via Docker
+   - Starts **PostgreSQL** (localhost:5432) and **MinIO** (localhost:9000) via Docker
    - Auto-creates the MinIO `flowershow` bucket with public access
    - Configures MinIO webhook notifications to the Cloudflare Worker
    - Runs Prisma migrations
@@ -231,7 +128,7 @@ Monitor local events at: http://localhost:8288/
 
 5. Visit the app at `http://cloud.localhost:3000`
 
-#### Optional services
+### Optional services
 
 Add flags to include extra services:
 
@@ -249,24 +146,23 @@ pnpm dev:up:all                # everything
 
 **Typesense** runs on localhost:8108 with API key `xyz`.
 
-#### Stopping services
+### Stopping services
 
 ```bash
 pnpm dev:down   # stop containers, keep data volumes
 pnpm dev:nuke   # stop containers + delete all data (fresh start)
 ```
 
-#### Service endpoints
+### Service endpoints
 
-| Service    | URL                    | Credentials            |
-|------------|------------------------|------------------------|
-| Next.js    | http://localhost:3000   |                        |
-| Worker     | http://localhost:8787   |                        |
-| PostgreSQL | localhost:5432         | postgres / postgres    |
-| MinIO API  | http://localhost:9000   | minioadmin / minioadmin |
-| MinIO Console | http://localhost:9001 | minioadmin / minioadmin |
-| Inngest    | http://localhost:8288   |                        |
-| Typesense  | http://localhost:8108   | API key: `xyz`         |
+| Service       | URL                      | Credentials              |
+|---------------|--------------------------|--------------------------|
+| Next.js       | http://localhost:3000     |                          |
+| Worker        | http://localhost:8787     |                          |
+| PostgreSQL    | localhost:5432            | postgres / postgres      |
+| MinIO API     | http://localhost:9000     | minioadmin / minioadmin  |
+| MinIO Console | http://localhost:9001     | minioadmin / minioadmin  |
+| Typesense     | http://localhost:8108     | API key: `xyz`           |
 
 ## Environment Configuration
 
@@ -289,54 +185,37 @@ The application is configurable via `config.json` file (path set via `APP_CONFIG
 - Social links
 - Site aliases
 
-Current config file: [DataHub Cloud config.json](https://dash.cloudflare.com/83025b28472d6aa2bf5ae59f3724aa78/r2/default/buckets/datahub-assets/objects/config.json/details)
-
 ## Infrastructure
 
 ### Databases
 
-PostgreSQL databases on Vercel:
+PostgreSQL databases on Vercel (Neon):
 
-- Production: `datahub-cloud`
-- Staging: `datahub-cloud-staging`
+- Production: `flowershow`
+- Staging: `flowershow-staging`
 - Development: Local PostgreSQL instance
 
 ### Content Storage
 
 R2 Cloudflare buckets:
 
-- Production: `datahub-cloud`
-- Staging: `datahub-cloud-staging`
+- Production: `flowershow`
+- Staging: `flowershow-staging`
 - Development: Local MinIO instance
 
 ### Authentication
 
-GitHub OAuth applications under Datopian account:
+GitHub OAuth applications:
 
-- Production: `DataHub Cloud`
-- Staging: `DataHub Cloud - Staging`
-- Development: `DataHub Cloud - Dev`
+- Production: `Flowershow`
+- Staging: `Flowershow - Staging`
+- Development: `Flowershow - Dev`
 
-### Domain Configuration
+### Monitoring and Debugging
 
-#### Root Domain (datahub.io)
-
-Two projects share the datahub.io domain:
-
-1. DataHub Cloud app (`@username/projectname` paths)
-2. DataHub.io website (landing pages)
-
-Traffic routing managed by Cloudflare worker:
-
-- Landing pages (`/`, `/publish`, `/pricing`, `/collections`) → datahub-io project
-- All other paths → datahub-next-new project
-
-Worker: [datahub-io-reverse-proxy](https://dash.cloudflare.com/83025b28472d6aa2bf5ae59f3724aa78/workers/services/view/datahub-io-reverse-proxy)
-
-#### Subdomains
-
-- Production: `cloud.datahub.io`
-- Staging: `staging-cloud.datahub.io`
+The publish pipeline can be monitored through:
+- Cloudflare Workers dashboard → queue event logs
+- Cloudflare Workflows dashboard → `GitHubSyncWorkflow` and `PublishFinalizerWorkflow` instances
 
 ## Development
 
@@ -463,32 +342,32 @@ npx playwright test --ui
 ### Common Issues
 
 1. **Docker containers won't start**
-   - Check if ports are already in use: `lsof -i :5432 -i :9000 -i :8288`
+   - Check if ports are already in use: `lsof -i :5432 -i :9000`
    - Try a clean restart: `pnpm dev:nuke && pnpm dev:up`
    - Check container logs: `docker compose logs <service>`
 
-2. MinIO Connection Issues
+2. **MinIO connection issues**
    - Verify MinIO is running: `docker compose ps minio`
    - Check credentials in `.env` match docker-compose defaults (minioadmin/minioadmin)
    - Check bucket exists: visit http://localhost:9001
 
-3. Database Connection
+3. **Database connection**
    - Verify PostgreSQL is running: `docker compose ps postgres`
    - Check database credentials in `.env`
    - Reset database: `pnpm dev:nuke && pnpm dev:up`
 
-4. OAuth Authentication
+4. **OAuth authentication**
    - Verify correct OAuth app configuration
    - Check callback URLs
    - Ensure environment variables are set
 
-5. Stripe Integration
+5. **Stripe integration**
    - Ensure you started with `pnpm dev:up --stripe`
    - Verify `STRIPE_SECRET_KEY` is set in `.env`
    - Check Stripe CLI logs: `docker compose logs stripe-cli`
    - You must run `stripe login` once on the host before first use
 
-6. Typesense Search
+6. **Typesense search**
    - Ensure you started with `pnpm dev:up --search`
    - Check Typesense health status: `curl http://localhost:8108/health`
    - Verify environment variables in `.env`
