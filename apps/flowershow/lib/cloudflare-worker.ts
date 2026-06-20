@@ -25,11 +25,11 @@ export async function triggerGitHubSyncWorkflow(
     githubInstallationId = null,
   } = params;
 
-  const response = await fetch(`${env.CF_SYNC_WORKER_URL}/sync`, {
+  const response = await fetch(`${env.CF_WORKER_URL}/sync`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${env.CF_SYNC_WORKER_SECRET}`,
+      Authorization: `Bearer ${env.CF_WORKER_SECRET}`,
     },
     body: JSON.stringify({
       siteId,
@@ -54,11 +54,11 @@ export async function startPublishFinalizerWorkflow(
   publishId: string,
   siteId: string,
 ): Promise<void> {
-  const response = await fetch(`${env.CF_SYNC_WORKER_URL}/start-finalizer`, {
+  const response = await fetch(`${env.CF_WORKER_URL}/start-finalizer`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${env.CF_SYNC_WORKER_SECRET}`,
+      Authorization: `Bearer ${env.CF_WORKER_SECRET}`,
     },
     body: JSON.stringify({ publishId, siteId }),
   });
@@ -75,17 +75,14 @@ export async function terminatePublishFinalizerWorkflows(
   publishIds: string[],
 ): Promise<void> {
   if (publishIds.length === 0) return;
-  const response = await fetch(
-    `${env.CF_SYNC_WORKER_URL}/terminate-finalizer`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${env.CF_SYNC_WORKER_SECRET}`,
-      },
-      body: JSON.stringify({ publishIds }),
+  const response = await fetch(`${env.CF_WORKER_URL}/terminate-finalizer`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${env.CF_WORKER_SECRET}`,
     },
-  );
+    body: JSON.stringify({ publishIds }),
+  });
 
   if (!response.ok) {
     throw new Error(

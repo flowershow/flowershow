@@ -107,7 +107,7 @@ Use this when you want to work on the worker in isolation.
 | `DATABASE_URL`           | Yes      | PostgreSQL connection string                                           |
 | `GITHUB_APP_ID`          | Yes      | GitHub App ID (for installation token generation)                      |
 | `GITHUB_APP_PRIVATE_KEY` | Yes      | Base64-encoded PEM: `base64 -i private-key.pem \| tr -d '\n'`          |
-| `SYNC_TRIGGER_SECRET`    | Yes      | Shared secret — must match `CF_SYNC_WORKER_SECRET` in Next.js `.env`   |
+| `SYNC_TRIGGER_SECRET`    | Yes      | Shared secret — must match `CF_WORKER_SECRET` in Next.js `.env`        |
 | `INTERNAL_API_SECRET`    | No       | Secret for post-publish revalidation callbacks to Next.js              |
 | `NEXTJS_APP_URL`         | No       | Next.js base URL (e.g. `http://localhost:3000`) for cache revalidation |
 | `S3_ENDPOINT`            | Dev      | MinIO URL (default: `http://localhost:9000`)                           |
