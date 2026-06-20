@@ -579,7 +579,6 @@ async function handleRepositoryEvent(data: WebhookPayload) {
 
 /**
  * Handle push events for repositories in GitHub App installations
- * This eliminates the need for per-repository webhooks
  */
 async function handlePushEvent(data: WebhookPayload) {
   const { ref, repository, installation } = data;
@@ -598,7 +597,6 @@ async function handlePushEvent(data: WebhookPayload) {
     const branch = ref.replace('refs/heads/', '');
     const ghInstallationId = BigInt(installation.id);
 
-    // Look up a DB installation record to get the CUID for token resolution
     const dbInstallation = await prisma.gitHubInstallation.findFirst({
       where: { installationId: ghInstallationId },
       select: { id: true },
@@ -656,12 +654,11 @@ async function handlePushEvent(data: WebhookPayload) {
           // Prefer the webhook's current repo name (always up-to-date) over the
           // potentially-stale Site.ghRepository column.
           ghRepository: repository.full_name,
-          ghBranch: site.ghBranch!,
+          ghBranch: branch,
           rootDir: site.rootDir,
-          installationId:
-            site.installationRepository?.installationId ?? dbInstallation.id,
           gitCommitSha,
           gitCommitMessage,
+          githubInstallationId: installation.id.toString(),
         }),
       ),
     );

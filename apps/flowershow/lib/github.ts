@@ -165,28 +165,6 @@ export function clearInstallationTokenCache(
   tokenCache.delete(githubInstallationId);
 }
 
-/**
- * Resolve the raw GitHub installation ID (BigInt as string) from the database CUID.
- * Used when delegating token generation to the Cloudflare worker.
- * @param installationDbId - The database CUID for the GitHubInstallation record
- */
-export async function getGithubInstallationId(
-  installationDbId: string,
-): Promise<string> {
-  const installation = await db.gitHubInstallation.findUnique({
-    where: { id: installationDbId },
-    select: { installationId: true },
-  });
-
-  if (!installation) {
-    throw new Error(
-      `GitHub installation not found for database ID: ${installationDbId}`,
-    );
-  }
-
-  return installation.installationId.toString();
-}
-
 // ============================================================================
 // GitHub API Helpers
 // ============================================================================
