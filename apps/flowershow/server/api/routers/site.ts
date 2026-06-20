@@ -256,7 +256,10 @@ export const siteRouter = createTRPCRouter({
         include: {
           user: true,
           installationRepository: {
-            select: { installationId: true, repositoryFullName: true },
+            select: {
+              repositoryFullName: true,
+              installation: { select: { installationId: true } },
+            },
           },
         },
       });
@@ -346,8 +349,9 @@ export const siteRouter = createTRPCRouter({
             ghRepository: repoFullName,
             ghBranch: site.ghBranch,
             rootDir: newRoot,
-            installationId:
-              site.installationRepository?.installationId ?? undefined,
+            githubInstallationId:
+              site.installationRepository?.installation?.installationId?.toString() ??
+              undefined,
           });
         }
       } else {
@@ -356,26 +360,6 @@ export const siteRouter = createTRPCRouter({
           where: { id },
           data: { [key]: converted },
         });
-
-        // If enableSearch is being turned on, trigger a force sync to index all files
-        // Note: this is a temporary solution, to make sure people who upgrade now have their
-        // site's indexes updated (but we index all documents, even for non-premium users atm, which we shouldn't)
-        if (
-          repoFullName &&
-          site.ghBranch &&
-          key === 'enableSearch' &&
-          converted === true
-        ) {
-          await triggerGitHubSyncWorkflow({
-            siteId: id,
-            ghRepository: repoFullName,
-            ghBranch: site.ghBranch,
-            rootDir: site.rootDir,
-            installationId:
-              site.installationRepository?.installationId ?? undefined,
-            forceSync: true,
-          });
-        }
       }
 
       // Analytics (best-effort)
@@ -1960,6 +1944,7 @@ export const siteRouter = createTRPCRouter({
       // a caller cannot use another user's installation token.
       let installationRepoId: string | null = null;
       let verifiedInstallationId: string | undefined;
+      let githubInstallationId: string | undefined;
       if (installationId) {
         const repoRecord = await ctx.db.gitHubInstallationRepository.findFirst({
           where: {
@@ -1967,11 +1952,16 @@ export const siteRouter = createTRPCRouter({
             repositoryFullName: ghRepository,
             installation: { userId: ctx.session.user.id },
           },
-          select: { id: true },
+          select: {
+            id: true,
+            installation: { select: { installationId: true } },
+          },
         });
         if (repoRecord) {
           installationRepoId = repoRecord.id;
           verifiedInstallationId = installationId;
+          githubInstallationId =
+            repoRecord.installation.installationId.toString();
         }
       }
 
@@ -2009,7 +1999,7 @@ export const siteRouter = createTRPCRouter({
         ghRepository,
         ghBranch,
         rootDir: rootDir || null,
-        installationId: verifiedInstallationId,
+        githubInstallationId,
       });
 
       // Analytics
