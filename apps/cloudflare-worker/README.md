@@ -21,9 +21,9 @@ Two publish paths share one Queue consumer.
 4. After processing each file, the consumer runs an **atomic completion check**: a single `UPDATE ... WHERE NOT EXISTS (uploading rows)` ensures exactly one concurrent consumer sends the `publish-complete` event to the Workflow.
 5. The Workflow finalizes the `Publish` record and revalidates Next.js cache tags.
 
-**Presigned path** (`POST /start-lifecycle`) — CLI, Obsidian, dashboard:
+**Presigned path** (`POST /start-finalizer`) — CLI, Obsidian, dashboard:
 
-1. The Next.js app creates `Publish` + `PublishFile` records and presigned R2 PUT URLs, then calls `/start-lifecycle` to start the Workflow.
+1. The Next.js app creates `Publish` + `PublishFile` records and presigned R2 PUT URLs, then calls `/start-finalizer` to start the Workflow.
 2. Workflow calls `step.waitForEvent('publish-complete', { timeout: '1h' })`.
 3. Clients upload files directly to R2 → Queue consumer processes each file → same atomic completion check → Workflow finalizes.
 
@@ -41,12 +41,12 @@ Example: `my-site/main/raw/blog/welcome.md`
 
 ### HTTP endpoints
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| `POST` | `/sync` | Bearer `SYNC_TRIGGER_SECRET` | Start a GitHub-sync Workflow for a site |
-| `POST` | `/start-lifecycle` | Bearer `SYNC_TRIGGER_SECRET` | Start a presigned-path Workflow instance |
-| `POST` | `/queue` | None (dev only) | Receive MinIO S3 webhook events and enqueue them |
-| `GET` | `/health` | None | Health check |
+| Method | Path               | Auth                         | Description                                      |
+| ------ | ------------------ | ---------------------------- | ------------------------------------------------ |
+| `POST` | `/sync`            | Bearer `SYNC_TRIGGER_SECRET` | Start a GitHub-sync Workflow for a site          |
+| `POST` | `/start-finalizer` | Bearer `SYNC_TRIGGER_SECRET` | Start a presigned-path Workflow instance         |
+| `POST` | `/queue`           | None (dev only)              | Receive MinIO S3 webhook events and enqueue them |
+| `GET`  | `/health`          | None                         | Health check                                     |
 
 ## Local Development
 
@@ -60,6 +60,7 @@ pnpm dev:up
 ```
 
 This starts:
+
 - **Postgres** on port 5432 (`flowershow-dev` database)
 - **MinIO** on port 9000 (console at port 9001) — bucket `flowershow` created, webhook to `localhost:8787/queue` wired up automatically
 - The **Next.js app** and this **worker**
@@ -101,24 +102,24 @@ Use this when you want to work on the worker in isolation.
 
 `.dev.vars` is only used in local development (`npm run dev`). In production and staging, all vars are set via the Cloudflare dashboard.
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | PostgreSQL connection string |
-| `GITHUB_APP_ID` | Yes | GitHub App ID (for installation token generation) |
-| `GITHUB_APP_PRIVATE_KEY` | Yes | Base64-encoded PEM: `base64 -i private-key.pem \| tr -d '\n'` |
-| `SYNC_TRIGGER_SECRET` | Yes | Shared secret — must match `CF_SYNC_WORKER_SECRET` in Next.js `.env` |
-| `INTERNAL_API_SECRET` | No | Secret for post-publish revalidation callbacks to Next.js |
-| `NEXTJS_APP_URL` | No | Next.js base URL (e.g. `http://localhost:3000`) for cache revalidation |
-| `S3_ENDPOINT` | Dev | MinIO URL (default: `http://localhost:9000`) |
-| `S3_ACCESS_KEY_ID` | Dev | MinIO access key (default: `minioadmin`) |
-| `S3_SECRET_ACCESS_KEY` | Dev | MinIO secret (default: `minioadmin`) |
-| `S3_BUCKET` | Dev | MinIO bucket name (default: `flowershow`) |
-| `S3_FORCE_PATH_STYLE` | Dev | Set to `true` for MinIO |
-| `TYPESENSE_HOST` | No | Typesense host |
-| `TYPESENSE_PORT` | No | Typesense port |
-| `TYPESENSE_PROTOCOL` | No | Typesense protocol |
-| `TYPESENSE_API_KEY` | No | Typesense API key (write access to all collections) |
-| `POSTHOG_KEY` | No | PostHog project API key for error tracking |
+| Variable                 | Required | Description                                                            |
+| ------------------------ | -------- | ---------------------------------------------------------------------- |
+| `DATABASE_URL`           | Yes      | PostgreSQL connection string                                           |
+| `GITHUB_APP_ID`          | Yes      | GitHub App ID (for installation token generation)                      |
+| `GITHUB_APP_PRIVATE_KEY` | Yes      | Base64-encoded PEM: `base64 -i private-key.pem \| tr -d '\n'`          |
+| `SYNC_TRIGGER_SECRET`    | Yes      | Shared secret — must match `CF_SYNC_WORKER_SECRET` in Next.js `.env`   |
+| `INTERNAL_API_SECRET`    | No       | Secret for post-publish revalidation callbacks to Next.js              |
+| `NEXTJS_APP_URL`         | No       | Next.js base URL (e.g. `http://localhost:3000`) for cache revalidation |
+| `S3_ENDPOINT`            | Dev      | MinIO URL (default: `http://localhost:9000`)                           |
+| `S3_ACCESS_KEY_ID`       | Dev      | MinIO access key (default: `minioadmin`)                               |
+| `S3_SECRET_ACCESS_KEY`   | Dev      | MinIO secret (default: `minioadmin`)                                   |
+| `S3_BUCKET`              | Dev      | MinIO bucket name (default: `flowershow`)                              |
+| `S3_FORCE_PATH_STYLE`    | Dev      | Set to `true` for MinIO                                                |
+| `TYPESENSE_HOST`         | No       | Typesense host                                                         |
+| `TYPESENSE_PORT`         | No       | Typesense port                                                         |
+| `TYPESENSE_PROTOCOL`     | No       | Typesense protocol                                                     |
+| `TYPESENSE_API_KEY`      | No       | Typesense API key (write access to all collections)                    |
+| `POSTHOG_KEY`            | No       | PostHog project API key for error tracking                             |
 
 ### Manual file upload (smoke test)
 
@@ -131,6 +132,7 @@ mc cp myfile.md local/flowershow/{siteId}/main/raw/myfile.md
 MinIO fires a webhook to the worker's `/queue` endpoint, which enqueues the event. The queue consumer processes the file and writes a `Blob` record to the database. Watch the worker terminal for logs.
 
 > **MinIO client setup:** If you haven't installed and configured `mc` yet:
+>
 > ```bash
 > brew install minio/stable/mc             # macOS; see https://min.io/docs/minio/linux/reference/minio-mc.html for Linux
 > mc alias set local http://localhost:9000 minioadmin minioadmin
@@ -169,14 +171,14 @@ npm run test:e2e
 
 Each test creates a unique `siteId`-scoped dataset and cleans up after itself, so tests are safe to run against the shared dev database.
 
-| Suite | What it verifies |
-|-------|-----------------|
-| A — presigned happy path | Markdown processed → `Blob` created with `sha`/`size`/`metadata`; `Publish` finalized as `success` |
-| B — `publish: false` frontmatter | File suppressed; `PublishFile` flipped to `success`; no `Blob` created |
-| C — image file | PNG dimensions extracted; `Blob` created with `width`/`height` |
-| D — multi-file publish | 3 files processed concurrently; atomic completion fires exactly once |
-| F — anonymous upload | No `publishId` in metadata → `Blob` created; no `Publish` touched |
-| G — delete event | `DeleteObject` queue event → `Blob` removed from database |
+| Suite                            | What it verifies                                                                                   |
+| -------------------------------- | -------------------------------------------------------------------------------------------------- |
+| A — presigned happy path         | Markdown processed → `Blob` created with `sha`/`size`/`metadata`; `Publish` finalized as `success` |
+| B — `publish: false` frontmatter | File suppressed; `PublishFile` flipped to `success`; no `Blob` created                             |
+| C — image file                   | PNG dimensions extracted; `Blob` created with `width`/`height`                                     |
+| D — multi-file publish           | 3 files processed concurrently; atomic completion fires exactly once                               |
+| F — anonymous upload             | No `publishId` in metadata → `Blob` created; no `Publish` touched                                  |
+| G — delete event                 | `DeleteObject` queue event → `Blob` removed from database                                          |
 
 ## Deployment
 
@@ -202,34 +204,34 @@ Both commands pass `--keep-vars` so secrets set via the dashboard are not overwr
 
 ### Required secrets (set in Cloudflare dashboard → Worker settings → Variables)
 
-| Variable | Description |
-|----------|-------------|
-| `DATABASE_URL` | PostgreSQL connection string |
-| `GITHUB_APP_ID` | GitHub App ID |
-| `GITHUB_APP_PRIVATE_KEY` | Base64-encoded PEM private key |
-| `SYNC_TRIGGER_SECRET` | Shared secret with the Next.js app |
-| `INTERNAL_API_SECRET` | Revalidation callback secret |
-| `NEXTJS_APP_URL` | Next.js base URL |
-| `TYPESENSE_HOST` | Typesense host |
-| `TYPESENSE_PORT` | Typesense port |
-| `TYPESENSE_PROTOCOL` | Typesense protocol |
-| `TYPESENSE_API_KEY` | Typesense API key (write access) |
+| Variable                 | Description                        |
+| ------------------------ | ---------------------------------- |
+| `DATABASE_URL`           | PostgreSQL connection string       |
+| `GITHUB_APP_ID`          | GitHub App ID                      |
+| `GITHUB_APP_PRIVATE_KEY` | Base64-encoded PEM private key     |
+| `SYNC_TRIGGER_SECRET`    | Shared secret with the Next.js app |
+| `INTERNAL_API_SECRET`    | Revalidation callback secret       |
+| `NEXTJS_APP_URL`         | Next.js base URL                   |
+| `TYPESENSE_HOST`         | Typesense host                     |
+| `TYPESENSE_PORT`         | Typesense port                     |
+| `TYPESENSE_PROTOCOL`     | Typesense protocol                 |
+| `TYPESENSE_API_KEY`      | Typesense API key (write access)   |
 
 R2 bucket bindings and workflow bindings are declared in `wrangler.flowershow.toml` and applied automatically on deploy.
 
 ### Queues and workflows per environment
 
-| Environment | Queue | Workflow |
-|-------------|-------|---------|
-| Production | `flowershow-markdown-queue` | `flowershow-publish-workflow` |
-| Staging | `flowershow-markdown-queue-staging` | `flowershow-publish-workflow-staging` |
-| Dev | `markdown-processing-queue-dev` | `flowershow-publish-workflow-dev` |
+| Environment | Queue                               | Workflow                              |
+| ----------- | ----------------------------------- | ------------------------------------- |
+| Production  | `flowershow-markdown-queue`         | `flowershow-publish-workflow`         |
+| Staging     | `flowershow-markdown-queue-staging` | `flowershow-publish-workflow-staging` |
+| Dev         | `markdown-processing-queue-dev`     | `flowershow-publish-workflow-dev`     |
 
 ## Project Structure
 
 ```
 src/
-  worker.js            — HTTP endpoints (/sync, /start-lifecycle, /queue dev adapter, /health),
+  worker.js            — HTTP endpoints (/sync, /start-finalizer, /queue dev adapter, /health),
                          queue consumer entry, cron handler, PublishWorkflow re-export
   publish-workflow.js  — Cloudflare Workflow: GitHub sync and presigned-path lifecycle ownership
   message-handler.js   — Queue consumer: file processing, Blob upsert, atomic publish completion
@@ -259,15 +261,18 @@ vitest.e2e.config.js     — Vitest config for E2E tests (single-fork, 30s timeo
 The queue consumer extracts the following from markdown files:
 
 ### Title
+
 1. `title` field in frontmatter
 2. First H1 heading in the content body
 3. Filename without extension as fallback
 
 ### Description
+
 1. `description` field in frontmatter
 2. First 200 characters of content body as fallback
 
 ### Other frontmatter fields
+
 All other frontmatter key-value pairs are stored as-is in `Blob.metadata`.
 
 To add more extraction logic, edit `parseMarkdownForSync` in [src/processing-utils.js](src/processing-utils.js).

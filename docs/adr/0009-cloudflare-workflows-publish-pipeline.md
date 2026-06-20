@@ -66,7 +66,7 @@ The finalizer starts for every publish.
 1. Create `Publish` record; handle supersession.
 2. Create `PublishFile` rows (`uploading`, `presignedUrlExpiresAt` set) for files to upload.
 3. Delete removed files from R2; create terminal `PublishFile` rows for each deletion.
-4. Start `PublishFinalizerWorkflow` (via worker `/start-lifecycle` endpoint).
+4. Start `PublishFinalizerWorkflow` (via worker `/start-finalizer` endpoint).
 5. Return presigned R2 PUT URLs to the client.
 
 ### `PublishFinalizerWorkflow`

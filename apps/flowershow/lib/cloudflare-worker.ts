@@ -59,11 +59,11 @@ export async function triggerGitHubSyncWorkflow(
   }
 }
 
-export async function startPublishLifecycle(
+export async function startPublishFinalizerWorkflow(
   publishId: string,
   siteId: string,
 ): Promise<void> {
-  const response = await fetch(`${env.CF_SYNC_WORKER_URL}/start-lifecycle`, {
+  const response = await fetch(`${env.CF_SYNC_WORKER_URL}/start-finalizer`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -79,12 +79,13 @@ export async function startPublishLifecycle(
   }
 }
 
-export async function terminatePublishLifecycle(
+// TODO do we really want to terminate them ?
+export async function terminatePublishFinalizerWorkflows(
   publishIds: string[],
 ): Promise<void> {
   if (publishIds.length === 0) return;
   const response = await fetch(
-    `${env.CF_SYNC_WORKER_URL}/terminate-lifecycle`,
+    `${env.CF_SYNC_WORKER_URL}/terminate-finalizer`,
     {
       method: 'POST',
       headers: {
@@ -97,7 +98,7 @@ export async function terminatePublishLifecycle(
 
   if (!response.ok) {
     throw new Error(
-      `Failed to terminate lifecycle workflows: ${response.status} ${response.statusText}`,
+      `Failed to terminate publish finalizer workflows: ${response.status} ${response.statusText}`,
     );
   }
 }

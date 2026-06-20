@@ -13,7 +13,7 @@ import {
   isLegacyPublishClient,
   validateAccessToken,
 } from '@/lib/cli-auth';
-import { startPublishLifecycle } from '@/lib/cloudflare-worker';
+import { startPublishFinalizerWorkflow } from '@/lib/cloudflare-worker';
 import {
   deleteFile,
   generatePresignedUploadUrl,
@@ -178,7 +178,7 @@ export async function POST(
 
     if (!isLegacy) {
       try {
-        await startPublishLifecycle(publish.id, siteId);
+        await startPublishFinalizerWorkflow(publish.id, siteId);
       } catch (lifecycleErr) {
         console.error('Failed to start lifecycle workflow:', lifecycleErr);
       }

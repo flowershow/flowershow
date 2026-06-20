@@ -8,7 +8,7 @@ import {
   generateOwnershipToken,
   isValidAnonymousUserId,
 } from '@/lib/anonymous-user';
-import { startPublishLifecycle } from '@/lib/cloudflare-worker';
+import { startPublishFinalizerWorkflow } from '@/lib/cloudflare-worker';
 import {
   generatePresignedUploadUrl,
   getContentType,
@@ -226,7 +226,7 @@ export async function POST(request: NextRequest) {
 
     // Start lifecycle workflow — waits for queue consumer to signal completion
     try {
-      await startPublishLifecycle(publish.id, site.id);
+      await startPublishFinalizerWorkflow(publish.id, site.id);
     } catch (lifecycleErr) {
       console.error(
         'Failed to start lifecycle workflow for anon publish:',

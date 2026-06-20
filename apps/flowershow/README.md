@@ -67,7 +67,7 @@ graph TD
         CLI[CLI / Obsidian / Dashboard] -->|API routes| NX[Next.js app]
         UI[Manual UI Trigger] -->|tRPC syncSite| NX
         WH -->|Validate & Filter| CW[Cloudflare Worker /sync]
-        NX -->|/start-lifecycle| CW
+        NX -->|/start-finalizer| CW
     end
 
     subgraph "Processing"
@@ -99,22 +99,27 @@ Full-site syncs (`/sync` for both GitHub and presigned paths) also explicitly te
 **Prerequisites:** Docker and pnpm installed.
 
 1. Install dependencies from the monorepo root:
+
    ```bash
    pnpm install
    ```
 
 2. Create a `.env` file from `.env.example`:
+
    ```bash
    cp apps/flowershow/.env.example apps/flowershow/.env
    ```
 
 3. Fetch or create the app config:
+
    ```bash
    pnpm --filter @flowershow/app fetch-config
    ```
+
    Or create your own `apps/flowershow/config.json` file.
 
 4. Start everything:
+
    ```bash
    pnpm dev:up
    ```
@@ -155,14 +160,14 @@ pnpm dev:nuke   # stop containers + delete all data (fresh start)
 
 ### Service endpoints
 
-| Service       | URL                      | Credentials              |
-|---------------|--------------------------|--------------------------|
-| Next.js       | http://localhost:3000     |                          |
-| Worker        | http://localhost:8787     |                          |
-| PostgreSQL    | localhost:5432            | postgres / postgres      |
-| MinIO API     | http://localhost:9000     | minioadmin / minioadmin  |
-| MinIO Console | http://localhost:9001     | minioadmin / minioadmin  |
-| Typesense     | http://localhost:8108     | API key: `xyz`           |
+| Service       | URL                   | Credentials             |
+| ------------- | --------------------- | ----------------------- |
+| Next.js       | http://localhost:3000 |                         |
+| Worker        | http://localhost:8787 |                         |
+| PostgreSQL    | localhost:5432        | postgres / postgres     |
+| MinIO API     | http://localhost:9000 | minioadmin / minioadmin |
+| MinIO Console | http://localhost:9001 | minioadmin / minioadmin |
+| Typesense     | http://localhost:8108 | API key: `xyz`          |
 
 ## Environment Configuration
 
@@ -214,6 +219,7 @@ GitHub OAuth applications:
 ### Monitoring and Debugging
 
 The publish pipeline can be monitored through:
+
 - Cloudflare Workers dashboard → queue event logs
 - Cloudflare Workflows dashboard → `GitHubSyncWorkflow` and `PublishFinalizerWorkflow` instances
 

@@ -1,4 +1,9 @@
-import { getPostgresClient, getStorageClient, getTypesenseClient, validateEnv } from './clients.js';
+import {
+  getPostgresClient,
+  getStorageClient,
+  getTypesenseClient,
+  validateEnv,
+} from './clients.js';
 import { GitHubSyncWorkflow } from './github-sync-workflow.js';
 import { generateId } from './helpers.js';
 import { handleMessage } from './message-handler.js';
@@ -27,14 +32,26 @@ export default {
         return new Response('Invalid JSON', { status: 400 });
       }
 
-      const { siteId, ghRepository, ghBranch, rootDir, githubInstallationId, forceSync, gitCommitSha, gitCommitMessage } = body;
+      const {
+        siteId,
+        ghRepository,
+        ghBranch,
+        rootDir,
+        githubInstallationId,
+        forceSync,
+        gitCommitSha,
+        gitCommitMessage,
+      } = body;
       if (!siteId || !ghRepository || !ghBranch || !githubInstallationId) {
-        return new Response('Missing required fields: siteId, ghRepository, ghBranch, githubInstallationId', { status: 400 });
+        return new Response(
+          'Missing required fields: siteId, ghRepository, ghBranch, githubInstallationId',
+          { status: 400 },
+        );
       }
 
       const sql = getPostgresClient(env);
-      
-      // TODO is this the right place to create 
+
+      // TODO is this the right place to create
       let publishId;
       try {
         publishId = generateId();
@@ -58,16 +75,24 @@ export default {
             WHERE id = ${prev.id} AND status = 'in_progress'
           `;
           try {
-            const prevFinalizer = await env.PUBLISH_FINALIZER_WORKFLOW.get(prev.id);
+            const prevFinalizer = await env.PUBLISH_FINALIZER_WORKFLOW.get(
+              prev.id,
+            );
             await prevFinalizer.terminate();
           } catch (termErr) {
-            console.error(`Failed to terminate finalizer workflow ${prev.id}: ${termErr.message}`);
+            console.error(
+              `Failed to terminate finalizer workflow ${prev.id}: ${termErr.message}`,
+            );
           }
           try {
-            const prevSync = await env.GITHUB_SYNC_WORKFLOW.get(`${prev.id}-github`);
+            const prevSync = await env.GITHUB_SYNC_WORKFLOW.get(
+              `${prev.id}-github`,
+            );
             await prevSync.terminate();
           } catch (termErr) {
-            console.error(`Failed to terminate sync workflow ${prev.id}: ${termErr.message}`);
+            console.error(
+              `Failed to terminate sync workflow ${prev.id}: ${termErr.message}`,
+            );
           }
         }
       } finally {
@@ -77,13 +102,23 @@ export default {
       // Publish record creation and finalizer start are handled inside the workflow
       const syncInstance = await env.GITHUB_SYNC_WORKFLOW.create({
         id: `${publishId}-github`,
-        params: { publishId, siteId, ghRepository, ghBranch, rootDir: rootDir ?? null, githubInstallationId, forceSync: forceSync ?? false, gitCommitSha: gitCommitSha ?? null, gitCommitMessage: gitCommitMessage ?? null },
+        params: {
+          publishId,
+          siteId,
+          ghRepository,
+          ghBranch,
+          rootDir: rootDir ?? null,
+          githubInstallationId,
+          forceSync: forceSync ?? false,
+          gitCommitSha: gitCommitSha ?? null,
+          gitCommitMessage: gitCommitMessage ?? null,
+        },
       });
 
       return Response.json({ instanceId: syncInstance.id }, { status: 202 });
     }
 
-    if (request.method === 'POST' && url.pathname === '/terminate-lifecycle') {
+    if (request.method === 'POST' && url.pathname === '/terminate-finalizer') {
       const authHeader = request.headers.get('Authorization');
       const expectedToken = `Bearer ${env.SYNC_TRIGGER_SECRET}`;
       if (!env.SYNC_TRIGGER_SECRET || authHeader !== expectedToken) {
@@ -99,7 +134,9 @@ export default {
 
       const { publishIds } = body;
       if (!Array.isArray(publishIds)) {
-        return new Response('Missing required field: publishIds', { status: 400 });
+        return new Response('Missing required field: publishIds', {
+          status: 400,
+        });
       }
 
       for (const pid of publishIds) {
@@ -107,14 +144,16 @@ export default {
           const instance = await env.PUBLISH_FINALIZER_WORKFLOW.get(pid);
           await instance.terminate();
         } catch (termErr) {
-          console.error(`Failed to terminate finalizer workflow ${pid}: ${termErr.message}`);
+          console.error(
+            `Failed to terminate finalizer workflow ${pid}: ${termErr.message}`,
+          );
         }
       }
 
       return new Response(null, { status: 204 });
     }
 
-    if (request.method === 'POST' && url.pathname === '/start-lifecycle') {
+    if (request.method === 'POST' && url.pathname === '/start-finalizer') {
       const authHeader = request.headers.get('Authorization');
       const expectedToken = `Bearer ${env.SYNC_TRIGGER_SECRET}`;
       if (!env.SYNC_TRIGGER_SECRET || authHeader !== expectedToken) {
@@ -130,7 +169,9 @@ export default {
 
       const { publishId, siteId } = body;
       if (!publishId || !siteId) {
-        return new Response('Missing required fields: publishId, siteId', { status: 400 });
+        return new Response('Missing required fields: publishId, siteId', {
+          status: 400,
+        });
       }
 
       const instance = await env.PUBLISH_FINALIZER_WORKFLOW.create({

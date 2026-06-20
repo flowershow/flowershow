@@ -1,5 +1,4 @@
-import type { PresignedUrl } from '@flowershow/api-contract';
-import { revalidateTag } from 'next/cache';
+import type { PresignedUrl, SyncResponse } from '@flowershow/api-contract';
 import { type NextRequest, NextResponse } from 'next/server';
 import {
   checkCliVersion,
@@ -8,8 +7,8 @@ import {
   validateAccessToken,
 } from '@/lib/cli-auth';
 import {
-  startPublishLifecycle,
-  terminatePublishLifecycle,
+  startPublishFinalizerWorkflow,
+  terminatePublishFinalizerWorkflows,
 } from '@/lib/cloudflare-worker';
 import {
   deleteFile,
@@ -81,6 +80,8 @@ export async function POST(
   request: NextRequest,
   props: { params: Promise<{ siteId: string }> },
 ) {
+  const posthog = PostHogClient();
+  const { siteId } = await props.params;
   try {
     // Check CLI version
     const versionError = checkCliVersion(request);
@@ -96,8 +97,6 @@ export async function POST(
         { status: 401 },
       );
     }
-
-    const { siteId } = await props.params;
 
     const site = await prisma.site.findUnique({
       where: { id: siteId },
@@ -207,119 +206,131 @@ export async function POST(
       }
 
       // Cancel any in-progress Publish
+      // TODO don't we need to also switch the status ?
+      // and do we really want to terminate explicitly? Or maybe only superseding PublishFiles
+      // is enough and then we should let the finalizer workflow terminate on it's own?
       const previousInProgress = await prisma.publish.findMany({
         where: { siteId, id: { not: publish.id }, status: 'in_progress' },
         select: { id: true },
       });
       if (previousInProgress.length > 0) {
         try {
-          await terminatePublishLifecycle(previousInProgress.map((p) => p.id));
+          await terminatePublishFinalizerWorkflows(
+            previousInProgress.map((p) => p.id),
+          );
         } catch (termErr) {
-          console.error(
-            'Failed to terminate previous lifecycle workflows:',
-            termErr,
+          log(
+            `Failed to terminate previous finalizer workflows for publish IDs: ${previousInProgress
+              .map((p) => p.id)
+              .join(', ')}`,
+            SeverityNumber.ERROR,
+            {
+              siteId,
+              publishIds: previousInProgress.map((p) => p.id).join(','),
+              error:
+                termErr instanceof Error ? termErr.message : String(termErr),
+            },
           );
         }
       }
 
       if (toDelete.length > 0) {
-        try {
-          deletedPaths = (
-            await Promise.all(
-              toDelete.map((path) =>
-                deleteFile({ projectId: siteId, path })
-                  .then(() => path)
-                  .catch((error) => {
-                    console.error(
-                      `[sync] R2 deletion failed for ${siteId}/${path}:`,
-                      error,
-                    );
-                    return null;
-                  }),
-              ),
-            )
-          ).filter((p): p is string => p !== null);
-          log('Delete files from R2', SeverityNumber.INFO, {
-            files_to_delete: toDelete.length,
-            files_deleted: deletedPaths.length,
-          });
+        // Delete files from R2
+        deletedPaths = (
+          await Promise.all(
+            toDelete.map((path) =>
+              deleteFile({ projectId: siteId, path })
+                .then(() => path)
+                .catch((error) => {
+                  log(
+                    `R2 deletion failed for ${siteId}/${path}:`,
+                    SeverityNumber.ERROR,
+                    {
+                      siteId,
+                      path,
+                      error:
+                        error instanceof Error ? error.message : String(error),
+                    },
+                  );
+                  return null;
+                }),
+            ),
+          )
+        ).filter((p): p is string => p !== null);
 
-          if (!isLegacy) {
-            const deletedSet = new Set(deletedPaths);
-            await prisma.publishFile.createMany({
-              data: toDelete.map((path) => ({
-                publishId: publish.id,
-                path,
-                changeType: 'deleted' as const,
-                status: (deletedSet.has(path) ? 'success' : 'error') as
-                  | 'success'
-                  | 'error',
-              })),
-            });
-          }
-        } finally {
-          revalidateTag(siteId);
+        // Create PublishFile records ("delete" type)
+        if (!isLegacy) {
+          const deletedSet = new Set(deletedPaths);
+          await prisma.publishFile.createMany({
+            data: toDelete.map((path) => ({
+              publishId: publish.id,
+              path,
+              changeType: 'deleted' as const,
+              status: (deletedSet.has(path) ? 'success' : 'error') as
+                | 'success'
+                | 'error',
+            })),
+          });
         }
       }
 
-      try {
-        [uploadUrls, updateUrls] = await Promise.all([
-          generateUrlsForFiles(toUpload, siteId, isLegacy ? null : publish.id),
-          generateUrlsForFiles(toUpdate, siteId, isLegacy ? null : publish.id),
-        ]);
+      [uploadUrls, updateUrls] = await Promise.all([
+        generateUrlsForFiles(toUpload, siteId, isLegacy ? null : publish.id),
+        generateUrlsForFiles(toUpdate, siteId, isLegacy ? null : publish.id),
+      ]);
 
-        log('Generate presigned URLs', SeverityNumber.INFO, {
-          files_to_upload: toUpload.length,
-          files_to_update: toUpdate.length,
-        });
+      if (!isLegacy) {
+        const presignedUrlExpiresAt = new Date(
+          Date.now() + PRESIGNED_URL_TTL * 1000,
+        );
 
-        if (!isLegacy) {
-          const presignedUrlExpiresAt = new Date(
-            Date.now() + PRESIGNED_URL_TTL * 1000,
-          );
-          const uploadFileRows = [
-            ...toUpload.map((f) => ({
-              publishId: publish.id,
-              path: f.path,
-              changeType: 'added' as const,
-              status: 'uploading' as const,
-              presignedUrlExpiresAt,
-            })),
-            ...toUpdate.map((f) => ({
-              publishId: publish.id,
-              path: f.path,
-              changeType: 'updated' as const,
-              status: 'uploading' as const,
-              presignedUrlExpiresAt,
-            })),
-          ];
-          if (uploadFileRows.length > 0) {
-            await prisma.publishFile.createMany({ data: uploadFileRows });
-          }
+        // Create PublishFile records for uploads and updates with "uploading" status
+        const uploadFileRows = [
+          ...toUpload.map((f) => ({
+            publishId: publish.id,
+            path: f.path,
+            changeType: 'added' as const,
+            status: 'uploading' as const,
+            presignedUrlExpiresAt,
+          })),
+          ...toUpdate.map((f) => ({
+            publishId: publish.id,
+            path: f.path,
+            changeType: 'updated' as const,
+            status: 'uploading' as const,
+            presignedUrlExpiresAt,
+          })),
+        ];
+        if (uploadFileRows.length > 0) {
+          await prisma.publishFile.createMany({ data: uploadFileRows });
         }
-      } finally {
-        revalidateTag(siteId);
       }
 
       if (!isLegacy) {
-        // Start lifecycle workflow — polls until all PublishFile rows are terminal,
-        // then finalizes the Publish record. Handles all cases including delete-only.
         try {
-          await startPublishLifecycle(publish.id, siteId);
-        } catch (lifecycleErr) {
-          console.error('Failed to start lifecycle workflow:', lifecycleErr);
+          await startPublishFinalizerWorkflow(publish.id, siteId);
+        } catch (err) {
+          log(
+            'Failed to start publish finalizer workflow',
+            SeverityNumber.ERROR,
+            {
+              siteId,
+              publishId: publish.id,
+              error: err instanceof Error ? err.message : String(err),
+            },
+          );
         }
       }
     }
 
     const response: SyncResponse = {
-      toUpload: uploadUrls!,
-      toUpdate: updateUrls!,
+      toUpload: uploadUrls,
+      toUpdate: updateUrls,
       deleted: deletedPaths,
       unchanged,
       summary: {
-        toUpload: uploadUrls!.length,
-        toUpdate: updateUrls!.length,
+        toUpload: uploadUrls.length,
+        toUpdate: updateUrls.length,
         deleted: deletedPaths.length,
         unchanged: unchanged.length,
       },
@@ -328,7 +339,6 @@ export async function POST(
     };
 
     if (!dryRun) {
-      const posthog = PostHogClient();
       const { client_type } = getClientInfo(request);
       const publish_method =
         client_type === 'obsidian-plugin' ? 'obsidian_plugin' : client_type;
@@ -337,23 +347,28 @@ export async function POST(
         event: 'content_published',
         properties: { publish_method, site_id: siteId },
       });
-      await posthog.shutdown();
     }
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error syncing files:', error);
-    const posthog = PostHogClient();
     const { client_type, client_version } = getClientInfo(request);
+    log('Error syncing files', SeverityNumber.ERROR, {
+      route: 'POST /api/sites/id/[siteId]/sync',
+      siteId,
+      client_type,
+      client_version: client_version ?? undefined,
+      error: error instanceof Error ? error.message : String(error),
+    });
     posthog.captureException(error, 'system', {
       route: 'POST /api/sites/id/[siteId]/sync',
       client_type,
       client_version,
     });
-    await posthog.shutdown();
     return NextResponse.json(
       { error: 'internal_error', message: 'Failed to sync files' },
       { status: 500 },
     );
+  } finally {
+    await posthog.shutdown();
   }
 }
