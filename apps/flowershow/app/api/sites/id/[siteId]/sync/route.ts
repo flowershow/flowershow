@@ -25,44 +25,6 @@ import {
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 
-async function generateUrlsForFiles(
-  filesToProcess: FileMetadata[],
-  siteId: string,
-  publishId: string | null,
-): Promise<PresignedUrl[]> {
-  return Promise.all(
-    filesToProcess.map(async (file) => {
-      const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
-
-      const s3Key = `${siteId}/main/raw/${file.path}`;
-      const contentType = getContentType(extension);
-      const uploadUrl = await generatePresignedUploadUrl(
-        s3Key,
-        PRESIGNED_URL_TTL,
-        contentType,
-        publishId ? { 'publish-id': publishId } : undefined,
-        publishId ? new Set(['x-amz-meta-publish-id']) : undefined,
-      );
-
-      return { path: file.path, uploadUrl, contentType };
-    }),
-  );
-}
-
-function generateDryRunPlaceholders(
-  filesToProcess: FileMetadata[],
-): PresignedUrl[] {
-  return filesToProcess.map((file) => {
-    const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
-    return {
-      path: file.path,
-      uploadUrl: '',
-      blobId: '',
-      contentType: getContentType(extension),
-    };
-  });
-}
-
 /**
  * POST /api/sites/id/:siteId/sync
  * Unified sync endpoint for direct publishing (CLI, Obsidian plugin, or other integrations)
@@ -274,9 +236,46 @@ export async function POST(
         }
       }
 
+      const effectivePublishId = isLegacy ? null : publish.id;
       [uploadUrls, updateUrls] = await Promise.all([
-        generateUrlsForFiles(toUpload, siteId, isLegacy ? null : publish.id),
-        generateUrlsForFiles(toUpdate, siteId, isLegacy ? null : publish.id),
+        Promise.all(
+          toUpload.map(async (file) => {
+            const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
+            const s3Key = `${siteId}/main/raw/${file.path}`;
+            const contentType = getContentType(extension);
+            const uploadUrl = await generatePresignedUploadUrl(
+              s3Key,
+              PRESIGNED_URL_TTL,
+              contentType,
+              effectivePublishId
+                ? { 'publish-id': effectivePublishId }
+                : undefined,
+              effectivePublishId
+                ? new Set(['x-amz-meta-publish-id'])
+                : undefined,
+            );
+            return { path: file.path, uploadUrl, contentType };
+          }),
+        ),
+        Promise.all(
+          toUpdate.map(async (file) => {
+            const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
+            const s3Key = `${siteId}/main/raw/${file.path}`;
+            const contentType = getContentType(extension);
+            const uploadUrl = await generatePresignedUploadUrl(
+              s3Key,
+              PRESIGNED_URL_TTL,
+              contentType,
+              effectivePublishId
+                ? { 'publish-id': effectivePublishId }
+                : undefined,
+              effectivePublishId
+                ? new Set(['x-amz-meta-publish-id'])
+                : undefined,
+            );
+            return { path: file.path, uploadUrl, contentType };
+          }),
+        ),
       ]);
 
       if (!isLegacy) {
@@ -371,4 +370,18 @@ export async function POST(
   } finally {
     await posthog.shutdown();
   }
+}
+
+function generateDryRunPlaceholders(
+  filesToProcess: FileMetadata[],
+): PresignedUrl[] {
+  return filesToProcess.map((file) => {
+    const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
+    return {
+      path: file.path,
+      uploadUrl: '',
+      blobId: '',
+      contentType: getContentType(extension),
+    };
+  });
 }

@@ -1,7 +1,6 @@
 import {
   DeleteFilesRequestSchema,
   type DeleteFilesResponse,
-  type PresignedUrl,
   PublishFilesRequestSchema,
   type PublishFilesResponse,
 } from '@flowershow/api-contract';
