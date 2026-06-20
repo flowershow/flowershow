@@ -1,11 +1,10 @@
 import {
   DeleteFilesRequestSchema,
   type DeleteFilesResponse,
+  type PresignedUrl,
   PublishFilesRequestSchema,
   type PublishFilesResponse,
-  type UploadTarget,
 } from '@flowershow/api-contract';
-import { revalidateTag } from 'next/cache';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import {
@@ -19,6 +18,7 @@ import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
+import { log, SeverityNumber } from '@/lib/otel-logger';
 import {
   clientTypeToPublishSource,
   MAX_FILES,
@@ -38,7 +38,10 @@ export async function POST(
   request: NextRequest,
   props: { params: Promise<{ siteId: string }> },
 ) {
+  const posthog = PostHogClient();
+  const { siteId } = await props.params;
   try {
+    const isLegacy = isLegacyPublishClient(request);
     let userId: string | null = null;
     const tokenAuth = await validateAccessToken(request);
     if (tokenAuth?.userId) {
@@ -55,8 +58,6 @@ export async function POST(
         { status: 401 },
       );
     }
-
-    const { siteId } = await props.params;
 
     const site = await prisma.site.findUnique({
       where: { id: siteId },
@@ -104,9 +105,8 @@ export async function POST(
       where: { siteId, path: { in: files.map((f) => f.path) } },
       select: { path: true, sha: true },
     });
-    const existingBlobMap = new Map(existingBlobs.map((b) => [b.path, b]));
 
-    const isLegacy = isLegacyPublishClient(request);
+    const existingBlobMap = new Map(existingBlobs.map((b) => [b.path, b]));
 
     // Create Publish record
     const publish = await prisma.publish.create({
@@ -133,54 +133,57 @@ export async function POST(
       });
     }
 
-    let uploadUrls: UploadTarget[];
-    try {
-      const presignedUrlExpiresAt = new Date(
-        Date.now() + PRESIGNED_URL_TTL * 1000,
-      );
+    const presignedUrlExpiresAt = new Date(
+      Date.now() + PRESIGNED_URL_TTL * 1000,
+    );
 
-      uploadUrls = await Promise.all(
-        files.map(async (file) => {
-          const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
-          const s3Key = `${siteId}/main/raw/${file.path}`;
-          const contentType = getContentType(extension);
-          const uploadUrl = await generatePresignedUploadUrl(
-            s3Key,
-            PRESIGNED_URL_TTL,
-            contentType,
-            isLegacy ? undefined : { 'publish-id': publish.id },
-            isLegacy ? undefined : new Set(['x-amz-meta-publish-id']),
-          );
+    const uploadUrls = await Promise.all(
+      files.map(async (file) => {
+        const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
+        const s3Key = `${siteId}/main/raw/${file.path}`;
+        const contentType = getContentType(extension);
+        const uploadUrl = await generatePresignedUploadUrl(
+          s3Key,
+          PRESIGNED_URL_TTL,
+          contentType,
+          isLegacy ? undefined : { 'publish-id': publish.id },
+          isLegacy ? undefined : new Set(['x-amz-meta-publish-id']),
+        );
 
-          if (!isLegacy) {
-            const existing = existingBlobMap.get(file.path);
-            const changeType = (
-              !existing || existing.sha !== file.sha ? 'added' : 'updated'
-            ) as 'added' | 'updated';
+        if (!isLegacy) {
+          const existing = existingBlobMap.get(file.path);
+          const changeType = (
+            !existing || existing.sha !== file.sha ? 'added' : 'updated'
+          ) as 'added' | 'updated';
 
-            await prisma.publishFile.create({
-              data: {
-                publishId: publish.id,
-                path: file.path,
-                changeType,
-                status: 'uploading',
-                presignedUrlExpiresAt,
-              },
-            });
-          }
+          await prisma.publishFile.create({
+            data: {
+              publishId: publish.id,
+              path: file.path,
+              changeType,
+              status: 'uploading',
+              presignedUrlExpiresAt,
+            },
+          });
+        }
 
-          return { path: file.path, uploadUrl, contentType };
-        }),
-      );
-    } finally {
-      revalidateTag(siteId);
-    }
+        return { path: file.path, uploadUrl, contentType };
+      }),
+    );
 
     if (!isLegacy) {
       try {
         await startPublishFinalizerWorkflow(publish.id, siteId);
-      } catch (lifecycleErr) {
-        console.error('Failed to start lifecycle workflow:', lifecycleErr);
+      } catch (err) {
+        log(
+          'Failed to start publish finalizer workflow',
+          SeverityNumber.ERROR,
+          {
+            siteId,
+            publishId: publish.id,
+            error: err instanceof Error ? err.message : String(err),
+          },
+        );
       }
     }
 
@@ -189,7 +192,6 @@ export async function POST(
       publishId: publish.id,
     };
 
-    const posthog = PostHogClient();
     const { client_type } = getClientInfo(request);
     const publish_method =
       client_type === 'obsidian-plugin' ? 'obsidian_plugin' : client_type;
@@ -198,23 +200,28 @@ export async function POST(
       event: 'content_published',
       properties: { publish_method, site_id: siteId },
     });
-    await posthog.shutdown();
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error publishing files:', error);
-    const posthog = PostHogClient();
     const { client_type, client_version } = getClientInfo(request);
+    log('Error publishing files', SeverityNumber.ERROR, {
+      route: 'POST /api/sites/id/[siteId]/files',
+      siteId,
+      client_type,
+      client_version: client_version ?? undefined,
+      error: error instanceof Error ? error.message : String(error),
+    });
     posthog.captureException(error, 'system', {
       route: 'POST /api/sites/id/[siteId]/files',
       client_type,
       client_version,
     });
-    await posthog.shutdown();
     return NextResponse.json(
       { error: 'internal_error', message: 'Failed to publish files' },
       { status: 500 },
     );
+  } finally {
+    await posthog.shutdown();
   }
 }
 
@@ -231,6 +238,8 @@ export async function DELETE(
   request: NextRequest,
   props: { params: Promise<{ siteId: string }> },
 ) {
+  const posthog = PostHogClient();
+  const { siteId } = await props.params;
   try {
     const auth = await validateAccessToken(request);
     if (!auth?.userId) {
@@ -239,8 +248,6 @@ export async function DELETE(
         { status: 401 },
       );
     }
-
-    const { siteId } = await props.params;
 
     const site = await prisma.site.findUnique({
       where: { id: siteId },
@@ -299,38 +306,45 @@ export async function DELETE(
     }
 
     if (deleted.length > 0) {
-      try {
-        await Promise.all(
-          deleted.map((path) =>
-            deleteFile({ projectId: siteId, path }).catch((error) => {
-              console.error(
-                `[DELETE /files] R2 deletion failed for ${siteId}/${path}:`,
-                error,
-              );
-            }),
-          ),
-        );
-      } finally {
-        revalidateTag(siteId);
-      }
+      await Promise.all(
+        deleted.map((path) =>
+          deleteFile({ projectId: siteId, path }).catch((error) => {
+            log(
+              `R2 deletion failed for ${siteId}/${path}:`,
+              SeverityNumber.ERROR,
+              {
+                siteId,
+                path,
+                error: error instanceof Error ? error.message : String(error),
+              },
+            );
+          }),
+        ),
+      );
     }
 
     const response: DeleteFilesResponse = { deleted, notFound };
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error deleting files:', error);
-    const posthog = PostHogClient();
     const { client_type, client_version } = getClientInfo(request);
+    log('Error deleting files', SeverityNumber.ERROR, {
+      route: 'DELETE /api/sites/id/[siteId]/files',
+      siteId,
+      client_type,
+      client_version: client_version ?? undefined,
+      error: error instanceof Error ? error.message : String(error),
+    });
     posthog.captureException(error, 'system', {
       route: 'DELETE /api/sites/id/[siteId]/files',
       client_type,
       client_version,
     });
-    await posthog.shutdown();
     return NextResponse.json(
       { error: 'internal_error', message: 'Failed to delete files' },
       { status: 500 },
     );
+  } finally {
+    await posthog.shutdown();
   }
 }
