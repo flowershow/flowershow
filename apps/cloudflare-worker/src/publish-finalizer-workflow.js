@@ -74,7 +74,7 @@ export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
               'Content-Type': 'application/json',
               'x-internal-secret': this.env.INTERNAL_API_SECRET,
             },
-            body: JSON.stringify({ tag: siteId }),
+            body: JSON.stringify({ tags: [siteId] }),
           },
         );
         if (!resp.ok) {

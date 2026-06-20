@@ -8,17 +8,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { tag?: string };
+  let body: { tags?: string[] };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  if (!body.tag) {
-    return NextResponse.json({ error: 'Missing tag' }, { status: 400 });
+  if (!body.tags?.length) {
+    return NextResponse.json({ error: 'Missing tags' }, { status: 400 });
   }
 
-  revalidateTag(body.tag);
-  return NextResponse.json({ revalidated: true });
+  for (const tag of body.tags) {
+    revalidateTag(tag);
+  }
+  return NextResponse.json({ revalidated: body.tags });
 }

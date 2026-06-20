@@ -247,10 +247,14 @@ async function uploadFixturesForSite(
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'cloud.local:3000';
 
 async function revalidateCache(): Promise<void> {
-  const url = `http://${ROOT_DOMAIN}/api/e2e/revalidate`;
+  const url = `http://${ROOT_DOMAIN}/api/internal/revalidate`;
+  const secret = process.env.INTERNAL_API_SECRET;
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(secret ? { 'x-internal-secret': secret } : {}),
+    },
     body: JSON.stringify({ tags: [FREE_SITE.id, PREMIUM_SITE.id] }),
   });
   if (!res.ok) {
