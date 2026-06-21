@@ -1,9 +1,5 @@
 import { WorkflowEntrypoint } from 'cloudflare:workers';
-import {
-  getPostgresClient,
-  getStorageClient,
-  getTypesenseClient,
-} from './clients.js';
+import { getPostgresClient, getStorageClient } from './clients.js';
 import {
   fetchGitHubConfig,
   fetchGitHubFileRaw,
@@ -18,7 +14,7 @@ const BATCH_SIZE = 20;
 export class GitHubSyncWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
     const {
-      publishId,
+      publishId, // generate here ?
       siteId,
       ghRepository,
       ghBranch,
@@ -37,7 +33,6 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
 
     const sql = getPostgresClient(this.env);
     const storage = getStorageClient(this.env);
-    const typesense = getTypesenseClient(this.env);
 
     // Verify site exists
     await step.do('fetch-site', async () => {
@@ -45,7 +40,7 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       if (rows.length === 0) throw new Error(`Site ${siteId} not found.`);
     });
 
-    // Create the Publish record as the first durable step
+    // Create the Publish record
     await step.do('create-publish-record', async () => {
       await sql`
         INSERT INTO "Publish" (id, site_id, source, status, started_at, git_commit_sha, git_commit_message)
@@ -215,7 +210,7 @@ function createBatches(items, batchSize) {
  * Computes which files from the GitHub tree need to be upserted.
  * Returns items with { ghTreeItem, filePath, changeType }.
  */
-function computeFilesToUpsert(
+export function computeFilesToUpsert(
   existingBlobs,
   gitHubTree,
   normalizedRootDir,

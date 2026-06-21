@@ -10,21 +10,27 @@ import { captureError, generateId } from './utils.js';
 
 export async function handleMessage({ msg, storage, sql, typesense, env }) {
   const rawKey = msg.body.object.key;
+  const { siteId, branch, path } = parseObjectKey(rawKey);
 
   if (msg.body.action === 'DeleteObject') {
-    const { siteId, path } = parseObjectKey(rawKey);
-    if (!/^[\w-]+$/.test(siteId)) throw new Error(`Invalid siteId: ${siteId}`);
-    await processDeleteEvent({ sql, typesense, siteId, path });
+    const deleted = await sql`
+      DELETE FROM "Blob"
+      WHERE site_id = ${siteId} AND path = ${path}
+      RETURNING id
+    `;
+    if (deleted.length === 0) return;
+    try {
+      await typesense
+        .collections(siteId)
+        .documents(`${deleted[0].id}`)
+        .delete();
+    } catch (_) {
+      // Document may not exist in Typesense (e.g. non-indexed file type)
+    }
     return msg.ack();
   }
 
   try {
-    const { siteId, branch, path } = parseObjectKey(rawKey);
-
-    if (!/^[\w-]+$/.test(siteId) || !/^[\w-]+$/.test(branch)) {
-      throw new Error(`Invalid siteId or branch: ${siteId}, ${branch}`);
-    }
-
     const key = `${siteId}/${branch}/raw/${path}`;
     const publishId = await getPublishIdFromMetadata(storage, key);
 
@@ -163,20 +169,6 @@ async function updatePublishFile(sql, publishId, path, status, errorMsg) {
       SET status = 'success'
       WHERE publish_id = ${publishId} AND path = ${path}
     `;
-  }
-}
-
-async function processDeleteEvent({ sql, typesense, siteId, path }) {
-  const deleted = await sql`
-    DELETE FROM "Blob"
-    WHERE site_id = ${siteId} AND path = ${path}
-    RETURNING id
-  `;
-  if (deleted.length === 0) return;
-  try {
-    await typesense.collections(siteId).documents(`${deleted[0].id}`).delete();
-  } catch (_) {
-    // Document may not exist in Typesense (e.g. non-indexed file type)
   }
 }
 
