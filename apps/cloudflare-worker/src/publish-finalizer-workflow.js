@@ -26,42 +26,9 @@ export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
       }
     }
 
-    await step.do('finalize-publish', async () => {
-      if (timedOut) {
-        await sql`
-          UPDATE "PublishFile" SET status = 'expired'
-          WHERE publish_id = ${publishId} AND status = 'uploading'
-        `;
-        await sql`
-          UPDATE "Publish" SET status = 'error', completed_at = NOW()
-          WHERE id = ${publishId} AND status = 'in_progress'
-        `;
-        return;
-      }
-
-      const [{ total, canceled, errors }] = await sql`
-        SELECT
-          COUNT(*) AS total,
-          COUNT(*) FILTER (WHERE status = 'canceled') AS canceled,
-          COUNT(*) FILTER (WHERE status = 'error') AS errors
-        FROM "PublishFile"
-        WHERE publish_id = ${publishId}
-      `;
-
-      let status;
-      if (Number(total) > 0 && Number(canceled) === Number(total)) {
-        status = 'superseded';
-      } else if (Number(errors) > 0) {
-        status = 'error';
-      } else {
-        status = 'success';
-      }
-
-      await sql`
-        UPDATE "Publish" SET status = ${status}, completed_at = NOW()
-        WHERE id = ${publishId}
-      `;
-    });
+    await step.do('finalize-publish', () =>
+      finalizePublish({ sql, publishId, timedOut }),
+    );
 
     await step.do('revalidate-tags', async () => {
       if (!this.env.NEXTJS_APP_URL || !this.env.INTERNAL_API_SECRET) return;
@@ -85,4 +52,41 @@ export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
       }
     });
   }
+}
+
+export async function finalizePublish({ sql, publishId, timedOut }) {
+  if (timedOut) {
+    await sql`
+      UPDATE "PublishFile" SET status = 'expired'
+      WHERE publish_id = ${publishId} AND status = 'uploading'
+    `;
+    await sql`
+      UPDATE "Publish" SET status = 'error', completed_at = NOW()
+      WHERE id = ${publishId} AND status = 'in_progress'
+    `;
+    return;
+  }
+
+  const [{ total, canceled, errors }] = await sql`
+    SELECT
+      COUNT(*) AS total,
+      COUNT(*) FILTER (WHERE status = 'canceled') AS canceled,
+      COUNT(*) FILTER (WHERE status = 'error') AS errors
+    FROM "PublishFile"
+    WHERE publish_id = ${publishId}
+  `;
+
+  let status;
+  if (Number(total) > 0 && Number(canceled) === Number(total)) {
+    status = 'superseded';
+  } else if (Number(errors) > 0) {
+    status = 'error';
+  } else {
+    status = 'success';
+  }
+
+  await sql`
+    UPDATE "Publish" SET status = ${status}, completed_at = NOW()
+    WHERE id = ${publishId}
+  `;
 }
