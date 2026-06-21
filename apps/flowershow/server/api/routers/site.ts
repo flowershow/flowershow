@@ -595,7 +595,7 @@ export const siteRouter = createTRPCRouter({
       return { id: site.id };
     }),
 
-  getPublishState: protectedProcedure
+  getLatestPublishState: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .query(
       async ({

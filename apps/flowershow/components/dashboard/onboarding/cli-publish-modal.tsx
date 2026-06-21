@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import Modal from '@/providers/modal';
 import { api } from '@/trpc/react';
 
+type State = 'waiting' | 'processing' | 'success';
+
 function CopyableCommand({ command }: { command: string }) {
   const [copied, setCopied] = useState(false);
 
@@ -63,30 +65,32 @@ export default function CliPublishModal({
   setShowModal,
 }: CliPublishModalProps) {
   const router = useRouter();
-  const [received, setReceived] = useState(false);
+  const [state, setState] = useState<State>('waiting');
 
-  // Poll for content to detect when CLI publishes
-  const { data: blobPaths } = api.site.getAllBlobPaths.useQuery(
-    { siteId },
+  const { data: publishState } = api.site.getLatestPublishState.useQuery(
+    { id: siteId },
     {
-      enabled: showModal && !received,
+      enabled: showModal && state !== 'success',
       refetchInterval: 3000,
     },
   );
 
   useEffect(() => {
-    if (blobPaths && blobPaths.length > 0) {
-      setReceived(true);
+    if (!publishState) return;
+    if (state === 'waiting' && publishState.isInProgress) {
+      setState('processing');
+    } else if (state === 'processing' && !publishState.isInProgress) {
+      setState('success');
     }
-  }, [blobPaths]);
+  }, [publishState, state]);
 
   const handleClose = () => {
-    if (received) {
+    if (state === 'success') {
       router.push(`/site/${siteId}/settings`);
       router.refresh();
     }
     setShowModal(false);
-    setTimeout(() => setReceived(false), 200);
+    setTimeout(() => setState('waiting'), 200);
   };
 
   return (
@@ -95,7 +99,7 @@ export default function CliPublishModal({
         <div className="p-5 md:p-10">
           <h2 className="font-dashboard-heading text-2xl">Publish from CLI</h2>
 
-          {!received ? (
+          {state !== 'success' ? (
             <>
               <div className="mt-6 space-y-4">
                 <div className="rounded-lg border border-stone-200 p-4">
@@ -166,7 +170,9 @@ export default function CliPublishModal({
                   />
                 </svg>
                 <p className="text-sm text-amber-700">
-                  Waiting for content upload...
+                  {state === 'waiting'
+                    ? 'Waiting for content upload...'
+                    : 'Processing files...'}
                 </p>
               </div>
             </>
@@ -185,7 +191,7 @@ export default function CliPublishModal({
         </div>
 
         <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 md:px-10 gap-3">
-          {received ? (
+          {state === 'success' ? (
             <>
               <a
                 href={siteUrl}

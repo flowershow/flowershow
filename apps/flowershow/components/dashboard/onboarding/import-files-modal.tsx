@@ -12,7 +12,7 @@ type State =
   | 'selecting'
   | 'ready'
   | 'uploading'
-  | 'syncing'
+  | 'processing'
   | 'success'
   | 'error';
 
@@ -154,16 +154,16 @@ export default function ImportFilesOnboardingModal({
   };
 
   // Poll publish state while files are being processed
-  const { data: publishState } = api.site.getPublishState.useQuery(
+  const { data: publishState } = api.site.getLatestPublishState.useQuery(
     { id: siteId },
     {
-      enabled: state === 'syncing',
+      enabled: state === 'processing',
       refetchInterval: 3000,
     },
   );
 
   useEffect(() => {
-    if (state === 'syncing' && publishState && !publishState.isInProgress) {
+    if (state === 'processing' && publishState && !publishState.isInProgress) {
       setState('success');
     }
   }, [publishState, state]);
@@ -205,7 +205,7 @@ export default function ImportFilesOnboardingModal({
         ),
       );
 
-      setState('syncing');
+      setState('processing');
     } catch (err) {
       console.error('Import error:', err);
       setError(err instanceof Error ? err.message : 'Failed to upload files');
@@ -214,7 +214,7 @@ export default function ImportFilesOnboardingModal({
   };
 
   const handleClose = () => {
-    if (state === 'uploading' || state === 'syncing') return;
+    if (state === 'uploading' || state === 'processing') return;
     if (state === 'success') {
       router.push(`/site/${siteId}/settings`);
       router.refresh();
@@ -243,7 +243,7 @@ export default function ImportFilesOnboardingModal({
     <Modal
       showModal={showModal}
       setShowModal={handleClose}
-      closeOnClickOutside={state !== 'uploading' && state !== 'syncing'}
+      closeOnClickOutside={state !== 'uploading' && state !== 'processing'}
     >
       <div className="w-full max-w-lg bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden">
         <div className="relative flex flex-col space-y-2 p-5 md:p-10 md:pb-0">
@@ -334,7 +334,7 @@ export default function ImportFilesOnboardingModal({
             </div>
           )}
 
-          {(state === 'uploading' || state === 'syncing') && (
+          {(state === 'uploading' || state === 'processing') && (
             <div className="py-8 text-center">
               <svg
                 className="mx-auto h-10 w-10 animate-spin text-stone-600"
@@ -408,7 +408,7 @@ export default function ImportFilesOnboardingModal({
             </>
           )}
 
-          {(state === 'uploading' || state === 'syncing') && (
+          {(state === 'uploading' || state === 'processing') && (
             <button
               disabled
               className="px-4 py-2 text-sm font-medium text-stone-400 cursor-not-allowed"

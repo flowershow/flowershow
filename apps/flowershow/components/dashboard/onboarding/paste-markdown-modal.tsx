@@ -25,7 +25,7 @@ const calculateSHA256 = async (content: string): Promise<string> => {
   );
 };
 
-type State = 'idle' | 'publishing' | 'syncing' | 'success' | 'error';
+type State = 'idle' | 'publishing' | 'processing' | 'success' | 'error';
 
 interface PasteMarkdownModalProps {
   siteId: string;
@@ -45,13 +45,13 @@ export default function PasteMarkdownModal({
   const [error, setError] = useState<string | null>(null);
   const [markdown, setMarkdown] = useState('');
 
-  const { data: publishState } = api.site.getPublishState.useQuery(
+  const { data: publishState } = api.site.getLatestPublishState.useQuery(
     { id: siteId },
-    { enabled: state === 'syncing', refetchInterval: 3000 },
+    { enabled: state === 'processing', refetchInterval: 3000 },
   );
 
   useEffect(() => {
-    if (state === 'syncing' && publishState && !publishState.isInProgress) {
+    if (state === 'processing' && publishState && !publishState.isInProgress) {
       setState('success');
     }
   }, [publishState, state]);
@@ -94,7 +94,7 @@ export default function PasteMarkdownModal({
         ),
       );
 
-      setState('syncing');
+      setState('processing');
     } catch (err) {
       console.error('Publish error:', err);
       setError(
@@ -105,7 +105,7 @@ export default function PasteMarkdownModal({
   };
 
   const handleClose = () => {
-    if (state === 'publishing' || state === 'syncing') return;
+    if (state === 'publishing' || state === 'processing') return;
     if (state === 'success') {
       router.push(`/site/${siteId}/settings`);
       router.refresh();
@@ -122,7 +122,7 @@ export default function PasteMarkdownModal({
     <Modal
       showModal={showModal}
       setShowModal={handleClose}
-      closeOnClickOutside={state !== 'publishing' && state !== 'syncing'}
+      closeOnClickOutside={state !== 'publishing' && state !== 'processing'}
     >
       <div className="w-full max-w-lg overflow-hidden rounded-md bg-white md:border md:border-stone-200 md:shadow">
         <div className="relative flex flex-col space-y-2 p-5 md:p-10 md:pb-0">
@@ -157,7 +157,7 @@ export default function PasteMarkdownModal({
             </div>
           )}
 
-          {(state === 'publishing' || state === 'syncing') && (
+          {(state === 'publishing' || state === 'processing') && (
             <div className="py-8 text-center">
               <svg
                 aria-label={
@@ -223,7 +223,7 @@ export default function PasteMarkdownModal({
             </>
           )}
 
-          {(state === 'publishing' || state === 'syncing') && (
+          {(state === 'publishing' || state === 'processing') && (
             <button
               type="button"
               disabled

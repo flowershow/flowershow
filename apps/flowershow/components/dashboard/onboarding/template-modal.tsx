@@ -141,7 +141,7 @@ export default function TemplateModal({
     });
 
   // Poll publish state while syncing
-  const { data: publishState } = api.site.getPublishState.useQuery(
+  const { data: publishState } = api.site.getLatestPublishState.useQuery(
     { id: siteId },
     {
       enabled: step === 'syncing',

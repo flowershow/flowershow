@@ -374,12 +374,12 @@ describe('site.getBlob', () => {
   });
 });
 
-describe('site.getPublishState', () => {
+describe('site.getLatestPublishState', () => {
   it('returns isUnpublished when no Publish records exist', async () => {
     const db = createMockDb({ publishes: [], publishFiles: [] });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getPublishState({ id: 'site-1' });
+    const result = await caller.site.getLatestPublishState({ id: 'site-1' });
 
     expect(result.isUnpublished).toBe(true);
     expect(result.isInProgress).toBe(false);
@@ -394,7 +394,7 @@ describe('site.getPublishState', () => {
     });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getPublishState({ id: 'site-1' });
+    const result = await caller.site.getLatestPublishState({ id: 'site-1' });
 
     expect(result.isInProgress).toBe(true);
     expect(result.isUnpublished).toBe(false);
@@ -413,7 +413,7 @@ describe('site.getPublishState', () => {
     });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getPublishState({ id: 'site-1' });
+    const result = await caller.site.getLatestPublishState({ id: 'site-1' });
 
     expect(result.isInProgress).toBe(false);
     expect(result.isUnpublished).toBe(false);

@@ -20,7 +20,7 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
   const searchParams = useSearchParams();
   const publishJustStarted = searchParams.get('publishStarted') === '1';
 
-  const { data } = api.site.getPublishState.useQuery(
+  const { data } = api.site.getLatestPublishState.useQuery(
     { id: site.id },
     { refetchInterval: 10 * 1000, keepPreviousData: true },
   );
