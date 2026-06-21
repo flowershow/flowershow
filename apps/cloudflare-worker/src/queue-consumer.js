@@ -1,13 +1,18 @@
 import { computeGitBlobSha } from './github.js';
 import {
+  deleteFile,
+  getPublishIdFromMetadata,
+  readFileBytes,
+} from './storage.js';
+import { indexInTypesense } from './typesense.js';
+import {
+  captureError,
   extractImageDimensions,
+  generateId,
   isSupportedImagePath,
   parseMarkdownForSync,
   parseObjectKey,
-} from './processing-utils.js';
-import { deleteFile, getPublishIdFromMetadata, readFileBytes } from './storage.js';
-import { indexInTypesense } from './typesense.js';
-import { captureError, generateId } from './utils.js';
+} from './utils.js';
 
 export async function handleMessage({ msg, storage, sql, typesense, env }) {
   const rawKey = msg.body.object.key;
