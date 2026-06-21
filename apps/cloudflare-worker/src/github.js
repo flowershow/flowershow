@@ -134,10 +134,11 @@ export async function fetchGitHubRepoTree(ghRepository, ghBranch, token) {
   return resp.json();
 }
 
-export async function fetchGitHubConfig(ghRepository, ghBranch, token) {
+export async function fetchGitHubConfig(ghRepository, ghBranch, token, rootDir) {
+  const configPath = rootDir ? `${rootDir.replace(/^\/+|\/+$/g, '')}/config.json` : 'config.json';
   try {
     const resp = await githubFetch(
-      `/repos/${ghRepository}/contents/config.json?ref=${encodeURIComponent(ghBranch)}`,
+      `/repos/${ghRepository}/contents/${configPath}?ref=${encodeURIComponent(ghBranch)}`,
       token,
     );
     const data = await resp.json();

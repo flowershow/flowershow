@@ -58,7 +58,7 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
     // Fetch site config (contentInclude / contentExclude)
     const { contentInclude: includes = [], contentExclude: excludes = [] } =
       await step.do('fetch-site-config', async () => {
-        return fetchGitHubConfig(ghRepository, ghBranch, accessToken);
+        return fetchGitHubConfig(ghRepository, ghBranch, accessToken, rootDir);
       });
 
     // Fetch GitHub repo tree
