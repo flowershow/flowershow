@@ -465,7 +465,7 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       });
     });
 
-    it('cancels in-flight PublishFile rows from prior publishes for overlapping paths', async () => {
+    it('cancels in-flight PublishFile rows from prior publishes', async () => {
       vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([]);
 
       await POST(
@@ -476,7 +476,6 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       expect(prisma.publishFile.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            path: { in: ['new.md'] },
             status: 'uploading',
             publishId: { not: PUBLISH_ID },
           }),
