@@ -37,7 +37,7 @@ _Avoid_: Skin, style, template, stylesheet
 ### Publishing
 
 **Publish**:
-A single end-to-end publishing event for a site. Records when it started, what triggered it (publish source), its outcome (publish status), and any errors. The source of truth for a site's current status — not blob states, not live GitHub API calls.
+A single end-to-end publishing event for a site. Records when it started (`startedAt`) and when it finished (`completedAt`). A Publish with `completedAt IS NULL` is in progress.
 _Avoid_: Sync, sync run, deployment, deploy
 
 **PublishFile**:
@@ -49,7 +49,7 @@ The channel that triggered a publish. Canonical values: `github_webhook`, `cli`,
 _Avoid_: Sync source, publish method, trigger type, client type
 
 **Publish Status**:
-The current state of a site as shown to the user, derived from its latest Publish: `UNPUBLISHED` (no publishes yet), `PENDING` (publish in progress), `SUCCESS` (last publish completed), `ERROR` (last publish failed).
+The user-facing state of a site, derived at read time from the latest Publish and its PublishFile records. Never stored as a column. Values: `UNPUBLISHED` (no publishes yet), `PENDING` (latest Publish has no `completedAt`), `SUCCESS` (latest Publish completed, no errors), `ERROR` (latest Publish completed with errors).
 _Avoid_: Sync status, site status, deployment status
 
 ## Example dialogue
@@ -58,10 +58,10 @@ _Avoid_: Sync status, site status, deployment status
 >
 > **Domain expert**: What was the publish source — GitHub webhook or a direct upload?
 >
-> **Dev**: GitHub webhook. The publish completed but the status never updated to SUCCESS.
+> **Dev**: GitHub webhook. The publish completed but the UI is still showing PENDING.
 >
-> **Domain expert**: So the Publish record has a completed status but the UI is still showing PENDING? That's a stale poll — the site's publish status is derived from the latest Publish record, so if the record is right, it's a frontend cache issue.
+> **Domain expert**: Check whether `completedAt` is set on the Publish record. If it is, the UI is reading stale data — Publish Status is derived at read time from `completedAt` and the PublishFile rows, so if those are right it's a frontend cache issue.
 >
-> **Dev**: Right. Previously we derived status from blob states and a live GitHub API call, which caused flicker. Now we read the Publish record directly.
+> **Dev**: Right. Previously we derived status from blob states and a live GitHub API call, which caused flicker. Now we check `completedAt` directly.
 >
-> **Domain expert**: Good. The Publish is the definitive record of what happened. There's nothing more authoritative.
+> **Domain expert**: Good. `completedAt IS NOT NULL` is the definitive signal that a publish finished. Nothing more authoritative than that.

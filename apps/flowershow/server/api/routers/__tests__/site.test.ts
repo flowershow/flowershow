@@ -108,12 +108,11 @@ type MockPublish = {
   startedAt: Date;
   completedAt?: Date | null;
   legacy?: boolean;
-  status?: 'in_progress' | 'success' | 'error' | 'superseded';
 };
 type MockPublishFile = {
   publishId: string;
   path: string;
-  status: 'uploading' | 'success' | 'error';
+  status: 'uploading' | 'success' | 'error' | 'canceled' | 'expired';
   error?: string | null;
 };
 
@@ -182,11 +181,14 @@ function createMockDb({
         );
         const p = sorted[0];
         if (!p) return null;
+        const errorFiles = publishFiles.filter(
+          (f) => f.publishId === p.id && f.status === 'error',
+        );
         return {
           ...p,
-          status: p.status ?? 'in_progress',
           completedAt: p.completedAt ?? null,
           legacy: p.legacy ?? false,
+          files: errorFiles.slice(0, 1).map(() => ({ id: 'error-file' })),
         };
       }),
     },
@@ -383,10 +385,10 @@ describe('site.getPublishStatus', () => {
     expect(result.lastPublishedAt).toBeNull();
   });
 
-  it('returns PENDING when Publish.status is in_progress (no files yet)', async () => {
+  it('returns PENDING when completedAt is null (no files yet)', async () => {
     const startedAt = new Date('2026-05-01T10:00:00Z');
     const db = createMockDb({
-      publishes: [{ id: 'pub-1', startedAt, status: 'in_progress' }],
+      publishes: [{ id: 'pub-1', startedAt, completedAt: null }],
       publishFiles: [],
     });
     const caller = createAuthenticatedCaller(db);
@@ -397,10 +399,10 @@ describe('site.getPublishStatus', () => {
     expect(result.lastPublishedAt).toEqual(startedAt);
   });
 
-  it('returns PENDING when Publish.status is in_progress (files still uploading)', async () => {
+  it('returns PENDING when completedAt is null (files still uploading)', async () => {
     const startedAt = new Date('2026-05-01T10:00:00Z');
     const db = createMockDb({
-      publishes: [{ id: 'pub-1', startedAt, status: 'in_progress' }],
+      publishes: [{ id: 'pub-1', startedAt, completedAt: null }],
       publishFiles: [
         { publishId: 'pub-1', path: 'index.md', status: 'success' },
         { publishId: 'pub-1', path: 'page.md', status: 'uploading' },
@@ -413,11 +415,11 @@ describe('site.getPublishStatus', () => {
     expect(result.status).toBe('PENDING');
   });
 
-  it('returns SUCCESS when Publish.status is success', async () => {
+  it('returns SUCCESS when completedAt is set and no error files', async () => {
     const startedAt = new Date('2026-05-01T10:00:00Z');
     const completedAt = new Date('2026-05-01T10:01:00Z');
     const db = createMockDb({
-      publishes: [{ id: 'pub-1', startedAt, completedAt, status: 'success' }],
+      publishes: [{ id: 'pub-1', startedAt, completedAt }],
       publishFiles: [
         { publishId: 'pub-1', path: 'index.md', status: 'success' },
         { publishId: 'pub-1', path: 'page.md', status: 'success' },
@@ -431,14 +433,15 @@ describe('site.getPublishStatus', () => {
     expect(result.lastPublishedAt).toEqual(completedAt);
   });
 
-  it('returns SUCCESS when Publish.status is superseded', async () => {
+  it('returns SUCCESS when completedAt is set and all files are canceled', async () => {
     const startedAt = new Date('2026-05-01T10:00:00Z');
     const completedAt = new Date('2026-05-01T10:01:00Z');
     const db = createMockDb({
-      publishes: [
-        { id: 'pub-1', startedAt, completedAt, status: 'superseded' },
+      publishes: [{ id: 'pub-1', startedAt, completedAt }],
+      publishFiles: [
+        { publishId: 'pub-1', path: 'index.md', status: 'canceled' },
+        { publishId: 'pub-1', path: 'page.md', status: 'canceled' },
       ],
-      publishFiles: [],
     });
     const caller = createAuthenticatedCaller(db);
 
@@ -447,12 +450,15 @@ describe('site.getPublishStatus', () => {
     expect(result.status).toBe('SUCCESS');
   });
 
-  it('returns ERROR when Publish.status is error', async () => {
+  it('returns ERROR when completedAt is set and there are error files', async () => {
     const startedAt = new Date('2026-05-01T10:00:00Z');
     const completedAt = new Date('2026-05-01T10:01:00Z');
     const db = createMockDb({
-      publishes: [{ id: 'pub-1', startedAt, completedAt, status: 'error' }],
-      publishFiles: [],
+      publishes: [{ id: 'pub-1', startedAt, completedAt }],
+      publishFiles: [
+        { publishId: 'pub-1', path: 'index.md', status: 'success' },
+        { publishId: 'pub-1', path: 'page.md', status: 'error' },
+      ],
     });
     const caller = createAuthenticatedCaller(db);
 

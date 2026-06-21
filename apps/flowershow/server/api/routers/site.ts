@@ -625,7 +625,11 @@ export const siteRouter = createTRPCRouter({
             startedAt: true,
             completedAt: true,
             legacy: true,
-            status: true,
+            files: {
+              where: { status: 'error' },
+              select: { id: true },
+              take: 1,
+            },
           },
         });
 
@@ -646,8 +650,7 @@ export const siteRouter = createTRPCRouter({
           return { status: 'UNPUBLISHED', lastPublishedAt: null };
         }
 
-        // If the publish was made with a legacy client version (before the Publish/PublishFile system was introduced),
-        // we treat it as a success (PublishFile records are not created for legacy clients, as they don't include Publish id in the upload metadata)
+        // Legacy clients don't create PublishFile records — treat as success
         if (latestPublish.legacy) {
           return {
             status: 'SUCCESS',
@@ -655,25 +658,23 @@ export const siteRouter = createTRPCRouter({
           };
         }
 
-        if (latestPublish.status === 'in_progress') {
+        if (!latestPublish.completedAt) {
           return {
             status: 'PENDING',
             lastPublishedAt: latestPublish.startedAt,
           };
         }
 
-        if (latestPublish.status === 'error') {
+        if (latestPublish.files.length > 0) {
           return {
             status: 'ERROR',
-            lastPublishedAt:
-              latestPublish.completedAt ?? latestPublish.startedAt,
+            lastPublishedAt: latestPublish.completedAt,
           };
         }
 
-        // success or superseded → SUCCESS
         return {
           status: 'SUCCESS',
-          lastPublishedAt: latestPublish.completedAt ?? latestPublish.startedAt,
+          lastPublishedAt: latestPublish.completedAt,
         };
       },
     ),
@@ -702,11 +703,11 @@ export const siteRouter = createTRPCRouter({
         select: {
           id: true,
           startedAt: true,
+          completedAt: true,
           source: true,
           gitCommitSha: true,
           gitCommitMessage: true,
           legacy: true,
-          status: true,
           files: {
             select: {
               id: true,
@@ -727,7 +728,8 @@ export const siteRouter = createTRPCRouter({
             source: p.source,
             gitCommitSha: p.gitCommitSha,
             gitCommitMessage: p.gitCommitMessage,
-            status: 'LEGACY' as const,
+            isInProgress: false,
+            legacy: true,
             counts: {
               added: 0,
               updated: 0,
@@ -740,22 +742,14 @@ export const siteRouter = createTRPCRouter({
         }
 
         const files = p.files;
-        const status: 'PENDING' | 'SUCCESS' | 'ERROR' | 'CANCELED' =
-          p.status === 'in_progress'
-            ? 'PENDING'
-            : p.status === 'error'
-              ? 'ERROR'
-              : p.status === 'superseded'
-                ? 'CANCELED'
-                : 'SUCCESS';
-
         return {
           id: p.id,
           startedAt: p.startedAt,
           source: p.source,
           gitCommitSha: p.gitCommitSha,
           gitCommitMessage: p.gitCommitMessage,
-          status,
+          isInProgress: !p.completedAt,
+          legacy: false,
           counts: {
             added: files.filter(
               (f) =>

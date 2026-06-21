@@ -66,24 +66,3 @@ export async function startPublishFinalizerWorkflow(
     );
   }
 }
-
-// TODO do we really want to terminate them ?
-export async function terminatePublishFinalizerWorkflows(
-  publishIds: string[],
-): Promise<void> {
-  if (publishIds.length === 0) return;
-  const response = await fetch(`${env.CF_WORKER_URL}/terminate-finalizer`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${env.CF_WORKER_SECRET}`,
-    },
-    body: JSON.stringify({ publishIds }),
-  });
-
-  if (!response.ok) {
-    throw new Error(
-      `Failed to terminate publish finalizer workflows: ${response.status} ${response.statusText}`,
-    );
-  }
-}

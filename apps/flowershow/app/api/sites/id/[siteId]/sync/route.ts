@@ -6,10 +6,7 @@ import {
   isLegacyPublishClient,
   validateAccessToken,
 } from '@/lib/cli-auth';
-import {
-  startPublishFinalizerWorkflow,
-  terminatePublishFinalizerWorkflows,
-} from '@/lib/cloudflare-worker';
+import { startPublishFinalizerWorkflow } from '@/lib/cloudflare-worker';
 import {
   deleteFile,
   generatePresignedUploadUrl,
@@ -149,52 +146,16 @@ export async function POST(
       });
       publishId = publish.id;
 
-      // Cancel in-flight PublishFile rows from any prior publish for overlapping paths
-      const newPaths = [
-        ...toUpload.map((f) => f.path),
-        ...toUpdate.map((f) => f.path),
-        ...toDelete,
-      ];
-      if (newPaths.length > 0) {
-        await prisma.publishFile.updateMany({
-          where: {
-            publish: { siteId },
-            path: { in: newPaths },
-            status: 'uploading',
-            publishId: { not: publish.id },
-          },
-          data: { status: 'canceled' },
-        });
-      }
-
-      // Cancel any in-progress Publish
-      // TODO don't we need to also switch the status ?
-      // and do we really want to terminate explicitly? Or maybe only superseding PublishFiles
-      // is enough and then we should let the finalizer workflow terminate on it's own?
-      const previousInProgress = await prisma.publish.findMany({
-        where: { siteId, id: { not: publish.id }, status: 'in_progress' },
-        select: { id: true },
+      // Cancel all uploading files from prior in-progress publishes for this site.
+      // Their finalizers will detect completion on the next poll and set completedAt.
+      await prisma.publishFile.updateMany({
+        where: {
+          publish: { siteId, completedAt: null },
+          status: 'uploading',
+          publishId: { not: publish.id },
+        },
+        data: { status: 'canceled' },
       });
-      if (previousInProgress.length > 0) {
-        try {
-          await terminatePublishFinalizerWorkflows(
-            previousInProgress.map((p) => p.id),
-          );
-        } catch (termErr) {
-          log(
-            `Failed to terminate previous finalizer workflows for publish IDs: ${previousInProgress
-              .map((p) => p.id)
-              .join(', ')}`,
-            SeverityNumber.ERROR,
-            {
-              siteId,
-              publishIds: previousInProgress.map((p) => p.id).join(','),
-              error:
-                termErr instanceof Error ? termErr.message : String(termErr),
-            },
-          );
-        }
-      }
 
       if (toDelete.length > 0) {
         // Delete files from R2

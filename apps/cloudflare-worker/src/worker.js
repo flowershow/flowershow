@@ -55,11 +55,12 @@ export default {
       try {
         publishId = generateId();
 
-        // Supersede any in-progress publishes for this site
+        // Cancel all uploading files from prior in-progress publishes for this site.
+        // Their finalizers will detect completion on the next poll and set completedAt.
         const previous = await sql`
           SELECT id FROM "Publish"
           WHERE site_id = ${siteId}
-            AND status = 'in_progress'
+            AND completed_at IS NULL
           ORDER BY started_at DESC
         `;
 
@@ -68,24 +69,7 @@ export default {
             UPDATE "PublishFile" SET status = 'canceled'
             WHERE publish_id = ${prev.id} AND status = 'uploading'
           `;
-          await sql`
-            UPDATE "Publish" SET status = 'superseded', completed_at = NOW()
-            WHERE id = ${prev.id} AND status = 'in_progress'
-          `;
-          // Not sure this is needed. Old finalizers should terminate themselves when they see
-          // no more uploading files
-          try {
-            const prevFinalizer = await env.PUBLISH_FINALIZER_WORKFLOW.get(
-              prev.id,
-            );
-            await prevFinalizer.terminate();
-          } catch (termErr) {
-            console.error(
-              `Failed to terminate finalizer workflow ${prev.id}: ${termErr.message}`,
-            );
-          }
-          // This is still useful though, because there is no need to finish processing older GitHub tree
-          // when a newer sync has started processing a newer tree.
+          // Terminate the GitHub sync workflow — no value in continuing to process an old tree.
           try {
             const prevSync = await env.GITHUB_SYNC_WORKFLOW.get(
               `${prev.id}-github`,
@@ -116,42 +100,6 @@ export default {
       });
 
       return Response.json({ instanceId: syncInstance.id }, { status: 202 });
-    }
-
-    // Terminate finalizer workflow
-    if (request.method === 'POST' && url.pathname === '/terminate-finalizer') {
-      const authHeader = request.headers.get('Authorization');
-      const expectedToken = `Bearer ${env.SYNC_TRIGGER_SECRET}`;
-      if (!env.SYNC_TRIGGER_SECRET || authHeader !== expectedToken) {
-        return new Response('Unauthorized', { status: 401 });
-      }
-
-      let body;
-      try {
-        body = await request.json();
-      } catch {
-        return new Response('Invalid JSON', { status: 400 });
-      }
-
-      const { publishIds } = body;
-      if (!Array.isArray(publishIds)) {
-        return new Response('Missing required field: publishIds', {
-          status: 400,
-        });
-      }
-
-      for (const pid of publishIds) {
-        try {
-          const instance = await env.PUBLISH_FINALIZER_WORKFLOW.get(pid);
-          await instance.terminate();
-        } catch (termErr) {
-          console.error(
-            `Failed to terminate finalizer workflow ${pid}: ${termErr.message}`,
-          );
-        }
-      }
-
-      return new Response(null, { status: 204 });
     }
 
     // Start finalizer workflow

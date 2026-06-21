@@ -31,7 +31,7 @@ Replace Inngest with **Cloudflare Workflows** as the durable orchestrator for ev
 Replaces Inngest's sync function. Creates the `Publish` record, diffs the GitHub tree against stored Blobs, creates all `PublishFile` records, starts `PublishFinalizerWorkflow`, then uploads files to R2.
 
 **`PublishFinalizerWorkflow`** (all paths, `instanceId = publishId`)
-Lifecycle owner for every publish. Polls the DB until all `PublishFile` rows for the publish are in a terminal state, then finalizes the `Publish` record and revalidates cache tags.
+Lifecycle owner for every publish. Polls the DB until all `PublishFile` rows for the publish are in a terminal state, then sets `Publish.completedAt` and runs any downstream tasks (e.g., cache revalidation). It is the sole writer of `completedAt` — no endpoint sets it.
 
 **Queue consumer** (all paths)
 Processes a single file per message: upserts the Blob record, updates Typesense, and (when `publishId` is present in R2 object metadata) flips the `PublishFile` to `success` or `error`. No coordination — it does not signal the finalizer.
@@ -75,7 +75,7 @@ Polls every 10 seconds:
 
 ```js
 while (true) {
-  const done = await step.do('check-completion', async () => {
+  const done = await step.do("check-completion", async () => {
     const [{ count }] = await sql`
       SELECT COUNT(*) FROM "PublishFile"
       WHERE publish_id = ${publishId} AND status = 'uploading'
@@ -83,7 +83,7 @@ while (true) {
     return Number(count) === 0;
   });
   if (done) break;
-  await step.sleep('poll-interval', '10s');
+  await step.sleep("poll-interval", "10s");
 }
 ```
 
@@ -91,23 +91,32 @@ while (true) {
 
 **On completion (count = 0):**
 
-Determine terminal `Publish` status:
-
-- All `PublishFile` rows are `canceled` → `status = 'superseded'` (the publish was fully claimed by a newer one).
-- Any `error` rows (ignoring `canceled`) → `status = 'error'`.
-- Otherwise → `status = 'success'`.
-
-Then set `completedAt = NOW()` and revalidate Next.js cache tags for the site.
+Set `completedAt = NOW()` and run any downstream tasks (e.g., cache revalidation).
 
 **On 1-hour timeout:**
 
-Mark remaining `uploading` `PublishFile` rows as `expired`. Set `Publish.status = 'error'`, `completedAt = NOW()`.
-
-`Publish.status` transitions directly from `in_progress` to a terminal state — there is no intermediate `finalizing` status.
+Mark remaining `uploading` `PublishFile` rows as `expired`. Set `completedAt = NOW()`.
 
 ### Supersession
 
-**Path-level `PublishFile` cancellation** runs on every new publish regardless of source. Any in-flight `PublishFile` rows from prior publishes for the same site that share a path with the new publish are canceled:
+Supersession is handled entirely at the `PublishFile` level — `Publish` records are never touched by incoming publishes. Each prior publish's `PublishFinalizerWorkflow` continues running; when it next polls and finds no `uploading` rows, it sets `completedAt` and exits naturally.
+
+**Full publish** (`/sync` — any source, including GitHub): replaces the entire site. All `uploading` `PublishFile` rows from all prior in-progress publishes for the same site are canceled, regardless of path:
+
+```sql
+UPDATE "PublishFile" SET status = 'canceled'
+WHERE publish_id IN (
+  SELECT id FROM "Publish"
+  WHERE site_id = $siteId
+    AND completed_at IS NULL
+    AND id != $newPublishId
+)
+AND status = 'uploading';
+```
+
+For GitHub, the previous `GitHubSyncWorkflow` is also terminated (no value in continuing to process an old tree).
+
+**Partial publish** (`/files`): operates on a specific subset of files; concurrent `/files` publishes may touch completely different paths. Only `uploading` `PublishFile` rows from prior publishes that share a path with the new publish are canceled:
 
 ```sql
 UPDATE "PublishFile" pf SET status = 'canceled'
@@ -119,11 +128,6 @@ WHERE pf.publish_id = p.id
   AND pf.publish_id != $newPublishId;
 ```
 
-**Finalizer termination** depends on the publish source:
-
-- **GitHub `/sync`** and **Next.js `/sync`** — a full-site publish fully supersedes any prior in-progress publish for the same site. The previous `PublishFinalizerWorkflow` is terminated explicitly (`instance.terminate()`). For GitHub, the previous `GitHubSyncWorkflow` is also terminated.
-- **Next.js `/files`** — operates on a specific subset of files; concurrent `/files` publishes may touch completely different paths. The previous `PublishFinalizerWorkflow` is **not** terminated. It continues polling and exits naturally once its remaining (non-canceled) `PublishFile` rows reach a terminal state.
-
 The Queue consumer is robust to at-least-once delivery: if a message redelivers after its `PublishFile` was already set to a terminal state, the UPDATE is a no-op and the Blob upsert is idempotent (`ON CONFLICT DO UPDATE`).
 
 ### Blob lifecycle — queue consumer owns create and delete
@@ -131,6 +135,7 @@ The Queue consumer is robust to at-least-once delivery: if a message redelivers 
 **Creation:** Blob records are created lazily by the queue consumer, not eagerly by the API routes or workflows. Creating them before the file lands in R2 produces ghost records when uploads are abandoned. The consumer is the only actor that has seen the file content.
 
 When a `PutObject` event arrives, the consumer:
+
 1. Derives `path`, `extension`, and `appPath` from the R2 object key.
 2. Reads file content (already needed for markdown/images; an extra GET for other types).
 3. Computes `sha` as a git blob SHA (`SHA1("blob {size}\0{content}")`), matching the GitHub tree API and CLI format.
@@ -149,13 +154,16 @@ The anonymous publish path (`/api/sites/publish-anon`) is updated to follow the 
 ## Consequences
 
 **Gained:**
-- Explicit publish lifecycle: `Publish.status` and `completedAt` are set at the moment a publish finishes, not derived on read.
+
+- Explicit publish lifecycle: `Publish.completedAt` is set at the moment a publish finishes. `completedAt IS NULL` means in progress; `IS NOT NULL` means done.
+- `PublishFinalizerWorkflow` is the sole writer of `completedAt`; no endpoint touches it.
 - Post-publish hooks are trivial to add: new `step.do()` calls in `PublishFinalizerWorkflow` after finalization.
 - The 1-hour polling timeout replaces the `cleanupExpiredPublishFiles` cron — each publish gets its own deadline.
 - Inngest removed as an external dependency.
 - The entire publish pipeline lives in one Cloudflare project (Worker + Queues + Workflows + Cron Triggers).
 
 **Added complexity:**
+
 - Supersession must be implemented manually (Inngest handled `cancelOn` declaratively).
 - Local dev requires a Workflows emulator alongside MinIO and the wrangler dev server.
 - `GitHubSyncWorkflow` has a 10,000 `step.do()` limit. At batch size 20 this accommodates ~20k files per sync — sufficient, but the batch size should not be reduced without rechecking.
@@ -163,7 +171,7 @@ The anonymous publish path (`/api/sites/publish-anon`) is updated to follow the 
 
 ## Migration order
 
-1. Update the data model: add `status` and `completedAt` to `Publish`; make status transitions explicit in existing code.
+1. Update the data model: add `completedAt` to `Publish`.
 2. Introduce `PublishFinalizerWorkflow` for the **presigned paths only**: API routes create `Publish` + `PublishFile` records, start the workflow, return presigned URLs. Delivers explicit publish lifecycle for CLI/Obsidian publishes immediately.
 3. Port GitHub sync into `GitHubSyncWorkflow`: create `Publish` record, diff, create `PublishFile` records, start finalizer, upload to R2. Remove Inngest sync function.
 4. Move remaining Inngest crons to Cloudflare Cron Triggers. Remove Inngest. (Emails are sent directly from the Next.js app.)
