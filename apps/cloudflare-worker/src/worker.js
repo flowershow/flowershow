@@ -38,7 +38,6 @@ export default {
         ghBranch,
         rootDir,
         githubInstallationId,
-        forceSync,
         gitCommitSha,
         gitCommitMessage,
       } = body;
@@ -109,7 +108,6 @@ export default {
           ghBranch,
           rootDir: rootDir ?? null,
           githubInstallationId,
-          forceSync: forceSync ?? false,
           gitCommitSha: gitCommitSha ?? null,
           gitCommitMessage: gitCommitMessage ?? null,
         },

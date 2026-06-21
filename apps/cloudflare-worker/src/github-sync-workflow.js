@@ -26,7 +26,6 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       ghBranch,
       rootDir,
       githubInstallationId,
-      forceSync = false,
       gitCommitSha = null,
       gitCommitMessage = null,
     } = event.payload;
@@ -76,7 +75,7 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
         const existingBlobs = await sql`
           SELECT path, sha FROM "Blob" WHERE site_id = ${siteId}
         `;
-        const items = computeFilesToUpsert(existingBlobs, gitHubTree, normalizedRoot, includes, excludes, forceSync);
+        const items = computeFilesToUpsert(existingBlobs, gitHubTree, normalizedRoot, includes, excludes);
         return createBatches(items, BATCH_SIZE);
       },
     );

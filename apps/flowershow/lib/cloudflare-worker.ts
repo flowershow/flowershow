@@ -5,7 +5,6 @@ interface SyncParams {
   ghRepository: string;
   ghBranch: string;
   rootDir?: string | null;
-  forceSync?: boolean;
   gitCommitSha?: string | null;
   gitCommitMessage?: string | null;
   githubInstallationId?: string | null; // This is the GitHub App installation ID, not the db one
@@ -19,7 +18,6 @@ export async function triggerGitHubSyncWorkflow(
     ghRepository,
     ghBranch,
     rootDir,
-    forceSync = false,
     gitCommitSha = null,
     gitCommitMessage = null,
     githubInstallationId = null,
@@ -37,7 +35,6 @@ export async function triggerGitHubSyncWorkflow(
       ghBranch,
       rootDir: rootDir ?? null,
       githubInstallationId,
-      forceSync,
       gitCommitSha,
       gitCommitMessage,
     }),

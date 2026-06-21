@@ -16,7 +16,13 @@ export function createBatches(items, batchSize) {
  * Computes which files from the GitHub tree need to be upserted.
  * Returns items with { ghTreeItem, filePath, changeType }.
  */
-export function computeFilesToUpsert(existingBlobs, gitHubTree, normalizedRootDir, includes, excludes, forceSync) {
+export function computeFilesToUpsert(
+  existingBlobs,
+  gitHubTree,
+  normalizedRootDir,
+  includes,
+  excludes,
+) {
   const blobShaMap = new Map(existingBlobs.map((b) => [b.path, b.sha]));
 
   return gitHubTree.tree
@@ -36,7 +42,6 @@ export function computeFilesToUpsert(existingBlobs, gitHubTree, normalizedRootDi
     })
     .filter(
       ({ ghTreeItem, filePath }) =>
-        forceSync ||
         !blobShaMap.has(filePath) ||
         blobShaMap.get(filePath) !== ghTreeItem.sha,
     );
@@ -46,7 +51,13 @@ export function computeFilesToUpsert(existingBlobs, gitHubTree, normalizedRootDi
  * Computes which existing blobs are no longer in the GitHub tree and should be deleted.
  * Returns an array of blob objects from existingBlobs.
  */
-export function computeFilesToDelete(existingBlobs, gitHubTree, normalizedRootDir, includes, excludes) {
+export function computeFilesToDelete(
+  existingBlobs,
+  gitHubTree,
+  normalizedRootDir,
+  includes,
+  excludes,
+) {
   const visiblePaths = new Set(
     gitHubTree.tree
       .filter(
