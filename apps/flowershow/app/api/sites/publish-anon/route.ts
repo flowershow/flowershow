@@ -176,7 +176,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create Typesense collection exists for search indexing
     await createSiteCollection(site.id);
 
     // Create Publish record for lifecycle tracking (fixes missing history for anon publishes)
@@ -224,7 +223,6 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Start lifecycle workflow — waits for queue consumer to signal completion
     try {
       await startPublishFinalizerWorkflow(publish.id, site.id);
     } catch (lifecycleErr) {
