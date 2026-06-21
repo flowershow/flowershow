@@ -61,14 +61,6 @@ export async function createSiteCollection(siteId: string) {
 }
 
 /**
- * Ensure a Typesense collection exists for a site.
- * Idempotent — safe to call multiple times; silently succeeds if collection already exists.
- */
-export async function ensureSiteCollection(siteId: string) {
-  await createSiteCollection(siteId);
-}
-
-/**
  * Delete a site's collection
  */
 export async function deleteSiteCollection(siteId: string) {

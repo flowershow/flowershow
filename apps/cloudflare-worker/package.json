@@ -9,12 +9,15 @@
     "lint": "biome lint .",
     "deploy:staging": "npx wrangler deploy --config wrangler.flowershow.toml --keep-vars --env staging",
     "deploy:production": "npx wrangler deploy --config wrangler.flowershow.toml --keep-vars --env production",
-    "test": "node --test test/processing-utils.test.js test/worker.test.js"
+    "test": "vitest run --config vitest.unit.config.js",
+    "test:e2e": "vitest run --config vitest.e2e.config.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260621.1",
+    "vitest": "^3.0.0",
     "wrangler": "^4.1.0"
   },
   "type": "module",

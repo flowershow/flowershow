@@ -3,11 +3,9 @@
 import {
   ChevronDownIcon,
   ChevronRightIcon,
-  CircleCheckIcon,
-  CircleDotDashedIcon,
-  CircleXIcon,
   GitCommitHorizontalIcon,
   InfoIcon,
+  LoaderCircleIcon,
 } from 'lucide-react';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
@@ -16,10 +14,10 @@ type PublishSource =
   | 'github_webhook'
   | 'cli'
   | 'obsidian_plugin'
-  | 'dashboard_upload';
-type PublishStatus = 'PENDING' | 'SUCCESS' | 'ERROR' | 'CANCELED' | 'LEGACY';
+  | 'dashboard_upload'
+  | 'anonymous';
 type ChangeType = 'added' | 'updated' | 'deleted';
-type FileStatus = 'uploading' | 'success' | 'error' | 'canceled';
+type FileStatus = 'uploading' | 'success' | 'error' | 'canceled' | 'expired';
 
 interface PublishFile {
   id: string;
@@ -35,7 +33,8 @@ interface PublishEntry {
   source: PublishSource;
   gitCommitSha: string | null;
   gitCommitMessage: string | null;
-  status: PublishStatus;
+  isInProgress: boolean;
+  legacy: boolean;
   counts: {
     added: number;
     updated: number;
@@ -51,48 +50,8 @@ const SOURCE_LABELS: Record<PublishSource, string> = {
   cli: 'CLI',
   obsidian_plugin: 'Obsidian',
   dashboard_upload: 'Dashboard',
+  anonymous: 'Anonymous',
 };
-
-function StatusBadge({ status }: { status: PublishStatus }) {
-  if (status === 'SUCCESS') {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
-        <CircleCheckIcon className="h-3 w-3" />
-        Success
-      </span>
-    );
-  }
-  if (status === 'ERROR') {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-xs font-medium text-red-700">
-        <CircleXIcon className="h-3 w-3" />
-        Error
-      </span>
-    );
-  }
-  if (status === 'CANCELED') {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500">
-        <CircleDotDashedIcon className="h-3 w-3" />
-        Canceled
-      </span>
-    );
-  }
-  if (status === 'LEGACY') {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500">
-        <InfoIcon className="h-3 w-3" />
-        Published
-      </span>
-    );
-  }
-  return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-yellow-50 px-2 py-0.5 text-xs font-medium text-yellow-700">
-      <CircleDotDashedIcon className="h-3 w-3" />
-      Pending
-    </span>
-  );
-}
 
 function FileStatusDot({ status }: { status: FileStatus }) {
   return (
@@ -174,7 +133,18 @@ function PublishRow({
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <StatusBadge status={entry.status} />
+            {entry.isInProgress && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-yellow-50 px-2 py-0.5 text-xs font-medium text-yellow-700">
+                <LoaderCircleIcon className="h-3 w-3 animate-spin" />
+                In progress
+              </span>
+            )}
+            {entry.legacy && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500">
+                <InfoIcon className="h-3 w-3" />
+                Published
+              </span>
+            )}
             <span className="rounded bg-stone-100 px-1.5 py-0.5 text-xs text-stone-600">
               {SOURCE_LABELS[entry.source]}
             </span>
@@ -205,7 +175,7 @@ function PublishRow({
             </div>
           )}
 
-          {entry.status === 'LEGACY' && (
+          {entry.legacy && (
             <p className="mt-1 text-xs text-stone-400">
               {entry.source === 'cli'
                 ? 'Upgrade to CLI v2.1.0+ for detailed publish logs.'

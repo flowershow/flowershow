@@ -19,7 +19,7 @@ for arg in "$@"; do
       echo "Usage: pnpm dev:local [flags]"
       echo ""
       echo "Start local development without Docker."
-      echo "Runs minio, inngest, worker, and app as local processes."
+      echo "Runs minio, worker, and app as local processes."
       echo ""
       echo "Flags:"
       echo "  --stripe   Include Stripe CLI webhook forwarding"
@@ -59,10 +59,6 @@ echo "Starting minio..."
 minio server ~/minio &
 PIDS+=($!)
 
-echo "Starting inngest dev server..."
-npx inngest-cli@latest dev &
-PIDS+=($!)
-
 if $SEARCH; then
   echo "Starting typesense..."
   mkdir -p /tmp/typesense-data
@@ -83,7 +79,7 @@ if $GITHUB; then
   fi
   if [[ -n "${GH_WEBHOOK_URL:-}" ]]; then
     echo "Starting GitHub webhook proxy (smee)..."
-    npx smee -u "$GH_WEBHOOK_URL" -t http://localhost:3000/api/webhooks/github-app &
+    npx smee-client -u "$GH_WEBHOOK_URL" -t http://localhost:3000/api/webhooks/github-app &
     PIDS+=($!)
   else
     echo "Warning: GH_WEBHOOK_URL not set, skipping GitHub webhook proxy"
@@ -93,7 +89,6 @@ fi
 echo ""
 echo "Services:"
 echo "  MinIO       -> localhost:9000 (console: localhost:9001)"
-echo "  Inngest     -> localhost:8288"
 $SEARCH && echo "  Typesense   -> localhost:8108"
 $STRIPE && echo "  Stripe CLI  -> forwarding to localhost:3000"
 $GITHUB && echo "  Smee        -> forwarding to localhost:3000"

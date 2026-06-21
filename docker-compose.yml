@@ -14,7 +14,7 @@ services:
   postgres:
     image: postgres:16
     ports:
-      - "5433:5432"
+      - "5432:5432"
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -65,14 +65,6 @@ services:
         mc event add local/flowershow arn:minio:sqs::worker:webhook --event put || true;
         echo 'MinIO setup complete: bucket created, webhook configured.';
       "
-
-  inngest:
-    image: inngest/inngest:latest
-    ports:
-      - "8288:8288"
-    command: inngest dev -u http://host.docker.internal:3000/api/inngest
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
 
   # ── Optional profiles ──────────────────────────────────────────
 

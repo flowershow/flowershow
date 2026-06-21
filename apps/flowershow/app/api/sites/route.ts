@@ -4,16 +4,17 @@ import {
   type ListSitesResponse,
 } from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
+import { SiteCreatedEmail } from '@/emails/site-created';
 import {
   checkCliVersion,
   getClientInfo,
   validateAccessToken,
 } from '@/lib/cli-auth';
-import { inngest } from '@/inngest/client';
+import { sendEmail } from '@/lib/email';
 import PostHogClient from '@/lib/server-posthog';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { buildSiteSubdomain } from '@/lib/site-subdomain';
-import { deleteSiteCollection, ensureSiteCollection } from '@/lib/typesense';
+import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
 /**
@@ -151,20 +152,19 @@ export async function POST(request: NextRequest) {
       ? `https://${site.customDomain}`
       : `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
-    // Ensure Typesense collection exists for search indexing
-    await ensureSiteCollection(site.id);
+    await createSiteCollection(site.id);
 
     // Send site-created email for new sites
     if (isNewSite && user.email) {
-      await inngest.send({
-        name: 'email/site-created.send',
-        data: {
-          userId: auth.userId,
-          email: user.email,
-          name: user.name,
+      const userName = user.name?.split(' ')[0] || 'there';
+      await sendEmail({
+        to: user.email,
+        subject: `Your site "${sanitizedName}" is live!`,
+        react: SiteCreatedEmail({
+          userName,
           siteUrl,
           projectName: sanitizedName,
-        },
+        }),
       });
     }
 

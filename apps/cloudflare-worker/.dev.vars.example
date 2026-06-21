@@ -1,5 +1,5 @@
 # Database Configuration (required for all environments)
-DATABASE_URL=postgresql://postgres:postgres@localhost:5433/flowershow-dev
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/flowershow-dev
 TYPESENSE_HOST=localhost
 TYPESENSE_PORT=8108
 TYPESENSE_PROTOCOL=http
@@ -15,3 +15,20 @@ S3_FORCE_PATH_STYLE=true
 
 # Optional S3 settings
 S3_REGION=us-east-1  # Defaults to us-east-1 for MinIO if not set
+
+# GitHub App credentials (for generating installation tokens inside the workflow)
+GITHUB_APP_ID=your_github_app_id
+# Base64-encoded PEM private key: base64 -i private-key.pem | tr -d '\n'
+GITHUB_APP_PRIVATE_KEY=base64_encoded_pem_private_key
+
+# Sync workflow secrets
+# SYNC_TRIGGER_SECRET: authenticates /sync requests from the Next.js app — must match CF_WORKER_SECRET in Next.js .env
+SYNC_TRIGGER_SECRET=some-shared-secret-between-nextjs-and-worker
+# INTERNAL_API_SECRET: authenticates revalidation callbacks from the worker to Next.js — must match INTERNAL_API_SECRET in Next.js .env
+INTERNAL_API_SECRET=some-secret-the-worker-uses-to-call-back-nextjs
+# NEXTJS_APP_URL: base URL of the Next.js app for revalidation callbacks after a publish completes
+NEXTJS_APP_URL=http://localhost:3000
+
+# PostHog error tracking (optional — worker reports errors without it)
+# POSTHOG_KEY=your-posthog-project-api-key
+# POSTHOG_HOST=https://eu.i.posthog.com

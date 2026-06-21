@@ -9,10 +9,7 @@ import {
 import { Plan, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { filePathToSlug } from '../../lib/file-path-to-slug';
-import {
-  extractImageDimensions,
-  parseMarkdownForSync,
-} from './processing-utils';
+import { extractImageDimensions, parseMarkdown } from './processing-utils';
 
 // --- Config ---
 
@@ -179,7 +176,7 @@ async function uploadFixturesForSite(
     let shouldPublish = true;
 
     if (['md', 'mdx'].includes(ext)) {
-      const parsed = await parseMarkdownForSync({
+      const parsed = await parseMarkdown({
         markdown: content.toString(),
         path: filePath,
       });
@@ -247,10 +244,14 @@ async function uploadFixturesForSite(
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'cloud.local:3000';
 
 async function revalidateCache(): Promise<void> {
-  const url = `http://${ROOT_DOMAIN}/api/e2e/revalidate`;
+  const url = `http://${ROOT_DOMAIN}/api/internal/revalidate`;
+  const secret = process.env.INTERNAL_API_SECRET;
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(secret ? { 'x-internal-secret': secret } : {}),
+    },
     body: JSON.stringify({ tags: [FREE_SITE.id, PREMIUM_SITE.id] }),
   });
   if (!res.ok) {

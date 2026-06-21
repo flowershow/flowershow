@@ -72,7 +72,7 @@ async function extractTitle(source: string): Promise<string | null> {
   return null;
 }
 
-export async function parseMarkdownForSync({
+export async function parseMarkdown({
   markdown,
   path: filePath,
 }: {

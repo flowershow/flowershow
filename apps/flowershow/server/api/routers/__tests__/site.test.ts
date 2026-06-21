@@ -2,13 +2,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ── Mocks (must come before imports that depend on them) ──────────
 
-vi.mock('@/env.mjs', () => ({
-  env: {
-    NEXT_PUBLIC_VERCEL_ENV: 'test',
-    NEXT_PUBLIC_ROOT_DOMAIN: 'localhost:3000',
-  },
-}));
-
 vi.mock('next/cache', () => ({
   unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
   revalidateTag: vi.fn(),
@@ -23,7 +16,7 @@ vi.mock('@/server/db', () => ({
 }));
 
 vi.mock('@/lib/stripe', () => ({ stripe: {} }));
-vi.mock('@/inngest/client', () => ({ inngest: { send: vi.fn() } }));
+vi.mock('@/lib/typesense', () => ({ deleteSiteCollection: vi.fn() }));
 vi.mock('@/lib/server-posthog', () => {
   const client = {
     capture: vi.fn(),
@@ -110,11 +103,16 @@ function makeSite(overrides: Partial<Record<string, unknown>> = {}) {
  * relying on call order, so tests won't break if the implementation
  * reorders, adds, or removes internal queries.
  */
-type MockPublish = { id: string; startedAt: Date };
+type MockPublish = {
+  id: string;
+  startedAt: Date;
+  completedAt?: Date | null;
+  legacy?: boolean;
+};
 type MockPublishFile = {
   publishId: string;
   path: string;
-  status: 'uploading' | 'success' | 'error';
+  status: 'uploading' | 'success' | 'error' | 'canceled' | 'expired';
   error?: string | null;
 };
 
@@ -181,7 +179,17 @@ function createMockDb({
         const sorted = [...publishes].sort(
           (a, b) => b.startedAt.getTime() - a.startedAt.getTime(),
         );
-        return sorted[0] ?? null;
+        const p = sorted[0];
+        if (!p) return null;
+        const errorFiles = publishFiles.filter(
+          (f) => f.publishId === p.id && f.status === 'error',
+        );
+        return {
+          ...p,
+          completedAt: p.completedAt ?? null,
+          legacy: p.legacy ?? false,
+          files: errorFiles.slice(0, 1).map(() => ({ id: 'error-file' })),
+        };
       }),
     },
     publishFile: {
@@ -366,51 +374,38 @@ describe('site.getBlob', () => {
   });
 });
 
-describe('site.getSyncStatus', () => {
-  it('returns UNPUBLISHED when no Publish records exist', async () => {
+describe('site.getLatestPublishState', () => {
+  it('returns isUnpublished when no Publish records exist', async () => {
     const db = createMockDb({ publishes: [], publishFiles: [] });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getSyncStatus({ id: 'site-1' });
+    const result = await caller.site.getLatestPublishState({ id: 'site-1' });
 
-    expect(result.status).toBe('UNPUBLISHED');
-    expect(result.lastSyncedAt).toBeNull();
+    expect(result.isUnpublished).toBe(true);
+    expect(result.isInProgress).toBe(false);
+    expect(result.lastPublishedAt).toBeNull();
   });
 
-  it('returns PENDING when a Publish exists but has no PublishFile rows yet', async () => {
+  it('returns isInProgress when completedAt is null', async () => {
     const startedAt = new Date('2026-05-01T10:00:00Z');
     const db = createMockDb({
-      publishes: [{ id: 'pub-1', startedAt }],
+      publishes: [{ id: 'pub-1', startedAt, completedAt: null }],
       publishFiles: [],
     });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getSyncStatus({ id: 'site-1' });
+    const result = await caller.site.getLatestPublishState({ id: 'site-1' });
 
-    expect(result.status).toBe('PENDING');
-    expect(result.lastSyncedAt).toEqual(startedAt);
+    expect(result.isInProgress).toBe(true);
+    expect(result.isUnpublished).toBe(false);
+    expect(result.lastPublishedAt).toEqual(startedAt);
   });
 
-  it('returns PENDING when any PublishFile is in uploading status', async () => {
+  it('returns complete when completedAt is set', async () => {
     const startedAt = new Date('2026-05-01T10:00:00Z');
+    const completedAt = new Date('2026-05-01T10:01:00Z');
     const db = createMockDb({
-      publishes: [{ id: 'pub-1', startedAt }],
-      publishFiles: [
-        { publishId: 'pub-1', path: 'index.md', status: 'success' },
-        { publishId: 'pub-1', path: 'page.md', status: 'uploading' },
-      ],
-    });
-    const caller = createAuthenticatedCaller(db);
-
-    const result = await caller.site.getSyncStatus({ id: 'site-1' });
-
-    expect(result.status).toBe('PENDING');
-  });
-
-  it('returns SUCCESS when all PublishFile rows are terminal with no errors', async () => {
-    const startedAt = new Date('2026-05-01T10:00:00Z');
-    const db = createMockDb({
-      publishes: [{ id: 'pub-1', startedAt }],
+      publishes: [{ id: 'pub-1', startedAt, completedAt }],
       publishFiles: [
         { publishId: 'pub-1', path: 'index.md', status: 'success' },
         { publishId: 'pub-1', path: 'page.md', status: 'success' },
@@ -418,31 +413,10 @@ describe('site.getSyncStatus', () => {
     });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getSyncStatus({ id: 'site-1' });
+    const result = await caller.site.getLatestPublishState({ id: 'site-1' });
 
-    expect(result.status).toBe('SUCCESS');
-    expect(result.lastSyncedAt).toEqual(startedAt);
-  });
-
-  it('returns ERROR when all PublishFile rows are terminal and at least one errored', async () => {
-    const startedAt = new Date('2026-05-01T10:00:00Z');
-    const db = createMockDb({
-      publishes: [{ id: 'pub-1', startedAt }],
-      publishFiles: [
-        { publishId: 'pub-1', path: 'index.md', status: 'success' },
-        {
-          publishId: 'pub-1',
-          path: 'page.md',
-          status: 'error',
-          error: 'parse failed',
-        },
-      ],
-    });
-    const caller = createAuthenticatedCaller(db);
-
-    const result = await caller.site.getSyncStatus({ id: 'site-1' });
-
-    expect(result.status).toBe('ERROR');
-    expect(result.error).toContain('[page.md]: parse failed');
+    expect(result.isInProgress).toBe(false);
+    expect(result.isUnpublished).toBe(false);
+    expect(result.lastPublishedAt).toEqual(completedAt);
   });
 });

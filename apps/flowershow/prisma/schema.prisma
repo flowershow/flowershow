@@ -177,7 +177,9 @@ enum PublishSource {
   cli
   obsidian_plugin
   dashboard_upload
+  anonymous
 }
+
 
 enum PublishFileChangeType {
   added
@@ -190,6 +192,7 @@ enum PublishFileStatus {
   success
   error
   canceled
+  expired
 }
 
 model Publish {
@@ -198,6 +201,7 @@ model Publish {
   siteId            String        @map("site_id")
   source            PublishSource
   startedAt         DateTime      @default(now()) @map("started_at")
+  completedAt       DateTime?     @map("completed_at")
   gitCommitSha      String?       @map("git_commit_sha")
   gitCommitMessage  String?       @map("git_commit_message")
   legacy            Boolean       @default(false)

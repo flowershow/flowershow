@@ -1,21 +1,21 @@
-import { Blob, Prisma, PrismaClient, PublishSource } from '@prisma/client';
+import { Blob, Prisma, PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
 import { jwtVerify } from 'jose';
 import { revalidateTag, unstable_cache } from 'next/cache';
 import { z } from 'zod';
 import { isNavDropdown, SiteConfig } from '@/components/types';
+import { SiteCreatedEmail } from '@/emails/site-created';
 import { env } from '@/env.mjs';
-import { inngest } from '@/inngest/client';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { buildSiteTree } from '@/lib/build-site-tree';
+import { triggerGitHubSyncWorkflow } from '@/lib/cloudflare-worker';
 import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
 import {
   type ContentType,
   deleteProject,
   fetchFile,
   generatePresignedUploadUrl,
-  getContentType,
 } from '@/lib/content-store';
 import {
   addDomainToVercel,
@@ -23,8 +23,8 @@ import {
   removeDomainAndVariantFromVercelProject,
   validDomainRegex,
 } from '@/lib/domains';
+import { sendEmail } from '@/lib/email';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
-import { filePathToSlug } from '@/lib/file-path-to-slug';
 import { checkIfBranchExists } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
 import { resolveContentLink } from '@/lib/resolve-link';
@@ -37,6 +37,7 @@ import {
 } from '@/lib/site-config';
 import { siteKeyBytes } from '@/lib/site-hmac-key';
 import { buildSiteSubdomain } from '@/lib/site-subdomain';
+import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
 import { ensureLeadingSlash } from '@/lib/url-encoder';
 import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
 import {
@@ -209,17 +210,15 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
+      await createSiteCollection(created.id);
+
       if (creator?.email) {
         const siteUrl = `https://${created.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
-        await inngest.send({
-          name: 'email/site-created.send',
-          data: {
-            userId: ctx.session.user.id,
-            email: creator.email,
-            name: creator.name,
-            siteUrl,
-            projectName,
-          },
+        const userName = creator.name?.split(' ')[0] || 'there';
+        await sendEmail({
+          to: creator.email,
+          subject: `Your site "${projectName}" is live!`,
+          react: SiteCreatedEmail({ userName, siteUrl, projectName }),
         });
       }
 
@@ -257,7 +256,10 @@ export const siteRouter = createTRPCRouter({
         include: {
           user: true,
           installationRepository: {
-            select: { installationId: true, repositoryFullName: true },
+            select: {
+              repositoryFullName: true,
+              installation: { select: { installationId: true } },
+            },
           },
         },
       });
@@ -325,20 +327,6 @@ export const siteRouter = createTRPCRouter({
             if (site.customDomain && site.customDomain !== newDomain) {
               await removeDomainAndVariantFromVercelProject(site.customDomain);
             }
-
-            // Send a delayed email to check if domain is properly configured
-            if (site.user.email) {
-              await inngest.send({
-                name: 'email/custom-domain.check',
-                data: {
-                  userId: ctx.session.user.id,
-                  email: site.user.email,
-                  name: site.user.name,
-                  domain: newDomain,
-                  siteId: id,
-                },
-              });
-            }
           } else {
             // Non-production: only update DB
             await ctx.db.site.update({
@@ -356,17 +344,14 @@ export const siteRouter = createTRPCRouter({
         });
         await deleteProject(id).catch(() => {}); // TODO handle it in a better way
         if (repoFullName && site.ghBranch) {
-          await inngest.send({
-            name: 'site/sync',
-            data: {
-              siteId: id,
-              ghRepository: repoFullName,
-              ghBranch: site.ghBranch,
-              rootDir: newRoot,
-              accessToken: ctx.session.accessToken,
-              installationId:
-                site.installationRepository?.installationId ?? undefined,
-            },
+          await triggerGitHubSyncWorkflow({
+            siteId: id,
+            ghRepository: repoFullName,
+            ghBranch: site.ghBranch,
+            rootDir: newRoot,
+            githubInstallationId:
+              site.installationRepository?.installation?.installationId?.toString() ??
+              undefined,
           });
         }
       } else {
@@ -375,30 +360,6 @@ export const siteRouter = createTRPCRouter({
           where: { id },
           data: { [key]: converted },
         });
-
-        // If enableSearch is being turned on, trigger a force sync to index all files
-        // Note: this is a temporary solution, to make sure people who upgrade now have their
-        // site's indexes updated (but we index all documents, even for non-premium users atm, which we shouldn't)
-        if (
-          repoFullName &&
-          site.ghBranch &&
-          key === 'enableSearch' &&
-          converted === true
-        ) {
-          await inngest.send({
-            name: 'site/sync',
-            data: {
-              siteId: id,
-              ghRepository: repoFullName,
-              ghBranch: site.ghBranch,
-              rootDir: site.rootDir,
-              accessToken: ctx.session.accessToken,
-              installationId:
-                site.installationRepository?.installationId ?? undefined,
-              forceSync: true,
-            },
-          });
-        }
       }
 
       // Analytics (best-effort)
@@ -620,13 +581,8 @@ export const siteRouter = createTRPCRouter({
         await removeDomainAndVariantFromVercelProject(site.customDomain);
       }
 
-      await inngest.send({
-        name: 'site/delete',
-        data: {
-          siteId: site.id,
-          accessToken: ctx.session.accessToken,
-        },
-      });
+      await deleteProject(site.id);
+      await deleteSiteCollection(site.id);
 
       const posthog = PostHogClient();
       posthog.capture({
@@ -639,16 +595,16 @@ export const siteRouter = createTRPCRouter({
       return { id: site.id };
     }),
 
-  getSyncStatus: protectedProcedure
+  getLatestPublishState: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .query(
       async ({
         ctx,
         input,
       }): Promise<{
-        status: 'UNPUBLISHED' | 'SUCCESS' | 'PENDING' | 'ERROR';
-        error?: string | null;
-        lastSyncedAt?: Date | null;
+        isUnpublished: boolean;
+        isInProgress: boolean;
+        lastPublishedAt: Date | null;
       }> => {
         const site = await ctx.db.site.findUnique({
           where: { id: input.id },
@@ -665,62 +621,50 @@ export const siteRouter = createTRPCRouter({
         const latestPublish = await ctx.db.publish.findFirst({
           where: { siteId: site.id },
           orderBy: { startedAt: 'desc' },
-          select: { id: true, startedAt: true, legacy: true },
+          select: {
+            id: true,
+            startedAt: true,
+            completedAt: true,
+            legacy: true,
+          },
         });
 
         if (!latestPublish) {
           // Temporary patch: sites published before Publish record tracking was
-          // introduced have content (blobs) but no Publish rows. For these sites
-          // we infer the last-synced time from the most recently updated blob so
-          // the header doesn't falsely show "Publish your first content".
+          // introduced have no Publish rows. For these sites we infer
+          // the last-published time from the most recently updated blob
           const latestBlob = await ctx.db.blob.aggregate({
             where: { siteId: site.id },
             _max: { updatedAt: true },
           });
           if (latestBlob._max.updatedAt) {
             return {
-              status: 'SUCCESS',
-              lastSyncedAt: latestBlob._max.updatedAt,
+              isUnpublished: false,
+              isInProgress: false,
+              lastPublishedAt: latestBlob._max.updatedAt,
             };
           }
-          return { status: 'UNPUBLISHED', lastSyncedAt: null };
-        }
-
-        if (latestPublish.legacy) {
-          return { status: 'SUCCESS', lastSyncedAt: latestPublish.startedAt };
-        }
-
-        const publishFiles = await ctx.db.publishFile.findMany({
-          where: { publishId: latestPublish.id },
-          select: { status: true, error: true, path: true },
-        });
-
-        if (publishFiles.length === 0) {
-          return { status: 'PENDING', lastSyncedAt: latestPublish.startedAt };
-        }
-
-        if (publishFiles.some((f) => f.status === 'uploading')) {
-          return { status: 'PENDING', lastSyncedAt: latestPublish.startedAt };
-        }
-
-        const errorFiles = publishFiles.filter((f) => f.status === 'error');
-        if (errorFiles.length > 0) {
-          const error = errorFiles
-            .map((f) =>
-              f.error
-                ? `[${f.path}]: ${f.error}`
-                : `[${f.path}]: Unknown error`,
-            )
-            .join('\n');
           return {
-            status: 'ERROR',
-            error,
-            lastSyncedAt: latestPublish.startedAt,
+            isUnpublished: true,
+            isInProgress: false,
+            lastPublishedAt: null,
           };
         }
 
-        // All terminal with no errors (may include canceled files) → SUCCESS
-        return { status: 'SUCCESS', lastSyncedAt: latestPublish.startedAt };
+        // Legacy publishes have no completedAt — treat as complete
+        if (!latestPublish.completedAt && !latestPublish.legacy) {
+          return {
+            isUnpublished: false,
+            isInProgress: true,
+            lastPublishedAt: latestPublish.startedAt,
+          };
+        }
+
+        return {
+          isUnpublished: false,
+          isInProgress: false,
+          lastPublishedAt: latestPublish.completedAt ?? latestPublish.startedAt,
+        };
       },
     ),
 
@@ -748,6 +692,7 @@ export const siteRouter = createTRPCRouter({
         select: {
           id: true,
           startedAt: true,
+          completedAt: true,
           source: true,
           gitCommitSha: true,
           gitCommitMessage: true,
@@ -772,7 +717,8 @@ export const siteRouter = createTRPCRouter({
             source: p.source,
             gitCommitSha: p.gitCommitSha,
             gitCommitMessage: p.gitCommitMessage,
-            status: 'LEGACY' as const,
+            isInProgress: false,
+            legacy: true,
             counts: {
               added: 0,
               updated: 0,
@@ -785,26 +731,14 @@ export const siteRouter = createTRPCRouter({
         }
 
         const files = p.files;
-        const hasPending =
-          files.length === 0 || files.some((f) => f.status === 'uploading');
-        const hasError = !hasPending && files.some((f) => f.status === 'error');
-        const hasCanceled =
-          !hasPending && files.some((f) => f.status === 'canceled');
-        const status: 'PENDING' | 'SUCCESS' | 'ERROR' | 'CANCELED' = hasPending
-          ? 'PENDING'
-          : hasError
-            ? 'ERROR'
-            : hasCanceled
-              ? 'CANCELED'
-              : 'SUCCESS';
-
         return {
           id: p.id,
           startedAt: p.startedAt,
           source: p.source,
           gitCommitSha: p.gitCommitSha,
           gitCommitMessage: p.gitCommitMessage,
-          status,
+          isInProgress: !p.completedAt,
+          legacy: false,
           counts: {
             added: files.filter(
               (f) =>
@@ -1988,6 +1922,7 @@ export const siteRouter = createTRPCRouter({
       // a caller cannot use another user's installation token.
       let installationRepoId: string | null = null;
       let verifiedInstallationId: string | undefined;
+      let githubInstallationId: string | undefined;
       if (installationId) {
         const repoRecord = await ctx.db.gitHubInstallationRepository.findFirst({
           where: {
@@ -1995,11 +1930,16 @@ export const siteRouter = createTRPCRouter({
             repositoryFullName: ghRepository,
             installation: { userId: ctx.session.user.id },
           },
-          select: { id: true },
+          select: {
+            id: true,
+            installation: { select: { installationId: true } },
+          },
         });
         if (repoRecord) {
           installationRepoId = repoRecord.id;
           verifiedInstallationId = installationId;
+          githubInstallationId =
+            repoRecord.installation.installationId.toString();
         }
       }
 
@@ -2032,16 +1972,12 @@ export const siteRouter = createTRPCRouter({
       });
 
       // Trigger initial sync
-      await inngest.send({
-        name: 'site/sync',
-        data: {
-          siteId,
-          ghRepository,
-          ghBranch,
-          rootDir: rootDir || null,
-          accessToken: ctx.session.accessToken,
-          installationId: verifiedInstallationId,
-        },
+      await triggerGitHubSyncWorkflow({
+        siteId,
+        ghRepository,
+        ghBranch,
+        rootDir: rootDir || null,
+        githubInstallationId,
       });
 
       // Analytics
@@ -2067,154 +2003,6 @@ export const siteRouter = createTRPCRouter({
 
       revalidateTag(`${site.id}`);
       return fresh;
-    }),
-  publishFiles: protectedProcedure
-    .input(
-      z.object({
-        siteId: z.string().min(1),
-        files: z.array(
-          z.object({
-            path: z.string().min(1),
-            size: z.number(),
-            sha: z.string().min(1),
-          }),
-        ),
-        publishMethod: z.string().optional(),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      const { siteId, files, publishMethod = 'drag_drop_dashboard' } = input;
-
-      const site = await ctx.db.site.findUnique({
-        where: { id: siteId },
-        select: { id: true, userId: true },
-      });
-
-      if (!site || site.userId !== ctx.session.user.id) {
-        throw new TRPCError({
-          code: 'NOT_FOUND',
-          message: 'Site not found',
-        });
-      }
-
-      const MAX_FILES = 1000;
-      const MAX_FILE_SIZE = 100 * 1024 * 1024;
-      const MAX_TOTAL_SIZE = 500 * 1024 * 1024;
-
-      if (files.length > MAX_FILES) {
-        throw new TRPCError({
-          code: 'PAYLOAD_TOO_LARGE',
-          message: `Maximum ${MAX_FILES} files per request`,
-        });
-      }
-
-      let totalSize = 0;
-      for (const file of files) {
-        if (file.size > MAX_FILE_SIZE) {
-          throw new TRPCError({
-            code: 'PAYLOAD_TOO_LARGE',
-            message: `File ${file.path} exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-          });
-        }
-        totalSize += file.size;
-      }
-
-      if (totalSize > MAX_TOTAL_SIZE) {
-        throw new TRPCError({
-          code: 'PAYLOAD_TOO_LARGE',
-          message: `Total upload size exceeds maximum of ${MAX_TOTAL_SIZE / 1024 / 1024}MB`,
-        });
-      }
-
-      const PRESIGNED_URL_TTL = 3600;
-
-      const publish = await ctx.db.publish.create({
-        data: { siteId, source: PublishSource.dashboard_upload },
-      });
-
-      let uploadUrls: {
-        path: string;
-        uploadUrl: string;
-        blobId: string;
-        contentType: string;
-      }[];
-      try {
-        const presignedUrlExpiresAt = new Date(
-          Date.now() + PRESIGNED_URL_TTL * 1000,
-        );
-        uploadUrls = await Promise.all(
-          files.map(async (file) => {
-            const extension = file.path.split('.').pop()?.toLowerCase() || '';
-
-            const urlPath = ['md', 'mdx', 'canvas'].includes(extension)
-              ? filePathToSlug(file.path)
-              : null;
-
-            const blob = await ctx.db.blob.upsert({
-              where: {
-                siteId_path: { siteId, path: file.path },
-              },
-              create: {
-                siteId,
-                path: file.path,
-                appPath: urlPath,
-                size: file.size,
-                sha: file.sha,
-                metadata: Prisma.JsonNull,
-                extension,
-              },
-              update: {
-                size: file.size,
-                sha: file.sha,
-                appPath: urlPath,
-                extension,
-              },
-            });
-
-            const s3Key = `${siteId}/main/raw/${file.path}`;
-            const contentType = getContentType(extension);
-            const uploadUrl = await generatePresignedUploadUrl(
-              s3Key,
-              PRESIGNED_URL_TTL,
-              contentType,
-              { 'publish-id': publish.id },
-              new Set(['x-amz-meta-publish-id']),
-            );
-
-            await ctx.db.publishFile.create({
-              data: {
-                publishId: publish.id,
-                path: file.path,
-                changeType: 'added',
-                status: 'uploading',
-                presignedUrlExpiresAt,
-              },
-            });
-
-            return {
-              path: file.path,
-              uploadUrl,
-              blobId: blob.id,
-              contentType,
-            };
-          }),
-        );
-      } finally {
-        revalidateTag(siteId);
-      }
-
-      const posthog = await PostHogClient();
-      posthog.capture({
-        distinctId: ctx.session.user.id,
-        event: 'content_published',
-        properties: {
-          publish_method: publishMethod,
-          site_id: siteId,
-        },
-      });
-      await posthog.shutdown();
-
-      return { files: uploadUrls, publishId: publish.id };
     }),
 });
 

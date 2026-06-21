@@ -27,7 +27,7 @@ for arg in "$@"; do
       echo "  -h, --help Show this help"
       echo ""
       echo "Examples:"
-      echo "  pnpm dev:up                  # Core: Postgres, MinIO, Inngest + app"
+      echo "  pnpm dev:up                  # Core: Postgres, MinIO + app"
       echo "  pnpm dev:up --stripe         # Core + Stripe webhook forwarding"
       echo "  pnpm dev:up --stripe --github # Core + Stripe + GitHub webhooks"
       echo "  pnpm dev:up:all              # Everything"
@@ -49,13 +49,12 @@ echo "▶ Starting infrastructure services..."
 docker compose ${PROFILES[@]+"${PROFILES[@]}"} up -d
 
 echo "▶ Waiting for services to be healthy..."
-docker compose up -d --wait postgres minio inngest
+docker compose up -d --wait postgres minio
 
 echo "✔ Infrastructure ready."
 echo ""
-echo "  PostgreSQL  → localhost:5433  (flowershow-dev)"
+echo "  PostgreSQL  → localhost:5432  (flowershow-dev)"
 echo "  MinIO       → localhost:9000  (console: localhost:9001)"
-echo "  Inngest     → localhost:8288"
 
 for arg in "$@"; do
   case "$arg" in

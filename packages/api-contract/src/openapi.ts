@@ -20,7 +20,7 @@ import {
   SiteDetailSchema,
   SiteSummarySchema,
   StatusResponseSchema,
-  UploadTargetSchema,
+  PresignedUrlSchema,
   UserSchema,
 } from './schemas.js';
 
@@ -32,7 +32,7 @@ const SCHEMA_ENTRIES = [
   ['SiteDetail', SiteDetailSchema],
   ['User', UserSchema],
   ['FileMetadata', FileMetadataSchema],
-  ['UploadTarget', UploadTargetSchema],
+  ['UploadTarget', PresignedUrlSchema],
   ['PublishFilesResponse', PublishFilesResponseSchema],
   ['StatusResponse', StatusResponseSchema],
 ] as const;

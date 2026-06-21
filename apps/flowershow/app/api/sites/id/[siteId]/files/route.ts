@@ -3,65 +3,60 @@ import {
   type DeleteFilesResponse,
   PublishFilesRequestSchema,
   type PublishFilesResponse,
-  type UploadTarget,
 } from '@flowershow/api-contract';
-import { Prisma, PublishSource } from '@prisma/client';
-import { revalidateTag } from 'next/cache';
 import { type NextRequest, NextResponse } from 'next/server';
-import { deleteBlobs } from '@/lib/blob-cleanup';
+import { getServerSession } from 'next-auth';
 import {
   getClientInfo,
   isLegacyPublishClient,
   validateAccessToken,
 } from '@/lib/cli-auth';
+import { startPublishFinalizerWorkflow } from '@/lib/cloudflare-worker';
 import {
+  deleteFile,
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
-import { filePathToSlug } from '@/lib/file-path-to-slug';
+import { log, SeverityNumber } from '@/lib/otel-logger';
+import {
+  clientTypeToPublishSource,
+  MAX_FILES,
+  PRESIGNED_URL_TTL,
+  validatePublishFiles,
+} from '@/lib/publish-limits';
 import PostHogClient from '@/lib/server-posthog';
-import { ensureSiteCollection } from '@/lib/typesense';
+import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
-
-// Maximum file size: 100MB
-const MAX_FILE_SIZE = 100 * 1024 * 1024;
-// Maximum total upload size: 500MB
-const MAX_TOTAL_SIZE = 500 * 1024 * 1024;
-// Maximum number of files per request
-const MAX_FILES = 1000;
-// Presigned URL TTL in seconds
-const PRESIGNED_URL_TTL = 3600;
-
-function clientTypeToPublishSource(
-  clientType: 'cli' | 'obsidian-plugin' | 'unknown',
-): PublishSource {
-  if (clientType === 'cli') return PublishSource.cli;
-  if (clientType === 'obsidian-plugin') return PublishSource.obsidian_plugin;
-  return PublishSource.dashboard_upload;
-}
 
 /**
  * POST /api/sites/id/:siteId/files
  * Publish specific files without affecting other files
  * Returns presigned URLs for uploading the specified files
- *
- * Use this endpoint when you want to publish only selected files,
- * as opposed to the /sync endpoint which syncs the entire state.
  */
 export async function POST(
   request: NextRequest,
   props: { params: Promise<{ siteId: string }> },
 ) {
+  const posthog = PostHogClient();
+  const { siteId } = await props.params;
   try {
-    const auth = await validateAccessToken(request);
-    if (!auth?.userId) {
+    const isLegacy = isLegacyPublishClient(request);
+    let userId: string | null = null;
+    const tokenAuth = await validateAccessToken(request);
+    if (tokenAuth?.userId) {
+      userId = tokenAuth.userId;
+    } else {
+      const session = await getServerSession(authOptions);
+      if (session?.user?.id) {
+        userId = session.user.id;
+      }
+    }
+    if (!userId) {
       return NextResponse.json(
         { error: 'unauthorized', message: 'Not authenticated' },
         { status: 401 },
       );
     }
-
-    const { siteId } = await props.params;
 
     const site = await prisma.site.findUnique({
       where: { id: siteId },
@@ -75,14 +70,12 @@ export async function POST(
       );
     }
 
-    if (site.userId !== auth.userId) {
+    if (site.userId !== userId) {
       return NextResponse.json(
         { error: 'forbidden', message: 'You do not have access to this site' },
         { status: 403 },
       );
     }
-
-    await ensureSiteCollection(siteId);
 
     const parsedBody = PublishFilesRequestSchema.safeParse(
       await request.json(),
@@ -103,57 +96,16 @@ export async function POST(
       );
     }
 
-    if (files.length > MAX_FILES) {
-      return NextResponse.json(
-        {
-          error: 'payload_too_large',
-          message: `Maximum ${MAX_FILES} files per request`,
-        },
-        { status: 413 },
-      );
-    }
-
-    let totalSize = 0;
-    for (const file of files) {
-      if (!file.path || typeof file.size !== 'number' || !file.sha) {
-        return NextResponse.json(
-          {
-            error: 'invalid_request',
-            message: 'Each file must have path, size, and sha',
-          },
-          { status: 400 },
-        );
-      }
-      if (file.size > MAX_FILE_SIZE) {
-        return NextResponse.json(
-          {
-            error: 'file_too_large',
-            message: `File ${file.path} exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-          },
-          { status: 413 },
-        );
-      }
-      totalSize += file.size;
-    }
-
-    if (totalSize > MAX_TOTAL_SIZE) {
-      return NextResponse.json(
-        {
-          error: 'payload_too_large',
-          message: `Total upload size exceeds maximum of ${MAX_TOTAL_SIZE / 1024 / 1024}MB`,
-        },
-        { status: 413 },
-      );
-    }
+    const validationError = validatePublishFiles(files);
+    if (validationError) return validationError;
 
     // Fetch existing blobs to determine changeType (added vs updated)
     const existingBlobs = await prisma.blob.findMany({
       where: { siteId, path: { in: files.map((f) => f.path) } },
       select: { path: true, sha: true },
     });
-    const existingBlobMap = new Map(existingBlobs.map((b) => [b.path, b]));
 
-    const isLegacy = isLegacyPublishClient(request);
+    const existingBlobMap = new Map(existingBlobs.map((b) => [b.path, b]));
 
     // Create Publish record
     const publish = await prisma.publish.create({
@@ -164,71 +116,74 @@ export async function POST(
       },
     });
 
-    let uploadUrls: UploadTarget[];
-    try {
-      const presignedUrlExpiresAt = new Date(
-        Date.now() + PRESIGNED_URL_TTL * 1000,
-      );
+    // Cancel in-flight PublishFile rows from any prior publish for overlapping paths.
+    // Unlike /sync, we do NOT terminate previous finalizers — concurrent /files
+    // publishes may cover completely different paths and can coexist.
+    const newPaths = files.map((f) => f.path);
+    if (!isLegacy && newPaths.length > 0) {
+      await prisma.publishFile.updateMany({
+        where: {
+          publish: { siteId },
+          path: { in: newPaths },
+          status: 'uploading',
+          publishId: { not: publish.id },
+        },
+        data: { status: 'canceled' },
+      });
+    }
 
-      uploadUrls = await Promise.all(
-        files.map(async (file) => {
-          const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
+    const presignedUrlExpiresAt = new Date(
+      Date.now() + PRESIGNED_URL_TTL * 1000,
+    );
 
-          const urlPath = ['md', 'mdx', 'canvas'].includes(extension)
-            ? filePathToSlug(file.path)
-            : null;
+    const uploadUrls = await Promise.all(
+      files.map(async (file) => {
+        const extension = file.path.split('.').pop()?.toLowerCase() ?? '';
+        const s3Key = `${siteId}/main/raw/${file.path}`;
+        const contentType = getContentType(extension);
+        const uploadUrl = await generatePresignedUploadUrl(
+          s3Key,
+          PRESIGNED_URL_TTL,
+          contentType,
+          isLegacy ? undefined : { 'publish-id': publish.id },
+          isLegacy ? undefined : new Set(['x-amz-meta-publish-id']),
+        );
 
-          const blob = await prisma.blob.upsert({
-            where: { siteId_path: { siteId, path: file.path } },
-            create: {
-              siteId,
+        if (!isLegacy) {
+          const existing = existingBlobMap.get(file.path);
+          const changeType = (
+            !existing || existing.sha !== file.sha ? 'added' : 'updated'
+          ) as 'added' | 'updated';
+
+          await prisma.publishFile.create({
+            data: {
+              publishId: publish.id,
               path: file.path,
-              appPath: urlPath,
-              size: file.size,
-              sha: file.sha,
-              metadata: Prisma.JsonNull,
-              extension,
-            },
-            update: {
-              size: file.size,
-              sha: file.sha,
-              appPath: urlPath,
-              extension,
+              changeType,
+              status: 'uploading',
+              presignedUrlExpiresAt,
             },
           });
+        }
 
-          const s3Key = `${siteId}/main/raw/${file.path}`;
-          const contentType = getContentType(extension);
-          const uploadUrl = await generatePresignedUploadUrl(
-            s3Key,
-            PRESIGNED_URL_TTL,
-            contentType,
-            isLegacy ? undefined : { 'publish-id': publish.id },
-            isLegacy ? undefined : new Set(['x-amz-meta-publish-id']),
-          );
+        return { path: file.path, uploadUrl, contentType };
+      }),
+    );
 
-          if (!isLegacy) {
-            const existing = existingBlobMap.get(file.path);
-            const changeType = (
-              !existing || existing.sha !== file.sha ? 'added' : 'updated'
-            ) as 'added' | 'updated';
-
-            await prisma.publishFile.create({
-              data: {
-                publishId: publish.id,
-                path: file.path,
-                changeType,
-                status: 'uploading',
-                presignedUrlExpiresAt,
-              },
-            });
-          }
-
-          return { path: file.path, uploadUrl, blobId: blob.id, contentType };
-        }),
-      );
-    } finally {
-      revalidateTag(siteId);
+    if (!isLegacy) {
+      try {
+        await startPublishFinalizerWorkflow(publish.id, siteId);
+      } catch (err) {
+        log(
+          'Failed to start publish finalizer workflow',
+          SeverityNumber.ERROR,
+          {
+            siteId,
+            publishId: publish.id,
+            error: err instanceof Error ? err.message : String(err),
+          },
+        );
+      }
     }
 
     const response: PublishFilesResponse = {
@@ -236,32 +191,36 @@ export async function POST(
       publishId: publish.id,
     };
 
-    const posthog = PostHogClient();
     const { client_type } = getClientInfo(request);
     const publish_method =
       client_type === 'obsidian-plugin' ? 'obsidian_plugin' : client_type;
     posthog.capture({
-      distinctId: auth.userId,
+      distinctId: userId,
       event: 'content_published',
       properties: { publish_method, site_id: siteId },
     });
-    await posthog.shutdown();
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error publishing files:', error);
-    const posthog = PostHogClient();
     const { client_type, client_version } = getClientInfo(request);
+    log('Error publishing files', SeverityNumber.ERROR, {
+      route: 'POST /api/sites/id/[siteId]/files',
+      siteId,
+      client_type,
+      client_version: client_version ?? undefined,
+      error: error instanceof Error ? error.message : String(error),
+    });
     posthog.captureException(error, 'system', {
       route: 'POST /api/sites/id/[siteId]/files',
       client_type,
       client_version,
     });
-    await posthog.shutdown();
     return NextResponse.json(
       { error: 'internal_error', message: 'Failed to publish files' },
       { status: 500 },
     );
+  } finally {
+    await posthog.shutdown();
   }
 }
 
@@ -278,6 +237,8 @@ export async function DELETE(
   request: NextRequest,
   props: { params: Promise<{ siteId: string }> },
 ) {
+  const posthog = PostHogClient();
+  const { siteId } = await props.params;
   try {
     const auth = await validateAccessToken(request);
     if (!auth?.userId) {
@@ -286,8 +247,6 @@ export async function DELETE(
         { status: 401 },
       );
     }
-
-    const { siteId } = await props.params;
 
     const site = await prisma.site.findUnique({
       where: { id: siteId },
@@ -330,7 +289,7 @@ export async function DELETE(
 
     const existingBlobs = await prisma.blob.findMany({
       where: { siteId, path: { in: paths } },
-      select: { id: true, path: true },
+      select: { path: true },
     });
 
     const existingPaths = new Set(existingBlobs.map((b) => b.path));
@@ -345,30 +304,46 @@ export async function DELETE(
       }
     }
 
-    if (existingBlobs.length > 0) {
-      try {
-        await deleteBlobs(siteId, existingBlobs);
-      } finally {
-        revalidateTag(siteId);
-      }
+    if (deleted.length > 0) {
+      await Promise.all(
+        deleted.map((path) =>
+          deleteFile({ projectId: siteId, path }).catch((error) => {
+            log(
+              `R2 deletion failed for ${siteId}/${path}:`,
+              SeverityNumber.ERROR,
+              {
+                siteId,
+                path,
+                error: error instanceof Error ? error.message : String(error),
+              },
+            );
+          }),
+        ),
+      );
     }
 
     const response: DeleteFilesResponse = { deleted, notFound };
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error('Error deleting files:', error);
-    const posthog = PostHogClient();
     const { client_type, client_version } = getClientInfo(request);
+    log('Error deleting files', SeverityNumber.ERROR, {
+      route: 'DELETE /api/sites/id/[siteId]/files',
+      siteId,
+      client_type,
+      client_version: client_version ?? undefined,
+      error: error instanceof Error ? error.message : String(error),
+    });
     posthog.captureException(error, 'system', {
       route: 'DELETE /api/sites/id/[siteId]/files',
       client_type,
       client_version,
     });
-    await posthog.shutdown();
     return NextResponse.json(
       { error: 'internal_error', message: 'Failed to delete files' },
       { status: 500 },
     );
+  } finally {
+    await posthog.shutdown();
   }
 }

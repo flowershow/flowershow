@@ -2,23 +2,22 @@ import {
   AnonPublishRequestSchema,
   type AnonPublishResponse,
 } from '@flowershow/api-contract';
-import { Prisma } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   ANONYMOUS_USER_ID,
   generateOwnershipToken,
   isValidAnonymousUserId,
 } from '@/lib/anonymous-user';
+import { startPublishFinalizerWorkflow } from '@/lib/cloudflare-worker';
 import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
-import { filePathToSlug } from '@/lib/file-path-to-slug';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import PostHogClient from '@/lib/server-posthog';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { buildAnonSiteSubdomain } from '@/lib/site-subdomain';
-import { ensureSiteCollection } from '@/lib/typesense';
+import { createSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
@@ -177,8 +176,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Ensure Typesense collection exists for search indexing
-    await ensureSiteCollection(site.id);
+    await createSiteCollection(site.id);
+
+    // Create Publish record for lifecycle tracking (fixes missing history for anon publishes)
+    const publish = await prisma.publish.create({
+      data: {
+        siteId: site.id,
+        source: 'anonymous',
+      },
+    });
+
+    const presignedUrlExpiresAt = new Date(Date.now() + 3600 * 1000);
 
     // Create blob records and generate upload URLs for all files
     const fileUploads: FileUploadInfo[] = [];
@@ -187,35 +195,41 @@ export async function POST(request: NextRequest) {
       const file = files[i]!;
       const extension = file.fileName.split('.').pop()?.toLowerCase()!;
 
-      const appPath = ['md', 'mdx', 'canvas'].includes(extension)
-        ? filePathToSlug(file.fileName)
-        : null;
-
-      await prisma.blob.create({
+      await prisma.publishFile.create({
         data: {
-          siteId: site.id,
+          publishId: publish.id,
           path: file.fileName,
-          appPath,
-          size: file.fileSize,
-          sha: file.sha,
-          metadata: Prisma.JsonNull,
-          extension,
+          changeType: 'added',
+          status: 'uploading',
+          presignedUrlExpiresAt,
         },
       });
 
-      // Generate presigned upload URL
+      // Generate presigned upload URL — embed publishId so the queue consumer
+      // can credit this publish when the file is processed
       const s3Key = `${site.id}/main/raw/${file.fileName}`;
       const contentType = getContentType(extension);
       const uploadUrl = await generatePresignedUploadUrl(
         s3Key,
         3600, // 1 hour expiry
         contentType,
+        { 'publish-id': publish.id },
+        new Set(['x-amz-meta-publish-id']),
       );
 
       fileUploads.push({
         fileName: file.fileName,
         uploadUrl,
       });
+    }
+
+    try {
+      await startPublishFinalizerWorkflow(publish.id, site.id);
+    } catch (lifecycleErr) {
+      console.error(
+        'Failed to start lifecycle workflow for anon publish:',
+        lifecycleErr,
+      );
     }
 
     // Construct live URL
