@@ -5,10 +5,9 @@ import {
   validateEnv,
 } from './clients.js';
 import { GitHubSyncWorkflow } from './github-sync-workflow.js';
-import { generateId } from './helpers.js';
-import { handleMessage } from './message-handler.js';
 import { PublishFinalizerWorkflow } from './publish-finalizer-workflow.js';
-import { cleanupExpiredSites } from './storage.js';
+import { handleMessage } from './queue-consumer.js';
+import { generateId } from './utils.js';
 
 export { GitHubSyncWorkflow, PublishFinalizerWorkflow };
 
@@ -238,3 +237,43 @@ export default {
     );
   },
 };
+
+async function cleanupExpiredSites({ sql, storage, typesense }) {
+  const expiredSites = await sql`
+    SELECT id FROM "Site"
+    WHERE is_temporary = true
+      AND expires_at <= NOW()
+  `;
+
+  if (expiredSites.length === 0) {
+    console.log('cleanupExpiredSites: no expired sites');
+    return;
+  }
+
+  console.log(`cleanupExpiredSites: deleting ${expiredSites.length} sites`);
+
+  for (const site of expiredSites) {
+    try {
+      await sql`DELETE FROM "Site" WHERE id = ${site.id}`;
+      await deleteSiteStorage(storage, site.id);
+      if (typesense) {
+        try {
+          await typesense.collections(`${site.id}`).delete();
+        } catch (err) {
+          if (err?.httpStatus !== 404) {
+            console.error(
+              `Failed to delete Typesense collection ${site.id}:`,
+              err.message,
+            );
+          }
+        }
+      }
+      console.log(`cleanupExpiredSites: deleted site ${site.id}`);
+    } catch (err) {
+      console.error(
+        `cleanupExpiredSites: failed for site ${site.id}:`,
+        err.message,
+      );
+    }
+  }
+}

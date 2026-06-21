@@ -1,3 +1,72 @@
+export async function getGitHubInstallationToken(githubInstallationId, env) {
+  const jwt = await generateGitHubAppJWT(
+    env.GITHUB_APP_ID,
+    env.GITHUB_APP_PRIVATE_KEY,
+  );
+
+  const response = await fetch(
+    `https://api.github.com/app/installations/${githubInstallationId}/access_tokens`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+        Accept: 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28',
+        'User-Agent': 'flowershow-worker',
+      },
+    },
+  );
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(
+      `Failed to get GitHub installation token: ${response.status} ${response.statusText} — ${body}`,
+    );
+  }
+
+  const data = await response.json();
+  return data.token;
+}
+
+export async function fetchGitHubRepoTree(ghRepository, ghBranch, token) {
+  const resp = await githubFetch(
+    `/repos/${ghRepository}/git/trees/${encodeURIComponent(ghBranch)}?recursive=1`,
+    token,
+  );
+  return resp.json();
+}
+
+export async function fetchGitHubConfig(
+  ghRepository,
+  ghBranch,
+  token,
+  rootDir,
+) {
+  const configPath = rootDir
+    ? `${rootDir.replace(/^\/+|\/+$/g, '')}/config.json`
+    : 'config.json';
+  try {
+    const resp = await githubFetch(
+      `/repos/${ghRepository}/contents/${configPath}?ref=${encodeURIComponent(ghBranch)}`,
+      token,
+    );
+    const data = await resp.json();
+    const decoded = atob(data.content.replace(/\n/g, ''));
+    return JSON.parse(decoded);
+  } catch {
+    return {};
+  }
+}
+
+export async function fetchGitHubFileRaw(ghRepository, fileSha, token) {
+  const resp = await githubFetch(
+    `/repos/${ghRepository}/git/blobs/${fileSha}`,
+    token,
+    'application/vnd.github.raw+json',
+  );
+  return resp.arrayBuffer();
+}
+
 function derLength(len) {
   if (len < 0x80) return new Uint8Array([len]);
   if (len < 0x100) return new Uint8Array([0x81, len]);
@@ -32,7 +101,10 @@ function pkcs1ToPkcs8(pkcs1Der) {
     0x01, 0x05, 0x00,
   ]);
   const version = new Uint8Array([0x02, 0x01, 0x00]);
-  return derTLV(0x30, concatBytes(version, algorithmId, derTLV(0x04, pkcs1Der)));
+  return derTLV(
+    0x30,
+    concatBytes(version, algorithmId, derTLV(0x04, pkcs1Der)),
+  );
 }
 
 async function generateGitHubAppJWT(appId, privateKeyBase64) {
@@ -79,36 +151,6 @@ async function generateGitHubAppJWT(appId, privateKeyBase64) {
   return `${message}.${sigB64Url}`;
 }
 
-export async function getGitHubInstallationToken(githubInstallationId, env) {
-  const jwt = await generateGitHubAppJWT(
-    env.GITHUB_APP_ID,
-    env.GITHUB_APP_PRIVATE_KEY,
-  );
-
-  const response = await fetch(
-    `https://api.github.com/app/installations/${githubInstallationId}/access_tokens`,
-    {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${jwt}`,
-        Accept: 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-        'User-Agent': 'flowershow-worker',
-      },
-    },
-  );
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new Error(
-      `Failed to get GitHub installation token: ${response.status} ${response.statusText} — ${body}`,
-    );
-  }
-
-  const data = await response.json();
-  return data.token;
-}
-
 async function githubFetch(url, token, accept = 'application/vnd.github+json') {
   const response = await fetch(`https://api.github.com${url}`, {
     headers: {
@@ -126,34 +168,13 @@ async function githubFetch(url, token, accept = 'application/vnd.github+json') {
   return response;
 }
 
-export async function fetchGitHubRepoTree(ghRepository, ghBranch, token) {
-  const resp = await githubFetch(
-    `/repos/${ghRepository}/git/trees/${encodeURIComponent(ghBranch)}?recursive=1`,
-    token,
-  );
-  return resp.json();
-}
-
-export async function fetchGitHubConfig(ghRepository, ghBranch, token, rootDir) {
-  const configPath = rootDir ? `${rootDir.replace(/^\/+|\/+$/g, '')}/config.json` : 'config.json';
-  try {
-    const resp = await githubFetch(
-      `/repos/${ghRepository}/contents/${configPath}?ref=${encodeURIComponent(ghBranch)}`,
-      token,
-    );
-    const data = await resp.json();
-    const decoded = atob(data.content.replace(/\n/g, ''));
-    return JSON.parse(decoded);
-  } catch {
-    return {};
-  }
-}
-
-export async function fetchGitHubFileRaw(ghRepository, fileSha, token) {
-  const resp = await githubFetch(
-    `/repos/${ghRepository}/git/blobs/${fileSha}`,
-    token,
-    'application/vnd.github.raw+json',
-  );
-  return resp.arrayBuffer();
+export async function computeGitBlobSha(content) {
+  const header = new TextEncoder().encode(`blob ${content.length}\0`);
+  const combined = new Uint8Array(header.length + content.length);
+  combined.set(header);
+  combined.set(content, header.length);
+  const hashBuffer = await crypto.subtle.digest('SHA-1', combined);
+  return Array.from(new Uint8Array(hashBuffer))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
 }

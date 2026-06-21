@@ -1,13 +1,54 @@
 import {
   DeleteObjectCommand,
   DeleteObjectsCommand,
+  GetObjectCommand,
+  HeadObjectCommand,
   ListObjectsV2Command,
   PutObjectCommand,
 } from '@aws-sdk/client-s3';
-import { getContentType } from './path-utils.js';
 
-export async function uploadFile(storage, siteId, filePath, content, extension, publishId) {
-  const key = `${siteId}/main/raw/${filePath}`;
+const MAX_FILE_BYTES = 5 * 1024 * 1024;
+
+export async function getPublishIdFromMetadata(storage, key) {
+  try {
+    if (storage.type === 's3') {
+      const resp = await storage.client.send(
+        new HeadObjectCommand({ Bucket: storage.bucket, Key: key }),
+      );
+      return resp.Metadata?.['publish-id'] ?? null;
+    }
+    const obj = await storage.client.head(key);
+    return obj?.customMetadata?.['publish-id'] ?? null;
+  } catch {
+    return null;
+  }
+}
+
+export async function readFileBytes(storage, key) {
+  if (storage.type === 's3') {
+    const resp = await storage.client.send(
+      new GetObjectCommand({ Bucket: storage.bucket, Key: key }),
+    );
+    const length = resp.ContentLength;
+    if (length > MAX_FILE_BYTES) throw new Error(`File too large: ${length}`);
+    return new Uint8Array(await resp.Body.transformToByteArray());
+  }
+  const obj = await storage.client.get(key);
+  if (!obj) throw new Error(`Object not found: ${key}`);
+  if (obj.size > MAX_FILE_BYTES) throw new Error(`File too large: ${obj.size}`);
+  return new Uint8Array(await obj.arrayBuffer());
+}
+
+export async function uploadFile(
+  storage,
+  siteId,
+  branch,
+  filePath,
+  content,
+  extension,
+  publishId,
+) {
+  const key = `${siteId}/${branch}/raw/${filePath}`;
   const contentType = getContentType(extension);
   const isMedia =
     contentType.startsWith('image/') ||
@@ -34,8 +75,8 @@ export async function uploadFile(storage, siteId, filePath, content, extension, 
   }
 }
 
-export async function deleteFile(storage, siteId, filePath) {
-  const key = `${siteId}/main/raw/${filePath}`;
+export async function deleteFile(storage, siteId, branch, filePath) {
+  const key = `${siteId}/${branch}/raw/${filePath}`;
   if (storage.type === 's3') {
     await storage.client.send(
       new DeleteObjectCommand({ Bucket: storage.bucket, Key: key }),
@@ -45,7 +86,7 @@ export async function deleteFile(storage, siteId, filePath) {
   }
 }
 
-async function deleteSiteStorage(storage, siteId) {
+export async function deleteSiteStorage(storage, siteId) {
   const prefix = `${siteId}/`;
   if (storage.type === 's3') {
     let truncated = true;
@@ -78,36 +119,34 @@ async function deleteSiteStorage(storage, siteId) {
   }
 }
 
-export async function cleanupExpiredSites({ sql, storage, typesense }) {
-  const expiredSites = await sql`
-    SELECT id FROM "Site"
-    WHERE is_temporary = true
-      AND expires_at <= NOW()
-  `;
-
-  if (expiredSites.length === 0) {
-    console.log('cleanupExpiredSites: no expired sites');
-    return;
-  }
-
-  console.log(`cleanupExpiredSites: deleting ${expiredSites.length} sites`);
-
-  for (const site of expiredSites) {
-    try {
-      await sql`DELETE FROM "Site" WHERE id = ${site.id}`;
-      await deleteSiteStorage(storage, site.id);
-      if (typesense) {
-        try {
-          await typesense.collections(`${site.id}`).delete();
-        } catch (err) {
-          if (err?.httpStatus !== 404) {
-            console.error(`Failed to delete Typesense collection ${site.id}:`, err.message);
-          }
-        }
-      }
-      console.log(`cleanupExpiredSites: deleted site ${site.id}`);
-    } catch (err) {
-      console.error(`cleanupExpiredSites: failed for site ${site.id}:`, err.message);
-    }
-  }
+function getContentType(extension) {
+  const types = {
+    md: 'text/markdown',
+    mdx: 'text/markdown',
+    html: 'text/html',
+    csv: 'text/csv',
+    geojson: 'application/geo+json',
+    json: 'application/json',
+    yaml: 'application/yaml',
+    yml: 'application/yaml',
+    canvas: 'application/json',
+    base: 'application/yaml',
+    css: 'text/css',
+    js: 'text/javascript',
+    jpeg: 'image/jpeg',
+    jpg: 'image/jpeg',
+    png: 'image/png',
+    gif: 'image/gif',
+    svg: 'image/svg+xml',
+    ico: 'image/x-icon',
+    webp: 'image/webp',
+    avif: 'image/avif',
+    pdf: 'application/pdf',
+    mp4: 'video/mp4',
+    webm: 'video/webm',
+    aac: 'audio/aac',
+    mp3: 'audio/mpeg',
+    opus: 'audio/opus',
+  };
+  return types[extension] || 'application/json';
 }

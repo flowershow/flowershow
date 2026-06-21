@@ -1,19 +1,17 @@
 import { WorkflowEntrypoint } from 'cloudflare:workers';
-import { getPostgresClient, getStorageClient, getTypesenseClient } from './clients.js';
+import {
+  getPostgresClient,
+  getStorageClient,
+  getTypesenseClient,
+} from './clients.js';
 import {
   fetchGitHubConfig,
   fetchGitHubFileRaw,
   fetchGitHubRepoTree,
   getGitHubInstallationToken,
 } from './github.js';
-import { generateId } from './helpers.js';
 import { deleteFile, uploadFile } from './storage.js';
-import {
-  computeFilesToDelete,
-  computeFilesToUpsert,
-  createBatches,
-  normalizeRootDir,
-} from './workflow-utils.js';
+import { generateId } from './utils.js';
 
 const BATCH_SIZE = 20;
 
@@ -75,7 +73,13 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
         const existingBlobs = await sql`
           SELECT path, sha FROM "Blob" WHERE site_id = ${siteId}
         `;
-        const items = computeFilesToUpsert(existingBlobs, gitHubTree, normalizedRoot, includes, excludes);
+        const items = computeFilesToUpsert(
+          existingBlobs,
+          gitHubTree,
+          normalizedRoot,
+          includes,
+          excludes,
+        );
         return createBatches(items, BATCH_SIZE);
       },
     );
@@ -87,7 +91,13 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
         const existingBlobs = await sql`
           SELECT path FROM "Blob" WHERE site_id = ${siteId}
         `;
-        const toDelete = computeFilesToDelete(existingBlobs, gitHubTree, normalizedRoot, includes, excludes);
+        const toDelete = computeFilesToDelete(
+          existingBlobs,
+          gitHubTree,
+          normalizedRoot,
+          includes,
+          excludes,
+        );
         return createBatches(toDelete, BATCH_SIZE);
       },
     );
@@ -114,7 +124,7 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
           await Promise.all(
             batch.map(async (blob) => {
               try {
-                await deleteFile(storage, siteId, blob.path);
+                await deleteFile(storage, siteId, ghBranch, blob.path);
                 deletedPaths.push(blob.path);
               } catch (err) {
                 console.error(
@@ -170,6 +180,7 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
                 await uploadFile(
                   storage,
                   siteId,
+                  ghBranch,
                   filePath,
                   fileBuffer,
                   extension,
@@ -186,4 +197,98 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       ),
     );
   }
+}
+
+function normalizeRootDir(rootDir) {
+  return rootDir ? `${rootDir.replace(/^(.?\/)+|\/+$/g, '')}/` : '';
+}
+
+function createBatches(items, batchSize) {
+  const batches = [];
+  for (let i = 0; i < items.length; i += batchSize) {
+    batches.push(items.slice(i, i + batchSize));
+  }
+  return batches;
+}
+
+/**
+ * Computes which files from the GitHub tree need to be upserted.
+ * Returns items with { ghTreeItem, filePath, changeType }.
+ */
+function computeFilesToUpsert(
+  existingBlobs,
+  gitHubTree,
+  normalizedRootDir,
+  includes,
+  excludes,
+) {
+  const blobShaMap = new Map(existingBlobs.map((b) => [b.path, b.sha]));
+
+  return gitHubTree.tree
+    .filter(
+      (item) =>
+        item.type !== 'tree' &&
+        item.path.startsWith(normalizedRootDir) &&
+        isPathVisible(item.path, includes, excludes),
+    )
+    .map((item) => {
+      const filePath = item.path.replace(normalizedRootDir, '');
+      return {
+        ghTreeItem: item,
+        filePath,
+        changeType: blobShaMap.has(filePath) ? 'updated' : 'added',
+      };
+    })
+    .filter(
+      ({ ghTreeItem, filePath }) =>
+        !blobShaMap.has(filePath) ||
+        blobShaMap.get(filePath) !== ghTreeItem.sha,
+    );
+}
+
+/**
+ * Computes which existing blobs are no longer in the GitHub tree and should be deleted.
+ * Returns an array of blob objects from existingBlobs.
+ */
+export function computeFilesToDelete(
+  existingBlobs,
+  gitHubTree,
+  normalizedRootDir,
+  includes,
+  excludes,
+) {
+  const visiblePaths = new Set(
+    gitHubTree.tree
+      .filter(
+        (item) =>
+          item.type !== 'tree' &&
+          item.path.startsWith(normalizedRootDir) &&
+          isPathVisible(item.path, includes, excludes),
+      )
+      .map((item) => item.path.replace(normalizedRootDir, '')),
+  );
+
+  return existingBlobs.filter((b) => !visiblePaths.has(b.path));
+}
+
+function isPathVisible(p, includes, excludes) {
+  const normalized = normalizeUrlPath(p);
+  if (normalized === '/config.json' || normalized === '/custom.css')
+    return true;
+  if (isPathIncluded(p, excludes)) return false;
+  if (isPathIncluded(p, includes)) return true;
+  return !includes[0];
+}
+
+function normalizeUrlPath(p) {
+  const withLeading = p?.startsWith('/') ? p : `/${p}`;
+  return withLeading.replace(/\/$/, '');
+}
+
+function isPathIncluded(p, collection) {
+  p = normalizeUrlPath(p);
+  return collection.some((item) => {
+    item = normalizeUrlPath(item);
+    return item === p || p.startsWith(`${item}/`);
+  });
 }
