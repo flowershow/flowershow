@@ -2,8 +2,9 @@
 
 A Cloudflare Worker that drives the Flowershow publish pipeline. It combines:
 
-- A **Cloudflare Workflow** (`PublishWorkflow`) that orchestrates each publish — running the full GitHub sync (fetch tree, diff, upload to R2) or acting as a lifecycle owner for presigned-URL uploads (CLI, Obsidian, dashboard).
-- A **Queue consumer** that fires on every R2 event: on **PUT**, parses frontmatter, extracts image dimensions, upserts `Blob` records, indexes in Typesense, and atomically signals when all files in a publish are processed; on **DELETE**, removes the `Blob` record and Typesense document.
+- **`GitHubSyncWorkflow`** — orchestrates GitHub-triggered publishes: fetches the GitHub tree, diffs against stored `Blob` records, creates `Publish`/`PublishFile` records, and uploads files to R2.
+- **`PublishFinalizerWorkflow`** — shared by all publish paths. Polls until all `PublishFile` rows reach a terminal state, then sets `Publish.completedAt` and revalidates Next.js cache tags.
+- A **Queue consumer** that fires on every R2 event: on **PUT**, parses frontmatter, extracts image dimensions, upserts `Blob` records, and indexes in Typesense; on **DELETE**, removes the `Blob` record and Typesense document.
 - **HTTP endpoints** for triggering workflows and a dev-mode adapter for MinIO webhook events.
 - A **daily cron** that purges deleted sites from storage, database, and Typesense.
 
@@ -11,25 +12,22 @@ A Cloudflare Worker that drives the Flowershow publish pipeline. It combines:
 
 ### How a publish works
 
-Two publish paths share one Queue consumer.
+Two publish paths share one Queue consumer and one `PublishFinalizerWorkflow`.
 
 **GitHub path** (`POST /sync`):
 
-1. Creates a `Publish` record and starts a `PublishWorkflow` instance (`instanceId = publishId`).
-2. Workflow: fetches GitHub tree → diffs against stored `Blob` records → downloads files and uploads to R2 with `publishId` in object metadata → removes deleted files from R2 and creates terminal `PublishFile` rows immediately; Blob record and Typesense cleanup follows async via `DeleteObject` → queue consumer.
-3. Each R2 PUT fires a queue event. The consumer reads the file, computes a git-compatible SHA-1, upserts the `Blob`, indexes in Typesense, and flips the `PublishFile` row to `success` (or `error`).
-4. After processing each file, the consumer runs an **atomic completion check**: a single `UPDATE ... WHERE NOT EXISTS (uploading rows)` ensures exactly one concurrent consumer sends the `publish-complete` event to the Workflow.
-5. The Workflow finalizes the `Publish` record and revalidates Next.js cache tags.
+1. Terminates any in-flight `GitHubSyncWorkflow` for the site, then starts a new one.
+2. Workflow creates the `Publish` record, diffs the GitHub tree against stored `Blob` records, creates `PublishFile` rows, and starts `PublishFinalizerWorkflow`.
+3. Workflow uploads files to R2 with `publishId` in object metadata. Deleted files are removed from R2 immediately with terminal `PublishFile` rows; Blob/Typesense cleanup follows via `DeleteObject` → queue consumer.
+4. Each R2 PUT fires a queue event. The consumer reads the file, computes a git-compatible SHA-1, upserts the `Blob`, indexes in Typesense, and flips the `PublishFile` row to `success` (or `error`).
+5. `PublishFinalizerWorkflow` polls every 10 s until no `uploading` rows remain, then sets `Publish.completedAt` and revalidates Next.js cache tags.
 
 **Presigned path** (`POST /start-finalizer`) — CLI, Obsidian, dashboard:
 
-1. The Next.js app creates `Publish` + `PublishFile` records and presigned R2 PUT URLs, then calls `/start-finalizer` to start the Workflow.
-2. Workflow calls `step.waitForEvent('publish-complete', { timeout: '1h' })`.
-3. Clients upload files directly to R2 → Queue consumer processes each file → same atomic completion check → Workflow finalizes.
+1. The Next.js app creates `Publish` + `PublishFile` records and presigned R2 PUT URLs, then calls `/start-finalizer` to start `PublishFinalizerWorkflow`.
+2. Clients upload files directly to R2 → Queue consumer processes each file → `PublishFinalizerWorkflow` polls and finalizes as above.
 
 **Anonymous path** (no `publishId`): same as presigned but no `Publish` or `PublishFile` records exist; the consumer processes files without attempting lifecycle finalization.
-
-**Timeout**: if the 1-hour Workflow timeout fires before all files are processed, remaining `PublishFile` rows are marked `expired` and the publish is finalized as `error`.
 
 ### R2 object key format
 
@@ -150,7 +148,7 @@ Pure function tests — no external services required.
 npm test
 ```
 
-Runs `test/processing-utils.test.js`, `test/worker.test.js`, and `test/workflow-utils.test.js` via `node --test`.
+Runs `test/unit/github-sync-workflow.test.js` and `test/unit/queue-consumer.test.js` via Vitest.
 
 ### E2E tests
 
@@ -173,7 +171,7 @@ Each test creates a unique `siteId`-scoped dataset and cleans up after itself, s
 
 | Suite                            | What it verifies                                                                                   |
 | -------------------------------- | -------------------------------------------------------------------------------------------------- |
-| A — presigned happy path         | Markdown processed → `Blob` created with `sha`/`size`/`metadata`; `Publish` finalized as `success` |
+| A — presigned happy path         | Markdown processed → `Blob` created with `sha`/`size`/`metadata`; `Publish.completedAt` set        |
 | B — `publish: false` frontmatter | File suppressed; `PublishFile` flipped to `success`; no `Blob` created                             |
 | C — image file                   | PNG dimensions extracted; `Blob` created with `width`/`height`                                     |
 | D — multi-file publish           | 3 files processed concurrently; atomic completion fires exactly once                               |
@@ -231,27 +229,24 @@ R2 bucket bindings and workflow bindings are declared in `wrangler.flowershow.to
 
 ```
 src/
-  worker.js            — HTTP endpoints (/sync, /start-finalizer, /queue dev adapter, /health),
-                         queue consumer entry, cron handler, PublishWorkflow re-export
-  publish-workflow.js  — Cloudflare Workflow: GitHub sync and presigned-path lifecycle ownership
-  message-handler.js   — Queue consumer: file processing, Blob upsert, atomic publish completion
-  workflow-utils.js    — Pure functions: diff/batch logic extracted from the Workflow (unit-testable)
-  clients.js           — Factory functions for Postgres, S3/R2, and Typesense clients; env validation
-  github.js            — GitHub App JWT generation, installation token fetch, tree and file APIs
-  helpers.js           — ID generation, PostHog error capture
-  path-utils.js        — URL slug generation, path visibility (include/exclude patterns), MIME types
-  processing-utils.js  — Markdown parsing (gray-matter), title/description extraction, image dimensions
-  storage.js           — R2/S3 file upload, delete, site cleanup
-  typesense.js         — Typesense document upsert, deletion, collection management
+  worker.js                    — HTTP endpoints (/sync, /start-finalizer, /queue dev adapter, /health),
+                                 queue consumer entry, cron handler
+  github-sync-workflow.js      — Cloudflare Workflow: GitHub tree fetch, diff, upload to R2
+  publish-finalizer-workflow.js — Cloudflare Workflow: polls PublishFile rows, sets Publish.completedAt,
+                                  revalidates Next.js cache tags
+  queue-consumer.js            — Queue consumer: file processing, Blob upsert, Typesense indexing
+  clients.js                   — Factory functions for Postgres, S3/R2, and Typesense clients; env validation
+  github.js                    — GitHub App JWT generation, installation token fetch, tree and file APIs
+  utils.js                     — ID generation, PostHog error capture, shared helpers
+  storage.js                   — R2/S3 file upload, delete, site cleanup
 
 test/
-  processing-utils.test.js — Unit tests for markdown parsing and image processing
-  worker.test.js           — Unit tests for env validation
-  workflow-utils.test.js   — Unit tests for diff/batch pure functions
-  e2e/
-    queue-consumer.test.js — E2E tests for the full queue consumer pipeline
+  unit/
+    github-sync-workflow.test.js — Unit tests for the GitHub sync workflow
+    queue-consumer.test.js       — Unit tests for the queue consumer
 
 wrangler.flowershow.toml — Workers config: queues, workflows, crons, R2 bindings, environments
+vitest.unit.config.js    — Vitest config for unit tests
 vitest.e2e.config.js     — Vitest config for E2E tests (single-fork, 30s timeout per test)
 .dev.vars.example        — Template for local environment variables
 ```
@@ -275,7 +270,7 @@ The queue consumer extracts the following from markdown files:
 
 All other frontmatter key-value pairs are stored as-is in `Blob.metadata`.
 
-To add more extraction logic, edit `parseMarkdown` in [src/processing-utils.js](src/processing-utils.js).
+To add more extraction logic, edit `parseMarkdown` in [src/queue-consumer.js](src/queue-consumer.js).
 
 ### Suppressing files
 
@@ -283,7 +278,7 @@ A file with `publish: false` in its frontmatter is deleted from R2, which fires 
 
 ## Known Limitations and Gotchas
 
-- **Workflow step limit**: Cloudflare Workflows cap at ~1024 steps per instance. At the current `BATCH_SIZE` of 20 in `publish-workflow.js`, this handles up to ~20k files per GitHub sync. Do not reduce `BATCH_SIZE` without rechecking this cap.
+- **Workflow step limit**: Cloudflare Workflows cap at ~1024 steps per instance. At the current `BATCH_SIZE` of 20 in `github-sync-workflow.js`, this handles up to ~20k files per GitHub sync. Do not reduce `BATCH_SIZE` without rechecking this cap.
 - **File size limit**: The queue consumer rejects files larger than 5 MB.
 - **Dev Workflow workaround**: `env.PUBLISH_WORKFLOW.get()` does not resolve correctly in Miniflare (local dev). In `dev` mode, the queue consumer's completion check finalizes the `Publish` record directly rather than sending a `publish-complete` event to the Workflow.
 - **At-least-once delivery**: Cloudflare Queues deliver messages at least once. The atomic completion `UPDATE` and the `Blob` upsert (`INSERT ... ON CONFLICT DO UPDATE`) are both idempotent, so redelivery is safe.

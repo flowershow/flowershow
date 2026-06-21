@@ -40,7 +40,7 @@ Every publish goes through the same lifecycle regardless of how it was triggered
 
 **`GitHubSyncWorkflow`** (`apps/cloudflare-worker`) — GitHub path only. Creates the `Publish` record, diffs the GitHub tree against stored Blobs, creates all `PublishFile` records, starts `PublishFinalizerWorkflow`, then uploads files to R2.
 
-**`PublishFinalizerWorkflow`** (`apps/cloudflare-worker`) — all paths, `instanceId = publishId`. Polls every 10 seconds until all `PublishFile` rows for the publish reach a terminal state, then sets `Publish.status` (`success` / `error` / `superseded`) and revalidates Next.js cache tags.
+**`PublishFinalizerWorkflow`** (`apps/cloudflare-worker`) — all paths, `instanceId = publishId`. Polls every 10 seconds until all `PublishFile` rows for the publish reach a terminal state, then sets `Publish.completedAt` and revalidates Next.js cache tags.
 
 **Queue consumer** (`apps/cloudflare-worker`) — all paths. Processes one file per message: upserts the Blob record, updates Typesense, flips the `PublishFile` row to `success` or `error`. Blob deletion is driven by R2 `DeleteObject` events handled by the same consumer. No coordination logic — the consumer does not signal the finalizer.
 
@@ -80,9 +80,9 @@ graph TD
 
 ### Supersession
 
-When a new publish starts, any in-flight `PublishFile` rows from previous publishes for the same paths are canceled (`status = 'canceled'`). The finalizer for those publishes naturally exits when it polls and finds no `uploading` rows remaining, setting `Publish.status = 'superseded'`.
+When a new publish starts, any in-flight `PublishFile` rows from previous publishes for the same paths are canceled (`status = 'canceled'`). The finalizer for those publishes naturally exits on its next poll (≤10 s) when it finds no `uploading` rows remaining, sets `completedAt`, and terminates.
 
-Full-site syncs (`/sync` for both GitHub and presigned paths) also explicitly terminate the previous `PublishFinalizerWorkflow` instance. Concurrent `/files` (subset) publishes leave previous finalizers running — they poll independently and exit when their rows are done.
+Full-site syncs (`/sync`) also explicitly terminate any in-flight `GitHubSyncWorkflow` instance for the site. `PublishFinalizerWorkflow` instances are not explicitly terminated — they exit lazily as described above. Concurrent `/files` (subset) publishes leave previous finalizers running — they poll independently and exit when their rows are done.
 
 ## Site Creation and Data Flow
 
@@ -90,7 +90,7 @@ Full-site syncs (`/sync` for both GitHub and presigned paths) also explicitly te
 
 2. **Site Configuration** — User selects repository, branch (defaults to `main`), and optional root directory.
 
-3. **Initial Sync** — Triggered on site creation. `GitHubSyncWorkflow` fetches files from GitHub, creates `Publish` + `PublishFile` records, and uploads files to R2. R2 events drive the queue consumer, which creates/updates `Blob` records and indexes content in Typesense. `PublishFinalizerWorkflow` sets the final `Publish.status`.
+3. **Initial Sync** — Triggered on site creation. `GitHubSyncWorkflow` fetches files from GitHub, creates `Publish` + `PublishFile` records, and uploads files to R2. R2 events drive the queue consumer, which creates/updates `Blob` records and indexes content in Typesense. `PublishFinalizerWorkflow` sets `Publish.completedAt` when all files reach a terminal state.
 
 4. **Consecutive Syncs** — Automatic (GitHub webhooks) or manual (UI). Same pipeline as above, with path-scoped supersession of any in-progress publish.
 
