@@ -80,7 +80,7 @@ export default function GitHubSyncModal({
           'GitHub repository connected! Sync is running in the background.',
         );
         setShowModal(false);
-        router.push(`/site/${siteId}/settings?syncStarted=1`);
+        router.push(`/site/${siteId}/settings?publishStarted=1`);
         router.refresh();
       },
       onError: (error) => {

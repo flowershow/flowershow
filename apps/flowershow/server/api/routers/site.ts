@@ -210,6 +210,8 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
+      await createSiteCollection(created.id);
+
       if (creator?.email) {
         const siteUrl = `https://${created.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
         const userName = creator.name?.split(' ')[0] || 'there';
@@ -219,8 +221,6 @@ export const siteRouter = createTRPCRouter({
           react: SiteCreatedEmail({ userName, siteUrl, projectName }),
         });
       }
-
-      await createSiteCollection(created.id);
 
       const posthog = await PostHogClient();
       posthog.capture({
@@ -595,7 +595,7 @@ export const siteRouter = createTRPCRouter({
       return { id: site.id };
     }),
 
-  getSyncStatus: protectedProcedure
+  getPublishStatus: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .query(
       async ({
@@ -603,8 +603,7 @@ export const siteRouter = createTRPCRouter({
         input,
       }): Promise<{
         status: 'UNPUBLISHED' | 'SUCCESS' | 'PENDING' | 'ERROR';
-        error?: string | null;
-        lastSyncedAt?: Date | null;
+        lastPublishedAt?: Date | null;
       }> => {
         const site = await ctx.db.site.findUnique({
           where: { id: input.id },
@@ -632,9 +631,8 @@ export const siteRouter = createTRPCRouter({
 
         if (!latestPublish) {
           // Temporary patch: sites published before Publish record tracking was
-          // introduced have content (blobs) but no Publish rows. For these sites
-          // we infer the last-synced time from the most recently updated blob so
-          // the header doesn't falsely show "Publish your first content".
+          // introduced have no Publish rows. For these sites we infer
+          // the last-published time from the most recently updated blob
           const latestBlob = await ctx.db.blob.aggregate({
             where: { siteId: site.id },
             _max: { updatedAt: true },
@@ -642,43 +640,40 @@ export const siteRouter = createTRPCRouter({
           if (latestBlob._max.updatedAt) {
             return {
               status: 'SUCCESS',
-              lastSyncedAt: latestBlob._max.updatedAt,
+              lastPublishedAt: latestBlob._max.updatedAt,
             };
           }
-          return { status: 'UNPUBLISHED', lastSyncedAt: null };
+          return { status: 'UNPUBLISHED', lastPublishedAt: null };
         }
 
+        // If the publish was made with a legacy client version (before the Publish/PublishFile system was introduced),
+        // we treat it as a success (PublishFile records are not created for legacy clients, as they don't include Publish id in the upload metadata)
         if (latestPublish.legacy) {
-          return { status: 'SUCCESS', lastSyncedAt: latestPublish.startedAt };
+          return {
+            status: 'SUCCESS',
+            lastPublishedAt: latestPublish.startedAt,
+          };
         }
 
         if (latestPublish.status === 'in_progress') {
-          return { status: 'PENDING', lastSyncedAt: latestPublish.startedAt };
+          return {
+            status: 'PENDING',
+            lastPublishedAt: latestPublish.startedAt,
+          };
         }
 
         if (latestPublish.status === 'error') {
-          const errorFiles = await ctx.db.publishFile.findMany({
-            where: { publishId: latestPublish.id, status: 'error' },
-            select: { path: true, error: true },
-          });
-          const error = errorFiles
-            .map((f) =>
-              f.error
-                ? `[${f.path}]: ${f.error}`
-                : `[${f.path}]: Unknown error`,
-            )
-            .join('\n');
           return {
             status: 'ERROR',
-            error: error || null,
-            lastSyncedAt: latestPublish.completedAt ?? latestPublish.startedAt,
+            lastPublishedAt:
+              latestPublish.completedAt ?? latestPublish.startedAt,
           };
         }
 
         // success or superseded → SUCCESS
         return {
           status: 'SUCCESS',
-          lastSyncedAt: latestPublish.completedAt ?? latestPublish.startedAt,
+          lastPublishedAt: latestPublish.completedAt ?? latestPublish.startedAt,
         };
       },
     ),

@@ -1,23 +1,14 @@
 'use client';
 
 import {
-  Popover,
-  PopoverButton,
-  PopoverPanel,
-  Transition,
-} from '@headlessui/react';
-import {
   CalendarIcon,
-  CircleAlertIcon,
   CircleArrowDownIcon,
   CircleCheckIcon,
-  InfoIcon,
   RocketIcon,
   SquareArrowOutUpRight,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useState } from 'react';
 
 import { GithubIcon } from '@/components/icons';
 import { getRepoFullName } from '@/lib/get-repo-full-name';
@@ -27,28 +18,29 @@ import { api } from '@/trpc/react';
 
 export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
   const searchParams = useSearchParams();
-  const syncJustStarted = searchParams.get('syncStarted') === '1';
+  const publishJustStarted = searchParams.get('publishStarted') === '1';
 
-  const { data } = api.site.getSyncStatus.useQuery(
+  const { data } = api.site.getPublishStatus.useQuery(
     { id: site.id },
     { refetchInterval: 10 * 1000, keepPreviousData: true },
   );
 
-  const syncStatus = data
-    ? syncJustStarted && data.status === 'UNPUBLISHED'
-      ? { status: 'PENDING' as const, lastSyncedAt: undefined }
-      : data
-    : {
-        status: (syncJustStarted ? 'PENDING' : 'LOADING') as
-          | 'PENDING'
-          | 'LOADING',
-        lastSyncedAt: undefined,
-      };
-
-  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  let publishStatus: {
+    status: 'UNPUBLISHED' | 'SUCCESS' | 'PENDING' | 'ERROR' | 'LOADING';
+    lastPublishedAt?: Date | null;
+  };
+  if (!data) {
+    publishStatus = {
+      status: publishJustStarted ? 'PENDING' : 'LOADING',
+      lastPublishedAt: undefined,
+    };
+  } else if (publishJustStarted && data.status === 'UNPUBLISHED') {
+    publishStatus = { status: 'PENDING', lastPublishedAt: undefined };
+  } else {
+    publishStatus = data;
+  }
 
   const url = getSiteUrl(site);
-
   const repoFullName = getRepoFullName(site);
 
   return (
@@ -67,13 +59,13 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
           </div>
         </h2>
 
-        {/* Sync status */}
+        {/* Publish status */}
         <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
           <div
-            data-testid="sync-status"
+            data-testid="publish-status"
             className="mt-2 flex items-center text-sm text-gray-500"
           >
-            {syncStatus.status === 'UNPUBLISHED' ? (
+            {publishStatus.status === 'UNPUBLISHED' ? (
               <a
                 href={`./welcome`}
                 className="flex items-center text-pink-600 hover:underline"
@@ -84,23 +76,7 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
                 />
                 <span>Publish your first content</span>
               </a>
-            ) : syncStatus.status === 'LOADING' ? (
-              <div className="flex items-center">
-                <CircleAlertIcon
-                  className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
-                  aria-hidden="true"
-                />
-                <span>-</span>
-              </div>
-            ) : syncStatus.status === 'SUCCESS' ? (
-              <div className="flex items-center">
-                <CircleCheckIcon
-                  className="mr-1.5 h-5 w-5 flex-shrink-0 text-green-400"
-                  aria-hidden="true"
-                />
-                <span>Published</span>
-              </div>
-            ) : syncStatus.status === 'PENDING' ? (
+            ) : publishStatus.status === 'PENDING' ? (
               <div className="flex items-center">
                 <CircleArrowDownIcon
                   className="mr-1.5 h-5 w-5 flex-shrink-0 text-orange-400"
@@ -108,68 +84,43 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
                 />
                 <span>Publishing...</span>
               </div>
-            ) : syncStatus.status === 'ERROR' ? (
-              <div className="group flex items-center hover:cursor-default">
-                <CircleAlertIcon
-                  className="mr-1.5 h-5 w-5 flex-shrink-0 text-red-400"
-                  aria-hidden="true"
-                />
-                <Popover className="relative z-30">
-                  <PopoverButton
-                    onMouseEnter={() => setShowErrorDialog(true)}
-                    onMouseLeave={() => setShowErrorDialog(false)}
-                    className="group flex outline-none hover:text-gray-800"
-                  >
-                    <span>Error</span>
-                    <InfoIcon
-                      className="ml-1 h-5 w-5 flex-shrink-0"
-                      aria-hidden="true"
-                    />
-                  </PopoverButton>
-
-                  <Transition
-                    show={showErrorDialog}
-                    enter="transition duration-100 ease-out"
-                    enterFrom="transform scale-95 opacity-0"
-                    enterTo="transform scale-100 opacity-100"
-                    leave="transition duration-75 ease-out"
-                    leaveFrom="transform scale-100 opacity-100"
-                    leaveTo="transform scale-95 opacity-0"
-                  >
-                    <PopoverPanel className="absolute left-1/2 flex w-screen max-w-min -translate-x-1/2 px-4">
-                      <div
-                        onMouseEnter={() => setShowErrorDialog(true)}
-                        onMouseLeave={() => setShowErrorDialog(false)}
-                        className="max-h-80 w-80 shrink overflow-y-auto rounded-xl bg-white p-4 text-sm leading-6 text-gray-900 shadow-lg ring-1 ring-gray-900/5"
-                      >
-                        {syncStatus && syncStatus.error}
-                      </div>
-                    </PopoverPanel>
-                  </Transition>
-                </Popover>
-              </div>
-            ) : (
+            ) : publishStatus.status === 'SUCCESS' ? (
               <div className="flex items-center">
-                <CircleAlertIcon
+                <CalendarIcon
                   className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
                   aria-hidden="true"
                 />
-                <span>Outdated</span>
+                <span>
+                  Last published{' '}
+                  {publishStatus.lastPublishedAt
+                    ? new Date(publishStatus.lastPublishedAt).toLocaleString()
+                    : ''}
+                </span>
+              </div>
+            ) : publishStatus.status === 'ERROR' ? (
+              <div className="flex items-center">
+                <CalendarIcon
+                  className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
+                  aria-hidden="true"
+                />
+                <span>
+                  Last published{' '}
+                  {publishStatus.lastPublishedAt
+                    ? new Date(publishStatus.lastPublishedAt).toLocaleString()
+                    : ''}
+                </span>
+                <span className="ml-2 inline-block h-2 w-2 flex-shrink-0 rounded-full bg-red-500" />
+              </div>
+            ) : (
+              <div className="flex items-center">
+                <CircleCheckIcon
+                  className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
+                  aria-hidden="true"
+                />
+                <span>-</span>
               </div>
             )}
           </div>
-          {syncStatus.lastSyncedAt && (
-            <div className="mt-2 flex items-center text-sm text-gray-500">
-              <CalendarIcon
-                className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
-                aria-hidden="true"
-              />
-              <span>
-                Last published{' '}
-                {new Date(syncStatus.lastSyncedAt).toLocaleString()}
-              </span>
-            </div>
-          )}
         </div>
 
         {/* Publish method */}

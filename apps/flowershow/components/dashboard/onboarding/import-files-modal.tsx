@@ -154,8 +154,8 @@ export default function ImportFilesOnboardingModal({
     }
   };
 
-  // Poll sync status while files are being processed
-  const { data: syncStatus } = api.site.getSyncStatus.useQuery(
+  // Poll publish status while files are being processed
+  const { data: publishStatus } = api.site.getPublishStatus.useQuery(
     { id: siteId },
     {
       enabled: state === 'syncing',
@@ -164,14 +164,14 @@ export default function ImportFilesOnboardingModal({
   );
 
   useEffect(() => {
-    if (state === 'syncing' && syncStatus?.status === 'SUCCESS') {
+    if (state === 'syncing' && publishStatus?.status === 'SUCCESS') {
       setState('success');
     }
-    if (state === 'syncing' && syncStatus?.status === 'ERROR') {
-      setError(syncStatus.error ?? 'Failed to process files');
+    if (state === 'syncing' && publishStatus?.status === 'ERROR') {
+      setError('Failed to process files');
       setState('error');
     }
-  }, [syncStatus, state]);
+  }, [publishStatus, state]);
 
   const handleStartImport = async () => {
     setState('uploading');

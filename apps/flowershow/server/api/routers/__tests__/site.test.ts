@@ -372,15 +372,15 @@ describe('site.getBlob', () => {
   });
 });
 
-describe('site.getSyncStatus', () => {
+describe('site.getPublishStatus', () => {
   it('returns UNPUBLISHED when no Publish records exist', async () => {
     const db = createMockDb({ publishes: [], publishFiles: [] });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getSyncStatus({ id: 'site-1' });
+    const result = await caller.site.getPublishStatus({ id: 'site-1' });
 
     expect(result.status).toBe('UNPUBLISHED');
-    expect(result.lastSyncedAt).toBeNull();
+    expect(result.lastPublishedAt).toBeNull();
   });
 
   it('returns PENDING when Publish.status is in_progress (no files yet)', async () => {
@@ -391,10 +391,10 @@ describe('site.getSyncStatus', () => {
     });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getSyncStatus({ id: 'site-1' });
+    const result = await caller.site.getPublishStatus({ id: 'site-1' });
 
     expect(result.status).toBe('PENDING');
-    expect(result.lastSyncedAt).toEqual(startedAt);
+    expect(result.lastPublishedAt).toEqual(startedAt);
   });
 
   it('returns PENDING when Publish.status is in_progress (files still uploading)', async () => {
@@ -408,7 +408,7 @@ describe('site.getSyncStatus', () => {
     });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getSyncStatus({ id: 'site-1' });
+    const result = await caller.site.getPublishStatus({ id: 'site-1' });
 
     expect(result.status).toBe('PENDING');
   });
@@ -425,10 +425,10 @@ describe('site.getSyncStatus', () => {
     });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getSyncStatus({ id: 'site-1' });
+    const result = await caller.site.getPublishStatus({ id: 'site-1' });
 
     expect(result.status).toBe('SUCCESS');
-    expect(result.lastSyncedAt).toEqual(completedAt);
+    expect(result.lastPublishedAt).toEqual(completedAt);
   });
 
   it('returns SUCCESS when Publish.status is superseded', async () => {
@@ -442,7 +442,7 @@ describe('site.getSyncStatus', () => {
     });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getSyncStatus({ id: 'site-1' });
+    const result = await caller.site.getPublishStatus({ id: 'site-1' });
 
     expect(result.status).toBe('SUCCESS');
   });
@@ -452,21 +452,13 @@ describe('site.getSyncStatus', () => {
     const completedAt = new Date('2026-05-01T10:01:00Z');
     const db = createMockDb({
       publishes: [{ id: 'pub-1', startedAt, completedAt, status: 'error' }],
-      publishFiles: [
-        { publishId: 'pub-1', path: 'index.md', status: 'success' },
-        {
-          publishId: 'pub-1',
-          path: 'page.md',
-          status: 'error',
-          error: 'parse failed',
-        },
-      ],
+      publishFiles: [],
     });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getSyncStatus({ id: 'site-1' });
+    const result = await caller.site.getPublishStatus({ id: 'site-1' });
 
     expect(result.status).toBe('ERROR');
-    expect(result.error).toContain('[page.md]: parse failed');
+    expect(result.lastPublishedAt).toEqual(completedAt);
   });
 });
