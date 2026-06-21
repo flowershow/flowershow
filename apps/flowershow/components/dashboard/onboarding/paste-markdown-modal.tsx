@@ -45,20 +45,16 @@ export default function PasteMarkdownModal({
   const [error, setError] = useState<string | null>(null);
   const [markdown, setMarkdown] = useState('');
 
-  const { data: publishStatus } = api.site.getPublishStatus.useQuery(
+  const { data: publishState } = api.site.getPublishState.useQuery(
     { id: siteId },
     { enabled: state === 'syncing', refetchInterval: 3000 },
   );
 
   useEffect(() => {
-    if (state === 'syncing' && publishStatus?.status === 'SUCCESS') {
+    if (state === 'syncing' && publishState && !publishState.isInProgress) {
       setState('success');
     }
-    if (state === 'syncing' && publishStatus?.status === 'ERROR') {
-      setError('Failed to process content');
-      setState('error');
-    }
-  }, [publishStatus, state]);
+  }, [publishState, state]);
 
   const handlePublish = async () => {
     if (!markdown.trim()) {

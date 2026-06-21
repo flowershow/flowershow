@@ -4,12 +4,12 @@ import {
   type ListSitesResponse,
 } from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
+import { SiteCreatedEmail } from '@/emails/site-created';
 import {
   checkCliVersion,
   getClientInfo,
   validateAccessToken,
 } from '@/lib/cli-auth';
-import { SiteCreatedEmail } from '@/emails/site-created';
 import { sendEmail } from '@/lib/email';
 import PostHogClient from '@/lib/server-posthog';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
@@ -152,7 +152,6 @@ export async function POST(request: NextRequest) {
       ? `https://${site.customDomain}`
       : `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
-    // Create Typesense collection exists for search indexing
     await createSiteCollection(site.id);
 
     // Send site-created email for new sites

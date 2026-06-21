@@ -140,8 +140,8 @@ export default function TemplateModal({
       },
     });
 
-  // Poll publish status while syncing
-  const { data: publishStatus } = api.site.getPublishStatus.useQuery(
+  // Poll publish state while syncing
+  const { data: publishState } = api.site.getPublishState.useQuery(
     { id: siteId },
     {
       enabled: step === 'syncing',
@@ -150,10 +150,10 @@ export default function TemplateModal({
   );
 
   useEffect(() => {
-    if (step === 'syncing' && publishStatus?.status === 'SUCCESS') {
+    if (step === 'syncing' && publishState && !publishState.isInProgress) {
       setStep('success');
     }
-  }, [publishStatus, step]);
+  }, [publishState, step]);
 
   const template =
     templates.find((t) => t.id === selectedTemplate) ?? templates[0];

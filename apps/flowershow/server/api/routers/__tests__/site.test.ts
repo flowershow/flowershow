@@ -374,18 +374,19 @@ describe('site.getBlob', () => {
   });
 });
 
-describe('site.getPublishStatus', () => {
-  it('returns UNPUBLISHED when no Publish records exist', async () => {
+describe('site.getPublishState', () => {
+  it('returns isUnpublished when no Publish records exist', async () => {
     const db = createMockDb({ publishes: [], publishFiles: [] });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getPublishStatus({ id: 'site-1' });
+    const result = await caller.site.getPublishState({ id: 'site-1' });
 
-    expect(result.status).toBe('UNPUBLISHED');
+    expect(result.isUnpublished).toBe(true);
+    expect(result.isInProgress).toBe(false);
     expect(result.lastPublishedAt).toBeNull();
   });
 
-  it('returns PENDING when completedAt is null (no files yet)', async () => {
+  it('returns isInProgress when completedAt is null', async () => {
     const startedAt = new Date('2026-05-01T10:00:00Z');
     const db = createMockDb({
       publishes: [{ id: 'pub-1', startedAt, completedAt: null }],
@@ -393,29 +394,14 @@ describe('site.getPublishStatus', () => {
     });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getPublishStatus({ id: 'site-1' });
+    const result = await caller.site.getPublishState({ id: 'site-1' });
 
-    expect(result.status).toBe('PENDING');
+    expect(result.isInProgress).toBe(true);
+    expect(result.isUnpublished).toBe(false);
     expect(result.lastPublishedAt).toEqual(startedAt);
   });
 
-  it('returns PENDING when completedAt is null (files still uploading)', async () => {
-    const startedAt = new Date('2026-05-01T10:00:00Z');
-    const db = createMockDb({
-      publishes: [{ id: 'pub-1', startedAt, completedAt: null }],
-      publishFiles: [
-        { publishId: 'pub-1', path: 'index.md', status: 'success' },
-        { publishId: 'pub-1', path: 'page.md', status: 'uploading' },
-      ],
-    });
-    const caller = createAuthenticatedCaller(db);
-
-    const result = await caller.site.getPublishStatus({ id: 'site-1' });
-
-    expect(result.status).toBe('PENDING');
-  });
-
-  it('returns SUCCESS when completedAt is set and no error files', async () => {
+  it('returns complete when completedAt is set', async () => {
     const startedAt = new Date('2026-05-01T10:00:00Z');
     const completedAt = new Date('2026-05-01T10:01:00Z');
     const db = createMockDb({
@@ -427,44 +413,10 @@ describe('site.getPublishStatus', () => {
     });
     const caller = createAuthenticatedCaller(db);
 
-    const result = await caller.site.getPublishStatus({ id: 'site-1' });
+    const result = await caller.site.getPublishState({ id: 'site-1' });
 
-    expect(result.status).toBe('SUCCESS');
-    expect(result.lastPublishedAt).toEqual(completedAt);
-  });
-
-  it('returns SUCCESS when completedAt is set and all files are canceled', async () => {
-    const startedAt = new Date('2026-05-01T10:00:00Z');
-    const completedAt = new Date('2026-05-01T10:01:00Z');
-    const db = createMockDb({
-      publishes: [{ id: 'pub-1', startedAt, completedAt }],
-      publishFiles: [
-        { publishId: 'pub-1', path: 'index.md', status: 'canceled' },
-        { publishId: 'pub-1', path: 'page.md', status: 'canceled' },
-      ],
-    });
-    const caller = createAuthenticatedCaller(db);
-
-    const result = await caller.site.getPublishStatus({ id: 'site-1' });
-
-    expect(result.status).toBe('SUCCESS');
-  });
-
-  it('returns ERROR when completedAt is set and there are error files', async () => {
-    const startedAt = new Date('2026-05-01T10:00:00Z');
-    const completedAt = new Date('2026-05-01T10:01:00Z');
-    const db = createMockDb({
-      publishes: [{ id: 'pub-1', startedAt, completedAt }],
-      publishFiles: [
-        { publishId: 'pub-1', path: 'index.md', status: 'success' },
-        { publishId: 'pub-1', path: 'page.md', status: 'error' },
-      ],
-    });
-    const caller = createAuthenticatedCaller(db);
-
-    const result = await caller.site.getPublishStatus({ id: 'site-1' });
-
-    expect(result.status).toBe('ERROR');
+    expect(result.isInProgress).toBe(false);
+    expect(result.isUnpublished).toBe(false);
     expect(result.lastPublishedAt).toEqual(completedAt);
   });
 });

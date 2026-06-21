@@ -35,7 +35,6 @@ export default function ImportFilesOnboardingModal({
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const folderInputRef = useRef<HTMLInputElement>(null);
 
   const isContentFile = (file: File): boolean => {
     return (
@@ -154,8 +153,8 @@ export default function ImportFilesOnboardingModal({
     }
   };
 
-  // Poll publish status while files are being processed
-  const { data: publishStatus } = api.site.getPublishStatus.useQuery(
+  // Poll publish state while files are being processed
+  const { data: publishState } = api.site.getPublishState.useQuery(
     { id: siteId },
     {
       enabled: state === 'syncing',
@@ -164,14 +163,10 @@ export default function ImportFilesOnboardingModal({
   );
 
   useEffect(() => {
-    if (state === 'syncing' && publishStatus?.status === 'SUCCESS') {
+    if (state === 'syncing' && publishState && !publishState.isInProgress) {
       setState('success');
     }
-    if (state === 'syncing' && publishStatus?.status === 'ERROR') {
-      setError('Failed to process files');
-      setState('error');
-    }
-  }, [publishStatus, state]);
+  }, [publishState, state]);
 
   const handleStartImport = async () => {
     setState('uploading');

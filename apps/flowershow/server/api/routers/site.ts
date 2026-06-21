@@ -595,15 +595,16 @@ export const siteRouter = createTRPCRouter({
       return { id: site.id };
     }),
 
-  getPublishStatus: protectedProcedure
+  getPublishState: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .query(
       async ({
         ctx,
         input,
       }): Promise<{
-        status: 'UNPUBLISHED' | 'SUCCESS' | 'PENDING' | 'ERROR';
-        lastPublishedAt?: Date | null;
+        isUnpublished: boolean;
+        isInProgress: boolean;
+        lastPublishedAt: Date | null;
       }> => {
         const site = await ctx.db.site.findUnique({
           where: { id: input.id },
@@ -625,11 +626,6 @@ export const siteRouter = createTRPCRouter({
             startedAt: true,
             completedAt: true,
             legacy: true,
-            files: {
-              where: { status: 'error' },
-              select: { id: true },
-              take: 1,
-            },
           },
         });
 
@@ -643,38 +639,31 @@ export const siteRouter = createTRPCRouter({
           });
           if (latestBlob._max.updatedAt) {
             return {
-              status: 'SUCCESS',
+              isUnpublished: false,
+              isInProgress: false,
               lastPublishedAt: latestBlob._max.updatedAt,
             };
           }
-          return { status: 'UNPUBLISHED', lastPublishedAt: null };
-        }
-
-        // Legacy clients don't create PublishFile records — treat as success
-        if (latestPublish.legacy) {
           return {
-            status: 'SUCCESS',
-            lastPublishedAt: latestPublish.startedAt,
+            isUnpublished: true,
+            isInProgress: false,
+            lastPublishedAt: null,
           };
         }
 
-        if (!latestPublish.completedAt) {
+        // Legacy publishes have no completedAt — treat as complete
+        if (!latestPublish.completedAt && !latestPublish.legacy) {
           return {
-            status: 'PENDING',
+            isUnpublished: false,
+            isInProgress: true,
             lastPublishedAt: latestPublish.startedAt,
-          };
-        }
-
-        if (latestPublish.files.length > 0) {
-          return {
-            status: 'ERROR',
-            lastPublishedAt: latestPublish.completedAt,
           };
         }
 
         return {
-          status: 'SUCCESS',
-          lastPublishedAt: latestPublish.completedAt,
+          isUnpublished: false,
+          isInProgress: false,
+          lastPublishedAt: latestPublish.completedAt ?? latestPublish.startedAt,
         };
       },
     ),

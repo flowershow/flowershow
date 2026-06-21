@@ -20,25 +20,19 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
   const searchParams = useSearchParams();
   const publishJustStarted = searchParams.get('publishStarted') === '1';
 
-  const { data } = api.site.getPublishStatus.useQuery(
+  const { data } = api.site.getPublishState.useQuery(
     { id: site.id },
     { refetchInterval: 10 * 1000, keepPreviousData: true },
   );
 
-  let publishStatus: {
-    status: 'UNPUBLISHED' | 'SUCCESS' | 'PENDING' | 'ERROR' | 'LOADING';
-    lastPublishedAt?: Date | null;
-  };
-  if (!data) {
-    publishStatus = {
-      status: publishJustStarted ? 'PENDING' : 'LOADING',
-      lastPublishedAt: undefined,
-    };
-  } else if (publishJustStarted && data.status === 'UNPUBLISHED') {
-    publishStatus = { status: 'PENDING', lastPublishedAt: undefined };
-  } else {
-    publishStatus = data;
-  }
+  const isUnpublished = !data
+    ? false
+    : publishJustStarted
+      ? false
+      : data.isUnpublished;
+  const isInProgress = !data
+    ? publishJustStarted
+    : data.isInProgress || (publishJustStarted && data.isUnpublished);
 
   const url = getSiteUrl(site);
   const repoFullName = getRepoFullName(site);
@@ -65,7 +59,7 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
             data-testid="publish-status"
             className="mt-2 flex items-center text-sm text-gray-500"
           >
-            {publishStatus.status === 'UNPUBLISHED' ? (
+            {isUnpublished ? (
               <a
                 href={`./welcome`}
                 className="flex items-center text-pink-600 hover:underline"
@@ -76,7 +70,7 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
                 />
                 <span>Publish your first content</span>
               </a>
-            ) : publishStatus.status === 'PENDING' ? (
+            ) : isInProgress ? (
               <div className="flex items-center">
                 <CircleArrowDownIcon
                   className="mr-1.5 h-5 w-5 flex-shrink-0 text-orange-400"
@@ -84,7 +78,7 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
                 />
                 <span>Publishing...</span>
               </div>
-            ) : publishStatus.status === 'SUCCESS' ? (
+            ) : data ? (
               <div className="flex items-center">
                 <CalendarIcon
                   className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
@@ -92,24 +86,10 @@ export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
                 />
                 <span>
                   Last published{' '}
-                  {publishStatus.lastPublishedAt
-                    ? new Date(publishStatus.lastPublishedAt).toLocaleString()
+                  {data.lastPublishedAt
+                    ? new Date(data.lastPublishedAt).toLocaleString()
                     : ''}
                 </span>
-              </div>
-            ) : publishStatus.status === 'ERROR' ? (
-              <div className="flex items-center">
-                <CalendarIcon
-                  className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
-                  aria-hidden="true"
-                />
-                <span>
-                  Last published{' '}
-                  {publishStatus.lastPublishedAt
-                    ? new Date(publishStatus.lastPublishedAt).toLocaleString()
-                    : ''}
-                </span>
-                <span className="ml-2 inline-block h-2 w-2 flex-shrink-0 rounded-full bg-red-500" />
               </div>
             ) : (
               <div className="flex items-center">
