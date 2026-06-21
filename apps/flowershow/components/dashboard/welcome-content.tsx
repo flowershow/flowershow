@@ -163,7 +163,6 @@ export default function WelcomeContent({
       />
       <TemplateModal
         siteId={siteId}
-        siteUrl={siteUrl}
         showModal={activeModal === 'template'}
         setShowModal={(show) => setActiveModal(show ? 'template' : null)}
         initialTemplate={selectedTemplate}
