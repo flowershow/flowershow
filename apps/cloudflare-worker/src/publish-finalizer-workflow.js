@@ -26,18 +26,9 @@ export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
       }
     }
 
-    await step.do('finalize-publish', async () => {
-      if (timedOut) {
-        await sql`
-          UPDATE "PublishFile" SET status = 'expired'
-          WHERE publish_id = ${publishId} AND status = 'uploading'
-        `;
-      }
-      await sql`
-        UPDATE "Publish" SET completed_at = NOW()
-        WHERE id = ${publishId} AND completed_at IS NULL
-      `;
-    });
+    await step.do('finalize-publish', () =>
+      finalizePublish({ sql, publishId, timedOut }),
+    );
 
     await step.do('revalidate-tags', async () => {
       if (!this.env.NEXTJS_APP_URL || !this.env.INTERNAL_API_SECRET) return;
@@ -61,4 +52,17 @@ export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
       }
     });
   }
+}
+
+export async function finalizePublish({ sql, publishId, timedOut }) {
+  if (timedOut) {
+    await sql`
+      UPDATE "PublishFile" SET status = 'expired'
+      WHERE publish_id = ${publishId} AND status = 'uploading'
+    `;
+  }
+  await sql`
+    UPDATE "Publish" SET completed_at = NOW()
+    WHERE id = ${publishId} AND completed_at IS NULL
+  `;
 }

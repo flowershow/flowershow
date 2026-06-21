@@ -14,7 +14,7 @@ const BATCH_SIZE = 20;
 export class GitHubSyncWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
     const {
-      publishId, // generate here ?
+      publishId,
       siteId,
       ghRepository,
       ghBranch,
@@ -43,8 +43,8 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
     // Create the Publish record
     await step.do('create-publish-record', async () => {
       await sql`
-        INSERT INTO "Publish" (id, site_id, source, status, started_at, git_commit_sha, git_commit_message)
-        VALUES (${publishId}, ${siteId}, 'github_webhook', 'in_progress', NOW(), ${gitCommitSha}, ${gitCommitMessage})
+        INSERT INTO "Publish" (id, site_id, source, started_at, git_commit_sha, git_commit_message)
+        VALUES (${publishId}, ${siteId}, 'github_webhook', NOW(), ${gitCommitSha}, ${gitCommitMessage})
       `;
     });
 
