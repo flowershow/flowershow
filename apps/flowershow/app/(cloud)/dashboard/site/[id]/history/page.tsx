@@ -11,8 +11,6 @@ export default async function PublishHistoryPage(props: {
   const site = await api.site.getById.query({ id: siteId });
   if (!site) notFound();
 
-  const publishes = await api.site.getPublishHistory.query({ id: siteId });
-
   return (
     <div className="mt-6 flex flex-col space-y-6">
       <div>
@@ -24,7 +22,7 @@ export default async function PublishHistoryPage(props: {
           per-file details.
         </p>
       </div>
-      <PublishHistory publishes={publishes} ghRepository={site.ghRepository} />
+      <PublishHistory siteId={siteId} ghRepository={site.ghRepository} />
     </div>
   );
 }

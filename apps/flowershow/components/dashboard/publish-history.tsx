@@ -8,7 +8,10 @@ import {
   LoaderCircleIcon,
 } from 'lucide-react';
 import { useState } from 'react';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 import { cn } from '@/lib/utils';
+import { api } from '@/trpc/react';
 
 type PublishSource =
   | 'github_webhook'
@@ -240,15 +243,42 @@ function PublishRow({
 }
 
 interface PublishHistoryProps {
-  publishes: PublishEntry[];
+  siteId: string;
   ghRepository: string | null;
 }
 
 export default function PublishHistory({
-  publishes,
+  siteId,
   ghRepository,
 }: PublishHistoryProps) {
-  if (publishes.length === 0) {
+  const { data: publishes, isLoading } = api.site.getPublishHistory.useQuery(
+    { id: siteId },
+    {
+      refetchInterval: (data) =>
+        data?.some((p) => p.isInProgress) ? 5000 : false,
+    },
+  );
+
+  if (isLoading) {
+    return (
+      <div className="overflow-hidden rounded-md border border-stone-200 bg-white">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div
+            key={i}
+            className="border-b border-stone-100 px-4 py-3 last:border-0"
+          >
+            <div className="flex items-center gap-2">
+              <Skeleton width={70} height={18} borderRadius={999} />
+              <Skeleton width={60} height={18} borderRadius={4} />
+              <Skeleton width={100} height={14} />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (!publishes || publishes.length === 0) {
     return (
       <p className="text-sm text-stone-400">
         No publishes yet. Your publish history will appear here once you publish
