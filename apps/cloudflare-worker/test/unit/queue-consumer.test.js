@@ -7,7 +7,7 @@ import {
   normalizePermalink,
   parseMarkdown,
   parseObjectKey,
-} from '../src/queue-consumer.js';
+} from '../../src/queue-consumer.js';
 
 const TINY_PNG_BASE64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Zx9QAAAAASUVORK5CYII=';

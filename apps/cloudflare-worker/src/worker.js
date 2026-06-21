@@ -7,6 +7,7 @@ import {
 import { GitHubSyncWorkflow } from './github-sync-workflow.js';
 import { PublishFinalizerWorkflow } from './publish-finalizer-workflow.js';
 import { handleMessage } from './queue-consumer.js';
+import { deleteSiteStorage } from './storage.js';
 import { generateId } from './utils.js';
 
 export { GitHubSyncWorkflow, PublishFinalizerWorkflow };
@@ -17,6 +18,7 @@ export default {
     validateEnv(env);
     const url = new URL(request.url);
 
+    // Trigger GitHub sync workflow
     if (request.method === 'POST' && url.pathname === '/sync') {
       const authHeader = request.headers.get('Authorization');
       const expectedToken = `Bearer ${env.SYNC_TRIGGER_SECRET}`;
@@ -49,17 +51,15 @@ export default {
 
       const sql = getPostgresClient(env);
 
-      // TODO is this the right place to create
       let publishId;
       try {
         publishId = generateId();
 
-        // Supersede any in-progress GitHub publishes for this site
+        // Supersede any in-progress publishes for this site
         const previous = await sql`
           SELECT id FROM "Publish"
           WHERE site_id = ${siteId}
             AND status = 'in_progress'
-            AND source = 'github_webhook'
           ORDER BY started_at DESC
         `;
 
@@ -72,6 +72,8 @@ export default {
             UPDATE "Publish" SET status = 'superseded', completed_at = NOW()
             WHERE id = ${prev.id} AND status = 'in_progress'
           `;
+          // Not sure this is needed. Old finalizers should terminate themselves when they see
+          // no more uploading files
           try {
             const prevFinalizer = await env.PUBLISH_FINALIZER_WORKFLOW.get(
               prev.id,
@@ -82,6 +84,8 @@ export default {
               `Failed to terminate finalizer workflow ${prev.id}: ${termErr.message}`,
             );
           }
+          // This is still useful though, because there is no need to finish processing older GitHub tree
+          // when a newer sync has started processing a newer tree.
           try {
             const prevSync = await env.GITHUB_SYNC_WORKFLOW.get(
               `${prev.id}-github`,
@@ -97,7 +101,6 @@ export default {
         await sql.end();
       }
 
-      // Publish record creation and finalizer start are handled inside the workflow
       const syncInstance = await env.GITHUB_SYNC_WORKFLOW.create({
         id: `${publishId}-github`,
         params: {
@@ -115,6 +118,7 @@ export default {
       return Response.json({ instanceId: syncInstance.id }, { status: 202 });
     }
 
+    // Terminate finalizer workflow
     if (request.method === 'POST' && url.pathname === '/terminate-finalizer') {
       const authHeader = request.headers.get('Authorization');
       const expectedToken = `Bearer ${env.SYNC_TRIGGER_SECRET}`;
@@ -150,6 +154,7 @@ export default {
       return new Response(null, { status: 204 });
     }
 
+    // Start finalizer workflow
     if (request.method === 'POST' && url.pathname === '/start-finalizer') {
       const authHeader = request.headers.get('Authorization');
       const expectedToken = `Bearer ${env.SYNC_TRIGGER_SECRET}`;
@@ -179,6 +184,7 @@ export default {
       return Response.json({ instanceId: instance.id }, { status: 202 });
     }
 
+    // Dev adapter for S3 events from Minio
     if (env.ENVIRONMENT === 'dev' && url.pathname === '/queue') {
       let event;
       try {
@@ -201,6 +207,7 @@ export default {
       return new Response('Queued', { status: 200 });
     }
 
+    // Health check
     if (url.pathname === '/health') {
       return new Response('OK', { status: 200 });
     }
