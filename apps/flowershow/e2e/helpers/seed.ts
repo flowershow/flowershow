@@ -9,10 +9,7 @@ import {
 import { Plan, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { filePathToSlug } from '../../lib/file-path-to-slug';
-import {
-  extractImageDimensions,
-  parseMarkdownForSync,
-} from './processing-utils';
+import { extractImageDimensions, parseMarkdown } from './processing-utils';
 
 // --- Config ---
 
@@ -179,7 +176,7 @@ async function uploadFixturesForSite(
     let shouldPublish = true;
 
     if (['md', 'mdx'].includes(ext)) {
-      const parsed = await parseMarkdownForSync({
+      const parsed = await parseMarkdown({
         markdown: content.toString(),
         path: filePath,
       });

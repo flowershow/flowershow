@@ -5,9 +5,9 @@ import {
   extractTitle,
   isSupportedImagePath,
   normalizePermalink,
-  parseMarkdownForSync,
+  parseMarkdown,
   parseObjectKey,
-} from '../src/processing-utils.js';
+} from '../src/queue-consumer.js';
 
 const TINY_PNG_BASE64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Zx9QAAAAASUVORK5CYII=';
@@ -91,8 +91,8 @@ test('normalizePermalink normalizes to leading slash, no trailing slash', () => 
   assert.strictEqual(normalizePermalink(undefined), null);
 });
 
-test('parseMarkdownForSync defaults publish to true', async () => {
-  const { metadata, permalink, shouldPublish } = await parseMarkdownForSync({
+test('parseMarkdown defaults publish to true', async () => {
+  const { metadata, permalink, shouldPublish } = await parseMarkdown({
     markdown: '# Hello',
     path: 'hello.md',
   });
@@ -103,9 +103,9 @@ test('parseMarkdownForSync defaults publish to true', async () => {
   assert.strictEqual(shouldPublish, true);
 });
 
-test('parseMarkdownForSync preserves explicit publish false and normalizes permalink', async () => {
+test('parseMarkdown preserves explicit publish false and normalizes permalink', async () => {
   const markdown = `---\npublish: false\npermalink: /posts/intro/\n---\n# Intro`;
-  const { metadata, permalink, shouldPublish } = await parseMarkdownForSync({
+  const { metadata, permalink, shouldPublish } = await parseMarkdown({
     markdown,
     path: 'intro.md',
   });
@@ -136,8 +136,8 @@ test('extractImageDimensions returns nulls for unsupported file type', () => {
   assert.deepStrictEqual(result, { width: null, height: null });
 });
 
-test('parseMarkdownForSync falls back to filename when no frontmatter title and no H1', async () => {
-  const { metadata } = await parseMarkdownForSync({
+test('parseMarkdown falls back to filename when no frontmatter title and no H1', async () => {
+  const { metadata } = await parseMarkdown({
     markdown: 'Just some content without a heading.',
     path: 'docs/my-page.md',
   });
@@ -145,9 +145,9 @@ test('parseMarkdownForSync falls back to filename when no frontmatter title and 
   assert.strictEqual(metadata.title, 'my-page');
 });
 
-test('parseMarkdownForSync prefers frontmatter title over H1', async () => {
+test('parseMarkdown prefers frontmatter title over H1', async () => {
   const markdown = '---\ntitle: Frontmatter Title\n---\n# H1 Title';
-  const { metadata } = await parseMarkdownForSync({
+  const { metadata } = await parseMarkdown({
     markdown,
     path: 'page.md',
   });

@@ -6,7 +6,6 @@ import {
   getPublishIdFromMetadata,
   readFileBytes,
 } from './storage.js';
-import { indexInTypesense } from './typesense.js';
 import { captureError, generateId } from './utils.js';
 
 export async function handleMessage({ msg, storage, sql, typesense, env }) {
@@ -198,8 +197,10 @@ async function processMarkdownFile({
     const sha = await computeGitBlobSha(contentBytes);
     const size = contentBytes.length;
 
-    const { metadata, body, permalink, shouldPublish } =
-      await parseMarkdownForSync({ markdown, path });
+    const { metadata, body, permalink, shouldPublish } = await parseMarkdown({
+      markdown,
+      path,
+    });
 
     if (!shouldPublish) {
       // Delete from R2; the resulting DeleteObject event drives Blob/Typesense cleanup.
@@ -338,7 +339,7 @@ export function extractImageDimensions(path, content) {
   };
 }
 
-export async function parseMarkdownForSync({ markdown, path }) {
+export async function parseMarkdown({ markdown, path }) {
   let parsed;
 
   try {
@@ -393,3 +394,28 @@ export const extractTitle = async (source) => {
   }
   return null;
 };
+
+async function indexInTypesense({
+  typesense,
+  siteId,
+  blobId,
+  path,
+  body,
+  metadata,
+}) {
+  if (!typesense) return;
+  try {
+    const document = {
+      title: metadata.title,
+      content: body,
+      path,
+      description: metadata.description,
+      authors: metadata.authors,
+      date: metadata.date ? new Date(metadata.date).getTime() / 1000 : null,
+      id: `${blobId}`,
+    };
+    await typesense.collections(siteId).documents().upsert(document);
+  } catch {
+    console.error(`Failed indexing document: ${`${siteId} - ${path}`}`);
+  }
+}

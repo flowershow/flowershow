@@ -275,7 +275,7 @@ The queue consumer extracts the following from markdown files:
 
 All other frontmatter key-value pairs are stored as-is in `Blob.metadata`.
 
-To add more extraction logic, edit `parseMarkdownForSync` in [src/processing-utils.js](src/processing-utils.js).
+To add more extraction logic, edit `parseMarkdown` in [src/processing-utils.js](src/processing-utils.js).
 
 ### Suppressing files
 
