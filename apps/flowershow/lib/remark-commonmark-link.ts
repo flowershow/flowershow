@@ -1,4 +1,4 @@
-import * as path from 'path';
+import { matchLinkTarget } from '@flowershow/core';
 import { visit } from 'unist-util-visit';
 import { resolveContentLink, resolveToAbsolutePath } from './resolve-link';
 
@@ -11,29 +11,14 @@ export interface Options {
 
 const dimensionOnlyPattern = /^\s*(\d+)(?:x(\d+))?\s*$/;
 
-/**
- * Find a file in the files list matching the resolved content path.
- * For extension-less paths (markdown links without .md), also tries .md/.mdx.
- */
-function findFile(resolvedPath: string, files: string[]): string | undefined {
-  const exact = files.find((f) => f === resolvedPath);
-  if (exact) return exact;
-
-  // Extension-less markdown links: try .md, .mdx
-  if (!path.extname(resolvedPath)) {
-    return files.find(
-      (f) => f === resolvedPath + '.md' || f === resolvedPath + '.mdx',
-    );
-  }
-  return undefined;
-}
-
 function RemarkCommonMarkLink({
   filePath,
   siteHostname,
   files = [],
   permalinks,
 }: Options) {
+  const wrappedFiles = files.map((f) => ({ path: f }));
+
   return (tree: any) => {
     visit(tree, 'link', (node) => {
       if (typeof node.url !== 'string') return;
@@ -42,7 +27,10 @@ function RemarkCommonMarkLink({
 
       const contentPath = resolveToAbsolutePath(node.url, filePath);
       const matchingFile = contentPath
-        ? findFile(contentPath, files)
+        ? matchLinkTarget(contentPath, wrappedFiles, {
+            format: 'exact',
+            caseInsensitive: false,
+          })?.path
         : undefined;
 
       if (matchingFile) {
@@ -64,7 +52,10 @@ function RemarkCommonMarkLink({
 
       const contentPath = resolveToAbsolutePath(node.url, filePath);
       const matchingFile = contentPath
-        ? findFile(contentPath, files)
+        ? matchLinkTarget(contentPath, wrappedFiles, {
+            format: 'exact',
+            caseInsensitive: false,
+          })?.path
         : undefined;
 
       node.url = resolveContentLink({
