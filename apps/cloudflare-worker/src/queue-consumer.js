@@ -392,12 +392,14 @@ export function extractLinks(markdown) {
   const links = [];
 
   // Strip fenced code blocks to avoid matching links inside them
-  const stripped = markdown.replace(/```[\s\S]*?```/g, '').replace(/`[^`]*`/g, '');
+  const stripped = markdown
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`[^`]*`/g, '');
 
   // Embeds: ![[target]] or ![[target|alias]] or ![[target#heading]]
   const embedRe = /!\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]/g;
   for (const m of stripped.matchAll(embedRe)) {
-    const target = m[1].trim();
+    const target = m[1].trim().replace(/\\$/, '');
     if (target) links.push({ targetPath: target, linkType: 'embed' });
   }
 
@@ -405,7 +407,7 @@ export function extractLinks(markdown) {
   // Must not be preceded by ! (already captured as embeds above)
   const wikilinkRe = /(?<!!)(?<!\[)\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]/g;
   for (const m of stripped.matchAll(wikilinkRe)) {
-    const target = m[1].trim();
+    const target = m[1].trim().replace(/\\$/, '');
     if (target) links.push({ targetPath: target, linkType: 'wikilink' });
   }
 
