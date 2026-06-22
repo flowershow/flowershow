@@ -25,9 +25,9 @@ A few things it gets right that a plain LLM wouldn't:
 Install the skill with one command:
 
 ```bash
-npx skills add flowershow/flowershow --skill flowershow --global
+npx skills add flowershow/skills --global
 ```
 
 This registers the `flowershow` skill. Your AI assistant will then use it automatically whenever you ask to configure or manage a Flowershow site.
 
-If you don't have Node.js, refer to your agent's documentation for adding custom skills or instructions, then point it to the [skill source](https://raw.githubusercontent.com/flowershow/flowershow/main/skills/flowershow/SKILL.md) directly.
+If you don't have Node.js, refer to your agent's documentation for adding custom skills or instructions, then point it to the [skill source](https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md) directly.

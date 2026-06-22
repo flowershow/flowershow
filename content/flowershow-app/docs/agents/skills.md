@@ -19,10 +19,10 @@ Once installed, your assistant can:
 **With Node.js:**
 
 ```bash
-npx skills add flowershow/flowershow --skill flowershow --global
+npx skills add flowershow/skills --global
 ```
 
-**Without Node.js:** Refer to your agent's documentation for adding custom skills or instructions, then point it to the skill source at `https://raw.githubusercontent.com/flowershow/flowershow/main/skills/flowershow/SKILL.md`.
+**Without Node.js:** Refer to your agent's documentation for adding custom skills or instructions, then point it to the skill source at `https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md`.
 
 ## How it works
 

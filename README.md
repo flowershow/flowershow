@@ -1,4 +1,4 @@
-[![skills.sh](https://skills.sh/b/flowershow/flowershow)](https://skills.sh/flowershow/flowershow)
+[![skills.sh](https://skills.sh/b/flowershow/skills)](https://skills.sh/flowershow/skills)
 
 # Flowershow 💐
 
@@ -112,7 +112,7 @@ pnpm release                   # Build all packages and publish to npm
 - **Web app**: [`apps/flowershow/README.md`](apps/flowershow/README.md) — architecture, local dev setup, environment config, testing, troubleshooting
 - **REST API contract**: [`packages/api-contract/README.md`](packages/api-contract/README.md) — Zod schemas, TypeScript types, and OpenAPI 3.1 spec for the Flowershow REST API. The contract is the single source of truth for the API surface; the Next.js API routes, CLI, and Obsidian plugin all consume it.
 - **Interactive API docs**: With the dev server running, visit `http://cloud.flowershow.local:3000/api/docs` for Swagger UI, or `/api/docs/openapi.json` for the raw spec. In production: [flowershow.app/api/docs](https://flowershow.app/api/docs).
-- **CLI**: [`apps/cli/README.md`](apps/cli/README.md) — Go CLI for publishing markdown files. Also the interface for AI agent integration — see the [Flowershow skill](skills/flowershow/SKILL.md).
+- **CLI**: [`apps/cli/README.md`](apps/cli/README.md) — Go CLI for publishing markdown files. Also the interface for AI agent integration — see the [Flowershow skill](https://github.com/flowershow/skills).
 - **User docs**: [flowershow.app/docs](https://flowershow.app/docs)
 
 ## Community
