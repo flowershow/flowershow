@@ -81,7 +81,7 @@ This applies to any user-visible change: adding/removing tools, renaming command
 
 ### Issue tracker
 
-GitHub Issues is primary (external/public issues); beads (`bd`) is used for internal session-level tracking. See `docs/agents/issue-tracker.md`.
+GitHub Issues is the issue tracker. See `docs/agents/issue-tracker.md`.
 
 ### Triage labels
 
@@ -122,16 +122,3 @@ If the change introduces a feature users need to understand or configure, create
 - New CLI commands or flags
 - Bug fixes that change previously broken or surprising behavior users may have worked around
 
-## Beads (optional session task tracking)
-
-This repo has `bd` (beads) available for tracking complex, multi-session work. It is **rarely used** — only reach for it when explicitly asked or when a task spans multiple sessions and needs persistent state.
-
-```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --status in_progress  # Claim work
-bd close <id>         # Complete work
-bd sync               # Sync with git
-```
-
-Don't use beads for simple tasks that can be completed in one session.

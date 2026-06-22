@@ -1,8 +1,6 @@
-# Issue tracker: GitHub (primary) + Beads (session)
+# Issue tracker: GitHub
 
 Issues and PRDs for this repo live as **GitHub Issues** at `github.com/flowershow/flowershow`. Use the `gh` CLI for all create/read/update operations.
-
-Beads (`bd`) is used for **internal session-level task tracking** only — it is not the target for skills that "publish to the issue tracker".
 
 ## Conventions
 
