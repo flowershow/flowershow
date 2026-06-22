@@ -52,6 +52,20 @@ _Avoid_: Sync source, publish method, trigger type, client type
 The user-facing state of a site, derived at read time from the latest Publish and its PublishFile records. Never stored as a column. Values: `UNPUBLISHED` (no publishes yet), `PENDING` (latest Publish has no `completedAt`), `SUCCESS` (latest Publish completed, no errors), `ERROR` (latest Publish completed with errors).
 _Avoid_: Sync status, site status, deployment status
 
+### Links and Graph
+
+**Link**:
+A directional connection from one Page File to another within the same site, extracted during publish. Stored in a dedicated `Link` table as `(sourceBlobId, targetPath, targetBlobId?, linkType)`. Three syntaxes are captured: wiki links (`[[Page]]`), embeds (`![[Page]]`), and internal CommonMark links (`[text](path)`). External URLs, anchors, and raw asset links are excluded. The `remark-wiki-link` parser already distinguishes `wikilink` and `embed` node types.
+_Avoid_: Edge, connection, reference
+
+**Backlink**:
+A Link viewed from the perspective of its target — the set of pages that link *to* the current page. Derived by querying `Link WHERE targetBlobId = X`.
+_Avoid_: Incoming link, reverse link
+
+**Link Resolution**:
+The post-publish step (run in the PublishFinalizerWorkflow) that walks all unresolved Links for a site, matches `targetPath` against current Blob records, and fills in `targetBlobId`. Also cleans up Links whose source or target Blob was deleted.
+_Avoid_: Link indexing, link building
+
 ## Example dialogue
 
 > **Dev**: A user says their site shows PENDING even though the publish finished an hour ago.
