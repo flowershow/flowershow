@@ -8,7 +8,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { Plan, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
-import { filePathToSlug } from '../../lib/file-path-to-slug';
+import { filePathToSlug } from './file-path-to-slug';
 import { extractImageDimensions, parseMarkdown } from './processing-utils';
 
 // --- Config ---

@@ -102,7 +102,7 @@ function customEncodeSegment(segment) {
   return encodeURIComponent(segment).replace(/%20/g, '+').replace(/%2F/g, '/');
 }
 
-function filePathToSlug(filePath) {
+export function filePathToSlug(filePath) {
   filePath = filePath.startsWith('/') ? filePath : `/${filePath}`;
   const lastDot = filePath.lastIndexOf('.');
   const lastSlash = filePath.lastIndexOf('/');

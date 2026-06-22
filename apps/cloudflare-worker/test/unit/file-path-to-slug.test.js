@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filePathToSlug } from './file-path-to-slug';
+import { filePathToSlug } from '../../src/queue-consumer.js';
 
 describe('filePathToSlug', () => {
   describe('root files', () => {

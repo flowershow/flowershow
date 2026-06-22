@@ -1,20 +1,15 @@
+// Node.js-compatible copy for e2e test seeding. Must stay in sync with the
+// canonical implementation in apps/cloudflare-worker/src/queue-consumer.js.
 import * as path from 'path';
-import { customEncodeUrl, ensureLeadingSlash } from './url-encoder';
 
 const PAGE_FILE_EXTENSIONS = new Set(['md', 'mdx', 'canvas']);
 
-/**
- * Convert an absolute file path to a URL slug with a leading slash.
- * Spaces are encoded as `+`. Page file extensions (md, mdx, canvas) are stripped.
- * README and index filenames are normalised to their directory root.
- *
- * @example
- * filePathToSlug('/blog/Cool Post.md')  // → '/blog/Cool+Post'
- * filePathToSlug('/README.md')           // → '/'
- * filePathToSlug('notes/file.md')        // → '/notes/file' (relative path normalised)
- */
+function customEncodeUrl(segment: string): string {
+  return encodeURIComponent(segment).replace(/%20/g, '+').replace(/%2F/g, '/');
+}
+
 export function filePathToSlug(filePath: string): string {
-  filePath = ensureLeadingSlash(filePath);
+  filePath = filePath.startsWith('/') ? filePath : `/${filePath}`;
 
   const extWithDot = path.extname(filePath);
   const ext = extWithDot.slice(1);
