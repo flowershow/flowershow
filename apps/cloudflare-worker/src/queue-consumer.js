@@ -439,18 +439,18 @@ async function syncLinks(sql, siteId, blobId, markdown) {
   const extracted = extractLinks(markdown);
   const newTargetPaths = extracted.map((l) => l.targetPath);
 
-  // Delete links no longer present in the file. Branch on empty because
-  // fetch_types:false (used in this worker) prevents postgres.js from
-  // inferring the element type for an empty array, causing a "malformed
-  // array literal" error when ALL(ARRAY[]::unknown) is sent.
-  if (newTargetPaths.length === 0) {
-    await sql`DELETE FROM "Link" WHERE source_blob_id = ${blobId}`;
-  } else {
-    await sql`
-      DELETE FROM "Link"
-      WHERE source_blob_id = ${blobId}
-        AND target_path != ALL(${sql.array(newTargetPaths)})
-    `;
+  // fetch_types:false (required in this worker) breaks sql.array() — the
+  // OID type map is unavailable so postgres.js can't serialize array params.
+  // Diff in JS instead: fetch existing rows, delete stale ones by scalar ID.
+  const existing = await sql`
+    SELECT id, target_path FROM "Link"
+    WHERE source_blob_id = ${blobId}
+  `;
+  const newPathSet = new Set(newTargetPaths);
+  for (const row of existing) {
+    if (!newPathSet.has(row.target_path)) {
+      await sql`DELETE FROM "Link" WHERE id = ${row.id}`;
+    }
   }
 
   // Insert new links; on conflict update only link_type (preserving target_blob_id)
