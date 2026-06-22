@@ -23,6 +23,7 @@
     "access": "public"
   },
   "dependencies": {
+    "@flowershow/core": "workspace:*",
     "github-slugger": "^2.0.0",
     "mdast-util-to-markdown": "^2.1.2",
     "micromark-util-character": "^2.0.0",

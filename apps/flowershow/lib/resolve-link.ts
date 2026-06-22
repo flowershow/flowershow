@@ -1,9 +1,12 @@
+import {
+  encodeSlug,
+  filePathToSlug,
+  PAGE_FILE_EXTENSIONS,
+} from '@flowershow/core';
 import { slug } from 'github-slugger';
 import * as path from 'path';
 import { env } from '../env.mjs';
-import { customEncodeUrl, ensureLeadingSlash } from './url-encoder';
-
-const PAGE_FILE_EXTENSIONS = new Set(['md', 'mdx', 'canvas']);
+import { ensureLeadingSlash } from './url-encoder';
 
 /**
  * Resolve a render-time link target (href or src) to a URL path or full asset URL.
@@ -77,28 +80,6 @@ export const resolveContentLink = ({
 
   // Page file — compute URL slug
   const permalink = permalinks?.[resolvedPath];
-  let urlPath: string;
-  if (permalink) {
-    urlPath = permalink;
-  } else {
-    // Strip page file extension
-    const withoutExt = PAGE_FILE_EXTENSIONS.has(ext)
-      ? resolvedPath.slice(0, resolvedPath.length - extWithDot.length)
-      : resolvedPath;
-
-    // Normalise README/index to directory root
-    const base = path.basename(withoutExt);
-    urlPath =
-      base === 'README' || base === 'index'
-        ? path.dirname(withoutExt)
-        : withoutExt;
-
-    urlPath = !urlPath || urlPath === '/' ? '/' : urlPath.replace(/\/$/, '');
-  }
-
-  const encoded = urlPath
-    .split('/')
-    .map((p) => customEncodeUrl(p))
-    .join('/');
-  return `${encoded}${headingId}`;
+  const urlPath = permalink ?? encodeSlug(filePathToSlug(resolvedPath));
+  return `${urlPath}${headingId}`;
 };

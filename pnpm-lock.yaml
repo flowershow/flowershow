@@ -60,6 +60,9 @@ importers:
       '@aws-sdk/client-s3':
         specifier: ^3.0.0
         version: 3.990.0
+      '@flowershow/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       gray-matter:
         specifier: ^4.0.3
         version: 4.0.3(patch_hash=f99747fffebc5f7699100bb5c1d087b565fe92daccc48287872c6f4c9d9ac819)
@@ -106,6 +109,9 @@ importers:
       '@flowershow/api-contract':
         specifier: workspace:*
         version: link:../../packages/api-contract
+      '@flowershow/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       '@flowershow/remark-wiki-link':
         specifier: workspace:*
         version: link:../../packages/remark-wiki-link
@@ -544,8 +550,20 @@ importers:
         specifier: ^8.5.0
         version: 8.5.1(jiti@2.6.1)(postcss@8.5.10)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
 
+  packages/core:
+    devDependencies:
+      tsup:
+        specifier: ^8.5.0
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.10)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.4(@types/debug@4.1.12)(@types/node@24.10.13)(@vitest/browser@3.2.4)(jiti@2.6.1)(jsdom@27.4.0)(terser@5.46.0)(tsx@4.21.0)(yaml@2.8.2)
+
   packages/remark-wiki-link:
     dependencies:
+      '@flowershow/core':
+        specifier: workspace:*
+        version: link:../core
       github-slugger:
         specifier: ^2.0.0
         version: 2.0.0

@@ -1,5 +1,6 @@
 import { WorkflowEntrypoint } from 'cloudflare:workers';
 import { getPostgresClient } from './clients.js';
+import { resolveTargetToBlob } from './utils.js';
 
 const MAX_POLL_ATTEMPTS = 360; // 1 hour at 10s intervals
 
@@ -44,15 +45,7 @@ export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
 
       for (const link of unresolved) {
         const target = link.target_path;
-        const match = blobs.find(
-          (b) =>
-            b.permalink === target ||
-            b.app_path === target ||
-            b.path === target ||
-            b.path.endsWith(`/${target}`) ||
-            b.path.endsWith(`/${target}.md`) ||
-            b.path.endsWith(`/${target}.mdx`),
-        );
+        const match = resolveTargetToBlob(target, blobs);
         if (match) {
           await sql`
             UPDATE "Link" SET target_blob_id = ${match.id}

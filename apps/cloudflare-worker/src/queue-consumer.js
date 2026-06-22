@@ -1,3 +1,4 @@
+import { encodeSlug, filePathToSlug, PAGE_FILE_EXTENSIONS } from '@flowershow/core';
 import matter from 'gray-matter';
 import { imageSize, types as supportedImageTypes } from 'image-size';
 import { computeGitBlobSha } from './github.js';
@@ -96,34 +97,6 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
   }
 }
 
-const PAGE_EXTENSIONS = new Set(['md', 'mdx', 'canvas']);
-
-function customEncodeSegment(segment) {
-  return encodeURIComponent(segment).replace(/%20/g, '+').replace(/%2F/g, '/');
-}
-
-export function filePathToSlug(filePath) {
-  filePath = filePath.startsWith('/') ? filePath : `/${filePath}`;
-  const lastDot = filePath.lastIndexOf('.');
-  const lastSlash = filePath.lastIndexOf('/');
-  const extWithDot = lastDot > lastSlash ? filePath.slice(lastDot) : '';
-  const ext = extWithDot.slice(1);
-
-  let withoutExt = PAGE_EXTENSIONS.has(ext)
-    ? filePath.slice(0, filePath.length - extWithDot.length)
-    : filePath;
-
-  const parts = withoutExt.split('/');
-  const basename = parts[parts.length - 1];
-  if (basename === 'README' || basename === 'index') {
-    withoutExt = parts.slice(0, -1).join('/') || '/';
-  }
-
-  if (!withoutExt || withoutExt === '/') return '/';
-  withoutExt = withoutExt.replace(/\/$/, '');
-
-  return withoutExt.split('/').map(customEncodeSegment).join('/');
-}
 
 async function upsertBlob(
   sql,
@@ -132,7 +105,7 @@ async function upsertBlob(
   { sha, size, metadata, permalink, width, height },
 ) {
   const extension = path.split('.').pop()?.toLowerCase() ?? '';
-  const appPath = PAGE_EXTENSIONS.has(extension) ? filePathToSlug(path) : null;
+  const appPath = PAGE_FILE_EXTENSIONS.has(extension) ? encodeSlug(filePathToSlug(path)) : null;
   const rows = await sql`
     INSERT INTO "Blob" (id, site_id, path, app_path, extension, sha, size, metadata, permalink, width, height, updated_at)
     VALUES (

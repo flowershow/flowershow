@@ -19,12 +19,12 @@ describe('mdast-util-wiki-link', () => {
 
       visit(ast, 'wikiLink', (node: any) => {
         expect(node.value).toBe('Wiki Link');
-        expect(node.data.path).toBe('Wiki Link');
+        expect(node.data.path).toBe('/Wiki Link');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(true);
         expect(node.data.hName).toBe('a');
         expect(node.data.hProperties?.className).toBe('internal');
-        expect(node.data.hProperties?.href).toBe('Wiki Link');
+        expect(node.data.hProperties?.href).toBe('/Wiki Link');
         expect(node.data.hChildren?.[0].value).toBe('Wiki Link');
       });
     });
@@ -41,12 +41,12 @@ describe('mdast-util-wiki-link', () => {
 
       visit(ast, 'wikiLink', (node: any) => {
         expect(node.value).toBe('New Page');
-        expect(node.data.path).toBe('New Page');
+        expect(node.data.path).toBe('/New Page');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
         expect(node.data.hName).toBe('a');
         expect(node.data.hProperties?.className).toBe('internal new');
-        expect(node.data.hProperties?.href).toBe('New Page');
+        expect(node.data.hProperties?.href).toBe('/New Page');
         expect(node.data.hChildren?.[0].value).toBe('New Page');
       });
     });
@@ -85,12 +85,12 @@ describe('mdast-util-wiki-link', () => {
 
       visit(ast, 'wikiLink', (node: any) => {
         expect(node.value).toBe('Wiki Link#Some Heading');
-        expect(node.data.path).toBe('Wiki Link#some-heading');
+        expect(node.data.path).toBe('/Wiki Link#some-heading');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
         expect(node.data.hName).toBe('a');
         expect(node.data.hProperties?.className).toBe('internal new');
-        expect(node.data.hProperties?.href).toBe('Wiki Link#some-heading');
+        expect(node.data.hProperties?.href).toBe('/Wiki Link#some-heading');
         expect(node.data.hChildren?.[0].value).toBe('Wiki Link#Some Heading');
       });
     });
@@ -107,12 +107,12 @@ describe('mdast-util-wiki-link', () => {
 
       visit(ast, 'wikiLink', (node: any) => {
         expect(node.value).toBe('Wiki Link#Some Heading');
-        expect(node.data.path).toBe('Wiki Link#some-heading');
+        expect(node.data.path).toBe('/Wiki Link#some-heading');
         expect(node.data.alias).toBe('Alias');
         expect(node.data.existing).toBe(false);
         expect(node.data.hName).toBe('a');
         expect(node.data.hProperties?.className).toBe('internal new');
-        expect(node.data.hProperties?.href).toBe('Wiki Link#some-heading');
+        expect(node.data.hProperties?.href).toBe('/Wiki Link#some-heading');
         expect(node.data.hChildren?.[0].value).toBe('Alias');
       });
     });
@@ -135,14 +135,14 @@ describe('mdast-util-wiki-link', () => {
           'Wiki Link#Some.Heading.With-♥-Unicode and spaces',
         );
         expect(node.data.path).toBe(
-          'Wiki Link#someheadingwith--unicode-and-spaces',
+          '/Wiki Link#someheadingwith--unicode-and-spaces',
         );
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
         expect(node.data.hName).toBe('a');
         expect(node.data.hProperties?.className).toBe('internal new');
         expect(node.data.hProperties?.href).toBe(
-          'Wiki Link#someheadingwith--unicode-and-spaces',
+          '/Wiki Link#someheadingwith--unicode-and-spaces',
         );
         expect(node.data.hChildren?.[0].value).toBe(
           'Wiki Link#Some.Heading.With-♥-Unicode and spaces',
@@ -184,12 +184,12 @@ describe('mdast-util-wiki-link', () => {
 
       visit(ast, 'wikiLink', (node: any) => {
         expect(node.value).toBe('Wiki Link');
-        expect(node.data.path).toBe('Wiki Link');
+        expect(node.data.path).toBe('/Wiki Link');
         expect(node.data.alias).toBe('Alias');
         expect(node.data.existing).toBe(false);
         expect(node.data.hName).toBe('a');
         expect(node.data.hProperties?.className).toBe('internal new');
-        expect(node.data.hProperties?.href).toBe('Wiki Link');
+        expect(node.data.hProperties?.href).toBe('/Wiki Link');
         expect(node.data.hChildren?.[0].value).toBe('Alias');
       });
     });
@@ -209,12 +209,12 @@ describe('mdast-util-wiki-link', () => {
 
       visit(ast, 'wikiLink', (node: any) => {
         expect(node.value).toBe('post-1');
-        expect(node.data.path).toBe('post-1');
+        expect(node.data.path).toBe('/post-1');
         expect(node.data.alias).toBe('Link with Alias');
         expect(node.data.existing).toBe(false);
         expect(node.data.hName).toBe('a');
         expect(node.data.hProperties?.className).toBe('internal new');
-        expect(node.data.hProperties?.href).toBe('post-1');
+        expect(node.data.hProperties?.href).toBe('/post-1');
         expect(node.data.hChildren?.[0].value).toBe('Link with Alias');
       });
     });
@@ -479,9 +479,9 @@ describe('mdast-util-wiki-link', () => {
 
       visit(ast, 'wikiLink', (node: any) => {
         expect(node.value).toBe('blog/my-post');
-        expect(node.data.path).toBe('blog/my-post');
+        expect(node.data.path).toBe('/blog/my-post');
         expect(node.data.existing).toBe(true);
-        expect(node.data.hProperties?.href).toBe('blog/my-post');
+        expect(node.data.hProperties?.href).toBe('/blog/my-post');
       });
     });
 

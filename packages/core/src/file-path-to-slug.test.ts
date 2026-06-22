@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filePathToSlug } from '../../src/queue-consumer.js';
+import { encodeSlug, filePathToSlug } from './file-path-to-slug';
 
 describe('filePathToSlug', () => {
   describe('root files', () => {
@@ -48,7 +48,7 @@ describe('filePathToSlug', () => {
     });
 
     it('strips .canvas', () => {
-      expect(filePathToSlug('/My Canvas.canvas')).toBe('/My+Canvas');
+      expect(filePathToSlug('/My Canvas.canvas')).toBe('/My Canvas');
     });
 
     it('keeps non-page extension', () => {
@@ -56,16 +56,16 @@ describe('filePathToSlug', () => {
     });
   });
 
-  describe('space encoding', () => {
-    it('encodes spaces in filename as +', () => {
+  describe('paths with spaces (no encoding)', () => {
+    it('preserves spaces in filename', () => {
       expect(filePathToSlug('/Abc Resources/Xyz Map.md')).toBe(
-        '/Abc+Resources/Xyz+Map',
+        '/Abc Resources/Xyz Map',
       );
     });
 
-    it('encodes spaces in directory segment', () => {
+    it('preserves spaces in directory segment', () => {
       expect(filePathToSlug('/My Notes/Cool Article.md')).toBe(
-        '/My+Notes/Cool+Article',
+        '/My Notes/Cool Article',
       );
     });
   });
@@ -74,5 +74,25 @@ describe('filePathToSlug', () => {
     it('normalises relative path with leading slash prepended', () => {
       expect(filePathToSlug('some/file.md')).toBe('/some/file');
     });
+  });
+});
+
+describe('encodeSlug', () => {
+  it('encodes spaces as +', () => {
+    expect(encodeSlug('/Abc Resources/Xyz Map')).toBe('/Abc+Resources/Xyz+Map');
+  });
+
+  it('encodes spaces in a single segment', () => {
+    expect(encodeSlug('/My Canvas')).toBe('/My+Canvas');
+  });
+
+  it('leaves root alone', () => {
+    expect(encodeSlug('/')).toBe('/');
+  });
+
+  it('round-trips with filePathToSlug', () => {
+    expect(encodeSlug(filePathToSlug('/My Notes/Cool Article.md'))).toBe(
+      '/My+Notes/Cool+Article',
+    );
   });
 });

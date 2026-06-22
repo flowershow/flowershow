@@ -1,3 +1,4 @@
+import { filePathToSlug } from '@flowershow/core';
 import { slug } from 'github-slugger';
 
 // File type definitions
@@ -99,23 +100,11 @@ export const defaultUrlResolver = ({
   heading?: string;
   isEmbed?: boolean;
 }): string => {
-  if (isEmbed) {
-    return filePath;
-  }
-  const pathWithNoExtension = filePath.replace(/\.(mdx?|md)/, '');
-
-  // Remove trailing /index and /README
-  const normalizedPath = pathWithNoExtension.replace(/\/?(index|README)$/, '');
-
-  // Generate heading id if present
+  if (isEmbed) return filePath;
+  const slugPath = filePathToSlug(filePath);
   const headingId = heading ? `#${slug(heading)}` : '';
-
-  // Special case: only heading anchor
-  if (headingId && !normalizedPath) {
-    return headingId;
-  }
-
-  return (normalizedPath || '/') + headingId;
+  if (headingId && slugPath === '/') return headingId;
+  return slugPath + headingId;
 };
 
 export const findMatchingFilePath = ({
