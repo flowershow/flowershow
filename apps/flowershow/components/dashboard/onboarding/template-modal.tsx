@@ -247,7 +247,7 @@ export default function TemplateModal({
       setShowModal={handleClose}
       closeOnClickOutside={!isConnecting}
     >
-      <div className="w-full max-w-xl overflow-hidden rounded-md bg-white md:border md:border-stone-200 md:shadow">
+      <div className="w-full md:max-w-xl overflow-hidden rounded-md bg-white md:border md:border-stone-200 md:shadow">
         {/* Step 1: Choose template */}
         {step === 'template' && (
           <div className="relative flex flex-col space-y-6 p-5 md:p-10">

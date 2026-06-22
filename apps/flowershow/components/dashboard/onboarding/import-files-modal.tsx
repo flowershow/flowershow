@@ -245,7 +245,7 @@ export default function ImportFilesOnboardingModal({
       setShowModal={handleClose}
       closeOnClickOutside={state !== 'uploading' && state !== 'processing'}
     >
-      <div className="w-full max-w-lg bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden">
+      <div className="w-full md:max-w-lg bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden">
         <div className="relative flex flex-col space-y-2 p-5 md:p-10 md:pb-0">
           <h2 className="font-dashboard-heading text-2xl">Import Files</h2>
           <p className="text-sm text-stone-500">

@@ -55,7 +55,7 @@ export default function ObsidianPublishModal({
 
   return (
     <Modal showModal={showModal} setShowModal={handleClose}>
-      <div className="w-full max-w-lg bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden">
+      <div className="w-full md:max-w-lg bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden">
         <div className="p-5 md:p-10">
           <h2 className="font-dashboard-heading text-2xl">
             Publish from Obsidian

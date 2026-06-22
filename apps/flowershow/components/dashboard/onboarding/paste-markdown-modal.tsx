@@ -124,7 +124,7 @@ export default function PasteMarkdownModal({
       setShowModal={handleClose}
       closeOnClickOutside={state !== 'publishing' && state !== 'processing'}
     >
-      <div className="w-full max-w-lg overflow-hidden rounded-md bg-white md:border md:border-stone-200 md:shadow">
+      <div className="w-full md:max-w-lg overflow-hidden rounded-md bg-white md:border md:border-stone-200 md:shadow">
         <div className="relative flex flex-col space-y-2 p-5 md:p-10 md:pb-0">
           <div className="flex items-center gap-3">
             <h2 className="font-dashboard-heading text-2xl">Paste Markdown</h2>
