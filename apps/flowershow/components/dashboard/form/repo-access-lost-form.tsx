@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { GithubIcon } from '@/components/icons';
 import LoadingDots from '@/components/icons/loading-dots';
-import { cn } from '@/lib/utils';
+import clsx from 'clsx';
 import { api } from '@/trpc/react';
 
 interface RepoAccessLostFormProps {
@@ -138,7 +138,7 @@ export default function RepoAccessLostForm({
               <button
                 onClick={handleReconnect}
                 disabled={isReconnecting}
-                className={cn(
+                className={clsx(
                   'flex h-10 min-w-[13rem] items-center justify-center space-x-2 rounded-md border px-4 text-sm font-medium transition-all focus:outline-none',
                   isReconnecting
                     ? 'cursor-not-allowed border-blue-300 bg-blue-100 text-blue-400'
@@ -155,7 +155,7 @@ export default function RepoAccessLostForm({
               <button
                 onClick={handleConnect}
                 disabled={isConnecting}
-                className={cn(
+                className={clsx(
                   'flex h-10 min-w-[13rem] items-center justify-center space-x-2 rounded-md border px-4 text-sm font-medium transition-all focus:outline-none',
                   isConnecting
                     ? 'cursor-not-allowed border-blue-300 bg-blue-100 text-blue-400'

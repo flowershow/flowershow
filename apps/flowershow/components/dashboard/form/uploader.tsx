@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { cn } from '@/lib/utils';
+import clsx from 'clsx';
 
 export default function Uploader({
   defaultValue,
@@ -44,7 +44,7 @@ export default function Uploader({
     <div>
       <label
         htmlFor={`${name}-upload`}
-        className={cn(
+        className={clsx(
           'group relative mt-2 flex cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50',
           aspectRatio,
           {

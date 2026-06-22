@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import GitHubConnectionCard from '@/components/dashboard/github-connection-card';
 import { GithubIcon } from '@/components/icons';
 import LoadingDots from '@/components/icons/loading-dots';
-import { cn } from '@/lib/utils';
+import clsx from 'clsx';
 import Modal from '@/providers/modal';
 import { api } from '@/trpc/react';
 
@@ -311,7 +311,7 @@ export default function GitHubSyncModal({
               <button
                 type="submit"
                 disabled={isConnecting || !data.ghRepository}
-                className={cn(
+                className={clsx(
                   'flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium transition-all',
                   isConnecting || !data.ghRepository
                     ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'

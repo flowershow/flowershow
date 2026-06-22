@@ -6,7 +6,6 @@ import { signOut } from 'next-auth/react';
 import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
-import { cn } from '@/lib/utils';
 import { api } from '@/trpc/react';
 import { PasswordInput } from '../password-input';
 
@@ -101,7 +100,7 @@ export default function SitePasswordProtectionForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className={cn(
+      className={clsx(
         'isolate rounded-lg border border-stone-200',
         disabled ? 'bg-stone-50' : 'bg-white',
       )}
@@ -184,7 +183,7 @@ export default function SitePasswordProtectionForm({
         {!disabled && (
           <button
             type="submit"
-            className={cn(
+            className={clsx(
               'flex h-8 w-32 shrink-0 items-center justify-center space-x-2 rounded-md border px-2 py-1 text-sm transition-all focus:outline-none sm:h-10',
               !canSave || pending
                 ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'

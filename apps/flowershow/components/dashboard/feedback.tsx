@@ -4,7 +4,7 @@ import Cookies from 'js-cookie';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
-import { cn } from '@/lib/utils';
+import clsx from 'clsx';
 import { useConfetti } from '@/providers/confetti-provider';
 import { useModal } from '@/providers/modal-provider';
 import { api } from '@/trpc/react';
@@ -152,7 +152,7 @@ function SubmitButton({ disabled = false, pending = false }) {
   return (
     <button
       type="submit"
-      className={cn(
+      className={clsx(
         'flex h-10 items-center justify-center space-x-2 rounded-md border px-4 text-sm transition-all focus:outline-none',
         pending || disabled
           ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   '

@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
-import { cn } from '@/lib/utils';
+import clsx from 'clsx';
 
 export default function ReportAbuse() {
   const [open, setOpen] = useState(false);
@@ -73,7 +73,7 @@ function SubmitButton() {
   const { pending } = useFormStatus();
   return (
     <button
-      className={cn(
+      className={clsx(
         'h flex h-8 w-full items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none sm:h-10',
         pending
           ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'

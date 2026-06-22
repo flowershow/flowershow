@@ -10,7 +10,7 @@ import {
 import { useState } from 'react';
 import Skeleton from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
-import { cn } from '@/lib/utils';
+import clsx from 'clsx';
 import { api } from '@/trpc/react';
 
 type PublishSource =
@@ -59,7 +59,7 @@ const SOURCE_LABELS: Record<PublishSource, string> = {
 function FileStatusDot({ status }: { status: FileStatus }) {
   return (
     <span
-      className={cn(
+      className={clsx(
         'inline-block h-1.5 w-1.5 rounded-full',
         status === 'success' && 'bg-green-500',
         status === 'error' && 'bg-red-500',
@@ -73,7 +73,7 @@ function FileStatusDot({ status }: { status: FileStatus }) {
 function ChangeTypeBadge({ changeType }: { changeType: ChangeType }) {
   return (
     <span
-      className={cn(
+      className={clsx(
         'rounded px-1 py-0.5 font-mono text-[10px] uppercase',
         changeType === 'added' && 'bg-green-100 text-green-700',
         changeType === 'updated' && 'bg-blue-100 text-blue-700',

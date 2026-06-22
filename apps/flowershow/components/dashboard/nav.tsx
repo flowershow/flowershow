@@ -16,7 +16,7 @@ import posthog from 'posthog-js';
 import { ReactNode, useEffect, useMemo } from 'react';
 import FeedbackModal from '@/components/dashboard/feedback';
 import { getConfig } from '@/lib/app-config';
-import { cn } from '@/lib/utils';
+import clsx from 'clsx';
 import { useModal } from '@/providers/modal-provider';
 import { api } from '@/trpc/react';
 

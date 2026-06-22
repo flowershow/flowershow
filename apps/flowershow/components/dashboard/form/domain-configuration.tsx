@@ -4,7 +4,7 @@ import { AlertCircle, Info, XCircle } from 'lucide-react';
 import { useState } from 'react';
 import { env } from '@/env.mjs';
 import { getSubdomain } from '@/lib/domains';
-import { cn } from '@/lib/utils';
+import clsx from 'clsx';
 import { useDomainStatus } from './use-domain-status';
 
 export const InlineSnippet = ({
@@ -16,7 +16,7 @@ export const InlineSnippet = ({
 }) => {
   return (
     <span
-      className={cn(
+      className={clsx(
         'inline-block rounded-md bg-blue-100 px-1 py-0.5 font-mono text-blue-900  ',
         className,
       )}

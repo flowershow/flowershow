@@ -6,7 +6,6 @@ import { useParams, useRouter } from 'next/navigation';
 import { type FormEvent, type ReactNode, useState } from 'react';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
-import { cn } from '@/lib/utils';
 import type { SiteUpdateKey } from '@/server/api/types';
 import DomainConfiguration from './domain-configuration';
 import DomainStatus from './domain-status';
@@ -138,7 +137,7 @@ export default function Form({
       data-testid={`config-${inputAttrs.name}`}
       onSubmit={onFormSubmit}
       /* no `action={...}` to prevent reset issues in select field (bug: https://github.com/facebook/react/issues/30580#issuecomment-2822605921)  */
-      className={cn(
+      className={clsx(
         'isolate rounded-lg border border-stone-200',
         disabled ? 'bg-stone-50' : 'bg-white',
       )}
@@ -263,7 +262,7 @@ function FormButton({ name, pending }: { name: string; pending: boolean }) {
   return (
     <button
       type="submit"
-      className={cn(
+      className={clsx(
         'flex h-8 w-32 shrink-0 items-center justify-center space-x-2 rounded-md border px-2 py-1 text-sm transition-all focus:outline-none sm:h-10',
         pending
           ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'

@@ -6,7 +6,7 @@ import { signOut } from 'next-auth/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
-import { cn } from '@/lib/utils';
+import clsx from 'clsx';
 import { api } from '@/trpc/react';
 
 type SubscriptionWithInterval = Subscription & {
@@ -171,7 +171,7 @@ export default function DeleteSiteForm({ siteName }: { siteName: string }) {
 function FormButton({ pending = false }) {
   return (
     <button
-      className={cn(
+      className={clsx(
         'flex h-8 w-32 items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none sm:h-10',
         pending
           ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   '

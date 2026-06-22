@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { type ReactNode, useState } from 'react';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
-import { cn } from '@/lib/utils';
+import clsx from 'clsx';
 
 export default function JsonForm({
   title,
@@ -90,7 +90,7 @@ export default function JsonForm({
         <button
           type="submit"
           disabled={pending}
-          className={cn(
+          className={clsx(
             'flex h-8 w-32 shrink-0 items-center justify-center space-x-2 rounded-md border px-2 py-1 text-sm transition-all focus:outline-none sm:h-10',
             pending
               ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'

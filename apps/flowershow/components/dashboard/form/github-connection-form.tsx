@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import GitHubConnectionCard from '@/components/dashboard/github-connection-card';
 import { GithubIcon } from '@/components/icons';
 import LoadingDots from '@/components/icons/loading-dots';
-import { cn } from '@/lib/utils';
+import clsx from 'clsx';
 import { useModal } from '@/providers/modal-provider';
 import { SiteUpdateKey } from '@/server/api/types';
 import { api } from '@/trpc/react';
@@ -179,7 +179,7 @@ export default function GitHubConnectionForm({
           <button
             onClick={handleOpenConnectModal}
             disabled={isButtonLoading}
-            className={cn(
+            className={clsx(
               'flex h-10 w-full items-center justify-center space-x-2 rounded-md border px-4 text-sm font-medium transition-all focus:outline-none sm:w-auto',
               isButtonLoading
                 ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
@@ -255,7 +255,7 @@ export default function GitHubConnectionForm({
                 <button
                   onClick={handleSaveRootDir}
                   disabled={isSavingRootDir}
-                  className={cn(
+                  className={clsx(
                     'flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium transition-all focus:outline-none',
                     isSavingRootDir
                       ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
@@ -286,7 +286,7 @@ export default function GitHubConnectionForm({
           <button
             onClick={handleDisconnect}
             disabled={isDisconnecting}
-            className={cn(
+            className={clsx(
               'flex h-10 w-full items-center justify-center rounded-md border px-4 text-sm font-medium transition-all focus:outline-none sm:w-auto',
               isDisconnecting
                 ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
@@ -608,7 +608,7 @@ function ConnectGitHubModal({
         <button
           type="submit"
           disabled={isConnecting || !data.ghRepository}
-          className={cn(
+          className={clsx(
             'flex h-10 items-center justify-center space-x-2 rounded-md border px-6 text-sm font-medium transition-all focus:outline-none',
             isConnecting || !data.ghRepository
               ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'

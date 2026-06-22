@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { GithubIcon } from '@/components/icons';
 import LoadingDots from '@/components/icons/loading-dots';
-import { cn } from '@/lib/utils';
+import clsx from 'clsx';
 import { api } from '@/trpc/react';
 
 export default function GitHubSettingsPage() {
@@ -181,7 +181,7 @@ export default function GitHubSettingsPage() {
                     <button
                       onClick={() => handleSync(installation.id)}
                       disabled={isSyncing || isRemoving}
-                      className={cn(
+                      className={clsx(
                         'flex h-9 items-center justify-center rounded-md border px-3 text-sm transition-all focus:outline-none',
                         isSyncing || isRemoving
                           ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
@@ -203,7 +203,7 @@ export default function GitHubSettingsPage() {
                         handleRemove(installation.id, installation.accountLogin)
                       }
                       disabled={isSyncing || isRemoving}
-                      className={cn(
+                      className={clsx(
                         'flex h-9 items-center justify-center rounded-md border px-3 text-sm transition-all focus:outline-none',
                         isSyncing || isRemoving
                           ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
