@@ -7,7 +7,7 @@ vi.mock('@/env.mjs', () => ({
   },
 }));
 
-import { resolveContentLink } from './resolve-link';
+import { resolveContentLink, resolveToAbsolutePath } from './resolve-link';
 
 /* example site file tree:
  * /README.md
@@ -365,5 +365,47 @@ describe('resolve links on non-README page', () => {
       });
       expect(resolved).toBe(expected);
     });
+  });
+});
+
+describe('resolveToAbsolutePath', () => {
+  it('resolves a relative target from the root', () => {
+    expect(resolveToAbsolutePath('about.md', '/')).toBe('/about.md');
+  });
+
+  it('resolves a relative target from a nested file', () => {
+    expect(resolveToAbsolutePath('post-1.md', '/blog/README.md')).toBe(
+      '/blog/post-1.md',
+    );
+  });
+
+  it('resolves ../ traversal', () => {
+    expect(resolveToAbsolutePath('../about.md', '/blog/post-1.md')).toBe(
+      '/about.md',
+    );
+  });
+
+  it('passes through an absolute target unchanged', () => {
+    expect(
+      resolveToAbsolutePath('/projects/project-1.md', '/blog/post-1.md'),
+    ).toBe('/projects/project-1.md');
+  });
+
+  it('decodes %20 space encoding', () => {
+    expect(resolveToAbsolutePath('my%20file.md', '/')).toBe('/my file.md');
+  });
+
+  it('strips a heading fragment', () => {
+    expect(resolveToAbsolutePath('about.md#section', '/')).toBe('/about.md');
+  });
+
+  it('returns empty string for a heading-only target', () => {
+    expect(resolveToAbsolutePath('#section', '/')).toBe('');
+  });
+
+  it('adds a leading slash to originFilePath if missing', () => {
+    expect(resolveToAbsolutePath('post-1.md', 'blog/README.md')).toBe(
+      '/blog/post-1.md',
+    );
   });
 });

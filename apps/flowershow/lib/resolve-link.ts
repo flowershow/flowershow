@@ -9,6 +9,26 @@ import { env } from '../env.mjs';
 import { ensureLeadingSlash } from './url-encoder';
 
 /**
+ * Resolve a link target to an absolute content path.
+ * Decodes %20 space encoding and strips heading fragments.
+ * Returns '' when the target is heading-only (no file path).
+ */
+export function resolveToAbsolutePath(
+  target: string,
+  originFilePath: string,
+): string {
+  const decoded = target
+    .split('/')
+    .map((p) => p.replaceAll('%20', ' '))
+    .join('/');
+  const [, pathPart = ''] = decoded.match(/^(.*?)(?:#.*)?$/u) || [];
+  if (!pathPart) return '';
+  const origin = ensureLeadingSlash(originFilePath);
+  if (pathPart.startsWith('/')) return pathPart;
+  return path.resolve(path.dirname(origin), pathPart);
+}
+
+/**
  * Resolve a render-time link target (href or src) to a URL path or full asset URL.
  * @param opts.target  - Value of the href or src (relative or absolute)
  * @param opts.originFilePath  - Absolute path to the file where the link is (you can skip it if it's a root level file (e.g. top config.json))

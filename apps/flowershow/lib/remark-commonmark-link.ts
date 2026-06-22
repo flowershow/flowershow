@@ -1,6 +1,6 @@
 import * as path from 'path';
 import { visit } from 'unist-util-visit';
-import { resolveContentLink } from './resolve-link';
+import { resolveContentLink, resolveToAbsolutePath } from './resolve-link';
 
 export interface Options {
   filePath: string;
@@ -10,32 +10,6 @@ export interface Options {
 }
 
 const dimensionOnlyPattern = /^\s*(\d+)(?:x(\d+))?\s*$/;
-
-/**
- * Resolve a commonmark relative path to an absolute content path.
- * Replicates the resolution logic from resolveContentLink
- * so we can match against the files list before URL conversion.
- */
-function resolveToContentPath(target: string, originFilePath: string): string {
-  // Decode %20 spaces (commonmark encoding)
-  const decoded = target
-    .split('/')
-    .map((p) => p.replaceAll('%20', ' '))
-    .join('/');
-
-  // Strip heading fragment
-  const [, pathPart = ''] = decoded.match(/^(.*?)(?:#.*)?$/u) || [];
-  if (!pathPart) return '';
-
-  // Normalize origin to have leading slash
-  const origin = originFilePath.startsWith('/')
-    ? originFilePath
-    : `/${originFilePath}`;
-
-  // Resolve relative to absolute
-  if (pathPart.startsWith('/')) return pathPart;
-  return path.resolve(path.dirname(origin), pathPart);
-}
 
 /**
  * Find a file in the files list matching the resolved content path.
@@ -66,7 +40,7 @@ function RemarkCommonMarkLink({
       if (node.url.startsWith('mailto:')) return;
       if (node.url.startsWith('http')) return;
 
-      const contentPath = resolveToContentPath(node.url, filePath);
+      const contentPath = resolveToAbsolutePath(node.url, filePath);
       const matchingFile = contentPath
         ? findFile(contentPath, files)
         : undefined;
@@ -89,7 +63,7 @@ function RemarkCommonMarkLink({
     visit(tree, 'image', (node: any) => {
       if (typeof node.url !== 'string') return;
 
-      const contentPath = resolveToContentPath(node.url, filePath);
+      const contentPath = resolveToAbsolutePath(node.url, filePath);
       const matchingFile = contentPath
         ? findFile(contentPath, files)
         : undefined;
