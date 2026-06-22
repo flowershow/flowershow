@@ -439,11 +439,14 @@ async function syncLinks(sql, siteId, blobId, markdown) {
   const extracted = extractLinks(markdown);
   const newTargetPaths = extracted.map((l) => l.targetPath);
 
-  // Delete links whose target_path is no longer in the file
+  // Delete links whose target_path is no longer in the file.
+  // sql.array() is required — postgres.js does not auto-serialize JS arrays
+  // as Postgres array literals. The empty-array case is valid SQL and
+  // deletes all existing links for the blob (file now has no links).
   await sql`
     DELETE FROM "Link"
     WHERE source_blob_id = ${blobId}
-      AND target_path != ALL(${newTargetPaths})
+      AND target_path != ALL(${sql.array(newTargetPaths, 'text')})
   `;
 
   // Insert new links; on conflict update only link_type (preserving target_blob_id)
