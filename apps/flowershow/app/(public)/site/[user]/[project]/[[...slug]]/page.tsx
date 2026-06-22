@@ -32,6 +32,7 @@ import { resolveSiteAlias } from '@/lib/resolve-site-alias';
 import { ensureLeadingSlash } from '@/lib/url-encoder';
 import type { PageMetadata } from '@/server/api/types';
 import { api } from '@/trpc/server';
+import BacklinksPanel from './_components/backlinks-panel';
 import UrlNormalizer from './_components/url-normalizer';
 
 const config = getConfig();
@@ -464,6 +465,8 @@ export default async function SitePage(props: {
               </div>
             </BlogLayout>
           </main>
+
+          <BacklinksPanel siteId={site.id} blobId={blob.id} />
 
           {(showEditLink || showRawLink) && (
             <div className="page-edit-button-container">

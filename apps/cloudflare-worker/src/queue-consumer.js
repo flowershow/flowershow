@@ -211,6 +211,7 @@ async function processMarkdownFile({
       metadata,
       permalink,
     });
+    await syncLinks(sql, siteId, blobId, markdown);
     await indexInTypesense({ typesense, siteId, blobId, path, body, metadata });
     await updatePublishFile(sql, publishId, path, 'success');
   } catch (e) {
@@ -386,6 +387,75 @@ export const extractTitle = async (source) => {
   }
   return null;
 };
+
+export function extractLinks(markdown) {
+  const links = [];
+
+  // Strip fenced code blocks to avoid matching links inside them
+  const stripped = markdown.replace(/```[\s\S]*?```/g, '').replace(/`[^`]*`/g, '');
+
+  // Embeds: ![[target]] or ![[target|alias]] or ![[target#heading]]
+  const embedRe = /!\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]/g;
+  for (const m of stripped.matchAll(embedRe)) {
+    const target = m[1].trim();
+    if (target) links.push({ targetPath: target, linkType: 'embed' });
+  }
+
+  // Wiki links: [[target]] or [[target|alias]] or [[target#heading]]
+  // Must not be preceded by ! (already captured as embeds above)
+  const wikilinkRe = /(?<!!)(?<!\[)\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]/g;
+  for (const m of stripped.matchAll(wikilinkRe)) {
+    const target = m[1].trim();
+    if (target) links.push({ targetPath: target, linkType: 'wikilink' });
+  }
+
+  // CommonMark links: [text](href) — internal only
+  const commonmarkRe = /\[(?:[^\]]*)\]\(([^)]+)\)/g;
+  for (const m of stripped.matchAll(commonmarkRe)) {
+    const href = m[1].trim().split(' ')[0]; // strip title
+    if (
+      !href.startsWith('http://') &&
+      !href.startsWith('https://') &&
+      !href.startsWith('mailto:') &&
+      !href.startsWith('#') &&
+      href.length > 0
+    ) {
+      // Strip fragment
+      const target = href.split('#')[0];
+      if (target) links.push({ targetPath: target, linkType: 'commonmark' });
+    }
+  }
+
+  // Deduplicate by targetPath (keep first occurrence)
+  const seen = new Set();
+  return links.filter(({ targetPath }) => {
+    if (seen.has(targetPath)) return false;
+    seen.add(targetPath);
+    return true;
+  });
+}
+
+async function syncLinks(sql, siteId, blobId, markdown) {
+  const extracted = extractLinks(markdown);
+  const newTargetPaths = extracted.map((l) => l.targetPath);
+
+  // Delete links whose target_path is no longer in the file
+  await sql`
+    DELETE FROM "Link"
+    WHERE source_blob_id = ${blobId}
+      AND target_path != ALL(${newTargetPaths})
+  `;
+
+  // Insert new links; on conflict update only link_type (preserving target_blob_id)
+  for (const { targetPath, linkType } of extracted) {
+    await sql`
+      INSERT INTO "Link" (id, site_id, source_blob_id, target_path, link_type)
+      VALUES (${generateId()}, ${siteId}, ${blobId}, ${targetPath}, ${linkType})
+      ON CONFLICT (source_blob_id, target_path)
+      DO UPDATE SET link_type = EXCLUDED.link_type
+    `;
+  }
+}
 
 async function indexInTypesense({
   typesense,

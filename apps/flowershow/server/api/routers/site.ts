@@ -2015,6 +2015,47 @@ export const siteRouter = createTRPCRouter({
       revalidateTag(`${site.id}`);
       return fresh;
     }),
+  getBacklinks: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+        blobId: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const siteForAccess = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { privacyMode: true, tokenVersion: true, userId: true },
+      });
+      await assertSiteAccess(siteForAccess, input.siteId, ctx);
+
+      return await unstable_cache(
+        async (input) => {
+          const links = await ctx.db.link.findMany({
+            where: { targetBlobId: input.blobId },
+            select: {
+              sourceBlob: {
+                select: { appPath: true, metadata: true },
+              },
+            },
+            orderBy: { sourceBlob: { path: 'asc' } },
+          });
+
+          return links
+            .map(({ sourceBlob }) => ({
+              appPath: sourceBlob.appPath,
+              title: (sourceBlob.metadata as Record<string, unknown> | null)
+                ?.title as string | undefined,
+            }))
+            .filter((b) => b.appPath !== null);
+        },
+        undefined,
+        {
+          revalidate: 60,
+          tags: [`${input.siteId}`],
+        },
+      )(input);
+    }),
 });
 
 // ---- Util: ensure unique project name per user ----

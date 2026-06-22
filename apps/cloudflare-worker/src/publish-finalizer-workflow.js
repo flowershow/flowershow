@@ -30,6 +30,38 @@ export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
       finalizePublish({ sql, publishId, timedOut }),
     );
 
+    await step.do('resolve-links', async () => {
+      const unresolved = await sql`
+        SELECT id, target_path FROM "Link"
+        WHERE site_id = ${siteId} AND target_blob_id IS NULL
+      `;
+      if (unresolved.length === 0) return;
+
+      const blobs = await sql`
+        SELECT id, path, app_path, permalink FROM "Blob"
+        WHERE site_id = ${siteId}
+      `;
+
+      for (const link of unresolved) {
+        const target = link.target_path;
+        const match = blobs.find(
+          (b) =>
+            b.permalink === target ||
+            b.app_path === target ||
+            b.path === target ||
+            b.path.endsWith(`/${target}`) ||
+            b.path.endsWith(`/${target}.md`) ||
+            b.path.endsWith(`/${target}.mdx`),
+        );
+        if (match) {
+          await sql`
+            UPDATE "Link" SET target_blob_id = ${match.id}
+            WHERE id = ${link.id}
+          `;
+        }
+      }
+    });
+
     await step.do('revalidate-tags', async () => {
       if (!this.env.NEXTJS_APP_URL || !this.env.INTERNAL_API_SECRET) return;
       try {
