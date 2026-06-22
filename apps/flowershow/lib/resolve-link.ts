@@ -42,13 +42,11 @@ export const resolveContentLink = ({
   target,
   originFilePath = '/',
   siteHostname,
-  commonMarkSpaceEncoded = false,
   permalinks,
 }: {
   target: string;
   originFilePath?: string;
   siteHostname?: string;
-  commonMarkSpaceEncoded?: boolean;
   permalinks?: Record<string, string>;
 }) => {
   if (
@@ -59,27 +57,12 @@ export const resolveContentLink = ({
     return target;
   }
 
-  // Remove space encoding (required in CommonMark links)
-  if (commonMarkSpaceEncoded) {
-    target = target
-      .split('/')
-      .map((p) => p.replaceAll('%20', ' '))
-      .join('/');
-  }
-
-  const [, filePath = '', heading = ''] =
-    target.match(/^(.*?)(?:#(.*))?$/u) || [];
-
+  const [, , heading = ''] = target.match(/^(.*?)(?:#(.*))?$/u) || [];
   const headingId = heading ? `#${slug(heading)}` : '';
 
-  if (!filePath && headingId) return headingId;
+  const resolvedPath = resolveToAbsolutePath(target, originFilePath);
 
-  const origin = ensureLeadingSlash(originFilePath);
-
-  // Resolve relative path to absolute path
-  const resolvedPath = filePath.startsWith('/')
-    ? filePath
-    : path.resolve(path.dirname(origin), filePath);
+  if (!resolvedPath) return headingId;
 
   // Classify: page file (render as slug) vs raw asset (render as full URL)
   // (Specifically: full URL is required for Next.js Image compatibility)

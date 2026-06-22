@@ -1,6 +1,6 @@
 import { WorkflowEntrypoint } from 'cloudflare:workers';
+import { matchLinkTarget } from '@flowershow/core';
 import { getPostgresClient } from './clients.js';
-import { resolveTargetToBlob } from './utils.js';
 
 const MAX_POLL_ATTEMPTS = 360; // 1 hour at 10s intervals
 
@@ -38,14 +38,13 @@ export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
       `;
       if (unresolved.length === 0) return;
 
-      const blobs = await sql`
+      const blobs = /** @type {{ id: string, path: string }[]} */ (await sql`
         SELECT id, path, app_path, permalink FROM "Blob"
         WHERE site_id = ${siteId}
-      `;
+      `);
 
       for (const link of unresolved) {
-        const target = link.target_path;
-        const match = resolveTargetToBlob(target, blobs);
+        const match = matchLinkTarget(link.target_path, blobs);
         if (match) {
           await sql`
             UPDATE "Link" SET target_blob_id = ${match.id}

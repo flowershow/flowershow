@@ -1,16 +1,3 @@
-export function resolveTargetToBlob(targetPath, blobs) {
-  return (
-    blobs.find(
-      (b) =>
-        b.permalink === targetPath ||
-        b.app_path === targetPath ||
-        b.path === targetPath ||
-        b.path.endsWith(`/${targetPath}`) ||
-        b.path.endsWith(`/${targetPath}.md`) ||
-        b.path.endsWith(`/${targetPath}.mdx`),
-    ) ?? null
-  );
-}
 
 export function generateId() {
   const timestamp = Date.now().toString(36);

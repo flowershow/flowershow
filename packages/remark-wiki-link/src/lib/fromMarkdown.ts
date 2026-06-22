@@ -1,25 +1,25 @@
+import { matchLinkTarget } from '@flowershow/core';
+import type { Embed, WikiLink } from 'mdast';
 import type {
   Extension as FromMarkdownExtension,
   Handle,
 } from 'mdast-util-from-markdown';
 import {
   defaultUrlResolver,
-  findMatchingFilePath,
+  getYouTubeEmbedUrl,
+  isAudioFile,
   isImageFile,
   isMarkdownFile,
   isPdfFile,
-  isAudioFile,
   isVideoFile,
   isYouTubeUrl,
-  getYouTubeEmbedUrl,
 } from '../utils';
-import type { Embed, WikiLink } from 'mdast';
-import type { Options } from './remarkWikiLink';
 import { WIKI_LINK_TARGET_PATTERN } from '../utils/const';
+import type { Options } from './remarkWikiLink';
 
 function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
-  const format = opts.format || 'shortestPossible';
-  const files = opts.files || [];
+  const matchFormat = opts.format ?? 'shortestPossible';
+  const fileDescriptors = (opts.files || []).map((p) => ({ path: p }));
   const permalinks = opts.permalinks || {};
   const caseInsensitive = opts.caseInsensitive ?? true;
   const className = opts.className || 'internal';
@@ -68,12 +68,10 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
     const [, targetPath = '', heading = ''] =
       value.match(WIKI_LINK_TARGET_PATTERN) || [];
 
-    const matchingFilePath = findMatchingFilePath({
-      path: targetPath,
-      files,
-      format,
+    const matchingFilePath = matchLinkTarget(targetPath, fileDescriptors, {
+      format: matchFormat,
       caseInsensitive,
-    });
+    })?.path;
 
     const existing = Boolean(
       matchingFilePath ?? (targetPath.length === 0 && heading),

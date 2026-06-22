@@ -1,9 +1,7 @@
-import { findMatchingFilePath } from '@flowershow/remark-wiki-link';
+import { matchLinkTarget } from '@flowershow/core';
 import { getWikiLinkValue } from './wiki-link';
 
-/**
- * Only works with simple wiki-links, i.e. no headings or aliases,
- */
+/** Only works with simple wiki-links, i.e. no headings or aliases. */
 export const resolveWikiLinkToFilePath = ({
   wikiLink,
   filePaths,
@@ -12,13 +10,13 @@ export const resolveWikiLinkToFilePath = ({
   filePaths: string[];
 }) => {
   const target = getWikiLinkValue(wikiLink);
-
-  const matchingFilePath = findMatchingFilePath({
-    path: target,
-    files: filePaths,
-    format: 'shortestPossible',
-    caseInsensitive: false,
-  });
-
-  return matchingFilePath || target;
+  return (
+    matchLinkTarget(
+      target,
+      filePaths.map((p) => ({ path: p })),
+      {
+        caseInsensitive: false,
+      },
+    )?.path ?? target
+  );
 };

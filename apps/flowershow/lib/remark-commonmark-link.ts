@@ -55,7 +55,6 @@ function RemarkCommonMarkLink({
         target: node.url,
         originFilePath: filePath,
         siteHostname,
-        commonMarkSpaceEncoded: true,
         permalinks,
       });
     });
@@ -72,7 +71,6 @@ function RemarkCommonMarkLink({
         target: node.url,
         originFilePath: filePath,
         siteHostname,
-        commonMarkSpaceEncoded: true,
       });
 
       if (!node.data) node.data = {};

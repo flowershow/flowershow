@@ -1,14 +1,14 @@
-import { syntax, type SyntaxOptions } from './syntax';
-import { fromMarkdown } from './fromMarkdown';
-import { toMarkdown } from './toMarkdown';
 import type { Processor } from 'unified';
+import { fromMarkdown } from './fromMarkdown';
+import { type SyntaxOptions, syntax } from './syntax';
+import { toMarkdown } from './toMarkdown';
 
 let warningIssued = false;
 
 export interface Options {
   format?:
-    | 'regular' // link paths will be treated as is (absolute or relative, depending on how they are written)
-    | 'shortestPossible'; // (default) link paths will be treated as "shortest-possible" absolute paths (e.g. "[[abc]]" would be matched to blog/abc file if provided in files array)
+    | 'exact' // link paths are matched exactly (absolute paths, no suffix matching)
+    | 'shortestPossible'; // (default) link paths are matched by suffix — [[abc]] resolves to the shortest file ending in /abc
   files?: string[]; // list of file paths used to match wikilinks
   permalinks?: Record<string, string>; // map of file paths to their permalinks (e.g. { "path/to/file.md": "/custom-permalink" })
   caseInsensitive?: boolean; // (default: true) whether to match file paths case-insensitively
