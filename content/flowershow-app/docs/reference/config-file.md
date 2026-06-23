@@ -209,6 +209,19 @@ Show or hide the in-page table of contents. [[table-of-contents|Learn more →]]
 
 ---
 
+### `showBacklinks`
+
+**Type:** `boolean`  
+**Default:** `true`
+
+Show or hide the backlinks panel at the bottom of each page. [[backlinks|Learn more →]]
+
+```json
+"showBacklinks": false
+```
+
+---
+
 ### `contentInclude`
 
 **Type:** `string[]`  
