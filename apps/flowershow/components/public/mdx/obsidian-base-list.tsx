@@ -5,7 +5,7 @@ import Link from 'next/link';
 import React from 'react';
 import { resolveContentLink } from '@/lib/resolve-link';
 import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
-import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
+import { extractWikiLinkValue } from '@/lib/wiki-link';
 
 type Row = {
   path: string;
@@ -113,8 +113,8 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
     }
 
     // Handle wiki links
-    if (isWikiLink(value)) {
-      const target = getWikiLinkValue(value);
+    const target = extractWikiLinkValue(value);
+    if (target) {
       const filePath = resolveWikiLinkToFilePath({
         wikiLink: value,
         filePaths: allSitePaths,

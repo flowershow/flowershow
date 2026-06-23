@@ -39,7 +39,7 @@ import { siteKeyBytes } from '@/lib/site-hmac-key';
 import { buildSiteSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
 import { ensureLeadingSlash } from '@/lib/utils';
-import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
+import { extractWikiLinkValue } from '@/lib/wiki-link';
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -1150,7 +1150,7 @@ export const siteRouter = createTRPCRouter({
 
             if (metadata?.[mediaFrontmatterField]) {
               let value = metadata[mediaFrontmatterField];
-              if (isWikiLink(value)) {
+              if (extractWikiLinkValue(value) !== null) {
                 value = resolveWikiLinkToFilePath({
                   wikiLink: value,
                   filePaths: siteFilePaths,
@@ -1291,7 +1291,7 @@ export const siteRouter = createTRPCRouter({
             if (metadata?.[key]) {
               let value = metadata[key];
 
-              if (isWikiLink(value)) {
+              if (extractWikiLinkValue(value) !== null) {
                 value = resolveWikiLinkToFilePath({
                   wikiLink: value,
                   filePaths: siteFilePaths,
@@ -1308,7 +1308,7 @@ export const siteRouter = createTRPCRouter({
           if (metadata?.cta) {
             metadata?.cta.forEach((c) => {
               let value = c.href;
-              if (isWikiLink(value)) {
+              if (extractWikiLinkValue(value) !== null) {
                 value = resolveWikiLinkToFilePath({
                   wikiLink: value,
                   filePaths: siteFilePaths,
@@ -1329,7 +1329,7 @@ export const siteRouter = createTRPCRouter({
             if (typeof metadata.hero.image === 'string') {
               let value = metadata.hero.image;
 
-              if (isWikiLink(value)) {
+              if (extractWikiLinkValue(value) !== null) {
                 value = resolveWikiLinkToFilePath({
                   wikiLink: value,
                   filePaths: siteFilePaths,
@@ -1345,7 +1345,7 @@ export const siteRouter = createTRPCRouter({
             if (Array.isArray(metadata.hero.cta)) {
               metadata.hero.cta.forEach((c) => {
                 let value = c.href;
-                if (isWikiLink(value)) {
+                if (extractWikiLinkValue(value) !== null) {
                   value = resolveWikiLinkToFilePath({
                     wikiLink: value,
                     filePaths: siteFilePaths,
@@ -1519,9 +1519,7 @@ export const siteRouter = createTRPCRouter({
             const authorsPromises = input.authors.map(
               async (author: string) => {
                 let authorPath = author;
-                if (isWikiLink(authorPath)) {
-                  authorPath = getWikiLinkValue(authorPath);
-                }
+                authorPath = extractWikiLinkValue(authorPath) ?? authorPath;
                 const authorBlob = await ctx.db.blob.findFirst({
                   where: {
                     siteId: input.siteId,
@@ -1550,7 +1548,7 @@ export const siteRouter = createTRPCRouter({
 
                 if (metadata?.avatar) {
                   let value = metadata.avatar;
-                  if (isWikiLink(metadata.avatar)) {
+                  if (extractWikiLinkValue(metadata.avatar) !== null) {
                     value = resolveWikiLinkToFilePath({
                       wikiLink: value,
                       filePaths: siteFilePaths,

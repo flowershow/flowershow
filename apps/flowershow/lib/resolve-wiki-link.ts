@@ -1,5 +1,5 @@
 import { matchLinkTarget } from '@flowershow/core';
-import { getWikiLinkValue } from './wiki-link';
+import { extractWikiLinkValue } from './wiki-link';
 
 /** Only works with simple wiki-links, i.e. no headings or aliases. */
 export const resolveWikiLinkToFilePath = ({
@@ -9,7 +9,7 @@ export const resolveWikiLinkToFilePath = ({
   wikiLink: string; // [[wiki-link]] or [[some-image.jpg]]
   filePaths: string[];
 }) => {
-  const target = getWikiLinkValue(wikiLink);
+  const target = extractWikiLinkValue(wikiLink) ?? wikiLink;
   return (
     matchLinkTarget(
       target,
