@@ -601,7 +601,6 @@ export async function renderMarkdownToHtml(
     .use(remarkCommonMarkLink, {
       filePath: '',
       siteHostname,
-      files,
       permalinks,
     })
     .use(remarkWikiLink, {

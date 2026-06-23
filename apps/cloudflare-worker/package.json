@@ -22,6 +22,7 @@
   },
   "type": "module",
   "dependencies": {
+    "@flowershow/core": "workspace:*",
     "@aws-sdk/client-s3": "^3.0.0",
     "gray-matter": "^4.0.3",
     "image-size": "^2.0.2",

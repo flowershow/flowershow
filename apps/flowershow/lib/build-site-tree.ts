@@ -1,6 +1,6 @@
 import type { Blob as DbBlob } from '@prisma/client';
 import { PageMetadata } from '@/server/api/types';
-import { customEncodeUrl, ensureLeadingSlash } from './url-encoder';
+import { encodeSlug } from '@flowershow/core';
 
 type Meta = PageMetadata | null;
 
@@ -79,7 +79,7 @@ export function buildSiteTree(
         label: toLabel(name),
         name,
         path: nodePath,
-        urlPath: `/${customEncodeUrl(nodePath)}`,
+        urlPath: encodeSlug(`/${nodePath}`),
         children: [],
       };
       parent.children.push(node);
@@ -104,7 +104,7 @@ export function buildSiteTree(
     // Use permalink → appPath → fallback to path (for files like .html that
     // are served at their raw path URL and never receive an appPath).
     const rawPath = blob.permalink || blob.appPath;
-    const urlPath = rawPath ?? `/${parts.map(customEncodeUrl).join('/')}`;
+    const urlPath = rawPath ?? encodeSlug(`/${parts.join('/')}`);
 
     parent.children.push({
       kind: 'file',

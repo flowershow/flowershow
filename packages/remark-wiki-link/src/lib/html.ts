@@ -1,7 +1,7 @@
+import { matchLinkTarget } from '@flowershow/core';
 import type { CompileData, Handle, HtmlExtension } from 'micromark-util-types';
 import {
   defaultUrlResolver,
-  findMatchingFilePath,
   isAudioFile,
   isImageFile,
   isMarkdownFile,
@@ -14,8 +14,8 @@ import type { Options } from './remarkWikiLink';
 // Micromark HtmlExtension
 // https://github.com/micromark/micromark#htmlextension
 function html(opts: Options = {}): HtmlExtension {
-  const format = opts.format || 'shortestPossible';
-  const files = opts.files || [];
+  const matchFormat = opts.format ?? 'shortestPossible';
+  const fileDescriptors = (opts.files || []).map((p) => ({ path: p }));
   const caseInsensitive = opts.caseInsensitive ?? true;
   const className = opts.className || 'internal';
   const newClassName = opts.newClassName || 'new';
@@ -63,12 +63,10 @@ function html(opts: Options = {}): HtmlExtension {
       target.match(WIKI_LINK_TARGET_PATTERN) || [];
 
     // /path/to/file.md
-    const matchingFilePath = findMatchingFilePath({
-      path: targetPath,
-      files,
-      format,
+    const matchingFilePath = matchLinkTarget(targetPath, fileDescriptors, {
+      format: matchFormat,
       caseInsensitive,
-    });
+    })?.path;
 
     const existing = Boolean(
       matchingFilePath ?? (targetPath.length === 0 && heading),

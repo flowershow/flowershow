@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest';
 import {
   extractImageDimensions,
+  extractLinks,
   extractTitle,
   isSupportedImagePath,
   normalizePermalink,
@@ -181,4 +182,126 @@ test('parseObjectKey throws when raw segment is missing', () => {
   expect(() => parseObjectKey('site/branch/notraw/file.md')).toThrow(
     /Invalid key format/,
   );
+});
+
+// extractLinks
+
+test('extractLinks - empty string returns empty array', () => {
+  expect(extractLinks('')).toEqual([]);
+});
+
+test('extractLinks - basic embed ![[note]]', () => {
+  expect(extractLinks('![[my-note]]')).toEqual([
+    { targetPath: 'my-note', linkType: 'embed' },
+  ]);
+});
+
+test('extractLinks - embed with alias strips alias', () => {
+  expect(extractLinks('![[my-note|Display Name]]')).toEqual([
+    { targetPath: 'my-note', linkType: 'embed' },
+  ]);
+});
+
+test('extractLinks - embed with heading strips heading', () => {
+  expect(extractLinks('![[my-note#Introduction]]')).toEqual([
+    { targetPath: 'my-note', linkType: 'embed' },
+  ]);
+});
+
+test('extractLinks - basic wikilink [[note]]', () => {
+  expect(extractLinks('[[my-note]]')).toEqual([
+    { targetPath: 'my-note', linkType: 'wikilink' },
+  ]);
+});
+
+test('extractLinks - wikilink with alias strips alias', () => {
+  expect(extractLinks('[[my-note|Display Name]]')).toEqual([
+    { targetPath: 'my-note', linkType: 'wikilink' },
+  ]);
+});
+
+test('extractLinks - wikilink with heading strips heading', () => {
+  expect(extractLinks('[[my-note#Introduction]]')).toEqual([
+    { targetPath: 'my-note', linkType: 'wikilink' },
+  ]);
+});
+
+test('extractLinks - embed is not also captured as wikilink', () => {
+  const links = extractLinks('![[my-note]]');
+  expect(links).toHaveLength(1);
+  expect(links[0].targetPath).toBe('my-note');
+  expect(links[0].linkType).toBe('embed');
+});
+
+test('extractLinks - commonmark internal link', () => {
+  expect(extractLinks('[text](docs/page.md)')).toEqual([
+    { targetPath: 'docs/page.md', linkType: 'commonmark' },
+  ]);
+});
+
+test('extractLinks - commonmark link with fragment strips fragment', () => {
+  expect(extractLinks('[text](docs/page.md#section)')).toEqual([
+    { targetPath: 'docs/page.md', linkType: 'commonmark' },
+  ]);
+});
+
+test('extractLinks - commonmark link with title attribute strips title', () => {
+  expect(extractLinks('[text](docs/page.md "Page Title")')).toEqual([
+    { targetPath: 'docs/page.md', linkType: 'commonmark' },
+  ]);
+});
+
+test('extractLinks - commonmark https link is excluded', () => {
+  expect(extractLinks('[text](https://example.com)')).toEqual([]);
+});
+
+test('extractLinks - commonmark http link is excluded', () => {
+  expect(extractLinks('[text](http://example.com)')).toEqual([]);
+});
+
+test('extractLinks - commonmark mailto link is excluded', () => {
+  expect(extractLinks('[text](mailto:user@example.com)')).toEqual([]);
+});
+
+test('extractLinks - commonmark fragment-only link is excluded', () => {
+  expect(extractLinks('[text](#section)')).toEqual([]);
+});
+
+test('extractLinks - links inside fenced code blocks are ignored', () => {
+  const markdown = '```\n[[wikilink]]\n![[embed]]\n[text](page.md)\n```';
+  expect(extractLinks(markdown)).toEqual([]);
+});
+
+test('extractLinks - links inside inline code are ignored', () => {
+  const markdown = 'Use `[[wikilink]]` and `[text](page.md)` syntax.';
+  expect(extractLinks(markdown)).toEqual([]);
+});
+
+test('extractLinks - deduplicates by targetPath keeping first occurrence', () => {
+  const markdown = '[[note]] and [[note|alias]]';
+  const links = extractLinks(markdown);
+  expect(links).toHaveLength(1);
+  expect(links[0]).toEqual({ targetPath: 'note', linkType: 'wikilink' });
+});
+
+test('extractLinks - wikilink with escaped pipe alias in table strips backslash and alias', () => {
+  expect(extractLinks('| [[some-file\\|some alias]] |')).toEqual([
+    { targetPath: 'some-file', linkType: 'wikilink' },
+  ]);
+});
+
+test('extractLinks - embed with escaped pipe alias in table strips backslash and alias', () => {
+  expect(extractLinks('| ![[some-file\\|some alias]] |')).toEqual([
+    { targetPath: 'some-file', linkType: 'embed' },
+  ]);
+});
+
+test('extractLinks - returns all three link types from mixed content', () => {
+  const markdown =
+    '![[some-note]] See [[other-note]] and [text](docs/page.md) for details.';
+  expect(extractLinks(markdown)).toEqual([
+    { targetPath: 'some-note', linkType: 'embed' },
+    { targetPath: 'other-note', linkType: 'wikilink' },
+    { targetPath: 'docs/page.md', linkType: 'commonmark' },
+  ]);
 });

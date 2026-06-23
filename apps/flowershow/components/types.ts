@@ -83,6 +83,7 @@ export interface SiteConfig {
   showToc?: boolean;
   showEditLink?: boolean;
   showComments?: boolean;
+  showBacklinks?: boolean;
   giscus?: Partial<GiscusProps>;
   redirects?: Array<{
     from: string;

@@ -29,9 +29,10 @@ import {
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { processCanvas } from '@/lib/process-canvas';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
-import { ensureLeadingSlash } from '@/lib/url-encoder';
+import { ensureLeadingSlash } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
 import { api } from '@/trpc/server';
+import BacklinksPanel from './_components/backlinks-panel';
 import UrlNormalizer from './_components/url-normalizer';
 
 const config = getConfig();
@@ -375,6 +376,7 @@ export default async function SitePage(props: {
     ? `${site.rootDir.replace(/^(.?\/)+|\/+$/g, '')}/`
     : '';
   const showPageComments = metadata?.showComments ?? siteConfig?.showComments;
+  const showBacklinks = siteConfig?.showBacklinks ?? true;
   const giscusConfig = siteConfig?.giscus;
   const activeSidebarPath = (() => {
     const paths = siteConfig?.sidebar?.paths;
@@ -487,6 +489,11 @@ export default async function SitePage(props: {
               )}
             </div>
           )}
+
+          {showBacklinks && (
+            <BacklinksPanel siteId={site.id} blobId={blob.id} />
+          )}
+
           {showPageComments && (
             <div className="page-comments-container">
               <Comments

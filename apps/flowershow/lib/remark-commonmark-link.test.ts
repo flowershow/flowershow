@@ -19,7 +19,6 @@ function processMarkdown(input: string, opts: Partial<Options> = {}) {
     .use(RemarkCommonMarkLink, {
       filePath: opts.filePath ?? 'test.md',
       siteHostname: opts.siteHostname ?? 'localhost:3000',
-      files: opts.files,
       permalinks: opts.permalinks,
     })
     .use(remarkRehype)
@@ -82,62 +81,41 @@ describe('RemarkCommonMarkLink - image sizes', () => {
 });
 
 describe('RemarkCommonMarkLink - data-fs-resolved-file-path', () => {
-  it('should set data-fs-resolved-file-path on image when file matches', async () => {
+  it('should set data-fs-resolved-file-path on image from resolved path', async () => {
     const output = await processMarkdown('![alt](./photo.png)', {
       filePath: 'blog/post.md',
-      files: ['/blog/photo.png', '/other/file.md'],
     });
     expect(output).toContain('data-fs-resolved-file-path="/blog/photo.png"');
   });
 
-  it('should not set data-fs-resolved-file-path when file does not match', async () => {
-    const output = await processMarkdown('![alt](./missing.png)', {
+  it('should not set data-fs-resolved-file-path on links', async () => {
+    const output = await processMarkdown('[click](./other-post.md)', {
       filePath: 'blog/post.md',
-      files: ['/blog/photo.png'],
     });
     expect(output).not.toContain('data-fs-resolved-file-path');
   });
 
-  it('should set data-fs-resolved-file-path on link when file matches', async () => {
-    const output = await processMarkdown('[click](./other-post.md)', {
-      filePath: 'blog/post.md',
-      files: ['/blog/other-post.md'],
-    });
-    expect(output).toContain(
-      'data-fs-resolved-file-path="/blog/other-post.md"',
+  it('should not set data-fs-resolved-file-path on external images', async () => {
+    const output = await processMarkdown(
+      '![alt](https://example.com/photo.png)',
+      { filePath: 'blog/post.md' },
     );
-  });
-
-  it('should match extension-less markdown links', async () => {
-    const output = await processMarkdown('[click](./other-post)', {
-      filePath: 'blog/post.md',
-      files: ['/blog/other-post.md'],
-    });
-    expect(output).toContain(
-      'data-fs-resolved-file-path="/blog/other-post.md"',
-    );
+    expect(output).not.toContain('data-fs-resolved-file-path');
   });
 
   it('should resolve parent directory references', async () => {
     const output = await processMarkdown('![alt](../assets/image.png)', {
-      filePath: 'blog/post.md',
-      files: ['/assets/image.png'],
+      filePath: '/my/blog/post.md',
     });
-    expect(output).toContain('data-fs-resolved-file-path="/assets/image.png"');
+    expect(output).toContain(
+      'data-fs-resolved-file-path="/my/assets/image.png"',
+    );
   });
 
   it('should handle %20-encoded spaces in paths', async () => {
     const output = await processMarkdown('![alt](./my%20photo.png)', {
       filePath: 'blog/post.md',
-      files: ['/blog/my photo.png'],
     });
     expect(output).toContain('data-fs-resolved-file-path="/blog/my photo.png"');
-  });
-
-  it('should not set data-fs-resolved-file-path when files list is empty', async () => {
-    const output = await processMarkdown('![alt](./photo.png)', {
-      filePath: 'blog/post.md',
-    });
-    expect(output).not.toContain('data-fs-resolved-file-path');
   });
 });

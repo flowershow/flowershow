@@ -1,3 +1,4 @@
+import { matchLinkTarget } from '@flowershow/core';
 import { Blob, Prisma, PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
@@ -28,7 +29,6 @@ import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { checkIfBranchExists } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
 import { resolveContentLink } from '@/lib/resolve-link';
-import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
 import PostHogClient from '@/lib/server-posthog';
 import {
   deepMerge,
@@ -38,8 +38,7 @@ import {
 import { siteKeyBytes } from '@/lib/site-hmac-key';
 import { buildSiteSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
-import { ensureLeadingSlash } from '@/lib/url-encoder';
-import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
+import { ensureLeadingSlash, extractWikiLinkTarget } from '@/lib/utils';
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -1123,6 +1122,7 @@ export const siteRouter = createTRPCRouter({
               },
             })
           ).map((b) => b.path);
+          const siteFiles = siteFilePaths.map((p) => ({ path: p }));
 
           const blobs = await ctx.db.$queryRaw<
             {
@@ -1150,11 +1150,10 @@ export const siteRouter = createTRPCRouter({
 
             if (metadata?.[mediaFrontmatterField]) {
               let value = metadata[mediaFrontmatterField];
-              if (isWikiLink(value)) {
-                value = resolveWikiLinkToFilePath({
-                  wikiLink: value,
-                  filePaths: siteFilePaths,
-                });
+              const wikiTarget = extractWikiLinkTarget(value);
+              if (wikiTarget !== null) {
+                value =
+                  matchLinkTarget(wikiTarget, siteFiles)?.path ?? wikiTarget;
               }
               metadata[mediaFrontmatterField] = resolveContentLink({
                 target: value,
@@ -1286,16 +1285,15 @@ export const siteRouter = createTRPCRouter({
               },
             })
           ).map((b) => b.path);
+          const siteFiles = siteFilePaths.map((p) => ({ path: p }));
 
           ['image', 'avatar'].forEach((key) => {
             if (metadata?.[key]) {
               let value = metadata[key];
-
-              if (isWikiLink(value)) {
-                value = resolveWikiLinkToFilePath({
-                  wikiLink: value,
-                  filePaths: siteFilePaths,
-                });
+              const wikiTarget = extractWikiLinkTarget(value);
+              if (wikiTarget !== null) {
+                value =
+                  matchLinkTarget(wikiTarget, siteFiles)?.path ?? wikiTarget;
               }
 
               metadata[key] = resolveContentLink({
@@ -1308,11 +1306,10 @@ export const siteRouter = createTRPCRouter({
           if (metadata?.cta) {
             metadata?.cta.forEach((c) => {
               let value = c.href;
-              if (isWikiLink(value)) {
-                value = resolveWikiLinkToFilePath({
-                  wikiLink: value,
-                  filePaths: siteFilePaths,
-                });
+              const wikiTarget = extractWikiLinkTarget(value);
+              if (wikiTarget !== null) {
+                value =
+                  matchLinkTarget(wikiTarget, siteFiles)?.path ?? wikiTarget;
               }
               c.href = resolveContentLink({
                 target: value,
@@ -1328,12 +1325,10 @@ export const siteRouter = createTRPCRouter({
           ) {
             if (typeof metadata.hero.image === 'string') {
               let value = metadata.hero.image;
-
-              if (isWikiLink(value)) {
-                value = resolveWikiLinkToFilePath({
-                  wikiLink: value,
-                  filePaths: siteFilePaths,
-                });
+              const wikiTarget = extractWikiLinkTarget(value);
+              if (wikiTarget !== null) {
+                value =
+                  matchLinkTarget(wikiTarget, siteFiles)?.path ?? wikiTarget;
               }
 
               metadata.hero.image = resolveContentLink({
@@ -1345,11 +1340,10 @@ export const siteRouter = createTRPCRouter({
             if (Array.isArray(metadata.hero.cta)) {
               metadata.hero.cta.forEach((c) => {
                 let value = c.href;
-                if (isWikiLink(value)) {
-                  value = resolveWikiLinkToFilePath({
-                    wikiLink: value,
-                    filePaths: siteFilePaths,
-                  });
+                const wikiTarget = extractWikiLinkTarget(value);
+                if (wikiTarget !== null) {
+                  value =
+                    matchLinkTarget(wikiTarget, siteFiles)?.path ?? wikiTarget;
                 }
                 c.href = resolveContentLink({
                   target: value,
@@ -1515,13 +1509,12 @@ export const siteRouter = createTRPCRouter({
                 },
               })
             ).map((b) => b.path);
+            const siteFiles = siteFilePaths.map((p) => ({ path: p }));
 
             const authorsPromises = input.authors.map(
               async (author: string) => {
                 let authorPath = author;
-                if (isWikiLink(authorPath)) {
-                  authorPath = getWikiLinkValue(authorPath);
-                }
+                authorPath = extractWikiLinkTarget(authorPath) ?? authorPath;
                 const authorBlob = await ctx.db.blob.findFirst({
                   where: {
                     siteId: input.siteId,
@@ -1550,11 +1543,11 @@ export const siteRouter = createTRPCRouter({
 
                 if (metadata?.avatar) {
                   let value = metadata.avatar;
-                  if (isWikiLink(metadata.avatar)) {
-                    value = resolveWikiLinkToFilePath({
-                      wikiLink: value,
-                      filePaths: siteFilePaths,
-                    });
+                  const wikiTarget = extractWikiLinkTarget(value);
+                  if (wikiTarget !== null) {
+                    value =
+                      matchLinkTarget(wikiTarget, siteFiles)?.path ??
+                      wikiTarget;
                   }
                   metadata.avatar = resolveContentLink({
                     target: value,
@@ -2014,6 +2007,47 @@ export const siteRouter = createTRPCRouter({
 
       revalidateTag(`${site.id}`);
       return fresh;
+    }),
+  getBacklinks: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+        blobId: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const siteForAccess = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { privacyMode: true, tokenVersion: true, userId: true },
+      });
+      await assertSiteAccess(siteForAccess, input.siteId, ctx);
+
+      return await unstable_cache(
+        async (input) => {
+          const links = await ctx.db.link.findMany({
+            where: { targetBlobId: input.blobId },
+            select: {
+              sourceBlob: {
+                select: { appPath: true, metadata: true },
+              },
+            },
+            orderBy: { sourceBlob: { path: 'asc' } },
+          });
+
+          return links
+            .map(({ sourceBlob }) => ({
+              appPath: sourceBlob.appPath,
+              title: (sourceBlob.metadata as Record<string, unknown> | null)
+                ?.title as string | undefined,
+            }))
+            .filter((b) => b.appPath !== null);
+        },
+        undefined,
+        {
+          revalidate: 60,
+          tags: [`${input.siteId}`],
+        },
+      )(input);
     }),
 });
 

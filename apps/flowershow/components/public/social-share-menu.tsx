@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { Fragment } from 'react';
 import { toast } from 'sonner';
 import { socialIcons } from '@/components/public/social-icons';
-import { transformObjectToParams } from '@/lib/transform-object-to-params';
+import { transformObjectToParams } from '@/lib/utils';
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ');

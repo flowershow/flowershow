@@ -10,7 +10,7 @@ describe('micromark-extension-wiki-link', () => {
         htmlExtensions: [html({ files: ['Wiki Link.md'] })],
       });
       expect(serialized).toBe(
-        '<p><a href="Wiki Link" class="internal" data-fs-resolved-file-path="Wiki Link.md">Wiki Link</a></p>',
+        '<p><a href="/Wiki Link" class="internal" data-fs-resolved-file-path="Wiki Link.md">Wiki Link</a></p>',
       );
     });
 
@@ -20,7 +20,7 @@ describe('micromark-extension-wiki-link', () => {
         htmlExtensions: [html()],
       });
       expect(serialized).toBe(
-        '<p><a href="New Page" class="internal new">New Page</a></p>',
+        '<p><a href="/New Page" class="internal new">New Page</a></p>',
       );
     });
 
@@ -44,7 +44,7 @@ describe('micromark-extension-wiki-link', () => {
         htmlExtensions: [html()],
       });
       expect(serialized).toBe(
-        '<p><a href="Wiki Link#some-heading" class="internal new">Wiki Link#Some Heading</a></p>',
+        '<p><a href="/Wiki Link#some-heading" class="internal new">Wiki Link#Some Heading</a></p>',
       );
     });
 
@@ -58,7 +58,7 @@ describe('micromark-extension-wiki-link', () => {
         },
       );
       expect(serialized).toBe(
-        '<p><a href="Wiki Link#some-heading" class="internal new">Alias</a></p>',
+        '<p><a href="/Wiki Link#some-heading" class="internal new">Alias</a></p>',
       );
     });
 
@@ -72,7 +72,7 @@ describe('micromark-extension-wiki-link', () => {
         },
       );
       expect(serialized).toBe(
-        '<p><a href="Wiki Link#someheadingwith--unicode-and-spaces" class="internal new">Wiki Link#Some.Heading.With-♥-Unicode and spaces</a></p>',
+        '<p><a href="/Wiki Link#someheadingwith--unicode-and-spaces" class="internal new">Wiki Link#Some.Heading.With-♥-Unicode and spaces</a></p>',
       );
     });
 
@@ -92,7 +92,7 @@ describe('micromark-extension-wiki-link', () => {
         htmlExtensions: [html()],
       });
       expect(serialized).toBe(
-        '<p><a href="Wiki Link" class="internal new">Alias</a></p>',
+        '<p><a href="/Wiki Link" class="internal new">Alias</a></p>',
       );
     });
 
@@ -107,7 +107,7 @@ describe('micromark-extension-wiki-link', () => {
       expect(serialized).toBe(
         `<p>| Column 1 | Column 2  | Column 3 |
 | -------- | --------------------------------- | -------- |
-| Data 1   | <a href="post-1" class="internal new">Link with Alias</a>       | Data 2   |</p>`,
+| Data 1   | <a href="/post-1" class="internal new">Link with Alias</a>       | Data 2   |</p>`,
       );
     });
 
@@ -275,7 +275,7 @@ describe('micromark-extension-wiki-link', () => {
         htmlExtensions: [html({ files: ['Wiki Link.md'] })],
       });
       expect(serialized).toBe(
-        '<p><a href="Wiki Link" class="internal" data-fs-resolved-file-path="Wiki Link.md">Wiki Link</a></p>',
+        '<p><a href="/Wiki Link" class="internal" data-fs-resolved-file-path="Wiki Link.md">Wiki Link</a></p>',
       );
     });
 
@@ -285,7 +285,7 @@ describe('micromark-extension-wiki-link', () => {
         htmlExtensions: [html()],
       });
       expect(serialized).toBe(
-        '<p><a href="New Page" class="internal new">New Page</a></p>',
+        '<p><a href="/New Page" class="internal new">New Page</a></p>',
       );
     });
 
@@ -429,7 +429,7 @@ describe('micromark-extension-wiki-link', () => {
         ],
       });
       expect(serialized).toBe(
-        '<p><a href="Wiki Link" class="test-wiki-link test-new">Wiki Link</a></p>',
+        '<p><a href="/Wiki Link" class="test-wiki-link test-new">Wiki Link</a></p>',
       );
     });
 
@@ -439,7 +439,7 @@ describe('micromark-extension-wiki-link', () => {
         htmlExtensions: [html()],
       });
       expect(serialized).toBe(
-        '<p><a href="Wiki Link" class="internal new">Alias Name</a></p>',
+        '<p><a href="/Wiki Link" class="internal new">Alias Name</a></p>',
       );
     });
 
@@ -492,7 +492,7 @@ describe('micromark-extension-wiki-link', () => {
         htmlExtensions: [html({ files: ['Wiki Link.md'] })],
       });
       expect(serialized).toBe(
-        '<p><a href="Wiki Link" class="internal" data-fs-resolved-file-path="Wiki Link.md">wiki link</a></p>',
+        '<p><a href="/Wiki Link" class="internal" data-fs-resolved-file-path="Wiki Link.md">wiki link</a></p>',
       );
     });
 
@@ -522,7 +522,7 @@ describe('micromark-extension-wiki-link', () => {
         ],
       });
       expect(serialized).toBe(
-        '<p><a href="wiki link" class="internal new">wiki link</a></p>',
+        '<p><a href="/wiki link" class="internal new">wiki link</a></p>',
       );
     });
   });

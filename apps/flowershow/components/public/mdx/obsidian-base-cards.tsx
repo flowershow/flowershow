@@ -1,5 +1,6 @@
 'use client';
 
+import { matchLinkTarget } from '@flowershow/core';
 import {
   Box,
   Card,
@@ -11,8 +12,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import React from 'react';
 import { resolveContentLink } from '@/lib/resolve-link';
-import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
-import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
+import { extractWikiLinkTarget } from '@/lib/utils';
 
 type Row = {
   path: string;
@@ -133,12 +133,14 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
 
     // Handle wiki links - render as clickable links
     let displayValue: React.ReactNode;
-    if (isWikiLink(value)) {
-      const target = getWikiLinkValue(value);
-      const filePath = resolveWikiLinkToFilePath({
-        wikiLink: value,
-        filePaths: allSitePaths,
-      });
+    const target =
+      typeof value === 'string' ? extractWikiLinkTarget(value) : null;
+    if (target) {
+      const filePath =
+        matchLinkTarget(
+          target,
+          allSitePaths.map((p) => ({ path: p })),
+        )?.path ?? target;
       const urlPath = resolveContentLink({
         target: filePath,
         siteHostname,
@@ -192,11 +194,14 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
     if (!imageValue) return null;
 
     // Check if it's a wiki link
-    if (typeof imageValue === 'string' && isWikiLink(imageValue)) {
-      const filePath = resolveWikiLinkToFilePath({
-        wikiLink: imageValue,
-        filePaths: allSitePaths,
-      });
+    const wikiTarget =
+      typeof imageValue === 'string' ? extractWikiLinkTarget(imageValue) : null;
+    if (wikiTarget !== null) {
+      const filePath =
+        matchLinkTarget(
+          wikiTarget,
+          allSitePaths.map((p) => ({ path: p })),
+        )?.path ?? wikiTarget;
       return resolveContentLink({
         target: filePath,
         siteHostname,

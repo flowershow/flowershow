@@ -1,4 +1,5 @@
 import { WorkflowEntrypoint } from 'cloudflare:workers';
+import { matchLinkTarget } from '@flowershow/core';
 import { getPostgresClient } from './clients.js';
 
 const MAX_POLL_ATTEMPTS = 360; // 1 hour at 10s intervals
@@ -29,6 +30,29 @@ export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
     await step.do('finalize-publish', () =>
       finalizePublish({ sql, publishId, timedOut }),
     );
+
+    await step.do('resolve-links', async () => {
+      const unresolved = await sql`
+        SELECT id, target_path FROM "Link"
+        WHERE site_id = ${siteId} AND target_blob_id IS NULL
+      `;
+      if (unresolved.length === 0) return;
+
+      const blobs = /** @type {{ id: string, path: string }[]} */ (await sql`
+        SELECT id, path, app_path, permalink FROM "Blob"
+        WHERE site_id = ${siteId}
+      `);
+
+      for (const link of unresolved) {
+        const match = matchLinkTarget(link.target_path, blobs);
+        if (match) {
+          await sql`
+            UPDATE "Link" SET target_blob_id = ${match.id}
+            WHERE id = ${link.id}
+          `;
+        }
+      }
+    });
 
     await step.do('revalidate-tags', async () => {
       if (!this.env.NEXTJS_APP_URL || !this.env.INTERNAL_API_SECRET) return;

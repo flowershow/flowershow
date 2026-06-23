@@ -1,12 +1,12 @@
 'use client';
 
+import { matchLinkTarget } from '@flowershow/core';
 import { Box, Typography } from '@mui/material';
 import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import Link from 'next/link';
 import React from 'react';
 import { resolveContentLink } from '@/lib/resolve-link';
-import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
-import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
+import { extractWikiLinkTarget } from '@/lib/utils';
 
 type Column = string;
 type Row = {
@@ -107,12 +107,14 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
       );
     }
 
-    if (isWikiLink(value)) {
-      const target = getWikiLinkValue(value);
-      const filePath = resolveWikiLinkToFilePath({
-        wikiLink: value,
-        filePaths: allSitePaths,
-      });
+    const target =
+      typeof value === 'string' ? extractWikiLinkTarget(value) : null;
+    if (target) {
+      const filePath =
+        matchLinkTarget(
+          target,
+          allSitePaths.map((p) => ({ path: p })),
+        )?.path ?? target;
       const urlPath = resolveContentLink({
         target: filePath,
         siteHostname,

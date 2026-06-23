@@ -1,5 +1,12 @@
 # remark-wiki-link
 
+## 4.0.0
+
+### Major Changes
+
+- - Links are now prefixed with leading slashes to make them absolute from the root of the site.
+  - `regular` format has been renamed to `exact`.
+
 ## 3.4.0
 
 ### Minor Changes

@@ -6,7 +6,7 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
-import { Plan, PrismaClient } from '@prisma/client';
+import { LinkType, Plan, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { filePathToSlug } from './file-path-to-slug';
 import { extractImageDimensions, parseMarkdown } from './processing-utils';
@@ -239,6 +239,63 @@ async function uploadFixturesForSite(
   console.log(`Seeded ${files.length} files for site ${siteId}`);
 }
 
+// --- Backlink seeding ---
+
+async function seedBacklinksForSite(
+  siteId: string,
+  db: PrismaClient,
+): Promise<void> {
+  const [targetBlob, source1Blob, source2Blob] = await Promise.all([
+    db.blob.findUnique({
+      where: { siteId_path: { siteId, path: 'backlinks-target.md' } },
+    }),
+    db.blob.findUnique({
+      where: { siteId_path: { siteId, path: 'backlinks-source-1.md' } },
+    }),
+    db.blob.findUnique({
+      where: { siteId_path: { siteId, path: 'backlinks-source-2.md' } },
+    }),
+  ]);
+
+  if (!targetBlob || !source1Blob || !source2Blob) {
+    console.warn(
+      `⚠️  seedBacklinksForSite(${siteId}): one or more blobs not found — skipping link creation`,
+    );
+    return;
+  }
+
+  // Delete any stale links for these (sourceBlobId, targetPath) pairs before
+  // re-inserting with the correct targetBlobId. Using skipDuplicates would
+  // silently keep old null-targetBlobId records when blobs are upserted with
+  // the same IDs across seed runs.
+  await db.link.deleteMany({
+    where: {
+      sourceBlobId: { in: [source1Blob.id, source2Blob.id] },
+      targetPath: 'backlinks-target',
+    },
+  });
+
+  await db.link.createMany({
+    data: [
+      {
+        siteId,
+        sourceBlobId: source1Blob.id,
+        targetPath: 'backlinks-target',
+        targetBlobId: targetBlob.id,
+        linkType: LinkType.wikilink,
+      },
+      {
+        siteId,
+        sourceBlobId: source2Blob.id,
+        targetPath: 'backlinks-target',
+        targetBlobId: targetBlob.id,
+        linkType: LinkType.wikilink,
+      },
+    ],
+  });
+  console.log(`Seeded backlinks for site ${siteId}`);
+}
+
 // --- Cache invalidation ---
 
 const ROOT_DOMAIN = process.env.NEXT_PUBLIC_ROOT_DOMAIN || 'cloud.local:3000';
@@ -262,10 +319,6 @@ async function revalidateCache(): Promise<void> {
 export async function seed(): Promise<void> {
   const db = getPrisma();
   const s3 = getS3Client();
-
-  // Preflight: fail fast with clear messages if services are down
-  // Invalidate any stale Next.js Data Cache entries for this site
-  await revalidateCache();
 
   await checkPostgres(db);
   await checkMinIO(s3);
@@ -353,6 +406,13 @@ export async function seed(): Promise<void> {
   await uploadFixturesForSite(FREE_SITE.id, db, s3);
   await uploadFixturesForSite(PREMIUM_SITE.id, db, s3);
   await uploadFixturesForSite(PASSWORD_SITE.id, db, s3);
+
+  // 6. Seed backlink Link records for backlinks e2e tests
+  await seedBacklinksForSite(FREE_SITE.id, db);
+  await seedBacklinksForSite(PREMIUM_SITE.id, db);
+
+  // 7. Invalidate Next.js Data Cache after all data (including links) is in place
+  await revalidateCache();
 }
 
 // --- Teardown ---

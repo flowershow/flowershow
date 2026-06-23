@@ -1,3 +1,8 @@
+import {
+  encodeSlug,
+  filePathToSlug,
+  PAGE_FILE_EXTENSIONS,
+} from '@flowershow/core';
 import matter from 'gray-matter';
 import { imageSize, types as supportedImageTypes } from 'image-size';
 import { computeGitBlobSha } from './github.js';
@@ -96,35 +101,6 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
   }
 }
 
-const PAGE_EXTENSIONS = new Set(['md', 'mdx', 'canvas']);
-
-function customEncodeSegment(segment) {
-  return encodeURIComponent(segment).replace(/%20/g, '+').replace(/%2F/g, '/');
-}
-
-export function filePathToSlug(filePath) {
-  filePath = filePath.startsWith('/') ? filePath : `/${filePath}`;
-  const lastDot = filePath.lastIndexOf('.');
-  const lastSlash = filePath.lastIndexOf('/');
-  const extWithDot = lastDot > lastSlash ? filePath.slice(lastDot) : '';
-  const ext = extWithDot.slice(1);
-
-  let withoutExt = PAGE_EXTENSIONS.has(ext)
-    ? filePath.slice(0, filePath.length - extWithDot.length)
-    : filePath;
-
-  const parts = withoutExt.split('/');
-  const basename = parts[parts.length - 1];
-  if (basename === 'README' || basename === 'index') {
-    withoutExt = parts.slice(0, -1).join('/') || '/';
-  }
-
-  if (!withoutExt || withoutExt === '/') return '/';
-  withoutExt = withoutExt.replace(/\/$/, '');
-
-  return withoutExt.split('/').map(customEncodeSegment).join('/');
-}
-
 async function upsertBlob(
   sql,
   siteId,
@@ -132,7 +108,9 @@ async function upsertBlob(
   { sha, size, metadata, permalink, width, height },
 ) {
   const extension = path.split('.').pop()?.toLowerCase() ?? '';
-  const appPath = PAGE_EXTENSIONS.has(extension) ? filePathToSlug(path) : null;
+  const appPath = PAGE_FILE_EXTENSIONS.has(extension)
+    ? encodeSlug(filePathToSlug(path))
+    : null;
   const rows = await sql`
     INSERT INTO "Blob" (id, site_id, path, app_path, extension, sha, size, metadata, permalink, width, height, updated_at)
     VALUES (
@@ -211,6 +189,7 @@ async function processMarkdownFile({
       metadata,
       permalink,
     });
+    await syncLinks(sql, siteId, blobId, markdown);
     await indexInTypesense({ typesense, siteId, blobId, path, body, metadata });
     await updatePublishFile(sql, publishId, path, 'success');
   } catch (e) {
@@ -386,6 +365,84 @@ export const extractTitle = async (source) => {
   }
   return null;
 };
+
+export function extractLinks(markdown) {
+  const links = [];
+
+  // Strip fenced code blocks to avoid matching links inside them
+  const stripped = markdown
+    .replace(/```[\s\S]*?```/g, '')
+    .replace(/`[^`]*`/g, '');
+
+  // Embeds: ![[target]] or ![[target|alias]] or ![[target#heading]]
+  const embedRe = /!\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]/g;
+  for (const m of stripped.matchAll(embedRe)) {
+    const target = m[1].trim().replace(/\\$/, '');
+    if (target) links.push({ targetPath: target, linkType: 'embed' });
+  }
+
+  // Wiki links: [[target]] or [[target|alias]] or [[target#heading]]
+  // Must not be preceded by ! (already captured as embeds above)
+  const wikilinkRe = /(?<!!)(?<!\[)\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]/g;
+  for (const m of stripped.matchAll(wikilinkRe)) {
+    const target = m[1].trim().replace(/\\$/, '');
+    if (target) links.push({ targetPath: target, linkType: 'wikilink' });
+  }
+
+  // CommonMark links: [text](href) — internal only
+  const commonmarkRe = /\[(?:[^\]]*)\]\(([^)]+)\)/g;
+  for (const m of stripped.matchAll(commonmarkRe)) {
+    const href = m[1].trim().split(' ')[0]; // strip title
+    if (
+      !href.startsWith('http://') &&
+      !href.startsWith('https://') &&
+      !href.startsWith('mailto:') &&
+      !href.startsWith('#') &&
+      href.length > 0
+    ) {
+      // Strip fragment
+      const target = href.split('#')[0];
+      if (target) links.push({ targetPath: target, linkType: 'commonmark' });
+    }
+  }
+
+  // Deduplicate by targetPath (keep first occurrence)
+  const seen = new Set();
+  return links.filter(({ targetPath }) => {
+    if (seen.has(targetPath)) return false;
+    seen.add(targetPath);
+    return true;
+  });
+}
+
+async function syncLinks(sql, siteId, blobId, markdown) {
+  const extracted = extractLinks(markdown);
+  const newTargetPaths = extracted.map((l) => l.targetPath);
+
+  // fetch_types:false (required in this worker) breaks sql.array() — the
+  // OID type map is unavailable so postgres.js can't serialize array params.
+  // Diff in JS instead: fetch existing rows, delete stale ones by scalar ID.
+  const existing = await sql`
+    SELECT id, target_path FROM "Link"
+    WHERE source_blob_id = ${blobId}
+  `;
+  const newPathSet = new Set(newTargetPaths);
+  for (const row of existing) {
+    if (!newPathSet.has(row.target_path)) {
+      await sql`DELETE FROM "Link" WHERE id = ${row.id}`;
+    }
+  }
+
+  // Insert new links; on conflict update only link_type (preserving target_blob_id)
+  for (const { targetPath, linkType } of extracted) {
+    await sql`
+      INSERT INTO "Link" (id, site_id, source_blob_id, target_path, link_type)
+      VALUES (${generateId()}, ${siteId}, ${blobId}, ${targetPath}, ${linkType})
+      ON CONFLICT (source_blob_id, target_path)
+      DO UPDATE SET link_type = EXCLUDED.link_type
+    `;
+  }
+}
 
 async function indexInTypesense({
   typesense,

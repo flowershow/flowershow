@@ -20,12 +20,12 @@ describe('remark-wiki-link', () => {
 
       visit(ast, 'wikiLink', (node: any) => {
         expect(node.value).toBe('Wiki Link');
-        expect(node.data.path).toBe('Wiki Link');
+        expect(node.data.path).toBe('/Wiki Link');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(true);
         expect(node.data.hName).toBe('a');
         expect(node.data.hProperties?.className).toBe('internal');
-        expect(node.data.hProperties?.href).toBe('Wiki Link');
+        expect(node.data.hProperties?.href).toBe('/Wiki Link');
         expect(node.data.hChildren?.[0].value).toBe('Wiki Link');
       });
     });
@@ -39,12 +39,12 @@ describe('remark-wiki-link', () => {
 
       visit(ast, 'wikiLink', (node: any) => {
         expect(node.value).toBe('New Page');
-        expect(node.data.path).toBe('New Page');
+        expect(node.data.path).toBe('/New Page');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
         expect(node.data.hName).toBe('a');
         expect(node.data.hProperties?.className).toBe('internal new');
-        expect(node.data.hProperties?.href).toBe('New Page');
+        expect(node.data.hProperties?.href).toBe('/New Page');
         expect(node.data.hChildren?.[0].value).toBe('New Page');
       });
     });
@@ -58,12 +58,12 @@ describe('remark-wiki-link', () => {
 
       visit(ast, 'wikiLink', (node: any) => {
         expect(node.value).toBe('Wiki Link#Some Heading');
-        expect(node.data.path).toBe('Wiki Link#some-heading');
+        expect(node.data.path).toBe('/Wiki Link#some-heading');
         expect(node.data.alias).toBe(undefined);
         expect(node.data.existing).toBe(false);
         expect(node.data.hName).toBe('a');
         expect(node.data.hProperties?.className).toBe('internal new');
-        expect(node.data.hProperties?.href).toBe('Wiki Link#some-heading');
+        expect(node.data.hProperties?.href).toBe('/Wiki Link#some-heading');
         expect(node.data.hChildren?.[0].value).toBe('Wiki Link#Some Heading');
       });
     });
@@ -394,9 +394,9 @@ describe('remark-wiki-link', () => {
 
         visit(ast, 'wikiLink', (node: any) => {
           expect(node.value).toBe('blog/my-post');
-          expect(node.data.path).toBe('blog/my-post');
+          expect(node.data.path).toBe('/blog/my-post');
           expect(node.data.existing).toBe(true);
-          expect(node.data.hProperties?.href).toBe('blog/my-post');
+          expect(node.data.hProperties?.href).toBe('/blog/my-post');
         });
       });
 

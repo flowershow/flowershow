@@ -12,6 +12,10 @@ export const capitalize = (s: string) => {
   return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
+export function ensureLeadingSlash(path: string): string {
+  return path.startsWith('/') ? path : `/${path}`;
+}
+
 export const truncate = (str: string, num: number) => {
   if (!str) return '';
   if (str.length <= num) {
@@ -51,3 +55,23 @@ export const toDateString = (date: Date) => {
 export const random = (min: number, max: number) => {
   return Math.floor(Math.random() * (max - min + 1) + min);
 };
+
+export function transformObjectToParams(object) {
+  const params = Object.entries(object)
+    .filter(([, value]) => value !== undefined && value !== null)
+    .map(
+      ([key, value]) =>
+        `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`,
+    );
+
+  return params.length > 0 ? `?${params.join('&')}` : '';
+}
+
+/**
+ * Extracts the value from a wiki link ([[target]] or [[target|alias]]),
+ * returning null if the string is not a wiki link.
+ */
+export function extractWikiLinkTarget(text: string): string | null {
+  const match = text.match(/^\[\[([^|]+?)(?:\|.+?)?\]\]$/);
+  return match?.[1] ?? null;
+}

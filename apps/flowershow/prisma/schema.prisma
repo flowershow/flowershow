@@ -126,6 +126,7 @@ model Site {
   subscription            Subscription?
   blobs                   Blob[]
   publishes               Publish[]
+  links                   Link[]
   tree                    Json?         @db.JsonB // GitHub tree data
   privacyMode             PrivacyMode   @default(PUBLIC) @map("privacy_mode")
   accessPasswordHash      String?       @map("access_password_hash")
@@ -167,9 +168,35 @@ model Blob {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  outgoingLinks Link[] @relation("outgoingLinks")
+  incomingLinks Link[] @relation("incomingLinks")
+
   @@unique([siteId, path])
   @@index([siteId])
   @@index([siteId, permalink])
+}
+
+enum LinkType {
+  wikilink
+  embed
+  commonmark
+}
+
+model Link {
+  id           String   @id @default(cuid())
+  siteId       String   @map("site_id")
+  sourceBlobId String   @map("source_blob_id")
+  targetPath   String   @map("target_path")
+  targetBlobId String?  @map("target_blob_id")
+  linkType     LinkType @map("link_type")
+
+  site       Site  @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  sourceBlob Blob  @relation("outgoingLinks", fields: [sourceBlobId], references: [id], onDelete: Cascade)
+  targetBlob Blob? @relation("incomingLinks", fields: [targetBlobId], references: [id], onDelete: SetNull)
+
+  @@unique([sourceBlobId, targetPath])
+  @@index([siteId])
+  @@index([targetBlobId])
 }
 
 enum PublishSource {

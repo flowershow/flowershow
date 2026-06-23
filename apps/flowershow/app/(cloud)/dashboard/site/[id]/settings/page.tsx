@@ -890,6 +890,16 @@ export default async function SiteSettingsPage(props: {
             }}
             handleSubmit={updateDbConfig}
           />
+          <Form
+            title="Show Backlinks"
+            description="Show a list of pages that link to the current page at the bottom of each page."
+            inputAttrs={{
+              name: 'showBacklinks',
+              type: 'text',
+              defaultValue: (siteConfig?.showBacklinks ?? true).toString(),
+            }}
+            handleSubmit={updateDbConfig}
+          />
         </section>
 
         <hr className="border-stone-200" />

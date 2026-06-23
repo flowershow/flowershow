@@ -1,3 +1,4 @@
+import { filePathToSlug } from '@flowershow/core';
 import { slug } from 'github-slugger';
 
 // File type definitions
@@ -99,66 +100,9 @@ export const defaultUrlResolver = ({
   heading?: string;
   isEmbed?: boolean;
 }): string => {
-  if (isEmbed) {
-    return filePath;
-  }
-  const pathWithNoExtension = filePath.replace(/\.(mdx?|md)/, '');
-
-  // Remove trailing /index and /README
-  const normalizedPath = pathWithNoExtension.replace(/\/?(index|README)$/, '');
-
-  // Generate heading id if present
+  if (isEmbed) return filePath;
+  const slugPath = filePathToSlug(filePath);
   const headingId = heading ? `#${slug(heading)}` : '';
-
-  // Special case: only heading anchor
-  if (headingId && !normalizedPath) {
-    return headingId;
-  }
-
-  return (normalizedPath || '/') + headingId;
-};
-
-export const findMatchingFilePath = ({
-  path,
-  files,
-  format,
-  caseInsensitive = true,
-}: {
-  path: string; // wiki-link target (e.g. some/file in [[some/file#Some heading|Alias]])
-  files: string[]; // file paths with  (with or without extensions)
-  format?: 'regular' | 'shortestPossible';
-  caseInsensitive?: boolean; // whether to match case-insensitively (default: true)
-}): string | undefined => {
-  if (path.length === 0) {
-    return undefined;
-  }
-
-  const normalizedPath = caseInsensitive ? path.toLowerCase() : path;
-
-  if (format === 'regular') {
-    return files.find((file) => {
-      const fileWithoutExt = file.replace(/\.(mdx?|md)$/, '');
-      const normalizedFile = caseInsensitive
-        ? fileWithoutExt.toLowerCase()
-        : fileWithoutExt;
-      return normalizedFile === normalizedPath;
-    });
-  }
-
-  // Find all files that end with the path (without extension for markdown files)
-  const matchingFiles = files.filter((file) => {
-    const fileWithoutExt = file.replace(/\.(mdx?|md)$/, '');
-    const normalizedFile = caseInsensitive
-      ? fileWithoutExt.toLowerCase()
-      : fileWithoutExt;
-    return normalizedFile.endsWith(normalizedPath);
-  });
-
-  if (matchingFiles.length === 0) {
-    return undefined;
-  }
-
-  // Sort by path length (shortest first) to prioritize files closer to root
-  // This ensures [[test]] resolves to /test.md instead of /blog/test.md
-  return matchingFiles.sort((a, b) => a.length - b.length)[0];
+  if (headingId && slugPath === '/') return headingId;
+  return slugPath + headingId;
 };
