@@ -28,7 +28,6 @@ import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { checkIfBranchExists } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
 import { resolveContentLink } from '@/lib/resolve-link';
-import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
 import PostHogClient from '@/lib/server-posthog';
 import {
   deepMerge,
@@ -39,7 +38,10 @@ import { siteKeyBytes } from '@/lib/site-hmac-key';
 import { buildSiteSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
 import { ensureLeadingSlash } from '@/lib/utils';
-import { extractWikiLinkValue } from '@/lib/wiki-link';
+import {
+  extractWikiLinkValue,
+  resolveWikiLinkToFilePath,
+} from '@/lib/wiki-link';
 import {
   createTRPCRouter,
   protectedProcedure,

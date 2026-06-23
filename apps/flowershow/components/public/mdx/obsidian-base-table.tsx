@@ -5,8 +5,10 @@ import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import Link from 'next/link';
 import React from 'react';
 import { resolveContentLink } from '@/lib/resolve-link';
-import { resolveWikiLinkToFilePath } from '@/lib/resolve-wiki-link';
-import { extractWikiLinkValue } from '@/lib/wiki-link';
+import {
+  extractWikiLinkValue,
+  resolveWikiLinkToFilePath,
+} from '@/lib/wiki-link';
 
 type Column = string;
 type Row = {
