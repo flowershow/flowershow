@@ -113,7 +113,8 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
     }
 
     // Handle wiki links
-    const target = extractWikiLinkTarget(value);
+    const target =
+      typeof value === 'string' ? extractWikiLinkTarget(value) : null;
     if (target) {
       const filePath =
         matchLinkTarget(

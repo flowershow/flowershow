@@ -133,7 +133,8 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
 
     // Handle wiki links - render as clickable links
     let displayValue: React.ReactNode;
-    const target = extractWikiLinkTarget(value);
+    const target =
+      typeof value === 'string' ? extractWikiLinkTarget(value) : null;
     if (target) {
       const filePath =
         matchLinkTarget(

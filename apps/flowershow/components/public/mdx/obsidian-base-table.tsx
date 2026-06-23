@@ -107,7 +107,8 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
       );
     }
 
-    const target = extractWikiLinkTarget(value);
+    const target =
+      typeof value === 'string' ? extractWikiLinkTarget(value) : null;
     if (target) {
       const filePath =
         matchLinkTarget(
