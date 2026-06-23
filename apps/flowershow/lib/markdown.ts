@@ -76,7 +76,6 @@ export async function processMarkdown(
     .use(remarkCommonMarkLink, {
       filePath,
       siteHostname,
-      files,
       permalinks,
     })
     .use(remarkWikiLink, {
@@ -148,7 +147,7 @@ export const getMdxOptions = ({
       remarkPlugins: [
         remarkObsidianComments,
         // run this before remark-wiki-link
-        [remarkCommonMarkLink, { filePath, siteHostname, files, permalinks }],
+        [remarkCommonMarkLink, { filePath, siteHostname, permalinks }],
         [
           remarkWikiLink,
           {
