@@ -60,6 +60,7 @@ export default function Form({
     'showToc',
     'showEditLink',
     'showModeSwitch',
+    'showBacklinks',
   ].includes(inputAttrs.name);
 
   // Controlled value for all non-toggle inputs (text, textarea, select)

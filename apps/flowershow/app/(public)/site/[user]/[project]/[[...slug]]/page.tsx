@@ -376,6 +376,7 @@ export default async function SitePage(props: {
     ? `${site.rootDir.replace(/^(.?\/)+|\/+$/g, '')}/`
     : '';
   const showPageComments = metadata?.showComments ?? siteConfig?.showComments;
+  const showBacklinks = siteConfig?.showBacklinks ?? true;
   const giscusConfig = siteConfig?.giscus;
   const activeSidebarPath = (() => {
     const paths = siteConfig?.sidebar?.paths;
@@ -489,7 +490,9 @@ export default async function SitePage(props: {
             </div>
           )}
 
-          <BacklinksPanel siteId={site.id} blobId={blob.id} />
+          {showBacklinks && (
+            <BacklinksPanel siteId={site.id} blobId={blob.id} />
+          )}
 
           {showPageComments && (
             <div className="page-comments-container">

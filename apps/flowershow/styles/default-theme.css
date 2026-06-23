@@ -2258,15 +2258,15 @@
   }
 
   .page-backlinks-title {
-    text-transform: uppercase;
+    /* text-transform: uppercase; */
     font-weight: var(--font-weight-semibold);
-    color: var(--color-foreground-900);
+    color: var(--color-foreground-500);
     margin-bottom: 0.5rem;
   }
 
   .page-backlinks-list {
-    list-style: none;
-    padding: 0;
+    list-style: revert;
+    padding: 0 0 0 1.5rem;
     margin: 0.25rem 0 0;
   }
 
