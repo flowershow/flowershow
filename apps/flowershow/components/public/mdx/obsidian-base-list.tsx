@@ -1,13 +1,11 @@
 'use client';
 
+import { matchLinkTarget } from '@flowershow/core';
 import { Box, Typography } from '@mui/material';
 import Link from 'next/link';
 import React from 'react';
 import { resolveContentLink } from '@/lib/resolve-link';
-import {
-  extractWikiLinkValue,
-  resolveWikiLinkToFilePath,
-} from '@/lib/wiki-link';
+import { extractWikiLinkTarget } from '@/lib/utils';
 
 type Row = {
   path: string;
@@ -115,12 +113,14 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
     }
 
     // Handle wiki links
-    const target = extractWikiLinkValue(value);
+    const target = extractWikiLinkTarget(value);
     if (target) {
-      const filePath = resolveWikiLinkToFilePath({
-        wikiLink: value,
-        filePaths: allSitePaths,
-      });
+      const filePath =
+        matchLinkTarget(
+          target,
+          allSitePaths.map((p) => ({ path: p })),
+          { caseInsensitive: false },
+        )?.path ?? target;
       const urlPath = resolveContentLink({
         target: filePath,
         siteHostname,
