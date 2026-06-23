@@ -11,7 +11,9 @@ A collection of books tracked with Obsidian Bases.
 
 ```base
 filters:
-  file.inFolder("books")
+  and:
+  - file.inFolder("books")
+  - file.name != "README"
 views:
   - type: table
     name: "All Books"
@@ -28,7 +30,9 @@ views:
 
 ```base
 filters:
-  file.inFolder("books")
+  and:
+  - file.inFolder("books")
+  - file.name != "README"
 views:
   - type: cards
     name: "Bookshelf"
@@ -45,7 +49,9 @@ views:
 
 ```base
 filters:
-  file.inFolder("books")
+  and:
+  - file.inFolder("books")
+  - file.name != "README"
 views:
   - type: list
     name: "Reading List"
