@@ -15,7 +15,7 @@
     "format:write": "biome format --write .",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo run build --filter=./packages/remark-wiki-link... && changeset publish",
+    "release": "turbo run build --filter=./packages/... && changeset publish",
     "docs:sitemap": "tsx scripts/generate-docs-sitemap.ts",
     "prepare": "husky install"
   },
