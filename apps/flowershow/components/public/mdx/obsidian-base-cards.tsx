@@ -139,7 +139,6 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
         matchLinkTarget(
           target,
           allSitePaths.map((p) => ({ path: p })),
-          { caseInsensitive: false },
         )?.path ?? target;
       const urlPath = resolveContentLink({
         target: filePath,
@@ -201,7 +200,6 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
         matchLinkTarget(
           wikiTarget,
           allSitePaths.map((p) => ({ path: p })),
-          { caseInsensitive: false },
         )?.path ?? wikiTarget;
       return resolveContentLink({
         target: filePath,

@@ -119,7 +119,6 @@ export const ObsidianBaseList: React.FC<ObsidianBaseListProps> = (props) => {
         matchLinkTarget(
           target,
           allSitePaths.map((p) => ({ path: p })),
-          { caseInsensitive: false },
         )?.path ?? target;
       const urlPath = resolveContentLink({
         target: filePath,

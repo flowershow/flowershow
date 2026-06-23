@@ -113,7 +113,6 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
         matchLinkTarget(
           target,
           allSitePaths.map((p) => ({ path: p })),
-          { caseInsensitive: false },
         )?.path ?? target;
       const urlPath = resolveContentLink({
         target: filePath,

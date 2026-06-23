@@ -1153,9 +1153,7 @@ export const siteRouter = createTRPCRouter({
               const wikiTarget = extractWikiLinkTarget(value);
               if (wikiTarget !== null) {
                 value =
-                  matchLinkTarget(wikiTarget, siteFiles, {
-                    caseInsensitive: false,
-                  })?.path ?? wikiTarget;
+                  matchLinkTarget(wikiTarget, siteFiles)?.path ?? wikiTarget;
               }
               metadata[mediaFrontmatterField] = resolveContentLink({
                 target: value,
@@ -1295,9 +1293,7 @@ export const siteRouter = createTRPCRouter({
               const wikiTarget = extractWikiLinkTarget(value);
               if (wikiTarget !== null) {
                 value =
-                  matchLinkTarget(wikiTarget, siteFiles, {
-                    caseInsensitive: false,
-                  })?.path ?? wikiTarget;
+                  matchLinkTarget(wikiTarget, siteFiles)?.path ?? wikiTarget;
               }
 
               metadata[key] = resolveContentLink({
@@ -1313,9 +1309,7 @@ export const siteRouter = createTRPCRouter({
               const wikiTarget = extractWikiLinkTarget(value);
               if (wikiTarget !== null) {
                 value =
-                  matchLinkTarget(wikiTarget, siteFiles, {
-                    caseInsensitive: false,
-                  })?.path ?? wikiTarget;
+                  matchLinkTarget(wikiTarget, siteFiles)?.path ?? wikiTarget;
               }
               c.href = resolveContentLink({
                 target: value,
@@ -1334,9 +1328,7 @@ export const siteRouter = createTRPCRouter({
               const wikiTarget = extractWikiLinkTarget(value);
               if (wikiTarget !== null) {
                 value =
-                  matchLinkTarget(wikiTarget, siteFiles, {
-                    caseInsensitive: false,
-                  })?.path ?? wikiTarget;
+                  matchLinkTarget(wikiTarget, siteFiles)?.path ?? wikiTarget;
               }
 
               metadata.hero.image = resolveContentLink({
@@ -1351,9 +1343,7 @@ export const siteRouter = createTRPCRouter({
                 const wikiTarget = extractWikiLinkTarget(value);
                 if (wikiTarget !== null) {
                   value =
-                    matchLinkTarget(wikiTarget, siteFiles, {
-                      caseInsensitive: false,
-                    })?.path ?? wikiTarget;
+                    matchLinkTarget(wikiTarget, siteFiles)?.path ?? wikiTarget;
                 }
                 c.href = resolveContentLink({
                   target: value,
@@ -1556,9 +1546,8 @@ export const siteRouter = createTRPCRouter({
                   const wikiTarget = extractWikiLinkTarget(value);
                   if (wikiTarget !== null) {
                     value =
-                      matchLinkTarget(wikiTarget, siteFiles, {
-                        caseInsensitive: false,
-                      })?.path ?? wikiTarget;
+                      matchLinkTarget(wikiTarget, siteFiles)?.path ??
+                      wikiTarget;
                   }
                   metadata.avatar = resolveContentLink({
                     target: value,
