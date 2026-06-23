@@ -12,6 +12,10 @@ export const capitalize = (s: string) => {
   return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
+export function ensureLeadingSlash(path: string): string {
+  return path.startsWith('/') ? path : `/${path}`;
+}
+
 export const truncate = (str: string, num: number) => {
   if (!str) return '';
   if (str.length <= num) {

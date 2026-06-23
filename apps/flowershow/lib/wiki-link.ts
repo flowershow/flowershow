@@ -25,26 +25,3 @@ export function getWikiLinkValue(wikiLink: string): string {
   }
   return match[1];
 }
-
-/**
- * Finds a matching permalink that ends with the given file path
- * @param permalinks - Array of possible permalinks
- * @param filePath - File path to match against the end of permalinks
- * @returns Matching permalink or null if none found
- */
-export function findMatchingPermalink(
-  permalinks: string[],
-  filePath: string,
-): string | null {
-  // Normalize the file path by ensuring forward slashes
-  const normalizedFilePath = filePath.replace(/\\/g, '/');
-
-  // Find a permalink that ends with the file path
-  return (
-    permalinks.find(
-      (permalink) =>
-        permalink.endsWith('/' + normalizedFilePath) ||
-        permalink.endsWith(normalizedFilePath),
-    ) || null
-  );
-}

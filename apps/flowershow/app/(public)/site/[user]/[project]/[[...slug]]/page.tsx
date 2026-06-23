@@ -29,7 +29,7 @@ import {
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { processCanvas } from '@/lib/process-canvas';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
-import { ensureLeadingSlash } from '@/lib/url-encoder';
+import { ensureLeadingSlash } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
 import { api } from '@/trpc/server';
 import BacklinksPanel from './_components/backlinks-panel';

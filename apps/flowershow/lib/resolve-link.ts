@@ -6,7 +6,7 @@ import {
 import { slug } from 'github-slugger';
 import * as path from 'path';
 import { env } from '../env.mjs';
-import { ensureLeadingSlash } from './url-encoder';
+import { ensureLeadingSlash } from './utils';
 
 /**
  * Resolve a link target to an absolute content path.

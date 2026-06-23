@@ -38,7 +38,7 @@ import {
 import { siteKeyBytes } from '@/lib/site-hmac-key';
 import { buildSiteSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
-import { ensureLeadingSlash } from '@/lib/url-encoder';
+import { ensureLeadingSlash } from '@/lib/utils';
 import { getWikiLinkValue, isWikiLink } from '@/lib/wiki-link';
 import {
   createTRPCRouter,
