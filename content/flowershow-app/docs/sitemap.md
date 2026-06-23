@@ -40,6 +40,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 ## Reference
 
 - [Analytics](/docs/reference/analytics) — Configure analytics for your Flowershow site using Google Analytics 4 or Umami.
+- [Backlinks](/docs/reference/backlinks) — Show a list of pages that link to the current page.
 - [Flowershow CLI](/docs/reference/cli) — Learn how to use the Flowershow CLI to publish your notes directly from your terminal.
 - [Comments](/docs/reference/comments) — Enable comments on your site's pages. Powered by Giscus and GitHub Discussions.
 - [`config.json` file](/docs/reference/config-file) — Reference for all available options in the config.json site configuration file.
