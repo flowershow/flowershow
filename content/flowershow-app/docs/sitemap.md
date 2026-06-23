@@ -9,7 +9,6 @@ An index of all documentation pages. Fetch this file to discover available docs 
 
 ## General
 
-- [Flowershow Docs](/docs)
 - [FAQs](/docs/faq)
 
 ## Getting Started
@@ -26,7 +25,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Content Catalogs and Listing Pages](/docs/guides/content-catalogs) — Flowershow's new List component makes it super easy to create blog index pages and other kind of listing pages for tutorials, recipes, and more.
 - [Custom collection cards](/docs/guides/custom-collection-cards) — Render custom cards for a collection of pages using normal HTML in the page body.
 - [Custom Fonts](/docs/guides/custom-fonts) — Learn how to enhance your site's typography with Google Fonts
-- [Custom Styles](/docs/guides/custom-styles) — A step-by-step guide to customizing your site's appearance using CSS, from basic styling to advanced hero sections
+- [Styling your site](/docs/guides/custom-styles) — Customize your site's appearance — colors, fonts, and more — using CSS variables and a single custom.css file.
 - [Debugging 404 pages](/docs/guides/debug-404s) — Troubleshoot and fix 404 errors on your Flowershow site.
 - [Debugging MDX Errors](/docs/guides/debug-mdx-errors) — Struggling with MDX errors? This guide explains the most common MDX parsing issues, how to avoid them, and how to fix them fast.
 - [Enhancing Markdown Pages with Styled JSX Blocks](/docs/guides/enhance-markdown-with-styled-jsx-blocks) — Learn how to transform simple markdown content into beautiful, JSX components styled with Tailwind CSS. We'll walk through the complete process using a real-world example.
@@ -78,6 +77,5 @@ An index of all documentation pages. Fetch this file to discover available docs 
 
 ## Agents
 
-- [Agents](/docs/agents) — How AI agents and coding assistants work with Flowershow.
 - [Markdown access](/docs/agents/markdown-access) — Every page on a Flowershow site is also served as raw markdown. Append .md to any URL to get clean, agent-readable content.
-- [Skills](/docs/agents/skills) — Install the Flowershow skill to let your AI assistant publish and manage Flowershow sites directly from the terminal.
+- [Skills](/docs/agents/skills) — Install the Flowershow skill to let your AI assistant publish and manage Flowershow sites — whether you publish via the fl CLI, a GitHub repository, or the Obsidian plugin.
