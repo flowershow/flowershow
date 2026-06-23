@@ -466,8 +466,6 @@ export default async function SitePage(props: {
             </BlogLayout>
           </main>
 
-          <BacklinksPanel siteId={site.id} blobId={blob.id} />
-
           {(showEditLink || showRawLink) && (
             <div className="page-edit-button-container">
               {showEditLink && (
@@ -490,6 +488,9 @@ export default async function SitePage(props: {
               )}
             </div>
           )}
+
+          <BacklinksPanel siteId={site.id} blobId={blob.id} />
+
           {showPageComments && (
             <div className="page-comments-container">
               <Comments

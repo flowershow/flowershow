@@ -15,10 +15,10 @@ export default async function BacklinksPanel({ siteId, blobId }: Props) {
 
   return (
     <div className="page-backlinks-container">
-      <h2 className="page-backlinks-title">Linked from</h2>
+      <h3 className="page-backlinks-title">Links to this page:</h3>
       <ul className="page-backlinks-list">
         {backlinks.map((b) => (
-          <li key={b.appPath}>
+          <li key={b.appPath} className="page-backlinks-item">
             <Link href={b.appPath!}>{b.title ?? b.appPath}</Link>
           </li>
         ))}

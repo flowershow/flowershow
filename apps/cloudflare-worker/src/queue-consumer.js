@@ -1,4 +1,8 @@
-import { encodeSlug, filePathToSlug, PAGE_FILE_EXTENSIONS } from '@flowershow/core';
+import {
+  encodeSlug,
+  filePathToSlug,
+  PAGE_FILE_EXTENSIONS,
+} from '@flowershow/core';
 import matter from 'gray-matter';
 import { imageSize, types as supportedImageTypes } from 'image-size';
 import { computeGitBlobSha } from './github.js';
@@ -97,7 +101,6 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
   }
 }
 
-
 async function upsertBlob(
   sql,
   siteId,
@@ -105,7 +108,9 @@ async function upsertBlob(
   { sha, size, metadata, permalink, width, height },
 ) {
   const extension = path.split('.').pop()?.toLowerCase() ?? '';
-  const appPath = PAGE_FILE_EXTENSIONS.has(extension) ? encodeSlug(filePathToSlug(path)) : null;
+  const appPath = PAGE_FILE_EXTENSIONS.has(extension)
+    ? encodeSlug(filePathToSlug(path))
+    : null;
   const rows = await sql`
     INSERT INTO "Blob" (id, site_id, path, app_path, extension, sha, size, metadata, permalink, width, height, updated_at)
     VALUES (
