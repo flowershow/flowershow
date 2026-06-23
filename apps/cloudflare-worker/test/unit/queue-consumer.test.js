@@ -233,6 +233,24 @@ test('extractLinks - embed is not also captured as wikilink', () => {
   expect(links[0].linkType).toBe('embed');
 });
 
+test('extractLinks - embed with .md extension is included', () => {
+  expect(extractLinks('![[my-note.md]]')).toEqual([
+    { targetPath: 'my-note.md', linkType: 'embed' },
+  ]);
+});
+
+test('extractLinks - embed of image file is excluded', () => {
+  expect(extractLinks('![[photo.png]]')).toEqual([]);
+});
+
+test('extractLinks - embed of video file is excluded', () => {
+  expect(extractLinks('![[screencast.mp4]]')).toEqual([]);
+});
+
+test('extractLinks - embed of pdf is excluded', () => {
+  expect(extractLinks('![[document.pdf]]')).toEqual([]);
+});
+
 test('extractLinks - commonmark internal link', () => {
   expect(extractLinks('[text](docs/page.md)')).toEqual([
     { targetPath: 'docs/page.md', linkType: 'commonmark' },
@@ -265,6 +283,10 @@ test('extractLinks - commonmark mailto link is excluded', () => {
 
 test('extractLinks - commonmark fragment-only link is excluded', () => {
   expect(extractLinks('[text](#section)')).toEqual([]);
+});
+
+test('extractLinks - commonmark image embed is excluded', () => {
+  expect(extractLinks('![alt text](image.png)')).toEqual([]);
 });
 
 test('extractLinks - links inside fenced code blocks are ignored', () => {

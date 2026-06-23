@@ -375,10 +375,15 @@ export function extractLinks(markdown) {
     .replace(/`[^`]*`/g, '');
 
   // Embeds: ![[target]] or ![[target|alias]] or ![[target#heading]]
+  // Only note embeds are stored — skip media files (any extension other than .md)
   const embedRe = /!\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]/g;
   for (const m of stripped.matchAll(embedRe)) {
     const target = m[1].trim().replace(/\\$/, '');
-    if (target) links.push({ targetPath: target, linkType: 'embed' });
+    if (!target) continue;
+    const dotIndex = target.lastIndexOf('.');
+    const ext = dotIndex !== -1 ? target.slice(dotIndex + 1).toLowerCase() : null;
+    if (ext && ext !== 'md') continue;
+    links.push({ targetPath: target, linkType: 'embed' });
   }
 
   // Wiki links: [[target]] or [[target|alias]] or [[target#heading]]
@@ -389,8 +394,8 @@ export function extractLinks(markdown) {
     if (target) links.push({ targetPath: target, linkType: 'wikilink' });
   }
 
-  // CommonMark links: [text](href) — internal only
-  const commonmarkRe = /\[(?:[^\]]*)\]\(([^)]+)\)/g;
+  // CommonMark links: [text](href) — internal only; negative lookbehind excludes image embeds ![alt](src)
+  const commonmarkRe = /(?<!!)\[(?:[^\]]*)\]\(([^)]+)\)/g;
   for (const m of stripped.matchAll(commonmarkRe)) {
     const href = m[1].trim().split(' ')[0]; // strip title
     if (
