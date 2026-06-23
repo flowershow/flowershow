@@ -59,9 +59,6 @@ def parse_changelog_file(path: str) -> tuple[str, str, str]:
     return title, description, raw
 
 
-REPO_RAW_URL = "https://github.com/flowershow/flowershow/blob/main"
-
-
 def _chunk_text(text: str, size: int = 1900) -> list[str]:
     """Split text into chunks of at most `size` chars, breaking on newlines when possible."""
     chunks = []
@@ -92,9 +89,7 @@ def _content_to_blocks(content: str) -> list[dict]:
     return blocks
 
 
-def create_notion_entry(title: str, description: str, content: str, source_file: str):
-    source_url = f"{REPO_RAW_URL}/{source_file}"
-
+def create_notion_entry(title: str, description: str, content: str):
     notion.pages.create(
         parent={"data_source_id": CONTENT_CALENDAR_DS},
         properties={
@@ -103,12 +98,6 @@ def create_notion_entry(title: str, description: str, content: str, source_file:
             },
             "Type": {
                 "select": {"name": "Changelog"}
-            },
-            "Source": {
-                "rich_text": [{
-                    "type": "text",
-                    "text": {"content": source_url, "link": {"url": source_url}},
-                }]
             },
             "Target Platforms": {
                 "multi_select": [{"name": p} for p in DEFAULT_PLATFORMS]
@@ -129,7 +118,7 @@ def main():
 
     path = sys.argv[1]
     title, description, content = parse_changelog_file(path)
-    create_notion_entry(title, description, content, path)
+    create_notion_entry(title, description, content)
 
 
 if __name__ == "__main__":
