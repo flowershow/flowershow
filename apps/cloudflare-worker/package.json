@@ -17,7 +17,7 @@
   "license": "ISC",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260621.1",
-    "vitest": "^3.0.0",
+    "vitest": "^3.2.6",
     "wrangler": "^4.1.0"
   },
   "type": "module",

@@ -26,7 +26,7 @@
     "husky": "^8.0.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
-    "turbo": "^2.5.4",
+    "turbo": "^2.9.14",
     "typescript": "^5.9.3"
   },
   "packageManager": "pnpm@10.12.1",
