@@ -54,14 +54,18 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
         return fetchGitHubConfig(ghRepository, ghBranch, accessToken, rootDir);
       });
 
-    // Fetch GitHub repo tree
+    // Fetch GitHub repo tree — strip to only the fields used downstream (path,
+    // type, sha) to stay within the Workflows 1 MiB step-output limit.
     const gitHubTree = await step.do('fetch-github-tree', async () => {
-      return fetchGitHubRepoTree(ghRepository, ghBranch, accessToken);
+      const full = await fetchGitHubRepoTree(ghRepository, ghBranch, accessToken);
+      return { tree: full.tree.map(({ path, type, sha }) => ({ path, type, sha })) };
     });
 
     const normalizedRoot = normalizeRootDir(rootDir);
 
-    // Determine which files need to be upserted
+    // Determine which files need to be upserted — store only the fields used
+    // during processing (ghPath/ghSha for download, filePath/changeType for DB)
+    // to keep step output small.
     const fileBatchesToUpsert = await step.do(
       'get-file-batches-to-upsert',
       async () => {
@@ -75,7 +79,15 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
           includes,
           excludes,
         );
-        return createBatches(items, BATCH_SIZE);
+        return createBatches(
+          items.map(({ ghTreeItem, filePath, changeType }) => ({
+            ghPath: ghTreeItem.path,
+            ghSha: ghTreeItem.sha,
+            filePath,
+            changeType,
+          })),
+          BATCH_SIZE,
+        );
       },
     );
 
@@ -164,12 +176,12 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       fileBatchesToUpsert.map((batch, index) =>
         step.do(`process-files-to-upsert-batch-${index}`, async () => {
           await Promise.all(
-            batch.map(async ({ ghTreeItem, filePath }) => {
+            batch.map(async ({ ghPath, ghSha, filePath }) => {
               try {
-                const extension = ghTreeItem.path.split('.').pop() || '';
+                const extension = ghPath.split('.').pop() || '';
                 const fileBuffer = await fetchGitHubFileRaw(
                   ghRepository,
-                  ghTreeItem.sha,
+                  ghSha,
                   accessToken,
                 );
                 await uploadFile(
