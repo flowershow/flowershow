@@ -2049,6 +2049,57 @@ export const siteRouter = createTRPCRouter({
         },
       )(input);
     }),
+  getGraphData: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const siteForAccess = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { privacyMode: true, tokenVersion: true, userId: true },
+      });
+      await assertSiteAccess(siteForAccess, input.siteId, ctx);
+
+      return await unstable_cache(
+        async (input) => {
+          const [blobs, links] = await Promise.all([
+            ctx.db.blob.findMany({
+              where: { siteId: input.siteId, appPath: { not: null } },
+              select: { id: true, appPath: true, metadata: true },
+            }),
+            ctx.db.link.findMany({
+              where: { siteId: input.siteId, targetBlobId: { not: null } },
+              select: { sourceBlobId: true, targetBlobId: true },
+            }),
+          ]);
+
+          return {
+            nodes: blobs
+              .filter((b) => b.appPath !== null)
+              .map((b) => ({
+                id: b.id,
+                appPath: b.appPath as string,
+                title: (b.metadata as Record<string, unknown> | null)?.title as
+                  | string
+                  | undefined,
+              })),
+            links: links
+              .filter((l) => l.targetBlobId !== null)
+              .map((l) => ({
+                source: l.sourceBlobId,
+                target: l.targetBlobId as string,
+              })),
+          };
+        },
+        undefined,
+        {
+          revalidate: 60,
+          tags: [`${input.siteId}`],
+        },
+      )(input);
+    }),
 });
 
 // ---- Util: ensure unique project name per user ----

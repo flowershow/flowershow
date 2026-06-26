@@ -87,6 +87,7 @@
     "react": "19.2.1",
     "react-dom": "19.2.1",
     "react-error-boundary": "^6.0.0",
+    "react-force-graph-2d": "^1.29.1",
     "react-instantsearch": "^7.16.3",
     "react-leaflet": "^5.0.0",
     "react-loading-skeleton": "^3.5.0",

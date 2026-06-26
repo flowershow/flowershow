@@ -33,6 +33,7 @@ import { ensureLeadingSlash } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
 import { api } from '@/trpc/server';
 import BacklinksPanel from './_components/backlinks-panel';
+import GraphMiniPanel from './_components/graph-view';
 import UrlNormalizer from './_components/url-normalizer';
 
 const config = getConfig();
@@ -515,6 +516,7 @@ export default async function SitePage(props: {
 
         {showToc && (
           <div className="layout-inner-right">
+            <GraphMiniPanel siteId={site.id} currentBlobId={blob.id} />
             <aside className="page-toc-container">
               <TableOfContents />
             </aside>
