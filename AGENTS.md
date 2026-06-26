@@ -89,7 +89,7 @@ Default canonical label strings (`needs-triage`, `needs-info`, `ready-for-agent`
 
 ### Domain docs
 
-Multi-context monorepo — `CONTEXT-MAP.md` at root points to per-context `CONTEXT.md` files. See `docs/agents/domain.md`.
+Single-context repo — one `CONTEXT.md` + `docs/adr/` at root. See `docs/agents/domain.md`.
 
 ## Changelog and Docs Pages
 
