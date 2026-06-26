@@ -402,8 +402,10 @@ export function extractLinks(markdown) {
       !href.startsWith('http://') &&
       !href.startsWith('https://') &&
       !href.startsWith('mailto:') &&
+      !href.startsWith('data:') &&
       !href.startsWith('#') &&
-      href.length > 0
+      href.length > 0 &&
+      href.length <= 2000
     ) {
       // Strip fragment
       const target = href.split('#')[0];
