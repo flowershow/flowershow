@@ -52,7 +52,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - ["Edit this page" links](/docs/reference/edit-this-page) — Display an "Edit this page" link at the bottom of each page that takes users directly to the file in your GitHub repo, ready for editing.
 - [Footer configuration](/docs/reference/footer) — Customize your site footer with navigation links and social media icons.
 - [Forms](/docs/reference/forms) — Embed newsletter signups, contact forms, and surveys in your pages.
-- [Using Frontmatter Values in MDX Pages](/docs/reference/frontmatter-variables) — Access frontmatter fields directly inside your MDX page content using the frontmatter object.
+- [Using Frontmatter Fields as Variables in Page Content](/docs/reference/frontmatter-variables) — Reference frontmatter fields as variables anywhere in your MDX page content — reuse values, build dynamic links, render lists, and more.
 - [Hero sections](/docs/reference/hero-sections) — Add prominent, full-width banners at the top of your pages that can include titles, descriptions, background images and call-to-action buttons.
 - [Home page](/docs/reference/home-page) — How Flowershow resolves which file to show at the root of your site.
 - [List component](/docs/reference/list-component) — Create organized lists and content catalogs by automatically listing files in a specified directory.
