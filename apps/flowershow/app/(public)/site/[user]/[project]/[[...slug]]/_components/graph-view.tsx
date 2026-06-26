@@ -88,7 +88,10 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   const highlightedNodeIdsRef = useRef<Set<string> | null>(null);
 
-  const { data, isLoading, error } = api.site.getGraphData.useQuery({ siteId });
+  const { data, isLoading, error } = api.site.getGraphData.useQuery({
+    siteId,
+    blobId: currentBlobId,
+  });
 
   const graphData = useMemo(
     () => ({

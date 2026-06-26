@@ -2053,6 +2053,7 @@ export const siteRouter = createTRPCRouter({
     .input(
       z.object({
         siteId: z.string().min(1),
+        blobId: z.string().min(1),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -2064,28 +2065,63 @@ export const siteRouter = createTRPCRouter({
 
       return await unstable_cache(
         async (input) => {
-          const [blobs, links] = await Promise.all([
+          const directLinks = await ctx.db.link.findMany({
+            where: {
+              siteId: input.siteId,
+              targetBlobId: { not: null },
+              OR: [
+                { sourceBlobId: input.blobId },
+                { targetBlobId: input.blobId },
+              ],
+            },
+            select: { sourceBlobId: true, targetBlobId: true },
+          });
+
+          const neighborIds = new Set<string>([input.blobId]);
+          for (const l of directLinks) {
+            neighborIds.add(l.sourceBlobId);
+            if (l.targetBlobId) neighborIds.add(l.targetBlobId);
+          }
+
+          const neighborIdList = [...neighborIds];
+
+          const [blobs, interLinks] = await Promise.all([
             ctx.db.blob.findMany({
-              where: { siteId: input.siteId, appPath: { not: null } },
+              where: { id: { in: neighborIdList }, appPath: { not: null } },
               select: { id: true, appPath: true, metadata: true },
             }),
             ctx.db.link.findMany({
-              where: { siteId: input.siteId, targetBlobId: { not: null } },
+              where: {
+                siteId: input.siteId,
+                targetBlobId: { not: null },
+                sourceBlobId: { in: neighborIdList },
+                AND: [{ targetBlobId: { in: neighborIdList } }],
+              },
               select: { sourceBlobId: true, targetBlobId: true },
             }),
           ]);
 
+          const allLinks = [
+            ...directLinks,
+            ...interLinks.filter(
+              (il) =>
+                !directLinks.some(
+                  (dl) =>
+                    dl.sourceBlobId === il.sourceBlobId &&
+                    dl.targetBlobId === il.targetBlobId,
+                ),
+            ),
+          ];
+
           return {
-            nodes: blobs
-              .filter((b) => b.appPath !== null)
-              .map((b) => ({
-                id: b.id,
-                appPath: b.appPath as string,
-                title: (b.metadata as Record<string, unknown> | null)?.title as
-                  | string
-                  | undefined,
-              })),
-            links: links
+            nodes: blobs.map((b) => ({
+              id: b.id,
+              appPath: b.appPath as string,
+              title: (b.metadata as Record<string, unknown> | null)?.title as
+                | string
+                | undefined,
+            })),
+            links: allLinks
               .filter((l) => l.targetBlobId !== null)
               .map((l) => ({
                 source: l.sourceBlobId,
@@ -2096,7 +2132,7 @@ export const siteRouter = createTRPCRouter({
         undefined,
         {
           revalidate: 60,
-          tags: [`${input.siteId}`],
+          tags: [`${input.siteId}`, `${input.siteId}-graph-${input.blobId}`],
         },
       )(input);
     }),
