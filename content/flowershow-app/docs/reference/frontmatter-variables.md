@@ -1,6 +1,6 @@
 ---
-title: Using Frontmatter Values in MDX Pages
-description: Access frontmatter fields directly inside your MDX page content using the frontmatter object.
+title: Using Frontmatter Fields as Variables in Page Content
+description: Reference frontmatter fields as variables anywhere in your MDX page content — reuse values, build dynamic links, render lists, and more.
 ---
 
 > [!important]

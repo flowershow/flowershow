@@ -34,6 +34,7 @@ MDX lets you embed React components directly in your content. Enable it (globall
 - Use Flowershow components like [[list-component|List]]
 - Write [[custom-styles#jsx-blocks-styled-with-tailwind|JSX blocks styled with Tailwind]]
 - Embed interactive React components
+- [[frontmatter-variables|Use frontmatter fields as variables in your content]]
 
 > [!note]
 > MDX has stricter parsing rules than regular Markdown and may break content that works fine in `.md` files:
