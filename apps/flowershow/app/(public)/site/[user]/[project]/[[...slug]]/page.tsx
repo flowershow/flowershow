@@ -322,11 +322,15 @@ export default async function SitePage(props: {
         });
 
         if ('error' in mdxSource) {
-          const message = mdxSource.error.message.concat(
-            '\n\n🧑‍🔧 See how to debug and solve most common MDX errors in our docs:\nhttps://flowershow.app/docs/debug-mdx-errors',
-          );
           compiledContent = (
-            <ErrorMessage title="Error parsing MDX" message={message} />
+            <ErrorMessage
+              title="Error parsing MDX"
+              message={mdxSource.error.message}
+              link={{
+                href: 'https://flowershow.app/docs/debug-mdx-errors',
+                label: 'See how to debug and solve most common MDX errors',
+              }}
+            />
           );
         } else {
           compiledContent = (

@@ -16,10 +16,16 @@ type Props = {
 
 function MDXClientRenderer({ mdxSource, blob, site, imageDimensions }: Props) {
   if ('error' in mdxSource) {
-    const message = mdxSource.error.message.concat(
-      '\n\n🧑‍🔧 See how to debug and solve most common MDX errors in our docs:\nhttps://flowershow.app/docs/debug-mdx-errors',
+    return (
+      <ErrorMessage
+        title="Error parsing MDX"
+        message={mdxSource.error.message}
+        link={{
+          href: 'https://flowershow.app/docs/debug-mdx-errors',
+          label: 'See how to debug and solve most common MDX errors',
+        }}
+      />
     );
-    return <ErrorMessage title="Error parsing MDX" message={message} />;
   }
 
   const components = mdxComponentsFactory({
@@ -35,10 +41,16 @@ function MDXClientRenderer({ mdxSource, blob, site, imageDimensions }: Props) {
     });
 
     if (error) {
-      const message = error.message.concat(
-        '\n\n🧑‍🔧 See how to debug and solve most common MDX errors in our docs:\nhttps://flowershow.app/docs/debug-mdx-errors',
+      return (
+        <ErrorMessage
+          title="Error parsing MDX"
+          message={error.message}
+          link={{
+            href: 'https://flowershow.app/docs/debug-mdx-errors',
+            label: 'See how to debug and solve most common MDX errors',
+          }}
+        />
       );
-      return <ErrorMessage title="Error parsing MDX" message={message} />;
     }
 
     return (
@@ -50,16 +62,16 @@ function MDXClientRenderer({ mdxSource, blob, site, imageDimensions }: Props) {
 }
 
 function Fallback() {
-  const message = `
-There was an error rendering this page.
-
-This can happen if something in the MDX evaluation failed at runtime.
-
-🧑‍🔧 Troubleshooting steps and examples:
-https://flowershow.app/docs/debug-mdx-errors
-  `.trim();
-
-  return <ErrorMessage title="Error rendering MDX" message={message} />;
+  return (
+    <ErrorMessage
+      title="Error rendering MDX"
+      message="There was an error rendering this page. This can happen if something in the MDX evaluation failed at runtime."
+      link={{
+        href: 'https://flowershow.app/docs/debug-mdx-errors',
+        label: 'See troubleshooting steps and examples',
+      }}
+    />
+  );
 }
 
 export default MDXClientRenderer;

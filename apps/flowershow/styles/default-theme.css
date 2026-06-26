@@ -1227,6 +1227,14 @@
     line-height: var(--line-height-relaxed);
     color: oklch(from var(--color-danger) 0.35 c h);
   }
+  .error-card-link {
+    display: block;
+    margin-top: 0.5rem;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-relaxed);
+    color: oklch(from var(--color-danger) 0.35 c h);
+    text-decoration: underline;
+  }
   .error-card-stack {
     margin-top: 0.5rem;
     border-radius: var(--radius);
