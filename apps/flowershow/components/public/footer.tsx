@@ -71,11 +71,12 @@ export default async function Footer({
             </p>
             {social && (
               <div className="site-footer-social-links">
-                {social.map(({ label, href }, index) => {
+                {social.map(({ label, href }) => {
+                  if (!href) return null;
                   const Icon = (label && socialIcons[label]) || GlobeIcon;
                   return (
                     <Link
-                      key={`${href}-${index}`}
+                      key={href}
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"

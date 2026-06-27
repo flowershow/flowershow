@@ -119,11 +119,12 @@ const Nav = ({
             )}
             {social && (
               <div className="site-navbar-social-links-container">
-                {social.map(({ label, href }, index) => {
+                {social.map(({ label, href }) => {
+                  if (!href) return null;
                   const Icon = (label && socialIcons[label]) || GlobeIcon;
                   return (
                     <a
-                      key={`${href}-${index}`}
+                      key={href}
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
@@ -208,17 +209,20 @@ const Nav = ({
             {social && (
               <div className="mobile-nav-social-links-container">
                 {social &&
-                  social.map(({ label, name, href }, index) => (
-                    <a
-                      key={`${href}-${index}`}
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mobile-nav-social-link"
-                    >
-                      {name}
-                    </a>
-                  ))}
+                  social.map(({ label, name, href }) => {
+                    if (!href) return null;
+                    return (
+                      <a
+                        key={href}
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mobile-nav-social-link"
+                      >
+                        {name}
+                      </a>
+                    );
+                  })}
               </div>
             )}
             {cta && (
