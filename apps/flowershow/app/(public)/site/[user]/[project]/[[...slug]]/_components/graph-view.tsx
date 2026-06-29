@@ -28,19 +28,34 @@ interface Props {
   currentBlobId: string;
 }
 
-const MINI_WIDTH = 220;
-const MINI_HEIGHT = 160;
-const FULL_WIDTH = 800;
-const FULL_HEIGHT = 600;
+const MINI_WIDTH = 240;
+const MINI_HEIGHT = 180;
+const FULL_WIDTH = 900;
+const FULL_HEIGHT = 700;
 
 const NODE_COLOR_DEFAULT = '#94a3b8';
-const NODE_COLOR_DEFAULT_DIM = 'rgba(148, 163, 184, 0.15)';
 const NODE_COLOR_CURRENT = '#f97316';
-const NODE_COLOR_CURRENT_DIM = 'rgba(249, 115, 22, 0.15)';
 const LINK_COLOR = '#cbd5e1';
-const LINK_COLOR_DIM = 'rgba(203, 213, 225, 0.1)';
 const NODE_LABEL_COLOR = '#334155';
-const NODE_LABEL_COLOR_DIM = 'rgba(51, 65, 85, 0.15)';
+
+// RGB tuples for alpha interpolation during hover transitions
+const NODE_DEFAULT_RGB = [148, 163, 184] as const;
+const NODE_CURRENT_RGB = [249, 115, 22] as const;
+const LINK_RGB = [203, 213, 225] as const;
+const LABEL_RGB = [51, 65, 85] as const;
+const DIM_ALPHA = 0.15;
+const LINK_DIM_ALPHA = 0.1;
+
+const TRANSITION_DURATION = 180; // ms
+
+function dimmedColor(
+  rgb: readonly [number, number, number],
+  progress: number,
+  targetAlpha: number,
+): string {
+  const alpha = 1 - progress * (1 - targetAlpha);
+  return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha.toFixed(3)})`;
+}
 
 const MINI_NODE_REL_SIZE = 3;
 const FULL_NODE_REL_SIZE = 5;
@@ -56,25 +71,33 @@ function getLinkEndId(end: unknown): string {
   return '';
 }
 
-// Painters are stable references that read hover state via a ref getter to
+// Painters are stable references that read hover state via ref getters to
 // avoid recreating them on every hover change.
 function makeNodeLabelPainter(
   nodeRelSize: number,
   maxLen: number,
   getHighlightedIds: () => Set<string> | null,
+  getDimProgress: () => number,
+  getHoveredId: () => string | null,
 ) {
   return (n: unknown, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const node = asNode(n) as GraphNode & { x: number; y: number };
     const raw = node.title ?? node.appPath.split('/').pop() ?? '';
     const label = raw.length > maxLen ? `${raw.slice(0, maxLen)}…` : raw;
     if (!label) return;
-    const fontSize = Math.max(4, 12 / globalScale);
+    const dp = getDimProgress();
+    const isHovered = getHoveredId() === node.id;
+    const fontScale = isHovered ? 1 + 0.1 * dp : 1;
+    const fontSize = Math.max(4, 12 / globalScale) * fontScale;
     ctx.font = `${fontSize}px Sans-Serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
     const highlightedIds = getHighlightedIds();
-    const dimmed = highlightedIds !== null && !highlightedIds.has(node.id);
-    ctx.fillStyle = dimmed ? NODE_LABEL_COLOR_DIM : NODE_LABEL_COLOR;
+    const isDimmed = highlightedIds !== null && !highlightedIds.has(node.id);
+    ctx.fillStyle =
+      !isDimmed || dp === 0
+        ? NODE_LABEL_COLOR
+        : dimmedColor(LABEL_RGB, dp, DIM_ALPHA);
     ctx.fillText(label, node.x, node.y + nodeRelSize + 2 / globalScale);
   };
 }
@@ -86,7 +109,15 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
   const [modalOpen, setModalOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
+  // renderHighlightedIds lags behind hoveredNodeId during fade-out so the
+  // dimming stays visible until the animation completes.
+  const [renderHighlightedIds, setRenderHighlightedIds] =
+    useState<Set<string> | null>(null);
+  const [dimProgress, setDimProgress] = useState(0);
+  const dimProgressRef = useRef(0);
   const highlightedNodeIdsRef = useRef<Set<string> | null>(null);
+  const hoveredNodeIdRef = useRef<string | null>(null);
+  const animFrameRef = useRef<number | null>(null);
 
   const { data, isLoading, error } = api.site.getGraphData.useQuery({
     siteId,
@@ -118,10 +149,47 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
     return ids;
   }, [hoveredNodeId, graphData.links]);
 
-  // Keep ref in sync so the stable canvas painters always see the latest set.
+  // Animate dimProgress when hover changes. renderHighlightedIds is kept alive
+  // during fade-out so the dimming remains visible until the transition ends.
   useEffect(() => {
-    highlightedNodeIdsRef.current = highlightedNodeIds;
-  }, [highlightedNodeIds]);
+    const target = highlightedNodeIds !== null ? 1 : 0;
+
+    if (highlightedNodeIds !== null) {
+      setRenderHighlightedIds(highlightedNodeIds);
+      highlightedNodeIdsRef.current = highlightedNodeIds;
+      hoveredNodeIdRef.current = hoveredNodeId;
+    }
+
+    if (animFrameRef.current !== null)
+      cancelAnimationFrame(animFrameRef.current);
+
+    const startValue = dimProgressRef.current;
+    if (startValue === target) return;
+
+    const startTime = performance.now();
+
+    function tick(now: number) {
+      const elapsed = now - startTime;
+      const t = Math.min(elapsed / TRANSITION_DURATION, 1);
+      const eased = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+      const value = startValue + (target - startValue) * eased;
+      dimProgressRef.current = value;
+      setDimProgress(value);
+      if (t < 1) {
+        animFrameRef.current = requestAnimationFrame(tick);
+      } else if (target === 0) {
+        setRenderHighlightedIds(null);
+        highlightedNodeIdsRef.current = null;
+        hoveredNodeIdRef.current = null;
+      }
+    }
+
+    animFrameRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (animFrameRef.current !== null)
+        cancelAnimationFrame(animFrameRef.current);
+    };
+  }, [highlightedNodeIds, hoveredNodeId]);
 
   const paintMiniLabel = useMemo(
     () =>
@@ -129,6 +197,8 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
         MINI_NODE_REL_SIZE,
         12,
         () => highlightedNodeIdsRef.current,
+        () => dimProgressRef.current,
+        () => hoveredNodeIdRef.current,
       ),
     [],
   );
@@ -139,6 +209,8 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
         FULL_NODE_REL_SIZE,
         30,
         () => highlightedNodeIdsRef.current,
+        () => dimProgressRef.current,
+        () => hoveredNodeIdRef.current,
       ),
     [],
   );
@@ -147,25 +219,31 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
     (n: unknown) => {
       const node = asNode(n);
       const isCurrent = node.id === currentBlobId;
-      if (highlightedNodeIds !== null && !highlightedNodeIds.has(node.id)) {
-        return isCurrent ? NODE_COLOR_CURRENT_DIM : NODE_COLOR_DEFAULT_DIM;
+      const isDimmed =
+        renderHighlightedIds !== null && !renderHighlightedIds.has(node.id);
+      if (!isDimmed || dimProgress === 0) {
+        return isCurrent ? NODE_COLOR_CURRENT : NODE_COLOR_DEFAULT;
       }
-      return isCurrent ? NODE_COLOR_CURRENT : NODE_COLOR_DEFAULT;
+      return dimmedColor(
+        isCurrent ? NODE_CURRENT_RGB : NODE_DEFAULT_RGB,
+        dimProgress,
+        DIM_ALPHA,
+      );
     },
-    [currentBlobId, highlightedNodeIds],
+    [currentBlobId, renderHighlightedIds, dimProgress],
   );
 
   const linkColor = useCallback(
     (link: unknown) => {
-      if (!highlightedNodeIds) return LINK_COLOR;
+      if (!renderHighlightedIds || dimProgress === 0) return LINK_COLOR;
       const l = link as GraphLink;
       const src = getLinkEndId(l.source);
       const tgt = getLinkEndId(l.target);
-      return highlightedNodeIds.has(src) && highlightedNodeIds.has(tgt)
-        ? LINK_COLOR
-        : LINK_COLOR_DIM;
+      if (renderHighlightedIds.has(src) && renderHighlightedIds.has(tgt))
+        return LINK_COLOR;
+      return dimmedColor(LINK_RGB, dimProgress, LINK_DIM_ALPHA);
     },
-    [highlightedNodeIds],
+    [renderHighlightedIds, dimProgress],
   );
 
   const handleNodeHover = useCallback((n: unknown) => {
@@ -256,7 +334,6 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
       >
         <div className="graph-modal__inner">
           <div className="graph-modal__header">
-            <span className="graph-modal__title">Knowledge graph</span>
             <button
               className="graph-modal__close"
               aria-label="Close"
@@ -265,19 +342,21 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
               ✕
             </button>
           </div>
-          <ForceGraph2D
-            graphData={graphData}
-            width={FULL_WIDTH}
-            height={FULL_HEIGHT}
-            nodeId="id"
-            nodeColor={nodeColor}
-            nodeCanvasObject={paintFullLabel}
-            nodeCanvasObjectMode={nodeLabelMode}
-            linkColor={linkColor}
-            nodeRelSize={FULL_NODE_REL_SIZE}
-            onNodeClick={handleNodeClick}
-            onNodeHover={handleNodeHover}
-          />
+          {modalOpen && (
+            <ForceGraph2D
+              graphData={graphData}
+              width={FULL_WIDTH}
+              height={FULL_HEIGHT}
+              nodeId="id"
+              nodeColor={nodeColor}
+              nodeCanvasObject={paintFullLabel}
+              nodeCanvasObjectMode={nodeLabelMode}
+              linkColor={linkColor}
+              nodeRelSize={FULL_NODE_REL_SIZE}
+              onNodeClick={handleNodeClick}
+              onNodeHover={handleNodeHover}
+            />
+          )}
         </div>
       </dialog>
     </>

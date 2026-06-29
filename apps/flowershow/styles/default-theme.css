@@ -794,7 +794,7 @@
     @media (min-width: 1280px) {
       /* xl */
       &.has-sidebar-and-toc {
-        grid-template-columns: 16rem minmax(0, 1fr) 12rem;
+        grid-template-columns: 16rem minmax(0, 1fr) 240px;
       }
     }
 
@@ -809,7 +809,7 @@
     @media (min-width: 1280px) {
       /* xl */
       &.has-toc {
-        grid-template-columns: minmax(0, 1fr) 12rem;
+        grid-template-columns: minmax(0, 1fr) 240px;
         padding-left: 16rem;
       }
     }
@@ -2296,6 +2296,7 @@
 
   /* ── Knowledge graph ───────────────────────────────── */
   .graph-mini-panel {
+    height: 180px;
     position: relative;
     border: 1px solid var(--color-foreground-200);
     border-radius: 0.5rem;
@@ -2336,7 +2337,6 @@
   }
 
   .graph-mini-panel--loading {
-    height: 160px;
     background: var(--color-foreground-100);
     border-radius: 0.5rem;
     margin-bottom: 1rem;
