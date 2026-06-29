@@ -694,7 +694,9 @@ export default async function SiteSettingsPage(props: {
             inputAttrs={{
               name: 'showKnowledgeGraph',
               type: 'text',
-              defaultValue: (siteConfig?.showKnowledgeGraph ?? true).toString(),
+              defaultValue: (
+                siteConfig?.showKnowledgeGraph ?? false
+              ).toString(),
             }}
             handleSubmit={updateDbConfig}
           />

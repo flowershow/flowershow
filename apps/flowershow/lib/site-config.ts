@@ -11,7 +11,7 @@ function normalizeUmamiConfig(
 
 export const SITE_CONFIG_DEFAULTS = {
   showToc: true,
-  showKnowledgeGraph: true,
+  showKnowledgeGraph: false,
   showSidebar: true,
   showComments: false,
   showBacklinks: true,
