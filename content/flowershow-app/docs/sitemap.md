@@ -55,6 +55,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Using Frontmatter Fields as Variables in Page Content](/docs/reference/frontmatter-variables) — Reference frontmatter fields as variables anywhere in your MDX page content — reuse values, build dynamic links, render lists, and more.
 - [Hero sections](/docs/reference/hero-sections) — Add prominent, full-width banners at the top of your pages that can include titles, descriptions, background images and call-to-action buttons.
 - [Home page](/docs/reference/home-page) — How Flowershow resolves which file to show at the root of your site.
+- [Knowledge Graph](/docs/reference/knowledge-graph) — Show an interactive graph of how your notes connect to each other.
 - [List component](/docs/reference/list-component) — Create organized lists and content catalogs by automatically listing files in a specified directory.
 - [Math equations](/docs/reference/math) — Write math equestions with LaTeX syntax.
 - [Mermaid diagrams](/docs/reference/mermaid) — Create diagrams and visualizations using a popular, text-based syntax.
