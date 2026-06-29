@@ -33,6 +33,7 @@ import { ensureLeadingSlash } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
 import { api } from '@/trpc/server';
 import BacklinksPanel from './_components/backlinks-panel';
+import GraphMiniPanel from './_components/graph-view';
 import UrlNormalizer from './_components/url-normalizer';
 
 const config = getConfig();
@@ -400,6 +401,9 @@ export default async function SitePage(props: {
     return activeSidebarPath !== undefined;
   })();
   const showToc = metadata?.showToc ?? siteConfig?.showToc;
+  const showKnowledgeGraph =
+    metadata?.showKnowledgeGraph ?? siteConfig?.showKnowledgeGraph ?? true;
+  const showRightColumn = showToc || showKnowledgeGraph;
   const heroConfig = resolveHeroConfig(metadata, siteConfig);
   const showHero = heroConfig.showHero;
 
@@ -445,9 +449,9 @@ export default async function SitePage(props: {
       <div
         className={clsx(
           'layout-inner',
-          showSidebar && showToc && 'has-sidebar-and-toc',
-          !showSidebar && showToc && 'has-toc',
-          showSidebar && !showToc && 'has-sidebar',
+          showSidebar && showRightColumn && 'has-sidebar-and-toc',
+          !showSidebar && showRightColumn && 'has-toc',
+          showSidebar && !showRightColumn && 'has-sidebar',
         )}
       >
         {showSidebar && (
@@ -513,11 +517,16 @@ export default async function SitePage(props: {
           )}
         </div>
 
-        {showToc && (
+        {showRightColumn && (
           <div className="layout-inner-right">
-            <aside className="page-toc-container">
-              <TableOfContents />
-            </aside>
+            {showKnowledgeGraph && (
+              <GraphMiniPanel siteId={site.id} currentBlobId={blob.id} />
+            )}
+            {showToc && (
+              <aside className="page-toc-container">
+                <TableOfContents />
+              </aside>
+            )}
           </div>
         )}
       </div>

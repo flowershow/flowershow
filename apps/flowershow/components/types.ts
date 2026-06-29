@@ -81,6 +81,7 @@ export interface SiteConfig {
     paths?: string[];
   };
   showToc?: boolean;
+  showKnowledgeGraph?: boolean;
   showEditLink?: boolean;
   showComments?: boolean;
   showBacklinks?: boolean;

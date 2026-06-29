@@ -95,6 +95,7 @@ export interface PageMetadata {
   publish?: boolean;
   showSidebar?: boolean;
   showToc?: boolean;
+  showKnowledgeGraph?: boolean;
   showHero?: boolean;
   hero?:
     | boolean

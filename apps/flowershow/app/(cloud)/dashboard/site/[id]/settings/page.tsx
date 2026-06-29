@@ -688,6 +688,16 @@ export default async function SiteSettingsPage(props: {
             }}
             handleSubmit={updateDbConfig}
           />
+          <Form
+            title="Show Knowledge Graph"
+            description="Show a knowledge graph on each page, visualising connections between notes."
+            inputAttrs={{
+              name: 'showKnowledgeGraph',
+              type: 'text',
+              defaultValue: (siteConfig?.showKnowledgeGraph ?? true).toString(),
+            }}
+            handleSubmit={updateDbConfig}
+          />
           <JsonForm
             title="Content Include"
             description="Paths to include in the site (e.g. directories or specific files). Leave empty to include everything."
