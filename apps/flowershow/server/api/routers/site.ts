@@ -2054,7 +2054,7 @@ export const siteRouter = createTRPCRouter({
     .input(
       z.object({
         siteId: z.string().min(1),
-        blobId: z.string().min(1),
+        blobId: z.string().min(1).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -2066,6 +2066,43 @@ export const siteRouter = createTRPCRouter({
 
       return await unstable_cache(
         async (input) => {
+          if (!input.blobId) {
+            const [blobs, links] = await Promise.all([
+              ctx.db.blob.findMany({
+                where: { siteId: input.siteId, appPath: { not: null } },
+                select: { id: true, appPath: true, metadata: true },
+              }),
+              ctx.db.link.findMany({
+                where: { siteId: input.siteId, targetBlobId: { not: null } },
+                distinct: ['sourceBlobId', 'targetBlobId'],
+                select: { sourceBlobId: true, targetBlobId: true },
+              }),
+            ]);
+
+            const blobIds = new Set(blobs.map((b) => b.id));
+
+            return {
+              nodes: blobs.map((b) => ({
+                id: b.id,
+                appPath: b.appPath as string,
+                title: (b.metadata as Record<string, unknown> | null)?.title as
+                  | string
+                  | undefined,
+              })),
+              links: links
+                .filter(
+                  (l) =>
+                    l.targetBlobId !== null &&
+                    blobIds.has(l.sourceBlobId) &&
+                    blobIds.has(l.targetBlobId),
+                )
+                .map((l) => ({
+                  source: l.sourceBlobId,
+                  target: l.targetBlobId as string,
+                })),
+            };
+          }
+
           const directLinks = await ctx.db.link.findMany({
             where: {
               siteId: input.siteId,
@@ -2142,7 +2179,12 @@ export const siteRouter = createTRPCRouter({
         undefined,
         {
           revalidate: 60,
-          tags: [`${input.siteId}`, `${input.siteId}-graph-${input.blobId}`],
+          tags: [
+            `${input.siteId}`,
+            input.blobId
+              ? `${input.siteId}-graph-${input.blobId}`
+              : `${input.siteId}-global-graph`,
+          ],
         },
       )(input);
     }),

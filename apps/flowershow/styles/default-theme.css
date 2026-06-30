@@ -2309,10 +2309,21 @@
     }
   }
 
-  .graph-mini-panel__expand {
+  .graph-mini-panel__actions {
     position: absolute;
     top: 0.375rem;
     right: 0.375rem;
+    display: flex;
+    gap: 0.25rem;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .graph-mini-panel:hover .graph-mini-panel__actions {
+    opacity: 1;
+  }
+
+  .graph-mini-panel__action-btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2323,17 +2334,11 @@
     background: var(--color-background);
     color: var(--color-foreground-400);
     cursor: pointer;
-    opacity: 0;
-    transition: opacity 0.15s;
 
     &:hover {
       color: var(--color-foreground-700);
       background: var(--color-foreground-100);
     }
-  }
-
-  .graph-mini-panel:hover .graph-mini-panel__expand {
-    opacity: 1;
   }
 
   .graph-mini-panel--loading {

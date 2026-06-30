@@ -1,5 +1,6 @@
 'use client';
 
+import { Maximize2, Network } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -107,6 +108,7 @@ const nodeLabelMode = () => 'after';
 export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'local' | 'global'>('local');
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null);
   // renderHighlightedIds lags behind hoveredNodeId during fade-out so the
@@ -124,6 +126,11 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
     blobId: currentBlobId,
   });
 
+  const { data: globalData } = api.site.getGraphData.useQuery(
+    { siteId },
+    { enabled: modalOpen && modalMode === 'global' },
+  );
+
   const graphData = useMemo(
     () => ({
       nodes: ((data?.nodes ?? []) as GraphNode[]).map((n) =>
@@ -134,11 +141,21 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
     [data, currentBlobId],
   );
 
+  const globalGraphData = useMemo(
+    () => ({
+      nodes: (globalData?.nodes ?? []) as GraphNode[],
+      links: (globalData?.links ?? []) as GraphLink[],
+    }),
+    [globalData],
+  );
+
+  const activeGraphData = modalMode === 'global' ? globalGraphData : graphData;
+
   // Hovered node + its direct neighbours. null means no hover (nothing dimmed).
   const highlightedNodeIds = useMemo(() => {
     if (!hoveredNodeId) return null;
     const ids = new Set<string>([hoveredNodeId]);
-    for (const link of graphData.links) {
+    for (const link of activeGraphData.links) {
       const src = getLinkEndId(link.source);
       const tgt = getLinkEndId(link.target);
       if (src === hoveredNodeId || tgt === hoveredNodeId) {
@@ -147,7 +164,7 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
       }
     }
     return ids;
-  }, [hoveredNodeId, graphData.links]);
+  }, [hoveredNodeId, activeGraphData.links]);
 
   // Animate dimProgress when hover changes. renderHighlightedIds is kept alive
   // during fade-out so the dimming remains visible until the transition ends.
@@ -300,30 +317,30 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
           onNodeClick={handleNodeClick}
           onNodeHover={handleNodeHover}
         />
-        <button
-          type="button"
-          className="graph-mini-panel__expand"
-          aria-label="Expand knowledge graph"
-          onClick={() => setModalOpen(true)}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden="true"
+        <div className="graph-mini-panel__actions">
+          <button
+            type="button"
+            className="graph-mini-panel__action-btn"
+            aria-label="Open global graph"
+            onClick={() => {
+              setModalMode('global');
+              setModalOpen(true);
+            }}
           >
-            <polyline points="15 3 21 3 21 9" />
-            <polyline points="9 21 3 21 3 15" />
-            <line x1="21" y1="3" x2="14" y2="10" />
-            <line x1="3" y1="21" x2="10" y2="14" />
-          </svg>
-        </button>
+            <Network size={14} aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            className="graph-mini-panel__action-btn"
+            aria-label="Expand local graph"
+            onClick={() => {
+              setModalMode('local');
+              setModalOpen(true);
+            }}
+          >
+            <Maximize2 size={14} aria-hidden="true" />
+          </button>
+        </div>
       </div>
 
       <dialog
@@ -334,6 +351,9 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
       >
         <div className="graph-modal__inner">
           <div className="graph-modal__header">
+            <span className="graph-modal__title">
+              {modalMode === 'global' ? 'Global graph' : 'Local graph'}
+            </span>
             <button
               className="graph-modal__close"
               aria-label="Close"
@@ -344,7 +364,7 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
           </div>
           {modalOpen && (
             <ForceGraph2D
-              graphData={graphData}
+              graphData={activeGraphData}
               width={FULL_WIDTH}
               height={FULL_HEIGHT}
               nodeId="id"
