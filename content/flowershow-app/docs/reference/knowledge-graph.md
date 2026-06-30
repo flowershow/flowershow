@@ -6,7 +6,7 @@ description: Show an interactive graph of how your notes connect to each other.
 Configure the knowledge graph from the **Flowershow dashboard** under **Site Settings → Content**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
 
 > [!note]
-> The knowledge graph is enabled by default and appears on the right-hand side of every page.
+> The knowledge graph is disabled by default. Enable it in **Settings → Content → Show Knowledge Graph**.
 
 ## How the graph works
 
@@ -45,4 +45,4 @@ If you want to version-control your configuration, or have your editor's AI agen
 }
 ```
 
-- `showKnowledgeGraph`: Set to `false` to disable the knowledge graph globally. Defaults to `true`.
+- `showKnowledgeGraph`: Set to `true` to enable the knowledge graph globally. Defaults to `false`.

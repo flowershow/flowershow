@@ -1,7 +1,7 @@
 ---
 title: "Knowledge Graph"
 date: 2026-06-29
-description: Every page now shows a live, interactive graph of how your notes connect — one of Obsidian's most beloved features, now on the web.
+description: Interactive graph of how your notes connect — one of Obsidian's most beloved features, now in Flowershow.
 authors:
   - olayway
 showToc: false
@@ -15,18 +15,10 @@ The graph needs a fast, queryable map of which page links to which. The [[2026-0
 
 ## Configuring it
 
-The graph is on by default. Turn it off site-wide in **Settings → Show Knowledge Graph**, via `config.json`:
+The graph is off by default. Turn it on site-wide in **Settings → Show Knowledge Graph** or via `config.json`:
 
 ```json
 {
-  "showKnowledgeGraph": false
+  "showKnowledgeGraph": true
 }
-```
-
-or per page in frontmatter:
-
-```yaml
----
-showKnowledgeGraph: false
----
 ```
