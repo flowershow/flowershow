@@ -2116,6 +2116,8 @@ export const siteRouter = createTRPCRouter({
             ),
           ];
 
+          const blobIds = new Set(blobs.map((b) => b.id));
+
           return {
             nodes: blobs.map((b) => ({
               id: b.id,
@@ -2125,7 +2127,12 @@ export const siteRouter = createTRPCRouter({
                 | undefined,
             })),
             links: allLinks
-              .filter((l) => l.targetBlobId !== null)
+              .filter(
+                (l) =>
+                  l.targetBlobId !== null &&
+                  blobIds.has(l.sourceBlobId) &&
+                  blobIds.has(l.targetBlobId),
+              )
               .map((l) => ({
                 source: l.sourceBlobId,
                 target: l.targetBlobId as string,
