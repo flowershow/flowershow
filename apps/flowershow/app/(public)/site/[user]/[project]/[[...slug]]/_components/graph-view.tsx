@@ -58,8 +58,8 @@ function dimmedColor(
   return `rgba(${rgb[0]}, ${rgb[1]}, ${rgb[2]}, ${alpha.toFixed(3)})`;
 }
 
-const MINI_NODE_REL_SIZE = 3;
-const FULL_NODE_REL_SIZE = 5;
+const MINI_NODE_REL_SIZE = 1;
+const FULL_NODE_REL_SIZE = 1.5;
 
 function asNode(n: unknown): GraphNode {
   return n as GraphNode;
@@ -80,6 +80,7 @@ function makeNodeLabelPainter(
   getHighlightedIds: () => Set<string> | null,
   getDimProgress: () => number,
   getHoveredId: () => string | null,
+  getNodeVal: (id: string) => number,
 ) {
   return (n: unknown, ctx: CanvasRenderingContext2D, globalScale: number) => {
     const node = asNode(n) as GraphNode & { x: number; y: number };
@@ -99,7 +100,8 @@ function makeNodeLabelPainter(
       !isDimmed || dp === 0
         ? NODE_LABEL_COLOR
         : dimmedColor(LABEL_RGB, dp, DIM_ALPHA);
-    ctx.fillText(label, node.x, node.y + nodeRelSize + 2 / globalScale);
+    const radius = Math.sqrt(getNodeVal(node.id)) * nodeRelSize;
+    ctx.fillText(label, node.x, node.y + radius + 2 / globalScale);
   };
 }
 
@@ -120,6 +122,8 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
   const highlightedNodeIdsRef = useRef<Set<string> | null>(null);
   const hoveredNodeIdRef = useRef<string | null>(null);
   const animFrameRef = useRef<number | null>(null);
+  const miniLinkCountsRef = useRef<Map<string, number>>(new Map());
+  const modalLinkCountsRef = useRef<Map<string, number>>(new Map());
 
   const { data, isLoading, error } = api.site.getGraphData.useQuery({
     siteId,
@@ -150,6 +154,31 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
   );
 
   const activeGraphData = modalMode === 'global' ? globalGraphData : graphData;
+
+  const miniLinkCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const link of graphData.links) {
+      const src = getLinkEndId(link.source);
+      const tgt = getLinkEndId(link.target);
+      counts.set(src, (counts.get(src) ?? 0) + 1);
+      counts.set(tgt, (counts.get(tgt) ?? 0) + 1);
+    }
+    return counts;
+  }, [graphData.links]);
+
+  const modalLinkCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const link of activeGraphData.links) {
+      const src = getLinkEndId(link.source);
+      const tgt = getLinkEndId(link.target);
+      counts.set(src, (counts.get(src) ?? 0) + 1);
+      counts.set(tgt, (counts.get(tgt) ?? 0) + 1);
+    }
+    return counts;
+  }, [activeGraphData.links]);
+
+  miniLinkCountsRef.current = miniLinkCounts;
+  modalLinkCountsRef.current = modalLinkCounts;
 
   // Hovered node + its direct neighbours. null means no hover (nothing dimmed).
   const highlightedNodeIds = useMemo(() => {
@@ -216,6 +245,7 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
         () => highlightedNodeIdsRef.current,
         () => dimProgressRef.current,
         () => hoveredNodeIdRef.current,
+        (id) => 1 + (miniLinkCountsRef.current.get(id) ?? 0) * 0.5,
       ),
     [],
   );
@@ -228,7 +258,20 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
         () => highlightedNodeIdsRef.current,
         () => dimProgressRef.current,
         () => hoveredNodeIdRef.current,
+        (id) => 1 + (modalLinkCountsRef.current.get(id) ?? 0) * 0.5,
       ),
+    [],
+  );
+
+  const miniNodeVal = useCallback(
+    (n: unknown) =>
+      1 + (miniLinkCountsRef.current.get(asNode(n).id) ?? 0) * 0.5,
+    [],
+  );
+
+  const modalNodeVal = useCallback(
+    (n: unknown) =>
+      1 + (modalLinkCountsRef.current.get(asNode(n).id) ?? 0) * 0.5,
     [],
   );
 
@@ -256,8 +299,18 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
       const l = link as GraphLink;
       const src = getLinkEndId(l.source);
       const tgt = getLinkEndId(l.target);
-      if (renderHighlightedIds.has(src) && renderHighlightedIds.has(tgt))
-        return LINK_COLOR;
+      if (renderHighlightedIds.has(src) && renderHighlightedIds.has(tgt)) {
+        const r = Math.round(
+          LINK_RGB[0] + (NODE_CURRENT_RGB[0] - LINK_RGB[0]) * dimProgress,
+        );
+        const g = Math.round(
+          LINK_RGB[1] + (NODE_CURRENT_RGB[1] - LINK_RGB[1]) * dimProgress,
+        );
+        const b = Math.round(
+          LINK_RGB[2] + (NODE_CURRENT_RGB[2] - LINK_RGB[2]) * dimProgress,
+        );
+        return `rgb(${r}, ${g}, ${b})`;
+      }
       return dimmedColor(LINK_RGB, dimProgress, LINK_DIM_ALPHA);
     },
     [renderHighlightedIds, dimProgress],
@@ -314,6 +367,7 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
           nodeCanvasObjectMode={nodeLabelMode}
           linkColor={linkColor}
           nodeRelSize={MINI_NODE_REL_SIZE}
+          nodeVal={miniNodeVal}
           onNodeClick={handleNodeClick}
           onNodeHover={handleNodeHover}
         />
@@ -373,6 +427,7 @@ export default function GraphMiniPanel({ siteId, currentBlobId }: Props) {
               nodeCanvasObjectMode={nodeLabelMode}
               linkColor={linkColor}
               nodeRelSize={FULL_NODE_REL_SIZE}
+              nodeVal={modalNodeVal}
               onNodeClick={handleNodeClick}
               onNodeHover={handleNodeHover}
             />
