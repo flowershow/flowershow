@@ -16,7 +16,10 @@ During every publish, Flowershow extracts all internal links from your content a
 - Note embeds: `![[Page Name]]`
 - Standard Markdown links: `[text](path)`
 
-The graph renders these connections as a force-directed network. The current page is pinned at the centre and highlighted; every note that links to or from it radiates outward. Hover a node to dim unrelated nodes and links; click one to navigate to that page. An expand button opens a full-size view in a modal.
+The graph renders these connections as a force-directed network. The current page is pinned at the centre and highlighted; every note that links to or from it radiates outward. Hover a node to dim unrelated nodes and links; click one to navigate to that page. Two buttons appear in the corner of the panel on hover:
+
+- **Expand local graph** — opens a full-size version of the current page's neighbourhood in a modal.
+- **Global graph** — opens a modal showing every note in your site and all the connections between them.
 
 ## Show or hide the knowledge graph
 
