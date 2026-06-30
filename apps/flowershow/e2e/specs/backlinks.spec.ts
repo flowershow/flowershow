@@ -10,7 +10,7 @@ test('Backlinks panel shows incoming links', async ({ page, basePath }) => {
   );
 
   const items = panel.locator('.page-backlinks-list li');
-  await expect(items).toHaveCount(2);
+  await expect(items).toHaveCount(3);
 
   await test.step('source 1 link has correct text and href', async () => {
     const link = panel.locator('a', { hasText: 'Backlinks Source One' });
@@ -29,6 +29,32 @@ test('Backlinks panel shows incoming links', async ({ page, basePath }) => {
       `${basePath}/backlinks-source-2`,
     );
   });
+
+  await test.step('source 3 link has correct text and href', async () => {
+    const link = panel.locator('a', { hasText: 'Backlinks Source Three' });
+    await expect(link).toBeVisible();
+    await expect(link).toHaveAttribute(
+      'href',
+      `${basePath}/backlinks-source-3`,
+    );
+  });
+});
+
+test('Source page appears only once even when linked via multiple paths', async ({
+  page,
+  basePath,
+}) => {
+  await page.goto(`${basePath}/backlinks-target`);
+
+  const panel = page.locator('.page-backlinks-container');
+  await expect(panel).toBeVisible();
+
+  // source-3 has two Link records pointing to this page (different targetPath
+  // values, same targetBlobId) — it must appear exactly once, not twice.
+  const source3Links = panel.locator('a', {
+    hasText: 'Backlinks Source Three',
+  });
+  await expect(source3Links).toHaveCount(1);
 });
 
 test('No backlinks panel when no incoming links', async ({

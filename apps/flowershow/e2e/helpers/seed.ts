@@ -245,19 +245,24 @@ async function seedBacklinksForSite(
   siteId: string,
   db: PrismaClient,
 ): Promise<void> {
-  const [targetBlob, source1Blob, source2Blob] = await Promise.all([
-    db.blob.findUnique({
-      where: { siteId_path: { siteId, path: 'backlinks-target.md' } },
-    }),
-    db.blob.findUnique({
-      where: { siteId_path: { siteId, path: 'backlinks-source-1.md' } },
-    }),
-    db.blob.findUnique({
-      where: { siteId_path: { siteId, path: 'backlinks-source-2.md' } },
-    }),
-  ]);
+  const [targetBlob, source1Blob, source2Blob, source3Blob] = await Promise.all(
+    [
+      db.blob.findUnique({
+        where: { siteId_path: { siteId, path: 'backlinks-target.md' } },
+      }),
+      db.blob.findUnique({
+        where: { siteId_path: { siteId, path: 'backlinks-source-1.md' } },
+      }),
+      db.blob.findUnique({
+        where: { siteId_path: { siteId, path: 'backlinks-source-2.md' } },
+      }),
+      db.blob.findUnique({
+        where: { siteId_path: { siteId, path: 'backlinks-source-3.md' } },
+      }),
+    ],
+  );
 
-  if (!targetBlob || !source1Blob || !source2Blob) {
+  if (!targetBlob || !source1Blob || !source2Blob || !source3Blob) {
     console.warn(
       `⚠️  seedBacklinksForSite(${siteId}): one or more blobs not found — skipping link creation`,
     );
@@ -270,8 +275,10 @@ async function seedBacklinksForSite(
   // the same IDs across seed runs.
   await db.link.deleteMany({
     where: {
-      sourceBlobId: { in: [source1Blob.id, source2Blob.id] },
-      targetPath: 'backlinks-target',
+      sourceBlobId: { in: [source1Blob.id, source2Blob.id, source3Blob.id] },
+      targetPath: {
+        in: ['backlinks-target', 'subfolder/../backlinks-target'],
+      },
     },
   });
 
@@ -288,6 +295,22 @@ async function seedBacklinksForSite(
         siteId,
         sourceBlobId: source2Blob.id,
         targetPath: 'backlinks-target',
+        targetBlobId: targetBlob.id,
+        linkType: LinkType.wikilink,
+      },
+      // Two links from source3 to the same target via different paths —
+      // reproduces the "doubled backlinks" bug (issue #1290).
+      {
+        siteId,
+        sourceBlobId: source3Blob.id,
+        targetPath: 'backlinks-target',
+        targetBlobId: targetBlob.id,
+        linkType: LinkType.wikilink,
+      },
+      {
+        siteId,
+        sourceBlobId: source3Blob.id,
+        targetPath: 'subfolder/../backlinks-target',
         targetBlobId: targetBlob.id,
         linkType: LinkType.wikilink,
       },

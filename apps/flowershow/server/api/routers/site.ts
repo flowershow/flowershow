@@ -2026,6 +2026,7 @@ export const siteRouter = createTRPCRouter({
         async (input) => {
           const links = await ctx.db.link.findMany({
             where: { targetBlobId: input.blobId },
+            distinct: ['sourceBlobId'],
             select: {
               sourceBlob: {
                 select: { appPath: true, metadata: true },
@@ -2074,6 +2075,7 @@ export const siteRouter = createTRPCRouter({
                 { targetBlobId: input.blobId },
               ],
             },
+            distinct: ['sourceBlobId', 'targetBlobId'],
             select: { sourceBlobId: true, targetBlobId: true },
           });
 
@@ -2097,6 +2099,7 @@ export const siteRouter = createTRPCRouter({
                 sourceBlobId: { in: neighborIdList },
                 AND: [{ targetBlobId: { in: neighborIdList } }],
               },
+              distinct: ['sourceBlobId', 'targetBlobId'],
               select: { sourceBlobId: true, targetBlobId: true },
             }),
           ]);
