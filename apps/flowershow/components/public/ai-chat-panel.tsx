@@ -5,7 +5,7 @@ import { BotMessageSquare, SendIcon, Trash2Icon, XIcon } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
+import { resolveContentLink } from '@/lib/resolve-link';
 
 type Message = {
   id: number;
@@ -259,7 +259,7 @@ export function AiChatPanel({ siteId }: AiChatPanelProps) {
                         {msg.sources.map((path) => (
                           <Link
                             key={path}
-                            href={resolveFilePathToUrlPath({ target: path })}
+                            href={resolveContentLink({ target: path })}
                             className="ai-chat-source-link"
                           >
                             {path

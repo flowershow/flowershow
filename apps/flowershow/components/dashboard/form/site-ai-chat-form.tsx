@@ -60,9 +60,14 @@ export default function SiteAiChatForm({ siteId }: { siteId: string }) {
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
         <div className="flex flex-wrap justify-between gap-2">
-          <h2 id="aiChat" className="font-dashboard-heading text-xl">
-            AI Chat
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 id="aiChat" className="font-dashboard-heading text-xl">
+              AI Chat
+            </h2>
+            <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+              Experimental
+            </span>
+          </div>
           {hasExistingKey && (
             <span className="flex shrink-0 items-center rounded-full border border-green-200 bg-green-50 px-3 py-0.5 text-xs font-medium text-green-700">
               Enabled
@@ -80,7 +85,6 @@ export default function SiteAiChatForm({ siteId }: { siteId: string }) {
           <PasswordInput
             label={hasExistingKey ? 'Replace API key' : 'Anthropic API key'}
             placeholder={hasExistingKey ? '••••••••' : 'sk-ant-...'}
-            helpText="Your Anthropic API key. We never expose it — only whether AI Chat is enabled."
             onChange={(e) => setApiKey(e.target.value)}
             disabled={pending}
             value={apiKey}
