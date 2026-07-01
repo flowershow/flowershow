@@ -1,12 +1,5 @@
 'use client';
 
-import { env } from '@/env.mjs';
-
-const isSecure =
-  env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
-  env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
-const protocol = isSecure ? 'https' : 'http';
-
 interface PublishModalProps {
   state: 'uploading' | 'published' | 'error';
   liveUrl: string;
@@ -32,7 +25,7 @@ export function PublishModal({
 }: PublishModalProps) {
   if (state === 'uploading') {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
+      <div className="bg-white md:rounded-lg md:shadow-lg p-8 md:max-w-md w-full mx-4">
         <div className="text-center">
           <div className="mb-6">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-orange-500"></div>
@@ -48,7 +41,7 @@ export function PublishModal({
 
   if (state === 'error') {
     return (
-      <div className="bg-white rounded-lg shadow-lg p-8 max-w-md w-full mx-4">
+      <div className="bg-white md:rounded-lg md:shadow-lg p-8 md:max-w-md w-full mx-4">
         <div className="text-center">
           <div className="text-3xl mb-4 opacity-70">⚠️</div>
           <h2 className="text-lg font-medium text-gray-700 mb-2">
@@ -68,7 +61,7 @@ export function PublishModal({
 
   // Published state
   return (
-    <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+    <div className="bg-white md:rounded-lg md:shadow-lg p-6 md:max-w-md w-full mx-4">
       {/* Success header */}
       <div className="text-center mb-5">
         <h2 className="text-xl font-medium text-gray-700">
@@ -80,7 +73,7 @@ export function PublishModal({
       <div className="mb-5">
         <label className="block text-xs text-gray-500 mb-1.5">Live URL</label>
         <code className="block bg-gray-50 px-3 py-2 rounded text-xs break-all text-gray-600 mb-2.5">
-          {`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${liveUrl}`}
+          {liveUrl}
         </code>
         <div className="flex gap-2">
           <button
@@ -90,7 +83,7 @@ export function PublishModal({
             {copied ? 'Copied' : 'Copy URL'}
           </button>
           <a
-            href={`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${liveUrl}`}
+            href={liveUrl}
             target="_blank"
             rel="noopener noreferrer"
             onClick={onVisitSite}

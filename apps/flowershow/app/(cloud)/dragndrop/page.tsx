@@ -23,6 +23,7 @@ interface FileUploadInfo {
 interface PublishResult {
   siteId: string;
   projectName: string;
+  publishId: string;
   files: FileUploadInfo[];
   liveUrl: string;
   ownershipToken: string;
@@ -131,6 +132,7 @@ export default function HomePage() {
             body: file,
             headers: {
               'Content-Type': 'text/markdown',
+              'x-amz-meta-publish-id': result.publishId,
             },
           });
 
@@ -177,8 +179,7 @@ export default function HomePage() {
 
   const handleCopyUrl = async () => {
     try {
-      const fullUrl = `${window.location.origin}${liveUrl}`;
-      await navigator.clipboard.writeText(fullUrl);
+      await navigator.clipboard.writeText(liveUrl);
       setCopied(true);
 
       // Track URL copy

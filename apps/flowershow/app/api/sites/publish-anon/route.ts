@@ -3,6 +3,7 @@ import {
   type AnonPublishResponse,
 } from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
+import { env } from '@/env.mjs';
 import {
   ANONYMOUS_USER_ID,
   generateOwnershipToken,
@@ -22,6 +23,11 @@ import prisma from '@/server/db';
 
 const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 const MAX_FILES = 5;
+
+const isSecure =
+  env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+  env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
+const protocol = isSecure ? 'https' : 'http';
 
 interface FileUploadInfo {
   fileName: string;
@@ -44,8 +50,9 @@ interface FileUploadInfo {
  * Response: {
  *   siteId: string,
  *   projectName: string,
+ *   publishId: string,
  *   files: Array<{ fileName: string, uploadUrl: string }>,
- *   liveUrl: string,
+ *   liveUrl: string,  // Absolute URL to the published site
  *   ownershipToken: string  // For claiming the site later
  * }
  *
@@ -233,7 +240,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Construct live URL
-    const liveUrl = `/@anon/${projectName}`;
+    const liveUrl = `${protocol}://${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
     // Track analytics
     const posthog = PostHogClient();
@@ -254,6 +261,7 @@ export async function POST(request: NextRequest) {
     const response: AnonPublishResponse = {
       siteId: site.id,
       projectName,
+      publishId: publish.id,
       files: fileUploads,
       liveUrl,
       ownershipToken,

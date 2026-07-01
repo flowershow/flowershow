@@ -59,6 +59,11 @@ export default async function middleware(req: NextRequest) {
     return proxyPostHog(req);
   }
 
+  const isSecure =
+    env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+    env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
+  const protocol = isSecure ? 'https' : 'http';
+
   // 1) Normalize hostname (handle Vercel preview)
   let hostname = req.headers.get('host')!;
   if (hostname.endsWith(`.${env.NEXT_PUBLIC_VERCEL_DEPLOYMENT_SUFFIX}`)) {
@@ -88,7 +93,7 @@ export default async function middleware(req: NextRequest) {
         return withPHBootstrapCookie(
           NextResponse.redirect(
             new URL(
-              `https://${legacySite.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}${legacySlug}${searchParams}`,
+              `${protocol}://${legacySite.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}${legacySlug}${searchParams}`,
               req.url,
             ),
             { status: 301 },
@@ -100,7 +105,7 @@ export default async function middleware(req: NextRequest) {
     // Fallback: redirect to root domain
     return withPHBootstrapCookie(
       NextResponse.redirect(
-        new URL(`https://${env.NEXT_PUBLIC_ROOT_DOMAIN}${path}`, req.url),
+        new URL(`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${path}`, req.url),
         { status: 301 },
       ),
       phBootstrap,
@@ -169,7 +174,7 @@ export default async function middleware(req: NextRequest) {
     return withPHBootstrapCookie(
       NextResponse.redirect(
         new URL(
-          `https://${subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}${slug}${searchParams}`,
+          `${protocol}://${subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}${slug}${searchParams}`,
           req.url,
         ),
         { status: 301 },
@@ -193,7 +198,7 @@ export default async function middleware(req: NextRequest) {
   if (hostname === env.NEXT_PUBLIC_SITE_DOMAIN) {
     return withPHBootstrapCookie(
       NextResponse.redirect(
-        new URL(`https://${env.NEXT_PUBLIC_HOME_DOMAIN}`, req.url),
+        new URL(`${protocol}://${env.NEXT_PUBLIC_HOME_DOMAIN}`, req.url),
         { status: 302 },
       ),
       phBootstrap,

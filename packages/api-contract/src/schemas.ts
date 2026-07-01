@@ -291,6 +291,7 @@ export type AnonPublishRequest = z.infer<typeof AnonPublishRequestSchema>;
 export const AnonPublishResponseSchema = z.object({
   siteId: z.string(),
   projectName: z.string(),
+  publishId: z.string(),
   files: z.array(
     z.object({
       fileName: z.string(),
