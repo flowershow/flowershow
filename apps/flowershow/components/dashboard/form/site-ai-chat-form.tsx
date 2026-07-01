@@ -1,9 +1,9 @@
 'use client';
+import clsx from 'clsx';
 import { signOut } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
-import { cn } from '@/lib/utils';
 import { api } from '@/trpc/react';
 import { PasswordInput } from '../password-input';
 
@@ -95,7 +95,7 @@ export default function SiteAiChatForm({ siteId }: { siteId: string }) {
               type="button"
               onClick={handleClear}
               disabled={pending}
-              className={cn(
+              className={clsx(
                 'text-sm text-red-500 underline',
                 pending && 'cursor-not-allowed opacity-50',
               )}
@@ -107,7 +107,7 @@ export default function SiteAiChatForm({ siteId }: { siteId: string }) {
 
         <button
           type="submit"
-          className={cn(
+          className={clsx(
             'flex h-8 w-32 shrink-0 items-center justify-center space-x-2 rounded-md border px-2 py-1 text-sm transition-all focus:outline-none sm:h-10',
             !canSave || pending
               ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'

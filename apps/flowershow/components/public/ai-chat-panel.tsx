@@ -1,11 +1,11 @@
 'use client';
+import clsx from 'clsx';
 import FocusTrap from 'focus-trap-react';
 import { BotMessageSquare, SendIcon, Trash2Icon, XIcon } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { resolveFilePathToUrlPath } from '@/lib/resolve-link';
-import { cn } from '@/lib/utils';
 
 type Message = {
   id: number;
@@ -237,13 +237,13 @@ export function AiChatPanel({ siteId }: AiChatPanelProps) {
                 {messages.map((msg) => (
                   <div
                     key={msg.id}
-                    className={cn(
+                    className={clsx(
                       'ai-chat-message',
                       msg.role === 'user' ? 'is-user' : 'is-assistant',
                     )}
                   >
                     <div
-                      className={cn(
+                      className={clsx(
                         'ai-chat-bubble',
                         msg.role === 'user' ? 'is-user' : 'is-assistant',
                       )}
@@ -311,7 +311,7 @@ export function AiChatPanel({ siteId }: AiChatPanelProps) {
                   type="submit"
                   disabled={!input.trim() || isLoading}
                   aria-label="Send message"
-                  className={cn(
+                  className={clsx(
                     'ai-chat-submit',
                     !input.trim() || isLoading ? 'is-disabled' : 'is-active',
                   )}
