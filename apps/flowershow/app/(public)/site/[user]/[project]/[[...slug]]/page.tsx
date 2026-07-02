@@ -402,7 +402,7 @@ export default async function SitePage(props: {
   })();
   const showToc = metadata?.showToc ?? siteConfig?.showToc;
   const showKnowledgeGraph =
-    metadata?.showKnowledgeGraph ?? siteConfig?.showKnowledgeGraph ?? true;
+    metadata?.showKnowledgeGraph ?? siteConfig?.showKnowledgeGraph ?? false;
   const showRightColumn = showToc || showKnowledgeGraph;
   const heroConfig = resolveHeroConfig(metadata, siteConfig);
   const showHero = heroConfig.showHero;
