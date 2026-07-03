@@ -70,7 +70,7 @@ Rufus is an entrepreneur and technologist who has spent twenty years working on 
 
 <img className="h-20 w-20 rounded-full lg:w-24 lg:h-24 mt-4" src="https://secure.gravatar.com/avatar/d7dc90fd29be2f58ccaee994cf2b841a?s=300" alt="Ola Rubaj" />
 
-Ola is a front-end developer with a sharp eye for detail and a genuine love of elegant interfaces. She built most of what makes Flowershow look and feel the way it does. When she's not writing code she's reading, and she has a thing for flowers.
+Ola is a product engineer and core builder behind Flowershow. She has built much of what makes Flowershow work and feel the way it does — from the app experience and publishing flows to the tooling, infrastructure, documentation, and community support around it. Her work is focused on making Markdown publishing feel simple, reliable, and approachable for everyone.
 
 ---
 
@@ -80,4 +80,4 @@ A flower show is where you exhibit your garden to the world — the carefully cu
 
 ---
 
-*[Start publishing — free forever →](https://cloud.flowershow.app/)*
+_[Start publishing — free forever →](https://cloud.flowershow.app/)_
