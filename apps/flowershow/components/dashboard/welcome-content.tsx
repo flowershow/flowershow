@@ -1,6 +1,7 @@
 'use client';
 
 import { FileTextIcon, TerminalIcon, UploadIcon } from 'lucide-react';
+import posthog from 'posthog-js';
 import { useState } from 'react';
 import ObsidianIcon from '@/components/icons/obsidian';
 import { GithubIcon } from '../icons';
@@ -91,6 +92,11 @@ export default function WelcomeContent({
                 key={t.id}
                 type="button"
                 onClick={() => {
+                  posthog.capture('welcome_option_selected', {
+                    option: 'template',
+                    template: t.id,
+                    site_id: siteId,
+                  });
                   setSelectedTemplate(t.id);
                   setActiveModal('template');
                 }}
@@ -115,7 +121,13 @@ export default function WelcomeContent({
               <button
                 type="button"
                 key={option.id}
-                onClick={() => setActiveModal(option.id)}
+                onClick={() => {
+                  posthog.capture('welcome_option_selected', {
+                    option: option.id,
+                    site_id: siteId,
+                  });
+                  setActiveModal(option.id);
+                }}
                 className="relative flex flex-col items-center rounded-lg border border-stone-200 p-6 text-center transition-all hover:border-stone-400 hover:shadow-md"
               >
                 {'beta' in option && option.beta && (
