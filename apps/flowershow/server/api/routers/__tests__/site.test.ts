@@ -460,11 +460,12 @@ describe('site.getBlob', () => {
 });
 
 describe('site.getLatestPublishState', () => {
-  it('returns isUnpublished when no Publish records exist', async () => {
+  it('returns isUnpublished when no Publish records exist, regardless of site age', async () => {
     const db = createMockDb({
       publishes: [],
       publishFiles: [],
-      site: makeSite({ createdAt: new Date(Date.now() - 120_000) }),
+      // Brand-new site (just created) with no Publish records and no blobs
+      site: makeSite({ createdAt: new Date() }),
     });
     const caller = createAuthenticatedCaller(db);
 
@@ -472,21 +473,6 @@ describe('site.getLatestPublishState', () => {
 
     expect(result.isUnpublished).toBe(true);
     expect(result.isInProgress).toBe(false);
-    expect(result.lastPublishedAt).toBeNull();
-  });
-
-  it('returns isInProgress when no Publish records exist but site is younger than 60s', async () => {
-    const db = createMockDb({
-      publishes: [],
-      publishFiles: [],
-      site: makeSite({ createdAt: new Date(Date.now() - 30_000) }),
-    });
-    const caller = createAuthenticatedCaller(db);
-
-    const result = await caller.site.getLatestPublishState({ id: 'site-1' });
-
-    expect(result.isInProgress).toBe(true);
-    expect(result.isUnpublished).toBe(false);
     expect(result.lastPublishedAt).toBeNull();
   });
 

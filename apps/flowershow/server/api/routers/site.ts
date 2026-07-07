@@ -607,7 +607,7 @@ export const siteRouter = createTRPCRouter({
       }> => {
         const site = await ctx.db.site.findUnique({
           where: { id: input.id },
-          select: { id: true, userId: true, createdAt: true },
+          select: { id: true, userId: true },
         });
 
         if (!site || site.userId !== ctx.session.user.id) {
@@ -641,17 +641,6 @@ export const siteRouter = createTRPCRouter({
               isUnpublished: false,
               isInProgress: false,
               lastPublishedAt: latestBlob._max.updatedAt,
-            };
-          }
-          // Temporary patch: Treat newly created sites as having a publish in progress to avoid
-          // briefly showing "Publish your first content" before the Publish
-          // record is written (race between site creation and job start).
-          const siteAgeMs = Date.now() - site.createdAt.getTime();
-          if (siteAgeMs < 60 * 1000) {
-            return {
-              isUnpublished: false,
-              isInProgress: true,
-              lastPublishedAt: null,
             };
           }
           return {
