@@ -2,6 +2,7 @@
 
 import { Radio, RadioGroup } from '@headlessui/react';
 import { useSearchParams } from 'next/navigation';
+import posthog from 'posthog-js';
 import { useEffect, useState } from 'react';
 
 import type { Plan, PlanType } from '@/lib/stripe-plans';
@@ -67,13 +68,20 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
 
   const handleSubscribe = async () => {
     setLoading(true);
+    const interval = frequency.value;
     const priceId =
-      plans.PREMIUM.price?.[frequency.value as 'month' | 'year']?.stripePriceId;
+      plans.PREMIUM.price?.[interval as 'month' | 'year']?.stripePriceId;
     if (!priceId) {
       console.error('No price ID found for selected interval');
       setLoading(false);
       return;
     }
+    posthog.capture('upgrade_cta_clicked', {
+      siteId,
+      interval,
+      priceId,
+      source: 'billing_settings',
+    });
     createCheckoutSession.mutate({ siteId, priceId });
   };
 
