@@ -6,22 +6,23 @@ import {
   MenuItem,
   MenuItems,
 } from '@headlessui/react';
-import Cookies from 'js-cookie';
 import { ExternalLinkIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useSelectedLayoutSegments } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import posthog from 'posthog-js';
-import { ReactNode, useEffect, useMemo } from 'react';
+import { ReactNode, useMemo } from 'react';
 import FeedbackModal from '@/components/dashboard/feedback';
+import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
-import clsx from 'clsx';
 import { useModal } from '@/providers/modal-provider';
 import { api } from '@/trpc/react';
 
 const config = getConfig();
-const FEEDBACK_DISMISSED_COOKIE = 'feedback-dismissed';
+
+// Only expose the feedback button when a PostHog survey id is configured.
+const feedbackEnabled = !!env.NEXT_PUBLIC_POSTHOG_FEEDBACK_SURVEY_ID;
 
 export default function Nav({ children }: { children: ReactNode }) {
   const modal = useModal();
@@ -47,28 +48,6 @@ export default function Nav({ children }: { children: ReactNode }) {
     }
     return [];
   }, [segments, id]);
-
-  const { data: user, refetch } = api.user.getUser.useQuery(undefined, {
-    refetchInterval: 30000,
-  });
-
-  useEffect(() => {
-    // Check if user has submitted feedback before
-    const hasSubmittedFeedback =
-      user?.feedback || Cookies.get(FEEDBACK_DISMISSED_COOKIE);
-    const hasCreatedSite = Boolean(user?.sites.length);
-
-    if (!hasSubmittedFeedback && hasCreatedSite) {
-      const timer = setTimeout(() => {
-        modal?.show(
-          <FeedbackModal dismissable={true} onSubmit={refetch} />,
-          false,
-        );
-      }, 20000);
-
-      return () => clearTimeout(timer);
-    }
-  }, [user]);
 
   return (
     <Disclosure
@@ -121,13 +100,15 @@ export default function Nav({ children }: { children: ReactNode }) {
               <span>Support</span>
               <ExternalLinkIcon className="h-4" />
             </Link>
-            <button
-              type="button"
-              className="hidden rounded-md bg-pink-50 px-2.5 py-1.5 text-sm font-semibold text-pink-600 shadow-sm hover:bg-pink-100 sm:block"
-              onClick={() => modal?.show(<FeedbackModal onSubmit={refetch} />)}
-            >
-              Send feedback
-            </button>
+            {feedbackEnabled && (
+              <button
+                type="button"
+                className="hidden rounded-md bg-pink-50 px-2.5 py-1.5 text-sm font-semibold text-pink-600 shadow-sm hover:bg-pink-100 sm:block"
+                onClick={() => modal?.show(<FeedbackModal />)}
+              >
+                Send feedback
+              </button>
+            )}
             {/* Profile dropdown */}
             <Menu as="div" className="relative ml-3">
               <div>
@@ -189,17 +170,17 @@ export default function Nav({ children }: { children: ReactNode }) {
                     <ExternalLinkIcon className="ml-1 h-4" />
                   </Link>
                 </MenuItem>
-                <MenuItem>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      modal?.show(<FeedbackModal onSubmit={refetch} />)
-                    }
-                    className="block w-full px-4 py-2 text-left text-sm text-pink-600 data-[focus]:bg-gray-100 data-[focus]:outline-none sm:hidden"
-                  >
-                    Send feedback
-                  </button>
-                </MenuItem>
+                {feedbackEnabled && (
+                  <MenuItem>
+                    <button
+                      type="button"
+                      onClick={() => modal?.show(<FeedbackModal />)}
+                      className="block w-full px-4 py-2 text-left text-sm text-pink-600 data-[focus]:bg-gray-100 data-[focus]:outline-none sm:hidden"
+                    >
+                      Send feedback
+                    </button>
+                  </MenuItem>
+                )}
               </MenuItems>
             </Menu>
           </div>
@@ -207,8 +188,4 @@ export default function Nav({ children }: { children: ReactNode }) {
       </div>
     </Disclosure>
   );
-}
-
-function isDefined<T>(value: T | null | undefined): value is NonNullable<T> {
-  return value !== null && value !== undefined;
 }

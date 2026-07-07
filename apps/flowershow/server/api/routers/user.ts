@@ -1,8 +1,6 @@
 import { z } from 'zod';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { fetchGitHubScopeRepositories, fetchGitHubScopes } from '@/lib/github';
-import { FeedbackThankYouEmail } from '@/emails/feedback-thank-you';
-import { sendEmail } from '@/lib/email';
 import PostHogClient from '@/lib/server-posthog';
 import {
   createTRPCRouter,
@@ -44,7 +42,6 @@ export const userRouter = createTRPCRouter({
       where: { id: ctx.session.user.id },
       select: {
         username: true,
-        feedback: true,
         sites: true,
       },
     });
@@ -72,67 +69,6 @@ export const userRouter = createTRPCRouter({
         scope: username === scope ? 'self' : scope,
         accessToken,
       });
-    }),
-  submitFeedback: protectedProcedure
-    .input(
-      z.object({
-        rating: z.number().min(1).max(5),
-        feedback: z.string().min(1),
-      }),
-    )
-    .mutation(async ({ ctx, input }) => {
-      // Get current user to check existing feedback
-      const user = await ctx.db.user.findUnique({
-        where: { id: ctx.session.user.id },
-        select: { feedback: true },
-      });
-
-      // Get existing feedback array or create new one
-      const existingFeedback = user?.feedback
-        ? Array.isArray(user.feedback)
-          ? user.feedback
-          : [user.feedback]
-        : [];
-
-      // Check if user has submitted feedback in the last hour
-      const lastFeedback = existingFeedback[existingFeedback.length - 1];
-
-      if (lastFeedback) {
-        const lastSubmissionTime = new Date((lastFeedback as any).timestamp);
-        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-
-        if (lastSubmissionTime > fiveMinutesAgo) {
-          throw new Error(
-            '⏳ Please wait at least 5min between feedback submissions, or click Support and create an issue or start a discussion.',
-          );
-        }
-      }
-
-      // Create new feedback entry with timestamp
-      const newFeedback = {
-        ...input,
-        timestamp: new Date().toISOString(),
-      };
-
-      // Update user with appended feedback
-      const user2 = await ctx.db.user.update({
-        where: { id: ctx.session.user.id },
-        data: {
-          feedback: [...existingFeedback, newFeedback],
-        },
-        select: { email: true, name: true },
-      });
-
-      if (user2.email) {
-        const userName = user2.name?.split(' ')[0] || 'there';
-        await sendEmail({
-          to: user2.email,
-          subject: 'Thanks for your feedback!',
-          react: FeedbackThankYouEmail({ userName }),
-        });
-      }
-
-      return { success: true };
     }),
   getAccessTokens: protectedProcedure.query(async ({ ctx }) => {
     return await ctx.db.accessToken.findMany({

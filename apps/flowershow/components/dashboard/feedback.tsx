@@ -1,46 +1,40 @@
 'use client';
 
-import Cookies from 'js-cookie';
-import { useState } from 'react';
+import posthog, { SurveyQuestionType } from 'posthog-js';
+import type { Survey } from 'posthog-js';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
 import clsx from 'clsx';
 import { useConfetti } from '@/providers/confetti-provider';
 import { useModal } from '@/providers/modal-provider';
-import { api } from '@/trpc/react';
+import { env } from '@/env.mjs';
 
-const FEEDBACK_COOKIE = 'feedback-dismissed';
-
-export default function FeedbackModal({
-  onSubmit,
-  dismissable = false,
-}: {
-  onSubmit?: () => void;
-  dismissable?: boolean;
-}) {
+export default function FeedbackModal() {
   const modal = useModal();
   const [formData, setFormData] = useState({
     rating: 5,
     feedback: '',
   });
+  const [survey, setSurvey] = useState<Survey | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { showConfetti } = useConfetti();
 
-  const { isLoading: isSubmitting, mutate: submitFeedback } =
-    api.user.submitFeedback.useMutation({
-      onSuccess: () => {
-        modal?.hide();
-        if (onSubmit) {
-          onSubmit();
-        }
-        toast.success(
-          'Thank you for taking the time to share your thoughts! 🎉',
-        );
-        showConfetti();
-      },
-      onError: (error: any) => {
-        toast.error(error.message);
-      },
-    });
+  useEffect(() => {
+    // Fetch the survey definition directly by its known id rather than relying
+    // on getActiveMatchingSurveys — this form is custom-rendered and triggered
+    // manually, so we don't want PostHog's targeting/display matching (which
+    // filters out the survey once a user has dismissed or responded to it).
+    posthog.getSurveys((surveys) => {
+      const feedbackSurvey = surveys.find(
+        (survey) => survey.id === env.NEXT_PUBLIC_POSTHOG_FEEDBACK_SURVEY_ID,
+      );
+      if (feedbackSurvey) {
+        setSurvey(feedbackSurvey);
+        posthog.capture('survey shown', { $survey_id: feedbackSurvey.id });
+      }
+    }, true);
+  }, []);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -54,12 +48,46 @@ export default function FeedbackModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    submitFeedback(formData);
+
+    if (!survey) {
+      toast.error('Feedback is temporarily unavailable, please try again.');
+      return;
+    }
+
+    const ratingQuestion = survey.questions.find(
+      (q) => q.type === SurveyQuestionType.Rating,
+    );
+    const textQuestion = survey.questions.find(
+      (q) => q.type === SurveyQuestionType.Open,
+    );
+
+    if (!ratingQuestion || !textQuestion) {
+      toast.error('Feedback is temporarily unavailable, please try again.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    posthog.capture('survey sent', {
+      $survey_id: survey.id,
+      [`$survey_response_${ratingQuestion.id}`]: String(formData.rating),
+      [`$survey_response_${textQuestion.id}`]: formData.feedback,
+    });
+
+    modal?.hide();
+    toast.success('Thank you for taking the time to share your thoughts! 🎉');
+    showConfetti();
   };
 
+  const feedbackPrompt =
+    formData.rating <= 2
+      ? 'Sorry to hear that — what went wrong, or what was missing?'
+      : formData.rating === 3
+        ? 'What would make Flowershow work better for you?'
+        : "Glad you're enjoying it! What's one thing that would make it even better?";
+
   const handleDismiss = () => {
-    if (dismissable) {
-      Cookies.set(FEEDBACK_COOKIE, 'true', { expires: 3 });
+    if (survey) {
+      posthog.capture('survey dismissed', { $survey_id: survey.id });
     }
     modal?.hide();
   };
@@ -118,12 +146,12 @@ export default function FeedbackModal({
             htmlFor="feedback"
             className="text-sm font-medium text-stone-500 "
           >
-            Your feedback
+            {feedbackPrompt}
           </label>
           <textarea
             id="feedback"
             name="feedback"
-            placeholder="Tell us what you think..."
+            placeholder="The more specific, the better..."
             value={formData.feedback}
             onChange={handleChange}
             required
