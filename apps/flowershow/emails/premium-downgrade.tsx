@@ -64,7 +64,7 @@ Thanks for being with us — we really appreciate that you gave Flowershow a try
           p: { fontSize: '16px', lineHeight: '26px', color: '#484848' },
         }}
       >
-        {`If you cancelled because something was missing, too limited, too expensive, or just not the right fit, I'd genuinely love to hear it. You can simply reply to this email — every reply goes to a real person and helps us improve Flowershow.
+        {`If you cancelled because something was missing, too limited, too expensive, or just not the right fit, we'd genuinely love to hear it. You can simply reply to this email — every reply goes to a real person and helps us improve Flowershow.
 
 And if you decide to keep using Flowershow, that's wonderful too.
 
