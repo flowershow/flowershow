@@ -3,18 +3,45 @@ import { headers } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { PremiumDowngradeEmail } from '@/emails/premium-downgrade';
+import { PremiumExpiredEmail } from '@/emails/premium-expired';
 import { PremiumUpgradeEmail } from '@/emails/premium-upgrade';
+import { RenewalReminderEmail } from '@/emails/renewal-reminder';
 import { removeDomainAndVariantFromVercelProject } from '@/lib/domains';
 import { sendEmail } from '@/lib/email';
 import PostHogClient from '@/lib/server-posthog';
 import { stripe } from '@/lib/stripe';
+import { sendTransactionalEmail } from '@/lib/transactional-email';
 import prisma from '@/server/db';
 
+// Email ownership: payment-failure emails are sent by Stripe itself.
+// We therefore do NOT handle `invoice.payment_failed` here.
+// Flowershow only sends emails Stripe does not: annual renewal reminders
+// (invoice.upcoming) and involuntary-expiry notices (subscription cancelled on
+// payment_failure, handled in the subscription case below).
 const relevantEvents = new Set([
   'checkout.session.completed',
   'customer.subscription.updated',
   'customer.subscription.deleted',
+  'invoice.upcoming',
 ]);
+
+const billingSettingsUrl = (siteId: string) =>
+  `https://${env.NEXT_PUBLIC_CLOUD_DOMAIN}/site/${siteId}/settings`;
+
+function formatAmount(
+  amountInCents: number | null | undefined,
+  currency = 'usd',
+) {
+  const value = (amountInCents ?? 0) / 100;
+  try {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: (currency || 'usd').toUpperCase(),
+    }).format(value);
+  } catch {
+    return `$${value.toFixed(2)}`;
+  }
+}
 
 export async function POST(req: Request) {
   const body = await req.text();
@@ -23,15 +50,12 @@ export async function POST(req: Request) {
   let event;
 
   try {
-    console.log(`📥 Incoming Stripe webhook request`);
     event = stripe.webhooks.constructEvent(
       body,
       sig!,
       env.STRIPE_WEBHOOK_SECRET,
     );
-    console.log(`✅ Webhook verified. Event type: ${event.type}`);
   } catch (err: any) {
-    console.error(`❌ Webhook verification failed: ${err.message}`);
     const posthog = PostHogClient();
     posthog.captureException(err, 'system', {
       route: 'POST /api/stripe/webhook',
@@ -48,7 +72,6 @@ export async function POST(req: Request) {
     try {
       switch (event.type) {
         case 'checkout.session.completed': {
-          console.log(`🔄 Processing checkout.session.completed`);
           const checkoutSession = event.data.object as any;
           const subscription = await stripe.subscriptions.retrieve(
             checkoutSession.subscription,
@@ -62,13 +85,6 @@ export async function POST(req: Request) {
             throw new Error('Missing required subscription data');
           }
 
-          console.log(`📋 Subscription details:
-            - Customer: ${checkoutSession.customer}
-            - Site ID: ${checkoutSession.metadata.siteId}
-            - Price ID: ${priceId}
-            - Interval: ${interval}
-          `);
-
           // Check for existing subscription
           const existingSubscription = await prisma.subscription.findUnique({
             where: { siteId: checkoutSession.metadata.siteId },
@@ -79,17 +95,12 @@ export async function POST(req: Request) {
             existingSubscription &&
             existingSubscription.status === 'canceled'
           ) {
-            console.log(
-              `🗑️ Deleting existing canceled subscription: ${existingSubscription.id}`,
-            );
             await prisma.subscription.delete({
               where: { id: existingSubscription.id },
             });
           }
 
           // Create new subscription
-          console.log(`📝 Creating new subscription record`);
-
           await prisma.subscription.create({
             data: {
               siteId: checkoutSession.metadata.siteId,
@@ -109,7 +120,6 @@ export async function POST(req: Request) {
           });
 
           // Update site's features to PREMIUM
-          console.log(`⭐ Upgrading site to PREMIUM plan`);
           const updatedSite = await prisma.site.update({
             where: {
               id: checkoutSession.metadata.siteId,
@@ -147,19 +157,11 @@ export async function POST(req: Request) {
             }),
           });
 
-          console.log(`✅ Checkout session processing completed`);
           break;
         }
         case 'customer.subscription.updated':
         case 'customer.subscription.deleted': {
-          console.log(`🔄 Processing ${event.type}`);
           const subscription = event.data.object as any;
-
-          console.log(`📋 Subscription details:
-            - ID: ${subscription.id}
-            - Status: ${subscription.status}
-          `);
-
           const dbSubscription = await prisma.subscription.findUnique({
             where: {
               stripeSubscriptionId: subscription.id,
@@ -186,8 +188,6 @@ export async function POST(req: Request) {
             subscription.cancel_at_period_end === true &&
             dbSubscription.cancelAtPeriodEnd === false;
 
-          console.log({ justCancelled });
-
           // Look up the user to check if they've already received the cancel bonus
           const user = await prisma.user.findUnique({
             where: { id: dbSubscription.site.userId },
@@ -204,9 +204,6 @@ export async function POST(req: Request) {
           if (grantBonus) {
             periodEnd = new Date(subscription.current_period_end * 1000);
             periodEnd.setMonth(periodEnd.getMonth() + 3);
-            console.log(
-              `⏳ Granting cancel bonus. Extending access until ${periodEnd.toISOString()}`,
-            );
           } else if (
             subscription.cancel_at_period_end === true &&
             dbSubscription.cancelAtPeriodEnd === true
@@ -218,7 +215,6 @@ export async function POST(req: Request) {
             periodEnd = new Date(subscription.current_period_end * 1000);
           }
 
-          console.log(`📝 Updating subscription record`);
           await prisma.subscription.update({
             where: {
               stripeSubscriptionId: subscription.id,
@@ -236,8 +232,6 @@ export async function POST(req: Request) {
           });
 
           if (justCancelled) {
-            console.log(`📧 Subscription cancelled — sending downgrade email`);
-
             if (grantBonus) {
               await prisma.user.update({
                 where: { id: dbSubscription.site.userId },
@@ -281,16 +275,12 @@ export async function POST(req: Request) {
 
           // When Stripe confirms the subscription is fully cancelled, downgrade to FREE
           if (subscription.status === 'canceled') {
-            console.log(`⬇️ Downgrading site to FREE plan`);
             const site = dbSubscription.site;
 
             if (
               site.customDomain &&
               env.NEXT_PUBLIC_VERCEL_ENV === 'production'
             ) {
-              console.log(
-                `🌐 Removing custom domain ${site.customDomain} from Vercel`,
-              );
               await removeDomainAndVariantFromVercelProject(site.customDomain);
             }
 
@@ -307,9 +297,88 @@ export async function POST(req: Request) {
                 }),
               },
             });
+
+            // Involuntary expiry: the subscription was cancelled because payment
+            // failed (not a voluntary cancellation). Send a distinct "expired,
+            // reactivate anytime" email.
+            const cancellationReason =
+              subscription.cancellation_details?.reason;
+            if (cancellationReason === 'payment_failure' && user?.email) {
+              const expiredUserName = user.name?.split(' ')[0] || 'there';
+              await sendTransactionalEmail({
+                to: user.email,
+                subject: 'Your Flowershow Premium has expired',
+                react: PremiumExpiredEmail({
+                  userName: expiredUserName,
+                  siteName: dbSubscription.site.projectName,
+                  reactivateUrl: billingSettingsUrl(dbSubscription.siteId),
+                }),
+                type: 'premium_expired',
+                userId: user.id,
+                idempotencyKey: `expiry:${subscription.id}`,
+                distinctId: user.id,
+                properties: { siteId: dbSubscription.siteId },
+              });
+            }
           }
 
-          console.log(`✅ Subscription update processing completed`);
+          break;
+        }
+        case 'invoice.upcoming': {
+          const invoice = event.data.object as any;
+          const stripeSubscriptionId = invoice.subscription;
+
+          if (!stripeSubscriptionId) {
+            break;
+          }
+
+          const dbSubscription = await prisma.subscription.findUnique({
+            where: { stripeSubscriptionId },
+            include: { site: { include: { user: true } } },
+          });
+
+          const user = dbSubscription?.site.user;
+          if (!dbSubscription || !user?.email) {
+            break;
+          }
+
+          // Annual plans only — monthly renewals send nothing.
+          const lineInterval =
+            invoice.lines?.data?.[0]?.price?.recurring?.interval;
+          const interval = lineInterval ?? dbSubscription.interval;
+          if (interval !== 'year') {
+            break;
+          }
+
+          const periodEnd: number | null =
+            invoice.period_end ?? invoice.next_payment_attempt ?? null;
+          const renewalDate = periodEnd
+            ? new Date(periodEnd * 1000).toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })
+            : 'soon';
+          const amount = formatAmount(invoice.amount_due, invoice.currency);
+
+          const renewalUserName = user.name?.split(' ')[0] || 'there';
+          await sendTransactionalEmail({
+            to: user.email,
+            subject: 'Your Flowershow Premium renews soon',
+            react: RenewalReminderEmail({
+              userName: renewalUserName,
+              siteName: dbSubscription.site.projectName,
+              renewalDate,
+              amount,
+              manageBillingUrl: billingSettingsUrl(dbSubscription.siteId),
+            }),
+            type: 'renewal_reminder',
+            userId: user.id,
+            idempotencyKey: `renewal:${stripeSubscriptionId}:${periodEnd}`,
+            distinctId: user.id,
+            properties: { siteId: dbSubscription.siteId, interval: 'year' },
+          });
+
           break;
         }
         default:
@@ -328,11 +397,8 @@ export async function POST(req: Request) {
         { status: 500 },
       );
     }
-  } else {
-    console.log(`ℹ️ Ignoring irrelevant event type: ${event.type}`);
   }
 
-  console.log(`✅ Webhook processing completed successfully`);
   return NextResponse.json({
     received: true,
   } satisfies StripeWebhookReceivedResponse);

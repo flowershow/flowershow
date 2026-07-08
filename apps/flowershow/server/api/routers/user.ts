@@ -1,7 +1,9 @@
 import { z } from 'zod';
+import { AccountDeletedEmail } from '@/emails/account-deleted';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { fetchGitHubScopeRepositories, fetchGitHubScopes } from '@/lib/github';
 import PostHogClient from '@/lib/server-posthog';
+import { sendTransactionalEmail } from '@/lib/transactional-email';
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -185,6 +187,8 @@ export const userRouter = createTRPCRouter({
         where: { id: userId },
         select: {
           username: true,
+          name: true,
+          email: true,
           sites: {
             select: {
               id: true,
@@ -219,6 +223,11 @@ export const userRouter = createTRPCRouter({
         );
       }
 
+      // Capture the address before the row is gone — the confirmation is sent
+      // after the delete transaction commits.
+      const deletedUserEmail = user.email;
+      const deletedUserName = user.name?.split(' ')[0] || user.username;
+
       // Delete user (cascades to all relations per schema)
       await ctx.db.user.delete({
         where: { id: userId },
@@ -230,6 +239,18 @@ export const userRouter = createTRPCRouter({
         event: 'account_deleted',
       });
       await posthog.shutdown();
+
+      if (deletedUserEmail) {
+        await sendTransactionalEmail({
+          to: deletedUserEmail,
+          subject: 'Your Flowershow account has been deleted',
+          react: AccountDeletedEmail({ userName: deletedUserName }),
+          type: 'account_deleted',
+          userId,
+          idempotencyKey: `account-deleted:${userId}`,
+          distinctId: userId,
+        });
+      }
 
       return { success: true };
     }),
