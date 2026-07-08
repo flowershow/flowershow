@@ -1,15 +1,38 @@
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import axios from 'axios';
 import { getServerSession, type NextAuthOptions } from 'next-auth';
+import type { Adapter } from 'next-auth/adapters';
+import EmailProvider from 'next-auth/providers/email';
 import GitHubProvider, { GithubProfile } from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
 import { env } from '@/env.mjs';
+import { MagicLinkEmail } from '@/emails/magic-link';
 import { WelcomeEmail } from '@/emails/welcome';
 import { sendEmail } from '@/lib/email';
+import { generateUsername } from '@/lib/generate-username';
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 
 const VERCEL_DEPLOYMENT = !!env.VERCEL_URL;
+
+// Per-email cooldown between magic-link emails, to prevent inbox spamming and
+// protect sender deliverability.
+const MAGIC_LINK_COOLDOWN_MS = 60 * 1000;
+
+// Wrap the Prisma adapter so that `username` (required, unique, subdomain-safe)
+// is always set when creating a user. OAuth sign-ins pass a username through
+// their `profile()` callback (GitHub uses the login as-is); magic-link and
+// Google sign-ins have it generated from the email address.
+const prismaAdapter = PrismaAdapter(prisma);
+const adapter: Adapter = {
+  ...prismaAdapter,
+  createUser: async (data) => {
+    const username =
+      (data as { username?: string }).username ??
+      (await generateUsername(data.email!));
+    return prismaAdapter.createUser!({ ...data, username } as typeof data);
+  },
+};
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -40,18 +63,43 @@ export const authOptions: NextAuthOptions = {
     GoogleProvider({
       clientId: env.AUTH_GOOGLE_ID as string,
       clientSecret: env.AUTH_GOOGLE_SECRET as string,
-      profile(profile) {
-        const username =
-          profile.email?.split('@')[0] ||
-          profile.name?.replace(/\s+/g, '-').toLowerCase() ||
-          profile.sub;
+      async profile(profile) {
         return {
           id: profile.sub,
           name: profile.name,
           email: profile.email,
           image: profile.picture,
-          username: username,
+          // Generated (sanitised + collision-checked) from the email rather
+          // than using the raw email prefix.
+          username: await generateUsername(profile.email),
         };
+      },
+    }),
+    EmailProvider({
+      from: 'Flowershow <support@flowershow.app>',
+      sendVerificationRequest: async ({ identifier: email, url, expires }) => {
+        const recentToken = await prisma.verificationToken.findFirst({
+          where: {
+            identifier: email,
+            expires: {
+              gt: new Date(expires.getTime() - MAGIC_LINK_COOLDOWN_MS),
+              lt: expires,
+            },
+          },
+        });
+
+        if (recentToken) {
+          // A link was just sent; silently skip to avoid inbox spam. The user
+          // already received (or is about to receive) the first email.
+          console.log(`Magic-link cooldown active for ${email}, skipping send`);
+          return;
+        }
+
+        await sendEmail({
+          to: email,
+          subject: 'Your Flowershow sign-in link',
+          react: MagicLinkEmail({ url }),
+        });
       },
     }),
   ],
@@ -60,7 +108,7 @@ export const authOptions: NextAuthOptions = {
     verifyRequest: `/login`,
     error: '/login', // Error code passed in query string as ?error=
   },
-  adapter: PrismaAdapter(prisma),
+  adapter,
   session: {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -109,11 +157,22 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
-      // Look up the OAuth account that was just created to determine the auth provider
-      const account = await prisma.account.findFirst({
-        where: { userId: user.id },
-        select: { provider: true },
+      // Send welcome email
+      const userName = user.name?.split(' ')[0] || 'there';
+      await sendEmail({
+        to: user.email!,
+        subject: 'Welcome to Flowershow',
+        react: WelcomeEmail({ userName }),
       });
+    },
+    signIn: async ({ user, account, isNewUser }) => {
+      // Capture sign_up here rather than in `createUser`: for OAuth,
+      // `events.createUser` fires before `linkAccount`, so no Account row
+      // exists yet to read the provider from; for magic-link there is never an
+      // Account row at all. This event runs after linking and receives the
+      // `account` directly, so `account.provider` is reliable for every flow
+      // ('github' | 'google' | 'email').
+      if (!isNewUser) return;
 
       const posthog = PostHogClient();
       posthog.capture({
@@ -124,14 +183,6 @@ export const authOptions: NextAuthOptions = {
         },
       });
       await posthog.shutdown();
-
-      // Send welcome email
-      const userName = user.name?.split(' ')[0] || 'there';
-      await sendEmail({
-        to: user.email!,
-        subject: 'Welcome to Flowershow',
-        react: WelcomeEmail({ userName }),
-      });
     },
   },
   callbacks: {
@@ -178,6 +229,11 @@ export const authOptions: NextAuthOptions = {
       //   on subsequent sign in - prisma user
       // account: OAuth response with fresh tokens from provider
       // profile: full GitHub or Google profile
+      // Magic-link sign-ins have no OAuth profile — the token was already
+      // verified by NextAuth before this callback runs, so allow them through
+      // before the OAuth-only account/token logic below.
+      if (account?.provider === 'email') return true;
+
       if (!account || !profile) return false;
 
       const existingAccount = await prisma.account.findFirst({

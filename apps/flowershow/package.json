@@ -80,6 +80,7 @@
     "next": "15.5.18",
     "next-auth": "4.24.12",
     "next-mdx-remote-client": "^2.1.7",
+    "nodemailer": "^7.0.13",
     "papaparse": "^5.5.3",
     "postcss-prefixwrap": "^1.57.0",
     "posthog-js": "^1.279.3",
