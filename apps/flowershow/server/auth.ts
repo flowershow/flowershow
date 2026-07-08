@@ -95,11 +95,42 @@ export const authOptions: NextAuthOptions = {
           return;
         }
 
-        await sendEmail({
-          to: email,
-          subject: 'Your Flowershow sign-in link',
-          react: MagicLinkEmail({ url }),
+        // Sign-in is blocked on this email actually going out, so unlike our
+        // best-effort emails we retry transient failures and, if it still
+        // fails, throw — NextAuth then routes to the error page instead of
+        // showing a false "check your email". The failure is tracked so the
+        // team has a signal too.
+        const MAX_ATTEMPTS = 2;
+        let lastError: unknown;
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+          try {
+            const result = await sendEmail({
+              to: email,
+              subject: 'Your Flowershow sign-in link',
+              react: MagicLinkEmail({ url }),
+            });
+            // Resend reports API errors on `error` rather than throwing.
+            if (result?.error) {
+              throw new Error(`Resend error: ${JSON.stringify(result.error)}`);
+            }
+            return; // delivered
+          } catch (err) {
+            lastError = err;
+            console.error(
+              `Magic-link send attempt ${attempt}/${MAX_ATTEMPTS} failed for ${email}:`,
+              err,
+            );
+          }
+        }
+
+        const posthog = PostHogClient();
+        posthog.captureException(lastError, 'system', {
+          context: 'magic_link_send',
+          provider: 'resend',
         });
+        await posthog.shutdown();
+
+        throw new Error('Failed to send magic-link email');
       },
     }),
   ],

@@ -11,6 +11,7 @@ interface SendEmailOptions {
   subject: string;
   react: ReactElement;
   from?: string;
+  idempotencyKey?: string;
 }
 
 export async function sendEmail({
@@ -18,11 +19,15 @@ export async function sendEmail({
   subject,
   react,
   from = FROM_DEFAULT,
+  idempotencyKey,
 }: SendEmailOptions) {
-  return resend.emails.send({
-    from,
-    to,
-    subject,
-    react,
-  });
+  return resend.emails.send(
+    {
+      from,
+      to,
+      subject,
+      react,
+    },
+    idempotencyKey ? { idempotencyKey } : undefined,
+  );
 }

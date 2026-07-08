@@ -1,12 +1,16 @@
 'use client';
 
 import { signOut } from 'next-auth/react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
 import clsx from 'clsx';
 import { api } from '@/trpc/react';
 
 export default function DeleteAccountForm({ username }: { username: string }) {
+  const [confirmValue, setConfirmValue] = useState('');
+  const confirmationMatches = confirmValue === username;
+
   const { isPending: isDeletingAccount, mutate: deleteAccount } =
     api.user.deleteAccount.useMutation({
       onSuccess: () => {
@@ -25,7 +29,8 @@ export default function DeleteAccountForm({ username }: { username: string }) {
     });
 
   const handleDelete = () => {
-    deleteAccount({ confirm: username });
+    if (!confirmationMatches) return;
+    deleteAccount({ confirm: confirmValue });
   };
 
   return (
@@ -49,9 +54,11 @@ export default function DeleteAccountForm({ username }: { username: string }) {
           data-testid="delete-account-input"
           name="confirm"
           type="text"
-          required
-          pattern={username}
+          autoComplete="off"
+          value={confirmValue}
+          onChange={(e) => setConfirmValue(e.target.value)}
           placeholder={username}
+          aria-invalid={confirmValue.length > 0 && !confirmationMatches}
           className="w-full max-w-md rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500    "
         />
       </div>
@@ -60,22 +67,26 @@ export default function DeleteAccountForm({ username }: { username: string }) {
         <p className="w-full text-sm text-stone-500 ">
           This action is irreversible. Please proceed with caution.
         </p>
-        <FormButton pending={isDeletingAccount} />
+        <FormButton
+          pending={isDeletingAccount}
+          disabled={!confirmationMatches}
+        />
       </div>
     </form>
   );
 }
 
-function FormButton({ pending = false }) {
+function FormButton({ pending = false, disabled = false }) {
+  const inactive = pending || disabled;
   return (
     <button
       className={clsx(
         'flex h-8 min-w-32 text-nowrap items-center justify-center px-4 rounded-md border text-sm transition-all focus:outline-none sm:h-10',
-        pending
+        inactive
           ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   '
           : 'border-red-600 bg-red-600 text-white hover:bg-white hover:text-red-600 ',
       )}
-      disabled={pending}
+      disabled={inactive}
     >
       {pending ? <LoadingDots color="#808080" /> : <p>Confirm Delete</p>}
     </button>
