@@ -13,6 +13,7 @@ import { validDomainRegex } from '@/lib/domains';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { getRepoFullName } from '@/lib/get-repo-full-name';
 import { PLANS } from '@/lib/stripe-plans';
+import { SITE_NAME_MAX_LENGTH } from '@/lib/validate-site-name';
 import type { SiteUpdateKey } from '@/server/api/types';
 import { api } from '@/trpc/server';
 
@@ -62,6 +63,11 @@ export default async function SiteSettingsPage(props: {
   }) => {
     'use server';
     await api.site.update.mutate({ id, key, value });
+  };
+
+  const renameSite = async ({ id, value }: { id: string; value: string }) => {
+    'use server';
+    await api.site.renameSite.mutate({ id, name: value });
   };
 
   const updateDbConfig = async ({
@@ -262,12 +268,13 @@ export default async function SiteSettingsPage(props: {
               name: 'projectName',
               type: 'text',
               defaultValue: site.projectName,
-              placeholder: 'site name',
-              maxLength: 32,
-              pattern: '^[a-zA-Z0-9_.-]+$',
+              placeholder: 'My Notes',
+              maxLength: SITE_NAME_MAX_LENGTH,
+              // Must contain at least one letter or number and no "/".
+              pattern: '^(?=.*[a-zA-Z0-9])[^/]+$',
             }}
-            handleSubmit={updateSite}
-            helpText="It can only consist of ASCII letters, digits, and characters ., -, and _. Maximum 32 characters can be used."
+            handleSubmit={renameSite}
+            helpText={`It must contain at least one letter or number and cannot contain "/". Renaming does not change your site's URL. Maximum ${SITE_NAME_MAX_LENGTH} characters.`}
           />
           <Form
             title="Site Title"

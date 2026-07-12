@@ -36,3 +36,21 @@ export function buildSiteSubdomain(
 export function buildAnonSiteSubdomain(projectName: string): string {
   return sanitizeSubdomain(`${projectName}-anon`);
 }
+
+/**
+ * Resolve a globally-unique subdomain by appending `-N` until `exists` reports
+ * the candidate is free.
+ */
+export async function ensureUniqueSubdomain(
+  base: string,
+  exists: (candidate: string) => Promise<boolean>,
+): Promise<string> {
+  let subdomain = base;
+  let n = 2;
+  while (await exists(subdomain)) {
+    // Re-sanitize so the suffixed value stays a valid, length-bounded label.
+    subdomain = sanitizeSubdomain(`${base}-${n}`);
+    n++;
+  }
+  return subdomain;
+}
