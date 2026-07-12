@@ -3,6 +3,7 @@ import { InternalSite, internalSiteSelect } from '@/lib/db/internal';
 import { validateAccessToken } from '@/lib/cli-auth';
 import prisma from '@/server/db';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
+import { sanitizeProjectName } from '@/lib/sanitize-project-name';
 
 export async function GET(
   req: NextRequest,
@@ -21,6 +22,9 @@ export async function GET(
 
   let site: InternalSite | null = null;
 
+  // Sites are stored under the sanitized site name, so name-based lookups
+  // below sanitize the raw path segment the same way it was at creation time.
+  // Domain/subdomain lookups use their own columns and are left as-is.
   if (username === '_domain') {
     site = await prisma.site.findUnique({
       where: {
@@ -38,7 +42,7 @@ export async function GET(
   } else if (username === 'anon') {
     site = await prisma.site.findFirst({
       where: {
-        projectName: projectname,
+        projectName: sanitizeProjectName(projectname),
         userId: ANONYMOUS_USER_ID,
       },
       select: internalSiteSelect,
@@ -49,7 +53,7 @@ export async function GET(
         user: {
           username,
         },
-        projectName: projectname,
+        projectName: sanitizeProjectName(projectname),
       },
       select: internalSiteSelect,
     });

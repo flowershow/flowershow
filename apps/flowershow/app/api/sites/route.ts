@@ -15,6 +15,7 @@ import PostHogClient from '@/lib/server-posthog';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { buildSiteSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
+import { sanitizeProjectName } from '@/lib/sanitize-project-name';
 import prisma from '@/server/db';
 
 /**
@@ -48,10 +49,10 @@ export async function POST(request: NextRequest) {
 
     const { projectName, overwrite = false } = parsedBody.data;
 
-    // Sanitize project name (alphanumeric, hyphens, underscores only)
-    const sanitizedName = projectName
-      .toLowerCase()
-      .replace(/[^a-z0-9-_]/g, '-');
+    // Sanitize the site name (alphanumeric, hyphens, underscores only).
+    // Uses the same helper as the get-site-by-name lookup so a site created
+    // from a raw name is always findable by that raw name later.
+    const sanitizedName = sanitizeProjectName(projectName);
     if (sanitizedName.length < 1 || sanitizedName.length > 100) {
       return NextResponse.json(
         {
