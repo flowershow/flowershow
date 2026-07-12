@@ -24,6 +24,14 @@ _Avoid_: Asset (overloaded with the Blob term above), media file
 A user's published website on Flowershow. May be backed by a GitHub repository (webhook-driven) or fed by direct file uploads from the CLI, Obsidian plugin, or dashboard.
 _Avoid_: Project, blog, workspace
 
+**Site Name**:
+The human-facing label of a Site, stored raw in `blob`-adjacent column `Site.projectName` exactly as the user typed it (e.g. `"My Notes"`). Also the key used to look a Site up by name (`GET /api/sites/{username}/{projectname}`, CLI, Obsidian plugin) — matched **exactly and case-sensitively**, never slugified. Unique per user (exact), enforced by a DB unique index on `(userId, projectName)`. Validated only enough to guarantee a derivable, URL-safe Subdomain: at least one alphanumeric character, no `/` or control characters, bounded length. Passing the wrong casing/characters is a caller error → 404. See ADR-0011.
+_Avoid_: Project name (that's the DB column, not the concept), slug, title (Site Title is a separate config field)
+
+**Subdomain**:
+The stable web address of a Site, `{subdomain}.flowershow.me`, and the only slugified name value. Derived once via `sanitizeSubdomain(`{name}-{username}`)` at creation and **frozen** thereafter — renaming a Site never changes its URL. Globally unique (`Site.subdomain @unique`); collision resolution (the `-N` suffix) lives here, not on the Site Name. `sanitizeSubdomain` is the single source of truth for the slug transform; there is no `sanitizeProjectName`. See ADR-0011.
+_Avoid_: Slug, domain (Custom Domain is a separate field), host
+
 **Blob**:
 A single tracked file within a site, always reflecting its current state (path, SHA, processing status). Not a version snapshot — mutated in place on each publish.
 _Avoid_: File record, asset

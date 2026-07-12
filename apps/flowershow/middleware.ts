@@ -169,7 +169,7 @@ export default async function middleware(req: NextRequest) {
     const site = await fetchSite(req, `/api/sites/${username}/${projectname}`);
     if (!site) return rewrite(`/not-found`, req, phBootstrap);
 
-    const subdomain = site.subdomain ?? `${projectname}-${username}`;
+    const subdomain = site.subdomain;
 
     return withPHBootstrapCookie(
       NextResponse.redirect(

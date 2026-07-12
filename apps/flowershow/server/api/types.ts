@@ -75,8 +75,6 @@ export enum SiteUpdateKey {
   enableComments = 'enableComments',
   enableSearch = 'enableSearch',
   enableRss = 'enableRss',
-  subdomain = 'subdomain',
-  projectName = 'projectName',
   syntaxMode = 'syntaxMode',
   giscusRepoId = 'giscusRepoId',
   giscusCategoryId = 'giscusCategoryId',
@@ -84,6 +82,8 @@ export enum SiteUpdateKey {
   showBuiltWithButton = 'showBuiltWithButton',
   showRawLink = 'showRawLink',
   hideBranding = 'hideBranding',
+  // Site Name (projectName) is intentionally NOT here
+  // Renaming goes through the dedicated `renameSite` mutation
 }
 export interface PageMetadata {
   title: string;

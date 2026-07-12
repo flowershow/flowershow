@@ -84,7 +84,7 @@ export default function Form({
         toast.error('Please enter a valid domain (e.g. yourdomain.com)');
       } else if (inputAttrs.name === 'projectName') {
         toast.error(
-          'Error: Project name can only contain ASCII letters, digits, and the characters -, and _',
+          'Error: Site name must contain at least one letter or number and cannot contain "/"',
         );
       }
       return;

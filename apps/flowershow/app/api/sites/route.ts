@@ -13,8 +13,12 @@ import {
 import { sendEmail } from '@/lib/email';
 import PostHogClient from '@/lib/server-posthog';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
-import { buildSiteSubdomain } from '@/lib/site-subdomain';
+import {
+  buildSiteSubdomain,
+  ensureUniqueSubdomain,
+} from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
+import { validateSiteName } from '@/lib/validate-site-name';
 import prisma from '@/server/db';
 
 /**
@@ -48,25 +52,20 @@ export async function POST(request: NextRequest) {
 
     const { projectName, overwrite = false } = parsedBody.data;
 
-    // Sanitize project name (alphanumeric, hyphens, underscores only)
-    const sanitizedName = projectName
-      .toLowerCase()
-      .replace(/[^a-z0-9-_]/g, '-');
-    if (sanitizedName.length < 1 || sanitizedName.length > 100) {
+    const validation = validateSiteName(projectName);
+    if (!validation.ok) {
       return NextResponse.json(
-        {
-          error: 'invalid_project_name',
-          message: 'Project name must be 1-100 characters',
-        },
+        { error: 'invalid_project_name', message: validation.error },
         { status: 400 },
       );
     }
+    const siteName = validation.name;
 
-    // Check if site already exists
+    // Check if site already exists (exact, case-sensitive match).
     const existingSite = await prisma.site.findFirst({
       where: {
         userId: auth.userId,
-        projectName: sanitizedName,
+        projectName: siteName,
       },
     });
 
@@ -74,7 +73,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: 'site_exists',
-          message: `A site named '${sanitizedName}' already exists.`,
+          message: `A site named '${siteName}' already exists.`,
         },
         { status: 409 },
       );
@@ -128,11 +127,20 @@ export async function POST(request: NextRequest) {
         },
       });
     } else {
-      // Create new site
+      const subdomain = await ensureUniqueSubdomain(
+        buildSiteSubdomain(siteName, username),
+        (candidate) =>
+          prisma.site
+            .findFirst({
+              where: { subdomain: candidate },
+              select: { id: true },
+            })
+            .then(Boolean),
+      );
       site = await prisma.site.create({
         data: {
-          projectName: sanitizedName,
-          subdomain: buildSiteSubdomain(sanitizedName, username),
+          projectName: siteName,
+          subdomain,
           userId: auth.userId,
           configJson: SITE_CONFIG_DEFAULTS,
         },
@@ -159,11 +167,11 @@ export async function POST(request: NextRequest) {
       const userName = user.name?.split(' ')[0] || 'there';
       await sendEmail({
         to: user.email,
-        subject: `Your site "${sanitizedName}" is live!`,
+        subject: `Your site "${siteName}" is live!`,
         react: SiteCreatedEmail({
           userName,
           siteUrl,
-          projectName: sanitizedName,
+          projectName: siteName,
         }),
       });
     }

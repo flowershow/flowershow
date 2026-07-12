@@ -36,9 +36,16 @@ import {
   SITE_CONFIG_DEFAULTS,
 } from '@/lib/site-config';
 import { siteKeyBytes } from '@/lib/site-hmac-key';
-import { buildSiteSubdomain } from '@/lib/site-subdomain';
+import {
+  buildSiteSubdomain,
+  ensureUniqueSubdomain,
+} from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
 import { ensureLeadingSlash, extractWikiLinkTarget } from '@/lib/utils';
+import {
+  SITE_NAME_MAX_LENGTH,
+  validateSiteName,
+} from '@/lib/validate-site-name';
 import {
   createTRPCRouter,
   protectedProcedure,
@@ -179,20 +186,20 @@ export const siteRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
       z.object({
-        projectName: z.string().min(1).max(32),
+        projectName: z.string().min(1).max(SITE_NAME_MAX_LENGTH),
       }),
     )
     .output(publicSiteSchema)
     .mutation(async ({ ctx, input }): Promise<PublicSite> => {
-      const baseName = input.projectName
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9-_]/g, '-');
+      const validation = validateSiteName(input.projectName);
+      if (!validation.ok) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: validation.error });
+      }
 
       const projectName = await ensureUniqueProjectName(
         ctx.db,
         ctx.session.user.id,
-        baseName,
+        validation.name,
       );
 
       const creator = await ctx.db.user.findUnique({
@@ -200,10 +207,21 @@ export const siteRouter = createTRPCRouter({
         select: { email: true, name: true, username: true },
       });
 
+      const subdomain = await ensureUniqueSubdomain(
+        buildSiteSubdomain(projectName, creator?.username ?? ''),
+        (candidate) =>
+          ctx.db.site
+            .findFirst({
+              where: { subdomain: candidate },
+              select: { id: true },
+            })
+            .then(Boolean),
+      );
+
       const created = await ctx.db.site.create({
         data: {
           projectName,
-          subdomain: buildSiteSubdomain(projectName, creator?.username ?? ''),
+          subdomain,
           user: { connect: { id: ctx.session.user.id } },
           configJson: SITE_CONFIG_DEFAULTS,
         },
@@ -383,6 +401,64 @@ export const siteRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Site not found after update',
+        });
+      }
+
+      revalidateTag(`${site.id}`);
+      return fresh;
+    }),
+  renameSite: protectedProcedure
+    .input(
+      z.object({
+        id: z.string().min(1),
+        name: z.string().min(1).max(SITE_NAME_MAX_LENGTH),
+      }),
+    )
+    .output(publicSiteSchema)
+    .mutation(async ({ ctx, input }): Promise<PublicSite> => {
+      const validation = validateSiteName(input.name);
+      if (!validation.ok) {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: validation.error });
+      }
+      const name = validation.name;
+
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.id },
+        select: { id: true, userId: true },
+      });
+      if (!site || site.userId !== ctx.session.user.id) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Site not found' });
+      }
+
+      // Exact, case-sensitive per-user uniqueness — the name is the lookup key.
+      const clash = await ctx.db.site.findFirst({
+        where: {
+          userId: site.userId,
+          projectName: name,
+          id: { not: site.id },
+        },
+        select: { id: true },
+      });
+      if (clash) {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message: `You already have a site named "${name}".`,
+        });
+      }
+
+      await ctx.db.site.update({
+        where: { id: site.id },
+        data: { projectName: name },
+      });
+
+      const fresh = await ctx.db.site.findUnique({
+        where: { id: site.id },
+        select: publicSiteSelect,
+      });
+      if (!fresh) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found after rename',
         });
       }
 
@@ -2180,6 +2256,9 @@ export const siteRouter = createTRPCRouter({
 });
 
 // ---- Util: ensure unique project name per user ----
+// Name dedup is per-user and exact, used only by dashboard `create` so it
+// never hard-fails on a colliding name. Renaming does NOT auto-dedup — it
+// surfaces the clash as a CONFLICT (see `renameSite`). See ADR-0011.
 async function ensureUniqueProjectName(
   prisma: PrismaClient,
   userId: string,

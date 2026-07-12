@@ -145,6 +145,7 @@ model Site {
   installationRepositoryId String?                       @map("installation_repository_id")
   installationRepository   GitHubInstallationRepository? @relation(fields: [installationRepositoryId], references: [id])
 
+  @@unique([userId, projectName])
   @@index([userId])
   @@index([installationRepositoryId])
   @@index([expiresAt])
