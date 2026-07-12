@@ -29,6 +29,7 @@ import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { checkIfBranchExists } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
 import { resolveContentLink } from '@/lib/resolve-link';
+import { sanitizeProjectName } from '@/lib/sanitize-project-name';
 import PostHogClient from '@/lib/server-posthog';
 import {
   deepMerge,
@@ -184,10 +185,7 @@ export const siteRouter = createTRPCRouter({
     )
     .output(publicSiteSchema)
     .mutation(async ({ ctx, input }): Promise<PublicSite> => {
-      const baseName = input.projectName
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9-_]/g, '-');
+      const baseName = sanitizeProjectName(input.projectName.trim());
 
       const projectName = await ensureUniqueProjectName(
         ctx.db,
