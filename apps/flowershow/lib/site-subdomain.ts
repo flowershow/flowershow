@@ -19,20 +19,54 @@ export function sanitizeSubdomain(raw: string): string {
 }
 
 /**
+ * Error thrown when a raw project name contains no characters that survive
+ * subdomain sanitization (e.g. a name made entirely of hyphens, spaces, or
+ * symbols). Such a name has no valid DNS label of its own.
+ *
+ * Callers that turn user input into a site should catch this and reject the
+ * request (400 / BAD_REQUEST) rather than letting the site be created.
+ */
+export class EmptySubdomainLabelError extends Error {
+  constructor(raw: string) {
+    super(`Project name "${raw}" produces no valid subdomain label`);
+    this.name = 'EmptySubdomainLabelError';
+  }
+}
+
+/**
  * Build the subdomain for a regular user site.
  * Format: {projectName}-{username}
+ *
+ * The project and username labels are sanitized *independently* and then
+ * joined, so the separating hyphen can never be collapsed into an adjacent run
+ * of hyphens. Without this, a projectName of only hyphens (e.g. "---") would
+ * sanitize away entirely and leave the bare `{username}` — letting a user
+ * squat on `<username>.flowershow.me` and bypass the `{sitename}-{username}`
+ * format. An empty project label is rejected outright.
+ *
+ * @throws EmptySubdomainLabelError if `projectName` has no valid label.
  */
 export function buildSiteSubdomain(
   projectName: string,
   username: string,
 ): string {
-  return sanitizeSubdomain(`${projectName}-${username}`);
+  const projectLabel = sanitizeSubdomain(projectName);
+  if (!projectLabel) {
+    throw new EmptySubdomainLabelError(projectName);
+  }
+  return sanitizeSubdomain(`${projectLabel}-${username}`);
 }
 
 /**
  * Build the subdomain for an anonymous/temporary site.
  * Format: {projectName}-anon
+ *
+ * @throws EmptySubdomainLabelError if `projectName` has no valid label.
  */
 export function buildAnonSiteSubdomain(projectName: string): string {
-  return sanitizeSubdomain(`${projectName}-anon`);
+  const projectLabel = sanitizeSubdomain(projectName);
+  if (!projectLabel) {
+    throw new EmptySubdomainLabelError(projectName);
+  }
+  return sanitizeSubdomain(`${projectLabel}-anon`);
 }

@@ -13,7 +13,7 @@ import {
 import { sendEmail } from '@/lib/email';
 import PostHogClient from '@/lib/server-posthog';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
-import { buildSiteSubdomain } from '@/lib/site-subdomain';
+import { buildSiteSubdomain, sanitizeSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
 import { sanitizeProjectName } from '@/lib/sanitize-project-name';
 import prisma from '@/server/db';
@@ -58,6 +58,19 @@ export async function POST(request: NextRequest) {
         {
           error: 'invalid_project_name',
           message: 'Project name must be 1-100 characters',
+        },
+        { status: 400 },
+      );
+    }
+
+    // A name that sanitizes to no valid subdomain label (e.g. only hyphens or
+    // symbols) would collapse the `{name}-{username}` subdomain down to the
+    // bare `{username}`, so reject it rather than let the user squat on it.
+    if (!sanitizeSubdomain(sanitizedName)) {
+      return NextResponse.json(
+        {
+          error: 'invalid_project_name',
+          message: 'Project name must contain at least one letter or number',
         },
         { status: 400 },
       );

@@ -210,7 +210,7 @@ export type RevokeTokenRequest = z.infer<typeof RevokeTokenRequestSchema>;
 // DELETE /api/sites/id/:siteId/files
 // ---------------------------------------------------------------------------
 export const CreateSiteRequestSchema = z.object({
-  projectName: z.string(),
+  projectName: z.string().min(1),
   overwrite: z.boolean().optional(),
 });
 export type CreateSiteRequest = z.infer<typeof CreateSiteRequestSchema>;

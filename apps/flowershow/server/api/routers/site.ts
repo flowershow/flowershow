@@ -37,7 +37,7 @@ import {
   SITE_CONFIG_DEFAULTS,
 } from '@/lib/site-config';
 import { siteKeyBytes } from '@/lib/site-hmac-key';
-import { buildSiteSubdomain } from '@/lib/site-subdomain';
+import { buildSiteSubdomain, sanitizeSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
 import { ensureLeadingSlash, extractWikiLinkTarget } from '@/lib/utils';
 import {
@@ -187,6 +187,16 @@ export const siteRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }): Promise<PublicSite> => {
       const baseName = sanitizeProjectName(input.projectName.trim());
 
+      // Reject names that sanitize to no valid subdomain label (e.g. only
+      // hyphens/symbols); otherwise the subdomain collapses to the bare
+      // username and bypasses the `{sitename}-{username}` format.
+      if (!sanitizeSubdomain(baseName)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Project name must contain at least one letter or number',
+        });
+      }
+
       const projectName = await ensureUniqueProjectName(
         ctx.db,
         ctx.session.user.id,
@@ -198,10 +208,19 @@ export const siteRouter = createTRPCRouter({
         select: { email: true, name: true, username: true },
       });
 
+      // A missing username would drop the `-{username}` suffix and collapse the
+      // subdomain to the bare project label; require one (as the REST path does).
+      if (!creator?.username) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'User has no username set',
+        });
+      }
+
       const created = await ctx.db.site.create({
         data: {
           projectName,
-          subdomain: buildSiteSubdomain(projectName, creator?.username ?? ''),
+          subdomain: buildSiteSubdomain(projectName, creator.username),
           user: { connect: { id: ctx.session.user.id } },
           configJson: SITE_CONFIG_DEFAULTS,
         },
