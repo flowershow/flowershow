@@ -1,4 +1,3 @@
-
 export function generateId() {
   const timestamp = Date.now().toString(36);
   const random = crypto.randomUUID().replace(/-/g, '').substring(0, 16);

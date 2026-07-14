@@ -7,7 +7,7 @@ import {
   getGitHubInstallationToken,
 } from './github.js';
 import { deleteFile, uploadFile } from './storage.js';
-import { generateId } from './utils.js';
+import { captureError, generateId } from './utils.js';
 
 const BATCH_SIZE = 20;
 
@@ -24,126 +24,138 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       gitCommitMessage = null,
     } = event.payload;
 
-    // Generate a fresh token on every run (outside any step so retries don't reuse
-    // a cached expired value — GitHub App installation tokens expire in 1h).
-    const accessToken = await getGitHubInstallationToken(
-      githubInstallationId,
-      this.env,
-    );
+    try {
+      // Generate a fresh token on every run (outside any step so retries don't reuse
+      // a cached expired value — GitHub App installation tokens expire in 1h).
+      const accessToken = await getGitHubInstallationToken(
+        githubInstallationId,
+        this.env,
+      );
 
-    const sql = getPostgresClient(this.env);
-    const storage = getStorageClient(this.env);
+      const sql = getPostgresClient(this.env);
+      const storage = getStorageClient(this.env);
 
-    // Verify site exists
-    await step.do('fetch-site', async () => {
-      const rows = await sql`SELECT id FROM "Site" WHERE id = ${siteId}`;
-      if (rows.length === 0) throw new Error(`Site ${siteId} not found.`);
-    });
+      // Verify site exists
+      await step.do('fetch-site', async () => {
+        const rows = await sql`SELECT id FROM "Site" WHERE id = ${siteId}`;
+        if (rows.length === 0) throw new Error(`Site ${siteId} not found.`);
+      });
 
-    // Create the Publish record
-    await step.do('create-publish-record', async () => {
-      await sql`
+      // Create the Publish record
+      await step.do('create-publish-record', async () => {
+        await sql`
         INSERT INTO "Publish" (id, site_id, source, started_at, git_commit_sha, git_commit_message)
         VALUES (${publishId}, ${siteId}, 'github_webhook', NOW(), ${gitCommitSha}, ${gitCommitMessage})
       `;
-    });
-
-    // Fetch site config (contentInclude / contentExclude)
-    const { contentInclude: includes = [], contentExclude: excludes = [] } =
-      await step.do('fetch-site-config', async () => {
-        return fetchGitHubConfig(ghRepository, ghBranch, accessToken, rootDir);
       });
 
-    // Fetch GitHub repo tree — strip to only the fields used downstream (path,
-    // type, sha) to stay within the Workflows 1 MiB step-output limit.
-    const gitHubTree = await step.do('fetch-github-tree', async () => {
-      const full = await fetchGitHubRepoTree(ghRepository, ghBranch, accessToken);
-      return { tree: full.tree.map(({ path, type, sha }) => ({ path, type, sha })) };
-    });
+      // Fetch site config (contentInclude / contentExclude)
+      const { contentInclude: includes = [], contentExclude: excludes = [] } =
+        await step.do('fetch-site-config', async () => {
+          return fetchGitHubConfig(
+            ghRepository,
+            ghBranch,
+            accessToken,
+            rootDir,
+          );
+        });
 
-    const normalizedRoot = normalizeRootDir(rootDir);
+      // Fetch GitHub repo tree — strip to only the fields used downstream (path,
+      // type, sha) to stay within the Workflows 1 MiB step-output limit.
+      const gitHubTree = await step.do('fetch-github-tree', async () => {
+        const full = await fetchGitHubRepoTree(
+          ghRepository,
+          ghBranch,
+          accessToken,
+        );
+        return {
+          tree: full.tree.map(({ path, type, sha }) => ({ path, type, sha })),
+        };
+      });
 
-    // Determine which files need to be upserted — store only the fields used
-    // during processing (ghPath/ghSha for download, filePath/changeType for DB)
-    // to keep step output small.
-    const fileBatchesToUpsert = await step.do(
-      'get-file-batches-to-upsert',
-      async () => {
-        const existingBlobs = await sql`
+      const normalizedRoot = normalizeRootDir(rootDir);
+
+      // Determine which files need to be upserted — store only the fields used
+      // during processing (ghPath/ghSha for download, filePath/changeType for DB)
+      // to keep step output small.
+      const fileBatchesToUpsert = await step.do(
+        'get-file-batches-to-upsert',
+        async () => {
+          const existingBlobs = await sql`
           SELECT path, sha FROM "Blob" WHERE site_id = ${siteId}
         `;
-        const items = computeFilesToUpsert(
-          existingBlobs,
-          gitHubTree,
-          normalizedRoot,
-          includes,
-          excludes,
-        );
-        return createBatches(
-          items.map(({ ghTreeItem, filePath, changeType }) => ({
-            ghPath: ghTreeItem.path,
-            ghSha: ghTreeItem.sha,
-            filePath,
-            changeType,
-          })),
-          BATCH_SIZE,
-        );
-      },
-    );
+          const items = computeFilesToUpsert(
+            existingBlobs,
+            gitHubTree,
+            normalizedRoot,
+            includes,
+            excludes,
+          );
+          return createBatches(
+            items.map(({ ghTreeItem, filePath, changeType }) => ({
+              ghPath: ghTreeItem.path,
+              ghSha: ghTreeItem.sha,
+              filePath,
+              changeType,
+            })),
+            BATCH_SIZE,
+          );
+        },
+      );
 
-    // Determine which files should be deleted
-    const fileBatchesToDelete = await step.do(
-      'get-file-batches-to-delete',
-      async () => {
-        const existingBlobs = await sql`
+      // Determine which files should be deleted
+      const fileBatchesToDelete = await step.do(
+        'get-file-batches-to-delete',
+        async () => {
+          const existingBlobs = await sql`
           SELECT path FROM "Blob" WHERE site_id = ${siteId}
         `;
-        const toDelete = computeFilesToDelete(
-          existingBlobs,
-          gitHubTree,
-          normalizedRoot,
-          includes,
-          excludes,
-        );
-        return createBatches(toDelete, BATCH_SIZE);
-      },
-    );
+          const toDelete = computeFilesToDelete(
+            existingBlobs,
+            gitHubTree,
+            normalizedRoot,
+            includes,
+            excludes,
+          );
+          return createBatches(toDelete, BATCH_SIZE);
+        },
+      );
 
-    // Create PublishFile rows for all files to upsert
-    await step.do('create-publish-files-for-upsert', async () => {
-      const allItems = fileBatchesToUpsert.flat();
-      if (allItems.length === 0) return;
-      for (const { filePath, changeType } of allItems) {
-        await sql`
+      // Create PublishFile rows for all files to upsert
+      await step.do('create-publish-files-for-upsert', async () => {
+        const allItems = fileBatchesToUpsert.flat();
+        if (allItems.length === 0) return;
+        for (const { filePath, changeType } of allItems) {
+          await sql`
           INSERT INTO "PublishFile" (id, publish_id, path, change_type, status)
           VALUES (${generateId()}, ${publishId}, ${filePath}, ${changeType}, 'uploading')
         `;
-      }
-    });
+        }
+      });
 
-    // Delete file batches from R2; create terminal PublishFile rows for each deletion.
-    // Worker handles Blob/Typesense cleanup via DeleteObject events.
-    await Promise.all(
-      fileBatchesToDelete.map((batch, index) =>
-        step.do(`delete-files-batch-${index}`, async () => {
-          const deletedPaths = [];
+      // Delete file batches from R2; create terminal PublishFile rows for each deletion.
+      // Worker handles Blob/Typesense cleanup via DeleteObject events.
+      await Promise.all(
+        fileBatchesToDelete.map((batch, index) =>
+          step.do(`delete-files-batch-${index}`, async () => {
+            const deletedPaths = [];
 
-          await Promise.all(
-            batch.map(async (blob) => {
-              try {
-                await deleteFile(storage, siteId, ghBranch, blob.path);
-                deletedPaths.push(blob.path);
-              } catch (err) {
-                console.error(
-                  `Storage deletion failed ${siteId}/${blob.path}: ${err.message}`,
-                );
-              }
-            }),
-          );
+            await Promise.all(
+              batch.map(async (blob) => {
+                try {
+                  await deleteFile(storage, siteId, ghBranch, blob.path);
+                  deletedPaths.push(blob.path);
+                } catch (err) {
+                  console.error(
+                    `Storage deletion failed ${siteId}/${blob.path}: ${err.message}`,
+                  );
+                }
+              }),
+            );
 
-          const deletedSet = new Set(deletedPaths);
-          for (const blob of batch) {
-            await sql`
+            const deletedSet = new Set(deletedPaths);
+            for (const blob of batch) {
+              await sql`
               INSERT INTO "PublishFile" (id, publish_id, path, change_type, status)
               VALUES (
                 ${generateId()},
@@ -153,56 +165,67 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
                 ${deletedSet.has(blob.path) ? 'success' : 'error'}
               )
             `;
-          }
+            }
 
-          return deletedPaths;
-        }),
-      ),
-    );
+            return deletedPaths;
+          }),
+        ),
+      );
 
-    // Start the finalizer after all PublishFile rows exist (uploading + terminal).
-    // The finalizer polls until all uploading rows reach a terminal state, then
-    // finalizes the Publish record. It naturally handles the zero-files and
-    // delete-only cases without any special signaling.
-    await step.do('start-publish-finalizer', async () => {
-      await this.env.PUBLISH_FINALIZER_WORKFLOW.create({
-        id: publishId,
-        params: { publishId, siteId },
+      // Start the finalizer after all PublishFile rows exist (uploading + terminal).
+      // The finalizer polls until all uploading rows reach a terminal state, then
+      // finalizes the Publish record. It naturally handles the zero-files and
+      // delete-only cases without any special signaling.
+      await step.do('start-publish-finalizer', async () => {
+        await this.env.PUBLISH_FINALIZER_WORKFLOW.create({
+          id: publishId,
+          params: { publishId, siteId },
+        });
       });
-    });
 
-    // Download from GitHub and upload to R2 in batches
-    await Promise.all(
-      fileBatchesToUpsert.map((batch, index) =>
-        step.do(`process-files-to-upsert-batch-${index}`, async () => {
-          await Promise.all(
-            batch.map(async ({ ghPath, ghSha, filePath }) => {
-              try {
-                const extension = ghPath.split('.').pop() || '';
-                const fileBuffer = await fetchGitHubFileRaw(
-                  ghRepository,
-                  ghSha,
-                  accessToken,
-                );
-                await uploadFile(
-                  storage,
-                  siteId,
-                  ghBranch,
-                  filePath,
-                  fileBuffer,
-                  extension,
-                  publishId,
-                );
-              } catch (error) {
-                console.error(
-                  `Sync file error ${siteId}/${filePath}: ${error.message}`,
-                );
-              }
-            }),
-          );
-        }),
-      ),
-    );
+      // Download from GitHub and upload to R2 in batches
+      await Promise.all(
+        fileBatchesToUpsert.map((batch, index) =>
+          step.do(`process-files-to-upsert-batch-${index}`, async () => {
+            await Promise.all(
+              batch.map(async ({ ghPath, ghSha, filePath }) => {
+                try {
+                  const extension = ghPath.split('.').pop() || '';
+                  const fileBuffer = await fetchGitHubFileRaw(
+                    ghRepository,
+                    ghSha,
+                    accessToken,
+                  );
+                  await uploadFile(
+                    storage,
+                    siteId,
+                    ghBranch,
+                    filePath,
+                    fileBuffer,
+                    extension,
+                    publishId,
+                  );
+                } catch (error) {
+                  console.error(
+                    `Sync file error ${siteId}/${filePath}: ${error.message}`,
+                  );
+                }
+              }),
+            );
+          }),
+        ),
+      );
+    } catch (err) {
+      await captureError(this.env, {
+        source: 'workflow_github_sync',
+        siteId,
+        publishId,
+        error_message: err?.message,
+        error_name: err?.name,
+        error_stack: err?.stack,
+      });
+      throw err;
+    }
   }
 }
 
