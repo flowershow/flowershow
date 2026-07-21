@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import { sendEmail } from '@/lib/email';
-import { log, SeverityNumber } from '@/lib/otel-logger';
+import { flushLogs, log, SeverityNumber } from '@/lib/otel-logger';
 import PostHogClient from '@/lib/server-posthog';
 
 interface SendTransactionalEmailParams {
@@ -82,7 +82,7 @@ export async function sendTransactionalEmail(
       context: 'transactional_email',
       email_type: type,
     });
-    await posthog.shutdown();
+    await Promise.all([posthog.shutdown(), flushLogs()]);
 
     return { sent: false };
   }

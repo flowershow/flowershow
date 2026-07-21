@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import jwt from 'jsonwebtoken';
 import { env } from '@/env.mjs';
-import { log, SeverityNumber } from '@/lib/otel-logger';
+import { flushLogs, log, SeverityNumber } from '@/lib/otel-logger';
 import PostHogClient from '@/lib/server-posthog';
 import { db } from '@/server/db';
 
@@ -115,6 +115,7 @@ async function refreshInstallationToken(
       throw error;
     } finally {
       refreshLocks.delete(githubInstallationId);
+      await flushLogs();
     }
   })();
 

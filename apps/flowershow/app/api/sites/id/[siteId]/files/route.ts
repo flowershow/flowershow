@@ -17,7 +17,7 @@ import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
-import { log, SeverityNumber } from '@/lib/otel-logger';
+import { flushLogs, log, SeverityNumber } from '@/lib/otel-logger';
 import {
   clientTypeToPublishSource,
   MAX_FILES,
@@ -220,7 +220,7 @@ export async function POST(
       { status: 500 },
     );
   } finally {
-    await posthog.shutdown();
+    await Promise.all([posthog.shutdown(), flushLogs()]);
   }
 }
 
@@ -344,6 +344,6 @@ export async function DELETE(
       { status: 500 },
     );
   } finally {
-    await posthog.shutdown();
+    await Promise.all([posthog.shutdown(), flushLogs()]);
   }
 }

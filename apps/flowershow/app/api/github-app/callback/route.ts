@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { getInstallationToken } from '@/lib/github';
-import { log, SeverityNumber } from '@/lib/otel-logger';
+import { flushLogs, log, SeverityNumber } from '@/lib/otel-logger';
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 
@@ -256,5 +256,7 @@ export async function GET(request: Request) {
     return NextResponse.redirect(
       `${protocol}://${env.NEXT_PUBLIC_CLOUD_DOMAIN}?error=callback_failed`,
     );
+  } finally {
+    await flushLogs();
   }
 }

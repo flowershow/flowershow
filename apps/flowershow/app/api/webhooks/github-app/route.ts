@@ -7,7 +7,7 @@ import {
   clearInstallationTokenCache,
   getInstallationToken,
 } from '@/lib/github';
-import { log, SeverityNumber } from '@/lib/otel-logger';
+import { flushLogs, log, SeverityNumber } from '@/lib/otel-logger';
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
     posthog.captureException(error, 'system', {
       route: 'POST /api/webhooks/github-app',
     });
-    await posthog.shutdown();
+    await Promise.all([posthog.shutdown(), flushLogs()]);
     console.error('Error processing GitHub App webhook:', error);
     return NextResponse.json(
       { error: 'Webhook processing failed' },
@@ -726,6 +726,6 @@ async function handlePushEvent(data: WebhookPayload) {
       sites_failed: failedSyncs.length,
     });
   } finally {
-    await posthog.shutdown();
+    await Promise.all([posthog.shutdown(), flushLogs()]);
   }
 }

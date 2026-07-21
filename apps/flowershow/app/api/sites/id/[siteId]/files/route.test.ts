@@ -47,6 +47,7 @@ vi.mock('@/lib/server-posthog', () => ({
 
 vi.mock('@/lib/otel-logger', () => ({
   log: vi.fn(),
+  flushLogs: vi.fn().mockResolvedValue(undefined),
   SeverityNumber: { ERROR: 17 },
 }));
 

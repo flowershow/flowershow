@@ -56,3 +56,22 @@ export function log(
     attributes: cleanAttrs,
   });
 }
+
+/**
+ * Force-export any buffered log records.
+ *
+ * The BatchLogRecordProcessor buffers records and exports them on an interval.
+ * On serverless platforms (Vercel) the function is frozen/killed immediately
+ * after the response is returned, so any batch that hasn't hit its export tick
+ * is silently dropped. Await this at the end of a request — alongside
+ * `posthog.shutdown()` — to guarantee logs are shipped before teardown.
+ *
+ * Best-effort: never throws, so it can't mask the real response during teardown.
+ */
+export async function flushLogs(): Promise<void> {
+  try {
+    await loggerProvider.forceFlush();
+  } catch {
+    // Swallow — telemetry flushing must not break the request lifecycle.
+  }
+}

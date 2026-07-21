@@ -12,7 +12,7 @@ import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
-import { log, SeverityNumber } from '@/lib/otel-logger';
+import { flushLogs, log, SeverityNumber } from '@/lib/otel-logger';
 import {
   clientTypeToPublishSource,
   type FileMetadata,
@@ -329,7 +329,7 @@ export async function POST(
       { status: 500 },
     );
   } finally {
-    await posthog.shutdown();
+    await Promise.all([posthog.shutdown(), flushLogs()]);
   }
 }
 
