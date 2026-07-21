@@ -1,6 +1,6 @@
 import type { SuccessResponse } from '@flowershow/api-contract';
 import { createHmac, timingSafeEqual } from 'crypto';
-import { NextResponse } from 'next/server';
+import { after, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { triggerGitHubSyncWorkflow } from '@/lib/cloudflare-worker';
 import {
@@ -111,6 +111,34 @@ export async function POST(request: Request) {
 
     const data = JSON.parse(payload) as WebhookPayload;
 
+    after(() => processWebhookEvent(eventType, data));
+
+    return NextResponse.json({ success: true } satisfies SuccessResponse);
+  } catch (error) {
+    const posthog = PostHogClient();
+    posthog.captureException(error, 'system', {
+      route: 'POST /api/webhooks/github-app',
+    });
+    await Promise.all([posthog.shutdown(), flushLogs()]);
+    console.error('Error processing GitHub App webhook:', error);
+    return NextResponse.json(
+      { error: 'Webhook processing failed' },
+      { status: 500 },
+    );
+  }
+}
+
+async function processWebhookEvent(
+  eventType: string | null,
+  data: WebhookPayload,
+): Promise<void> {
+  log('POST /api/webhooks/github-app', SeverityNumber.INFO, {
+    event_type: eventType || 'unknown',
+    phase: 'deferred_processing_started',
+    installation_id: data.installation?.id,
+  });
+
+  try {
     switch (eventType) {
       case 'installation':
         await handleInstallationEvent(data);
@@ -134,22 +162,21 @@ export async function POST(request: Request) {
 
     log('POST /api/webhooks/github-app', SeverityNumber.INFO, {
       event_type: eventType || 'unknown',
+      phase: 'deferred_processing_completed',
       installation_id: data.installation?.id,
       action: data.action,
     });
-
-    return NextResponse.json({ success: true } satisfies SuccessResponse);
   } catch (error) {
     const posthog = PostHogClient();
     posthog.captureException(error, 'system', {
       route: 'POST /api/webhooks/github-app',
+      source: 'deferred_webhook_processing',
+      event_type: eventType || 'unknown',
     });
-    await Promise.all([posthog.shutdown(), flushLogs()]);
+    await posthog.shutdown();
     console.error('Error processing GitHub App webhook:', error);
-    return NextResponse.json(
-      { error: 'Webhook processing failed' },
-      { status: 500 },
-    );
+  } finally {
+    await flushLogs();
   }
 }
 
