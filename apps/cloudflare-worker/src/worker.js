@@ -56,8 +56,14 @@ export default {
         try {
           publishId = generateId();
 
-          // Cancel all uploading files from prior in-progress publishes for this site.
-          // Their finalizers will detect completion on the next poll and set completedAt.
+          // Supersede prior in-progress publishes for this site: cancel their
+          // uploading files, terminate their sync workflow, and finalize them.
+          //
+          // We must set completed_at directly rather than relying on the prior
+          // finalizer to notice the canceled files: if the previous sync was
+          // terminated before it reached the start-publish-finalizer step
+          // (github-sync-workflow.js), no finalizer was ever created, so nothing
+          // would ever close the row — orphaning it with a NULL completed_at.
           const previous = await sql`
             SELECT id FROM "Publish"
             WHERE site_id = ${siteId}
@@ -81,6 +87,10 @@ export default {
                 `Failed to terminate sync workflow ${prev.id}: ${termErr.message}`,
               );
             }
+            await sql`
+              UPDATE "Publish" SET completed_at = NOW()
+              WHERE id = ${prev.id} AND completed_at IS NULL
+            `;
           }
         } finally {
           await sql.end();
