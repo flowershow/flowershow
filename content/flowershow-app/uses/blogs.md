@@ -148,7 +148,6 @@ showComments: false
     </div>
   </div>
 </div>
-
 <div className="mx-auto py-8 sm:py-16 max-w-7xl px-6 lg:px-8">
   <div className="mx-auto max-w-3xl text-center">
     <h2 className="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">No blog setup required.</h2>
@@ -398,9 +397,8 @@ showComments: false
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <h2 className="mb-2 text-pretty text-balance text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">Stay in the loop.</h2>
     <p className="mb-6 text-lg text-gray-600">New features, tutorials, and the occasional idea worth sharing. No spam, unsubscribe any time.</p>
-    <CustomHtml
-      html={`<iframe data-tally-src="https://tally.so/embed/mYy8k6?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" width="100%" height="157" frameBorder="0" marginHeight="0" marginWidth="0" title="Want product news and updates? Sign up for our newsletter."></iframe><script async src="https://tally.so/widgets/embed.js"></script>`}
-    />
+    <iframe data-tally-src="https://tally.so/embed/mYy8k6?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" width="100%" height="157" frameBorder="0" marginHeight="0" marginWidth="0" title="Want product news and updates? Sign up for our newsletter."></iframe>
+    <script async src="https://tally.so/widgets/embed.js"></script
   </div>
 </div>
 <div className="bg-[#892E5E]">

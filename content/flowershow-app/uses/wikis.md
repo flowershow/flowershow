@@ -90,7 +90,6 @@ showComments: false
   <p className="mt-8 text-3xl font-semibold text-gray-900">Drop your Markdown files in a folder. That's your wiki.</p>
 </div>
 </div>
-
 <div className="bg-gray-50 py-6 mt-6 sm:mt-12 sm:py-12">
 <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
   <h2 className="mt-2 max-w-5xl text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">A real wiki, out of the box.</h2>
@@ -108,11 +107,8 @@ showComments: false
       <p className="mt-2 text-sm text-gray-600">Connect pages naturally using Markdown links and grow your knowledge base over time.</p>
     </div>
   </div>
-
 </div>
-
 </div>
-
 <div className="bg-white py-12 sm:py-16">
 <div className="mx-auto max-w-3xl text-center px-6">
   <h2 className="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">A better alternative to GitHub Wiki </h2>
@@ -120,7 +116,6 @@ showComments: false
   <p className="mt-4 text-lg text-gray-600">Flowershow turns your repository into a fast, searchable wiki with beautiful navigation and zero configuration.</p>
 </div>
 </div>
-
 <div className="bg-[#892E5E]">
 <div className="px-6 py-24 sm:py-32 lg:px-8">
   <div className="mx-auto max-w-2xl text-center">
