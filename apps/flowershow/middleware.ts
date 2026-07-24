@@ -245,16 +245,6 @@ export default async function middleware(req: NextRequest) {
     const guard = await ensureSiteAccess(req, site, phBootstrap);
     if (guard) return guard;
 
-    // Non-image raw files (e.g. .md, .pdf, .html) are served after the
-    // password gate so password-protected sites redirect to login here.
-    const raw = rewriteRawIfNeeded(
-      path,
-      `/api/raw/${username}/${projectname}`,
-      req,
-      phBootstrap,
-    );
-    if (raw) return raw;
-
     if (pathname === '/sitemap.xml') {
       return rewrite(
         `/api/sitemap/${username}/${projectname}`,
@@ -266,6 +256,16 @@ export default async function middleware(req: NextRequest) {
     if (pathname === '/rss.xml') {
       return rewrite(`/api/rss/${username}/${projectname}`, req, phBootstrap);
     }
+
+    // Non-image raw files (e.g. .md, .pdf, .html) are served after the
+    // password gate so password-protected sites redirect to login here.
+    const raw = rewriteRawIfNeeded(
+      path,
+      `/api/raw/${username}/${projectname}`,
+      req,
+      phBootstrap,
+    );
+    if (raw) return raw;
 
     return rewrite(
       `/site/${username}/${projectname}${pathname}${searchParams}`,
@@ -302,6 +302,16 @@ export default async function middleware(req: NextRequest) {
   const guard = await ensureSiteAccess(req, site, phBootstrap);
   if (guard) return guard;
 
+  // For custom domains: username "_domain", project = hostname
+  if (pathname === '/sitemap.xml') {
+    return rewrite(`/api/sitemap/_domain/${hostname}`, req, phBootstrap);
+  }
+
+  // Per-site RSS feed
+  if (pathname === '/rss.xml') {
+    return rewrite(`/api/rss/_domain/${hostname}`, req, phBootstrap);
+  }
+
   // Non-image raw files served after the password gate.
   const raw = rewriteRawIfNeeded(
     path,
@@ -310,17 +320,6 @@ export default async function middleware(req: NextRequest) {
     phBootstrap,
   );
   if (raw) return raw;
-
-  // Per-site sitemap
-  if (pathname === '/sitemap.xml') {
-    // For custom domains: username "_domain", project = hostname
-    return rewrite(`/api/sitemap/_domain/${hostname}`, req, phBootstrap);
-  }
-
-  // Per-site RSS feed
-  if (pathname === '/rss.xml') {
-    return rewrite(`/api/rss/_domain/${hostname}`, req, phBootstrap);
-  }
 
   // Render custom-domain site (path already includes search params)
   return withPHBootstrapCookie(
