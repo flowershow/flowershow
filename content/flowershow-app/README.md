@@ -55,14 +55,12 @@ showComments: false
     </div>
   </div>
 </div>
-
 <div className="bg-gray-900 py-6">
   <div className="mx-auto max-w-7xl px-6 lg:px-8 text-center">
     <p className="font-semibold text-white">Works with AI agents.</p>
     <p className="mt-1 text-sm text-gray-400">Flowershow is markdown publishing infrastructure. The Flowershow skill helps agents publish content, configure sites, and customize styling using your existing workflow — CLI, GitHub, or Obsidian.<br/><br/><a href="https://flowershow.app/docs/agents/skills" className="text-orange-400 hover:text-orange-300">Use the Flowershow skill →</a></p>
   </div>
 </div>
-
 <div className="py-12 sm:py-20">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl lg:text-center">
@@ -98,7 +96,6 @@ showComments: false
     </div>
   </div>
 </div>
-
 <div className="bg-gray-50 py-12 sm:py-20 my-4">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl lg:text-center mb-12">
@@ -140,7 +137,6 @@ showComments: false
     </div>
   </div>
 </div>
-
 <div className="py-12 sm:py-20">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl lg:text-center">
@@ -169,7 +165,6 @@ showComments: false
     </div>
   </div>
 </div>
-
 <div className="bg-slate-50 py-12 sm:py-20 my-4">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl">
@@ -186,7 +181,6 @@ showComments: false
     </div>
   </div>
 </div>
-
 <div className="py-12 sm:py-20">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl lg:text-center">
@@ -218,7 +212,6 @@ showComments: false
     </div>
   </div>
 </div>
-
 <div className="bg-orange-50 py-12 sm:py-20 my-4">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl lg:text-center mb-12">
@@ -358,7 +351,6 @@ showComments: false
     </p>
   </div>
 </div>
-
 <div className="py-12 sm:py-20">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl">
@@ -384,14 +376,12 @@ showComments: false
     </div>
   </div>
 </div>
-
 <div className="bg-gray-50 py-12 sm:py-20 my-4">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <h2 className="mb-2 text-pretty text-balance text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">Stay in the loop.</h2>
     <p className="mb-6 text-lg text-gray-600">New features, tutorials, and the occasional idea worth sharing. No spam, unsubscribe any time.</p>
   </div>
 </div>
-
 <div className="bg-slate-900 mt-4">
   <div className="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
     <div className="mx-auto max-w-2xl text-center">
@@ -407,7 +397,6 @@ showComments: false
     </div>
   </div>
 </div>
-
 <div className="bg-white py-6 sm:py-12 dark:bg-gray-900">
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="flex justify-center mx-auto mt-10 max-w-lg items-center gap-x-8 gap-y-10 sm:max-w-xl sm:gap-x-10 lg:mx-0 lg:max-w-none ">
