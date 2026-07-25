@@ -11,27 +11,11 @@
     "title": "Flowershow",
     "links": [
       {
-        "href": "/docs",
-        "name": "Docs"
-      },
-      {
-        "href": "/blog",
-        "name": "Blog"
-      },
-      {
-        "href": "/changelog",
-        "name": "Changelog"
-      },
-      {
-        "href": "/pricing",
-        "name": "Pricing"
-      },
-      {
         "name": "Use Cases",
         "links": [
           {
-            "href": "/uses/docs",
-            "name": "Docs"
+            "href": "/uses/digital-gardens",
+            "name": "Digital Gardens"
           },
           {
             "href": "/uses/blogs",
@@ -42,31 +26,51 @@
             "name": "Wikis"
           },
           {
+            "href": "/uses/docs",
+            "name": "Docs"
+          },
+          {
             "href": "/uses/data-stories",
             "name": "Data Stories"
           }
         ]
       },
       {
-        "name": "Publish",
+        "name": "Workflows",
         "links": [
           {
             "href": "/publish-obsidian",
-            "name": "Obsidian Vault"
+            "name": "Publish from Obsidian"
           },
           {
             "href": "/publish-github",
-            "name": "From GitHub"
+            "name": "Publish from GitHub"
           },
           {
             "href": "/cli",
-            "name": "From Terminal (CLI)"
+            "name": "Publish from terminal (CLI)"
           },
           {
             "href": "/dragndrop",
-            "name": "Drag & Drop"
+            "name": "Quick drag & drop"
           }
         ]
+      },
+      {
+        "href": "/docs",
+        "name": "Docs"
+      },
+      {
+        "href": "/changelog",
+        "name": "Changelog"
+      },
+      {
+        "href": "/blog",
+        "name": "Blog"
+      },
+      {
+        "href": "/pricing",
+        "name": "Pricing"
       },
       {
         "href": "https://demo.flowershow.app/",
