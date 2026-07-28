@@ -183,38 +183,42 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
         });
       });
 
-      // Download from GitHub and upload to R2 in batches
-      await Promise.all(
-        fileBatchesToUpsert.map((batch, index) =>
-          step.do(`process-files-to-upsert-batch-${index}`, async () => {
-            await Promise.all(
-              batch.map(async ({ ghPath, ghSha, filePath }) => {
-                try {
-                  const extension = ghPath.split('.').pop() || '';
-                  const fileBuffer = await fetchGitHubFileRaw(
-                    ghRepository,
-                    ghSha,
-                    accessToken,
-                  );
-                  await uploadFile(
-                    storage,
-                    siteId,
-                    ghBranch,
-                    filePath,
-                    fileBuffer,
-                    extension,
-                    publishId,
-                  );
-                } catch (error) {
-                  console.error(
-                    `Sync file error ${siteId}/${filePath}: ${error.message}`,
-                  );
-                }
-              }),
-            );
-          }),
-        ),
-      );
+      // Download from GitHub and upload to R2 in batches.
+      // Batches run sequentially (not via Promise.all) so at most BATCH_SIZE
+      // file buffers are resident in memory at once — fanning out all batches
+      // concurrently loaded every file into the isolate simultaneously and blew
+      // past the 128 MiB Worker memory limit on large/media-heavy repos.
+      // Files within a batch are still fetched/uploaded in parallel.
+      for (let index = 0; index < fileBatchesToUpsert.length; index++) {
+        const batch = fileBatchesToUpsert[index];
+        await step.do(`process-files-to-upsert-batch-${index}`, async () => {
+          await Promise.all(
+            batch.map(async ({ ghPath, ghSha, filePath }) => {
+              try {
+                const extension = ghPath.split('.').pop() || '';
+                const fileBuffer = await fetchGitHubFileRaw(
+                  ghRepository,
+                  ghSha,
+                  accessToken,
+                );
+                await uploadFile(
+                  storage,
+                  siteId,
+                  ghBranch,
+                  filePath,
+                  fileBuffer,
+                  extension,
+                  publishId,
+                );
+              } catch (error) {
+                console.error(
+                  `Sync file error ${siteId}/${filePath}: ${error.message}`,
+                );
+              }
+            }),
+          );
+        });
+      }
     } catch (err) {
       await captureError(this.env, {
         source: 'workflow_github_sync',
