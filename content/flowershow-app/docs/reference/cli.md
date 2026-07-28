@@ -3,15 +3,6 @@ title: Flowershow CLI
 description: Learn how to use the Flowershow CLI to publish your notes directly from your terminal.
 ---
 
-> [!WARNING]
-> **Migrating from the old npm CLI?** If you previously installed `@flowershow/publish` via npm, please uninstall it and use `fl` instead:
->
-> ```bash
-> npm uninstall -g @flowershow/publish
-> ```
->
-> Then follow the installation instructions below.
-
 The Flowershow CLI allows you to publish your Markdown files and folders to Flowershow directly from your terminal.
 
 ## Installation
@@ -25,6 +16,15 @@ curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli
 This automatically detects your OS and architecture, downloads the correct binary, and installs it to `/usr/local/bin/`.
 
 **Windows** — download `fl_windows_amd64.zip` from the [GitHub Releases](https://github.com/flowershow/flowershow/releases) page and add the extracted binary to your `PATH`.
+
+> [!WARNING]
+> **If you used the OLD (pre Feb 2026) npm CLI** please uninstall it and use `fl` instead:
+>
+> ```bash
+> npm uninstall -g @flowershow/publish
+> ```
+>
+> Then follow the installation instructions above.
 
 ### Manual installation
 
