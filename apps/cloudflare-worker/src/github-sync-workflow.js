@@ -214,6 +214,16 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
                 console.error(
                   `Sync file error ${siteId}/${filePath}: ${error.message}`,
                 );
+                // Mark the row terminal so the failure surfaces in the publish
+                // status. Otherwise the upload never produces an R2 event, the
+                // PublishFile row stays 'uploading', and the finalizer polls it
+                // for a full hour before expiring it — a silent failure that
+                // still reports the publish as completed.
+                await sql`
+                  UPDATE "PublishFile"
+                  SET status = 'error', error = ${error.message}
+                  WHERE publish_id = ${publishId} AND path = ${filePath}
+                `;
               }
             }),
           );
