@@ -7,7 +7,7 @@ import {
   PutObjectCommand,
 } from '@aws-sdk/client-s3';
 
-const MAX_FILE_BYTES = 5 * 1024 * 1024;
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
 export async function getPublishIdFromMetadata(storage, key) {
   try {
