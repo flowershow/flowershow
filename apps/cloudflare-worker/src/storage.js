@@ -39,12 +39,15 @@ export async function readFileBytes(storage, key) {
   return new Uint8Array(await obj.arrayBuffer());
 }
 
+// `body` is a ReadableStream (from a GitHub raw blob Response), or null for an
+// empty file. The R2 path streams it straight through so peak memory does not
+// scale with file size.
 export async function uploadFile(
   storage,
   siteId,
   branch,
   filePath,
-  content,
+  body,
   extension,
   publishId,
 ) {
@@ -57,18 +60,21 @@ export async function uploadFile(
   const cacheControl = `max-age=${isMedia ? 300 : 0}, must-revalidate`;
 
   if (storage.type === 's3') {
+    // Dev-only backend. The AWS SDK does not stream a web ReadableStream
+    // cleanly in Workers, so buffer here
+    const bytes = new Uint8Array(await new Response(body).arrayBuffer());
     await storage.client.send(
       new PutObjectCommand({
         Bucket: storage.bucket,
         Key: key,
-        Body: new Uint8Array(content),
+        Body: bytes,
         ContentType: contentType,
         CacheControl: cacheControl,
         ...(publishId && { Metadata: { 'publish-id': publishId } }),
       }),
     );
   } else {
-    await storage.client.put(key, content, {
+    await storage.client.put(key, body ?? new Uint8Array(), {
       httpMetadata: { contentType, cacheControl },
       ...(publishId && { customMetadata: { 'publish-id': publishId } }),
     });

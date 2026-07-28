@@ -11,6 +11,13 @@ import { captureError, generateId } from './utils.js';
 
 const BATCH_SIZE = 20;
 
+// Upper bound on a single file we will sync. Streaming keeps memory independent
+// of file size, so this is not a memory ceiling — it is a product/safety
+// boundary: GitHub itself blocks pushes over 100 MB (without LFS), so files at
+// or beyond this are pathological. Oversized files are recorded as failed
+// (never uploaded) so they surface as a clear error instead of a silent gap.
+const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
+
 export class GitHubSyncWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
     const {
@@ -61,7 +68,7 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
         });
 
       // Fetch GitHub repo tree — strip to only the fields used downstream (path,
-      // type, sha) to stay within the Workflows 1 MiB step-output limit.
+      // type, sha, size) to stay within the Workflows 1 MiB step-output limit.
       const gitHubTree = await step.do('fetch-github-tree', async () => {
         const full = await fetchGitHubRepoTree(
           ghRepository,
@@ -69,16 +76,22 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
           accessToken,
         );
         return {
-          tree: full.tree.map(({ path, type, sha }) => ({ path, type, sha })),
+          tree: full.tree.map(({ path, type, sha, size }) => ({
+            path,
+            type,
+            sha,
+            size,
+          })),
         };
       });
 
       const normalizedRoot = normalizeRootDir(rootDir);
 
       // Determine which files need to be upserted — store only the fields used
-      // during processing (ghPath/ghSha for download, filePath/changeType for DB)
-      // to keep step output small.
-      const fileBatchesToUpsert = await step.do(
+      // during processing (ghPath/ghSha for download, filePath/changeType for DB,
+      // ghSize for the guard) to keep step output small. Files over
+      // MAX_UPLOAD_BYTES are split out and never downloaded/uploaded.
+      const { fileBatchesToUpsert, oversizedFiles } = await step.do(
         'get-file-batches-to-upsert',
         async () => {
           const existingBlobs = await sql`
@@ -91,15 +104,21 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
             includes,
             excludes,
           );
-          return createBatches(
-            items.map(({ ghTreeItem, filePath, changeType }) => ({
-              ghPath: ghTreeItem.path,
-              ghSha: ghTreeItem.sha,
-              filePath,
-              changeType,
-            })),
-            BATCH_SIZE,
+          const mapped = items.map(({ ghTreeItem, filePath, changeType }) => ({
+            ghPath: ghTreeItem.path,
+            ghSha: ghTreeItem.sha,
+            ghSize: ghTreeItem.size ?? null,
+            filePath,
+            changeType,
+          }));
+          const { withinLimit, oversized } = partitionBySize(
+            mapped,
+            MAX_UPLOAD_BYTES,
           );
+          return {
+            fileBatchesToUpsert: createBatches(withinLimit, BATCH_SIZE),
+            oversizedFiles: oversized,
+          };
         },
       );
 
@@ -121,14 +140,24 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
         },
       );
 
-      // Create PublishFile rows for all files to upsert
+      // Create PublishFile rows: files to upload start as 'uploading'; oversized
+      // files that were skipped are recorded as terminal 'error' rows up front so
+      // the finalizer never waits on them and the failure is visible.
       await step.do('create-publish-files-for-upsert', async () => {
         const allItems = fileBatchesToUpsert.flat();
-        if (allItems.length === 0) return;
         for (const { filePath, changeType } of allItems) {
           await sql`
           INSERT INTO "PublishFile" (id, publish_id, path, change_type, status)
           VALUES (${generateId()}, ${publishId}, ${filePath}, ${changeType}, 'uploading')
+        `;
+        }
+        for (const { filePath, changeType, ghSize } of oversizedFiles) {
+          console.error(
+            `Skipping oversized file ${siteId}/${filePath}: ${ghSize} bytes exceeds ${MAX_UPLOAD_BYTES}`,
+          );
+          await sql`
+          INSERT INTO "PublishFile" (id, publish_id, path, change_type, status)
+          VALUES (${generateId()}, ${publishId}, ${filePath}, ${changeType}, 'error')
         `;
         }
       });
@@ -183,38 +212,44 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
         });
       });
 
-      // Download from GitHub and upload to R2 in batches
-      await Promise.all(
-        fileBatchesToUpsert.map((batch, index) =>
-          step.do(`process-files-to-upsert-batch-${index}`, async () => {
-            await Promise.all(
-              batch.map(async ({ ghPath, ghSha, filePath }) => {
-                try {
-                  const extension = ghPath.split('.').pop() || '';
-                  const fileBuffer = await fetchGitHubFileRaw(
-                    ghRepository,
-                    ghSha,
-                    accessToken,
-                  );
-                  await uploadFile(
-                    storage,
-                    siteId,
-                    ghBranch,
-                    filePath,
-                    fileBuffer,
-                    extension,
-                    publishId,
-                  );
-                } catch (error) {
-                  console.error(
-                    `Sync file error ${siteId}/${filePath}: ${error.message}`,
-                  );
-                }
-              }),
-            );
-          }),
-        ),
-      );
+      // Download from GitHub and upload to R2 in batches. Streaming (below)
+      // keeps per-file memory bounded regardless of size, so batches no longer
+      // exist to cap memory — they run SEQUENTIALLY (not via Promise.all) to cap
+      // the number of concurrent GitHub fetches and R2 puts in flight to
+      // ~BATCH_SIZE, staying within subrequest/connection limits and avoiding
+      // GitHub secondary rate limits. Files within a batch still stream in
+      // parallel.
+      for (let index = 0; index < fileBatchesToUpsert.length; index++) {
+        const batch = fileBatchesToUpsert[index];
+        await step.do(`process-files-to-upsert-batch-${index}`, async () => {
+          await Promise.all(
+            batch.map(async ({ ghPath, ghSha, filePath }) => {
+              try {
+                const extension = ghPath.split('.').pop() || '';
+                // Stream GitHub → R2 without buffering the whole file.
+                const resp = await fetchGitHubFileRaw(
+                  ghRepository,
+                  ghSha,
+                  accessToken,
+                );
+                await uploadFile(
+                  storage,
+                  siteId,
+                  ghBranch,
+                  filePath,
+                  resp.body,
+                  extension,
+                  publishId,
+                );
+              } catch (error) {
+                console.error(
+                  `Sync file error ${siteId}/${filePath}: ${error.message}`,
+                );
+              }
+            }),
+          );
+        });
+      }
     } catch (err) {
       await captureError(this.env, {
         source: 'workflow_github_sync',
@@ -231,6 +266,24 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
 
 function normalizeRootDir(rootDir) {
   return rootDir ? `${rootDir.replace(/^(.?\/)+|\/+$/g, '')}/` : '';
+}
+
+/**
+ * Splits mapped upsert items into those within the size limit and those over it.
+ * Items with an unknown size (ghSize == null) are always kept — we only skip a
+ * file when we have a concrete byte count that exceeds maxBytes.
+ */
+export function partitionBySize(items, maxBytes) {
+  const withinLimit = [];
+  const oversized = [];
+  for (const item of items) {
+    if (item.ghSize != null && item.ghSize > maxBytes) {
+      oversized.push(item);
+    } else {
+      withinLimit.push(item);
+    }
+  }
+  return { withinLimit, oversized };
 }
 
 function createBatches(items, batchSize) {

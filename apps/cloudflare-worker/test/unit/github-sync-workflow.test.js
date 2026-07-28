@@ -2,9 +2,8 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('cloudflare:workers', () => ({ WorkflowEntrypoint: class {} }));
 
-const { computeFilesToUpsert, computeFilesToDelete } = await import(
-  '../../src/github-sync-workflow.js'
-);
+const { computeFilesToUpsert, computeFilesToDelete, partitionBySize } =
+  await import('../../src/github-sync-workflow.js');
 
 function makeTree(items) {
   return { tree: items };
@@ -231,5 +230,42 @@ describe('computeFilesToDelete', () => {
       [],
     );
     expect(result).toHaveLength(0);
+  });
+});
+
+describe('partitionBySize', () => {
+  const max = 100;
+
+  it('keeps files at or under the limit', () => {
+    const { withinLimit, oversized } = partitionBySize(
+      [
+        { filePath: 'a', ghSize: 50 },
+        { filePath: 'b', ghSize: 100 },
+      ],
+      max,
+    );
+    expect(withinLimit).toHaveLength(2);
+    expect(oversized).toHaveLength(0);
+  });
+
+  it('splits out files over the limit', () => {
+    const { withinLimit, oversized } = partitionBySize(
+      [
+        { filePath: 'small', ghSize: 10 },
+        { filePath: 'big', ghSize: 101 },
+      ],
+      max,
+    );
+    expect(withinLimit.map((f) => f.filePath)).toEqual(['small']);
+    expect(oversized.map((f) => f.filePath)).toEqual(['big']);
+  });
+
+  it('keeps files with unknown size', () => {
+    const { withinLimit, oversized } = partitionBySize(
+      [{ filePath: 'a', ghSize: null }],
+      max,
+    );
+    expect(withinLimit).toHaveLength(1);
+    expect(oversized).toHaveLength(0);
   });
 });

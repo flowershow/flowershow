@@ -59,12 +59,11 @@ export async function fetchGitHubConfig(
 }
 
 export async function fetchGitHubFileRaw(ghRepository, fileSha, token) {
-  const resp = await githubFetch(
+  return githubFetch(
     `/repos/${ghRepository}/git/blobs/${fileSha}`,
     token,
     'application/vnd.github.raw+json',
   );
-  return resp.arrayBuffer();
 }
 
 function derLength(len) {
