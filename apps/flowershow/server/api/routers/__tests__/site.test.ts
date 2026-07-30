@@ -72,6 +72,7 @@ function makeSite(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     id: 'site-1',
     projectName: 'my-site',
+    subdomain: 'my-site',
     ghRepository: 'user/repo',
     ghBranch: 'main',
     customDomain: null,
@@ -81,9 +82,13 @@ function makeSite(overrides: Partial<Record<string, unknown>> = {}) {
     giscusRepoId: null,
     giscusCategoryId: null,
     enableSearch: false,
+    enableRss: false,
     showSidebar: true,
+    showBuiltWithButton: true,
+    showRawLink: false,
     privacyMode: 'PUBLIC',
     syntaxMode: 'md',
+    tokenVersion: 1,
     installationRepositoryId: null,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -198,6 +203,7 @@ function createMockDb({
     site: {
       findFirst: vi.fn(async () => site),
       findUnique: vi.fn(async () => site),
+      findMany: vi.fn(async () => (site ? [site] : [])),
     },
     publish: {
       findFirst: vi.fn(async () => {
@@ -684,5 +690,291 @@ describe('site.getGraphData', () => {
     await expect(
       caller.site.getGraphData({ siteId: 'site-1', blobId: 'focal' }),
     ).rejects.toThrow('Site access required');
+  });
+});
+
+// Read paths that expose a PASSWORD-protected site's structure/metadata must
+// enforce the password gate, not just the page-body paths.
+describe('site read-path authorization', () => {
+  const passwordSite = () =>
+    makeSite({ privacyMode: 'PASSWORD', tokenVersion: 1 });
+
+  const blobs = () => [
+    makeBlob({
+      id: 'secret-1',
+      path: 'secret/plan.md',
+      appPath: '/secret/plan',
+      permalink: '/roadmap',
+      metadata: { title: 'Secret roadmap', publish: true },
+    }),
+  ];
+
+  it('getSiteTree throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
+    const db = createMockDb({ site: passwordSite(), blobs: blobs() });
+    const caller = createCaller(db);
+
+    await expect(caller.site.getSiteTree({ siteId: 'site-1' })).rejects.toThrow(
+      'Site access required',
+    );
+  });
+
+  it('getPermalinksMapping throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
+    const db = createMockDb({ site: passwordSite(), blobs: blobs() });
+    const caller = createCaller(db);
+
+    await expect(
+      caller.site.getPermalinksMapping({ siteId: 'site-1' }),
+    ).rejects.toThrow('Site access required');
+  });
+
+  it('getPermalinks throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
+    const db = createMockDb({ site: passwordSite(), blobs: blobs() });
+    const caller = createCaller(db);
+
+    await expect(
+      caller.site.getPermalinks({ siteId: 'site-1' }),
+    ).rejects.toThrow('Site access required');
+  });
+
+  it('getAllBlobPaths throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
+    const db = createMockDb({ site: passwordSite(), blobs: blobs() });
+    const caller = createCaller(db);
+
+    await expect(
+      caller.site.getAllBlobPaths({ siteId: 'site-1' }),
+    ).rejects.toThrow('Site access required');
+  });
+
+  it('getConfig throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
+    const db = createMockDb({ site: passwordSite(), blobs: blobs() });
+    const caller = createCaller(db);
+
+    await expect(caller.site.getConfig({ siteId: 'site-1' })).rejects.toThrow(
+      'Site access required',
+    );
+  });
+
+  it('getCustomStyles throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
+    const db = createMockDb({ site: passwordSite(), blobs: blobs() });
+    const caller = createCaller(db);
+
+    await expect(
+      caller.site.getCustomStyles({ siteId: 'site-1' }),
+    ).rejects.toThrow('Site access required');
+  });
+
+  it('getAuthors throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
+    const db = createMockDb({ site: passwordSite(), blobs: blobs() });
+    const caller = createCaller(db);
+
+    await expect(
+      caller.site.getAuthors({ siteId: 'site-1', authors: ['alice'] }),
+    ).rejects.toThrow('Site access required');
+  });
+
+  it('getImageDimensionsMap throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
+    const db = createMockDb({ site: passwordSite(), blobs: blobs() });
+    const caller = createCaller(db);
+
+    await expect(
+      caller.site.getImageDimensionsMap({ siteId: 'site-1' }),
+    ).rejects.toThrow('Site access required');
+  });
+
+  it('getSiteBranding stays public for a PASSWORD site (login page needs it)', async () => {
+    const db = createMockDb({ site: passwordSite(), blobs: blobs() });
+    const caller = createCaller(db);
+
+    // Must NOT throw — the per-site login page renders before auth.
+    await expect(
+      caller.site.getSiteBranding({ siteId: 'site-1' }),
+    ).resolves.not.toThrow();
+  });
+
+  it('still serves structure for PUBLIC sites without a token', async () => {
+    const db = createMockDb({ blobs: blobs() });
+    const caller = createCaller(db);
+
+    const paths = await caller.site.getAllBlobPaths({ siteId: 'site-1' });
+    expect(paths).toContain('/secret/plan.md');
+  });
+
+  it('serves structure to the site owner even for a PASSWORD site', async () => {
+    const db = createMockDb({ site: passwordSite(), blobs: blobs() });
+    const caller = createAuthenticatedCaller(db);
+
+    const paths = await caller.site.getAllBlobPaths({ siteId: 'site-1' });
+    expect(paths).toContain('/secret/plan.md');
+  });
+});
+
+describe('site.getById authorization', () => {
+  it('rejects an unauthenticated caller', async () => {
+    const db = createMockDb();
+    const caller = createCaller(db);
+
+    await expect(caller.site.getById({ id: 'site-1' })).rejects.toThrow(
+      'UNAUTHORIZED',
+    );
+    expect(db.site.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('scopes the query to the authenticated caller as owner', async () => {
+    const db = createMockDb();
+    // A site not owned by the caller (or an unknown id) yields null, matching
+    // the not-found contract every caller already handles.
+    db.site.findFirst = vi.fn(async () => null);
+    const caller = createAuthenticatedCaller(db);
+
+    const result = await caller.site.getById({ id: 'site-1' });
+
+    expect(result).toBeNull();
+    expect(db.site.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({ id: 'site-1', userId: 'user-1' }),
+      }),
+    );
+  });
+});
+
+describe('site anonymous-lookup field narrowing', () => {
+  const passwordSite = () =>
+    makeSite({ privacyMode: 'PASSWORD', tokenVersion: 1 });
+
+  const SENSITIVE_KEYS = [
+    'ghRepository',
+    'ghBranch',
+    'rootDir',
+    'plan',
+    'giscusRepoId',
+    'giscusCategoryId',
+    'installationRepository',
+    'isTemporary',
+    'expiresAt',
+    'anonymousOwnerId',
+  ] as const;
+
+  const expectStripped = (site: Record<string, unknown> | null) => {
+    expect(site).not.toBeNull();
+    // Routing/identity fields the render path and login page rely on remain.
+    expect(site!.id).toBe('site-1');
+    expect(site!.subdomain).toBe('my-site');
+    expect(site!.projectName).toBe('my-site');
+    expect(site!.privacyMode).toBe('PASSWORD');
+    // Internal metadata is gone.
+    for (const key of SENSITIVE_KEYS) {
+      expect(site![key]).toBeUndefined();
+    }
+  };
+
+  const expectFull = (site: Record<string, unknown> | null) => {
+    expect(site).not.toBeNull();
+    expect(site!.ghRepository).toBe('user/repo');
+    expect(site!.ghBranch).toBe('main');
+    expect(site!.plan).toBe('FREE');
+  };
+
+  describe('get', () => {
+    it('strips sensitive fields for a PASSWORD site without a token', async () => {
+      const db = createMockDb({ site: passwordSite() });
+      const caller = createCaller(db);
+
+      const site = await caller.site.get({
+        username: 'testuser',
+        projectName: 'my-site',
+      });
+
+      expectStripped(site);
+    });
+
+    it('returns the full record for a PUBLIC site without a token', async () => {
+      const db = createMockDb({ site: makeSite() });
+      const caller = createCaller(db);
+
+      const site = await caller.site.get({
+        username: 'testuser',
+        projectName: 'my-site',
+      });
+
+      expectFull(site);
+    });
+
+    it('returns the full record to the owner of a PASSWORD site', async () => {
+      const db = createMockDb({ site: passwordSite() });
+      const caller = createAuthenticatedCaller(db);
+
+      const site = await caller.site.get({
+        username: 'testuser',
+        projectName: 'my-site',
+      });
+
+      expectFull(site);
+    });
+
+    it('returns null for a missing site', async () => {
+      const db = createMockDb({ site: null });
+      const caller = createCaller(db);
+
+      const site = await caller.site.get({
+        username: 'nobody',
+        projectName: 'nope',
+      });
+
+      expect(site).toBeNull();
+    });
+  });
+
+  describe('getByDomain', () => {
+    it('strips sensitive fields for a PASSWORD site without a token', async () => {
+      const db = createMockDb({ site: passwordSite() });
+      const caller = createCaller(db);
+
+      const site = await caller.site.getByDomain({ domain: 'example.com' });
+
+      expectStripped(site);
+    });
+  });
+
+  describe('getAnonymous', () => {
+    it('strips sensitive fields for a PASSWORD site without a token', async () => {
+      const db = createMockDb({ site: passwordSite() });
+      const caller = createCaller(db);
+
+      const site = await caller.site.getAnonymous({ projectName: 'my-site' });
+
+      expectStripped(site);
+    });
+  });
+
+  describe('getMany', () => {
+    it('strips sensitive fields for a PASSWORD site without a token', async () => {
+      const db = createMockDb({ site: passwordSite() });
+      const caller = createCaller(db);
+
+      const sites = await caller.site.getMany({ ids: ['site-1'] });
+
+      expect(sites).toHaveLength(1);
+      expectStripped(sites[0]!);
+    });
+
+    it('returns the full record for a PUBLIC site without a token (drag-and-drop)', async () => {
+      const db = createMockDb({ site: makeSite() });
+      const caller = createCaller(db);
+
+      const sites = await caller.site.getMany({ ids: ['site-1'] });
+
+      expect(sites).toHaveLength(1);
+      expectFull(sites[0]!);
+    });
+
+    it('returns an empty array for no ids without touching the db', async () => {
+      const db = createMockDb({ site: makeSite() });
+      const caller = createCaller(db);
+
+      const sites = await caller.site.getMany({ ids: [] });
+
+      expect(sites).toEqual([]);
+      expect(db.site.findMany).not.toHaveBeenCalled();
+    });
   });
 });

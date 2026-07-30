@@ -4,13 +4,13 @@ import { hydrate, type SerializeResult } from 'next-mdx-remote-client/csr';
 import { ErrorBoundary } from 'react-error-boundary';
 import ErrorMessage from '@/components/public/error-message';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
-import type { PageMetadata, PublicSite } from '@/server/api/types';
+import type { SiteLookupResult, PageMetadata } from '@/server/api/types';
 import { mdxComponentsFactory } from './mdx/mdx-components-factory';
 
 type Props = {
   mdxSource: SerializeResult<PageMetadata>;
   blob: Blob;
-  site: PublicSite;
+  site: SiteLookupResult;
   imageDimensions?: ImageDimensionsMap;
 };
 

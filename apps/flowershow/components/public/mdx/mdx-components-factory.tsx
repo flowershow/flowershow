@@ -5,7 +5,7 @@ import ErrorMessage from '@/components/public/error-message';
 import { env } from '@/env.mjs';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import { resolveContentLink } from '@/lib/resolve-link';
-import { PublicSite } from '@/server/api/types';
+import { SiteLookupResult } from '@/server/api/types';
 import type { CustomHtmlProps } from './custom-html';
 import type { FlatUiTableProps } from './flatui-table';
 import FsImage from './fs-image';
@@ -35,7 +35,7 @@ export const mdxComponentsFactory = ({
   imageDimensions,
 }: {
   blob: Blob;
-  site: PublicSite;
+  site: SiteLookupResult;
   imageDimensions?: ImageDimensionsMap;
 }) => {
   const components: MDXComponents = {

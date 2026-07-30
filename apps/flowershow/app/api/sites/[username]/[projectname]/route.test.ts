@@ -120,4 +120,69 @@ describe('GET /api/sites/:username/:projectname — exact name lookup', () => {
     );
     expect(res.status).toBe(404);
   });
+
+  // An unauthenticated caller may know the site's public hostname, so this
+  // endpoint must expose only the allow-listed fields, never internal metadata.
+  it('returns only the allow-listed fields to an unauthenticated caller', async () => {
+    (prisma.site.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: 'site-1',
+      subdomain: 'my-sub',
+      customDomain: null,
+      projectName: 'My Notes',
+      privacyMode: 'PASSWORD',
+      tokenVersion: 3,
+      // Internal-only fields that must NOT leak:
+      ghRepository: 'owner/secret-repo',
+      ghBranch: 'main',
+      rootDir: 'notes',
+      plan: 'PRO',
+      enableComments: true,
+      giscusRepoId: 'R_xxx',
+      giscusCategoryId: 'DIC_xxx',
+      enableSearch: true,
+      syntaxMode: 'obsidian',
+      installationRepositoryId: 'irid',
+      installationRepository: { installationId: 1, repositoryFullName: 'x/y' },
+      isTemporary: false,
+      expiresAt: null,
+      anonymousOwnerId: null,
+      accessPasswordHash: 'bcrypt$hash',
+      createdAt: new Date(0),
+      updatedAt: new Date(0),
+      user: { username: 'victim', id: 'user-1' },
+    });
+
+    const res = await GET(
+      makeRequest('_subdomain', 'my-sub'),
+      makeParams('_subdomain', 'my-sub'),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+
+    expect(body).toEqual({
+      id: 'site-1',
+      subdomain: 'my-sub',
+      customDomain: null,
+      projectName: 'My Notes',
+      privacyMode: 'PASSWORD',
+      tokenVersion: 3,
+      user: { username: 'victim' },
+    });
+    for (const leaked of [
+      'ghRepository',
+      'ghBranch',
+      'rootDir',
+      'plan',
+      'accessPasswordHash',
+      'installationRepositoryId',
+      'installationRepository',
+      'giscusRepoId',
+      'isTemporary',
+      'expiresAt',
+      'createdAt',
+    ]) {
+      expect(body).not.toHaveProperty(leaked);
+    }
+    expect(body.user).not.toHaveProperty('id');
+  });
 });

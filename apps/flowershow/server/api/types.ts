@@ -1,72 +1,107 @@
 import { Plan, Prisma, PrivacyMode, SyntaxMode } from '@prisma/client';
 import { z } from 'zod';
 
-export const publicSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
+// Fields safe to return to any caller: they identify and route the site and are
+// already exposed via its public URL/DNS.
+export const publicSiteFields = Prisma.validator<Prisma.SiteSelect>()({
   id: true,
-  ghRepository: true,
-  ghBranch: true,
   projectName: true,
   customDomain: true,
   subdomain: true,
-  rootDir: true,
-  plan: true,
+  privacyMode: true,
+  syntaxMode: true,
   enableComments: true,
-  giscusRepoId: true,
-  giscusCategoryId: true,
   enableSearch: true,
   enableRss: true,
   showSidebar: true,
-  privacyMode: true,
-  syntaxMode: true,
   showBuiltWithButton: true,
   showRawLink: true,
-  installationRepository: {
-    select: { repositoryFullName: true },
-  },
   createdAt: true,
   updatedAt: true,
   user: { select: { username: true, id: true } },
-  // Anonymous/temporary site fields
+});
+
+// Internal metadata that must only be returned once site access is established
+// (owner session or valid site-access cookie).
+export const sensitiveSiteFields = Prisma.validator<Prisma.SiteSelect>()({
+  ghRepository: true,
+  ghBranch: true,
+  rootDir: true,
+  plan: true,
+  giscusRepoId: true,
+  giscusCategoryId: true,
+  installationRepository: {
+    select: { repositoryFullName: true },
+  },
   isTemporary: true,
   expiresAt: true,
   anonymousOwnerId: true,
 });
 
-export type PublicSite = Prisma.SiteGetPayload<{
-  select: typeof publicSiteSelect;
+// Full record for owner/admin-scoped procedures and for callers with established
+// site access. Unchanged shape: anonymous (routing) fields + sensitive metadata.
+export const fullSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
+  ...publicSiteFields,
+  ...sensitiveSiteFields,
+});
+
+export type FullSite = Prisma.SiteGetPayload<{
+  select: typeof fullSiteSelect;
 }>;
 
-export const publicSiteSchema: z.ZodType<PublicSite> = z.object({
-  id: z.string(),
+// What the site-lookup procedures return: routing fields always,
+// sensitive metadata only when access is established (hence optional).
+export type SiteLookupResult = Prisma.SiteGetPayload<{
+  select: typeof publicSiteFields;
+}> &
+  Partial<Prisma.SiteGetPayload<{ select: typeof sensitiveSiteFields }>>;
+
+// The required shape — the full record always carries these. The lookup schema
+// derives its optional variant from this via `.partial()`, so the sensitive
+// field list lives in exactly one place on the zod side.
+const sensitiveSiteSchemaShape = {
   ghRepository: z.string().nullable(),
   ghBranch: z.string().nullable(),
-  projectName: z.string(),
-  customDomain: z.string().nullable(),
-  subdomain: z.string(),
   rootDir: z.string().nullable(),
   plan: z.enum(Plan),
-  enableComments: z.boolean(),
   giscusRepoId: z.string().nullable(),
   giscusCategoryId: z.string().nullable(),
-  enableSearch: z.boolean(),
-  enableRss: z.boolean(),
-  showSidebar: z.boolean(),
-  privacyMode: z.enum(PrivacyMode),
-  syntaxMode: z.enum(SyntaxMode),
-  showBuiltWithButton: z.boolean(),
-  showRawLink: z.boolean(),
   installationRepository: z
-    .object({
-      repositoryFullName: z.string(),
-    })
+    .object({ repositoryFullName: z.string() })
     .nullable(),
-  createdAt: z.date(),
-  updatedAt: z.date(),
-  user: z.object({ username: z.string(), id: z.string() }),
-  // Anonymous/temporary site fields
   isTemporary: z.boolean(),
   expiresAt: z.date().nullable(),
   anonymousOwnerId: z.string().nullable(),
+};
+
+const publicSiteSchemaShape = {
+  id: z.string(),
+  projectName: z.string(),
+  customDomain: z.string().nullable(),
+  subdomain: z.string(),
+  privacyMode: z.enum(PrivacyMode),
+  syntaxMode: z.enum(SyntaxMode),
+  enableComments: z.boolean(),
+  enableSearch: z.boolean(),
+  enableRss: z.boolean(),
+  showSidebar: z.boolean(),
+  showBuiltWithButton: z.boolean(),
+  showRawLink: z.boolean(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
+  user: z.object({ username: z.string(), id: z.string() }),
+};
+
+export const fullSiteSchema: z.ZodType<FullSite> = z.object({
+  ...publicSiteSchemaShape,
+  ...sensitiveSiteSchemaShape,
+});
+
+// Accepts both shapes: the narrowed anonymous response (sensitive fields absent)
+// and the full record (sensitive fields present) returned once access is granted.
+export const siteLookupResultSchema: z.ZodType<SiteLookupResult> = z.object({
+  ...publicSiteSchemaShape,
+  ...z.object(sensitiveSiteSchemaShape).partial().shape,
 });
 
 export enum SiteUpdateKey {

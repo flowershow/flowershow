@@ -4,12 +4,13 @@ import type { SiteConfig } from '@/components/types';
 import { fetchFile } from '@/lib/content-store';
 import { getSiteUrl } from '@/lib/get-site-url';
 import { buildRssFeed } from '@/lib/rss';
+import { hasSiteAccess } from '@/lib/site-access';
 import { resolveSiteConfig } from '@/lib/site-config';
 import prisma from '@/server/db';
 import { Prisma } from '@prisma/client';
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   props: { params: Promise<{ user: string; project: string }> },
 ) {
   const parsedParams = RssParamsSchema.safeParse(await props.params);
@@ -53,6 +54,15 @@ export async function GET(
   });
 
   if (!site) {
+    return new Response('Not found', { status: 404 });
+  }
+
+  if (
+    !(await hasSiteAccess(site, site.id, {
+      session: null,
+      headers: request.headers,
+    }))
+  ) {
     return new Response('Not found', { status: 404 });
   }
 

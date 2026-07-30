@@ -1,6 +1,6 @@
 import { Plan } from '@prisma/client';
 import { env } from '@/env.mjs';
-import { PublicSite } from '@/server/api/types';
+import { FullSite } from '@/server/api/types';
 
 export enum Feature {
   CustomDomain = 'CustomDomain',
@@ -28,7 +28,7 @@ const PREMIUM_FEATURES: Feature[] = [
  */
 export function isFeatureEnabled(
   feature: Feature,
-  site: Pick<PublicSite, 'customDomain' | 'plan'>,
+  site: Pick<FullSite, 'customDomain'> & { plan?: FullSite['plan'] | null },
 ): boolean {
   if (PREMIUM_FEATURES.includes(feature)) {
     return site.plan === Plan.PREMIUM;

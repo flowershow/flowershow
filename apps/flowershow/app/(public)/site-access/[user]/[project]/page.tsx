@@ -65,7 +65,7 @@ export default async function LoginPage(props: {
     }
   }
 
-  const siteConfig = await api.site.getConfig
+  const siteBranding = await api.site.getSiteBranding
     .query({
       siteId: site.id,
     })
@@ -73,8 +73,7 @@ export default async function LoginPage(props: {
   const siteHostname =
     site.customDomain ?? `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
-  // TODO: nav.logo is deprecated in favour of root logo — remove nav.logo fallback once migration period ends
-  const logo = siteConfig?.logo ?? siteConfig?.nav?.logo ?? config.logo;
+  const logo = siteBranding?.logo ?? config.logo;
   // Use the raw API endpoint instead of the site URL so _next/image can fetch the
   // logo server-side without hitting the password gate on the site domain.
   const resolvedLogo =

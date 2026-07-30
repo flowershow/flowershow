@@ -13,10 +13,10 @@ import { useSearchParams } from 'next/navigation';
 import { GithubIcon } from '@/components/icons';
 import { getRepoFullName } from '@/lib/get-repo-full-name';
 import { getSiteUrl } from '@/lib/get-site-url';
-import { PublicSite } from '@/server/api/types';
+import { FullSite } from '@/server/api/types';
 import { api } from '@/trpc/react';
 
-export default function SiteSettingsHeader({ site }: { site: PublicSite }) {
+export default function SiteSettingsHeader({ site }: { site: FullSite }) {
   const searchParams = useSearchParams();
   const publishJustStarted = searchParams.get('publishStarted') === '1';
 

@@ -2,6 +2,7 @@ import { SitemapParamsSchema } from '@flowershow/api-contract';
 import { Prisma } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { getSiteUrl } from '@/lib/get-site-url';
+import { hasSiteAccess } from '@/lib/site-access';
 import prisma from '@/server/db';
 
 export async function GET(
@@ -46,6 +47,15 @@ export async function GET(
   });
 
   if (!site) {
+    return new Response('Not found', { status: 404 });
+  }
+
+  if (
+    !(await hasSiteAccess(site, site.id, {
+      session: null,
+      headers: request.headers,
+    }))
+  ) {
     return new Response('Not found', { status: 404 });
   }
 

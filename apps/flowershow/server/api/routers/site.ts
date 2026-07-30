@@ -2,16 +2,15 @@ import { matchLinkTarget } from '@flowershow/core';
 import { Blob, Prisma, PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
-import { jwtVerify } from 'jose';
 import { revalidateTag, unstable_cache } from 'next/cache';
 import { z } from 'zod';
-import { isNavDropdown, SiteConfig } from '@/components/types';
+import type { SiteConfig } from '@/components/types';
+import { isNavDropdown } from '@/components/types';
 import { SiteCreatedEmail } from '@/emails/site-created';
 import { env } from '@/env.mjs';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { buildSiteTree } from '@/lib/build-site-tree';
 import { triggerGitHubSyncWorkflow } from '@/lib/cloudflare-worker';
-import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
 import {
   type ContentType,
   deleteProject,
@@ -35,7 +34,6 @@ import {
   resolveSiteConfig,
   SITE_CONFIG_DEFAULTS,
 } from '@/lib/site-config';
-import { siteKeyBytes } from '@/lib/site-hmac-key';
 import {
   buildSiteSubdomain,
   ensureUniqueSubdomain,
@@ -46,65 +44,66 @@ import {
   SITE_NAME_MAX_LENGTH,
   validateSiteName,
 } from '@/lib/validate-site-name';
+import { assertSiteAccess, hasSiteAccess } from '@/lib/site-access';
 import {
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
 } from '@/server/api/trpc';
-import {
+import type {
+  FullSite,
   PageMetadata,
-  PublicSite,
-  publicSiteSchema,
-  publicSiteSelect,
+  SiteLookupResult,
+} from '@/server/api/types';
+
+import {
+  fullSiteSchema,
+  fullSiteSelect,
   SiteUpdateKey,
-} from '../types';
-
-/**
- * Throws UNAUTHORIZED if the caller does not have access to a PASSWORD-protected site.
- * Site owners and callers with a valid site-access cookie are allowed through.
- */
-async function assertSiteAccess(
-  site: { privacyMode: string; tokenVersion: number; userId: string } | null,
-  siteId: string,
-  ctx: {
-    session: { user?: { id: string } } | null;
-    headers: Headers;
-  },
-) {
-  if (!site || site.privacyMode !== 'PASSWORD') return;
-  if (ctx.session?.user?.id === site.userId) return;
-
-  const cookieHeader = ctx.headers.get('cookie') ?? '';
-  const cookieName = SITE_ACCESS_COOKIE_NAME(siteId);
-  let token: string | undefined;
-  for (const part of cookieHeader.split(';')) {
-    const [k, ...v] = part.trim().split('=');
-    if (k?.trim() === cookieName) {
-      token = v.join('=');
-      break;
-    }
-  }
-
-  if (!token) {
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'Site access required',
-    });
-  }
-  try {
-    const secret = await siteKeyBytes(siteId, site.tokenVersion);
-    await jwtVerify(token, secret, { audience: siteId });
-  } catch {
-    throw new TRPCError({
-      code: 'UNAUTHORIZED',
-      message: 'Site access required',
-    });
-  }
-}
+  siteLookupResultSchema,
+} from '@/server/api/types';
 
 const asciiPrintableNoEdgeSpaces = new RegExp(
   '^(?=.{8,128}$)[!-~](?:[ -~]*[!-~])?$',
 );
+
+const fullSiteSelectWithTokenVersion = {
+  ...fullSiteSelect,
+  tokenVersion: true,
+} satisfies Prisma.SiteSelect;
+
+type SiteLookupRow = Prisma.SiteGetPayload<{
+  select: typeof fullSiteSelectWithTokenVersion;
+}>;
+
+async function narrowSiteForCaller(
+  site: SiteLookupRow | null,
+  ctx: { session: { user?: { id: string } } | null; headers: Headers },
+): Promise<SiteLookupResult | null> {
+  if (!site) return null;
+  const { tokenVersion, ...rest } = site;
+  const access = await hasSiteAccess(
+    { privacyMode: rest.privacyMode, tokenVersion, userId: rest.user.id },
+    rest.id,
+    ctx,
+  );
+  if (access) return rest;
+  // No access to this PASSWORD site: drop internal metadata, keep routing fields.
+  const {
+    ghRepository: _ghRepository,
+    ghBranch: _ghBranch,
+    rootDir: _rootDir,
+    plan: _plan,
+    giscusRepoId: _giscusRepoId,
+    giscusCategoryId: _giscusCategoryId,
+    installationRepository: _installationRepository,
+    isTemporary: _isTemporary,
+    expiresAt: _expiresAt,
+    anonymousOwnerId: _anonymousOwnerId,
+    ...anonymous
+  } = rest;
+  return anonymous;
+}
 
 export const siteRouter = createTRPCRouter({
   get: publicProcedure
@@ -114,17 +113,18 @@ export const siteRouter = createTRPCRouter({
         projectName: z.string().min(1),
       }),
     )
-    .output(publicSiteSchema.nullable())
-    .query(async ({ ctx, input }): Promise<PublicSite | null> => {
-      return ctx.db.site.findFirst({
+    .output(siteLookupResultSchema.nullable())
+    .query(async ({ ctx, input }): Promise<SiteLookupResult | null> => {
+      const site = await ctx.db.site.findFirst({
         where: {
           AND: [
             { projectName: input.projectName },
             { user: { username: input.username } },
           ],
         },
-        select: publicSiteSelect,
+        select: fullSiteSelectWithTokenVersion,
       });
+      return narrowSiteForCaller(site, ctx);
     }),
   getAnonymous: publicProcedure
     .input(
@@ -132,56 +132,62 @@ export const siteRouter = createTRPCRouter({
         projectName: z.string().min(1),
       }),
     )
-    .output(publicSiteSchema.nullable())
-    .query(async ({ ctx, input }): Promise<PublicSite | null> => {
-      return ctx.db.site.findFirst({
+    .output(siteLookupResultSchema.nullable())
+    .query(async ({ ctx, input }): Promise<SiteLookupResult | null> => {
+      const site = await ctx.db.site.findFirst({
         where: {
           projectName: input.projectName,
           userId: ANONYMOUS_USER_ID,
         },
-        select: publicSiteSelect,
+        select: fullSiteSelectWithTokenVersion,
       });
+      return narrowSiteForCaller(site, ctx);
     }),
   getByDomain: publicProcedure
     .input(z.object({ domain: z.string().min(1) }))
-    .output(publicSiteSchema.nullable())
-    .query(async ({ ctx, input }): Promise<PublicSite | null> => {
-      return await ctx.db.site.findFirst({
+    .output(siteLookupResultSchema.nullable())
+    .query(async ({ ctx, input }): Promise<SiteLookupResult | null> => {
+      const site = await ctx.db.site.findFirst({
         where: {
           customDomain: input.domain,
         },
-        select: publicSiteSelect,
+        select: fullSiteSelectWithTokenVersion,
       });
+      return narrowSiteForCaller(site, ctx);
     }),
-  getById: publicProcedure
+  getById: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
-    .output(publicSiteSchema.nullable())
-    .query(async ({ ctx, input }): Promise<PublicSite | null> => {
+    .output(fullSiteSchema.nullable())
+    .query(async ({ ctx, input }): Promise<FullSite | null> => {
       return await ctx.db.site.findFirst({
-        where: { id: input.id },
-        select: publicSiteSelect,
+        where: { id: input.id, userId: ctx.session.user.id },
+        select: fullSiteSelect,
       });
     }),
   getMany: publicProcedure
     .input(z.object({ ids: z.array(z.string()) }))
-    .output(z.array(publicSiteSchema))
-    .query(async ({ ctx, input }): Promise<PublicSite[]> => {
+    .output(z.array(siteLookupResultSchema))
+    .query(async ({ ctx, input }): Promise<SiteLookupResult[]> => {
       if (input.ids.length === 0) {
         return [];
       }
-      return await ctx.db.site.findMany({
+      const sites = await ctx.db.site.findMany({
         where: { id: { in: input.ids } },
-        select: publicSiteSelect,
+        select: fullSiteSelectWithTokenVersion,
         orderBy: { createdAt: 'desc' },
       });
+      const narrowed = await Promise.all(
+        sites.map((site) => narrowSiteForCaller(site, ctx)),
+      );
+      return narrowed.filter((site): site is SiteLookupResult => site !== null);
     }),
   getAll: protectedProcedure
-    .output(z.array(publicSiteSchema))
-    .query(async ({ ctx }): Promise<PublicSite[]> => {
+    .output(z.array(fullSiteSchema))
+    .query(async ({ ctx }): Promise<FullSite[]> => {
       if (ctx.session.user.role !== 'ADMIN') {
         throw new Error('Unauthorized');
       }
-      return await ctx.db.site.findMany({ select: publicSiteSelect });
+      return await ctx.db.site.findMany({ select: fullSiteSelect });
     }),
   create: protectedProcedure
     .input(
@@ -189,8 +195,8 @@ export const siteRouter = createTRPCRouter({
         projectName: z.string().min(1).max(SITE_NAME_MAX_LENGTH),
       }),
     )
-    .output(publicSiteSchema)
-    .mutation(async ({ ctx, input }): Promise<PublicSite> => {
+    .output(fullSiteSchema)
+    .mutation(async ({ ctx, input }): Promise<FullSite> => {
       const validation = validateSiteName(input.projectName);
       if (!validation.ok) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: validation.error });
@@ -249,7 +255,7 @@ export const siteRouter = createTRPCRouter({
 
       const fresh = await ctx.db.site.findUnique({
         where: { id: created.id },
-        select: publicSiteSelect,
+        select: fullSiteSelect,
       });
       if (!fresh) {
         throw new Error('Site not found after creation');
@@ -264,8 +270,8 @@ export const siteRouter = createTRPCRouter({
         value: z.string(),
       }),
     )
-    .output(publicSiteSchema)
-    .mutation(async ({ ctx, input }): Promise<PublicSite> => {
+    .output(fullSiteSchema)
+    .mutation(async ({ ctx, input }): Promise<FullSite> => {
       const { id, key, value } = input;
 
       const site = await ctx.db.site.findUnique({
@@ -308,7 +314,7 @@ export const siteRouter = createTRPCRouter({
           await ctx.db.site.update({
             where: { id },
             data: { customDomain: null },
-            select: publicSiteSelect,
+            select: fullSiteSelect,
           });
 
           // Remove old domain from Vercel
@@ -330,7 +336,7 @@ export const siteRouter = createTRPCRouter({
             await ctx.db.site.update({
               where: { id },
               data: { customDomain: newDomain },
-              select: publicSiteSelect,
+              select: fullSiteSelect,
             });
 
             // Provision domain(s) in Vercel (best-effort)
@@ -395,7 +401,7 @@ export const siteRouter = createTRPCRouter({
       // Return canonical public shape
       const fresh = await ctx.db.site.findUnique({
         where: { id },
-        select: publicSiteSelect,
+        select: fullSiteSelect,
       });
       if (!fresh) {
         throw new TRPCError({
@@ -414,8 +420,8 @@ export const siteRouter = createTRPCRouter({
         name: z.string().min(1).max(SITE_NAME_MAX_LENGTH),
       }),
     )
-    .output(publicSiteSchema)
-    .mutation(async ({ ctx, input }): Promise<PublicSite> => {
+    .output(fullSiteSchema)
+    .mutation(async ({ ctx, input }): Promise<FullSite> => {
       const validation = validateSiteName(input.name);
       if (!validation.ok) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: validation.error });
@@ -453,7 +459,7 @@ export const siteRouter = createTRPCRouter({
 
       const fresh = await ctx.db.site.findUnique({
         where: { id: site.id },
-        select: publicSiteSelect,
+        select: fullSiteSelect,
       });
       if (!fresh) {
         throw new TRPCError({
@@ -479,8 +485,8 @@ export const siteRouter = createTRPCRouter({
           .optional(),
       }),
     )
-    .output(publicSiteSchema)
-    .mutation(async ({ ctx, input }): Promise<PublicSite> => {
+    .output(fullSiteSchema)
+    .mutation(async ({ ctx, input }): Promise<FullSite> => {
       const site = await ctx.db.site.findUnique({
         where: { id: input.id },
       });
@@ -530,7 +536,7 @@ export const siteRouter = createTRPCRouter({
       }
       const fresh = await ctx.db.site.findUnique({
         where: { id: input.id },
-        select: publicSiteSelect,
+        select: fullSiteSelect,
       });
       if (!fresh) {
         throw new TRPCError({
@@ -848,22 +854,24 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        include: {
+          user: true,
+        },
+      });
+
+      if (!site) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      await assertSiteAccess(site, input.siteId, ctx);
+
       return await unstable_cache(
         async (input) => {
-          const site = await ctx.db.site.findUnique({
-            where: { id: input.siteId },
-            include: {
-              user: true,
-            },
-          });
-
-          if (!site) {
-            throw new TRPCError({
-              code: 'NOT_FOUND',
-              message: 'Site not found',
-            });
-          }
-
           try {
             return await fetchFile({
               projectId: site.id,
@@ -881,7 +889,9 @@ export const siteRouter = createTRPCRouter({
       )(input);
     }),
 
-  getConfig: publicProcedure
+  // Ungated branding subset (title, logo, favicon) for the login page, which
+  // renders before auth. Returns only presentation fields, never structure.
+  getSiteBranding: publicProcedure
     .input(
       z.object({
         siteId: z.string().min(1),
@@ -897,7 +907,6 @@ export const siteRouter = createTRPCRouter({
               customDomain: true,
               subdomain: true,
               configJson: true,
-              user: { select: { username: true } },
             },
           });
 
@@ -908,6 +917,81 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
+          const siteHostname =
+            site.customDomain ??
+            `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
+
+          let fileConfig: SiteConfig | null = null;
+          try {
+            const configJson = await fetchFile({
+              projectId: site.id,
+              path: 'config.json',
+            });
+            fileConfig = configJson
+              ? (JSON.parse(configJson) as SiteConfig)
+              : null;
+          } catch {
+            // missing or invalid config.json — fall back to DB config only
+          }
+
+          const dbConfigJson = (site.configJson ?? null) as SiteConfig | null;
+          const resolved = resolveSiteConfig(dbConfigJson, fileConfig);
+          if (!resolved) return null;
+
+          // TODO: nav.logo is deprecated in favour of root logo
+          const rawLogo = resolved.logo ?? resolved.nav?.logo ?? null;
+          const rawFavicon = resolved.favicon ?? null;
+          const resolveBrand = (value: string) =>
+            isEmoji(value)
+              ? value
+              : resolveContentLink({ target: value, siteHostname });
+
+          return {
+            title: resolved.title ?? null,
+            logo: rawLogo ? resolveBrand(rawLogo) : null,
+            favicon: rawFavicon ? resolveBrand(rawFavicon) : null,
+          };
+        },
+        undefined,
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.siteId}`, `${input.siteId}-branding`],
+        },
+      )(input);
+    }),
+
+  getConfig: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: {
+          id: true,
+          customDomain: true,
+          subdomain: true,
+          configJson: true,
+          privacyMode: true,
+          tokenVersion: true,
+          userId: true,
+          user: { select: { username: true } },
+        },
+      });
+
+      if (!site) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      await assertSiteAccess(site, input.siteId, ctx);
+
+      return await unstable_cache(
+        async (input) => {
           const siteHostname =
             site.customDomain ??
             `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
@@ -1045,22 +1129,24 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        include: {
+          user: true,
+        },
+      });
+
+      if (!site) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      await assertSiteAccess(site, input.siteId, ctx);
+
       return await unstable_cache(
         async (input) => {
-          const site = await ctx.db.site.findUnique({
-            where: { id: input.siteId },
-            include: {
-              user: true,
-            },
-          });
-
-          if (!site) {
-            throw new TRPCError({
-              code: 'NOT_FOUND',
-              message: 'Site not found',
-            });
-          }
-
           const siteHostname =
             site.customDomain ??
             `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
@@ -1165,6 +1251,8 @@ export const siteRouter = createTRPCRouter({
           message: 'Site not found',
         });
       }
+
+      await assertSiteAccess(site, input.siteId, ctx);
 
       return await unstable_cache(
         async (input) => {
@@ -1546,20 +1634,22 @@ export const siteRouter = createTRPCRouter({
           avatar?: string;
         }>
       > => {
+        const site = await ctx.db.site.findUnique({
+          where: { id: input.siteId },
+          include: { user: true },
+        });
+
+        if (!site) {
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Site not found',
+          });
+        }
+
+        await assertSiteAccess(site, input.siteId, ctx);
+
         return await unstable_cache(
           async (input) => {
-            const site = await ctx.db.site.findUnique({
-              where: { id: input.siteId },
-              include: { user: true },
-            });
-
-            if (!site) {
-              throw new TRPCError({
-                code: 'NOT_FOUND',
-                message: 'Site not found',
-              });
-            }
-
             const siteHostname =
               site.customDomain ??
               `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
@@ -1649,20 +1739,22 @@ export const siteRouter = createTRPCRouter({
     )
     .output(z.record(z.string(), z.string()))
     .query(async ({ ctx, input }): Promise<Record<string, string>> => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        include: { user: true },
+      });
+
+      if (!site) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      await assertSiteAccess(site, input.siteId, ctx);
+
       return await unstable_cache(
         async (input) => {
-          const site = await ctx.db.site.findUnique({
-            where: { id: input.siteId },
-            include: { user: true },
-          });
-
-          if (!site) {
-            throw new TRPCError({
-              code: 'NOT_FOUND',
-              message: 'Site not found',
-            });
-          }
-
           const siteHostname =
             site.customDomain ??
             `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
@@ -1705,22 +1797,24 @@ export const siteRouter = createTRPCRouter({
     )
     .output(z.array(z.string()))
     .query(async ({ ctx, input }): Promise<string[]> => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        include: {
+          user: true,
+        },
+      });
+
+      if (!site) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      await assertSiteAccess(site, input.siteId, ctx);
+
       return await unstable_cache(
         async (input) => {
-          const site = await ctx.db.site.findUnique({
-            where: { id: input.siteId },
-            include: {
-              user: true,
-            },
-          });
-
-          if (!site) {
-            throw new TRPCError({
-              code: 'NOT_FOUND',
-              message: 'Site not found',
-            });
-          }
-
           const blobs = await ctx.db.blob.findMany({
             where: {
               siteId: site.id,
@@ -1763,19 +1857,21 @@ export const siteRouter = createTRPCRouter({
     )
     .output(z.array(z.string()))
     .query(async ({ ctx, input }): Promise<string[]> => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+      });
+
+      if (!site) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      await assertSiteAccess(site, input.siteId, ctx);
+
       return await unstable_cache(
         async (input) => {
-          const site = await ctx.db.site.findUnique({
-            where: { id: input.siteId },
-          });
-
-          if (!site) {
-            throw new TRPCError({
-              code: 'NOT_FOUND',
-              message: 'Site not found',
-            });
-          }
-
           const blobs = await ctx.db.blob.findMany({
             where: {
               siteId: input.siteId,
@@ -1804,6 +1900,13 @@ export const siteRouter = createTRPCRouter({
       }),
     )
     .query(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { privacyMode: true, tokenVersion: true, userId: true },
+      });
+
+      await assertSiteAccess(site, input.siteId, ctx);
+
       return await unstable_cache(
         async (input) => {
           const blobs = await ctx.db.blob.findMany({
@@ -1839,8 +1942,8 @@ export const siteRouter = createTRPCRouter({
     }),
   disconnectGitHub: protectedProcedure
     .input(z.object({ siteId: z.string().min(1) }))
-    .output(publicSiteSchema)
-    .mutation(async ({ ctx, input }): Promise<PublicSite> => {
+    .output(fullSiteSchema)
+    .mutation(async ({ ctx, input }): Promise<FullSite> => {
       const site = await ctx.db.site.findUnique({
         where: { id: input.siteId },
       });
@@ -1887,7 +1990,7 @@ export const siteRouter = createTRPCRouter({
 
       const fresh = await ctx.db.site.findUnique({
         where: { id: input.siteId },
-        select: publicSiteSelect,
+        select: fullSiteSelect,
       });
 
       if (!fresh) {
@@ -1948,7 +2051,7 @@ export const siteRouter = createTRPCRouter({
         data: {
           installationRepositoryId: repoRecord.id,
         },
-        select: publicSiteSelect,
+        select: fullSiteSelect,
       });
 
       return fresh;
@@ -1963,8 +2066,8 @@ export const siteRouter = createTRPCRouter({
         installationId: z.string().optional(),
       }),
     )
-    .output(publicSiteSchema)
-    .mutation(async ({ ctx, input }): Promise<PublicSite> => {
+    .output(fullSiteSchema)
+    .mutation(async ({ ctx, input }): Promise<FullSite> => {
       const { siteId, ghRepository, ghBranch, rootDir, installationId } = input;
 
       const site = await ctx.db.site.findUnique({
@@ -2060,7 +2163,7 @@ export const siteRouter = createTRPCRouter({
 
       const fresh = await ctx.db.site.findUnique({
         where: { id: siteId },
-        select: publicSiteSelect,
+        select: fullSiteSelect,
       });
 
       if (!fresh) {

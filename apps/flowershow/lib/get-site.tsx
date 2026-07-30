@@ -1,12 +1,12 @@
 import { notFound, redirect } from 'next/navigation';
-import { PublicSite } from '@/server/api/types';
+import { SiteLookupResult } from '@/server/api/types';
 import { api } from '@/trpc/server';
 
 export async function getSite(
   user: string,
   project: string,
-): Promise<PublicSite> {
-  let site: PublicSite | null = null;
+): Promise<SiteLookupResult> {
+  let site: SiteLookupResult | null = null;
 
   if (user === '_domain') {
     site = await api.site.getByDomain.query({

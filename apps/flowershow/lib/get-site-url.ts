@@ -6,8 +6,8 @@ type SiteWithUrl = {
   projectName: string;
   customDomain: string | null;
   subdomain: string;
-  plan: Plan;
   user: { username: string };
+  plan?: Plan | null;
 };
 
 export function getSiteUrl(site: SiteWithUrl) {

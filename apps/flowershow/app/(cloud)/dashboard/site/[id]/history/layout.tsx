@@ -1,7 +1,7 @@
 import { notFound, redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import SiteTabs from '@/components/dashboard/site-tabs';
-import { publicSiteSelect } from '@/server/api/types';
+import { fullSiteSelect } from '@/server/api/types';
 import { getSession } from '@/server/auth';
 import prisma from '@/server/db';
 import SiteSettingsHeader from '../settings/header';
@@ -23,7 +23,7 @@ export default async function SiteHistoryLayout(props: {
       id: decodeURIComponent(params.id),
     },
     select: {
-      ...publicSiteSelect,
+      ...fullSiteSelect,
       userId: true,
     },
   });

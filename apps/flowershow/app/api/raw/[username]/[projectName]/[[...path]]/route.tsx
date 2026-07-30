@@ -1,9 +1,7 @@
-import { jwtVerify } from 'jose';
 import { NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
-import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
 import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
-import { siteKeyBytes } from '@/lib/site-hmac-key';
+import { hasSiteAccess, siteAccessSelect } from '@/lib/site-access';
 import prisma from '@/server/db';
 
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp']);
@@ -29,11 +27,11 @@ export async function GET(
     username === '_domain'
       ? await prisma.site.findFirst({
           where: { customDomain: projectName },
-          select: { id: true, privacyMode: true, tokenVersion: true },
+          select: siteAccessSelect,
         })
       : await prisma.site.findFirst({
           where: { projectName, user: { username } },
-          select: { id: true, privacyMode: true, tokenVersion: true },
+          select: siteAccessSelect,
         });
 
   if (!site) {
@@ -47,17 +45,14 @@ export async function GET(
   const isImage = IMAGE_EXTENSIONS.has(ext);
   const isHtml = ext === 'html';
 
-  // Non-image files on password-protected sites require a valid session cookie.
+  // Non-image files on password-protected sites require a valid access cookie.
   // Images are exempt so the Next.js image optimizer (server-side, no cookie) still works.
   if (site.privacyMode === 'PASSWORD' && !isImage) {
-    const cookie = req.cookies.get(SITE_ACCESS_COOKIE_NAME(site.id));
-    if (!cookie || !site.tokenVersion) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    try {
-      const secret = await siteKeyBytes(site.id, site.tokenVersion);
-      await jwtVerify(cookie.value, secret, { audience: site.id });
-    } catch {
+    const allowed = await hasSiteAccess(site, site.id, {
+      session: null,
+      headers: req.headers,
+    });
+    if (!allowed) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
   }

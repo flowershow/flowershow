@@ -22,7 +22,7 @@ import '@/styles/prism.css';
 import '@/styles/callouts.css';
 import '@/styles/default-theme.css';
 import { THEME_PREFERENCE_STORAGE_KEY } from '@/lib/const';
-import type { PublicSite } from '@/server/api/types';
+import type { SiteLookupResult } from '@/server/api/types';
 import KatexStylesLoader from './_components/katex-loader';
 import SiteLogoutButton from './_components/site-logout-button';
 
@@ -78,7 +78,7 @@ export default async function PublicLayout(props: {
   const username = decodeURIComponent(params.user); // user's github username or "_domain" if on custom domain (see middleware)
   const projectName = decodeURIComponent(params.project);
 
-  let site: PublicSite | null;
+  let site: SiteLookupResult | null;
   if (username === '_domain') {
     site = await api.site.getByDomain.query({
       domain: projectName,
@@ -242,7 +242,7 @@ export default async function PublicLayout(props: {
                 {site.isTemporary && site.anonymousOwnerId && (
                   <TemporarySiteBanner
                     siteId={site.id}
-                    expiresAt={site.expiresAt}
+                    expiresAt={site.expiresAt ?? null}
                     anonymousOwnerId={site.anonymousOwnerId}
                   />
                 )}

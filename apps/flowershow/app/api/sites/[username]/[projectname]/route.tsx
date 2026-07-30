@@ -122,17 +122,15 @@ export async function GET(
     }
   }
 
-  // Strip sensitive / internal-only fields before returning.
-  // The middleware only needs: id, privacyMode, tokenVersion, plan,
-  // customDomain, projectName, user.username, and a few display fields.
-  const {
-    accessPasswordHash: _hash,
-    anonymousOwnerId: _anonId,
-    installationRepository: _installRepo,
-    installationRepositoryId: _installRepoId,
-    user: { id: _userId, ...safeUser },
-    ...rest
-  } = site;
-
-  return NextResponse.json({ ...rest, user: safeUser });
+  // Anyone who knows a site's public hostname can reach this unauthenticated,
+  // so return only the fields the middleware needs — never internal metadata.
+  return NextResponse.json({
+    id: site.id,
+    subdomain: site.subdomain,
+    customDomain: site.customDomain,
+    projectName: site.projectName,
+    privacyMode: site.privacyMode,
+    tokenVersion: site.tokenVersion,
+    user: { username: site.user.username },
+  });
 }

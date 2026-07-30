@@ -31,13 +31,16 @@ export async function GET(
     const auth = await validateAccessToken(request);
     const isAuthenticated = !!auth?.userId;
 
+    // Fetch once: ownership check (when authenticated) and privacyMode, which
+    // gates the public error branch below so PASSWORD sites don't leak file
+    // paths / error detail to anonymous callers.
+    const site = await prisma.site.findUnique({
+      where: { id: siteId },
+      select: { id: true, userId: true, privacyMode: true },
+    });
+
     // If authenticated, verify ownership
     if (isAuthenticated) {
-      const site = await prisma.site.findUnique({
-        where: { id: siteId },
-        select: { id: true, userId: true },
-      });
-
       if (!site) {
         return NextResponse.json(
           { error: 'not_found', message: 'Site not found' },
@@ -142,6 +145,13 @@ export async function GET(
     }
 
     if (overallStatus === 'error') {
+      // PASSWORD sites: return only the coarse status to anonymous callers —
+      // never the failing file paths or error messages
+      if (site?.privacyMode === 'PASSWORD') {
+        return NextResponse.json({
+          status: 'error',
+        } satisfies PublicStatusResponse);
+      }
       return NextResponse.json({
         status: 'error',
         errors: publishFiles
