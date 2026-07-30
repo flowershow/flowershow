@@ -105,28 +105,28 @@ showComments: false
     <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
       <a href="https://lessflowery.flowershow.app/" className="group block">
         <div className="overflow-hidden rounded-lg ring-1 ring-gray-200 group-hover:ring-orange-300 transition">
-          <img alt="LessFlowery theme preview" src="/assets/themes/lessflowery.jpg" className="w-full aspect-video object-cover object-top" />
+          <img alt="LessFlowery theme preview" src="/assets/themes/lessflowery.webp" className="w-full aspect-video object-cover object-top" />
         </div>
         <p className="mt-3 font-semibold text-gray-900">LessFlowery</p>
         <p className="mt-1 text-sm text-gray-500">Clean and editorial. Great for essays and research.</p>
       </a>
       <a href="https://letterpress.flowershow.app/" className="group block">
         <div className="overflow-hidden rounded-lg ring-1 ring-gray-200 group-hover:ring-orange-300 transition">
-          <img alt="Letterpress theme preview" src="/assets/themes/letterpress.png" className="w-full aspect-video object-cover object-top" />
+          <img alt="Letterpress theme preview" src="/assets/themes/letterpress.webp" className="w-full aspect-video object-cover object-top" />
         </div>
         <p className="mt-3 font-semibold text-gray-900">Letterpress</p>
         <p className="mt-1 text-sm text-gray-500">Modern typography and generous whitespace. Balanced and readable.</p>
       </a>
       <a href="https://superstack.flowershow.app/" className="group block">
         <div className="overflow-hidden rounded-lg ring-1 ring-gray-200 group-hover:ring-orange-300 transition">
-          <img alt="Superstack theme preview" src="/assets/themes/superstack.jpg" className="w-full aspect-video object-cover object-top" />
+          <img alt="Superstack theme preview" src="/assets/themes/superstack.webp" className="w-full aspect-video object-cover object-top" />
         </div>
         <p className="mt-3 font-semibold text-gray-900">Superstack</p>
         <p className="mt-1 text-sm text-gray-500">Newsletter-style layout. Perfect for blogs and subscriber content.</p>
       </a>
       <a href="https://leaf.flowershow.app/" className="group block">
         <div className="overflow-hidden rounded-lg ring-1 ring-gray-200 group-hover:ring-orange-300 transition">
-          <img alt="Leaf theme preview" src="/assets/themes/leaf.png" className="w-full aspect-video object-cover object-top" />
+          <img alt="Leaf theme preview" src="/assets/themes/leaf.webp" className="w-full aspect-video object-cover object-top" />
         </div>
         <p className="mt-3 font-semibold text-gray-900">Leaf</p>
         <p className="mt-1 text-sm text-gray-500">Nature-inspired with subtle greens. Warm and distinctive.</p>
@@ -221,127 +221,127 @@ showComments: false
     <div className="grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 sm:gap-y-10 lg:grid-cols-3">
       <div>
         <a href="http://lifeitself.org/">
-          <img alt="Life Itself" src="/assets/showcases/lifeitself.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="Life Itself" src="/assets/showcases/lifeitself.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>Life Itself</h3></div>
         </a>
       </div>
       <div>
         <a href="https://www.wet-vermilion-crowd.com/">
-          <img alt="Wet Vermillion Pile of Stuff" src="/assets/showcases/wet-vermillion.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="Wet Vermillion Pile of Stuff" src="/assets/showcases/wet-vermillion.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>Wet Vermillion Pile of Stuff</h3></div>
         </a>
       </div>
       <div>
         <a href="https://developmentalspaces.org/">
-          <img alt="Developmental Spaces" src="/assets/showcases/developmentalspaces.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="Developmental Spaces" src="/assets/showcases/developmentalspaces.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>Developmental Spaces</h3></div>
         </a>
       </div>
       <div>
         <a href="https://backtobasic.dev/">
-          <img alt="Back to Basic" src="/assets/showcases/backtobasic.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="Back to Basic" src="/assets/showcases/backtobasic.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>Back to Basic</h3></div>
         </a>
       </div>
       <div>
         <a href="https://givewiser.org/">
-          <img alt="Give Wiser" src="/assets/showcases/give-wiser.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="Give Wiser" src="/assets/showcases/give-wiser.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>Give Wiser</h3></div>
         </a>
       </div>
       <div>
         <a href="https://dnd-compendium-iwuaa.flowershow.me/">
-          <img alt="D&D Compendium" src="/assets/showcases/dnd.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="D&D Compendium" src="/assets/showcases/dnd.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>D&D Compendium</h3></div>
         </a>
       </div>
       <div>
         <a href="https://markdowndb.com">
-          <img alt="MarkdownDB" src="/assets/showcases/markdowndb.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="MarkdownDB" src="/assets/showcases/markdowndb.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>MarkdownDB</h3></div>
         </a>
       </div>
       <div>
         <a href="https://verdantverse-asinglemind.flowershow.me/">
-          <img alt="Verdantverse" src="/assets/showcases/verdantverse.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="Verdantverse" src="/assets/showcases/verdantverse.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>Verdantverse</h3></div>
         </a>
       </div>
       <div>
         <a href="https://note-ccccooh.flowershow.site/">
-          <img alt="Sy_Study&Note" src="/assets/showcases/ccccooh.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="Sy_Study&Note" src="/assets/showcases/ccccooh.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>Sy_Study&Note</h3></div>
         </a>
       </div>
       <div>
         <a href="https://metacrisis.info/">
-          <img alt="Metacrisis" src="/assets/showcases/metacrisis.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="Metacrisis" src="/assets/showcases/metacrisis.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>Metacrisis</h3></div>
         </a>
       </div>
       <div>
         <a href="https://rufuspollock.com/">
-          <img alt="Rufus Pollock" src="/assets/showcases/rufuspollockcom.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="Rufus Pollock" src="/assets/showcases/rufuspollockcom.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>Rufus Pollock</h3></div>
         </a>
       </div>
       <div>
         <a href="https://prisca-os-saiefr.flowershow.me/">
-          <img alt="Prisca/OS" src="/assets/showcases/prisca.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="Prisca/OS" src="/assets/showcases/prisca.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>Prisca/OS</h3></div>
         </a>
       </div>
       <div>
         <a href="https://research.lifeitself.org/">
-          <img alt="LifeItself Research" src="/assets/showcases/life-itself-research.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="LifeItself Research" src="/assets/showcases/life-itself-research.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>Life Itself Research</h3></div>
         </a>
       </div>
       <div>
         <a href="https://hexxen-herr-der-fliegen-bluedogxlii.flowershow.me/">
-          <img alt="Hexxen 1733" src="/assets/showcases/hexxen.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="Hexxen 1733" src="/assets/showcases/hexxen.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>Hexxen 1733</h3></div>
         </a>
       </div>
       <div>
         <a href="https://comparethe.co/">
-          <img alt="CompareThe＿" src="/assets/showcases/comparethe.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="CompareThe＿" src="/assets/showcases/comparethe.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>CompareThe＿</h3></div>
         </a>
       </div>
       <div>
         <a href="https://linuxknowledge-je7remy.flowershow.me">
-          <img alt="Linux & Cybersecurity Knowledge Hub" src="/assets/showcases/jeremy-linux-knowledge.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="Linux & Cybersecurity Knowledge Hub" src="/assets/showcases/jeremy-linux-knowledge.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>Linux & Cybersecurity Knowledge Hub</h3></div>
         </a>
       </div>
       <div>
         <a href="https://crbgc-philoserf.flowershow.me/">
-          <img alt="C&RBGC" src="/assets/showcases/crbgc.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="C&RBGC" src="/assets/showcases/crbgc.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>C&RBGC Notes</h3></div>
         </a>
       </div>
       <div>
         <a href="http://study-fpga-yunyouren.flowershow.me/">
-          <img alt="FPGA Study Notes" src="/assets/showcases/fpga.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="FPGA Study Notes" src="/assets/showcases/fpga.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>FPGA Study Notes</h3></div>
         </a>
       </div>
       <div>
         <a href="https://genealogy-of-feeling-commonplace-blackberry-garance.flowershow.me/">
-          <img alt="The Genealogy of Feeling" src="/assets/showcases/genealogy-of-feeling.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="The Genealogy of Feeling" src="/assets/showcases/genealogy-of-feeling.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>The Genealogy of Feeling</h3></div>
         </a>
       </div>
       <div>
         <a href="http://glorydazeaor.com/">
-          <img alt="GloryDazeAOR" src="/assets/showcases/glorydazeaor.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="GloryDazeAOR" src="/assets/showcases/glorydazeaor.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>GloryDazeAOR</h3></div>
         </a>
       </div>
       <div>
         <a href="https://tgnotes-arnoldit-com.flowershow.me/">
-          <img alt="Telegram Notes" src="/assets/showcases/tgnotes.png" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
+          <img alt="Telegram Notes" src="/assets/showcases/tgnotes.webp" className="aspect-video w-full rounded-lg bg-gray-100 object-cover" />
           <div className="mt-4 text-lg font-medium text-gray-900"><h3>Telegram Notes</h3></div>
         </a>
       </div>

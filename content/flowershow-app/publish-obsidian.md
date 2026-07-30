@@ -11,7 +11,7 @@ showComments: false
   <div className="mx-auto max-w-7xl px-6 lg:px-8">
     <div className="mx-auto max-w-3xl text-center">
       <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-purple-50 px-4 py-1.5 text-sm font-medium text-purple-700 ring-1 ring-purple-200">
-        <img src="/assets/obsidian_icon.png" alt="Obsidian" className="h-4 w-4" />
+        <img src="/assets/obsidian_icon.webp" alt="Obsidian" className="h-4 w-4" />
         Built for Obsidian users
       </div>
       <a href="/docs/agents/skills" className="mb-6 ml-2 inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-1.5 text-sm font-medium text-orange-700 ring-1 ring-orange-200 transition hover:bg-orange-100">🤖 New — publish with your AI agent <span aria-hidden="true">→</span></a>
@@ -31,7 +31,7 @@ showComments: false
       <div className="mt-16 max-w-5xl mx-auto flow-root">
         <div className="-m-2 rounded-xl bg-gray-900/5 p-2 ring-1 ring-inset ring-gray-900/10 lg:-m-4 lg:rounded-2xl lg:p-4">
           <img
-            src="/assets/showcases/verdantverse.png"
+            src="/assets/showcases/verdantverse.webp"
             alt="A published Obsidian vault on Flowershow"
             width={2432}
             height={1442}
@@ -175,7 +175,7 @@ showComments: false
       </div>
       <img
         alt="Flowershow plugin inside Obsidian"
-        src="/assets/publish-from-obsidian.png"
+        src="/assets/publish-from-obsidian.webp"
         width={2432}
         height={1442}
         className="w-[48rem] max-w-none rounded-xl shadow-xl ring-1 ring-gray-400/10 sm:w-[57rem] md:-ml-4 lg:-ml-0"
@@ -274,27 +274,27 @@ showComments: false
     </div>
     <div className="mx-auto mt-16 grid max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       <a href="https://my.flowershow.app/@ASingleMind/Verdantverse" className="group">
-        <img src="/assets/showcases/verdantverse.png" alt="Verdantverse" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
+        <img src="/assets/showcases/verdantverse.webp" alt="Verdantverse" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
         <div className="mt-3 text-base font-medium text-gray-900 group-hover:text-purple-600">Verdantverse</div>
       </a>
       <a href="https://my.flowershow.app/@Iwuaa/dnd-compendium" className="group">
-        <img src="/assets/showcases/dnd.png" alt="D&D Compendium" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
+        <img src="/assets/showcases/dnd.webp" alt="D&D Compendium" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
         <div className="mt-3 text-base font-medium text-gray-900 group-hover:text-purple-600">D&D Compendium</div>
       </a>
       <a href="https://my.flowershow.app/@CCCCOOH/Note" className="group">
-        <img src="/assets/showcases/ccccooh.png" alt="Sy_Study&Note" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
+        <img src="/assets/showcases/ccccooh.webp" alt="Sy_Study&Note" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
         <div className="mt-3 text-base font-medium text-gray-900 group-hover:text-purple-600">Sy_Study&Note</div>
       </a>
       <a href="https://my.flowershow.app/@bluedogXLII/hexxen-herr-der-fliegen" className="group">
-        <img src="/assets/showcases/hexxen.png" alt="Hexxen 1733" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
+        <img src="/assets/showcases/hexxen.webp" alt="Hexxen 1733" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
         <div className="mt-3 text-base font-medium text-gray-900 group-hover:text-purple-600">Hexxen 1733</div>
       </a>
       <a href="https://my.flowershow.app/@je7remy/linuxknowledge" className="group">
-        <img src="/assets/showcases/jeremy-linux-knowledge.png" alt="Linux & Cybersecurity Knowledge Hub" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
+        <img src="/assets/showcases/jeremy-linux-knowledge.webp" alt="Linux & Cybersecurity Knowledge Hub" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
         <div className="mt-3 text-base font-medium text-gray-900 group-hover:text-purple-600">Linux & Cybersecurity Knowledge Hub</div>
       </a>
       <a href="https://my.flowershow.app/@rufuspollock/rufuspollock-com" className="group">
-        <img src="/assets/showcases/rufuspollockcom.png" alt="rufuspollock.com" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
+        <img src="/assets/showcases/rufuspollockcom.webp" alt="rufuspollock.com" className="aspect-video w-full rounded-lg bg-gray-100 object-cover shadow group-hover:shadow-md transition-shadow" />
         <div className="mt-3 text-base font-medium text-gray-900 group-hover:text-purple-600">rufuspollock.com</div>
       </a>
     </div>

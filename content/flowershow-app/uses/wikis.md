@@ -31,7 +31,7 @@ showComments: false
       </div>
       <div className="mt-8 sm:mt-12 aspect-video rounded-md overflow-hidden">
         <img
-            src="/assets/uses/wikis/demo-wikis.png"
+            src="/assets/uses/wikis/demo-wikis.webp"
             className="w-full h-full object-contain"
           />
       </div>

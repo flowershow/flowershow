@@ -162,7 +162,7 @@ showComments: false
           <div className="relative flex-1 min-h-[20rem] w-full overflow-hidden bg-[#D94585]">
             <div className="absolute left-8 top-8 right-8 h-full">
               <img
-                src="/assets/uses/blog/blog-index.png"
+                src="/assets/uses/blog/blog-index.webp"
                 className="object-top-left object-cover"
                 alt=""
                 loading="lazy"
@@ -184,7 +184,7 @@ showComments: false
           <div className="relative flex-1 min-h-[16rem] w-full overflow-hidden bg-[#FAE000]">
             <div className="absolute left-6 top-6 right-6 h-full">
               <img
-                src="/assets/uses/blog/blog-search.png"
+                src="/assets/uses/blog/blog-search.webp"
                 className="object-top object-fit rounded-lg"
                 alt=""
                 loading="lazy"
@@ -206,7 +206,7 @@ showComments: false
           <div className="relative flex-1 min-h-[16rem] w-full overflow-hidden bg-gray-100">
             <div className="absolute left-8 top-8 w-full h-full">
               <img
-                src="/assets/uses/blog/blog-comments.png"
+                src="/assets/uses/blog/blog-comments.webp"
                 className="object-top-left object-cover w-full h-full"
                 alt=""
                 loading="lazy"
@@ -315,7 +315,7 @@ showComments: false
       </div>
       <div className="w-[48rem] max-w-none sm:w-[57rem] md:-ml-4 lg:-ml-0 aspect-video rounded-xl border border-gray-100 overflow-hidden">
         <img
-          src="/assets/uses/blog/blog-themes.gif"
+          src="/assets/uses/blog/blog-themes.webp"
           className="w-full h-full object-contain"
         ></img>
       </div>
@@ -333,7 +333,7 @@ showComments: false
         <div className="relative min-h-[12rem] w-full overflow-hidden bg-[#C8E235]">
           <div className="absolute left-4 top-4 right-4 bottom-0">
             <img
-              src="/assets/uses/blog/blog-flowershow.png"
+              src="/assets/uses/blog/blog-flowershow.webp"
               className="object-top object-cover w-full rounded-t-lg"
               alt=""
               loading="lazy"

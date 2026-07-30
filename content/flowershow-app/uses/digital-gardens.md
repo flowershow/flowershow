@@ -29,7 +29,7 @@ showComments: false
       </div>
       <div className="mt-8 sm:mt-12 aspect-video rounded-md overflow-hidden ring-1 ring-gray-200">
         <img
-            src="/assets/uses/digital-gardens/hero.png"
+            src="/assets/uses/digital-gardens/hero.webp"
             className="w-full h-full object-cover object-top"
             alt="Life Itself — a digital garden published with Flowershow"
           />
@@ -175,7 +175,7 @@ showComments: false
         <div className="relative flex-1 min-h-[27rem] w-full overflow-hidden bg-[#10B981]">
           <div className="absolute left-8 top-8 w-full h-full">
             <img
-                src="/assets/uses/digital-gardens/graph.png"
+                src="/assets/uses/digital-gardens/graph.webp"
                 className="object-top-left object-cover w-full h-full"
                 alt="Interactive knowledge graph of connected notes"
                 loading="lazy"
@@ -203,7 +203,7 @@ showComments: false
         <div className="relative h-60 w-full overflow-hidden bg-[#BEF264]">
           <div className="absolute left-6 top-6 right-6 h-full">
             <img
-                src="/assets/uses/digital-gardens/backlinks.png"
+                src="/assets/uses/digital-gardens/backlinks.webp"
                 className="object-top object-fit rounded-lg"
                 alt="Links to this page panel"
                 loading="lazy"
@@ -229,7 +229,7 @@ showComments: false
         <div className="relative h-60 w-full overflow-hidden bg-gray-100">
           <div className="absolute inset-6">
             <img
-                src="/assets/uses/digital-gardens/wikilinks.png"
+                src="/assets/uses/digital-gardens/wikilinks.webp"
                 className="object-cover rounded-lg w-full h-full"
                 alt="Wiki-links rendered between notes"
                 loading="lazy"
@@ -264,7 +264,7 @@ showComments: false
         <div className="relative flex-1 min-h-70 w-full overflow-hidden bg-[#84CC16]">
           <div className="absolute left-8 top-8 w-full h-full">
             <img
-                src="/assets/uses/digital-gardens/search.png"
+                src="/assets/uses/digital-gardens/search.webp"
                 className="object-top-left object-cover w-full h-full rounded-md"
                 alt="Full-text search across the garden"
                 loading="lazy"
@@ -372,7 +372,7 @@ showComments: false
     </div>
     <div className="aspect-video rounded-xl overflow-hidden ring-1 ring-gray-200">
       <img
-          src="/assets/showcases/verdantverse.png"
+          src="/assets/showcases/verdantverse.webp"
           className="w-full h-full object-cover object-top"
           alt="A themed digital garden published with Flowershow"
           loading="lazy"
@@ -399,7 +399,7 @@ showComments: false
     <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-8 sm:grid-cols-2">
       <a href="https://notes.lifeitself.org/" className="group flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#6EE7B7]">
         <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
-          <img src="/assets/showcases/life-itself-dg.png" className="object-top object-cover w-full h-full" alt="Life Itself Digital Garden" loading="lazy" />
+          <img src="/assets/showcases/life-itself-dg.webp" className="object-top object-cover w-full h-full" alt="Life Itself Digital Garden" loading="lazy" />
         </div>
         <div className="p-8">
           <h3 className="text-base font-semibold text-gray-900">Life Itself</h3>
@@ -409,7 +409,7 @@ showComments: false
       </a>
       <a href="https://verdantverse-asinglemind.flowershow.me/" className="group flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#6EE7B7]">
         <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
-          <img src="/assets/showcases/verdantverse.png" className="object-top object-cover w-full h-full" alt="Verdantverse" loading="lazy" />
+          <img src="/assets/showcases/verdantverse.webp" className="object-top object-cover w-full h-full" alt="Verdantverse" loading="lazy" />
         </div>
         <div className="p-8">
           <h3 className="text-base font-semibold text-gray-900">Verdantverse</h3>
@@ -419,7 +419,7 @@ showComments: false
       </a>
       <a href="https://prisca-os-saiefr.flowershow.me/" className="group flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#6EE7B7]">
         <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
-          <img src="/assets/showcases/prisca.png" className="object-top object-cover w-full h-full" alt="Prisca/OS" loading="lazy" />
+          <img src="/assets/showcases/prisca.webp" className="object-top object-cover w-full h-full" alt="Prisca/OS" loading="lazy" />
         </div>
         <div className="p-8">
           <h3 className="text-base font-semibold text-gray-900">Prisca/OS</h3>
@@ -429,7 +429,7 @@ showComments: false
       </a>
       <a href="https://backtobasic.dev/" className="group flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#6EE7B7]">
         <div className="relative aspect-video w-full overflow-hidden bg-gray-100">
-          <img src="/assets/showcases/backtobasic.png" className="object-top object-cover w-full h-full" alt="Back to Basic" loading="lazy" />
+          <img src="/assets/showcases/backtobasic.webp" className="object-top object-cover w-full h-full" alt="Back to Basic" loading="lazy" />
         </div>
         <div className="p-8">
           <h3 className="text-base font-semibold text-gray-900">Back to Basic</h3>

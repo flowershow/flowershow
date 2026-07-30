@@ -144,7 +144,7 @@ showComments: false
   <div className="lg:col-span-3 p-8 lg:pl-12">
     <div className="lg:max-w-lg">
       <h2 className="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">No setup ceremony.</h2>
-      <img src="/assets/uses/docs/frictions.png" className="mt-6 w-full" loading="lazy" />
+      <img src="/assets/uses/docs/frictions.webp" className="mt-6 w-full" loading="lazy" />
       <p className="mt-8 text-3xl font-semibold text-gray-900">Upload your files. That's enough.</p>
     </div>
   </div>
@@ -169,7 +169,7 @@ showComments: false
         <div className="relative flex-1 min-h-[27rem] w-full overflow-hidden bg-[#D94585]">
           <div className="absolute left-8 top-8 w-full h-full">
             <img
-                src="/assets/uses/docs/navigation.png"
+                src="/assets/uses/docs/navigation.webp"
                 className="object-top-left object-cover w-full h-full"
                 alt=""
                 loading="lazy"
@@ -196,7 +196,7 @@ showComments: false
         <div className="relative h-60 w-full overflow-hidden bg-[#FAE000]">
           <div className="absolute left-6 top-6 right-6 h-full">
             <img
-                src="/assets/uses/docs/search.png"
+                src="/assets/uses/docs/search.webp"
                 className="object-top object-fit rounded-lg"
                 alt=""
                 loading="lazy"
@@ -222,7 +222,7 @@ showComments: false
         <div className="relative h-60 w-full overflow-hidden bg-gray-100">
           <div className="absolute inset-6">
             <img
-                src="/assets/uses/docs/password.png"
+                src="/assets/uses/docs/password.webp"
                 className="object-contain rounded-lg"
                 alt=""
                 loading="lazy"
@@ -248,7 +248,7 @@ showComments: false
         <div className="relative h-70 w-full overflow-hidden bg-gray-100">
           <div className="absolute left-8 top-8 w-full h-full">
             <img
-                src="/assets/uses/docs/docs-sync.png"
+                src="/assets/uses/docs/docs-sync.webp"
                 className="object-top-left object-cover w-full h-full rounded-md"
                 alt=""
                 loading="lazy"
@@ -272,7 +272,7 @@ showComments: false
         <div className="relative flex-1 min-h-70 w-full overflow-hidden bg-[#C8E235]">
           <div className="absolute left-8 top-8 w-full h-full">
             <img
-                src="/assets/uses/docs/comments.png"
+                src="/assets/uses/docs/comments.webp"
                 className="object-top-left object-cover w-full h-full rounded-md"
                 alt=""
                 loading="lazy"
@@ -477,7 +477,7 @@ showComments: false
         <div className="relative min-h-[12rem] w-full overflow-hidden bg-[#C8E235]">
           <div className="absolute left-4 top-4 right-4 bottom-0">
             <img
-              src="/assets/uses/docs/docs-flowershow.png"
+              src="/assets/uses/docs/docs-flowershow.webp"
               className="object-top object-cover w-full rounded-t-lg"
               alt=""
               loading="lazy"
