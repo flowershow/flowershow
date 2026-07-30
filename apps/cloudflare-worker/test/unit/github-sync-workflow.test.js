@@ -106,6 +106,37 @@ describe('computeFilesToUpsert', () => {
     expect(result[0].filePath).toBe('public/page.md');
   });
 
+  it('excludes files matching excludes when a rootDir is set (#1331)', () => {
+    // Exclude patterns are site-relative ("/notes"); the GitHub tree paths carry
+    // the rootDir prefix ("site/notes/..."). The exclude must still match after
+    // the prefix is stripped.
+    const result = computeFilesToUpsert(
+      [],
+      makeTree([
+        makeItem('site/notes/private.md', 'sha1'),
+        makeItem('site/docs/page.md', 'sha2'),
+      ]),
+      'site/',
+      [],
+      ['/notes'],
+    );
+    expect(result.map((r) => r.filePath)).toEqual(['docs/page.md']);
+  });
+
+  it('applies includes relative to rootDir (#1331)', () => {
+    const result = computeFilesToUpsert(
+      [],
+      makeTree([
+        makeItem('site/docs/page.md', 'sha1'),
+        makeItem('site/notes/page.md', 'sha2'),
+      ]),
+      'site/',
+      ['/docs'],
+      [],
+    );
+    expect(result.map((r) => r.filePath)).toEqual(['docs/page.md']);
+  });
+
   it('includes only files matching includes when includes is non-empty', () => {
     const result = computeFilesToUpsert(
       [],
@@ -231,5 +262,21 @@ describe('computeFilesToDelete', () => {
       [],
     );
     expect(result).toHaveLength(0);
+  });
+
+  it('deletes now-excluded blobs when a rootDir is set (#1331)', () => {
+    // A previously-synced blob whose path is now covered by contentExclude must
+    // be marked for deletion even though the tree path carries the rootDir prefix.
+    const result = computeFilesToDelete(
+      [{ path: 'notes/private.md' }, { path: 'docs/page.md' }],
+      makeTree([
+        makeItem('site/notes/private.md', 'sha1'),
+        makeItem('site/docs/page.md', 'sha2'),
+      ]),
+      'site/',
+      [],
+      ['/notes'],
+    );
+    expect(result.map((b) => b.path)).toEqual(['notes/private.md']);
   });
 });
