@@ -273,7 +273,14 @@ export function computeFilesToUpsert(
       (item) =>
         item.type !== 'tree' &&
         item.path.startsWith(normalizedRootDir) &&
-        isPathVisible(item.path, includes, excludes),
+        // Match include/exclude patterns against the site-relative path (rootDir
+        // stripped) — users write patterns relative to their site root ("/notes"),
+        // not the repo root ("<rootDir>/notes").
+        isPathVisible(
+          item.path.replace(normalizedRootDir, ''),
+          includes,
+          excludes,
+        ),
     )
     .map((item) => {
       const filePath = item.path.replace(normalizedRootDir, '');
@@ -307,7 +314,12 @@ export function computeFilesToDelete(
         (item) =>
           item.type !== 'tree' &&
           item.path.startsWith(normalizedRootDir) &&
-          isPathVisible(item.path, includes, excludes),
+          // See computeFilesToUpsert: match patterns against the site-relative path.
+          isPathVisible(
+            item.path.replace(normalizedRootDir, ''),
+            includes,
+            excludes,
+          ),
       )
       .map((item) => item.path.replace(normalizedRootDir, '')),
   );
