@@ -275,14 +275,6 @@ export default function HomePage() {
                   </button>
                 </p>
               </div>
-
-              {/* Social proof */}
-              <p className="mt-8 text-sm text-gray-400 text-center">
-                <span className="font-medium text-gray-600">990+</span> sites
-                published &nbsp;&middot;&nbsp;{' '}
-                <span className="font-medium text-gray-600">Free plan</span>{' '}
-                <span className="text-gray-500">— forever.</span>
-              </p>
             </div>
           </div>
         </div>

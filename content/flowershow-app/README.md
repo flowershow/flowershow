@@ -39,9 +39,9 @@ showComments: false
         <span>🤖 Agent-friendly</span>
       </div>
       <div className="mt-8 flex items-center justify-center gap-x-6 text-sm text-gray-400">
-        <span><strong className="text-gray-600">1,900+</strong> users</span>
+        <span><strong className="text-gray-600">2,000+</strong> users</span>
         <span aria-hidden="true">·</span>
-        <span><strong className="text-gray-600">1100+</strong> sites published</span>
+        <span><strong className="text-gray-600">1700+</strong> sites published</span>
         <span aria-hidden="true">·</span>
         <span><strong className="text-gray-600">Free forever</strong></span>
         <span aria-hidden="true">·</span>
