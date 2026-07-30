@@ -487,10 +487,6 @@
       "to": "/docs/reference/password-protection"
     },
     {
-      "from": "/privacy",
-      "to": "/docs/reference/privacy"
-    },
-    {
       "from": "/docs/redirects",
       "to": "/docs/reference/redirects"
     },
@@ -525,10 +521,6 @@
     {
       "from": "/docs/table-of-contents",
       "to": "/docs/reference/table-of-contents"
-    },
-    {
-      "from": "/terms-of-service",
-      "to": "/docs/reference/terms-of-service"
     },
     {
       "from": "/docs/themes",
