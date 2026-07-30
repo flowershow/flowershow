@@ -376,14 +376,6 @@ showComments: false
     </div>
   </div>
 </div>
-<div className="bg-gray-50 py-12 sm:py-20 my-4">
-  <div className="mx-auto max-w-7xl px-6 lg:px-8">
-    <h2 className="mb-2 text-pretty text-balance text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">Stay in the loop.</h2>
-    <p className="mb-6 text-lg text-gray-600">New features, tutorials, and the occasional idea worth sharing. No spam, unsubscribe any time.</p>
-    <iframe data-tally-src="https://tally.so/embed/mYy8k6?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" loading="lazy" width="100%" height="100" frameborder="0" marginheight="0" marginwidth="0" title="Flowershow Subscribers"></iframe>
-    <script>var d=document,w="https://tally.so/widgets/embed.js",v=function(){"undefined"!=typeof Tally?Tally.loadEmbeds():d.querySelectorAll("iframe[data-tally-src]:not([src])").forEach((function(e){e.src=e.dataset.tallySrc}))};if("undefined"!=typeof Tally)v();else if(d.querySelector('script[src="'+w+'"]')==null){var s=d.createElement("script");s.src=w,s.onload=v,s.onerror=v,d.body.appendChild(s);}</script>
-  </div>
-</div>
 <div className="bg-slate-900 mt-4">
   <div className="px-6 py-24 sm:px-6 sm:py-32 lg:px-8">
     <div className="mx-auto max-w-2xl text-center">

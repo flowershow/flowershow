@@ -20,12 +20,12 @@ link, demo video. A+C layer — practical promise in the first 3 seconds.]
 
 > Content to URL. Instantly.
 
-*or*
+_or_
 
 > Markdown to website in seconds.
 
-*Note: "Content to URL. Instantly." is punchier and broader. "Markdown to website in
-seconds" signals the audience more specifically. Both are strong — test to decide.*
+_Note: "Content to URL. Instantly." is punchier and broader. "Markdown to website in
+seconds" signals the audience more specifically. Both are strong — test to decide._
 
 ---
 
@@ -58,11 +58,11 @@ seconds" signals the audience more specifically. Both are strong — test to dec
 
 [Three numbers in a quiet horizontal row. Small text, muted — trust anchor, not hero.]
 
-> **1,200+** users  ·  **950+** sites published  ·  **Free** forever
+> **1,200+** users · **950+** sites published · **Free** forever
 
-*Optionally, if recognisable organisations use Flowershow, add a quiet logo/name strip
+_Optionally, if recognisable organisations use Flowershow, add a quiet logo/name strip
 below the stats: "Trusted by people at [Org A] · [Org B] · [Org C]" — only if the
-names add genuine credibility. Defer until confirmed names are available.*
+names add genuine credibility. Defer until confirmed names are available._
 
 ---
 
@@ -140,9 +140,9 @@ Nature-inspired with subtle greens. Warm and distinctive for personal sites and 
 
 → [Browse all themes and usage instructions](/themes)
 
-*[Screenshots: use the preview images from github.com/flowershow/themes — each theme
+_[Screenshots: use the preview images from github.com/flowershow/themes — each theme
 has a preview .jpg or .png. The existing /assets/official-themes.png is a combined
-view that could work as a teaser image above the individual cards.]*
+view that could work as a teaser image above the individual cards.]_
 
 ---
 
@@ -150,8 +150,9 @@ view that could work as a teaser image above the individual cards.]*
 
 [NEW SECTION. 2–3 short quotes from real users. Real names, real sites. Pull from
 community members, GitHub discussions, Discord, or direct outreach. Format: pull quote
-+ name + site URL or role. Positioned here — after features, before the "how it works"
-section — to validate the promise before explaining the mechanism.]
+
+- name + site URL or role. Positioned here — after features, before the "how it works"
+  section — to validate the promise before explaining the mechanism.]
 
 ---
 
@@ -170,9 +171,9 @@ section — to validate the promise before explaining the mechanism.]
 > of our workflow."
 > — [Name], [organisation]
 
-*[PLACEHOLDER — these need to be real quotes. Reach out to active community members,
+_[PLACEHOLDER — these need to be real quotes. Reach out to active community members,
 check GitHub discussions and Discord for existing praise that can be used with permission.
-Even one strong real quote beats three placeholder ones.]*
+Even one strong real quote beats three placeholder ones.]_
 
 ---
 
@@ -358,6 +359,7 @@ moment of decision.]
 **CTA button:** Start publishing free →
 
 **Quiet secondary line (below button):**
+
 > No credit card required. Free plan, forever.
 
 ---
@@ -365,12 +367,14 @@ moment of decision.]
 ## Copy Notes & Decisions
 
 ### Tone
+
 - Direct, confident, not corporate.
 - "You" not "users." "Your files" not "your assets."
 - Short sentences. No weasel words ("seamlessly," "robust," "powerful").
 - The voice is: a knowledgeable friend who respects your time.
 
 ### What to avoid
+
 - "Supercharge your workflow" — generic
 - "Seamlessly integrates" — nobody talks like this
 - "Powerful and flexible" — every product says this
@@ -378,20 +382,21 @@ moment of decision.]
 
 ### Changes from first draft and why
 
-| Change | Reason |
-|---|---|
-| Added pricing nudge near hero | Free is a major conversion driver — make it visible immediately |
-| Added stats bar near hero | Concrete numbers beat vague trust claims; 1,000+ users is confirmed |
-| Added themes showcase (Section 3) | 2–3 polished named themes deserve visual proof, not a bullet point |
+| Change                                 | Reason                                                                |
+| -------------------------------------- | --------------------------------------------------------------------- |
+| Added pricing nudge near hero          | Free is a major conversion driver — make it visible immediately       |
+| Added stats bar near hero              | Concrete numbers beat vague trust claims; 1,000+ users is confirmed   |
+| Added themes showcase (Section 3)      | 2–3 polished named themes deserve visual proof, not a bullet point    |
 | Added testimonials section (Section 4) | Specific social proof beats generic; positioned before "how it works" |
-| Moved Ways to Publish to Section 5 | Build desire first (features + themes), then explain mechanism |
-| Restructured hero subhead | Aspiration first, pain negation second — broader appeal |
-| Trimmed use cases to 4 + overflow link | 8 equal cards creates no hierarchy; 4 is scannable |
-| Added FAQ section | Removes last objections before conversion moment |
-| Repositioned newsletter | Above final CTA as lower-commitment alternative, not interruption |
-| Rewrote final CTA heading | Mirrors hero headline — bookend pattern, stronger conversion |
+| Moved Ways to Publish to Section 5     | Build desire first (features + themes), then explain mechanism        |
+| Restructured hero subhead              | Aspiration first, pain negation second — broader appeal               |
+| Trimmed use cases to 4 + overflow link | 8 equal cards creates no hierarchy; 4 is scannable                    |
+| Added FAQ section                      | Removes last objections before conversion moment                      |
+| Repositioned newsletter                | Above final CTA as lower-commitment alternative, not interruption     |
+| Rewrote final CTA heading              | Mirrors hero headline — bookend pattern, stronger conversion          |
 
 ### Things still not decided / need real content
+
 - **Theme names and descriptions** — pull from github.com/flowershow/themes
 - **Testimonial quotes** — source from GitHub Discussions, Discord, or direct outreach
 - **Sites-published count** — confirm from backend for the stats bar
