@@ -116,7 +116,12 @@ export function SearchModal({ indexId }: SearchModalProps) {
 
   return (
     <>
-      <button onClick={openModal} name="search" className="search-button">
+      <button
+        onClick={openModal}
+        name="search"
+        aria-label="Search"
+        className="search-button"
+      >
         <SearchIcon className="search-icon" />
         <span className="search-placeholder">Search...</span>
         <span aria-hidden className="search-shortcut-hint">

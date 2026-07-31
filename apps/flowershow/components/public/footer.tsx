@@ -71,7 +71,7 @@ export default async function Footer({
             </p>
             {social && (
               <div className="site-footer-social-links">
-                {social.map(({ label, href }) => {
+                {social.map(({ label, name, href }) => {
                   if (!href) return null;
                   const Icon = (label && socialIcons[label]) || GlobeIcon;
                   return (
@@ -80,6 +80,7 @@ export default async function Footer({
                       href={href}
                       target="_blank"
                       rel="noopener noreferrer"
+                      aria-label={name || label || 'Social link'}
                       className="site-footer-social-link"
                     >
                       <Icon className="site-footer-social-icon" />
