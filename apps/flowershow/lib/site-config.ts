@@ -94,5 +94,5 @@ export function buildPageTitle(
   if (pageTitle.trim().toLowerCase() === siteName.trim().toLowerCase()) {
     return siteName;
   }
-  return `${pageTitle} - ${siteName}`;
+  return `${pageTitle} | ${siteName}`;
 }
