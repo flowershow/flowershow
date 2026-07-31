@@ -1,23 +1,27 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-  buildSiteSubdomain,
-  ensureUniqueSubdomain,
-  sanitizeSubdomain,
-} from './site-subdomain';
+import { buildSubdomain, ensureUniqueSubdomain } from './site-subdomain';
 
-describe('sanitizeSubdomain', () => {
+describe('buildSubdomain', () => {
   it('lowercases and hyphenates invalid characters', () => {
-    expect(sanitizeSubdomain('My Notes')).toBe('my-notes');
+    expect(buildSubdomain('My Notes')).toBe('my-notes');
   });
 
   it('collapses consecutive hyphens and trims edges', () => {
-    expect(sanitizeSubdomain('  !!My   Notes!!  ')).toBe('my-notes');
+    expect(buildSubdomain('  !!My   Notes!!  ')).toBe('my-notes');
   });
-});
 
-describe('buildSiteSubdomain', () => {
-  it('joins name and username into a single slug', () => {
-    expect(buildSiteSubdomain('My Notes', 'olayway')).toBe('my-notes-olayway');
+  it('transliterates non-Latin scripts to an ASCII label', () => {
+    expect(buildSubdomain('База знаний')).toBe('baza-znaniy');
+    expect(buildSubdomain('Café')).toBe('cafe');
+  });
+
+  it('joins multiple parts into a single slug', () => {
+    expect(buildSubdomain('My Notes', 'olayway')).toBe('my-notes-olayway');
+  });
+
+  it('keeps the label non-empty via the suffix when the name has no slug content', () => {
+    // Name transliterates to nothing usable; the username suffix carries it.
+    expect(buildSubdomain('🎉', 'olayway')).toBe('olayway');
   });
 });
 
@@ -48,14 +52,14 @@ describe('ensureUniqueSubdomain', () => {
 
   it('resolves two slug-colliding names to distinct subdomains', async () => {
     // "My Notes" and "my notes" both build the same base.
-    const base = buildSiteSubdomain('My Notes', 'ola'); // my-notes-ola
+    const base = buildSubdomain('My Notes', 'ola'); // my-notes-ola
     const taken = new Set<string>();
     const exists = vi.fn(async (s: string) => taken.has(s));
 
     const first = await ensureUniqueSubdomain(base, exists);
     taken.add(first);
     const second = await ensureUniqueSubdomain(
-      buildSiteSubdomain('my notes', 'ola'),
+      buildSubdomain('my notes', 'ola'),
       exists,
     );
 

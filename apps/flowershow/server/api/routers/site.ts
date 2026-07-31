@@ -34,10 +34,7 @@ import {
   resolveSiteConfig,
   SITE_CONFIG_DEFAULTS,
 } from '@/lib/site-config';
-import {
-  buildSiteSubdomain,
-  ensureUniqueSubdomain,
-} from '@/lib/site-subdomain';
+import { buildSubdomain, ensureUniqueSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
 import { ensureLeadingSlash, extractWikiLinkTarget } from '@/lib/utils';
 import {
@@ -214,7 +211,7 @@ export const siteRouter = createTRPCRouter({
       });
 
       const subdomain = await ensureUniqueSubdomain(
-        buildSiteSubdomain(projectName, creator?.username ?? ''),
+        buildSubdomain(projectName, creator?.username ?? ''),
         (candidate) =>
           ctx.db.site
             .findFirst({

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { SITE_NAME_MAX_LENGTH, validateSiteName } from './validate-site-name';
-import { sanitizeSubdomain } from './site-subdomain';
+import { buildSubdomain } from './site-subdomain';
 
 describe('validateSiteName', () => {
   it('accepts a plain name and returns it unchanged', () => {
@@ -44,9 +44,19 @@ describe('validateSiteName', () => {
     expect(validateSiteName('!!!___...').ok).toBe(false);
   });
 
-  it('rejects a name whose only letters are non-ASCII (subdomain would be empty)', () => {
-    // Cyrillic-only — sanitizeSubdomain keeps only [a-z0-9], so this must fail.
-    expect(validateSiteName('Привет').ok).toBe(false);
+  it('accepts a non-ASCII name that transliterates to ASCII, keeping it raw', () => {
+    // Cyrillic transliterates to "Baza znaniy", so the name is valid and the
+    // subdomain is derivable — but the stored name stays the original Cyrillic.
+    expect(validateSiteName('База знаний')).toEqual({
+      ok: true,
+      name: 'База знаний',
+    });
+    expect(validateSiteName('Привет').ok).toBe(true);
+  });
+
+  it('rejects a name that transliterates to no alphanumerics (emoji-only)', () => {
+    // "🎉" transliterates to "", so the subdomain would collapse to empty.
+    expect(validateSiteName('🎉').ok).toBe(false);
   });
 
   it('rejects a name containing a slash', () => {
@@ -75,14 +85,16 @@ describe('validateSiteName', () => {
       'Season 2024 — recap!',
       '   trimmed   ',
       'ünïcode with 1 ascii digit',
+      'База знаний',
+      'こんにちは',
     ];
     for (const raw of candidates) {
       const result = validateSiteName(raw);
       expect(result.ok).toBe(true);
       if (result.ok) {
-        expect(
-          sanitizeSubdomain(`${result.name}-someuser`).length,
-        ).toBeGreaterThan(0);
+        expect(buildSubdomain(result.name, 'someuser').length).toBeGreaterThan(
+          0,
+        );
       }
     }
   });

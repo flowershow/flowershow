@@ -17,7 +17,7 @@ import {
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import PostHogClient from '@/lib/server-posthog';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
-import { buildAnonSiteSubdomain } from '@/lib/site-subdomain';
+import { buildSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection } from '@/lib/typesense';
 import prisma from '@/server/db';
 
@@ -174,7 +174,7 @@ export async function POST(request: NextRequest) {
     const site = await prisma.site.create({
       data: {
         projectName,
-        subdomain: buildAnonSiteSubdomain(projectName),
+        subdomain: buildSubdomain(projectName, 'anon'),
         userId: ANONYMOUS_USER_ID,
         anonymousOwnerId: anonymousUserId,
         isTemporary: true,

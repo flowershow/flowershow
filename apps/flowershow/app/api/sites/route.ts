@@ -13,10 +13,7 @@ import {
 import { sendEmail } from '@/lib/email';
 import PostHogClient from '@/lib/server-posthog';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
-import {
-  buildSiteSubdomain,
-  ensureUniqueSubdomain,
-} from '@/lib/site-subdomain';
+import { buildSubdomain, ensureUniqueSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
 import { validateSiteName } from '@/lib/validate-site-name';
 import prisma from '@/server/db';
@@ -128,7 +125,7 @@ export async function POST(request: NextRequest) {
       });
     } else {
       const subdomain = await ensureUniqueSubdomain(
-        buildSiteSubdomain(siteName, username),
+        buildSubdomain(siteName, username),
         (candidate) =>
           prisma.site
             .findFirst({

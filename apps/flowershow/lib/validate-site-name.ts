@@ -8,8 +8,11 @@
  *
  *  - non-empty after trimming
  *  - at most SITE_NAME_MAX_LENGTH characters
- *  - at least one ASCII alphanumeric character — this is what guarantees
- *    `sanitizeSubdomain` can never collapse to the empty string (#1307)
+ *  - contains at least one letter or number (any script) — a name of pure
+ *    punctuation/emoji is not a meaningful identifier. This is a property of
+ *    the name, checked here directly; the Subdomain's non-emptiness is
+ *    guaranteed separately by `buildSubdomain`'s trailing discriminator, so
+ *    validation does not need to reach into subdomain-building.
  *  - no `/` (would break the `/api/sites/{username}/{projectname}` path)
  *  - no ASCII control characters
  *
@@ -44,7 +47,7 @@ export function validateSiteName(raw: string): SiteNameValidation {
       error: `Site name must be at most ${SITE_NAME_MAX_LENGTH} characters.`,
     };
   }
-  if (!/[a-z0-9]/i.test(name)) {
+  if (!/[\p{L}\p{N}]/u.test(name)) {
     return {
       ok: false,
       error: 'Site name must contain at least one letter or number.',

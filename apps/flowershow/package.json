@@ -117,6 +117,7 @@
     "stripe": "^17.5.0",
     "superjson": "^2.2.2",
     "swr": "^2.3.6",
+    "transliteration": "^2.6.1",
     "typesense": "^2.1.0",
     "typesense-instantsearch-adapter": "^2.9.0",
     "unified": "^11.0.5",

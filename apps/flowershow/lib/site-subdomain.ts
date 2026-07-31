@@ -1,40 +1,25 @@
+import { transliterate } from 'transliteration';
+
 /**
- * Sanitize a raw string into a valid DNS subdomain label.
+ * Build a DNS-safe subdomain label from the given parts — typically the site
+ * name plus an owner discriminator: a username, `"anon"` for temporary sites,
+ * or a numeric suffix during collision resolution.
  *
- * Rules applied:
- *  - Lowercase only
- *  - Only a-z, 0-9, hyphens
- *  - Consecutive hyphens collapsed to one
- *  - No leading or trailing hyphens
- *  - Max 63 characters (truncated cleanly, never ending with a hyphen)
+ * Parts are joined with `-`, transliterated to ASCII (so non-Latin names like
+ * "База знаний" yield a readable label instead of collapsing to hyphens),
+ * lowercased, reduced to `[a-z0-9-]` with no repeated/leading/trailing hyphens,
+ * and capped at the 63-char DNS label limit. The trailing discriminator is what
+ * guarantees the label is non-empty even when the name transliterates to
+ * nothing (#1307) — the site name itself is never required to be sluggable.
  */
-export function sanitizeSubdomain(raw: string): string {
-  return raw
+export function buildSubdomain(...parts: string[]): string {
+  return transliterate(parts.join('-'))
     .toLowerCase()
     .replace(/[^a-z0-9-]/g, '-') // replace invalid chars with hyphen
     .replace(/-+/g, '-') // collapse consecutive hyphens
     .replace(/^-+|-+$/g, '') // strip leading/trailing hyphens
     .slice(0, 63) // enforce max label length
     .replace(/-+$/g, ''); // strip any trailing hyphen left by truncation
-}
-
-/**
- * Build the subdomain for a regular user site.
- * Format: {projectName}-{username}
- */
-export function buildSiteSubdomain(
-  projectName: string,
-  username: string,
-): string {
-  return sanitizeSubdomain(`${projectName}-${username}`);
-}
-
-/**
- * Build the subdomain for an anonymous/temporary site.
- * Format: {projectName}-anon
- */
-export function buildAnonSiteSubdomain(projectName: string): string {
-  return sanitizeSubdomain(`${projectName}-anon`);
 }
 
 /**
@@ -48,8 +33,8 @@ export async function ensureUniqueSubdomain(
   let subdomain = base;
   let n = 2;
   while (await exists(subdomain)) {
-    // Re-sanitize so the suffixed value stays a valid, length-bounded label.
-    subdomain = sanitizeSubdomain(`${base}-${n}`);
+    // Re-build so the suffixed value stays a valid, length-bounded label.
+    subdomain = buildSubdomain(base, String(n));
     n++;
   }
   return subdomain;
