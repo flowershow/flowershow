@@ -171,7 +171,8 @@
     "/journal",
     "/meta",
     "/notes",
-    "/blog/archive"
+    "/blog/archive",
+    "/markdown"
   ],
   "contentHide": [
     "/docs/sitemap.md",
