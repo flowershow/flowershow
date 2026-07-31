@@ -1,6 +1,6 @@
 ---
-title: "Publish a Digital Garden from Markdown"
-description: "Grow your notes in public. Turn a folder of Markdown into a living digital garden — knowledge graph, backlinks, and wiki-links, all automatic. Free plan forever."
+title: "Publish Your Digital Garden"
+description: "Grow your notes in public. Turn a folder of Markdown into a living digital garden with knowledge graph, backlinks, and wiki-links. Free plan forever."
 layout: plain
 showToc: false
 showEditLink: false

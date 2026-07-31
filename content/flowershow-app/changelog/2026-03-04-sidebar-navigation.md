@@ -1,7 +1,7 @@
 ---
 title: "Sidebar: on by default, redesigned on mobile, and configurable per route"
 date: 2026-03-04
-description: The sidebar is now enabled for all new sites, has a dedicated slide-out drawer on mobile with breadcrumb navigation, and can be restricted to specific URL paths.
+description: The sidebar is now on for all new sites, has a slide-out drawer on mobile with breadcrumb navigation, and can be restricted to specific URL paths.
 authors:
   - Ola Rubaj
 image: "[[assets/sidebar-navigation.png]]"

@@ -144,7 +144,7 @@ showComments: false
   <div className="lg:col-span-3 p-8 lg:pl-12">
     <div className="lg:max-w-lg">
       <h2 className="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">No setup ceremony.</h2>
-      <img src="/assets/uses/docs/frictions.webp" className="mt-6 w-full" loading="lazy" />
+      <img src="/assets/uses/docs/frictions.webp" className="mt-6 w-full" loading="lazy" alt="The setup friction of traditional documentation site generators" />
       <p className="mt-8 text-3xl font-semibold text-gray-900">Upload your files. That's enough.</p>
     </div>
   </div>

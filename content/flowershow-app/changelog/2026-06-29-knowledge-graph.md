@@ -1,5 +1,5 @@
 ---
-title: "Knowledge Graph"
+title: "Knowledge graph is now live"
 date: 2026-06-29
 description: Interactive graph of how your notes connect — one of Obsidian's most beloved features, now in Flowershow.
 authors:
@@ -22,3 +22,5 @@ The graph is off by default. Turn it on site-wide in **Settings → Show Knowled
   "showKnowledgeGraph": true
 }
 ```
+
+Learn more in the [Knowledge Graph reference](/docs/reference/knowledge-graph).

@@ -1,6 +1,6 @@
 ---
 title: Best Cloud Blogging Platforms for Obsidian Users
-description: A detailed comparison of blog publishing platforms for Obsidian users. Analyzes each platform's workflow, Markdown support, pricing, and key features to help you choose the right solution for your needs.
+description: A detailed comparison of blog publishing platforms for Obsidian users — workflow, Markdown support, pricing, and features to help you choose the right one.
 date: 2025-07-23
 authors:
   - olayway

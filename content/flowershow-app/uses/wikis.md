@@ -33,6 +33,7 @@ showComments: false
         <img
             src="/assets/uses/wikis/demo-wikis.webp"
             className="w-full h-full object-contain"
+            alt="A wiki built from Markdown files and published with Flowershow"
           />
       </div>
       <p className="mt-8 text-sm text-gray-400 text-center">

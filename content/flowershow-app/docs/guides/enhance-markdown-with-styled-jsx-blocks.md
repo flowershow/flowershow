@@ -1,6 +1,6 @@
 ---
 title: Enhancing Markdown Pages with Styled JSX Blocks
-description: Learn how to transform simple markdown content into beautiful, JSX components styled with Tailwind CSS. We'll walk through the complete process using a real-world example.
+description: Learn how to transform plain markdown into beautiful JSX components styled with Tailwind CSS, walking through the complete process with a real-world example.
 date: 2025-06-05
 authors:
   - olayway

@@ -1,7 +1,7 @@
 ---
 title: "All site settings now configurable from the dashboard"
 date: 2026-05-21
-description: Most config options previously required editing config.json manually. They're now all in the dashboard — theme, nav links, analytics, content filters, redirects, sidebar, and more.
+description: Config options that once required editing config.json are now all in the dashboard — theme, nav links, analytics, content filters, redirects, sidebar, and more.
 authors:
   - olayway
 showToc: false

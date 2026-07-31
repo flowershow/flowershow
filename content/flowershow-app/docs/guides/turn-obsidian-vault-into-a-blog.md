@@ -1,5 +1,6 @@
 ---
 title: Turn Your Obsidian Vault into a Blog with Flowershow
+description: A step-by-step guide to turning your Obsidian vault into a published blog with Flowershow — sections, authors, navigation, and themes, all from Markdown.
 date: 2025-10-07
 authors:
   - olayway

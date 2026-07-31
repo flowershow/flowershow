@@ -1,6 +1,6 @@
 ---
 title: Flowershow now Supports Full CommonMark + GitHub Flavored Markdown
-description: "Flowershow now fully supports the CommonMark and GitHub-Flavored Markdown specs — including tables, footnotes, task lists, and more — making your Markdown render exactly as you wrote it, across any platform."
+description: "Flowershow now fully supports CommonMark and GitHub-Flavored Markdown — tables, footnotes, task lists, and more — so your Markdown renders exactly as written."
 authors:
   - olayway
 date: 2025-11-10

@@ -1,5 +1,5 @@
 ---
-title: "URL Redirects"
+title: "Announcing URL Redirects"
 date: 2025-10-20
 description: "Flowershow now supports URL redirects, making it easier to manage your content's URLs and maintain backwards compatibility."
 authors:
@@ -44,3 +44,5 @@ Here's a real example from our own config.json:
 ```
 
 In this case, we've renamed some documentation page to better reflect their content. Thanks to redirects, all existing links to these pages will automatically forward users to the new locations.
+
+See the [URL Redirects reference](/docs/reference/redirects) for full configuration details.

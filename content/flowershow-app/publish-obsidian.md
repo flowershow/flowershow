@@ -1,5 +1,5 @@
 ---
-title: "Publish Your Obsidian Vault as a Website — Free Obsidian Publish Alternative"
+title: "Free Obsidian Publish Alternative — Publish Your Vault"
 description: "Turn your Obsidian vault into a live website with wiki links, graph view, and search. The best free alternative to Obsidian Publish."
 layout: plain
 showToc: false

@@ -1,5 +1,6 @@
 ---
 title: Flowershow blog feature design
+description: An early design note on how Flowershow's blog feature works — the thinking behind blog sections, post listings, and author pages.
 date: 2023-05-18
 authors:
   - rufuspollock

@@ -317,6 +317,7 @@ showComments: false
         <img
           src="/assets/uses/blog/blog-themes.webp"
           className="w-full h-full object-contain"
+          alt="Choosing a theme for a Markdown blog in Flowershow"
         ></img>
       </div>
     </div>

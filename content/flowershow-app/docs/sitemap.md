@@ -57,7 +57,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Home page](/docs/reference/home-page) — How Flowershow resolves which file to show at the root of your site.
 - [Knowledge Graph](/docs/reference/knowledge-graph) — Show an interactive graph of how your notes connect to each other.
 - [List component](/docs/reference/list-component) — Create organized lists and content catalogs by automatically listing files in a specified directory.
-- [Math equations](/docs/reference/math) — Write math equestions with LaTeX syntax.
+- [Math equations](/docs/reference/math) — Write math equations with LaTeX syntax.
 - [Mermaid diagrams](/docs/reference/mermaid) — Create diagrams and visualizations using a popular, text-based syntax.
 - [Navbar configuration](/docs/reference/navbar) — Set logo, title, links and socials in your navigation bar.
 - [Obsidian Bases Syntax (Beta)](/docs/reference/obsidian-bases) — Detailed reference for Obsidian Bases syntax, including filters, formulas, and view types.

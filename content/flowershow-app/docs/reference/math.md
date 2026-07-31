@@ -1,6 +1,6 @@
 ---
 title: Math equations
-description: Write math equestions with LaTeX syntax.
+description: Write math equations with LaTeX syntax.
 ---
 
 ## Inline math

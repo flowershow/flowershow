@@ -3,7 +3,7 @@ title: Flowershow Cloud Beta Testing
 date: 2025-02-19
 authors:
   - olayway
-description: We’re super excited to share that the public launch of Flowershow Cloud is just around the corner, and we need your help to make it even better! Get early access now!
+description: The public launch of Flowershow Cloud is just around the corner, and we need your help to make it even better. Get early access now!
 ---
 
 Hey everyone 👋!
