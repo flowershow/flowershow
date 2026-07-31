@@ -16,16 +16,19 @@ Place `config.json` in the root of your published content folder. For most users
 
 ## Options
 
-### `title`
+### `siteName`
 
 **Type:** `string`  
-**Default:** —
+**Default:** your project name
 
-Site name appended as a suffix to every page title in browser tabs, search results, and social shares. [[seo-social-metadata|Learn more →]]
+Your site's name — appended as a suffix to every page title (browser tabs, search results, social shares) and shown in the navbar and footer. Overrides the name set in the dashboard under **Settings → General → Name**. [[seo-social-metadata|Learn more →]]
 
 ```json
-"title": "My Digital Garden"
+"siteName": "My Digital Garden"
 ```
+
+> [!note]
+> `title` is still accepted as a deprecated alias for `siteName`. Existing configs keep working, but new sites should use `siteName`.
 
 ---
 

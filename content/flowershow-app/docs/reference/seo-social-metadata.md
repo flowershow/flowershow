@@ -5,15 +5,17 @@ description: Configure SEO titles, descriptions, and social media images for bet
 
 Configure site-wide SEO defaults from the **Flowershow dashboard** under **Site Settings → General**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
 
-## Site title
+## Site name
 
-Go to **Settings → General → Site Title** and enter your site name.
+Your site's name is set from **Settings → General → Name**.
 
-This value is appended as a suffix to every page title and appears in browser tabs, search results, social shares, and bookmarks. It doesn't affect how the title displays on the page itself. Keep the combined title under 60 characters for best results.
+This value is appended as a suffix to every page title and appears in browser tabs, search results, social shares, and bookmarks. It's also shown in your site's navbar and footer. It doesn't affect how the title displays in the page body itself. Keep the combined title under 60 characters for best results.
 
 **Page title:** "My Guide"  
-**Site title:** "My Site"  
+**Site name:** "My Site"  
 **Final SEO title:** "My Guide - My Site"
+
+When a page's title is the same as your site name — for example, your home page — the name isn't repeated. The SEO title is just "My Site" rather than "My Site - My Site".
 
 ## Default description
 
@@ -79,15 +81,18 @@ If you want to version-control your configuration, or have your editor's AI agen
 
 ```json
 {
-  "title": "My Site Name",
+  "siteName": "My Site Name",
   "description": "Default site description.",
   "image": "/assets/default-social.jpg"
 }
 ```
 
-- `title`: Site name appended as a suffix to every page title
+- `siteName`: Your site's name, appended as a suffix to every page title. Overrides the name set in the dashboard; defaults to your project name.
 - `description`: Fallback description for pages with no frontmatter description
 - `image`: Path to the default social image (relative to site root) or an external URL
+
+> [!note]
+> `title` is still accepted as a deprecated alias for `siteName`. Existing configs keep working, but new sites should use `siteName`.
 
 ### Complete example
 
@@ -105,7 +110,7 @@ image: /assets/docker-guide-social.jpg
 
 ```json
 {
-  "title": "DevTutorials",
+  "siteName": "DevTutorials",
   "description": "Professional development tutorials for modern developers.",
   "image": "/assets/devtutorials-default.jpg"
 }

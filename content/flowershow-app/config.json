@@ -1,5 +1,5 @@
 {
-  "title": "Flowershow — Publish Markdown as a Website",
+  "siteName": "Flowershow",
   "showSidebar": true,
   "sidebar": {
     "paths": [
@@ -8,7 +8,6 @@
     ]
   },
   "nav": {
-    "title": "Flowershow",
     "links": [
       {
         "name": "Use Cases",

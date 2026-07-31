@@ -29,6 +29,7 @@ import {
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { processCanvas } from '@/lib/process-canvas';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
+import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
 import { ensureLeadingSlash } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
 import { api } from '@/trpc/server';
@@ -86,10 +87,8 @@ export async function generateMetadata(props: {
     })
     .catch(() => null);
 
-  const title =
-    siteConfig?.title && metadata?.title
-      ? `${metadata?.title} - ${siteConfig.title}`
-      : (metadata?.title ?? siteConfig?.title ?? projectName);
+  const siteName = resolveSiteName(siteConfig, site.projectName);
+  const title = buildPageTitle(metadata?.title, siteName);
   const description = metadata?.description ?? siteConfig?.description;
   const url = decodedSlug !== '/' ? `${siteUrl}${decodedSlug}` : `${siteUrl}/`;
 
