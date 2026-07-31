@@ -1,5 +1,5 @@
 ---
-title: "Markdown Documentation Site Builder | Flowershow"
+title: "Markdown Documentation Site Builder"
 description: "Turn a folder of markdown files into a searchable documentation website. Sidebar navigation, full-text search, custom domains."
 layout: plain
 showToc: false

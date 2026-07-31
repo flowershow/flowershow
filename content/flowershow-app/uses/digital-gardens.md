@@ -1,5 +1,5 @@
 ---
-title: "Publish a Digital Garden from Markdown | Flowershow"
+title: "Publish a Digital Garden from Markdown"
 description: "Grow your notes in public. Turn a folder of Markdown into a living digital garden — knowledge graph, backlinks, and wiki-links, all automatic. Free plan forever."
 layout: plain
 showToc: false

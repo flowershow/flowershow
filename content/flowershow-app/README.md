@@ -1,5 +1,5 @@
 ---
-title: Publish Markdown as a Website — Blogs, Docs & Knowledge Bases | Flowershow
+title: Publish Markdown as a Website — Blogs, Docs & Knowledge Bases
 description: Turn markdown files into beautiful websites in seconds. Publish Obsidian vaults, blogs, docs, and knowledge bases — free, no coding required.
 layout: plain
 showToc: false

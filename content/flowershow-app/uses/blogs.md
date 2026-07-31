@@ -1,5 +1,5 @@
 ---
-title: "Create a Markdown Blog — No Coding Required | Flowershow"
+title: "Create a Markdown Blog — No Coding Required"
 description: "Publish a beautiful blog from markdown files. Author profiles, comments, search, custom domains. Free to start."
 layout: plain
 showToc: false

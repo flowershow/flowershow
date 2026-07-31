@@ -1,5 +1,5 @@
 ---
-title: "Build a Wiki from Markdown Files | Flowershow"
+title: "Build a Wiki from Markdown Files"
 description: "Publish a wiki or knowledge base from plain markdown. Wiki links, search, and navigation — all automatic. Free plan forever."
 layout: plain
 showToc: false
