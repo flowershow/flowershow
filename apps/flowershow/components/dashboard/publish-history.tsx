@@ -171,7 +171,7 @@ function PublishRow({
                 <span className="font-mono">{shortSha}</span>
               )}
               {entry.gitCommitMessage && (
-                <span className="truncate text-stone-400">
+                <span className="min-w-0 truncate text-stone-400">
                   {entry.gitCommitMessage}
                 </span>
               )}
