@@ -73,3 +73,6 @@ packages/obsidian-plugin/main.js
 # bd worktree
 .worktrees/flowershow-kpm-2/
 .worktrees/
+
+.agents/
+.claude/

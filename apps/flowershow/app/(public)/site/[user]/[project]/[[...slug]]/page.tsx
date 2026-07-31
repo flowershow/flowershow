@@ -91,7 +91,7 @@ export async function generateMetadata(props: {
       ? `${metadata?.title} - ${siteConfig.title}`
       : (metadata?.title ?? siteConfig?.title ?? projectName);
   const description = metadata?.description ?? siteConfig?.description;
-  const url = `${siteUrl}/${decodedSlug !== '/' ? decodedSlug : ''}`;
+  const url = decodedSlug !== '/' ? `${siteUrl}${decodedSlug}` : `${siteUrl}/`;
 
   let imageUrl: string | null = config.thumbnail;
   let faviconUrl: string = config.favicon;
@@ -139,8 +139,6 @@ export async function generateMetadata(props: {
       ],
       creator: '@flowershowapp',
     },
-    // Set canonical URL to custom domain if it exists
-    // Maybe not needed since we redirect to a custom domain if it exists ?
     alternates: {
       canonical: url,
       ...(siteConfig?.enableRss && {
