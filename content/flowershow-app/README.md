@@ -38,7 +38,7 @@ showComments: false
         <span>⌨️ CLI</span>
         <span>🤖 Agent-friendly</span>
       </div>
-      <div className="mt-8 flex items-center justify-center gap-x-6 text-sm text-gray-400">
+      <div className="mt-8 flex items-center justify-center gap-x-6 text-sm text-gray-500">
         <span><strong className="text-gray-600">2,000+</strong> users</span>
         <span aria-hidden="true">·</span>
         <span><strong className="text-gray-600">1700+</strong> sites published</span>
@@ -133,7 +133,7 @@ showComments: false
       </a>
     </div>
     <div className="mt-8 text-center">
-      <a href="https://github.com/flowershow/themes" className="text-sm font-semibold text-orange-500 hover:text-orange-400">Browse all themes and usage instructions →</a>
+      <a href="https://github.com/flowershow/themes" className="text-sm font-semibold text-gray-500 hover:text-gray-700">Browse all themes and usage instructions →</a>
     </div>
   </div>
 </div>
@@ -155,7 +155,7 @@ showComments: false
         </div>
         <div>
           <dt className="font-semibold text-gray-900">⌨️ CLI</dt>
-          <dd className="mt-2 text-gray-600"><code>publish ./my-folder</code> from the terminal. No repo needed. Built for speed, automation, and local workflows. <a href="/publish" className="text-orange-500 hover:text-orange-400">Learn more →</a></dd>
+          <dd className="mt-2 text-gray-600"><code>publish ./my-folder</code> from the terminal. No repo needed. Built for speed, automation, and local workflows. <a href="/publish" className="text-gray-500 hover:text-gray-700">Learn more →</a></dd>
         </div>
         <div>
           <dt className="font-semibold text-gray-900">💎 Obsidian plugin</dt>
@@ -176,7 +176,7 @@ showComments: false
         <p>And when you work with AI agents, the Flowershow skill helps them understand your setup and make the right changes — from publishing content to editing <code>config.json</code> or writing <code>custom.css</code>.</p>
       </div>
       <div className="mt-8">
-        <a href="/about" className="text-sm font-semibold text-orange-500 hover:text-orange-400">Read the full story →</a>
+        <a href="/about" className="text-sm font-semibold text-gray-500 hover:text-gray-700">Read the full story →</a>
       </div>
     </div>
   </div>
@@ -195,7 +195,7 @@ showComments: false
         </div>
         <div>
           <dt className="font-semibold text-gray-900">✍️ Blogs</dt>
-          <dd className="mt-2 text-gray-600">A beautiful blog in minutes. Author profiles, comments, full-text search — everything you'd expect, none of the setup. <a href="/blogs" className="text-orange-500 hover:text-orange-400">See how →</a></dd>
+          <dd className="mt-2 text-gray-600">A beautiful blog in minutes. Author profiles, comments, full-text search — everything you'd expect, none of the setup. <a href="/blogs" className="text-gray-500 hover:text-gray-700">See how →</a></dd>
         </div>
         <div>
           <dt className="font-semibold text-gray-900">📚 Knowledge Bases & Docs</dt>
@@ -203,11 +203,11 @@ showComments: false
         </div>
         <div>
           <dt className="font-semibold text-gray-900">🤖 Automation & AI agents</dt>
-          <dd className="mt-2 text-gray-600">Publish from scripts, cron jobs, or AI agents. The Flowershow skill helps agents work with your existing setup — CLI, GitHub, or Obsidian. <a href="https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md" className="text-orange-500 hover:text-orange-400">Use the skill →</a></dd>
+          <dd className="mt-2 text-gray-600">Publish from scripts, cron jobs, or AI agents. The Flowershow skill helps agents work with your existing setup — CLI, GitHub, or Obsidian. <a href="https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md" className="text-gray-500 hover:text-gray-700">Use the skill →</a></dd>
         </div>
       </dl>
       <p className="mt-10 text-sm text-gray-500">
-        Also great for: <a href="/data-stories" className="text-orange-500 hover:text-orange-400">data stories</a> · <a href="/blogs" className="text-orange-500 hover:text-orange-400">landing pages</a> · wikis · team handbooks
+        Also great for: <a href="/data-stories" className="text-gray-500 hover:text-gray-700">data stories</a> · <a href="/blogs" className="text-gray-500 hover:text-gray-700">landing pages</a> · wikis · team handbooks
       </p>
     </div>
   </div>
@@ -347,7 +347,7 @@ showComments: false
       </div>
     </div>
     <p className="mt-10 text-center text-sm text-gray-500">
-      This site is published with Flowershow too! <a href="https://github.com/flowershow/flowershow/tree/main/content/flowershow-app" className="text-orange-500 hover:text-orange-400">View the source on GitHub →</a>
+      This site is published with Flowershow too! <a href="https://github.com/flowershow/flowershow/tree/main/content/flowershow-app" className="text-gray-500 hover:text-gray-700">View the source on GitHub →</a>
     </p>
   </div>
 </div>
@@ -358,7 +358,7 @@ showComments: false
       <dl className="mt-10 space-y-8">
         <div>
           <dt className="font-semibold text-gray-900">Is it really free?</dt>
-          <dd className="mt-2 text-gray-600">Yes. The free plan lets you publish one site with no time limit and no credit card required. Premium plans start at $5/month and unlock custom domains, full-text search, and more. <a href="/pricing" className="text-orange-500 hover:text-orange-400">See pricing →</a></dd>
+          <dd className="mt-2 text-gray-600">Yes. The free plan lets you publish one site with no time limit and no credit card required. Premium plans start at $5/month and unlock custom domains, full-text search, and more. <a href="/pricing" className="text-gray-500 hover:text-gray-700">See pricing →</a></dd>
         </div>
         <div>
           <dt className="font-semibold text-gray-900">What markdown does it support?</dt>
@@ -370,7 +370,7 @@ showComments: false
         </div>
         <div>
           <dt className="font-semibold text-gray-900">Can I use my own domain?</dt>
-          <dd className="mt-2 text-gray-600">Yes, on the Premium plan. Custom domains, custom favicons, and custom social images are all available. <a href="/pricing" className="text-orange-500 hover:text-orange-400">See pricing →</a></dd>
+          <dd className="mt-2 text-gray-600">Yes, on the Premium plan. Custom domains, custom favicons, and custom social images are all available. <a href="/pricing" className="text-gray-500 hover:text-gray-700">See pricing →</a></dd>
         </div>
       </dl>
     </div>
