@@ -6,7 +6,7 @@ description: Customize your site footer with navigation links and social media i
 Configure your site footer from the **Flowershow dashboard** under **Site Settings → Navigation**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
 
 > [!note]
-> The footer automatically displays your site name and a copyright notice. If no title is configured, it falls back to your project name. The year updates automatically.
+> The footer automatically displays your site name and a copyright notice. The site name comes from **Settings → General → Name** (or `siteName` in `config.json`). The year updates automatically.
 
 ## Social media links
 
@@ -40,6 +40,7 @@ Go to **Settings → Navigation → Footer Navigation** and enter your navigatio
 ```
 
 Each group requires:
+
 - `title`: Heading for the group
 - `links`: Array of link objects, each with `name` (display text) and `href` (URL or path)
 
@@ -49,7 +50,7 @@ If you want to version-control your configuration, or have your editor's AI agen
 
 ```json
 {
-  "title": "My Digital Garden",
+  "siteName": "My Digital Garden",
   "social": [
     { "label": "github", "href": "https://github.com/yourusername" },
     { "label": "twitter", "href": "https://twitter.com/yourusername" },
@@ -78,7 +79,7 @@ If you want to version-control your configuration, or have your editor's AI agen
 }
 ```
 
-- `title`: Site name shown in the footer copyright — this is only configurable via `config.json`, not from the dashboard
+- `siteName`: Your site's name, shown in the footer copyright. Overrides the name set in the dashboard (**Settings → General → Name**); defaults to your project name. `title` is still accepted as a deprecated alias.
 - `social`: Array of social link objects (same format as the dashboard JSON editor) — see [[social-links]]
 - `footer.navigation`: Array of navigation group objects (same format as the dashboard JSON editor)
 

@@ -14,6 +14,7 @@ import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { getThemeUrl } from '@/lib/get-theme';
+import { resolveSiteName } from '@/lib/site-config';
 import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
 import { TRPCReactProvider } from '@/trpc/react';
 import { api } from '@/trpc/server';
@@ -143,9 +144,10 @@ export default async function PublicLayout(props: {
     }
   }
 
-  // TODO: nav.logo is deprecated in favour of root logo — remove nav.logo fallback once migration period ends
-  const logo = siteConfig?.logo ?? siteConfig?.nav?.logo ?? appConfig.logo;
-  const title = siteConfig?.nav?.title;
+  const userLogo = siteConfig?.logo ?? siteConfig?.nav?.logo;
+  const logo = userLogo ?? appConfig.logo;
+  const siteName = resolveSiteName(siteConfig, site.projectName);
+  const navTitle = siteConfig?.nav?.title ?? (userLogo ? undefined : siteName);
   const links = siteConfig?.nav?.links;
   const social = siteConfig?.social || siteConfig?.nav?.social;
   const canHideBuiltWith = isFeatureEnabled(Feature.NoBranding, site);
@@ -250,7 +252,7 @@ export default async function PublicLayout(props: {
                   <Nav
                     logo={logo}
                     url={sitePrefix || '/'}
-                    title={title}
+                    title={navTitle}
                     links={links}
                     social={social}
                     showSearch={showSearch}
@@ -261,7 +263,7 @@ export default async function PublicLayout(props: {
                 )}
                 <div className="site-body">{children}</div>
                 <Footer
-                  siteName={siteConfig?.title || site.projectName}
+                  siteName={siteName}
                   social={social}
                   navigation={siteConfig?.footer?.navigation}
                 />

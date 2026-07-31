@@ -62,6 +62,9 @@ export interface FooterConfig {
 }
 
 export interface SiteConfig {
+  /** The site's brand/name — used as the SEO title suffix, navbar name (when not overridden by nav.title), footer publication name, and RSS channel title. */
+  siteName?: string;
+  /** @deprecated Use `siteName` instead. Still honored as a fallback for existing configs. */
   title?: string;
   description?: string;
   image?: string;

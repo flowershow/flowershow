@@ -35,7 +35,7 @@ Pages without a `date` field (e.g. documentation pages, landing pages) are exclu
 
 ## Feed metadata
 
-The feed's title and description are taken from your site's title and description settings. If no title is configured, the feed title defaults to your site's project name.
+The feed's title and description are taken from your site's name and description settings. The feed title is your site name (**Settings → General → Name**, or `siteName` in `config.json`).
 
 ## Using config.json
 
@@ -44,20 +44,20 @@ If you want to version-control your configuration, or have your editor's AI agen
 ```json
 {
   "enableRss": true,
-  "title": "My Site",
+  "siteName": "My Site",
   "description": "A site about interesting things"
 }
 ```
 
 - `enableRss`: Set to `true` to enable the RSS feed
-- `title`: Feed title (falls back to your site's project name if not set)
+- `siteName`: Feed title — your site's name (defaults to your project name). `title` is still accepted as a deprecated alias.
 - `description`: Feed description
 
 ## Frontmatter fields used
 
-| Field | Required | Used for |
-|-------|----------|----------|
-| `date` | Yes | Determines inclusion in feed and the item's publication date |
-| `title` | No | Item title (falls back to file name) |
-| `description` | No | Item summary |
-| `authors` | No | Item author(s) |
+| Field         | Required | Used for                                                     |
+| ------------- | -------- | ------------------------------------------------------------ |
+| `date`        | Yes      | Determines inclusion in feed and the item's publication date |
+| `title`       | No       | Item title (falls back to file name)                         |
+| `description` | No       | Item summary                                                 |
+| `authors`     | No       | Item author(s)                                               |

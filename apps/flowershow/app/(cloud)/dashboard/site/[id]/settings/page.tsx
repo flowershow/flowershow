@@ -263,7 +263,7 @@ export default async function SiteSettingsPage(props: {
           </div>
           <Form
             title="Name"
-            description="The name of your site. Only visible by you."
+            description="The name of your site. Shown in the navbar and footer, and appended as a suffix to every page title (browser tabs, search results, social shares, and bookmarks)."
             inputAttrs={{
               name: 'projectName',
               type: 'text',
@@ -274,14 +274,11 @@ export default async function SiteSettingsPage(props: {
               pattern: '^(?=.*[a-zA-Z0-9])[^/]+$',
             }}
             handleSubmit={renameSite}
-            helpText={`It must contain at least one letter or number and cannot contain "/". Renaming does not change your site's URL. Maximum ${SITE_NAME_MAX_LENGTH} characters.`}
-          />
-          <Form
-            title="Site Title"
-            description="Your site name, appended as a suffix to every page title. Appears in browser tabs, search results, social shares, and bookmarks."
             helpText={
               <>
-                Max 40 characters.{' '}
+                It must contain at least one letter or number and cannot contain
+                &quot;/&quot;. Renaming does not change your site&apos;s URL.
+                Maximum {SITE_NAME_MAX_LENGTH} characters.{' '}
                 <a
                   className="underline"
                   href="https://flowershow.app/docs/reference/seo-social-metadata"
@@ -291,14 +288,6 @@ export default async function SiteSettingsPage(props: {
                 </a>
               </>
             }
-            inputAttrs={{
-              name: 'title',
-              type: 'text',
-              defaultValue: siteConfig?.title ?? '',
-              placeholder: 'My Awesome Site',
-              maxLength: 40,
-            }}
-            handleSubmit={updateDbConfig}
           />
           <Form
             title="Description"

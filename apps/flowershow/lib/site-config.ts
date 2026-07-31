@@ -71,3 +71,28 @@ export function resolveSiteConfig(
   }
   return resolved;
 }
+
+/**
+ * Resolves the site's brand/name — the single value shown as the SEO title
+ * suffix, navbar name, footer publication name, and RSS channel title.
+ */
+export function resolveSiteName(
+  siteConfig: SiteConfig | null | undefined,
+  projectName: string,
+): string {
+  return siteConfig?.siteName ?? siteConfig?.title ?? projectName;
+}
+
+/**
+ * Builds a page's `<title>` from the page title and the resolved brand.
+ */
+export function buildPageTitle(
+  pageTitle: string | null | undefined,
+  siteName: string,
+): string {
+  if (!pageTitle) return siteName;
+  if (pageTitle.trim().toLowerCase() === siteName.trim().toLowerCase()) {
+    return siteName;
+  }
+  return `${pageTitle} - ${siteName}`;
+}

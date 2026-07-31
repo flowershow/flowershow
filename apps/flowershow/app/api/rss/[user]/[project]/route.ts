@@ -5,7 +5,7 @@ import { fetchFile } from '@/lib/content-store';
 import { getSiteUrl } from '@/lib/get-site-url';
 import { buildRssFeed } from '@/lib/rss';
 import { hasSiteAccess } from '@/lib/site-access';
-import { resolveSiteConfig } from '@/lib/site-config';
+import { resolveSiteConfig, resolveSiteName } from '@/lib/site-config';
 import prisma from '@/server/db';
 import { Prisma } from '@prisma/client';
 
@@ -83,9 +83,8 @@ export async function GET(
   }
 
   const siteUrl = getSiteUrl(site);
-  const siteTitle = siteConfig.title ?? site.projectName;
-  const siteDescription =
-    siteConfig.description ?? `${site.projectName} RSS Feed`;
+  const siteTitle = resolveSiteName(siteConfig, site.projectName);
+  const siteDescription = siteConfig.description ?? `${siteTitle} RSS Feed`;
 
   const xml = buildRssFeed(
     { siteUrl, title: siteTitle, description: siteDescription },

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { resolveSiteConfig } from './site-config';
+import {
+  buildPageTitle,
+  resolveSiteConfig,
+  resolveSiteName,
+} from './site-config';
 
 describe('resolveSiteConfig', () => {
   it('returns empty object when all inputs are null', () => {
@@ -67,5 +71,40 @@ describe('resolveSiteConfig', () => {
     const file = { theme: 'forest' };
     const result = resolveSiteConfig(db, file);
     expect(result.theme).toBe('forest');
+  });
+});
+
+describe('resolveSiteName', () => {
+  it('prefers siteName over the deprecated title and the project name', () => {
+    expect(
+      resolveSiteName({ siteName: 'Brand', title: 'Old' }, 'my-project'),
+    ).toBe('Brand');
+  });
+
+  it('falls back to the deprecated title when siteName is unset', () => {
+    expect(resolveSiteName({ title: 'Old Brand' }, 'my-project')).toBe(
+      'Old Brand',
+    );
+  });
+
+  it('falls back to the project name when neither is set', () => {
+    expect(resolveSiteName({}, 'my-project')).toBe('my-project');
+    expect(resolveSiteName(null, 'my-project')).toBe('my-project');
+  });
+});
+
+describe('buildPageTitle', () => {
+  it('appends the brand as a suffix to the page title', () => {
+    expect(buildPageTitle('About', 'My Site')).toBe('About - My Site');
+  });
+
+  it('returns the brand alone when the page has no title', () => {
+    expect(buildPageTitle(undefined, 'My Site')).toBe('My Site');
+    expect(buildPageTitle('', 'My Site')).toBe('My Site');
+  });
+
+  it('deduplicates when the page title equals the brand (case-insensitive)', () => {
+    expect(buildPageTitle('My Site', 'My Site')).toBe('My Site');
+    expect(buildPageTitle('  my site ', 'My Site')).toBe('My Site');
   });
 });

@@ -13,7 +13,9 @@ Configure your site's navigation bar from the **Flowershow dashboard**, or using
 Go to **Settings → Navigation** and set:
 
 - **Logo** — upload an image file
-- **Nav Title** — the text shown as your site title in the navbar
+- **Nav Title** — the text shown next to the logo in the navbar
+
+If you don't set a nav title, your site name (from **Settings → General → Name**) is shown next to the logo by default — unless you've uploaded your own logo, in which case the logo stands alone. Set a nav title to override this with different text.
 
 > [!note]
 > To use a file path, external URL, or emoji as your logo, use `config.json` — the dashboard logo field accepts image uploads only.

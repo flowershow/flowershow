@@ -19,6 +19,9 @@ vi.mock('@/lib/site-config', () => ({
   resolveSiteConfig: vi
     .fn()
     .mockReturnValue({ enableRss: true, title: 't', description: 'd' }),
+  resolveSiteName: vi.fn(
+    (config, projectName) => config?.siteName ?? config?.title ?? projectName,
+  ),
 }));
 
 vi.mock('@/lib/get-site-url', () => ({
