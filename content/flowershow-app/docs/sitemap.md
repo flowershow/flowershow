@@ -28,14 +28,14 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Styling your site](/docs/guides/custom-styles) — Customize your site's appearance — colors, fonts, and more — using CSS variables and a single custom.css file.
 - [Debugging 404 pages](/docs/guides/debug-404s) — Troubleshoot and fix 404 errors on your Flowershow site.
 - [Debugging MDX Errors](/docs/guides/debug-mdx-errors) — Struggling with MDX errors? This guide explains the most common MDX parsing issues, how to avoid them, and how to fix them fast.
-- [Enhancing Markdown Pages with Styled JSX Blocks](/docs/guides/enhance-markdown-with-styled-jsx-blocks) — Learn how to transform simple markdown content into beautiful, JSX components styled with Tailwind CSS. We'll walk through the complete process using a real-world example.
+- [Enhancing Markdown Pages with Styled JSX Blocks](/docs/guides/enhance-markdown-with-styled-jsx-blocks) — Learn how to transform plain markdown into beautiful JSX components styled with Tailwind CSS, walking through the complete process with a real-world example.
 - [Newsletter and Subscription Forms](/docs/guides/forms) — Learn how to integrate newsletter signup forms, contact forms, and surveys into your Flowershow site
-- [Publishing a Blog](/docs/guides/publish-blog) — A comprehensive guide on setting up a blog on your Flowershow site — from creating a blog section to configuring the blog home page, adding authors, navigation, and applying themes.
+- [Publishing a Blog](/docs/guides/publish-blog) — A complete guide to setting up a blog on Flowershow — create a blog section, configure the home page, add authors and navigation, and apply themes.
 - [Publishing from the Terminal](/docs/guides/publish-from-terminal) — A step-by-step tutorial covering installation, publishing, syncing changes, and managing your sites from the command line.
 - [Publishing a GitHub Repo with Markdown](/docs/guides/publish-github-repo) — Learn how to publish your repository containing markdown files with Flowershow in 2 simple steps.
 - [Publishing Your Obsidian Vault](/docs/guides/publish-obsidian-vault) — Learn how to publish your Obsidian Vault quickly and easily using Flowershow. We'll go through four simple steps to get your notes online. Let's get started!
 - [Publish Your Obsidian Vault with Enveloppe + Flowershow](/docs/guides/publish-vault-with-enveloppe) — Learn how to set up the Enveloppe plugin in Obsidian to publish your vault with Flowershow
-- [Turn Your Obsidian Vault into a Blog with Flowershow](/docs/guides/turn-obsidian-vault-into-a-blog)
+- [Turn Your Obsidian Vault into a Blog with Flowershow](/docs/guides/turn-obsidian-vault-into-a-blog) — A step-by-step guide to turning your Obsidian vault into a published blog with Flowershow — sections, authors, navigation, and themes, all from Markdown.
 
 ## Reference
 
@@ -80,4 +80,4 @@ An index of all documentation pages. Fetch this file to discover available docs 
 ## Agents
 
 - [Markdown access](/docs/agents/markdown-access) — Every page on a Flowershow site is also served as raw markdown. Append .md to any URL to get clean, agent-readable content.
-- [Skills](/docs/agents/skills) — Install the Flowershow skill to let your AI assistant publish and manage Flowershow sites — whether you publish via the fl CLI, a GitHub repository, or the Obsidian plugin.
+- [Skills](/docs/agents/skills) — Install the Flowershow skill so your AI assistant can publish and manage Flowershow sites — via the fl CLI, a GitHub repository, or the Obsidian plugin.
