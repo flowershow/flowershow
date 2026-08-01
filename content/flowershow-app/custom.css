@@ -114,11 +114,9 @@
 
 .fs-root .textlink {
   display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 15px;
-  color: var(--ink); background-image: linear-gradient(var(--rose), var(--rose));
-  background-size: 0% 1.5px; background-repeat: no-repeat; background-position: 0 100%;
-  transition: background-size .2s ease;
+  color: var(--ink); transition: color .2s ease;
 }
-.fs-root .textlink:hover { background-size: 100% 1.5px; color: var(--rose-deep); }
+.fs-root .textlink:hover { color: var(--rose-deep); }
 .fs-root .textlink .arw { transition: transform .15s ease; }
 .fs-root .textlink:hover .arw { transform: translateX(3px); }
 
@@ -184,7 +182,7 @@
 .fs-root .demo-media iframe { width: 100%; height: 100%; border: 0; display: block; }
 .fs-root .cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-bottom: 20px; }
 .fs-root .gh-star {
-  display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 16px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 46px; padding: 0 16px;
   border: 1px solid var(--hairline-strong); border-radius: 9px; font-size: 14px; font-weight: 600;
   color: var(--ink); background: var(--canvas); transition: border-color .15s ease;
 }
@@ -251,6 +249,8 @@
 }
 .fs-root .feature-tile:nth-child(odd) { padding-right: 44px; }
 .fs-root .feature-tile:nth-child(even) { padding-left: 44px; border-left: 1px solid var(--hairline-strong); }
+/* First row sits directly under the section heading — no rule above it */
+.fs-root .feature-tile:nth-child(1), .fs-root .feature-tile:nth-child(2) { border-top: none; padding-top: 0; }
 .fs-root .ft-head {
   display: flex; align-items: center; gap: 9px; margin: 0;
   font-family: var(--sans); font-size: 15px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em;
@@ -277,27 +277,30 @@
 }
 .fs-root .ft-vis > .panel { position: absolute; left: 0; right: 0; top: 0; }
 
-/* Features — simple ruled row (title + description, no visual) */
+/* Features — simple ruled row (title + description, no visual).
+   Column dividers are drawn with border-left; the leftmost cell of each row is
+   kept flush + border-free. Every breakpoint overrides with matching nth-child
+   specificity so the single-column layout can't inherit a stray divider. */
 .fs-root .feature-row { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0;
   border-top: 1px solid var(--hairline-strong); }
-.fs-root .feature-mini { display: flex; flex-direction: column; padding: 30px 26px 8px 0; }
-.fs-root .feature-mini + .feature-mini { border-left: 1px solid var(--hairline-strong); padding-left: 26px; }
+.fs-root .feature-mini { display: flex; flex-direction: column; padding: 30px 26px 30px;
+  border-left: 1px solid var(--hairline-strong); }
+.fs-root .feature-mini:nth-child(4n+1) { border-left: none; padding-left: 0; }
 .fs-root .feature-mini dt, .fs-root .feature-mini dd { margin: 0; }
 .fs-root .feature-mini h3 { font-family: var(--sans); font-size: 15px; font-weight: 600;
   color: var(--ink); letter-spacing: -0.01em; }
 .fs-root .feature-mini p { margin: 8px 0 0; color: var(--muted); font-size: 13.5px; line-height: 1.55; }
 @media (max-width: 760px) {
   .fs-root .feature-row { grid-template-columns: 1fr 1fr; }
+  .fs-root .feature-mini:nth-child(n) { border-left: 1px solid var(--hairline-strong); padding-left: 26px; }
   .fs-root .feature-mini:nth-child(2n+1) { border-left: none; padding-left: 0; }
-  .fs-root .feature-mini:nth-child(2n) { border-left: 1px solid var(--hairline-strong); padding-left: 26px; }
-  .fs-root .feature-mini:nth-child(n+3) { border-top: 1px solid var(--hairline-strong); padding-top: 30px; }
-  .fs-root .feature-mini { padding-right: 24px; }
+  .fs-root .feature-mini:nth-child(n+3) { border-top: 1px solid var(--hairline-strong); }
 }
 @media (max-width: 480px) {
   .fs-root .feature-row { grid-template-columns: 1fr; }
-  .fs-root .feature-mini { border-left: none; padding-left: 0; padding-right: 0;
-    border-top: 1px solid var(--hairline-strong); padding-top: 28px; }
-  .fs-root .feature-mini:first-child { border-top: none; }
+  .fs-root .feature-mini:nth-child(n) { border-left: none; padding-left: 0; padding-right: 0; }
+  .fs-root .feature-mini:nth-child(n+2) { border-top: 1px solid var(--hairline-strong); }
+  .fs-root .feature-mini:nth-child(1) { border-top: none; }
 }
 
 /* Vis — markdown code panel */
@@ -382,7 +385,7 @@
 .fs-root .self-note { text-align: center; margin-top: 56px; font-size: 15px; color: var(--muted); }
 
 /* ---------- FAQ — divider list ---------- */
-.fs-root .faq-grid { max-width: 780px; margin: 0 auto; border-top: 1px solid var(--hairline-strong); }
+.fs-root .faq-grid { max-width: 780px; margin: 0 auto; }
 .fs-root .faq-item { padding: 26px 2px; border-bottom: 1px solid var(--hairline-strong); }
 .fs-root .faq-item h3 { font-size: 1.075rem; margin-bottom: 10px; }
 .fs-root .faq-item p { color: var(--muted); font-size: 15.5px; line-height: 1.6; }
@@ -420,6 +423,8 @@
   .fs-root .feature-tile:nth-child(even) { padding-left: 0; border-left: none; }
   .fs-root .feature-tile:nth-child(odd) .ft-docs { right: 0; }
   .fs-root .feature-tile { min-height: 300px; }
+  /* Single column now — tile 2 needs its divider back (only tile 1 stays flush) */
+  .fs-root .feature-tile:nth-child(2) { border-top: 1px solid var(--hairline-strong); padding-top: 34px; }
 }
 @media (max-width: 720px) {
   .fs-root { font-size: 16px; }

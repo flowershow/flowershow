@@ -24,10 +24,10 @@ showComments: false
           <p className="microcopy"><b>Free forever</b>, no credit card required</p>
         </div>
         <div className="hero-media reveal">
-          <img className="hero-slide" src="/assets/home/garden.png" alt="A digital garden published with Flowershow — sidebar navigation and an interactive backlinks graph" fetchPriority="high" decoding="async" />
+          <img className="hero-slide" src="/assets/home/blog.png" alt="A blog published with Flowershow" fetchPriority="high" decoding="async" />
           <img className="hero-slide" src="/assets/home/wiki.png" alt="A wiki published with Flowershow" loading="lazy" fetchPriority="low" decoding="async" />
-          <img className="hero-slide" src="/assets/home/blog.png" alt="A blog published with Flowershow" loading="lazy" fetchPriority="low" decoding="async" />
           <img className="hero-slide" src="/assets/home/docs.png" alt="A documentation site published with Flowershow" loading="lazy" fetchPriority="low" decoding="async" />
+          <img className="hero-slide" src="/assets/home/garden.png" alt="A digital garden published with Flowershow — sidebar navigation and an interactive backlinks graph" loading="lazy" fetchPriority="low" decoding="async"/>
         </div>
       </div>
     </section>
@@ -81,7 +81,7 @@ showComments: false
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19h8" /><path d="m4 17 6-6-6-6" /></svg>
             </span>
             <h3>CLI</h3>
-            <p>Publish straight from the terminal with <code>fl</code>.</p>
+            <p>Publish straight from the terminal.</p>
             <a className="wf-go" href="/cli" aria-label="Publish with the CLI"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></a>
           </div>
         </div>
