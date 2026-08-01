@@ -2172,7 +2172,7 @@
       display: none;
     }
   }
-
+  
   .rendered-mdx.is-plain {
     font-family: var(--font-heading);
   }
@@ -2208,11 +2208,6 @@
     .rendered-mdx .heading-link {
       visibility: hidden;
     }
-  }
-
-  /* Hide second h1 on any page */
-  .rendered-mdx section:first-of-type h1:first-child {
-    display: none;
   }
 
   .rendered-mdx ul.contains-task-list {
