@@ -24,10 +24,10 @@ showComments: false
           <p className="microcopy"><b>Free forever</b>, no credit card required</p>
         </div>
         <div className="hero-media reveal">
-          <img className="hero-slide" src="/assets/home/garden.png" alt="A digital garden published with Flowershow — sidebar navigation and an interactive backlinks graph" />
-          <img className="hero-slide" src="/assets/home/wiki.png" alt="A wiki published with Flowershow" />
-          <img className="hero-slide" src="/assets/home/blog.png" alt="A blog published with Flowershow" />
-          <img className="hero-slide" src="/assets/home/docs.png" alt="A documentation site published with Flowershow" />
+          <img className="hero-slide" src="/assets/home/garden.png" alt="A digital garden published with Flowershow — sidebar navigation and an interactive backlinks graph" fetchPriority="high" decoding="async" />
+          <img className="hero-slide" src="/assets/home/wiki.png" alt="A wiki published with Flowershow" loading="lazy" fetchPriority="low" decoding="async" />
+          <img className="hero-slide" src="/assets/home/blog.png" alt="A blog published with Flowershow" loading="lazy" fetchPriority="low" decoding="async" />
+          <img className="hero-slide" src="/assets/home/docs.png" alt="A documentation site published with Flowershow" loading="lazy" fetchPriority="low" decoding="async" />
         </div>
       </div>
     </section>
