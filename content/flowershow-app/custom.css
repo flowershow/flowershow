@@ -145,10 +145,43 @@
   border: 1px solid var(--hairline);
   box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 30px 70px -28px rgba(17,13,15,.30);
   width: 100%;
-  aspect-ratio: 16 / 8;
+  aspect-ratio: 2940 / 1848; /* matches the hero screenshots so nothing is cropped */
   background: linear-gradient(135deg, var(--rose-tint) 0%, #ffffff 55%, var(--surface-card) 100%);
 }
 .fs-root .hero-img { width: 100%; height: 100%; object-fit: cover; object-position: left top; }
+
+/* Hero slideshow — 4 use-case screenshots crossfading in a loop.
+   Each slide is a full-quality static image; opacity is animated with a shared
+   keyframe, staggered per slide. No JS needed (MDX can't run <script>). */
+.fs-root .hero-slide {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: left top;
+  opacity: 0; animation: heroSlide 24s linear infinite;
+}
+.fs-root .hero-slide:nth-child(1) { animation-delay: 0s; }
+.fs-root .hero-slide:nth-child(2) { animation-delay: 6s; }
+.fs-root .hero-slide:nth-child(3) { animation-delay: 12s; }
+.fs-root .hero-slide:nth-child(4) { animation-delay: 18s; }
+@keyframes heroSlide {
+  0%   { opacity: 0; }
+  4%   { opacity: 1; }
+  25%  { opacity: 1; }
+  29%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fs-root .hero-slide { animation: none; }
+  .fs-root .hero-slide:first-child { opacity: 1; }
+}
+
+/* ---------- Demo video — framed 16/9 embed near the foot of the page ---------- */
+.fs-root .demo-media {
+  max-width: 900px; margin: 0 auto; position: relative;
+  border-radius: 16px; overflow: hidden; border: 1px solid var(--hairline);
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 30px 70px -28px rgba(17,13,15,.30);
+  aspect-ratio: 16 / 9; background: var(--surface-card);
+}
+.fs-root .demo-media iframe { width: 100%; height: 100%; border: 0; display: block; }
 .fs-root .cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-bottom: 20px; }
 .fs-root .gh-star {
   display: inline-flex; align-items: center; gap: 8px; height: 46px; padding: 0 16px;
@@ -385,7 +418,6 @@
 /* ---------- Responsive ---------- */
 @media (max-width: 940px) {
   .fs-root .hero-copy .lede { max-width: 46ch; }
-  .fs-root .hero-media { aspect-ratio: 16 / 10; }
   .fs-root .publish-grid { grid-template-columns: 1fr; gap: 40px; align-items: start; }
   .fs-root .publish-copy { max-width: none; }
   .fs-root .wf-grid { grid-template-columns: repeat(2, 1fr); }
@@ -413,3 +445,51 @@
   .fs-root .btn, .fs-root .textlink, .fs-root .wf-card, .fs-root .show-card,
   .fs-root .show-thumb-img, .fs-root .show-link .arw { transition: none; }
 }
+
+/* ==========================================================================
+   Default Flowershow footer — restyled to match the landing mockup
+   --------------------------------------------------------------------------
+   The footer is theme chrome, rendered from config.json on EVERY page of this
+   site (home, docs, blog, changelog…). So — unlike the landing styles above —
+   these rules are intentionally NOT scoped under `.fs-root`: they apply
+   site-wide for one consistent dark footer. custom.css layers above the theme,
+   so the overrides win without !important.
+   Target DOM: apps/flowershow/components/public/footer.tsx
+   ========================================================================== */
+
+/* Full-bleed near-black band; inner content stays centered (theme handles that) */
+.site-footer {
+  background: var(--surface-dark);
+  border-top: none;
+  color: var(--on-dark-soft);
+}
+.site-footer-inner { padding: 64px 0 40px; }
+
+/* Publication name → brand, white, with the 💐 mark like the mockup */
+.site-footer-publication-name {
+  font-family: var(--sans);
+  color: var(--on-dark);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.site-footer-publication-name::before { content: "💐 "; }
+
+.site-footer-copyright { color: var(--on-dark-soft); font-size: 14px; }
+
+/* Social icons: light gray → white on hover */
+.site-footer-social-link { color: var(--on-dark-soft); }
+.site-footer-social-link:hover { color: var(--on-dark); }
+
+/* Column headings: mono, uppercase, wide-tracked */
+.site-footer-navigation-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--on-dark-soft);
+}
+
+/* Links: soft light gray → white on hover */
+.site-footer-navigation-link { font-size: 14px; color: #cfc9cd; }
+.site-footer-navigation-link:hover { color: var(--on-dark); }

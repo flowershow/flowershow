@@ -16,7 +16,7 @@ showComments: false
           <p className="lede">Digital gardens, wikis, blogs, docs — publish them all as beautiful hosted sites, straight from your markdown. No code. No config.</p>
           <div className="cta-row">
             <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
-            <a className="btn btn-secondary" href="https://demo.flowershow.app/">Watch demo <span className="arw">→</span></a>
+            <a className="btn btn-secondary" href="#demo">Watch demo <span className="arw">→</span></a>
             <a className="gh-star" href="https://github.com/flowershow/flowershow" aria-label="Star Flowershow on GitHub">
               <span aria-hidden="true">★</span> Star on GitHub <span className="cnt">1.1k</span>
             </a>
@@ -24,7 +24,10 @@ showComments: false
           <p className="microcopy"><b>Free forever</b>, no credit card required</p>
         </div>
         <div className="hero-media reveal">
-          <img src="/assets/showcases/demo.png" alt="A Flowershow site published from markdown, shown in a browser — the Flowershow demo garden" className="hero-img" />
+          <img className="hero-slide" src="/assets/home/garden.png" alt="A digital garden published with Flowershow — sidebar navigation and an interactive backlinks graph" />
+          <img className="hero-slide" src="/assets/home/wiki.png" alt="A wiki published with Flowershow" />
+          <img className="hero-slide" src="/assets/home/blog.png" alt="A blog published with Flowershow" />
+          <img className="hero-slide" src="/assets/home/docs.png" alt="A documentation site published with Flowershow" />
         </div>
       </div>
     </section>
@@ -306,6 +309,16 @@ showComments: false
             <h3>Can I use my own domain?</h3>
             <p>Yes, on the Premium plan. Custom domains, custom favicons, and custom social images are all available. <a className="textlink" href="/pricing">See pricing <span className="arw">→</span></a></p>
           </div>
+        </div>
+      </div>
+    </section>
+    <section className="section" id="demo">
+      <div className="wrap">
+        <div className="section-head reveal">
+          <h2>See it go from markdown to live site.</h2>
+        </div>
+        <div className="demo-media reveal">
+          <iframe src="https://www.youtube-nocookie.com/embed/E9mjeskpdf8?rel=0" title="Flowershow demo — publish markdown as a website" loading="lazy" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
         </div>
       </div>
     </section>
