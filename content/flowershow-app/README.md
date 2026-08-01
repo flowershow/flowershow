@@ -38,6 +38,18 @@ showComments: false
           <div className="publish-cta">
             <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
           </div>
+          <div className="publish-agent">
+            <span className="pa-lead">
+              <span className="pa-icons" aria-hidden="true">
+                <svg className="ag-claude" viewBox="0 0 24 24" fill="#D97757" role="img" aria-label="Claude Code" xmlns="http://www.w3.org/2000/svg"><path d="M21 10.5h3v3h-3v3h-1.5v3H18v-3h-1.5v3H15v-3H9v3H7.5v-3H6v3H4.5v-3H3v-3H0v-3h3v-6h18Zm-15 0h1.5v-3H6Zm10.5 0H18v-3h-1.5z" /></svg>
+                <svg className="ag-codex" viewBox="0 0 24 24" fill="#000000" role="img" aria-label="Codex" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" clipRule="evenodd" d="M8.086.457a6.105 6.105 0 013.046-.415c1.333.153 2.521.72 3.564 1.7a.117.117 0 00.107.029c1.408-.346 2.762-.224 4.061.366l.063.03.154.076c1.357.703 2.33 1.77 2.918 3.198.278.679.418 1.388.421 2.126a5.655 5.655 0 01-.18 1.631.167.167 0 00.04.155 5.982 5.982 0 011.578 2.891c.385 1.901-.01 3.615-1.183 5.14l-.182.22a6.063 6.063 0 01-2.934 1.851.162.162 0 00-.108.102c-.255.736-.511 1.364-.987 1.992-1.199 1.582-2.962 2.462-4.948 2.451-1.583-.008-2.986-.587-4.21-1.736a.145.145 0 00-.14-.032c-.518.167-1.04.191-1.604.185a5.924 5.924 0 01-2.595-.622 6.058 6.058 0 01-2.146-1.781c-.203-.269-.404-.522-.551-.821a7.74 7.74 0 01-.495-1.283 6.11 6.11 0 01-.017-3.064.166.166 0 00.008-.074.115.115 0 00-.037-.064 5.958 5.958 0 01-1.38-2.202 5.196 5.196 0 01-.333-1.589 6.915 6.915 0 01.188-2.132c.45-1.484 1.309-2.648 2.577-3.493.282-.188.55-.334.802-.438.286-.12.573-.22.861-.304a.129.129 0 00.087-.087A6.016 6.016 0 015.635 2.31C6.315 1.464 7.132.846 8.086.457zm-.804 7.85a.848.848 0 00-1.473.842l1.694 2.965-1.688 2.848a.849.849 0 001.46.864l1.94-3.272a.849.849 0 00.007-.854l-1.94-3.393zm5.446 6.24a.849.849 0 000 1.695h4.848a.849.849 0 000-1.696h-4.848z" /></svg>
+                <svg className="ag-cursor" viewBox="0 0 24 24" fill="#000000" role="img" aria-label="Cursor" xmlns="http://www.w3.org/2000/svg"><path d="M11.503.131 1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23" /></svg>
+              </span>
+              Using an AI agent?
+            </span>
+            <p className="pa-copy">The Flowershow skill publishes, configures, and styles your site — in whichever workflow you already use.</p>
+            <a className="textlink" href="/docs/agents/skills">Instructions for your agent <span className="arw">→</span></a>
+          </div>
         </div>
         <div className="wf-grid reveal">
           <div className="wf-card">
@@ -64,26 +76,13 @@ showComments: false
             <p>Publish your vault — wikilinks and graph included.</p>
             <a className="wf-go" href="/publish-obsidian" aria-label="Publish from Obsidian"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></a>
           </div>
-          <div className="wf-card wf-card-cli">
+          <div className="wf-card">
             <span className="wf-ico" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19h8" /><path d="m4 17 6-6-6-6" /></svg>
             </span>
-            <div className="wf-cli-head">
-              <h3>CLI</h3>
-              <span className="wf-agents" aria-hidden="true">
-                <svg className="ag-claude" viewBox="0 0 24 24" fill="#D97757" role="img" aria-label="Claude Code" xmlns="http://www.w3.org/2000/svg"><path d="M21 10.5h3v3h-3v3h-1.5v3H18v-3h-1.5v3H15v-3H9v3H7.5v-3H6v3H4.5v-3H3v-3H0v-3h3v-6h18Zm-15 0h1.5v-3H6Zm10.5 0H18v-3h-1.5z" /></svg>
-                <svg className="ag-codex" viewBox="0 0 24 24" fill="#000000" role="img" aria-label="Codex" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" clipRule="evenodd" d="M8.086.457a6.105 6.105 0 013.046-.415c1.333.153 2.521.72 3.564 1.7a.117.117 0 00.107.029c1.408-.346 2.762-.224 4.061.366l.063.03.154.076c1.357.703 2.33 1.77 2.918 3.198.278.679.418 1.388.421 2.126a5.655 5.655 0 01-.18 1.631.167.167 0 00.04.155 5.982 5.982 0 011.578 2.891c.385 1.901-.01 3.615-1.183 5.14l-.182.22a6.063 6.063 0 01-2.934 1.851.162.162 0 00-.108.102c-.255.736-.511 1.364-.987 1.992-1.199 1.582-2.962 2.462-4.948 2.451-1.583-.008-2.986-.587-4.21-1.736a.145.145 0 00-.14-.032c-.518.167-1.04.191-1.604.185a5.924 5.924 0 01-2.595-.622 6.058 6.058 0 01-2.146-1.781c-.203-.269-.404-.522-.551-.821a7.74 7.74 0 01-.495-1.283 6.11 6.11 0 01-.017-3.064.166.166 0 00.008-.074.115.115 0 00-.037-.064 5.958 5.958 0 01-1.38-2.202 5.196 5.196 0 01-.333-1.589 6.915 6.915 0 01.188-2.132c.45-1.484 1.309-2.648 2.577-3.493.282-.188.55-.334.802-.438.286-.12.573-.22.861-.304a.129.129 0 00.087-.087A6.016 6.016 0 015.635 2.31C6.315 1.464 7.132.846 8.086.457zm-.804 7.85a.848.848 0 00-1.473.842l1.694 2.965-1.688 2.848a.849.849 0 001.46.864l1.94-3.272a.849.849 0 00.007-.854l-1.94-3.393zm5.446 6.24a.849.849 0 000 1.695h4.848a.849.849 0 000-1.696h-4.848z" /></svg>
-                <svg className="ag-cursor" viewBox="0 0 24 24" fill="#000000" role="img" aria-label="Cursor" xmlns="http://www.w3.org/2000/svg"><path d="M11.503.131 1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23" /></svg>
-              </span>
-            </div>
-            <p>Publish straight from the terminal.</p>
-            <a className="wf-copy" href="/docs/agents/skills">
-              <span className="wf-copy-ico" aria-hidden="true">
-                <svg className="ico-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
-              </span>
-              <span className="wf-copy-label">Instructions for your agent</span>
-              <span className="wf-copy-arw" aria-hidden="true">→</span>
-            </a>
+            <h3>CLI</h3>
+            <p>Publish straight from the terminal with <code>fl</code>.</p>
+            <a className="wf-go" href="/cli" aria-label="Publish with the CLI"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></a>
           </div>
         </div>
       </div>
@@ -100,10 +99,10 @@ showComments: false
               Markdown-native
             </dt>
             <dd className="ft-desc">CommonMark, GFM, Obsidian wikilinks, Mermaid diagrams, and LaTeX math — it all just works.</dd>
-            <a className="ft-docs" href="/docs/reference/syntax">Docs <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
+            <a className="ft-docs" href="/docs/reference/syntax">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
             <div className="ft-vis">
               <div className="panel vis-code">
-                <pre><span className="c">{'# My digital garden'}</span><br /><br />{'Welcome to my '}<span className="s">{'**notes**'}</span>{'.'}<br /><br />{'- '}<span className="w">{'[[Wikilinks]]'}</span>{' just work'}<br />{'- GFM tables & task lists'}<br />{'- '}<span className="l">{'$E = mc^2$'}</span>{' LaTeX math'}<br /><br /><span className="c">{'```mermaid'}</span><br />{'graph LR'}<br />{'  Idea --> Note --> Site'}<br /><span className="c">{'```'}</span></pre>
+                <pre><span className="c"># Welcome</span><br /><br />This is my <span className="s">**site**</span>.<br /><br />- <span className="w">[[Wikilinks]]</span> just work<br />- GFM tables &amp; task lists<br />- <span className="l">$E = mc^2$</span> LaTeX math<br /><br /><span className="c">```mermaid</span><br />graph LR<br />  Idea --&gt; Note --&gt; Site<br /><span className="c">```</span></pre>
               </div>
             </div>
           </div>
@@ -113,18 +112,18 @@ showComments: false
               Own your content
             </dt>
             <dd className="ft-desc">Your files stay plain markdown — portable, Git-friendly, no lock-in. Flowershow is infrastructure, not a silo.</dd>
-            <a className="ft-docs" href="/docs">Docs <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
+            <a className="ft-docs" href="/docs">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
             <div className="ft-vis">
               <div className="panel vis-tree">
                 <ul>
-                  <li className="dir">my-garden/</li>
+                  <li className="dir">my-site/</li>
                   <li className="f l1">config.json</li>
                   <li className="f l1">index.md</li>
                   <li className="dir l1">assets/</li>
-                  <li className="f l2">profile.jpg</li>
-                  <li className="dir l1">notes/</li>
-                  <li className="f l2">second-brain.md</li>
-                  <li className="f l2">book-notes.md</li>
+                  <li className="f l2">cover.jpg</li>
+                  <li className="dir l1">pages/</li>
+                  <li className="f l2">getting-started.md</li>
+                  <li className="f l2">guide.md</li>
                 </ul>
               </div>
             </div>
@@ -135,7 +134,7 @@ showComments: false
               Themes &amp; CSS
             </dt>
             <dd className="ft-desc">Four polished themes, or roll your own with CSS and Tailwind — full control of the look.</dd>
-            <a className="ft-docs" href="/docs/reference/themes">Docs <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
+            <a className="ft-docs" href="/docs/reference/themes">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
             <div className="ft-vis">
               <div className="panel vis-themes">
                 <div className="theme-grid">
@@ -153,7 +152,7 @@ showComments: false
               Custom domains
             </dt>
             <dd className="ft-desc">Bring your own domain, favicon, and social image. Your site, your brand.</dd>
-            <a className="ft-docs" href="/docs/reference/custom-domain">Docs <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
+            <a className="ft-docs" href="/docs/reference/custom-domain">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
             <div className="ft-vis">
               <div className="panel vis-domain">
                 <div className="bar">
@@ -175,7 +174,7 @@ showComments: false
               Full-text search
             </dt>
             <dd className="ft-desc">Built-in search across every page, so readers find what they need in an instant.</dd>
-            <a className="ft-docs" href="/docs">Docs <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
+            <a className="ft-docs" href="/docs">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
             <div className="ft-vis">
               <div className="panel vis-search">
                 <div className="box">
@@ -196,7 +195,7 @@ showComments: false
               Works with AI agents
             </dt>
             <dd className="ft-desc">The Flowershow skill lets agents publish, configure, and style your site — through your CLI, GitHub, or Obsidian workflow.</dd>
-            <a className="ft-docs" href="/docs/agents/skills">Docs <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
+            <a className="ft-docs" href="/docs/agents/skills">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
             <div className="ft-vis">
               <div className="panel vis-agent">
                 <div className="chat">

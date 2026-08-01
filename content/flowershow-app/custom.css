@@ -227,30 +227,21 @@
   background: var(--surface-card); border: 1px solid var(--hairline);
   padding: 2px 6px; border-radius: 5px; }
 
-/* CLI card — agent icons beside title + link-to-docs pill */
-.fs-root .wf-card-cli { padding-right: 24px; }
-.fs-root .wf-cli-head { display: flex; align-items: center; gap: 12px; }
-.fs-root .wf-cli-head h3 { font-size: 15.5px; }
-.fs-root .wf-agents { margin-left: auto; display: inline-flex; align-items: center; gap: 9px; }
-.fs-root .wf-agents svg { display: block; }
-.fs-root .wf-agents .ag-claude { width: 20px; height: 20px; }
-.fs-root .wf-agents .ag-codex, .fs-root .wf-agents .ag-cursor { width: 16px; height: 16px; }
-.fs-root .wf-copy {
-  margin-top: 5px; align-self: flex-start;
-  display: inline-flex; align-items: center; gap: 7px;
-  background: var(--canvas); color: var(--ink);
-  font-family: var(--sans); font-size: 12.5px; font-weight: 500;
-  padding: 7px 13px 7px 11px; border-radius: 999px;
-  border: 1px solid var(--hairline-strong);
-  box-shadow: 0 1px 2px rgba(0,0,0,.05); cursor: pointer;
-  transition: background .15s ease, transform .15s ease, border-color .15s ease;
+/* Agent skill — cross-cutting note beneath the CTA (works with any workflow) */
+.fs-root .publish-agent {
+  margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--hairline);
+  display: flex; flex-direction: column; gap: 10px; max-width: 34ch;
 }
-.fs-root .wf-copy:hover { background: var(--surface-soft); border-color: var(--rose); color: var(--rose-deep); }
-.fs-root .wf-copy:active { transform: scale(.96); }
-.fs-root .wf-copy .wf-copy-ico { position: relative; display: grid; place-items: center; width: 14px; height: 14px; flex-shrink: 0; }
-.fs-root .wf-copy .wf-copy-ico svg { width: 14px; height: 14px; color: var(--muted); }
-.fs-root .wf-copy .wf-copy-arw { transition: transform .15s ease; }
-.fs-root .wf-copy:hover .wf-copy-arw { transform: translateX(3px); }
+.fs-root .publish-agent .pa-lead {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-size: 13px; font-weight: 600; color: var(--ink);
+}
+.fs-root .publish-agent .pa-icons { display: inline-flex; align-items: center; gap: 8px; }
+.fs-root .publish-agent .pa-icons svg { display: block; }
+.fs-root .publish-agent .ag-claude { width: 18px; height: 18px; }
+.fs-root .publish-agent .ag-codex, .fs-root .publish-agent .ag-cursor { width: 15px; height: 15px; }
+.fs-root .publish-agent .pa-copy { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
+.fs-root .publish-agent .textlink { font-size: 14px; }
 
 /* ---------- Features — ruled tiles with visuals ---------- */
 .fs-root .feature-grid { display: grid; grid-template-columns: 1fr 1fr; margin: 0; }
