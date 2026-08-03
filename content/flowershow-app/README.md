@@ -87,6 +87,40 @@ showComments: false
         </div>
       </div>
     </section>
+    <section className="section uses" id="use-cases">
+      <div className="wrap">
+        <div className="section-head reveal">
+          <span className="eyebrow">Use cases</span>
+          <h2>Built for the way you already write.</h2>
+          <p>Blogs, wikis, docs, digital gardens — the same folder of markdown, published four different ways.</p>
+        </div>
+        <div className="uses-grid reveal">
+          <a className="use-card use-garden" href="/uses/digital-gardens">
+            <h3>Digital gardens</h3>
+            <p className="use-desc">A living, connected garden of notes that grows as you think.</p>
+            <span className="use-link">Explore <span className="arw">→</span></span>
+          </a>
+          <a className="use-card use-blog" href="/uses/blogs">
+            <h3>Blogs</h3>
+            <p className="use-desc">A beautiful blog from your markdown — so you can just write.</p>
+            <span className="use-link">Explore <span className="arw">→</span></span>
+          </a>
+          <a className="use-card use-wiki" href="/uses/wikis">
+            <h3>Wikis</h3>
+            <p className="use-desc">A fast, searchable wiki with links wired up automatically.</p>
+            <span className="use-link">Explore <span className="arw">→</span></span>
+          </a>
+          <a className="use-card use-docs" href="/uses/docs">
+            <h3>Docs</h3>
+            <p className="use-desc">A docs site with sidebar nav and instant full-text search.</p>
+            <span className="use-link">Explore <span className="arw">→</span></span>
+          </a>
+        </div>
+        <div className="uses-cta reveal">
+          <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
+        </div>
+      </div>
+    </section>
     <section className="section section-soft" id="features">
       <div className="wrap">
         <div className="section-head reveal">
@@ -138,10 +172,10 @@ showComments: false
             <div className="ft-vis">
               <div className="panel vis-themes">
                 <div className="theme-grid">
-                  <div className="thumb"><span className="bar" style={{ background: '#111111' }}></span><span className="ln"></span><span className="ln s2"></span></div>
-                  <div className="thumb"><span className="bar" style={{ background: '#f7dd00' }}></span><span className="ln"></span><span className="ln s2"></span></div>
-                  <div className="thumb"><span className="bar" style={{ background: '#a4104c' }}></span><span className="ln"></span><span className="ln s2"></span></div>
-                  <div className="thumb"><span className="bar" style={{ background: '#e761aa' }}></span><span className="ln"></span><span className="ln s2"></span></div>
+                  <div className="thumb"><span className="bar" style="background:#111111"></span><span className="ln"></span><span className="ln s2"></span></div>
+                  <div className="thumb"><span className="bar" style="background:#f7dd00"></span><span className="ln"></span><span className="ln s2"></span></div>
+                  <div className="thumb"><span className="bar" style="background:#a4104c"></span><span className="ln"></span><span className="ln s2"></span></div>
+                  <div className="thumb"><span className="bar" style="background:#e761aa"></span><span className="ln"></span><span className="ln s2"></span></div>
                 </div>
               </div>
             </div>
@@ -229,7 +263,7 @@ showComments: false
             <dd><p>Every page shows what links to it, so related ideas surface automatically.</p></dd>
           </div>
         </dl>
-        <div style={{ textAlign: 'center', marginTop: '44px' }} className="reveal">
+        <div style="text-align:center;margin-top:44px" className="reveal">
           <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
         </div>
       </div>
@@ -321,6 +355,25 @@ showComments: false
         </div>
       </div>
     </section>
+    <section className="section section-soft" id="open-source">
+      <div className="wrap os-grid reveal">
+        <div className="os-copy">
+          <span className="eyebrow">Open source</span>
+          <h2>Built in the open</h2>
+          <p>Flowershow's core is free and open source under the AGPL — fork it, self-host it, or send a pull request.</p>
+        </div>
+        <div className="os-side">
+          <a className="os-star" href="https://github.com/flowershow/flowershow/stargazers">
+            <span className="os-star-num">1,098</span>
+            <span className="os-star-label">stars on GitHub</span>
+          </a>
+          <a className="os-gh" href="https://github.com/flowershow/flowershow">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" clipRule="evenodd" d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23a11.5 11.5 0 0 1 3.003-.404c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222 0 1.606-.014 2.898-.014 3.293 0 .322.216.694.825.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
+            View on GitHub <span className="arw">→</span>
+          </a>
+        </div>
+      </div>
+    </section>
     <section className="final">
       <div className="wrap">
         <div className="final-card reveal">
@@ -330,6 +383,9 @@ showComments: false
           <p>Join thousands of writers, researchers, and teams already publishing with Flowershow.</p>
           <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
           <p className="fine">No credit card required · Free plan, forever</p>
+        </div>
+        <div className="ph-badge reveal">
+          <a href="https://www.producthunt.com/products/flowershow/launches/flowershow?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-flowershow" target="_blank" rel="noopener noreferrer" aria-label="Flowershow on Product Hunt"><img alt="Flowershow - Publish your markdown as a beautiful website – in seconds. | Product Hunt" width="250" height="54" loading="lazy" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1099959&amp;theme=light&amp;t=1785761358225" /></a>
         </div>
       </div>
     </section>

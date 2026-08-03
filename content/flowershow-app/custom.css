@@ -241,6 +241,43 @@
 .fs-root .publish-agent .pa-copy { font-size: 13.5px; color: var(--muted); line-height: 1.5; }
 .fs-root .publish-agent .textlink { font-size: 14px; }
 
+/* ---------- Use cases — a single row of four small cards, one shared CTA ----------
+   Images live in the hero carousel and features have their own section, so each
+   card is minimal: a title, a one-line description, and an "Explore →" link (the
+   whole card links to that use case's page). A per-card brand accent (green,
+   pink, yellow, berry) is passed down as `--u-accent` and shows on the link and
+   the hover border. */
+.fs-root .uses .section-head { margin-bottom: clamp(40px, 6vw, 56px); }
+.fs-root .uses-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.fs-root .use-card {
+  display: flex; flex-direction: column;
+  background: var(--canvas); border: 1px solid var(--hairline-strong); border-radius: 14px;
+  padding: 26px 24px;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.fs-root .use-card:hover {
+  border-color: var(--u-accent);
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 18px 40px -24px rgba(17,13,15,.24);
+  transform: translateY(-2px);
+}
+.fs-root .use-card h3 {
+  font-family: var(--serif); font-size: 1.3rem; letter-spacing: -0.015em;
+  color: var(--ink); margin: 0 0 10px;
+}
+.fs-root .use-card .use-desc { color: var(--muted); font-size: 14px; line-height: 1.55; }
+.fs-root .use-link {
+  margin-top: auto; padding-top: 20px; display: inline-flex; align-items: center; gap: 6px;
+  font-weight: 600; font-size: 14px; color: var(--u-accent);
+}
+.fs-root .use-link .arw { transition: transform .15s ease; }
+.fs-root .use-card:hover .use-link .arw { transform: translateX(3px); }
+.fs-root .uses-cta { display: flex; justify-content: center; margin-top: clamp(36px, 5vw, 52px); }
+/* Per-card brand accent */
+.fs-root .use-garden { --u-accent: #067a52; }
+.fs-root .use-blog   { --u-accent: #b4185f; }
+.fs-root .use-wiki   { --u-accent: #8f7000; }
+.fs-root .use-docs   { --u-accent: #a4104c; }
+
 /* ---------- Features — ruled tiles with visuals ---------- */
 .fs-root .feature-grid { display: grid; grid-template-columns: 1fr 1fr; margin: 0; }
 .fs-root .feature-tile {
@@ -390,6 +427,44 @@
 .fs-root .faq-item h3 { font-size: 1.075rem; margin-bottom: 10px; }
 .fs-root .faq-item p { color: var(--muted); font-size: 15.5px; line-height: 1.6; }
 
+/* ---------- Open source — copy left, star count + button right ---------- */
+.fs-root .os-grid {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(40px, 6vw, 80px); align-items: center;
+}
+.fs-root .os-copy h2 { margin: 0; }
+.fs-root .os-copy p { margin-top: 16px; color: var(--muted); font-size: 1.05rem; line-height: 1.6; max-width: 42ch; }
+
+.fs-root .os-side {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 22px;
+  justify-self: end;
+}
+.fs-root .os-star {
+  display: inline-flex; flex-direction: column; align-items: flex-start; gap: 3px; color: var(--ink);
+}
+.fs-root .os-star-num {
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: clamp(2.75rem, 6vw, 4rem); font-weight: 500; letter-spacing: -0.03em; line-height: 1;
+  transition: color .15s ease;
+}
+.fs-root .os-star-label {
+  font-size: 13px; letter-spacing: 0.02em; color: var(--muted-soft);
+}
+.fs-root .os-star:hover .os-star-num { color: var(--rose-deep); }
+
+.fs-root .os-gh {
+  display: inline-flex; align-items: center; gap: 9px; height: 46px; padding: 0 20px;
+  border: 1px solid var(--hairline-strong); border-radius: 9px; font-size: 15px; font-weight: 600;
+  color: var(--ink); background: var(--canvas); transition: border-color .15s ease;
+}
+.fs-root .os-gh:hover { border-color: var(--muted); }
+.fs-root .os-gh svg { width: 19px; height: 19px; flex: none; }
+.fs-root .os-gh .arw { transition: transform .15s ease; }
+.fs-root .os-gh:hover .arw { transform: translateX(3px); }
+
+.fs-root .ph-badge { display: flex; justify-content: center; margin-top: clamp(40px, 6vw, 56px); }
+.fs-root .ph-badge img { width: 250px; height: 54px; }
+
 /* ---------- Final CTA ---------- */
 .fs-root .final { padding-top: clamp(64px, 9vw, 104px); padding-bottom: clamp(64px, 9vw, 104px); }
 .fs-root .final-card {
@@ -414,6 +489,9 @@
   .fs-root .hero-copy .lede { max-width: 46ch; }
   .fs-root .publish-grid { grid-template-columns: 1fr; gap: 40px; align-items: start; }
   .fs-root .publish-copy { max-width: none; }
+  .fs-root .os-grid { grid-template-columns: 1fr; gap: 32px; align-items: start; }
+  .fs-root .os-side { justify-self: start; }
+  .fs-root .uses-grid { grid-template-columns: repeat(2, 1fr); }
   .fs-root .wf-grid { grid-template-columns: repeat(2, 1fr); }
   .fs-root .show-grid { grid-template-columns: repeat(2, 1fr); gap: 32px 22px; }
 }
@@ -435,6 +513,7 @@
 @media (max-width: 480px) {
   .fs-root .wf-grid { grid-template-columns: 1fr; }
   .fs-root .show-grid { grid-template-columns: 1fr; }
+  .fs-root .uses-grid { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
