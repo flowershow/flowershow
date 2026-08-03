@@ -108,7 +108,9 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 	}
 	if existingSite == nil {
 		ui.PrintError(fmt.Sprintf(
-			"Site '%s' not found.\nUse 'fl' to create it first, or specify a different site name with --name.",
+			"Site '%s' not found.\n"+
+				"It may have been renamed — check its current name in your dashboard\n"+
+				"(https://cloud.flowershow.app) and pass it with --name.",
 			projectName,
 		))
 		os.Exit(1)

@@ -77,14 +77,13 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 		localCfg = localconfig.Read(folderPath)
 	}
 
-	// Reject --name if config already has a different name
+	// If --name is given and differs from the stored name, treat it as an
+	// explicit re-point request (e.g. after a server-side rename)
 	if localCfg != nil && nameFlag != "" && nameFlag != localCfg.SiteName {
-		ui.PrintError(fmt.Sprintf(
-			"Site name is already set to %q in .flowershow.\n"+
-				"To use a different name, delete .flowershow and re-run with --name.",
-			localCfg.SiteName,
+		ui.PrintWarning(fmt.Sprintf(
+			"Re-pointing this folder from %q to %q (--name overrides .flowershow).",
+			localCfg.SiteName, nameFlag,
 		))
-		return nil
 	}
 
 	// Discover files
@@ -123,10 +122,10 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 	// Resolve site name
 	var siteName string
 	switch {
-	case localCfg != nil:
-		siteName = localCfg.SiteName
 	case nameFlag != "":
 		siteName = nameFlag
+	case localCfg != nil:
+		siteName = localCfg.SiteName
 	default:
 		siteName, err = files.GetProjectName(discovered)
 		if err != nil {
@@ -142,21 +141,62 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 		return nil
 	}
 
-	// Config found but site was deleted on the server
+	// The stored name no longer resolves on the server. The most common cause
+	// is a server-side rename (e.g. the 2026 site-name unification), NOT a
+	// deletion — the site still exists under a new name, with its content and
+	// URL intact. Never discard .flowershow or auto-create a duplicate here;
+	// help the user re-point to the current name instead.
 	if localCfg != nil && existingSite == nil {
-		localconfig.Delete(folderPath)
-		ui.PrintError(fmt.Sprintf(
-			"Site %q not found. It may have been deleted.\n"+
-				"Run `fl` to create a new site.",
+		ui.PrintWarning(fmt.Sprintf(
+			"Couldn't find a site named %q.\n"+
+				"It may have been renamed — your content and URL are unchanged.\n"+
+				"Check its current name in your dashboard: https://my.flowershow.app",
 			siteName,
 		))
-		return nil
+
+		if skipConfirm {
+			ui.PrintError(fmt.Sprintf(
+				"Re-point this folder by re-running with the current name:\n"+
+					"  fl --name \"<current site name>\" %s",
+				folderPath,
+			))
+			return nil
+		}
+
+		newName, err := ui.PromptText("Enter the current site name (or leave blank to cancel):")
+		if err != nil {
+			ui.PrintError("Failed to read input: " + err.Error())
+			return nil
+		}
+		if newName == "" {
+			ui.PrintError("Cancelled. Your local .flowershow was left unchanged.")
+			return nil
+		}
+
+		renamed, err := api.GetSiteByName(userInfo.Username, newName)
+		if err != nil {
+			ui.PrintError(err.Error())
+			return nil
+		}
+		if renamed == nil {
+			ui.PrintError(fmt.Sprintf(
+				"No site named %q found either.\n"+
+					"Double-check the exact name in your dashboard and try again.",
+				newName,
+			))
+			return nil
+		}
+
+		_ = localconfig.Write(folderPath, &localconfig.Config{SiteName: newName})
+		fmt.Printf("%s\n", ui.Green(fmt.Sprintf("✓ Re-pointed .flowershow to %q", newName)))
+		return doSync(renamed.Site, newName, discovered, sp, startTime)
 	}
 
 	// Site already exists → delta sync
 	if existingSite != nil {
-		// Restore missing config if site exists (e.g. config was manually deleted)
-		if isFolderMode && localCfg == nil {
+		// Persist the name in folder mode, both when there is no local config
+		// yet and when --name re-pointed the folder to a different site.
+		if isFolderMode && (localCfg == nil || localCfg.SiteName != siteName) {
 			_ = localconfig.Write(folderPath, &localconfig.Config{SiteName: siteName})
 		}
 		return doSync(existingSite.Site, siteName, discovered, sp, startTime)

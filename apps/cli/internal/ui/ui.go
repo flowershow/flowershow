@@ -115,6 +115,16 @@ func Confirm(prompt string) (bool, error) {
 	return line == "y" || line == "yes", nil
 }
 
+// PromptText prints a prompt and returns the trimmed line the user typed.
+// Returns an empty string on a blank line or closed stdin (EOF), so callers
+// can treat empty as "cancel".
+func PromptText(prompt string) (string, error) {
+	fmt.Printf("%s ", yellow(prompt))
+	reader := bufio.NewReader(os.Stdin)
+	line, _ := reader.ReadString('\n')
+	return strings.TrimSpace(line), nil
+}
+
 // Header prints the command header.
 func Header(subtitle string) {
 	fmt.Printf("\n%s\n\n", bold("💐 Flowershow CLI - "+subtitle))

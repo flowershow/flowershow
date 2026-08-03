@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.2.0
+
+- Recover gracefully when a site has been renamed on the server. Previously, if the stored site name no longer matched (e.g. after the site-name unification), `fl` reported the site as deleted, removed the local `.flowershow`, and could create a duplicate site. It now recognises a likely rename, keeps `.flowershow` intact, and offers to re-point the folder to the site's current name.
+- `--name` now takes precedence over the name saved in `.flowershow`, so you can re-point a folder to a renamed site with `fl --name "Current Name" ./folder` (including in `--yes`/CI mode).
+- `fl sync` now hints that a "not found" site may have been renamed and can be reached with `--name`.
+
 ## 2.1.0
 
 - Publish history tracking: the CLI now sends a `publish-id` header with every R2 upload, enabling per-file status tracking and a full publish history in the Flowershow dashboard.
