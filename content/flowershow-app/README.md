@@ -12,7 +12,7 @@ showComments: false
     <section className="hero">
       <div className="wrap hero-grid">
         <div className="hero-copy reveal">
-          <h1>The simpler way to publish markdown on the web.</h1>
+          <h1>The simpler way to publish markdown as a website.</h1>
           <p className="lede">Digital gardens, wikis, blogs, docs — publish them all as beautiful hosted sites, straight from your markdown. No code.</p>
           <div className="cta-row">
             <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
@@ -130,7 +130,7 @@ showComments: false
               <span className="ft-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M2 12h20" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></svg></span>
               Custom domains
             </dt>
-            <dd className="ft-desc">Bring your own domain, favicon, and social image. Your site, your brand.</dd>
+            <dd className="ft-desc">Bring your own domain, favicon, and social image on Premium. Your site, your brand.</dd>
             <a className="ft-docs" href="/docs/reference/custom-domain">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
             <div className="ft-vis">
               <div className="panel vis-domain">
@@ -152,7 +152,7 @@ showComments: false
               <span className="ft-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg></span>
               Full-text search
             </dt>
-            <dd className="ft-desc">Built-in search across every page, so readers find what they need in an instant.</dd>
+            <dd className="ft-desc">Search across every page on Premium, so readers find what they need in an instant.</dd>
             <a className="ft-docs" href="/docs">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
             <div className="ft-vis">
               <div className="panel vis-search">
@@ -354,7 +354,7 @@ showComments: false
         <div className="faq-grid">
           <div className="faq-item reveal">
             <h3>Is it really free?</h3>
-            <p>Yes. The free plan lets you publish one site with no time limit and no credit card required. Premium plans start at $5/month and unlock custom domains, full-text search, and more. <a className="textlink" href="/pricing">See pricing <span className="arw">→</span></a></p>
+            <p>Yes. The free plan lets you publish one site on a flowershow.app subdomain — no time limit, no credit card, just a small "Built with Flowershow" footer. Premium plans start at $5/month and unlock custom domains, full-text search, and more. <a className="textlink" href="/pricing">See pricing <span className="arw">→</span></a></p>
           </div>
           <div className="faq-item reveal">
             <h3>What markdown does it support?</h3>
@@ -412,7 +412,7 @@ showComments: false
           <span className="petal p1" aria-hidden="true">💐</span>
           <span className="petal p2" aria-hidden="true">💐</span>
           <h2>Markdown to URL. Instantly. Free.</h2>
-          <p>Join thousands of writers, researchers, and teams already publishing with Flowershow.</p>
+          <p>Join the writers, researchers, and teams behind 1,700+ sites already published with Flowershow.</p>
           <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
           <p className="fine">No credit card required · Free plan, forever</p>
         </div>
