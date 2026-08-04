@@ -345,6 +345,17 @@ showComments: false
         </div>
       </div>
     </section>
+    <section className="section" id="demo">
+      <div className="wrap">
+        <div className="section-head reveal">
+          <span className="eyebrow">Demo</span>
+          <h2>See it go from markdown to live site.</h2>
+        </div>
+        <div className="demo-media reveal">
+          <iframe src="https://www.youtube-nocookie.com/embed/E9mjeskpdf8?rel=0" title="Flowershow demo — publish markdown as a website" loading="lazy" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
+        </div>
+      </div>
+    </section>
     <section className="section section-soft" id="faq">
       <div className="wrap">
         <div className="section-head reveal">
@@ -368,17 +379,6 @@ showComments: false
             <h3>Can I use my own domain?</h3>
             <p>Yes, on the Premium plan. Custom domains, custom favicons, and custom social images are all available. <a className="textlink" href="/pricing">See pricing <span className="arw">→</span></a></p>
           </div>
-        </div>
-      </div>
-    </section>
-    <section className="section" id="demo">
-      <div className="wrap">
-        <div className="section-head reveal">
-          <span className="eyebrow">Demo</span>
-          <h2>See it go from markdown to live site.</h2>
-        </div>
-        <div className="demo-media reveal">
-          <iframe src="https://www.youtube-nocookie.com/embed/E9mjeskpdf8?rel=0" title="Flowershow demo — publish markdown as a website" loading="lazy" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
         </div>
       </div>
     </section>
