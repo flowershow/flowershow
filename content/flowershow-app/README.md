@@ -277,15 +277,6 @@ showComments: false
           <h2>Powering <span className="stat-hl">1,700+</span> sites and growing</h2>
         </div>
         <div className="show-grid">
-          <a className="show-card sc-wiki reveal" href="http://lifeitself.org/">
-            <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
-            <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/lifeitself.webp" alt="Life Itself site published with Flowershow" loading="lazy" decoding="async" /></div>
-            <div className="show-body">
-              <span className="show-badge">Wiki</span>
-              <p><span className="nm">Life Itself</span> runs its research community's handbook and public wiki on Flowershow.</p>
-              <span className="show-link">lifeitself.org <span className="arw">→</span></span>
-            </div>
-          </a>
           <a className="show-card sc-garden reveal" href="https://developmentalspaces.org/">
             <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/developmentalspaces.webp" alt="Developmental Spaces site published with Flowershow" loading="lazy" decoding="async" /></div>
@@ -293,6 +284,15 @@ showComments: false
               <span className="show-badge">Garden</span>
               <p><span className="nm">Developmental Spaces</span> publishes its research library as a living, interlinked site.</p>
               <span className="show-link">developmentalspaces.org <span className="arw">→</span></span>
+            </div>
+          </a>
+          <a className="show-card sc-wiki reveal" href="http://lifeitself.org/">
+            <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
+            <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/lifeitself.webp" alt="Life Itself site published with Flowershow" loading="lazy" decoding="async" /></div>
+            <div className="show-body">
+              <span className="show-badge">Wiki</span>
+              <p><span className="nm">Life Itself</span> runs its research community's handbook and public wiki on Flowershow.</p>
+              <span className="show-link">lifeitself.org <span className="arw">→</span></span>
             </div>
           </a>
           <a className="show-card sc-docs reveal" href="https://markdowndb.com">
@@ -304,13 +304,13 @@ showComments: false
               <span className="show-link">markdowndb.com <span className="arw">→</span></span>
             </div>
           </a>
-          <a className="show-card sc-docs reveal" href="https://givewiser.org/">
+          <a className="show-card sc-garden reveal" href="https://prisca-os-saiefr.flowershow.me/">
             <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
-            <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/give-wiser.webp" alt="Give Wiser knowledge base published with Flowershow" loading="lazy" decoding="async" /></div>
+            <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/prisca.webp" alt="Prisca/OS digital garden published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
-              <span className="show-badge">Docs</span>
-              <p><span className="nm">Give Wiser</span> hosts its nonprofit's knowledge base and guides with Flowershow.</p>
-              <span className="show-link">givewiser.org <span className="arw">→</span></span>
+              <span className="show-badge">Garden</span>
+              <p><span className="nm">Prisca/OS</span> grows one student's notes on CS, security, and AI as a learn-in-public garden.</p>
+              <span className="show-link">prisca-os-saiefr.flowershow.me <span className="arw">→</span></span>
             </div>
           </a>
           <a className="show-card sc-wiki reveal" href="https://metacrisis.info/">
