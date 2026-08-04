@@ -397,8 +397,8 @@
 /* Vis — markdown code panel */
 .fs-root .vis-code { background: var(--canvas); border: 1px solid var(--hairline-strong); border-radius: 12px; padding: 18px 20px; }
 .fs-root .vis-code pre { margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.75; color: var(--body); white-space: pre; }
-.fs-root .vis-code .h { color: var(--rose-deep); } .fs-root .vis-code .w { color: #7c3aed; }
-.fs-root .vis-code .l { color: #0f766e; } .fs-root .vis-code .s { color: var(--ink); font-weight: 600; } .fs-root .vis-code .c { color: var(--muted); }
+.fs-root .vis-code .h { color: var(--berry-ink); } .fs-root .vis-code .w { color: var(--berry-ink); }
+.fs-root .vis-code .l { color: var(--muted); } .fs-root .vis-code .s { color: var(--ink); font-weight: 600; } .fs-root .vis-code .c { color: var(--muted); }
 
 /* Vis — file tree */
 .fs-root .vis-tree { background: var(--canvas); border: 1px solid var(--hairline-strong); border-radius: 12px; padding: 18px 20px; font-family: var(--mono); font-size: 12px; color: var(--body); }
@@ -482,8 +482,9 @@
 .fs-root .show-body p { margin: 0; font-size: clamp(1.1rem, 1.35vw, 1.25rem); line-height: 1.4; font-weight: 600; letter-spacing: -0.015em; color: var(--muted); }
 .fs-root .show-body .nm { color: var(--ink); }
 .fs-root .show-link { margin-top: auto; display: inline-flex; align-items: center; gap: 6px;
-  font-size: 14px; font-weight: 600; color: var(--fern-ink); font-variant-numeric: tabular-nums; }
+  font-size: 14px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; transition: color .15s ease; }
 .fs-root .show-link .arw { transition: transform .15s ease; }
+.fs-root .show-card:hover .show-link { color: var(--berry-ink); }
 .fs-root .show-card:hover .show-link .arw { transform: translateX(3px); }
 /* Type badge — same pill as the use-case cards (uppercase, white-on-accent),
    sitting at the top of the card body above the name. Accent per card matches
