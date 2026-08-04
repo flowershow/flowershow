@@ -35,8 +35,8 @@ showComments: false
       <div className="wrap">
         <div className="section-head reveal">
           <span className="eyebrow">Use cases</span>
-          <h2>Built for the way you already write.</h2>
-          <p>Blogs, wikis, docs, digital gardens — the same folder of markdown, published four different ways.</p>
+          <h2>One tool, any kind of site.</h2>
+          <p>Blogs, wikis, docs, digital gardens — all from the same folder of markdown.</p>
         </div>
         <div className="uses-grid reveal">
           <a className="use-card use-garden" href="/uses/digital-gardens">
@@ -190,24 +190,24 @@ showComments: false
             </div>
           </div>
         </dl>
-        <dl className="feature-row reveal">
-          <div className="feature-mini">
-            <dt><h3>Password protection</h3></dt>
-            <dd><p>Gate any site behind a password — share drafts and private notes with only the people you choose.</p></dd>
-          </div>
-          <div className="feature-mini">
-            <dt><h3>Comments</h3></dt>
-            <dd><p>Turn on threaded discussion so readers can respond right where they're reading.</p></dd>
-          </div>
-          <div className="feature-mini">
-            <dt><h3>Knowledge graph</h3></dt>
-            <dd><p>An interactive map of your notes and how they connect — the whole vault at a glance.</p></dd>
-          </div>
-          <div className="feature-mini">
-            <dt><h3>Backlinks</h3></dt>
-            <dd><p>Every page shows what links to it, so related ideas surface automatically.</p></dd>
-          </div>
-        </dl>
+        <div className="feature-row reveal">
+          <a className="feature-mini" href="/docs/reference/password-protection">
+            <h3>Password protection</h3>
+            <p>Gate any site behind a password — share drafts and private notes with only the people you choose.</p>
+          </a>
+          <a className="feature-mini" href="/docs/reference/comments">
+            <h3>Comments</h3>
+            <p>Turn on threaded discussion so readers can respond right where they're reading.</p>
+          </a>
+          <a className="feature-mini" href="/docs/reference/knowledge-graph">
+            <h3>Knowledge graph</h3>
+            <p>An interactive map of your notes and how they connect — the whole vault at a glance.</p>
+          </a>
+          <a className="feature-mini" href="/docs/reference/backlinks">
+            <h3>Backlinks</h3>
+            <p>Every page shows what links to it, so related ideas surface automatically.</p>
+          </a>
+        </div>
         <div style="text-align:center;margin-top:44px" className="reveal">
           <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
         </div>
@@ -274,53 +274,75 @@ showComments: false
       <div className="wrap">
         <div className="section-head reveal" style="margin-bottom:48px">
           <span className="eyebrow">Showcase</span>
-          <h2>Powering <span className="stat-hl">1,700+</span> sites</h2>
+          <h2>Powering <span className="stat-hl">1,700+</span> sites and growing</h2>
         </div>
         <div className="show-grid">
-          <a className="show-card reveal" href="http://lifeitself.org/">
+          <a className="show-card sc-wiki reveal" href="http://lifeitself.org/">
+            <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/lifeitself.webp" alt="Life Itself site published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
+              <span className="show-badge">Wiki</span>
               <p><span className="nm">Life Itself</span> runs its research community's handbook and public wiki on Flowershow.</p>
               <span className="show-link">lifeitself.org <span className="arw">→</span></span>
             </div>
           </a>
-          <a className="show-card reveal" href="https://developmentalspaces.org/">
+          <a className="show-card sc-garden reveal" href="https://developmentalspaces.org/">
+            <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/developmentalspaces.webp" alt="Developmental Spaces site published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
+              <span className="show-badge">Garden</span>
               <p><span className="nm">Developmental Spaces</span> publishes its research library as a living, interlinked site.</p>
               <span className="show-link">developmentalspaces.org <span className="arw">→</span></span>
             </div>
           </a>
-          <a className="show-card reveal" href="https://markdowndb.com">
+          <a className="show-card sc-docs reveal" href="https://markdowndb.com">
+            <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/markdowndb.webp" alt="MarkdownDB documentation published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
+              <span className="show-badge">Docs</span>
               <p><span className="nm">MarkdownDB</span> ships its developer documentation straight from markdown.</p>
               <span className="show-link">markdowndb.com <span className="arw">→</span></span>
             </div>
           </a>
-          <a className="show-card reveal" href="https://givewiser.org/">
+          <a className="show-card sc-docs reveal" href="https://givewiser.org/">
+            <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/give-wiser.webp" alt="Give Wiser knowledge base published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
+              <span className="show-badge">Docs</span>
               <p><span className="nm">Give Wiser</span> hosts its nonprofit's knowledge base and guides with Flowershow.</p>
               <span className="show-link">givewiser.org <span className="arw">→</span></span>
             </div>
           </a>
-          <a className="show-card reveal" href="https://metacrisis.info/">
+          <a className="show-card sc-wiki reveal" href="https://metacrisis.info/">
+            <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/metacrisis.webp" alt="Metacrisis wiki published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
+              <span className="show-badge">Wiki</span>
               <p><span className="nm">Metacrisis</span> maps a sprawling wiki of interconnected notes and essays.</p>
               <span className="show-link">metacrisis.info <span className="arw">→</span></span>
             </div>
           </a>
-          <a className="show-card reveal" href="https://dnd-compendium-iwuaa.flowershow.me/">
+          <a className="show-card sc-garden reveal" href="https://dnd-compendium-iwuaa.flowershow.me/">
+            <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/dnd.webp" alt="D&amp;D Compendium reference site published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
+              <span className="show-badge">Garden</span>
               <p><span className="nm">D&amp;D Compendium</span> turns a campaign vault into a public reference site.</p>
               <span className="show-link">dnd-compendium.flowershow.me <span className="arw">→</span></span>
             </div>
           </a>
         </div>
-        <p className="self-note reveal">This site is published with Flowershow too. <a className="textlink" href="https://github.com/flowershow/flowershow/tree/main/content/flowershow-app">View the source on GitHub <span className="arw">→</span></a></p>
+        <div className="self-note reveal">
+          <span className="sn-badge" aria-hidden="true">💐</span>
+          <div className="sn-copy">
+            <h3>This very site runs on Flowershow.</h3>
+            <p>The whole landing page is just markdown + HTML blocks, a config file, and some CSS — check exactly how it's built.</p>
+          </div>
+          <a className="btn btn-secondary sn-btn" href="https://github.com/flowershow/flowershow/tree/main/content/flowershow-app">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23a11.5 11.5 0 0 1 3.003-.404c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222 0 1.606-.014 2.898-.014 3.293 0 .322.216.694.825.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
+            View the source <span className="arw">→</span>
+          </a>
+        </div>
       </div>
     </section>
     <section className="section section-soft" id="faq">
@@ -387,7 +409,7 @@ showComments: false
         <div className="final-card reveal">
           <span className="petal p1" aria-hidden="true">💐</span>
           <span className="petal p2" aria-hidden="true">💐</span>
-          <h2>Content to URL. Instantly. Free.</h2>
+          <h2>Markdown to URL. Instantly. Free.</h2>
           <p>Join thousands of writers, researchers, and teams already publishing with Flowershow.</p>
           <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
           <p className="fine">No credit card required · Free plan, forever</p>
