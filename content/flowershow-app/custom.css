@@ -547,9 +547,11 @@
 .fs-root .os-copy p { margin-top: 16px; color: var(--muted); font-size: 1.05rem; line-height: 1.6; max-width: 42ch; }
 
 .fs-root .os-side {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 22px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 24px;
   justify-self: end;
 }
+/* GitHub button + Product Hunt badge sit side by side so the column stays short */
+.fs-root .os-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .fs-root .os-star {
   display: inline-flex; flex-direction: column; align-items: flex-start; gap: 3px; color: var(--ink);
 }
