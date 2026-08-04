@@ -395,7 +395,7 @@
 }
 
 /* Vis — markdown code panel */
-.fs-root .vis-code { background: var(--surface-soft); border: 1px solid var(--hairline-strong); border-radius: 12px; padding: 18px 20px; }
+.fs-root .vis-code { background: var(--canvas); border: 1px solid var(--hairline-strong); border-radius: 12px; padding: 18px 20px; }
 .fs-root .vis-code pre { margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.75; color: var(--body); white-space: pre; }
 .fs-root .vis-code .h { color: var(--rose-deep); } .fs-root .vis-code .w { color: #7c3aed; }
 .fs-root .vis-code .l { color: #0f766e; } .fs-root .vis-code .s { color: var(--ink); font-weight: 600; } .fs-root .vis-code .c { color: var(--muted); }
