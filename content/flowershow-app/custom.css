@@ -228,7 +228,6 @@
 .fs-root .publish-grid { display: grid; grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
   gap: clamp(40px, 6vw, 76px); align-items: center; }
 .fs-root .publish-copy { max-width: 30ch; }
-.fs-root .publish-copy .eyebrow { color: var(--gold-eyebrow); }
 .fs-root .publish-copy h2 { margin-top: 16px; }
 .fs-root .publish-copy .publish-cta { margin-top: 32px; }
 
@@ -453,9 +452,6 @@
 
 /* ---------- Showcase ---------- */
 .fs-root .section-head h2 .stat-hl { color: var(--rose-deep); font-variant-numeric: tabular-nums; }
-/* This section runs on the fern/green accent instead of the page's berry/rose. */
-.fs-root #showcase .eyebrow { color: var(--fern-ink); }
-.fs-root #showcase .section-head h2 .stat-hl { color: var(--fern-ink); }
 .fs-root .section-head h2 .h2-sub { color: var(--muted); }
 .fs-root .stats { display: flex; justify-content: center; gap: 40px; margin-bottom: 44px; flex-wrap: wrap; }
 .fs-root .stat { text-align: center; }
@@ -580,7 +576,7 @@
 .fs-root .ph-badge img { width: 197px; height: 46px; object-fit: contain; object-position: left center; display: block; }
 
 /* ---------- Final CTA ---------- */
-.fs-root .final { padding-top: clamp(64px, 9vw, 104px); padding-bottom: clamp(64px, 9vw, 104px); }
+.fs-root .final { padding-top: clamp(64px, 9vw, 104px); padding-bottom: 0; }
 .fs-root .final-card {
   background: var(--surface-card); border: none; border-radius: 20px;
   padding: clamp(44px, 6vw, 72px) 32px; text-align: center; position: relative; overflow: hidden;
