@@ -535,6 +535,8 @@
 .fs-root .faq-item p { color: var(--muted); font-size: 16px; line-height: 1.6; }
 
 /* ---------- Open source — copy left, star count + button right ---------- */
+/* Reads on plain white — drop the soft-gray section fill (ID beats .section-soft) */
+.fs-root #open-source { background: var(--canvas); }
 .fs-root .os-grid {
   display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: clamp(40px, 6vw, 80px); align-items: center;
@@ -575,18 +577,23 @@
 .fs-root .ph-badge { display: flex; justify-content: flex-start; }
 .fs-root .ph-badge img { width: 197px; height: 46px; object-fit: contain; object-position: left center; display: block; }
 
-/* ---------- Final CTA ---------- */
+/* ---------- Final CTA — flat berry close ----------
+   The page's last block: one clean, saturated brand-berry fill (no gradient, no
+   decorative petals) with white text and a white button. A single bold colour
+   band sitting flush above the near-black footer to close the page. */
 .fs-root .final { padding-top: clamp(64px, 9vw, 104px); padding-bottom: 0; }
 .fs-root .final-card {
-  background: var(--surface-card); border: none; border-radius: 20px;
-  padding: clamp(44px, 6vw, 72px) 32px; text-align: center; position: relative; overflow: hidden;
+  background: var(--berry-blush); border: none; border-radius: 20px;
+  padding: clamp(56px, 7vw, 84px) 32px; text-align: center; position: relative; overflow: hidden;
 }
-.fs-root .final-card .petal { position: absolute; font-size: 130px; opacity: 0.06; line-height: 1; pointer-events: none; }
-.fs-root .final-card .p1 { top: -18px; left: -10px; transform: rotate(-15deg); }
-.fs-root .final-card .p2 { bottom: -34px; right: -6px; transform: rotate(20deg); }
-.fs-root .final-card h2 { margin-bottom: 18px; position: relative; }
-.fs-root .final-card p { color: var(--muted); font-size: 1.1rem; max-width: 44ch; margin: 0 auto 30px; position: relative; }
-.fs-root .final-card .fine { font-family: var(--mono); font-size: 12.5px; color: var(--muted-soft); margin-top: 20px; }
+.fs-root .final-card .petal { display: none; }
+.fs-root .final-card h2 { color: #fff; margin-bottom: 18px; position: relative; }
+.fs-root .final-card p { color: rgba(255,255,255,.88); font-size: 1.1rem; max-width: 44ch; margin: 0 auto 30px; position: relative; }
+.fs-root .final-card .fine { font-family: var(--mono); font-size: 12.5px; color: rgba(255,255,255,.72); margin-top: 20px; position: relative; }
+/* White button pops on the berry fill */
+.fs-root .final-card .btn-primary { background: #fff; color: var(--ink); position: relative; }
+.fs-root .final-card .btn-primary:hover { background: rgba(255,255,255,.9); }
+.fs-root .final-card .btn-primary:active { transform: translateY(1px); }
 
 /* ---------- Reveal — content visible by default ----------
    The mockup faded `.reveal` blocks in via JS + IntersectionObserver. MDX pages
