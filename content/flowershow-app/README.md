@@ -277,11 +277,11 @@ showComments: false
           <h2>Powering <span className="stat-hl">1,700+</span> sites and growing</h2>
         </div>
         <div className="show-grid">
-          <a className="show-card sc-garden reveal" href="https://developmentalspaces.org/">
+          <a className="show-card sc-wiki reveal" href="https://developmentalspaces.org/">
             <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/developmentalspaces.webp" alt="Developmental Spaces site published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
-              <span className="show-badge">Garden</span>
+              <span className="show-badge">Wiki</span>
               <p><span className="nm">Developmental Spaces</span> publishes its research library as a living, interlinked site.</p>
               <span className="show-link">developmentalspaces.org <span className="arw">→</span></span>
             </div>
