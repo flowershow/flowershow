@@ -33,36 +33,38 @@
   --surface-dark-elevated: #1b1719;
   --on-dark: #ffffff;
   --on-dark-soft: #a29ba0;
-  /* ---- Brand palette — canonical accent colors ---- */
+  /* ---- Brand palette — canonical accent colors ----
+     Two-shade accent system: berry (pink) + gold (warm yellow), plus fern
+     (green) reserved for the Gardens use-case. The old bright --rose-punch and
+     lime --golden-glow were retired to keep the palette tight and on-brand. */
   --berry-blush:  #ab3a76;
   --black-forest: #043406;
   --bright-fern:  #56aa16;
-  --rose-punch:   #d94585;
-  --golden-glow:  #eae609;
   --brand-black:  #000000;
 
-  /* Semantic accent roles → brand palette. `*-ink` / `--gold` are desaturated &
-     darkened so the accent stays legible as TEXT on white (esp. the golden). */
-  --berry: var(--berry-blush);   /* decorative accents, eyebrows, chips */
+  /* Semantic accent roles → brand palette. Each accent is two shades: a
+     saturated fill and a darkened `*-ink` that stays legible as TEXT on white.
+     Yellows are all warm (#F9F394 fill / #8a6f00 text); green is Gardens-only. */
+  --berry: var(--berry-blush);   /* decorative accents, eyebrows, chips, pink pop */
   --berry-ink: #872c5b;          /* darkened berry — accent text, links, hover */
-  --fern: var(--bright-fern);    /* green pop, chips */
-  --fern-ink: #417f10;           /* darkened fern — green text on white */
+  --fern: var(--bright-fern);    /* green pop — Gardens only */
+  --fern-ink: #417f10;           /* darkened fern — green text on white (Gardens) */
   --forest: var(--black-forest); /* deep green — strong anchor */
-  --lemon: var(--golden-glow);   /* golden fills / badges / scarce pop */
-  --gold: #989606;               /* desaturated dark golden — golden-in-TEXT */
   --plum: var(--berry-ink);      /* legacy name → deep berry accent text */
   --plum-deep: #6e2249;          /* darker berry — hover */
   /* Soft tints for colorful, filled card backgrounds */
   --tint-plum: #f6e7eb;
   --tint-berry: #f8e8f1;
   --tint-fern: #eaf5df;
-  --tint-lemon: #faf1c6;         /* golden wash */
-  --card-yellow: #F9F394;        /* filled yellow publish cards */
-  --card-ink: #171310;           /* near-black text/icons on yellow cards */
-  --gold-eyebrow: #8a6f00;       /* golden eyebrow — legible as text on white */
+  --tint-lemon: #faf1c6;         /* warm golden wash */
+  --card-yellow: #F9F394;        /* warm yellow fill — publish cards, badges */
+  --card-ink: #171310;           /* near-black text/icons on yellow fills */
+  --gold-eyebrow: #8a6f00;       /* warm dark gold — golden-in-TEXT / accents */
+  --lemon: var(--card-yellow);   /* warm yellow fill (back-compat alias) */
+  --gold: var(--gold-eyebrow);   /* warm dark gold (back-compat alias) */
   --obsidian: #7c3aed;           /* Obsidian brand violet */
   /* Back-compat aliases — existing rules pick up the brand palette automatically */
-  --rose: var(--rose-punch);     /* bright pink pop → focus, selection, "+" */
+  --rose: var(--berry);          /* pink pop → focus, selection, "+" */
   --rose-deep: var(--berry-ink); /* deep berry → link / hover text */
   --rose-tint: var(--tint-berry);
   --yellow: var(--lemon);
@@ -241,7 +243,7 @@
   transition: box-shadow .16s ease, transform .16s ease;
 }
 .fs-root .wf-card:hover {
-  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 24px 48px -26px color-mix(in srgb, var(--golden-glow) 62%, transparent);
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 24px 48px -26px color-mix(in srgb, var(--gold-eyebrow) 50%, transparent);
   transform: translateY(-3px);
 }
 .fs-root .wf-go {
@@ -330,7 +332,7 @@
 .fs-root .use-garden { --u-accent: var(--fern-ink);    --u-bg: color-mix(in srgb, var(--bright-fern) 13%, #fff); }
 .fs-root .use-blog   { --u-accent: var(--berry-blush); --u-bg: color-mix(in srgb, var(--berry-blush) 13%, #fff); }
 .fs-root .use-wiki   { --u-accent: var(--berry-ink);   --u-bg: color-mix(in srgb, var(--berry-ink) 12%, #fff); }
-.fs-root .use-docs   { --u-accent: var(--gold);        --u-bg: color-mix(in srgb, var(--golden-glow) 15%, #fff); }
+.fs-root .use-docs   { --u-accent: var(--gold);        --u-bg: color-mix(in srgb, var(--gold-eyebrow) 15%, #fff); }
 
 /* ---------- Features — filled rounded cards with visuals ---------- */
 .fs-root .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 0; }
@@ -342,17 +344,17 @@
 }
 .fs-root .feature-tile:hover {
   transform: translateY(-3px);
-  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 24px 48px -26px color-mix(in srgb, var(--rose-punch) 45%, transparent);
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 24px 48px -26px color-mix(in srgb, var(--berry-blush) 45%, transparent);
 }
 .fs-root .ft-head {
   display: flex; align-items: center; gap: 12px; margin: 0;
   font-family: var(--sans); font-size: 1.2rem; font-weight: 700; color: var(--ink); letter-spacing: -0.02em;
 }
 .fs-root .ft-ico {
-  color: var(--rose-punch); flex: none;
+  color: var(--berry-blush); flex: none;
   display: flex; align-items: center; justify-content: center;
   width: 40px; height: 40px; border-radius: 12px;
-  background: color-mix(in srgb, var(--rose-punch) 12%, #fff);
+  background: color-mix(in srgb, var(--berry-blush) 12%, #fff);
 }
 .fs-root .ft-ico svg { width: 20px; height: 20px; display: block; }
 .fs-root .ft-desc { margin: 12px 0 0; color: var(--muted); font-size: 16px; line-height: 1.55; max-width: 42ch; }
@@ -382,7 +384,7 @@
   transition: box-shadow .18s ease, transform .18s ease; }
 .fs-root .feature-mini:hover {
   transform: translateY(-3px);
-  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 20px 40px -24px color-mix(in srgb, var(--rose-punch) 45%, transparent); }
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 20px 40px -24px color-mix(in srgb, var(--berry-blush) 45%, transparent); }
 .fs-root .feature-mini dt, .fs-root .feature-mini dd { margin: 0; }
 .fs-root .feature-mini h3 { font-family: var(--sans); font-size: 1.15rem; font-weight: 700;
   color: var(--ink); letter-spacing: -0.02em; }
