@@ -2028,12 +2028,22 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
+      if (!site.ghBranch) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Site has no known branch to reconnect',
+        });
+      }
+
       const repoRecord = await ctx.db.gitHubInstallationRepository.findFirst({
         where: {
           installation: { userId: site.userId },
           repositoryFullName: site.ghRepository,
         },
-        select: { id: true },
+        select: {
+          id: true,
+          installation: { select: { installationId: true } },
+        },
       });
 
       if (!repoRecord) {
@@ -2050,6 +2060,23 @@ export const siteRouter = createTRPCRouter({
         },
         select: fullSiteSelect,
       });
+
+      await triggerGitHubSyncWorkflow({
+        siteId: input.siteId,
+        ghRepository: site.ghRepository,
+        ghBranch: site.ghBranch,
+        rootDir: site.rootDir,
+        githubInstallationId: repoRecord.installation.installationId.toString(),
+      });
+
+      // Analytics
+      const posthog = PostHogClient();
+      posthog.capture({
+        distinctId: site.userId,
+        event: 'site_github_reconnected',
+        properties: { id: site.id, ghRepository: site.ghRepository },
+      });
+      await posthog.shutdown();
 
       return fresh;
     }),
