@@ -14,7 +14,7 @@
    pink / berry / yellow accent palette, system font stack, ruled-grid cards.
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;500;600;700;800&display=swap');
 
 :root {
   /* Monochrome spine */
@@ -70,7 +70,7 @@
   --yellow: var(--lemon);
 
   --maxw: 1180px;
-  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --sans: "Urbanist", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --serif: ui-serif, "New York", "Iowan Old Style", Georgia, "Times New Roman", Times, serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 }
