@@ -39,26 +39,26 @@ showComments: false
           <p>Same files, same workflow, whatever you publish.</p>
         </div>
         <div className="uses-grid reveal">
-          <a className="use-card use-garden" href="/uses/digital-gardens">
+          <div className="use-card use-garden">
             <span className="use-badge">Gardens</span>
             <h3 className="use-title">Grow a living garden of notes, mapped by backlinks and an <span className="use-accent">interactive graph</span>.</h3>
-            <span className="use-link">Explore <span className="arw">→</span></span>
-          </a>
-          <a className="use-card use-blog" href="/uses/blogs">
+            <a className="use-link" href="/uses/digital-gardens"><span className="lm-txt">Explore</span> <span className="arw">→</span></a>
+          </div>
+          <div className="use-card use-blog">
             <span className="use-badge">Blog</span>
             <h3 className="use-title">Publish a blog with <span className="use-accent">beautiful themes</span>, no site builder to wrangle.</h3>
-            <span className="use-link">Explore <span className="arw">→</span></span>
-          </a>
-          <a className="use-card use-wiki" href="/uses/wikis">
+            <a className="use-link" href="/uses/blogs"><span className="lm-txt">Explore</span> <span className="arw">→</span></a>
+          </div>
+          <div className="use-card use-wiki">
             <span className="use-badge">Wikis</span>
             <h3 className="use-title">Build a fast, searchable wiki with <span className="use-accent">links wired up automatically</span>.</h3>
-            <span className="use-link">Explore <span className="arw">→</span></span>
-          </a>
-          <a className="use-card use-docs" href="/uses/docs">
+            <a className="use-link" href="/uses/wikis"><span className="lm-txt">Explore</span> <span className="arw">→</span></a>
+          </div>
+          <div className="use-card use-docs">
             <span className="use-badge">Docs</span>
             <h3 className="use-title">Ship a docs site with sidebar nav and <span className="use-accent">instant full-text search</span>.</h3>
-            <span className="use-link">Explore <span className="arw">→</span></span>
-          </a>
+            <a className="use-link" href="/uses/docs"><span className="lm-txt">Explore</span> <span className="arw">→</span></a>
+          </div>
         </div>
         <div className="uses-cta reveal">
           <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
@@ -78,7 +78,7 @@ showComments: false
               Markdown-native
             </dt>
             <dd className="ft-desc">CommonMark, GFM, Obsidian wikilinks, Mermaid diagrams, and LaTeX math — it all just works.</dd>
-            <a className="ft-docs" href="/docs/reference/syntax">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
+            <a className="ft-learn" href="/docs/reference/syntax"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             <div className="ft-vis">
               <div className="panel vis-code">
                 <pre><span className="c"># Welcome</span><br /><br />This is my <span className="s">**site**</span>.<br /><br />- <span className="w">[[Wikilinks]]</span> just work<br />- GFM tables &amp; task lists<br />- <span className="l">$E = mc^2$</span> LaTeX math<br /><br /><span className="c">```mermaid</span><br />graph LR<br />  Idea --&gt; Note --&gt; Site<br /><span className="c">```</span></pre>
@@ -91,7 +91,7 @@ showComments: false
               Own your content
             </dt>
             <dd className="ft-desc">Your files stay plain markdown — portable, Git-friendly, no lock-in. Flowershow is infrastructure, not a silo.</dd>
-            <a className="ft-docs" href="/docs">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
+            <a className="ft-learn" href="/docs"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             <div className="ft-vis">
               <div className="panel vis-tree">
                 <ul>
@@ -113,7 +113,7 @@ showComments: false
               Themes &amp; CSS
             </dt>
             <dd className="ft-desc">Four polished themes, or roll your own with CSS and Tailwind — full control of the look.</dd>
-            <a className="ft-docs" href="/docs/reference/themes">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
+            <a className="ft-learn" href="/docs/reference/themes"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             <div className="ft-vis">
               <div className="panel vis-themes">
                 <div className="theme-grid">
@@ -131,7 +131,7 @@ showComments: false
               Custom domains
             </dt>
             <dd className="ft-desc">Bring your own domain, favicon, and social image on Premium. Your site, your brand.</dd>
-            <a className="ft-docs" href="/docs/reference/custom-domain">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
+            <a className="ft-learn" href="/docs/reference/custom-domain"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             <div className="ft-vis">
               <div className="panel vis-domain">
                 <div className="bar">
@@ -153,7 +153,7 @@ showComments: false
               Full-text search
             </dt>
             <dd className="ft-desc">Search across every page on Premium, so readers find what they need in an instant.</dd>
-            <a className="ft-docs" href="/docs">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
+            <a className="ft-learn" href="/docs"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             <div className="ft-vis">
               <div className="panel vis-search">
                 <div className="box">
@@ -174,7 +174,7 @@ showComments: false
               Works with AI agents
             </dt>
             <dd className="ft-desc">The Flowershow skill lets agents publish, configure, and style your site — through your CLI, GitHub, or Obsidian workflow.</dd>
-            <a className="ft-docs" href="/docs/agents/skills">Learn more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
+            <a className="ft-learn" href="/docs/agents/skills"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             <div className="ft-vis">
               <div className="panel vis-agent">
                 <div className="chat">
@@ -191,22 +191,26 @@ showComments: false
           </div>
         </dl>
         <div className="feature-row reveal">
-          <a className="feature-mini" href="/docs/reference/password-protection">
+          <div className="feature-mini">
             <h3>Password protection</h3>
             <p>Gate any site behind a password — share drafts and private notes with only the people you choose.</p>
-          </a>
-          <a className="feature-mini" href="/docs/reference/comments">
+            <a className="fm-learn" href="/docs/reference/password-protection"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+          </div>
+          <div className="feature-mini">
             <h3>Comments</h3>
             <p>Turn on threaded discussion so readers can respond right where they're reading.</p>
-          </a>
-          <a className="feature-mini" href="/docs/reference/knowledge-graph">
+            <a className="fm-learn" href="/docs/reference/comments"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+          </div>
+          <div className="feature-mini">
             <h3>Knowledge graph</h3>
             <p>An interactive map of your notes and how they connect — the whole vault at a glance.</p>
-          </a>
-          <a className="feature-mini" href="/docs/reference/backlinks">
+            <a className="fm-learn" href="/docs/reference/knowledge-graph"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+          </div>
+          <div className="feature-mini">
             <h3>Backlinks</h3>
             <p>Every page shows what links to it, so related ideas surface automatically.</p>
-          </a>
+            <a className="fm-learn" href="/docs/reference/backlinks"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+          </div>
         </div>
         <div style="text-align:center;margin-top:44px" className="reveal">
           <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
@@ -231,42 +235,42 @@ showComments: false
               Using an AI agent?
             </span>
             <p className="pa-copy">The Flowershow skill publishes, configures, and styles your site — in whichever workflow you already use.</p>
-            <a className="textlink" href="/docs/agents/skills">Instructions for your agent <span className="arw">→</span></a>
+            <a className="textlink" href="/docs/agents/skills"><span className="lm-txt">Instructions for your agent</span> <span className="arw">→</span></a>
           </div>
         </div>
         <div className="wf-grid reveal">
-          <a className="wf-card" href="https://cloud.flowershow.app/">
-            <span className="wf-ico" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M12 15V3" /><path d="M7 8l5-5 5 5" /></svg>
-            </span>
-            <h3>Drag &amp; drop</h3>
-            <p>Upload a folder in the browser and get a live site.</p>
-            <span className="wf-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
-          </a>
-          <a className="wf-card" href="/publish-github">
-            <span className="wf-ico brand-github" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
-            </span>
-            <h3>GitHub</h3>
-            <p>Connect a repo; every push republishes automatically.</p>
-            <span className="wf-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
-          </a>
-          <a className="wf-card" href="/publish-obsidian">
+          <div className="wf-card">
             <span className="wf-ico brand-obsidian" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.355 18.538a68.967 68.959 0 0 0 1.858-2.954.81.81 0 0 0-.062-.9c-.516-.685-1.504-2.075-2.042-3.362-.553-1.321-.636-3.375-.64-4.377a1.707 1.707 0 0 0-.358-1.05l-3.198-4.064a3.744 3.744 0 0 1-.076.543c-.106.503-.307 1.004-.536 1.5-.134.29-.29.6-.446.914l-.31.626c-.516 1.068-.997 2.227-1.132 3.59-.124 1.26.046 2.73.815 4.481.128.011.257.025.386.044a6.363 6.363 0 0 1 3.326 1.505c.916.79 1.744 1.922 2.415 3.5zM8.199 22.569c.073.012.146.02.22.02.78.024 2.095.092 3.16.29.87.16 2.593.64 4.01 1.055 1.083.316 2.198-.548 2.355-1.664.114-.814.33-1.735.725-2.58l-.01.005c-.67-1.87-1.522-3.078-2.416-3.849a5.295 5.295 0 0 0-2.778-1.257c-1.54-.216-2.952.19-3.84.45.532 2.218.368 4.829-1.425 7.531zM5.533 9.938c-.023.1-.056.197-.098.29L2.82 16.059a1.602 1.602 0 0 0 .313 1.772l4.116 4.24c2.103-3.101 1.796-6.02.836-8.3-.728-1.73-1.832-3.081-2.55-3.831zM9.32 14.01c.615-.183 1.606-.465 2.745-.534-.683-1.725-.848-3.233-.716-4.577.154-1.552.7-2.847 1.235-3.95.113-.235.223-.454.328-.664.149-.297.288-.577.419-.86.217-.47.379-.885.46-1.27.08-.38.08-.72-.014-1.043-.095-.325-.297-.675-.68-1.06a1.6 1.6 0 0 0-1.475.36l-4.95 4.452a1.602 1.602 0 0 0-.513.952l-.427 2.83c.672.59 2.328 2.316 3.335 4.711.09.21.175.43.253.653z" /></svg>
             </span>
             <h3>Obsidian</h3>
             <p>Publish your vault — wikilinks and graph included.</p>
-            <span className="wf-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
-          </a>
-          <a className="wf-card" href="/cli">
+            <a className="wf-learn" href="/publish-obsidian"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+          </div>
+          <div className="wf-card">
+            <span className="wf-ico brand-github" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
+            </span>
+            <h3>GitHub</h3>
+            <p>Connect a repo; every push republishes automatically.</p>
+            <a className="wf-learn" href="/publish-github"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+          </div>
+          <div className="wf-card">
+            <span className="wf-ico" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M12 15V3" /><path d="M7 8l5-5 5 5" /></svg>
+            </span>
+            <h3>Drag &amp; drop</h3>
+            <p>Upload a folder in the browser and get a live site.</p>
+            <a className="wf-learn" href="https://cloud.flowershow.app/"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+          </div>
+          <div className="wf-card">
             <span className="wf-ico" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19h8" /><path d="m4 17 6-6-6-6" /></svg>
             </span>
             <h3>CLI</h3>
             <p>Publish straight from the terminal.</p>
-            <span className="wf-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
-          </a>
+            <a className="wf-learn" href="/cli"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+          </div>
         </div>
       </div>
     </section>
@@ -277,60 +281,60 @@ showComments: false
           <h2>Powering <span className="stat-hl">1,700+</span> sites and growing</h2>
         </div>
         <div className="show-grid">
-          <a className="show-card sc-wiki reveal" href="https://developmentalspaces.org/">
+          <div className="show-card sc-wiki reveal">
             <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/developmentalspaces.webp" alt="Developmental Spaces site published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
               <span className="show-badge">Wiki</span>
               <p><span className="nm">Developmental Spaces</span> publishes its research library as a living, interlinked site.</p>
-              <span className="show-link">developmentalspaces.org <span className="arw">→</span></span>
+              <a className="show-link" href="https://developmentalspaces.org/"><span className="lm-txt">developmentalspaces.org</span> <span className="arw">→</span></a>
             </div>
-          </a>
-          <a className="show-card sc-wiki reveal" href="http://lifeitself.org/">
+          </div>
+          <div className="show-card sc-wiki reveal">
             <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/lifeitself.webp" alt="Life Itself site published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
               <span className="show-badge">Wiki</span>
               <p><span className="nm">Life Itself</span> runs its research community's handbook and public wiki on Flowershow.</p>
-              <span className="show-link">lifeitself.org <span className="arw">→</span></span>
+              <a className="show-link" href="http://lifeitself.org/"><span className="lm-txt">lifeitself.org</span> <span className="arw">→</span></a>
             </div>
-          </a>
-          <a className="show-card sc-docs reveal" href="https://markdowndb.com">
+          </div>
+          <div className="show-card sc-docs reveal">
             <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/markdowndb.webp" alt="MarkdownDB documentation published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
               <span className="show-badge">Docs</span>
               <p><span className="nm">MarkdownDB</span> ships its developer documentation straight from markdown.</p>
-              <span className="show-link">markdowndb.com <span className="arw">→</span></span>
+              <a className="show-link" href="https://markdowndb.com"><span className="lm-txt">markdowndb.com</span> <span className="arw">→</span></a>
             </div>
-          </a>
-          <a className="show-card sc-garden reveal" href="https://prisca-os-saiefr.flowershow.me/">
+          </div>
+          <div className="show-card sc-garden reveal">
             <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/prisca.webp" alt="Prisca/OS digital garden published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
               <span className="show-badge">Garden</span>
               <p><span className="nm">Prisca/OS</span> grows one student's notes on CS, security, and AI as a learn-in-public garden.</p>
-              <span className="show-link">prisca-os-saiefr.flowershow.me <span className="arw">→</span></span>
+              <a className="show-link" href="https://prisca-os-saiefr.flowershow.me/"><span className="lm-txt">prisca-os-saiefr.flowershow.me</span> <span className="arw">→</span></a>
             </div>
-          </a>
-          <a className="show-card sc-wiki reveal" href="https://metacrisis.info/">
+          </div>
+          <div className="show-card sc-wiki reveal">
             <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/metacrisis.webp" alt="Metacrisis wiki published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
               <span className="show-badge">Wiki</span>
               <p><span className="nm">Metacrisis</span> maps a sprawling wiki of interconnected notes and essays.</p>
-              <span className="show-link">metacrisis.info <span className="arw">→</span></span>
+              <a className="show-link" href="https://metacrisis.info/"><span className="lm-txt">metacrisis.info</span> <span className="arw">→</span></a>
             </div>
-          </a>
-          <a className="show-card sc-garden reveal" href="https://dnd-compendium-iwuaa.flowershow.me/">
+          </div>
+          <div className="show-card sc-garden reveal">
             <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/dnd.webp" alt="D&amp;D Compendium reference site published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
               <span className="show-badge">Garden</span>
               <p><span className="nm">D&amp;D Compendium</span> turns a campaign vault into a public reference site.</p>
-              <span className="show-link">dnd-compendium.flowershow.me <span className="arw">→</span></span>
+              <a className="show-link" href="https://dnd-compendium-iwuaa.flowershow.me/"><span className="lm-txt">dnd-compendium.flowershow.me</span> <span className="arw">→</span></a>
             </div>
-          </a>
+          </div>
         </div>
         <div className="self-note reveal">
           <span className="sn-badge" aria-hidden="true">💐</span>
@@ -365,7 +369,7 @@ showComments: false
         <div className="faq-grid">
           <div className="faq-item reveal">
             <h3>Is it really free?</h3>
-            <p>Yes. The free plan lets you publish one site on a flowershow.app subdomain — no time limit, no credit card, just a small "Built with Flowershow" footer. Premium plans start at $5/month and unlock custom domains, full-text search, and more. <a className="textlink" href="/pricing">See pricing <span className="arw">→</span></a></p>
+            <p>Yes. The free plan lets you publish one site on a flowershow.app subdomain — no time limit, no credit card, just a small "Built with Flowershow" footer. Premium plans start at $5/month and unlock custom domains, full-text search, and more. <a className="textlink" href="/pricing"><span className="lm-txt">See pricing</span> <span className="arw">→</span></a></p>
           </div>
           <div className="faq-item reveal">
             <h3>What markdown does it support?</h3>
@@ -377,7 +381,7 @@ showComments: false
           </div>
           <div className="faq-item reveal">
             <h3>Can I use my own domain?</h3>
-            <p>Yes, on the Premium plan. Custom domains, custom favicons, and custom social images are all available. <a className="textlink" href="/pricing">See pricing <span className="arw">→</span></a></p>
+            <p>Yes, on the Premium plan. Custom domains, custom favicons, and custom social images are all available. <a className="textlink" href="/pricing"><span className="lm-txt">See pricing</span> <span className="arw">→</span></a></p>
           </div>
         </div>
       </div>
@@ -391,7 +395,7 @@ showComments: false
         </div>
         <div className="os-side">
           <a className="os-star" href="https://github.com/flowershow/flowershow/stargazers">
-            <span className="os-star-num">1,098</span>
+            <span className="os-star-num">1,1k</span>
             <span className="os-star-label">stars on GitHub</span>
           </a>
           <div className="os-actions">

@@ -148,12 +148,54 @@
 .fs-root .btn .arw { transition: transform .15s ease; }
 .fs-root .btn:hover .arw { transform: translateX(3px); }
 
+/* ============================================================
+   Canonical in-card link. Every non-button link — Learn more,
+   Explore, showcase URLs, the agent note — is styled identically
+   and, on hover anywhere over its card, changes color, underlines,
+   and nudges its arrow forward. Bottom-alignment is set per card
+   type alongside each card's own rule.
+   ============================================================ */
+.fs-root .use-link, .fs-root .show-link, .fs-root .learn,
+.fs-root .wf-learn, .fs-root .fm-learn, .fs-root .ft-learn,
 .fs-root .textlink {
-  display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 15px;
-  color: var(--ink); transition: color .2s ease;
+  display: inline-flex; align-items: center; gap: 6px;
+  font-weight: 600; font-size: 14px; line-height: 1.2;
+  color: var(--ink); text-decoration: none;
+  transition: color .16s ease;
 }
-.fs-root .textlink:hover { color: var(--rose-deep); }
-.fs-root .textlink .arw { transition: transform .15s ease; }
+.fs-root .use-link .arw, .fs-root .show-link .arw, .fs-root .learn .arw,
+.fs-root .wf-learn .arw, .fs-root .fm-learn .arw, .fs-root .ft-learn .arw,
+.fs-root .textlink .arw { transition: transform .16s ease; }
+/* underline is a pseudo-element so it can animate: it unwraps left→right and
+   sits under the label only — never the arrow or the flex gap */
+.fs-root .lm-txt { position: relative; }
+.fs-root .lm-txt::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 1px;
+  background: currentColor; transform: scaleX(0); transform-origin: left center;
+  transition: transform .22s ease;
+}
+.fs-root .use-link:hover, .fs-root .use-card:hover .use-link,
+.fs-root .show-link:hover, .fs-root .show-card:hover .show-link,
+.fs-root .learn:hover, .fs-root .uc-feature:hover .learn,
+.fs-root .wf-learn:hover, .fs-root .wf-card:hover .wf-learn,
+.fs-root .fm-learn:hover, .fs-root .feature-mini:hover .fm-learn,
+.fs-root .ft-learn:hover, .fs-root .feature-tile:hover .ft-learn,
+.fs-root .textlink:hover {
+  color: var(--berry-ink);
+}
+.fs-root .use-link:hover .lm-txt::after, .fs-root .use-card:hover .use-link .lm-txt::after,
+.fs-root .show-link:hover .lm-txt::after, .fs-root .show-card:hover .show-link .lm-txt::after,
+.fs-root .learn:hover .lm-txt::after, .fs-root .uc-feature:hover .learn .lm-txt::after,
+.fs-root .wf-learn:hover .lm-txt::after, .fs-root .wf-card:hover .wf-learn .lm-txt::after,
+.fs-root .fm-learn:hover .lm-txt::after, .fs-root .feature-mini:hover .fm-learn .lm-txt::after,
+.fs-root .ft-learn:hover .lm-txt::after, .fs-root .feature-tile:hover .ft-learn .lm-txt::after,
+.fs-root .textlink:hover .lm-txt::after { transform: scaleX(1); }
+.fs-root .use-link:hover .arw, .fs-root .use-card:hover .use-link .arw,
+.fs-root .show-link:hover .arw, .fs-root .show-card:hover .show-link .arw,
+.fs-root .learn:hover .arw, .fs-root .uc-feature:hover .learn .arw,
+.fs-root .wf-learn:hover .arw, .fs-root .wf-card:hover .wf-learn .arw,
+.fs-root .fm-learn:hover .arw, .fs-root .feature-mini:hover .fm-learn .arw,
+.fs-root .ft-learn:hover .arw, .fs-root .feature-tile:hover .ft-learn .arw,
 .fs-root .textlink:hover .arw { transform: translateX(3px); }
 
 .fs-root :focus-visible { outline: 2px solid var(--rose); outline-offset: 3px; border-radius: 4px; }
@@ -176,8 +218,7 @@
   position: relative;
   border-radius: 16px;
   overflow: hidden;
-  border: none;
-  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 30px 70px -28px rgba(17,13,15,.30);
+  border: 1px solid var(--hairline);
   width: 100%;
   aspect-ratio: 2940 / 1848; /* matches the hero screenshots so nothing is cropped */
   background: linear-gradient(135deg, var(--rose-tint) 0%, #ffffff 55%, var(--surface-card) 100%);
@@ -238,24 +279,13 @@
 .fs-root .wf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .fs-root .wf-card {
   position: relative; background: color-mix(in srgb, var(--card-yellow) 68%, #fff); border-radius: 16px;
-  padding: 24px 52px 24px 22px;
+  padding: 24px 22px;
   display: flex; flex-direction: column; gap: 12px;
-  color: var(--card-ink); text-decoration: none;
-  transition: box-shadow .16s ease, transform .16s ease;
+  color: var(--card-ink);
 }
-.fs-root .wf-card:hover {
-  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 24px 48px -26px color-mix(in srgb, var(--gold-eyebrow) 62%, transparent);
-  transform: translateY(-3px);
-}
-.fs-root .wf-go {
-  position: absolute; top: 20px; right: 20px; width: 30px; height: 30px;
-  display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 9px; background: rgba(0,0,0,.08); color: var(--card-ink);
-  opacity: 0; transform: translateY(-2px);
-  transition: opacity .15s ease, transform .15s ease;
-}
-.fs-root .wf-go svg { width: 15px; height: 15px; display: block; }
-.fs-root .wf-card:hover .wf-go { opacity: 1; transform: translateY(0); }
+.fs-root .wf-go { display: none; }
+/* explicit, always-visible "Learn more" link — only its style shifts on hover */
+.fs-root .wf-learn { align-self: flex-start; margin-top: auto; }
 .fs-root .wf-ico {
   width: 44px; height: 44px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
@@ -284,14 +314,12 @@
 .fs-root .publish-agent .ag-claude { width: 18px; height: 18px; }
 .fs-root .publish-agent .ag-codex, .fs-root .publish-agent .ag-cursor { width: 15px; height: 15px; }
 .fs-root .publish-agent .pa-copy { font-size: 16px; color: var(--muted); line-height: 1.5; }
-.fs-root .publish-agent .textlink { font-size: 16px; }
 
 /* ---------- Use cases — a single row of four small cards, one shared CTA ----------
    Images live in the hero carousel and features have their own section, so each
-   card is minimal: a title, a one-line description, and an "Explore →" link (the
-   whole card links to that use case's page). A per-card brand accent (green,
-   pink, yellow, berry) is passed down as `--u-accent` and shows on the link and
-   the hover border. */
+   card is minimal: a title, a one-line description, and an "Explore →" link.
+   A per-card brand accent (green, pink, yellow, berry) is passed down as
+   `--u-accent` and colors the badge and the title's highlighted phrase. */
 .fs-root .uses .section-head { margin-bottom: clamp(40px, 6vw, 56px); }
 .fs-root .uses-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 /* Clay-style: colored background, accent badge pill top-left, big two-tone
@@ -302,11 +330,6 @@
   border-radius: 20px;
   padding: 22px 22px 20px;
   min-height: 250px;
-  transition: box-shadow .18s ease, transform .18s ease;
-}
-.fs-root .use-card:hover {
-  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 24px 48px -26px color-mix(in srgb, var(--u-accent) 55%, transparent);
-  transform: translateY(-3px);
 }
 .fs-root .use-badge {
   align-self: flex-start;
@@ -322,12 +345,7 @@
   color: var(--ink);
 }
 .fs-root .use-title .use-accent { color: var(--u-accent); }
-.fs-root .use-link {
-  margin-top: 16px; display: inline-flex; align-items: center; gap: 6px;
-  font-weight: 700; font-size: 14px; color: var(--u-accent);
-}
-.fs-root .use-link .arw { transition: transform .15s ease; }
-.fs-root .use-card:hover .use-link .arw { transform: translateX(3px); }
+.fs-root .use-link { margin-top: 16px; }
 .fs-root .uses-cta { display: flex; justify-content: center; margin-top: clamp(36px, 5vw, 52px); }
 /* Per-card brand accent + matching (slightly richer) background fill */
 .fs-root .use-garden { --u-accent: var(--fern-ink);    --u-bg: color-mix(in srgb, var(--bright-fern) 13%, #fff); }
@@ -340,12 +358,7 @@
 .fs-root .feature-tile {
   position: relative; display: flex; flex-direction: column;
   background: var(--surface-soft); border: none; border-radius: 20px;
-  padding: 26px 28px 0; min-height: 340px; overflow: hidden;
-  transition: box-shadow .18s ease, transform .18s ease;
-}
-.fs-root .feature-tile:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 24px 48px -26px color-mix(in srgb, var(--berry-blush) 45%, transparent);
+  padding: 26px 28px 22px; min-height: 340px; overflow: hidden;
 }
 .fs-root .ft-head {
   display: flex; align-items: center; gap: 12px; margin: 0;
@@ -358,18 +371,9 @@
   background: color-mix(in srgb, var(--berry-blush) 12%, #fff);
 }
 .fs-root .ft-ico svg { width: 20px; height: 20px; display: block; }
-.fs-root .ft-desc { margin: 12px 0 0; color: var(--muted); font-size: 17.5px; font-weight: 500; line-height: 1.55; max-width: 42ch; }
-.fs-root .ft-docs {
-  position: absolute; top: 26px; right: 26px; display: inline-flex; align-items: center; gap: 6px;
-  font-size: 12px; font-weight: 600; color: var(--muted);
-  background: var(--canvas); border-radius: 999px;
-  padding: 6px 12px; box-shadow: 0 1px 2px rgba(17,13,15,.05);
-  opacity: 0; transform: translateY(-2px);
-  transition: opacity .2s ease, transform .2s ease, background .15s ease, color .15s ease;
-}
-.fs-root .feature-tile:hover .ft-docs, .fs-root .ft-docs:focus-visible { opacity: 1; transform: none; }
-.fs-root .ft-docs:hover { background: var(--surface-soft); color: var(--ink); }
-.fs-root .ft-docs svg { width: 13px; height: 13px; }
+.fs-root .ft-desc { margin: 12px 0 0; color: var(--muted); font-size: 17.5px; font-weight: 600; line-height: 1.55; max-width: 42ch; }
+/* order:1 drops the link below the visual so it sits at the card's very bottom */
+.fs-root .ft-learn { order: 1; margin-top: 12px; }
 .fs-root .ft-vis {
   margin-top: 24px; flex: 1; min-height: 150px; overflow: hidden; position: relative;
   -webkit-mask-image: linear-gradient(to bottom, #000 74%, transparent);
@@ -381,15 +385,13 @@
 .fs-root .feature-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
   margin: 20px 0 0; }
 .fs-root .feature-mini { display: flex; flex-direction: column;
-  background: var(--surface-soft); border: none; border-radius: 16px; padding: 24px;
-  transition: box-shadow .18s ease, transform .18s ease; }
-.fs-root .feature-mini:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 20px 40px -24px color-mix(in srgb, var(--berry-blush) 45%, transparent); }
+  background: var(--surface-soft); border: none; border-radius: 16px; padding: 24px; }
 .fs-root .feature-mini dt, .fs-root .feature-mini dd { margin: 0; }
 .fs-root .feature-mini h3 { font-family: var(--sans); font-size: 1.15rem; font-weight: 700;
   color: var(--ink); letter-spacing: -0.02em; }
 .fs-root .feature-mini p { margin: 8px 0 0; color: var(--muted); font-size: 17.5px; font-weight: 500; line-height: 1.55; }
+/* explicit, always-visible "Learn more" link — only its style shifts on hover */
+.fs-root .fm-learn { align-self: flex-start; margin-top: auto; padding-top: 14px; }
 @media (max-width: 760px) {
   .fs-root .feature-row { grid-template-columns: 1fr 1fr; }
 }
@@ -468,11 +470,6 @@
   position: relative; display: flex; flex-direction: column;
   background: var(--surface-soft); border-radius: 20px;
   padding: 14px 14px 4px; outline-offset: 3px;
-  transition: box-shadow .18s ease, transform .18s ease;
-}
-.fs-root .show-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 24px 48px -26px rgba(17,13,15,.30);
 }
 .fs-root .show-thumb {
   position: relative; aspect-ratio: 16 / 10; width: 100%; overflow: hidden;
@@ -484,11 +481,7 @@
    by color alone — name in ink, description in muted. */
 .fs-root .show-body p { margin: 0; font-size: clamp(1.1rem, 1.35vw, 1.25rem); line-height: 1.4; font-weight: 600; letter-spacing: -0.015em; color: var(--muted); }
 .fs-root .show-body .nm { color: var(--ink); }
-.fs-root .show-link { margin-top: auto; display: inline-flex; align-items: center; gap: 6px;
-  font-size: 14px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; transition: color .15s ease; }
-.fs-root .show-link .arw { transition: transform .15s ease; }
-.fs-root .show-card:hover .show-link { color: var(--berry-ink); }
-.fs-root .show-card:hover .show-link .arw { transform: translateX(3px); }
+.fs-root .show-link { margin-top: auto; font-variant-numeric: tabular-nums; }
 /* Type badge — same pill as the use-case cards (uppercase, white-on-accent),
    sitting at the top of the card body above the name. Accent per card matches
    the matching use-case card colour. */
@@ -503,17 +496,8 @@
 .fs-root .sc-blog   { --sc-accent: var(--berry-blush); }
 .fs-root .sc-wiki   { --sc-accent: var(--berry-ink); }
 .fs-root .sc-docs   { --sc-accent: var(--gold); }
-/* corner ↗ chip — mirrors the .wf-go publish-card motif */
-.fs-root .show-go {
-  position: absolute; top: 24px; right: 24px; width: 30px; height: 30px;
-  display: flex; align-items: center; justify-content: center;
-  border-radius: 9px; background: rgba(255,255,255,.9); color: var(--ink);
-  box-shadow: 0 2px 8px rgba(17,13,15,.12);
-  opacity: 0; transform: translateY(-2px);
-  transition: opacity .2s ease, transform .2s ease;
-}
-.fs-root .show-card:hover .show-go { opacity: 1; transform: none; }
-.fs-root .show-go svg { width: 15px; height: 15px; display: block; }
+/* corner ↗ chip was a whole-card hover affordance; the URL is now the link */
+.fs-root .show-go { display: none; }
 /* Dogfooding banner — filled card in the section's card language, promoted from
    the old muted one-liner into a proper "we run on our own product" callout. */
 .fs-root .self-note {
@@ -638,7 +622,185 @@
 
 @media (prefers-reduced-motion: reduce) {
   .fs-root .btn, .fs-root .textlink, .fs-root .wf-card, .fs-root .show-card,
-  .fs-root .show-thumb-img, .fs-root .show-link .arw { transition: none; }
+  .fs-root .show-thumb-img, .fs-root .show-link .arw, .fs-root .lm-txt::after { transition: none; }
+}
+
+/* ==========================================================================
+   Digital-gardens landing — pieces the home page has no equivalent for
+   --------------------------------------------------------------------------
+   The gardens page (/uses/digital-gardens) reuses the shared landing kit above
+   as-is — .hero, .wf-grid, .feature-grid, .show-grid, .final-card — so it reads
+   as the same product as the home page. These few extra components cover the
+   sections the home page doesn't have, plus the fern-green accent the design
+   tokens reserve for the Gardens use-case.
+
+   The page wraps its body in `<div className="fs-root fs-garden">`, so the one
+   shared component we re-tint green (.ft-ico) is scoped under `.fs-garden` and
+   never touches the home page.
+   ========================================================================== */
+
+/* Announcement pill — hero eyebrow chip */
+.fs-root .pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 600; letter-spacing: -0.01em;
+  color: var(--fern-ink); background: var(--tint-fern);
+  border-radius: 999px; padding: 6px 14px; margin-bottom: 20px;
+  transition: background .15s ease;
+}
+.fs-root .pill:hover { background: color-mix(in srgb, var(--bright-fern) 20%, #fff); }
+.fs-root .pill .arw { transition: transform .15s ease; }
+.fs-root .pill:hover .arw { transform: translateX(3px); }
+
+/* Fern accent — two-tone headline word, Gardens only */
+.fs-root .accent-fern { color: var(--fern-ink); }
+
+/* Soft page ground — use-case pages sit on surface-soft so they read as a
+   distinct page-type from the white main landing. Sections keep their own
+   fills on top (.section-soft stays a touch darker for gentle alternation). */
+.fs-root.fs-garden { background: var(--surface-soft); }
+
+/* ---- Use-case badge — "Flowershow for: [Use case]" ----
+   Nested: an outer square-rounded box holds the muted "Flowershow for:" label
+   + an inner square-rounded accent chip naming the use-case. Reusable across
+   all use-case pages: each page sets --uc-accent / --uc-tint on its root to
+   recolor the chip (defaults below are the Gardens fern). */
+.fs-root .uc-badge {
+  display: inline-flex; align-items: center; gap: 9px;
+  padding: 5px 6px 5px 13px;
+  border: 1px solid var(--hairline-strong); border-radius: 9px;
+  background: var(--canvas);
+  font-size: 14px; font-weight: 600; letter-spacing: -0.006em; line-height: 1;
+  margin-bottom: 20px;
+}
+.fs-root .uc-badge .uc-pre { color: var(--muted); font-weight: 500; }
+.fs-root .uc-badge .uc-name {
+  display: inline-flex; align-items: center; padding: 5px 11px;
+  border-radius: 6px;
+  background: var(--uc-tint, var(--tint-fern));
+  color: var(--uc-accent, var(--fern-ink));
+}
+
+/* Uniform soft ground on use-case pages: no section carries its own fill, so
+   the whole page reads as one continuous surface. Section bands are dropped;
+   the cards that used to rely on a darker band for contrast become white
+   surfaces floating on the soft ground instead. Scoped to .fs-garden so the
+   white-page main landing keeps its soft-gray sections and cards. */
+.fs-root.fs-garden .section-soft { background: transparent; }
+.fs-root.fs-garden .show-card {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+}
+/* Ways-to-publish sits in a white card floating on the soft garden ground */
+.fs-root.fs-garden .publish-card {
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  border-radius: 24px;
+  padding: clamp(32px, 5vw, 56px);
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 22px 48px -30px rgba(17,13,15,.22);
+}
+
+/* ---- Feature rows — full-width alternating cards (Clay-style) ----
+   Each feature is a white card floating on the soft ground: copy on one side,
+   a product screenshot on the other, sides swapping per row. The card itself
+   is NOT a link — a small "Learn more" link lives inside the copy instead. */
+.fs-root .uc-features { display: flex; flex-direction: column; gap: clamp(20px, 2.6vw, 30px); }
+.fs-root .uc-feature {
+  display: flex; align-items: stretch; gap: clamp(6px, 1vw, 16px);
+  background: var(--canvas); border-radius: 24px;
+  padding: clamp(10px, 1.2vw, 16px); overflow: hidden;
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 22px 48px -30px rgba(17,13,15,.22);
+}
+.fs-root .uc-feature:nth-child(even) { flex-direction: row-reverse; }
+.fs-root .uc-feature > * { flex: 1 1 0; min-width: 0; }
+.fs-root .uc-feature-text {
+  display: flex; flex-direction: column; justify-content: center;
+  padding: clamp(22px, 3.2vw, 46px);
+}
+.fs-root .uc-feature-text h3 {
+  font-size: clamp(1.8rem, 3vw, 2.6rem); line-height: 1.1;
+  letter-spacing: -0.025em; color: var(--ink);
+}
+.fs-root .uc-feature-text p {
+  margin-top: 14px; color: var(--muted); font-size: 1.075rem; line-height: 1.6; max-width: 44ch;
+}
+.fs-root .uc-feature-text code {
+  font-family: var(--mono); font-size: .9em; color: var(--body);
+  background: var(--surface-card); border-radius: 5px; padding: 1px 6px;
+}
+.fs-root .uc-feature-text .learn { margin-top: 22px; }
+.fs-root .uc-feature-media {
+  border-radius: 16px; overflow: hidden; min-height: clamp(240px, 26vw, 380px);
+  background: linear-gradient(135deg, var(--tint-fern) 0%, #fff 60%, var(--surface-card) 100%);
+}
+.fs-root .uc-feature-media img { width: 100%; height: 100%; object-fit: cover; object-position: left top; display: block; }
+@media (max-width: 860px) {
+  .fs-root .uc-feature, .fs-root .uc-feature:nth-child(even) { flex-direction: column; align-items: stretch; }
+}
+
+/* Gardens re-tints the shared feature-icon chip from berry to fern */
+.fs-root.fs-garden .ft-ico { color: var(--fern-ink); background: color-mix(in srgb, var(--bright-fern) 13%, #fff); }
+
+/* Numbered steps — circled index + title + copy, three across */
+.fs-root .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(24px, 4vw, 40px); }
+.fs-root .step { display: flex; flex-direction: column; align-items: flex-start; }
+.fs-root .step-num {
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1.05rem;
+  color: var(--fern-ink); background: var(--tint-fern);
+}
+.fs-root .step h3 { margin-top: 18px; }
+.fs-root .step p { margin-top: 10px; color: var(--muted); font-size: 16px; line-height: 1.55; }
+
+/* Feature visuals that carry a real screenshot rather than a CSS mockup — the
+   tile's .ft-vis already masks the bottom edge, so the shot bleeds in. */
+.fs-root .ft-vis .shot {
+  width: 100%; border-radius: 12px 12px 0 0;
+  border: 1px solid var(--hairline-strong); border-bottom: none; display: block;
+}
+/* Wide feature tile — spans both columns for the hero feature (the graph) */
+.fs-root .feature-tile.wide { grid-column: 1 / -1; }
+
+/* Concept cards — emoji + title + copy, filled soft cards, three across */
+.fs-root .concept-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.fs-root .concept-card { background: var(--surface-soft); border-radius: 20px; padding: 28px; }
+.fs-root .concept-card .ic { font-size: 1.6rem; }
+.fs-root .concept-card h3 { margin-top: 16px; }
+.fs-root .concept-card p { margin-top: 10px; color: var(--muted); font-size: 16px; line-height: 1.55; }
+
+/* Icon feature list — the split "Make it yours" section */
+.fs-root .feature-list { margin: 32px 0 0; display: flex; flex-direction: column; gap: 22px; }
+.fs-root .feature-list .fl-item { position: relative; padding-left: 40px; font-size: 16px; color: var(--muted); line-height: 1.55; }
+.fs-root .feature-list .fl-ico { position: absolute; left: 0; top: 1px; color: var(--fern-ink); }
+.fs-root .feature-list .fl-ico svg { width: 22px; height: 22px; display: block; }
+.fs-root .feature-list b { color: var(--ink); font-weight: 600; }
+
+/* Split media frame — the mockup shot beside "Make it yours" */
+.fs-root .split-media {
+  border-radius: 16px; overflow: hidden; border: 1px solid var(--hairline);
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 30px 70px -28px rgba(17,13,15,.30);
+  aspect-ratio: 16 / 10;
+}
+.fs-root .split-media img { width: 100%; height: 100%; object-fit: cover; object-position: left top; }
+
+/* Callout band — centered card promoting the Obsidian Publish comparison */
+.fs-root .callout {
+  max-width: 900px; margin: 0 auto; text-align: center;
+  background: var(--tint-fern); border-radius: 20px;
+  padding: clamp(32px, 5vw, 48px) 32px;
+}
+.fs-root .callout h2 { font-size: clamp(1.5rem, 2.5vw, 2rem); }
+.fs-root .callout p { margin: 14px auto 26px; max-width: 52ch; color: var(--body); font-size: 1.05rem; line-height: 1.55; }
+
+/* Final CTA — Gardens green variant of the shared .final-card */
+.fs-root .final-card.garden { background: var(--black-forest); }
+
+@media (max-width: 760px) {
+  .fs-root .feature-tile.wide { grid-column: auto; }
+  .fs-root .concept-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 940px) {
+  .fs-root .steps { grid-template-columns: 1fr; gap: 24px; }
 }
 
 /* ==========================================================================
