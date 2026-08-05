@@ -688,29 +688,3 @@
 /* Links: soft light gray → white on hover */
 .site-footer-navigation-link { font-size: 14px; color: #cfc9cd; }
 .site-footer-navigation-link:hover { color: var(--on-dark); }
-
-/* ==========================================================================
-   A/B test — landing page (control vs. redesign)
-   --------------------------------------------------------------------------
-   The home page (content/flowershow-app/README.md) ships BOTH variants in one
-   document, so there is exactly ONE indexable URL — no duplicate pages, no
-   canonical/noindex needed. Google, no-JS visitors, and un-bucketed users all
-   see the CONTROL by default (== the previously-live page, so indexed content
-   is unchanged). PostHog reveals the redesign (`variant B`) client-side only
-   for the test cohort.
-
-   These rules are intentionally NOT scoped under `.fs-root`: the toggle
-   wrappers sit ABOVE it (`.lp-ab--b` contains the `.fs-root` redesign;
-   `.lp-ab--control` contains the old Tailwind markup). The `.lp-ab*` classes
-   exist only on the landing page, so leaving them unscoped is safe.
-
-   Toggle contract for PostHog: the experiment's TEST variant adds the class
-   `ab-variant-b` to <body> (a single "add class" action in the web-experiment
-   editor). No custom JS ships in the markdown. To QA variant B without PostHog,
-   add `ab-variant-b` to <body> in devtools. Flipping the default (ship B) is a
-   one-line change: swap which variant is hidden below.
-   ========================================================================== */
-.lp-ab--control { display: block; }
-.lp-ab--b { display: none; }
-body.ab-variant-b .lp-ab--control { display: none; }
-body.ab-variant-b .lp-ab--b { display: block; }
