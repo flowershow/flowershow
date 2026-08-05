@@ -20,19 +20,19 @@
   /* Monochrome spine */
   --ink: #111111;
   --ink-active: #242424;
-  --body: #37343a;
-  --muted: #6b6870;
-  --muted-soft: #928e96;
+  --body: #37342e;
+  --muted: #6b6860;
+  --muted-soft: #928d84;
   --canvas: #ffffff;
-  /* Neutrals biased a hair warm-rose so they read chosen, not inherited */
-  --surface-soft: #faf8f9;
-  --surface-card: #f6f3f5;
-  --hairline: #ece7ea;
-  --hairline-strong: #ddd6db;
-  --surface-dark: #100d0f;
-  --surface-dark-elevated: #1b1719;
+  /* Neutrals biased a hair warm (cream, not rose) so they read chosen, not inherited */
+  --surface-soft: #f9f8f6;
+  --surface-card: #f4f2ee;
+  --hairline: #eae7e1;
+  --hairline-strong: #dad5cc;
+  --surface-dark: #100e0b;
+  --surface-dark-elevated: #1b1814;
   --on-dark: #ffffff;
-  --on-dark-soft: #a29ba0;
+  --on-dark-soft: #a29c92;
   /* ---- Brand palette — canonical accent colors ----
      Two-shade accent system: berry (pink) + gold (warm yellow), plus fern
      (green) reserved for the Gardens use-case. The old bright --rose-punch and
