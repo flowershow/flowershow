@@ -85,6 +85,7 @@
   text-rendering: optimizeLegibility;
   line-height: 1.5;
   font-size: 17px;
+  font-weight: 500;
 }
 .fs-root ::selection { background: var(--rose-tint); color: var(--rose-deep); }
 
@@ -357,7 +358,7 @@
   background: color-mix(in srgb, var(--berry-blush) 12%, #fff);
 }
 .fs-root .ft-ico svg { width: 20px; height: 20px; display: block; }
-.fs-root .ft-desc { margin: 12px 0 0; color: var(--muted); font-size: 16px; line-height: 1.55; max-width: 42ch; }
+.fs-root .ft-desc { margin: 12px 0 0; color: var(--muted); font-size: 17.5px; font-weight: 500; line-height: 1.55; max-width: 42ch; }
 .fs-root .ft-docs {
   position: absolute; top: 26px; right: 26px; display: inline-flex; align-items: center; gap: 6px;
   font-size: 12px; font-weight: 600; color: var(--muted);
@@ -388,7 +389,7 @@
 .fs-root .feature-mini dt, .fs-root .feature-mini dd { margin: 0; }
 .fs-root .feature-mini h3 { font-family: var(--sans); font-size: 1.15rem; font-weight: 700;
   color: var(--ink); letter-spacing: -0.02em; }
-.fs-root .feature-mini p { margin: 8px 0 0; color: var(--muted); font-size: 16px; line-height: 1.55; }
+.fs-root .feature-mini p { margin: 8px 0 0; color: var(--muted); font-size: 17.5px; font-weight: 500; line-height: 1.55; }
 @media (max-width: 760px) {
   .fs-root .feature-row { grid-template-columns: 1fr 1fr; }
 }
@@ -687,3 +688,29 @@
 /* Links: soft light gray → white on hover */
 .site-footer-navigation-link { font-size: 14px; color: #cfc9cd; }
 .site-footer-navigation-link:hover { color: var(--on-dark); }
+
+/* ==========================================================================
+   A/B test — landing page (control vs. redesign)
+   --------------------------------------------------------------------------
+   The home page (content/flowershow-app/README.md) ships BOTH variants in one
+   document, so there is exactly ONE indexable URL — no duplicate pages, no
+   canonical/noindex needed. Google, no-JS visitors, and un-bucketed users all
+   see the CONTROL by default (== the previously-live page, so indexed content
+   is unchanged). PostHog reveals the redesign (`variant B`) client-side only
+   for the test cohort.
+
+   These rules are intentionally NOT scoped under `.fs-root`: the toggle
+   wrappers sit ABOVE it (`.lp-ab--b` contains the `.fs-root` redesign;
+   `.lp-ab--control` contains the old Tailwind markup). The `.lp-ab*` classes
+   exist only on the landing page, so leaving them unscoped is safe.
+
+   Toggle contract for PostHog: the experiment's TEST variant adds the class
+   `ab-variant-b` to <body> (a single "add class" action in the web-experiment
+   editor). No custom JS ships in the markdown. To QA variant B without PostHog,
+   add `ab-variant-b` to <body> in devtools. Flipping the default (ship B) is a
+   one-line change: swap which variant is hidden below.
+   ========================================================================== */
+.lp-ab--control { display: block; }
+.lp-ab--b { display: none; }
+body.ab-variant-b .lp-ab--control { display: none; }
+body.ab-variant-b .lp-ab--b { display: block; }
