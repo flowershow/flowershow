@@ -530,10 +530,13 @@ function proxyPostHog(req: NextRequest) {
   proxied.port = '443';
   proxied.pathname = url.pathname.replace(/^\/relay-qYYb/, ''); // strip prefix
 
-  const headers = new Headers(req.headers);
-  headers.set('host', hostname);
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set('host', hostname);
+  requestHeaders.delete('cookie');
 
-  return NextResponse.rewrite(proxied, { headers });
+  return NextResponse.rewrite(proxied, {
+    request: { headers: requestHeaders },
+  });
 }
 
 type PHBootstrap = {
