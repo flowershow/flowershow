@@ -25,6 +25,12 @@ export function PostHogProvider({ children }) {
       disable_web_experiments: false, // https://posthog.com/docs/experiments/no-code-web-experiments
       bootstrap: bootstrapData,
       disable_session_recording: true, // TODO temporary patch https://github.com/flowershow/flowershow/issues/1131
+      loaded: (ph) => {
+        // Expose PostHog on window so the PostHog Toolbar and the no-code
+        // web-experiments visual editor can attach. The posthog-js/react npm
+        // integration (unlike the HTML snippet) does not do this automatically.
+        (window as unknown as { posthog?: typeof ph }).posthog = ph;
+      },
     });
   }, []);
 
