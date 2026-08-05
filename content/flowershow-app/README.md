@@ -395,7 +395,7 @@ showComments: false
         </div>
         <div className="os-side">
           <a className="os-star" href="https://github.com/flowershow/flowershow/stargazers">
-            <span className="os-star-num">1,1k</span>
+            <span className="os-star-num">1.1k</span>
             <span className="os-star-label">stars on GitHub</span>
           </a>
           <div className="os-actions">
