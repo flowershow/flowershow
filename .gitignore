@@ -76,3 +76,5 @@ packages/obsidian-plugin/main.js
 
 .agents/
 .claude/
+# Flowershow CLI local metadata (pins publish target)
+.flowershow

@@ -1,0 +1,716 @@
+/* ==========================================================================
+   Flowershow landing pages — shared styles
+   --------------------------------------------------------------------------
+   Flowershow auto-loads this file from the content root and layers it above
+   the default theme (CSS cascade layers), so no !important is needed.
+
+   Everything here is scoped under `.fs-root` so it applies ONLY to landing
+   pages that wrap their body in `<div className="fs-root"> … </div>` and never
+   leaks into docs, blog, or changelog. To reuse this design on another landing
+   page (publish-github, publish-obsidian, cli, pricing, …) just wrap that
+   page's JSX body in `<div className="fs-root">`.
+
+   Design tokens come from the site DESIGN.md: a monochrome spine with a
+   pink / berry / yellow accent palette, system font stack, ruled-grid cards.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Monochrome spine */
+  --ink: #111111;
+  --ink-active: #242424;
+  --body: #37343a;
+  --muted: #6b6870;
+  --muted-soft: #928e96;
+  --canvas: #ffffff;
+  /* Neutrals biased a hair warm-rose so they read chosen, not inherited */
+  --surface-soft: #faf8f9;
+  --surface-card: #f6f3f5;
+  --hairline: #ece7ea;
+  --hairline-strong: #ddd6db;
+  --surface-dark: #100d0f;
+  --surface-dark-elevated: #1b1719;
+  --on-dark: #ffffff;
+  --on-dark-soft: #a29ba0;
+  /* ---- Brand palette — canonical accent colors ----
+     Two-shade accent system: berry (pink) + gold (warm yellow), plus fern
+     (green) reserved for the Gardens use-case. The old bright --rose-punch and
+     lime --golden-glow were retired to keep the palette tight and on-brand. */
+  --berry-blush:  #ab3a76;
+  --black-forest: #043406;
+  --bright-fern:  #56aa16;
+  --brand-black:  #000000;
+
+  /* Semantic accent roles → brand palette. Each accent is two shades: a
+     saturated fill and a darkened `*-ink` that stays legible as TEXT on white.
+     Yellows are all warm (#F9F394 fill / #8a6f00 text); green is Gardens-only. */
+  --berry: var(--berry-blush);   /* decorative accents, eyebrows, chips, pink pop */
+  --berry-ink: #872c5b;          /* darkened berry — accent text, links, hover */
+  --fern: var(--bright-fern);    /* green pop — Gardens only */
+  --fern-ink: #417f10;           /* darkened fern — green text on white (Gardens) */
+  --forest: var(--black-forest); /* deep green — strong anchor */
+  --plum: var(--berry-ink);      /* legacy name → deep berry accent text */
+  --plum-deep: #6e2249;          /* darker berry — hover */
+  /* Soft tints for colorful, filled card backgrounds */
+  --tint-plum: #f6e7eb;
+  --tint-berry: #f8e8f1;
+  --tint-fern: #eaf5df;
+  --tint-lemon: #faf1c6;         /* warm golden wash */
+  --card-yellow: #F9F394;        /* warm yellow fill — publish cards, badges */
+  --card-ink: #171310;           /* near-black text/icons on yellow fills */
+  --gold-eyebrow: #8a6f00;       /* warm dark gold — golden-in-TEXT / accents */
+  --lemon: var(--card-yellow);   /* warm yellow fill (back-compat alias) */
+  --gold: var(--gold-eyebrow);   /* warm dark gold (back-compat alias) */
+  --obsidian: #7c3aed;           /* Obsidian brand violet */
+  /* Back-compat aliases — existing rules pick up the brand palette automatically */
+  --rose: var(--berry);          /* pink pop → focus, selection, "+" */
+  --rose-deep: var(--berry-ink); /* deep berry → link / hover text */
+  --rose-tint: var(--tint-berry);
+  --yellow: var(--lemon);
+
+  --maxw: 1180px;
+  --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --serif: ui-serif, "New York", "Iowan Old Style", Georgia, "Times New Roman", Times, serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+}
+
+.fs-root, .fs-root *, .fs-root *::before, .fs-root *::after { box-sizing: border-box; }
+
+.fs-root {
+  font-family: var(--sans);
+  color: var(--body);
+  background: var(--canvas);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  line-height: 1.5;
+  font-size: 17px;
+  font-weight: 500;
+}
+.fs-root ::selection { background: var(--rose-tint); color: var(--rose-deep); }
+
+.fs-root a { color: inherit; text-decoration: none; }
+.fs-root img { max-width: 100%; display: block; }
+
+.fs-root .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 24px; }
+
+/* ---------- Typography ---------- */
+.fs-root .eyebrow {
+  font-family: var(--sans);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--berry);
+  margin: 0 0 16px;
+  display: block;
+}
+.fs-root h1, .fs-root h2, .fs-root h3 {
+  font-family: var(--sans);
+  color: var(--ink);
+  font-weight: 600;
+  margin: 0;
+  text-wrap: balance;
+}
+.fs-root h1 {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 5.6vw, 4rem);
+  line-height: 1.04;
+  letter-spacing: -0.035em;
+}
+.fs-root h2 {
+  font-family: var(--sans);
+  font-weight: 700;
+  font-size: clamp(1.9rem, 3.8vw, 3rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+.fs-root h3 { font-size: 1.125rem; line-height: 1.35; letter-spacing: -0.01em; }
+.fs-root p { margin: 0; }
+
+.fs-root .lede { font-size: clamp(1.05rem, 1.6vw, 1.25rem); color: var(--body); line-height: 1.55; }
+
+/* ---------- Buttons ---------- */
+.fs-root .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--sans); font-size: 15px; font-weight: 600; letter-spacing: -0.01em;
+  height: 46px; padding: 0 22px; border-radius: 9px; border: 1px solid transparent;
+  cursor: pointer; transition: background .15s ease, border-color .15s ease, transform .15s ease;
+  white-space: nowrap;
+}
+.fs-root .btn-primary { background: var(--ink); color: var(--on-dark); }
+.fs-root .btn-primary:hover { background: var(--ink-active); }
+.fs-root .btn-primary:active { transform: translateY(1px); }
+.fs-root .btn-secondary { background: var(--canvas); color: var(--ink); border-color: var(--hairline-strong); }
+.fs-root .btn-secondary:hover { border-color: var(--muted); }
+.fs-root .btn-ghost { background: transparent; color: var(--ink); height: auto; padding: 0; }
+.fs-root .btn .arw { transition: transform .15s ease; }
+.fs-root .btn:hover .arw { transform: translateX(3px); }
+
+.fs-root .textlink {
+  display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 15px;
+  color: var(--ink); transition: color .2s ease;
+}
+.fs-root .textlink:hover { color: var(--rose-deep); }
+.fs-root .textlink .arw { transition: transform .15s ease; }
+.fs-root .textlink:hover .arw { transform: translateX(3px); }
+
+.fs-root :focus-visible { outline: 2px solid var(--rose); outline-offset: 3px; border-radius: 4px; }
+
+/* ---------- Sections ---------- */
+.fs-root .section { padding: clamp(64px, 9vw, 104px) 0; }
+.fs-root .section-soft { background: var(--surface-card); }
+.fs-root .section-head { max-width: 620px; margin: 0 auto 56px; text-align: center; }
+.fs-root .section-head p:not(.eyebrow) { margin-top: 18px; color: var(--muted); font-size: 1.1rem; }
+
+/* ---------- Hero ---------- */
+.fs-root .hero { padding: clamp(48px, 7vw, 92px) 0 clamp(56px, 8vw, 100px); overflow: hidden; }
+/* Stacked: copy on top, media full-width below */
+.fs-root .hero-grid { display: grid; grid-template-columns: 1fr; gap: clamp(40px, 5vw, 64px); }
+.fs-root .hero-copy h1 { margin-bottom: 22px; }
+.fs-root .hero-copy .lede { max-width: 52ch; margin-bottom: 30px; }
+
+/* Hero media — full content width, sits below the copy */
+.fs-root .hero-media {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  border: none;
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 30px 70px -28px rgba(17,13,15,.30);
+  width: 100%;
+  aspect-ratio: 2940 / 1848; /* matches the hero screenshots so nothing is cropped */
+  background: linear-gradient(135deg, var(--rose-tint) 0%, #ffffff 55%, var(--surface-card) 100%);
+}
+.fs-root .hero-img { width: 100%; height: 100%; object-fit: cover; object-position: left top; }
+
+/* Hero slideshow — 4 use-case screenshots crossfading in a loop.
+   Each slide is a full-quality static image; opacity is animated with a shared
+   keyframe, staggered per slide. No JS needed (MDX can't run <script>). */
+.fs-root .hero-slide {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: cover; object-position: left top;
+  opacity: 0; animation: heroSlide 24s linear infinite;
+}
+.fs-root .hero-slide:nth-child(1) { animation-delay: 0s; }
+.fs-root .hero-slide:nth-child(2) { animation-delay: 6s; }
+.fs-root .hero-slide:nth-child(3) { animation-delay: 12s; }
+.fs-root .hero-slide:nth-child(4) { animation-delay: 18s; }
+@keyframes heroSlide {
+  0%   { opacity: 0; }
+  4%   { opacity: 1; }
+  25%  { opacity: 1; }
+  29%  { opacity: 0; }
+  100% { opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fs-root .hero-slide { animation: none; }
+  .fs-root .hero-slide:first-child { opacity: 1; }
+}
+
+/* ---------- Demo video — framed 16/9 embed near the foot of the page ---------- */
+.fs-root .demo-media {
+  max-width: 900px; margin: 0 auto; position: relative;
+  border-radius: 16px; overflow: hidden; border: 1px solid var(--hairline);
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 30px 70px -28px rgba(17,13,15,.30);
+  aspect-ratio: 16 / 9; background: var(--surface-card);
+}
+.fs-root .demo-media iframe { width: 100%; height: 100%; border: 0; display: block; }
+.fs-root .cta-row { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-bottom: 20px; }
+.fs-root .gh-star {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 46px; padding: 0 16px;
+  border: 1px solid var(--hairline-strong); border-radius: 9px; font-size: 14px; font-weight: 600;
+  color: var(--ink); background: var(--canvas); transition: border-color .15s ease;
+}
+.fs-root .gh-star:hover { border-color: var(--muted); }
+.fs-root .gh-star .cnt { color: var(--muted); font-variant-numeric: tabular-nums; }
+.fs-root .microcopy { font-family: var(--sans); font-size: 13.5px; color: var(--muted-soft); letter-spacing: 0; }
+.fs-root .microcopy b { color: inherit; font-weight: 500; }
+
+/* ---------- Publish your way — split layout ---------- */
+.fs-root .publish-grid { display: grid; grid-template-columns: minmax(0, 0.82fr) minmax(0, 1.18fr);
+  gap: clamp(40px, 6vw, 76px); align-items: center; }
+.fs-root .publish-copy { max-width: 30ch; }
+.fs-root .publish-copy h2 { margin-top: 16px; }
+.fs-root .publish-copy .publish-cta { margin-top: 32px; }
+
+/* ---------- Workflow grid — filled rounded cards, colored icon chips ---------- */
+.fs-root .wf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.fs-root .wf-card {
+  position: relative; background: color-mix(in srgb, var(--card-yellow) 68%, #fff); border-radius: 16px;
+  padding: 24px 52px 24px 22px;
+  display: flex; flex-direction: column; gap: 12px;
+  color: var(--card-ink); text-decoration: none;
+  transition: box-shadow .16s ease, transform .16s ease;
+}
+.fs-root .wf-card:hover {
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 24px 48px -26px color-mix(in srgb, var(--gold-eyebrow) 62%, transparent);
+  transform: translateY(-3px);
+}
+.fs-root .wf-go {
+  position: absolute; top: 20px; right: 20px; width: 30px; height: 30px;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 9px; background: rgba(0,0,0,.08); color: var(--card-ink);
+  opacity: 0; transform: translateY(-2px);
+  transition: opacity .15s ease, transform .15s ease;
+}
+.fs-root .wf-go svg { width: 15px; height: 15px; display: block; }
+.fs-root .wf-card:hover .wf-go { opacity: 1; transform: translateY(0); }
+.fs-root .wf-ico {
+  width: 44px; height: 44px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--canvas); color: var(--card-ink);
+  box-shadow: 0 1px 2px rgba(17,13,15,.10);
+}
+.fs-root .wf-ico.brand-obsidian { color: var(--obsidian); }
+.fs-root .wf-ico svg { width: 22px; height: 22px; display: block; }
+.fs-root .wf-card h3 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--card-ink); }
+.fs-root .wf-card p { font-size: 1.05rem; color: var(--card-ink); line-height: 1.5; }
+.fs-root .wf-card code { font-family: var(--mono); font-size: 12.5px; color: var(--card-ink);
+  background: rgba(0,0,0,.06); border: none;
+  padding: 2px 6px; border-radius: 5px; }
+
+/* Agent skill — cross-cutting note beneath the CTA (works with any workflow) */
+.fs-root .publish-agent {
+  margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--hairline);
+  display: flex; flex-direction: column; gap: 10px; max-width: 34ch;
+}
+.fs-root .publish-agent .pa-lead {
+  display: inline-flex; align-items: center; gap: 9px;
+  font-size: 13px; font-weight: 600; color: var(--ink);
+}
+.fs-root .publish-agent .pa-icons { display: inline-flex; align-items: center; gap: 8px; }
+.fs-root .publish-agent .pa-icons svg { display: block; }
+.fs-root .publish-agent .ag-claude { width: 18px; height: 18px; }
+.fs-root .publish-agent .ag-codex, .fs-root .publish-agent .ag-cursor { width: 15px; height: 15px; }
+.fs-root .publish-agent .pa-copy { font-size: 16px; color: var(--muted); line-height: 1.5; }
+.fs-root .publish-agent .textlink { font-size: 16px; }
+
+/* ---------- Use cases — a single row of four small cards, one shared CTA ----------
+   Images live in the hero carousel and features have their own section, so each
+   card is minimal: a title, a one-line description, and an "Explore →" link (the
+   whole card links to that use case's page). A per-card brand accent (green,
+   pink, yellow, berry) is passed down as `--u-accent` and shows on the link and
+   the hover border. */
+.fs-root .uses .section-head { margin-bottom: clamp(40px, 6vw, 56px); }
+.fs-root .uses-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+/* Clay-style: colored background, accent badge pill top-left, big two-tone
+   headline pushed to the bottom. No image, no description. */
+.fs-root .use-card {
+  display: flex; flex-direction: column;
+  background: var(--u-bg); border: none;
+  border-radius: 20px;
+  padding: 22px 22px 20px;
+  min-height: 250px;
+  transition: box-shadow .18s ease, transform .18s ease;
+}
+.fs-root .use-card:hover {
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 24px 48px -26px color-mix(in srgb, var(--u-accent) 55%, transparent);
+  transform: translateY(-3px);
+}
+.fs-root .use-badge {
+  align-self: flex-start;
+  font-family: var(--sans); font-weight: 700; font-size: 12px;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  color: #fff; background: var(--u-accent);
+  padding: 5px 12px; border-radius: 999px;
+}
+.fs-root .use-title {
+  margin: auto 0 0;
+  font-family: var(--sans); font-weight: 700;
+  font-size: clamp(1.2rem, 1.55vw, 1.45rem); letter-spacing: -0.02em; line-height: 1.22;
+  color: var(--ink);
+}
+.fs-root .use-title .use-accent { color: var(--u-accent); }
+.fs-root .use-link {
+  margin-top: 16px; display: inline-flex; align-items: center; gap: 6px;
+  font-weight: 700; font-size: 14px; color: var(--u-accent);
+}
+.fs-root .use-link .arw { transition: transform .15s ease; }
+.fs-root .use-card:hover .use-link .arw { transform: translateX(3px); }
+.fs-root .uses-cta { display: flex; justify-content: center; margin-top: clamp(36px, 5vw, 52px); }
+/* Per-card brand accent + matching (slightly richer) background fill */
+.fs-root .use-garden { --u-accent: var(--fern-ink);    --u-bg: color-mix(in srgb, var(--bright-fern) 13%, #fff); }
+.fs-root .use-blog   { --u-accent: var(--berry-blush); --u-bg: color-mix(in srgb, var(--berry-blush) 13%, #fff); }
+.fs-root .use-wiki   { --u-accent: var(--berry-ink);   --u-bg: color-mix(in srgb, var(--berry-ink) 12%, #fff); }
+.fs-root .use-docs   { --u-accent: var(--gold);        --u-bg: color-mix(in srgb, var(--card-yellow) 55%, #fff); }
+
+/* ---------- Features — filled rounded cards with visuals ---------- */
+.fs-root .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 0; }
+.fs-root .feature-tile {
+  position: relative; display: flex; flex-direction: column;
+  background: var(--surface-soft); border: none; border-radius: 20px;
+  padding: 26px 28px 0; min-height: 340px; overflow: hidden;
+  transition: box-shadow .18s ease, transform .18s ease;
+}
+.fs-root .feature-tile:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 24px 48px -26px color-mix(in srgb, var(--berry-blush) 45%, transparent);
+}
+.fs-root .ft-head {
+  display: flex; align-items: center; gap: 12px; margin: 0;
+  font-family: var(--sans); font-size: 1.2rem; font-weight: 700; color: var(--ink); letter-spacing: -0.02em;
+}
+.fs-root .ft-ico {
+  color: var(--berry-blush); flex: none;
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: 12px;
+  background: color-mix(in srgb, var(--berry-blush) 12%, #fff);
+}
+.fs-root .ft-ico svg { width: 20px; height: 20px; display: block; }
+.fs-root .ft-desc { margin: 12px 0 0; color: var(--muted); font-size: 17.5px; font-weight: 500; line-height: 1.55; max-width: 42ch; }
+.fs-root .ft-docs {
+  position: absolute; top: 26px; right: 26px; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  background: var(--canvas); border-radius: 999px;
+  padding: 6px 12px; box-shadow: 0 1px 2px rgba(17,13,15,.05);
+  opacity: 0; transform: translateY(-2px);
+  transition: opacity .2s ease, transform .2s ease, background .15s ease, color .15s ease;
+}
+.fs-root .feature-tile:hover .ft-docs, .fs-root .ft-docs:focus-visible { opacity: 1; transform: none; }
+.fs-root .ft-docs:hover { background: var(--surface-soft); color: var(--ink); }
+.fs-root .ft-docs svg { width: 13px; height: 13px; }
+.fs-root .ft-vis {
+  margin-top: 24px; flex: 1; min-height: 150px; overflow: hidden; position: relative;
+  -webkit-mask-image: linear-gradient(to bottom, #000 74%, transparent);
+  mask-image: linear-gradient(to bottom, #000 74%, transparent);
+}
+.fs-root .ft-vis > .panel { position: absolute; left: 0; right: 0; top: 0; }
+
+/* Features — mini cards (title + description, no visual): filled + rounded. */
+.fs-root .feature-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  margin: 20px 0 0; }
+.fs-root .feature-mini { display: flex; flex-direction: column;
+  background: var(--surface-soft); border: none; border-radius: 16px; padding: 24px;
+  transition: box-shadow .18s ease, transform .18s ease; }
+.fs-root .feature-mini:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 20px 40px -24px color-mix(in srgb, var(--berry-blush) 45%, transparent); }
+.fs-root .feature-mini dt, .fs-root .feature-mini dd { margin: 0; }
+.fs-root .feature-mini h3 { font-family: var(--sans); font-size: 1.15rem; font-weight: 700;
+  color: var(--ink); letter-spacing: -0.02em; }
+.fs-root .feature-mini p { margin: 8px 0 0; color: var(--muted); font-size: 17.5px; font-weight: 500; line-height: 1.55; }
+@media (max-width: 760px) {
+  .fs-root .feature-row { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+  .fs-root .feature-row { grid-template-columns: 1fr; }
+}
+
+/* Vis — markdown code panel */
+.fs-root .vis-code { background: var(--canvas); border: 1px solid var(--hairline-strong); border-radius: 12px; padding: 18px 20px; }
+.fs-root .vis-code pre { margin: 0; font-family: var(--mono); font-size: 12px; line-height: 1.75; color: var(--body); white-space: pre; }
+.fs-root .vis-code .h { color: var(--berry-ink); } .fs-root .vis-code .w { color: var(--berry-ink); }
+.fs-root .vis-code .l { color: var(--muted); } .fs-root .vis-code .s { color: var(--ink); font-weight: 600; } .fs-root .vis-code .c { color: var(--muted); }
+
+/* Vis — file tree */
+.fs-root .vis-tree { background: var(--canvas); border: 1px solid var(--hairline-strong); border-radius: 12px; padding: 18px 20px; font-family: var(--mono); font-size: 12px; color: var(--body); }
+.fs-root .vis-tree ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.fs-root .vis-tree li { white-space: nowrap; }
+.fs-root .vis-tree .dir { color: var(--ink); font-weight: 600; }
+.fs-root .vis-tree .dir::before { content: "▾ "; color: var(--muted); }
+.fs-root .vis-tree .f::before { content: "◦ "; color: var(--muted-soft); }
+.fs-root .vis-tree .l1 { padding-left: 18px; } .fs-root .vis-tree .l2 { padding-left: 36px; }
+
+/* Vis — theme swatches */
+.fs-root .vis-themes { background: var(--canvas); border: 1px solid var(--hairline-strong); border-radius: 12px; padding: 16px; }
+.fs-root .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fs-root .thumb { background: var(--surface-soft); border: 1px solid var(--hairline); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 6px; }
+.fs-root .thumb .bar { height: 7px; width: 60%; border-radius: 3px; }
+.fs-root .thumb .ln { height: 5px; border-radius: 3px; background: var(--hairline-strong); }
+.fs-root .thumb .ln.s2 { width: 78%; }
+
+/* Vis — custom domain browser bar */
+.fs-root .vis-domain { background: var(--canvas); border: 1px solid var(--hairline-strong); border-radius: 12px; overflow: hidden; }
+.fs-root .vis-domain .bar { display: flex; align-items: center; gap: 10px; padding: 11px 13px; border-bottom: 1px solid var(--hairline); }
+.fs-root .vis-domain .dots { display: flex; gap: 5px; }
+.fs-root .vis-domain .dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--hairline-strong); }
+.fs-root .vis-domain .url { flex: 1; display: flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 11.5px; color: var(--ink); background: var(--surface-soft); border: 1px solid var(--hairline); border-radius: 999px; padding: 5px 12px; }
+.fs-root .vis-domain .url svg { width: 11px; height: 11px; color: var(--rose-deep); }
+.fs-root .vis-domain .page { padding: 18px 16px; display: flex; flex-direction: column; gap: 9px; }
+.fs-root .vis-domain .page .t { height: 9px; width: 50%; border-radius: 3px; background: var(--hairline-strong); }
+.fs-root .vis-domain .page .r { height: 5px; border-radius: 3px; background: var(--hairline); }
+.fs-root .vis-domain .page .r.s2 { width: 88%; } .fs-root .vis-domain .page .r.s3 { width: 72%; }
+
+/* Vis — full-text search */
+.fs-root .vis-search { background: var(--canvas); border: 1px solid var(--hairline-strong); border-radius: 12px; padding: 16px; }
+.fs-root .vis-search .box { display: flex; align-items: center; gap: 9px; border: 1px solid var(--hairline-strong); border-radius: 9px; padding: 9px 12px; font-size: 12.5px; color: var(--muted); }
+.fs-root .vis-search .box svg { width: 14px; height: 14px; color: var(--muted); flex: none; }
+.fs-root .vis-search .box .cur { color: var(--ink); } .fs-root .vis-search .box .cur b { color: var(--rose-deep); font-weight: 600; }
+.fs-root .vis-search .res { margin-top: 10px; display: flex; flex-direction: column; gap: 2px; }
+.fs-root .vis-search .res .row { padding: 8px 11px; border-radius: 7px; font-size: 12px; color: var(--body); }
+.fs-root .vis-search .res .row b { color: var(--rose-deep); font-weight: 600; }
+.fs-root .vis-search .res .row.on { background: var(--rose-tint); }
+
+/* Vis — AI agent chat */
+.fs-root .vis-agent { background: var(--canvas); border: 1px solid var(--hairline-strong); border-radius: 12px; padding: 16px; }
+.fs-root .chat { display: flex; flex-direction: column; gap: 11px; }
+.fs-root .msg { border-radius: 12px; padding: 11px 14px; font-size: 12.5px; line-height: 1.5; }
+.fs-root .msg.user { align-self: flex-end; max-width: 84%; background: var(--ink); color: var(--on-dark); border-bottom-right-radius: 4px; }
+.fs-root .msg.user code { background: rgba(255,255,255,.16); color: #fff; padding: 1px 5px; border-radius: 4px; font-family: var(--mono); font-size: 11.5px; }
+.fs-root .msg.bot { align-self: flex-start; max-width: 90%; background: var(--surface-soft); border: 1px solid var(--hairline); color: var(--body); display: flex; flex-direction: column; gap: 6px; border-bottom-left-radius: 4px; }
+.fs-root .msg.bot .bot-head { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; color: var(--ink); font-size: 12px; }
+.fs-root .msg.bot .step { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+.fs-root .msg.bot .step b { color: var(--ink); font-weight: 600; }
+
+/* ---------- Showcase ---------- */
+.fs-root .section-head h2 .stat-hl { color: var(--rose-deep); font-variant-numeric: tabular-nums; }
+.fs-root .section-head h2 .h2-sub { color: var(--muted); }
+.fs-root .stats { display: flex; justify-content: center; gap: 40px; margin-bottom: 44px; flex-wrap: wrap; }
+.fs-root .stat { text-align: center; }
+.fs-root .stat .n { font-size: clamp(2rem, 4vw, 2.75rem); font-weight: 600; color: var(--ink); letter-spacing: -0.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+.fs-root .stat .l { font-family: var(--mono); font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 10px; }
+.fs-root .stat .n .plus { color: var(--rose); }
+.fs-root .show-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+/* Filled soft card matching the feature tiles: inset thumbnail, lift + rose glow
+   on hover, plus the publish-section corner ↗ chip. */
+.fs-root .show-card {
+  position: relative; display: flex; flex-direction: column;
+  background: var(--surface-soft); border-radius: 20px;
+  padding: 14px 14px 4px; outline-offset: 3px;
+  transition: box-shadow .18s ease, transform .18s ease;
+}
+.fs-root .show-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 24px 48px -26px rgba(17,13,15,.30);
+}
+.fs-root .show-thumb {
+  position: relative; aspect-ratio: 16 / 10; width: 100%; overflow: hidden;
+  border: none; border-radius: 12px; background: var(--canvas);
+}
+.fs-root .show-thumb-img { width: 100%; height: 100%; object-fit: cover; object-position: left top; display: block; }
+.fs-root .show-body { display: flex; flex-direction: column; gap: 14px; padding: 18px 8px 14px; flex: 1; }
+/* Use-card style: name + description at one large size and weight, told apart
+   by color alone — name in ink, description in muted. */
+.fs-root .show-body p { margin: 0; font-size: clamp(1.1rem, 1.35vw, 1.25rem); line-height: 1.4; font-weight: 600; letter-spacing: -0.015em; color: var(--muted); }
+.fs-root .show-body .nm { color: var(--ink); }
+.fs-root .show-link { margin-top: auto; display: inline-flex; align-items: center; gap: 6px;
+  font-size: 14px; font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; transition: color .15s ease; }
+.fs-root .show-link .arw { transition: transform .15s ease; }
+.fs-root .show-card:hover .show-link { color: var(--berry-ink); }
+.fs-root .show-card:hover .show-link .arw { transform: translateX(3px); }
+/* Type badge — same pill as the use-case cards (uppercase, white-on-accent),
+   sitting at the top of the card body above the name. Accent per card matches
+   the matching use-case card colour. */
+.fs-root .show-badge {
+  align-self: flex-start;
+  font-family: var(--sans); font-weight: 700; font-size: 12px;
+  letter-spacing: 0.09em; text-transform: uppercase;
+  color: #fff; background: var(--sc-accent);
+  padding: 5px 12px; border-radius: 999px;
+}
+.fs-root .sc-garden { --sc-accent: var(--fern-ink); }
+.fs-root .sc-blog   { --sc-accent: var(--berry-blush); }
+.fs-root .sc-wiki   { --sc-accent: var(--berry-ink); }
+.fs-root .sc-docs   { --sc-accent: var(--gold); }
+/* corner ↗ chip — mirrors the .wf-go publish-card motif */
+.fs-root .show-go {
+  position: absolute; top: 24px; right: 24px; width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 9px; background: rgba(255,255,255,.9); color: var(--ink);
+  box-shadow: 0 2px 8px rgba(17,13,15,.12);
+  opacity: 0; transform: translateY(-2px);
+  transition: opacity .2s ease, transform .2s ease;
+}
+.fs-root .show-card:hover .show-go { opacity: 1; transform: none; }
+.fs-root .show-go svg { width: 15px; height: 15px; display: block; }
+/* Dogfooding banner — filled card in the section's card language, promoted from
+   the old muted one-liner into a proper "we run on our own product" callout. */
+.fs-root .self-note {
+  display: flex; align-items: center; gap: 22px;
+  margin-top: 40px; padding: 22px 26px;
+  background: var(--surface-soft); border-radius: 20px;
+}
+.fs-root .sn-badge {
+  flex: none; width: 52px; height: 52px; border-radius: 14px;
+  display: flex; align-items: center; justify-content: center; font-size: 26px;
+  background: var(--canvas); box-shadow: 0 1px 2px rgba(17,13,15,.05);
+}
+.fs-root .sn-copy { flex: 1; min-width: 0; }
+.fs-root .sn-copy h3 { font-family: var(--sans); font-size: 1.2rem; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; margin: 0; }
+.fs-root .sn-copy p { margin: 6px 0 0; color: var(--muted); font-size: 16px; line-height: 1.5; }
+.fs-root .sn-btn { flex: none; }
+.fs-root .sn-btn svg { width: 18px; height: 18px; }
+
+/* ---------- FAQ — filled rounded cards ---------- */
+.fs-root .faq-grid { max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+.fs-root .faq-item { background: var(--surface-soft); border-radius: 16px; padding: 24px 26px; }
+.fs-root .faq-item h3 { font-family: var(--sans); font-weight: 700; font-size: 1.075rem; margin-bottom: 10px; }
+.fs-root .faq-item p { color: var(--muted); font-size: 16px; line-height: 1.6; }
+
+/* ---------- Open source — copy left, star count + button right ---------- */
+/* Reads on plain white — drop the soft-gray section fill (ID beats .section-soft) */
+.fs-root #open-source { background: var(--canvas); }
+.fs-root .os-grid {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(40px, 6vw, 80px); align-items: center;
+}
+.fs-root .os-copy h2 { margin: 0; }
+.fs-root .os-copy p { margin-top: 16px; color: var(--muted); font-size: 1.05rem; line-height: 1.6; max-width: 42ch; }
+
+.fs-root .os-side {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 24px;
+  justify-self: end;
+}
+/* GitHub button + Product Hunt badge sit side by side so the column stays short */
+.fs-root .os-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.fs-root .os-star {
+  display: inline-flex; flex-direction: column; align-items: flex-start; gap: 3px; color: var(--ink);
+}
+.fs-root .os-star-num {
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: clamp(2.25rem, 5vw, 3.25rem); font-weight: 500; letter-spacing: -0.03em; line-height: 1;
+  transition: color .15s ease;
+}
+.fs-root .os-star-label {
+  font-size: 13px; letter-spacing: 0.02em; color: var(--muted-soft);
+}
+.fs-root .os-star:hover .os-star-num { color: var(--rose-deep); }
+
+.fs-root .os-gh {
+  display: inline-flex; align-items: center; gap: 9px; height: 46px; padding: 0 20px;
+  border: 1px solid var(--hairline-strong); border-radius: 9px; font-size: 15px; font-weight: 600;
+  color: var(--ink); background: var(--canvas); transition: border-color .15s ease;
+}
+.fs-root .os-gh:hover { border-color: var(--muted); }
+.fs-root .os-gh svg { width: 19px; height: 19px; flex: none; }
+.fs-root .os-gh .arw { transition: transform .15s ease; }
+.fs-root .os-gh:hover .arw { transform: translateX(3px); }
+
+/* Matched to the GitHub button box (197×46); object-fit keeps the badge undistorted */
+.fs-root .ph-badge { display: flex; justify-content: flex-start; }
+.fs-root .ph-badge img { width: 197px; height: 46px; object-fit: contain; object-position: left center; display: block; }
+
+/* ---------- Final CTA — flat berry close ----------
+   The page's last block: one clean, saturated brand-berry fill (no gradient, no
+   decorative petals) with white text and a white button. A single bold colour
+   band sitting flush above the near-black footer to close the page. */
+.fs-root .final { padding-top: clamp(64px, 9vw, 104px); padding-bottom: 0; }
+.fs-root .final-card {
+  background: var(--berry-blush); border: none; border-radius: 20px;
+  padding: clamp(56px, 7vw, 84px) 32px; text-align: center; position: relative; overflow: hidden;
+}
+.fs-root .final-card .petal { display: none; }
+.fs-root .final-card h2 { color: #fff; margin-bottom: 18px; position: relative; }
+.fs-root .final-card p { color: rgba(255,255,255,.88); font-size: 1.1rem; max-width: 44ch; margin: 0 auto 30px; position: relative; }
+.fs-root .final-card .fine { font-family: var(--mono); font-size: 12.5px; color: rgba(255,255,255,.72); margin-top: 20px; position: relative; }
+/* White button pops on the berry fill */
+.fs-root .final-card .btn-primary { background: #fff; color: var(--ink); position: relative; }
+.fs-root .final-card .btn-primary:hover { background: rgba(255,255,255,.9); }
+.fs-root .final-card .btn-primary:active { transform: translateY(1px); }
+
+/* ---------- Reveal — content visible by default ----------
+   The mockup faded `.reveal` blocks in via JS + IntersectionObserver. MDX pages
+   don't run arbitrary <script>, so we render everything visible (no JS needed).
+   The `reveal` classes are left on the markup as harmless no-ops. */
+.fs-root .reveal { opacity: 1; transform: none; }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 940px) {
+  .fs-root .hero-copy .lede { max-width: 46ch; }
+  .fs-root .publish-grid { grid-template-columns: 1fr; gap: 40px; align-items: start; }
+  .fs-root .publish-copy { max-width: none; }
+  .fs-root .os-grid { grid-template-columns: 1fr; gap: 32px; align-items: start; }
+  .fs-root .os-side { justify-self: start; }
+  .fs-root .uses-grid { grid-template-columns: repeat(2, 1fr); }
+  .fs-root .wf-grid { grid-template-columns: repeat(2, 1fr); }
+  .fs-root .show-grid { grid-template-columns: repeat(2, 1fr); gap: 32px 22px; }
+}
+@media (max-width: 760px) {
+  .fs-root .feature-grid { grid-template-columns: 1fr; }
+  .fs-root .feature-tile { min-height: 300px; }
+}
+@media (max-width: 720px) {
+  .fs-root { font-size: 16px; }
+  .fs-root .cta-row { gap: 12px; }
+  .fs-root .cta-row .btn, .fs-root .cta-row .gh-star { width: 100%; }
+  .fs-root .stats { gap: 28px; }
+}
+@media (max-width: 560px) {
+  .fs-root .self-note { flex-direction: column; text-align: center; }
+  .fs-root .sn-btn { width: 100%; }
+}
+@media (max-width: 480px) {
+  .fs-root .wf-grid { grid-template-columns: 1fr; }
+  .fs-root .show-grid { grid-template-columns: 1fr; }
+  .fs-root .uses-grid { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fs-root .btn, .fs-root .textlink, .fs-root .wf-card, .fs-root .show-card,
+  .fs-root .show-thumb-img, .fs-root .show-link .arw { transition: none; }
+}
+
+/* ==========================================================================
+   Default Flowershow footer — restyled to match the landing mockup
+   --------------------------------------------------------------------------
+   The footer is theme chrome, rendered from config.json on EVERY page of this
+   site (home, docs, blog, changelog…). So — unlike the landing styles above —
+   these rules are intentionally NOT scoped under `.fs-root`: they apply
+   site-wide for one consistent dark footer. custom.css layers above the theme,
+   so the overrides win without !important.
+   Target DOM: apps/flowershow/components/public/footer.tsx
+   ========================================================================== */
+
+/* Full-bleed near-black band; inner content stays centered (theme handles that) */
+.site-footer {
+  background: var(--surface-dark);
+  border-top: none;
+  color: var(--on-dark-soft);
+}
+.site-footer-inner { padding: 64px 0 40px; }
+
+/* Publication name → brand, white, with the 💐 mark like the mockup */
+.site-footer-publication-name {
+  font-family: var(--sans);
+  color: var(--on-dark);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.site-footer-publication-name::before { content: "💐 "; }
+
+.site-footer-copyright { color: var(--on-dark-soft); font-size: 14px; }
+
+/* Social icons: light gray → white on hover */
+.site-footer-social-link { color: var(--on-dark-soft); }
+.site-footer-social-link:hover { color: var(--on-dark); }
+
+/* Column headings: mono, uppercase, wide-tracked */
+.site-footer-navigation-title {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--on-dark-soft);
+}
+
+/* Links: soft light gray → white on hover */
+.site-footer-navigation-link { font-size: 14px; color: #cfc9cd; }
+.site-footer-navigation-link:hover { color: var(--on-dark); }
+
+/* ==========================================================================
+   A/B test — landing page (control vs. redesign)
+   --------------------------------------------------------------------------
+   The home page (content/flowershow-app/README.md) ships BOTH variants in one
+   document, so there is exactly ONE indexable URL — no duplicate pages, no
+   canonical/noindex needed. Google, no-JS visitors, and un-bucketed users all
+   see the CONTROL by default (== the previously-live page, so indexed content
+   is unchanged). PostHog reveals the redesign (`variant B`) client-side only
+   for the test cohort.
+
+   These rules are intentionally NOT scoped under `.fs-root`: the toggle
+   wrappers sit ABOVE it (`.lp-ab--b` contains the `.fs-root` redesign;
+   `.lp-ab--control` contains the old Tailwind markup). The `.lp-ab*` classes
+   exist only on the landing page, so leaving them unscoped is safe.
+
+   Toggle contract for PostHog: the experiment's TEST variant adds the class
+   `ab-variant-b` to <body> (a single "add class" action in the web-experiment
+   editor). No custom JS ships in the markdown. To QA variant B without PostHog,
+   add `ab-variant-b` to <body> in devtools. Flipping the default (ship B) is a
+   one-line change: swap which variant is hidden below.
+   ========================================================================== */
+.lp-ab--control { display: block; }
+.lp-ab--b { display: none; }
+body.ab-variant-b .lp-ab--control { display: none; }
+body.ab-variant-b .lp-ab--b { display: block; }
