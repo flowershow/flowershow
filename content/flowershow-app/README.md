@@ -35,18 +35,18 @@ showComments: false
       <div className="wrap">
         <div className="section-head reveal">
           <span className="eyebrow">Use cases</span>
-          <h2>One tool, any kind of site.</h2>
-          <p>Blogs, wikis, docs, digital gardens — all from the same folder of markdown.</p>
+          <h2>One folder of Markdown, any kind of site.</h2>
+          <p>Same files, same workflow, whatever you publish.</p>
         </div>
         <div className="uses-grid reveal">
           <a className="use-card use-garden" href="/uses/digital-gardens">
             <span className="use-badge">Gardens</span>
-            <h3 className="use-title">Grow a living garden of <span className="use-accent">connected notes</span> that thinks with you.</h3>
+            <h3 className="use-title">Grow a living garden of notes, mapped by backlinks and an <span className="use-accent">interactive graph</span>.</h3>
             <span className="use-link">Explore <span className="arw">→</span></span>
           </a>
           <a className="use-card use-blog" href="/uses/blogs">
             <span className="use-badge">Blog</span>
-            <h3 className="use-title">Publish a <span className="use-accent">beautiful blog</span> straight from your markdown.</h3>
+            <h3 className="use-title">Publish a blog with <span className="use-accent">beautiful themes</span>, no site builder to wrangle.</h3>
             <span className="use-link">Explore <span className="arw">→</span></span>
           </a>
           <a className="use-card use-wiki" href="/uses/wikis">
@@ -69,7 +69,7 @@ showComments: false
       <div className="wrap">
         <div className="section-head reveal">
           <span className="eyebrow">Features</span>
-          <h2>Everything your markdown needs to go live.</h2>
+          <h2>Everything you need to publish, built in.</h2>
         </div>
         <dl className="feature-grid reveal">
           <div className="feature-tile">

@@ -236,14 +236,14 @@
 /* ---------- Workflow grid — filled rounded cards, colored icon chips ---------- */
 .fs-root .wf-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
 .fs-root .wf-card {
-  position: relative; background: var(--card-yellow); border-radius: 16px;
+  position: relative; background: color-mix(in srgb, var(--card-yellow) 68%, #fff); border-radius: 16px;
   padding: 24px 52px 24px 22px;
   display: flex; flex-direction: column; gap: 12px;
   color: var(--card-ink); text-decoration: none;
   transition: box-shadow .16s ease, transform .16s ease;
 }
 .fs-root .wf-card:hover {
-  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 24px 48px -26px color-mix(in srgb, var(--gold-eyebrow) 50%, transparent);
+  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 24px 48px -26px color-mix(in srgb, var(--gold-eyebrow) 62%, transparent);
   transform: translateY(-3px);
 }
 .fs-root .wf-go {
@@ -332,7 +332,7 @@
 .fs-root .use-garden { --u-accent: var(--fern-ink);    --u-bg: color-mix(in srgb, var(--bright-fern) 13%, #fff); }
 .fs-root .use-blog   { --u-accent: var(--berry-blush); --u-bg: color-mix(in srgb, var(--berry-blush) 13%, #fff); }
 .fs-root .use-wiki   { --u-accent: var(--berry-ink);   --u-bg: color-mix(in srgb, var(--berry-ink) 12%, #fff); }
-.fs-root .use-docs   { --u-accent: var(--gold);        --u-bg: color-mix(in srgb, var(--gold-eyebrow) 15%, #fff); }
+.fs-root .use-docs   { --u-accent: var(--gold);        --u-bg: color-mix(in srgb, var(--card-yellow) 55%, #fff); }
 
 /* ---------- Features — filled rounded cards with visuals ---------- */
 .fs-root .feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 0; }
