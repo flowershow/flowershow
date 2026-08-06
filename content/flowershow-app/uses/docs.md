@@ -151,7 +151,7 @@ showComments: false
         <div className="final-card reveal">
           <span className="petal p1" aria-hidden="true">💐</span>
           <span className="petal p2" aria-hidden="true">💐</span>
-          <h2>Your docs are already written. Give them a URL.</h2>
+          <h2>Markdown to URL. Instantly. Free.</h2>
           <p>Join the writers, researchers, and teams behind 1,700+ sites already published with Flowershow.</p>
           <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
           <p className="fine">No credit card required · Free plan, forever</p>

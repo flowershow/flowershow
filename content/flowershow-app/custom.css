@@ -63,6 +63,13 @@
   --lemon: var(--card-yellow);   /* warm yellow fill (back-compat alias) */
   --gold: var(--gold-eyebrow);   /* warm dark gold (back-compat alias) */
   --obsidian: #7c3aed;           /* Obsidian brand violet */
+  /* Teal — the Data Stories use-case accent. A cool, analytical pop that reads
+     distinct from the warm gold/berry family (docs owns gold). Two shades: a
+     saturated fill (--teal) and a darkened --teal-ink that stays legible as
+     TEXT on white, plus a soft --tint-teal wash — mirrors the berry triplet. */
+  --teal:       #0f9aa6;         /* saturated teal — data-viz fills */
+  --teal-ink:   #0b6b74;         /* darkened teal — accent text/links on white */
+  --tint-teal:  #dcf0f2;         /* soft teal wash — filled card backgrounds */
   /* Back-compat aliases — existing rules pick up the brand palette automatically */
   --rose: var(--berry);          /* pink pop → focus, selection, "+" */
   --rose-deep: var(--berry-ink); /* deep berry → link / hover text */
@@ -695,7 +702,8 @@
 .fs-root.fs-garden .publish-card,
 .fs-root.lp-blog .publish-card,
 .fs-root.lp-wiki .publish-card,
-.fs-root.lp-docs .publish-card {
+.fs-root.lp-docs .publish-card,
+.fs-root.lp-data-stories .publish-card {
   background: var(--canvas);
   border-radius: 24px;
   padding: clamp(32px, 5vw, 56px);
@@ -1084,6 +1092,94 @@
 
 /* Deep-gold corner tag for the "no build pipeline" text strip */
 .fs-root.lp-docs .bento-tag.alt { color: var(--gold-eyebrow); background: var(--tint-lemon); }
+
+/* ==========================================================================
+   Data Stories landing — /uses/data-stories
+   --------------------------------------------------------------------------
+   Same shared kit + gardens-style .uc-feature rows (white card, copy on one
+   side, a colored inner panel on the other), scoped under `.lp-data-stories`
+   and tinted to the TEAL accent reserved for this use-case (docs owns gold).
+   Unlike gardens — whose panels hold hand-built SVG mockups — each panel here
+   holds a REAL Flowershow data component (this page is .mdx, so the live
+   <FlatUiTable>/<LineChart>/<PlotlyBarChart> render as the showcase media).
+   The .dv-panel wrapper replaces the fixed-width .mock: data viz needs room,
+   so it grows to fill the media panel instead of capping at 440px.
+   ========================================================================== */
+
+/* Soft page ground — matches the family: whole page on surface-soft, section
+   bands transparent, so feature cards read as white surfaces floating on it. */
+.fs-root.lp-data-stories { background: var(--surface-soft); }
+.fs-root.lp-data-stories .section-soft { background: transparent; }
+
+/* Re-tint the gardens-default-fern kit pieces to teal on this page */
+.fs-root.lp-data-stories .uc-badge .uc-name { background: var(--tint-teal); color: var(--teal-ink); }
+.fs-root.lp-data-stories .eyebrow { color: var(--teal-ink); }
+
+/* Teal in-card link hover — the kit defaults these to berry; here it's teal */
+.fs-root.lp-data-stories .wf-card:hover .wf-learn,
+.fs-root.lp-data-stories .textlink:hover,
+.fs-root.lp-data-stories .dv-feature:hover .learn,
+.fs-root.lp-data-stories .dv-copy .learn:hover { color: var(--teal-ink); }
+
+/* Stacked feature cards — copy header on top, the live component spanning the
+   FULL card width below. Data viz (especially the 8-column table and the
+   time-series charts) needs the whole width, so unlike the gardens side-by-side
+   .uc-feature rows these stack vertically. The teal --feat-* triplet drives the
+   tinted media panel fill + the film-grain, mirroring the gardens accent vars. */
+.fs-root.lp-data-stories .dv-feature {
+  --feat-strong: var(--teal-ink);
+  --feat-bright: var(--teal);
+  --feat-tint: var(--tint-teal);
+  background: var(--canvas); border-radius: 28px;
+  padding: clamp(16px, 1.8vw, 24px); overflow: hidden;
+}
+/* Header row: copy on the left, the one-line MDX snippet on the right. Wraps to
+   a single column on narrow screens (see the 720px query below). */
+.fs-root.lp-data-stories .dv-head {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: clamp(18px, 3vw, 44px); flex-wrap: wrap;
+  padding: clamp(14px, 1.6vw, 22px) clamp(14px, 1.6vw, 22px) clamp(20px, 2vw, 26px);
+}
+.fs-root.lp-data-stories .dv-copy { flex: 1 1 360px; min-width: 0; }
+.fs-root.lp-data-stories .dv-copy h3 {
+  font-size: clamp(1.6rem, 2.6vw, 2.25rem); line-height: 1.12;
+  letter-spacing: -0.028em; color: var(--ink);
+}
+.fs-root.lp-data-stories .dv-copy p {
+  margin-top: 14px; color: var(--muted); font-size: 1.075rem; line-height: 1.6; max-width: 60ch;
+}
+.fs-root.lp-data-stories .dv-copy .learn { margin-top: 18px; color: var(--teal-ink); }
+/* One-line MDX snippet — plain mono card, sits to the right of the copy */
+.fs-root.lp-data-stories .dv-code {
+  flex: 0 1 400px; margin: 4px 0 0; font-family: var(--mono);
+  font-size: 12.5px; line-height: 1.65; color: var(--body);
+  background: var(--surface-card); border: 1px solid var(--hairline);
+  border-radius: 10px; padding: 14px 16px; overflow-x: auto;
+  white-space: pre; tab-size: 2;
+}
+/* Full-width tinted media panel — same teal fill + film-grain as the gardens
+   .uc-feature-media (grain is an inline feTurbulence SVG; no /assets url()). */
+.fs-root.lp-data-stories .dv-media {
+  display: flex; justify-content: center; border-radius: 20px;
+  padding: clamp(16px, 2.4vw, 34px);
+  background-color: color-mix(in srgb, var(--feat-bright) 50%, #fff);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 160px 160px; background-repeat: repeat;
+  background-blend-mode: overlay;
+}
+/* White card holding the live chart/table — fills the panel width */
+.fs-root.lp-data-stories .dv-panel {
+  width: 100%; background: var(--canvas); border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(17, 17, 17, .06), 0 5px 14px -8px rgba(17, 17, 17, .16);
+  border: 1px solid color-mix(in srgb, var(--canvas) 70%, transparent);
+  padding: clamp(14px, 1.6vw, 22px); overflow: auto;
+}
+.fs-root.lp-data-stories .dv-panel table { width: 100%; }
+.fs-root.lp-data-stories .dv-panel :where(svg, canvas, img) { max-width: 100%; }
+/* Snippet drops full-width below the copy on narrow screens */
+@media (max-width: 720px) {
+  .fs-root.lp-data-stories .dv-code { flex-basis: 100%; }
+}
 
 /* ==========================================================================
    Default Flowershow footer — restyled to match the landing mockup
