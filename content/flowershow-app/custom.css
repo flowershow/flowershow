@@ -147,6 +147,7 @@
 .fs-root .btn-ghost { background: transparent; color: var(--ink); height: auto; padding: 0; }
 .fs-root .btn .arw { transition: transform .15s ease; }
 .fs-root .btn:hover .arw { transform: translateX(3px); }
+.fs-root .btn-google .g-ico { width: 18px; height: 18px; flex: none; }
 
 /* ============================================================
    Canonical in-card link. Every non-button link — Learn more,

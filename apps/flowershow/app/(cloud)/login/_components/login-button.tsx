@@ -33,6 +33,7 @@ export default function LoginButton() {
   const searchParams = useSearchParams();
   const error = searchParams?.get('error');
   const callbackUrl = searchParams?.get('callbackUrl');
+  const provider = searchParams?.get('provider');
 
   useEffect(() => {
     const errorCode = Array.isArray(error) ? error.pop() : error;
@@ -40,6 +41,16 @@ export default function LoginButton() {
       toast.error(ERROR_MESSAGES[errorCode] ?? errorCode);
     }
   }, [error]);
+
+  // Auto-trigger a provider's OAuth flow when linked here with ?provider=<id>
+  // (e.g. the landing-page "Sign up with Google" button → /login?provider=google).
+  // Skipped if there's an error in the URL so the user can see the message and retry.
+  useEffect(() => {
+    if (provider === 'google' && !error) {
+      setGoogleLoading(true);
+      signIn('google', { callbackUrl: callbackUrl || '/' });
+    }
+  }, [provider, error, callbackUrl]);
 
   const isLoading = githubLoading || googleLoading || emailLoading;
 

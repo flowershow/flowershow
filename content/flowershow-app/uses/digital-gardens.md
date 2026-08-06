@@ -16,7 +16,7 @@ showComments: false
           <h1>Grow a digital garden from your markdown notes.</h1>
           <p className="lede">Backlinks, an interactive knowledge graph, and wikilinks — wired up automatically. Publish your Obsidian vault or a folder of markdown as a living, linked site. No code.</p>
           <div className="cta-row">
-            <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
+            <a className="btn btn-primary" href="https://cloud.flowershow.app/login">Get started <span className="arw">→</span></a>
             <a className="btn btn-secondary" href="https://demo-garden.flowershow.app/">See demo site <span className="arw">→</span></a>
           </div>
           <p className="microcopy"><b>Free forever</b>, no credit card required</p>
