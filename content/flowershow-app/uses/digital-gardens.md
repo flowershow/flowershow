@@ -17,6 +17,15 @@ showComments: false
           <p className="lede">Backlinks, an interactive knowledge graph, and wikilinks — wired up automatically. Publish your Obsidian vault or a folder of markdown as a living, linked site. No code.</p>
           <div className="cta-row">
             <a className="btn btn-primary" href="https://cloud.flowershow.app/login">Get started <span className="arw">→</span></a>
+            <a className="btn btn-secondary btn-google" href="https://cloud.flowershow.app/login?provider=google">
+              <svg className="g-ico" aria-hidden="true" viewBox="0 0 24 24">
+                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+              </svg>
+              Sign up with Google
+            </a>
             <a className="btn btn-secondary" href="https://demo-garden.flowershow.app/">See demo site <span className="arw">→</span></a>
           </div>
           <p className="microcopy"><b>Free forever</b>, no credit card required</p>
@@ -34,37 +43,107 @@ showComments: false
           <p>Your notes, already connected — nothing to wire up by hand.</p>
         </div>
         <div className="uc-features">
-          <div className="uc-feature reveal">
+          <div className="uc-feature reveal f-graph">
             <div className="uc-feature-text">
               <h3>An interactive knowledge graph</h3>
               <p>Every note becomes a point in a living map of your garden. Readers pan and zoom to explore by association, following the connections between ideas instead of hunting through a menu.</p>
               <a className="learn" href="/docs/reference/knowledge-graph"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             </div>
-            <div className="uc-feature-media"><img src="/assets/uses/digital-gardens/graph.webp" alt="The interactive knowledge graph of a Flowershow digital garden" loading="lazy" decoding="async" /></div>
+            <div className="uc-feature-media">
+              <div className="mock mk-graph">
+                <svg viewBox="0 0 440 300" role="img" aria-label="An interactive knowledge graph — an Ethics note linked to Virtue, Free Will, Knowledge, Truth, Justice, and Mind">
+                  <g className="g-edges">
+                    <line x1="182" y1="132" x2="300" y2="88" />
+                    <line x1="182" y1="132" x2="96" y2="82" />
+                    <line x1="182" y1="132" x2="204" y2="236" />
+                    <line x1="182" y1="132" x2="366" y2="152" />
+                    <line x1="182" y1="132" x2="72" y2="192" />
+                    <line x1="300" y1="88" x2="366" y2="152" />
+                    <line x1="366" y1="152" x2="328" y2="214" />
+                    <line x1="328" y1="214" x2="204" y2="236" />
+                    <line x1="96" y1="82" x2="72" y2="192" />
+                    <line x1="72" y1="192" x2="204" y2="236" />
+                  </g>
+                  <circle className="g-node" cx="182" cy="132" r="14" />
+                  <circle className="g-node" cx="300" cy="88" r="14" />
+                  <circle className="g-node" cx="96" cy="82" r="14" />
+                  <circle className="g-node" cx="204" cy="236" r="14" />
+                  <circle className="g-node" cx="366" cy="152" r="14" />
+                  <circle className="g-node" cx="328" cy="214" r="14" />
+                  <circle className="g-node" cx="72" cy="192" r="14" />
+                  <text className="g-lbl" x="182" y="110">Ethics</text>
+                  <text className="g-lbl" x="300" y="66">Free Will</text>
+                  <text className="g-lbl" x="96" y="60">Virtue</text>
+                  <text className="g-lbl" x="204" y="266">Justice</text>
+                  <text className="g-lbl" x="366" y="182">Knowledge</text>
+                  <text className="g-lbl" x="328" y="244">Truth</text>
+                  <text className="g-lbl" x="72" y="222">Mind</text>
+                </svg>
+              </div>
+            </div>
           </div>
-          <div className="uc-feature reveal">
+          <div className="uc-feature reveal f-backlinks">
             <div className="uc-feature-text">
-              <h3>Backlinks on every page</h3>
+              <h3>Backlinks</h3>
               <p>Each page automatically lists what links to it, so related notes surface themselves. The more you plant and cross-link, the richer every page's context becomes — no manual indexes to maintain.</p>
               <a className="learn" href="/docs/reference/knowledge-graph"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             </div>
-            <div className="uc-feature-media"><img src="/assets/uses/digital-gardens/backlinks.webp" alt="Backlinks listed automatically at the foot of a note in a Flowershow garden" loading="lazy" decoding="async" /></div>
-          </div>
-          <div className="uc-feature reveal">
-            <div className="uc-feature-text">
-              <h3>Wikilinks that just work</h3>
-              <p>Write <code>[[Note Title]]</code> exactly as you do in Obsidian — Flowershow resolves it to a real link, aliases and headings included. Your vault publishes as-is, with nothing to rewrite.</p>
-              <a className="learn" href="/docs/reference/syntax"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            <div className="uc-feature-media">
+              <div className="mock mk-back">
+                <div className="note-title">Virtue</div>
+                <div className="note-sub">Excellence of character — the disposition to act well, cultivated through habit.</div>
+                <div className="bl-head">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" /></svg>
+                  <span className="bl-lbl">Linked references</span>
+                  <span className="bl-count">5</span>
+                </div>
+                <div className="bl-link">
+                  <span>Ethics</span>
+                </div>
+                <div className="bl-link">
+                  <span>Justice</span>
+                </div>
+                <div className="bl-link">
+                  <span>Aristotle</span>
+                </div>
+                <div className="bl-link">
+                  <span>The Good Life</span>
+                </div>
+                <div className="bl-link">
+                  <span>Practical Wisdom</span>
+                </div>
+              </div>
             </div>
-            <div className="uc-feature-media"><img src="/assets/uses/digital-gardens/wikilinks.webp" alt="Obsidian-style wikilinks resolving to real links in a Flowershow garden" loading="lazy" decoding="async" /></div>
           </div>
-          <div className="uc-feature reveal">
+          <div className="uc-feature reveal f-search">
             <div className="uc-feature-text">
               <h3>Full-text search</h3>
               <p>Readers search across every note and jump straight to what they need — essential once a garden grows past a handful of pages and menus stop being enough.</p>
               <a className="learn" href="/docs"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             </div>
-            <div className="uc-feature-media"><img src="/assets/uses/digital-gardens/search.webp" alt="Full-text search across every note in a Flowershow garden" loading="lazy" decoding="async" /></div>
+            <div className="uc-feature-media">
+              <div className="mock mk-search">
+                <div className="se-box">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+                  <span className="se-q">ethics<span className="caret"></span></span>
+                  <span className="se-kbd">⌘K</span>
+                </div>
+                <div className="se-results">
+                  <div className="se-row on">
+                    <span className="se-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg></span>
+                    <div className="se-tx"><div className="st-t">Introduction to Ethics</div><div className="st-s">The branch of <mark>ethics</mark> asks what we owe to one another…</div></div>
+                  </div>
+                  <div className="se-row">
+                    <span className="se-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg></span>
+                    <div className="se-tx"><div className="st-t">Virtue Ethics</div><div className="st-s">An <mark>ethics</mark> grounded in character rather than rules…</div></div>
+                  </div>
+                  <div className="se-row">
+                    <span className="se-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg></span>
+                    <div className="se-tx"><div className="st-t">Applied Ethics</div><div className="st-s">How <mark>ethics</mark> plays out in medicine, law, and technology…</div></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div style="text-align:center;margin-top:48px" className="reveal">

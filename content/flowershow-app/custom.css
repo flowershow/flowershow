@@ -698,41 +698,128 @@
   padding: clamp(32px, 5vw, 56px);
 }
 
-/* ---- Feature rows — full-width alternating cards (Clay-style) ----
-   Each feature is a white card floating on the soft ground: copy on one side,
-   a product screenshot on the other, sides swapping per row. The card itself
-   is NOT a link — a small "Learn more" link lives inside the copy instead. */
+/* ---- Feature rows — white cards with a colored mockup panel (Clay-style) ----
+   Each feature is a white card: copy on one side, and on the other a soft
+   colored inner panel that holds a hand-built UI mockup (not a screenshot),
+   sides swapping per row. Every mockup colour derives from three per-card
+   accent vars — --feat-strong (text/icons), --feat-bright (fills), --feat-tint
+   (soft washes) — so a card recolours by swapping just those three. The f-*
+   modifier classes alternate the theme's two brand accents: berry (pink) and
+   gold (yellow). Lighter shades come from color-mix, mirroring .ft-ico below.
+   The card itself is NOT a link — a small "Learn more" link lives in the copy. */
 .fs-root .uc-features { display: flex; flex-direction: column; gap: clamp(20px, 2.6vw, 30px); }
 .fs-root .uc-feature {
-  display: flex; align-items: stretch; gap: clamp(6px, 1vw, 16px);
-  background: var(--canvas); border-radius: 24px;
-  padding: clamp(10px, 1.2vw, 16px); overflow: hidden;
+  --feat-strong: var(--berry-ink);
+  --feat-bright: var(--berry);
+  --feat-tint: var(--tint-berry);
+  display: flex; align-items: stretch; gap: clamp(8px, 1.4vw, 20px);
+  background: var(--canvas); border-radius: 28px;
+  padding: clamp(12px, 1.4vw, 18px); overflow: hidden;
+}
+/* Per-card accent themes — alternate pink / yellow down the stack */
+.fs-root .f-graph, .fs-root .f-wikilinks {
+  --feat-strong: var(--berry-ink); --feat-bright: var(--berry); --feat-tint: var(--tint-berry);
+}
+.fs-root .f-backlinks, .fs-root .f-search {
+  --feat-strong: var(--gold-eyebrow); --feat-bright: var(--card-yellow); --feat-tint: var(--tint-lemon);
 }
 .fs-root .uc-feature:nth-child(even) { flex-direction: row-reverse; }
 .fs-root .uc-feature > * { flex: 1 1 0; min-width: 0; }
 .fs-root .uc-feature-text {
   display: flex; flex-direction: column; justify-content: center;
-  padding: clamp(22px, 3.2vw, 46px);
+  padding: clamp(20px, 3vw, 42px);
 }
 .fs-root .uc-feature-text h3 {
-  font-size: clamp(1.8rem, 3vw, 2.6rem); line-height: 1.1;
-  letter-spacing: -0.025em; color: var(--ink);
+  font-size: clamp(1.7rem, 2.8vw, 2.4rem); line-height: 1.12;
+  letter-spacing: -0.028em; color: var(--ink);
 }
 .fs-root .uc-feature-text p {
-  margin-top: 14px; color: var(--muted); font-size: 1.075rem; line-height: 1.6; max-width: 44ch;
+  margin-top: 16px; color: var(--muted); font-size: 1.075rem; line-height: 1.62; max-width: 42ch;
 }
 .fs-root .uc-feature-text code {
-  font-family: var(--mono); font-size: .9em; color: var(--body);
+  font-family: var(--mono); font-size: .88em; color: var(--feat-strong);
   background: var(--surface-card); border-radius: 5px; padding: 1px 6px;
 }
-.fs-root .uc-feature-text .learn { margin-top: 22px; }
+.fs-root .uc-feature-text .learn { margin-top: 24px; color: var(--feat-strong); }
+/* Keep the Learn-more hover on the card's own accent, not the shared berry
+   hover from the .learn rules above */
+.fs-root .uc-feature:hover .learn, .fs-root .uc-feature-text .learn:hover { color: var(--feat-strong); }
 .fs-root .uc-feature-media {
-  border-radius: 16px; overflow: hidden; min-height: clamp(240px, 26vw, 380px);
-  background: linear-gradient(135deg, var(--tint-fern) 0%, #fff 60%, var(--surface-card) 100%);
+  display: flex; align-items: center; justify-content: center;
+  min-height: clamp(280px, 27vw, 360px); border-radius: 20px;
+  padding: clamp(24px, 3vw, 44px);
+  /* Deeper, more saturated tint than before (was 32%), with a monochrome
+     film-grain overlay. Grain is an inline feTurbulence SVG (no /assets url() —
+     those 404 in this pipeline) blended via overlay so it modulates the hue
+     rather than washing it toward grey. */
+  background-color: color-mix(in srgb, var(--feat-bright) 50%, #fff);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 160px 160px; background-repeat: repeat;
+  background-blend-mode: overlay;
 }
-.fs-root .uc-feature-media img { width: 100%; height: 100%; object-fit: cover; object-position: left top; display: block; }
+/* Floating mockup panel shared by all four cards */
+.fs-root .mock {
+  width: 100%; max-width: 440px; background: var(--canvas); border-radius: 18px;
+  box-shadow: 0 1px 2px rgba(17, 17, 17, .06), 0 5px 14px -8px rgba(17, 17, 17, .16);
+  border: 1px solid color-mix(in srgb, var(--canvas) 70%, transparent); overflow: hidden;
+}
+/* 1. Knowledge graph — all fills/strokes come from CSS so they use theme vars */
+.fs-root .mk-graph { padding: 8px; }
+.fs-root .mk-graph svg { width: 100%; height: auto; display: block; }
+.fs-root .mk-graph .g-edges line { stroke: color-mix(in srgb, var(--feat-bright) 58%, #fff); stroke-width: 1.4; stroke-linecap: round; }
+.fs-root .mk-graph .g-dot { fill: color-mix(in srgb, var(--feat-bright) 82%, #fff); }
+.fs-root .mk-graph .g-dot-sm { fill: color-mix(in srgb, var(--feat-bright) 60%, #fff); }
+.fs-root .mk-graph .g-node { fill: var(--canvas); stroke: var(--feat-bright); stroke-width: 2; }
+.fs-root .mk-graph .g-hub { fill: var(--feat-bright); }
+.fs-root .mk-graph .g-hub-ring { fill: none; stroke: var(--feat-strong); stroke-width: 1.5; opacity: .6; }
+.fs-root .mk-graph .g-lbl { fill: var(--feat-strong); font-size: 11px; font-weight: 600; text-anchor: middle; letter-spacing: -0.01em; }
+.fs-root .mk-graph .g-lbl-c { fill: var(--canvas); font-size: 10px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+/* 2. Backlinks */
+.fs-root .mk-back { padding: 18px 18px 20px; }
+.fs-root .mk-back .note-title { font-size: 15px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; }
+.fs-root .mk-back .note-sub { margin-top: 3px; font-size: 12px; color: var(--muted-soft); }
+.fs-root .mk-back .bl-head { display: flex; align-items: center; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--hairline); }
+.fs-root .mk-back .bl-head svg { width: 15px; height: 15px; color: var(--feat-strong); }
+.fs-root .mk-back .bl-head .bl-lbl { font-size: 12.5px; font-weight: 700; color: var(--ink); letter-spacing: -0.01em; }
+.fs-root .mk-back .bl-count { margin-left: auto; font-size: 11px; font-weight: 700; color: var(--feat-strong); background: color-mix(in srgb, var(--feat-bright) 40%, #fff); border-radius: 999px; padding: 2px 9px; }
+/* Flowershow backlinks are plain links to referencing pages — no context
+   snippets — so each reference is a single link row, not a card with excerpt. */
+.fs-root .mk-back .bl-link { display: flex; align-items: center; margin-top: 8px; padding: 9px 12px; border: 1px solid var(--hairline); border-radius: 10px; background: var(--surface-soft); }
+.fs-root .mk-back .bl-link span { font-size: 12.5px; font-weight: 600; color: var(--feat-strong); border-bottom: 1.5px solid color-mix(in srgb, var(--feat-strong) 30%, transparent); }
+/* 3. Wikilinks */
+.fs-root .mk-wiki { padding: 20px; }
+.fs-root .mk-wiki .wk-label { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted-soft); }
+.fs-root .mk-wiki .wk-editor { margin-top: 9px; padding: 14px 16px; background: var(--ink); border-radius: 11px; font-family: var(--mono); font-size: 13px; line-height: 1.7; color: color-mix(in srgb, var(--surface-card) 88%, transparent); }
+.fs-root .mk-wiki .tok-b { color: color-mix(in srgb, var(--feat-bright) 82%, #fff); }
+.fs-root .mk-wiki .tok-l { color: var(--canvas); }
+.fs-root .mk-wiki .wk-arrow { display: flex; justify-content: center; margin: 12px 0; }
+.fs-root .mk-wiki .wk-arrow svg { width: 22px; height: 22px; color: var(--feat-strong); }
+.fs-root .mk-wiki .wk-rendered { padding: 15px 16px; background: var(--surface-soft); border: 1px solid var(--hairline); border-radius: 11px; font-size: 13.5px; line-height: 1.65; color: var(--body); }
+.fs-root .mk-wiki .wk-rendered a { color: var(--feat-strong); text-decoration: none; font-weight: 600; border-bottom: 1.5px solid color-mix(in srgb, var(--feat-strong) 34%, transparent); }
+.fs-root .mk-wiki .wk-rendered a:hover { border-bottom-color: var(--feat-strong); }
+/* 4. Full-text search */
+.fs-root .mk-search { padding: 18px; }
+.fs-root .mk-search .se-box { display: flex; align-items: center; gap: 10px; padding: 12px 15px; border: 1.5px solid var(--hairline-strong); border-radius: 12px; background: var(--canvas); box-shadow: 0 0 0 4px color-mix(in srgb, var(--feat-bright) 26%, #fff); }
+.fs-root .mk-search .se-box svg { width: 17px; height: 17px; color: var(--feat-strong); flex: none; }
+.fs-root .mk-search .se-q { font-size: 14px; color: var(--ink); font-weight: 500; }
+.fs-root .mk-search .caret { display: inline-block; width: 1.5px; height: 16px; background: var(--feat-strong); margin-left: 1px; vertical-align: -3px; animation: se-blink 1.1s steps(1) infinite; }
+@keyframes se-blink { 50% { opacity: 0; } }
+.fs-root .mk-search .se-kbd { margin-left: auto; font-family: var(--mono); font-size: 10.5px; color: var(--muted-soft); border: 1px solid var(--hairline-strong); border-radius: 5px; padding: 2px 6px; }
+.fs-root .mk-search .se-results { margin-top: 10px; border: 1px solid var(--hairline); border-radius: 12px; overflow: hidden; background: var(--canvas); }
+.fs-root .mk-search .se-row { display: flex; gap: 11px; padding: 11px 14px; border-bottom: 1px solid var(--hairline); }
+.fs-root .mk-search .se-row:last-child { border-bottom: none; }
+.fs-root .mk-search .se-row.on { background: color-mix(in srgb, var(--feat-bright) 24%, #fff); }
+.fs-root .mk-search .se-ic { width: 26px; height: 26px; flex: none; border-radius: 7px; background: color-mix(in srgb, var(--feat-bright) 34%, #fff); color: var(--feat-strong); display: flex; align-items: center; justify-content: center; }
+.fs-root .mk-search .se-ic svg { width: 14px; height: 14px; }
+.fs-root .mk-search .st-t { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.fs-root .mk-search .st-s { margin-top: 3px; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
+.fs-root .mk-search .st-s mark { background: color-mix(in srgb, var(--feat-bright) 50%, #fff); color: var(--feat-strong); border-radius: 3px; padding: 0 3px; font-weight: 600; }
 @media (max-width: 860px) {
   .fs-root .uc-feature, .fs-root .uc-feature:nth-child(even) { flex-direction: column; align-items: stretch; }
+  /* In the stacked layout the flex main axis is vertical, so the row layout's
+     `flex: 1 1 0` (for equal column widths) would collapse each child's height
+     and let the taller mock spill out of its panel. Reset to natural height. */
+  .fs-root .uc-feature > * { flex: 0 0 auto; }
 }
 
 /* Gardens re-tints the shared feature-icon chip from berry to fern */
