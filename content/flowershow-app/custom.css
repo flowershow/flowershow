@@ -694,7 +694,8 @@
    flat fill only, matching the README's borderless/shadowless card model */
 .fs-root.fs-garden .publish-card,
 .fs-root.lp-blog .publish-card,
-.fs-root.lp-wiki .publish-card {
+.fs-root.lp-wiki .publish-card,
+.fs-root.lp-docs .publish-card {
   background: var(--canvas);
   border-radius: 24px;
   padding: clamp(32px, 5vw, 56px);
@@ -1050,6 +1051,39 @@
     grid-template-areas: "sch" "cmt" "nws";
   }
 }
+
+/* ==========================================================================
+   Docs landing — /uses/docs
+   --------------------------------------------------------------------------
+   Same shared kit + bento feature grid as the blogs page, but scoped under
+   `.lp-docs` and tinted to the GOLD accent reserved for the docs use-case
+   (see .use-docs / .sc-docs). Like blogs (and unlike wikis, which had no
+   screenshots), the docs bento insets real screenshots per tile, over
+   gold-family fills: bright card-yellow on the hero navigation tile, a soft
+   lemon wash on search, neutral surface on the rest.
+   ========================================================================== */
+
+/* Soft page ground — matches blogs/wikis: whole page on surface-soft, section
+   bands transparent, so bento cards read as white surfaces floating on it. */
+.fs-root.lp-docs { background: var(--surface-soft); }
+.fs-root.lp-docs .section-soft { background: transparent; }
+
+/* Re-tint the gardens-default-fern kit pieces to gold on the docs page */
+.fs-root.lp-docs .uc-badge .uc-name { background: var(--tint-lemon); color: var(--gold-eyebrow); }
+.fs-root.lp-docs .eyebrow { color: var(--gold-eyebrow); }
+
+/* Gold in-card link hover — the kit defaults these to berry; docs is gold */
+.fs-root.lp-docs .wf-card:hover .wf-learn,
+.fs-root.lp-docs .textlink:hover,
+.fs-root.lp-docs .bento-card:hover .ft-learn,
+.fs-root.lp-docs .ft-learn:hover { color: var(--gold-eyebrow); }
+
+/* Soft-gold media fill — a lemon wash between the bright card-yellow (bg-lemon,
+   already defined) and the neutral bg-soft, so the tiles read as one gold family */
+.fs-root.lp-docs .bento-media.bg-lemon-soft { background-color: var(--tint-lemon); }
+
+/* Deep-gold corner tag for the "no build pipeline" text strip */
+.fs-root.lp-docs .bento-tag.alt { color: var(--gold-eyebrow); background: var(--tint-lemon); }
 
 /* ==========================================================================
    Default Flowershow footer — restyled to match the landing mockup
