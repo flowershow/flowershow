@@ -693,7 +693,8 @@
 /* Ways-to-publish sits in a white card floating on the soft garden ground —
    flat fill only, matching the README's borderless/shadowless card model */
 .fs-root.fs-garden .publish-card,
-.fs-root.lp-blog .publish-card {
+.fs-root.lp-blog .publish-card,
+.fs-root.lp-wiki .publish-card {
   background: var(--canvas);
   border-radius: 24px;
   padding: clamp(32px, 5vw, 56px);
@@ -990,6 +991,63 @@
   .fs-root .bento {
     grid-template-columns: 1fr;
     grid-template-areas: "idx" "sch" "cmt" "nws";
+  }
+}
+
+/* ==========================================================================
+   Wikis landing — /uses/wikis
+   --------------------------------------------------------------------------
+   Same shared kit + bento feature grid as the blogs page, but scoped under
+   `.lp-wiki` and tinted to the deep-berry accent (--berry-ink) reserved for
+   the wiki use-case (see .use-wiki / .sc-wiki). The blog bento inset a
+   screenshot per tile; the wiki has none, so its media panels instead centre
+   the hand-built CSS mockups (nav tree, search, wiki links) over a soft
+   deep-berry wash + grain, recoloured through the shared --feat-* vars.
+   ========================================================================== */
+
+/* Soft page ground — matches blogs/gardens: whole page on surface-soft, section
+   bands transparent, so bento cards read as white surfaces floating on it. */
+.fs-root.lp-wiki { background: var(--surface-soft); }
+.fs-root.lp-wiki .section-soft { background: transparent; }
+
+/* Re-tint the gardens-default-fern kit pieces to deep berry on the wiki page */
+.fs-root.lp-wiki .uc-badge .uc-name { background: var(--tint-berry); color: var(--berry-ink); }
+.fs-root.lp-wiki .eyebrow { color: var(--berry-ink); }
+
+/* Deep-berry theme for the bento mockups — the mk-* mocks derive every colour
+   from these three vars (mirrors the gardens .uc-feature accent triplet). */
+.fs-root.lp-wiki .bento {
+  --feat-strong: var(--berry-ink);
+  --feat-bright: var(--berry-blush);
+  --feat-tint: var(--tint-berry);
+  /* Only three tiles here (search + wiki-links side by side, GitHub-Wiki strip
+     below) — override the blog grid, which reserves a big `idx` tile we removed. */
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-areas:
+    "sch cmt"
+    "nws nws";
+}
+/* Mock-holding panel — unlike the blog panels (which inset a screenshot), these
+   centre a floating white .mock over a soft deep-berry wash. The grain SVG +
+   blend from the base .bento-media rule still applies underneath. */
+.fs-root.lp-wiki .bento-media.is-mock {
+  display: flex; align-items: center; justify-content: center;
+  padding: clamp(20px, 3.4vw, 38px);
+  background-color: color-mix(in srgb, var(--berry-ink) 24%, #fff);
+}
+.fs-root.lp-wiki .bento-media.is-mock .mock { max-width: 380px; }
+/* Whole-card hover accent → deep berry */
+.fs-root.lp-wiki .bento-card:hover .ft-learn { color: var(--berry-ink); }
+/* Deep-berry variant of the corner tag for the text strip */
+.fs-root.lp-wiki .bento-tag.alt { color: var(--berry-ink); background: var(--tint-berry); }
+/* Wiki-links mock is shown label-less and arrow-less here — restore the gap the
+   arrow used to give between the raw editor row and the rendered row. */
+.fs-root.lp-wiki .mk-wiki .wk-rendered { margin-top: 12px; }
+/* Stack the two mock tiles on narrow screens */
+@media (max-width: 560px) {
+  .fs-root.lp-wiki .bento {
+    grid-template-columns: 1fr;
+    grid-template-areas: "sch" "cmt" "nws";
   }
 }
 
