@@ -211,7 +211,7 @@
 .fs-root .hero { padding: clamp(48px, 7vw, 92px) 0 clamp(56px, 8vw, 100px); overflow: hidden; }
 /* Stacked: copy on top, media full-width below */
 .fs-root .hero-grid { display: grid; grid-template-columns: 1fr; gap: clamp(40px, 5vw, 64px); }
-.fs-root .hero-copy h1 { margin-bottom: 22px; }
+.fs-root .hero-copy h1 { margin-bottom: 22px; max-width: 18ch; }
 .fs-root .hero-copy .lede { max-width: 52ch; margin-bottom: 30px; }
 
 /* Hero media — full content width, sits below the copy */
@@ -692,7 +692,8 @@
 }
 /* Ways-to-publish sits in a white card floating on the soft garden ground —
    flat fill only, matching the README's borderless/shadowless card model */
-.fs-root.fs-garden .publish-card {
+.fs-root.fs-garden .publish-card,
+.fs-root.lp-blog .publish-card {
   background: var(--canvas);
   border-radius: 24px;
   padding: clamp(32px, 5vw, 56px);
@@ -886,6 +887,110 @@
 }
 @media (max-width: 940px) {
   .fs-root .steps { grid-template-columns: 1fr; gap: 24px; }
+}
+
+/* ==========================================================================
+   Blogs landing — /uses/blogs
+   --------------------------------------------------------------------------
+   Reuses the shared landing kit (.hero, .wf-grid, .publish-grid, .faq-grid,
+   .show-grid, .final-card) on a plain white .fs-root page with the default
+   berry accent — so it reads as the same product as the home + gardens pages.
+   The one component the kit lacks is the bento feature grid, defined below.
+   Page-scoped overrides under `.lp-blog` re-tint the few pieces the kit
+   defaults to the Gardens fern (the uc-badge chip, the feature-list icons)
+   back to berry.
+   ========================================================================== */
+
+/* Berry headline accent — blog counterpart to .accent-fern */
+.fs-root .accent-berry { color: var(--berry); }
+
+/* Soft page ground — like the gardens page, the whole blog page sits on
+   surface-soft and section bands go transparent, so cards (bento tiles, wf
+   cards) read as white surfaces floating on one continuous soft ground. */
+.fs-root.lp-blog { background: var(--surface-soft); }
+.fs-root.lp-blog .section-soft { background: transparent; }
+
+/* Re-tint gardens-default-fern pieces to berry on the blog page */
+.fs-root.lp-blog .uc-badge .uc-name { background: var(--tint-berry); color: var(--berry-ink); }
+.fs-root.lp-blog .feature-list .fl-ico { color: var(--berry-ink); }
+
+/* Publish-copy sub-line under the heading */
+.fs-root .publish-copy .pc-sub { margin-top: 16px; color: var(--muted); font-size: 1.05rem; line-height: 1.55; }
+
+/* Split section — "Make it yours": copy beside a framed media shot */
+.fs-root .split-grid { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(40px, 6vw, 72px); align-items: center; }
+.fs-root .split-copy { max-width: 46ch; }
+.fs-root .split-copy h2 { margin-top: 4px; }
+.fs-root .split-copy .lede { margin-top: 16px; color: var(--muted); }
+.fs-root .split-copy .split-cta { margin-top: 30px; }
+.fs-root .split-copy .split-note { margin-top: 16px; font-size: 13px; color: var(--muted-soft); }
+
+/* ---- Bento feature grid ----
+   The asymmetric 6-column tiling kept from the original blog page, restyled
+   into the kit's rounded cards: a big blog-index tile on the left, search +
+   comments stacked on the right, and a newsletter strip across the bottom.
+   Each card is white with a hairline border so it lifts off the soft section
+   band; media panels carry a brand-tinted fill behind an inset screenshot. */
+.fs-root .bento {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-areas:
+    "idx idx idx idx sch sch"
+    "idx idx idx idx sch sch"
+    "idx idx idx idx cmt cmt"
+    "nws nws nws nws cmt cmt";
+  gap: 16px;
+}
+.fs-root .bento-card { display: flex; flex-direction: column; overflow: hidden; background: var(--canvas); border-radius: 20px; }
+.fs-root .bento-index    { grid-area: idx; }
+.fs-root .bento-search   { grid-area: sch; }
+.fs-root .bento-comments { grid-area: cmt; }
+.fs-root .bento-news     { grid-area: nws; }
+/* Grainy colored panels — same monochrome feTurbulence overlay the gardens
+   feature cards use (.uc-feature-media): a repeating noise SVG blended over
+   the solid fill so the color reads textured rather than flat. */
+.fs-root .bento-media {
+  position: relative; flex: 1; min-height: 16rem; overflow: hidden;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='0.55'/%3E%3C/svg%3E");
+  background-size: 160px 160px; background-repeat: repeat;
+  background-blend-mode: overlay;
+}
+.fs-root .bento-index .bento-media { min-height: 20rem; }
+.fs-root .bento-media.bg-berry { background-color: var(--berry-blush); }
+.fs-root .bento-media.bg-lemon { background-color: var(--card-yellow); }
+.fs-root .bento-media.bg-soft  { background-color: var(--surface-card); }
+.fs-root .bento-media img { position: absolute; left: 32px; top: 32px; width: 100%; height: 100%; object-fit: cover; object-position: left top; border-top-left-radius: 12px; }
+.fs-root .bento-body { padding: 26px 28px 28px; }
+.fs-root .bento-body h3 { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em; }
+.fs-root .bento-body p { margin-top: 10px; color: var(--muted); font-size: 16px; line-height: 1.55; max-width: 48ch; }
+.fs-root .bento-body .ft-learn { margin-top: 16px; }
+/* Whole-card hover drives the Learn-more link (color, underline, arrow) */
+.fs-root .bento-card:hover .ft-learn { color: var(--berry-ink); }
+.fs-root .bento-card:hover .ft-learn .lm-txt::after { transform: scaleX(1); }
+.fs-root .bento-card:hover .ft-learn .arw { transform: translateX(3px); }
+.fs-root .bento-tag { display: inline-block; margin-bottom: 12px; font-family: var(--mono); font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); background: var(--surface-card); border-radius: 999px; padding: 4px 10px; }
+
+/* Single centered showcase card (the dogfood "Flowershow blog") */
+.fs-root .show-grid.one { grid-template-columns: minmax(0, 520px); justify-content: center; }
+
+@media (max-width: 940px) {
+  .fs-root .split-grid { grid-template-columns: 1fr; gap: 32px; align-items: start; }
+}
+@media (max-width: 860px) {
+  .fs-root .bento {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "idx idx"
+      "sch cmt"
+      "nws nws";
+  }
+  .fs-root .bento-index .bento-media { min-height: 16rem; }
+}
+@media (max-width: 560px) {
+  .fs-root .bento {
+    grid-template-columns: 1fr;
+    grid-template-areas: "idx" "sch" "cmt" "nws";
+  }
 }
 
 /* ==========================================================================
