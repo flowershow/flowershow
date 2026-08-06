@@ -688,15 +688,13 @@
 .fs-root.fs-garden .section-soft { background: transparent; }
 .fs-root.fs-garden .show-card {
   background: var(--canvas);
-  border: 1px solid var(--hairline);
 }
-/* Ways-to-publish sits in a white card floating on the soft garden ground */
+/* Ways-to-publish sits in a white card floating on the soft garden ground —
+   flat fill only, matching the README's borderless/shadowless card model */
 .fs-root.fs-garden .publish-card {
   background: var(--canvas);
-  border: 1px solid var(--hairline);
   border-radius: 24px;
   padding: clamp(32px, 5vw, 56px);
-  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 22px 48px -30px rgba(17,13,15,.22);
 }
 
 /* ---- Feature rows — full-width alternating cards (Clay-style) ----
@@ -708,7 +706,6 @@
   display: flex; align-items: stretch; gap: clamp(6px, 1vw, 16px);
   background: var(--canvas); border-radius: 24px;
   padding: clamp(10px, 1.2vw, 16px); overflow: hidden;
-  box-shadow: 0 1px 2px rgba(17,13,15,.04), 0 22px 48px -30px rgba(17,13,15,.22);
 }
 .fs-root .uc-feature:nth-child(even) { flex-direction: row-reverse; }
 .fs-root .uc-feature > * { flex: 1 1 0; min-width: 0; }
