@@ -157,4 +157,19 @@ describe('rehypeJsonCanvas', () => {
     expect(html).toContain('canvas-error');
     expect(html).toContain('Error rendering canvas');
   });
+
+  // Regression: in the real pipeline the `.canvas` extension is stripped from
+  // `src` (filePathToSlug treats canvas as a page file), so the embed arrives
+  // as `<img src="/diagram" data-fs-resolved-file-path="/diagram.canvas">`.
+  // Detection must key off the resolved file path, not `src`.
+  it('renders canvas when src has the extension stripped but the resolved path keeps it', async () => {
+    const html = await processMarkdown(
+      '<img src="/diagram" data-fs-resolved-file-path="/diagram.canvas" alt="diagram">',
+      { 'diagram.canvas': SIMPLE_CANVAS_JSON },
+    );
+
+    expect(html).toContain('<div class="canvas-embed">');
+    expect(html).toContain('Test Node');
+    expect(html).not.toContain('<img');
+  });
 });

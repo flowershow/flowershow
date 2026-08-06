@@ -53,13 +53,31 @@ const rehypeJsonCanvas: Plugin<
     visit(tree, 'element', (node: Element) => {
       if (node.tagName !== 'img') return;
 
-      const src = node.properties?.src as string | undefined;
-      if (!src?.endsWith('.canvas')) return;
+      // The `src` is a URL slug with the page extension stripped (see
+      // filePathToSlug via resolveContentLink), so `canvas-demo.canvas`
+      // arrives here as `/canvas-demo`. Detect canvas embeds via the resolved
+      // file path (which keeps `.canvas`), falling back to `src` for any path
+      // that still carries the extension.
+      // The attribute is set by upstream remark plugins as a raw
+      // `data-fs-resolved-file-path` hProperty. Depending on whether
+      // rehype-raw has re-parsed the tree first (pure-markdown pipeline) or not
+      // (MDX pipeline), property-information may hand it to us camelCased or in
+      // its literal dashed form — so accept both.
+      const props = node.properties ?? {};
+      const resolvedPath = (props['dataFsResolvedFilePath'] ??
+        props['data-fs-resolved-file-path']) as string | undefined;
+      const src = props.src as string | undefined;
+      const canvasPath = resolvedPath?.endsWith('.canvas')
+        ? resolvedPath
+        : src?.endsWith('.canvas')
+          ? src
+          : undefined;
+      if (!canvasPath) return;
 
       // Try exact match, then match by basename
-      const basename = src.split('/').pop() ?? '';
+      const basename = canvasPath.split('/').pop() ?? '';
       const canvasContent =
-        canvasFiles[src] ??
+        canvasFiles[canvasPath] ??
         Object.entries(canvasFiles).find(
           ([key]) => key === basename || key.endsWith(`/${basename}`),
         )?.[1];
@@ -67,7 +85,7 @@ const rehypeJsonCanvas: Plugin<
       if (!canvasContent) {
         node.tagName = 'div';
         node.properties = { className: ['canvas-embed', 'canvas-missing'] };
-        node.children = [h('p', `Canvas file not found: ${src}`)];
+        node.children = [h('p', `Canvas file not found: ${canvasPath}`)];
         return;
       }
 
