@@ -1,0 +1,33 @@
+{
+  "nodes": [
+    {
+      "id": "n1",
+      "type": "text",
+      "x": 0,
+      "y": 0,
+      "width": 240,
+      "height": 80,
+      "text": "Canvas E2E Node",
+      "color": "4"
+    },
+    {
+      "id": "n2",
+      "type": "text",
+      "x": 340,
+      "y": 0,
+      "width": 240,
+      "height": 80,
+      "text": "Second Node"
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1",
+      "fromNode": "n1",
+      "toNode": "n2",
+      "fromSide": "right",
+      "toSide": "left",
+      "toEnd": "arrow"
+    }
+  ]
+}
