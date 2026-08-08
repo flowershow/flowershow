@@ -119,6 +119,53 @@ as visible page content.
   repo. Substituted IBM Plex Mono. Users with a license can override
   `--font-body` themselves.
 
+## Gotchas that cost real time (read before writing a theme)
+
+All found by rendering, none discoverable from the theming docs.
+
+1. **Callouts are styled by DATA ATTRIBUTES, not classes.**
+   `[data-callout]`, `[data-callout-type="note"]`, `[data-callout-title]`,
+   `[data-callout-body]`. Class selectors like `.callout` / `.callout-note`
+   match *nothing*. An earlier draft used them and silently did nothing.
+
+2. **Bare attribute selectors tie the base rules and lose.**
+   Base rules are `[data-callout]` (specificity 0,1,0). A theme rule with the
+   same selector ties and does not reliably win. Scope to
+   `.rendered-mdx [data-callout]` (0,2,0).
+
+3. **`--navbar-height` is a lie.** `.site-navbar-inner` hardcodes
+   `height: 4rem` and never reads the token, despite `default-theme.css`
+   commenting the token as "override these to change sticky positioning
+   throughout". To change navbar height you must override the class.
+
+4. **Inline code gets literal backtick pseudo-elements** from
+   `@tailwindcss/typography`. They are not in the DOM. Worse, the generated
+   rule carries `!important`, so `content: none` loses at any specificity —
+   you need `content: none !important`. This contradicts `docs/theming.md`,
+   which says the cascade-layer setup means themes never need `!important`.
+
+5. **The navbar does not render at all unless configured.** Flowershow shows
+   it only if nav title, nav links, CTA, social links, or search is set. A
+   demo site without those has no navbar, so navbar styling is invisible and
+   the theme looks broken. `nav` is an **object** (`{title, links, social,
+   cta}`), not an array — see `layout.tsx`. `_demo-content/config.base.json`
+   now covers this.
+
+6. **Two independent caching layers will lie to you.**
+   - *jsDelivr branch URLs*: `@branch/...` updates unevenly across edges.
+     One edge served new CSS while the browser's edge served a stale copy,
+     surviving both `cache: 'reload'` and a cache-busting query. **Fix: pin
+     to the commit SHA.** `scripts/demo-site.sh` now does this automatically.
+   - *Flowershow page render*: after `fl` publish, the served HTML keeps the
+     previous config (and so the previous theme URL) for a while. Poll until
+     the page HTML contains the current SHA before judging anything:
+     ```sh
+     SHA=$(git rev-parse HEAD)
+     until curl -s "$SITE/docs/kitchen-sink?x=$RANDOM" | grep -q "$SHA"; do sleep 5; done
+     ```
+   Between them, a correct theme can look completely unapplied. Verify the
+   page is actually serving the SHA you just published before debugging CSS.
+
 ## Structural findings for Flowershow core (thread 3)
 
 Logged as found; not yet filed as issues.
