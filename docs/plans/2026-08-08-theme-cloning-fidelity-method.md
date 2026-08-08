@@ -98,8 +98,13 @@ Measured from the live site, not from source:
 | Hero h1 | 32px / 700 / lh 41.6px / ls -0.32px / white |
 | Hero body | 16px / lh 25.6px |
 | Primary CTA | bg `#dd2e57`, radius 2px, padding 10px 32px, 16px |
-| Section h1 | 32px / 700 |
-| Section h2 | 25px / 700 |
+| Section h1 | 32px / **300** / dimmed (0.56 dark, 0.54 light) / mb 40px |
+| Section h2 | 25px / 700 / lh 35px / ls -0.25px / mb 16px |
+| Buttons | 16px / 700 |
+| Feature grid | 2 cols — flex-wrap, gap 32px, items `flex: 1 0 48%` |
+| Feature icon | 44px, inherits text colour (not accent) |
+| Spotlight row | flex, gap 64px, mb 64px |
+| Hero copy column | 540px |
 | Dark section bg | `#1e2129`, fg `rgba(226,228,233,0.82)` |
 | Light section bg | `#ffffff`, fg `rgba(0,0,0,0.87)` |
 | `--md-primary-fg-color` | `#4051b5` |
