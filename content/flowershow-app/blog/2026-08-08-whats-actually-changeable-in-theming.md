@@ -33,7 +33,7 @@ That's the single biggest thing standing between us and more themes — from us 
 
 A separate layer that isn't theming at all, but gets confused with it constantly.
 
-Site-level, from the dashboard: `showSidebar`, `showRawLink`, `enableComments`, `enableSearch`, `enableRss`, `showBuiltWithButton`.
+Site-level, from the dashboard: `showSidebar`, `showRawLink`, `showBacklinks`, `enableComments`, `enableSearch`, `enableRss`, `showBuiltWithButton`.
 
 Page-level, from frontmatter: `layout: plain`, `showToc`, `showHero`, `hero`, `showEditLink`, `showComments`, `cta`.
 
@@ -51,6 +51,7 @@ Hero
   │   ├ main.page-main      → page header (title, description, authors, date)
   │   │                       then .rendered-mdx (your content)
   │   ├ .page-edit-button-container   → "Edit this page" / "View raw markdown"
+  │   ├ .page-backlinks-container     → "Links to this page"
   │   └ .page-comments-container      → comments
   └ .layout-inner-right     → table of contents
 ```
@@ -59,7 +60,7 @@ That order is fixed. Take the "View raw markdown" link: it is a hardcoded siblin
 
 Same for the page header itself: title, then description, then authors and date. Want the byline above the title? That's not a CSS problem.
 
-And backlinks, since people ask: there is no backlinks feature in the codebase at all. Not a theming question yet.
+[Backlinks](https://flowershow.app/docs/reference/backlinks) are the cleanest illustration of the three layers pulling apart. The *look* of the panel is L1/L2 — it has `page-backlinks-container`, `-title`, `-list`, `-item`, all themeable. *Whether it appears* is L3 — `showBacklinks`, owned by the site. *Where it appears* is L4 — hardcoded between the edit links and the comments, and if you want "Links to this page" as a sidebar rail instead of a footer block, there is no amount of theming that gets you there.
 
 ## The distinction that actually matters
 
