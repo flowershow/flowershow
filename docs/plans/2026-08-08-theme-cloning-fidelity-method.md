@@ -57,6 +57,32 @@ side-by-side against the target's render.** Structural checks are necessary
 and not remotely sufficient. This is exactly the judgement-vs-structure split
 written into `themes/CLAUDE.md` — which was written and then not followed.
 
+### Compare numerically, not by eye
+
+A second pass on the landing page showed that side-by-side *looking* isn't
+enough either. Write one profile extractor, run it on both pages, diff the
+numbers:
+
+```js
+function prof(el){ const s=getComputedStyle(el);
+  return {fs:s.fontSize, fw:s.fontWeight, lh:s.lineHeight,
+          ls:s.letterSpacing, mb:s.marginBottom, color:s.color}; }
+```
+
+Eyeballing catches "wrong font". It does not catch "right font, wrong weight
+*relationship*" — and the relationships are what carry the resemblance.
+
+The clearest example: on mkdocs-material the **hero h1 is 700 weight at full
+strength, but every section h1 is 300 weight AND dimmed** (0.56 on dark, 0.54
+on light). Treating them as one style flattened the whole hierarchy, and was
+most of why the page read as not-Material despite correct font, colour, and
+layout. Other misses only numbers would catch: feature grid is 2 columns not
+3 (`flex: 1 0 48%`), icons are 44px inheriting text colour not 28px accent,
+buttons are 700 not 500, h2 margin-bottom is 16px not 8px.
+
+Typography precision — relative weight, size, and spacing — matters far more
+than font choice. Get the ratios right before touching anything else.
+
 ## Reference data captured so far
 
 ### mkdocs-material (https://squidfunk.github.io/mkdocs-material/)
@@ -221,7 +247,9 @@ Current demo sites (stage-1 quality, do not treat as good):
    raw HTML (Flowershow supports HTML pages), with the theme handling only
    the non-landing pages? That's the current working assumption from the
    two-stage plan.
-3. What original artwork replaces the parallax illustration?
+3. What original artwork replaces the parallax illustration? (Lower priority
+   than first thought — the artwork was NOT what made the landing read wrong;
+   typography precision was. See "Compare numerically".)
 4. Is model/tool fidelity the bottleneck for visual cloning, or was the
    bottleneck simply not looking? Evidence so far points to the latter — the
    method error, not capability.
