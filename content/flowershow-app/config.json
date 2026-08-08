@@ -3,8 +3,7 @@
   "showSidebar": true,
   "sidebar": {
     "paths": [
-      "/docs",
-      "/markdown"
+      "/docs"
     ]
   },
   "nav": {
@@ -171,8 +170,7 @@
     "/journal",
     "/meta",
     "/notes",
-    "/blog/archive",
-    "/markdown"
+    "/blog/archive"
   ],
   "contentHide": [
     "/docs/sitemap.md",
@@ -182,6 +180,10 @@
   ],
   "showEditLink": true,
   "redirects": [
+    {
+      "from": "/markdown",
+      "to": "https://wayofmarkdown.com"
+    },
     {
       "from": "/docs/site-wide-toc",
       "to": "/docs/reference/sidebar"
