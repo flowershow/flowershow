@@ -277,7 +277,11 @@ function NavbarDropdown({
       onMouseLeave={close}
     >
       <button
-        className={clsx('site-navbar-dropdown-trigger', isOpen && 'is-open')}
+        className={clsx(
+          'site-navbar-link',
+          'site-navbar-dropdown-trigger',
+          isOpen && 'is-open',
+        )}
         onClick={() => setIsOpen((v) => !v)}
         aria-expanded={isOpen}
         aria-haspopup="true"
