@@ -693,6 +693,33 @@ describe('site.getGraphData', () => {
   });
 });
 
+describe('site.getSiteTree', () => {
+  // Regression: clearing the "Sidebar Paths" / "Content Hide" field in the
+  // dashboard persists `null` (not `undefined`) into configJson — deepMerge
+  // keeps null. That null used to flow into these inputs and fail the
+  // `z.array(...).optional()` validation, so the query threw and the page
+  // swallowed it into an empty (effectively hidden) sidebar. Null must be
+  // treated the same as "unset": no filtering, full tree.
+  it('accepts null paths/contentHide and returns the full, unfiltered tree', async () => {
+    const blobs = [
+      makeBlob({ id: 'a', path: 'docs/one.md', appPath: '/docs/one' }),
+      makeBlob({ id: 'b', path: 'blog/two.md', appPath: '/blog/two' }),
+    ];
+    const db = createMockDb({ blobs });
+    const caller = createCaller(db);
+
+    const tree = await caller.site.getSiteTree({
+      siteId: 'site-1',
+      paths: null,
+      contentHide: null,
+    });
+
+    const names = tree.map((n) => n.name);
+    expect(names).toContain('docs');
+    expect(names).toContain('blog');
+  });
+});
+
 // Read paths that expose a PASSWORD-protected site's structure/metadata must
 // enforce the password gate, not just the page-body paths.
 describe('site read-path authorization', () => {

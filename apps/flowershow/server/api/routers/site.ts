@@ -1121,8 +1121,10 @@ export const siteRouter = createTRPCRouter({
       z.object({
         siteId: z.string().min(1),
         orderBy: z.enum(['path', 'title']).default('title'),
-        paths: z.array(z.string()).optional(),
-        contentHide: z.array(z.string()).optional(),
+        // Cleared config array fields are persisted as `null` in configJson
+        // (deepMerge keeps null), so accept null as well as undefined here.
+        paths: z.array(z.string()).nullish(),
+        contentHide: z.array(z.string()).nullish(),
       }),
     )
     .query(async ({ ctx, input }) => {
