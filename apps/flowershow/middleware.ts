@@ -79,35 +79,18 @@ export default async function middleware(req: NextRequest) {
   // Build PostHog bootstrap cookie once for all routes
   const phBootstrap = await buildPHBootstrapCookie(req, posthog);
 
-  // 3) Legacy redirect: flowershow.app/@... → new subdomain URL
+  // 3) Legacy user-site paths: flowershow.app/@user/project/... are gone.
+  // These pre-subdomain URLs (content now lives at *.flowershow.me) were the
+  // largest impression source on the marketing domain and dragged its
+  // site-wide search quality. We previously 301-forwarded them, but a 301 to
+  // live 200 content kept them indexed indefinitely, so we now return 410 Gone
+  // to have search engines deindex them. See SEO audit 2026-08.
   if (hostname === 'flowershow.app' && pathname.startsWith('/@')) {
-    const aliasResolved = resolveSiteAlias(pathname, 'from');
-    const legacyMatch = aliasResolved.match(/^\/@([^/]+)\/([^/]+)(.*)/);
-    if (legacyMatch) {
-      const [, legacyUser, legacyProject, legacySlug = ''] = legacyMatch;
-      const legacySite = await fetchSite(
-        req,
-        `/api/sites/${legacyUser}/${legacyProject}`,
-      );
-      if (legacySite?.subdomain) {
-        return withPHBootstrapCookie(
-          NextResponse.redirect(
-            new URL(
-              `${protocol}://${legacySite.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}${legacySlug}${searchParams}`,
-              req.url,
-            ),
-            { status: 301 },
-          ),
-          phBootstrap,
-        );
-      }
-    }
-    // Fallback: redirect to root domain
     return withPHBootstrapCookie(
-      NextResponse.redirect(
-        new URL(`${protocol}://${env.NEXT_PUBLIC_ROOT_DOMAIN}${path}`, req.url),
-        { status: 301 },
-      ),
+      new NextResponse('410 Gone', {
+        status: 410,
+        headers: { 'X-Robots-Tag': 'noindex' },
+      }),
       phBootstrap,
     );
   }
