@@ -28,7 +28,37 @@ jobs:
 
     steps:
       - name: Add localhost subdomains to /etc/hosts
-        run: echo "127.0.0.1 my.localhost cloud.localhost e2e-premium.flowershow.local" | sudo tee -a /etc/hosts
+        # Must match the hostnames the e2e seed/app actually use. NEXT_PUBLIC_ROOT_DOMAIN
+        # is my.flowershow.local (see .env.example); the seed's revalidateCache() fetches it
+        # during setup, so a missing entry fails the whole run with EAI_AGAIN before any test
+        # runs. The two custom-domain sites resolve via their own *.flowershow.local hosts
+        # entries; subdomain sites use *.localhost (auto-resolved). Keep this in sync with the
+        # local dev /etc/hosts.
+        run: echo "127.0.0.1 flowershow.local my.flowershow.local cloud.flowershow.local api.flowershow.local e2e-premium.flowershow.local e2e-password-premium.flowershow.local" | sudo tee -a /etc/hosts
+
+      - name: Verify required hostnames resolve
+        # Preflight guard: fail loud and early if a hostname the e2e run depends on is
+        # missing from /etc/hosts. Without this, a drift between this workflow and the
+        # domain constants in e2e/helpers/seed.ts surfaces only mid-run as an opaque
+        # "TypeError: fetch failed / getaddrinfo EAI_AGAIN" inside the setup project.
+        # If this step fails, add the reported host to the /etc/hosts step above.
+        run: |
+          set -euo pipefail
+          required=(
+            my.flowershow.local              # NEXT_PUBLIC_ROOT_DOMAIN, hit by seed revalidateCache()
+            e2e-premium.flowershow.local     # PREMIUM_SITE_CUSTOM_DOMAIN
+            e2e-password-premium.flowershow.local  # PASSWORD_CUSTOM_DOMAIN_SITE
+          )
+          missing=0
+          for h in "${required[@]}"; do
+            if getent hosts "$h" > /dev/null; then
+              echo "ok: $h -> $(getent hosts "$h" | awk '{print $1}')"
+            else
+              echo "::error::Required e2e hostname '$h' does not resolve. Add it to the '/etc/hosts' step in .github/workflows/e2e.yml (keep it in sync with the domain constants in apps/flowershow/e2e/helpers/seed.ts)."
+              missing=1
+            fi
+          done
+          exit $missing
 
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
