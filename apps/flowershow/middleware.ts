@@ -532,6 +532,11 @@ type PHBootstrap = {
 } | null;
 
 async function buildPHBootstrapCookie(req: NextRequest, posthog: PostHog) {
+  // [DEBUG-e2e500] Temporary — confirm whether the per-request PostHog client
+  // (new PostHog() every middleware call, never shut down; 401s on the dummy CI
+  // key) is what degrades the dev server into 500s. REMOVE after diagnosis.
+  if (process.env.E2E_DISABLE_POSTHOG === 'true') return null;
+
   // Only for real HTML page views
   const isGet = req.method === 'GET';
   const accept = req.headers.get('accept') || '';

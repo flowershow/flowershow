@@ -110,6 +110,11 @@ jobs:
 
       - name: Start Next.js dev server
         working-directory: apps/flowershow
+        # [DEBUG-e2e500] E2E_DISABLE_POSTHOG short-circuits buildPHBootstrapCookie so
+        # no per-request PostHog client is created — confirms the leak/401-storm is
+        # what degrades the server into 500s. Remove with the other DEBUG changes.
+        env:
+          E2E_DISABLE_POSTHOG: "true"
         run: |
           nohup npx next dev --turbopack > /tmp/next-dev.log 2>&1 &
           echo $! > /tmp/next-dev.pid
