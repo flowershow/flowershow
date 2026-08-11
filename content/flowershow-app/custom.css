@@ -1182,6 +1182,68 @@
 }
 
 /* ==========================================================================
+   CLI landing — /cli
+   --------------------------------------------------------------------------
+   Reuses the shared landing kit (.hero, .section, .section-head, .steps,
+   .concept-grid, .demo-media, .final-card) on a plain white .fs-root page with
+   the default berry accent — so it reads as the same product as the home page.
+   The one bespoke component is the terminal mockup (.term) that stands in for
+   the hero screenshot. Page-scoped overrides under `.lp-cli` re-tint the couple
+   of kit pieces that default to the Gardens fern (the .pill chip, the .step-num
+   index) back to berry, and lay the steps/concepts out two-up.
+   ========================================================================== */
+
+/* Re-tint gardens-default-fern kit pieces to berry on the CLI page */
+.fs-root.lp-cli .pill { color: var(--berry-ink); background: var(--tint-berry); }
+.fs-root.lp-cli .pill:hover { background: color-mix(in srgb, var(--berry-blush) 20%, #fff); }
+.fs-root.lp-cli .step-num { color: var(--berry-ink); background: var(--tint-berry); }
+
+/* Inline code in prose — mono chip in the berry accent */
+.fs-root.lp-cli .concept-card code, .fs-root.lp-cli .section-head code {
+  font-family: var(--mono); font-size: .88em; color: var(--berry-ink);
+  background: var(--surface-card); border-radius: 5px; padding: 1px 6px;
+}
+
+/* Two-up steps and concept cards (the kit defaults to three across) */
+.fs-root.lp-cli .cli-steps { grid-template-columns: repeat(2, 1fr); max-width: 760px; margin: 0 auto; }
+.fs-root.lp-cli .cli-steps .step { align-items: stretch; }
+.fs-root.lp-cli .cli-steps .cmd-line { margin-top: 16px; }
+.fs-root.lp-cli .concept-grid { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 620px) {
+  .fs-root.lp-cli .cli-steps, .fs-root.lp-cli .concept-grid { grid-template-columns: 1fr; }
+}
+
+/* Terminal mockup — dark card with a traffic-light bar and mono body. Stands in
+   for the hero screenshot; also the language the .cmd-line command chips speak. */
+.fs-root .hero-media-term { width: 100%; }
+.fs-root .term {
+  background: var(--surface-dark); border-radius: 14px; overflow: hidden;
+  box-shadow: 0 1px 2px rgba(17,13,15,.06), 0 30px 70px -28px rgba(17,13,15,.45);
+  font-family: var(--mono); text-align: left;
+}
+.fs-root .term-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px; background: var(--surface-dark-elevated);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.fs-root .term-bar i { width: 11px; height: 11px; border-radius: 50%; background: #3a352f; }
+.fs-root .term-bar .term-title { margin-left: 6px; font-size: 12px; color: var(--on-dark-soft); letter-spacing: .01em; }
+.fs-root .term-body { padding: 20px 22px 24px; font-size: 13.5px; line-height: 1.85; color: var(--on-dark-soft); }
+.fs-root .term-body .ln { white-space: pre-wrap; }
+.fs-root .term-body .cmd { color: var(--on-dark); }
+.fs-root .term-body .cmd::before { content: "$ "; color: var(--berry); }
+.fs-root .term-body .ok { color: var(--bright-fern); }
+.fs-root .term-body .muted { color: var(--muted-soft); }
+.fs-root .term-body .url { color: var(--on-dark); font-weight: 600; border-bottom: 1px solid rgba(255,255,255,.28); }
+
+/* Command chip — a single dark terminal line for the numbered steps */
+.fs-root .cmd-line {
+  font-family: var(--mono); font-size: 13px; color: var(--on-dark);
+  background: var(--surface-dark); border-radius: 10px; padding: 12px 15px;
+}
+.fs-root .cmd-line::before { content: "$ "; color: var(--berry); }
+
+/* ==========================================================================
    Default Flowershow footer — restyled to match the landing mockup
    --------------------------------------------------------------------------
    The footer is theme chrome, rendered from config.json on EVERY page of this

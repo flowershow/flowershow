@@ -7,118 +7,109 @@ showComments: false
 showEditLink: false
 ---
 
-<div className="py-12 sm:py-24">
-  <div className="mx-auto max-w-7xl px-6 lg:px-8">
-    <div className="mx-auto max-w-3xl text-center">
-      <a href="/docs/agents/skills" className="mb-6 inline-flex items-center gap-2 rounded-full bg-orange-50 px-4 py-1.5 text-sm font-medium text-orange-700 ring-1 ring-orange-200 transition hover:bg-orange-100">🤖 New — publish with your AI agent <span aria-hidden="true">→</span></a>
-      <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl">Publish Markdown directly from your terminal.</h1>
-      <p className="mt-6 text-pretty text-lg text-gray-500 sm:text-xl/8">Open-source CLI tool to publish Markdown and HTML straight from the command line. Perfect for power users and AI agents. Get a shareable URL in seconds.</p>
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-        <a
-          href="https://flowershow.app/docs/cli"
-          className="inline-flex items-center justify-center rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2"
-        >Install now</a>
-        <a
-        href="#demo"
-        className="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 shadow-sm transition hover:border-gray-400 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-offset-2">Learn more →</a>
+<div className="fs-root lp-cli">
+  <div id="top">
+    <section className="hero">
+      <div className="wrap hero-grid">
+        <div className="hero-copy reveal">
+          <a className="pill" href="/docs/agents/skills">🤖 New — publish with your AI agent <span className="arw">→</span></a>
+          <h1>Publish Markdown directly from your terminal.</h1>
+          <p className="lede">CLI to publish Markdown and HTML straight from the command line. Perfect for power users and AI agents — get a shareable URL in seconds.</p>
+          <div className="cta-row">
+            <a className="btn btn-primary" href="https://flowershow.app/docs/cli">Install now <span className="arw">→</span></a>
+            <a className="btn btn-secondary" href="#demo">Watch demo <span className="arw">→</span></a>
+          </div>
+          <p className="microcopy"><b>Free forever</b>, no credit card required</p>
+        </div>
+        <div className="hero-media-term reveal">
+          <div className="term">
+            <div className="term-bar">
+              <i></i><i></i><i></i>
+              <span className="term-title">zsh — my-notes</span>
+            </div>
+            <div className="term-body">
+              <div className="ln cmd">fl ./my-notes</div>
+              <div className="ln muted">Scanning 12 files…</div>
+              <div className="ln ok">✓ Uploaded 12 files in 3.2s</div>
+              <div className="ln">→ Live at <span className="url">my-notes.flowershow.app</span></div>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div id="demo" className="mt-12 max-w-6xl mx-auto flow-root sm:mt-16">
-      <div className="relative aspect-video w-full">
-        <iframe className="absolute inset-0 w-full h-full rounded-md" src="https://www.youtube.com/embed/x6XsC2njFnU?si=zpgL-9BCrDWw6lS0" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
+    </section>
+    <section className="section section-soft" id="how">
+      <div className="wrap">
+        <div className="section-head reveal">
+          <span className="eyebrow">How it works</span>
+          <h2>Publish in one command.</h2>
+          <p>No git repo, no build pipeline. Just run <code>fl</code> — you'll get a shareable URL in seconds.</p>
+        </div>
+        <div className="steps cli-steps reveal">
+          <div className="step">
+            <span className="step-num">1</span>
+            <h3>Publish</h3>
+            <div className="cmd-line">fl ./my-folder</div>
+            <p>Your site goes live instantly and you get a shareable URL. Works with a single file too.</p>
+          </div>
+          <div className="step">
+            <span className="step-num">2</span>
+            <h3>Republish</h3>
+            <div className="cmd-line">fl ./my-folder</div>
+            <p>The same command updates your site. We diff locally and upload only what changed.</p>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
-</div>
-<div className="bg-gray-50 py-12 sm:py-24 my-12 rounded-3xl mx-6 lg:mx-8">
-  <div className="mx-auto max-w-7xl px-6 lg:px-8">
-    <div className="mx-auto max-w-3xl lg:text-center">
-      <h2 className="mt-2 text-pretty text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl lg:text-balance">Publish in one command</h2>
-      <p className="mt-6 text-lg/8 text-gray-600">No git repo, no build pipeline. Just run <code>fl</code> — you'll get a shareable URL in seconds.</p>
-    </div>
-    <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-5xl">
-      <dl className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-2 lg:gap-y-16">
-        <div>
-          <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-            <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-orange-400 text-white font-bold">1</div>
-            Publish
-          </dt>
-          <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-            <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">fl ./my-folder</div>
-            <p className="mt-4">Your site goes live instantly. You get a shareable URL — works with a single file too.</p>
-          </dd>
+    </section>
+    <section className="section" id="demo">
+      <div className="wrap">
+        <div className="section-head reveal">
+          <span className="eyebrow">Demo</span>
+          <h2>See it go from folder to live site.</h2>
         </div>
-        <div>
-          <dt className="flex items-center gap-x-3 text-base font-semibold leading-7 text-gray-900">
-            <div className="h-10 w-10 flex items-center justify-center rounded-lg bg-orange-400 text-white font-bold">2</div>
-            Republish
-          </dt>
-          <dd className="mt-4 flex flex-auto flex-col text-base leading-7 text-gray-600">
-            <div className="bg-gray-900 text-slate-200 p-4 rounded-md overflow-x-auto text-sm font-mono">fl ./my-folder</div>
-            <p className="mt-4">Same command updates your site. We diff locally and upload only what changed.</p>
-          </dd>
+        <div className="demo-media reveal">
+          <iframe src="https://www.youtube-nocookie.com/embed/E9z0zLewoAM?rel=0" title="Flowershow CLI — a real publish walkthrough" loading="lazy" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
         </div>
-      </dl>
-    </div>
-  </div>
-</div>
-<div className="mx-auto max-w-7xl px-6 lg:px-8">
-  <div id="demo" className="mt-12 max-w-6xl mx-auto flow-root sm:mt-16">
-    <iframe className="w-full rounded-md" width="560" height="315" src="https://www.youtube.com/embed/E9z0zLewoAM?si=J7LDLnPoh3tG_ZRJ" title="YouTube video player" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
-  </div>
-</div>
-<div className="py-12 sm:py-24">
-  <div className="mx-auto max-w-7xl px-6 lg:px-8">
-    <div className="mx-auto max-w-3xl lg:text-center">
-      <h2 className="mt-2 text-pretty text-3xl font-semibold tracking-tight text-gray-900 sm:text-4xl lg:text-balance">Why publish from the terminal?</h2>
-    </div>
-    <div className="mx-auto mt-16 max-w-2xl sm:mt-20 lg:mt-24 lg:max-w-5xl">
-      <dl className="grid grid-cols-1 gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-2 lg:gap-y-16">
-        <div className="relative pl-16">
-          <dt className="text-base font-semibold leading-7 text-gray-900">
-            <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
-              <span className="text-2xl">📄</span>
-            </div>
-            No Setup Required
-          </dt>
-          <dd className="mt-2 text-base leading-7 text-gray-600">
-            No `git init`. No config files. No "setting up a project". If you have a folder of Markdown on your computer, you can publish it.
-          </dd>
+      </div>
+    </section>
+    <section className="section section-soft" id="why">
+      <div className="wrap">
+        <div className="section-head reveal">
+          <span className="eyebrow">Why the terminal</span>
+          <h2>Why publish from the terminal?</h2>
         </div>
-        <div className="relative pl-16">
-          <dt className="text-base font-semibold leading-7 text-gray-900">
-            <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
-              <span className="text-2xl">⚡</span>
-            </div>
-            Instant
-          </dt>
-          <dd className="mt-2 text-base leading-7 text-gray-600">
-            No build pipelines. No waiting for a server to clone your repo. The CLI uploads your local files fast and diffs your files locally when you update them and uploads only what changed.
-          </dd>
+        <div className="concept-grid reveal">
+          <div className="concept-card">
+            <span className="ic">📄</span>
+            <h3>No setup required</h3>
+            <p>No <code>git init</code>, no config files, no "setting up a project". If you have a folder of Markdown on your computer, you can publish it.</p>
+          </div>
+          <div className="concept-card">
+            <span className="ic">⚡</span>
+            <h3>Instant</h3>
+            <p>No build pipelines and no waiting for a server to clone your repo. The CLI uploads fast, and on updates it diffs locally and sends only what changed.</p>
+          </div>
+          <div className="concept-card">
+            <span className="ic">🤖</span>
+            <h3>Automation ready</h3>
+            <p>Since it's just a command, it's perfect for scripts, cron jobs, or AI agents that need to publish content without a human clicking a UI.</p>
+          </div>
+          <div className="concept-card">
+            <span className="ic">🏃</span>
+            <h3>Stay in flow</h3>
+            <p>Don't break your writing flow to switch to a browser. Write in your editor, run <code>fl</code>, share the URL, and keep going.</p>
+          </div>
         </div>
-         <div className="relative pl-16">
-          <dt className="text-base font-semibold leading-7 text-gray-900">
-            <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
-              <span className="text-2xl">🤖</span>
-            </div>
-            Automation Ready
-          </dt>
-          <dd className="mt-2 text-base leading-7 text-gray-600">
-            Since it's just a command, it's perfect for scripts, cron jobs, or AI agents that need to publish content without a human clicking a UI.
-          </dd>
+      </div>
+    </section>
+    <section className="final">
+      <div className="wrap">
+        <div className="final-card reveal">
+          <h2>Markdown to URL. Straight from your shell.</h2>
+          <p>Install the CLI and publish your first site in seconds — free, no credit card required.</p>
+          <a className="btn btn-primary" href="https://flowershow.app/docs/cli">Install now <span className="arw">→</span></a>
+          <p className="fine">Open source · Free plan, forever</p>
         </div>
-        <div className="relative pl-16">
-          <dt className="text-base font-semibold leading-7 text-gray-900">
-             <div className="absolute left-0 top-0 flex h-10 w-10 items-center justify-center rounded-lg bg-orange-100">
-              <span className="text-2xl">🏃</span>
-            </div>
-            Stay in Flow
-          </dt>
-          <dd className="mt-2 text-base leading-7 text-gray-600">
-            Don't break your writing flow to switch to a browser. Write in your editor -> run `fl` -> share URL -> keep going.
-          </dd>
-        </div>
-      </dl>
-    </div>
+      </div>
+    </section>
   </div>
 </div>
