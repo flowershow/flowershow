@@ -62,7 +62,13 @@
   --gold-eyebrow: #8a6f00;       /* warm dark gold — golden-in-TEXT / accents */
   --lemon: var(--card-yellow);   /* warm yellow fill (back-compat alias) */
   --gold: var(--gold-eyebrow);   /* warm dark gold (back-compat alias) */
-  --obsidian: #7c3aed;           /* Obsidian brand violet */
+  /* Obsidian — the /publish-obsidian landing accent (brand violet). Two shades:
+     a saturated fill (--obsidian) and a darkened --obsidian-ink that stays
+     legible as TEXT on white, plus a soft --tint-obsidian wash — mirrors the
+     berry/teal triplet. Also used by .wf-ico.brand-obsidian on the home page. */
+  --obsidian:      #7c3aed;      /* Obsidian brand violet — icon + fills */
+  --obsidian-ink:  #6d28d9;      /* darkened violet — accent text/links on white */
+  --tint-obsidian: #f0e9fe;      /* soft violet wash — filled card backgrounds */
   /* Teal — the Data Stories use-case accent. A cool, analytical pop that reads
      distinct from the warm gold/berry family (docs owns gold). Two shades: a
      saturated fill (--teal) and a darkened --teal-ink that stays legible as
@@ -1242,6 +1248,61 @@
   background: var(--surface-dark); border-radius: 10px; padding: 12px 15px;
 }
 .fs-root .cmd-line::before { content: "$ "; color: var(--berry); }
+
+/* ==========================================================================
+   Obsidian landing — /publish-obsidian
+   --------------------------------------------------------------------------
+   Reuses the shared landing kit (.hero, .section, .steps, .concept-grid,
+   .demo-media, .split-grid, .show-grid, .final-card) on a plain white .fs-root
+   page, scoped under `.lp-obsidian` and tinted to the OBSIDIAN violet accent
+   the design tokens reserve for this page (--obsidian / --obsidian-ink /
+   --tint-obsidian). Like the other landing pages it re-tints the kit pieces
+   that default to the Gardens fern (the .pill chip, the .step-num index, the
+   .eyebrow) to violet. The one bespoke component is the .cmp comparison table
+   — this page's "Obsidian Publish alternative" section has no kit equivalent.
+   ========================================================================== */
+
+/* Violet headline accent — obsidian counterpart to .accent-fern / .accent-berry */
+.fs-root .accent-obsidian { color: var(--obsidian-ink); }
+
+/* Re-tint gardens-default-fern kit pieces to violet on the obsidian page */
+.fs-root.lp-obsidian .eyebrow { color: var(--obsidian-ink); }
+.fs-root.lp-obsidian .step-num { color: var(--obsidian-ink); background: var(--tint-obsidian); }
+
+/* Violet in-card link hover — the kit defaults these to berry; here it's violet */
+.fs-root.lp-obsidian .textlink:hover,
+.fs-root.lp-obsidian .show-card:hover .show-link,
+.fs-root.lp-obsidian .show-link:hover { color: var(--obsidian-ink); }
+
+/* Inline code in prose — mono chip in the violet accent */
+.fs-root.lp-obsidian .concept-card code, .fs-root.lp-obsidian .section-head code {
+  font-family: var(--mono); font-size: .88em; color: var(--obsidian-ink);
+  background: var(--surface-card); border-radius: 5px; padding: 1px 6px;
+}
+
+/* ---- Comparison table — Flowershow vs Obsidian Publish vs self-hosted ----
+   No kit equivalent, so a small bespoke component: a borderless table with
+   hairline row rules and the Flowershow column washed in soft violet (its
+   header rounds at the top, its last cell at the bottom) to read as the pick.
+   Wrapped in .cmp-wrap so it scrolls horizontally on narrow screens rather
+   than breaking the page's own layout. */
+.fs-root .cmp-wrap { max-width: 880px; margin: 0 auto; overflow-x: auto; }
+.fs-root .cmp { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 660px; }
+.fs-root .cmp th, .fs-root .cmp td { padding: 14px 18px; text-align: center; vertical-align: middle; }
+.fs-root .cmp thead th {
+  font-family: var(--sans); font-weight: 700; font-size: 15px; color: var(--muted);
+  letter-spacing: -0.01em; padding-top: 10px; padding-bottom: 16px;
+}
+.fs-root .cmp tbody tr { border-top: 1px solid var(--hairline); }
+.fs-root .cmp tbody td { color: var(--muted); font-weight: 500; }
+.fs-root .cmp tbody td:first-child, .fs-root .cmp thead th:first-child {
+  text-align: left; color: var(--body); font-weight: 600;
+}
+/* Highlighted Flowershow column — soft violet wash running top to bottom */
+.fs-root .cmp .col-fs { background: var(--tint-obsidian); color: var(--obsidian-ink); font-weight: 700; }
+.fs-root .cmp thead th.col-fs { border-radius: 12px 12px 0 0; }
+.fs-root .cmp tbody tr:last-child td.col-fs { border-radius: 0 0 12px 12px; }
+.fs-root .cmp-note { margin: 22px auto 0; max-width: 880px; text-align: center; font-size: 14px; color: var(--muted-soft); }
 
 /* ==========================================================================
    Default Flowershow footer — restyled to match the landing mockup

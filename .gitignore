@@ -78,3 +78,4 @@ packages/obsidian-plugin/main.js
 .claude/
 # Flowershow CLI local metadata (pins publish target)
 .flowershow
+.gstack/
