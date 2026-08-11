@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/env.mjs', () => ({
   env: {
@@ -15,21 +15,19 @@ const baseSite = {
   projectName: 'garden',
   customDomain: null,
   subdomain: 'garden-johndoe',
-  plan: 'FREE' as const,
   user: { username: 'johndoe' },
 };
 
 describe('getSiteUrl', () => {
-  it('returns subdomain URL for a site with a subdomain', () => {
+  it('returns subdomain URL for a site with no custom domain', () => {
     expect(getSiteUrl(baseSite)).toBe('https://garden-johndoe.flowershow.site');
   });
 
-  it('returns custom domain URL when site has custom domain and PREMIUM plan', () => {
+  it('returns custom domain URL whenever a custom domain is set', () => {
     expect(
       getSiteUrl({
         ...baseSite,
         customDomain: 'my.custom.com',
-        plan: 'PREMIUM',
       }),
     ).toBe('https://my.custom.com');
   });

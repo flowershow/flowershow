@@ -1,13 +1,10 @@
-import { Plan } from '@prisma/client';
 import { env } from '@/env.mjs';
-import { Feature, isFeatureEnabled } from './feature-flags';
 
 type SiteWithUrl = {
   projectName: string;
   customDomain: string | null;
   subdomain: string;
   user: { username: string };
-  plan?: Plan | null;
 };
 
 export function getSiteUrl(site: SiteWithUrl) {
@@ -18,7 +15,7 @@ export function getSiteUrl(site: SiteWithUrl) {
     env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
   const protocol = isSecure ? 'https' : 'http';
 
-  if (isFeatureEnabled(Feature.CustomDomain, site) && customDomain) {
+  if (customDomain) {
     return `${protocol}://${customDomain}`;
   }
 
