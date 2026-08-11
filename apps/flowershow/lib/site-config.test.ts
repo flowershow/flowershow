@@ -95,7 +95,7 @@ describe('resolveSiteName', () => {
 
 describe('buildPageTitle', () => {
   it('appends the brand as a suffix to the page title', () => {
-    expect(buildPageTitle('About', 'My Site')).toBe('About - My Site');
+    expect(buildPageTitle('About', 'My Site')).toBe('About | My Site');
   });
 
   it('returns the brand alone when the page has no title', () => {
