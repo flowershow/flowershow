@@ -71,7 +71,13 @@ jobs:
         run: pnpm install
 
       - name: Build workspace packages
-        run: pnpm turbo build --filter='@flowershow/remark-wiki-link'
+        # The dev server resolves the app's workspace deps from their built dist/
+        # (each package's "main"/"module" points at ./dist). A missing dist/ makes
+        # the route importing that package fail to compile and wedges the whole dev
+        # server, cascading into 500s across the suite (e.g. api-contract -> the RSS
+        # route). Build ALL of @flowershow/app's workspace deps, not just one, so this
+        # can't drift when a new workspace dependency is added.
+        run: pnpm turbo build --filter='@flowershow/app^...'
 
       - name: Start MinIO
         run: |
