@@ -97,11 +97,6 @@ jobs:
         working-directory: apps/flowershow
         run: |
           cp .env.example .env
-          # [DEBUG-e2e500] Silence the PostHog 401 error storm caused by the dummy
-          # NEXT_PUBLIC_POSTHOG_KEY in .env.example (~185 log lines per request,
-          # bloating next-dev.log to 15k lines). buildPHBootstrapCookie early-returns
-          # on an empty key. Remove together with the route instrumentation.
-          sed -i 's/^NEXT_PUBLIC_POSTHOG_KEY=.*/NEXT_PUBLIC_POSTHOG_KEY=/' .env
 
       - name: Run database migrations
         working-directory: apps/flowershow
