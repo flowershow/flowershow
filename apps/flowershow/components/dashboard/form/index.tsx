@@ -79,7 +79,14 @@ export default function Form({
     event.preventDefault();
     if (disabled || isToggleField) return;
 
-    if (inputAttrs.pattern && !RegExp(inputAttrs.pattern).test(value)) {
+    // An empty value bypasses the pattern check so it can reach the server,
+    // which treats it as a request to clear the field (e.g. remove a custom
+    // domain). The server still rejects empty values where they aren't allowed.
+    if (
+      inputAttrs.pattern &&
+      value.trim() !== '' &&
+      !RegExp(inputAttrs.pattern).test(value)
+    ) {
       if (inputAttrs.name === 'customDomain') {
         toast.error('Please enter a valid domain (e.g. yourdomain.com)');
       } else if (inputAttrs.name === 'projectName') {
