@@ -33,7 +33,7 @@ export const FREE_SITE_SUBDOMAIN = `${FREE_SITE.projectName}-${TEST_USER.usernam
 export const FREE_SITE_BASE_URL = `http://${FREE_SITE_SUBDOMAIN}.${process.env.NEXT_PUBLIC_SITE_DOMAIN || 'localhost:3000'}`;
 
 export const PREMIUM_SITE_CUSTOM_DOMAIN =
-  process.env.E2E_CUSTOM_DOMAIN || 'e2e-premium.localhost:3000';
+  process.env.E2E_CUSTOM_DOMAIN || 'e2e-premium.flowershow.local:3000';
 
 export const PREMIUM_SITE = {
   id: 'e2e-premium-site-id',

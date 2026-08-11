@@ -40,6 +40,9 @@ export default defineConfig({
         baseURL: FREE_SITE_BASE_URL,
         basePath: '',
       } as any,
+      // password-protection.spec.ts asserts login redirects that only happen on
+      // the password-protected site; it runs under its own project below.
+      testIgnore: ['**/password-protection.spec.ts'],
       dependencies: ['setup'],
     },
     {
