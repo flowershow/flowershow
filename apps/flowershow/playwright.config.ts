@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 import {
   FREE_SITE_BASE_URL,
+  PASSWORD_CUSTOM_DOMAIN_SITE_CUSTOM_DOMAIN,
   PASSWORD_SITE_BASE_URL,
   PREMIUM_SITE_CUSTOM_DOMAIN,
 } from './e2e/helpers/seed';
@@ -40,9 +41,12 @@ export default defineConfig({
         baseURL: FREE_SITE_BASE_URL,
         basePath: '',
       } as any,
-      // password-protection.spec.ts asserts login redirects that only happen on
-      // the password-protected site; it runs under its own project below.
-      testIgnore: ['**/password-protection.spec.ts'],
+      // The password-protection specs assert login redirects that only happen on
+      // password-protected sites; they run under their own projects below.
+      testIgnore: [
+        '**/password-protection.spec.ts',
+        '**/password-protection-custom-domain.spec.ts',
+      ],
       dependencies: ['setup'],
     },
     {
@@ -66,10 +70,25 @@ export default defineConfig({
       dependencies: ['setup'],
     },
     {
+      name: 'password-custom-domain',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `http://${PASSWORD_CUSTOM_DOMAIN_SITE_CUSTOM_DOMAIN}`,
+        basePath: '',
+      } as any,
+      testMatch: ['**/password-protection-custom-domain.spec.ts'],
+      dependencies: ['setup'],
+    },
+    {
       name: 'teardown',
       testDir: './e2e',
       testMatch: 'teardown.ts',
-      dependencies: ['chromium', 'custom-domain', 'password-protection'],
+      dependencies: [
+        'chromium',
+        'custom-domain',
+        'password-protection',
+        'password-custom-domain',
+      ],
     },
   ],
 });

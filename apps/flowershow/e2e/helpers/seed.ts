@@ -49,6 +49,25 @@ export const PASSWORD_SITE_PASSWORD = 'test-password-123';
 export const PASSWORD_SITE_SUBDOMAIN = `${PASSWORD_SITE.projectName}-${TEST_USER.username}`;
 export const PASSWORD_SITE_BASE_URL = `http://${PASSWORD_SITE_SUBDOMAIN}.${process.env.NEXT_PUBLIC_SITE_DOMAIN || 'localhost:3000'}`;
 
+// A password-protected site that *also* has a custom domain. This combination
+// regressed into a redirect loop (ERR_TOO_MANY_REDIRECTS) when the canonical
+// host used for the login redirect disagreed about whether the custom domain or
+// the subdomain was canonical — see commit 04b2128c. Must resolve locally like
+// PREMIUM_SITE_CUSTOM_DOMAIN (own /etc/hosts entry, not a subdomain of
+// NEXT_PUBLIC_SITE_DOMAIN). Override with E2E_PASSWORD_CUSTOM_DOMAIN if needed.
+export const PASSWORD_CUSTOM_DOMAIN_SITE_CUSTOM_DOMAIN =
+  process.env.E2E_PASSWORD_CUSTOM_DOMAIN ||
+  'e2e-password-premium.flowershow.local:3000';
+
+export const PASSWORD_CUSTOM_DOMAIN_SITE = {
+  id: 'e2e-password-premium-site-id',
+  projectName: 'e2e-password-premium-site',
+  customDomain: PASSWORD_CUSTOM_DOMAIN_SITE_CUSTOM_DOMAIN,
+};
+export const PASSWORD_CUSTOM_DOMAIN_SITE_PASSWORD = 'test-password-123';
+export const PASSWORD_CUSTOM_DOMAIN_SITE_SUBDOMAIN = `${PASSWORD_CUSTOM_DOMAIN_SITE.projectName}-${TEST_USER.username}`;
+export const PASSWORD_CUSTOM_DOMAIN_SITE_BASE_URL = `http://${PASSWORD_CUSTOM_DOMAIN_SITE_SUBDOMAIN}.${process.env.NEXT_PUBLIC_SITE_DOMAIN || 'localhost:3000'}`;
+
 // --- Prisma ---
 
 let prisma: PrismaClient;
@@ -332,7 +351,9 @@ async function revalidateCache(): Promise<void> {
       'Content-Type': 'application/json',
       ...(secret ? { 'x-internal-secret': secret } : {}),
     },
-    body: JSON.stringify({ tags: [FREE_SITE.id, PREMIUM_SITE.id] }),
+    body: JSON.stringify({
+      tags: [FREE_SITE.id, PREMIUM_SITE.id, PASSWORD_CUSTOM_DOMAIN_SITE.id],
+    }),
   });
   if (!res.ok) {
     console.warn(`⚠️  Cache revalidation failed (${res.status}), continuing…`);
@@ -425,16 +446,43 @@ export async function seed(): Promise<void> {
     },
   });
 
-  // 5. Upload fixtures to MinIO and create Blob records for all sites
+  // 5. Upsert Password + Custom Domain Site (regression fixture for the
+  //    redirect loop fixed in 04b2128c: PASSWORD + PREMIUM + customDomain)
+  await db.site.upsert({
+    where: { id: PASSWORD_CUSTOM_DOMAIN_SITE.id },
+    create: {
+      id: PASSWORD_CUSTOM_DOMAIN_SITE.id,
+      projectName: PASSWORD_CUSTOM_DOMAIN_SITE.projectName,
+      subdomain: PASSWORD_CUSTOM_DOMAIN_SITE_SUBDOMAIN,
+      userId: TEST_USER.id,
+      customDomain: PASSWORD_CUSTOM_DOMAIN_SITE.customDomain,
+      plan: Plan.PREMIUM,
+      privacyMode: 'PASSWORD',
+      accessPasswordHash,
+      tokenVersion: 1,
+    },
+    update: {
+      projectName: PASSWORD_CUSTOM_DOMAIN_SITE.projectName,
+      subdomain: PASSWORD_CUSTOM_DOMAIN_SITE_SUBDOMAIN,
+      customDomain: PASSWORD_CUSTOM_DOMAIN_SITE.customDomain,
+      plan: Plan.PREMIUM,
+      privacyMode: 'PASSWORD',
+      accessPasswordHash,
+      tokenVersion: 1,
+    },
+  });
+
+  // 6. Upload fixtures to MinIO and create Blob records for all sites
   await uploadFixturesForSite(FREE_SITE.id, db, s3);
   await uploadFixturesForSite(PREMIUM_SITE.id, db, s3);
   await uploadFixturesForSite(PASSWORD_SITE.id, db, s3);
+  await uploadFixturesForSite(PASSWORD_CUSTOM_DOMAIN_SITE.id, db, s3);
 
-  // 6. Seed backlink Link records for backlinks e2e tests
+  // 7. Seed backlink Link records for backlinks e2e tests
   await seedBacklinksForSite(FREE_SITE.id, db);
   await seedBacklinksForSite(PREMIUM_SITE.id, db);
 
-  // 7. Invalidate Next.js Data Cache after all data (including links) is in place
+  // 8. Invalidate Next.js Data Cache after all data (including links) is in place
   await revalidateCache();
 }
 

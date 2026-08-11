@@ -6,15 +6,17 @@ End-to-end tests using [Playwright](https://playwright.dev/) against a running l
 
 - Local dev server running (`pnpm dev`)
 - Database and MinIO running (via Docker Compose)
-- An `/etc/hosts` entry for the premium custom-domain site so it resolves locally:
+- `/etc/hosts` entries for the custom-domain sites so they resolve locally:
 
   ```
   127.0.0.1 e2e-premium.flowershow.local
+  127.0.0.1 e2e-password-premium.flowershow.local
   ```
 
-  This host must **not** be a subdomain of `NEXT_PUBLIC_SITE_DOMAIN` (`localhost:3000`),
-  or the middleware routes it through the subdomain branch and the custom-domain
-  tests 404. Override it with `E2E_CUSTOM_DOMAIN` if needed.
+  These hosts must **not** be subdomains of `NEXT_PUBLIC_SITE_DOMAIN` (`localhost:3000`),
+  or the middleware routes them through the subdomain branch and the custom-domain
+  tests 404. Override them with `E2E_CUSTOM_DOMAIN` /
+  `E2E_PASSWORD_CUSTOM_DOMAIN` if needed.
 
 ## Running tests
 
@@ -55,13 +57,14 @@ e2e/
 
 ## How setup works
 
-The Playwright config defines five projects:
+The Playwright config defines six projects:
 
-1. **setup** — seeds the free site, the premium custom-domain site, and the password-protected site
-2. **chromium** — runs every spec (except `password-protection.spec.ts`) against the free subdomain site (`e2e-test-site-test-user.localhost:3000`)
+1. **setup** — seeds the free site, the premium custom-domain site, the password-protected site, and the password-protected custom-domain site
+2. **chromium** — runs every spec (except the `password-protection*` specs) against the free subdomain site (`e2e-test-site-test-user.localhost:3000`)
 3. **custom-domain** — runs `links-and-embeds.spec.ts` and `rss.spec.ts` against the premium site (`e2e-premium.flowershow.local:3000`), which is served as a real custom domain
 4. **password-protection** — runs `password-protection.spec.ts` against the password-protected site (`e2e-password-site-test-user.localhost:3000`)
-5. **teardown** — deletes seeded data (depends on chromium, custom-domain, and password-protection)
+5. **password-custom-domain** — runs `password-protection-custom-domain.spec.ts` against the password-protected custom-domain site (`e2e-password-premium.flowershow.local:3000`); regression coverage for the login redirect loop fixed in `04b2128c`
+6. **teardown** — deletes seeded data (depends on chromium, custom-domain, password-protection, and password-custom-domain)
 
 Using `--project=chromium --no-deps` skips the setup and teardown projects, running only the browser tests against whatever data is already in the DB.
 
