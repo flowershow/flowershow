@@ -30,6 +30,15 @@ export async function onRequestError(
     return;
   }
 
+  // Ignore tRPC NOT_FOUND errors. These are expected control flow — a visitor
+  // or crawler requested a path that doesn't exist on a user's site — which the
+  // page handlers already convert into a 404 via `notFound()`. They are not
+  // actionable bugs, so don't report them as exceptions.
+  const trpcCode = (error as { data?: { code?: string } }).data?.code;
+  if (error.name === 'TRPCClientError' && trpcCode === 'NOT_FOUND') {
+    return;
+  }
+
   const { default: PostHogClient } = await import('./lib/server-posthog');
   const posthog = PostHogClient();
 
