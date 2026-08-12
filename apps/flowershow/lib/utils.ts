@@ -52,6 +52,22 @@ export const toDateString = (date: Date) => {
   });
 };
 
+/**
+ * Parses a value into a valid Date, or returns null if it can't be parsed.
+ *
+ * Frontmatter `date` fields are user-controlled and frequently hold values that
+ * are not parseable dates — e.g. Zotero-style ranges ("1964-1982"), year-only
+ * values, template placeholders, or free text. Passing those straight to
+ * `new Date(...).toISOString()` / `.toUTCString()` throws
+ * `RangeError: Invalid time value` and crashes the render. Use this at every
+ * boundary where a frontmatter date is turned into a Date.
+ */
+export function safeDate(value: unknown): Date | null {
+  if (value == null || value === '') return null;
+  const date = new Date(value as string | number | Date);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 export const random = (min: number, max: number) => {
   return Math.floor(Math.random() * (max - min + 1) + min);
 };
