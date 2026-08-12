@@ -167,7 +167,6 @@ export function SearchModal({ indexId }: SearchModalProps) {
                     searchClient={searchClient}
                     indexName={indexId}
                     stalledSearchDelay={1000}
-                    insights
                   >
                     <div className="search-modal-input-container">
                       <SearchBox
