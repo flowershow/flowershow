@@ -2,6 +2,8 @@ import { CalendarIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { safeDate } from '@/lib/utils';
+
 interface Props extends React.PropsWithChildren {
   title: string;
   description?: string;
@@ -23,7 +25,7 @@ export const BlogLayout: React.FC<Props> = ({
   date,
   authors,
 }) => {
-  const formattedDate = date ? formatDate(date) : null;
+  const parsedDate = safeDate(date);
 
   return (
     <>
@@ -87,12 +89,18 @@ export const BlogLayout: React.FC<Props> = ({
               </div>
             )}
 
-            {date && formattedDate && (
+            {date && (
               <div className="page-header-date">
                 <CalendarIcon className="page-header-date-icon" />
-                <time dateTime={new Date(date).toISOString()}>
-                  {formattedDate}
-                </time>
+                {parsedDate ? (
+                  <time dateTime={parsedDate.toISOString()}>
+                    {formatDate(parsedDate)}
+                  </time>
+                ) : (
+                  // Not a parseable date (e.g. a range like "1964-1982"); render
+                  // the raw frontmatter value rather than crashing the render.
+                  <span>{date}</span>
+                )}
               </div>
             )}
           </div>
@@ -103,17 +111,12 @@ export const BlogLayout: React.FC<Props> = ({
   );
 };
 
-const formatDate = (
-  date: string | undefined,
-  locales = 'en-US',
-): string | null => {
-  if (!date) return null;
-
+const formatDate = (date: Date, locales = 'en-US'): string => {
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
     month: 'long',
     day: 'numeric',
   };
 
-  return new Date(date).toLocaleDateString(locales, options);
+  return date.toLocaleDateString(locales, options);
 };

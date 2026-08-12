@@ -451,6 +451,17 @@ async function syncLinks(sql, siteId, blobId, markdown) {
   }
 }
 
+/**
+ * Convert a user-controlled frontmatter `date` into a Unix timestamp (seconds),
+ * or null when it isn't a parseable date. Frontmatter dates are often ranges
+ * ("1964-1982") or free text, which would otherwise index as NaN.
+ */
+function getUnixTimestamp(value) {
+  if (value == null || value === '') return null;
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date.getTime() / 1000;
+}
+
 async function indexInTypesense({
   typesense,
   siteId,
@@ -467,7 +478,7 @@ async function indexInTypesense({
       path,
       description: metadata.description,
       authors: metadata.authors,
-      date: metadata.date ? new Date(metadata.date).getTime() / 1000 : null,
+      date: getUnixTimestamp(metadata.date),
       id: `${blobId}`,
     };
     await typesense.collections(siteId).documents().upsert(document);

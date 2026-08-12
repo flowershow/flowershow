@@ -1,3 +1,5 @@
+import { safeDate } from './utils';
+
 export interface RssBlob {
   appPath: string | null;
   updatedAt: Date;
@@ -37,9 +39,7 @@ export function buildRssItem(blob: RssBlob, siteUrl: string): string {
   const description = metadata.description
     ? escapeXml(metadata.description as string)
     : '';
-  const pubDate = metadata.date
-    ? new Date(metadata.date as string).toUTCString()
-    : blob.updatedAt.toUTCString();
+  const pubDate = (safeDate(metadata.date) ?? blob.updatedAt).toUTCString();
   const authors = metadata.authors as string[] | undefined;
   const author = authors?.length ? escapeXml(authors.join(', ')) : '';
 
@@ -59,8 +59,8 @@ export function buildRssFeed(
 ): string {
   const filtered = filterRssBlobs(blobs)
     .sort((a, b) => {
-      const dateA = new Date(a.metadata?.date as string).getTime();
-      const dateB = new Date(b.metadata?.date as string).getTime();
+      const dateA = safeDate(a.metadata?.date)?.getTime() ?? 0;
+      const dateB = safeDate(b.metadata?.date)?.getTime() ?? 0;
       return dateB - dateA;
     })
     .slice(0, maxItems);

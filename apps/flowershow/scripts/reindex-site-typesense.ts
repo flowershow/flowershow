@@ -49,6 +49,8 @@ import { PrismaClient } from '@prisma/client';
 import matter from 'gray-matter';
 import { Client as TypesenseClient } from 'typesense';
 
+import { safeDate } from '../lib/utils';
+
 // ---------------------------------------------------------------------------
 // Configuration — read directly from process.env to avoid env.mjs full validation
 // ---------------------------------------------------------------------------
@@ -366,7 +368,9 @@ async function reindexSite(siteId: string, dryRun: boolean) {
         path: filePath,
         description: metadata.description,
         authors: metadata.authors,
-        date: metadata.date ? new Date(metadata.date).getTime() / 1000 : null,
+        date: safeDate(metadata.date)
+          ? safeDate(metadata.date)!.getTime() / 1000
+          : null,
       };
 
       if (dryRun) {
