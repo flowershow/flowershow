@@ -33,7 +33,16 @@ export async function onRequestError(
   const { default: PostHogClient } = await import('./lib/server-posthog');
   const posthog = PostHogClient();
 
+  // `request.path` is the internal (rewritten) `/site/...` path, which is the
+  // same across every user site. The host header carries the user-facing origin
+  // (e.g. `abc.flowershow.me` or a custom domain), which is what actually
+  // identifies the site that threw. Middleware routes on `host` directly; fall
+  // back to `x-forwarded-host` in case a proxy hop only sets that.
+  const requestHost =
+    request.headers['host'] ?? request.headers['x-forwarded-host'];
+
   posthog.captureException(error, 'server-request-error', {
+    request_host: requestHost,
     request_path: request.path,
     request_method: request.method,
     router_kind: context.routerKind,
