@@ -68,6 +68,25 @@ export function safeDate(value: unknown): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+/**
+ * Normalizes a user-controlled frontmatter `authors` value into a clean list of
+ * author strings.
+ *
+ * `authors` is documented as a list, but users naturally write a single scalar
+ * (`authors: Jane`) when there's one author, and YAML frontmatter can hold
+ * arbitrary shapes. The tRPC `getAuthors` input requires `string[]`, so a scalar
+ * (or any non-array) previously threw a ZodError and crashed the whole page
+ * render. Coerce a scalar to a single-item list, keep only non-empty string
+ * entries from a list, and drop anything else — never throw.
+ */
+export function normalizeAuthors(value: unknown): string[] {
+  const list = Array.isArray(value) ? value : [value];
+  return list.filter(
+    (entry): entry is string =>
+      typeof entry === 'string' && entry.trim().length > 0,
+  );
+}
+
 export const random = (min: number, max: number) => {
   return Math.floor(Math.random() * (max - min + 1) + min);
 };

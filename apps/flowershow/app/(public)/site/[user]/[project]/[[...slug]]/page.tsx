@@ -30,7 +30,7 @@ import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { processCanvas } from '@/lib/process-canvas';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
-import { ensureLeadingSlash } from '@/lib/utils';
+import { ensureLeadingSlash, normalizeAuthors } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
 import { api } from '@/trpc/server';
 import BacklinksPanel from './_components/backlinks-panel';
@@ -365,10 +365,14 @@ export default async function SitePage(props: {
     );
   }
 
-  const authors = metadata?.authors
+  // Frontmatter `authors` is user-controlled: it may be a scalar (`authors: Jane`)
+  // or arbitrary YAML, while getAuthors requires string[]. Normalize before the
+  // query so a scalar renders correctly and malformed values don't crash render.
+  const normalizedAuthors = normalizeAuthors(metadata?.authors);
+  const authors = normalizedAuthors.length
     ? await api.site.getAuthors.query({
         siteId: site.id,
-        authors: metadata.authors,
+        authors: normalizedAuthors,
       })
     : undefined;
 
