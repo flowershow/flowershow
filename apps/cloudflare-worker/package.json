@@ -27,8 +27,6 @@
     "gray-matter": "^4.0.3",
     "image-size": "^2.0.2",
     "postgres": "^3.4.4",
-    "remark": "^15.0.1",
-    "strip-markdown": "^6.0.0",
     "typesense": "^2.0.3"
   }
 }

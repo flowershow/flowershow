@@ -24,7 +24,6 @@
     "@changesets/cli": "^2.31.1",
     "@types/node": "^24.13.3",
     "husky": "^8.0.3",
-    "ts-node": "^10.9.2",
     "tsx": "^4.23.12",
     "turbo": "^2.10.9",
     "typescript": "^5.9.3"
