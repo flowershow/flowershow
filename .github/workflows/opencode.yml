@@ -3,9 +3,18 @@ name: Issue Triage
 on:
   issues:
     types: [opened]
+  issue_comment:
+    types: [created]
 
 jobs:
   triage:
+    # Auto-triage every new issue; also run on demand when a trusted
+    # collaborator comments "/triage" on an existing issue (not a PR).
+    if: >-
+      github.event_name == 'issues' ||
+      ( github.event_name == 'issue_comment' &&
+        !github.event.issue.pull_request &&
+        startsWith(github.event.comment.body, '/triage') )
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -13,13 +22,25 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      - name: Check account age
+      - name: Authorize trigger
         id: check
         uses: actions/github-script@v7
         with:
           script: |
+            // Manual "/triage": only repo collaborators with triage/write access
+            // or above may run it. This is what blocks people outside the org.
+            if (context.eventName === 'issue_comment') {
+              const { data } = await github.rest.repos.getCollaboratorPermissionLevel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                username: context.payload.comment.user.login,
+              });
+              const level = data.role_name || data.permission;
+              return ['admin', 'maintain', 'write', 'triage'].includes(level);
+            }
+            // Auto-triage on open: skip brand-new accounts as a light spam guard.
             const user = await github.rest.users.getByUsername({
-              username: context.payload.issue.user.login
+              username: context.payload.issue.user.login,
             });
             const created = new Date(user.data.created_at);
             const days = (Date.now() - created) / (1000 * 60 * 60 * 24);
@@ -38,7 +59,7 @@ jobs:
         with:
           model: ${{ secrets.OPENCODE_MODEL || 'anthropic/claude-sonnet-4-20250514' }}
           prompt: |
-            Triage this newly opened issue by running the `triage` skill
+            Triage this issue by running the `triage` skill
             (invoke: skill({ name: "triage" })) and following it exactly.
             The skill runs unattended: decide, apply the category issue type
             and one state label, and post a single comment. Do not wait for or
