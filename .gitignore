@@ -75,7 +75,8 @@ packages/obsidian-plugin/main.js
 .worktrees/
 
 .agents/
-.claude/
+.claude/*
+!.claude/skills/
 # Flowershow CLI local metadata (pins publish target)
 .flowershow
 .gstack/

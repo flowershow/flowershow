@@ -83,9 +83,11 @@ This applies to any user-visible change: adding/removing tools, renaming command
 
 GitHub Issues is the issue tracker. See `docs/agents/issue-tracker.md`.
 
-### Triage labels
+### Triage categories and labels
 
-Default canonical label strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+**Category** is set via GitHub **issue types**, not labels: `Bug` and `Enhancement` are issue types. Do not create or apply labels of the same names.
+
+**State** uses canonical label strings (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
 
 ### Domain docs
 
