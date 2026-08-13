@@ -1,39 +1,55 @@
 ---
 title: Themes
-description: Change the look of your site in one line of config.
+description: Browse Flowershow themes and preview each one live before you apply it.
 ---
 
-Configure your site's theme from the **Flowershow dashboard** under **Site Settings → Appearance**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
+A theme sets your site's overall look — typography, colors, and spacing — in one line of config. Pick one below and preview it live, then see [Apply a theme](/docs/reference/apply-a-theme) for how to set it and customize it further.
 
-## Available themes
+<div className="not-prose grid gap-6 sm:grid-cols-2 mt-6">
+  <a href="https://letterpress.flowershow.app/" target="_blank" rel="noreferrer" className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 no-underline shadow-sm transition duration-150 hover:border-orange-400 hover:shadow-md">
+    <img src="/assets/theme-letterpress.png" alt="Letterpress theme preview" className="w-full border-b border-gray-100 object-cover" />
+    <div className="flex flex-1 flex-col gap-2 p-5">
+      <div className="flex items-center gap-2">
+        <span className="text-base font-semibold text-gray-900">Letterpress</span>
+        <code className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">"letterpress"</code>
+      </div>
+      <p className="m-0 flex-1 text-sm text-gray-600">Clean, modern editorial look with balanced serif typography and generous whitespace.</p>
+      <span className="text-sm font-medium text-orange-600">View live demo →</span>
+    </div>
+  </a>
+  <a href="https://superstack.flowershow.app/" target="_blank" rel="noreferrer" className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 no-underline shadow-sm transition duration-150 hover:border-orange-400 hover:shadow-md">
+    <img src="/assets/theme-superstack.png" alt="Superstack theme preview" className="w-full border-b border-gray-100 object-cover" />
+    <div className="flex flex-1 flex-col gap-2 p-5">
+      <div className="flex items-center gap-2">
+        <span className="text-base font-semibold text-gray-900">Superstack</span>
+        <code className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">"superstack"</code>
+      </div>
+      <p className="m-0 flex-1 text-sm text-gray-600">Bold, newsletter-style layout with sans-serif headings, inspired by Substack.</p>
+      <span className="text-sm font-medium text-orange-600">View live demo →</span>
+    </div>
+  </a>
+  <a href="https://lessflowery.flowershow.app/" target="_blank" rel="noreferrer" className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 no-underline shadow-sm transition duration-150 hover:border-orange-400 hover:shadow-md">
+    <img src="/assets/theme-lessflowery.png" alt="LessFlowery theme preview" className="w-full border-b border-gray-100 object-cover" />
+    <div className="flex flex-1 flex-col gap-2 p-5">
+      <div className="flex items-center gap-2">
+        <span className="text-base font-semibold text-gray-900">LessFlowery</span>
+        <code className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">"lessflowery"</code>
+      </div>
+      <p className="m-0 flex-1 text-sm text-gray-600">Understated, text-first and literary, inspired by LessWrong.</p>
+      <span className="text-sm font-medium text-orange-600">View live demo →</span>
+    </div>
+  </a>
+  <a href="https://leaf.flowershow.app/" target="_blank" rel="noreferrer" className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 no-underline shadow-sm transition duration-150 hover:border-orange-400 hover:shadow-md">
+    <img src="/assets/theme-leaf.png" alt="Leaf theme preview" className="w-full border-b border-gray-100 object-cover" />
+    <div className="flex flex-1 flex-col gap-2 p-5">
+      <div className="flex items-center gap-2">
+        <span className="text-base font-semibold text-gray-900">Leaf</span>
+        <code className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">"leaf"</code>
+      </div>
+      <p className="m-0 flex-1 text-sm text-gray-600">Nature-inspired theme with warm, earthy green tones and decorative botanicals.</p>
+      <span className="text-sm font-medium text-orange-600">View live demo →</span>
+    </div>
+  </a>
+</div>
 
-| Theme           | Description                                                 |
-| --------------- | ----------------------------------------------------------- |
-| **Letterpress** | Clean, modern theme with balanced typography and whitespace |
-| **Superstack**  | Inspired by Substack's visual design                        |
-| **LessFlowery** | Inspired by LessWrong's visual style                        |
-| **Leaf**        | Nature-inspired theme with subtle green colors              |
-
-Browse all themes with previews on the [flowershow/themes](https://github.com/flowershow/themes) repository.
-
-## Select a theme
-
-Go to **Settings → Appearance → Theme** and choose a theme from the dropdown. Your site will use the selected theme on next publish.
-
-## Using config.json
-
-If you want to version-control your configuration, or have your editor's AI agent manage settings without touching the dashboard, you can define everything in `config.json` instead. Values set in `config.json` take precedence over dashboard settings.
-
-```json
-{
-  "theme": "letterpress"
-}
-```
-
-- `theme`: Name of the theme to apply. One of `letterpress`, `superstack`, `lessflowery`, `leaf`.
-
-## Customizing further
-
-Want to tweak colors, fonts, or spacing beyond what a theme provides? Create a `custom.css` file in your site root. See [[custom-styles|Custom Styles]] for available CSS variables and examples.
-
-For light/dark mode configuration, see [[dark-mode|Dark Mode]].
+Ready to use one? See [Apply a theme](/docs/reference/apply-a-theme) to set your pick from the dashboard or `config.json` and customize it further.
