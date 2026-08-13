@@ -20,13 +20,13 @@
     "prepare": "husky install"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.1",
-    "@changesets/cli": "^2.29.8",
-    "@types/node": "^24.9.1",
-    "husky": "^8.0.0",
+    "@biomejs/biome": "^2.5.8",
+    "@changesets/cli": "^2.31.1",
+    "@types/node": "^24.13.3",
+    "husky": "^8.0.3",
     "ts-node": "^10.9.2",
-    "tsx": "^4.19.2",
-    "turbo": "^2.9.14",
+    "tsx": "^4.23.12",
+    "turbo": "^2.10.9",
     "typescript": "^5.9.3"
   },
   "packageManager": "pnpm@10.12.1",
