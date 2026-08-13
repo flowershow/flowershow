@@ -33,6 +33,7 @@ import {
   deepMerge,
   resolveSiteConfig,
   SITE_CONFIG_DEFAULTS,
+  validateConfigPatch,
 } from '@/lib/site-config';
 import { buildSubdomain, ensureUniqueSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
@@ -565,8 +566,17 @@ export const siteRouter = createTRPCRouter({
         });
       }
 
-      const existing = (site.configJson ?? {}) as Record<string, unknown>;
       const patch = input.config as Record<string, unknown>;
+      try {
+        validateConfigPatch(patch);
+      } catch (err) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: err instanceof Error ? err.message : 'Invalid config.',
+        });
+      }
+
+      const existing = (site.configJson ?? {}) as Record<string, unknown>;
       const merged = deepMerge(existing, patch);
 
       await ctx.db.site.update({
@@ -1092,8 +1102,9 @@ export const siteRouter = createTRPCRouter({
               }
             }
 
-            if (config.footer?.navigation) {
+            if (Array.isArray(config.footer?.navigation)) {
               config.footer.navigation.forEach((group) => {
+                if (!Array.isArray(group?.links)) return;
                 group.links.forEach((link) => {
                   link.href = resolveContentLink({
                     target: link.href,

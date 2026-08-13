@@ -3,6 +3,7 @@ import {
   buildPageTitle,
   resolveSiteConfig,
   resolveSiteName,
+  validateConfigPatch,
 } from './site-config';
 
 describe('resolveSiteConfig', () => {
@@ -106,5 +107,60 @@ describe('buildPageTitle', () => {
   it('deduplicates when the page title equals the brand (case-insensitive)', () => {
     expect(buildPageTitle('My Site', 'My Site')).toBe('My Site');
     expect(buildPageTitle('  my site ', 'My Site')).toBe('My Site');
+  });
+});
+
+describe('validateConfigPatch', () => {
+  it('accepts a well-formed footer.navigation', () => {
+    expect(() =>
+      validateConfigPatch({
+        footer: {
+          navigation: [
+            { title: 'Docs', links: [{ name: 'Guide', href: '/docs' }] },
+          ],
+        },
+      }),
+    ).not.toThrow();
+  });
+
+  it('accepts patches that do not touch footer navigation', () => {
+    expect(() => validateConfigPatch({ siteName: 'Brand' })).not.toThrow();
+    expect(() => validateConfigPatch({ footer: {} })).not.toThrow();
+  });
+
+  it('allows clearing footer.navigation with null', () => {
+    expect(() =>
+      validateConfigPatch({ footer: { navigation: null } }),
+    ).not.toThrow();
+  });
+
+  it('rejects a flat list of links (missing title/links)', () => {
+    // The exact shape that 500'd portais-cyan-quoisee.flowershow.me.
+    expect(() =>
+      validateConfigPatch({
+        footer: {
+          navigation: [
+            { href: '/blog', name: 'Blog' },
+            { href: '/about', name: 'About' },
+          ],
+        },
+      }),
+    ).toThrow(/footer/i);
+  });
+
+  it('rejects a group missing its links array', () => {
+    expect(() =>
+      validateConfigPatch({
+        footer: { navigation: [{ title: 'Broken' }] },
+      }),
+    ).toThrow(/links/i);
+  });
+
+  it('rejects footer.navigation that is not an array', () => {
+    expect(() =>
+      validateConfigPatch({
+        footer: { navigation: { title: 'Docs', links: [] } },
+      }),
+    ).toThrow();
   });
 });

@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import type { SiteConfig } from '@/components/types';
 
 // Coerces the legacy string form of umami config (plain website ID) to the
@@ -25,6 +26,46 @@ export const SITE_CONFIG_DEFAULTS = {
 
 function isPlainObject(val: unknown): val is Record<string, unknown> {
   return typeof val === 'object' && val !== null && !Array.isArray(val);
+}
+
+const navLinkSchema = z.object({
+  name: z.string(),
+  href: z.string(),
+});
+
+/**
+ * Shape of `footer.navigation`: an array of groups, each with a `title` and a
+ * `links` array of {name, href}. Enforced on save so malformed config (e.g. a
+ * flat list of links) can't be persisted and later crash the public Footer,
+ * which renders in the layout on every page.
+ */
+export const footerNavigationSchema = z.array(
+  z.object({
+    title: z.string(),
+    links: z.array(navLinkSchema),
+  }),
+);
+
+/**
+ * Validates a site config patch before it is persisted. Currently guards
+ * `footer.navigation`; a `null` value (clearing the field) or an absent field
+ * is allowed. Throws an Error with a user-facing message on invalid shapes.
+ */
+export function validateConfigPatch(patch: Record<string, unknown>): void {
+  const footer = patch.footer;
+  if (!isPlainObject(footer) || !('navigation' in footer)) return;
+
+  const navigation = footer.navigation;
+  if (navigation == null) return; // clearing the field is allowed
+
+  const result = footerNavigationSchema.safeParse(navigation);
+  if (!result.success) {
+    throw new Error(
+      'Invalid footer navigation. Expected an array of groups, each with a ' +
+        '"title" and a "links" array of { name, href }. ' +
+        'Example: [{"title":"Docs","links":[{"name":"Getting Started","href":"/docs"}]}]',
+    );
+  }
 }
 
 export function deepMerge<T extends Record<string, unknown>>(

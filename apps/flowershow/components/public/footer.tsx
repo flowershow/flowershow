@@ -1,58 +1,19 @@
 import { GlobeIcon } from 'lucide-react';
 import Link from 'next/link';
 import { FooterNavigationGroup, SocialLink } from '@/components/types';
-// import { getConfig } from '@/lib/app-config';
-// import { api } from '@/trpc/server';
 import { socialIcons } from './social-icons';
 
 interface FooterProps {
-  // siteId?: string;
   siteName?: string;
   navigation?: FooterNavigationGroup[];
   social?: SocialLink[];
 }
 
 export default async function Footer({
-  // siteId,
   siteName,
   navigation,
   social,
 }: FooterProps) {
-  // Try to fetch custom footer
-  // let customFooterContent: string | null = null;
-
-  // if (siteId) {
-  //   try {
-  //     const customFooterBlob = await api.site.getBlobByPath.query({
-  //       siteId,
-  //       path: '_flowershow/components/Footer.html',
-  //     });
-
-  //     if (customFooterBlob) {
-  //       customFooterContent = await api.site.getBlobContent.query({
-  //         id: customFooterBlob.id,
-  //       });
-  //     }
-  //   } catch (error) {
-  //     // Custom footer doesn't exist, will use default
-  //   }
-  // }
-
-  // // If custom footer exists, render it as HTML
-  // if (customFooterContent) {
-  //   return (
-  //     <>
-  //       <p id="footer" className="sr-only">
-  //         Footer
-  //       </p>
-  //       <div
-  //         id="customfooter"
-  //         dangerouslySetInnerHTML={{ __html: customFooterContent }}
-  //       />
-  //     </>
-  //   );
-  // }
-
   const currentYear = new Date().getFullYear();
 
   return (
@@ -95,28 +56,40 @@ export default async function Footer({
           {navigation && navigation.length > 0 && (
             <div className="site-footer-navigation-section">
               <div className="site-footer-navigation-grid">
-                {navigation.map((group) => (
-                  <div
-                    key={group.title}
-                    className="site-footer-navigation-group"
-                  >
-                    <h4 className="site-footer-navigation-title">
-                      {group.title}
-                    </h4>
-                    <ul role="list" className="site-footer-navigation-list">
-                      {group.links.map((link) => (
-                        <li key={link.name}>
-                          <Link
-                            href={link.href}
-                            className="site-footer-navigation-link"
-                          >
-                            {link.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+                {navigation.map((group) => {
+                  // Only render groups shaped as { title, links: [...] }. Guards
+                  // against malformed config (e.g. a flat list of links, or a
+                  // group with no `links` array) that would otherwise throw and
+                  // 500 the whole page, since Footer renders in the layout.
+                  if (
+                    !Array.isArray(group?.links) ||
+                    group.links.length === 0
+                  ) {
+                    return null;
+                  }
+                  return (
+                    <div
+                      key={group.title}
+                      className="site-footer-navigation-group"
+                    >
+                      <h4 className="site-footer-navigation-title">
+                        {group.title}
+                      </h4>
+                      <ul role="list" className="site-footer-navigation-list">
+                        {group.links.map((link) => (
+                          <li key={link.name}>
+                            <Link
+                              href={link.href}
+                              className="site-footer-navigation-link"
+                            >
+                              {link.name}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
