@@ -5,7 +5,9 @@ import { h } from 'hastscript';
 import mdxMermaid from 'mdx-mermaid';
 import type { EvaluateOptions } from 'next-mdx-remote-client/rsc';
 import { ReactElement } from 'react';
-import rehypeAutolinkHeadings from 'rehype-autolink-headings';
+import rehypeAutolinkHeadings, {
+  type Options as RehypeAutolinkHeadingsOptions,
+} from 'rehype-autolink-headings';
 import rehypeKatex from 'rehype-katex';
 import rehypePrismPlus from 'rehype-prism-plus';
 import rehypeRaw from 'rehype-raw';
@@ -202,8 +204,8 @@ export const getUrlResolver = (siteHostname: string) => {
   };
 };
 
-const rehypeAutolinkHeadingsConfig = {
-  properties: { className: 'heading-link' },
+const rehypeAutolinkHeadingsConfig: RehypeAutolinkHeadingsOptions = {
+  properties: { className: ['heading-link'] },
   test(element: any) {
     return (
       ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(element.tagName) &&
