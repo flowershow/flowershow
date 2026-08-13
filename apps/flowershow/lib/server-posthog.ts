@@ -7,6 +7,6 @@ export default function PostHogClient() {
     flushAt: 1,
     flushInterval: 0,
   });
-  posthogClient.debug(process.env.NODE_ENV === 'development');
+  posthogClient.debug(process.env.POSTHOG_DEBUG === 'true');
   return posthogClient;
 }
