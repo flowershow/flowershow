@@ -135,7 +135,7 @@ importers:
         version: 8.29.2(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.1))(@types/react@19.2.2)(react@19.2.1))(@mui/material@7.3.11(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.1))(@types/react@19.2.2)(react@19.2.1))(@types/react@19.2.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(@mui/system@7.3.11(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.1))(@types/react@19.2.2)(react@19.2.1))(@types/react@19.2.2)(react@19.2.1))(@types/react@19.2.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@next-auth/prisma-adapter':
         specifier: ^1.0.7
-        version: 1.0.7(@prisma/client@5.5.2(prisma@5.5.2))(next-auth@4.24.12(next@15.5.18(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(nodemailer@7.0.13)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))
+        version: 1.0.7(@prisma/client@5.5.2(prisma@5.5.2))(next-auth@4.24.15(next@15.5.18(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(nodemailer@7.0.13)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))
       '@next/third-parties':
         specifier: 15.5.6
         version: 15.5.6(next@15.5.18(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react@19.2.1)
@@ -263,8 +263,8 @@ importers:
         specifier: 15.5.18
         version: 15.5.18(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       next-auth:
-        specifier: 4.24.12
-        version: 4.24.12(next@15.5.18(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(nodemailer@7.0.13)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+        specifier: 4.24.15
+        version: 4.24.15(next@15.5.18(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(nodemailer@7.0.13)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       next-mdx-remote-client:
         specifier: ^2.1.12
         version: 2.1.12(@types/react@19.2.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(unified@11.0.5)
@@ -3271,6 +3271,7 @@ packages:
   '@plotly/mapbox-gl@1.13.4':
     resolution: {integrity: sha512-sR3/Pe5LqT/fhYgp4rT4aSFf1rTsxMbGiH6Hojc7PH36ny5Bn17iVFUjpzycafETURuFbLZUfjODO8LvSI+5zQ==}
     engines: {node: '>=6.4.0'}
+    deprecated: This package is deprecated as of August 2026. plotly.js v4 uses MapLibre for map traces — see https://github.com/maplibre/maplibre-gl-js.
 
   '@plotly/point-cluster@3.1.9':
     resolution: {integrity: sha512-MwaI6g9scKf68Orpr1pHZ597pYx9uP8UEFXLPbsCmuw3a84obwz6pnMXGc90VhgDNeNiLEdlmuK7CPo+5PIxXw==}
@@ -8882,10 +8883,10 @@ packages:
     resolution: {integrity: sha512-eonl3sLUha+S1GzTPxychyhnUzKyeQkZ7jLjKrBagJgPla13F+uQ71HgpFefyHgqrjEbCPkDArxYsjY8/+gLKA==}
     engines: {node: '>= 0.4.0'}
 
-  next-auth@4.24.12:
-    resolution: {integrity: sha512-wooJAL5Md9Fn2UwUI2qN9TY/+k8HJGRyi3TdSt/xHfDTtdpPxDqmo4v8hUrKGb+d66FB/rYy9RutA/9EeJrK0Q==}
+  next-auth@4.24.15:
+    resolution: {integrity: sha512-NnjYtjrSOAx/TIVFGTX4IfI/9yHnNpi4B7FuLUwuV20v2Zxgr2OGP/YN0ynJuI7y8QOnTBPitfOdEXZrVvhIuA==}
     peerDependencies:
-      '@auth/core': 0.34.2
+      '@auth/core': 0.34.3
       next: ^12.2.5 || ^13 || ^14 || ^15 || ^16
       nodemailer: ^7.0.7
       react: ^17.0.2 || ^18 || ^19
@@ -11027,11 +11028,6 @@ packages:
 
   uuid@11.1.1:
     resolution: {integrity: sha512-vIYxrBCC/N/K+Js3qSN88go7kIfNPssr/hHCesKCQNAjmgvYS2oqr69kIufEG+O4+PfezOH4EbIeHCfFov8ZgQ==}
-    hasBin: true
-
-  uuid@8.3.2:
-    resolution: {integrity: sha512-+NYs2QeMWy+GWFOEm9xnn6HCDp0l7QBD7ml8zLUmJ+93Q5NF0NocErnwkTkXVFNiX3/fpC6afS8Dhb/gz7R7eg==}
-    deprecated: uuid@10 and below is no longer supported.  For ESM codebases, update to uuid@latest.  For CommonJS codebases, use uuid@11 (but be aware this version will likely be deprecated in 2028).
     hasBin: true
 
   uvu@0.5.6:
@@ -13946,10 +13942,10 @@ snapshots:
 
   '@neoconfetti/react@1.0.0': {}
 
-  '@next-auth/prisma-adapter@1.0.7(@prisma/client@5.5.2(prisma@5.5.2))(next-auth@4.24.12(next@15.5.18(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(nodemailer@7.0.13)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))':
+  '@next-auth/prisma-adapter@1.0.7(@prisma/client@5.5.2(prisma@5.5.2))(next-auth@4.24.15(next@15.5.18(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(nodemailer@7.0.13)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))':
     dependencies:
       '@prisma/client': 5.5.2(prisma@5.5.2)
-      next-auth: 4.24.12(next@15.5.18(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(nodemailer@7.0.13)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      next-auth: 4.24.15(next@15.5.18(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(nodemailer@7.0.13)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
 
   '@next/env@15.5.18': {}
 
@@ -19954,7 +19950,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 26.2.0
+      '@types/node': 24.13.3
       merge-stream: 2.0.0
       supports-color: 8.1.1
     optional: true
@@ -21407,7 +21403,7 @@ snapshots:
   netmask@2.1.1:
     optional: true
 
-  next-auth@4.24.12(next@15.5.18(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(nodemailer@7.0.13)(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
+  next-auth@4.24.15(next@15.5.18(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(nodemailer@7.0.13)(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
     dependencies:
       '@babel/runtime': 7.29.7
       '@panva/hkdf': 1.2.1
@@ -21420,7 +21416,7 @@ snapshots:
       preact-render-to-string: 5.2.6(preact@10.29.8)
       react: 19.2.1
       react-dom: 19.2.1(react@19.2.1)
-      uuid: 8.3.2
+      uuid: 11.1.1
     optionalDependencies:
       nodemailer: 7.0.13
 
@@ -24297,8 +24293,6 @@ snapshots:
   util-deprecate@1.0.2: {}
 
   uuid@11.1.1: {}
-
-  uuid@8.3.2: {}
 
   uvu@0.5.6:
     dependencies:
