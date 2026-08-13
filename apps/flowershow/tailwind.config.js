@@ -44,7 +44,6 @@ module.exports = {
           css: {
             'blockquote p:first-of-type::before': { content: 'none' },
             'blockquote p:first-of-type::after': { content: 'none' },
-            fontSize: '1.125em',
             fontFamily: 'var(--font-body)',
           },
         },
