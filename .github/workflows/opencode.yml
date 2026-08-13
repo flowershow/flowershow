@@ -24,7 +24,7 @@ jobs:
     steps:
       - name: Authorize trigger
         id: check
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             // Manual "/triage": only repo collaborators with triage/write access
