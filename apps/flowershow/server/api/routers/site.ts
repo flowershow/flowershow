@@ -5,7 +5,6 @@ import bcrypt from 'bcryptjs';
 import { revalidateTag, unstable_cache } from 'next/cache';
 import { z } from 'zod';
 import type { SiteConfig } from '@/components/types';
-import { isNavDropdown } from '@/components/types';
 import { SiteCreatedEmail } from '@/emails/site-created';
 import { env } from '@/env.mjs';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
@@ -942,7 +941,9 @@ export const siteRouter = createTRPCRouter({
           }
 
           const dbConfigJson = (site.configJson ?? null) as SiteConfig | null;
-          const resolved = resolveSiteConfig(dbConfigJson, fileConfig);
+          const resolved = resolveSiteConfig(dbConfigJson, fileConfig, {
+            siteId: site.id,
+          });
           if (!resolved) return null;
 
           // TODO: nav.logo is deprecated in favour of root logo
@@ -1003,121 +1004,26 @@ export const siteRouter = createTRPCRouter({
             site.customDomain ??
             `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
+          let fileConfig: SiteConfig | null = null;
           try {
             const configJson = await fetchFile({
               projectId: site.id,
               path: 'config.json',
             });
-            const config = configJson
+            fileConfig = configJson
               ? (JSON.parse(configJson) as SiteConfig)
               : null;
-
-            const dbConfigJson = (site.configJson ?? null) as SiteConfig | null;
-            if (!config)
-              return dbConfigJson
-                ? resolveSiteConfig(dbConfigJson, null)
-                : null;
-
-            // Resolve media paths to full URLs
-            const keysToResolve = ['image', 'logo', 'favicon', 'thumbnail'];
-            keysToResolve.forEach((key) => {
-              if (
-                (key === 'favicon' || key === 'logo') &&
-                config[key] &&
-                isEmoji(config[key])
-              ) {
-                return;
-              }
-
-              if (config[key]) {
-                config[key] = resolveContentLink({
-                  target: config[key],
-                  siteHostname,
-                });
-              }
-            });
-
-            if (config.nav?.links) {
-              config.nav.links.forEach((item) => {
-                if (isNavDropdown(item)) {
-                  item.links.forEach((link) => {
-                    link.href = resolveContentLink({
-                      target: link.href,
-                      siteHostname,
-                    });
-                  });
-                } else {
-                  item.href = resolveContentLink({
-                    target: item.href,
-                    siteHostname,
-                  });
-                }
-              });
-            }
-
-            if (config.nav?.logo && !isEmoji(config.nav.logo)) {
-              config.nav.logo = resolveContentLink({
-                target: config.nav.logo,
-                siteHostname,
-              });
-            }
-
-            if (config.nav?.social) {
-              config.nav.social.forEach((social) => {
-                social.href = resolveContentLink({
-                  target: social.href,
-                  siteHostname,
-                });
-              });
-            }
-
-            if (config.nav?.cta) {
-              config.nav.cta.href = resolveContentLink({
-                target: config.nav.cta.href,
-                siteHostname,
-              });
-            }
-
-            if (
-              config.hero &&
-              typeof config.hero === 'object' &&
-              !Array.isArray(config.hero)
-            ) {
-              if (typeof config.hero.image === 'string') {
-                config.hero.image = resolveContentLink({
-                  target: config.hero.image,
-                  siteHostname,
-                });
-              }
-
-              if (Array.isArray(config.hero.cta)) {
-                config.hero.cta.forEach((c) => {
-                  if (typeof c?.href === 'string') {
-                    c.href = resolveContentLink({
-                      target: c.href,
-                      siteHostname,
-                    });
-                  }
-                });
-              }
-            }
-
-            if (Array.isArray(config.footer?.navigation)) {
-              config.footer.navigation.forEach((group) => {
-                if (!Array.isArray(group?.links)) return;
-                group.links.forEach((link) => {
-                  link.href = resolveContentLink({
-                    target: link.href,
-                    siteHostname,
-                  });
-                });
-              });
-            }
-
-            return resolveSiteConfig(dbConfigJson, config);
           } catch {
-            return null;
+            // missing or invalid config.json — fall back to DB config only
           }
+
+          const dbConfigJson = (site.configJson ?? null) as SiteConfig | null;
+          if (!fileConfig && !dbConfigJson) return null;
+
+          return resolveSiteConfig(dbConfigJson, fileConfig, {
+            siteHostname,
+            siteId: site.id,
+          });
         },
         undefined,
         {
