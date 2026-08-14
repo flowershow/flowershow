@@ -1,13 +1,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
-// lib/domains imports env (used by the Vercel API helpers); stub it so the
-// module can be imported in isolation.
+// isReservedDomain derives the blocked domains from these two config values
+// (SITE_DOMAIN = where user subdomains live, HOME_DOMAIN = marketing/docs).
 vi.mock('@/env.mjs', () => ({
   env: {
-    NEXT_PUBLIC_VERCEL_ENV: 'production',
-    PROJECT_ID_VERCEL: 'prj_test',
-    TEAM_ID_VERCEL: 'team_test',
-    AUTH_BEARER_TOKEN: 'token_test',
+    NEXT_PUBLIC_SITE_DOMAIN: 'flowershow.me',
+    NEXT_PUBLIC_HOME_DOMAIN: 'flowershow.app',
   },
 }));
 
@@ -16,12 +14,11 @@ const { isReservedDomain } = await import('./domains');
 
 describe('isReservedDomain', () => {
   it.each([
-    'flowershow.me',
-    'tom.flowershow.me',
-    'my.site.flowershow.me',
-    'flowershow.app',
-    'docs.flowershow.app',
-    'flowershow.site',
+    'flowershow.me', // SITE_DOMAIN apex
+    'tom.flowershow.me', // subdomain of SITE_DOMAIN
+    'my.site.flowershow.me', // deep subdomain of SITE_DOMAIN
+    'flowershow.app', // HOME_DOMAIN apex
+    'docs.flowershow.app', // subdomain of HOME_DOMAIN
     'FlowerShow.ME', // case-insensitive
     'tom.flowershow.me.', // trailing dot (FQDN)
   ])('rejects our own domain: %s', (domain) => {
@@ -31,8 +28,10 @@ describe('isReservedDomain', () => {
   it.each([
     'example.com',
     'tom.dev',
+    'flowershow.org', // a different TLD we don't operate
+    'flowershow.site', // not one of the configured base domains
     'flowershow.example.com', // flowershow is a subdomain label, not ours
-    'notflowershow.me', // not the flowershow apex
+    'notflowershow.me', // not the SITE_DOMAIN apex
     'myflowershow.com',
   ])('allows a domain the user owns: %s', (domain) => {
     expect(isReservedDomain(domain)).toBe(false);

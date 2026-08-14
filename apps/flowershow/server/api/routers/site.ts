@@ -309,8 +309,8 @@ export const siteRouter = createTRPCRouter({
             message: 'Custom domains require a Premium plan',
           });
         }
-        // Users get an auto-assigned *.flowershow.me subdomain; they must not be
-        // able to claim one of our own domains as a "custom domain".
+        // Users get an auto-assigned subdomain on our site domain; they must not
+        // be able to claim one of our own domains as a "custom domain".
         if (newDomain && isReservedDomain(newDomain)) {
           throw new TRPCError({
             code: 'BAD_REQUEST',
