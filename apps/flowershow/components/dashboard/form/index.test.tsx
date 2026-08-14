@@ -83,6 +83,20 @@ describe('Form — custom domain validation', () => {
     expect(handleSubmit).not.toHaveBeenCalled();
   });
 
+  // Users are auto-assigned a subdomain on our site domain, so they must not be
+  // able to claim one of our own domains as a custom domain. The configured
+  // NEXT_PUBLIC_SITE_DOMAIN in tests is `test.localhost` (see vitest.setup.ts).
+  it('rejects a subdomain of our site domain before submitting', async () => {
+    const handleSubmit = renderCustomDomainForm('');
+
+    const input = screen.getByRole('textbox');
+    fireEvent.change(input, { target: { value: 'tom.test.localhost' } });
+    fireEvent.click(screen.getByRole('button', { name: /save/i }));
+
+    await waitFor(() => expect(toastError).toHaveBeenCalled());
+    expect(handleSubmit).not.toHaveBeenCalled();
+  });
+
   it('submits a valid domain', async () => {
     const handleSubmit = renderCustomDomainForm('');
 

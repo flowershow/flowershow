@@ -20,6 +20,7 @@ import {
 import {
   addDomainToVercel,
   getDomainVariant,
+  isReservedDomain,
   removeDomainAndVariantFromVercelProject,
   validDomainRegex,
 } from '@/lib/domains';
@@ -306,6 +307,15 @@ export const siteRouter = createTRPCRouter({
           throw new TRPCError({
             code: 'FORBIDDEN',
             message: 'Custom domains require a Premium plan',
+          });
+        }
+        // Users get an auto-assigned subdomain on our site domain; they must not
+        // be able to claim one of our own domains as a "custom domain".
+        if (newDomain && isReservedDomain(newDomain)) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message:
+              'This domain is not available. Please enter a domain you own.',
           });
         }
         if (!newDomain) {

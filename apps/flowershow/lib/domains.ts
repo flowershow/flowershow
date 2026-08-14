@@ -161,3 +161,30 @@ export const getApexDomain = (url: string) => {
 export const validDomainRegex = new RegExp(
   /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/,
 );
+
+const normalizeHost = (host: string) =>
+  host
+    .trim()
+    .toLowerCase()
+    .replace(/\.$/, '') // trailing dot (FQDN form)
+    .replace(/:\d+$/, ''); // port (dev domains carry one, e.g. localhost:3000)
+
+// Domains we own and operate: the base domain for auto-assigned user subdomains
+// (SITE_DOMAIN, e.g. a `<site>-<user>` subdomain) and the marketing/docs domain
+// (HOME_DOMAIN). Derived from config so nothing is hardcoded.
+const reservedBaseDomains = () =>
+  [env.NEXT_PUBLIC_SITE_DOMAIN, env.NEXT_PUBLIC_HOME_DOMAIN]
+    .map(normalizeHost)
+    .filter(Boolean);
+
+// A custom domain must not point at one of our own domains — that would let a
+// user squat on our namespace (e.g. tom.<SITE_DOMAIN>). Matches each base apex
+// and any subdomain of it, but leaves unrelated domains (flowershow.org, a
+// user's own domain) untouched.
+export const isReservedDomain = (domain: string) => {
+  const host = normalizeHost(domain);
+  if (!host) return false;
+  return reservedBaseDomains().some(
+    (base) => host === base || host.endsWith(`.${base}`),
+  );
+};
