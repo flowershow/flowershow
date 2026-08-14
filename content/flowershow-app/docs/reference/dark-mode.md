@@ -25,7 +25,7 @@ Go to **Settings → Appearance → Show Mode Switch** and toggle it on to displ
 > [!note]
 > The visitor's selection persists across page reloads.
 
-You can see the theme switch in action on the [demo site](https://demo.flowershow.app/).
+You can see the theme switch in action on the [demo site](https://demo.flowershow.me/).
 
 ## Custom CSS support
 

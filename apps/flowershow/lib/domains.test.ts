@@ -18,7 +18,7 @@ describe('isReservedDomain', () => {
     'tom.flowershow.me', // subdomain of SITE_DOMAIN
     'my.site.flowershow.me', // deep subdomain of SITE_DOMAIN
     'flowershow.app', // HOME_DOMAIN apex
-    'docs.flowershow.app', // subdomain of HOME_DOMAIN
+    'docs.flowershow.me', // subdomain of HOME_DOMAIN
     'FlowerShow.ME', // case-insensitive
     'tom.flowershow.me.', // trailing dot (FQDN)
   ])('rejects our own domain: %s', (domain) => {

@@ -9,4 +9,4 @@ description: Publish directly from your Obsidian vault — no GitHub account nee
 4. In Obsidian, open **Flowershow plugin settings** and paste your token
 5. Click the Flowershow icon in the sidebar, select your notes, and publish
 
-Your site is live at `your-name.flowershow.app`.
+Your site is live at `your-name.flowershow.me`.

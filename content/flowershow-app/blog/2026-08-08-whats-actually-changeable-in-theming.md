@@ -74,7 +74,7 @@ The useful split isn't "theme vs core". It's:
 
 Most requests that arrive as "I want a theme that does X" are really L3 or L4 requests wearing an L1 costume.
 
-Recreating the feel of Substack, or LessWrong, or a Ghost theme — that's L1/L2 work, and it works today. That's exactly what [Superstack](https://superstack.flowershow.app/), [LessFlowery](https://lessflowery.flowershow.app/) and [Letterpress](https://letterpress.flowershow.app/) are. But "put the date under the title, the byline above it, and a related-posts block in the footer" is L4, and it's currently impossible at any level of CSS skill.
+Recreating the feel of Substack, or LessWrong, or a Ghost theme — that's L1/L2 work, and it works today. That's exactly what [Superstack](https://superstack.flowershow.me/), [LessFlowery](https://lessflowery.flowershow.me/) and [Letterpress](https://letterpress.flowershow.me/) are. But "put the date under the title, the byline above it, and a related-posts block in the footer" is L4, and it's currently impossible at any level of CSS skill.
 
 ## Where this goes
 

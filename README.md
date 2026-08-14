@@ -17,6 +17,7 @@ Flowershow is proudly open-source.
 Flowershow is a product of [Datopian](https://datopian.com) - dedicated to democratising the power of data & knowledge.
 
 ---
+
 ---
 
 # For Developers
@@ -87,15 +88,15 @@ For web app setup (database, storage, auth, etc.), see [`apps/flowershow/README.
 
 ## Tooling
 
-| Tool | Scope | Purpose |
-|------|-------|---------|
-| [Biome](https://biomejs.dev/) | Entire repo | Formatting (single quotes, 2-space indent) and linting for `packages/` |
-| [ESLint](https://eslint.org/) | `apps/flowershow` | Next.js-specific linting via `eslint-config-next` |
-| [Vitest](https://vitest.dev/) | `packages/remark-wiki-link` | Unit tests |
-| [Playwright](https://playwright.dev/) | `apps/flowershow` | E2E tests |
-| [Turborepo](https://turbo.build/) | Root | Task orchestration and caching |
-| [Changesets](https://github.com/changesets/changesets) | `packages/` | Versioning and npm publishing |
-| [Husky](https://typicode.github.io/husky/) | Root | Git hooks (pre-commit runs lint-staged) |
+| Tool                                                   | Scope                       | Purpose                                                                |
+| ------------------------------------------------------ | --------------------------- | ---------------------------------------------------------------------- |
+| [Biome](https://biomejs.dev/)                          | Entire repo                 | Formatting (single quotes, 2-space indent) and linting for `packages/` |
+| [ESLint](https://eslint.org/)                          | `apps/flowershow`           | Next.js-specific linting via `eslint-config-next`                      |
+| [Vitest](https://vitest.dev/)                          | `packages/remark-wiki-link` | Unit tests                                                             |
+| [Playwright](https://playwright.dev/)                  | `apps/flowershow`           | E2E tests                                                              |
+| [Turborepo](https://turbo.build/)                      | Root                        | Task orchestration and caching                                         |
+| [Changesets](https://github.com/changesets/changesets) | `packages/`                 | Versioning and npm publishing                                          |
+| [Husky](https://typicode.github.io/husky/)             | Root                        | Git hooks (pre-commit runs lint-staged)                                |
 
 A pre-commit hook automatically formats staged files via lint-staged before each commit.
 
@@ -126,8 +127,8 @@ We're working on opening up parts of Flowershow for community contributions. Whi
 
 You can already contribute by adding pull requests for demos or tests of Flowershow markdown features:
 
-- **Demo**: [demo.flowershow.app](https://demo.flowershow.app) — [github.com/flowershow/demo](https://github.com/flowershow/demo)
-- **Test**: [test.flowershow.app](https://test.flowershow.app/) — [github.com/flowershow/test](https://github.com/flowershow/test)
+- **Demo**: [demo.flowershow.me](https://demo.flowershow.me) — [github.com/flowershow/demo](https://github.com/flowershow/demo)
+- **Test**: [test.flowershow.me](https://test.flowershow.me/) — [github.com/flowershow/test](https://github.com/flowershow/test)
 
 ### Development Workflow
 

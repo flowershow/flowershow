@@ -26,7 +26,7 @@ showComments: false
               </svg>
               Sign up with Google
             </a>
-            <a className="btn btn-secondary" href="https://demo-wiki.flowershow.app/">See demo <span className="arw">→</span></a>
+            <a className="btn btn-secondary" href="https://demo-wiki.flowershow.me/">See demo <span className="arw">→</span></a>
           </div>
           <p className="microcopy"><b>Free forever</b>, no credit card required</p>
         </div>

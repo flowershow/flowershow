@@ -16,8 +16,9 @@ We're excited to announce alpha support for Obsidian Bases in Flowershow! This p
 Obsidian Bases let you organize and display your vault's content in multiple ways using filters, formulas, and different view types. Think of them as dynamic databases for your notes that can be embedded anywhere in your content.
 
 > [!info] Learn More
+>
 > - 📚 [Obsidian Bases Documentation](https://help.obsidian.md/bases) - Complete guide to Bases syntax and features
-> - 🎯 [Flowershow Demo Site](https://demo.flowershow.app/books/Bookshelf) - See Bases in action with live examples
+> - 🎯 [Flowershow Demo Site](https://demo.flowershow.me/books/Bookshelf) - See Bases in action with live examples
 
 ## Supported Features
 
@@ -44,6 +45,7 @@ Obsidian Bases let you organize and display your vault's content in multiple way
 ### Functions
 
 #### Global Functions
+
 - ✅ `escapeHTML()` - Escape special characters for HTML
 - ✅ `date()` - Parse date strings
 - ✅ `html()` - Render HTML snippets
@@ -56,6 +58,7 @@ Obsidian Bases let you organize and display your vault's content in multiple way
 - ✅ `number()` - Type conversion
 
 #### Type-Specific Functions
+
 - ✅ **Any** - `isTruthy()`, `toString()`
 - ✅ **Date** - All fields (`year`, `month`, `day`, `hour`, `minute`, `second`, `millisecond`) and functions (`format()`, `relative()`, `time()`, `date()`, `isEmpty()`)
 - ✅ **String** - Complete support for all string operations (`contains()`, `lower()`, `replace()`, `split()`, `trim()`, etc.)
@@ -86,16 +89,19 @@ Obsidian Bases let you organize and display your vault's content in multiple way
 The following features are planned for future releases:
 
 ### Core Functionality
+
 - ❌ **Custom Summaries** - Define your own summary formulas
 - ❌ **Date Arithmetic** - Add/subtract durations from dates
 - ❌ **`this` Context** - Access properties of the embedding file
 
 ### File Properties
+
 - ❌ `file.ctime`, `file.mtime` - File creation and modification times
 - ❌ `file.links`, `file.embeds`, `file.tags` - File content metadata
 - ❌ `file.backlinks`, `file.properties` - Advanced file metadata
 
 ### Functions
+
 - ❌ `duration()` - Parse duration strings
 - ❌ `file()` - Get file objects from paths
 - ❌ `link()` - Create link objects programmatically
@@ -103,6 +109,7 @@ The following features are planned for future releases:
 - ❌ Link functions: `asFile()`, `linksTo()`
 
 ### View Features
+
 - ❌ **Map View** - Display files as pins on interactive maps
 - ❌ **Row Height Control** - Customize table row heights
 
@@ -113,6 +120,7 @@ To use Obsidian Bases in your Flowershow site, embed a base configuration using 
 > [!important]
 > Bases blocks are parsed in MDX mode.
 > To make them work, use one of these options:
+>
 > - Set your site's global syntax mode to `mdx`
 > - Set `syntaxMode: mdx` in the page frontmatter
 > - Use a `.mdx` file extension (when your global syntax mode is `auto`)
@@ -143,4 +151,4 @@ This is an alpha release, and we're actively working on expanding support. If yo
 
 ---
 
-*Note: This feature requires Obsidian 1.9+ for full compatibility with the Bases syntax.*
+_Note: This feature requires Obsidian 1.9+ for full compatibility with the Bases syntax._

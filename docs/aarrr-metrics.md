@@ -19,12 +19,12 @@ Flowershow has three publishing clients feeding into one platform:
 
 ### Current Tracking Infrastructure
 
-| System                        | Scope           | Identity       | What It Covers                                                                                                                                                                                                                                                       |
-| ----------------------------- | --------------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PostHog (server)              | Next.js app     | Real userId    | `sign_up`, `site_created`, `site_deleted`, `site_upgraded`, `subscription_canceled`, `token_created`, `device_authorized`, `site_settings_changed`, `files_synced`, `anon_publish_started`, `anon_claim_completed`, `github_installation_linked`, exception tracking |
-| PostHog (client)              | Web app         | Real userId    | Autocapture (page views, clicks), error tracking, anonymous publish flow events                                                                                                                                                                                      |
-| PostHog (CLI — supplementary) | CLI tool        | Anonymous UUID | `command_started`, `command_succeeded`, `command_failed` per command with `cli_version`, `duration_ms`, file counts, and sync stats. Cannot be linked to server-side user profiles.                                                                                  |
-| OpenTelemetry                 | Next.js app     | —              | Structured logs to PostHog via OTLP                                                                                                                                                                                                                                  |
+| System                        | Scope       | Identity       | What It Covers                                                                                                                                                                                                                                                       |
+| ----------------------------- | ----------- | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PostHog (server)              | Next.js app | Real userId    | `sign_up`, `site_created`, `site_deleted`, `site_upgraded`, `subscription_canceled`, `token_created`, `device_authorized`, `site_settings_changed`, `files_synced`, `anon_publish_started`, `anon_claim_completed`, `github_installation_linked`, exception tracking |
+| PostHog (client)              | Web app     | Real userId    | Autocapture (page views, clicks), error tracking, anonymous publish flow events                                                                                                                                                                                      |
+| PostHog (CLI — supplementary) | CLI tool    | Anonymous UUID | `command_started`, `command_succeeded`, `command_failed` per command with `cli_version`, `duration_ms`, file counts, and sync stats. Cannot be linked to server-side user profiles.                                                                                  |
+| OpenTelemetry                 | Next.js app | —              | Structured logs to PostHog via OTLP                                                                                                                                                                                                                                  |
 
 > **Note on dual tracking:** When a user runs `flowershow publish`, two separate event streams fire: (1) CLI-side `command_succeeded` with an anonymous UUID, and (2) server-side `files_synced` with the real userId. These cannot be joined in PostHog. For AARRR analysis, rely on server-side events for all user-level metrics. CLI-side telemetry is useful only for aggregate product health (e.g., "what % of publish commands fail?" or "what's the p95 publish duration?").
 
@@ -161,7 +161,7 @@ Flowershow has three publishing clients feeding into one platform:
 | Free-tier branding exposure | Page views on free-tier sites (which show "Powered by Flowershow") | Free tier as marketing channel               |
 | Sites with active comments  | Sites with `enableComments: true` + external Giscus engagement     | Community forming around content             |
 
-**North star:** % of new signups whose referrer is a `*.flowershow.app` published site.
+**North star:** % of new signups whose referrer is a `*.flowershow.me` published site.
 
 ### Currently Tracked
 

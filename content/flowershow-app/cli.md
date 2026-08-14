@@ -31,7 +31,7 @@ showEditLink: false
               <div className="ln cmd">fl ./my-notes</div>
               <div className="ln muted">Scanning 12 files…</div>
               <div className="ln ok">✓ Uploaded 12 files in 3.2s</div>
-              <div className="ln">→ Live at <span className="url">my-notes.flowershow.app</span></div>
+              <div className="ln">→ Live at <span className="url">my-notes.flowershow.me</span></div>
             </div>
           </div>
         </div>

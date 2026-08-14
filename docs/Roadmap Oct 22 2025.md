@@ -43,12 +43,12 @@ Thus the hierarchy is:
 
 **Issues**
 
-- [x] flowershow/flowershow#917 "Support *normal* markdown with normal html in it (no JSX) - either as option or by default"
+- [x] flowershow/flowershow#917 "Support _normal_ markdown with normal html in it (no JSX) - either as option or by default"
   - [x] flowershow/flowershow#911 "Allow the use of <color> tags into notes"
 - [x] flowershow/flowershow#343 "<= or >= in a markdown file breaks build (?)"
 - [x] flowershow/flowershow#770 "PDFs embeds don't work"
 - [x] flowershow/flowershow#912 "Do PDFs get copied across to storage?"
-- [x] test.flowershow.app site where we can add a bunch of this stuff (and we can then do automated tests against that if we want!) **See https://test.flowershow.app/ from https://github.com/flowershow/flowershow-test-repo**
+- [x] test.flowershow.me site where we can add a bunch of this stuff (and we can then do automated tests against that if we want!) **See https://test.flowershow.me/ from https://github.com/flowershow/flowershow-test-repo**
 - [x] flowershow/flowershow#774 "Avoid showing 500 errors - instead show info on the error or other error page"
 - [x] flowershow/flowershow#894 "Support for markdown highlights"
 - [x] flowershow/flowershow#909 "MDX errors have link to our dedicated error page (where instructions on how to fix)"
@@ -182,24 +182,27 @@ Extras (not sure we'll do them)
 
 ### By Epic:
 
-| Epic | Theme | Status | Details |
-|------|-------|--------|---------|
-| **Epic 1** | Markdown Fidelity | ✅ **100%** | All 12 items complete. Core reliability goal achieved. |
-| **Epic 2** | Obsidian Integration | ✅ **89%** | 9/10 items done. Only Obsidian Canvas support (#578) remains open. |
-| **Epic 2.b** | Publishing Enhancements | ✅ **100%** | MP4 embeds and image optimization both done. |
-| **Epic 3** | Docs & Advocacy | ⚠️ **60%** | 3/5 done. Missing: "Markdown is Awesome" boot-up (#906) and clearer open-source positioning (#product#10). |
-| **Epic 4** | Themes & Customization | ❌ **20%** | Only 1/5 done (demo showcase). Major gap: core themes (#706, #854), style adjustments (#864), and sidebar controls (#772) remain untouched. |
-| **Epic 5** | Cloud & Access Control | ⚠️ **67%** | 2/3 done. Private sites ✅ and homepage selection ✅. Missing: toggle for "Built with Flowershow" branding (#722). |
+| Epic         | Theme                   | Status      | Details                                                                                                                                     |
+| ------------ | ----------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Epic 1**   | Markdown Fidelity       | ✅ **100%** | All 12 items complete. Core reliability goal achieved.                                                                                      |
+| **Epic 2**   | Obsidian Integration    | ✅ **89%**  | 9/10 items done. Only Obsidian Canvas support (#578) remains open.                                                                          |
+| **Epic 2.b** | Publishing Enhancements | ✅ **100%** | MP4 embeds and image optimization both done.                                                                                                |
+| **Epic 3**   | Docs & Advocacy         | ⚠️ **60%**  | 3/5 done. Missing: "Markdown is Awesome" boot-up (#906) and clearer open-source positioning (#product#10).                                  |
+| **Epic 4**   | Themes & Customization  | ❌ **20%**  | Only 1/5 done (demo showcase). Major gap: core themes (#706, #854), style adjustments (#864), and sidebar controls (#772) remain untouched. |
+| **Epic 5**   | Cloud & Access Control  | ⚠️ **67%**  | 2/3 done. Private sites ✅ and homepage selection ✅. Missing: toggle for "Built with Flowershow" branding (#722).                          |
 
 ### Key Achievements:
+
 ✅ Markdown compatibility solidified (all core issues resolved)
 ✅ Obsidian workflow parity largely achieved
 ✅ Cloud private sites foundation laid
 
 ### Key Gaps:
+
 ❌ **Themes & customization** essentially not started (80% incomplete)
 ❌ **Advocacy positioning** partially done (missing broader messaging)
 ❌ **Canvas support** deferred (Obsidian extra)
 
 ### Timeline Assessment:
+
 We've nailed the **reliability & core integrations** goals but **theme/demo launch and marketing narrative** fell behind the original schedule.

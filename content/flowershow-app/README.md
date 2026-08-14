@@ -189,7 +189,7 @@ showComments: false
                     <span className="bot-head">💐 flowershow skill</span>
                     <span className="step">✓ Created site from 42 markdown files</span>
                     <span className="step">✓ Applied theme <b>prose</b> · enabled search</span>
-                    <span className="step">→ Live at <b>notes.flowershow.app</b></span>
+                    <span className="step">→ Live at <b>notes.flowershow.me</b></span>
                   </div>
                 </div>
               </div>
