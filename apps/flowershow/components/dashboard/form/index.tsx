@@ -6,6 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { type FormEvent, type ReactNode, useState } from 'react';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
+import { isReservedDomain } from '@/lib/domains';
 import type { SiteUpdateKey } from '@/server/api/types';
 import DomainConfiguration from './domain-configuration';
 import DomainStatus from './domain-status';
@@ -94,6 +95,17 @@ export default function Form({
           'Error: Site name must contain at least one letter or number and cannot contain "/"',
         );
       }
+      return;
+    }
+
+    if (
+      inputAttrs.name === 'customDomain' &&
+      value.trim() !== '' &&
+      isReservedDomain(value)
+    ) {
+      toast.error(
+        'This domain is not available. Please enter a domain you own.',
+      );
       return;
     }
 

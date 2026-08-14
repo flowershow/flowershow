@@ -161,3 +161,13 @@ export const getApexDomain = (url: string) => {
 export const validDomainRegex = new RegExp(
   /^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}$/,
 );
+
+// Domains we own and manage. Users are automatically assigned a
+// `<site>-<user>.flowershow.me` subdomain, so they must not be allowed to point
+// a "custom domain" at any flowershow.* domain (e.g. tom.flowershow.me) — that
+// would let them squat on our namespace. Matches the apex and any subdomain of
+// a flowershow.* domain by checking that "flowershow" is the second-level label.
+export const isReservedDomain = (domain: string) => {
+  const labels = domain.trim().toLowerCase().replace(/\.$/, '').split('.');
+  return labels.length >= 2 && labels[labels.length - 2] === 'flowershow';
+};
