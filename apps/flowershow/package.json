@@ -69,7 +69,7 @@
     "mdx-mermaid": "^2.0.4",
     "motion": "^12.43.0",
     "next": "15.5.18",
-    "next-auth": "4.24.12",
+    "next-auth": "4.24.15",
     "next-mdx-remote-client": "^2.1.12",
     "nodemailer": "^7.0.13",
     "papaparse": "^5.5.4",
