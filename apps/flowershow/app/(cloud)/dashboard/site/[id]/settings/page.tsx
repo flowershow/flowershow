@@ -983,6 +983,28 @@ export default async function SiteSettingsPage(props: {
             }}
             handleSubmit={updateUmamiSrc}
           />
+          <Form
+            title="Custom Head Code"
+            description="Raw HTML injected into the <head> of every page — third-party scripts, widget loaders (e.g. Tally, Mailchimp), site-verification <meta> tags, or custom fonts."
+            helpText={
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/custom-head"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            }
+            inputAttrs={{
+              name: 'head',
+              type: 'text',
+              defaultValue: siteConfig?.head ?? '',
+              placeholder:
+                '<script defer src="https://tally.so/widgets/embed.js"></script>',
+              required: false,
+            }}
+            handleSubmit={updateDbConfig}
+          />
         </section>
 
         <hr className="border-stone-200" />

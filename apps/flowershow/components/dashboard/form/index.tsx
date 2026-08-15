@@ -220,17 +220,22 @@ export default function Form({
               </div>
             )}
           </div>
-        ) : inputAttrs.name === 'description' ? (
+        ) : inputAttrs.name === 'description' || inputAttrs.name === 'head' ? (
+          // Rendered as a controlled textarea: React escapes `value`, so custom
+          // head HTML is shown as text and never executed in the dashboard origin.
           <textarea
             name={inputAttrs.name}
             placeholder={inputAttrs.placeholder}
             maxLength={inputAttrs.maxLength}
             required={required}
             disabled={disabled || pending}
-            rows={3}
+            rows={inputAttrs.name === 'head' ? 8 : 3}
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="w-full max-w-xl rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500"
+            className={clsx(
+              'w-full max-w-xl rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500',
+              inputAttrs.name === 'head' && 'font-mono',
+            )}
           />
         ) : inputAttrs.options ? (
           <select
