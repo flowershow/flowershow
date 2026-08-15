@@ -90,7 +90,10 @@ export async function processMarkdown(
     .use(remarkYouTubeAutoEmbed)
     .use(remarkGfm)
     .use(remarkSmartypants, { quotes: false, dashes: 'oldschool' })
-    .use(remarkMath)
+    // singleDollarTextMath disabled: a single `$` in prose (currency amounts)
+    // otherwise pairs with the next `$` and swallows the text between as math.
+    // Inline math still works with `$$...$$`. See issue #1359.
+    .use(remarkMath, { singleDollarTextMath: false })
     .use(remarkCallout)
     .use(remarkMark)
     .use(remarkRehype, { allowDangerousHtml: true })
@@ -163,7 +166,9 @@ export const getMdxOptions = ({
         remarkYouTubeAutoEmbed,
         remarkGfm,
         [remarkSmartypants, { quotes: false, dashes: 'oldschool' }],
-        remarkMath,
+        // See RSC path above / issue #1359: disable single-dollar text math so
+        // currency amounts in prose aren't parsed as math. `$$...$$` still works.
+        [remarkMath, { singleDollarTextMath: false }],
         remarkCallout,
         [mdxMermaid, {}],
         remarkMark,
