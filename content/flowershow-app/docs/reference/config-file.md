@@ -311,6 +311,19 @@ Umami analytics configuration. [[analytics|Learn more →]]
 
 ---
 
+### `head`
+
+**Type:** `string`  
+**Default:** —
+
+Raw HTML injected into the `<head>` of every page — third-party scripts, widget loaders, site-verification `<meta>` tags, or custom fonts. [[custom-head|Learn more →]]
+
+```json
+"head": "<script defer src=\"https://tally.so/widgets/embed.js\"></script>"
+```
+
+---
+
 ### `showComments`
 
 **Type:** `boolean`  
