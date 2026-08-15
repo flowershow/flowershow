@@ -48,6 +48,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Content filtering](/docs/reference/content-filtering) — Control which files and directories get published
 - [Custom domain](/docs/reference/custom-domain) — Connect your own domain to your Flowershow site
 - [Custom favicon](/docs/reference/custom-favicon) — Set a custom favicon for your site using an image file or an emoji.
+- [Custom Head Code](/docs/reference/custom-head) — Inject custom scripts, meta tags, and other HTML into the <head> of every page on your Flowershow site.
 - [Custom styles](/docs/reference/custom-styles) — Customize the appearance of your site with CSS.
 - [Dark Mode](/docs/reference/dark-mode) — Enable and configure light/dark theme switching for your Flowershow site.
 - ["Edit this page" links](/docs/reference/edit-this-page) — Display an "Edit this page" link at the bottom of each page that takes users directly to the file in your GitHub repo, ready for editing.
