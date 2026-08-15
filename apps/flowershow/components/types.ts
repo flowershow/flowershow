@@ -132,27 +132,12 @@ export interface SiteAlias {
   alias: string;
 }
 
-export interface DashboardLink extends NavLink {
-  type: 'guide' | 'discord' | 'announcement' | 'demo';
-}
-
-export interface AppNavConfig extends NavConfig {
-  cta?: NavLink;
-}
-
 export interface AppConfig extends SiteConfig {
   logo: string;
   favicon: string;
   thumbnail: string;
   termsOfService: string;
-  githubTemplateUrl: string;
   landingPageUrl: string;
-  nav: AppNavConfig;
-  dashboardSidebar: {
-    links: DashboardLink[];
-  };
   siteAliases?: SiteAlias[];
   dataVisComponentsEnabled?: boolean;
-  footer?: FooterConfig;
-  social?: SocialLink[];
 }

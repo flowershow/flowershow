@@ -1,7 +1,10 @@
 import { ReactNode } from 'react';
 import Footer from '@/components/public/footer';
 import Nav from '@/components/public/nav';
+import { SiteConfig } from '@/components/types';
 import { getConfig } from '@/lib/app-config';
+import { fetchFile } from '@/lib/content-store';
+import { resolveSiteConfig } from '@/lib/site-config';
 import '@/styles/default-theme.css';
 import { env } from '@/env.mjs';
 import { api } from '@/trpc/server';
@@ -13,15 +16,31 @@ export default async function HomeLayout({
 }) {
   const appConfig = getConfig();
 
-  const logo = appConfig.nav?.logo || appConfig.logo;
-  const links = appConfig.nav?.links;
-  const cta = appConfig.nav?.cta;
-  const social = appConfig.social;
-  const footerNavigation = appConfig.footer?.navigation;
-
   const flowershowWebsiteSite = await api.site.getByDomain.query({
     domain: env.NEXT_PUBLIC_HOME_DOMAIN,
   });
+
+  // Source the nav/footer chrome from the live flowershow.app site's own
+  // config.json so it stays in sync with the marketing site (single source of
+  // truth) rather than being duplicated in this app's config.json.
+  let siteConfig: SiteConfig = {};
+  if (flowershowWebsiteSite) {
+    try {
+      const raw = await fetchFile({
+        projectId: flowershowWebsiteSite.id,
+        path: 'config.json',
+      });
+      if (raw) siteConfig = resolveSiteConfig(null, JSON.parse(raw));
+    } catch {
+      // missing or invalid config.json — render chrome without nav/footer links
+    }
+  }
+
+  const logo = siteConfig.logo || appConfig.logo;
+  const links = siteConfig.nav?.links;
+  const cta = siteConfig.nav?.cta;
+  const social = siteConfig.social;
+  const footerNavigation = siteConfig.footer?.navigation;
 
   return (
     <div className="site-layout">
