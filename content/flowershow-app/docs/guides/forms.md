@@ -66,11 +66,12 @@ After creating your form in Brevo, follow these steps:
 
 ## Complex Embeds
 
-For forms that require additional elements like `<script>` tags, wrapper `<div>`s, or custom CSS (common with providers like Mailchimp, Tally, TypeForm, etc.):
+Many providers (Tally, Mailchimp, TypeForm, etc.) give you an embed that includes a `<script>` loader alongside the `<iframe>` or wrapper `<div>`. Split it into two parts:
 
-1. **Get the full embed code** from your form provider
-2. **Use the `CustomHtml` component** in your markdown
-3. **Pass the raw HTML** as a template string to the `html` prop
+1. **Put the loader `<script>` in [[custom-head|Custom Head Code]]** (dashboard **Site Settings → Analytics → Custom Head Code**, or the [[config-file#head|`head`]] field in `config.json`). It loads once, site-wide.
+2. **Paste the embed markup** (the `<iframe>` / `<div>`) into your markdown page.
+
+This loads the script once instead of on every page view, and keeps it working as visitors navigate between pages.
 
 ### Tally Forms
 
@@ -80,15 +81,18 @@ Once you've created your form in [Tally](http://tally.so/), follow these steps:
    - Click "Share" in your form editor
    - Select "Standard" option under "Embeded Form"
    - Click "Get the code"
-2. **Copy the code snippet**
-3. In your Flowershow markdown page add `CustomHtml` component, pasting the copied form embed in the `html` property.
+2. **Add the Tally loader script once** to your Custom Head Code:
 
-**Example:**
-```jsx
-<CustomHtml html={`<iframe data-tally-src="https://tally.so/embed/w7gg50?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" loading="lazy" width="100%" height="229" frameborder="0" marginheight="0" marginwidth="0" title="Newsletter sign-up"></iframe>
-<script>var d=document,w="https://tally.so/widgets/embed.js",v=function()
-	...
-`}/>
+```json
+{
+  "head": "<script defer src=\"https://tally.so/widgets/embed.js\"></script>"
+}
+```
+
+3. **Paste the iframe** into any page where you want the form:
+
+```html
+<iframe data-tally-src="https://tally.so/embed/w7gg50?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1" loading="lazy" width="100%" height="229" frameborder="0" marginheight="0" marginwidth="0" title="Newsletter sign-up"></iframe>
 ```
 
 ![[Pasted image 20250612112857.png]]
@@ -99,17 +103,7 @@ After creating your form in Mailchimp, follow these steps:
 1. **Get the embed code**
    - In the form editor, after you've set it up, click on "Continue"
 2. **Copy the whole Embedded Form Code**
-3. In your Flowershow markdown page add `CustomHtml` component, pasting the copied form embed in the `html` property.
-
-**Example**:
-```jsx
-<CustomHtml html={`<div id="mc_embed_shell">
-<link href="//cdn-images.mailchimp.com/embedcode/classic-061523.css" rel="stylesheet" type="text/css">
-<style type="text/css">
-#mc_embed_signup{background:#fff; false;clear:left; font:14px Helvetica,Arial,sans-serif; width: 600px;}
-    ...
-`}/>
-```
+3. **Move the `<script>` tag** into your Custom Head Code, and **paste the remaining markup** (the `<div id="mc_embed_shell">…`, its `<link>`, and `<style>`) into your markdown page.
 
 ### Why JSX Adjustments Are Needed
 
@@ -118,4 +112,4 @@ Flowershow uses React under the hood, which means any HTML in your markdown file
 - The `class` attribute must be written as `className`
 - Style attributes must be JavaScript objects with camelCase properties
 
-These adjustments ensure your embedded forms work correctly within React's rendering system. For complex embeds where these adjustments would be tedious, use the `CustomHtml` component which bypasses JSX processing entirely.
+These adjustments ensure your embedded forms work correctly within React's rendering system. They apply to markup you paste into a page; the loader script you move into [[custom-head|Custom Head Code]] is raw HTML and needs no adjustment.

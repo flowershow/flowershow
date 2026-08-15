@@ -260,10 +260,20 @@ This is useful for:
 
 To let readers subscribe or contact you, you can embed newsletter forms directly in your markdown files.
 
-If your form provider gives you a simple `<iframe>` snippet, you can paste it directly. For more complex embeds, specifically with scripts (like Tally or Mailchimp), use the `CustomHtml` component, and paste the embed code of your form into the `html` property:
+If your form provider gives you a simple `<iframe>` snippet, you can paste it directly. For embeds that also include a `<script>` loader (like Tally or Mailchimp), put the loader in [[custom-head|Custom Head Code]] and keep only the iframe in your page.
+
+Add the loader once in **Site Settings → Analytics → Custom Head Code** (or `config.json`):
+
+```json
+{
+  "head": "<script defer src=\"https://tally.so/widgets/embed.js\"></script>"
+}
+```
+
+Then drop the form into your post:
 
 ```md
-<CustomHtml html={`<iframe data-tally-src="https://tally.so/embed/your-form-id"></iframe><script src="https://tally.so/widgets/embed.js"></script>`}/>
+<iframe data-tally-src="https://tally.so/embed/your-form-id"></iframe>
 ```
 
 > [!info]

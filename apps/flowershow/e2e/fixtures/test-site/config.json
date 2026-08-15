@@ -1,6 +1,7 @@
 {
   "title": "E2E Test Site",
   "description": "Test site for E2E renderer tests",
+  "head": "<meta name=\"e2e-custom-head\" content=\"custom-head-verification-token\"><script>document.documentElement.setAttribute('data-custom-head-ran', 'true');</script>",
   "nav": {
     "title": "E2E Test Site",
     "links": [

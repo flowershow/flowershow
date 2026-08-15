@@ -5,6 +5,15 @@ export type CustomHtmlProps = {
   html: string;
 };
 
+/**
+ * @deprecated Prefer site-wide **Custom Head Code** (the `head` config field /
+ * dashboard Site Settings → Analytics → Custom Head Code) for injecting scripts
+ * and widget loaders. `CustomHtml` re-runs its `<script>` tags on every page
+ * that embeds it and only works from `.mdx` content. It is kept for
+ * backwards compatibility with existing pages; new sites should put the loader
+ * script in Custom Head Code and keep only the embed markup (e.g. an `<iframe>`)
+ * in the page. See docs/reference/custom-head.
+ */
 export const CustomHtml = ({ html }: CustomHtmlProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
 

@@ -75,6 +75,7 @@ export interface SiteConfig {
   social?: SocialLink[];
   analytics?: string;
   umami?: { websiteId: string; src?: string };
+  head?: string;
   contentInclude?: string[];
   contentExclude?: string[];
   contentHide?: string[];

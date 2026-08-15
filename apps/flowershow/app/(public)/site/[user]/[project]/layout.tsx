@@ -6,6 +6,7 @@ import { notFound, redirect } from 'next/navigation';
 import Script from 'next/script';
 import type { ReactNode } from 'react';
 import BuiltWithFloatingButton from '@/components/public/built-with-floating-button';
+import { CustomHead } from '@/components/public/custom-head';
 import Footer from '@/components/public/footer';
 import Nav from '@/components/public/nav';
 import { SiteProvider } from '@/components/public/site-context';
@@ -218,6 +219,8 @@ export default async function PublicLayout(props: {
             data-website-id={siteConfig.umami.websiteId}
           />
         )}
+        {/* User-configured custom head HTML — rendered on the public site only. */}
+        {siteConfig?.head && <CustomHead html={siteConfig.head} />}
       </head>
       <body>
         {siteConfig?.analytics && (

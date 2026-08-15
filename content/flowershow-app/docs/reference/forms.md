@@ -26,22 +26,35 @@ If your form provider gives you an `<iframe>` tag, paste it into your markdown. 
 
 ## Complex embeds (with scripts)
 
-For embeds that include `<script>` tags or wrapper elements (Tally, Mailchimp, etc.), use the `CustomHtml` component:
+Some providers (Tally, Mailchimp, etc.) give you an embed with a `<script>` loader alongside the `<iframe>`. Split it into two parts:
 
-```jsx
-<CustomHtml html={`
-  <iframe data-tally-src="https://tally.so/embed/your-form-id"
-    width="100%" height="229" frameborder="0"
-    title="Newsletter sign-up"></iframe>
-  <script>var d=document,w="https://tally.so/widgets/embed.js"...</script>
-`}/>
+1. Put the **loader script** in [[custom-head|Custom Head Code]] so it loads once, site-wide.
+2. Paste just the **embed markup** (the `<iframe>`) into your page.
+
+For example, add Tally's loader in Custom Head Code:
+
+```json
+{
+  "head": "<script defer src=\"https://tally.so/widgets/embed.js\"></script>"
+}
 ```
 
-The `CustomHtml` component renders raw HTML, bypassing JSX processing — so you can paste embed code as-is without converting attributes.
+Then drop the form on any page with a plain iframe:
+
+```html
+<iframe data-tally-src="https://tally.so/embed/your-form-id"
+  width="100%" height="229" frameborder="0"
+  title="Newsletter sign-up"></iframe>
+```
+
+This loads the script only once instead of on every page view, and keeps working as visitors navigate between pages.
+
+> [!warning] `CustomHtml` is deprecated
+> Older docs used the `CustomHtml` component to inline a whole embed (iframe + `<script>`) in the page. It still works, but it re-runs the loader script on every page that uses it and only works from `.md`/`.mdx` content. Prefer the Custom Head Code approach above.
 
 ## Why JSX adjustments?
 
-Flowershow uses React, which processes HTML as JSX. Multi-word attributes need camelCase (`frameBorder`), `class` becomes `className`, and style attributes become objects. The `CustomHtml` component avoids this by rendering raw HTML directly.
+Flowershow uses React, which processes HTML as JSX. Multi-word attributes need camelCase (`frameBorder`), `class` becomes `className`, and style attributes become objects. Plain `<iframe>` embeds in your page still need these adjustments; the loader script in Custom Head Code is raw HTML and needs none.
 
 > [!info]
 > For provider-specific examples (Brevo, Tally, Mailchimp), see the [[blog/how-to-add-forms|forms tutorial]].
