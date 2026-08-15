@@ -58,9 +58,14 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         with:
           model: ${{ secrets.OPENCODE_MODEL || 'anthropic/claude-sonnet-4-20250514' }}
+          share: false
           prompt: |
             Triage this issue by running the `triage` skill
             (invoke: skill({ name: "triage" })) and following it exactly.
-            The skill runs unattended: decide, apply the category issue type
-            and one state label, and post a single comment. Do not wait for or
-            ask a human, do not write repo files, and do not close the issue.
+            The skill runs unattended: decide, then apply the category issue
+            type and one state label with `gh`. Write your triage comment as
+            your final message — this action posts that final message verbatim
+            as the single issue comment, so do NOT post it yourself with
+            `gh issue comment` (that duplicates it) and do NOT add any preamble
+            or "done" summary around it. Do not wait for or ask a human, do not
+            write repo files, and do not close the issue.

@@ -55,13 +55,24 @@ The state names above are the actual label strings used on the tracker.
    insufficient detail (a strong `needs-info` signal). A confirmed verification makes a
    much stronger agent brief.
 
-3. **Decide and apply.** Set the category issue type and one state label, then post
-   exactly one comment explaining your reasoning. Pick the safest defensible outcome:
+3. **Decide and apply.** Set the category issue type and one state label with `gh`.
+   Then write your triage comment as your **final assistant message** — the triage
+   action posts that message verbatim as the single issue comment. Do **not** call
+   `gh issue comment` yourself; that produces a duplicate. Your final message must
+   start with the AI disclaimer and contain only the comment — no preamble, no
+   "I've completed triage" summary, no restating the steps you took. Pick the safest
+   defensible outcome:
 
-   - **Well-specified and actionable** → `ready-for-agent`; include an agent brief in
-     the comment ([AGENT-BRIEF.md](AGENT-BRIEF.md)).
-   - **Actionable but needs human judgment** → `ready-for-human`; write the same brief
-     structure and note why it can't be delegated.
+   - **Well-specified and actionable** → `ready-for-agent`; the comment **must**
+     contain a `## Agent Brief` section built from the template in
+     [AGENT-BRIEF.md](AGENT-BRIEF.md) (Category, Summary, Current behavior, Desired
+     behavior, Key interfaces, Acceptance criteria, Out of scope). Describe behavior
+     and interfaces — **never cite file paths or line numbers inside the brief**; they
+     go stale before an agent picks the issue up. You may cite one code location in a
+     separate verification note (step 2) to prove the repro, but the brief itself
+     stays behavioral.
+   - **Actionable but needs human judgment** → `ready-for-human`; write the same
+     `## Agent Brief` structure and note why it can't be delegated.
    - **Underspecified** → `needs-info`; post the Needs-info template with specific,
      answerable questions. This is the terminal action — do not attempt a back-and-forth.
    - **Obviously won't be actioned** → `wontfix`; post your reasoning but **do not
@@ -74,7 +85,10 @@ The state names above are the actual label strings used on the tracker.
 ## Hard limits
 
 - **Never wait for or ask a human.** Decide from what's in front of you.
-- **One comment only.** No multi-comment threads.
+- **One comment only, and it is your final assistant message.** Never call
+  `gh issue comment` — the action posts your final message as the comment, so posting
+  it yourself creates a duplicate. No multi-comment threads, and no chatter wrapped
+  around the comment (the whole final message is the comment).
 - **Never write repo files.** Do not modify `CONTEXT.md`, ADRs, or `.out-of-scope/`
   from the action — those need a human-reviewed commit/PR. Put recommendations in the
   comment instead.
