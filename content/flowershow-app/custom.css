@@ -1305,6 +1305,81 @@
 .fs-root .cmp-note { margin: 22px auto 0; max-width: 880px; text-align: center; font-size: 14px; color: var(--muted-soft); }
 
 /* ==========================================================================
+   Pricing page — plan cards + feature comparison
+   --------------------------------------------------------------------------
+   Reuses the shared landing kit (.section, .section-head, .eyebrow, .btn,
+   .cmp comparison table, .final-card) on a plain white .fs-root page scoped
+   under `.lp-pricing`. The only bespoke pieces are the plan cards
+   (.price-grid / .price-card) and the wide Custom banner (.price-custom) —
+   the kit has no tier-card equivalent. The comparison table is the shared
+   .cmp component, re-tinted from its default obsidian violet to the berry
+   accent this page uses for its featured plan.
+   ========================================================================== */
+
+/* Plan cards — Free + Premium side by side, Custom banner spans below */
+.fs-root .price-grid {
+  max-width: 940px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px;
+}
+.fs-root .price-card {
+  display: flex; flex-direction: column;
+  background: var(--canvas); border: 1px solid var(--hairline-strong);
+  border-radius: 20px; padding: 32px;
+}
+/* Featured (Premium) — berry ring so it reads as the pick */
+.fs-root .price-card.featured {
+  border-color: var(--berry);
+  box-shadow: 0 0 0 1px var(--berry), 0 30px 60px -40px rgba(171, 58, 118, .45);
+}
+.fs-root .price-name {
+  font-family: var(--sans); font-weight: 700; font-size: 12px;
+  letter-spacing: 0.09em; text-transform: uppercase; color: var(--berry);
+  display: flex; align-items: center; gap: 10px;
+}
+.fs-root .price-badge {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  color: #fff; background: var(--berry); padding: 3px 10px; border-radius: 999px;
+}
+.fs-root .price-cost { display: flex; align-items: baseline; gap: 16px; margin-top: 18px; flex-wrap: wrap; }
+.fs-root .price-amount { font-family: var(--sans); font-size: 3rem; font-weight: 800; letter-spacing: -0.03em; color: var(--ink); line-height: 1; }
+.fs-root .price-unit { font-size: 15px; color: var(--muted); font-weight: 500; margin-left: 4px; }
+.fs-root .price-alt { padding-left: 16px; border-left: 1px solid var(--hairline-strong); }
+.fs-root .price-desc { margin-top: 18px; color: var(--muted); font-size: 16px; line-height: 1.55; }
+.fs-root .price-card .btn { margin-top: 26px; width: 100%; }
+.fs-root .price-feats { list-style: none; margin: 26px 0 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.fs-root .price-feats li { display: flex; gap: 12px; align-items: flex-start; font-size: 15px; color: var(--body); font-weight: 500; line-height: 1.45; }
+.fs-root .price-feats svg { width: 18px; height: 18px; flex: none; margin-top: 1px; color: var(--berry); }
+.fs-root .price-fine { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--hairline); font-size: 13.5px; font-style: italic; color: var(--muted-soft); line-height: 1.5; }
+
+/* Custom — wide dark banner spanning both columns */
+.fs-root .price-custom {
+  grid-column: 1 / -1;
+  display: flex; align-items: center; justify-content: space-between; gap: 28px; flex-wrap: wrap;
+  background: var(--surface-dark); border-radius: 20px; padding: 36px 40px;
+}
+.fs-root .price-custom-copy { min-width: 0; flex: 1; }
+.fs-root .price-custom h3 { color: #fff; font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; }
+.fs-root .price-custom p { color: var(--on-dark-soft); font-size: 16px; line-height: 1.55; margin-top: 8px; max-width: 62ch; }
+.fs-root .price-custom .btn { background: rgba(255, 255, 255, .1); color: #fff; border-color: rgba(255, 255, 255, .25); }
+.fs-root .price-custom .btn:hover { background: rgba(255, 255, 255, .18); border-color: rgba(255, 255, 255, .42); }
+
+/* Comparison table — category divider rows + berry-tinted Premium column */
+.fs-root.lp-pricing .cmp .col-fs { background: var(--tint-berry); color: var(--berry-ink); }
+.fs-root .cmp tbody tr.cmp-group td {
+  text-align: left; font-family: var(--sans); font-weight: 700; font-size: 12px;
+  letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink);
+  padding-top: 28px; padding-bottom: 10px;
+}
+.fs-root .cmp .yes { color: var(--fern-ink); font-weight: 700; }
+.fs-root .cmp .no { color: var(--muted-soft); }
+.fs-root .cmp td.col-fs .yes { color: inherit; }
+
+@media (max-width: 720px) {
+  .fs-root .price-grid { grid-template-columns: 1fr; }
+  .fs-root .price-custom { flex-direction: column; align-items: flex-start; }
+}
+
+/* ==========================================================================
    Default Flowershow footer — restyled to match the landing mockup
    --------------------------------------------------------------------------
    The footer is theme chrome, rendered from config.json on EVERY page of this
