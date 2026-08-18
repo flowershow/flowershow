@@ -68,8 +68,10 @@ export async function processMarkdown(
   // this strips out frontmatter, so that it's not inlined with the rest of the markdown file
   const { content: rawContent } = matter(_content, {});
 
-  // Protect [[target|alias]] from GFM table cell splitting before unified parses
-  const content = protectWikiLinkAliases(rawContent);
+  // Protect [[target|alias]] from GFM table cell splitting before unified parses,
+  // and escape `$` that isn't part of a real math span so dollar signs in prose
+  // aren't parsed as inline math (#1359).
+  const content = protectNonMathDollars(protectWikiLinkAliases(rawContent));
 
   const processor = unified()
     .use(remarkParse)
@@ -90,10 +92,7 @@ export async function processMarkdown(
     .use(remarkYouTubeAutoEmbed)
     .use(remarkGfm)
     .use(remarkSmartypants, { quotes: false, dashes: 'oldschool' })
-    // singleDollarTextMath disabled: a single `$` in prose (currency amounts)
-    // otherwise pairs with the next `$` and swallows the text between as math.
-    // Inline math still works with `$$...$$`. See issue #1359.
-    .use(remarkMath, { singleDollarTextMath: false })
+    .use(remarkMath)
     .use(remarkCallout)
     .use(remarkMark)
     .use(remarkRehype, { allowDangerousHtml: true })
@@ -166,9 +165,7 @@ export const getMdxOptions = ({
         remarkYouTubeAutoEmbed,
         remarkGfm,
         [remarkSmartypants, { quotes: false, dashes: 'oldschool' }],
-        // See RSC path above / issue #1359: disable single-dollar text math so
-        // currency amounts in prose aren't parsed as math. `$$...$$` still works.
-        [remarkMath, { singleDollarTextMath: false }],
+        remarkMath,
         remarkCallout,
         [mdxMermaid, {}],
         remarkMark,
@@ -239,3 +236,35 @@ const rehypeAutolinkHeadingsConfig: RehypeAutolinkHeadingsOptions = {
     ];
   },
 };
+
+// Matches EITHER a genuine math span (captured in group 1) OR a single loose `$`.
+// A genuine span is:
+//   - `$$…$$`  — display or inline double-dollar math (may span lines), or
+//   - `$…$`    — inline math where the char right after the opening `$` and the
+//                char right before the closing `$` are both non-space (spaces are
+//                allowed in between, e.g. `$x_2 = 4$`), the opening `$` isn't
+//                backslash-escaped, and the content stays on one line.
+// remark-math is too eager about pairing, so instead of relying on it we detect
+// real spans ourselves and escape every other `$` (currency, `$HOME`, a lone `$`,
+// two prices in a sentence, …) so it renders as a literal dollar sign. This keeps
+// single-dollar math working — including digit-leading math like `$2*4=8$` — while
+// dollar signs in prose never swallow the text between them. See issue #1359.
+const MATH_SPAN_OR_LOOSE_DOLLAR =
+  /(\$\$[\s\S]*?\$\$|(?<!\\)\$(?![\s$])(?:\\.|[^\n$])*?(?<![\s\\])\$)|(?<!\\)\$/g;
+
+export function protectNonMathDollars(content: string): string {
+  // Split on code fences and inline code, keeping those segments verbatim. With a
+  // capturing group, split() interleaves text (even indices) and code (odd).
+  return content
+    .split(/(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`)/g)
+    .map((segment, i) =>
+      i % 2 === 1
+        ? segment
+        : segment.replace(
+            MATH_SPAN_OR_LOOSE_DOLLAR,
+            // Keep genuine spans as-is; escape a loose `$` into a literal one.
+            (_match, mathSpan) => (mathSpan ? mathSpan : '\\$'),
+          ),
+    )
+    .join('');
+}

@@ -24,6 +24,7 @@ import { isEmoji } from '@/lib/is-emoji';
 import {
   getMdxOptions,
   processMarkdown,
+  protectNonMathDollars,
   protectWikiLinkAliases,
 } from '@/lib/markdown';
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
@@ -315,7 +316,9 @@ export default async function SitePage(props: {
         }) as any;
 
         const mdxSource = await serialize<PageMetadata>({
-          source: protectWikiLinkAliases(pageContent ?? ''),
+          source: protectNonMathDollars(
+            protectWikiLinkAliases(pageContent ?? ''),
+          ),
           options: mdxOptions,
         });
 
