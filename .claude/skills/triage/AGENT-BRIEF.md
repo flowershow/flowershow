@@ -41,12 +41,12 @@ State what is out of scope. This prevents the agent from gold-plating or making 
 ```markdown
 ## Agent Brief
 
-**Category:** bug / enhancement
+**Category:** bug / feature / task
 **Summary:** one-line description of what needs to happen
 
 **Current behavior:**
 Describe what happens now. For bugs, this is the broken behavior.
-For enhancements, this is the status quo the feature builds on.
+For features, this is the status quo the feature builds on.
 
 **Desired behavior:**
 Describe what should happen after the agent's work is complete.
@@ -104,12 +104,12 @@ and append "..." to indicate truncation.
 - Multi-line description support
 ```
 
-### Good agent brief (enhancement)
+### Good agent brief (feature)
 
 ```markdown
 ## Agent Brief
 
-**Category:** enhancement
+**Category:** feature
 **Summary:** Add `.out-of-scope/` directory support for tracking rejected feature requests
 
 **Current behavior:**
@@ -142,7 +142,7 @@ checked for matches.
 **Out of scope:**
 - Automated matching (human confirms the match)
 - Reopening previously rejected features
-- Bug reports (only enhancement rejections go to `.out-of-scope/`)
+- Bug reports (only feature rejections go to `.out-of-scope/`)
 ```
 
 ### Bad agent brief
