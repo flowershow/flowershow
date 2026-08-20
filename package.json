@@ -10,7 +10,7 @@
     "dev:down": "docker compose --profile stripe --profile github --profile search down",
     "dev:nuke": "docker compose --profile stripe --profile github --profile search down -v",
     "lint": "pnpm docs:theme-classes:check && turbo run lint",
-    "test": "turbo run test",
+    "test": "node --test scripts/theme-class-reference.test.mjs && turbo run test",
     "format": "biome format .",
     "format:write": "biome format --write .",
     "changeset": "changeset",
