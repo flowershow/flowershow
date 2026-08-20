@@ -7,6 +7,18 @@ authors:
   - rufuspollock
 ---
 
+> **Update, 21 August 2026:** The follow-up theme-building phase is complete;
+> its work and findings are collected in
+> [#1339](https://github.com/flowershow/flowershow/issues/1339) and
+> [flowershow/themes#8](https://github.com/flowershow/themes/pull/8). You can
+> now browse the improved [Flowershow themes reference](/docs/reference/themes),
+> read the resulting
+> [theme-authoring tutorial](https://github.com/flowershow/themes/blob/main/docs/theme-authoring-tutorial.md)
+> or
+> [AI theme-cloning workflow](https://github.com/flowershow/themes/blob/main/docs/ai-theme-cloning-skill.md),
+> and follow the next discovery, authoring, and preview-release phase in
+> [#1364](https://github.com/flowershow/flowershow/issues/1364).
+
 I want to build more themes — for my own sites, and to grow the [official themes collection](https://github.com/flowershow/themes). So I sat down to work out what making a theme actually involves today, and hit a question I couldn't answer cleanly: **what can a theme actually change?**
 
 Our internal answer has been "theming is CSS only". That's true, but it's not the whole picture, and the gap between that sentence and reality is where every frustrating theming conversation starts.
