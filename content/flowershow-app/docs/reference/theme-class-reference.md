@@ -186,7 +186,7 @@ Page identity, hero content, Markdown body, code controls, images, and task-list
 
 ```text
 .page-hero-container
-└─ .page-hero[.has-image]
+└─ .page-hero[.has-image | .image-full]
 main.page-main (structural wrapper)
 ├─ .page-header
 │  ├─ .page-header-title
@@ -200,7 +200,6 @@ main.page-main (structural wrapper)
 | --- | --- |
 | <code>.contains-task-list</code> | Hook |
 | <code>.heading-link</code> | Hook |
-| <code>.image-full</code> | Hook |
 | <code>.page-header</code> | Hook |
 | <code>.page-header-author-avatar</code> | Hook |
 | <code>.page-header-author-name</code> | Hook |
@@ -480,15 +479,15 @@ Public error cards, diagnostic stacks, and 404 presentation.
 | <code>.not-found-subtitle</code> | Hook |
 | <code>.not-found-title</code> | Hook |
 
-## Shared states
+## Shared states and layout variants
 
-Conditional presence, open/current, image, and layout states.
+Conditional presence, open/current, image, and layout modifiers.
 
 **DOM shape**
 
 ```text
 Owning semantic hook
-└─ .is-* / .has-* / .no-*
+└─ .is-* / .has-* / .no-* / .image-full
 ```
 
 | Class | Kind | Owner |
@@ -497,6 +496,7 @@ Owning semantic hook
 | <code>.has-sidebar</code> | State | .layout-inner |
 | <code>.has-sidebar-and-toc</code> | State | .layout-inner |
 | <code>.has-toc</code> | State | .layout-inner |
+| <code>.image-full</code> | Variant | .page-hero |
 | <code>.is-collapsible</code> | State | .site-tree-item-self / .mobile-nav-tree-item-self |
 | <code>.is-current</code> | State | .site-tree-item-self / .mobile-nav-tree-item-self |
 | <code>.is-open</code> | State | navigation dropdowns and collapsible tree items |

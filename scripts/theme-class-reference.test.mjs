@@ -48,6 +48,7 @@ test('classifyClassName assigns representative hooks to stable UI areas', () => 
   assert.equal(classifyClassName('graph-modal'), 'embeds');
   assert.equal(classifyClassName('not-found-title'), 'errors');
   assert.equal(classifyClassName('is-current'), 'states');
+  assert.equal(classifyClassName('image-full'), 'states');
   assert.equal(classifyClassName('prose'), 'compatibility');
   assert.equal(classifyClassName('overflow-hidden'), 'compatibility');
   assert.equal(classifyClassName('made-up-hook'), 'unclassified');
@@ -98,6 +99,13 @@ test('generateReference includes the real center wrapper around main', () => {
     output,
     /\.layout-inner-center \(structural wrapper\)\n│     │  └─ main\.page-main/,
   );
+});
+
+test('generateReference identifies the image-full layout variant and owner', () => {
+  const output = generateReference('.page-hero.image-full { display: grid; }');
+
+  assert.match(output, /<code>\.image-full<\/code> \| Variant \| \.page-hero/);
+  assert.match(output, /\.page-hero\[\.has-image \| \.image-full\]/);
 });
 
 test('generateReference separates utilities from the public contract and names state owners', () => {

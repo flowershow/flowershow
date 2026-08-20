@@ -29,7 +29,7 @@ const GROUPS = [
     title: 'Page header, hero, and rendered content',
     description:
       'Page identity, hero content, Markdown body, code controls, images, and task-list hooks.',
-    dom: `.page-hero-container\n└─ .page-hero[.has-image]\nmain.page-main (structural wrapper)\n├─ .page-header\n│  ├─ .page-header-title\n│  ├─ .page-header-description\n│  └─ .page-header-metadata-container\n└─ .page-body (structural wrapper)\n   └─ .rendered-mdx[.is-plain]`,
+    dom: `.page-hero-container\n└─ .page-hero[.has-image | .image-full]\nmain.page-main (structural wrapper)\n├─ .page-header\n│  ├─ .page-header-title\n│  ├─ .page-header-description\n│  └─ .page-header-metadata-container\n└─ .page-body (structural wrapper)\n   └─ .rendered-mdx[.is-plain]`,
   },
   {
     id: 'toc',
@@ -78,10 +78,10 @@ const GROUPS = [
   },
   {
     id: 'states',
-    title: 'Shared states',
+    title: 'Shared states and layout variants',
     description:
-      'Conditional presence, open/current, image, and layout states.',
-    dom: `Owning semantic hook\n└─ .is-* / .has-* / .no-*`,
+      'Conditional presence, open/current, image, and layout modifiers.',
+    dom: `Owning semantic hook\n└─ .is-* / .has-* / .no-* / .image-full`,
   },
   {
     id: 'compatibility',
@@ -97,6 +97,7 @@ const COMPATIBILITY_CLASSES = new Set(['overflow-hidden', 'prose']);
 
 const STATE_OWNERS = {
   'has-image': '.page-hero',
+  'image-full': '.page-hero',
   'has-sidebar': '.layout-inner',
   'has-sidebar-and-toc': '.layout-inner',
   'has-toc': '.layout-inner',
@@ -121,6 +122,7 @@ export function extractClassNames(css) {
 
 export function classifyClassName(name) {
   if (COMPATIBILITY_CLASSES.has(name)) return 'compatibility';
+  if (name === 'image-full') return 'states';
   if (/^(is-|has-|no-nav$)/.test(name)) return 'states';
   if (/^(site-layout|layout-)/.test(name)) return 'layout';
   if (/^(site-navbar|mobile-nav|theme-switch|visitor-logout)/.test(name))
@@ -135,7 +137,7 @@ export function classifyClassName(name) {
   if (/^(graph-|pdf-|canvas-)/.test(name)) return 'embeds';
   if (/^(error-|not-found)/.test(name)) return 'errors';
   if (
-    /^(page-(header|hero)|rendered-mdx|heading-link|pre-|prose$|contains-task-list|image-full)/.test(
+    /^(page-(header|hero)|rendered-mdx|heading-link|pre-|contains-task-list)/.test(
       name,
     )
   ) {
@@ -146,6 +148,7 @@ export function classifyClassName(name) {
 
 function classKind(name) {
   if (COMPATIBILITY_CLASSES.has(name)) return 'Compatibility';
+  if (name === 'image-full') return 'Variant';
   if (/^(is-|has-|no-)/.test(name)) return 'State';
   if (name.includes('--')) return 'Variant';
   if (name.includes('__')) return 'Element';
