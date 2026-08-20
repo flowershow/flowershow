@@ -7,20 +7,29 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **230 unique class hooks**.
+and currently documents **230 styled class selectors**:
+**228 stable semantic hooks** and **2 non-contract
+compatibility utilities**.
 
 ## Stability contract
 
-The component and element hooks listed here are a public theme-author API.
+The semantic component, element, state, and variant hooks listed here are a
+public theme-author API.
 Removing or renaming one, or changing what UI element it represents, is a
 breaking change for themes. Adding a hook is non-breaking. State and Variant
 hooks are stable in name but only appear when their owning component enters
 that state; do not assume every page renders every hook.
 
-The list is exhaustive for classes styled by `default-theme.css`. Raw utility
-classes used only inside component source are not an authoring contract unless
-they also appear here. Structure is still controlled by Flowershow core: these
-hooks change presentation, not which components render or their order.
+The list is exhaustive for classes styled by `default-theme.css`. The final
+compatibility section is drift-checked but explicitly excluded from the public
+API. Emitted-only class names and raw utility classes used inside component
+source are not an authoring contract unless they appear in a semantic table on
+this page.
+
+Structural wrappers shown in DOM sketches but absent from their accompanying
+tables provide nesting context only; they are not stable hooks. Structure is
+still controlled by Flowershow core: these hooks change presentation, not which
+components render or their order.
 
 Kinds used below:
 
@@ -28,6 +37,7 @@ Kinds used below:
 - **Element** — BEM-style child written with `__`.
 - **Variant** — alternative treatment written with `--`.
 - **State** — conditional `is-*`, `has-*`, or `no-*` hook.
+- **Compatibility** — styled utility retained for compatibility, not public API.
 
 ## Related non-class hooks
 
@@ -49,10 +59,16 @@ Top-level site grid, responsive rails, and shell variants.
 
 ```text
 .site-layout[.no-nav]
-└─ .layout-inner[.has-sidebar][.has-toc]
-   ├─ .layout-inner-left
-   ├─ main
-   └─ .layout-inner-right
+├─ .site-navbar (optional)
+├─ .site-body (structural wrapper)
+│  ├─ .site-subnav (optional)
+│  ├─ .page-hero-container (optional)
+│  └─ .layout-inner[.has-sidebar | .has-toc | .has-sidebar-and-toc]
+│     ├─ .layout-inner-left
+│     ├─ .layout-inner-center (structural wrapper)
+│     │  └─ main.page-main (structural wrapper)
+│     └─ .layout-inner-right
+└─ .site-footer
 ```
 
 | Class | Kind |
@@ -70,13 +86,13 @@ Desktop navbar, dropdowns, mobile navigation, theme switch, and visitor controls
 
 ```text
 .site-navbar
-└─ .site-navbar-inner
-   ├─ .site-navbar-site-name
-   ├─ .site-navbar-links-container
-   │  ├─ .site-navbar-link
-   │  └─ .site-navbar-dropdown
-   └─ .site-navbar-mobile-nav-button
-      └─ .mobile-nav
+├─ .site-navbar-inner
+│  ├─ .site-navbar-site-name
+│  ├─ .site-navbar-links-container
+│  │  ├─ .site-navbar-link
+│  │  └─ .site-navbar-dropdown
+│  └─ .site-navbar-mobile-nav-button
+└─ .mobile-nav
 ```
 
 | Class | Kind |
@@ -131,11 +147,12 @@ Breadcrumbs, desktop site tree, and the small-screen sidebar drawer.
 .site-subnav
 ├─ .site-subnav-breadcrumbs
 └─ .site-subnav-menu-button
-.site-sidebar / .sidebar-drawer-panel
-└─ .site-tree
-   └─ .site-tree-item
-      ├─ .site-tree-item-self
-      └─ .site-tree-item-children
+.layout-inner-left
+└─ .site-sidebar
+   └─ .site-tree
+body (dialog portal)
+└─ .sidebar-drawer-panel
+   └─ .site-tree
 ```
 
 | Class | Kind |
@@ -168,14 +185,15 @@ Page identity, hero content, Markdown body, code controls, images, and task-list
 **DOM shape**
 
 ```text
-.page-hero
-└─ .page-hero-container
-main
+.page-hero-container
+└─ .page-hero[.has-image]
+main.page-main (structural wrapper)
 ├─ .page-header
 │  ├─ .page-header-title
 │  ├─ .page-header-description
 │  └─ .page-header-metadata-container
-└─ .rendered-mdx
+└─ .page-body (structural wrapper)
+   └─ .rendered-mdx[.is-plain]
 ```
 
 | Class | Kind |
@@ -209,7 +227,6 @@ main
 | <code>.pre-copy-button</code> | Hook |
 | <code>.pre-icon</code> | Hook |
 | <code>.pre-sr</code> | Hook |
-| <code>.prose</code> | Hook |
 | <code>.rendered-mdx</code> | Hook |
 
 ## Table of contents
@@ -374,7 +391,8 @@ Blocks rendered after the main page content.
 **DOM shape**
 
 ```text
-main
+.layout-inner-center (structural wrapper)
+├─ main.page-main (structural wrapper)
 ├─ .page-edit-button-container
 ├─ .page-backlinks-container
 │  └─ .page-backlinks-list
@@ -462,30 +480,46 @@ Public error cards, diagnostic stacks, and 404 presentation.
 | <code>.not-found-subtitle</code> | Hook |
 | <code>.not-found-title</code> | Hook |
 
-## Shared states and utility hooks
+## Shared states
 
-Cross-component presence, open/current, scrolling, image, and layout state classes.
+Conditional presence, open/current, image, and layout states.
 
 **DOM shape**
 
 ```text
-Owning component
-└─ .is-* / .has-* / .no-* / shared utility hook
+Owning semantic hook
+└─ .is-* / .has-* / .no-*
+```
+
+| Class | Kind | Owner |
+| --- | --- | --- |
+| <code>.has-image</code> | State | .page-hero |
+| <code>.has-sidebar</code> | State | .layout-inner |
+| <code>.has-sidebar-and-toc</code> | State | .layout-inner |
+| <code>.has-toc</code> | State | .layout-inner |
+| <code>.is-collapsible</code> | State | .site-tree-item-self / .mobile-nav-tree-item-self |
+| <code>.is-current</code> | State | .site-tree-item-self / .mobile-nav-tree-item-self |
+| <code>.is-open</code> | State | navigation dropdowns and collapsible tree items |
+| <code>.is-plain</code> | State | .rendered-mdx |
+| <code>.is-scrolled</code> | State | .site-navbar |
+| <code>.no-nav</code> | State | .site-layout |
+
+## Compatibility utilities (not public API)
+
+Selectors retained for exhaustive drift tracking but excluded from the semantic theme-author contract.
+
+**CSS layer**
+
+```text
+@layer utilities
+├─ .prose
+└─ .overflow-hidden
 ```
 
 | Class | Kind |
 | --- | --- |
-| <code>.has-image</code> | State |
-| <code>.has-sidebar</code> | State |
-| <code>.has-sidebar-and-toc</code> | State |
-| <code>.has-toc</code> | State |
-| <code>.is-collapsible</code> | State |
-| <code>.is-current</code> | State |
-| <code>.is-open</code> | State |
-| <code>.is-plain</code> | State |
-| <code>.is-scrolled</code> | State |
-| <code>.no-nav</code> | State |
-| <code>.overflow-hidden</code> | Hook |
+| <code>.overflow-hidden</code> | Compatibility |
+| <code>.prose</code> | Compatibility |
 
 ---
 

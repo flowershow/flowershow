@@ -48,6 +48,8 @@ test('classifyClassName assigns representative hooks to stable UI areas', () => 
   assert.equal(classifyClassName('graph-modal'), 'embeds');
   assert.equal(classifyClassName('not-found-title'), 'errors');
   assert.equal(classifyClassName('is-current'), 'states');
+  assert.equal(classifyClassName('prose'), 'compatibility');
+  assert.equal(classifyClassName('overflow-hidden'), 'compatibility');
   assert.equal(classifyClassName('made-up-hook'), 'unclassified');
 });
 
@@ -69,10 +71,15 @@ test('generateReference documents structure, stability, and each class once', ()
   assert.match(output, /^---\ntitle: Semantic theme class reference/m);
   assert.match(output, /Stability contract/);
   assert.match(output, /DOM shape/);
-  assert.match(output, /5 unique class hooks/);
+  assert.match(output, /5 styled class selectors/);
+  assert.match(output, /5 stable semantic hooks/);
   assert.match(output, /State/);
   assert.match(output, /Variant/);
   assert.match(output, /Element/);
+  assert.match(
+    output,
+    /\.site-navbar\n├─ \.site-navbar-inner[\s\S]*└─ \.mobile-nav/,
+  );
 
   for (const className of extractClassNames(fixtureCss)) {
     const occurrences = output.split(`<code>.${className}</code>`).length - 1;
@@ -82,6 +89,28 @@ test('generateReference documents structure, stability, and each class once', ()
       `${className} should occur once in the tables`,
     );
   }
+});
+
+test('generateReference includes the real center wrapper around main', () => {
+  const output = generateReference('.site-layout { display: block; }');
+
+  assert.match(
+    output,
+    /\.layout-inner-center \(structural wrapper\)\n│     │  └─ main\.page-main/,
+  );
+});
+
+test('generateReference separates utilities from the public contract and names state owners', () => {
+  const output = generateReference(`
+    .site-navbar.is-scrolled { color: red; }
+    @layer utilities { .prose { color: inherit; } }
+  `);
+
+  assert.match(output, /3 styled class selectors/);
+  assert.match(output, /2 stable semantic hooks/);
+  assert.match(output, /1\s+non-contract\s+compatibility utilities/);
+  assert.match(output, /Compatibility utilities \(not public API\)/);
+  assert.match(output, /<code>\.is-scrolled<\/code> \| State \| \.site-navbar/);
 });
 
 test('runCli writes deterministic output and detects drift', async () => {

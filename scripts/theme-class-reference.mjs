@@ -8,28 +8,28 @@ const GROUPS = [
     id: 'layout',
     title: 'Site layout and page shell',
     description: 'Top-level site grid, responsive rails, and shell variants.',
-    dom: `.site-layout[.no-nav]\n└─ .layout-inner[.has-sidebar][.has-toc]\n   ├─ .layout-inner-left\n   ├─ main\n   └─ .layout-inner-right`,
+    dom: `.site-layout[.no-nav]\n├─ .site-navbar (optional)\n├─ .site-body (structural wrapper)\n│  ├─ .site-subnav (optional)\n│  ├─ .page-hero-container (optional)\n│  └─ .layout-inner[.has-sidebar | .has-toc | .has-sidebar-and-toc]\n│     ├─ .layout-inner-left\n│     ├─ .layout-inner-center (structural wrapper)\n│     │  └─ main.page-main (structural wrapper)\n│     └─ .layout-inner-right\n└─ .site-footer`,
   },
   {
     id: 'navigation',
     title: 'Navbar and mobile navigation',
     description:
       'Desktop navbar, dropdowns, mobile navigation, theme switch, and visitor controls.',
-    dom: `.site-navbar\n└─ .site-navbar-inner\n   ├─ .site-navbar-site-name\n   ├─ .site-navbar-links-container\n   │  ├─ .site-navbar-link\n   │  └─ .site-navbar-dropdown\n   └─ .site-navbar-mobile-nav-button\n      └─ .mobile-nav`,
+    dom: `.site-navbar\n├─ .site-navbar-inner\n│  ├─ .site-navbar-site-name\n│  ├─ .site-navbar-links-container\n│  │  ├─ .site-navbar-link\n│  │  └─ .site-navbar-dropdown\n│  └─ .site-navbar-mobile-nav-button\n└─ .mobile-nav`,
   },
   {
     id: 'sidebar',
     title: 'Subnavigation, sidebar, and site tree',
     description:
       'Breadcrumbs, desktop site tree, and the small-screen sidebar drawer.',
-    dom: `.site-subnav\n├─ .site-subnav-breadcrumbs\n└─ .site-subnav-menu-button\n.site-sidebar / .sidebar-drawer-panel\n└─ .site-tree\n   └─ .site-tree-item\n      ├─ .site-tree-item-self\n      └─ .site-tree-item-children`,
+    dom: `.site-subnav\n├─ .site-subnav-breadcrumbs\n└─ .site-subnav-menu-button\n.layout-inner-left\n└─ .site-sidebar\n   └─ .site-tree\nbody (dialog portal)\n└─ .sidebar-drawer-panel\n   └─ .site-tree`,
   },
   {
     id: 'content',
     title: 'Page header, hero, and rendered content',
     description:
       'Page identity, hero content, Markdown body, code controls, images, and task-list hooks.',
-    dom: `.page-hero\n└─ .page-hero-container\nmain\n├─ .page-header\n│  ├─ .page-header-title\n│  ├─ .page-header-description\n│  └─ .page-header-metadata-container\n└─ .rendered-mdx`,
+    dom: `.page-hero-container\n└─ .page-hero[.has-image]\nmain.page-main (structural wrapper)\n├─ .page-header\n│  ├─ .page-header-title\n│  ├─ .page-header-description\n│  └─ .page-header-metadata-container\n└─ .page-body (structural wrapper)\n   └─ .rendered-mdx[.is-plain]`,
   },
   {
     id: 'toc',
@@ -62,7 +62,7 @@ const GROUPS = [
     id: 'page-actions',
     title: 'Backlinks, edit controls, and comments',
     description: 'Blocks rendered after the main page content.',
-    dom: `main\n├─ .page-edit-button-container\n├─ .page-backlinks-container\n│  └─ .page-backlinks-list\n└─ .page-comments-container`,
+    dom: `.layout-inner-center (structural wrapper)\n├─ main.page-main (structural wrapper)\n├─ .page-edit-button-container\n├─ .page-backlinks-container\n│  └─ .page-backlinks-list\n└─ .page-comments-container`,
   },
   {
     id: 'embeds',
@@ -78,12 +78,35 @@ const GROUPS = [
   },
   {
     id: 'states',
-    title: 'Shared states and utility hooks',
+    title: 'Shared states',
     description:
-      'Cross-component presence, open/current, scrolling, image, and layout state classes.',
-    dom: `Owning component\n└─ .is-* / .has-* / .no-* / shared utility hook`,
+      'Conditional presence, open/current, image, and layout states.',
+    dom: `Owning semantic hook\n└─ .is-* / .has-* / .no-*`,
+  },
+  {
+    id: 'compatibility',
+    title: 'Compatibility utilities (not public API)',
+    description:
+      'Selectors retained for exhaustive drift tracking but excluded from the semantic theme-author contract.',
+    sketchTitle: 'CSS layer',
+    dom: `@layer utilities\n├─ .prose\n└─ .overflow-hidden`,
   },
 ];
+
+const COMPATIBILITY_CLASSES = new Set(['overflow-hidden', 'prose']);
+
+const STATE_OWNERS = {
+  'has-image': '.page-hero',
+  'has-sidebar': '.layout-inner',
+  'has-sidebar-and-toc': '.layout-inner',
+  'has-toc': '.layout-inner',
+  'is-collapsible': '.site-tree-item-self / .mobile-nav-tree-item-self',
+  'is-current': '.site-tree-item-self / .mobile-nav-tree-item-self',
+  'is-open': 'navigation dropdowns and collapsible tree items',
+  'is-plain': '.rendered-mdx',
+  'is-scrolled': '.site-navbar',
+  'no-nav': '.site-layout',
+};
 
 export function extractClassNames(css) {
   const scrubbed = css
@@ -97,7 +120,8 @@ export function extractClassNames(css) {
 }
 
 export function classifyClassName(name) {
-  if (/^(is-|has-|no-nav$|overflow-hidden$)/.test(name)) return 'states';
+  if (COMPATIBILITY_CLASSES.has(name)) return 'compatibility';
+  if (/^(is-|has-|no-nav$)/.test(name)) return 'states';
   if (/^(site-layout|layout-)/.test(name)) return 'layout';
   if (/^(site-navbar|mobile-nav|theme-switch|visitor-logout)/.test(name))
     return 'navigation';
@@ -121,6 +145,7 @@ export function classifyClassName(name) {
 }
 
 function classKind(name) {
+  if (COMPATIBILITY_CLASSES.has(name)) return 'Compatibility';
   if (/^(is-|has-|no-)/.test(name)) return 'State';
   if (name.includes('--')) return 'Variant';
   if (name.includes('__')) return 'Element';
@@ -129,6 +154,10 @@ function classKind(name) {
 
 export function generateReference(css) {
   const classNames = extractClassNames(css);
+  const compatibilityCount = classNames.filter((className) =>
+    COMPATIBILITY_CLASSES.has(className),
+  ).length;
+  const semanticCount = classNames.length - compatibilityCount;
   const grouped = new Map(GROUPS.map((group) => [group.id, []]));
   for (const className of classNames) {
     const group = classifyClassName(className);
@@ -141,14 +170,19 @@ export function generateReference(css) {
   const sections = GROUPS.filter(
     (group) => grouped.get(group.id).length > 0,
   ).map((group) => {
+    const isStateGroup = group.id === 'states';
     const rows = grouped
       .get(group.id)
-      .map(
-        (className) =>
-          `| <code>.${className}</code> | ${classKind(className)} |`,
-      )
+      .map((className) => {
+        if (isStateGroup) {
+          return `| <code>.${className}</code> | ${classKind(className)} | ${STATE_OWNERS[className]} |`;
+        }
+        return `| <code>.${className}</code> | ${classKind(className)} |`;
+      })
       .join('\n');
-    return `## ${group.title}\n\n${group.description}\n\n**DOM shape**\n\n\`\`\`text\n${group.dom}\n\`\`\`\n\n| Class | Kind |\n| --- | --- |\n${rows}`;
+    const ownerHeader = isStateGroup ? ' Owner |' : '';
+    const ownerDivider = isStateGroup ? ' --- |' : '';
+    return `## ${group.title}\n\n${group.description}\n\n**${group.sketchTitle ?? 'DOM shape'}**\n\n\`\`\`text\n${group.dom}\n\`\`\`\n\n| Class | Kind |${ownerHeader}\n| --- | --- |${ownerDivider}\n${rows}`;
   });
 
   return `---
@@ -160,20 +194,29 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [\`default-theme.css\`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **${classNames.length} unique class hooks**.
+and currently documents **${classNames.length} styled class selectors**:
+**${semanticCount} stable semantic hooks** and **${compatibilityCount} non-contract
+compatibility utilities**.
 
 ## Stability contract
 
-The component and element hooks listed here are a public theme-author API.
+The semantic component, element, state, and variant hooks listed here are a
+public theme-author API.
 Removing or renaming one, or changing what UI element it represents, is a
 breaking change for themes. Adding a hook is non-breaking. State and Variant
 hooks are stable in name but only appear when their owning component enters
 that state; do not assume every page renders every hook.
 
-The list is exhaustive for classes styled by \`default-theme.css\`. Raw utility
-classes used only inside component source are not an authoring contract unless
-they also appear here. Structure is still controlled by Flowershow core: these
-hooks change presentation, not which components render or their order.
+The list is exhaustive for classes styled by \`default-theme.css\`. The final
+compatibility section is drift-checked but explicitly excluded from the public
+API. Emitted-only class names and raw utility classes used inside component
+source are not an authoring contract unless they appear in a semantic table on
+this page.
+
+Structural wrappers shown in DOM sketches but absent from their accompanying
+tables provide nesting context only; they are not stable hooks. Structure is
+still controlled by Flowershow core: these hooks change presentation, not which
+components render or their order.
 
 Kinds used below:
 
@@ -181,6 +224,7 @@ Kinds used below:
 - **Element** — BEM-style child written with \`__\`.
 - **Variant** — alternative treatment written with \`--\`.
 - **State** — conditional \`is-*\`, \`has-*\`, or \`no-*\` hook.
+- **Compatibility** — styled utility retained for compatibility, not public API.
 
 ## Related non-class hooks
 
