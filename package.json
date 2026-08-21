@@ -9,14 +9,16 @@
     "dev:local:all": "bash scripts/dev-local.sh --all",
     "dev:down": "docker compose --profile stripe --profile github --profile search down",
     "dev:nuke": "docker compose --profile stripe --profile github --profile search down -v",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
+    "lint": "pnpm docs:theme-classes:check && turbo run lint",
+    "test": "node --test scripts/theme-class-reference.test.mjs && turbo run test",
     "format": "biome format .",
     "format:write": "biome format --write .",
     "changeset": "changeset",
     "version-packages": "changeset version",
     "release": "turbo run build --filter=./packages/... && changeset publish",
     "docs:sitemap": "tsx scripts/generate-docs-sitemap.ts",
+    "docs:theme-classes": "node scripts/theme-class-reference.mjs --write",
+    "docs:theme-classes:check": "node scripts/theme-class-reference.mjs --check",
     "prepare": "husky install"
   },
   "devDependencies": {

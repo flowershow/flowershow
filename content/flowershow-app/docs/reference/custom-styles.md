@@ -11,6 +11,11 @@ description: Customize the appearance of your site with CSS.
 
 Flowershow uses CSS cascade layers, so any rule you write in `custom.css` wins over the default theme without needing `!important`.
 
+Start with the theme variables below for broad visual changes. When you need to
+target a particular component or state, use the
+[semantic theme class reference](/docs/reference/theme-class-reference), which
+groups Flowershow's stable CSS hooks by the UI area that emits them.
+
 ## Theme variables
 
 Flowershow exposes CSS custom properties (variables) in `:root`.
