@@ -8,7 +8,13 @@ export function getThemeUrl(theme: string): string | null {
 
   if (version) {
     return `https://cdn.jsdelivr.net/gh/flowershow/themes@${version}/${name}/theme.css`;
-  } else {
-    return `https://cdn.jsdelivr.net/gh/flowershow/themes/${name}/theme.css`;
   }
+
+  // Monospace was added after the latest themes release, so a bare name must
+  // resolve from main until the next versioned themes release includes it.
+  if (name === 'monospace') {
+    return 'https://cdn.jsdelivr.net/gh/flowershow/themes@main/monospace/theme.css';
+  }
+
+  return `https://cdn.jsdelivr.net/gh/flowershow/themes/${name}/theme.css`;
 }
