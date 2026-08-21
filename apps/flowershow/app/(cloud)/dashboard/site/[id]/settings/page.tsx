@@ -13,6 +13,7 @@ import { validDomainRegex } from '@/lib/domains';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { getRepoFullName } from '@/lib/get-repo-full-name';
 import { PLANS } from '@/lib/stripe-plans';
+import { OFFICIAL_THEMES } from '@/lib/themes';
 import { SITE_NAME_MAX_LENGTH } from '@/lib/validate-site-name';
 import type { SiteUpdateKey } from '@/server/api/types';
 import { api } from '@/trpc/server';
@@ -379,13 +380,7 @@ export default async function SiteSettingsPage(props: {
                   ? siteConfig.theme
                   : themeConfig?.theme) ?? '',
               required: false,
-              options: [
-                { value: '', label: 'Default' },
-                { value: 'letterpress', label: 'Letterpress' },
-                { value: 'superstack', label: 'Superstack' },
-                { value: 'lessflowery', label: 'Lessflowery' },
-                { value: 'leaf', label: 'Leaf' },
-              ],
+              options: [{ value: '', label: 'Default' }, ...OFFICIAL_THEMES],
             }}
             handleSubmit={updateThemeConfig}
           />
