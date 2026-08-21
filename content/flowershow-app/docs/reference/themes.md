@@ -50,6 +50,17 @@ A theme sets your site's overall look — typography, colors, and spacing — in
       <span className="text-sm font-medium text-orange-600">View live demo →</span>
     </div>
   </a>
+  <a href="https://monospace-theme-demo-rufuspollock.flowershow.me/" target="_blank" rel="noreferrer" className="group flex flex-col overflow-hidden rounded-xl border border-gray-200 no-underline shadow-sm transition duration-150 hover:border-orange-400 hover:shadow-md">
+    <img src="/assets/theme-monospace.png" alt="Monospace theme preview" className="w-full border-b border-gray-100 object-cover" />
+    <div className="flex flex-1 flex-col gap-2 p-5">
+      <div className="flex items-center gap-2">
+        <span className="text-base font-semibold text-gray-900">Monospace</span>
+        <code className="rounded bg-gray-100 px-2 py-0.5 text-xs text-gray-500">"monospace"</code>
+      </div>
+      <p className="m-0 flex-1 text-sm text-gray-600">Compact, near-monochrome typography for technical documentation, notes, and blogs.</p>
+      <span className="text-sm font-medium text-orange-600">View live demo →</span>
+    </div>
+  </a>
 </div>
 
 Ready to use one? See [Apply a theme](/docs/reference/apply-a-theme) to set your pick from the dashboard or `config.json` and customize it further.
