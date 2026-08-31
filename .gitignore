@@ -33,6 +33,7 @@ playwright/test-env.json
 *.tsbuildinfo
 *.log
 *storybook.log
+.obsidian/
 
 # debug
 npm-debug.log*
