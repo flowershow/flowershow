@@ -80,7 +80,65 @@ export default function TokensList({ tokens, emptyMessage }: TokensListProps) {
 
   return (
     <div className="rounded-lg border border-stone-200 bg-white dark:border-stone-700 dark:bg-black">
-      <div className="overflow-x-auto">
+      {/* Mobile: stacked cards */}
+      <ul className="divide-y divide-stone-200 dark:divide-stone-700 md:hidden">
+        {tokens.map((token) => {
+          const expired = isExpired(token);
+          return (
+            <li
+              key={token.id}
+              className={`space-y-3 p-4 ${expired ? 'opacity-60' : ''}`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <span className="flex flex-wrap items-center gap-2 text-sm font-medium text-stone-900 dark:text-stone-100">
+                  {token.name || 'Unnamed Token'}
+                  {expired && (
+                    <span className="rounded bg-stone-200 px-1.5 py-0.5 text-xs font-normal text-stone-600 dark:bg-stone-700 dark:text-stone-400">
+                      Expired
+                    </span>
+                  )}
+                </span>
+                <button
+                  onClick={() => handleRevoke(token.id)}
+                  disabled={revokingId === token.id}
+                  className="shrink-0 text-sm text-red-600 hover:text-red-900 disabled:cursor-not-allowed disabled:opacity-50 dark:text-red-400 dark:hover:text-red-300"
+                >
+                  {revokingId === token.id ? 'Revoking...' : 'Revoke'}
+                </button>
+              </div>
+              <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                <div>
+                  <dt className="font-medium uppercase tracking-wider text-stone-400 dark:text-stone-500">
+                    Created
+                  </dt>
+                  <dd className="mt-0.5 text-stone-600 dark:text-stone-300">
+                    {formatDate(token.createdAt)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-medium uppercase tracking-wider text-stone-400 dark:text-stone-500">
+                    Last Used
+                  </dt>
+                  <dd className="mt-0.5 text-stone-600 dark:text-stone-300">
+                    {formatDate(token.lastUsedAt)}
+                  </dd>
+                </div>
+                <div>
+                  <dt className="font-medium uppercase tracking-wider text-stone-400 dark:text-stone-500">
+                    Expires
+                  </dt>
+                  <dd className="mt-0.5 text-stone-600 dark:text-stone-300">
+                    {token.expiresAt ? formatDate(token.expiresAt) : 'Never'}
+                  </dd>
+                </div>
+              </dl>
+            </li>
+          );
+        })}
+      </ul>
+
+      {/* Desktop: table */}
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full">
           <thead>
             <tr className="border-b border-stone-200 dark:border-stone-700">
