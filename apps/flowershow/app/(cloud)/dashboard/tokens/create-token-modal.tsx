@@ -112,7 +112,7 @@ export default function CreateTokenModal() {
         setShowModal={setShowModal}
         closeOnClickOutside={!createdToken}
       >
-        <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-stone-900">
+        <div className="w-full md:max-w-md rounded-lg bg-white p-6 shadow-xl dark:bg-stone-900">
           {createdToken ? (
             // Token created - show token
             <div>
