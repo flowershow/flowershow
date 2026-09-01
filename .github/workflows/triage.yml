@@ -54,10 +54,14 @@ jobs:
 
       - uses: anomalyco/opencode/github@latest
         if: steps.check.outputs.result == 'true'
+        timeout-minutes: 15
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           model: ${{ secrets.OPENCODE_MODEL || 'anthropic/claude-sonnet-4-20250514' }}
+          use_github_token: "true"
           share: false
           prompt: |
             Triage this issue by running the `triage` skill
