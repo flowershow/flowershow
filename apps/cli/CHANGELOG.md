@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.3.0
+
+- Fix: `fl publish` now respects `contentExclude`/`contentInclude` in `config.json`, matching the visibility rules the GitHub-sync build already applies. Previously the CLI ignored `config.json` entirely, so excluded paths (e.g. drafts, internal notes) were published and served even though the GitHub-sync build correctly hid them for the same repo.
+
 ## 2.2.0
 
 - Recover gracefully when a site has been renamed on the server. Previously, if the stored site name no longer matched (e.g. after the site-name unification), `fl` reported the site as deleted, removed the local `.flowershow`, and could create a duplicate site. It now recognises a likely rename, keeps `.flowershow` intact, and offers to re-point the folder to the site's current name.

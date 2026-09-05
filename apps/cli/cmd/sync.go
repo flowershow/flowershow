@@ -10,6 +10,7 @@ import (
 	"github.com/flowershow/publish/internal/auth"
 	"github.com/flowershow/publish/internal/config"
 	"github.com/flowershow/publish/internal/files"
+	"github.com/flowershow/publish/internal/siteconfig"
 	"github.com/flowershow/publish/internal/telemetry"
 	"github.com/flowershow/publish/internal/ui"
 	"github.com/spf13/cobra"
@@ -84,6 +85,10 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 		})
 		return nil
 	}
+	// Apply config.json's contentInclude/contentExclude, matching the
+	// visibility rules the GitHub-sync build applies to the same config.json.
+	discovered = siteconfig.ApplyVisibility(discovered, absPath)
+
 	if err := files.ValidateFiles(discovered); err != nil {
 		sp.Fail("Validation failed")
 		ui.PrintError(err.Error())
