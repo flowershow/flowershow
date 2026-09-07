@@ -680,12 +680,26 @@ export function renderCanvas(
     svgChildren,
   );
 
+  // The "world" layer holds the absolutely-positioned nodes + edge overlay and
+  // is sized to the full canvas extent. It is the transform target for the
+  // client-side pan/zoom controller (CanvasEnhancer). Rendered statically so
+  // the canvas is still readable without JS — the container falls back to
+  // native scroll (`overflow: auto`) until the controller upgrades it.
+  const world = h(
+    'div',
+    {
+      className: 'canvas-world',
+      style: `position: absolute; top: 0; left: 0; width: ${width}px; height: ${height}px; transform-origin: 0 0;`,
+    },
+    [...nodeElements, svgOverlay],
+  );
+
   return h(
     'div',
     {
       className: 'canvas-container',
-      style: `position: relative; width: 100%; height: ${height}px;overflow:scroll;`,
+      style: `position: relative; width: 100%; height: min(80vh, ${height}px); overflow: auto;`,
     },
-    [...nodeElements, svgOverlay],
+    [world],
   );
 }

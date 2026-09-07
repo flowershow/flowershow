@@ -4,6 +4,7 @@ import { CodeIcon, EditIcon } from 'lucide-react';
 import Link from 'next/link';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import { serialize } from 'next-mdx-remote-client/serialize';
+import CanvasEnhancer from '@/components/public/canvas-enhancer';
 import Comments from '@/components/public/comments';
 import ErrorMessage from '@/components/public/error-message';
 import Hero from '@/components/public/hero';
@@ -364,6 +365,7 @@ export default async function SitePage(props: {
         <div className="rendered-mdx is-plain" id="mdxpage">
           {compiledContent}
         </div>
+        <CanvasEnhancer />
       </>
     );
   }
@@ -476,6 +478,7 @@ export default async function SitePage(props: {
               <div className="rendered-mdx" id="mdxpage">
                 {compiledContent}
               </div>
+              <CanvasEnhancer />
             </BlogLayout>
           </main>
 

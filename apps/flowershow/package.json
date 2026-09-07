@@ -41,6 +41,7 @@
     "@opentelemetry/exporter-logs-otlp-http": "^0.212.0",
     "@opentelemetry/resources": "^2.10.0",
     "@opentelemetry/sdk-logs": "^0.212.0",
+    "@panzoom/panzoom": "^4.6.2",
     "@prisma/client": "5.5.2",
     "@r4ai/remark-callout": "^0.6.2",
     "@react-email/components": "^1.0.12",

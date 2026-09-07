@@ -551,6 +551,30 @@ describe('renderCanvas', () => {
     expect(style).toContain('px');
   });
 
+  it('wraps nodes and edges in a sized canvas-world transform layer', () => {
+    const result = renderCanvas(SIMPLE_CANVAS);
+
+    // The container holds a single .canvas-world child (the pan/zoom target).
+    const world = findElements(result, 'div').find((el) =>
+      hasClass(el, 'canvas-world'),
+    );
+    expect(world).toBeDefined();
+
+    const worldStyle = world!.properties.style as string;
+    // Sized to the full canvas extent with a top-left transform origin so the
+    // client controller's fit/zoom math is predictable.
+    expect(worldStyle).toContain('width:');
+    expect(worldStyle).toContain('height:');
+    expect(worldStyle).toContain('px');
+    expect(worldStyle).toContain('transform-origin: 0 0');
+
+    // Nodes and the SVG overlay live inside the world layer, not the container.
+    expect(
+      findElements(world!, 'div').filter((el) => hasClass(el, 'canvas-node')),
+    ).toHaveLength(2);
+    expect(findElements(world!, 'svg')).toHaveLength(1);
+  });
+
   it('renders arrowheads when toEnd is "arrow"', () => {
     const canvas = {
       nodes: [
