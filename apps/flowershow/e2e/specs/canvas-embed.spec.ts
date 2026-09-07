@@ -31,11 +31,15 @@ test('Inline canvas embeds render as diagrams, not broken images', async ({
       await expect(canvas).toHaveCount(1);
       await expect(canvas).not.toHaveClass(/canvas-missing|canvas-error/);
       await expect(canvas.locator('svg').first()).toBeVisible();
-      await expect(embed.getByText('Canvas E2E Node')).toBeVisible();
+      await expect(embed.getByText('Create in Obsidian')).toBeVisible();
 
-      // The regression symptom: the embed fell through to an <img> (broken
-      // next/image). There must be no image inside the embed.
-      await expect(embed.locator('img')).toHaveCount(0);
+      // The regression symptom was the whole embed falling through to a broken
+      // next/image (<img src=".../canvas-embed-demo">). The demo canvas now
+      // legitimately contains an image *node*, so rather than forbidding all
+      // images, assert none of them point at the .canvas file itself.
+      for (const img of await embed.locator('img').all()) {
+        await expect(img).not.toHaveAttribute('src', /canvas-embed-demo/);
+      }
     });
   }
 });
