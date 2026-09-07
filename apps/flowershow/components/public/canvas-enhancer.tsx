@@ -2,6 +2,14 @@
 
 import { useEffect } from 'react';
 
+/** Wheel-zoom sensitivity. Below Panzoom's default of 0.3 for a gentler feel. */
+const WHEEL_ZOOM_STEP = 0.1;
+const MIN_SCALE = 0.2;
+const MAX_SCALE = 4;
+
+const clamp = (n: number, min: number, max: number) =>
+  Math.min(Math.max(n, min), max);
+
 /**
  * Progressive enhancement for server-rendered JSON Canvas.
  *
@@ -57,14 +65,50 @@ export default function CanvasEnhancer() {
         canvas: true, // pan by dragging anywhere in the viewport, not just a node
         origin: '0 0',
         cursor: 'grab',
-        minScale: 0.2,
-        maxScale: 4,
+        minScale: MIN_SCALE,
+        maxScale: MAX_SCALE,
         startScale: fit.scale,
         startX: fit.x,
         startY: fit.y,
       });
 
-      const onWheel = (event: WheelEvent) => panzoom.zoomWithWheel(event);
+      const onWheel = (event: WheelEvent) => {
+        // If the pointer is over a node whose content overflows, let the
+        // browser scroll that node instead of zooming the whole canvas.
+        // (`overscroll-behavior: contain` on `.canvas-node` in CSS stops the
+        // scroll from chaining out to the viewport at the node's edges.)
+        const target = event.target as HTMLElement | null;
+        const node = target?.closest<HTMLElement>('.canvas-node');
+        if (node && isScrollable(node)) return;
+
+        // Zoom toward the cursor. We can't use panzoom.zoomWithWheel(): its
+        // focal-point math is hardcoded for the default HTML transform-origin
+        // of 50% 50%, but our world uses `0 0` (to keep computeFit and the
+        // SSR layout simple), so its focal correction is off by half the world
+        // size and the zoom ignores the pointer. Instead we compute the focal
+        // point ourselves. For transform-origin `0 0`, keeping the content
+        // point under the cursor fixed means `focal = pointer * targetScale`,
+        // where `pointer` is the cursor position within the viewport.
+        event.preventDefault();
+        const delta =
+          event.deltaY === 0 && event.deltaX ? event.deltaX : event.deltaY;
+        // Gentler than Panzoom's default step (0.3); matters most on trackpads
+        // that emit many wheel events. The +/- toolbar buttons are unaffected.
+        const toScale = clamp(
+          panzoom.getScale() *
+            Math.exp(((delta < 0 ? 1 : -1) * WHEEL_ZOOM_STEP) / 3),
+          MIN_SCALE,
+          MAX_SCALE,
+        );
+        const rect = container.getBoundingClientRect();
+        panzoom.zoom(toScale, {
+          animate: false,
+          focal: {
+            x: (event.clientX - rect.left) * toScale,
+            y: (event.clientY - rect.top) * toScale,
+          },
+        });
+      };
       container.addEventListener('wheel', onWheel, { passive: false });
 
       const resetToFit = () => {
@@ -137,6 +181,17 @@ export default function CanvasEnhancer() {
   }, []);
 
   return null;
+}
+
+/**
+ * Whether an element's content overflows its box (in either axis), i.e. it has
+ * something to scroll. Used to decide, on wheel, between scrolling a node and
+ * zooming the canvas. A 1px slack absorbs sub-pixel rounding on scaled nodes.
+ */
+function isScrollable(el: HTMLElement): boolean {
+  return (
+    el.scrollHeight - el.clientHeight > 1 || el.scrollWidth - el.clientWidth > 1
+  );
 }
 
 function createControls(handlers: {

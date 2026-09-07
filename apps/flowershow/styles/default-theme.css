@@ -2468,6 +2468,12 @@
 }
 
 /* ---- Canvas node content resets ---- */
+/* Wheeling over a node with overflowing content scrolls the node instead of
+   zooming the canvas (see CanvasEnhancer's onWheel). `contain` keeps that
+   scroll from chaining out to the page/viewport once the node hits its edge. */
+.canvas-node {
+  overscroll-behavior: contain;
+}
 /* Strip paragraph margins so single-line text nodes don't overflow/scroll */
 .canvas-node-content p {
   margin-top: 0 !important;
