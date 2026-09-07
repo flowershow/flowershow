@@ -88,6 +88,13 @@ export interface CanvasRenderOptions {
   nodeStrokeWidth?: number;
   /** Stroke width for edge lines. Default: 2 */
   lineStrokeWidth?: number;
+  /**
+   * CSS height for the `.canvas-container` viewport. Default (used by inline
+   * `![[x.canvas]]` embeds) is `min(80vh, contentHeight)`, which never gives a
+   * small canvas a huge empty box. Standalone canvas pages pass `'100%'` so the
+   * container fills its full-height wrapper (see `.canvas-fullwidth` in CSS).
+   */
+  containerHeight?: string;
 }
 
 type ResolvedRenderOptions = Required<
@@ -647,6 +654,7 @@ export function renderCanvas(
 ): Element {
   const options = { ...defaults, ...config };
   const { width, height, offsetX, offsetY } = calculateLayout(canvas.nodes);
+  const containerHeight = config?.containerHeight ?? `min(80vh, ${height}px)`;
 
   const nodeElements = canvas.nodes.map((node) =>
     buildNodeElement(node, offsetX, offsetY, options),
@@ -698,7 +706,7 @@ export function renderCanvas(
     'div',
     {
       className: 'canvas-container',
-      style: `position: relative; width: 100%; height: min(80vh, ${height}px); overflow: auto;`,
+      style: `position: relative; width: 100%; height: ${containerHeight}; overflow: auto;`,
     },
     [world],
   );

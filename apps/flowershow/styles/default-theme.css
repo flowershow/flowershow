@@ -2477,6 +2477,34 @@
   margin-top: 0.5em !important;
 }
 
+/* ---- Standalone canvas page (full-width layout) ---- */
+/* Rendered by page.tsx for `.canvas` files: keeps the site header/footer but
+   drops the sidebar, ToC, and prose max-width so the canvas fills all available
+   width and height. The sticky navbar reserves its own `--navbar-height` of
+   flow above this, so the wrapper fills the rest of the viewport. The height
+   chain (wrapper -> .rendered-mdx -> .canvas-page -> .canvas-container) is set
+   to 100% so the container (rendered with `containerHeight: '100%'`) fills it. */
+.canvas-fullwidth {
+  width: 100%;
+  height: calc(100vh - var(--navbar-height));
+  height: calc(100dvh - var(--navbar-height));
+  padding: 0.75rem 1rem 1rem;
+  box-sizing: border-box;
+}
+@media (min-width: 640px) {
+  .canvas-fullwidth {
+    padding: 1rem 1.5rem 1.5rem;
+  }
+}
+.canvas-fullwidth > .rendered-mdx.is-canvas {
+  max-width: none;
+  width: 100%;
+  height: 100%;
+}
+.canvas-fullwidth .canvas-page {
+  height: 100%;
+}
+
 /* ---- Canvas pan/zoom viewport ---- */
 /* The world layer is the transform target for the client pan/zoom controller. */
 .canvas-world {

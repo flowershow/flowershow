@@ -261,6 +261,10 @@ export default async function SitePage(props: {
         files: siteFilePaths,
         permalinks: permalinksMapping,
         canvasNodeFiles,
+        // Standalone canvas pages render full-bleed (no sidebar/ToC): fill the
+        // full-height `.canvas-fullwidth` wrapper rather than the 80vh cap used
+        // by inline embeds.
+        containerHeight: '100%',
       });
     } catch (error: any) {
       compiledContent = (
@@ -351,6 +355,29 @@ export default async function SitePage(props: {
   }
 
   const scopedCss = await generateScopedCss(pageContent ?? '', '#mdxpage');
+
+  // Standalone canvas pages get a dedicated full-width layout: the site header
+  // and footer (from the parent layout) stay, but the sidebar, ToC, and prose
+  // max-width are dropped so the canvas fills the width of the page.
+  if (isCanvas) {
+    return (
+      <>
+        <style
+          id="unocss-mdx"
+          dangerouslySetInnerHTML={{
+            __html: scopedCss.css,
+          }}
+        />
+        <UrlNormalizer />
+        <div className="canvas-fullwidth">
+          <div className="rendered-mdx is-canvas" id="mdxpage">
+            {compiledContent}
+          </div>
+        </div>
+        <CanvasEnhancer />
+      </>
+    );
+  }
 
   if (metadata?.layout === 'plain') {
     return (
