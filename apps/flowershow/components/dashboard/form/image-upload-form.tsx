@@ -147,20 +147,22 @@ export default function ImageUploadForm({
 
   return (
     <div
-      className={`isolate rounded-lg border border-stone-200 ${disabled ? 'bg-stone-50' : 'bg-white'}`}
+      className={`isolate rounded-lg border border-stone-200 dark:border-zinc-700 ${disabled ? 'bg-stone-50 dark:bg-zinc-950' : 'bg-white dark:bg-zinc-950'}`}
     >
       <div className="flex flex-col space-y-4 p-5 sm:p-10">
         <div className="flex flex-wrap justify-between gap-2">
           <h2 className="font-dashboard-heading text-xl">{title}</h2>
           {disabled && (
-            <div className="flex shrink-0 flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600">
+            <div className="flex shrink-0 flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600 dark:text-zinc-300">
               <span className="whitespace-nowrap">
                 Available on premium plan
               </span>
             </div>
           )}
         </div>
-        <p className="text-sm text-stone-500">{description}</p>
+        <p className="text-sm text-stone-500 dark:text-zinc-400">
+          {description}
+        </p>
 
         <input
           ref={fileInputRef}
@@ -175,7 +177,7 @@ export default function ImageUploadForm({
             type="button"
             onClick={() => !disabled && fileInputRef.current?.click()}
             disabled={isUploading || disabled}
-            className={`group relative overflow-hidden rounded-md border border-stone-300 bg-stone-50 transition-colors hover:bg-stone-100 ${
+            className={`group relative overflow-hidden rounded-md border border-stone-300 bg-stone-50 transition-colors hover:bg-stone-100 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:bg-zinc-700 ${
               isSocial
                 ? 'aspect-[1200/630] w-full max-w-lg'
                 : 'aspect-square w-20'
@@ -206,10 +208,12 @@ export default function ImageUploadForm({
               ) : (
                 <>
                   <ImageIcon
-                    className={`h-5 w-5 ${displayValue ? 'text-white' : 'text-stone-400'}`}
+                    className={`h-5 w-5 ${displayValue ? 'text-white' : 'text-stone-400 dark:text-zinc-500'}`}
                   />
                   {!displayValue && (
-                    <span className="text-xs text-stone-500">Upload</span>
+                    <span className="text-xs text-stone-500 dark:text-zinc-400">
+                      Upload
+                    </span>
                   )}
                 </>
               )}
@@ -220,7 +224,7 @@ export default function ImageUploadForm({
             <button
               type="button"
               onClick={handleRemove}
-              className="flex w-fit items-center gap-1 text-sm text-stone-500 hover:text-stone-700"
+              className="flex w-fit items-center gap-1 text-sm text-stone-500 hover:text-stone-700 dark:text-zinc-400 dark:hover:text-zinc-200"
             >
               <X className="h-3.5 w-3.5" />
               Remove
@@ -229,7 +233,7 @@ export default function ImageUploadForm({
         </div>
       </div>
 
-      <div className="rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 text-sm text-stone-500 sm:px-10">
+      <div className="rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 text-sm text-stone-500 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-400 sm:px-10">
         {helpText ??
           (isSocial
             ? 'Recommended: 1200×630px. PNG, JPG, or WebP.'

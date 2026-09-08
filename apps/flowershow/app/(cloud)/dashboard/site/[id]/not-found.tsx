@@ -18,7 +18,7 @@ export default function NotFoundSite() {
         height={400}
         className="hidden "
       />
-      <p className="text-lg text-stone-500 ">
+      <p className="text-lg text-stone-500 dark:text-zinc-400 ">
         Site does not exist, or you do not have permission to view it
       </p>
     </div>

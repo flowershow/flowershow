@@ -223,19 +223,19 @@ export default function HomePage() {
   return (
     <>
       {/* Hero Section */}
-      <div className="bg-white">
+      <div className="bg-white dark:bg-zinc-950">
         <div className="relative isolate pt-14">
           <div className="pt-12 sm:pt-16">
             <div className="mx-auto max-w-7xl px-6 lg:px-8">
               <div className="mx-auto max-w-2xl text-center">
-                <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 sm:text-6xl">
+                <h1 className="text-balance text-5xl font-semibold tracking-tight text-gray-900 dark:text-zinc-100 sm:text-6xl">
                   Drop markdown.
                   <br />
                   <span className="bg-clip-text text-transparent bg-gradient-to-r from-[#7EB75B] to-[#A8D48A]">
                     Get a website.
                   </span>
                 </h1>
-                <p className="mt-6 text-pretty text-md font-medium text-gray-800 sm:text-lg">
+                <p className="mt-6 text-pretty text-md font-medium text-gray-800 dark:text-zinc-100 sm:text-lg">
                   The fastest way to publish real content on the web. No account
                   needed. No setup. Just drag and drop.
                 </p>
@@ -244,16 +244,16 @@ export default function HomePage() {
               {/* Drop Zone - Primary interaction */}
               <div className="mt-8 sm:mt-12 max-w-3xl mx-auto">
                 <DropZone onFileSelect={handleFileSelect} />
-                <p className="text-center text-sm text-gray-400 mt-3">
+                <p className="text-center text-sm text-gray-400 dark:text-zinc-500 mt-3">
                   Publishing a GitHub repo or many pages?{' '}
                   <a
                     href="https://cloud.flowershow.app/login"
-                    className="hover:text-gray-700 underline"
+                    className="hover:text-gray-700 dark:hover:text-zinc-200 underline"
                   >
                     Sign in →
                   </a>
                 </p>
-                <p className="text-center text-sm text-gray-400 mt-2">
+                <p className="text-center text-sm text-gray-400 dark:text-zinc-500 mt-2">
                   No file handy?{' '}
                   <button
                     type="button"
@@ -269,7 +269,7 @@ export default function HomePage() {
                       a.click();
                       URL.revokeObjectURL(url);
                     }}
-                    className="underline hover:text-gray-600"
+                    className="underline hover:text-gray-600 dark:hover:text-zinc-300"
                   >
                     Try an example
                   </button>
@@ -284,10 +284,10 @@ export default function HomePage() {
       {sites && sites.length > 0 && (
         <div className="py-12 px-4">
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-zinc-100 mb-6">
               You recently published
             </h2>
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 divide-y divide-gray-100 max-h-[250px] overflow-y-auto">
+            <div className="bg-white dark:bg-zinc-950 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700 divide-y divide-gray-100 dark:divide-zinc-800 max-h-[250px] overflow-y-auto">
               {sites.map((site) => {
                 const siteUrl = getSiteUrl(site);
                 const isOwned = !site.isTemporary && !!site.user.id;
@@ -295,19 +295,19 @@ export default function HomePage() {
                 return (
                   <div
                     key={site.id}
-                    className="flex items-center justify-between p-4 hover:bg-gray-50"
+                    className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-zinc-800"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">
+                      <p className="text-sm font-medium text-gray-900 dark:text-zinc-100 truncate">
                         {site.projectName}
                       </p>
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-gray-500 dark:text-zinc-400">
                         {formatRelativeTime(site.createdAt.toISOString())}
                       </p>
                     </div>
                     <div className="flex items-center gap-3 ml-4">
                       {isOwned ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-950/40 text-green-800 dark:text-green-400">
                           Owned
                         </span>
                       ) : (
@@ -322,7 +322,7 @@ export default function HomePage() {
                         href={siteUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
                       >
                         View
                       </a>
@@ -335,7 +335,7 @@ export default function HomePage() {
                             console.error('Failed to copy URL:', err);
                           }
                         }}
-                        className="text-sm text-gray-600 hover:text-gray-900 hover:underline"
+                        className="text-sm text-gray-600 dark:text-zinc-300 hover:text-gray-900 dark:hover:text-zinc-100 hover:underline"
                       >
                         Copy URL
                       </button>
@@ -351,10 +351,10 @@ export default function HomePage() {
       {/* How it works */}
       <div className="mx-auto py-8 sm:py-16 max-w-7xl px-6 lg:px-8">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
+          <h2 className="text-pretty text-4xl font-semibold tracking-tight text-gray-900 dark:text-zinc-100 sm:text-5xl">
             Publish first. Explain later.
           </h2>
-          <p className="mt-6 text-lg text-gray-600">
+          <p className="mt-6 text-lg text-gray-600 dark:text-zinc-300">
             Three steps. Under 60 seconds.
           </p>
         </div>
@@ -376,10 +376,10 @@ export default function HomePage() {
                 />
               </svg>
             </div>
-            <h3 className="mt-6 text-lg font-semibold text-gray-900">
+            <h3 className="mt-6 text-lg font-semibold text-gray-900 dark:text-zinc-100">
               1. Drop your files
             </h3>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400">
               Drag in your Markdown files. No sign-up. No config.
             </p>
           </div>
@@ -400,10 +400,10 @@ export default function HomePage() {
                 />
               </svg>
             </div>
-            <h3 className="mt-6 text-lg font-semibold text-gray-900">
+            <h3 className="mt-6 text-lg font-semibold text-gray-900 dark:text-zinc-100">
               2. Get a live URL
             </h3>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400">
               Your site is published instantly. Copy the link and share it.
             </p>
           </div>
@@ -424,10 +424,10 @@ export default function HomePage() {
                 />
               </svg>
             </div>
-            <h3 className="mt-6 text-lg font-semibold text-gray-900">
+            <h3 className="mt-6 text-lg font-semibold text-gray-900 dark:text-zinc-100">
               3. Save it (if you want)
             </h3>
-            <p className="mt-2 text-sm text-gray-500">
+            <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400">
               Create an account later to keep your site, add a custom domain,
               and publish more.
             </p>
@@ -436,13 +436,13 @@ export default function HomePage() {
       </div>
 
       {/* Other publish methods */}
-      <div className="bg-white">
+      <div className="bg-white dark:bg-zinc-950">
         <div className="mx-auto max-w-7xl px-6 py-8 sm:py-16 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
+            <h2 className="text-4xl font-semibold tracking-tight text-gray-900 dark:text-zinc-100 sm:text-5xl">
               Need more power?
             </h2>
-            <p className="mt-6 text-lg text-gray-600">
+            <p className="mt-6 text-lg text-gray-600 dark:text-zinc-300">
               Drag and drop is the fastest start. When you&apos;re ready, pick a
               workflow that fits.
             </p>
@@ -450,7 +450,7 @@ export default function HomePage() {
           <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             <a
               href="/blog/how-to-publish-repository-with-markdown"
-              className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#B5D4A3]"
+              className="group flex flex-col rounded-2xl bg-white dark:bg-zinc-950 p-8 shadow-sm ring-1 ring-gray-200/80 dark:ring-zinc-700 transition duration-200 hover:shadow-md hover:ring-[#B5D4A3]"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EBF5E7] ring-1 ring-[#C5DDB8]">
                 <svg
@@ -475,10 +475,10 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="mt-6 text-base font-semibold text-gray-900">
+              <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-zinc-100">
                 Connect GitHub
               </h3>
-              <p className="mt-2 text-sm text-gray-500 flex-1">
+              <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400 flex-1">
                 Keep content in your repo.
                 <br />
                 Push changes — they auto-sync.
@@ -489,7 +489,7 @@ export default function HomePage() {
             </a>
             <a
               href="/uses/obsidian"
-              className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#B5D4A3]"
+              className="group flex flex-col rounded-2xl bg-white dark:bg-zinc-950 p-8 shadow-sm ring-1 ring-gray-200/80 dark:ring-zinc-700 transition duration-200 hover:shadow-md hover:ring-[#B5D4A3]"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EBF5E7] ring-1 ring-[#C5DDB8]">
                 <svg
@@ -504,10 +504,10 @@ export default function HomePage() {
                   <path d="M19.355 18.538a68.967 68.959 0 0 0 1.858-2.954.81.81 0 0 0-.062-.9c-.516-.685-1.504-2.075-2.042-3.362-.553-1.321-.636-3.375-.64-4.377a1.707 1.707 0 0 0-.358-1.05l-3.198-4.064a3.744 3.744 0 0 1-.076.543c-.106.503-.307 1.004-.536 1.5-.134.29-.29.6-.446.914l-.31.626c-.516 1.068-.997 2.227-1.132 3.59-.124 1.26.046 2.73.815 4.481.128.011.257.025.386.044a6.363 6.363 0 0 1 3.326 1.505c.916.79 1.744 1.922 2.415 3.5zM8.199 22.569c.073.012.146.02.22.02.78.024 2.095.092 3.16.29.87.16 2.593.64 4.01 1.055 1.083.316 2.198-.548 2.355-1.664.114-.814.33-1.735.725-2.58l-.01.005c-.67-1.87-1.522-3.078-2.416-3.849a5.295 5.295 0 0 0-2.778-1.257c-1.54-.216-2.952.19-3.84.45.532 2.218.368 4.829-1.425 7.531zM5.533 9.938c-.023.1-.056.197-.098.29L2.82 16.059a1.602 1.602 0 0 0 .313 1.772l4.116 4.24c2.103-3.101 1.796-6.02.836-8.3-.728-1.73-1.832-3.081-2.55-3.831zM9.32 14.01c.615-.183 1.606-.465 2.745-.534-.683-1.725-.848-3.233-.716-4.577.154-1.552.7-2.847 1.235-3.95.113-.235.223-.454.328-.664.149-.297.288-.577.419-.86.217-.47.379-.885.46-1.27.08-.38.08-.72-.014-1.043-.095-.325-.297-.675-.68-1.06a1.6 1.6 0 0 0-1.475.36l-4.95 4.452a1.602 1.602 0 0 0-.513.952l-.427 2.83c.672.59 2.328 2.316 3.335 4.711.09.21.175.43.253.653z" />
                 </svg>
               </div>
-              <h3 className="mt-6 text-base font-semibold text-gray-900">
+              <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-zinc-100">
                 Publish from Obsidian
               </h3>
-              <p className="mt-2 text-sm text-gray-500 flex-1">
+              <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400 flex-1">
                 Keep writing in your vault. Publish with our official Obsidian
                 plugin.
               </p>
@@ -517,7 +517,7 @@ export default function HomePage() {
             </a>
             <a
               href="/publish"
-              className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#B5D4A3]"
+              className="group flex flex-col rounded-2xl bg-white dark:bg-zinc-950 p-8 shadow-sm ring-1 ring-gray-200/80 dark:ring-zinc-700 transition duration-200 hover:shadow-md hover:ring-[#B5D4A3]"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EBF5E7] ring-1 ring-[#C5DDB8]">
                 <svg
@@ -535,10 +535,10 @@ export default function HomePage() {
                   <path d="m4 17 6-6-6-6" />
                 </svg>
               </div>
-              <h3 className="mt-6 text-base font-semibold text-gray-900">
+              <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-zinc-100">
                 Use the CLI
               </h3>
-              <p className="mt-2 text-sm text-gray-500 flex-1">
+              <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400 flex-1">
                 Publish from the terminal. Script it if you want.
               </p>
               <span className="mt-5 text-sm font-medium text-[#7EB75B]">
@@ -550,19 +550,19 @@ export default function HomePage() {
       </div>
 
       {/* Features - bento grid */}
-      <div className="bg-gray-50 py-6 mt-6 sm:mt-12 sm:py-12">
+      <div className="bg-gray-50 dark:bg-zinc-950 py-6 mt-6 sm:mt-12 sm:py-12">
         <div className="mx-auto max-w-2xl px-6 lg:max-w-7xl lg:px-8">
-          <h2 className="mt-2 max-w-5xl text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
+          <h2 className="mt-2 max-w-5xl text-pretty text-4xl font-semibold tracking-tight text-gray-900 dark:text-zinc-100 sm:text-5xl">
             A real website, not a preview.
           </h2>
           <div className="mt-10 grid grid-cols-1 gap-4 sm:mt-16 lg:grid-cols-6">
             <div className="flex p-px lg:col-span-3">
-              <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 max-lg:rounded-t-[2rem] lg:rounded-tl-[2rem]">
+              <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white dark:bg-zinc-800 outline outline-1 outline-black/5 dark:outline-white/10 max-lg:rounded-t-[2rem] lg:rounded-tl-[2rem]">
                 <div className="p-10">
-                  <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">
+                  <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-zinc-100">
                     No account required
                   </h3>
-                  <p className="mt-2 max-w-lg text-sm/6 text-gray-600">
+                  <p className="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-zinc-300">
                     Publish immediately. Your site gets a temporary URL that
                     works for 7 days. No sign-up, no credit card, no friction.
                   </p>
@@ -570,12 +570,12 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex p-px lg:col-span-3">
-              <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 lg:rounded-tr-[2rem]">
+              <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white dark:bg-zinc-800 outline outline-1 outline-black/5 dark:outline-white/10 lg:rounded-tr-[2rem]">
                 <div className="p-10">
-                  <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">
+                  <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-zinc-100">
                     Shareable in seconds
                   </h3>
-                  <p className="mt-2 max-w-lg text-sm/6 text-gray-600">
+                  <p className="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-zinc-300">
                     Get a live, public URL the moment your files are uploaded.
                     Share drafts, landing pages, or docs with anyone instantly.
                   </p>
@@ -583,12 +583,12 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex p-px lg:col-span-2">
-              <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5">
+              <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white dark:bg-zinc-800 outline outline-1 outline-black/5 dark:outline-white/10">
                 <div className="p-10">
-                  <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">
+                  <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-zinc-100">
                     Temporary by default
                   </h3>
-                  <p className="mt-2 max-w-lg text-sm/6 text-gray-600">
+                  <p className="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-zinc-300">
                     Disposable URLs are a feature, not a limitation. Perfect for
                     work-in-progress content you need to share fast.
                   </p>
@@ -596,12 +596,12 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex p-px lg:col-span-2">
-              <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5">
+              <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white dark:bg-zinc-800 outline outline-1 outline-black/5 dark:outline-white/10">
                 <div className="p-10">
-                  <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">
+                  <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-zinc-100">
                     Save when you&apos;re ready
                   </h3>
-                  <p className="mt-2 max-w-lg text-sm/6 text-gray-600">
+                  <p className="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-zinc-300">
                     Want to keep it? Create a free account to save your site,
                     manage multiple sites, and add a custom domain.
                   </p>
@@ -609,12 +609,12 @@ export default function HomePage() {
               </div>
             </div>
             <div className="flex p-px lg:col-span-2">
-              <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white outline outline-1 outline-black/5 max-lg:rounded-b-[2rem] lg:rounded-br-[2rem]">
+              <div className="flex flex-col w-full overflow-hidden rounded-lg bg-white dark:bg-zinc-800 outline outline-1 outline-black/5 dark:outline-white/10 max-lg:rounded-b-[2rem] lg:rounded-br-[2rem]">
                 <div className="p-10">
-                  <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900">
+                  <h3 className="mt-2 text-lg font-medium tracking-tight text-gray-900 dark:text-zinc-100">
                     Plain Markdown
                   </h3>
-                  <p className="mt-2 max-w-lg text-sm/6 text-gray-600">
+                  <p className="mt-2 max-w-lg text-sm/6 text-gray-600 dark:text-zinc-300">
                     Your files are never locked in. Take them anywhere — another
                     host, another tool, or your own infrastructure.
                   </p>
@@ -626,13 +626,13 @@ export default function HomePage() {
       </div>
 
       {/* Use cases */}
-      <div className="bg-white py-8 sm:py-16">
+      <div className="bg-white dark:bg-zinc-950 py-8 sm:py-16">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-3xl text-center">
-            <h2 className="text-pretty text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
+            <h2 className="text-pretty text-4xl font-semibold tracking-tight text-gray-900 dark:text-zinc-100 sm:text-5xl">
               What will you publish?
             </h2>
-            <p className="mt-6 text-lg text-gray-600">
+            <p className="mt-6 text-lg text-gray-600 dark:text-zinc-300">
               Blogs, docs, landing pages, knowledge bases — if it&apos;s
               Markdown, it works.
             </p>
@@ -640,7 +640,7 @@ export default function HomePage() {
           <div className="mx-auto mt-16 grid max-w-5xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             <a
               href="/uses/blogs"
-              className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#B5D4A3]"
+              className="group flex flex-col rounded-2xl bg-white dark:bg-zinc-950 p-8 shadow-sm ring-1 ring-gray-200/80 dark:ring-zinc-700 transition duration-200 hover:shadow-md hover:ring-[#B5D4A3]"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EBF5E7] ring-1 ring-[#C5DDB8]">
                 <svg
@@ -658,10 +658,10 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="mt-6 text-base font-semibold text-gray-900">
+              <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-zinc-100">
                 Blogs
               </h3>
-              <p className="mt-2 text-sm text-gray-500 flex-1">
+              <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400 flex-1">
                 Drop your writing in a folder. That&apos;s your blog.
               </p>
               <span className="mt-5 text-sm font-medium text-[#7EB75B]">
@@ -670,7 +670,7 @@ export default function HomePage() {
             </a>
             <a
               href="/uses/docs"
-              className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#B5D4A3]"
+              className="group flex flex-col rounded-2xl bg-white dark:bg-zinc-950 p-8 shadow-sm ring-1 ring-gray-200/80 dark:ring-zinc-700 transition duration-200 hover:shadow-md hover:ring-[#B5D4A3]"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EBF5E7] ring-1 ring-[#C5DDB8]">
                 <svg
@@ -688,10 +688,10 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="mt-6 text-base font-semibold text-gray-900">
+              <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-zinc-100">
                 Documentation
               </h3>
-              <p className="mt-2 text-sm text-gray-500 flex-1">
+              <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400 flex-1">
                 Your folders become sections. Your files become pages.
               </p>
               <span className="mt-5 text-sm font-medium text-[#7EB75B]">
@@ -700,7 +700,7 @@ export default function HomePage() {
             </a>
             {/* <a
               href="/uses/landing-pages"
-              className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#B5D4A3]"
+              className="group flex flex-col rounded-2xl bg-white dark:bg-zinc-950 p-8 shadow-sm ring-1 ring-gray-200/80 dark:ring-zinc-700 transition duration-200 hover:shadow-md hover:ring-[#B5D4A3]"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EBF5E7] ring-1 ring-[#C5DDB8]">
                 <svg
@@ -718,10 +718,10 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="mt-6 text-base font-semibold text-gray-900">
+              <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-zinc-100">
                 Landing pages
               </h3>
-              <p className="mt-2 text-sm text-gray-500 flex-1">
+              <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400 flex-1">
                 Share a draft or idea fast. Get a URL in under a minute.
               </p>
               <span className="mt-5 text-sm font-medium text-[#7EB75B]">
@@ -730,7 +730,7 @@ export default function HomePage() {
             </a> */}
             <a
               href="/uses/data-stories"
-              className="group flex flex-col rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200/80 transition duration-200 hover:shadow-md hover:ring-[#B5D4A3]"
+              className="group flex flex-col rounded-2xl bg-white dark:bg-zinc-950 p-8 shadow-sm ring-1 ring-gray-200/80 dark:ring-zinc-700 transition duration-200 hover:shadow-md hover:ring-[#B5D4A3]"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#EBF5E7] ring-1 ring-[#C5DDB8]">
                 <svg
@@ -748,10 +748,10 @@ export default function HomePage() {
                   />
                 </svg>
               </div>
-              <h3 className="mt-6 text-base font-semibold text-gray-900">
+              <h3 className="mt-6 text-base font-semibold text-gray-900 dark:text-zinc-100">
                 Data stories
               </h3>
-              <p className="mt-2 text-sm text-gray-500 flex-1">
+              <p className="mt-2 text-sm text-gray-500 dark:text-zinc-400 flex-1">
                 Tables, charts, and interactive data — from CSV files.
               </p>
               <span className="mt-5 text-sm font-medium text-[#7EB75B]">
@@ -763,29 +763,29 @@ export default function HomePage() {
       </div>
 
       {/* FAQ */}
-      <div className="bg-white">
+      <div className="bg-white dark:bg-zinc-950">
         <div className="mx-auto max-w-7xl px-6 py-8 sm:py-16 lg:px-8">
-          <h2 className="text-4xl font-semibold tracking-tight text-gray-900 sm:text-5xl">
+          <h2 className="text-4xl font-semibold tracking-tight text-gray-900 dark:text-zinc-100 sm:text-5xl">
             Frequently asked questions
           </h2>
-          <dl className="mt-20 divide-y divide-gray-900/10">
+          <dl className="mt-20 divide-y divide-gray-900/10 dark:divide-white/10">
             <div className="py-8 first:pt-0 last:pb-0 lg:grid lg:grid-cols-12 lg:gap-8">
-              <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5">
+              <dt className="text-base/7 font-semibold text-gray-900 dark:text-zinc-100 lg:col-span-5">
                 Do I need an account to publish?
               </dt>
               <dd className="mt-4 lg:col-span-7 lg:mt-0">
-                <p className="text-base/7 text-gray-600">
+                <p className="text-base/7 text-gray-600 dark:text-zinc-300">
                   No. Drop your files and get a live URL instantly. Your site is
                   temporary (7 days) unless you create an account to save it.
                 </p>
               </dd>
             </div>
             <div className="py-8 first:pt-0 last:pb-0 lg:grid lg:grid-cols-12 lg:gap-8">
-              <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5">
+              <dt className="text-base/7 font-semibold text-gray-900 dark:text-zinc-100 lg:col-span-5">
                 What happens when a temporary site expires?
               </dt>
               <dd className="mt-4 lg:col-span-7 lg:mt-0">
-                <p className="text-base/7 text-gray-600">
+                <p className="text-base/7 text-gray-600 dark:text-zinc-300">
                   It expires silently after 7 days. You can restore it any time
                   by creating an account. Or just publish again — it takes
                   seconds.
@@ -793,22 +793,22 @@ export default function HomePage() {
               </dd>
             </div>
             <div className="py-8 first:pt-0 last:pb-0 lg:grid lg:grid-cols-12 lg:gap-8">
-              <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5">
+              <dt className="text-base/7 font-semibold text-gray-900 dark:text-zinc-100 lg:col-span-5">
                 What file formats are supported?
               </dt>
               <dd className="mt-4 lg:col-span-7 lg:mt-0">
-                <p className="text-base/7 text-gray-600">
+                <p className="text-base/7 text-gray-600 dark:text-zinc-300">
                   Markdown (.md) and MDX (.mdx) files, plus images and assets.
                   Up to 5 files without an account.
                 </p>
               </dd>
             </div>
             <div className="py-8 first:pt-0 last:pb-0 lg:grid lg:grid-cols-12 lg:gap-8">
-              <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5">
+              <dt className="text-base/7 font-semibold text-gray-900 dark:text-zinc-100 lg:col-span-5">
                 Is there a free plan?
               </dt>
               <dd className="mt-4 lg:col-span-7 lg:mt-0">
-                <p className="text-base/7 text-gray-600">
+                <p className="text-base/7 text-gray-600 dark:text-zinc-300">
                   Yes — forever. Free accounts get saved sites with basic
                   permanence. Premium adds custom domains, multiple sites, and
                   more.
@@ -816,22 +816,22 @@ export default function HomePage() {
               </dd>
             </div>
             <div className="py-8 first:pt-0 last:pb-0 lg:grid lg:grid-cols-12 lg:gap-8">
-              <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5">
+              <dt className="text-base/7 font-semibold text-gray-900 dark:text-zinc-100 lg:col-span-5">
                 Can I use my own domain?
               </dt>
               <dd className="mt-4 lg:col-span-7 lg:mt-0">
-                <p className="text-base/7 text-gray-600">
+                <p className="text-base/7 text-gray-600 dark:text-zinc-300">
                   Yes, on the paid plan. Create an account, save your site, and
                   add a custom domain from the dashboard.
                 </p>
               </dd>
             </div>
             <div className="py-8 first:pt-0 last:pb-0 lg:grid lg:grid-cols-12 lg:gap-8">
-              <dt className="text-base/7 font-semibold text-gray-900 lg:col-span-5">
+              <dt className="text-base/7 font-semibold text-gray-900 dark:text-zinc-100 lg:col-span-5">
                 What if I want to move my content later?
               </dt>
               <dd className="mt-4 lg:col-span-7 lg:mt-0">
-                <p className="text-base/7 text-gray-600">
+                <p className="text-base/7 text-gray-600 dark:text-zinc-300">
                   Your content is plain Markdown. Take it anywhere — another
                   host, another tool, or your own infrastructure. No lock-in.
                 </p>

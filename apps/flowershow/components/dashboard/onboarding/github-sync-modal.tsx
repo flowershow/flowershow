@@ -167,7 +167,7 @@ export default function GitHubSyncModal({
       setShowModal={handleClose}
       closeOnClickOutside={!isConnecting}
     >
-      <div className="w-full md:max-w-xl bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden">
+      <div className="w-full md:max-w-xl bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden dark:bg-zinc-950 dark:md:border-zinc-700">
         {/* Connect step - no installations yet */}
         {step === 'connect' && (
           <div className="relative flex flex-col space-y-6 p-5 md:p-10">
@@ -184,7 +184,7 @@ export default function GitHubSyncModal({
             <div className="flex justify-end">
               <button
                 onClick={handleClose}
-                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900"
+                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 dark:text-zinc-300 dark:hover:text-zinc-100"
               >
                 Cancel
               </button>
@@ -199,12 +199,12 @@ export default function GitHubSyncModal({
               <h2 className="font-dashboard-heading text-2xl">
                 Sync with GitHub
               </h2>
-              <p className="text-sm text-stone-500">
+              <p className="text-sm text-stone-500 dark:text-zinc-400">
                 Connect a GitHub repository to sync content to your site.
               </p>
 
               <div className="flex flex-col space-y-2 text-left">
-                <label className="text-sm font-medium text-stone-500">
+                <label className="text-sm font-medium text-stone-500 dark:text-zinc-400">
                   <span className="flex items-center space-x-1">
                     <GithubIcon className="h-4 w-4" />
                     <span>GitHub Account</span>
@@ -212,7 +212,7 @@ export default function GitHubSyncModal({
                 </label>
                 <select
                   aria-label="GitHub Account"
-                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 focus:border-black focus:outline-none focus:ring-black"
+                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 focus:border-black focus:outline-none focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:focus:border-zinc-100 dark:focus:ring-zinc-100"
                   value={data.selectedAccount}
                   required
                   onChange={(e) => handleAccountChange(e.target.value)}
@@ -223,12 +223,12 @@ export default function GitHubSyncModal({
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-stone-500 mt-1">
+                <p className="text-xs text-stone-500 mt-1 dark:text-zinc-400">
                   Missing GitHub account?{' '}
                   <button
                     type="button"
                     onClick={handleChangeGitHubAppPermissions}
-                    className="text-sky-500 hover:underline"
+                    className="text-sky-500 hover:underline dark:text-sky-400"
                   >
                     Add GitHub account
                   </button>
@@ -236,12 +236,12 @@ export default function GitHubSyncModal({
               </div>
 
               <div className="flex flex-col space-y-2 text-left">
-                <label className="text-sm font-medium text-stone-500">
+                <label className="text-sm font-medium text-stone-500 dark:text-zinc-400">
                   Repository
                 </label>
                 <select
                   aria-label="Repository"
-                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 focus:border-black focus:outline-none focus:ring-black"
+                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 focus:border-black focus:outline-none focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:focus:border-zinc-100 dark:focus:ring-zinc-100"
                   value={data.ghRepository}
                   required
                   disabled={filteredRepositories.length === 0}
@@ -258,12 +258,12 @@ export default function GitHubSyncModal({
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-stone-500 mt-1">
+                <p className="text-xs text-stone-500 mt-1 dark:text-zinc-400">
                   Missing repository?{' '}
                   <button
                     type="button"
                     onClick={handleChangeGitHubAppPermissions}
-                    className="text-sky-500 hover:underline"
+                    className="text-sky-500 hover:underline dark:text-sky-400"
                   >
                     Adjust GitHub App permissions
                   </button>
@@ -271,7 +271,7 @@ export default function GitHubSyncModal({
               </div>
 
               <div className="flex flex-col space-y-2 text-left">
-                <label className="text-sm font-medium text-stone-500">
+                <label className="text-sm font-medium text-stone-500 dark:text-zinc-400">
                   Branch
                 </label>
                 <input
@@ -281,12 +281,12 @@ export default function GitHubSyncModal({
                     setData({ ...data, ghBranch: e.target.value })
                   }
                   required
-                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 focus:border-black focus:outline-none focus:ring-black"
+                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 focus:border-black focus:outline-none focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:focus:border-zinc-100 dark:focus:ring-zinc-100"
                 />
               </div>
 
               <div className="flex flex-col space-y-2 text-left">
-                <label className="text-sm font-medium text-stone-500">
+                <label className="text-sm font-medium text-stone-500 dark:text-zinc-400">
                   Root Directory
                 </label>
                 <input
@@ -296,15 +296,15 @@ export default function GitHubSyncModal({
                     setData({ ...data, rootDir: e.target.value })
                   }
                   placeholder="Subdirectory to publish (optional)"
-                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black"
+                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:placeholder:text-zinc-500 dark:focus:border-zinc-100 dark:focus:ring-zinc-100"
                 />
               </div>
             </div>
-            <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 md:px-10 gap-3">
+            <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-zinc-700 dark:bg-zinc-950 md:px-10 gap-3">
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900"
+                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 dark:text-zinc-300 dark:hover:text-zinc-100"
               >
                 Cancel
               </button>
@@ -314,8 +314,8 @@ export default function GitHubSyncModal({
                 className={clsx(
                   'flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium transition-all',
                   isConnecting || !data.ghRepository
-                    ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
-                    : 'border-black bg-black text-white hover:bg-white hover:text-black',
+                    ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500'
+                    : 'border-black bg-black text-white hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200',
                 )}
               >
                 {isConnecting ? (

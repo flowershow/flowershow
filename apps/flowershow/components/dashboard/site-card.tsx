@@ -27,7 +27,7 @@ export default function SiteCard({
   const displayedUrl = site.customDomain || new URL(url).host;
 
   return (
-    <div className="relative rounded-lg border border-stone-200 pb-10 shadow-md transition-all hover:shadow-xl  ">
+    <div className="relative rounded-lg border border-stone-200 bg-white dark:border-zinc-700 dark:bg-zinc-950 pb-10 shadow-md transition-all hover:shadow-xl  ">
       {site.plan === 'PREMIUM' && (
         <div className="absolute right-2 top-2 text-yellow-500">
           <Star className="h-5 w-5" />
@@ -48,7 +48,7 @@ export default function SiteCard({
           href={url}
           target="_blank"
           rel="noreferrer"
-          className="truncate rounded-md bg-stone-100 px-2 py-1 text-sm font-medium text-stone-600 transition-colors hover:bg-stone-200   "
+          className="truncate rounded-md bg-stone-100 dark:bg-zinc-800 px-2 py-1 text-sm font-medium text-stone-600 dark:text-zinc-300 transition-colors hover:bg-stone-200 dark:hover:bg-zinc-700   "
         >
           {displayedUrl} ↗
         </a>

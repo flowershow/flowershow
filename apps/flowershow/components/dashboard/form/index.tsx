@@ -159,8 +159,8 @@ export default function Form({
       onSubmit={onFormSubmit}
       /* no `action={...}` to prevent reset issues in select field (bug: https://github.com/facebook/react/issues/30580#issuecomment-2822605921)  */
       className={clsx(
-        'isolate rounded-lg border border-stone-200',
-        disabled ? 'bg-stone-50' : 'bg-white',
+        'isolate rounded-lg border border-stone-200 dark:border-zinc-700',
+        disabled ? 'bg-stone-50 dark:bg-zinc-950' : 'bg-white dark:bg-zinc-950',
       )}
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
@@ -169,13 +169,15 @@ export default function Form({
             {title}
           </h2>
           {disabled && (
-            <div className="flex shrink-0 flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600">
+            <div className="flex shrink-0 flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600 dark:text-zinc-300">
               <span className="whitespace-nowrap">{disabledLabel}</span>
             </div>
           )}
         </div>
 
-        <p className="text-sm text-stone-500">{description}</p>
+        <p className="text-sm text-stone-500 dark:text-zinc-400">
+          {description}
+        </p>
 
         {isToggleField ? (
           <span className={disabled || pending ? 'cursor-not-allowed' : ''}>
@@ -186,7 +188,7 @@ export default function Form({
               className={clsx(
                 !disabled && !pending && toggleValue
                   ? 'bg-indigo-600'
-                  : 'bg-gray-200',
+                  : 'bg-gray-200 dark:bg-zinc-700',
                 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2',
                 (disabled || pending) && 'pointer-events-none opacity-70',
               )}
@@ -212,7 +214,7 @@ export default function Form({
               disabled={disabled || pending}
               value={value}
               onChange={(e) => setValue(e.target.value)}
-              className="z-10 flex-1 rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500"
+              className="z-10 flex-1 rounded-md border border-stone-300 dark:border-zinc-700 text-sm text-stone-900 dark:text-zinc-100 placeholder-stone-300 dark:placeholder-zinc-500 focus:border-stone-500 dark:focus:border-zinc-400 focus:outline-none focus:ring-stone-500 dark:focus:ring-zinc-400"
             />
             {!disabled && value && (
               <div className="absolute right-3 z-10 flex h-full items-center">
@@ -233,7 +235,7 @@ export default function Form({
             value={value}
             onChange={(e) => setValue(e.target.value)}
             className={clsx(
-              'w-full max-w-xl rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500',
+              'w-full max-w-xl rounded-md border border-stone-300 dark:border-zinc-700 text-sm text-stone-900 dark:text-zinc-100 placeholder-stone-300 dark:placeholder-zinc-500 focus:border-stone-500 dark:focus:border-zinc-400 focus:outline-none focus:ring-stone-500 dark:focus:ring-zinc-400',
               inputAttrs.name === 'head' && 'font-mono',
             )}
           />
@@ -244,7 +246,7 @@ export default function Form({
             disabled={disabled || pending}
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="w-full max-w-md rounded-md border border-stone-300 text-sm text-stone-900 focus:border-stone-500 focus:outline-none focus:ring-stone-500"
+            className="w-full max-w-md rounded-md border border-stone-300 dark:border-zinc-700 text-sm text-stone-900 dark:text-zinc-100 focus:border-stone-500 dark:focus:border-zinc-400 focus:outline-none focus:ring-stone-500 dark:focus:ring-zinc-400"
           >
             {inputAttrs.options.map((option) => (
               <option key={option.value} value={option.value}>
@@ -263,7 +265,7 @@ export default function Form({
             disabled={disabled || pending}
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="w-full max-w-md rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500"
+            className="w-full max-w-md rounded-md border border-stone-300 dark:border-zinc-700 text-sm text-stone-900 dark:text-zinc-100 placeholder-stone-300 dark:placeholder-zinc-500 focus:border-stone-500 dark:focus:border-zinc-400 focus:outline-none focus:ring-stone-500 dark:focus:ring-zinc-400"
           />
         )}
       </div>
@@ -273,8 +275,10 @@ export default function Form({
       )}
 
       {(helpText || (!isToggleField && !disabled)) && (
-        <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
-          <div className="w-full text-sm text-stone-500">{helpText}</div>
+        <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 px-5 py-3 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
+          <div className="w-full text-sm text-stone-500 dark:text-zinc-400">
+            {helpText}
+          </div>
           {!isToggleField && !disabled && (
             <FormButton name={inputAttrs.name} pending={pending} />
           )}
@@ -291,8 +295,8 @@ function FormButton({ name, pending }: { name: string; pending: boolean }) {
       className={clsx(
         'flex h-8 w-32 shrink-0 items-center justify-center space-x-2 rounded-md border px-2 py-1 text-sm transition-all focus:outline-none sm:h-10',
         pending
-          ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
-          : 'border-black bg-black text-white hover:bg-white hover:text-black',
+          ? 'cursor-not-allowed border-stone-200 dark:border-zinc-700 bg-stone-100 dark:bg-zinc-800 text-stone-400 dark:text-zinc-500'
+          : 'border-black bg-black text-white hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200',
       )}
       disabled={pending}
       data-testid={`save-${name}`}

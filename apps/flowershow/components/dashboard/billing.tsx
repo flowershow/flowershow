@@ -154,7 +154,7 @@ export default function Billing({
   return (
     <div
       data-testid="billing"
-      className="rounded-lg border border-stone-200 bg-white"
+      className="rounded-lg border border-stone-200 bg-white dark:border-zinc-700 dark:bg-zinc-950"
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
         <h2 id="billing" className="font-dashboard-heading text-xl">
@@ -169,7 +169,7 @@ export default function Billing({
         </p>
 
         {subscription?.status === 'canceled' && (
-          <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20">
+          <span className="inline-flex items-center rounded-full bg-red-50 px-2 py-1 text-xs font-medium text-red-700 ring-1 ring-inset ring-red-600/20 dark:bg-red-950/40 dark:text-red-400">
             Expired
           </span>
         )}
@@ -182,7 +182,7 @@ export default function Billing({
                 if (!price) {
                   return (
                     <p className="mb-2 flex items-baseline gap-x-2 text-lg">
-                      <span className="text-xl font-semibold tracking-tight text-stone-900">
+                      <span className="text-xl font-semibold tracking-tight text-stone-900 dark:text-zinc-100">
                         Free
                       </span>
                     </p>
@@ -196,14 +196,14 @@ export default function Billing({
                   <p className="mb-2 flex items-baseline gap-x-2 text-lg">
                     {isEligibleForDiscount ? (
                       <>
-                        <span className="text-xl font-semibold tracking-tight text-stone-900">
+                        <span className="text-xl font-semibold tracking-tight text-stone-900 dark:text-zinc-100">
                           {formatAmount(discounted, price.currency)}
                         </span>
-                        <span className="text-stone-400 line-through">
+                        <span className="text-stone-400 line-through dark:text-zinc-500">
                           {formatAmount(price.amount, price.currency)}
                         </span>
                         <span
-                          className="cursor-help self-center rounded-full bg-pink-50 px-2 py-0.5 text-xs font-medium text-pink-700 ring-1 ring-inset ring-pink-600/20"
+                          className="cursor-help self-center rounded-full bg-pink-50 px-2 py-0.5 text-xs font-medium text-pink-700 ring-1 ring-inset ring-pink-600/20 dark:bg-pink-950/40 dark:text-pink-400"
                           title={`Multi-site bundle discount: ${nextSiteDiscountPercent}% off because you already have ${activeSiteCount} premium ${
                             activeSiteCount === 1 ? 'site' : 'sites'
                           }. Every additional site costs less.`}
@@ -212,14 +212,14 @@ export default function Billing({
                         </span>
                       </>
                     ) : (
-                      <span className="text-xl font-semibold tracking-tight text-stone-900">
+                      <span className="text-xl font-semibold tracking-tight text-stone-900 dark:text-zinc-100">
                         {formatAmount(price.amount, price.currency)}
                       </span>
                     )}
                   </p>
                 );
               })()}
-              <p className="text-stone-500">
+              <p className="text-stone-500 dark:text-zinc-400">
                 billed {frequency.label.toLowerCase()}
                 {isEligibleForDiscount && (
                   <>
@@ -232,11 +232,11 @@ export default function Billing({
             </div>
 
             {/* Multi-site bundle discount ladder */}
-            <div className="rounded-md bg-stone-50 p-3 text-sm ring-1 ring-inset ring-stone-200">
-              <p className="mb-2 font-medium text-stone-700">
+            <div className="rounded-md bg-stone-50 p-3 text-sm ring-1 ring-inset ring-stone-200 dark:bg-zinc-950 dark:ring-zinc-700">
+              <p className="mb-2 font-medium text-stone-700 dark:text-zinc-200">
                 Save more with every site
               </p>
-              <ul className="space-y-1 text-stone-600">
+              <ul className="space-y-1 text-stone-600 dark:text-zinc-300">
                 {(() => {
                   const price = getIntervalPrice(plans.PREMIUM);
                   if (!price) return null;
@@ -258,7 +258,9 @@ export default function Billing({
                       <li
                         key={row.label}
                         className={`flex items-center justify-between ${
-                          isCurrent ? 'font-semibold text-stone-900' : ''
+                          isCurrent
+                            ? 'font-semibold text-stone-900 dark:text-zinc-100'
+                            : ''
                         }`}
                       >
                         <span>{row.label}</span>
@@ -271,7 +273,7 @@ export default function Billing({
                             /{frequency.value}
                           </span>
                           {row.percentOff > 0 && (
-                            <span className="text-xs text-green-700">
+                            <span className="text-xs text-green-700 dark:text-green-400">
                               {row.percentOff}% off
                             </span>
                           )}
@@ -281,7 +283,7 @@ export default function Billing({
                   });
                 })()}
               </ul>
-              <p className="mt-2 text-xs text-stone-400">
+              <p className="mt-2 text-xs text-stone-400 dark:text-zinc-500">
                 Discounts apply automatically at checkout.
               </p>
             </div>
@@ -291,13 +293,13 @@ export default function Billing({
                 <RadioGroup
                   value={frequency}
                   onChange={setFrequency}
-                  className="grid grid-cols-2 gap-x-1 rounded-md p-1 text-center text-xs/5 font-semibold ring-1 ring-inset ring-stone-200"
+                  className="grid grid-cols-2 gap-x-1 rounded-md p-1 text-center text-xs/5 font-semibold ring-1 ring-inset ring-stone-200 dark:ring-zinc-700"
                 >
                   {frequencies.map((option) => (
                     <Radio
                       key={option.value}
                       value={option}
-                      className="cursor-pointer rounded-md px-2.5 py-1 text-stone-500 data-[checked]:bg-black data-[checked]:text-white"
+                      className="cursor-pointer rounded-md px-2.5 py-1 text-stone-500 dark:text-zinc-400 data-[checked]:bg-black data-[checked]:text-white"
                     >
                       {option.label}
                     </Radio>
@@ -325,26 +327,26 @@ export default function Billing({
                 <p className="mb-2 flex items-baseline gap-x-2 text-lg">
                   {discountPercent > 0 ? (
                     <>
-                      <span className="text-xl font-semibold tracking-tight text-stone-900">
+                      <span className="text-xl font-semibold tracking-tight text-stone-900 dark:text-zinc-100">
                         {formatAmount(charged, price.currency)}
                       </span>
-                      <span className="text-stone-400 line-through">
+                      <span className="text-stone-400 line-through dark:text-zinc-500">
                         {formatAmount(price.amount, price.currency)}
                       </span>
                       <span
-                        className="cursor-help self-center rounded-full bg-pink-50 px-2 py-0.5 text-xs font-medium text-pink-700 ring-1 ring-inset ring-pink-600/20"
+                        className="cursor-help self-center rounded-full bg-pink-50 px-2 py-0.5 text-xs font-medium text-pink-700 ring-1 ring-inset ring-pink-600/20 dark:bg-pink-950/40 dark:text-pink-400"
                         title={`You're getting ${discountPercent}% off this site as part of your multi-site bundle discount.`}
                       >
                         {discountPercent}% off
                       </span>
                     </>
                   ) : (
-                    <span className="text-xl font-semibold tracking-tight text-stone-900">
+                    <span className="text-xl font-semibold tracking-tight text-stone-900 dark:text-zinc-100">
                       {formatAmount(price.amount, price.currency)}
                     </span>
                   )}
                 </p>
-                <p className="text-stone-500">
+                <p className="text-stone-500 dark:text-zinc-400">
                   billed {interval === 'month' ? 'monthly' : 'annually'}
                 </p>
               </div>
@@ -352,9 +354,9 @@ export default function Billing({
           })()}
 
         {subscription?.status === 'active' && subscription.currentPeriodEnd && (
-          <div className="text-sm text-stone-500">
+          <div className="text-sm text-stone-500 dark:text-zinc-400">
             {subscription.cancelAtPeriodEnd ? (
-              <p className="font-medium text-amber-600">
+              <p className="font-medium text-amber-600 dark:text-amber-400">
                 Your subscription will end on{' '}
                 {new Date(subscription.currentPeriodEnd).toLocaleDateString(
                   'en-US',
@@ -368,7 +370,7 @@ export default function Billing({
                   'en-US',
                   { year: 'numeric', month: 'long', day: 'numeric' },
                 )}{' '}
-                <span className="text-stone-500">
+                <span className="text-stone-500 dark:text-zinc-400">
                   (Renews{' '}
                   {subscription.interval === 'month' ? 'monthly' : 'annually'})
                 </span>
@@ -378,8 +380,8 @@ export default function Billing({
         )}
       </div>
 
-      <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
-        <p className="w-full text-sm text-stone-500">
+      <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 dark:border-zinc-700 dark:bg-zinc-950 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
+        <p className="w-full text-sm text-stone-500 dark:text-zinc-400">
           {subscription?.status === 'active' ? (
             'Manage your subscription and payment method.'
           ) : (
@@ -389,7 +391,7 @@ export default function Billing({
                 href="https://flowershow.app/pricing"
                 target="_blank"
                 rel="noreferrer"
-                className="underline hover:text-stone-700"
+                className="underline hover:text-stone-700 dark:hover:text-zinc-200"
               >
                 See pricing
               </a>

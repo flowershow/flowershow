@@ -33,7 +33,10 @@ export const PasswordInput = forwardRef<HTMLInputElement, Props>(
         {/* --slot defines equal top/bottom row min height */}
         <div className="min-h-30 grid grid-rows-[minmax(var(--slot),1fr)_auto_minmax(var(--slot),1fr)] gap-2 [--slot:1rem]">
           {/* Row 1: Label (vertically centered within its row) */}
-          <label htmlFor={id} className="block self-end text-sm text-stone-700">
+          <label
+            htmlFor={id}
+            className="block self-end text-sm text-stone-700 dark:text-zinc-200"
+          >
             {label}
           </label>
 
@@ -50,7 +53,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, Props>(
               spellCheck={false}
               disabled={disabled}
               className={clsx(
-                'h-10 w-full rounded-md border border-stone-300 pr-10 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500',
+                'h-10 w-full rounded-md border border-stone-300 dark:border-zinc-700 pr-10 text-sm text-stone-900 dark:text-zinc-100 placeholder-stone-300 dark:placeholder-zinc-500 focus:border-stone-500 dark:focus:border-zinc-400 focus:outline-none focus:ring-stone-500 dark:focus:ring-zinc-400',
                 error &&
                   'border-red-400 focus:border-red-500 focus:ring-red-500',
                 className,
@@ -66,7 +69,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, Props>(
               <button
                 type="button"
                 onClick={() => setShow((s) => !s)}
-                className="absolute inset-y-0 right-0 m-2 inline-flex items-center rounded p-1 text-stone-500 hover:text-stone-800"
+                className="absolute inset-y-0 right-0 m-2 inline-flex items-center rounded p-1 text-stone-500 dark:text-zinc-400 hover:text-stone-800 dark:hover:text-zinc-100"
                 aria-label={show ? 'Hide password' : 'Show password'}
                 aria-pressed={show}
               >
@@ -83,7 +86,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, Props>(
             {!error && helpText && (
               <p
                 id={helpId}
-                className="line-clamp-2 text-stone-500"
+                className="line-clamp-2 text-stone-500 dark:text-zinc-400"
                 title={helpText}
               >
                 {helpText}
@@ -92,7 +95,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, Props>(
             {error && (
               <p
                 id={errId}
-                className="line-clamp-2 text-red-600"
+                className="line-clamp-2 text-red-600 dark:text-red-400"
                 aria-live="polite"
               >
                 {error}

@@ -11,7 +11,7 @@ export default function CreateSiteButton() {
     <>
       <button
         onClick={() => setShowModal(true)}
-        className="flex items-center gap-1 rounded-md border border-black bg-black px-3 py-1.5 text-sm font-medium text-white transition-all hover:bg-white hover:text-black"
+        className="flex items-center gap-1 rounded-md border border-black bg-black px-3 py-1.5 text-sm font-medium text-white transition-all hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200"
       >
         <PlusIcon className="h-4 w-4" />
         New Site

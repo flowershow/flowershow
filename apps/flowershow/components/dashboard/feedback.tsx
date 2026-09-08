@@ -96,19 +96,19 @@ export default function FeedbackModal() {
     <form
       data-testid="feedback-form"
       onSubmit={handleSubmit}
-      className="w-full rounded-md bg-white  md:max-w-md md:border md:border-stone-200 md:shadow "
+      className="w-full rounded-md bg-white dark:bg-zinc-950  md:max-w-md md:border md:border-stone-200 dark:md:border-zinc-700 md:shadow "
     >
       <div className="relative flex flex-col space-y-4 p-5 font-dashboard-body md:p-10">
         <h2 className="font-dashboard-heading text-2xl ">
           Help us make Flowershow better for you!
         </h2>
-        <p className="text-sm text-stone-500 ">
+        <p className="text-sm text-stone-500 dark:text-zinc-400 ">
           We personally review every feedback submitted and use it to improve
           your experience.
         </p>
 
         <div className="flex flex-col space-y-2">
-          <p className="text-sm font-medium text-stone-500 ">
+          <p className="text-sm font-medium text-stone-500 dark:text-zinc-400 ">
             How was your experience?
           </p>
           <div className="flex space-x-2">
@@ -123,7 +123,7 @@ export default function FeedbackModal() {
                 key={value}
                 className={`cursor-pointer px-2 py-1 text-2xl transition-all ${
                   formData.rating === value
-                    ? 'rounded-full bg-blue-100 '
+                    ? 'rounded-full bg-blue-100 dark:bg-blue-900/40 '
                     : 'hover:opacity-80'
                 }`}
               >
@@ -144,7 +144,7 @@ export default function FeedbackModal() {
         <div className="flex flex-col space-y-2">
           <label
             htmlFor="feedback"
-            className="text-sm font-medium text-stone-500 "
+            className="text-sm font-medium text-stone-500 dark:text-zinc-400 "
           >
             {feedbackPrompt}
           </label>
@@ -157,16 +157,16 @@ export default function FeedbackModal() {
             required
             rows={3}
             minLength={5}
-            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black     "
+            className="w-full rounded-md border border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 px-4 py-2 text-sm text-stone-600 dark:text-zinc-300 placeholder:text-stone-400 dark:placeholder:text-zinc-500 focus:border-black focus:outline-none focus:ring-black     "
           />
         </div>
       </div>
 
-      <div className="flex items-center justify-between rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 font-dashboard-body   md:px-10">
+      <div className="flex items-center justify-between rounded-b-lg border-t border-stone-200 dark:border-zinc-700 bg-stone-50 dark:bg-zinc-950 p-3 font-dashboard-body   md:px-10">
         <button
           type="button"
           onClick={handleDismiss}
-          className="text-sm text-stone-500 hover:text-stone-600  "
+          className="text-sm text-stone-500 dark:text-zinc-400 hover:text-stone-600 dark:hover:text-zinc-300  "
         >
           Not right now
         </button>
@@ -183,8 +183,8 @@ function SubmitButton({ disabled = false, pending = false }) {
       className={clsx(
         'flex h-10 items-center justify-center space-x-2 rounded-md border px-4 text-sm transition-all focus:outline-none',
         pending || disabled
-          ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   '
-          : 'border-black bg-black text-white hover:bg-white hover:text-black     ',
+          ? 'cursor-not-allowed border-stone-200 dark:border-zinc-700 bg-stone-100 dark:bg-zinc-800 text-stone-400 dark:text-zinc-500   '
+          : 'border-black bg-black text-white hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200     ',
       )}
       disabled={pending || disabled}
     >

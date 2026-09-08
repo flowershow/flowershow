@@ -79,11 +79,13 @@ export default function WelcomeContent({
       <h1 className="font-dashboard-heading text-3xl">
         Welcome to {siteName} 🎉
       </h1>
-      <p className="mt-3 text-stone-500">Pick how you want to get started</p>
+      <p className="mt-3 text-stone-500 dark:text-zinc-400">
+        Pick how you want to get started
+      </p>
 
       <div className="mt-10 w-full space-y-6">
         <div>
-          <h2 className="text-left text-sm font-medium text-stone-700">
+          <h2 className="text-left text-sm font-medium text-stone-700 dark:text-zinc-200">
             Start from a Template
           </h2>
           <div className="mt-2 grid w-full grid-cols-1 gap-3 sm:grid-cols-3">
@@ -100,20 +102,22 @@ export default function WelcomeContent({
                   setSelectedTemplate(t.id);
                   setActiveModal('template');
                 }}
-                className="flex flex-col items-center rounded-lg border border-stone-200 p-6 text-center transition-all hover:border-stone-400 hover:shadow-md"
+                className="flex flex-col items-center rounded-lg border border-stone-200 bg-white dark:border-zinc-700 dark:bg-zinc-950 p-6 text-center transition-all hover:border-stone-400 dark:hover:border-zinc-500 hover:shadow-md"
               >
-                <t.icon className="h-8 w-8 text-stone-600" />
-                <h3 className="mt-3 text-sm font-semibold text-stone-900">
+                <t.icon className="h-8 w-8 text-stone-600 dark:text-zinc-300" />
+                <h3 className="mt-3 text-sm font-semibold text-stone-900 dark:text-zinc-100">
                   {t.title}
                 </h3>
-                <p className="mt-1 text-xs text-stone-500">{t.description}</p>
+                <p className="mt-1 text-xs text-stone-500 dark:text-zinc-400">
+                  {t.description}
+                </p>
               </button>
             ))}
           </div>
         </div>
 
         <div>
-          <h2 className="text-left text-sm font-medium text-stone-700">
+          <h2 className="text-left text-sm font-medium text-stone-700 dark:text-zinc-200">
             Or add your own content
           </h2>
           <div className="mt-2 grid w-full grid-cols-1 gap-3 sm:grid-cols-2">
@@ -128,18 +132,18 @@ export default function WelcomeContent({
                   });
                   setActiveModal(option.id);
                 }}
-                className="relative flex flex-col items-center rounded-lg border border-stone-200 p-6 text-center transition-all hover:border-stone-400 hover:shadow-md"
+                className="relative flex flex-col items-center rounded-lg border border-stone-200 bg-white dark:border-zinc-700 dark:bg-zinc-950 p-6 text-center transition-all hover:border-stone-400 dark:hover:border-zinc-500 hover:shadow-md"
               >
                 {'beta' in option && option.beta && (
-                  <span className="absolute right-2 top-2 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                  <span className="absolute right-2 top-2 rounded-full bg-purple-100 dark:bg-purple-900/40 px-2 py-0.5 text-xs font-medium text-purple-700 dark:text-purple-400">
                     Experimental
                   </span>
                 )}
-                <option.icon className="h-8 w-8 text-stone-600" />
-                <h3 className="mt-3 text-sm font-semibold text-stone-900">
+                <option.icon className="h-8 w-8 text-stone-600 dark:text-zinc-300" />
+                <h3 className="mt-3 text-sm font-semibold text-stone-900 dark:text-zinc-100">
                   {option.title}
                 </h3>
-                <p className="mt-1 text-xs text-stone-500">
+                <p className="mt-1 text-xs text-stone-500 dark:text-zinc-400">
                   {option.description}
                 </p>
               </button>

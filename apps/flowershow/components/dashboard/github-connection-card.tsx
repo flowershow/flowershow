@@ -96,15 +96,15 @@ export default function GitHubConnectionCard({
   };
 
   return (
-    <div className="rounded-md border border-stone-200 bg-white p-6 shadow-sm">
+    <div className="rounded-md border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 p-6 shadow-sm">
       <div className="mb-4">
         <div className="flex items-center space-x-2 mb-2">
-          <GithubIcon className="h-5 w-5 text-stone-700" />
-          <h3 className="text-lg font-semibold text-stone-900">
+          <GithubIcon className="h-5 w-5 text-stone-700 dark:text-zinc-200" />
+          <h3 className="text-lg font-semibold text-stone-900 dark:text-zinc-100">
             GitHub Repository Access
           </h3>
         </div>
-        <p className="text-sm text-stone-600">
+        <p className="text-sm text-stone-600 dark:text-zinc-300">
           Grant Flowershow access to selected repositories
         </p>
       </div>
@@ -116,8 +116,8 @@ export default function GitHubConnectionCard({
           className={clsx(
             'flex h-10 w-full items-center justify-center space-x-2 rounded-md border text-sm transition-all focus:outline-none',
             isConnecting
-              ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
-              : 'border-black bg-black text-white hover:bg-white hover:text-black',
+              ? 'cursor-not-allowed border-stone-200 dark:border-zinc-700 bg-stone-100 dark:bg-zinc-800 text-stone-400 dark:text-zinc-500'
+              : 'border-black bg-black text-white hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200',
           )}
         >
           {isConnecting ? (

@@ -12,7 +12,7 @@ export default function Loading() {
           {['a', 'b', 'c', 'd', 'e', 'f'].map((id) => (
             <div
               key={id}
-              className="relative rounded-lg border border-stone-200 pb-10 shadow-md"
+              className="relative rounded-lg border border-stone-200 dark:border-zinc-700 pb-10 shadow-md"
             >
               <div className="p-4">
                 <Skeleton width="60%" height={28} borderRadius={6} />

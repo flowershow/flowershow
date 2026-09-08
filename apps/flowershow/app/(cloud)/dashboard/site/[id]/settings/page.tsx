@@ -261,7 +261,9 @@ export default async function SiteSettingsPage(props: {
         {/* General */}
         <section id="general" className="scroll-mt-24 flex flex-col space-y-6">
           <div>
-            <h2 className="text-xl font-semibold text-stone-800">General</h2>
+            <h2 className="text-xl font-semibold text-stone-800 dark:text-zinc-100">
+              General
+            </h2>
           </div>
           <Form
             title="Name"
@@ -351,7 +353,7 @@ export default async function SiteSettingsPage(props: {
           />
         </section>
 
-        <hr className="border-stone-200" />
+        <hr className="border-stone-200 dark:border-zinc-700" />
 
         {/* Appearance */}
         <section
@@ -359,7 +361,9 @@ export default async function SiteSettingsPage(props: {
           className="scroll-mt-24 flex flex-col space-y-6"
         >
           <div>
-            <h2 className="text-xl font-semibold text-stone-800">Appearance</h2>
+            <h2 className="text-xl font-semibold text-stone-800 dark:text-zinc-100">
+              Appearance
+            </h2>
           </div>
           <Form
             title="Theme"
@@ -449,7 +453,7 @@ export default async function SiteSettingsPage(props: {
           />
         </section>
 
-        <hr className="border-stone-200" />
+        <hr className="border-stone-200 dark:border-zinc-700" />
 
         {/* Navigation */}
         <section
@@ -457,7 +461,9 @@ export default async function SiteSettingsPage(props: {
           className="scroll-mt-24 flex flex-col space-y-6"
         >
           <div>
-            <h2 className="text-xl font-semibold text-stone-800">Navigation</h2>
+            <h2 className="text-xl font-semibold text-stone-800 dark:text-zinc-100">
+              Navigation
+            </h2>
           </div>
           <ImageUploadForm
             title="Logo"
@@ -571,12 +577,14 @@ export default async function SiteSettingsPage(props: {
           />
         </section>
 
-        <hr className="border-stone-200" />
+        <hr className="border-stone-200 dark:border-zinc-700" />
 
         {/* Content */}
         <section id="content" className="scroll-mt-24 flex flex-col space-y-6">
           <div>
-            <h2 className="text-xl font-semibold text-stone-800">Content</h2>
+            <h2 className="text-xl font-semibold text-stone-800 dark:text-zinc-100">
+              Content
+            </h2>
           </div>
           <Form
             title="Markdown or MDX"
@@ -764,12 +772,14 @@ export default async function SiteSettingsPage(props: {
           />
         </section>
 
-        <hr className="border-stone-200" />
+        <hr className="border-stone-200 dark:border-zinc-700" />
 
         {/* Features */}
         <section id="features" className="scroll-mt-24 flex flex-col space-y-6">
           <div>
-            <h2 className="text-xl font-semibold text-stone-800">Features</h2>
+            <h2 className="text-xl font-semibold text-stone-800 dark:text-zinc-100">
+              Features
+            </h2>
           </div>
           <Form
             title="Full-Text Search"
@@ -906,7 +916,7 @@ export default async function SiteSettingsPage(props: {
           />
         </section>
 
-        <hr className="border-stone-200" />
+        <hr className="border-stone-200 dark:border-zinc-700" />
 
         {/* Analytics */}
         <section
@@ -914,7 +924,9 @@ export default async function SiteSettingsPage(props: {
           className="scroll-mt-24 flex flex-col space-y-6"
         >
           <div>
-            <h2 className="text-xl font-semibold text-stone-800">Analytics</h2>
+            <h2 className="text-xl font-semibold text-stone-800 dark:text-zinc-100">
+              Analytics
+            </h2>
           </div>
           <Form
             title="Google Analytics"
@@ -1003,12 +1015,14 @@ export default async function SiteSettingsPage(props: {
           />
         </section>
 
-        <hr className="border-stone-200" />
+        <hr className="border-stone-200 dark:border-zinc-700" />
 
         {/* GitHub */}
         <section id="github" className="scroll-mt-24 flex flex-col space-y-6">
           <div>
-            <h2 className="text-xl font-semibold text-stone-800">GitHub</h2>
+            <h2 className="text-xl font-semibold text-stone-800 dark:text-zinc-100">
+              GitHub
+            </h2>
           </div>
           {isRepoAccessLost && (
             <RepoAccessLostForm
@@ -1025,12 +1039,12 @@ export default async function SiteSettingsPage(props: {
           />
         </section>
 
-        <hr className="border-stone-200" />
+        <hr className="border-stone-200 dark:border-zinc-700" />
 
         {/* Access & Domains */}
         <section id="access" className="scroll-mt-24 flex flex-col space-y-6">
           <div>
-            <h2 className="text-xl font-semibold text-stone-800">
+            <h2 className="text-xl font-semibold text-stone-800 dark:text-zinc-100">
               Access &amp; Domains
             </h2>
           </div>
@@ -1065,12 +1079,14 @@ export default async function SiteSettingsPage(props: {
           />
         </section>
 
-        <hr className="border-stone-200" />
+        <hr className="border-stone-200 dark:border-zinc-700" />
 
         {/* Billing */}
         <section id="billing" className="scroll-mt-24 flex flex-col space-y-6">
           <div>
-            <h2 className="text-xl font-semibold text-stone-800">Billing</h2>
+            <h2 className="text-xl font-semibold text-stone-800 dark:text-zinc-100">
+              Billing
+            </h2>
           </div>
           <Billing
             siteId={site.id}
@@ -1080,12 +1096,14 @@ export default async function SiteSettingsPage(props: {
           />
         </section>
 
-        <hr className="border-stone-200" />
+        <hr className="border-stone-200 dark:border-zinc-700" />
 
         {/* Danger Zone */}
         <section id="danger" className="scroll-mt-24 flex flex-col space-y-6">
           <div>
-            <h2 className="text-xl font-semibold text-red-700">Danger Zone</h2>
+            <h2 className="text-xl font-semibold text-red-700 dark:text-red-400">
+              Danger Zone
+            </h2>
           </div>
           <DeleteSiteForm siteName={site.projectName} />
         </section>

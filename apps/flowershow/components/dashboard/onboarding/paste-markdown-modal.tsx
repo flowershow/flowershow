@@ -124,15 +124,15 @@ export default function PasteMarkdownModal({
       setShowModal={handleClose}
       closeOnClickOutside={state !== 'publishing' && state !== 'processing'}
     >
-      <div className="w-full md:max-w-lg overflow-hidden rounded-md bg-white md:border md:border-stone-200 md:shadow">
+      <div className="w-full md:max-w-lg overflow-hidden rounded-md bg-white md:border md:border-stone-200 md:shadow dark:bg-zinc-950 dark:md:border-zinc-700">
         <div className="relative flex flex-col space-y-2 p-5 md:p-10 md:pb-0">
           <div className="flex items-center gap-3">
             <h2 className="font-dashboard-heading text-2xl">Paste Markdown</h2>
-            <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+            <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-950/40 dark:text-purple-400">
               Experimental
             </span>
           </div>
-          <p className="text-left text-sm text-stone-500">
+          <p className="text-left text-sm text-stone-500 dark:text-zinc-400">
             Paste your markdown content and publish it as a page on your site.
           </p>
         </div>
@@ -142,7 +142,7 @@ export default function PasteMarkdownModal({
             <div>
               <label
                 htmlFor="paste-markdown-textarea"
-                className="mb-1 block text-left text-xs font-medium text-stone-700"
+                className="mb-1 block text-left text-xs font-medium text-stone-700 dark:text-zinc-200"
               >
                 Markdown content
               </label>
@@ -152,7 +152,7 @@ export default function PasteMarkdownModal({
                 onChange={(e) => setMarkdown(e.target.value)}
                 placeholder={'# My Page\n\nPaste your markdown here...'}
                 rows={12}
-                className="w-full resize-none rounded-md border border-stone-200 px-3 py-2 font-mono text-sm text-stone-900 placeholder-stone-400 focus:border-stone-400 focus:outline-none"
+                className="w-full resize-none rounded-md border border-stone-200 px-3 py-2 font-mono text-sm text-stone-900 placeholder-stone-400 focus:border-stone-400 focus:outline-none dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-500"
               />
             </div>
           )}
@@ -163,7 +163,7 @@ export default function PasteMarkdownModal({
                 aria-label={
                   state === 'publishing' ? 'Publishing...' : 'Processing...'
                 }
-                className="mx-auto h-10 w-10 animate-spin text-stone-600"
+                className="mx-auto h-10 w-10 animate-spin text-stone-600 dark:text-zinc-300"
                 fill="none"
                 viewBox="0 0 24 24"
               >
@@ -181,7 +181,7 @@ export default function PasteMarkdownModal({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              <p className="mt-3 text-sm text-stone-600">
+              <p className="mt-3 text-sm text-stone-600 dark:text-zinc-300">
                 {state === 'publishing' ? 'Publishing...' : 'Processing...'}
               </p>
             </div>
@@ -190,25 +190,29 @@ export default function PasteMarkdownModal({
           {state === 'success' && (
             <div className="py-8 text-center">
               <CheckCircleIcon className="mx-auto h-10 w-10 text-green-500" />
-              <p className="mt-3 text-sm font-medium text-stone-900">
+              <p className="mt-3 text-sm font-medium text-stone-900 dark:text-zinc-100">
                 Published successfully!
               </p>
-              <p className="mt-1 text-sm text-stone-500">
+              <p className="mt-1 text-sm text-stone-500 dark:text-zinc-400">
                 Your page is ready to go.
               </p>
             </div>
           )}
 
-          {error && <p className="text-center text-sm text-red-600">{error}</p>}
+          {error && (
+            <p className="text-center text-sm text-red-600 dark:text-red-400">
+              {error}
+            </p>
+          )}
         </div>
 
-        <div className="flex items-center justify-end gap-3 rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 md:px-10">
+        <div className="flex items-center justify-end gap-3 rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-zinc-700 dark:bg-zinc-950 md:px-10">
           {(state === 'idle' || state === 'error') && (
             <>
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900"
+                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 dark:text-zinc-300 dark:hover:text-zinc-100"
               >
                 Cancel
               </button>
@@ -216,7 +220,7 @@ export default function PasteMarkdownModal({
                 type="button"
                 onClick={handlePublish}
                 disabled={!markdown.trim()}
-                className="flex h-10 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-400"
+                className="flex h-10 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-400 dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
               >
                 Publish
               </button>
@@ -227,7 +231,7 @@ export default function PasteMarkdownModal({
             <button
               type="button"
               disabled
-              className="cursor-not-allowed px-4 py-2 text-sm font-medium text-stone-400"
+              className="cursor-not-allowed px-4 py-2 text-sm font-medium text-stone-400 dark:text-zinc-500"
             >
               Publishing...
             </button>
@@ -239,14 +243,14 @@ export default function PasteMarkdownModal({
                 href={siteUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex h-10 flex-1 items-center justify-center rounded-md border border-stone-300 bg-white px-4 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50"
+                className="flex h-10 flex-1 items-center justify-center rounded-md border border-stone-300 bg-white px-4 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-800"
               >
                 View site
               </a>
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex h-10 flex-1 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black"
+                className="flex h-10 flex-1 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200"
               >
                 Go to site settings
               </button>

@@ -168,11 +168,11 @@ export default function GitHubConnectionForm({
     return (
       <div
         id="ghIntegration"
-        className="rounded-lg border border-stone-200 bg-white"
+        className="rounded-lg border border-stone-200 bg-white dark:border-zinc-700 dark:bg-zinc-950"
       >
         <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
           <h2 className="font-dashboard-heading text-xl">GitHub Integration</h2>
-          <p className="text-sm text-stone-500">
+          <p className="text-sm text-stone-500 dark:text-zinc-400">
             Connect a GitHub repository to automatically sync content.
           </p>
 
@@ -182,8 +182,8 @@ export default function GitHubConnectionForm({
             className={clsx(
               'flex h-10 w-full items-center justify-center space-x-2 rounded-md border px-4 text-sm font-medium transition-all focus:outline-none sm:w-auto',
               isButtonLoading
-                ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
-                : 'border-stone-900 text-stone-900 hover:bg-stone-50',
+                ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500'
+                : 'border-stone-900 text-stone-900 hover:bg-stone-50 dark:border-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-800',
             )}
           >
             {isButtonLoading ? (
@@ -204,11 +204,11 @@ export default function GitHubConnectionForm({
   return (
     <div
       id="ghIntegration"
-      className="rounded-lg border border-stone-200 bg-white"
+      className="rounded-lg border border-stone-200 bg-white dark:border-zinc-700 dark:bg-zinc-950"
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
         <h2 className="font-dashboard-heading text-xl">GitHub Integration</h2>
-        <p className="text-sm text-stone-500">
+        <p className="text-sm text-stone-500 dark:text-zinc-400">
           This site is connected to a GitHub repository. Content is synced from
           GitHub.
         </p>
@@ -220,7 +220,7 @@ export default function GitHubConnectionForm({
               href={`https://github.com/${ghRepository}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex gap-2 items-center justify-center rounded-full border border-stone-300 bg-white py-1 px-2 text-sm font-medium text-stone-700 hover:bg-stone-50"
+              className="inline-flex gap-2 items-center justify-center rounded-full border border-stone-300 bg-white py-1 px-2 text-sm font-medium text-stone-700 hover:bg-stone-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-800"
             >
               <GithubIcon className="h-4 w-4" />
               {ghRepository}
@@ -229,18 +229,20 @@ export default function GitHubConnectionForm({
 
           {/* Branch */}
           <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium text-stone-500">Branch</label>
+            <label className="text-sm font-medium text-stone-500 dark:text-zinc-400">
+              Branch
+            </label>
             <input
               type="text"
               value={ghBranch || ''}
               disabled
-              className="w-full rounded-md border border-stone-200 bg-stone-100 px-4 py-2 text-sm text-stone-600"
+              className="w-full rounded-md border border-stone-200 bg-stone-100 px-4 py-2 text-sm text-stone-600 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
             />
           </div>
 
           {/* Root Directory */}
           <div className="flex flex-col space-y-2">
-            <label className="text-sm font-medium text-stone-500">
+            <label className="text-sm font-medium text-stone-500 dark:text-zinc-400">
               Root Directory
             </label>
             <div className="flex items-center space-x-2">
@@ -249,7 +251,7 @@ export default function GitHubConnectionForm({
                 value={editedRootDir}
                 onChange={(e) => setEditedRootDir(e.target.value)}
                 placeholder="Repository root"
-                className="flex-1 rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black"
+                className="flex-1 rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:placeholder:text-zinc-500 dark:focus:border-zinc-100 dark:focus:ring-zinc-100"
               />
               {rootDirChanged && (
                 <button
@@ -258,8 +260,8 @@ export default function GitHubConnectionForm({
                   className={clsx(
                     'flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium transition-all focus:outline-none',
                     isSavingRootDir
-                      ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
-                      : 'border-black bg-black text-white hover:bg-white hover:text-black',
+                      ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500'
+                      : 'border-black bg-black text-white hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200',
                   )}
                 >
                   {isSavingRootDir ? (
@@ -270,7 +272,7 @@ export default function GitHubConnectionForm({
                 </button>
               )}
             </div>
-            <span className="text-xs text-stone-500">
+            <span className="text-xs text-stone-500 dark:text-zinc-400">
               The directory within your repository where content is located.
               Leave empty to use the repository root.
             </span>
@@ -278,8 +280,8 @@ export default function GitHubConnectionForm({
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-between space-y-2 rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 sm:flex-row sm:space-y-0 sm:px-10">
-        <p className="text-sm text-stone-500">
+      <div className="flex flex-col items-center justify-between space-y-2 rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-zinc-700 dark:bg-zinc-950 sm:flex-row sm:space-y-0 sm:px-10">
+        <p className="text-sm text-stone-500 dark:text-zinc-400">
           Disconnect to publish via CLI or Obsidian plugin instead.
         </p>
         <div className="flex w-full flex-col space-y-2 sm:w-auto sm:flex-row sm:space-x-2 sm:space-y-0">
@@ -289,8 +291,8 @@ export default function GitHubConnectionForm({
             className={clsx(
               'flex h-10 w-full items-center justify-center rounded-md border px-4 text-sm font-medium transition-all focus:outline-none sm:w-auto',
               isDisconnecting
-                ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
-                : 'border-red-600 bg-white text-red-600 hover:bg-red-600 hover:text-white',
+                ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500'
+                : 'border-red-600 bg-white text-red-600 hover:bg-red-600 hover:text-white dark:bg-zinc-950 dark:text-red-400',
             )}
           >
             {isDisconnecting ? <LoadingDots color="#dc2626" /> : 'Disconnect'}
@@ -453,7 +455,7 @@ function ConnectGitHubModal({
   // Show GitHub connection card if no installations
   if (installations.length === 0) {
     return (
-      <div className="w-full max-w-xl rounded-md bg-white md:border md:border-stone-200 md:shadow">
+      <div className="w-full max-w-xl rounded-md bg-white md:border md:border-stone-200 md:shadow dark:bg-zinc-950 dark:md:border-zinc-700">
         <div className="relative flex flex-col space-y-6 p-5 md:p-10">
           <h2 className="font-dashboard-heading text-2xl">
             Connect GitHub Repository
@@ -462,7 +464,7 @@ function ConnectGitHubModal({
           <button
             type="button"
             onClick={onCancel}
-            className="flex h-10 items-center justify-center rounded-md border border-stone-300 bg-white px-6 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50 focus:outline-none"
+            className="flex h-10 items-center justify-center rounded-md border border-stone-300 bg-white px-6 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50 focus:outline-none dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-800"
           >
             Cancel
           </button>
@@ -474,7 +476,7 @@ function ConnectGitHubModal({
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-xl rounded-md bg-white md:border md:border-stone-200 md:shadow"
+      className="w-full max-w-xl rounded-md bg-white md:border md:border-stone-200 md:shadow dark:bg-zinc-950 dark:md:border-zinc-700"
     >
       <div className="relative flex flex-col space-y-4 p-5 md:p-10">
         <h2 className="font-dashboard-heading text-2xl">
@@ -484,7 +486,7 @@ function ConnectGitHubModal({
         <div className="flex flex-col space-y-2">
           <label
             htmlFor="selectedAccount"
-            className="text-sm font-medium text-stone-500"
+            className="text-sm font-medium text-stone-500 dark:text-zinc-400"
           >
             <span className="flex items-center space-x-1">
               <GithubIcon className="h-4 w-4" />
@@ -494,7 +496,7 @@ function ConnectGitHubModal({
           <select
             aria-label="GitHub Account"
             name="selectedAccount"
-            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black"
+            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:placeholder:text-zinc-500 dark:focus:border-zinc-100 dark:focus:ring-zinc-100"
             value={data.selectedAccount}
             required
             onChange={(e) => handleAccountChange(e.target.value)}
@@ -505,12 +507,12 @@ function ConnectGitHubModal({
               </option>
             ))}
           </select>
-          <p className="text-xs text-stone-500 mt-1">
+          <p className="text-xs text-stone-500 mt-1 dark:text-zinc-400">
             Missing GitHub account?{' '}
             <button
               type="button"
               onClick={handleChangeGitHubAppPermissions}
-              className="text-sky-500 hover:underline"
+              className="text-sky-500 hover:underline dark:text-sky-400"
             >
               Add GitHub account →
             </button>
@@ -520,14 +522,14 @@ function ConnectGitHubModal({
         <div className="flex flex-col space-y-2">
           <label
             htmlFor="ghRepository"
-            className="text-sm font-medium text-stone-500"
+            className="text-sm font-medium text-stone-500 dark:text-zinc-400"
           >
             <span>Repository</span>
           </label>
           <select
             aria-label="Repository"
             name="ghRepository"
-            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black"
+            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:placeholder:text-zinc-500 dark:focus:border-zinc-100 dark:focus:ring-zinc-100"
             value={data.ghRepository}
             required
             disabled={
@@ -546,12 +548,12 @@ function ConnectGitHubModal({
               </option>
             ))}
           </select>
-          <p className="text-xs text-stone-500 mt-1">
+          <p className="text-xs text-stone-500 mt-1 dark:text-zinc-400">
             Missing Git repository?{' '}
             <button
               type="button"
               onClick={handleChangeGitHubAppPermissions}
-              className="text-sky-500 hover:underline"
+              className="text-sky-500 hover:underline dark:text-sky-400"
             >
               Adjust GitHub App Permissions →
             </button>
@@ -561,7 +563,7 @@ function ConnectGitHubModal({
         <div className="flex flex-col space-y-2">
           <label
             htmlFor="ghBranch"
-            className="text-sm font-medium text-stone-500"
+            className="text-sm font-medium text-stone-500 dark:text-zinc-400"
           >
             <span>Branch</span>
           </label>
@@ -572,14 +574,14 @@ function ConnectGitHubModal({
             onChange={(e) => setData({ ...data, ghBranch: e.target.value })}
             maxLength={32}
             required
-            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black"
+            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:placeholder:text-zinc-500 dark:focus:border-zinc-100 dark:focus:ring-zinc-100"
           />
         </div>
 
         <div className="flex flex-col space-y-2">
           <label
             htmlFor="rootDir"
-            className="text-sm font-medium text-stone-500"
+            className="text-sm font-medium text-stone-500 dark:text-zinc-400"
           >
             <span>Root Dir</span>
           </label>
@@ -589,19 +591,19 @@ function ConnectGitHubModal({
             value={data.rootDir}
             onChange={(e) => setData({ ...data, rootDir: e.target.value })}
             maxLength={32}
-            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black"
+            className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:placeholder:text-zinc-500 dark:focus:border-zinc-100 dark:focus:ring-zinc-100"
           />
-          <span className="text-xs text-stone-500">
+          <span className="text-xs text-stone-500 dark:text-zinc-400">
             The directory within your project, in which your content is located.
             Leave empty if you want to publish the whole repository.
           </span>
         </div>
       </div>
-      <div className="flex items-center justify-end space-x-3 rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 md:px-10">
+      <div className="flex items-center justify-end space-x-3 rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-zinc-700 dark:bg-zinc-950 md:px-10">
         <button
           type="button"
           onClick={onCancel}
-          className="flex h-10 items-center justify-center rounded-md border border-stone-300 bg-white px-6 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50 focus:outline-none"
+          className="flex h-10 items-center justify-center rounded-md border border-stone-300 bg-white px-6 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50 focus:outline-none dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-800"
         >
           Cancel
         </button>
@@ -611,8 +613,8 @@ function ConnectGitHubModal({
           className={clsx(
             'flex h-10 items-center justify-center space-x-2 rounded-md border px-6 text-sm font-medium transition-all focus:outline-none',
             isConnecting || !data.ghRepository
-              ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
-              : 'border-black bg-black text-white hover:bg-white hover:text-black',
+              ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500'
+              : 'border-black bg-black text-white hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200',
           )}
         >
           {isConnecting ? (

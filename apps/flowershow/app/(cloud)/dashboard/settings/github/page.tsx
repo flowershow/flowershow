@@ -118,26 +118,26 @@ export default function GitHubSettingsPage() {
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-stone-900 mb-2">
+        <h1 className="text-3xl font-bold text-stone-900 dark:text-zinc-100 mb-2">
           GitHub App Installations
         </h1>
-        <p className="text-stone-600">
+        <p className="text-stone-600 dark:text-zinc-300">
           Manage your GitHub App installations and repository access
         </p>
       </div>
 
       {installations.length === 0 ? (
-        <div className="rounded-md border border-stone-200 bg-white p-8 text-center">
-          <GithubIcon className="h-12 w-12 mx-auto mb-4 text-stone-400" />
-          <h3 className="text-lg font-semibold text-stone-900 mb-2">
+        <div className="rounded-md border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 p-8 text-center">
+          <GithubIcon className="h-12 w-12 mx-auto mb-4 text-stone-400 dark:text-zinc-500" />
+          <h3 className="text-lg font-semibold text-stone-900 dark:text-zinc-100 mb-2">
             No GitHub App installations
           </h3>
-          <p className="text-sm text-stone-600 mb-6">
+          <p className="text-sm text-stone-600 dark:text-zinc-300 mb-6">
             Connect your GitHub repositories to get started with Flowershow
           </p>
           <button
             onClick={handleAddMore}
-            className="inline-flex h-10 items-center justify-center space-x-2 rounded-md border border-black bg-black px-6 text-sm text-white transition-all hover:bg-white hover:text-black focus:outline-none"
+            className="inline-flex h-10 items-center justify-center space-x-2 rounded-md border border-black bg-black px-6 text-sm text-white transition-all hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 focus:outline-none"
           >
             <GithubIcon className="h-4 w-4" />
             <span>Connect GitHub Repositories</span>
@@ -148,7 +148,7 @@ export default function GitHubSettingsPage() {
           <div className="flex justify-end">
             <button
               onClick={handleAddMore}
-              className="inline-flex h-10 items-center justify-center space-x-2 rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black focus:outline-none"
+              className="inline-flex h-10 items-center justify-center space-x-2 rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 focus:outline-none"
             >
               <span>Add More Repositories</span>
             </button>
@@ -161,16 +161,16 @@ export default function GitHubSettingsPage() {
             return (
               <div
                 key={installation.id}
-                className="rounded-md border border-stone-200 bg-white p-6 shadow-sm"
+                className="rounded-md border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 p-6 shadow-sm"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <GithubIcon className="h-6 w-6 text-stone-700" />
+                    <GithubIcon className="h-6 w-6 text-stone-700 dark:text-zinc-200" />
                     <div>
-                      <h3 className="text-lg font-semibold text-stone-900">
+                      <h3 className="text-lg font-semibold text-stone-900 dark:text-zinc-100">
                         {installation.accountLogin}
                       </h3>
-                      <p className="text-sm text-stone-600">
+                      <p className="text-sm text-stone-600 dark:text-zinc-300">
                         {installation.accountType} •{' '}
                         {installation.repositories.length} repositor
                         {installation.repositories.length !== 1 ? 'ies' : 'y'}
@@ -184,8 +184,8 @@ export default function GitHubSettingsPage() {
                       className={clsx(
                         'flex h-9 items-center justify-center rounded-md border px-3 text-sm transition-all focus:outline-none',
                         isSyncing || isRemoving
-                          ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
-                          : 'border-stone-200 bg-white text-stone-700 hover:bg-stone-50',
+                          ? 'cursor-not-allowed border-stone-200 dark:border-zinc-700 bg-stone-100 dark:bg-zinc-800 text-stone-400 dark:text-zinc-500'
+                          : 'border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 text-stone-700 dark:text-zinc-200 hover:bg-stone-50 dark:hover:bg-zinc-800',
                       )}
                     >
                       {isSyncing ? <LoadingDots color="#808080" /> : 'Sync'}
@@ -194,7 +194,7 @@ export default function GitHubSettingsPage() {
                       href={`https://github.com/settings/installations`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex h-9 items-center justify-center rounded-md border border-stone-200 bg-white px-3 text-sm text-stone-700 transition-all hover:bg-stone-50 focus:outline-none"
+                      className="flex h-9 items-center justify-center rounded-md border border-stone-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-3 text-sm text-stone-700 dark:text-zinc-200 transition-all hover:bg-stone-50 dark:hover:bg-zinc-800 focus:outline-none"
                     >
                       Manage on GitHub
                     </a>
@@ -206,8 +206,8 @@ export default function GitHubSettingsPage() {
                       className={clsx(
                         'flex h-9 items-center justify-center rounded-md border px-3 text-sm transition-all focus:outline-none',
                         isSyncing || isRemoving
-                          ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
-                          : 'border-red-200 bg-white text-red-600 hover:bg-red-50',
+                          ? 'cursor-not-allowed border-stone-200 dark:border-zinc-700 bg-stone-100 dark:bg-zinc-800 text-stone-400 dark:text-zinc-500'
+                          : 'border-red-200 dark:border-red-900 bg-white dark:bg-zinc-950 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/40',
                       )}
                     >
                       {isRemoving ? <LoadingDots color="#dc2626" /> : 'Remove'}
@@ -217,14 +217,14 @@ export default function GitHubSettingsPage() {
 
                 {installation.repositories.length > 0 && (
                   <div>
-                    <h4 className="text-sm font-medium text-stone-700 mb-2">
+                    <h4 className="text-sm font-medium text-stone-700 dark:text-zinc-200 mb-2">
                       Accessible Repositories:
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       {installation.repositories.map((repo) => (
                         <div
                           key={repo.id}
-                          className="flex items-center space-x-2 text-sm text-stone-600 bg-stone-50 rounded px-3 py-2"
+                          className="flex items-center space-x-2 text-sm text-stone-600 dark:text-zinc-300 bg-stone-50 dark:bg-zinc-950 rounded px-3 py-2"
                         >
                           <span>{repo.repositoryFullName}</span>
                           {repo.isPrivate && (
@@ -241,7 +241,7 @@ export default function GitHubSettingsPage() {
                   </div>
                 )}
 
-                <p className="text-xs text-stone-500 mt-4">
+                <p className="text-xs text-stone-500 dark:text-zinc-400 mt-4">
                   Installed on{' '}
                   {new Date(installation.createdAt).toLocaleDateString()}
                 </p>

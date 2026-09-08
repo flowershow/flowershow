@@ -83,7 +83,7 @@ export default function LoginButton() {
     return (
       <div className="space-y-3 text-center">
         <h2 className="font-dashboard-heading text-lg">Check your inbox</h2>
-        <p className="text-sm text-stone-600">
+        <p className="text-sm text-stone-600 dark:text-zinc-300">
           We&apos;ve sent a sign-in link to{' '}
           <span className="font-medium">{email}</span>. Click the link in that
           email to sign in. It may take a minute to arrive.
@@ -109,23 +109,23 @@ export default function LoginButton() {
         }}
         className={`${
           isLoading
-            ? 'cursor-not-allowed bg-stone-50 '
-            : 'bg-white hover:bg-stone-50 active:bg-stone-100   '
-        } group flex h-10 w-full items-center justify-center space-x-2 rounded-md border border-stone-200 transition-colors duration-75 focus:outline-none `}
+            ? 'cursor-not-allowed bg-stone-50 dark:bg-zinc-950 '
+            : 'bg-white dark:bg-zinc-950 hover:bg-stone-50 dark:hover:bg-zinc-800 active:bg-stone-100 dark:active:bg-zinc-800   '
+        } group flex h-10 w-full items-center justify-center space-x-2 rounded-md border border-stone-200 dark:border-zinc-700 transition-colors duration-75 focus:outline-none `}
       >
         {githubLoading ? (
           <LoadingDots color="#A8A29E" />
         ) : (
           <>
             <svg
-              className="h-4 w-4 text-black "
+              className="h-4 w-4 text-black dark:text-zinc-100 "
               aria-hidden="true"
               fill="currentColor"
               viewBox="0 0 24 24"
             >
               <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
             </svg>
-            <p className="text-sm font-medium text-stone-600 ">
+            <p className="text-sm font-medium text-stone-600 dark:text-zinc-300 ">
               Continue with GitHub
             </p>
           </>
@@ -140,9 +140,9 @@ export default function LoginButton() {
         }}
         className={`${
           isLoading
-            ? 'cursor-not-allowed bg-stone-50 '
-            : 'bg-white hover:bg-stone-50 active:bg-stone-100   '
-        } group flex h-10 w-full items-center justify-center space-x-2 rounded-md border border-stone-200 transition-colors duration-75 focus:outline-none `}
+            ? 'cursor-not-allowed bg-stone-50 dark:bg-zinc-950 '
+            : 'bg-white dark:bg-zinc-950 hover:bg-stone-50 dark:hover:bg-zinc-800 active:bg-stone-100 dark:active:bg-zinc-800   '
+        } group flex h-10 w-full items-center justify-center space-x-2 rounded-md border border-stone-200 dark:border-zinc-700 transition-colors duration-75 focus:outline-none `}
       >
         {googleLoading ? (
           <LoadingDots color="#A8A29E" />
@@ -166,7 +166,7 @@ export default function LoginButton() {
                 fill="#EA4335"
               />
             </svg>
-            <p className="text-sm font-medium text-stone-600 ">
+            <p className="text-sm font-medium text-stone-600 dark:text-zinc-300 ">
               Continue with Google
             </p>
           </>
@@ -174,9 +174,11 @@ export default function LoginButton() {
       </button>
 
       <div className="flex items-center gap-3 py-1">
-        <div className="h-px flex-1 bg-stone-200" />
-        <span className="text-xs uppercase text-stone-400">or</span>
-        <div className="h-px flex-1 bg-stone-200" />
+        <div className="h-px flex-1 bg-stone-200 dark:bg-zinc-700" />
+        <span className="text-xs uppercase text-stone-400 dark:text-zinc-500">
+          or
+        </span>
+        <div className="h-px flex-1 bg-stone-200 dark:bg-zinc-700" />
       </div>
 
       <form onSubmit={handleEmailSubmit} noValidate className="space-y-3">
@@ -191,14 +193,14 @@ export default function LoginButton() {
             disabled={isLoading}
             placeholder="Enter your email"
             aria-invalid={showEmailError}
-            className={`h-10 w-full rounded-md border px-3 text-sm text-stone-700 placeholder:text-stone-400 focus:outline-none disabled:cursor-not-allowed disabled:bg-stone-50 ${
+            className={`h-10 w-full rounded-md border px-3 text-sm text-stone-700 dark:text-zinc-200 placeholder:text-stone-400 dark:placeholder:text-zinc-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-stone-50 dark:disabled:bg-zinc-950 ${
               showEmailError
-                ? 'border-red-400 focus:border-red-500'
-                : 'border-stone-200 focus:border-stone-400'
+                ? 'border-red-400 dark:border-red-900 focus:border-red-500 dark:focus:border-red-500'
+                : 'border-stone-200 dark:border-zinc-700 focus:border-stone-400 dark:focus:border-zinc-500'
             }`}
           />
           {showEmailError && (
-            <p className="text-xs text-red-500">
+            <p className="text-xs text-red-500 dark:text-red-400">
               Please enter a valid email address.
             </p>
           )}
@@ -208,7 +210,7 @@ export default function LoginButton() {
           disabled={isLoading || !email.trim()}
           className={`${
             isLoading || !email.trim()
-              ? 'cursor-not-allowed bg-stone-200 '
+              ? 'cursor-not-allowed bg-stone-200 dark:bg-zinc-700 '
               : 'bg-black hover:bg-stone-800 active:bg-stone-700   '
           } group flex h-10 w-full items-center justify-center space-x-2 rounded-md border border-transparent transition-colors duration-75 focus:outline-none `}
         >
@@ -217,7 +219,9 @@ export default function LoginButton() {
           ) : (
             <p
               className={`text-sm font-medium ${
-                email.trim() ? 'text-white' : 'text-stone-400'
+                email.trim()
+                  ? 'text-white'
+                  : 'text-stone-400 dark:text-zinc-500'
               }`}
             >
               Continue

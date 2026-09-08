@@ -56,7 +56,7 @@ export default function Nav({ children }: { children: ReactNode }) {
   return (
     <Disclosure
       as="nav"
-      className="sticky top-0 z-50 bg-white text-base font-normal shadow"
+      className="sticky top-0 z-50 bg-white text-base font-normal shadow dark:border-b dark:border-zinc-800 dark:bg-zinc-950 dark:shadow-none"
     >
       <div className="mx-auto max-w-7xl px-4">
         <div className="flex h-16 justify-between space-x-2">
@@ -65,7 +65,7 @@ export default function Nav({ children }: { children: ReactNode }) {
               href="/"
               className="flex items-center space-x-2 text-lg font-semibold tracking-tight text-primary-strong md:text-xl"
             >
-              <Image src={config.logo} width={32} height={32} alt="Logo" />
+              <Image src={config.logo} width={24} height={24} alt="Logo" />
             </Link>
             {isSiteContext && (
               <div className="flex min-w-0 items-center">
@@ -73,47 +73,47 @@ export default function Nav({ children }: { children: ReactNode }) {
                   fill="currentColor"
                   viewBox="0 0 20 20"
                   aria-hidden="true"
-                  className="h-6 w-6 shrink-0 text-gray-300"
+                  className="h-6 w-6 shrink-0 text-gray-300 dark:text-zinc-600"
                 >
                   <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
                 </svg>
                 {/* Project switcher */}
                 <Menu as="div" className="relative ml-2 min-w-0 sm:ml-4">
-                  <MenuButton className="flex max-w-[10rem] items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 sm:max-w-xs">
+                  <MenuButton className="flex max-w-[10rem] items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 dark:text-zinc-200 dark:hover:bg-zinc-800 sm:max-w-xs">
                     <span className="truncate">
                       {currentSite?.projectName ?? 'Loading…'}
                     </span>
                     <ChevronsUpDownIcon
                       aria-hidden="true"
-                      className="h-4 w-4 shrink-0 text-gray-400"
+                      className="h-4 w-4 shrink-0 text-gray-400 dark:text-zinc-500"
                     />
                   </MenuButton>
                   <MenuItems
                     transition
-                    className="absolute left-0 z-10 mt-2 max-h-96 w-64 origin-top-left overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-200 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
+                    className="absolute left-0 z-10 mt-2 max-h-96 w-64 origin-top-left overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 dark:bg-zinc-800 dark:ring-white/10 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-200 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
                   >
                     {sortedSites.map((s) => (
                       <MenuItem key={s.id}>
                         <Link
                           href={`/site/${s.id}/settings`}
                           aria-current={s.id === id ? 'page' : undefined}
-                          className="flex w-full items-center justify-between gap-2 px-4 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
+                          className="flex w-full items-center justify-between gap-2 px-4 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100 dark:text-zinc-200 dark:data-[focus]:bg-zinc-700 data-[focus]:outline-none"
                         >
                           <span className="truncate">{s.projectName}</span>
                           {s.id === id && (
                             <CheckIcon
                               aria-hidden="true"
-                              className="h-4 w-4 shrink-0 text-pink-600"
+                              className="h-4 w-4 shrink-0 text-pink-600 dark:text-pink-400"
                             />
                           )}
                         </Link>
                       </MenuItem>
                     ))}
-                    <div className="my-1 border-t border-gray-100" />
+                    <div className="my-1 border-t border-gray-100 dark:border-zinc-700" />
                     <MenuItem>
                       <Link
                         href="/"
-                        className="block w-full px-4 py-2 text-sm font-medium text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
+                        className="block w-full px-4 py-2 text-sm font-medium text-gray-700 data-[focus]:bg-gray-100 dark:text-zinc-200 dark:data-[focus]:bg-zinc-700 data-[focus]:outline-none"
                       >
                         View all sites
                       </Link>
@@ -143,7 +143,7 @@ export default function Nav({ children }: { children: ReactNode }) {
             {feedbackEnabled && (
               <button
                 type="button"
-                className="hidden rounded-md bg-pink-50 px-2.5 py-1.5 text-sm font-semibold text-pink-600 shadow-sm hover:bg-pink-100 sm:block"
+                className="hidden rounded-md bg-pink-50 px-2.5 py-1.5 text-sm font-semibold text-pink-600 shadow-sm hover:bg-pink-100 dark:bg-pink-950/40 dark:text-pink-400 dark:hover:bg-pink-900/40 sm:block"
                 onClick={() => modal?.show(<FeedbackModal />)}
               >
                 Send feedback
@@ -152,7 +152,7 @@ export default function Nav({ children }: { children: ReactNode }) {
             {/* Profile dropdown */}
             <Menu as="div" className="relative ml-3">
               <div>
-                <MenuButton className="relative flex rounded-full bg-white text-sm">
+                <MenuButton className="relative flex rounded-full bg-white text-sm dark:bg-zinc-950">
                   <span className="absolute -inset-1.5" />
                   <span className="sr-only">Open user menu</span>
                   {children}
@@ -160,12 +160,12 @@ export default function Nav({ children }: { children: ReactNode }) {
               </div>
               <MenuItems
                 transition
-                className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-200 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
+                className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 dark:bg-zinc-800 dark:ring-white/10 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-200 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
               >
                 <MenuItem>
                   <Link
                     href="/tokens"
-                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
+                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 dark:text-zinc-200 dark:data-[focus]:bg-zinc-700 data-[focus]:outline-none"
                   >
                     API Tokens
                   </Link>
@@ -173,7 +173,7 @@ export default function Nav({ children }: { children: ReactNode }) {
                 <MenuItem>
                   <Link
                     href="/settings"
-                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
+                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 dark:text-zinc-200 dark:data-[focus]:bg-zinc-700 data-[focus]:outline-none"
                   >
                     Settings
                   </Link>
@@ -184,17 +184,17 @@ export default function Nav({ children }: { children: ReactNode }) {
                       posthog.reset();
                       signOut();
                     }}
-                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
+                    className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 dark:text-zinc-200 dark:data-[focus]:bg-zinc-700 data-[focus]:outline-none"
                   >
                     Sign out
                   </button>
                 </MenuItem>
-                <div className="my-1 border-t border-gray-100 sm:hidden" />
+                <div className="my-1 border-t border-gray-100 dark:border-zinc-700 sm:hidden" />
                 <MenuItem>
                   <Link
                     href="https://flowershow.app/docs"
                     target="_blank"
-                    className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none sm:hidden"
+                    className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 dark:text-zinc-200 dark:data-[focus]:bg-zinc-700 data-[focus]:outline-none sm:hidden"
                   >
                     <span>Docs</span>
                     <ExternalLinkIcon className="ml-1 h-4" />
@@ -204,7 +204,7 @@ export default function Nav({ children }: { children: ReactNode }) {
                   <Link
                     href="https://discord.gg/JChzM5VdFn"
                     target="_blank"
-                    className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none sm:hidden"
+                    className="flex w-full items-center px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 dark:text-zinc-200 dark:data-[focus]:bg-zinc-700 data-[focus]:outline-none sm:hidden"
                   >
                     <span>Support</span>
                     <ExternalLinkIcon className="ml-1 h-4" />
@@ -215,7 +215,7 @@ export default function Nav({ children }: { children: ReactNode }) {
                     <button
                       type="button"
                       onClick={() => modal?.show(<FeedbackModal />)}
-                      className="block w-full px-4 py-2 text-left text-sm text-pink-600 data-[focus]:bg-gray-100 data-[focus]:outline-none sm:hidden"
+                      className="block w-full px-4 py-2 text-left text-sm text-pink-600 data-[focus]:bg-gray-100 dark:text-pink-400 dark:data-[focus]:bg-zinc-700 data-[focus]:outline-none sm:hidden"
                     >
                       Send feedback
                     </button>

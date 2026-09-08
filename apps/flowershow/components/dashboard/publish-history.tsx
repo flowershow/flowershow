@@ -75,9 +75,12 @@ function ChangeTypeBadge({ changeType }: { changeType: ChangeType }) {
     <span
       className={clsx(
         'rounded px-1 py-0.5 font-mono text-[10px] uppercase',
-        changeType === 'added' && 'bg-green-100 text-green-700',
-        changeType === 'updated' && 'bg-blue-100 text-blue-700',
-        changeType === 'deleted' && 'bg-stone-100 text-stone-600',
+        changeType === 'added' &&
+          'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400',
+        changeType === 'updated' &&
+          'bg-blue-100 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400',
+        changeType === 'deleted' &&
+          'bg-stone-100 text-stone-600 dark:bg-zinc-800 dark:text-zinc-300',
       )}
     >
       {changeType === 'added'
@@ -115,14 +118,14 @@ function PublishRow({
   const hasFiles = entry.files.length > 0;
 
   return (
-    <div className="border-b border-stone-100 last:border-0">
+    <div className="border-b border-stone-100 last:border-0 dark:border-zinc-800">
       <button
         type="button"
-        className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-stone-50"
+        className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-stone-50 dark:hover:bg-zinc-800"
         onClick={() => hasFiles && setExpanded((v) => !v)}
         disabled={!hasFiles}
       >
-        <div className="mt-0.5 shrink-0 text-stone-400">
+        <div className="mt-0.5 shrink-0 text-stone-400 dark:text-zinc-500">
           {hasFiles ? (
             expanded ? (
               <ChevronDownIcon className="h-4 w-4" />
@@ -137,25 +140,27 @@ function PublishRow({
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             {entry.isInProgress && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-yellow-50 px-2 py-0.5 text-xs font-medium text-yellow-700">
+              <span className="inline-flex items-center gap-1 rounded-full bg-yellow-50 px-2 py-0.5 text-xs font-medium text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400">
                 <LoaderCircleIcon className="h-3 w-3 animate-spin" />
                 In progress
               </span>
             )}
             {entry.legacy && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500">
+              <span className="inline-flex items-center gap-1 rounded-full bg-stone-100 px-2 py-0.5 text-xs font-medium text-stone-500 dark:bg-zinc-800 dark:text-zinc-400">
                 <InfoIcon className="h-3 w-3" />
                 Published
               </span>
             )}
-            <span className="rounded bg-stone-100 px-1.5 py-0.5 text-xs text-stone-600">
+            <span className="rounded bg-stone-100 px-1.5 py-0.5 text-xs text-stone-600 dark:bg-zinc-800 dark:text-zinc-300">
               {SOURCE_LABELS[entry.source]}
             </span>
-            <span className="text-xs text-stone-400">{formattedDate}</span>
+            <span className="text-xs text-stone-400 dark:text-zinc-500">
+              {formattedDate}
+            </span>
           </div>
 
           {entry.gitCommitSha && (
-            <div className="mt-1 flex items-center gap-1.5 text-xs text-stone-500">
+            <div className="mt-1 flex items-center gap-1.5 text-xs text-stone-500 dark:text-zinc-400">
               <GitCommitHorizontalIcon className="h-3 w-3 shrink-0" />
               {commitUrl ? (
                 <a
@@ -171,7 +176,7 @@ function PublishRow({
                 <span className="font-mono">{shortSha}</span>
               )}
               {entry.gitCommitMessage && (
-                <span className="min-w-0 truncate text-stone-400">
+                <span className="min-w-0 truncate text-stone-400 dark:text-zinc-500">
                   {entry.gitCommitMessage}
                 </span>
               )}
@@ -179,7 +184,7 @@ function PublishRow({
           )}
 
           {entry.legacy && (
-            <p className="mt-1 text-xs text-stone-400">
+            <p className="mt-1 text-xs text-stone-400 dark:text-zinc-500">
               {entry.source === 'cli'
                 ? 'Upgrade to CLI v2.1.0+ for detailed publish logs.'
                 : entry.source === 'obsidian_plugin'
@@ -189,21 +194,27 @@ function PublishRow({
           )}
 
           {hasFiles && (
-            <div className="mt-1.5 flex flex-wrap gap-2 text-xs text-stone-500">
+            <div className="mt-1.5 flex flex-wrap gap-2 text-xs text-stone-500 dark:text-zinc-400">
               {added > 0 && (
-                <span className="text-green-600">+{added} added</span>
+                <span className="text-green-600 dark:text-green-400">
+                  +{added} added
+                </span>
               )}
               {updated > 0 && (
-                <span className="text-blue-600">{updated} updated</span>
+                <span className="text-blue-600 dark:text-blue-400">
+                  {updated} updated
+                </span>
               )}
               {deleted > 0 && <span>{deleted} deleted</span>}
               {errors > 0 && (
-                <span className="text-red-600">
+                <span className="text-red-600 dark:text-red-400">
                   {errors} error{errors !== 1 ? 's' : ''}
                 </span>
               )}
               {canceled > 0 && (
-                <span className="text-stone-400">{canceled} canceled</span>
+                <span className="text-stone-400 dark:text-zinc-500">
+                  {canceled} canceled
+                </span>
               )}
             </div>
           )}
@@ -211,23 +222,23 @@ function PublishRow({
       </button>
 
       {expanded && hasFiles && (
-        <div className="max-h-64 overflow-y-auto border-t border-stone-100 bg-stone-50 px-4 py-2">
-          <ul className="divide-y divide-stone-100">
+        <div className="max-h-64 overflow-y-auto border-t border-stone-100 bg-stone-50 px-4 py-2 dark:border-zinc-800 dark:bg-zinc-950">
+          <ul className="divide-y divide-stone-100 dark:divide-zinc-800">
             {entry.files.map((file) => (
               <li key={file.id} className="flex items-center gap-2 py-1.5">
                 <FileStatusDot status={file.status} />
                 <ChangeTypeBadge changeType={file.changeType} />
-                <span className="min-w-0 flex-1 break-all font-mono text-xs text-stone-600">
+                <span className="min-w-0 flex-1 break-all font-mono text-xs text-stone-600 dark:text-zinc-300">
                   {file.path}
                 </span>
                 {file.status === 'canceled' && (
-                  <span className="ml-2 shrink-0 text-xs text-stone-400">
+                  <span className="ml-2 shrink-0 text-xs text-stone-400 dark:text-zinc-500">
                     canceled
                   </span>
                 )}
                 {file.error && (
                   <span
-                    className="ml-2 shrink-0 max-w-xs truncate text-xs text-red-500"
+                    className="ml-2 shrink-0 max-w-xs truncate text-xs text-red-500 dark:text-red-400"
                     title={file.error}
                   >
                     {file.error}
@@ -261,11 +272,11 @@ export default function PublishHistory({
 
   if (isLoading) {
     return (
-      <div className="overflow-hidden rounded-md border border-stone-200 bg-white">
+      <div className="overflow-hidden rounded-md border border-stone-200 bg-white dark:border-zinc-700 dark:bg-zinc-950">
         {Array.from({ length: 3 }).map((_, i) => (
           <div
             key={i}
-            className="border-b border-stone-100 px-4 py-3 last:border-0"
+            className="border-b border-stone-100 px-4 py-3 last:border-0 dark:border-zinc-800"
           >
             <div className="flex items-center gap-2">
               <Skeleton width={70} height={18} borderRadius={999} />
@@ -280,7 +291,7 @@ export default function PublishHistory({
 
   if (!publishes || publishes.length === 0) {
     return (
-      <p className="text-sm text-stone-400">
+      <p className="text-sm text-stone-400 dark:text-zinc-500">
         No publishes yet. Your publish history will appear here once you publish
         your site.
       </p>
@@ -288,7 +299,7 @@ export default function PublishHistory({
   }
 
   return (
-    <div className="overflow-hidden rounded-md border border-stone-200 bg-white">
+    <div className="overflow-hidden rounded-md border border-stone-200 bg-white dark:border-zinc-700 dark:bg-zinc-950">
       {publishes.map((entry) => (
         <PublishRow key={entry.id} entry={entry} ghRepository={ghRepository} />
       ))}

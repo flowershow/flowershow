@@ -73,7 +73,9 @@ export default function CliAuthorizePage() {
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-current border-r-transparent"></div>
-          <p className="mt-2 text-sm text-gray-600">Loading...</p>
+          <p className="mt-2 text-sm text-gray-600 dark:text-zinc-300">
+            Loading...
+          </p>
         </div>
       </div>
     );
@@ -81,12 +83,12 @@ export default function CliAuthorizePage() {
 
   if (isAuthorized) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-zinc-950 px-4 py-12 sm:px-6 lg:px-8">
         <div className="w-full max-w-md space-y-8">
           <div className="text-center">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100 dark:bg-green-950/40">
               <svg
-                className="h-6 w-6 text-green-600"
+                className="h-6 w-6 text-green-600 dark:text-green-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -99,10 +101,10 @@ export default function CliAuthorizePage() {
                 />
               </svg>
             </div>
-            <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900">
+            <h2 className="mt-6 text-3xl font-bold tracking-tight text-gray-900 dark:text-zinc-100">
               Authorization Successful
             </h2>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-gray-600 dark:text-zinc-300">
               You can now return to your CLI and continue
             </p>
           </div>
@@ -111,7 +113,7 @@ export default function CliAuthorizePage() {
             <button
               type="button"
               onClick={() => router.push('/')}
-              className="w-full rounded-md border border-gray-300 bg-stone-800 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800/80 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+              className="w-full rounded-md border border-gray-300 dark:border-zinc-700 bg-stone-800 px-4 py-2 text-sm font-medium text-white hover:bg-stone-800/80 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
             >
               Go to Dashboard
             </button>
@@ -119,7 +121,7 @@ export default function CliAuthorizePage() {
             <button
               type="button"
               onClick={() => router.push('/tokens')}
-              className="w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
+              className="w-full rounded-md border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm font-medium text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2"
             >
               Manage Tokens
             </button>
@@ -130,38 +132,42 @@ export default function CliAuthorizePage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-zinc-950 px-4 py-12 sm:px-6 lg:px-8">
       <div className="w-full max-w-md space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
+          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900 dark:text-zinc-100">
             Authorize CLI Access
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-2 text-center text-sm text-gray-600 dark:text-zinc-300">
             Confirm authorization for device code
           </p>
         </div>
 
-        <div className="mt-8 space-y-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+        <div className="mt-8 space-y-6 rounded-lg border border-gray-200 dark:border-zinc-700 bg-white dark:bg-zinc-950 p-6 shadow-sm">
           <div className="space-y-4">
             <div>
-              <p className="text-sm font-medium text-gray-700">Device Code</p>
-              <p className="mt-1 font-mono text-2xl font-bold tracking-wider text-gray-900">
+              <p className="text-sm font-medium text-gray-700 dark:text-zinc-200">
+                Device Code
+              </p>
+              <p className="mt-1 font-mono text-2xl font-bold tracking-wider text-gray-900 dark:text-zinc-100">
                 {userCode}
               </p>
             </div>
 
             <div>
-              <p className="text-sm font-medium text-gray-700">Account</p>
-              <p className="mt-1 text-sm text-gray-900">
+              <p className="text-sm font-medium text-gray-700 dark:text-zinc-200">
+                Account
+              </p>
+              <p className="mt-1 text-sm text-gray-900 dark:text-zinc-100">
                 {session?.user?.email || session?.user?.name}
               </p>
             </div>
 
-            <div className="rounded-md bg-blue-50 p-4">
+            <div className="rounded-md bg-blue-50 dark:bg-blue-950/40 p-4">
               <div className="flex">
                 <div className="flex-shrink-0">
                   <svg
-                    className="h-5 w-5 text-blue-400"
+                    className="h-5 w-5 text-blue-400 dark:text-blue-400"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
@@ -173,10 +179,10 @@ export default function CliAuthorizePage() {
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm text-blue-700">
+                  <p className="text-sm text-blue-700 dark:text-blue-400">
                     This will grant the Flowershow CLI access to:
                   </p>
-                  <ul className="mt-2 list-inside list-disc text-sm text-blue-700">
+                  <ul className="mt-2 list-inside list-disc text-sm text-blue-700 dark:text-blue-400">
                     <li>View and manage your sites</li>
                     <li>Upload and publish content</li>
                     <li>Access site settings</li>
@@ -187,8 +193,8 @@ export default function CliAuthorizePage() {
           </div>
 
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
-              <p className="text-sm text-red-800">{error}</p>
+            <div className="rounded-md bg-red-50 dark:bg-red-950/40 p-4">
+              <p className="text-sm text-red-800 dark:text-red-400">{error}</p>
             </div>
           )}
 
@@ -197,7 +203,7 @@ export default function CliAuthorizePage() {
               type="button"
               onClick={handleCancel}
               disabled={isAuthorizing}
-              className="flex-1 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-1 rounded-md border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-4 py-2 text-sm font-medium text-gray-700 dark:text-zinc-200 hover:bg-gray-50 dark:hover:bg-zinc-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>

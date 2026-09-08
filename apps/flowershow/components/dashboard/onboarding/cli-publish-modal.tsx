@@ -30,13 +30,13 @@ function CopyableCommand({ command }: { command: string }) {
 
   return (
     <div className="group relative mt-2">
-      <pre className="overflow-x-auto rounded bg-stone-50 p-3 pr-10 text-xs text-stone-700">
+      <pre className="overflow-x-auto rounded bg-stone-50 p-3 pr-10 text-xs text-stone-700 dark:bg-zinc-800 dark:text-zinc-200">
         {command}
       </pre>
       <button
         type="button"
         onClick={handleCopy}
-        className="absolute right-2 top-2 rounded p-1 text-stone-400 hover:bg-stone-200 hover:text-stone-600"
+        className="absolute right-2 top-2 rounded p-1 text-stone-400 hover:bg-stone-200 hover:text-stone-600 dark:text-zinc-500 dark:hover:bg-zinc-700 dark:hover:text-zinc-300"
         aria-label="Copy command"
       >
         {copied ? (
@@ -95,19 +95,19 @@ export default function CliPublishModal({
 
   return (
     <Modal showModal={showModal} setShowModal={handleClose}>
-      <div className="w-full md:max-w-lg bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden">
+      <div className="w-full md:max-w-lg bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden dark:bg-zinc-950 dark:md:border-zinc-700">
         <div className="p-5 md:p-10">
           <h2 className="font-dashboard-heading text-2xl">Publish from CLI</h2>
 
           {state !== 'success' ? (
             <>
               <div className="mt-6 space-y-4">
-                <div className="rounded-lg border border-stone-200 p-4">
-                  <h3 className="text-sm font-semibold text-stone-900">
+                <div className="rounded-lg border border-stone-200 p-4 dark:border-zinc-700">
+                  <h3 className="text-sm font-semibold text-stone-900 dark:text-zinc-100">
                     Step 1: Install the CLI
                   </h3>
                   <CopyableCommand command="curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh" />
-                  <p className="mt-2 text-xs text-stone-500">
+                  <p className="mt-2 text-xs text-stone-500 dark:text-zinc-400">
                     macOS / Linux only. Windows: download from the{' '}
                     <a
                       href="https://github.com/flowershow/flowershow/releases"
@@ -121,24 +121,24 @@ export default function CliPublishModal({
                   </p>
                 </div>
 
-                <div className="rounded-lg border border-stone-200 p-4">
-                  <h3 className="text-sm font-semibold text-stone-900">
+                <div className="rounded-lg border border-stone-200 p-4 dark:border-zinc-700">
+                  <h3 className="text-sm font-semibold text-stone-900 dark:text-zinc-100">
                     Step 2: Authenticate
                   </h3>
                   <CopyableCommand command="fl login" />
-                  <p className="mt-2 text-xs text-stone-500">
+                  <p className="mt-2 text-xs text-stone-500 dark:text-zinc-400">
                     This will open your browser to authorize the CLI.
                   </p>
                 </div>
 
-                <div className="rounded-lg border border-stone-200 p-4">
-                  <h3 className="text-sm font-semibold text-stone-900">
+                <div className="rounded-lg border border-stone-200 p-4 dark:border-zinc-700">
+                  <h3 className="text-sm font-semibold text-stone-900 dark:text-zinc-100">
                     Step 3: Publish your content
                   </h3>
                   <CopyableCommand
                     command={`fl --name ${siteName} ./my-content`}
                   />
-                  <p className="mt-2 text-xs text-stone-500">
+                  <p className="mt-2 text-xs text-stone-500 dark:text-zinc-400">
                     <strong>
                       Change the content path to the correct directory.
                     </strong>
@@ -149,9 +149,9 @@ export default function CliPublishModal({
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4">
+              <div className="mt-6 flex items-center gap-3 rounded-lg border border-amber-200 bg-amber-50 p-4 dark:border-amber-900 dark:bg-amber-950/40">
                 <svg
-                  className="h-5 w-5 flex-shrink-0 animate-spin text-amber-600"
+                  className="h-5 w-5 flex-shrink-0 animate-spin text-amber-600 dark:text-amber-400"
                   fill="none"
                   viewBox="0 0 24 24"
                 >
@@ -169,7 +169,7 @@ export default function CliPublishModal({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   />
                 </svg>
-                <p className="text-sm text-amber-700">
+                <p className="text-sm text-amber-700 dark:text-amber-400">
                   {state === 'waiting'
                     ? 'Waiting for content upload...'
                     : 'Processing files...'}
@@ -179,10 +179,10 @@ export default function CliPublishModal({
           ) : (
             <div className="py-8 text-center">
               <CheckCircleIcon className="mx-auto h-10 w-10 text-green-500" />
-              <p className="mt-3 text-sm font-medium text-stone-900">
+              <p className="mt-3 text-sm font-medium text-stone-900 dark:text-zinc-100">
                 Your site is live!
               </p>
-              <p className="mt-1 text-sm text-stone-500">
+              <p className="mt-1 text-sm text-stone-500 dark:text-zinc-400">
                 Your initial publish is complete. Run the same command anytime
                 you want to update your site with new content.
               </p>
@@ -190,21 +190,21 @@ export default function CliPublishModal({
           )}
         </div>
 
-        <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 md:px-10 gap-3">
+        <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-zinc-700 dark:bg-zinc-950 md:px-10 gap-3">
           {state === 'success' ? (
             <>
               <a
                 href={siteUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex h-10 flex-1 items-center justify-center rounded-md border border-stone-300 bg-white px-4 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50"
+                className="flex h-10 flex-1 items-center justify-center rounded-md border border-stone-300 bg-white px-4 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-800"
               >
                 View site
               </a>
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex h-10 flex-1 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black"
+                className="flex h-10 flex-1 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200"
               >
                 Go to site settings
               </button>
@@ -213,7 +213,7 @@ export default function CliPublishModal({
             <button
               type="button"
               onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900"
+              className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 dark:text-zinc-300 dark:hover:text-zinc-100"
             >
               Close
             </button>

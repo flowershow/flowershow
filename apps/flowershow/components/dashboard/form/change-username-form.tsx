@@ -43,16 +43,16 @@ export default function ChangeUsernameForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="rounded-lg border border-stone-200 bg-white"
+      className="rounded-lg border border-stone-200 bg-white dark:border-zinc-700 dark:bg-zinc-950"
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
         <h2 id="changeUsername" className="font-dashboard-heading text-xl">
           Change Username
         </h2>
-        <p className="text-sm text-stone-500">
+        <p className="text-sm text-stone-500 dark:text-zinc-400">
           Current username: <b>{currentUsername}</b>
         </p>
-        <p className="text-sm text-stone-500">
+        <p className="text-sm text-stone-500 dark:text-zinc-400">
           Username may only contain alphanumeric characters or single hyphens,
           and cannot begin or end with a hyphen.
         </p>
@@ -67,19 +67,11 @@ export default function ChangeUsernameForm({
           minLength={3}
           maxLength={39}
           pattern="^[a-zA-Z0-9](?:[a-zA-Z0-9]|-(?=[a-zA-Z0-9])){0,38}$"
-          className="w-full max-w-md rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500"
+          className="w-full max-w-md rounded-md border border-stone-300 px-3 py-2 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-500 dark:focus:ring-zinc-500"
         />
-        <div className="rounded-md border border-amber-200 bg-amber-50 p-3">
-          <p className="text-sm text-amber-800">
-            <span className="font-medium">Warning:</span> Your username is part
-            of your site URLs (unless on custom domains). Changing it will break
-            any existing links you&apos;ve shared and may affect search engine
-            rankings for your existing sites.
-          </p>
-        </div>
       </div>
 
-      <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 sm:flex-row sm:justify-end sm:space-x-4 sm:space-y-0 sm:px-10">
+      <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 dark:border-zinc-700 dark:bg-zinc-950 sm:flex-row sm:justify-end sm:space-x-4 sm:space-y-0 sm:px-10">
         <div className="min-w-32">
           <FormButton pending={isChangingUsername} />
         </div>
@@ -94,7 +86,7 @@ function FormButton({ pending = false }) {
       className={clsx(
         'flex h-8 min-w-32 items-center justify-center px-4 rounded-md border text-sm transition-all focus:outline-none sm:h-10',
         pending
-          ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
+          ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500'
           : 'border-stone-800 bg-stone-800 text-white hover:bg-white hover:text-stone-800',
       )}
       disabled={pending}

@@ -101,8 +101,8 @@ export default function SitePasswordProtectionForm({
     <form
       onSubmit={handleSubmit}
       className={clsx(
-        'isolate rounded-lg border border-stone-200',
-        disabled ? 'bg-stone-50' : 'bg-white',
+        'isolate rounded-lg border border-stone-200 dark:border-zinc-700',
+        disabled ? 'bg-stone-50 dark:bg-zinc-950' : 'bg-white dark:bg-zinc-950',
       )}
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
@@ -114,7 +114,7 @@ export default function SitePasswordProtectionForm({
             Password Protection
           </h2>
           {disabled && (
-            <div className="flex shrink-0 flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600">
+            <div className="flex shrink-0 flex-col justify-center rounded-full border px-3 py-0.5 text-xs font-medium text-stone-600 dark:text-zinc-300">
               <span className="whitespace-nowrap">
                 Available on premium plan
               </span>
@@ -122,7 +122,7 @@ export default function SitePasswordProtectionForm({
           )}
         </div>
 
-        <p className="text-sm text-stone-500">
+        <p className="text-sm text-stone-500 dark:text-zinc-400">
           Limit access to your site by requiring a password.
         </p>
 
@@ -134,7 +134,7 @@ export default function SitePasswordProtectionForm({
             className={clsx(
               !inputDisabled && isProtectionOn
                 ? 'bg-indigo-600'
-                : 'bg-gray-200',
+                : 'bg-gray-200 dark:bg-zinc-700',
               'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2',
               inputDisabled && 'pointer-events-none opacity-70',
             )}
@@ -150,9 +150,13 @@ export default function SitePasswordProtectionForm({
           </Switch>
 
           {isProtectionOn ? (
-            <span className="text-xs text-stone-500">Enabled</span>
+            <span className="text-xs text-stone-500 dark:text-zinc-400">
+              Enabled
+            </span>
           ) : (
-            <span className="text-xs text-stone-500">Disabled</span>
+            <span className="text-xs text-stone-500 dark:text-zinc-400">
+              Disabled
+            </span>
           )}
         </div>
 
@@ -171,9 +175,9 @@ export default function SitePasswordProtectionForm({
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
+      <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 dark:border-zinc-700 dark:bg-zinc-950 sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
         <a
-          className="w-full text-sm text-stone-500 underline"
+          className="w-full text-sm text-stone-500 underline dark:text-zinc-400"
           href="https://flowershow.app/docs/reference/password-protection"
         >
           Learn more
@@ -186,8 +190,8 @@ export default function SitePasswordProtectionForm({
             className={clsx(
               'flex h-8 w-32 shrink-0 items-center justify-center space-x-2 rounded-md border px-2 py-1 text-sm transition-all focus:outline-none sm:h-10',
               !canSave || pending
-                ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
-                : 'border-black bg-black text-white hover:bg-white hover:text-black',
+                ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500'
+                : 'border-black bg-black text-white hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200',
             )}
             disabled={!canSave || pending}
           >

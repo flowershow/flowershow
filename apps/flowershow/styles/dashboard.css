@@ -13,9 +13,9 @@
    ──────────────────────────────────────────────────── */
 @layer base {
   :root {
-    /* color-scheme: light dark; */
-
     scroll-behavior: smooth;
+
+    color-scheme: light;
 
     --color-background: 255 255 255; /* white */
     --color-primary-faint: 228 228 231; /* zinc-200 */
@@ -27,12 +27,77 @@
     --color-secondary: 251 146 60; /* orange-400 */
   }
 
-  /* :root[data-theme="light"] {
-    color-scheme: light;
-  }
   :root[data-theme="dark"] {
     color-scheme: dark;
-  } */
+
+    /* Pure-black page background. Cards (forms, settings ToC, nav header,
+       modals) sit at zinc-950 and inputs at zinc-800, so they read as gently
+       raised surfaces — their zinc-700 borders keep them delineated. */
+    --color-background: 0 0 0; /* black */
+    /* The primary scale is inverted for dark mode: "strong" stays the most
+       prominent text colour, so it becomes the lightest instead of the
+       darkest. */
+    --color-primary-faint: 63 63 70; /* zinc-700 */
+    --color-primary-muted: 113 113 122; /* zinc-500 */
+    --color-primary-subtle: 161 161 170; /* zinc-400 */
+    --color-primary: 212 212 216; /* zinc-300 */
+    --color-primary-emphasis: 228 228 231; /* zinc-200 */
+    --color-primary-strong: 244 244 245; /* zinc-100 */
+    --color-secondary: 251 146 60; /* orange-400 */
+  }
+
+  /* @tailwindcss/forms styles inputs/textareas/selects in the base layer with a
+     hard-coded white background and light border, so any field without an
+     explicit `dark:bg-*` utility stays white in dark mode. Re-tint the controls
+     here as a fallback. Per-field `dark:*` utilities live in the utilities layer
+     and still override these values where present. */
+  :root[data-theme="dark"] {
+    [type="text"],
+    [type="email"],
+    [type="url"],
+    [type="password"],
+    [type="number"],
+    [type="date"],
+    [type="datetime-local"],
+    [type="month"],
+    [type="search"],
+    [type="tel"],
+    [type="time"],
+    [type="week"],
+    textarea,
+    select,
+    select[multiple] {
+      background-color: rgb(39 39 42); /* zinc-800 */
+      border-color: rgb(63 63 70); /* zinc-700 */
+      color: rgb(228 228 231); /* zinc-200 */
+    }
+
+    [type="text"]::placeholder,
+    [type="email"]::placeholder,
+    [type="url"]::placeholder,
+    [type="password"]::placeholder,
+    [type="number"]::placeholder,
+    [type="search"]::placeholder,
+    [type="tel"]::placeholder,
+    textarea::placeholder {
+      color: rgb(113 113 122); /* zinc-500 */
+    }
+
+    /* react-loading-skeleton bakes light base/highlight colours into inline CSS
+       variables (via <SkeletonTheme> or its own defaults), so skeletons render
+       white in dark mode. Override the variables here; !important is required to
+       beat the component's inline values. */
+    .react-loading-skeleton {
+      --base-color: #27272a !important; /* zinc-800 */
+      --highlight-color: #3f3f46 !important; /* zinc-700 */
+    }
+  }
+
+  /* Avoid a flash of transition when the theme is applied before paint. */
+  .disable-theme-transitions,
+  .disable-theme-transitions * {
+    transition: none !important;
+  }
 }
 
 @layer components {

@@ -14,10 +14,10 @@ export default async function PublishHistoryPage(props: {
   return (
     <div className="mt-6 flex flex-col space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-stone-800">
+        <h2 className="text-xl font-semibold text-stone-800 dark:text-zinc-100">
           Publish History
         </h2>
-        <p className="mt-1 text-sm text-stone-500">
+        <p className="mt-1 text-sm text-stone-500 dark:text-zinc-400">
           A log of past publishes for this site, including source, status, and
           per-file details.
         </p>

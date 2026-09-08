@@ -1,3 +1,5 @@
+import ThemeSwitch from '@/components/dashboard/theme-switch';
+
 export default function DashboardFooter() {
   return (
     <footer aria-labelledby="footer-heading">
@@ -5,10 +7,11 @@ export default function DashboardFooter() {
         Footer
       </p>
       <div className="mx-auto max-w-7xl px-4 pb-[60px] pt-16 sm:px-6 sm:pb-8 sm:pt-24 lg:px-8 lg:pt-32">
-        <div className="mt-8 border-t border-gray-900/10 pt-8 sm:mt-10 lg:mt-12">
-          <p className="text-left text-sm text-gray-500">
-            &copy; 2025 Datopian, Inc. All rights reserved.
+        <div className="mt-8 flex items-center justify-between border-t border-gray-900/10 dark:border-white/10 pt-8 sm:mt-10 lg:mt-12">
+          <p className="text-left text-sm text-gray-500 dark:text-zinc-400">
+            &copy; 2026 Datopian, Inc. All rights reserved.
           </p>
+          <ThemeSwitch />
         </div>
       </div>
     </footer>

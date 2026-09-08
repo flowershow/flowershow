@@ -41,7 +41,7 @@ export default function SettingsNav({ hasGhRepository: _ }: SettingsNavProps) {
   }, []);
 
   return (
-    <ul className="border-primary-silent space-y-2 rounded-md border px-4 py-5">
+    <ul className="space-y-2 rounded-lg border border-stone-200 bg-white px-4 py-5 dark:border-zinc-700 dark:bg-zinc-950">
       {navSections.map((section) => (
         <li className="w-full" key={section.id}>
           <a

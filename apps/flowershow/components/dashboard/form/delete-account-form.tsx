@@ -39,13 +39,13 @@ export default function DeleteAccountForm({ username }: { username: string }) {
         e.preventDefault();
         handleDelete();
       }}
-      className="rounded-lg border border-red-600 bg-white "
+      className="rounded-lg border border-red-600 bg-white dark:bg-zinc-950 "
     >
       <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
         <h2 id="deleteAccount" className="font-dashboard-heading text-xl ">
           Delete Account
         </h2>
-        <p className="text-sm text-stone-500 ">
+        <p className="text-sm text-stone-500 dark:text-zinc-400 ">
           Permanently deletes your account and all associated data. Type in your
           username <b>{username}</b> to confirm.
         </p>
@@ -59,12 +59,12 @@ export default function DeleteAccountForm({ username }: { username: string }) {
           onChange={(e) => setConfirmValue(e.target.value)}
           placeholder={username}
           aria-invalid={confirmValue.length > 0 && !confirmationMatches}
-          className="w-full max-w-md rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500    "
+          className="w-full max-w-md rounded-md border border-stone-300 text-sm text-stone-900 placeholder-stone-300 focus:border-stone-500 focus:outline-none focus:ring-stone-500 dark:border-zinc-700 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-zinc-500 dark:focus:ring-zinc-500    "
         />
       </div>
 
-      <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3   sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
-        <p className="w-full text-sm text-stone-500 ">
+      <div className="flex flex-col items-center justify-center space-y-4 rounded-b-lg border-t border-stone-200 bg-stone-50 px-5 py-3 dark:border-zinc-700 dark:bg-zinc-950   sm:flex-row sm:justify-between sm:space-x-4 sm:space-y-0 sm:px-10">
+        <p className="w-full text-sm text-stone-500 dark:text-zinc-400 ">
           This action is irreversible. Please proceed with caution.
         </p>
         <FormButton
@@ -83,7 +83,7 @@ function FormButton({ pending = false, disabled = false }) {
       className={clsx(
         'flex h-8 min-w-32 text-nowrap items-center justify-center px-4 rounded-md border text-sm transition-all focus:outline-none sm:h-10',
         inactive
-          ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   '
+          ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500   '
           : 'border-red-600 bg-red-600 text-white hover:bg-white hover:text-red-600 ',
       )}
       disabled={inactive}

@@ -45,7 +45,7 @@ export default function Uploader({
       <label
         htmlFor={`${name}-upload`}
         className={clsx(
-          'group relative mt-2 flex cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50',
+          'group relative mt-2 flex cursor-pointer flex-col items-center justify-center rounded-md border border-gray-300 bg-white shadow-sm transition-all hover:bg-gray-50 dark:border-zinc-700 dark:bg-zinc-950 dark:hover:bg-zinc-800',
           aspectRatio,
           {
             'max-w-screen-md': aspectRatio === 'aspect-video',
@@ -88,14 +88,14 @@ export default function Uploader({
             dragActive ? 'border-2 border-black' : ''
           } absolute z-[3] flex h-full w-full flex-col items-center justify-center rounded-md px-10 transition-all ${
             data[name]
-              ? 'bg-white/80 opacity-0 hover:opacity-100 hover:backdrop-blur-md'
-              : 'bg-white opacity-100 hover:bg-gray-50'
+              ? 'bg-white/80 opacity-0 hover:opacity-100 hover:backdrop-blur-md dark:bg-zinc-950/80'
+              : 'bg-white opacity-100 hover:bg-gray-50 dark:bg-zinc-950 dark:hover:bg-zinc-800'
           }`}
         >
           <svg
             className={`${
               dragActive ? 'scale-110' : 'scale-100'
-            } h-7 w-7 text-gray-500 transition-all duration-75 group-hover:scale-110 group-active:scale-95`}
+            } h-7 w-7 text-gray-500 transition-all duration-75 group-hover:scale-110 group-active:scale-95 dark:text-zinc-400`}
             xmlns="http://www.w3.org/2000/svg"
             width="24"
             height="24"
@@ -110,10 +110,10 @@ export default function Uploader({
             <path d="M12 12v9"></path>
             <path d="m16 16-4-4-4 4"></path>
           </svg>
-          <p className="mt-2 text-center text-sm text-gray-500">
+          <p className="mt-2 text-center text-sm text-gray-500 dark:text-zinc-400">
             Drag and drop or click to upload.
           </p>
-          <p className="mt-2 text-center text-sm text-gray-500">
+          <p className="mt-2 text-center text-sm text-gray-500 dark:text-zinc-400">
             Max file size: 50MB
           </p>
           <span className="sr-only">Photo upload</span>

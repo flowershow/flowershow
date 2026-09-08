@@ -98,15 +98,17 @@ export default function ClaimPage() {
 
   if (state === 'loading' || state === 'claiming') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 dark:from-zinc-900 dark:to-zinc-800">
         <div className="max-w-md w-full text-center px-4">
           <div className="mb-6">
-            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-orange-500"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 dark:border-zinc-700 border-t-orange-500"></div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100 mb-2">
             Claiming your site...
           </h1>
-          <p className="text-gray-600">This will just take a moment</p>
+          <p className="text-gray-600 dark:text-zinc-300">
+            This will just take a moment
+          </p>
         </div>
       </div>
     );
@@ -114,13 +116,13 @@ export default function ClaimPage() {
 
   if (state === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 dark:from-zinc-900 dark:to-zinc-800">
         <div className="max-w-md w-full text-center px-4">
           <div className="text-6xl mb-4">⚠️</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100 mb-2">
             Claim Failed
           </h1>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <p className="text-gray-600 dark:text-zinc-300 mb-6">{error}</p>
           <button
             onClick={() =>
               router.push(`${protocol}://${env.NEXT_PUBLIC_CLOUD_DOMAIN}`)
@@ -136,17 +138,19 @@ export default function ClaimPage() {
 
   if (state === 'success' && claimedSite) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 dark:from-zinc-900 dark:to-zinc-800">
         <div className="max-w-md w-full text-center px-4">
           <div className="text-6xl mb-4">🎉</div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100 mb-2">
             Site Claimed Successfully!
           </h1>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600 dark:text-zinc-300 mb-6">
             Your site <strong>{claimedSite.projectName}</strong> is now saved to
             your account.
           </p>
-          <p className="text-sm text-gray-500">Redirecting to dashboard...</p>
+          <p className="text-sm text-gray-500 dark:text-zinc-400">
+            Redirecting to dashboard...
+          </p>
         </div>
       </div>
     );

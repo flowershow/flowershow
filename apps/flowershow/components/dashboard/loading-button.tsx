@@ -20,10 +20,10 @@ export function LoadingButton({
       className={clsx(
         'relative flex h-10 items-center justify-center rounded-md border px-4 text-sm transition-all focus:outline-none',
         loading || disabled
-          ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400   '
+          ? 'cursor-not-allowed border-stone-200 dark:border-zinc-700 bg-stone-100 dark:bg-zinc-800 text-stone-400 dark:text-zinc-500   '
           : variant === 'filled'
-            ? 'border-black bg-black text-white hover:bg-white hover:text-black     '
-            : 'border-black text-black hover:bg-stone-100   ',
+            ? 'border-black bg-black text-white hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200     '
+            : 'border-black text-black dark:text-zinc-100 hover:bg-stone-100 dark:hover:bg-zinc-800   ',
       )}
       disabled={loading || disabled}
       {...props}

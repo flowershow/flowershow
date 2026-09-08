@@ -18,7 +18,7 @@ const variantStyles = {
   },
   outline: {
     slate:
-      'ring-slate-200 text-slate-700  hover:text-slate-900 hover:ring-slate-300 active:bg-slate-100 active:text-slate-600 focus-visible:outline-blue-600 focus-visible:ring-slate-300',
+      'ring-slate-200 dark:ring-zinc-700 text-slate-700 dark:text-zinc-200  hover:text-slate-900 dark:hover:text-zinc-100 hover:ring-slate-300 dark:hover:ring-zinc-600 active:bg-slate-100 dark:active:bg-zinc-800 active:text-slate-600 dark:active:text-zinc-300 focus-visible:outline-blue-600 focus-visible:ring-slate-300 dark:focus-visible:ring-zinc-600',
     /* white:
      *     'ring-slate-700 text-white hover:ring-slate-500 active:ring-slate-700 active:text-slate-400 focus-visible:outline-white', */
   },

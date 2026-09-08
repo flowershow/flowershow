@@ -247,7 +247,7 @@ export default function TemplateModal({
       setShowModal={handleClose}
       closeOnClickOutside={!isConnecting}
     >
-      <div className="w-full md:max-w-xl overflow-hidden rounded-md bg-white md:border md:border-stone-200 md:shadow">
+      <div className="w-full md:max-w-xl overflow-hidden rounded-md bg-white md:border md:border-stone-200 md:shadow dark:bg-zinc-950 dark:md:border-zinc-700">
         {/* Step 1: Choose template */}
         {step === 'template' && (
           <div className="relative flex flex-col space-y-6 p-5 md:p-10">
@@ -255,7 +255,7 @@ export default function TemplateModal({
               <h2 className="font-dashboard-heading text-2xl">
                 Start from a Template
               </h2>
-              <p className="mt-1 text-sm text-stone-500">
+              <p className="mt-1 text-sm text-stone-500 dark:text-zinc-400">
                 Pick a template to get started.
               </p>
             </div>
@@ -266,14 +266,16 @@ export default function TemplateModal({
                   type="button"
                   key={t.id}
                   onClick={() => handleSelectTemplate(t.id)}
-                  className="flex items-center gap-4 rounded-lg border border-stone-200 p-4 text-left transition-all hover:border-stone-400 hover:shadow-sm"
+                  className="flex items-center gap-4 rounded-lg border border-stone-200 p-4 text-left transition-all hover:border-stone-400 hover:shadow-sm dark:border-zinc-700 dark:hover:border-zinc-600"
                 >
-                  <t.icon className="h-6 w-6 flex-shrink-0 text-stone-600" />
+                  <t.icon className="h-6 w-6 flex-shrink-0 text-stone-600 dark:text-zinc-300" />
                   <div>
-                    <h3 className="text-sm font-semibold text-stone-900">
+                    <h3 className="text-sm font-semibold text-stone-900 dark:text-zinc-100">
                       {t.title}
                     </h3>
-                    <p className="text-xs text-stone-500">{t.description}</p>
+                    <p className="text-xs text-stone-500 dark:text-zinc-400">
+                      {t.description}
+                    </p>
                   </div>
                 </button>
               ))}
@@ -283,7 +285,7 @@ export default function TemplateModal({
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900"
+                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 dark:text-zinc-300 dark:hover:text-zinc-100"
               >
                 Cancel
               </button>
@@ -298,18 +300,18 @@ export default function TemplateModal({
               <h2 className="font-dashboard-heading text-2xl">
                 Create Your Repository
               </h2>
-              <p className="mt-1 text-sm text-stone-500">
+              <p className="mt-1 text-sm text-stone-500 dark:text-zinc-400">
                 Create a new GitHub repository from the{' '}
-                <span className="font-medium text-stone-700">
+                <span className="font-medium text-stone-700 dark:text-zinc-200">
                   {template.title}
                 </span>{' '}
                 template, then come back here to connect it.
               </p>
             </div>
 
-            <ol className="space-y-4 text-left text-sm text-stone-600">
+            <ol className="space-y-4 text-left text-sm text-stone-600 dark:text-zinc-300">
               <li className="flex gap-3">
-                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-xs font-medium text-stone-700">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-xs font-medium text-stone-700 dark:bg-zinc-800 dark:text-zinc-200">
                   1
                 </span>
                 <div>
@@ -318,7 +320,7 @@ export default function TemplateModal({
                     href={templateUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs font-medium text-stone-700 transition-colors hover:border-stone-300 hover:bg-stone-100"
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs font-medium text-stone-700 transition-colors hover:border-stone-300 hover:bg-stone-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
                   >
                     <GithubIcon className="h-3.5 w-3.5" />
                     Use this template
@@ -327,13 +329,13 @@ export default function TemplateModal({
                 </div>
               </li>
               <li className="flex gap-3">
-                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-xs font-medium text-stone-700">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-xs font-medium text-stone-700 dark:bg-zinc-800 dark:text-zinc-200">
                   2
                 </span>
                 <p>Choose a name for your new repository and create it.</p>
               </li>
               <li className="flex gap-3">
-                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-xs font-medium text-stone-700">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-xs font-medium text-stone-700 dark:bg-zinc-800 dark:text-zinc-200">
                   3
                 </span>
                 <div>
@@ -341,7 +343,7 @@ export default function TemplateModal({
                   <button
                     type="button"
                     onClick={handleChangeGitHubAppPermissions}
-                    className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs font-medium text-stone-700 transition-colors hover:border-stone-300 hover:bg-stone-100"
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-stone-200 bg-stone-50 px-3 py-1.5 text-xs font-medium text-stone-700 transition-colors hover:border-stone-300 hover:bg-stone-100 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:border-zinc-600 dark:hover:bg-zinc-700"
                   >
                     <GithubIcon className="h-3.5 w-3.5" />
                     Configure GitHub App
@@ -350,12 +352,12 @@ export default function TemplateModal({
                 </div>
               </li>
               <li className="flex gap-3">
-                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-xs font-medium text-stone-700">
+                <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-stone-100 text-xs font-medium text-stone-700 dark:bg-zinc-800 dark:text-zinc-200">
                   4
                 </span>
                 <p>
                   Once done, click{' '}
-                  <span className="font-medium text-stone-900">
+                  <span className="font-medium text-stone-900 dark:text-zinc-100">
                     I&apos;ve created my repo
                   </span>{' '}
                   below to connect it to your site.
@@ -367,14 +369,14 @@ export default function TemplateModal({
               <button
                 type="button"
                 onClick={() => setStep('template')}
-                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900"
+                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 dark:text-zinc-300 dark:hover:text-zinc-100"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={handleProceedToConnect}
-                className="flex h-10 items-center justify-center rounded-md border border-black bg-black px-4 text-sm font-medium text-white transition-all hover:bg-white hover:text-black"
+                className="flex h-10 items-center justify-center rounded-md border border-black bg-black px-4 text-sm font-medium text-white transition-all hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200"
               >
                 I&apos;ve created my repo
               </button>
@@ -397,14 +399,14 @@ export default function TemplateModal({
               <button
                 type="button"
                 onClick={() => setStep('instructions')}
-                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900"
+                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 dark:text-zinc-300 dark:hover:text-zinc-100"
               >
                 Back
               </button>
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900"
+                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 dark:text-zinc-300 dark:hover:text-zinc-100"
               >
                 Cancel
               </button>
@@ -419,12 +421,12 @@ export default function TemplateModal({
               <h2 className="font-dashboard-heading text-2xl">
                 Connect Your Repository
               </h2>
-              <p className="text-sm text-stone-500">
+              <p className="text-sm text-stone-500 dark:text-zinc-400">
                 Select the repository you just created from the template.
               </p>
 
               <div className="flex flex-col space-y-2 text-left">
-                <label className="text-sm font-medium text-stone-500">
+                <label className="text-sm font-medium text-stone-500 dark:text-zinc-400">
                   <span className="flex items-center space-x-1">
                     <GithubIcon className="h-4 w-4" />
                     <span>GitHub Account</span>
@@ -432,7 +434,7 @@ export default function TemplateModal({
                 </label>
                 <select
                   aria-label="GitHub Account"
-                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 focus:border-black focus:outline-none focus:ring-black"
+                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 focus:border-black focus:outline-none focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:focus:border-zinc-100 dark:focus:ring-zinc-100"
                   value={data.selectedAccount}
                   required
                   onChange={(e) => handleAccountChange(e.target.value)}
@@ -443,12 +445,12 @@ export default function TemplateModal({
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-xs text-stone-500">
+                <p className="mt-1 text-xs text-stone-500 dark:text-zinc-400">
                   Missing GitHub account?{' '}
                   <button
                     type="button"
                     onClick={handleChangeGitHubAppPermissions}
-                    className="text-sky-500 hover:underline"
+                    className="text-sky-500 hover:underline dark:text-sky-400"
                   >
                     Add GitHub account
                   </button>
@@ -458,13 +460,13 @@ export default function TemplateModal({
               <div className="flex flex-col space-y-2 text-left">
                 <label
                   htmlFor="tmpl-repo"
-                  className="text-sm font-medium text-stone-500"
+                  className="text-sm font-medium text-stone-500 dark:text-zinc-400"
                 >
                   Repository
                 </label>
                 <select
                   id="tmpl-repo"
-                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 focus:border-black focus:outline-none focus:ring-black"
+                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 focus:border-black focus:outline-none focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:focus:border-zinc-100 dark:focus:ring-zinc-100"
                   value={data.ghRepository}
                   required
                   disabled={filteredRepositories.length === 0}
@@ -481,12 +483,12 @@ export default function TemplateModal({
                     </option>
                   ))}
                 </select>
-                <p className="mt-1 text-xs text-stone-500">
+                <p className="mt-1 text-xs text-stone-500 dark:text-zinc-400">
                   Don&apos;t see your new repo?{' '}
                   <button
                     type="button"
                     onClick={handleChangeGitHubAppPermissions}
-                    className="text-sky-500 hover:underline"
+                    className="text-sky-500 hover:underline dark:text-sky-400"
                   >
                     Adjust GitHub App permissions
                   </button>
@@ -496,7 +498,7 @@ export default function TemplateModal({
               <div className="flex flex-col space-y-2 text-left">
                 <label
                   htmlFor="tmpl-branch"
-                  className="text-sm font-medium text-stone-500"
+                  className="text-sm font-medium text-stone-500 dark:text-zinc-400"
                 >
                   Branch
                 </label>
@@ -508,14 +510,14 @@ export default function TemplateModal({
                     setData({ ...data, ghBranch: e.target.value })
                   }
                   required
-                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 focus:border-black focus:outline-none focus:ring-black"
+                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 focus:border-black focus:outline-none focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:focus:border-zinc-100 dark:focus:ring-zinc-100"
                 />
               </div>
 
               <div className="flex flex-col space-y-2 text-left">
                 <label
                   htmlFor="tmpl-root-dir"
-                  className="text-sm font-medium text-stone-500"
+                  className="text-sm font-medium text-stone-500 dark:text-zinc-400"
                 >
                   Root Directory
                 </label>
@@ -527,15 +529,15 @@ export default function TemplateModal({
                     setData({ ...data, rootDir: e.target.value })
                   }
                   placeholder="Subdirectory to publish (optional)"
-                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black"
+                  className="w-full rounded-md border border-stone-200 bg-stone-50 px-4 py-2 text-sm text-stone-600 placeholder:text-stone-400 focus:border-black focus:outline-none focus:ring-black dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:placeholder:text-zinc-500 dark:focus:border-zinc-100 dark:focus:ring-zinc-100"
                 />
               </div>
             </div>
-            <div className="flex items-center justify-between rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 md:px-10">
+            <div className="flex items-center justify-between rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-zinc-700 dark:bg-zinc-950 md:px-10">
               <button
                 type="button"
                 onClick={() => setStep('instructions')}
-                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900"
+                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 dark:text-zinc-300 dark:hover:text-zinc-100"
               >
                 Back
               </button>
@@ -543,7 +545,7 @@ export default function TemplateModal({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900"
+                  className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 dark:text-zinc-300 dark:hover:text-zinc-100"
                 >
                   Cancel
                 </button>
@@ -553,8 +555,8 @@ export default function TemplateModal({
                   className={clsx(
                     'flex h-10 items-center justify-center rounded-md border px-4 text-sm font-medium transition-all',
                     isConnecting || !data.ghRepository
-                      ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400'
-                      : 'border-black bg-black text-white hover:bg-white hover:text-black',
+                      ? 'cursor-not-allowed border-stone-200 bg-stone-100 text-stone-400 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-500'
+                      : 'border-black bg-black text-white hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200',
                   )}
                 >
                   {isConnecting ? (

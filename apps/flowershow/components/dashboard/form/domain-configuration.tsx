@@ -17,7 +17,7 @@ export const InlineSnippet = ({
   return (
     <span
       className={clsx(
-        'inline-block rounded-md bg-blue-100 px-1 py-0.5 font-mono text-blue-900  ',
+        'inline-block rounded-md bg-blue-100 px-1 py-0.5 font-mono text-blue-900 dark:bg-blue-950/40 dark:text-blue-300  ',
         className,
       )}
     >
@@ -52,7 +52,7 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
     '76.76.21.21';
 
   return (
-    <div className="border-t border-stone-200 px-10 pb-5 pt-7 ">
+    <div className="border-t border-stone-200 px-10 pb-5 pt-7 dark:border-zinc-700 ">
       <div className="mb-4 flex items-center space-x-2">
         {status === 'Pending Verification' ? (
           <AlertCircle
@@ -76,7 +76,7 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
             <InlineSnippet>{apexName}</InlineSnippet> to prove ownership of{' '}
             <InlineSnippet>{domainName}</InlineSnippet>:
           </p>
-          <div className="my-5 flex items-start justify-start space-x-10 rounded-md bg-stone-50 p-2  ">
+          <div className="my-5 flex items-start justify-start space-x-10 rounded-md bg-stone-50 p-2 dark:bg-zinc-950  ">
             <div>
               <p className="text-sm font-bold">Type</p>
               <p className="mt-2 font-mono text-sm">{txtVerification.type}</p>
@@ -113,8 +113,8 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
               onClick={() => setRecordType('A')}
               className={`${
                 activeRecordType == 'A'
-                  ? 'border-black text-black  '
-                  : 'border-white text-stone-400  '
+                  ? 'border-black text-black dark:border-white dark:text-zinc-100  '
+                  : 'border-white text-stone-400 dark:border-zinc-900 dark:text-zinc-500  '
               } ease border-b-2 pb-1 text-sm transition-all duration-150`}
             >
               A Record{!subdomain && ' (recommended)'}
@@ -124,8 +124,8 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
               onClick={() => setRecordType('CNAME')}
               className={`${
                 activeRecordType == 'CNAME'
-                  ? 'border-black text-black  '
-                  : 'border-white text-stone-400  '
+                  ? 'border-black text-black dark:border-white dark:text-zinc-100  '
+                  : 'border-white text-stone-400 dark:border-zinc-900 dark:text-zinc-500  '
               } ease border-b-2 pb-1 text-sm transition-all duration-150`}
             >
               CNAME Record{subdomain && ' (recommended)'}
@@ -138,7 +138,7 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
               ), set the following {activeRecordType} record on your DNS
               provider to continue:
             </p>
-            <div className="flex items-center justify-start space-x-10 rounded-md bg-stone-50 p-2  ">
+            <div className="flex items-center justify-start space-x-10 rounded-md bg-stone-50 p-2 dark:bg-zinc-950  ">
               <div>
                 <p className="text-sm font-bold">Type</p>
                 <p className="mt-2 font-mono text-sm">{activeRecordType}</p>
@@ -163,9 +163,9 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
               available, set the highest value possible. Also, domain
               propagation can take up to an hour.
             </p>
-            <div className="mt-4 flex items-start space-x-2 rounded-md border border-blue-200 bg-blue-50 p-3">
-              <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
-              <p className="text-sm text-blue-800">
+            <div className="mt-4 flex items-start space-x-2 rounded-md border border-blue-200 bg-blue-50 p-3 dark:border-blue-900 dark:bg-blue-950/40">
+              <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500 dark:text-blue-400" />
+              <p className="text-sm text-blue-800 dark:text-blue-400">
                 If you are using Cloudflare, make sure to set the proxy status
                 to <strong>&quot;DNS only&quot;</strong> (grey cloud icon)
                 instead of &quot;Proxied&quot; (orange cloud icon).

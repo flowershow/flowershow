@@ -245,10 +245,10 @@ export default function ImportFilesOnboardingModal({
       setShowModal={handleClose}
       closeOnClickOutside={state !== 'uploading' && state !== 'processing'}
     >
-      <div className="w-full md:max-w-lg bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden">
+      <div className="w-full md:max-w-lg bg-white rounded-md md:border md:border-stone-200 md:shadow overflow-hidden dark:bg-zinc-950 dark:md:border-zinc-700">
         <div className="relative flex flex-col space-y-2 p-5 md:p-10 md:pb-0">
           <h2 className="font-dashboard-heading text-2xl">Import Files</h2>
-          <p className="text-sm text-stone-500">
+          <p className="text-sm text-stone-500 dark:text-zinc-400">
             Drop your Markdown, HTML, and media files to publish them.
           </p>
         </div>
@@ -268,7 +268,7 @@ export default function ImportFilesOnboardingModal({
               }}
               onClick={() => fileInputRef.current?.click()}
               className={`border border-dashed rounded-md p-8 text-center cursor-pointer transition-colors
-                ${isDragging ? 'border-black bg-stone-100' : 'border-stone-300 hover:border-stone-400'}`}
+                ${isDragging ? 'border-black bg-stone-100 dark:border-white dark:bg-zinc-800' : 'border-stone-300 hover:border-stone-400 dark:border-zinc-700 dark:hover:border-zinc-600'}`}
             >
               <input
                 type="file"
@@ -282,7 +282,7 @@ export default function ImportFilesOnboardingModal({
                 multiple
               />
               <UploadIcon className="mx-auto" />
-              <p className="mt-2 text-sm text-stone-600">
+              <p className="mt-2 text-sm text-stone-600 dark:text-zinc-300">
                 Drop your Markdown, HTML, and media files or browse
               </p>
             </div>
@@ -290,25 +290,25 @@ export default function ImportFilesOnboardingModal({
 
           {(state === 'ready' || state === 'error') && (
             <div>
-              <div className="max-h-64 overflow-y-auto border border-stone-200 rounded-md divide-y divide-stone-100">
+              <div className="max-h-64 overflow-y-auto border border-stone-200 rounded-md divide-y divide-stone-100 dark:border-zinc-700 dark:divide-zinc-800">
                 {selectedFiles.map((file, index) => (
                   <div
                     key={file.name + file.size}
-                    className="flex items-center justify-between px-3 py-2 hover:bg-stone-50"
+                    className="flex items-center justify-between px-3 py-2 hover:bg-stone-50 dark:hover:bg-zinc-800"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       {isContentFile(file) ? (
-                        <FileIcon className="size-4 text-stone-600" />
+                        <FileIcon className="size-4 text-stone-600 dark:text-zinc-300" />
                       ) : (
-                        <ImageIcon className="size-4 text-stone-600" />
+                        <ImageIcon className="size-4 text-stone-600 dark:text-zinc-300" />
                       )}
-                      <span className="text-sm text-stone-600 truncate">
+                      <span className="text-sm text-stone-600 truncate dark:text-zinc-300">
                         {file.name}
                       </span>
                     </div>
                     <button
                       onClick={() => removeFile(index)}
-                      className="text-stone-400 hover:text-red-500 p-1 flex-shrink-0 ml-2"
+                      className="text-stone-400 hover:text-red-500 p-1 flex-shrink-0 ml-2 dark:text-zinc-500 dark:hover:text-red-400"
                     >
                       <svg
                         className="w-4 h-4"
@@ -327,7 +327,7 @@ export default function ImportFilesOnboardingModal({
                   </div>
                 ))}
               </div>
-              <p className="mt-2 text-xs text-stone-500">
+              <p className="mt-2 text-xs text-stone-500 dark:text-zinc-400">
                 {selectedFiles.length} file
                 {selectedFiles.length !== 1 && 's'} selected
               </p>
@@ -337,7 +337,7 @@ export default function ImportFilesOnboardingModal({
           {(state === 'uploading' || state === 'processing') && (
             <div className="py-8 text-center">
               <svg
-                className="mx-auto h-10 w-10 animate-spin text-stone-600"
+                className="mx-auto h-10 w-10 animate-spin text-stone-600 dark:text-zinc-300"
                 fill="none"
                 viewBox="0 0 24 24"
               >
@@ -355,7 +355,7 @@ export default function ImportFilesOnboardingModal({
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                 />
               </svg>
-              <p className="mt-3 text-sm text-stone-600">
+              <p className="mt-3 text-sm text-stone-600 dark:text-zinc-300">
                 {state === 'uploading'
                   ? 'Uploading files...'
                   : 'Processing files...'}
@@ -366,25 +366,27 @@ export default function ImportFilesOnboardingModal({
           {state === 'success' && (
             <div className="py-8 text-center">
               <CheckCircleIcon className="mx-auto h-10 w-10 text-green-500" />
-              <p className="mt-3 text-sm font-medium text-stone-900">
+              <p className="mt-3 text-sm font-medium text-stone-900 dark:text-zinc-100">
                 Files uploaded successfully!
               </p>
-              <p className="mt-1 text-sm text-stone-500">
+              <p className="mt-1 text-sm text-stone-500 dark:text-zinc-400">
                 Your site is ready to go.
               </p>
             </div>
           )}
 
           {error && (
-            <p className="mt-3 text-sm text-red-600 text-center">{error}</p>
+            <p className="mt-3 text-sm text-red-600 text-center dark:text-red-400">
+              {error}
+            </p>
           )}
         </div>
 
-        <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 md:px-10 gap-3">
+        <div className="flex items-center justify-end rounded-b-lg border-t border-stone-200 bg-stone-50 p-3 dark:border-zinc-700 dark:bg-zinc-950 md:px-10 gap-3">
           {state === 'selecting' && (
             <button
               onClick={handleClose}
-              className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900"
+              className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 dark:text-zinc-300 dark:hover:text-zinc-100"
             >
               Cancel
             </button>
@@ -394,14 +396,14 @@ export default function ImportFilesOnboardingModal({
             <>
               <button
                 onClick={handleClose}
-                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900"
+                className="px-4 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 dark:text-zinc-300 dark:hover:text-zinc-100"
               >
                 Cancel
               </button>
               <button
                 onClick={handleStartImport}
                 disabled={!!error}
-                className="flex h-10 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-400"
+                className="flex h-10 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200 disabled:cursor-not-allowed disabled:border-stone-200 disabled:bg-stone-100 disabled:text-stone-400 dark:disabled:border-zinc-700 dark:disabled:bg-zinc-800 dark:disabled:text-zinc-500"
               >
                 Start import
               </button>
@@ -411,7 +413,7 @@ export default function ImportFilesOnboardingModal({
           {(state === 'uploading' || state === 'processing') && (
             <button
               disabled
-              className="px-4 py-2 text-sm font-medium text-stone-400 cursor-not-allowed"
+              className="px-4 py-2 text-sm font-medium text-stone-400 cursor-not-allowed dark:text-zinc-500"
             >
               {state === 'uploading' ? 'Uploading...' : 'Processing...'}
             </button>
@@ -423,14 +425,14 @@ export default function ImportFilesOnboardingModal({
                 href={siteUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex h-10 flex-1 items-center justify-center rounded-md border border-stone-300 bg-white px-4 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50"
+                className="flex h-10 flex-1 items-center justify-center rounded-md border border-stone-300 bg-white px-4 text-sm font-medium text-stone-700 transition-all hover:bg-stone-50 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-200 dark:hover:bg-zinc-800"
               >
                 View site
               </a>
               <button
                 type="button"
                 onClick={handleClose}
-                className="flex h-10 flex-1 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black"
+                className="flex h-10 flex-1 items-center justify-center rounded-md border border-black bg-black px-4 text-sm text-white transition-all hover:bg-white hover:text-black dark:border-white dark:bg-white dark:text-black dark:hover:bg-zinc-200"
               >
                 Go to site settings
               </button>

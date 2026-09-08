@@ -41,7 +41,7 @@ export default function SitesAdminTable() {
     <div className="max-h-screen overflow-y-scroll px-4 sm:px-6 lg:px-8">
       <div className="sm:flex sm:items-center">
         <div className="sm:flex-auto">
-          <h1 className="text-base font-semibold leading-6 text-gray-900">
+          <h1 className="text-base font-semibold leading-6 text-gray-900 dark:text-zinc-100">
             Sites
           </h1>
         </div>
@@ -50,13 +50,13 @@ export default function SitesAdminTable() {
         <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
           <div className="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
             <div className="relative">
-              <table className="min-w-full table-fixed divide-y divide-gray-300">
+              <table className="min-w-full table-fixed divide-y divide-gray-300 dark:divide-zinc-700">
                 <thead>
                   <tr>
                     <th scope="col" className="relative px-7 sm:w-12 sm:px-6">
                       <input
                         type="checkbox"
-                        className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                        className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-600"
                         ref={checkbox}
                         checked={checked}
                         onChange={toggleAll}
@@ -64,38 +64,40 @@ export default function SitesAdminTable() {
                     </th>
                     <th
                       scope="col"
-                      className="min-w-[12rem] py-3.5 pr-3 text-left text-sm font-semibold text-gray-900"
+                      className="min-w-[12rem] py-3.5 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-zinc-100"
                     >
                       Name
                     </th>
                     <th
                       scope="col"
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-zinc-100"
                     >
                       Owner
                     </th>
                     <th
                       scope="col"
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-zinc-100"
                     >
                       Repository
                     </th>
                     <th
                       scope="col"
-                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+                      className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-zinc-100"
                     >
                       Branch
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200 bg-white">
+                <tbody className="divide-y divide-gray-200 dark:divide-zinc-700 bg-white dark:bg-zinc-950">
                   {sites
                     .sort((a, b) => a.projectName.localeCompare(b.projectName))
                     .map((site, index) => (
                       <tr
                         key={site.id}
                         className={
-                          sites.includes(site) ? 'bg-gray-50' : undefined
+                          sites.includes(site)
+                            ? 'bg-gray-50 dark:bg-zinc-950'
+                            : undefined
                         }
                       >
                         <td className="relative px-7 sm:w-12 sm:px-6">
@@ -104,7 +106,7 @@ export default function SitesAdminTable() {
                           )}
                           <input
                             type="checkbox"
-                            className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                            className="absolute left-4 top-1/2 -mt-2 h-4 w-4 rounded border-gray-300 dark:border-zinc-700 text-indigo-600 focus:ring-indigo-600"
                             value={site.id}
                             checked={selectedSites.includes(site.id)}
                             onChange={(e) => {
@@ -162,18 +164,18 @@ export default function SitesAdminTable() {
                             'whitespace-nowrap py-4 pr-3 text-sm font-medium',
                             selectedSites.includes(site.id)
                               ? 'text-indigo-600'
-                              : 'text-gray-900',
+                              : 'text-gray-900 dark:text-zinc-100',
                           )}
                         >
                           {site.projectName}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-zinc-400">
                           {site.user.username}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-zinc-400">
                           {getRepoFullName(site)}
                         </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-zinc-400">
                           {site.ghBranch}
                         </td>
                       </tr>
