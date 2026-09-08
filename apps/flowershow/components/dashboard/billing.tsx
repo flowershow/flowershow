@@ -6,6 +6,7 @@ import posthog from 'posthog-js';
 import { useEffect, useState } from 'react';
 
 import type { Plan, PlanType } from '@/lib/stripe-plans';
+import { applyDiscount } from '@/lib/stripe-plans';
 import { api } from '@/trpc/react';
 import { LoadingButton } from './loading-button';
 
@@ -14,16 +15,52 @@ const frequencies = [
   { value: 'year', label: 'Annually', priceSuffix: '/year' },
 ] as const;
 
+interface LivePrice {
+  amount: number;
+  currency: string;
+}
+
+interface BundleTier {
+  id: string;
+  minExistingSites: number;
+  percentOff: number;
+}
+
+interface BundleInfo {
+  activeSiteCount: number;
+  prices: { month: LivePrice | null; year: LivePrice | null };
+  tiers: BundleTier[];
+  nextSiteDiscountPercent: number;
+}
+
 interface BillingProps {
   siteId: string;
   subscription: any;
   plans: Record<PlanType, Plan>;
+  bundleInfo?: BundleInfo;
 }
 
-export default function Billing({ siteId, subscription, plans }: BillingProps) {
+const ordinal = (n: number) => {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return `${n}${s[(v - 20) % 10] ?? s[v] ?? s[0]}`;
+};
+
+export default function Billing({
+  siteId,
+  subscription,
+  plans,
+  bundleInfo,
+}: BillingProps) {
   const [loading, setLoading] = useState(false);
   const [frequency, setFrequency] = useState(frequencies[0]);
   const searchParams = useSearchParams();
+
+  const activeSiteCount = bundleInfo?.activeSiteCount ?? 0;
+  const nextSiteDiscountPercent = bundleInfo?.nextSiteDiscountPercent ?? 0;
+  const isEligibleForDiscount =
+    (!subscription || subscription.status !== 'active') &&
+    nextSiteDiscountPercent > 0;
 
   useEffect(() => {
     if (searchParams.get('upgrade_success') === 'true') {
@@ -33,12 +70,33 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
     }
   }, [searchParams]);
 
-  const getPriceString = (plan: Plan) => {
+  // Fire once when the pricing ladder is shown to a user who hasn't yet
+  // upgraded this site, so we can measure bundle-discount interest.
+  useEffect(() => {
+    if (subscription?.status === 'active') return;
+    posthog.capture('bundle_ladder_shown', {
+      siteId,
+      activeSiteCount,
+      nextSiteDiscountPercent,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Base price for the selected interval, read live from Stripe (via
+  // bundleInfo) so amount changes in Stripe reflect here with no code change.
+  // Falls back to the static PLANS amount if the live lookup is unavailable.
+  const getIntervalPrice = (plan: Plan): LivePrice | null => {
     const interval = frequency.value as 'month' | 'year';
-    if (!plan.price?.[interval]) return 'Free';
-    const price = plan.price[interval]!; // Non-null assertion since we checked above
-    return `${price.currency === 'USD' ? '$' : ''}${price.amount}`;
+    const live = bundleInfo?.prices?.[interval];
+    if (live) return live;
+    const fallback = plan.price?.[interval];
+    return fallback
+      ? { amount: fallback.amount, currency: fallback.currency }
+      : null;
   };
+
+  const formatAmount = (amount: number, currency: string) =>
+    `${currency === 'USD' ? '$' : ''}${amount % 1 === 0 ? amount : amount.toFixed(2)}`;
 
   const createCheckoutSession = api.stripe.createCheckoutSession.useMutation({
     onSuccess: ({ url }) => {
@@ -81,6 +139,9 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
       interval,
       priceId,
       source: 'billing_settings',
+      current_site_count: activeSiteCount,
+      nth_site: activeSiteCount + 1,
+      discount_percent: nextSiteDiscountPercent,
     });
     createCheckoutSession.mutate({ siteId, priceId });
   };
@@ -116,16 +177,115 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
         {(!subscription || subscription.status !== 'active') && (
           <div className="space-y-4">
             <div>
-              <p className="mb-2 flex items-baseline gap-x-2 text-lg">
-                <span className="text-xl font-semibold tracking-tight text-stone-900">
-                  {getPriceString(plans.PREMIUM)}
-                </span>
-                <span className="text-stone-500">USD</span>
-              </p>
+              {(() => {
+                const price = getIntervalPrice(plans.PREMIUM);
+                if (!price) {
+                  return (
+                    <p className="mb-2 flex items-baseline gap-x-2 text-lg">
+                      <span className="text-xl font-semibold tracking-tight text-stone-900">
+                        Free
+                      </span>
+                    </p>
+                  );
+                }
+                const discounted = applyDiscount(
+                  price.amount,
+                  nextSiteDiscountPercent,
+                );
+                return (
+                  <p className="mb-2 flex items-baseline gap-x-2 text-lg">
+                    {isEligibleForDiscount ? (
+                      <>
+                        <span className="text-xl font-semibold tracking-tight text-stone-900">
+                          {formatAmount(discounted, price.currency)}
+                        </span>
+                        <span className="text-stone-400 line-through">
+                          {formatAmount(price.amount, price.currency)}
+                        </span>
+                        <span
+                          className="cursor-help self-center rounded-full bg-pink-50 px-2 py-0.5 text-xs font-medium text-pink-700 ring-1 ring-inset ring-pink-600/20"
+                          title={`Multi-site bundle discount: ${nextSiteDiscountPercent}% off because you already have ${activeSiteCount} premium ${
+                            activeSiteCount === 1 ? 'site' : 'sites'
+                          }. Every additional site costs less.`}
+                        >
+                          {nextSiteDiscountPercent}% off
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-xl font-semibold tracking-tight text-stone-900">
+                        {formatAmount(price.amount, price.currency)}
+                      </span>
+                    )}
+                  </p>
+                );
+              })()}
               <p className="text-stone-500">
-                per month, per site, billed {frequency.label.toLowerCase()}
+                billed {frequency.label.toLowerCase()}
+                {isEligibleForDiscount && (
+                  <>
+                    {' '}
+                    — bundle discount applied to your{' '}
+                    {ordinal(activeSiteCount + 1)} site
+                  </>
+                )}
               </p>
             </div>
+
+            {/* Multi-site bundle discount ladder */}
+            <div className="rounded-md bg-stone-50 p-3 text-sm ring-1 ring-inset ring-stone-200">
+              <p className="mb-2 font-medium text-stone-700">
+                Save more with every site
+              </p>
+              <ul className="space-y-1 text-stone-600">
+                {(() => {
+                  const price = getIntervalPrice(plans.PREMIUM);
+                  if (!price) return null;
+                  const rows = [
+                    { label: '1st site', percentOff: 0 },
+                    ...(bundleInfo?.tiers ?? []).map((tier) => ({
+                      label:
+                        tier.minExistingSites === 1
+                          ? '2nd site'
+                          : `${ordinal(tier.minExistingSites + 1)}+ site`,
+                      percentOff: tier.percentOff,
+                    })),
+                  ];
+                  return rows.map((row) => {
+                    const isCurrent =
+                      row.percentOff === nextSiteDiscountPercent &&
+                      isEligibleForDiscount;
+                    return (
+                      <li
+                        key={row.label}
+                        className={`flex items-center justify-between ${
+                          isCurrent ? 'font-semibold text-stone-900' : ''
+                        }`}
+                      >
+                        <span>{row.label}</span>
+                        <span className="flex items-center gap-x-2">
+                          <span>
+                            {formatAmount(
+                              applyDiscount(price.amount, row.percentOff),
+                              price.currency,
+                            )}
+                            /{frequency.value}
+                          </span>
+                          {row.percentOff > 0 && (
+                            <span className="text-xs text-green-700">
+                              {row.percentOff}% off
+                            </span>
+                          )}
+                        </span>
+                      </li>
+                    );
+                  });
+                })()}
+              </ul>
+              <p className="mt-2 text-xs text-stone-400">
+                Discounts apply automatically at checkout.
+              </p>
+            </div>
+
             <div className="inline-block">
               <fieldset aria-label="Payment frequency">
                 <RadioGroup
@@ -147,6 +307,49 @@ export default function Billing({ siteId, subscription, plans }: BillingProps) {
             </div>
           </div>
         )}
+
+        {subscription?.status === 'active' &&
+          (() => {
+            const interval = subscription.interval as 'month' | 'year';
+            const fallback = plans.PREMIUM.price?.[interval];
+            const price =
+              bundleInfo?.prices?.[interval] ??
+              (fallback
+                ? { amount: fallback.amount, currency: fallback.currency }
+                : null);
+            if (!price) return null;
+            const discountPercent = subscription.discountPercent ?? 0;
+            const charged = applyDiscount(price.amount, discountPercent);
+            return (
+              <div>
+                <p className="mb-2 flex items-baseline gap-x-2 text-lg">
+                  {discountPercent > 0 ? (
+                    <>
+                      <span className="text-xl font-semibold tracking-tight text-stone-900">
+                        {formatAmount(charged, price.currency)}
+                      </span>
+                      <span className="text-stone-400 line-through">
+                        {formatAmount(price.amount, price.currency)}
+                      </span>
+                      <span
+                        className="cursor-help self-center rounded-full bg-pink-50 px-2 py-0.5 text-xs font-medium text-pink-700 ring-1 ring-inset ring-pink-600/20"
+                        title={`You're getting ${discountPercent}% off this site as part of your multi-site bundle discount.`}
+                      >
+                        {discountPercent}% off
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-xl font-semibold tracking-tight text-stone-900">
+                      {formatAmount(price.amount, price.currency)}
+                    </span>
+                  )}
+                </p>
+                <p className="text-stone-500">
+                  billed {interval === 'month' ? 'monthly' : 'annually'}
+                </p>
+              </div>
+            );
+          })()}
 
         {subscription?.status === 'active' && subscription.currentPeriodEnd && (
           <div className="text-sm text-stone-500">
