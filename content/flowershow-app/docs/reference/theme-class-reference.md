@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **230 styled class selectors**:
-**228 stable semantic hooks** and **2 non-contract
+and currently documents **237 styled class selectors**:
+**235 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -425,7 +425,13 @@ Graph panels/modals and document/media rendering surfaces.
 
 | Class | Kind |
 | --- | --- |
+| <code>.canvas-control-btn</code> | Hook |
+| <code>.canvas-controls</code> | Hook |
+| <code>.canvas-fullwidth</code> | Hook |
+| <code>.canvas-node</code> | Hook |
 | <code>.canvas-node-content</code> | Hook |
+| <code>.canvas-page</code> | Hook |
+| <code>.canvas-world</code> | Hook |
 | <code>.graph-mini-panel</code> | Hook |
 | <code>.graph-mini-panel__action-btn</code> | Element |
 | <code>.graph-mini-panel__actions</code> | Element |
@@ -497,6 +503,7 @@ Owning semantic hook
 | <code>.has-sidebar-and-toc</code> | State | .layout-inner |
 | <code>.has-toc</code> | State | .layout-inner |
 | <code>.image-full</code> | Variant | .page-hero |
+| <code>.is-canvas</code> | State | undefined |
 | <code>.is-collapsible</code> | State | .site-tree-item-self / .mobile-nav-tree-item-self |
 | <code>.is-current</code> | State | .site-tree-item-self / .mobile-nav-tree-item-self |
 | <code>.is-open</code> | State | navigation dropdowns and collapsible tree items |

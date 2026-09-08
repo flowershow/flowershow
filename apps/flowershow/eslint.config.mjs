@@ -21,6 +21,9 @@ const eslintConfig = [
       'out/**',
       'build/**',
       'next-env.d.ts',
+      // Vendored Obsidian vault internals (compiled plugin bundles) live in
+      // e2e fixtures; they are not source and must never be linted.
+      '**/.obsidian/**',
     ],
   },
   {

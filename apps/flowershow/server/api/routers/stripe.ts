@@ -294,8 +294,14 @@ export const stripeRouter = createTRPCRouter({
       let discountPercent = 0;
       if (site.subscription.stripeSubscriptionId) {
         try {
-          const stripeSub = await stripe.subscriptions.retrieve(
-            site.subscription.stripeSubscriptionId,
+          const subId = site.subscription.stripeSubscriptionId;
+          const stripeSub = await cachedStripeMeta(`sub:${subId}`, () =>
+            // Expand the discounts' coupons: on newer API versions
+            // `subscription.discounts` is an array of IDs unless expanded, so
+            // without this the coupon's `percent_off` would be unreadable.
+            stripe.subscriptions.retrieve(subId, {
+              expand: ['discounts.coupon'],
+            }),
           );
           // Support both the legacy single `discount` field and the newer
           // `discounts` array. Coupons are percentage-based (see bundle setup).
