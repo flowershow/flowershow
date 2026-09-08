@@ -245,10 +245,17 @@ const rehypeAutolinkHeadingsConfig: RehypeAutolinkHeadingsOptions = {
 //                allowed in between, e.g. `$x_2 = 4$`), the opening `$` isn't
 //                backslash-escaped, and the content stays on one line.
 // remark-math is too eager about pairing, so instead of relying on it we detect
-// real spans ourselves and escape every other `$` (currency, `$HOME`, a lone `$`,
-// two prices in a sentence, …) so it renders as a literal dollar sign. This keeps
-// single-dollar math working — including digit-leading math like `$2*4=8$` — while
-// dollar signs in prose never swallow the text between them. See issue #1359.
+// real spans ourselves and neutralise every other `$` (currency, `$HOME`, a lone
+// `$`, two prices in a sentence, …) so it renders as a literal dollar sign. This
+// keeps single-dollar math working — including digit-leading math like `$2*4=8$` —
+// while dollar signs in prose never swallow the text between them. See issue #1359.
+//
+// We replace loose `$` with the numeric character reference `&#36;` rather than a
+// backslash escape (`\$`). A backslash escape is only consumed by CommonMark in
+// inline/text context; inside a raw HTML *block* (e.g. the `<div>`-wrapped landing
+// pages) the content is passed through verbatim, so `\$` would leak a literal
+// backslash into the output. `&#36;` is inert to remark-math (it's not a `$`
+// character) yet decodes to `$` both in markdown text and in raw HTML. See #1359.
 const MATH_SPAN_OR_LOOSE_DOLLAR =
   /(\$\$[\s\S]*?\$\$|(?<!\\)\$(?![\s$])(?:\\.|[^\n$])*?(?<![\s\\])\$)|(?<!\\)\$/g;
 
@@ -262,8 +269,9 @@ export function protectNonMathDollars(content: string): string {
         ? segment
         : segment.replace(
             MATH_SPAN_OR_LOOSE_DOLLAR,
-            // Keep genuine spans as-is; escape a loose `$` into a literal one.
-            (_match, mathSpan) => (mathSpan ? mathSpan : '\\$'),
+            // Keep genuine spans as-is; turn a loose `$` into a literal one via a
+            // numeric character reference so it survives raw HTML blocks too.
+            (_match, mathSpan) => (mathSpan ? mathSpan : '&#36;'),
           ),
     )
     .join('');

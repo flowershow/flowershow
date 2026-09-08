@@ -40,22 +40,22 @@ describe('protectNonMathDollars', () => {
     expect(protectNonMathDollars('$$\nE = mc^2\n$$')).toBe('$$\nE = mc^2\n$$');
   });
 
-  it('escapes currency amounts (a $ glued to a number, unpaired)', () => {
+  it('neutralises currency amounts (a $ glued to a number, unpaired)', () => {
     expect(protectNonMathDollars('From $50 to $60')).toBe(
-      'From \\$50 to \\$60',
+      'From &#36;50 to &#36;60',
     );
   });
 
-  it('escapes a $ with a space just inside a would-be span', () => {
+  it('neutralises a $ with a space just inside a would-be span', () => {
     // Space right after the opening `$` → not math.
-    expect(protectNonMathDollars('give $ 5 please')).toBe('give \\$ 5 please');
+    expect(protectNonMathDollars('give $ 5 please')).toBe('give &#36; 5 please');
     // Space right before the closing `$` → not math.
-    expect(protectNonMathDollars('$x = 5 $ nope')).toBe('\\$x = 5 \\$ nope');
+    expect(protectNonMathDollars('$x = 5 $ nope')).toBe('&#36;x = 5 &#36; nope');
   });
 
   it('separates literal prices from a real span in the same sentence', () => {
     expect(protectNonMathDollars('It costs $5 but area is $a^2$ units')).toBe(
-      'It costs \\$5 but area is $a^2$ units',
+      'It costs &#36;5 but area is $a^2$ units',
     );
   });
 
@@ -89,6 +89,20 @@ describe('currency amounts in prose', () => {
     // The literal dollar amounts survive as text.
     expect(html).toContain('$61');
     expect(html).toContain('$76');
+  });
+});
+
+describe('currency inside raw HTML blocks', () => {
+  it('renders a literal `$` (no leaked backslash) inside a block-level HTML wrapper', async () => {
+    // Landing pages (e.g. pricing) are one big `<div>` HTML block. A backslash
+    // escape would leak through verbatim here; the numeric entity does not. (#1359)
+    const html = await renderHtml(
+      '<div class="fs-root">\n<span class="price-amount">$0</span>\n</div>',
+    );
+
+    expect(html).toContain('>$0<');
+    expect(html).not.toContain('\\$');
+    expect(html).not.toContain('katex');
   });
 });
 
