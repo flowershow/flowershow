@@ -446,15 +446,20 @@ const KNOWN_FILE_EXTENSIONS = new Set([
  * @param ph - The PostHog bootstrap cookie data
  * @returns NextResponse for rewrite, or null if not a raw file
  */
-function rewriteRawIfNeeded(
+export function rewriteRawIfNeeded(
   inputPath: string,
   apiBase: string,
   req: NextRequest,
   ph: PHBootstrap,
   allowedExtensions: Set<string> = KNOWN_FILE_EXTENSIONS,
 ) {
-  // Extract the path before query parameters
-  const [pathPart] = inputPath.split('&');
+  // Split the pathname from the query string. The query must not influence
+  // extension detection or the blob key — it only rides along on the final URL
+  // so browser caching / tracking params (?utm_source=, ?cb=) survive (#1345).
+  const queryIndex = inputPath.indexOf('?');
+  const pathPart =
+    queryIndex === -1 ? inputPath : inputPath.slice(0, queryIndex);
+  const search = queryIndex === -1 ? '' : inputPath.slice(queryIndex);
   if (!pathPart) return null;
 
   // Get the filename (last segment of the path)
@@ -476,11 +481,12 @@ function rewriteRawIfNeeded(
     return null; // Not a recognized file extension, treat as regular path
   }
 
-  // Normalize and encode each path segment
-  const encoded = inputPath.split('/').map(normaliseSegment).join('/');
+  // Normalize and encode each path segment. Only the pathname is encoded into
+  // the blob key; the query string is re-appended verbatim afterwards.
+  const encoded = pathPart.split('/').map(normaliseSegment).join('/');
 
   return withPHBootstrapCookie(
-    NextResponse.rewrite(new URL(`${apiBase}${encoded}`, req.url)),
+    NextResponse.rewrite(new URL(`${apiBase}${encoded}${search}`, req.url)),
     ph,
   );
 }
