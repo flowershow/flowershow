@@ -6,7 +6,7 @@ import {
   MenuItem,
   MenuItems,
 } from '@headlessui/react';
-import { ExternalLinkIcon } from 'lucide-react';
+import { CheckIcon, ChevronsUpDownIcon, ExternalLinkIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useSelectedLayoutSegments } from 'next/navigation';
@@ -29,25 +29,29 @@ export default function Nav({ children }: { children: ReactNode }) {
   const segments = useSelectedLayoutSegments();
   const { id } = useParams() as { id: string };
 
-  const { data: site } = api.site.getById.useQuery(
-    { id },
+  const isSiteContext = segments[0] === 'site' && !!id;
+
+  // All of the user's sites, for the project switcher. This one query also
+  // supplies the current site's name (the switcher button label), so there's
+  // nothing to re-fetch when you switch between sites. A long staleTime keeps
+  // it cached across navigations instead of reloading every time.
+  const { data: sites } = api.user.getSites.useQuery(
+    {},
     {
-      enabled: !!id,
+      enabled: isSiteContext,
+      staleTime: 5 * 60 * 1000,
     },
   );
 
-  const pages = useMemo(() => {
-    if (segments[0] === 'site' && id && site) {
-      return [
-        {
-          name: site.projectName,
-          href: `/site/${id}/settings`,
-          current: true,
-        },
-      ];
-    }
-    return [];
-  }, [segments, id]);
+  const currentSite = sites?.find((s) => s.id === id);
+
+  const sortedSites = useMemo(
+    () =>
+      [...(sites ?? [])].sort((a, b) =>
+        a.projectName.localeCompare(b.projectName),
+      ),
+    [sites],
+  );
 
   return (
     <Disclosure
@@ -63,8 +67,8 @@ export default function Nav({ children }: { children: ReactNode }) {
             >
               <Image src={config.logo} width={32} height={32} alt="Logo" />
             </Link>
-            {pages.map((page) => (
-              <div key={page.name} className="flex items-center">
+            {isSiteContext && (
+              <div className="flex min-w-0 items-center">
                 <svg
                   fill="currentColor"
                   viewBox="0 0 20 20"
@@ -73,15 +77,51 @@ export default function Nav({ children }: { children: ReactNode }) {
                 >
                   <path d="M5.555 17.776l8-16 .894.448-8 16-.894-.448z" />
                 </svg>
-                <a
-                  href={page.href}
-                  aria-current={page.current ? 'page' : undefined}
-                  className="ml-4 text-sm font-medium text-gray-500 hover:text-gray-700"
-                >
-                  {page.name}
-                </a>
+                {/* Project switcher */}
+                <Menu as="div" className="relative ml-2 min-w-0 sm:ml-4">
+                  <MenuButton className="flex max-w-[10rem] items-center gap-1 rounded-md px-2 py-1 text-sm font-medium text-gray-700 hover:bg-gray-100 sm:max-w-xs">
+                    <span className="truncate">
+                      {currentSite?.projectName ?? 'Loading…'}
+                    </span>
+                    <ChevronsUpDownIcon
+                      aria-hidden="true"
+                      className="h-4 w-4 shrink-0 text-gray-400"
+                    />
+                  </MenuButton>
+                  <MenuItems
+                    transition
+                    className="absolute left-0 z-10 mt-2 max-h-96 w-64 origin-top-left overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 transition focus:outline-none data-[closed]:scale-95 data-[closed]:transform data-[closed]:opacity-0 data-[enter]:duration-200 data-[leave]:duration-75 data-[enter]:ease-out data-[leave]:ease-in"
+                  >
+                    {sortedSites.map((s) => (
+                      <MenuItem key={s.id}>
+                        <Link
+                          href={`/site/${s.id}/settings`}
+                          aria-current={s.id === id ? 'page' : undefined}
+                          className="flex w-full items-center justify-between gap-2 px-4 py-2 text-sm text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
+                        >
+                          <span className="truncate">{s.projectName}</span>
+                          {s.id === id && (
+                            <CheckIcon
+                              aria-hidden="true"
+                              className="h-4 w-4 shrink-0 text-pink-600"
+                            />
+                          )}
+                        </Link>
+                      </MenuItem>
+                    ))}
+                    <div className="my-1 border-t border-gray-100" />
+                    <MenuItem>
+                      <Link
+                        href="/"
+                        className="block w-full px-4 py-2 text-sm font-medium text-gray-700 data-[focus]:bg-gray-100 data-[focus]:outline-none"
+                      >
+                        View all sites
+                      </Link>
+                    </MenuItem>
+                  </MenuItems>
+                </Menu>
               </div>
-            ))}
+            )}
           </div>
           <div className="ml-6 flex items-center space-x-2">
             <Link
