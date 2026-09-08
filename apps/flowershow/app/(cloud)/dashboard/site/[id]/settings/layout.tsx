@@ -38,7 +38,7 @@ export default async function SiteSettingsLayout(props: {
     <>
       <SiteSettingsHeader site={site} />
       <SiteTabs siteId={site.id} />
-      <div className="mb-4 mt-6 flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+      {/* <div className="mb-4 mt-6 flex items-start gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
         <InfoIcon className="mt-0.5 h-4 w-4 shrink-0 text-blue-500" />
         <span>
           Heads up: the separate <strong>Site Title</strong> setting has been
@@ -46,7 +46,7 @@ export default async function SiteSettingsLayout(props: {
           title and shown in your navbar and footer — now comes from the{' '}
           <strong>Name</strong> field below.
         </span>
-      </div>
+      </div> */}
       {children}
     </>
   );
