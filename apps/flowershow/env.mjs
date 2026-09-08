@@ -50,6 +50,12 @@ export const env = createEnv({
     TURNSTILE_SECRET_KEY: z.string(),
     STRIPE_SECRET_KEY: z.string(),
     STRIPE_WEBHOOK_SECRET: z.string(),
+    // Stripe coupon IDs for multi-site bundle discount tiers (duration:
+    // forever). The discount percentage lives in the coupon in Stripe, not in
+    // code. Optional: if a tier's coupon is unset, that tier falls back to
+    // full price.
+    STRIPE_BUNDLE_COUPON_A: z.string().optional(),
+    STRIPE_BUNDLE_COUPON_B: z.string().optional(),
     RESEND_API_KEY: z.string(),
     DISCORD_PREMIUM_INVITE_URL: z.string().url(),
     E2E_GH_USERNAME: z.string().optional(),
@@ -136,6 +142,8 @@ export const env = createEnv({
     TURNSTILE_SECRET_KEY: process.env.TURNSTILE_SECRET_KEY,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    STRIPE_BUNDLE_COUPON_A: process.env.STRIPE_BUNDLE_COUPON_A,
+    STRIPE_BUNDLE_COUPON_B: process.env.STRIPE_BUNDLE_COUPON_B,
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     DISCORD_PREMIUM_INVITE_URL: process.env.DISCORD_PREMIUM_INVITE_URL,
     NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID:

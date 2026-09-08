@@ -27,9 +27,10 @@ export default async function SiteSettingsPage(props: {
   const site = await api.site.getById.query({ id: siteId });
   if (!site) notFound();
 
-  const [siteConfig, subscription] = await Promise.all([
+  const [siteConfig, subscription, bundleInfo] = await Promise.all([
     api.site.getDbConfig.query({ siteId: site.id }).catch(() => null),
     api.stripe.getSiteSubscription.query({ siteId: site.id }),
+    api.stripe.getBundleInfo.query(),
   ]);
 
   const repoFullName = getRepoFullName(site);
@@ -1071,7 +1072,12 @@ export default async function SiteSettingsPage(props: {
           <div>
             <h2 className="text-xl font-semibold text-stone-800">Billing</h2>
           </div>
-          <Billing siteId={site.id} subscription={subscription} plans={PLANS} />
+          <Billing
+            siteId={site.id}
+            subscription={subscription}
+            plans={PLANS}
+            bundleInfo={bundleInfo}
+          />
         </section>
 
         <hr className="border-stone-200" />

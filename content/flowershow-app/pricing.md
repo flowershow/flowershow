@@ -22,7 +22,7 @@ showEditLink: false
             <span className="price-amount">$0</span>
             <span className="price-unit">/month/site</span>
           </div>
-          <p className="price-desc">Perfect for personal blogs and small business websites.</p>
+          <p className="price-desc">Perfect for personal blogs, wikis, notes and small business websites.</p>
           <a className="btn btn-secondary" href="https://cloud.flowershow.app/login">Get started <span className="arw">→</span></a>
           <ul className="price-feats">
             <li>
@@ -78,12 +78,21 @@ showEditLink: false
               Priority support
             </li>
           </ul>
+          <div className="price-ladder">
+            <span className="price-ladder-title">Publishing more than one site? It gets cheaper.</span>
+            <ul>
+              <li><span className="pl-site">1st site</span><span className="pl-price">$5<span className="pl-per">/mo</span> · $50<span className="pl-per">/yr</span></span></li>
+              <li><span className="pl-site">2nd site</span><span className="pl-price">$4<span className="pl-per">/mo</span> · $40<span className="pl-per">/yr</span><span className="pl-off">20% off</span></span></li>
+              <li><span className="pl-site">3rd+ sites</span><span className="pl-price">$3.50<span className="pl-per">/mo</span> · $35<span className="pl-per">/yr</span><span className="pl-off">30% off</span></span></li>
+            </ul>
+            <span className="price-ladder-note">Discounts apply automatically at checkout, to monthly and yearly plans alike.</span>
+          </div>
           <p className="price-fine">Soft limits: 5GB storage, 500k visits/month, unlimited notes. We'll notify you if you go over.</p>
         </div>
         <div className="price-custom">
           <div className="price-custom-copy">
             <h3>Custom</h3>
-            <p>Get in touch if you're interested in higher limits or the option to purchase multiple sites at a discount.</p>
+            <p>Publishing at scale — dozens or hundreds of sites — or need higher limits than Premium? Get in touch for volume pricing tailored to you.</p>
           </div>
           <a className="btn" href="https://tally.so/r/mDod1q" target="_blank" rel="noopener noreferrer">Contact us for a quote <span className="arw">→</span></a>
         </div>
