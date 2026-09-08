@@ -1,11 +1,11 @@
 'use client';
 
 import {
-  CalendarIcon,
-  CircleArrowDownIcon,
   CircleCheckIcon,
+  LoaderCircleIcon,
   RocketIcon,
   SquareArrowOutUpRight,
+  StarIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -40,101 +40,91 @@ export default function SiteSettingsHeader({ site }: { site: FullSite }) {
   const repoFullName = getRepoFullName(site);
 
   return (
-    <div className="border-b border-stone-200 pb-4 sm:flex sm:items-start sm:justify-between">
-      <div className="min-w-0 flex-1">
-        <h2 className="mb-2 text-2xl font-bold leading-7 text-gray-900 sm:truncate sm:text-3xl sm:tracking-tight">
+    <div className="rounded-xl border border-stone-200 bg-stone-50/60 p-4">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <span data-testid="site-name" className="font-dashboard-heading">
-              {site.projectName}
-            </span>
+            <h2 className="truncate text-xl font-bold leading-7 text-gray-900 sm:text-2xl sm:tracking-tight">
+              <span data-testid="site-name" className="font-dashboard-heading">
+                {site.projectName}
+              </span>
+            </h2>
             {site.plan === 'PREMIUM' && (
-              <span className="ml-1 inline-flex items-center rounded-full bg-amber-50 px-2 py-1 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20">
+              <span className="inline-flex items-center gap-1 rounded-md bg-pink-600 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
+                <StarIcon className="h-3 w-3" aria-hidden="true" />
                 Premium
               </span>
             )}
           </div>
-        </h2>
 
-        {/* Publish status */}
-        <div className="mt-1 flex flex-col sm:mt-0 sm:flex-row sm:flex-wrap sm:space-x-6">
           <div
             data-testid="publish-status"
-            className="mt-2 flex items-center text-sm text-gray-500"
+            className="mt-3 flex flex-wrap items-center divide-x divide-stone-300 text-sm text-stone-500"
           >
-            {isUnpublished ? (
-              <a
-                href={`./welcome`}
-                className="flex items-center text-pink-600 hover:underline"
-              >
-                <RocketIcon
-                  className="mr-1.5 h-5 w-5 flex-shrink-0"
-                  aria-hidden="true"
-                />
-                <span>Publish your first content</span>
-              </a>
-            ) : isInProgress ? (
-              <div className="flex items-center">
-                <CircleArrowDownIcon
-                  className="mr-1.5 h-5 w-5 flex-shrink-0 text-orange-400"
-                  aria-hidden="true"
-                />
-                <span>Publishing...</span>
-              </div>
-            ) : data ? (
-              <div className="flex items-center">
-                <CalendarIcon
-                  className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
-                  aria-hidden="true"
-                />
-                <span>
-                  Last published{' '}
+            <span className="pr-3">
+              {isUnpublished ? (
+                <a
+                  href="./welcome"
+                  className="inline-flex items-center gap-1.5 font-medium text-pink-600 hover:underline"
+                >
+                  <RocketIcon className="h-4 w-4" aria-hidden="true" />
+                  Publish your first content
+                </a>
+              ) : isInProgress ? (
+                <span
+                  role="status"
+                  aria-live="polite"
+                  className="inline-flex items-center gap-1.5 font-medium text-amber-700"
+                >
+                  <LoaderCircleIcon
+                    className="h-4 w-4 animate-spin"
+                    aria-hidden="true"
+                  />
+                  Publishing…
+                </span>
+              ) : data ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <CircleCheckIcon
+                    className="h-4 w-4 text-emerald-500"
+                    aria-hidden="true"
+                  />
+                  Published{' '}
                   {data.lastPublishedAt
                     ? new Date(data.lastPublishedAt).toLocaleString()
                     : ''}
                 </span>
-              </div>
-            ) : (
-              <div className="flex items-center">
-                <CircleCheckIcon
-                  className="mr-1.5 h-5 w-5 flex-shrink-0 text-gray-400"
+              ) : (
+                <span>—</span>
+              )}
+            </span>
+
+            {repoFullName && (
+              <Link
+                href={`https://github.com/${repoFullName}`}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 pl-3 hover:text-stone-700 hover:underline"
+              >
+                <GithubIcon
+                  className="h-4 w-4 text-stone-400"
                   aria-hidden="true"
                 />
-                <span>-</span>
-              </div>
+                {repoFullName}
+              </Link>
             )}
           </div>
         </div>
 
-        {/* Publish method */}
-        {repoFullName && (
-          <Link
-            href={`https://github.com/${repoFullName}`}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-2 inline-flex items-center text-sm text-gray-500 hover:underline"
-          >
-            <GithubIcon
-              className="-ml-0.5 mr-1.5 h-5 w-5 text-gray-400"
-              aria-hidden="true"
-            />
-            <span>{repoFullName}</span>
-          </Link>
-        )}
-      </div>
-      <div className="mt-3 flex sm:mt-0">
-        <span className="ml-3 block">
+        <div className="shrink-0">
           {visitDisabled ? (
             <button
               type="button"
               disabled
               data-testid="visit-button"
               title="Your site is still publishing — you can visit it once the first publish finishes."
-              className="inline-flex cursor-not-allowed items-center rounded-md bg-gray-300 px-3 py-2 text-sm font-semibold text-white shadow-sm"
+              className="inline-flex w-full cursor-not-allowed items-center justify-center gap-1.5 rounded-md bg-stone-300 px-4 py-2 text-sm font-semibold text-white shadow-sm sm:w-auto"
             >
-              <SquareArrowOutUpRight
-                className="-ml-0.5 mr-1.5 h-5 w-5"
-                aria-hidden="true"
-              />
+              <SquareArrowOutUpRight className="h-4 w-4" aria-hidden="true" />
               Visit
             </button>
           ) : (
@@ -146,17 +136,14 @@ export default function SiteSettingsHeader({ site }: { site: FullSite }) {
             >
               <button
                 type="button"
-                className="inline-flex items-center rounded-md bg-green-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
+                className="inline-flex w-full items-center justify-center gap-1.5 rounded-md bg-stone-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-stone-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-stone-900 sm:w-auto"
               >
-                <SquareArrowOutUpRight
-                  className="-ml-0.5 mr-1.5 h-5 w-5"
-                  aria-hidden="true"
-                />
+                <SquareArrowOutUpRight className="h-4 w-4" aria-hidden="true" />
                 Visit
               </button>
             </a>
           )}
-        </span>
+        </div>
       </div>
     </div>
   );
