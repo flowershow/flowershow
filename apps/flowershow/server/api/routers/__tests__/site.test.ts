@@ -162,6 +162,8 @@ function createMockDb({
               return false;
             if (w.extension?.in && !w.extension.in.includes(b.extension))
               return false;
+            if (w.updatedAt?.lt && !(b.updatedAt < w.updatedAt.lt))
+              return false;
             return true;
           }) ?? null
         );
@@ -480,6 +482,7 @@ describe('site.getLatestPublishState', () => {
     expect(result.isUnpublished).toBe(true);
     expect(result.isInProgress).toBe(false);
     expect(result.lastPublishedAt).toBeNull();
+    expect(result.hasLiveContent).toBe(false);
   });
 
   it('returns isInProgress when completedAt is null', async () => {
@@ -495,6 +498,38 @@ describe('site.getLatestPublishState', () => {
     expect(result.isInProgress).toBe(true);
     expect(result.isUnpublished).toBe(false);
     expect(result.lastPublishedAt).toEqual(startedAt);
+  });
+
+  it('has no live content during the first publish (no pre-existing blobs)', async () => {
+    const startedAt = new Date('2026-05-01T10:00:00Z');
+    const db = createMockDb({
+      publishes: [{ id: 'pub-1', startedAt, completedAt: null }],
+      publishFiles: [],
+      // Blobs written by the in-progress publish carry a newer updatedAt
+      blobs: [makeBlob({ updatedAt: new Date('2026-05-01T10:00:30Z') })],
+    });
+    const caller = createAuthenticatedCaller(db);
+
+    const result = await caller.site.getLatestPublishState({ id: 'site-1' });
+
+    expect(result.isInProgress).toBe(true);
+    expect(result.hasLiveContent).toBe(false);
+  });
+
+  it('keeps live content during a re-publish (blobs predate the publish)', async () => {
+    const startedAt = new Date('2026-05-02T10:00:00Z');
+    const db = createMockDb({
+      publishes: [{ id: 'pub-2', startedAt, completedAt: null }],
+      publishFiles: [],
+      // Content from an earlier publish is still served
+      blobs: [makeBlob({ updatedAt: new Date('2026-05-01T10:00:00Z') })],
+    });
+    const caller = createAuthenticatedCaller(db);
+
+    const result = await caller.site.getLatestPublishState({ id: 'site-1' });
+
+    expect(result.isInProgress).toBe(true);
+    expect(result.hasLiveContent).toBe(true);
   });
 
   it('returns complete when completedAt is set', async () => {
@@ -514,6 +549,7 @@ describe('site.getLatestPublishState', () => {
     expect(result.isInProgress).toBe(false);
     expect(result.isUnpublished).toBe(false);
     expect(result.lastPublishedAt).toEqual(completedAt);
+    expect(result.hasLiveContent).toBe(true);
   });
 });
 

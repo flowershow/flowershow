@@ -703,6 +703,7 @@ export const siteRouter = createTRPCRouter({
         isUnpublished: boolean;
         isInProgress: boolean;
         lastPublishedAt: Date | null;
+        hasLiveContent: boolean;
       }> => {
         const site = await ctx.db.site.findUnique({
           where: { id: input.id },
@@ -740,21 +741,31 @@ export const siteRouter = createTRPCRouter({
               isUnpublished: false,
               isInProgress: false,
               lastPublishedAt: latestBlob._max.updatedAt,
+              hasLiveContent: true,
             };
           }
           return {
             isUnpublished: true,
             isInProgress: false,
             lastPublishedAt: null,
+            hasLiveContent: false,
           };
         }
 
         // Legacy publishes have no completedAt — treat as complete
         if (!latestPublish.completedAt && !latestPublish.legacy) {
+          const hasSomePublishedContent = await ctx.db.blob.findFirst({
+            where: {
+              siteId: site.id,
+              updatedAt: { lt: latestPublish.startedAt },
+            },
+            select: { id: true },
+          });
           return {
             isUnpublished: false,
             isInProgress: true,
             lastPublishedAt: latestPublish.startedAt,
+            hasLiveContent: Boolean(hasSomePublishedContent),
           };
         }
 
@@ -762,6 +773,7 @@ export const siteRouter = createTRPCRouter({
           isUnpublished: false,
           isInProgress: false,
           lastPublishedAt: latestPublish.completedAt ?? latestPublish.startedAt,
+          hasLiveContent: true,
         };
       },
     ),

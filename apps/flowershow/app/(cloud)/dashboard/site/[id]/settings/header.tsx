@@ -34,6 +34,8 @@ export default function SiteSettingsHeader({ site }: { site: FullSite }) {
     ? publishJustStarted
     : data.isInProgress || (publishJustStarted && data.isUnpublished);
 
+  const visitDisabled = data ? !data.hasLiveContent : publishJustStarted;
+
   const url = getSiteUrl(site);
   const repoFullName = getRepoFullName(site);
 
@@ -121,15 +123,13 @@ export default function SiteSettingsHeader({ site }: { site: FullSite }) {
       </div>
       <div className="mt-3 flex sm:mt-0">
         <span className="ml-3 block">
-          <a
-            href={url}
-            data-testid="visit-button"
-            target="_blank"
-            rel="noreferrer"
-          >
+          {visitDisabled ? (
             <button
               type="button"
-              className="inline-flex items-center rounded-md bg-green-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
+              disabled
+              data-testid="visit-button"
+              title="Your site is still publishing — you can visit it once the first publish finishes."
+              className="inline-flex cursor-not-allowed items-center rounded-md bg-gray-300 px-3 py-2 text-sm font-semibold text-white shadow-sm"
             >
               <SquareArrowOutUpRight
                 className="-ml-0.5 mr-1.5 h-5 w-5"
@@ -137,7 +137,25 @@ export default function SiteSettingsHeader({ site }: { site: FullSite }) {
               />
               Visit
             </button>
-          </a>
+          ) : (
+            <a
+              href={url}
+              data-testid="visit-button"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <button
+                type="button"
+                className="inline-flex items-center rounded-md bg-green-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-600"
+              >
+                <SquareArrowOutUpRight
+                  className="-ml-0.5 mr-1.5 h-5 w-5"
+                  aria-hidden="true"
+                />
+                Visit
+              </button>
+            </a>
+          )}
         </span>
       </div>
     </div>
