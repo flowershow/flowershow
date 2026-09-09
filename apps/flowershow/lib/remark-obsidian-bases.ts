@@ -185,17 +185,20 @@ async function executeBaseQueryForView(
     };
   }
 
-  if (!combinedFilters) {
-    return [];
-  }
-
   const formulas = parsedQuery.formulas;
 
-  const { where: whereClause, postFilter } = buildFilterStrategy(
-    combinedFilters,
-    rootDir,
-    formulas,
-  );
+  // Empty filters ⇒ the whole vault (every file for the site). This matches the
+  // official Bases default: "a base includes every file in the vault." Only run
+  // the filter strategy when filters are actually present.
+  let whereClause: Prisma.BlobWhereInput = {};
+  let postFilter: ((row: any) => boolean) | undefined;
+  if (combinedFilters) {
+    ({ where: whereClause, postFilter } = buildFilterStrategy(
+      combinedFilters,
+      rootDir,
+      formulas,
+    ));
+  }
 
   const finalWhere: Prisma.BlobWhereInput = { AND: [whereClause, { siteId }] };
 
@@ -237,6 +240,17 @@ async function executeBaseQueryForView(
       path: true,
       metadata: true,
       appPath: true,
+      size: true,
+      createdAt: true,
+      updatedAt: true,
+      // Outgoing links (this file → others): backs file.links and file.hasLink()
+      outgoingLinks: {
+        select: { targetPath: true, targetBlob: { select: { path: true } } },
+      },
+      // Incoming links (others → this file): backs file.backlinks
+      incomingLinks: {
+        select: { sourceBlob: { select: { path: true } } },
+      },
     },
   });
 
@@ -250,7 +264,7 @@ async function executeBaseQueryForView(
       for (const [formulaName, expression] of Object.entries(formulas)) {
         try {
           const ast = parseExpression(expression);
-          const value = evalExpr(ast, row as Blob, rootDir, formulas);
+          const value = evalExpr(ast, row, rootDir, formulas);
           computedFormulas[formulaName] = value;
         } catch (error) {
           console.error(`Error computing formula ${formulaName}:`, error);
@@ -277,6 +291,14 @@ async function executeBaseQueryForView(
         path: row.path,
         appPath: row.appPath,
         metadata: row.metadata as any,
+        // Pass file-level fields through so file.* filters (mtime/ctime/size/
+        // tags/links/backlinks/hasTag/hasLink) resolve in the JS post-filter,
+        // not just in the formula path.
+        size: (row as any).size,
+        createdAt: (row as any).createdAt,
+        updatedAt: (row as any).updatedAt,
+        outgoingLinks: (row as any).outgoingLinks,
+        incomingLinks: (row as any).incomingLinks,
       }),
     );
   }
@@ -740,6 +762,112 @@ function isMember(node: ExprNode, objName: string, prop: string): boolean {
   );
 }
 
+interface Duration {
+  __duration: true;
+  years: number;
+  months: number;
+  weeks: number;
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+}
+
+// Maps every unit spelling to a Duration field. Case-sensitive: `M` = month,
+// `m` = minute (matching Obsidian / Moment).
+const DURATION_UNITS: Record<string, keyof Omit<Duration, '__duration'>> = {
+  y: 'years',
+  year: 'years',
+  years: 'years',
+  M: 'months',
+  month: 'months',
+  months: 'months',
+  w: 'weeks',
+  week: 'weeks',
+  weeks: 'weeks',
+  d: 'days',
+  day: 'days',
+  days: 'days',
+  h: 'hours',
+  hour: 'hours',
+  hours: 'hours',
+  m: 'minutes',
+  minute: 'minutes',
+  minutes: 'minutes',
+  s: 'seconds',
+  second: 'seconds',
+  seconds: 'seconds',
+};
+
+function isDuration(v: unknown): v is Duration {
+  return typeof v === 'object' && v !== null && (v as any).__duration === true;
+}
+
+/**
+ * Parses a duration string such as "1M", "2 weeks", or a compound "1y2M3d"
+ * into a Duration. Returns null if the string contains no recognizable
+ * unit tokens (so callers can fall back to normal `+`/`-` behavior).
+ */
+function parseDuration(input: string): Duration | null {
+  const dur: Duration = {
+    __duration: true,
+    years: 0,
+    months: 0,
+    weeks: 0,
+    days: 0,
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+  };
+  const re = /(-?\d+)\s*([A-Za-z]+)/g;
+  let match: RegExpExecArray | null;
+  let found = false;
+  while ((match = re.exec(input)) !== null) {
+    const amount = parseInt(match[1]!, 10);
+    const field = DURATION_UNITS[match[2]!];
+    if (!field) return null; // unknown unit ⇒ not a duration
+    dur[field] += amount;
+    found = true;
+  }
+  // Ensure the whole string was unit tokens (no stray leftovers like "$5").
+  if (!found || input.replace(re, '').trim() !== '') return null;
+  return found ? dur : null;
+}
+
+/** Applies a Duration to a Date (calendar-aware for months/years). */
+function addDurationToDate(date: Date, dur: Duration, sign: 1 | -1): Date {
+  const d = new Date(date.getTime());
+  d.setFullYear(d.getFullYear() + sign * dur.years);
+  d.setMonth(d.getMonth() + sign * dur.months);
+  d.setDate(d.getDate() + sign * (dur.weeks * 7 + dur.days));
+  d.setHours(d.getHours() + sign * dur.hours);
+  d.setMinutes(d.getMinutes() + sign * dur.minutes);
+  d.setSeconds(d.getSeconds() + sign * dur.seconds);
+  return d;
+}
+
+/**
+ * Attempts Date +/- Duration arithmetic. `other` may be a Duration object or a
+ * string literal that parses as one (e.g. `date + "1M"`). Addition is
+ * commutative (duration + date). Returns undefined when this isn't a
+ * date/duration operation, so the caller falls back to normal `+`/`-`.
+ */
+function tryDateDuration(l: any, r: any, sign: 1 | -1): Date | undefined {
+  const asDuration = (v: any): Duration | null =>
+    isDuration(v) ? v : typeof v === 'string' ? parseDuration(v) : null;
+
+  if (l instanceof Date) {
+    const dur = asDuration(r);
+    if (dur) return addDurationToDate(l, dur, sign);
+  }
+  // duration + date (addition only)
+  if (sign === 1 && r instanceof Date) {
+    const dur = asDuration(l);
+    if (dur) return addDurationToDate(r, dur, 1);
+  }
+  return undefined;
+}
+
 // Global functions that are shared across all evaluations
 // These are computed once and reused for all rows
 const GLOBAL_FUNCTIONS: Record<string, (...args: any[]) => any> = {
@@ -763,6 +891,11 @@ const GLOBAL_FUNCTIONS: Record<string, (...args: any[]) => any> = {
       throw new Error(`Invalid date string: ${dateString}`);
     }
     return parsed;
+  },
+  duration: (value: any) => {
+    if (isDuration(value)) return value;
+    if (typeof value === 'string') return parseDuration(value);
+    return null;
   },
   html: (htmlString: string) => {
     // Return a special object that marks this as raw HTML
@@ -806,9 +939,55 @@ const GLOBAL_FUNCTIONS: Record<string, (...args: any[]) => any> = {
 };
 
 /**
- * Computes file properties from a row
+ * Normalizes a frontmatter tags value into a clean list of tag strings.
+ * Accepts a YAML list (`[a, b]`), a single string, or a whitespace/comma
+ * separated string, and strips any leading `#`.
+ *
+ * Note: this only sees frontmatter tags — inline body `#tags` are not indexed
+ * and therefore never appear here.
  */
-function getFileProperty(row: Blob, property: string, rootDir?: string): any {
+function normalizeTags(raw: unknown): string[] {
+  if (raw == null) return [];
+  const arr = Array.isArray(raw) ? raw : String(raw).split(/[\s,]+/);
+  return arr
+    .map((t) => String(t).trim().replace(/^#/, ''))
+    .filter((t) => t.length > 0);
+}
+
+/**
+ * True if `query` matches any tag in `tags`, including nested tags. Following
+ * Obsidian semantics, `hasTag("book")` matches both `book` and `book/fiction`.
+ */
+function tagMatches(tags: string[], query: string): boolean {
+  const q = String(query).trim().replace(/^#/, '');
+  if (!q) return false;
+  return tags.some((t) => t === q || t.startsWith(q + '/'));
+}
+
+/**
+ * Normalizes a link target (either an outgoing target or a hasLink() argument)
+ * to a comparable key: strips wikilink brackets, a trailing file extension, and
+ * reduces to the basename so `hasLink("Target")` matches a link to
+ * `folder/Target.md`.
+ */
+function normalizeLinkTarget(value: unknown): string {
+  let s = String(value ?? '').trim();
+  // Strip surrounding [[ ]] and any #heading / |alias
+  s = s.replace(/^\[\[/, '').replace(/\]\]$/, '');
+  s = s.split('#')[0]!.split('|')[0]!;
+  // Basename
+  const base = s.split('/').pop() ?? s;
+  // Strip a trailing extension
+  const dot = base.lastIndexOf('.');
+  return (dot > 0 ? base.slice(0, dot) : base).trim();
+}
+
+/**
+ * Computes file properties from a row. Returns data values for property access
+ * (path/name/ext/folder/basename/size/mtime/ctime/tags/links/backlinks) and
+ * bound functions for file methods (hasTag/hasLink).
+ */
+function getFileProperty(row: any, property: string, rootDir?: string): any {
   let path = row.path;
 
   // Add rootDir prefix back if it was stripped during indexing
@@ -830,6 +1009,13 @@ function getFileProperty(row: Blob, property: string, rootDir?: string): any {
       ? fileNameWithExt.substring(lastDotIndex + 1)
       : undefined;
 
+  const fileTags = () =>
+    normalizeTags((row.metadata as any)?.tags ?? (row.metadata as any)?.tag);
+  const outgoingTargets = () =>
+    ((row.outgoingLinks as any[]) ?? []).map(
+      (l) => l?.targetBlob?.path ?? l?.targetPath,
+    );
+
   switch (property) {
     case 'path':
       return path;
@@ -838,6 +1024,8 @@ function getFileProperty(row: Blob, property: string, rootDir?: string): any {
     }
     case 'name':
       return fileName;
+    case 'basename':
+      return fileNameWithExt;
     case 'folder': {
       let folder = segments.slice(0, -1).join('/');
       // Strip rootDir prefix from folder to match how filters are written
@@ -849,6 +1037,35 @@ function getFileProperty(row: Blob, property: string, rootDir?: string): any {
       }
       return folder;
     }
+    case 'size':
+      return row.size;
+    // mtime/ctime map to the Blob record's DB timestamps — the only per-file
+    // time data Flowershow stores (not filesystem or git times).
+    case 'mtime':
+      return row.updatedAt ? new Date(row.updatedAt) : undefined;
+    case 'ctime':
+      return row.createdAt ? new Date(row.createdAt) : undefined;
+    case 'tags':
+      return fileTags();
+    case 'links':
+      return outgoingTargets().filter((p: any) => p != null);
+    case 'backlinks':
+      return ((row.incomingLinks as any[]) ?? [])
+        .map((l) => l?.sourceBlob?.path)
+        .filter((p: any) => p != null);
+    // Methods
+    case 'hasTag':
+      return (...values: unknown[]) => {
+        const tags = fileTags();
+        return values.some((v) => tagMatches(tags, String(v)));
+      };
+    case 'hasLink':
+      return (target: unknown) => {
+        const key = normalizeLinkTarget(target);
+        return outgoingTargets().some(
+          (t: any) => normalizeLinkTarget(t) === key,
+        );
+      };
     default:
       return undefined;
   }
@@ -1128,7 +1345,7 @@ function resolveMemberAccess(obj: any, property: string): any {
  */
 function evalExpr(
   node: ExprNode,
-  row: Blob,
+  row: any,
   rootDir?: string,
   formulas?: Record<string, string>,
 ): any {
@@ -1183,10 +1400,14 @@ function evalExpr(
           return l >= r;
         case '<=':
           return l <= r;
-        case '+':
-          return l + r;
-        case '-':
-          return l - r;
+        case '+': {
+          const d = tryDateDuration(l, r, 1);
+          return d !== undefined ? d : l + r;
+        }
+        case '-': {
+          const d = tryDateDuration(l, r, -1);
+          return d !== undefined ? d : l - r;
+        }
         case '*':
           return l * r;
         case '/':
