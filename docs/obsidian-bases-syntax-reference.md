@@ -132,17 +132,17 @@ A **filter statement** is a line that evaluates to truthy/falsey. It can be:
 # Simple filter:
 filters:
   and:
-    - file.hasTag("tag")      # ❌ hasTag not implemented
+    - file.hasTag("tag")      # ✅ (frontmatter tags, nested matching)
 
 # Complex filter:
 filters:
   or:
-    - file.hasTag("tag")      # ❌
+    - file.hasTag("tag")      # ✅
     - and:
-        - file.hasTag("book") # ❌
-        - file.hasLink("Textbook") # ❌
+        - file.hasTag("book") # ✅
+        - file.hasLink("Textbook") # ✅ (matches loaded outgoing links)
     - not:
-        - file.hasTag("book") # ❌
+        - file.hasTag("book") # ✅
         - file.inFolder("Required Reading") # ✅ (top-level filter statement)
 ```
 
