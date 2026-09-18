@@ -1435,7 +1435,7 @@ git commit -m "feat(changelog): render changelog index and entry pages in site r
 **Files:**
 - Modify: `apps/flowershow/styles/default-theme.css` (add a new section after the "Page layout" section, near line 1660, inside the same `@layer components` block)
 
-- [ ] **Step 1: Add the styles** (these translate the approved mockup into existing tokens)
+- [x] **Step 1: Add the styles** (these translate the approved mockup into existing tokens)
 
 ```css
   /* ────────────────────────────────────────────────────
@@ -1695,9 +1695,9 @@ git commit -m "feat(changelog): render changelog index and entry pages in site r
   }
 ```
 
-- [ ] **Step 2: Visual check** (local stack). Open `/changelog` in light and dark mode at 1280px and 390px widths, and compare with the mockup. Adjust spacing values only if something is visibly broken. The contract (class names) must not change.
+- [x] **Step 2: Visual check** (local stack). Open `/changelog` in light and dark mode at 1280px and 390px widths, and compare with the mockup. Adjust spacing values only if something is visibly broken. The contract (class names) must not change. _(Done 2026-09-18 via a static render of the real components with the compiled CSS, because the app stack was unavailable. Fixed two issues found: `.rendered-mdx`'s page `min-h-[55vh]` spaced entries a screen apart, so there's now an override; and the 1-column grid needed `minmax(0, 1fr)`. The version pill uses `--color-foreground-50` because `--color-code-bg` doesn't switch in dark mode.)_
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add apps/flowershow/styles/default-theme.css
