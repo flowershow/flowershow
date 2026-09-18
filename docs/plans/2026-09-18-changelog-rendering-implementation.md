@@ -1897,9 +1897,30 @@ git commit -m "content: use built-in changelog rendering for flowershow.app chan
 
 ---
 
+### Task 11: Push, open a PR to `staging`, and verify via CI and staging (no Docker)
+
+**Bead:** `flowershow-v8x.5`, `flowershow-v8x.6` (verification). Approved by Rufus on 2026-09-18: push this branch and open a PR to `staging`.
+
+Docker and a local stack are NOT needed. CI runs the unit, lint and E2E workflows (`.github/workflows/e2e.yml` runs Playwright with its own Postgres) on PRs to `staging`, and that includes `e2e/specs/changelog.spec.ts`.
+
+- [ ] **Step 1: Sync with `staging`.** Run `git fetch origin staging`, then `git rebase origin/staging` (the branch was cut from `main`; the repo flow is feature → `staging`). Resolve conflicts, then re-run `cd apps/flowershow && pnpm test && npx tsc --noEmit -p .` and `pnpm docs:theme-classes:check` at the repo root. All must pass before pushing.
+- [ ] **Step 2: Push.** Run `git push -u origin feat/changelog-rendering`. Never force-push anything other than this branch, and never push `main` or `staging` directly.
+- [ ] **Step 3: Open the PR.** Run `gh pr create --base staging --head feat/changelog-rendering --title "feat: built-in changelog rendering for changelog/ folders"`, with a body that summarises the spec (link `docs/plans/2026-09-18-changelog-rendering-design.md`) and the mockup link, lists what was verified and how, and ends with the attribution line. Don't merge it: Rufus merges.
+- [ ] **Step 4: Watch CI.** Use `gh pr checks <n> --watch` (or poll `gh pr checks`). If unit, lint or E2E fail, fix them on the branch (TDD), push again, and repeat. Pay particular attention to `changelog.spec.ts`, `basic-rendering`, `canvas-embed`, `frontmatter` and `blog`. Once E2E passes, close beads `flowershow-v8x.4`, `flowershow-v8x.5`, `flowershow-v8x.6` and `flowershow-v8x.10`.
+- [ ] **Step 5: Staging check (best effort).** Once the PR (or `staging`) is deployed, find the deployment URL (`gh pr view <n> --json statusCheckRollup` or the Vercel bot comment). If `fl` can authenticate against it non-interactively (`API_URL=<url> fl whoami`), publish `content/flowershow-app` privately with `API_URL=<url> fl content/flowershow-app --name changelog-dogfood --yes`, then check `/changelog`, `/changelog?page=2` and one entry page against the mockup (https://claude.ai/artifact/4WfPDCR2WtJBV4uNZqou53). If `fl` needs an interactive browser login, don't block: note it on the PR and in bead `flowershow-v8x.9` for Rufus.
+
+### Task 12: Themeability: core provides structure, themes tweak the look
+
+**Bead:** `flowershow-v8x.15`. Do this on the same branch after Task 11 steps 1–4, pushing to update the PR.
+
+- [ ] **Step 1:** In the changelog section of `apps/flowershow/styles/default-theme.css`, introduce custom properties with defaults on `.changelog` / `.changelog-single`: `--changelog-meta-width` (11rem), `--changelog-gap` (3rem), `--changelog-entry-spacing` (3rem), `--changelog-marker-color` (`var(--color-accent)`), `--changelog-marker-size` (7px), `--changelog-title-size`, `--changelog-sticky-top` (5rem), `--changelog-rule-color`. Replace the hard-coded values with them. Keep the structural rules (grid, sticky, stacking) separate from the cosmetic ones, and mark them with comments.
+- [ ] **Step 2:** Prove it with 2–3 tiny override snippets (10 lines or fewer each) added to `content/flowershow-app/docs/reference/changelog.md` under "Styling": e.g. "Linear-like" (wider gap, bigger titles), "dense log" (small spacing, no dot), and "no date column" (`--changelog-meta-width: 0` plus meta stacked above the title). Check each via the static-render approach (render the components with the compiled CSS and screenshot in headless Chrome, allowing `--virtual-time-budget` for web fonts).
+- [ ] **Step 3:** Run `pnpm docs:theme-classes` (class list unchanged, but regenerate if needed), unit tests and lint. Then commit and push.
+
 ## Hand-off rules for unattended runs
 
 - Always start with `bd ready` and `git log --oneline -10` on `feat/changelog-rendering`, then pick the lowest-numbered unfinished task above.
-- Never push, open PRs, publish public sites, or touch production without asking Rufus.
-- If a step needs the local Docker stack and it isn't running, try `docker compose up -d` once. If that fails, record it in bead notes and move to the next task that doesn't need it.
+- **Allowed (approved 2026-09-18):** pushing `feat/changelog-rendering`, opening and updating its PR to `staging`, and publishing a *private* test site to a staging/preview deployment with `API_URL=... fl`.
+- **Never:** merge PRs, push `main` or `staging`, publish public sites, publish to production (`cloud.flowershow.app`), or push the themes repo.
+- Docker is not needed. Use CI (PR checks) for E2E, and the staging deployment for manual checks.
 - Record progress in beads notes (`bd update <id> --append-notes "..."`) at the end of each session.
