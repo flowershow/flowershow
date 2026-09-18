@@ -1716,7 +1716,7 @@ git commit -m "feat(changelog): default theme styles for changelog pages"
 - Create: `apps/flowershow/e2e/fixtures/test-site/releases/README.md` (opt-in via layout) plus `releases/2026-02-01-release-one.md`
 - Create: `apps/flowershow/e2e/specs/changelog.spec.ts`
 
-- [ ] **Step 1: Create the fixtures**
+- [x] **Step 1: Create the fixtures**
 
 `changelog/README.md`:
 
@@ -1766,7 +1766,7 @@ First release.
 
 Check `e2e/setup.ts` to see whether fixture files are globbed automatically or listed explicitly. If they're listed, add the new files. Also check whether a `people/alice.md` exists in the fixture (the blog spec uses `alice`). If it doesn't, the author renders as the raw handle, which the spec below allows.
 
-- [ ] **Step 2: Write the spec** `e2e/specs/changelog.spec.ts`:
+- [x] **Step 2: Write the spec** `e2e/specs/changelog.spec.ts`:
 
 ```ts
 import { expect, test } from '../helpers/fixtures';
@@ -1815,7 +1815,7 @@ test('layout: changelog opts another folder in', async ({ page, basePath }) => {
 });
 ```
 
-- [ ] **Step 3: Run the E2E tests** (needs the local stack)
+- [ ] **Step 3: Run the E2E tests** (needs the local stack) _(BLOCKED 2026-09-18: Docker isn't installed and there's no .env. The spec type-checks and `playwright test --list changelog` lists all 4 tests.)_
 
 Run: `cd apps/flowershow && npx playwright test --project=chromium changelog`
 Expected: PASS.
@@ -1824,7 +1824,7 @@ If the stack can't run in this environment, note it in bead `flowershow-v8x.5` (
 
 Also re-run `blog` and `basic-rendering`, which must still pass. Adding the `changelog/` folder must not change the existing blog list counts.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/flowershow/e2e
