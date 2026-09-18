@@ -722,7 +722,7 @@ git commit -m "refactor: extract renderPageContent from site page route"
   - `ChangelogEntryNav(props: { newer: ChangelogEntryMeta | null; older: ChangelogEntryMeta | null })`
   - `ChangelogIndex(props: { title: string; intro?: React.ReactNode; children: React.ReactNode; pagination: React.ReactNode })`
 
-- [ ] **Step 1: Write the failing tests** in `changelog.test.tsx`:
+- [x] **Step 1: Write the failing tests** in `changelog.test.tsx`:
 
 ```tsx
 import { cleanup, render, screen } from '@testing-library/react';
@@ -824,12 +824,12 @@ describe('ChangelogIndex', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `cd apps/flowershow && pnpm vitest run --project=unit components/public/changelog`
 Expected: FAIL (modules not found).
 
-- [ ] **Step 3: Implement the components**
+- [x] **Step 3: Implement the components**
 
 `types.ts`:
 
@@ -1039,12 +1039,12 @@ export function ChangelogIndex({ title, intro, pagination, children }: Props) {
 }
 ```
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `cd apps/flowershow && pnpm vitest run --project=unit components/public/changelog`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/flowershow/components/public/changelog
