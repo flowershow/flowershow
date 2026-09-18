@@ -571,7 +571,13 @@ export const siteRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const site = await ctx.db.site.findUnique({
         where: { id: input.siteId },
-        select: { id: true, userId: true, configJson: true },
+        select: {
+          id: true,
+          userId: true,
+          configJson: true,
+          plan: true,
+          customDomain: true,
+        },
       });
 
       if (!site || site.userId !== ctx.session.user.id) {
@@ -582,6 +588,20 @@ export const siteRouter = createTRPCRouter({
       }
 
       const patch = input.config as Record<string, unknown>;
+
+      // Custom head is a Premium feature.
+      if (
+        'head' in patch &&
+        typeof patch.head === 'string' &&
+        patch.head.trim() !== '' &&
+        !isFeatureEnabled(Feature.CustomHead, site)
+      ) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Custom head code requires a Premium plan',
+        });
+      }
+
       try {
         validateConfigPatch(patch);
       } catch (err) {

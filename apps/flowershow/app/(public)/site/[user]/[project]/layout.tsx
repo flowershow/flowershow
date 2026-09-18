@@ -219,8 +219,10 @@ export default async function PublicLayout(props: {
             data-website-id={siteConfig.umami.websiteId}
           />
         )}
-        {/* User-configured custom head HTML — rendered on the public site only. */}
-        {siteConfig?.head && <CustomHead html={siteConfig.head} />}
+        {/* User-configured custom head HTML — Premium-only, rendered on the public site only. */}
+        {isFeatureEnabled(Feature.CustomHead, site) && siteConfig?.head && (
+          <CustomHead html={siteConfig.head} />
+        )}
       </head>
       <body>
         {siteConfig?.analytics && (
