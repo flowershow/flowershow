@@ -1875,18 +1875,18 @@ git commit -m "docs: changelog rendering reference and theme classes"
 - Modify: `content/flowershow-app/changelog/README.mdx`
 - Possibly modify: `../themes/<theme>/theme.css` (separate repo at `/Users/rgrp/src/flowershow/themes`)
 
-- [ ] **Step 1: Drop `<List>` from the product changelog**
+- [x] **Step 1: Drop `<List>` from the product changelog**
 
 Replace the body of `content/flowershow-app/changelog/README.mdx` so it keeps the frontmatter (`title: Changelog`, `description: …`), drops `syntaxMode: mdx` and the `<List …/>` line, and keeps the one-line intro "This page tracks what we ship in Flowershow." Rename the file to `README.md` with `git mv`, since it no longer needs MDX.
 
-- [ ] **Step 2: Private dogfood publish.** This runs against **production** Flowershow, which only has the new renderer after deploy, so do it after the branch is deployed to a preview or merged. Until then, verify locally with `pnpm dev`. The command is:
+- [ ] **Step 2: Private dogfood publish.** _(DEFERRED: production doesn't have the renderer yet, so this happens after deploy/merge.)_ This runs against **production** Flowershow, which only has the new renderer after deploy, so do it after the branch is deployed to a preview or merged. Until then, verify locally with `pnpm dev`. The command is:
 
 Run: `fl content/flowershow-app --name changelog-dogfood-private` (check `fl --help` for the private/visibility flag, and use it).
 Expected: a private site URL. Open `/changelog` and compare it with the mockup.
 
-- [ ] **Step 3: Theme check.** For each official theme (leaf, letterpress, lessflowery, monospace, superstack, material-draft), set `"theme": "<name>"` in a local test site's `config.json`, then view `/changelog` and one entry page. Only where something is visibly broken (unreadable, overlapping, wrong font inheritance), add minimal overrides in that theme's `theme.css` using the documented classes. Commit theme changes in the themes repo on its own branch, and **do not push without asking**.
+- [x] **Step 3: Theme check.** _(Done 2026-09-18 via a static render of the real components with the compiled default CSS plus each theme.css. All 6 official themes render correctly (fonts and accents inherited), so no theme changes were needed. Re-check in the live app once the stack is available.)_ For each official theme (leaf, letterpress, lessflowery, monospace, superstack, material-draft), set `"theme": "<name>"` in a local test site's `config.json`, then view `/changelog` and one entry page. Only where something is visibly broken (unreadable, overlapping, wrong font inheritance), add minimal overrides in that theme's `theme.css` using the documented classes. Commit theme changes in the themes repo on its own branch, and **do not push without asking**.
 
-- [ ] **Step 4: Commit the dogfood change**
+- [x] **Step 4: Commit the dogfood change**
 
 ```bash
 git add content/flowershow-app/changelog

@@ -1,10 +1,6 @@
 ---
 title: Changelog
 description: Product updates from the Flowershow team.
-showToc: false
-syntaxMode: mdx
 ---
 
 This page tracks what we ship in Flowershow.
-
-<List dir="/changelog" pageSize="15" fields={["title", "description", "date"]}/>
