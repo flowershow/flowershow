@@ -81,3 +81,23 @@ views:
       - file.name
       - formula.incoming
 ```
+
+## Cards in a subfolder
+
+A `cards` view over notes that live in a subfolder. The card link must be a
+root-relative path (`/books/dune`), NOT a protocol-relative one (`//books/dune`),
+which a browser would read as `https://books/dune` — domain dropped, folder
+promoted to host. Regresses when the link is built as `` `/${row.appPath}` ``
+while `appPath` already carries a leading slash.
+
+```base
+filters:
+  and:
+    - file.inFolder("books")
+    - file.hasTag("favorite")
+views:
+  - type: cards
+    name: "Favorite books"
+    order:
+      - file.name
+```

@@ -69,7 +69,10 @@ export const ObsidianBaseTable: React.FC<ObsidianBaseTableProps> = (props) => {
       const fileName =
         pathParts[pathParts.length - 1]?.replace(/\.(md|mdx)$/, '') || '';
 
-      const linkUrl = `/${row.appPath || ''}`;
+      const linkUrl = resolveContentLink({
+        target: row.path,
+        siteHostname,
+      });
 
       return (
         <Link

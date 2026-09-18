@@ -8,6 +8,7 @@ import { expect, test } from '../helpers/fixtures';
 //   1 — "Favorites"         (table, hasTag + formulas)            → gaps #2/#3/#4
 //   2 — "Linked to target"  (list, file.hasLink)                  → gap #2
 //   3 — "Backlink count"    (table, file.backlinks)               → gap #4
+//   4 — "Favorite books"    (cards, notes in the books/ subfolder) → subfolder link
 test.describe('Obsidian Bases feature coverage', () => {
   test.beforeEach(async ({ page, basePath }) => {
     await page.goto(`${basePath}/bases-features`);
@@ -97,5 +98,27 @@ test.describe('Obsidian Bases feature coverage', () => {
     await expect(backlinkCount).toContainText('backlinks-target');
     // source-1, source-2, source-3 (source-3 is linked twice; .unique() dedupes)
     await expect(backlinkCount).toContainText('3');
+  });
+
+  test('cards view links to a subfolder note with a root-relative path', async ({
+    page,
+  }) => {
+    const cards = block(page, 4);
+
+    // The card for books/dune.md must link to the root-relative slug.
+    const dune = cards.getByRole('link', { name: 'dune', exact: true });
+    await expect(dune).toBeVisible();
+    await expect(dune).toHaveAttribute('href', '/books/dune');
+
+    // Regression guard: a `/${appPath}` template double-slashed the leading
+    // slash into `//books/dune`, a protocol-relative URL the browser resolves
+    // to `https://books/dune` (domain dropped). No card link may start with //.
+    const hrefs = await cards
+      .getByRole('link')
+      .evaluateAll((links) => links.map((l) => l.getAttribute('href') ?? ''));
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const href of hrefs) {
+      expect(href.startsWith('//')).toBe(false);
+    }
   });
 });

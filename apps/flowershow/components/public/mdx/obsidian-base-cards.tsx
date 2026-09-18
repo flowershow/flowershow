@@ -229,7 +229,10 @@ export const ObsidianBaseCards: React.FC<ObsidianBaseCardsProps> = (props) => {
         }}
       >
         {rows.map((row, index) => {
-          const linkUrl = `/${row.appPath || ''}`;
+          const linkUrl = resolveContentLink({
+            target: row.path,
+            siteHostname,
+          });
           const image = getImage(row);
           const isHexColor = image?.startsWith('#') && image.length === 7;
           // Prioritize images in the first 6 cards (likely above the fold)
