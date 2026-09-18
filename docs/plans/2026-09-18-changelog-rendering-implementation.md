@@ -1415,7 +1415,7 @@ export async function ChangelogEntryPage({ siteId, dir, blobPath, authors, child
 Run: `cd apps/flowershow && npx tsc --noEmit -p . && pnpm lint && pnpm test`
 Expected: no type errors, no lint errors, all tests PASS.
 
-- [ ] **Step 5: Manual smoke test** _(BLOCKED 2026-09-18: Docker isn't installed and there's no apps/flowershow/.env. Covered partly by a new unit test, changelog-index-page.test.tsx.)_ (needs the local stack: `docker compose up -d` at repo root, then `pnpm dev` in `apps/flowershow`)
+- [x] **Step 5: Manual smoke test** _(Superseded by CI E2E on PR #1383. Originally BLOCKED 2026-09-18: Docker isn't installed and there's no apps/flowershow/.env. Covered partly by a new unit test, changelog-index-page.test.tsx.)_ (needs the local stack: `docker compose up -d` at repo root, then `pnpm dev` in `apps/flowershow`)
 
 Publish the e2e test site (Task 8 seeds it), or use a local site containing `content/flowershow-app/changelog`. Then open `/changelog`, `/changelog?page=2`, `/changelog?page=99` (expect 404) and one entry page. Compare with the mockup.
 
@@ -1815,7 +1815,7 @@ test('layout: changelog opts another folder in', async ({ page, basePath }) => {
 });
 ```
 
-- [ ] **Step 3: Run the E2E tests** (needs the local stack) _(BLOCKED 2026-09-18: Docker isn't installed and there's no .env. The spec type-checks and `playwright test --list changelog` lists all 4 tests.)_
+- [x] **Step 3: Run the E2E tests** _(Passed in CI on PR #1383. Originally BLOCKED 2026-09-18: Docker isn't installed and there's no .env. The spec type-checks and `playwright test --list changelog` lists all 4 tests.)_
 
 Run: `cd apps/flowershow && npx playwright test --project=chromium changelog`
 Expected: PASS.
@@ -1831,7 +1831,7 @@ git add apps/flowershow/e2e
 git commit -m "test(changelog): e2e fixture and spec for changelog folder rendering"
 ```
 
-- [ ] **Step 5: Close beads** once Tasks 6–8 are green: `bd close flowershow-v8x.4 flowershow-v8x.5 flowershow-v8x.6`
+- [x] **Step 5: Close beads** once Tasks 6–8 are green: `bd close flowershow-v8x.4 flowershow-v8x.5 flowershow-v8x.6`
 
 ---
 
@@ -1905,9 +1905,9 @@ Docker and a local stack are NOT needed. CI runs the unit, lint and E2E workflow
 
 - [x] **Step 1: Sync with `staging`.** _(2026-09-19: rebased onto origin/staging. Resolved `page.tsx` conflicts by porting staging's canvas `containerHeight: '100%'` into `renderPageContent`, keeping `isCanvas` and `<CanvasEnhancer />` (added to the changelog branches too), and regenerating the class reference (261 classes). 650 unit tests pass.)_ Run `git fetch origin staging`, then `git rebase origin/staging` (the branch was cut from `main`; the repo flow is feature → `staging`). Resolve conflicts, then re-run `cd apps/flowershow && pnpm test && npx tsc --noEmit -p .` and `pnpm docs:theme-classes:check` at the repo root. All must pass before pushing.
 - [x] **Step 2: Push.** Run `git push -u origin feat/changelog-rendering`. Never force-push anything other than this branch, and never push `main` or `staging` directly.
-- [ ] **Step 3: Open the PR.** Run `gh pr create --base staging --head feat/changelog-rendering --title "feat: built-in changelog rendering for changelog/ folders"`, with a body that summarises the spec (link `docs/plans/2026-09-18-changelog-rendering-design.md`) and the mockup link, lists what was verified and how, and ends with the attribution line. Don't merge it: Rufus merges.
-- [ ] **Step 4: Watch CI.** Use `gh pr checks <n> --watch` (or poll `gh pr checks`). If unit, lint or E2E fail, fix them on the branch (TDD), push again, and repeat. Pay particular attention to `changelog.spec.ts`, `basic-rendering`, `canvas-embed`, `frontmatter` and `blog`. Once E2E passes, close beads `flowershow-v8x.4`, `flowershow-v8x.5`, `flowershow-v8x.6` and `flowershow-v8x.10`.
-- [ ] **Step 5: Staging check (best effort).** Once the PR (or `staging`) is deployed, find the deployment URL (`gh pr view <n> --json statusCheckRollup` or the Vercel bot comment). If `fl` can authenticate against it non-interactively (`API_URL=<url> fl whoami`), publish `content/flowershow-app` privately with `API_URL=<url> fl content/flowershow-app --name changelog-dogfood --yes`, then check `/changelog`, `/changelog?page=2` and one entry page against the mockup (https://claude.ai/artifact/4WfPDCR2WtJBV4uNZqou53). If `fl` needs an interactive browser login, don't block: note it on the PR and in bead `flowershow-v8x.9` for Rufus.
+- [x] **Step 3: Open the PR.** _(https://github.com/flowershow/flowershow/pull/1383)_ Run `gh pr create --base staging --head feat/changelog-rendering --title "feat: built-in changelog rendering for changelog/ folders"`, with a body that summarises the spec (link `docs/plans/2026-09-18-changelog-rendering-design.md`) and the mockup link, lists what was verified and how, and ends with the attribution line. Don't merge it: Rufus merges.
+- [x] **Step 4: Watch CI.** _(2026-09-19 PR #1383: Lint, test and e2e pass (49/49, including all 4 changelog specs). The `Vercel – flowershow-components` failure is pre-existing: it fails on every recent PR to staging.)_ Use `gh pr checks <n> --watch` (or poll `gh pr checks`). If unit, lint or E2E fail, fix them on the branch (TDD), push again, and repeat. Pay particular attention to `changelog.spec.ts`, `basic-rendering`, `canvas-embed`, `frontmatter` and `blog`. Once E2E passes, close beads `flowershow-v8x.4`, `flowershow-v8x.5`, `flowershow-v8x.6` and `flowershow-v8x.10`.
+- [ ] **Step 5: Staging check (best effort).** _(NEEDS RUFUS, 2026-09-19: the Vercel preview is behind SSO (302 to vercel.com/sso-api), and the only fl token is for production, so nothing was published. Instructions posted on PR #1383.)_ Once the PR (or `staging`) is deployed, find the deployment URL (`gh pr view <n> --json statusCheckRollup` or the Vercel bot comment). If `fl` can authenticate against it non-interactively (`API_URL=<url> fl whoami`), publish `content/flowershow-app` privately with `API_URL=<url> fl content/flowershow-app --name changelog-dogfood --yes`, then check `/changelog`, `/changelog?page=2` and one entry page against the mockup (https://claude.ai/artifact/4WfPDCR2WtJBV4uNZqou53). If `fl` needs an interactive browser login, don't block: note it on the PR and in bead `flowershow-v8x.9` for Rufus.
 
 ### Task 12: Themeability: core provides structure, themes tweak the look
 
