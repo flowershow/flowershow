@@ -1583,3 +1583,196 @@ describe('postFilter', () => {
     });
   });
 });
+
+// Helper for the gap-closing tests below: a mock Blob with the file-level
+// fields (size/timestamps/links) that the query now selects.
+const mkBlob = (
+  path: string,
+  metadata: Record<string, any> = {},
+  extra: Record<string, any> = {},
+): any => ({
+  path,
+  metadata,
+  appPath: `/${path.replace(/\.[^/.]+$/, '')}`,
+  siteId: 'test-site',
+  extension: path.split('.').pop() || '',
+  size: 1234,
+  sha: 'test-sha',
+  createdAt: new Date('2024-01-01T12:00:00'),
+  updatedAt: new Date('2024-06-01T12:00:00'),
+  outgoingLinks: [],
+  incomingLinks: [],
+  ...extra,
+});
+
+describe('file.hasTag', () => {
+  it('matches a tag present in frontmatter (list form)', () => {
+    const blob = mkBlob('a.md', { tags: ['book', 'fiction'] });
+    expect(getComputedProperty(blob, 'x', { x: 'file.hasTag("book")' })).toBe(
+      true,
+    );
+  });
+
+  it('returns false when no tag matches', () => {
+    const blob = mkBlob('a.md', { tags: ['book'] });
+    expect(
+      getComputedProperty(blob, 'x', { x: 'file.hasTag("magazine")' }),
+    ).toBe(false);
+  });
+
+  it('matches nested tags (hasTag("book") matches book/fiction)', () => {
+    const blob = mkBlob('a.md', { tags: ['book/fiction'] });
+    expect(getComputedProperty(blob, 'x', { x: 'file.hasTag("book")' })).toBe(
+      true,
+    );
+  });
+
+  it('normalizes a leading # and comma/space string form', () => {
+    const blob = mkBlob('a.md', { tags: '#book, fiction' });
+    expect(
+      getComputedProperty(blob, 'x', { x: 'file.hasTag("fiction")' }),
+    ).toBe(true);
+  });
+
+  it('matches any of several arguments', () => {
+    const blob = mkBlob('a.md', { tags: ['fiction'] });
+    expect(
+      getComputedProperty(blob, 'x', { x: 'file.hasTag("book", "fiction")' }),
+    ).toBe(true);
+  });
+
+  it('works as a standalone filter statement (post-filter)', () => {
+    const { postFilter } = buildFilterStrategy('file.hasTag("book")');
+    expect(postFilter).toBeDefined();
+    expect(postFilter!(mkBlob('a.md', { tags: ['book'] }))).toBe(true);
+    expect(postFilter!(mkBlob('b.md', { tags: ['other'] }))).toBe(false);
+  });
+});
+
+describe('file.hasLink / links / backlinks', () => {
+  const withLinks = (extra: Record<string, any>) => mkBlob('a.md', {}, extra);
+
+  it('hasLink matches an outgoing link by basename', () => {
+    const blob = withLinks({
+      outgoingLinks: [
+        { targetPath: 'target', targetBlob: { path: 'folder/target.md' } },
+      ],
+    });
+    expect(
+      getComputedProperty(blob, 'x', { x: 'file.hasLink("target")' }),
+    ).toBe(true);
+    expect(getComputedProperty(blob, 'x', { x: 'file.hasLink("other")' })).toBe(
+      false,
+    );
+  });
+
+  it('hasLink works as a standalone filter statement (post-filter)', () => {
+    const { postFilter } = buildFilterStrategy('file.hasLink("target")');
+    expect(postFilter).toBeDefined();
+    expect(
+      postFilter!(withLinks({ outgoingLinks: [{ targetPath: 'target' }] })),
+    ).toBe(true);
+    expect(
+      postFilter!(withLinks({ outgoingLinks: [{ targetPath: 'nope' }] })),
+    ).toBe(false);
+  });
+
+  it('file.links returns outgoing target paths', () => {
+    const blob = withLinks({
+      outgoingLinks: [
+        { targetPath: 'target', targetBlob: { path: 'target.md' } },
+      ],
+    });
+    expect(getComputedProperty(blob, 'x', { x: 'file.links' })).toEqual([
+      'target.md',
+    ]);
+  });
+
+  it('file.backlinks returns incoming source paths', () => {
+    const blob = withLinks({
+      incomingLinks: [{ sourceBlob: { path: 'source-1.md' } }],
+    });
+    expect(getComputedProperty(blob, 'x', { x: 'file.backlinks' })).toEqual([
+      'source-1.md',
+    ]);
+  });
+});
+
+describe('file.mtime / ctime / size / basename / tags', () => {
+  it('file.mtime resolves to the updatedAt timestamp', () => {
+    const blob = mkBlob('a.md');
+    expect(getComputedProperty(blob, 'x', { x: 'file.mtime.year' })).toBe(2024);
+    expect(getComputedProperty(blob, 'x', { x: 'file.mtime.month' })).toBe(6);
+  });
+
+  it('file.ctime resolves to the createdAt timestamp', () => {
+    const blob = mkBlob('a.md');
+    expect(getComputedProperty(blob, 'x', { x: 'file.ctime.month' })).toBe(1);
+  });
+
+  it('file.size resolves in the JS eval path', () => {
+    const blob = mkBlob('a.md');
+    expect(getComputedProperty(blob, 'x', { x: 'file.size' })).toBe(1234);
+  });
+
+  it('file.basename includes the extension', () => {
+    const blob = mkBlob('notes/test.md');
+    expect(getComputedProperty(blob, 'x', { x: 'file.basename' })).toBe(
+      'test.md',
+    );
+  });
+
+  it('file.tags returns the normalized frontmatter tags', () => {
+    const blob = mkBlob('a.md', { tags: ['#book', 'fiction'] });
+    expect(getComputedProperty(blob, 'x', { x: 'file.tags' })).toEqual([
+      'book',
+      'fiction',
+    ]);
+  });
+});
+
+describe('date + duration arithmetic', () => {
+  const fmt = (expr: string) =>
+    getComputedProperty(mkBlob('a.md'), 'x', {
+      x: `(${expr}).format("YYYY-MM-DD")`,
+    });
+
+  it('adds a month with a bare duration string', () => {
+    expect(fmt('date("2024-01-15 12:00:00") + "1M"')).toBe('2024-02-15');
+  });
+
+  it('subtracts a week', () => {
+    expect(fmt('date("2024-01-15 12:00:00") - "1w"')).toBe('2024-01-08');
+  });
+
+  it('supports the duration() global', () => {
+    expect(fmt('date("2024-01-01 12:00:00") + duration("10d")')).toBe(
+      '2024-01-11',
+    );
+  });
+
+  it('supports compound durations', () => {
+    expect(fmt('date("2024-01-01 12:00:00") + "1y2M3d"')).toBe('2025-03-04');
+  });
+
+  it('is commutative for addition (duration + date)', () => {
+    expect(fmt('duration("1M") + date("2024-01-15 12:00:00")')).toBe(
+      '2024-02-15',
+    );
+  });
+
+  it('still returns millisecond difference for date - date', () => {
+    const ms = getComputedProperty(mkBlob('a.md'), 'x', {
+      x: 'date("2024-01-02 12:00:00") - date("2024-01-01 12:00:00")',
+    });
+    expect(ms).toBe(86400000);
+  });
+
+  it('falls back to string concat when the string is not a duration', () => {
+    const result = getComputedProperty(mkBlob('a.md'), 'x', {
+      x: 'date("2024-01-01 12:00:00") + " note"',
+    });
+    expect(typeof result).toBe('string');
+    expect(result).toContain('note');
+  });
+});
