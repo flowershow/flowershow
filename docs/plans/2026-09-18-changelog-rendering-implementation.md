@@ -65,17 +65,17 @@
 
 **Bead:** none (setup)
 
-- [ ] **Step 1: Install dependencies** (there's no `node_modules` in the checkout yet)
+- [x] **Step 1: Install dependencies** (there's no `node_modules` in the checkout yet)
 
 Run: `cd /Users/rgrp/src/flowershow/flowershow && pnpm install`
 Expected: completes without errors.
 
-- [ ] **Step 2: Run the unit test baseline**
+- [x] **Step 2: Run the unit test baseline**
 
 Run: `cd apps/flowershow && pnpm test`
 Expected: PASS. If there are pre-existing failures, record their names in the bead notes (`bd update flowershow-v8x.4 --append-notes "baseline failures: ..."`) and don't fix them as part of this plan.
 
-- [ ] **Step 3: Confirm the branch**
+- [x] **Step 3: Confirm the branch**
 
 Run: `git branch --show-current`
 Expected: `feat/changelog-rendering`
@@ -110,7 +110,7 @@ Expected: `feat/changelog-rendering`
   - `neighbours(entries: ChangelogEntryMeta[], path: string): { newer: ChangelogEntryMeta | null; older: ChangelogEntryMeta | null }`
   - `parsePageParam(value: string | string[] | undefined): number | null`
 
-- [ ] **Step 1: Widen the metadata type**
+- [x] **Step 1: Widen the metadata type**
 
 In `apps/flowershow/server/api/types.ts`, change `layout?: 'plain';` to:
 
@@ -121,7 +121,7 @@ In `apps/flowershow/server/api/types.ts`, change `layout?: 'plain';` to:
 
 (`(string & {})` keeps autocomplete for the known values while allowing opt-out values like `default`.)
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 Create `apps/flowershow/lib/changelog.test.ts`:
 
@@ -292,12 +292,12 @@ describe('neighbours', () => {
 });
 ```
 
-- [ ] **Step 3: Run the tests to verify they fail**
+- [x] **Step 3: Run the tests to verify they fail**
 
 Run: `cd apps/flowershow && pnpm vitest run --project=unit lib/changelog.test.ts`
 Expected: FAIL with "Failed to resolve import './changelog'".
 
-- [ ] **Step 4: Implement `apps/flowershow/lib/changelog.ts`**
+- [x] **Step 4: Implement `apps/flowershow/lib/changelog.ts`**
 
 ```ts
 import { ensureLeadingSlash, normalizeAuthors, safeDate } from '@/lib/utils';
@@ -458,12 +458,12 @@ export function parsePageParam(value: string | string[] | undefined): number | n
 
 Before running, check that `normalizeAuthors` and `ensureLeadingSlash` are exported from `lib/utils.ts` (`grep -n "export function normalizeAuthors\|export function ensureLeadingSlash" apps/flowershow/lib/utils.ts`). Both are used by the page route today.
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `cd apps/flowershow && pnpm vitest run --project=unit lib/changelog.test.ts`
 Expected: PASS (all tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/flowershow/lib/changelog.ts apps/flowershow/lib/changelog.test.ts apps/flowershow/server/api/types.ts
