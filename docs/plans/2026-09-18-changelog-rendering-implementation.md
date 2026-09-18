@@ -1205,7 +1205,7 @@ git commit -m "feat(changelog): resolve changelog index/entry context for a requ
 - Consumes: Tasks 1–5 (`renderPageContent`, `getChangelogEntries`, `resolveChangelogContext`, the components, `paginate`, `neighbours`, `parsePageParam`, `CHANGELOG_PAGE_SIZE`).
 - Produces: `ChangelogIndexPage` and `ChangelogEntryPage` async server components (below).
 
-- [ ] **Step 1: Create `changelog-index-page.tsx`**
+- [x] **Step 1: Create `changelog-index-page.tsx`**
 
 ```tsx
 import { notFound } from 'next/navigation';
@@ -1294,7 +1294,7 @@ Note: `renderPageContent`'s `blob` option is typed loosely. If `MDXClient` needs
 
 Also check that `ensureLeadingSlash` in `lib/utils.ts` produces `/changelog` from `changelog`. If the site uses a `rootDir`, verify that blob paths are relative to it (they are for `editLink`, which prefixes `normalizedRootDir`), so `dir` maps straight onto the URL path.
 
-- [ ] **Step 2: Create `changelog-entry-page.tsx`**
+- [x] **Step 2: Create `changelog-entry-page.tsx`**
 
 ```tsx
 import { neighbours } from '@/lib/changelog';
@@ -1327,7 +1327,7 @@ export async function ChangelogEntryPage({ siteId, dir, blobPath, authors, child
 }
 ```
 
-- [ ] **Step 3: Modify `page.tsx`**
+- [x] **Step 3: Modify `page.tsx`**
   1. Add `searchParams` to the page props:
      ```ts
      export default async function SitePage(props: {
@@ -1410,16 +1410,16 @@ export async function ChangelogEntryPage({ siteId, dir, blobPath, authors, child
   8. In `generateMetadata`, mirror the README-less case. Change the `getBlob` `.catch` so that when the slug's last segment is `changelog` (use `isChangelogDirName(decodedSlug)`), it returns `null` instead of calling `notFound()`. The title then falls back to `buildPageTitle('Changelog', siteName)` when `blob` is null and `isChangelogDirName(decodedSlug)`.
   9. Add the imports: `resolveChangelogContext`, `parsePageParam`, `isChangelogDirName`, `ChangelogIndexPage` and `ChangelogEntryPage`.
 
-- [ ] **Step 4: Type-check, lint and unit test**
+- [x] **Step 4: Type-check, lint and unit test**
 
 Run: `cd apps/flowershow && npx tsc --noEmit -p . && pnpm lint && pnpm test`
 Expected: no type errors, no lint errors, all tests PASS.
 
-- [ ] **Step 5: Manual smoke test** (needs the local stack: `docker compose up -d` at repo root, then `pnpm dev` in `apps/flowershow`)
+- [ ] **Step 5: Manual smoke test** _(BLOCKED 2026-09-18: Docker isn't installed and there's no apps/flowershow/.env. Covered partly by a new unit test, changelog-index-page.test.tsx.)_ (needs the local stack: `docker compose up -d` at repo root, then `pnpm dev` in `apps/flowershow`)
 
 Publish the e2e test site (Task 8 seeds it), or use a local site containing `content/flowershow-app/changelog`. Then open `/changelog`, `/changelog?page=2`, `/changelog?page=99` (expect 404) and one entry page. Compare with the mockup.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/flowershow/components/public/changelog "apps/flowershow/app/(public)/site/[user]/[project]/[[...slug]]/page.tsx"

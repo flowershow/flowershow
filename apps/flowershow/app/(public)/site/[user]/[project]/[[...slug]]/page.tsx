@@ -19,6 +19,10 @@ import { getSiteUrl } from '@/lib/get-site-url';
 import { resolveHeroConfig } from '@/lib/hero-config';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import { isEmoji } from '@/lib/is-emoji';
+import { ChangelogEntryPage } from '@/components/public/changelog/changelog-entry-page';
+import { ChangelogIndexPage } from '@/components/public/changelog/changelog-index-page';
+import { isChangelogDirName, parsePageParam } from '@/lib/changelog';
+import { resolveChangelogContext } from '@/lib/changelog-context';
 import { renderPageContent } from '@/lib/render-page-content';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
@@ -61,10 +65,15 @@ export async function generateMetadata(props: {
       if (userName === 'anon') {
         return null;
       }
+      // README-less changelog folders render a generated index page
+      if (isChangelogDirName(decodedSlug)) {
+        return null;
+      }
       notFound();
     });
 
   const metadata = blob?.metadata as PageMetadata | null;
+  const isChangelogFallback = !blob && isChangelogDirName(decodedSlug);
 
   // workaround (?) to "not publish" files marked with `publish: false`
   // it's needed atm as Inngest sync function doesn't parse frontmatter, and so it uploads to R2
@@ -80,7 +89,10 @@ export async function generateMetadata(props: {
     .catch(() => null);
 
   const siteName = resolveSiteName(siteConfig, site.projectName);
-  const title = buildPageTitle(metadata?.title, siteName);
+  const title = buildPageTitle(
+    metadata?.title ?? (isChangelogFallback ? 'Changelog' : undefined),
+    siteName,
+  );
   const description = metadata?.description ?? siteConfig?.description;
   const url = decodedSlug !== '/' ? `${siteUrl}${decodedSlug}` : `${siteUrl}/`;
 
@@ -144,6 +156,7 @@ export async function generateMetadata(props: {
 
 export default async function SitePage(props: {
   params: Promise<RouteParams>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await props.params;
   const projectName = decodeURIComponent(params.project);
@@ -203,9 +216,59 @@ export default async function SitePage(props: {
       siteId: site.id,
       slug: decodedSlug,
     })
-    .catch(() => {
-      notFound();
-    });
+    .catch(() => null);
+
+  const changelog = await resolveChangelogContext({
+    slug: decodedSlug,
+    blob: blob
+      ? { path: blob.path, metadata: blob.metadata as PageMetadata | null }
+      : null,
+    siteFilePaths,
+    getFolderIndexMetadata: async (dir) => {
+      const match = ['index.md', 'index.mdx', 'README.md', 'README.mdx']
+        .map((f) => `${dir}/${f}`)
+        .find((c) => siteFilePaths.some((p) => p.replace(/^\//, '') === c));
+      if (!match) return null;
+      const indexBlob = await api.site.getBlobByPath
+        .query({ siteId: site.id, path: match })
+        .catch(() => null);
+      return (indexBlob?.metadata as PageMetadata | null) ?? null;
+    },
+  });
+  const changelogPage =
+    changelog?.kind === 'index'
+      ? parsePageParam((await props.searchParams).page)
+      : null;
+  if (changelog?.kind === 'index' && changelogPage === null) {
+    notFound();
+  }
+
+  // A changelog folder without a README/index still gets its timeline page
+  if (!blob) {
+    if (changelog?.kind !== 'index') notFound();
+    return (
+      <>
+        <UrlNormalizer />
+        <div className="layout-inner">
+          <div className="layout-inner-center">
+            <main className="page-main">
+              <ChangelogIndexPage
+                site={site}
+                dir={changelog.dir}
+                page={changelogPage!}
+                title="Changelog"
+                renderMode={siteConfig?.syntaxMode}
+                siteHostname={siteHostname}
+                siteFilePaths={siteFilePaths}
+                permalinksMapping={permalinksMapping}
+                imageDimensions={imageDimensions}
+              />
+            </main>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   // Handle Obsidian permalink redirects
   if (blob?.permalink) {
@@ -321,12 +384,14 @@ export default async function SitePage(props: {
     if (!paths || paths.length === 0) return true;
     return activeSidebarPath !== undefined;
   })();
-  const showToc = metadata?.showToc ?? siteConfig?.showToc;
+  // A changelog index TOC would list every entry's subheadings, so it's off there
+  const showToc =
+    changelog?.kind !== 'index' && (metadata?.showToc ?? siteConfig?.showToc);
   const showKnowledgeGraph =
     metadata?.showKnowledgeGraph ?? siteConfig?.showKnowledgeGraph ?? false;
   const showRightColumn = showToc || showKnowledgeGraph;
   const heroConfig = resolveHeroConfig(metadata, siteConfig);
-  const showHero = heroConfig.showHero;
+  const showHero = heroConfig.showHero && !changelog;
 
   let siteTree: Node[] | undefined;
 
@@ -383,18 +448,50 @@ export default async function SitePage(props: {
 
         <div className="layout-inner-center">
           <main className="page-main">
-            <BlogLayout
-              title={metadata?.title ?? ''}
-              description={metadata?.description ?? ''}
-              date={metadata?.date}
-              showHero={heroConfig.showHero}
-              authors={authors}
-            >
-              <div className="rendered-mdx" id="mdxpage">
-                {compiledContent}
-              </div>
-              <CanvasEnhancer />
-            </BlogLayout>
+            {changelog?.kind === 'index' ? (
+              <>
+                <ChangelogIndexPage
+                  site={site}
+                  dir={changelog.dir}
+                  page={changelogPage!}
+                  title={metadata?.title || 'Changelog'}
+                  intro={
+                    pageContent?.trim() ? (
+                      <div id="mdxpage">{compiledContent}</div>
+                    ) : undefined
+                  }
+                  renderMode={renderMode}
+                  siteHostname={siteHostname}
+                  siteFilePaths={siteFilePaths}
+                  permalinksMapping={permalinksMapping}
+                  imageDimensions={imageDimensions}
+                />
+                <CanvasEnhancer />
+              </>
+            ) : changelog?.kind === 'entry' ? (
+              <ChangelogEntryPage
+                siteId={site.id}
+                dir={changelog.dir}
+                blobPath={blob.path}
+                authors={authors}
+              >
+                <div id="mdxpage">{compiledContent}</div>
+                <CanvasEnhancer />
+              </ChangelogEntryPage>
+            ) : (
+              <BlogLayout
+                title={metadata?.title ?? ''}
+                description={metadata?.description ?? ''}
+                date={metadata?.date}
+                showHero={heroConfig.showHero}
+                authors={authors}
+              >
+                <div className="rendered-mdx" id="mdxpage">
+                  {compiledContent}
+                </div>
+                <CanvasEnhancer />
+              </BlogLayout>
+            )}
           </main>
 
           {(showEditLink || showRawLink) && (
