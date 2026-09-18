@@ -484,7 +484,7 @@ git commit -m "feat(changelog): pure helpers for changelog detection, sorting an
 - Consumes: `toChangelogEntries`, `normalizeDir`, `ChangelogEntryMeta`, `ChangelogBlobRow` from Task 1.
 - Produces: `api.site.getChangelogEntries.query({ siteId: string; dir: string }) → Promise<{ entries: ChangelogEntryMeta[] }>`. The full sorted list is returned, not paginated: pagination and neighbours happen in the caller, and folder sizes are small. `entry.image` is already resolved to a URL.
 
-- [ ] **Step 1: Teach the mock DB `path.startsWith` and `extension.in` for `findMany`**
+- [x] **Step 1: Teach the mock DB `path.startsWith` and `extension.in` for `findMany`**
 
 In `createMockDb`'s `blob.findMany` filter in `site.test.ts`, add these after the `w.id?.in` check:
 
@@ -495,7 +495,7 @@ In `createMockDb`'s `blob.findMany` filter in `site.test.ts`, add these after th
             return false;
 ```
 
-- [ ] **Step 2: Write the failing tests** (append to `site.test.ts`)
+- [x] **Step 2: Write the failing tests** (append to `site.test.ts`)
 
 ```ts
 describe('site.getChangelogEntries', () => {
@@ -530,12 +530,12 @@ describe('site.getChangelogEntries', () => {
 });
 ```
 
-- [ ] **Step 3: Run the tests to verify they fail**
+- [x] **Step 3: Run the tests to verify they fail**
 
 Run: `cd apps/flowershow && pnpm vitest run --project=unit server/api/routers/__tests__/site.test.ts -t getChangelogEntries`
 Expected: FAIL (`getChangelogEntries` is not a procedure).
 
-- [ ] **Step 4: Implement the procedure** in `site.ts`, directly after `getListComponentItems`:
+- [x] **Step 4: Implement the procedure** in `site.ts`, directly after `getListComponentItems`:
 
 ```ts
   getChangelogEntries: publicProcedure
@@ -620,12 +620,12 @@ import {
 } from '@/lib/changelog';
 ```
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `cd apps/flowershow && pnpm vitest run --project=unit server/api/routers/__tests__/site.test.ts`
 Expected: PASS (the new tests and all existing site router tests).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add apps/flowershow/server/api/routers/site.ts apps/flowershow/server/api/routers/__tests__/site.test.ts
