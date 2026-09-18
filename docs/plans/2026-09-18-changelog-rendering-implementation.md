@@ -661,14 +661,14 @@ export type RenderPageContentOptions = {
 export async function renderPageContent(opts: RenderPageContentOptions): Promise<React.JSX.Element>;
 ```
 
-- [ ] **Step 1: Create `lib/render-page-content.tsx`**
+- [x] **Step 1: Create `lib/render-page-content.tsx`**
   - Move these two helpers **verbatim** from the bottom of `page.tsx`: `fetchReferencedCanvasFiles` and `resolveCanvasFileReferences`.
   - Move the compile branch **verbatim**: the block from `if (!isMarkdown && !isMdx && !isCanvas) {` through the end of the outer `try { … } catch (error: any) { compiledContent = <ErrorMessage title="Error" … /> }` (currently roughly `page.tsx:246-350`). Put it inside `renderPageContent`, which declares `let compiledContent: React.JSX.Element;` and returns it.
   - Inside the function, derive `isMarkdown`, `isMdx` and `isCanvas` from `opts.blob.path` exactly as `page.tsx:236-238` does, and read `renderMode` from `opts.renderMode`. Replace the free variables `pageContent → opts.content`, `site → opts.site`, `blob → opts.blob`, `siteHostname`, `siteFilePaths`, `permalinksMapping` and `imageDimensions` with the `opts.*` fields.
   - Move the imports those lines need (`serialize`, `ErrorMessage`, `MDXClient`, `getMdxOptions`, `processMarkdown`, `protectNonMathDollars`, `protectWikiLinkAliases`, `preprocessMdxForgiving`, `processCanvas`, `api` from `@/trpc/server`, `ImageDimensionsMap`, `PageMetadata`).
   - The HTML redirect (`if (isHtml) redirect(...)`) **stays in `page.tsx`**.
 
-- [ ] **Step 2: Replace the moved block in `page.tsx`** with:
+- [x] **Step 2: Replace the moved block in `page.tsx`** with:
 
 ```ts
   compiledContent = await renderPageContent({
@@ -685,14 +685,14 @@ export async function renderPageContent(opts: RenderPageContentOptions): Promise
 
 Then delete the now-unused imports from `page.tsx`. Run `pnpm lint` in `apps/flowershow` to find them.
 
-- [ ] **Step 3: Verify there's no behaviour change**
+- [x] **Step 3: Verify there's no behaviour change**
 
 Run: `cd apps/flowershow && pnpm test && npx tsc --noEmit -p .`
 Expected: all unit tests PASS and there are no type errors. `lib/markdown-pipeline.integration.test.ts` must still pass.
 
 If the local stack is available (`docker compose up -d` + `pnpm dev`), also run `npx playwright test --project=chromium basic-rendering canvas-embed frontmatter`. Expected: PASS.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add apps/flowershow/lib/render-page-content.tsx "apps/flowershow/app/(public)/site/[user]/[project]/[[...slug]]/page.tsx"
