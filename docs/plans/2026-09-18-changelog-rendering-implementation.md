@@ -1843,7 +1843,7 @@ git commit -m "test(changelog): e2e fixture and spec for changelog folder render
 - Create: `content/flowershow-app/docs/reference/changelog.md`
 - Modify: `content/flowershow-app/docs/reference/theme-class-reference.md`
 
-- [ ] **Step 1: Write the user docs** in `docs/reference/changelog.md`. Follow the style of neighbouring reference pages such as `list-component.md` and `page-authors.md`, and read one first. Cover:
+- [x] **Step 1: Write the user docs** in `docs/reference/changelog.md`. Follow the style of neighbouring reference pages such as `list-component.md` and `page-authors.md`, and read one first. Cover:
   - making a `changelog/` folder with `YYYY-MM-DD-slug.md` entries
   - frontmatter: `title`, `date`, `description`, `image`, `authors`, `version`
   - authors via `people/`
@@ -1854,11 +1854,11 @@ git commit -m "test(changelog): e2e fixture and spec for changelog folder render
 
   Don't hard-wrap lines.
 
-- [ ] **Step 2: Add a "Changelog" section to `theme-class-reference.md`**, following the file's existing table format. List every class in the Global Constraints contract, plus the helper classes `.changelog-entry-meta-inner`, `.changelog-entry-content`, `.changelog-pagination-inner`, `.changelog-pagination-count`, `.changelog-back`, `.changelog-entry-nav-older` and `.changelog-entry-nav-newer`, each with a one-line description.
+- [x] **Step 2: Add a "Changelog" section to `theme-class-reference.md`** _(The reference is GENERATED: added a `changelog` group and classifier to `scripts/theme-class-reference.mjs` and ran `pnpm docs:theme-classes`. Without this, root `pnpm lint`/`pnpm test` fail with "Unclassified theme class: .changelog".)_, following the file's existing table format. List every class in the Global Constraints contract, plus the helper classes `.changelog-entry-meta-inner`, `.changelog-entry-content`, `.changelog-pagination-inner`, `.changelog-pagination-count`, `.changelog-back`, `.changelog-entry-nav-older` and `.changelog-entry-nav-newer`, each with a one-line description.
 
-- [ ] **Step 3: If the docs sidebar/nav is config-driven, add the page** (check `content/flowershow-app/config.json` for how reference pages are listed). If `docs/plans` or the repo has a sitemap regeneration step (see commit `ed3af38b chore(docs): regenerate docs sitemap`), run it.
+- [x] **Step 3: If the docs sidebar/nav is config-driven, add the page** (check `content/flowershow-app/config.json` for how reference pages are listed). If `docs/plans` or the repo has a sitemap regeneration step (see commit `ed3af38b chore(docs): regenerate docs sitemap`), run it.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add content/flowershow-app/docs
