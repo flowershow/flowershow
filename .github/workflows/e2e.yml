@@ -85,19 +85,19 @@ jobs:
             -p 9000:9000 \
             -e MINIO_ROOT_USER=minioadmin \
             -e MINIO_ROOT_PASSWORD=minioadmin \
-            minio/minio server /data
+            quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z server /data
           # Wait for MinIO to be ready
           timeout 30s bash -c 'until curl -sf http://localhost:9000/minio/health/live; do sleep 1; done'
 
       - name: Set up MinIO bucket
         run: |
-          # Download MinIO client
-          curl -fsSL https://dl.min.io/client/mc/release/linux-amd64/mc -o /usr/local/bin/mc
-          chmod +x /usr/local/bin/mc
-
-          mc alias set local http://localhost:9000 minioadmin minioadmin
-          mc mb local/flowershow
-          mc anonymous set download local/flowershow
+          # Run the MinIO client from its image (the standalone `mc` binary CDN
+          # at dl.min.io now 404/410s, and Docker Hub no longer hosts the image).
+          docker run --rm --network host quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z /bin/sh -c "
+            mc alias set local http://localhost:9000 minioadmin minioadmin &&
+            mc mb --ignore-existing local/flowershow &&
+            mc anonymous set download local/flowershow
+          "
 
       - name: Create .env file
         working-directory: apps/flowershow
