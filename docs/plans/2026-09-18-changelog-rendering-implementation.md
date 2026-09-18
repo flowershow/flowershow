@@ -1075,7 +1075,7 @@ export async function resolveChangelogContext(args: {
 }): Promise<ChangelogContext>;
 ```
 
-- [ ] **Step 1: Write the failing tests** in `changelog-context.test.ts`:
+- [x] **Step 1: Write the failing tests** in `changelog-context.test.ts`:
 
 ```ts
 import { describe, expect, it, vi } from 'vitest';
@@ -1125,12 +1125,12 @@ describe('resolveChangelogContext', () => {
 });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `cd apps/flowershow && pnpm vitest run --project=unit lib/changelog-context.test.ts`
 Expected: FAIL (module not found).
 
-- [ ] **Step 3: Implement `lib/changelog-context.ts`**
+- [x] **Step 3: Implement `lib/changelog-context.ts`**
 
 ```ts
 import {
@@ -1178,12 +1178,12 @@ export async function resolveChangelogContext({
 }
 ```
 
-- [ ] **Step 4: Run to verify it passes**
+- [x] **Step 4: Run to verify it passes**
 
 Run: `cd apps/flowershow && pnpm vitest run --project=unit lib/changelog-context.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add apps/flowershow/lib/changelog-context.ts apps/flowershow/lib/changelog-context.test.ts
