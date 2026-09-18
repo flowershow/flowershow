@@ -994,6 +994,7 @@ export default async function SiteSettingsPage(props: {
           <Form
             title="Custom Head Code"
             description="Raw HTML injected into the <head> of every page — third-party scripts, widget loaders (e.g. Tally, Mailchimp), site-verification <meta> tags, etc."
+            disabled={!isFeatureEnabled(Feature.CustomHead, site)}
             helpText={
               <a
                 className="underline"

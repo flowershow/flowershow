@@ -3,6 +3,9 @@ title: Custom Head Code
 description: Inject custom scripts, meta tags, and other HTML into the <head> of every page on your Flowershow site.
 ---
 
+> [!note]
+> Custom Head Code is a premium feature. See [pricing](/pricing) for details.
+
 Custom Head Code lets you add raw HTML to the `<head>` of **every page** on your site. It's the place for scripts, meta tags, and other head elements:
 
 - Third-party analytics and tag managers

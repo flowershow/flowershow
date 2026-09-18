@@ -311,7 +311,7 @@ Umami analytics configuration. [[analytics|Learn more →]]
 
 ---
 
-### `head`
+### `head` (⭐️ Premium feature)
 
 **Type:** `string`  
 **Default:** —
