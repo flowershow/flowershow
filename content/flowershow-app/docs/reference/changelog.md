@@ -75,7 +75,60 @@ To keep a `changelog` folder as normal pages, set a different layout in its `REA
 
 ## Styling
 
-Changelog pages use stable `.changelog-*` classes that themes and custom CSS can target. See the Changelog section of the [[theme-class-reference|theme class reference]].
+Flowershow provides the changelog's structure, and your theme or [[custom-styles|custom CSS]] adjusts the look. Colours and fonts come from your theme automatically. For layout and spacing, set any of these CSS custom properties, on `:root` or `.changelog`:
+
+| Property | Default | What it controls |
+| --- | --- | --- |
+| `--changelog-max-width` | `60rem` | Width of the whole changelog |
+| `--changelog-columns` | `11rem minmax(0, 1fr)` | Date column and content column. Use `minmax(0, 1fr)` to put dates above entries |
+| `--changelog-gap` | `3rem` | Space between the date column and the content |
+| `--changelog-entry-spacing` | `3rem` | Vertical space around each entry |
+| `--changelog-rule-color` | light foreground | Colour of the line between entries |
+| `--changelog-marker-color` | accent colour | Colour of the dot next to each date |
+| `--changelog-marker-size` | `7px` | Size of the dot (`0` hides it) |
+| `--changelog-marker-radius` | `9999px` | Dot shape (`0` makes a square) |
+| `--changelog-title-size` | theme's 3xl size | Size of entry titles on the timeline |
+| `--changelog-meta-position` | `sticky` | `static` stops the date following you as you scroll |
+| `--changelog-meta-direction` | `column` | `row` puts the date and authors on one line |
+| `--changelog-meta-spacing` | `0` | Space below the date and authors on wide screens (useful when stacking) |
+| `--changelog-sticky-top` | `5rem` | How far from the top the sticky date sits |
+
+A few examples:
+
+```css
+/* Roomy, Linear-style: more space, bigger titles, square marker */
+:root {
+  --changelog-gap: 5rem;
+  --changelog-entry-spacing: 5rem;
+  --changelog-title-size: 2.25rem;
+  --changelog-marker-radius: 0;
+}
+```
+
+```css
+/* Dense log: tight spacing, narrow date column, no dot */
+:root {
+  --changelog-entry-spacing: 1.25rem;
+  --changelog-gap: 1.5rem;
+  --changelog-columns: 7rem minmax(0, 1fr);
+  --changelog-marker-size: 0;
+  --changelog-title-size: 1.25rem;
+  --changelog-meta-position: static;
+}
+```
+
+```css
+/* No date column: date and authors in a row above each title */
+:root {
+  --changelog-columns: minmax(0, 1fr);
+  --changelog-meta-direction: row;
+  --changelog-meta-position: static;
+  --changelog-meta-spacing: 0.75rem;
+  --changelog-max-width: 42rem;
+}
+```
+
+For deeper changes, target the stable `.changelog-*` classes. See the Changelog section of the [[theme-class-reference|theme class reference]].
 
 ## Coming soon
 
