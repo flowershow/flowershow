@@ -93,11 +93,13 @@ jobs:
         run: |
           # Run the MinIO client from its image (the standalone `mc` binary CDN
           # at dl.min.io now 404/410s, and Docker Hub no longer hosts the image).
-          docker run --rm --network host quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z /bin/sh -c "
-            mc alias set local http://localhost:9000 minioadmin minioadmin &&
-            mc mb --ignore-existing local/flowershow &&
-            mc anonymous set download local/flowershow
-          "
+          # The mc image's entrypoint is `mc`, so override it to run a shell.
+          docker run --rm --network host --entrypoint /bin/sh \
+            quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z -c "
+              mc alias set local http://localhost:9000 minioadmin minioadmin &&
+              mc mb --ignore-existing local/flowershow &&
+              mc anonymous set download local/flowershow
+            "
 
       - name: Create .env file
         working-directory: apps/flowershow
