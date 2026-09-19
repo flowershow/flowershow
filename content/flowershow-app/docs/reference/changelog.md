@@ -207,4 +207,4 @@ layout: changelog
 ---
 ```
 
-To keep a `CHANGELOG.md` as a normal page, give it a different layout, such as `layout: default`. A `CHANGELOG.md` with no version headings is always shown as a normal page.
+To keep a `CHANGELOG.md` as a normal page, give it a different layout, such as `layout: default`. A `CHANGELOG.md` with no version headings is always shown as a normal page. Pages inside a changelog folder are always that folder's entries, so this detection and `layout: changelog` apply only to pages outside one.

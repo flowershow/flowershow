@@ -36,18 +36,20 @@ export async function resolveChangelogContext({
   if (!/\.mdx?$/i.test(blob.path)) return null;
   const dir = dirOf(blob.path);
 
-  // Single-file changelog: CHANGELOG.md (any case) or any page opting in
-  if (!isFolderIndexPath(blob.path)) {
-    const layout = blob.metadata?.layout;
-    if (layout === 'changelog') return { kind: 'file', dir };
-    if (!layout && isChangelogFileName(blob.path)) return { kind: 'file', dir };
-  }
-
   if (isFolderIndexPath(blob.path)) {
     return isChangelogDir(dir, blob.metadata) ? { kind: 'index', dir } : null;
   }
 
-  if (!dir) return null;
-  const folderMeta = await getFolderIndexMetadata(dir);
-  return isChangelogDir(dir, folderMeta) ? { kind: 'entry', dir } : null;
+  // Pages in a changelog folder (by name or by its index's layout) are its
+  // entries, and the folder alone decides: an entry's own layout never does.
+  const folderMeta = dir ? await getFolderIndexMetadata(dir) : null;
+  if (dir && (isChangelogDirName(dir) || folderMeta?.layout === 'changelog')) {
+    return isChangelogDir(dir, folderMeta) ? { kind: 'entry', dir } : null;
+  }
+
+  // Single-file changelog: CHANGELOG.md (any case), or any page opting in
+  const layout = blob.metadata?.layout;
+  if (layout === 'changelog') return { kind: 'file', dir };
+  if (!layout && isChangelogFileName(blob.path)) return { kind: 'file', dir };
+  return null;
 }

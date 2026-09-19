@@ -157,6 +157,38 @@ describe('single-file changelogs', () => {
       }),
     ).toBeNull();
   });
+  it('inside a changelog folder, the folder decides (entries stay entries)', async () => {
+    expect(
+      await resolveChangelogContext({
+        slug: '/changelog/changelog',
+        blob: { path: 'changelog/changelog.md', metadata: null },
+        siteFilePaths: [],
+        getFolderIndexMetadata: vi.fn().mockResolvedValue(null),
+      }),
+    ).toEqual({ kind: 'entry', dir: 'changelog' });
+    expect(
+      await resolveChangelogContext({
+        slug: '/releases/x',
+        blob: { path: 'releases/x.md', metadata: { layout: 'changelog' } },
+        siteFilePaths: [],
+        getFolderIndexMetadata: vi
+          .fn()
+          .mockResolvedValue({ layout: 'changelog' }),
+      }),
+    ).toEqual({ kind: 'entry', dir: 'releases' });
+  });
+  it('layout: changelog on a page in an ordinary folder → file', async () => {
+    expect(
+      await resolveChangelogContext({
+        slug: '/docs/history',
+        blob: { path: 'docs/history.md', metadata: { layout: 'changelog' } },
+        siteFilePaths: [],
+        getFolderIndexMetadata: vi
+          .fn()
+          .mockResolvedValue({ layout: 'default' }),
+      }),
+    ).toEqual({ kind: 'file', dir: 'docs' });
+  });
   it('folder README with layout: changelog is still folder mode', async () => {
     expect(
       await resolveChangelogContext({
