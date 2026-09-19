@@ -1,6 +1,6 @@
 # Changelog Rendering, Phase 2 (Single-File `CHANGELOG.md`) Implementation Plan
 
-Status: **Draft, pending approval of the [single-file design](2026-09-19-changelog-single-file-design.md) by Rufus.** Do not start until Task 0 is done.
+Status: **Design approved 2026-09-19.** Decisions are recorded in the [design doc](2026-09-19-changelog-single-file-design.md#decisions-answered-2026-09-19). Before Task 1, finish Task 0 Step 2: amend the tasks for Q1 (lowercase `/changelog` alias, an extra task) and Q9 (a "Compare" link in the meta column, in Task 3). Pushing `feat/changelog-single-file` and opening a **draft** PR is pre-approved for the scheduled run on 2026-09-19.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
