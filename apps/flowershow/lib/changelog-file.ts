@@ -1,4 +1,7 @@
+import matter from 'gray-matter';
 import type { Heading, Root, RootContent } from 'mdast';
+import remarkParse from 'remark-parse';
+import { unified } from 'unified';
 
 export type ParsedHeading = {
   version?: string;
@@ -104,4 +107,14 @@ export function entryAnchor(parsed: ParsedHeading, used: Set<string>): string {
   for (let i = 1; used.has(anchor); i++) anchor = `${base}-${i}`;
   used.add(anchor);
   return anchor;
+}
+
+/**
+ * Whether a markdown source has at least one version heading, i.e. whether
+ * `remarkChangelog` would restructure it. Files without any render as normal pages.
+ */
+export function hasVersionSections(source: string): boolean {
+  const { content } = matter(source);
+  const tree = unified().use(remarkParse).parse(content);
+  return splitChangelogTree(tree).sections.length > 0;
 }

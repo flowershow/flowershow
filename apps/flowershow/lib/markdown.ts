@@ -18,7 +18,7 @@ import remarkMath from 'remark-math';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import remarkSmartypants from 'remark-smartypants';
-import { unified } from 'unified';
+import { type Pluggable, unified } from 'unified';
 import FsImage from '@/components/public/mdx/fs-image';
 import remarkObsidianComments from '@/lib/remark-obsidian-comments';
 import remarkYouTubeAutoEmbed from '@/lib/remark-youtube-auto-embed';
@@ -30,6 +30,9 @@ import rehypeResolveExplicitJsxUrls from './rehype-resolve-explicit-jsx-urls';
 import rehypeResolveHtmlUrls from './rehype-resolve-html-urls';
 import rehypeToReact from './rehype-to-react';
 import rehypeUnwrapParagraphsAroundMedia from './rehype-unwrap-paragraph-around-media';
+import remarkChangelog, {
+  type RemarkChangelogOptions,
+} from './remark-changelog';
 import remarkCommonMarkLink from './remark-commonmark-link';
 import remarkObsidianBases from './remark-obsidian-bases';
 import { resolveContentLink } from './resolve-link';
@@ -45,6 +48,8 @@ interface MarkdownOptions {
   imageDimensions?: ImageDimensionsMap;
   canvasFiles?: Record<string, string>;
   canvasNodeFiles?: Record<string, string>;
+  /** Render the file as a single-file changelog timeline. */
+  changelog?: RemarkChangelogOptions;
 }
 
 // Private Use Area char used as a temporary alias divider so GFM table block-parsing
@@ -95,6 +100,11 @@ export async function processMarkdown(
     .use(remarkMath)
     .use(remarkCallout)
     .use(remarkMark)
+    // Last remark plugin: it restructures the whole tree
+    .use(
+      options.changelog ? remarkChangelog : () => undefined,
+      options.changelog,
+    )
     .use(remarkRehype, { allowDangerousHtml: true })
     .use(rehypeRaw)
     .use(rehypeJsonCanvas, {
@@ -134,6 +144,7 @@ export const getMdxOptions = ({
   permalinks,
   canvasFiles,
   canvasNodeFiles,
+  changelog,
 }: {
   filePath: string;
   files: string[];
@@ -144,6 +155,7 @@ export const getMdxOptions = ({
   permalinks?: Record<string, string>;
   canvasFiles?: Record<string, string>;
   canvasNodeFiles?: Record<string, string>;
+  changelog?: RemarkChangelogOptions;
 }): EvaluateOptions => {
   return {
     parseFrontmatter,
@@ -170,6 +182,8 @@ export const getMdxOptions = ({
         [mdxMermaid, {}],
         remarkMark,
         [remarkObsidianBases, { siteHostname, siteId, rootDir }],
+        // Last remark plugin: it restructures the whole tree
+        ...(changelog ? [[remarkChangelog, changelog] as Pluggable] : []),
       ],
       rehypePlugins: [
         [
@@ -206,12 +220,23 @@ export const getUrlResolver = (siteHostname: string) => {
   };
 };
 
+// Changelog page and entry titles already link to their own anchor
+function isChangelogTitle(element: any): boolean {
+  const className = element.properties?.className;
+  return (
+    Array.isArray(className) &&
+    (className.includes('changelog-title') ||
+      className.includes('changelog-entry-title'))
+  );
+}
+
 const rehypeAutolinkHeadingsConfig: RehypeAutolinkHeadingsOptions = {
   properties: { className: ['heading-link'] },
   test(element: any) {
     return (
       ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(element.tagName) &&
       element.properties?.id !== 'table-of-contents' &&
+      !isChangelogTitle(element) &&
       element.properties?.className !== 'blockquote-heading'
     );
   },

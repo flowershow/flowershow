@@ -4,6 +4,7 @@ import { unified } from 'unified';
 import { describe, expect, it } from 'vitest';
 import {
   entryAnchor,
+  hasVersionSections,
   headingText,
   isVersionHeading,
   parseVersionHeading,
@@ -142,5 +143,21 @@ describe('entryAnchor', () => {
     expect(
       entryAnchor({ version: '@scope/pkg@1.2.0', unreleased: false }, used),
     ).toBe('scope-pkg-1.2.0');
+  });
+});
+
+describe('hasVersionSections', () => {
+  it('is true for a changelog with version headings', () => {
+    expect(hasVersionSections('# Changelog\n\n## 1.0.0\n\n- x\n')).toBe(true);
+  });
+  it('is false for prose-only files', () => {
+    expect(hasVersionSections('# Notes\n\nJust prose.\n')).toBe(false);
+  });
+  it('ignores frontmatter (not a setext heading)', () => {
+    expect(
+      hasVersionSections(
+        '---\nlayout: changelog\ntitle: X\n---\n\nJust prose.\n',
+      ),
+    ).toBe(false);
   });
 });

@@ -76,7 +76,9 @@ function isEmpty(nodes: RootContent[]): boolean {
  * date-only) into the same `.changelog-*` DOM as the folder changelog.
  * Rewrites the whole tree once so reference definitions keep resolving.
  */
-export default function remarkChangelog(options: { title?: string } = {}) {
+export type RemarkChangelogOptions = { title?: string };
+
+export default function remarkChangelog(options: RemarkChangelogOptions = {}) {
   return (tree: Root) => {
     const { titleNode, preamble, sections } = splitChangelogTree(tree);
     if (sections.length === 0) return;
@@ -154,6 +156,8 @@ export default function remarkChangelog(options: { title?: string } = {}) {
                       children: [text(entryTitle(section))],
                     },
                   ],
+                  // Set here so rehype-slug can't reuse the entry's own anchor
+                  { id: `${anchor}-title` },
                 ),
                 el(
                   'div',

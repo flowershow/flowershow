@@ -1774,6 +1774,18 @@
     border-radius: var(--radius);
     padding: 0.05rem 0.5rem;
   }
+  .changelog-entry-compare {
+    font-size: var(--font-size-sm);
+    color: var(--color-foreground-600);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-foreground-900);
+      text-decoration: underline;
+      text-decoration-color: var(--color-accent);
+      text-underline-offset: 3px;
+    }
+  }
   .changelog-entry-authors {
     display: flex;
     flex-wrap: wrap;
@@ -1819,6 +1831,10 @@
       text-decoration-color: var(--color-accent);
       text-underline-offset: 4px;
     }
+  }
+  .changelog-entry.is-unreleased .changelog-entry-title,
+  .changelog-entry.is-unreleased .changelog-entry-title a {
+    color: var(--color-foreground-500);
   }
   .changelog-entry-description {
     font-size: var(--font-size-lg);
