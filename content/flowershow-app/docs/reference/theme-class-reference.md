@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **261 styled class selectors**:
-**259 stable semantic hooks** and **2 non-contract
+and currently documents **263 styled class selectors**:
+**261 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -305,7 +305,7 @@ Collection/blog listing cards, loading placeholders, and pagination controls.
 
 ## Changelog
 
-Built-in changelog timeline for changelog/ folders (or folders with layout: changelog) and the single-entry page.
+Built-in changelog timeline for changelog/ folders (or folders with layout: changelog), single CHANGELOG.md files (or pages with layout: changelog), and the single-entry page.
 
 **DOM shape**
 
@@ -315,10 +315,11 @@ Built-in changelog timeline for changelog/ folders (or folders with layout: chan
 │  ├─ .changelog-title
 │  └─ .changelog-intro
 ├─ ol.changelog-entries
-│  └─ li.changelog-entry
+│  └─ li.changelog-entry[.is-unreleased]
 │     ├─ .changelog-entry-meta
 │     │  └─ .changelog-entry-meta-inner
 │     │     ├─ .changelog-entry-date
+│     │     ├─ .changelog-entry-compare (CHANGELOG.md)
 │     │     ├─ .changelog-entry-version
 │     │     └─ .changelog-entry-authors
 │     │        └─ .changelog-entry-author
@@ -348,6 +349,7 @@ article.changelog-single (entry page)
 | <code>.changelog-entry-author</code> | Hook |
 | <code>.changelog-entry-authors</code> | Hook |
 | <code>.changelog-entry-body</code> | Hook |
+| <code>.changelog-entry-compare</code> | Hook |
 | <code>.changelog-entry-content</code> | Hook |
 | <code>.changelog-entry-date</code> | Hook |
 | <code>.changelog-entry-description</code> | Hook |
@@ -572,6 +574,7 @@ Owning semantic hook
 | <code>.is-open</code> | State | navigation dropdowns and collapsible tree items |
 | <code>.is-plain</code> | State | .rendered-mdx |
 | <code>.is-scrolled</code> | State | .site-navbar |
+| <code>.is-unreleased</code> | State | .changelog-entry |
 | <code>.no-nav</code> | State | .site-layout |
 
 ## Compatibility utilities (not public API)

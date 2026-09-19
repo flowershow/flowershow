@@ -1,9 +1,12 @@
 ---
 title: Changelog
-description: "Publish a changelog with dated entries: Flowershow turns a changelog folder into a timeline page automatically"
+description: "Publish a changelog: Flowershow turns a changelog folder or a CHANGELOG.md file into a timeline page automatically"
 ---
 
-Flowershow renders a changelog folder as a full timeline page, with no components or configuration needed. Each entry shows its date, authors, title, summary, optional image and full content, newest first, and each entry also gets its own page.
+Flowershow renders a changelog as a full timeline page, with no components or configuration needed. There are two ways to write one:
+
+- **A `changelog` folder** with one Markdown file per update. Each entry shows its date, authors, title, summary, optional image and full content, newest first, and each entry also gets its own page.
+- **A single `CHANGELOG.md` file**, the common format in software projects. See [Single `CHANGELOG.md` file](#single-changelogmd-file) below.
 
 ## Basic usage
 
@@ -130,6 +133,78 @@ A few examples:
 
 For deeper changes, target the stable `.changelog-*` classes. See the Changelog section of the [[theme-class-reference|theme class reference]].
 
-## Coming soon
+## Single `CHANGELOG.md` file
 
-Support for a single `CHANGELOG.md` file (the common format in software projects, such as [Keep a Changelog](https://keepachangelog.com)) is planned.
+A file called `CHANGELOG.md` (or `changelog.md`, in any case, anywhere in your site) renders as the same timeline on one page. Each version gets its own anchor, so you can link straight to it.
+
+```markdown
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+## [Unreleased]
+
+### Added
+
+- Dark mode for the dashboard.
+
+## [1.2.0] - 2026-09-18
+
+### Fixed
+
+- Login no longer times out on slow connections.
+
+## [1.1.0] - 2026-08-02
+
+- First public release.
+
+[Unreleased]: https://github.com/you/project/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/you/project/compare/v1.1.0...v1.2.0
+```
+
+### Where it's published
+
+`CHANGELOG.md` is published at `/CHANGELOG`, and also at `/changelog`. In a subfolder, `packages/cli/CHANGELOG.md` is at `/packages/cli/CHANGELOG` and `/packages/cli/changelog`.
+
+If the same folder also has a `changelog/` folder, the folder owns `/changelog` and the file stays at `/CHANGELOG`. Likewise, if a lowercase `changelog.md` sits next to a `changelog/` folder, the folder wins; set a `permalink` in the file's frontmatter to publish it at another URL.
+
+### Version headings
+
+Every `##` heading starts a new entry. These formats are recognised, so most tools work out of the box ([Keep a Changelog](https://keepachangelog.com), [Changesets](https://github.com/changesets/changesets), [release-please](https://github.com/googleapis/release-please) and conventional-changelog):
+
+| Heading | Entry title | Date |
+| --- | --- | --- |
+| `## [1.2.0] - 2026-09-18` | 1.2.0 | Sep 18, 2026 |
+| `## [17.11.2](https://…/compare/v17.11.1...v17.11.2) (2026-08-24)` | 17.11.2 | Aug 24, 2026 |
+| `## 2.3.0` | 2.3.0 | none |
+| `## 2026-09-18 - Big launch` | Big launch | Sep 18, 2026 |
+| `## 2026-09-18` | Sep 18, 2026 | Sep 18, 2026 |
+| `## Unreleased` | Unreleased | none |
+| `## Spring clean-up` | Spring clean-up | none |
+
+Headings like `### Added` or `### Bug Fixes` stay inside the entry. A top-level `#` heading that is itself a version (as in older conventional-changelog files, `# [3.1.0](…) (2019-04-10)`) also starts an entry.
+
+If a version heading links somewhere, like release-please's version links or Keep a Changelog's reference links at the bottom of the file, the entry shows a small **Compare** link next to the date (or **Release** if the link isn't a compare link).
+
+### Title, intro and Unreleased
+
+- **Page title:** the first `#` heading (e.g. `# Changelog` or `# @scope/package`). Without one, the frontmatter `title` is used, and otherwise "Changelog".
+- **Intro:** anything between the title and the first version appears above the timeline.
+- **Unreleased:** shown first and muted, and hidden while it's empty.
+
+### Linking to a version
+
+Each entry has an anchor made from its version, date or title: `/CHANGELOG#1.2.0`, `/CHANGELOG#unreleased`, `/CHANGELOG#2026-09-18`. The date and the entry title link to it.
+
+### Other file names, and turning it off
+
+Only `CHANGELOG.md` is detected automatically. To render any other page as a changelog (for example `HISTORY.md` or `RELEASES.md`), add `layout: changelog` to its frontmatter:
+
+```yaml
+---
+title: Release history
+layout: changelog
+---
+```
+
+To keep a `CHANGELOG.md` as a normal page, give it a different layout, such as `layout: default`. A `CHANGELOG.md` with no version headings is always shown as a normal page. Pages inside a changelog folder are always that folder's entries, so this detection and `layout: changelog` apply only to pages outside one.

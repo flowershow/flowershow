@@ -23,6 +23,7 @@ import { ChangelogEntryPage } from '@/components/public/changelog/changelog-entr
 import { ChangelogIndexPage } from '@/components/public/changelog/changelog-index-page';
 import { isChangelogDirName, parsePageParam } from '@/lib/changelog';
 import { resolveChangelogContext } from '@/lib/changelog-context';
+import { hasVersionSections } from '@/lib/changelog-file';
 import { renderPageContent } from '@/lib/render-page-content';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
@@ -218,7 +219,7 @@ export default async function SitePage(props: {
     })
     .catch(() => null);
 
-  const changelog = await resolveChangelogContext({
+  let changelog = await resolveChangelogContext({
     slug: decodedSlug,
     blob: blob
       ? { path: blob.path, metadata: blob.metadata as PageMetadata | null }
@@ -286,6 +287,11 @@ export default async function SitePage(props: {
 
   const metadata = blob.metadata as PageMetadata | null; // TODO types
 
+  // A CHANGELOG.md with no version headings is just a normal page
+  if (changelog?.kind === 'file' && !hasVersionSections(pageContent ?? '')) {
+    changelog = null;
+  }
+
   const isCanvas = blob.path.endsWith('.canvas');
   const isHtml = blob.path.endsWith('.html');
   const renderMode = metadata?.syntaxMode ?? siteConfig?.syntaxMode;
@@ -303,6 +309,8 @@ export default async function SitePage(props: {
     siteFilePaths,
     permalinksMapping,
     imageDimensions,
+    changelog:
+      changelog?.kind === 'file' ? { title: metadata?.title } : undefined,
   });
 
   const scopedCss = await generateScopedCss(pageContent ?? '', '#mdxpage');
@@ -384,9 +392,11 @@ export default async function SitePage(props: {
     if (!paths || paths.length === 0) return true;
     return activeSidebarPath !== undefined;
   })();
-  // A changelog index TOC would list every entry's subheadings, so it's off there
+  // A changelog timeline TOC would list every entry's subheadings, so it's off there
+  const isChangelogTimeline =
+    changelog?.kind === 'index' || changelog?.kind === 'file';
   const showToc =
-    changelog?.kind !== 'index' && (metadata?.showToc ?? siteConfig?.showToc);
+    !isChangelogTimeline && (metadata?.showToc ?? siteConfig?.showToc);
   const showKnowledgeGraph =
     metadata?.showKnowledgeGraph ?? siteConfig?.showKnowledgeGraph ?? false;
   const showRightColumn = showToc || showKnowledgeGraph;
@@ -466,6 +476,13 @@ export default async function SitePage(props: {
                   permalinksMapping={permalinksMapping}
                   imageDimensions={imageDimensions}
                 />
+                <CanvasEnhancer />
+              </>
+            ) : changelog?.kind === 'file' ? (
+              // Not a page-level .rendered-mdx: prose styles would number and
+              // indent the entry list. The plugin marks intro and bodies itself.
+              <>
+                <div id="mdxpage">{compiledContent}</div>
                 <CanvasEnhancer />
               </>
             ) : changelog?.kind === 'entry' ? (
