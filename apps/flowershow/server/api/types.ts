@@ -123,7 +123,8 @@ export enum SiteUpdateKey {
 export interface PageMetadata {
   title: string;
   description?: string;
-  layout?: 'plain';
+  layout?: 'plain' | 'changelog' | (string & {});
+  version?: string;
   image?: string;
   authors?: string[];
   date?: string;

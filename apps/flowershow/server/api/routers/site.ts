@@ -28,6 +28,11 @@ import { sendEmail } from '@/lib/email';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { checkIfBranchExists } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
+import {
+  type ChangelogBlobRow,
+  normalizeDir,
+  toChangelogEntries,
+} from '@/lib/changelog';
 import { resolveContentLink } from '@/lib/resolve-link';
 import PostHogClient from '@/lib/server-posthog';
 import {
@@ -1382,6 +1387,80 @@ export const siteRouter = createTRPCRouter({
         {
           revalidate: 60, // 1 minute
           tags: [`${site.id}`, `${site.id}-${input.dir}-catalog`],
+        },
+      )(input);
+    }),
+  getChangelogEntries: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+        dir: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findFirst({
+        where: { id: input.siteId },
+        include: { user: true },
+      });
+
+      if (!site) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Site not found' });
+      }
+
+      await assertSiteAccess(site, input.siteId, ctx);
+
+      return await unstable_cache(
+        async (input) => {
+          const dir = normalizeDir(input.dir);
+          const siteHostname =
+            site.customDomain ??
+            `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
+
+          const siteFiles = (
+            await ctx.db.blob.findMany({
+              where: { siteId: input.siteId },
+              select: { path: true },
+            })
+          ).map((b) => ({ path: b.path }));
+
+          const rows = await ctx.db.blob.findMany({
+            where: {
+              siteId: input.siteId,
+              path: { startsWith: dir ? `${dir}/` : '' },
+              extension: { in: ['md', 'mdx'] },
+            },
+            select: {
+              id: true,
+              path: true,
+              appPath: true,
+              permalink: true,
+              metadata: true,
+            },
+          });
+
+          const entries = toChangelogEntries(
+            rows as ChangelogBlobRow[],
+            dir,
+          ).map((entry) => {
+            if (!entry.image) return entry;
+            let value = entry.image;
+            const wikiTarget = extractWikiLinkTarget(value);
+            if (wikiTarget !== null) {
+              value =
+                matchLinkTarget(wikiTarget, siteFiles)?.path ?? wikiTarget;
+            }
+            return {
+              ...entry,
+              image: resolveContentLink({ target: value, siteHostname }),
+            };
+          });
+
+          return { entries };
+        },
+        undefined,
+        {
+          revalidate: 60,
+          tags: [`${site.id}`, `${site.id}-${input.dir}-changelog`],
         },
       )(input);
     }),
