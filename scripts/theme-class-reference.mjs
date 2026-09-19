@@ -45,6 +45,13 @@ const GROUPS = [
     dom: `.list-component\n├─ .list-component-item / .list-component-skeleton-item\n│  ├─ *-media\n│  └─ *-content\n└─ .list-component-pagination\n   ├─ .list-component-pagination-nav\n   └─ .list-component-pagination-pages`,
   },
   {
+    id: 'changelog',
+    title: 'Changelog',
+    description:
+      'Built-in changelog timeline for changelog/ folders (or folders with layout: changelog) and the single-entry page.',
+    dom: `.changelog\n├─ .changelog-header\n│  ├─ .changelog-title\n│  └─ .changelog-intro\n├─ ol.changelog-entries\n│  └─ li.changelog-entry\n│     ├─ .changelog-entry-meta\n│     │  └─ .changelog-entry-meta-inner\n│     │     ├─ .changelog-entry-date\n│     │     ├─ .changelog-entry-version\n│     │     └─ .changelog-entry-authors\n│     │        └─ .changelog-entry-author\n│     └─ .changelog-entry-content\n│        ├─ .changelog-entry-title\n│        ├─ .changelog-entry-description\n│        ├─ .changelog-entry-media\n│        └─ .changelog-entry-body.rendered-mdx\n└─ .changelog-pagination\n   └─ .changelog-pagination-inner\n      └─ .changelog-pagination-count\narticle.changelog-single (entry page)\n├─ .changelog-back\n├─ .changelog-entry-meta\n└─ .changelog-entry-title … .changelog-entry-body\n.changelog-entry-nav\n├─ .changelog-entry-nav-older\n└─ .changelog-entry-nav-newer`,
+  },
+  {
     id: 'search',
     title: 'Search button and modal',
     description:
@@ -131,6 +138,7 @@ export function classifyClassName(name) {
     return 'sidebar';
   if (/^(page-toc|toc(?:-|$))/.test(name)) return 'toc';
   if (/^list-component/.test(name)) return 'listings';
+  if (/^changelog/.test(name)) return 'changelog';
   if (/^search/.test(name)) return 'search';
   if (/^site-footer/.test(name)) return 'footer';
   if (/^page-(backlinks|comments|edit)/.test(name)) return 'page-actions';

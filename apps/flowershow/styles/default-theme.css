@@ -1655,6 +1655,288 @@
   }
 
   /* ────────────────────────────────────────────────────
+   Changelog (stable theme contract: .changelog-*)
+
+   Themes tweak the look with these custom properties (set them on :root
+   or .changelog); every rule below falls back to the default shown:
+     --changelog-max-width      60rem
+     --changelog-columns        11rem minmax(0, 1fr)   (date column | content)
+                                use minmax(0, 1fr) to stack the date above
+     --changelog-gap            3rem     space between the two columns
+     --changelog-entry-spacing  3rem     vertical space around each entry
+     --changelog-rule-color     var(--color-foreground-100)
+     --changelog-marker-color   var(--color-accent)
+     --changelog-marker-size    7px      (0 hides the dot)
+     --changelog-marker-radius  9999px   (0 for a square)
+     --changelog-title-size     var(--font-size-3xl)
+     --changelog-meta-position  sticky   (static to stop the date following you)
+     --changelog-meta-direction column   (row to lay date/authors out inline)
+     --changelog-meta-spacing   0        space below the date/authors on wide
+                                screens (set it when stacking, e.g. 0.75rem)
+     --changelog-sticky-top     5rem
+   ──────────────────────────────────────────────────── */
+  .changelog {
+    max-width: var(--changelog-max-width, 60rem);
+    margin: 0 auto;
+  }
+  .changelog-header,
+  .changelog-entry,
+  .changelog-pagination {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0 var(--changelog-gap, 3rem);
+
+    @media (min-width: 768px) {
+      grid-template-columns: var(--changelog-columns, 11rem minmax(0, 1fr));
+    }
+  }
+  .changelog-header {
+    margin-bottom: 3.5rem;
+    font-family: var(--font-heading);
+
+    > div {
+      @media (min-width: 768px) {
+        grid-column: -2 / -1;
+      }
+    }
+  }
+  .changelog-title {
+    font-size: var(--font-size-5xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    color: var(--color-foreground-900);
+    text-wrap: balance;
+  }
+  .changelog-intro {
+    margin-top: 0.75rem;
+    max-width: 38rem;
+    font-family: var(--font-body);
+  }
+  .changelog-entries {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .changelog-entry {
+    padding-block: var(--changelog-entry-spacing, 3rem);
+    border-top: 1px solid
+      var(--changelog-rule-color, var(--color-foreground-100));
+    scroll-margin-top: var(--changelog-sticky-top, 5rem);
+
+    &:first-child {
+      border-top: 0;
+      padding-top: 0;
+    }
+  }
+  .changelog-entry-meta {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-sm);
+    line-height: 1.5;
+  }
+  .changelog-entry-meta-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
+
+    @media (min-width: 768px) {
+      position: var(--changelog-meta-position, sticky);
+      top: var(--changelog-sticky-top, 5rem);
+      flex-direction: var(--changelog-meta-direction, column);
+      align-items: flex-start;
+      margin-bottom: var(--changelog-meta-spacing, 0);
+    }
+  }
+  .changelog-entry-date {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: var(--font-weight-medium);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-foreground-900);
+    text-decoration: none;
+
+    &::before {
+      content: "";
+      width: var(--changelog-marker-size, 7px);
+      height: var(--changelog-marker-size, 7px);
+      border-radius: var(--changelog-marker-radius, 9999px);
+      background: var(--changelog-marker-color, var(--color-accent));
+      flex: none;
+    }
+  }
+  .changelog-entry-version {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: var(--font-size-xs);
+    background: var(--color-foreground-50);
+    border-radius: var(--radius);
+    padding: 0.05rem 0.5rem;
+  }
+  .changelog-entry-authors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.75rem;
+  }
+  .changelog-entry-author {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-foreground-600);
+    text-decoration: none;
+
+    img {
+      width: 22px;
+      height: 22px;
+      border-radius: 9999px;
+      object-fit: cover;
+    }
+  }
+  a.changelog-entry-author:hover span {
+    text-decoration: underline;
+    text-decoration-color: var(--color-accent);
+    text-underline-offset: 3px;
+  }
+  .changelog-entry-content {
+    min-width: 0;
+  }
+  .changelog-entry-title {
+    font-family: var(--font-heading);
+    font-size: var(--changelog-title-size, var(--font-size-3xl));
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    color: var(--color-foreground-900);
+    margin: 0 0 0.6rem;
+    text-wrap: balance;
+
+    a {
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+      text-decoration-color: var(--color-accent);
+      text-underline-offset: 4px;
+    }
+  }
+  .changelog-entry-description {
+    font-size: var(--font-size-lg);
+    font-style: italic;
+    color: var(--color-foreground-700);
+    margin: 0 0 1.25rem;
+  }
+  .changelog-entry-media {
+    margin: 0 0 1.5rem;
+    border: 1px solid var(--color-foreground-100);
+    border-radius: var(--radius);
+    overflow: hidden;
+
+    img {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+  }
+  .changelog-entry-body {
+    max-width: 40rem;
+  }
+  /* Entry bodies and the intro reuse page prose styles, but not the page's
+     55vh minimum height (which would space every entry a screen apart) */
+  .changelog-entry-body.rendered-mdx:not(.is-plain),
+  .changelog-intro.rendered-mdx:not(.is-plain) {
+    min-height: 0;
+  }
+  .changelog-pagination {
+    border-top: 1px solid
+      var(--changelog-rule-color, var(--color-foreground-100));
+    padding-top: 2rem;
+    font-family: var(--font-heading);
+  }
+  .changelog-pagination-inner {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+
+    @media (min-width: 768px) {
+      grid-column: -2 / -1;
+    }
+    a {
+      font-weight: var(--font-weight-medium);
+      color: var(--color-foreground-900);
+      text-decoration: none;
+    }
+  }
+  .changelog-pagination-count {
+    color: var(--color-foreground-400);
+    font-variant-numeric: tabular-nums;
+  }
+  .changelog-single {
+    max-width: 44rem;
+    margin: 0 auto;
+
+    .changelog-entry-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .changelog-entry-title {
+      font-size: var(--font-size-5xl);
+      line-height: 1.15;
+    }
+  }
+  .changelog-back {
+    display: inline-block;
+    margin-bottom: 2rem;
+    font-family: var(--font-heading);
+    font-size: var(--font-size-sm);
+    color: var(--color-foreground-400);
+    text-decoration: none;
+  }
+  .changelog-entry-nav {
+    max-width: 44rem;
+    margin: 3.5rem auto 0;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-foreground-100);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    font-family: var(--font-heading);
+
+    @media (min-width: 640px) {
+      grid-template-columns: 1fr 1fr;
+    }
+    a {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      padding: 0.9rem 1rem;
+      border: 1px solid var(--color-foreground-100);
+      border-radius: var(--radius);
+      text-decoration: none;
+    }
+    a:hover {
+      border-color: var(--color-accent);
+    }
+    small {
+      color: var(--color-foreground-400);
+    }
+    span {
+      color: var(--color-foreground-900);
+      font-weight: var(--font-weight-medium);
+    }
+    .changelog-entry-nav-newer {
+      @media (min-width: 640px) {
+        text-align: right;
+      }
+    }
+  }
+
+  /* ────────────────────────────────────────────────────
    Page layout
    ──────────────────────────────────────────────────── */
   .page-header {

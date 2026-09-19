@@ -174,6 +174,13 @@ function createMockDb({
         const matches = blobs.filter((b) => {
           if (w.siteId && b.siteId !== w.siteId) return false;
           if (w.id?.in && !(w.id.in as string[]).includes(b.id)) return false;
+          if (
+            w.path?.startsWith !== undefined &&
+            !b.path.startsWith(w.path.startsWith)
+          )
+            return false;
+          if (w.extension?.in && !w.extension.in.includes(b.extension))
+            return false;
           if (w.appPath !== undefined) {
             const ap = w.appPath;
             if (ap !== null && typeof ap === 'object' && 'not' in ap) {
@@ -1039,5 +1046,79 @@ describe('site anonymous-lookup field narrowing', () => {
       expect(sites).toEqual([]);
       expect(db.site.findMany).not.toHaveBeenCalled();
     });
+  });
+});
+
+describe('site.getChangelogEntries', () => {
+  it('returns sorted direct entries of the folder, excluding README', async () => {
+    const blobs = [
+      makeBlob({
+        id: 'r',
+        path: 'changelog/README.md',
+        appPath: '/changelog',
+        metadata: { title: 'Changelog' },
+      }),
+      makeBlob({
+        id: 'a',
+        path: 'changelog/2026-01-01-a.md',
+        appPath: '/changelog/2026-01-01-a',
+        metadata: { title: 'A' },
+      }),
+      makeBlob({
+        id: 'b',
+        path: 'changelog/2026-02-01-b.md',
+        appPath: '/changelog/2026-02-01-b',
+        metadata: { title: 'B', date: '2026-02-01T00:00:00.000Z' },
+      }),
+      makeBlob({
+        id: 'x',
+        path: 'blog/post.md',
+        appPath: '/blog/post',
+        metadata: { title: 'X' },
+      }),
+    ];
+    const caller = createCaller(createMockDb({ blobs }));
+    const result = await caller.site.getChangelogEntries({
+      siteId: 'site-1',
+      dir: '/changelog',
+    });
+    expect(result.entries.map((e) => e.id)).toEqual(['b', 'a']);
+    expect(result.entries[0]).toMatchObject({
+      title: 'B',
+      date: '2026-02-01',
+      url: '/changelog/2026-02-01-b',
+    });
+  });
+
+  it('resolves wiki-link images to site URLs', async () => {
+    const blobs = [
+      makeBlob({
+        id: 'a',
+        path: 'changelog/2026-01-01-a.md',
+        appPath: '/changelog/2026-01-01-a',
+        metadata: { title: 'A', image: '[[assets/shot.png]]' },
+      }),
+      makeBlob({
+        id: 'img',
+        path: 'assets/shot.png',
+        appPath: null,
+        extension: 'png',
+        metadata: null,
+      }),
+    ];
+    const caller = createCaller(createMockDb({ blobs }));
+    const { entries } = await caller.site.getChangelogEntries({
+      siteId: 'site-1',
+      dir: 'changelog',
+    });
+    expect(entries[0]!.image).toContain('assets/shot.png');
+    expect(entries[0]!.image).not.toContain('[[');
+  });
+
+  it('throws NOT_FOUND for an unknown site', async () => {
+    const caller = createCaller(createMockDb({ site: null }));
+    await expect(
+      caller.site.getChangelogEntries({ siteId: 'nope', dir: 'changelog' }),
+    ).rejects.toThrow();
   });
 });

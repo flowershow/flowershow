@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **237 styled class selectors**:
-**235 stable semantic hooks** and **2 non-contract
+and currently documents **261 styled class selectors**:
+**259 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -302,6 +302,69 @@ Collection/blog listing cards, loading placeholders, and pagination controls.
 | <code>.list-component-skeleton-media</code> | Hook |
 | <code>.list-component-skeleton-media-placeholder</code> | Hook |
 | <code>.list-component-skeleton-summary</code> | Hook |
+
+## Changelog
+
+Built-in changelog timeline for changelog/ folders (or folders with layout: changelog) and the single-entry page.
+
+**DOM shape**
+
+```text
+.changelog
+├─ .changelog-header
+│  ├─ .changelog-title
+│  └─ .changelog-intro
+├─ ol.changelog-entries
+│  └─ li.changelog-entry
+│     ├─ .changelog-entry-meta
+│     │  └─ .changelog-entry-meta-inner
+│     │     ├─ .changelog-entry-date
+│     │     ├─ .changelog-entry-version
+│     │     └─ .changelog-entry-authors
+│     │        └─ .changelog-entry-author
+│     └─ .changelog-entry-content
+│        ├─ .changelog-entry-title
+│        ├─ .changelog-entry-description
+│        ├─ .changelog-entry-media
+│        └─ .changelog-entry-body.rendered-mdx
+└─ .changelog-pagination
+   └─ .changelog-pagination-inner
+      └─ .changelog-pagination-count
+article.changelog-single (entry page)
+├─ .changelog-back
+├─ .changelog-entry-meta
+└─ .changelog-entry-title … .changelog-entry-body
+.changelog-entry-nav
+├─ .changelog-entry-nav-older
+└─ .changelog-entry-nav-newer
+```
+
+| Class | Kind |
+| --- | --- |
+| <code>.changelog</code> | Hook |
+| <code>.changelog-back</code> | Hook |
+| <code>.changelog-entries</code> | Hook |
+| <code>.changelog-entry</code> | Hook |
+| <code>.changelog-entry-author</code> | Hook |
+| <code>.changelog-entry-authors</code> | Hook |
+| <code>.changelog-entry-body</code> | Hook |
+| <code>.changelog-entry-content</code> | Hook |
+| <code>.changelog-entry-date</code> | Hook |
+| <code>.changelog-entry-description</code> | Hook |
+| <code>.changelog-entry-media</code> | Hook |
+| <code>.changelog-entry-meta</code> | Hook |
+| <code>.changelog-entry-meta-inner</code> | Hook |
+| <code>.changelog-entry-nav</code> | Hook |
+| <code>.changelog-entry-nav-newer</code> | Hook |
+| <code>.changelog-entry-title</code> | Hook |
+| <code>.changelog-entry-version</code> | Hook |
+| <code>.changelog-header</code> | Hook |
+| <code>.changelog-intro</code> | Hook |
+| <code>.changelog-pagination</code> | Hook |
+| <code>.changelog-pagination-count</code> | Hook |
+| <code>.changelog-pagination-inner</code> | Hook |
+| <code>.changelog-single</code> | Hook |
+| <code>.changelog-title</code> | Hook |
 
 ## Search button and modal
 
