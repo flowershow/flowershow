@@ -31,7 +31,9 @@ test('CHANGELOG.md renders as a changelog timeline', async ({
 
   await test.step('entry anchors work', async () => {
     await page.goto(`${basePath}/CHANGELOG#0.9.0`);
-    await expect(page.locator('li.changelog-entry#0\\.9\\.0')).toBeInViewport();
+    await expect(
+      page.locator('li.changelog-entry[id="0.9.0"]'),
+    ).toBeInViewport();
   });
 });
 
