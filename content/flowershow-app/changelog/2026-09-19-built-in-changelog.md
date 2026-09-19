@@ -1,7 +1,7 @@
 ---
 title: Built-in changelog pages
 date: 2026-09-19
-description: Put dated Markdown files in a changelog/ folder and Flowershow renders a full timeline with a page for every entry, with no components or config.
+description: Put dated Markdown files in a changelog/ folder, or keep a single CHANGELOG.md, and Flowershow renders a full timeline with no components or config.
 authors:
   - rufuspollock
 showToc: false
@@ -19,5 +19,7 @@ Your changelog now looks like one out of the box. Add a `changelog/` folder of d
 ![[assets/changelog-entry-page.png]]
 
 Any other folder can be a changelog too: add `layout: changelog` to its `README.md`, for example for a `releases/` folder. To keep a `changelog` folder as ordinary pages, give its `README.md` a different layout, such as `layout: default`.
+
+**Prefer a single `CHANGELOG.md`?** It renders as the same timeline: each version gets its own entry with its date, a link you can share (`/CHANGELOG#1.2.0`), and a **Compare** link when the heading has one. Keep a Changelog, Changesets, release-please and date-based headings all work without any configuration, and the file is also available at `/changelog`. To render another file the same way, add `layout: changelog` to its frontmatter.
 
 If your changelog page used a `<List>` component, remove it: the timeline replaces it. See [[docs/reference/changelog|the changelog docs]] for the full reference.
