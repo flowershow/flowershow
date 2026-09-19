@@ -86,12 +86,23 @@ describe('resolveChangelogContext', () => {
     });
     expect(ctx).toEqual({ kind: 'entry', dir: 'releases' });
   });
-  it("an entry's own explicit layout wins", async () => {
+  it("an entry's own layout does not take it out of the changelog", async () => {
+    const getMeta = vi.fn().mockResolvedValue(null);
     const ctx = await resolveChangelogContext({
       slug: '/changelog/x',
-      blob: { path: 'changelog/x.md', metadata: { layout: 'plain' } },
+      blob: { path: 'changelog/x.md', metadata: { layout: 'default' } },
       siteFilePaths: files,
-      getFolderIndexMetadata: vi.fn(),
+      getFolderIndexMetadata: getMeta,
+    });
+    expect(ctx).toEqual({ kind: 'entry', dir: 'changelog' });
+    expect(getMeta).toHaveBeenCalledWith('changelog');
+  });
+  it("an entry's own layout does not opt a folder that opted out back in", async () => {
+    const ctx = await resolveChangelogContext({
+      slug: '/changelog/x',
+      blob: { path: 'changelog/x.md', metadata: { layout: 'changelog' } },
+      siteFilePaths: files,
+      getFolderIndexMetadata: vi.fn().mockResolvedValue({ layout: 'default' }),
     });
     expect(ctx).toBeNull();
   });
