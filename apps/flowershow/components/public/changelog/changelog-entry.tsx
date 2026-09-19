@@ -1,17 +1,6 @@
 import Link from 'next/link';
-import type { ChangelogEntryMeta } from '@/lib/changelog';
+import { type ChangelogEntryMeta, formatChangelogDate } from '@/lib/changelog';
 import type { ChangelogAuthor } from './types';
-
-const dateFormat = new Intl.DateTimeFormat('en-US', {
-  year: 'numeric',
-  month: 'short',
-  day: 'numeric',
-  timeZone: 'UTC',
-});
-
-function formatDate(date: string): string {
-  return dateFormat.format(new Date(`${date}T00:00:00Z`));
-}
 
 function Authors({ authors }: { authors: ChangelogAuthor[] }) {
   if (authors.length === 0) return null;
@@ -64,7 +53,7 @@ export function ChangelogEntry({
 }: Props) {
   const isIndex = variant === 'index';
   const time = entry.date && (
-    <time dateTime={entry.date}>{formatDate(entry.date)}</time>
+    <time dateTime={entry.date}>{formatChangelogDate(entry.date)}</time>
   );
   const meta = (
     <>

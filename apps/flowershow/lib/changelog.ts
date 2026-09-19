@@ -46,6 +46,50 @@ export function isFolderIndexPath(path: string): boolean {
   return FOLDER_INDEX_RE.test(path);
 }
 
+const CHANGELOG_FILE_RE = /(?:^|\/)changelog\.mdx?$/i;
+
+/** A single-file changelog: `changelog.md`/`.mdx` in any case, anywhere. */
+export function isChangelogFileName(path: string): boolean {
+  return CHANGELOG_FILE_RE.test(path);
+}
+
+function relativeTo(dir: string, path: string): string | null {
+  const p = path.replace(/^\/+/, '');
+  const d = normalizeDir(dir);
+  if (!d) return p;
+  return p.startsWith(`${d}/`) ? p.slice(d.length + 1) : null;
+}
+
+/** Whether `dir` has a `changelog/` folder (any case) with markdown directly inside. */
+export function hasChangelogFolder(dir: string, paths: string[]): boolean {
+  return paths.some((path) => {
+    const rel = relativeTo(dir, path);
+    return !!rel && /^changelog\/[^/]+\.mdx?$/i.test(rel);
+  });
+}
+
+/** The `changelog.md`/`.mdx` file (any case) directly in `dir`, if any. */
+export function findChangelogFile(dir: string, paths: string[]): string | null {
+  for (const path of paths) {
+    const rel = relativeTo(dir, path);
+    if (rel && !rel.includes('/') && isChangelogFileName(rel)) {
+      return path.replace(/^\/+/, '');
+    }
+  }
+  return null;
+}
+
+const changelogDateFormat = new Intl.DateTimeFormat('en-US', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  timeZone: 'UTC',
+});
+
+export function formatChangelogDate(date: string): string {
+  return changelogDateFormat.format(new Date(`${date}T00:00:00Z`));
+}
+
 export function isChangelogDirName(dir: string): boolean {
   const last = normalizeDir(dir).split('/').pop() ?? '';
   return last.toLowerCase() === CHANGELOG_DIR_NAME;
