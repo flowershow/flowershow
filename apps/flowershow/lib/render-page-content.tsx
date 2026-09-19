@@ -11,6 +11,7 @@ import {
 } from '@/lib/markdown';
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { processCanvas } from '@/lib/process-canvas';
+import type { RemarkChangelogOptions } from '@/lib/remark-changelog';
 import type { PageMetadata, SiteLookupResult } from '@/server/api/types';
 import { api } from '@/trpc/server';
 
@@ -23,6 +24,8 @@ export type RenderPageContentOptions = {
   siteFilePaths: string[];
   permalinksMapping: Record<string, string>;
   imageDimensions: ImageDimensionsMap;
+  /** Render a single-file changelog (CHANGELOG.md) as a timeline. */
+  changelog?: RemarkChangelogOptions;
 };
 
 /**
@@ -38,6 +41,7 @@ export async function renderPageContent({
   siteFilePaths,
   permalinksMapping,
   imageDimensions,
+  changelog,
 }: RenderPageContentOptions): Promise<React.JSX.Element> {
   let compiledContent: React.JSX.Element;
 
@@ -105,6 +109,7 @@ export async function renderPageContent({
           imageDimensions,
           canvasFiles,
           canvasNodeFiles,
+          changelog,
         });
         compiledContent = result;
       } else {
@@ -118,6 +123,7 @@ export async function renderPageContent({
           permalinks: permalinksMapping,
           canvasFiles,
           canvasNodeFiles,
+          changelog,
         }) as any;
 
         const mdxSource = await serialize<PageMetadata>({

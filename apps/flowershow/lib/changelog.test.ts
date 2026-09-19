@@ -5,8 +5,12 @@ import {
   dirOf,
   entryDateFromPath,
   entryTitleFromPath,
+  findChangelogFile,
+  formatChangelogDate,
+  hasMarkdownInDir,
   isChangelogDir,
   isChangelogDirName,
+  isChangelogFileName,
   isFolderIndexPath,
   neighbours,
   normalizeDir,
@@ -217,5 +221,56 @@ describe('neighbours', () => {
       newer: null,
       older: null,
     });
+  });
+});
+
+describe('isChangelogFileName', () => {
+  it('matches changelog.md/mdx in any case, anywhere', () => {
+    expect(isChangelogFileName('CHANGELOG.md')).toBe(true);
+    expect(isChangelogFileName('packages/cli/changelog.md')).toBe(true);
+    expect(isChangelogFileName('docs/Changelog.mdx')).toBe(true);
+  });
+  it('rejects other names and folder entries', () => {
+    expect(isChangelogFileName('changelog/2026-01-01-a.md')).toBe(false);
+    expect(isChangelogFileName('HISTORY.md')).toBe(false);
+    expect(isChangelogFileName('changelogs.md')).toBe(false);
+  });
+});
+
+describe('formatChangelogDate', () => {
+  it('formats ISO dates in UTC, en-US short', () => {
+    expect(formatChangelogDate('2026-08-21')).toBe('Aug 21, 2026');
+  });
+});
+
+describe('hasMarkdownInDir', () => {
+  it('is true when markdown sits directly in dir', () => {
+    expect(hasMarkdownInDir('changelog', ['changelog/2026-01-01-a.md'])).toBe(
+      true,
+    );
+    expect(hasMarkdownInDir('/changelog/', ['/changelog/README.mdx'])).toBe(
+      true,
+    );
+  });
+  it('is case-sensitive and ignores nested or non-markdown files', () => {
+    expect(hasMarkdownInDir('changelog', ['Changelog/a.md'])).toBe(false);
+    expect(hasMarkdownInDir('changelog', ['changelog/img/a.md'])).toBe(false);
+    expect(hasMarkdownInDir('changelog', ['changelog/a.png'])).toBe(false);
+    expect(hasMarkdownInDir('changelog', ['CHANGELOG.md'])).toBe(false);
+  });
+});
+
+describe('findChangelogFile', () => {
+  it('finds changelog.md/mdx in dir in any case', () => {
+    expect(findChangelogFile('', ['README.md', 'CHANGELOG.md'])).toBe(
+      'CHANGELOG.md',
+    );
+    expect(
+      findChangelogFile('packages/cli', ['/packages/cli/Changelog.mdx']),
+    ).toBe('packages/cli/Changelog.mdx');
+  });
+  it('returns null when there is none in that dir', () => {
+    expect(findChangelogFile('', ['packages/cli/CHANGELOG.md'])).toBeNull();
+    expect(findChangelogFile('docs', ['CHANGELOG.md'])).toBeNull();
   });
 });

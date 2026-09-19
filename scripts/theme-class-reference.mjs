@@ -48,8 +48,8 @@ const GROUPS = [
     id: 'changelog',
     title: 'Changelog',
     description:
-      'Built-in changelog timeline for changelog/ folders (or folders with layout: changelog) and the single-entry page.',
-    dom: `.changelog\n├─ .changelog-header\n│  ├─ .changelog-title\n│  └─ .changelog-intro\n├─ ol.changelog-entries\n│  └─ li.changelog-entry\n│     ├─ .changelog-entry-meta\n│     │  └─ .changelog-entry-meta-inner\n│     │     ├─ .changelog-entry-date\n│     │     ├─ .changelog-entry-version\n│     │     └─ .changelog-entry-authors\n│     │        └─ .changelog-entry-author\n│     └─ .changelog-entry-content\n│        ├─ .changelog-entry-title\n│        ├─ .changelog-entry-description\n│        ├─ .changelog-entry-media\n│        └─ .changelog-entry-body.rendered-mdx\n└─ .changelog-pagination\n   └─ .changelog-pagination-inner\n      └─ .changelog-pagination-count\narticle.changelog-single (entry page)\n├─ .changelog-back\n├─ .changelog-entry-meta\n└─ .changelog-entry-title … .changelog-entry-body\n.changelog-entry-nav\n├─ .changelog-entry-nav-older\n└─ .changelog-entry-nav-newer`,
+      'Built-in changelog timeline for changelog/ folders (or folders with layout: changelog), single CHANGELOG.md files (or pages with layout: changelog), and the single-entry page.',
+    dom: `.changelog\n├─ .changelog-header\n│  ├─ .changelog-title\n│  └─ .changelog-intro\n├─ ol.changelog-entries\n│  └─ li.changelog-entry[.is-unreleased]\n│     ├─ .changelog-entry-meta\n│     │  └─ .changelog-entry-meta-inner\n│     │     ├─ .changelog-entry-date\n│     │     ├─ .changelog-entry-compare (CHANGELOG.md)\n│     │     ├─ .changelog-entry-version\n│     │     └─ .changelog-entry-authors\n│     │        └─ .changelog-entry-author\n│     └─ .changelog-entry-content\n│        ├─ .changelog-entry-title\n│        ├─ .changelog-entry-description\n│        ├─ .changelog-entry-media\n│        └─ .changelog-entry-body.rendered-mdx\n└─ .changelog-pagination\n   └─ .changelog-pagination-inner\n      └─ .changelog-pagination-count\narticle.changelog-single (entry page)\n├─ .changelog-back\n├─ .changelog-entry-meta\n└─ .changelog-entry-title … .changelog-entry-body\n.changelog-entry-nav\n├─ .changelog-entry-nav-older\n└─ .changelog-entry-nav-newer`,
   },
   {
     id: 'search',
@@ -112,6 +112,7 @@ const STATE_OWNERS = {
   'is-current': '.site-tree-item-self / .mobile-nav-tree-item-self',
   'is-open': 'navigation dropdowns and collapsible tree items',
   'is-plain': '.rendered-mdx',
+  'is-unreleased': '.changelog-entry',
   'is-scrolled': '.site-navbar',
   'no-nav': '.site-layout',
 };

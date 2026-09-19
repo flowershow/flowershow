@@ -116,3 +116,87 @@ describe('resolveChangelogContext', () => {
     expect(ctx).toBeNull();
   });
 });
+
+describe('single-file changelogs', () => {
+  const none = vi.fn();
+  it('CHANGELOG.md anywhere → file', async () => {
+    expect(
+      await resolveChangelogContext({
+        slug: '/CHANGELOG',
+        blob: { path: 'CHANGELOG.md', metadata: {} },
+        siteFilePaths: [],
+        getFolderIndexMetadata: none,
+      }),
+    ).toEqual({ kind: 'file', dir: '' });
+    expect(
+      await resolveChangelogContext({
+        slug: '/packages/cli/changelog',
+        blob: { path: 'packages/cli/changelog.md', metadata: null },
+        siteFilePaths: [],
+        getFolderIndexMetadata: none,
+      }),
+    ).toEqual({ kind: 'file', dir: 'packages/cli' });
+  });
+  it('layout: changelog on any non-index page → file', async () => {
+    expect(
+      await resolveChangelogContext({
+        slug: '/history',
+        blob: { path: 'history.md', metadata: { layout: 'changelog' } },
+        siteFilePaths: [],
+        getFolderIndexMetadata: none,
+      }),
+    ).toEqual({ kind: 'file', dir: '' });
+  });
+  it('another explicit layout opts CHANGELOG.md out', async () => {
+    expect(
+      await resolveChangelogContext({
+        slug: '/CHANGELOG',
+        blob: { path: 'CHANGELOG.md', metadata: { layout: 'default' } },
+        siteFilePaths: [],
+        getFolderIndexMetadata: none,
+      }),
+    ).toBeNull();
+  });
+  it('inside a changelog folder, the folder decides (entries stay entries)', async () => {
+    expect(
+      await resolveChangelogContext({
+        slug: '/changelog/changelog',
+        blob: { path: 'changelog/changelog.md', metadata: null },
+        siteFilePaths: [],
+        getFolderIndexMetadata: vi.fn().mockResolvedValue(null),
+      }),
+    ).toEqual({ kind: 'entry', dir: 'changelog' });
+    expect(
+      await resolveChangelogContext({
+        slug: '/releases/x',
+        blob: { path: 'releases/x.md', metadata: { layout: 'changelog' } },
+        siteFilePaths: [],
+        getFolderIndexMetadata: vi
+          .fn()
+          .mockResolvedValue({ layout: 'changelog' }),
+      }),
+    ).toEqual({ kind: 'entry', dir: 'releases' });
+  });
+  it('layout: changelog on a page in an ordinary folder → file', async () => {
+    expect(
+      await resolveChangelogContext({
+        slug: '/docs/history',
+        blob: { path: 'docs/history.md', metadata: { layout: 'changelog' } },
+        siteFilePaths: [],
+        getFolderIndexMetadata: vi
+          .fn()
+          .mockResolvedValue({ layout: 'default' }),
+      }),
+    ).toEqual({ kind: 'file', dir: 'docs' });
+  });
+  it('folder README with layout: changelog is still folder mode', async () => {
+    expect(
+      await resolveChangelogContext({
+        slug: '/releases',
+        blob: { path: 'releases/README.md', metadata: { layout: 'changelog' } },
+        siteFilePaths: [],
+        getFolderIndexMetadata: none,
+      }),
+    ).toEqual({ kind: 'index', dir: 'releases' });
+  });
+});
