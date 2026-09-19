@@ -158,6 +158,7 @@ function createMockDb({
             if (w.siteId && b.siteId !== w.siteId) return false;
             if (w.permalink !== undefined && b.permalink !== w.permalink)
               return false;
+            if (typeof w.path === 'string' && b.path !== w.path) return false;
             if (w.appPath !== undefined && b.appPath !== w.appPath)
               return false;
             if (w.extension?.in && !w.extension.in.includes(b.extension))
@@ -470,6 +471,93 @@ describe('site.getBlob', () => {
       });
 
       expect(result.id).toBe('only-blob');
+    });
+  });
+
+  describe('changelog alias and folder precedence', () => {
+    it('serves CHANGELOG.md at /changelog', async () => {
+      const blobs = [
+        makeBlob({ id: 'cl', path: 'CHANGELOG.md', appPath: '/CHANGELOG' }),
+      ];
+      const caller = createCaller(createMockDb({ blobs }));
+      const result = await caller.site.getBlob({
+        siteId: 'site-1',
+        slug: '/changelog',
+      });
+      expect(result.id).toBe('cl');
+    });
+
+    it('serves a nested CHANGELOG.md at <dir>/changelog', async () => {
+      const blobs = [
+        makeBlob({
+          id: 'cli-cl',
+          path: 'packages/cli/CHANGELOG.md',
+          appPath: '/packages/cli/CHANGELOG',
+        }),
+      ];
+      const caller = createCaller(createMockDb({ blobs }));
+      const result = await caller.site.getBlob({
+        siteId: 'site-1',
+        slug: '/packages/cli/changelog',
+      });
+      expect(result.id).toBe('cli-cl');
+    });
+
+    it('does not alias when a changelog/ folder with entries exists', async () => {
+      const blobs = [
+        makeBlob({ id: 'cl', path: 'CHANGELOG.md', appPath: '/CHANGELOG' }),
+        makeBlob({
+          id: 'entry',
+          path: 'changelog/2026-01-01-a.md',
+          appPath: '/changelog/2026-01-01-a',
+        }),
+      ];
+      const caller = createCaller(createMockDb({ blobs }));
+      await expect(
+        caller.site.getBlob({ siteId: 'site-1', slug: '/changelog' }),
+      ).rejects.toThrow('Page not found');
+    });
+
+    it('prefers changelog/README.md over changelog.md on the same appPath', async () => {
+      const blobs = [
+        makeBlob({ id: 'file', path: 'changelog.md', appPath: '/changelog' }),
+        makeBlob({
+          id: 'readme',
+          path: 'changelog/README.md',
+          appPath: '/changelog',
+        }),
+      ];
+      const caller = createCaller(createMockDb({ blobs }));
+      const result = await caller.site.getBlob({
+        siteId: 'site-1',
+        slug: '/changelog',
+      });
+      expect(result.id).toBe('readme');
+    });
+
+    it('drops changelog.md when a README-less changelog/ folder exists', async () => {
+      const blobs = [
+        makeBlob({ id: 'file', path: 'changelog.md', appPath: '/changelog' }),
+        makeBlob({
+          id: 'entry',
+          path: 'changelog/2026-01-01-a.md',
+          appPath: '/changelog/2026-01-01-a',
+        }),
+      ];
+      const caller = createCaller(createMockDb({ blobs }));
+      await expect(
+        caller.site.getBlob({ siteId: 'site-1', slug: '/changelog' }),
+      ).rejects.toThrow('Page not found');
+    });
+
+    it('does not alias other slugs', async () => {
+      const blobs = [
+        makeBlob({ id: 'cl', path: 'CHANGELOG.md', appPath: '/CHANGELOG' }),
+      ];
+      const caller = createCaller(createMockDb({ blobs }));
+      await expect(
+        caller.site.getBlob({ siteId: 'site-1', slug: '/history' }),
+      ).rejects.toThrow('Page not found');
     });
   });
 });

@@ -7,7 +7,7 @@ import {
   entryTitleFromPath,
   findChangelogFile,
   formatChangelogDate,
-  hasChangelogFolder,
+  hasMarkdownInDir,
   isChangelogDir,
   isChangelogDirName,
   isChangelogFileName,
@@ -243,20 +243,20 @@ describe('formatChangelogDate', () => {
   });
 });
 
-describe('hasChangelogFolder', () => {
-  it('is true when dir has a changelog/ folder with markdown directly inside', () => {
-    expect(hasChangelogFolder('', ['changelog/2026-01-01-a.md'])).toBe(true);
-    expect(hasChangelogFolder('', ['/Changelog/README.md'])).toBe(true);
-    expect(
-      hasChangelogFolder('packages/cli', ['packages/cli/changelog/a.mdx']),
-    ).toBe(true);
+describe('hasMarkdownInDir', () => {
+  it('is true when markdown sits directly in dir', () => {
+    expect(hasMarkdownInDir('changelog', ['changelog/2026-01-01-a.md'])).toBe(
+      true,
+    );
+    expect(hasMarkdownInDir('/changelog/', ['/changelog/README.mdx'])).toBe(
+      true,
+    );
   });
-  it('is false for other dirs, nested files or non-markdown', () => {
-    expect(hasChangelogFolder('', ['CHANGELOG.md'])).toBe(false);
-    expect(hasChangelogFolder('', ['packages/cli/changelog/a.md'])).toBe(false);
-    expect(
-      hasChangelogFolder('', ['changelog/img/a.md', 'changelog/a.png']),
-    ).toBe(false);
+  it('is case-sensitive and ignores nested or non-markdown files', () => {
+    expect(hasMarkdownInDir('changelog', ['Changelog/a.md'])).toBe(false);
+    expect(hasMarkdownInDir('changelog', ['changelog/img/a.md'])).toBe(false);
+    expect(hasMarkdownInDir('changelog', ['changelog/a.png'])).toBe(false);
+    expect(hasMarkdownInDir('changelog', ['CHANGELOG.md'])).toBe(false);
   });
 });
 

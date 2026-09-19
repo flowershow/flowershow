@@ -60,11 +60,12 @@ function relativeTo(dir: string, path: string): string | null {
   return p.startsWith(`${d}/`) ? p.slice(d.length + 1) : null;
 }
 
-/** Whether `dir` has a `changelog/` folder (any case) with markdown directly inside. */
-export function hasChangelogFolder(dir: string, paths: string[]): boolean {
+/** Whether `dir` (exact case) has markdown files directly inside it. */
+export function hasMarkdownInDir(dir: string, paths: string[]): boolean {
+  const d = normalizeDir(dir);
   return paths.some((path) => {
-    const rel = relativeTo(dir, path);
-    return !!rel && /^changelog\/[^/]+\.mdx?$/i.test(rel);
+    const p = path.replace(/^\/+/, '');
+    return dirOf(p) === d && MARKDOWN_RE.test(p);
   });
 }
 

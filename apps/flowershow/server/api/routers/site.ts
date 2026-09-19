@@ -30,6 +30,12 @@ import { checkIfBranchExists } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
 import {
   type ChangelogBlobRow,
+  dirOf,
+  findChangelogFile,
+  hasMarkdownInDir,
+  isChangelogDirName,
+  isChangelogFileName,
+  isFolderIndexPath,
   normalizeDir,
   toChangelogEntries,
 } from '@/lib/changelog';
@@ -1504,9 +1510,42 @@ export const siteRouter = createTRPCRouter({
             if (candidates.length === 1) {
               blob = candidates[0]!;
             } else if (candidates.length > 1) {
+              // A folder index also beats a same-named file (changelog/README.md
+              // over changelog.md)
               blob =
                 candidates.find((b) => /(?:^|\/)index\.mdx?$/.test(b.path)) ??
+                candidates.find((b) => isFolderIndexPath(b.path)) ??
                 candidates[0]!;
+            }
+          }
+
+          let siteFilePaths: string[] | undefined;
+          const getSiteFilePaths = async () =>
+            (siteFilePaths ??= (
+              await ctx.db.blob.findMany({
+                where: { siteId: input.siteId },
+                select: { path: true },
+              })
+            ).map((b) => b.path));
+
+          // Changelog URLs: a `changelog/` folder with entries owns its URL, even
+          // without a README (the page route renders its index), and otherwise
+          // `/changelog` also serves a CHANGELOG.md (any case) in that directory.
+          if (
+            isChangelogDirName(input.slug) &&
+            blob?.permalink !== input.slug
+          ) {
+            const folder = normalizeDir(input.slug);
+            const paths = await getSiteFilePaths();
+            if (hasMarkdownInDir(folder, paths)) {
+              if (blob && isChangelogFileName(blob.path)) blob = null;
+            } else if (!blob && folder.split('/').pop() === 'changelog') {
+              const aliasPath = findChangelogFile(dirOf(folder), paths);
+              if (aliasPath) {
+                blob = await ctx.db.blob.findFirst({
+                  where: { siteId: input.siteId, path: aliasPath },
+                });
+              }
             }
           }
 
@@ -1559,17 +1598,9 @@ export const siteRouter = createTRPCRouter({
             `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
           const metadata = blob.metadata as PageMetadata | null;
-          const siteFilePaths = (
-            await ctx.db.blob.findMany({
-              where: {
-                siteId: input.siteId,
-              },
-              select: {
-                path: true,
-              },
-            })
-          ).map((b) => b.path);
-          const siteFiles = siteFilePaths.map((p) => ({ path: p }));
+          const siteFiles = (await getSiteFilePaths()).map((p) => ({
+            path: p,
+          }));
 
           ['image', 'avatar'].forEach((key) => {
             if (metadata?.[key]) {
