@@ -42,7 +42,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Analytics](/docs/reference/analytics) — Configure analytics for your Flowershow site using Google Analytics 4 or Umami.
 - [Apply a theme](/docs/reference/apply-a-theme) — Apply one of Flowershow's themes from the dashboard or config.json, and customize it further.
 - [Backlinks](/docs/reference/backlinks) — Show a list of pages that link to the current page.
-- [Changelog](/docs/reference/changelog) — Publish a changelog with dated entries: Flowershow turns a changelog folder into a timeline page automatically
+- [Changelog](/docs/reference/changelog) — Publish a changelog: Flowershow turns a changelog folder or a CHANGELOG.md file into a timeline page automatically
 - [Flowershow CLI](/docs/reference/cli) — Learn how to use the Flowershow CLI to publish your notes directly from your terminal.
 - [Comments](/docs/reference/comments) — Enable comments on your site's pages. Powered by Giscus and GitHub Discussions.
 - [`config.json` file](/docs/reference/config-file) — Reference for all available options in the config.json site configuration file.
