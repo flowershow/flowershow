@@ -71,7 +71,7 @@ layout: changelog
 
 ## Turning it off
 
-To keep a `changelog` folder as normal pages, set a different layout in its `README.md` or `index.md`, for example `layout: default`. An individual entry that sets its own `layout` is also rendered normally.
+To keep a `changelog` folder as normal pages, set a different layout in its `README.md` or `index.md`, for example `layout: default`. An entry's own `layout` does not take it out of the changelog: set `publish: false` to hide an entry.
 
 ## Styling
 
