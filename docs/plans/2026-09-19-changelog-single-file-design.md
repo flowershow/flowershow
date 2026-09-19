@@ -1,7 +1,7 @@
 # Changelog Rendering, Phase 2: Single-File `CHANGELOG.md`
 
 Date: 2026-09-19
-Status: **Draft, needs Rufus review**
+Status: **Approved 2026-09-19** (see Decisions below)
 Bead: `flowershow-v8x.11` (epic `flowershow-v8x`)
 Builds on: [v1 design (folder case)](2026-09-18-changelog-rendering-design.md) · [research](2026-09-18-changelog-rendering-research.md) · v1 PR #1383
 
@@ -123,7 +123,21 @@ It renders as the first entry, titled "Unreleased", with no date and an extra st
 | B. Split the source into per-version markdown chunks and compile each through `renderPageContent` (the Starlight / v1-folder style) | Reuses the React component directly, but it's up to 259 compiles per request and breaks reference-link definitions unless they're re-appended to every chunk. |
 | C. Parse at publish time in the worker and store entries in metadata | Enables per-version pages and RSS later, but needs worker, sync and schema changes and a resync. Overkill now. |
 
-## Open questions for Rufus
+## Decisions (answered 2026-09-19)
+
+Rufus answered the open questions below. These override the recommendations where they differ.
+
+1. **URL:** `CHANGELOG.md` (any case) must also render at `/changelog` (lowercase alias), in addition to its case-preserved URL. The alias applies only when no `changelog/` folder or `changelog.md` exists in the same directory (the real one wins). This needs an extra task in the blob lookup (`getBlob` in `server/api/routers/site.ts`).
+2. **Folder vs file collision:** the folder wins. The file is reachable only via a `permalink`. Document it.
+3. **Long files:** render every version, no cap. Measure page weight on a real ~3,000-line file and note the result in the PR.
+4. **Unreleased:** show it, muted (`.is-unreleased`), skipped when empty.
+5. **Changesets noise:** leave it verbatim. Tidying PR/commit prefixes is logged as a someday/maybe bead.
+6. **Date-only titles:** the formatted date is the title (and repeats in the meta column). Never guess or invent a title from the body; authors can add title text to the heading.
+7. **Auto-detection scope:** only `changelog.md` (any case) auto-detects. Everything else opts in with `layout: changelog`. General principle: avoid auto-detection beyond the obvious and support configuration instead. A site-config option to point at changelog files or directories is logged as an extension bead.
+8. **Anchors:** clean anchors only (`#2.0.0`). GitHub-style anchors are not preserved.
+9. **Compare links:** show a small "Compare" link in the meta column when the version heading carries a link (release-please inline link or Keep a Changelog reference link). The title itself links to the entry's anchor.
+
+## Open questions for Rufus (answered, see Decisions above)
 
 1. **URL for `CHANGELOG.md`.** Flowershow keeps case, so `CHANGELOG.md` is served at `/CHANGELOG`. Should we also answer `/changelog` for it (a lowercase alias), or leave it as `/CHANGELOG`? *Recommendation:* add the lowercase alias only when no `changelog/` folder or `changelog.md` exists.
 2. **A `changelog.md` and a `changelog/` folder in the same directory** both map to `/changelog`. Today `getBlob` prefers `index.*` and otherwise picks either. *Recommendation:* the folder wins, and the file is only reachable if it sets a `permalink`. Document it.
