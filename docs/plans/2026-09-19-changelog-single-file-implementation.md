@@ -1,6 +1,6 @@
 # Changelog Rendering, Phase 2 (Single-File `CHANGELOG.md`) Implementation Plan
 
-Status: **Design approved 2026-09-19.** Decisions are recorded in the [design doc](2026-09-19-changelog-single-file-design.md#decisions-answered-2026-09-19). Before Task 1, finish Task 0 Step 2: amend the tasks for Q1 (lowercase `/changelog` alias, an extra task) and Q9 (a "Compare" link in the meta column, in Task 3). Pushing `feat/changelog-single-file` and opening a **draft** PR is pre-approved for the scheduled run on 2026-09-19.
+Status: **Implemented 2026-09-19** on `feat/changelog-single-file` (Tasks 0–7; the post-deploy dogfood in Task 7 Step 4 is still open). **Design approved 2026-09-19.** Decisions are recorded in the [design doc](2026-09-19-changelog-single-file-design.md#decisions-answered-2026-09-19). Before Task 1, finish Task 0 Step 2: amend the tasks for Q1 (lowercase `/changelog` alias, an extra task) and Q9 (a "Compare" link in the meta column, in Task 3). Pushing `feat/changelog-single-file` and opening a **draft** PR is pre-approved for the scheduled run on 2026-09-19.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -51,9 +51,9 @@ Status: **Design approved 2026-09-19.** Decisions are recorded in the [design do
 
 **Bead:** the gate bead (`Rufus approves single-file design`)
 
-- [ ] **Step 1:** Rufus answers the 9 open questions in the design doc. Record the answers in the design doc under "Decisions (answered <date>)", and change its Status to Approved.
-- [ ] **Step 2:** If any answer differs from a recommendation, update the affected task below *before* starting. Likely candidates: Q1 (lowercase alias → an extra task in `getBlob`), Q3 (cap → an extra task), Q9 (compare link → Task 3 adds a meta link).
-- [ ] **Step 3:** Close the gate bead: `bd close <gate-id>`.
+- [x] **Step 1:** Rufus answers the 9 open questions in the design doc. Record the answers in the design doc under "Decisions (answered <date>)", and change its Status to Approved.
+- [x] **Step 2:** If any answer differs from a recommendation, update the affected task below *before* starting. Likely candidates: Q1 (lowercase alias → an extra task in `getBlob`), Q3 (cap → an extra task), Q9 (compare link → Task 3 adds a meta link).
+- [x] **Step 3:** Close the gate bead: `bd close <gate-id>`.
 
 ### Task 1: Shared helpers in `lib/changelog.ts`
 
@@ -62,7 +62,7 @@ Status: **Design approved 2026-09-19.** Decisions are recorded in the [design do
 **Interfaces:**
 - Produces: `isChangelogFileName(path: string): boolean` and `formatChangelogDate(date: string): string` (the output stays `"Aug 21, 2026"`, as v1)
 
-- [ ] **Step 1: Failing tests** (append to `lib/changelog.test.ts`):
+- [x] **Step 1: Failing tests** (append to `lib/changelog.test.ts`):
 
 ```ts
 import { formatChangelogDate, isChangelogFileName } from './changelog';
@@ -87,8 +87,8 @@ describe('formatChangelogDate', () => {
 });
 ```
 
-- [ ] **Step 2:** Run `cd apps/flowershow && pnpm vitest run --project=unit lib/changelog.test.ts`. Expected: FAIL (not exported).
-- [ ] **Step 3: Implement** in `lib/changelog.ts`:
+- [x] **Step 2:** Run `cd apps/flowershow && pnpm vitest run --project=unit lib/changelog.test.ts`. Expected: FAIL (not exported).
+- [x] **Step 3: Implement** in `lib/changelog.ts`:
 
 ```ts
 const CHANGELOG_FILE_RE = /(?:^|\/)changelog\.mdx?$/i;
@@ -111,8 +111,8 @@ export function formatChangelogDate(date: string): string {
 
 Then in `changelog-entry.tsx`, delete the local `dateFormat`/`formatDate`, and `import { formatChangelogDate } from '@/lib/changelog'`. Replace `formatDate(entry.date)` with `formatChangelogDate(entry.date)`.
 
-- [ ] **Step 4:** Run `pnpm vitest run --project=unit lib/changelog.test.ts components/public/changelog`. Expected: PASS, including the existing component tests (the date text is unchanged).
-- [ ] **Step 5:** Commit: `feat(changelog): shared date formatter and changelog file-name detection`
+- [x] **Step 4:** Run `pnpm vitest run --project=unit lib/changelog.test.ts components/public/changelog`. Expected: PASS, including the existing component tests (the date text is unchanged).
+- [x] **Step 5:** Commit: `feat(changelog): shared date formatter and changelog file-name detection`
 
 ### Task 1b: `/changelog` alias and folder-wins in `getBlob` (Q1, Q2)
 
@@ -124,11 +124,11 @@ Added 2026-09-19 after Rufus's decisions.
 - **Q1 alias:** when a slug whose last segment is `changelog` (lowercase) finds no blob by permalink or `appPath`, serve the `changelog.md`/`.mdx` file in that directory in any case (e.g. `CHANGELOG.md`), **unless** that directory has a `changelog/` folder (any case) with markdown files. `/CHANGELOG` keeps working through its own `appPath`. No redirect: the page renders at `/changelog`.
 - **Q2 folder wins:** when `changelog.md` and `changelog/README.md` share an `appPath`, the folder index wins (extend the candidate preference to index → README → file). When the folder has no README, a `changelog.md`/`CHANGELOG.md` that matched the slug is dropped, so `getBlob` 404s and the page route renders the README-less folder index (its existing fallback). A file with a `permalink` is still reachable at that permalink.
 
-- [ ] **Step 1: Failing tests.** In `lib/changelog.test.ts`, test two pure helpers: `hasMarkdownInDir(dir, paths)` (markdown directly inside `dir`, exact case, since URLs are case-sensitive and this mirrors the page route's README-less folder check; paths with or without a leading slash) and `findChangelogFile(dir, paths)` (the `changelog.md`/`.mdx` path in `dir`, any case, or `null`). In `site.test.ts` under `site.getBlob`, add a `changelog alias` block: `/changelog` serves `CHANGELOG.md`; `/packages/cli/changelog` serves `packages/cli/CHANGELOG.md`; no alias when a `changelog/` folder with entries exists (NOT_FOUND); `changelog/README.md` beats `changelog.md` on the same appPath; a README-less `changelog/` folder makes `/changelog` NOT_FOUND even when `changelog.md` exists. Extend the mock `findFirst` to filter on a string `where.path`.
-- [ ] **Step 2:** Run them. Expected: FAIL.
-- [ ] **Step 3: Implement** the helpers in `lib/changelog.ts` and use them in `getBlob` after the `appPath` lookup (fetch `select: { path: true }` for the site once and reuse it for the later `siteFilePaths`).
-- [ ] **Step 4:** Run `pnpm vitest run --project=unit lib/changelog.test.ts server/api/routers/__tests__/site.test.ts`. Expected: PASS.
-- [ ] **Step 5:** Commit: `feat(changelog): serve CHANGELOG.md at /changelog; changelog folder wins`
+- [x] **Step 1: Failing tests.** In `lib/changelog.test.ts`, test two pure helpers: `hasMarkdownInDir(dir, paths)` (markdown directly inside `dir`, exact case, since URLs are case-sensitive and this mirrors the page route's README-less folder check; paths with or without a leading slash) and `findChangelogFile(dir, paths)` (the `changelog.md`/`.mdx` path in `dir`, any case, or `null`). In `site.test.ts` under `site.getBlob`, add a `changelog alias` block: `/changelog` serves `CHANGELOG.md`; `/packages/cli/changelog` serves `packages/cli/CHANGELOG.md`; no alias when a `changelog/` folder with entries exists (NOT_FOUND); `changelog/README.md` beats `changelog.md` on the same appPath; a README-less `changelog/` folder makes `/changelog` NOT_FOUND even when `changelog.md` exists. Extend the mock `findFirst` to filter on a string `where.path`.
+- [x] **Step 2:** Run them. Expected: FAIL.
+- [x] **Step 3: Implement** the helpers in `lib/changelog.ts` and use them in `getBlob` after the `appPath` lookup (fetch `select: { path: true }` for the site once and reuse it for the later `siteFilePaths`).
+- [x] **Step 4:** Run `pnpm vitest run --project=unit lib/changelog.test.ts server/api/routers/__tests__/site.test.ts`. Expected: PASS.
+- [x] **Step 5:** Commit: `feat(changelog): serve CHANGELOG.md at /changelog; changelog folder wins`
 
 ### Task 2: Pure parser `lib/changelog-file.ts`
 
@@ -147,7 +147,7 @@ export function splitChangelogTree(tree: Root): { titleNode?: Heading; preamble:
 export function entryAnchor(parsed: ParsedHeading, used: Set<string>): string;
 ```
 
-- [ ] **Step 1: Failing tests.** Create `lib/changelog-file.test.ts`:
+- [x] **Step 1: Failing tests.** Create `lib/changelog-file.test.ts`:
 
 ```ts
 import remarkGfm from 'remark-gfm';
@@ -252,8 +252,8 @@ describe('entryAnchor', () => {
 });
 ```
 
-- [ ] **Step 2:** Run `pnpm vitest run --project=unit lib/changelog-file.test.ts`. Expected: FAIL (module missing).
-- [ ] **Step 3: Implement** `lib/changelog-file.ts`:
+- [x] **Step 2:** Run `pnpm vitest run --project=unit lib/changelog-file.test.ts`. Expected: FAIL (module missing).
+- [x] **Step 3: Implement** `lib/changelog-file.ts`:
 
 ```ts
 import type { Heading, Root, RootContent } from 'mdast';
@@ -357,8 +357,8 @@ export function entryAnchor(parsed: ParsedHeading, used: Set<string>): string {
 }
 ```
 
-- [ ] **Step 4:** Run `pnpm vitest run --project=unit lib/changelog-file.test.ts`. Expected: PASS. If `@changesets/cli` wrongly matches `VERSION_RE` (it must not, because there's no digit after `@`), fix the regex and not the test.
-- [ ] **Step 5:** Commit: `feat(changelog): parse single-file changelog version headings`
+- [x] **Step 4:** Run `pnpm vitest run --project=unit lib/changelog-file.test.ts`. Expected: PASS. If `@changesets/cli` wrongly matches `VERSION_RE` (it must not, because there's no digit after `@`), fix the regex and not the test.
+- [x] **Step 5:** Commit: `feat(changelog): parse single-file changelog version headings`
 
 ### Task 3: The `remarkChangelog` plugin
 
@@ -368,7 +368,7 @@ export function entryAnchor(parsed: ParsedHeading, used: Set<string>): string {
 - Consumes: Task 2 helpers, and `formatChangelogDate` (Task 1).
 - Produces: `export default function remarkChangelog(options?: { title?: string }): (tree: Root) => void`
 
-- [ ] **Step 1: Failing tests.** Create `lib/remark-changelog.test.ts`:
+- [x] **Step 1: Failing tests.** Create `lib/remark-changelog.test.ts`:
 
 ```ts
 import rehypeStringify from 'rehype-stringify';
@@ -460,8 +460,8 @@ describe('remarkChangelog', () => {
 });
 ```
 
-- [ ] **Step 2:** Run `pnpm vitest run --project=unit lib/remark-changelog.test.ts`. Expected: FAIL (module missing).
-- [ ] **Step 3: Implement** `lib/remark-changelog.ts`:
+- [x] **Step 2:** Run `pnpm vitest run --project=unit lib/remark-changelog.test.ts`. Expected: FAIL (module missing).
+- [x] **Step 3: Implement** `lib/remark-changelog.ts`:
 
 ```ts
 import type { PhrasingContent, Root, RootContent } from 'mdast';
@@ -577,8 +577,8 @@ export default function remarkChangelog(options: { title?: string } = {}) {
 }
 ```
 
-- [ ] **Step 4:** Run `pnpm vitest run --project=unit lib/remark-changelog.test.ts`. Expected: PASS. If `DOMParser` isn't available, check that the file runs in the `unit` project's jsdom environment (`vitest.config.ts`). If `id`/`dateTime` props render in different case, match what `hast-util-to-html` emits (`datetime`) in the assertions, not in the implementation.
-- [ ] **Step 5: Parity test.** Append to the same file. It renders the v1 React `ChangelogEntry` (index variant) for an equivalent entry, then compares the class skeleton:
+- [x] **Step 4:** Run `pnpm vitest run --project=unit lib/remark-changelog.test.ts`. Expected: PASS. If `DOMParser` isn't available, check that the file runs in the `unit` project's jsdom environment (`vitest.config.ts`). If `id`/`dateTime` props render in different case, match what `hast-util-to-html` emits (`datetime`) in the assertions, not in the implementation.
+- [x] **Step 5: Parity test.** Append to the same file. It renders the v1 React `ChangelogEntry` (index variant) for an equivalent entry, then compares the class skeleton:
 
 ```ts
 import { render } from '@testing-library/react';
@@ -610,7 +610,7 @@ it('matches the React ChangelogEntry DOM skeleton', async () => {
 
 Rename the test file to `.test.tsx` if JSX needs it. Run it: expected PASS. If it fails, change the **plugin** to match the React DOM (v1 is the contract).
 
-- [ ] **Step 6:** Commit: `feat(changelog): remark plugin rendering single-file changelogs in the v1 DOM`
+- [x] **Step 6:** Commit: `feat(changelog): remark plugin rendering single-file changelogs in the v1 DOM`
 
 **Amendment (Q9, 2026-09-19): compare link.** When the version heading carries a link (release-please `[17.11.2](…/compare/…)` → mdast `link`; Keep a Changelog `[1.1.0]` with a bottom definition → mdast `linkReference`), put a small link in `.changelog-entry-meta-inner` after the date: an mdast `link`/`linkReference` node (never a raw `<a>` built from user text) with `data.hProperties.className = ['changelog-entry-compare']`. Its text is "Compare" when the resolved URL contains `/compare/`, otherwise "Release". The title stays a plain link to the entry's anchor. Add tests for both link forms, and for a heading without a link (no `.changelog-entry-compare`). Add `.changelog-entry-compare` to default-theme.css (muted, small) and to the class reference DOM tree in Task 5.
 
@@ -620,7 +620,7 @@ Rename the test file to `.test.tsx` if JSX needs it. Run it: expected PASS. If i
 
 **Files:** Modify `apps/flowershow/lib/changelog-context.ts` and `apps/flowershow/lib/changelog-context.test.ts`
 
-- [ ] **Step 1: Failing tests** (append):
+- [x] **Step 1: Failing tests** (append):
 
 ```ts
 describe('single-file changelogs', () => {
@@ -641,8 +641,8 @@ describe('single-file changelogs', () => {
 });
 ```
 
-- [ ] **Step 2:** Run them. Expected: FAIL.
-- [ ] **Step 3: Implement.** In `changelog-context.ts`, widen the type to `{ kind: 'index' | 'entry' | 'file'; dir: string } | null`, import `isChangelogFileName`, and insert this right after `const dir = dirOf(blob.path);` (i.e. before the folder-index check):
+- [x] **Step 2:** Run them. Expected: FAIL.
+- [x] **Step 3: Implement.** In `changelog-context.ts`, widen the type to `{ kind: 'index' | 'entry' | 'file'; dir: string } | null`, import `isChangelogFileName`, and insert this right after `const dir = dirOf(blob.path);` (i.e. before the folder-index check):
 
 ```ts
   if (!isFolderIndexPath(blob.path)) {
@@ -652,14 +652,14 @@ describe('single-file changelogs', () => {
   }
 ```
 
-- [ ] **Step 4:** Run `pnpm vitest run --project=unit lib/changelog-context.test.ts`. Expected: PASS (old and new tests).
-- [ ] **Step 5:** Commit: `feat(changelog): detect single-file changelogs`
+- [x] **Step 4:** Run `pnpm vitest run --project=unit lib/changelog-context.test.ts`. Expected: PASS (old and new tests).
+- [x] **Step 5:** Commit: `feat(changelog): detect single-file changelogs`
 
 ### Task 5: Pipeline and page-route wiring, plus CSS
 
 **Files:** Modify `lib/markdown.ts`, `lib/render-page-content.tsx`, `page.tsx`, `styles/default-theme.css`, `scripts/theme-class-reference.mjs`, and the generated `content/flowershow-app/docs/reference/theme-class-reference.md`
 
-- [ ] **Step 1:** In `lib/markdown.ts`, add `changelog?: { title?: string }` to `MarkdownOptions`. In `processMarkdown`, register it only when set, as the **last remark plugin before `remarkRehype`**:
+- [x] **Step 1:** In `lib/markdown.ts`, add `changelog?: { title?: string }` to `MarkdownOptions`. In `processMarkdown`, register it only when set, as the **last remark plugin before `remarkRehype`**:
 
 ```ts
     .use(remarkMark)
@@ -669,8 +669,8 @@ describe('single-file changelogs', () => {
 
 In `getMdxOptions`, append `...(options.changelog ? [[remarkChangelog, options.changelog]] : [])` as the last entry of `remarkPlugins`. Import `remarkChangelog from './remark-changelog'`.
 
-- [ ] **Step 2:** In `render-page-content.tsx`, add `changelog?: { title?: string }` to `RenderPageContentOptions` and pass it into both the `processMarkdown(...)` and the `getMdxOptions(...)` option objects.
-- [ ] **Step 3:** In `page.tsx`:
+- [x] **Step 2:** In `render-page-content.tsx`, add `changelog?: { title?: string }` to `RenderPageContentOptions` and pass it into both the `processMarkdown(...)` and the `getMdxOptions(...)` option objects.
+- [x] **Step 3:** In `page.tsx`:
   - pass `changelog: changelog?.kind === 'file' ? { title: metadata?.title } : undefined` into the main `renderPageContent` call;
   - set `showToc` false and `showHero` false for `kind === 'file'` (extend the existing `changelog?.kind !== 'index'` checks);
   - in the `<main>` conditional, add a branch before `BlogLayout`:
@@ -683,7 +683,7 @@ In `getMdxOptions`, append `...(options.changelog ? [[remarkChangelog, options.c
               </>
 ```
 
-- [ ] **Step 4: CSS.** Add to the changelog section of `default-theme.css`:
+- [x] **Step 4: CSS.** Add to the changelog section of `default-theme.css`:
 
 ```css
   .changelog-entry.is-unreleased {
@@ -695,19 +695,19 @@ In `getMdxOptions`, append `...(options.changelog ? [[remarkChangelog, options.c
 
 In `scripts/theme-class-reference.mjs` `STATE_OWNERS`, add `'is-unreleased': '.changelog-entry',`. Run `pnpm docs:theme-classes` and then `pnpm docs:theme-classes:check`.
 
-- [ ] **Step 5: Verify.** Run `cd apps/flowershow && npx tsc --noEmit -p . && pnpm test`, then `npx eslint lib components/public "app/(public)/site"` at repo root, and `node --test scripts/theme-class-reference.test.mjs`. Everything must pass.
-- [ ] **Step 6: Visual check** (no app needed). Render `samples` of Keep a Changelog, Changesets and release-please through a throwaway vitest that runs `processMarkdown(..., { changelog: {} })` and writes the HTML. Wrap it with the compiled default CSS (see the v1 plan Task 7 notes) and screenshot it with headless Chrome (`--virtual-time-budget=15000`). Compare with the v1 folder look.
-- [ ] **Step 7:** Commit: `feat(changelog): render single-file changelogs in the site route`
+- [x] **Step 5: Verify.** Run `cd apps/flowershow && npx tsc --noEmit -p . && pnpm test`, then `npx eslint lib components/public "app/(public)/site"` at repo root, and `node --test scripts/theme-class-reference.test.mjs`. Everything must pass.
+- [x] **Step 6: Visual check** (no app needed). Render `samples` of Keep a Changelog, Changesets and release-please through a throwaway vitest that runs `processMarkdown(..., { changelog: {} })` and writes the HTML. Wrap it with the compiled default CSS (see the v1 plan Task 7 notes) and screenshot it with headless Chrome (`--virtual-time-budget=15000`). Compare with the v1 folder look.
+- [x] **Step 7:** Commit: `feat(changelog): render single-file changelogs in the site route`
 
 ### Task 6: E2E fixtures and spec (runs in CI)
 
 **Files:** Create fixtures and `apps/flowershow/e2e/specs/changelog-file.spec.ts`
 
-- [ ] **Step 1: Fixtures.**
+- [x] **Step 1: Fixtures.**
   - `e2e/fixtures/test-site/CHANGELOG.md`: use the `KAC` string from Task 3, plus a third version `## [0.9.0] - 2025-12-01` with a `### Fixed` list.
   - `e2e/fixtures/test-site/packages/cli/CHANGELOG.md`: `# @demo/cli`, then `## 2.0.0` with `### Major Changes` and a bullet, then `## 1.0.0` with `### Patch Changes` and a bullet.
   - `e2e/fixtures/test-site/notes/changelog.md`: frontmatter `layout: default` and a `## 1.0.0` heading (the opt-out check).
-- [ ] **Step 2: Spec.**
+- [x] **Step 2: Spec.**
 
 ```ts
 import { expect, test } from '../helpers/fixtures';
@@ -734,11 +734,11 @@ test('layout: default opts a changelog.md out', async ({ page, basePath }) => {
 });
 ```
 
-- [ ] **Step 3:** Check that the existing `changelog.spec.ts` (folder) is unaffected: its fixture folder has no file named `changelog.md`. Commit: `test(changelog): e2e for single-file changelogs`. CI runs these on the PR, so no local stack is needed.
+- [x] **Step 3:** Check that the existing `changelog.spec.ts` (folder) is unaffected: its fixture folder has no file named `changelog.md`. Commit: `test(changelog): e2e for single-file changelogs`. CI runs these on the PR, so no local stack is needed.
 
 ### Task 7: Docs, dogfood and PR
 
-- [ ] **Step 1:** In `content/flowershow-app/docs/reference/changelog.md`, replace the "Coming soon" section with a "Single `CHANGELOG.md` file" section. Cover the supported heading formats (with examples), the page title and intro rules, Unreleased, anchors (`/CHANGELOG#1.2.0`), opting in with `layout: changelog`, and opting out. Don't hard-wrap lines.
-- [ ] **Step 2:** Run the full verification again (tsc, unit tests, eslint, class-reference check).
+- [x] **Step 1:** In `content/flowershow-app/docs/reference/changelog.md`, replace the "Coming soon" section with a "Single `CHANGELOG.md` file" section. Cover the supported heading formats (with examples), the page title and intro rules, Unreleased, anchors (`/CHANGELOG#1.2.0`), opting in with `layout: changelog`, and opting out. Don't hard-wrap lines.
+- [x] **Step 2:** Run the full verification again (tsc, unit tests, eslint, class-reference check).
 - [ ] **Step 3:** Add a changelog entry `content/flowershow-app/changelog/YYYY-MM-DD-changelog-md-files.md` (AGENTS.md). Push `feat/changelog-single-file` and open a **draft** PR (pre-approved 2026-09-19), based on `feat/changelog-rendering` until #1383 merges. Then and watch `gh pr checks` until Lint, test and e2e are green. Then close the child beads and `flowershow-v8x.11`.
 - [ ] **Step 4:** Dogfood after deploy: a private `fl` publish of a folder containing a copy of `apps/cli/CHANGELOG.md`, checked in the browser.
