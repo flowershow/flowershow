@@ -56,7 +56,12 @@ export default defineConfig({
         baseURL: `http://${PREMIUM_SITE_CUSTOM_DOMAIN}`,
         basePath: '',
       } as any,
-      testMatch: ['**/links-and-embeds.spec.ts', '**/rss.spec.ts'],
+      testMatch: [
+        '**/links-and-embeds.spec.ts',
+        '**/rss.spec.ts',
+        // Custom head is a Premium feature: this is the seeded Premium site.
+        '**/custom-head.spec.ts',
+      ],
       dependencies: ['setup'],
     },
     {
