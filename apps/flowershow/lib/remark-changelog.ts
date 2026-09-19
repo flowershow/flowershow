@@ -71,13 +71,13 @@ function isEmpty(nodes: RootContent[]): boolean {
   return nodes.every((n) => n.type === 'definition');
 }
 
+export type RemarkChangelogOptions = { title?: string };
+
 /**
  * Turn a single-file changelog (Keep a Changelog, Changesets, release-please,
  * date-only) into the same `.changelog-*` DOM as the folder changelog.
  * Rewrites the whole tree once so reference definitions keep resolving.
  */
-export type RemarkChangelogOptions = { title?: string };
-
 export default function remarkChangelog(options: RemarkChangelogOptions = {}) {
   return (tree: Root) => {
     const { titleNode, preamble, sections } = splitChangelogTree(tree);
