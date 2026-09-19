@@ -73,6 +73,72 @@ describe('resolveSiteConfig', () => {
     const result = resolveSiteConfig(db, file);
     expect(result.theme).toBe('forest');
   });
+
+  describe('sanitizes each source before merging', () => {
+    it('a malformed field in file config cannot wipe a valid db value', () => {
+      const db = { theme: 'db-theme' };
+      const file = { theme: 123 as never }; // garbage
+      const result = resolveSiteConfig(db, file);
+      expect(result.theme).toBe('db-theme');
+    });
+
+    it('a malformed field in db config is dropped, not merged', () => {
+      const db = { social: 'not-an-array' as never };
+      const file = { siteName: 'Brand' };
+      const result = resolveSiteConfig(db, file);
+      expect(result).toEqual({ siteName: 'Brand' });
+    });
+  });
+
+  describe('opt-in link resolution via siteHostname', () => {
+    const siteHostname = 'sub.flowershow.site';
+
+    it('leaves media paths untouched when no hostname is given', () => {
+      const result = resolveSiteConfig(null, { logo: 'assets/logo.png' });
+      expect(result.logo).toBe('assets/logo.png');
+    });
+
+    it('resolves a media asset to a full URL when a hostname is given', () => {
+      const result = resolveSiteConfig(
+        null,
+        { logo: 'assets/logo.png' },
+        {
+          siteHostname,
+        },
+      );
+      expect(result.logo).toBe(`http://${siteHostname}/assets/logo.png`);
+    });
+
+    it('resolves DB-sourced media links too (not only file-sourced)', () => {
+      const result = resolveSiteConfig({ logo: 'assets/db-logo.png' }, null, {
+        siteHostname,
+      });
+      expect(result.logo).toBe(`http://${siteHostname}/assets/db-logo.png`);
+    });
+
+    it('resolves relative nav.links hrefs but leaves absolute URLs alone', () => {
+      const result = resolveSiteConfig(
+        null,
+        {
+          nav: {
+            links: [
+              { name: 'Blog', href: 'blog/post' },
+              { name: 'Ext', href: 'https://example.com' },
+            ],
+          },
+        },
+        { siteHostname },
+      );
+      const links = result.nav?.links as Array<{ name: string; href: string }>;
+      expect(links[0]!.href).toMatch(/^\//); // relative → resolved to a slug
+      expect(links[1]!.href).toBe('https://example.com'); // absolute untouched
+    });
+
+    it('preserves an emoji logo instead of resolving it as a link', () => {
+      const result = resolveSiteConfig(null, { logo: '🌸' }, { siteHostname });
+      expect(result.logo).toBe('🌸');
+    });
+  });
 });
 
 describe('resolveSiteName', () => {
