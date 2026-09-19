@@ -2,11 +2,15 @@ import {
   dirOf,
   isChangelogDir,
   isChangelogDirName,
+  isChangelogFileName,
   isFolderIndexPath,
   normalizeDir,
 } from '@/lib/changelog';
 
-export type ChangelogContext = { kind: 'index' | 'entry'; dir: string } | null;
+export type ChangelogContext = {
+  kind: 'index' | 'entry' | 'file';
+  dir: string;
+} | null;
 
 export async function resolveChangelogContext({
   slug,
@@ -31,6 +35,13 @@ export async function resolveChangelogContext({
 
   if (!/\.mdx?$/i.test(blob.path)) return null;
   const dir = dirOf(blob.path);
+
+  // Single-file changelog: CHANGELOG.md (any case) or any page opting in
+  if (!isFolderIndexPath(blob.path)) {
+    const layout = blob.metadata?.layout;
+    if (layout === 'changelog') return { kind: 'file', dir };
+    if (!layout && isChangelogFileName(blob.path)) return { kind: 'file', dir };
+  }
 
   if (isFolderIndexPath(blob.path)) {
     return isChangelogDir(dir, blob.metadata) ? { kind: 'index', dir } : null;

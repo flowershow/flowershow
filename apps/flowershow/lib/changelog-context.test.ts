@@ -116,3 +116,55 @@ describe('resolveChangelogContext', () => {
     expect(ctx).toBeNull();
   });
 });
+
+describe('single-file changelogs', () => {
+  const none = vi.fn();
+  it('CHANGELOG.md anywhere → file', async () => {
+    expect(
+      await resolveChangelogContext({
+        slug: '/CHANGELOG',
+        blob: { path: 'CHANGELOG.md', metadata: {} },
+        siteFilePaths: [],
+        getFolderIndexMetadata: none,
+      }),
+    ).toEqual({ kind: 'file', dir: '' });
+    expect(
+      await resolveChangelogContext({
+        slug: '/packages/cli/changelog',
+        blob: { path: 'packages/cli/changelog.md', metadata: null },
+        siteFilePaths: [],
+        getFolderIndexMetadata: none,
+      }),
+    ).toEqual({ kind: 'file', dir: 'packages/cli' });
+  });
+  it('layout: changelog on any non-index page → file', async () => {
+    expect(
+      await resolveChangelogContext({
+        slug: '/history',
+        blob: { path: 'history.md', metadata: { layout: 'changelog' } },
+        siteFilePaths: [],
+        getFolderIndexMetadata: none,
+      }),
+    ).toEqual({ kind: 'file', dir: '' });
+  });
+  it('another explicit layout opts CHANGELOG.md out', async () => {
+    expect(
+      await resolveChangelogContext({
+        slug: '/CHANGELOG',
+        blob: { path: 'CHANGELOG.md', metadata: { layout: 'default' } },
+        siteFilePaths: [],
+        getFolderIndexMetadata: none,
+      }),
+    ).toBeNull();
+  });
+  it('folder README with layout: changelog is still folder mode', async () => {
+    expect(
+      await resolveChangelogContext({
+        slug: '/releases',
+        blob: { path: 'releases/README.md', metadata: { layout: 'changelog' } },
+        siteFilePaths: [],
+        getFolderIndexMetadata: none,
+      }),
+    ).toEqual({ kind: 'index', dir: 'releases' });
+  });
+});
