@@ -16,7 +16,7 @@ Status: **Implemented 2026-09-19** on `feat/changelog-single-file` (Tasks 0–7;
 
 ## Global Constraints
 
-- Build on top of the v1 branch (`feat/changelog-rendering`, PR #1383), or on `staging` once #1383 is merged. Put phase 2 on its own branch, `feat/changelog-single-file`.
+- Build on top of the v1 branch (`feat/changelog-rendering`, PR #1383), or on `staging` once #1383 is merged (it was, so the branch is based on `staging`). Put phase 2 on its own branch, `feat/changelog-single-file`.
 - DOM and classes must match v1's index-variant `ChangelogEntry` exactly: `.changelog`, `.changelog-header`, `.changelog-title`, `.changelog-intro.rendered-mdx`, `ol.changelog-entries`, `li.changelog-entry#<anchor>`, `.changelog-entry-meta` > `.changelog-entry-meta-inner` > `a.changelog-entry-date` > `time[datetime]`, `.changelog-entry-content`, `h2.changelog-entry-title > a`, `.changelog-entry-body.rendered-mdx`. The only new class is the state `.is-unreleased` on `li.changelog-entry`.
 - `##` is always a version heading. `#` is one only if it parses as a version, date or Unreleased. `###` and deeper never are.
 - One compile per file. Never split the source into per-version chunks, because that breaks reference-link definitions.
@@ -654,6 +654,8 @@ describe('single-file changelogs', () => {
 
 - [x] **Step 4:** Run `pnpm vitest run --project=unit lib/changelog-context.test.ts`. Expected: PASS (old and new tests).
 - [x] **Step 5:** Commit: `feat(changelog): detect single-file changelogs`
+
+_Amendment (2026-09-19, after rebasing onto `staging`):_ #1386 made the folder the only judge of its entries (an entry's own `layout` never opts it out). So the implementation checks folder membership first: a page inside a changelog folder (by name, or by its index's `layout: changelog`) is that folder's entry or a normal page, and single-file detection applies only to pages outside such folders.
 
 ### Task 5: Pipeline and page-route wiring, plus CSS
 
