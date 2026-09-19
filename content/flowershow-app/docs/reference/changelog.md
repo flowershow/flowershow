@@ -1,6 +1,6 @@
 ---
 title: Changelog
-description: Publish a changelog: Flowershow turns a changelog folder or a CHANGELOG.md file into a timeline page automatically
+description: "Publish a changelog: Flowershow turns a changelog folder or a CHANGELOG.md file into a timeline page automatically"
 ---
 
 Flowershow renders a changelog as a full timeline page, with no components or configuration needed. There are two ways to write one:
