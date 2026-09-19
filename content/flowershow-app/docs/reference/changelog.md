@@ -1,6 +1,6 @@
 ---
 title: Changelog
-description: Publish a changelog with dated entries: Flowershow turns a changelog folder into a timeline page automatically
+description: "Publish a changelog with dated entries: Flowershow turns a changelog folder into a timeline page automatically"
 ---
 
 Flowershow renders a changelog folder as a full timeline page, with no components or configuration needed. Each entry shows its date, authors, title, summary, optional image and full content, newest first, and each entry also gets its own page.
