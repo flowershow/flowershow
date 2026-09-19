@@ -36,7 +36,6 @@ export async function resolveChangelogContext({
     return isChangelogDir(dir, blob.metadata) ? { kind: 'index', dir } : null;
   }
 
-  if (blob.metadata?.layout) return null;
   if (!dir) return null;
   const folderMeta = await getFolderIndexMetadata(dir);
   return isChangelogDir(dir, folderMeta) ? { kind: 'entry', dir } : null;

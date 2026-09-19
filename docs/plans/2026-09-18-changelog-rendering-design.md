@@ -81,7 +81,7 @@ Opt-out: a `README.md`/`index.md` in a `changelog/` folder with any other explic
 
 Requests are handled as follows:
 - **The folder URL** (e.g. `/changelog`): render the changelog index. If the folder has a README/index, its title, description and body become the header and intro. If it has none, the index still renders, with title "Changelog", instead of 404ing.
-- **A file inside the folder** (e.g. `/changelog/2026-08-21-monospace-theme`): render the changelog entry layout. An entry's own `layout:` frontmatter still wins.
+- **A file inside the folder** (e.g. `/changelog/2026-08-21-monospace-theme`): render the changelog entry layout. An entry's own `layout:` frontmatter does not take it out of the changelog (decided 2026-09-19); use `publish: false` to hide it.
 
 ## Architecture
 
