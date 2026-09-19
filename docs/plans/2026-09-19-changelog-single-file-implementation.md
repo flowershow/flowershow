@@ -114,6 +114,22 @@ Then in `changelog-entry.tsx`, delete the local `dateFormat`/`formatDate`, and `
 - [ ] **Step 4:** Run `pnpm vitest run --project=unit lib/changelog.test.ts components/public/changelog`. Expected: PASS, including the existing component tests (the date text is unchanged).
 - [ ] **Step 5:** Commit: `feat(changelog): shared date formatter and changelog file-name detection`
 
+### Task 1b: `/changelog` alias and folder-wins in `getBlob` (Q1, Q2)
+
+Added 2026-09-19 after Rufus's decisions.
+
+**Files:** Modify `apps/flowershow/lib/changelog.ts` (+ test), `apps/flowershow/server/api/routers/site.ts`, `apps/flowershow/server/api/routers/__tests__/site.test.ts`
+
+**Rules:**
+- **Q1 alias:** when a slug whose last segment is `changelog` (lowercase) finds no blob by permalink or `appPath`, serve the `changelog.md`/`.mdx` file in that directory in any case (e.g. `CHANGELOG.md`), **unless** that directory has a `changelog/` folder (any case) with markdown files. `/CHANGELOG` keeps working through its own `appPath`. No redirect: the page renders at `/changelog`.
+- **Q2 folder wins:** when `changelog.md` and `changelog/README.md` share an `appPath`, the folder index wins (extend the candidate preference to index → README → file). When the folder has no README, a `changelog.md`/`CHANGELOG.md` that matched the slug is dropped, so `getBlob` 404s and the page route renders the README-less folder index (its existing fallback). A file with a `permalink` is still reachable at that permalink.
+
+- [ ] **Step 1: Failing tests.** In `lib/changelog.test.ts`, test two pure helpers: `hasChangelogFolder(dir, paths)` (a `changelog/` folder with `.md`/`.mdx` directly inside, any case, paths with or without a leading slash) and `findChangelogFile(dir, paths)` (the `changelog.md`/`.mdx` path in `dir`, any case, or `null`). In `site.test.ts` under `site.getBlob`, add a `changelog alias` block: `/changelog` serves `CHANGELOG.md`; `/packages/cli/changelog` serves `packages/cli/CHANGELOG.md`; no alias when a `changelog/` folder with entries exists (NOT_FOUND); `changelog/README.md` beats `changelog.md` on the same appPath; a README-less `changelog/` folder makes `/changelog` NOT_FOUND even when `changelog.md` exists. Extend the mock `findFirst` to filter on a string `where.path`.
+- [ ] **Step 2:** Run them. Expected: FAIL.
+- [ ] **Step 3: Implement** the helpers in `lib/changelog.ts` and use them in `getBlob` after the `appPath` lookup (fetch `select: { path: true }` for the site once and reuse it for the later `siteFilePaths`).
+- [ ] **Step 4:** Run `pnpm vitest run --project=unit lib/changelog.test.ts server/api/routers/__tests__/site.test.ts`. Expected: PASS.
+- [ ] **Step 5:** Commit: `feat(changelog): serve CHANGELOG.md at /changelog; changelog folder wins`
+
 ### Task 2: Pure parser `lib/changelog-file.ts`
 
 **Files:** Create `apps/flowershow/lib/changelog-file.ts` and `apps/flowershow/lib/changelog-file.test.ts`
@@ -596,6 +612,10 @@ Rename the test file to `.test.tsx` if JSX needs it. Run it: expected PASS. If i
 
 - [ ] **Step 6:** Commit: `feat(changelog): remark plugin rendering single-file changelogs in the v1 DOM`
 
+**Amendment (Q9, 2026-09-19): compare link.** When the version heading carries a link (release-please `[17.11.2](…/compare/…)` → mdast `link`; Keep a Changelog `[1.1.0]` with a bottom definition → mdast `linkReference`), put a small link in `.changelog-entry-meta-inner` after the date: an mdast `link`/`linkReference` node (never a raw `<a>` built from user text) with `data.hProperties.className = ['changelog-entry-compare']`. Its text is "Compare" when the resolved URL contains `/compare/`, otherwise "Release". The title stays a plain link to the entry's anchor. Add tests for both link forms, and for a heading without a link (no `.changelog-entry-compare`). Add `.changelog-entry-compare` to default-theme.css (muted, small) and to the class reference DOM tree in Task 5.
+
+**Amendment (Q6):** a date-only heading with no text uses the formatted date as its title. Never derive a title from the body.
+
 ### Task 4: Detection of the `file` kind
 
 **Files:** Modify `apps/flowershow/lib/changelog-context.ts` and `apps/flowershow/lib/changelog-context.test.ts`
@@ -720,5 +740,5 @@ test('layout: default opts a changelog.md out', async ({ page, basePath }) => {
 
 - [ ] **Step 1:** In `content/flowershow-app/docs/reference/changelog.md`, replace the "Coming soon" section with a "Single `CHANGELOG.md` file" section. Cover the supported heading formats (with examples), the page title and intro rules, Unreleased, anchors (`/CHANGELOG#1.2.0`), opting in with `layout: changelog`, and opting out. Don't hard-wrap lines.
 - [ ] **Step 2:** Run the full verification again (tsc, unit tests, eslint, class-reference check).
-- [ ] **Step 3:** Ask Rufus before pushing `feat/changelog-single-file` and opening a PR to `staging`. When approved, push, open the PR, and watch `gh pr checks` until Lint, test and e2e are green. Then close the child beads and `flowershow-v8x.11`.
+- [ ] **Step 3:** Add a changelog entry `content/flowershow-app/changelog/YYYY-MM-DD-changelog-md-files.md` (AGENTS.md). Push `feat/changelog-single-file` and open a **draft** PR (pre-approved 2026-09-19), based on `feat/changelog-rendering` until #1383 merges. Then and watch `gh pr checks` until Lint, test and e2e are green. Then close the child beads and `flowershow-v8x.11`.
 - [ ] **Step 4:** Dogfood after deploy: a private `fl` publish of a folder containing a copy of `apps/cli/CHANGELOG.md`, checked in the browser.
