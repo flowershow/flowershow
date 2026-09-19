@@ -17,6 +17,7 @@ import {
   paginate,
   parsePageParam,
   resolveEntryDate,
+  resolveEntryTitle,
   toChangelogEntries,
 } from './changelog';
 
@@ -97,6 +98,34 @@ describe('dates and titles', () => {
     );
     expect(entryTitleFromPath('changelog/new_editor.md')).toBe('New editor');
   });
+  it('resolveEntryTitle keeps a real frontmatter title', () => {
+    expect(
+      resolveEntryTitle('Monospace theme', 'changelog/2026-08-21-monospace.md'),
+    ).toBe('Monospace theme');
+  });
+  it('resolveEntryTitle derives a title when there is none', () => {
+    expect(
+      resolveEntryTitle(undefined, 'changelog/2026-03-01-new-editor.md'),
+    ).toBe('New editor');
+    expect(resolveEntryTitle('', 'changelog/2026-03-01-new-editor.md')).toBe(
+      'New editor',
+    );
+  });
+  it('resolveEntryTitle treats a title that is just the file name as missing', () => {
+    // the sync fills metadata.title from the file name when there is no frontmatter title
+    expect(
+      resolveEntryTitle(
+        '2026-03-01-no-frontmatter-title',
+        'changelog/2026-03-01-no-frontmatter-title.md',
+      ),
+    ).toBe('No frontmatter title');
+    expect(
+      resolveEntryTitle(
+        '2026-03-01-no-frontmatter-title.md',
+        'changelog/2026-03-01-no-frontmatter-title.md',
+      ),
+    ).toBe('No frontmatter title');
+  });
   it('anchorFromPath is a URL-safe filename slug', () => {
     expect(anchorFromPath('changelog/2026-08-21-Monospace Theme.md')).toBe(
       '2026-08-21-monospace-theme',
@@ -124,6 +153,17 @@ describe('toChangelogEntries', () => {
   it('keeps direct md children only, excludes README, unpublished, nested and other folders', () => {
     const titles = toChangelogEntries(rows, 'changelog').map((e) => e.title);
     expect(titles).toEqual(['C', 'B', 'Undated']);
+  });
+  it('derives a readable title when the stored title is just the file name', () => {
+    const titles = toChangelogEntries(
+      [
+        row('changelog/2026-03-01-no-frontmatter-title.md', {
+          title: '2026-03-01-no-frontmatter-title',
+        }),
+      ],
+      'changelog',
+    ).map((e) => e.title);
+    expect(titles).toEqual(['No frontmatter title']);
   });
   it('sorts by date desc with undated last', () => {
     const dates = toChangelogEntries(rows, '/changelog/').map((e) => e.date);

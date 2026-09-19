@@ -129,6 +129,24 @@ export function entryTitleFromPath(path: string): string {
   return words ? words[0]!.toUpperCase() + words.slice(1) : basename(path);
 }
 
+/**
+ * The entry's frontmatter title, or a readable one derived from its file name.
+ * The sync stores the file name as `metadata.title` when there is no frontmatter
+ * title, so a title that is just the file name counts as missing.
+ */
+export function resolveEntryTitle(metaTitle: unknown, path: string): string {
+  const title = typeof metaTitle === 'string' ? metaTitle.trim() : '';
+  const name = basename(path);
+  if (
+    !title ||
+    title === name ||
+    title === path.slice(path.lastIndexOf('/') + 1)
+  ) {
+    return entryTitleFromPath(path);
+  }
+  return title;
+}
+
 export function anchorFromPath(path: string): string {
   return basename(path)
     .toLowerCase()
@@ -165,7 +183,7 @@ export function toChangelogEntries(
         path: r.path,
         url: ensureLeadingSlash(r.permalink || r.appPath || r.path),
         anchor: anchorFromPath(r.path),
-        title: m.title || entryTitleFromPath(r.path),
+        title: resolveEntryTitle(m.title, r.path),
         date: resolveEntryDate(m.date, r.path),
         ...(m.version ? { version: String(m.version) } : {}),
         ...(m.description ? { description: m.description } : {}),
