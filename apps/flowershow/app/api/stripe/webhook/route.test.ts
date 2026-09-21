@@ -6,12 +6,26 @@ vi.mock('next/headers', () => ({
   headers: () => ({ get: () => 'test-signature' }),
 }));
 
-vi.mock('@/lib/stripe', () => ({
-  stripe: {
-    webhooks: { constructEvent: vi.fn() },
-    subscriptions: { retrieve: vi.fn() },
-  },
-}));
+// Hermetic copy of the ownership helper. We can't importActual('@/lib/stripe')
+// because loading it validates env and constructs a real Stripe client. The
+// logic mirrors lib/stripe.ts: metadata.platform match OR a known price id.
+const TEST_KNOWN_PRICE_ID = 'price_flowershow_known';
+vi.mock('@/lib/stripe', () => {
+  const FLOWERSHOW_PLATFORM = 'flowershow';
+  const KNOWN_PRICE_IDS = new Set(['price_flowershow_known']);
+  return {
+    FLOWERSHOW_PLATFORM,
+    stripe: {
+      webhooks: { constructEvent: vi.fn() },
+      subscriptions: { retrieve: vi.fn() },
+    },
+    isFlowershowSubscription: (subscription: any) => {
+      if (subscription?.metadata?.platform === FLOWERSHOW_PLATFORM) return true;
+      const items = subscription?.items?.data ?? [];
+      return items.some((item: any) => KNOWN_PRICE_IDS.has(item?.price?.id));
+    },
+  };
+});
 
 vi.mock('@/server/db', () => ({
   default: {
@@ -47,10 +61,11 @@ vi.mock('@/lib/server-posthog', () => ({
 vi.mock('@/lib/otel-logger', () => ({
   log: vi.fn(),
   flushLogs: vi.fn().mockResolvedValue(undefined),
-  SeverityNumber: { ERROR: 17 },
+  SeverityNumber: { INFO: 9, WARN: 13, ERROR: 17 },
 }));
 
 import { sendEmail } from '@/lib/email';
+import { log } from '@/lib/otel-logger';
 import { stripe } from '@/lib/stripe';
 import prisma from '@/server/db';
 import { POST } from './route';
@@ -118,6 +133,9 @@ describe('stripe webhook — cancellation split', () => {
           cancel_at_period_end: false,
           current_period_start: 1893369600,
           current_period_end: 1893456000,
+          // Ownership marker so the shared-account filter recognises this as
+          // a Flowershow subscription and processes it.
+          metadata: { platform: 'flowershow' },
           items: {
             data: [
               { price: { id: 'price_1', recurring: { interval: 'month' } } },
@@ -263,5 +281,139 @@ describe('stripe webhook — annual renewal reminder (invoice.upcoming)', () => 
 
     expect(res.status).toBe(200);
     expect(sendEmail).not.toHaveBeenCalled();
+  });
+});
+
+// The Stripe account is shared across products, so the webhook receives
+// customer.subscription.* events for subscriptions Flowershow never created.
+// Those must be ignored (200, no-op) rather than throwing — throwing makes
+// Stripe retry the same event for ~3 days.
+describe('stripe webhook — shared-account ownership filtering', () => {
+  function subscriptionEvent(sub: Record<string, unknown>) {
+    return {
+      id: 'evt_sub_1',
+      type: 'customer.subscription.updated',
+      data: {
+        object: {
+          id: 'sub_foreign',
+          status: 'active',
+          cancel_at_period_end: false,
+          customer: 'cus_foreign',
+          current_period_start: 1893369600,
+          current_period_end: 1893456000,
+          items: {
+            data: [
+              {
+                price: { id: 'price_other', recurring: { interval: 'month' } },
+              },
+            ],
+          },
+          ...sub,
+        },
+      },
+    };
+  }
+
+  it('ignores a foreign subscription without touching the DB or throwing', async () => {
+    // No metadata.platform and a price id we don't own.
+    const res = await fireEvent(subscriptionEvent({}));
+
+    expect(res.status).toBe(200);
+    expect(prisma.subscription.findUnique).not.toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith(
+      'Ignoring non-Flowershow subscription event',
+      expect.anything(),
+      expect.objectContaining({ reason: 'not_flowershow' }),
+    );
+  });
+
+  it('treats a subscription tagged metadata.platform=flowershow as ours', async () => {
+    vi.mocked(prisma.subscription.findUnique).mockResolvedValue(null as any);
+
+    const res = await fireEvent(
+      subscriptionEvent({ metadata: { platform: 'flowershow' } }),
+    );
+
+    expect(res.status).toBe(200);
+    // Ownership passed → it did look for the record.
+    expect(prisma.subscription.findUnique).toHaveBeenCalled();
+  });
+
+  it('treats a known-price subscription as ours (pre-metadata fallback)', async () => {
+    vi.mocked(prisma.subscription.findUnique).mockResolvedValue(null as any);
+
+    const res = await fireEvent(
+      subscriptionEvent({
+        items: {
+          data: [
+            {
+              price: {
+                id: TEST_KNOWN_PRICE_ID,
+                recurring: { interval: 'month' },
+              },
+            },
+          ],
+        },
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(prisma.subscription.findUnique).toHaveBeenCalled();
+  });
+
+  it('no-ops (200 + warn) when a Flowershow subscription is missing in the DB', async () => {
+    vi.mocked(prisma.subscription.findUnique).mockResolvedValue(null as any);
+
+    const res = await fireEvent(
+      subscriptionEvent({ metadata: { platform: 'flowershow' } }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(prisma.subscription.update).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith(
+      'Flowershow subscription not found in DB; ignoring',
+      expect.anything(),
+      expect.objectContaining({ reason: 'subscription_not_in_db' }),
+    );
+  });
+});
+
+describe('stripe webhook — checkout.session.completed guards', () => {
+  function checkoutEvent(session: Record<string, unknown>) {
+    return {
+      id: 'evt_checkout_1',
+      type: 'checkout.session.completed',
+      data: { object: { customer: 'cus_1', ...session } },
+    };
+  }
+
+  it('ignores a foreign checkout session without calling retrieve', async () => {
+    const res = await fireEvent(checkoutEvent({ subscription: 'sub_x' }));
+
+    expect(res.status).toBe(200);
+    expect(stripe.subscriptions.retrieve).not.toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith(
+      'Ignoring non-Flowershow checkout.session.completed',
+      expect.anything(),
+      expect.objectContaining({ reason: 'not_flowershow' }),
+    );
+  });
+
+  it('does not call retrieve(null) when our session has no subscription id', async () => {
+    const res = await fireEvent(
+      checkoutEvent({
+        subscription: null,
+        metadata: { siteId: 'site-1', platform: 'flowershow' },
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(stripe.subscriptions.retrieve).not.toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith(
+      'Ignoring checkout.session.completed without a subscription id',
+      expect.anything(),
+      expect.objectContaining({ reason: 'missing_subscription_id' }),
+    );
   });
 });
