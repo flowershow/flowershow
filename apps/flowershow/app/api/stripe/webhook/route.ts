@@ -8,8 +8,13 @@ import { PremiumUpgradeEmail } from '@/emails/premium-upgrade';
 import { RenewalReminderEmail } from '@/emails/renewal-reminder';
 import { removeDomainAndVariantFromVercelProject } from '@/lib/domains';
 import { sendEmail } from '@/lib/email';
+import { flushLogs, log, SeverityNumber } from '@/lib/otel-logger';
 import PostHogClient from '@/lib/server-posthog';
-import { stripe } from '@/lib/stripe';
+import {
+  FLOWERSHOW_PLATFORM,
+  isFlowershowSubscription,
+  stripe,
+} from '@/lib/stripe';
 import { sendTransactionalEmail } from '@/lib/transactional-email';
 import prisma from '@/server/db';
 
@@ -24,6 +29,8 @@ const relevantEvents = new Set([
   'customer.subscription.deleted',
   'invoice.upcoming',
 ]);
+
+const ROUTE = 'POST /api/stripe/webhook';
 
 const billingSettingsUrl = (siteId: string) =>
   `https://${env.NEXT_PUBLIC_CLOUD_DOMAIN}/site/${siteId}/settings`;
@@ -73,6 +80,49 @@ export async function POST(req: Request) {
       switch (event.type) {
         case 'checkout.session.completed': {
           const checkoutSession = event.data.object as any;
+          const siteId = checkoutSession.metadata?.siteId;
+
+          // Shared Stripe account: ignore checkout sessions that aren't ours.
+          // Our sessions always carry metadata.platform (and metadata.siteId);
+          // foreign products' sessions carry neither.
+          if (
+            checkoutSession.metadata?.platform !== FLOWERSHOW_PLATFORM &&
+            !siteId
+          ) {
+            log(
+              'Ignoring non-Flowershow checkout.session.completed',
+              SeverityNumber.INFO,
+              {
+                route: ROUTE,
+                eventId: event.id,
+                eventType: event.type,
+                stripeCustomerId: checkoutSession.customer,
+                reason: 'not_flowershow',
+              },
+            );
+            break;
+          }
+
+          // Provisioning premium requires a subscription id. Non-subscription
+          // checkouts (e.g. one-time payments from other products) carry a null
+          // subscription — bail out rather than calling retrieve(null), which
+          // throws "subscription_exposed_id must be a string, but got: null".
+          if (typeof checkoutSession.subscription !== 'string') {
+            log(
+              'Ignoring checkout.session.completed without a subscription id',
+              SeverityNumber.WARN,
+              {
+                route: ROUTE,
+                eventId: event.id,
+                eventType: event.type,
+                siteId,
+                stripeCustomerId: checkoutSession.customer,
+                reason: 'missing_subscription_id',
+              },
+            );
+            break;
+          }
+
           const subscription = await stripe.subscriptions.retrieve(
             checkoutSession.subscription,
           );
@@ -162,6 +212,26 @@ export async function POST(req: Request) {
         case 'customer.subscription.updated':
         case 'customer.subscription.deleted': {
           const subscription = event.data.object as any;
+
+          // Shared Stripe account: ignore subscriptions that aren't ours before
+          // touching the DB. Foreign products' subscriptions are the common
+          // case here and must not error.
+          if (!isFlowershowSubscription(subscription)) {
+            log(
+              'Ignoring non-Flowershow subscription event',
+              SeverityNumber.INFO,
+              {
+                route: ROUTE,
+                eventId: event.id,
+                eventType: event.type,
+                stripeSubscriptionId: subscription.id,
+                stripeCustomerId: subscription.customer,
+                reason: 'not_flowershow',
+              },
+            );
+            break;
+          }
+
           const dbSubscription = await prisma.subscription.findUnique({
             where: {
               stripeSubscriptionId: subscription.id,
@@ -172,7 +242,22 @@ export async function POST(req: Request) {
           });
 
           if (!dbSubscription) {
-            throw new Error('Subscription not found');
+            // Looks like ours (metadata/price match) but we have no local
+            // record — nothing to update. Log and no-op rather than throwing,
+            // which would make Stripe retry the event for ~3 days.
+            log(
+              'Flowershow subscription not found in DB; ignoring',
+              SeverityNumber.WARN,
+              {
+                route: ROUTE,
+                eventId: event.id,
+                eventType: event.type,
+                stripeSubscriptionId: subscription.id,
+                stripeCustomerId: subscription.customer,
+                reason: 'subscription_not_in_db',
+              },
+            );
+            break;
           }
 
           const priceId = subscription.items.data[0]?.price?.id;
@@ -387,11 +472,15 @@ export async function POST(req: Request) {
     } catch (error) {
       console.error(`❌ Webhook handler failed:`, error);
       const posthog = PostHogClient();
+      // Attach event id + type so a captured exception carries the payload
+      // needed to look the event up in Stripe and replay it.
       posthog.captureException(error, 'system', {
-        route: 'POST /api/stripe/webhook',
+        route: ROUTE,
+        eventId: event.id,
         eventType: event.type,
       });
       await posthog.shutdown();
+      await flushLogs();
       return NextResponse.json(
         { message: 'Webhook handler failed' },
         { status: 500 },
@@ -399,6 +488,7 @@ export async function POST(req: Request) {
     }
   }
 
+  await flushLogs();
   return NextResponse.json({
     received: true,
   } satisfies StripeWebhookReceivedResponse);

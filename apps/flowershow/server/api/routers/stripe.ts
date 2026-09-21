@@ -1,7 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { env } from '@/env.mjs';
-import { stripe } from '@/lib/stripe';
+import { FLOWERSHOW_PLATFORM, stripe } from '@/lib/stripe';
 import type { BundleTierId } from '@/lib/stripe-plans';
 import { BUNDLE_TIERS, getBundleTierId } from '@/lib/stripe-plans';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
@@ -172,6 +172,19 @@ export const stripeRouter = createTRPCRouter({
         ...(couponId ? { discounts: [{ coupon: couponId }] } : {}),
         metadata: {
           siteId: input.siteId,
+          // Shared Stripe account: mark this session as ours so the webhook can
+          // tell it apart from other products' checkout sessions.
+          platform: FLOWERSHOW_PLATFORM,
+        },
+        // Propagate the platform marker onto the subscription Stripe creates.
+        // Checkout metadata does NOT flow through to the subscription, and
+        // customer.subscription.* webhook events only carry the subscription's
+        // own metadata — this is what lets the webhook identify our subs.
+        subscription_data: {
+          metadata: {
+            siteId: input.siteId,
+            platform: FLOWERSHOW_PLATFORM,
+          },
         },
         success_url: `${returnURLBase}/${input.siteId}/settings?upgrade_success=true`,
         cancel_url: `${returnURLBase}/${input.siteId}/settings?upgrade_cancelled=true`,
