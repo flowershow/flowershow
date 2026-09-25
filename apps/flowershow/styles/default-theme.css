@@ -2156,10 +2156,13 @@
     color: var(--color-foreground-400);
     font-size: var(--font-size-sm);
   }
-  /* `/tags/{tag}` listing of pages carrying a tag. */
+  /* `/tags/{tag}` listing of pages carrying a tag — a numbered (ordered) list. */
   .tag-page-list {
-    list-style: none;
-    padding: 0;
+    list-style: decimal;
+    padding-left: 1.5rem;
+  }
+  .tag-page-list-item::marker {
+    color: var(--color-foreground-400);
   }
   .tag-page-list-item + .tag-page-list-item {
     margin-top: 1rem;

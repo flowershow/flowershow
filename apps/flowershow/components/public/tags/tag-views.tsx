@@ -59,7 +59,7 @@ export async function TagListingPage({
       {pages.length === 0 ? (
         <p className="tags-page-empty">No pages with this tag.</p>
       ) : (
-        <ul className="tag-page-list">
+        <ol className="tag-page-list">
           {pages.map((p) => (
             <li key={p.href} className="tag-page-list-item">
               <Link href={p.href}>{p.title ?? p.href}</Link>
@@ -68,7 +68,7 @@ export async function TagListingPage({
               )}
             </li>
           ))}
-        </ul>
+        </ol>
       )}
     </div>
   );
