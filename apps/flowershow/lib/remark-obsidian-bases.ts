@@ -1,3 +1,4 @@
+import { normalizeFrontmatterTags, tagMatches } from '@flowershow/core';
 import { Blob, Prisma } from '@prisma/client';
 import type { Code, Root } from 'mdast';
 import type { MdxJsxAttribute, MdxJsxFlowElement } from 'mdast-util-mdx-jsx';
@@ -251,6 +252,12 @@ async function executeBaseQueryForView(
       incomingLinks: {
         select: { sourceBlob: { select: { path: true } } },
       },
+      // Unified tag set (frontmatter + inline body #tags): backs file.tags and
+      // file.hasTag(). Reading the Tag table — not just frontmatter metadata —
+      // is what finally lets inline tags resolve in Bases. See ADR-0012.
+      tags: {
+        select: { tag: true },
+      },
     },
   });
 
@@ -299,6 +306,7 @@ async function executeBaseQueryForView(
         updatedAt: (row as any).updatedAt,
         outgoingLinks: (row as any).outgoingLinks,
         incomingLinks: (row as any).incomingLinks,
+        tags: (row as any).tags,
       }),
     );
   }
@@ -939,32 +947,6 @@ const GLOBAL_FUNCTIONS: Record<string, (...args: any[]) => any> = {
 };
 
 /**
- * Normalizes a frontmatter tags value into a clean list of tag strings.
- * Accepts a YAML list (`[a, b]`), a single string, or a whitespace/comma
- * separated string, and strips any leading `#`.
- *
- * Note: this only sees frontmatter tags — inline body `#tags` are not indexed
- * and therefore never appear here.
- */
-function normalizeTags(raw: unknown): string[] {
-  if (raw == null) return [];
-  const arr = Array.isArray(raw) ? raw : String(raw).split(/[\s,]+/);
-  return arr
-    .map((t) => String(t).trim().replace(/^#/, ''))
-    .filter((t) => t.length > 0);
-}
-
-/**
- * True if `query` matches any tag in `tags`, including nested tags. Following
- * Obsidian semantics, `hasTag("book")` matches both `book` and `book/fiction`.
- */
-function tagMatches(tags: string[], query: string): boolean {
-  const q = String(query).trim().replace(/^#/, '');
-  if (!q) return false;
-  return tags.some((t) => t === q || t.startsWith(q + '/'));
-}
-
-/**
  * Normalizes a link target (either an outgoing target or a hasLink() argument)
  * to a comparable key: strips wikilink brackets, a trailing file extension, and
  * reduces to the basename so `hasLink("Target")` matches a link to
@@ -1009,8 +991,14 @@ function getFileProperty(row: any, property: string, rootDir?: string): any {
       ? fileNameWithExt.substring(lastDotIndex + 1)
       : undefined;
 
-  const fileTags = () =>
-    normalizeTags((row.metadata as any)?.tags ?? (row.metadata as any)?.tag);
+  // Prefer the unified Tag table (frontmatter + inline body #tags). Fall back to
+  // frontmatter-only normalization if a row was fetched without the relation.
+  const fileTags = (): string[] =>
+    Array.isArray(row.tags)
+      ? (row.tags as { tag: string }[]).map((t) => t.tag)
+      : normalizeFrontmatterTags(
+          (row.metadata as any)?.tags ?? (row.metadata as any)?.tag,
+        );
   const outgoingTargets = () =>
     ((row.outgoingLinks as any[]) ?? []).map(
       (l) => l?.targetBlob?.path ?? l?.targetPath,

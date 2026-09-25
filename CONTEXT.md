@@ -74,6 +74,28 @@ _Avoid_: Incoming link, reverse link
 The post-publish step (run in the PublishFinalizerWorkflow) that walks all unresolved Links for a site, matches `targetPath` against current Blob records, and fills in `targetBlobId`. Also cleans up Links whose source or target Blob was deleted.
 _Avoid_: Link indexing, link building
 
+### Tags
+
+**Tag**:
+A label attached to a Page File for grouping and navigation. Declared either in frontmatter (`tags`/`tag`) or written inline in the body as `#tag`. A page's tag set is the **union** of both sources, de-duplicated by case-folded identity with the first-seen casing preserved for display. Extracted at publish time and stored in the `Tag` table. See ADR-0012.
+_Avoid_: Label, keyword, category, topic
+
+**Frontmatter Tag**:
+A Tag declared under the `tags` or `tag` key in YAML frontmatter. Accepts a YAML list (`[a, b]`), a single string, or a whitespace/comma-separated string; a leading `#` is stripped. Rendered as a pill row in the page header.
+_Avoid_: Property tag, metadata tag
+
+**Inline Tag**:
+A Tag written in the body as `#tag`, following Obsidian grammar: preceded by start-of-line or whitespace, characters `[A-Za-z0-9_/-]`, at least one non-numeric character, and never inside code, link URLs, or a `# ` heading. Rendered as a pill in place, where it appears in the prose.
+_Avoid_: Hashtag, body tag
+
+**Nested Tag**:
+A hierarchical Tag using `/` as a separator (e.g. `book/fiction`). Matching a parent Tag includes its descendants — `hasTag("book")` and the `/tags/book` page both surface `book/fiction` (existing `tagMatches` semantics).
+_Avoid_: Subtag, child tag, hierarchical tag
+
+**Tag Page**:
+A virtual page at `/tags/{tag}` listing every Page File carrying that Tag (including Nested Tag descendants); `/tags` is the Tag index listing all tags with counts. Not backed by a Blob — rendered as a fallback before the 404, so real content at those paths always wins (collision rule: user content wins).
+_Avoid_: Tag archive, tag listing, tag route
+
 ## Example dialogue
 
 > **Dev**: A user says their site shows PENDING even though the publish finished an hour ago.

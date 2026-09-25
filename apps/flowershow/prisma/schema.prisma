@@ -126,6 +126,7 @@ model Site {
   blobs                   Blob[]
   publishes               Publish[]
   links                   Link[]
+  tags                    Tag[]
   tree                    Json?         @db.JsonB // GitHub tree data
   privacyMode             PrivacyMode   @default(PUBLIC) @map("privacy_mode")
   accessPasswordHash      String?       @map("access_password_hash")
@@ -170,6 +171,7 @@ model Blob {
 
   outgoingLinks Link[] @relation("outgoingLinks")
   incomingLinks Link[] @relation("incomingLinks")
+  tags          Tag[]
 
   @@unique([siteId, path])
   @@index([siteId])
@@ -197,6 +199,30 @@ model Link {
   @@unique([sourceBlobId, targetPath])
   @@index([siteId])
   @@index([targetBlobId])
+}
+
+enum TagSource {
+  frontmatter
+  inline
+}
+
+// Obsidian-style tags extracted at publish time (frontmatter + inline body
+// `#tags`), the canonical store for /tags navigation, counts, and Bases.
+// Mirrors the Link table (ADR-0010). See ADR-0012. `tag` holds the display
+// casing; identity/matching is case-folded in the shared @flowershow/core module.
+model Tag {
+  id     String    @id @default(cuid())
+  siteId String    @map("site_id")
+  blobId String    @map("blob_id")
+  tag    String
+  source TagSource
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  blob Blob @relation(fields: [blobId], references: [id], onDelete: Cascade)
+
+  @@unique([blobId, tag])
+  @@index([siteId, tag])
+  @@index([blobId])
 }
 
 enum PublishSource {

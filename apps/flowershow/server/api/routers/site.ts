@@ -1,4 +1,4 @@
-import { matchLinkTarget } from '@flowershow/core';
+import { matchLinkTarget, tagIdentity } from '@flowershow/core';
 import { Blob, Prisma, PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
@@ -2542,6 +2542,121 @@ export const siteRouter = createTRPCRouter({
               ? `${input.siteId}-graph-${input.blobId}`
               : `${input.siteId}-global-graph`,
           ],
+        },
+      )(input);
+    }),
+  // Tag index for the `/tags` page: every distinct tag on the site (folded by
+  // case-insensitive identity, first-seen display casing) with a page count.
+  // Sorted by count descending, then tag ascending.
+  getTagIndex: publicProcedure
+    .input(z.object({ siteId: z.string().min(1) }))
+    .query(async ({ ctx, input }) => {
+      const siteForAccess = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { privacyMode: true, tokenVersion: true, userId: true },
+      });
+      await assertSiteAccess(siteForAccess, input.siteId, ctx);
+
+      return await unstable_cache(
+        async (input) => {
+          const rows = await ctx.db.tag.findMany({
+            where: { siteId: input.siteId },
+            select: { tag: true, blobId: true },
+          });
+
+          // Aggregate by identity so `#Book` and `#book` count as one tag.
+          const byId = new Map<string, { tag: string; blobs: Set<string> }>();
+          for (const row of rows) {
+            const id = tagIdentity(row.tag);
+            if (!id) continue;
+            const entry = byId.get(id);
+            if (entry) {
+              entry.blobs.add(row.blobId);
+            } else {
+              byId.set(id, { tag: row.tag, blobs: new Set([row.blobId]) });
+            }
+          }
+
+          return [...byId.values()]
+            .map((e) => ({ tag: e.tag, count: e.blobs.size }))
+            .sort((a, b) => b.count - a.count || a.tag.localeCompare(b.tag));
+        },
+        undefined,
+        {
+          revalidate: 60,
+          tags: [`${input.siteId}`],
+        },
+      )(input);
+    }),
+  // Pages carrying a given tag, for the `/tags/{tag}` page. Descendant-inclusive
+  // (a parent tag surfaces its subtree, e.g. `book` includes `book/fiction`) and
+  // case-insensitive. Sorted by frontmatter date descending when present,
+  // otherwise by title ascending.
+  getPagesByTag: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+        tag: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const siteForAccess = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { privacyMode: true, tokenVersion: true, userId: true },
+      });
+      await assertSiteAccess(siteForAccess, input.siteId, ctx);
+
+      return await unstable_cache(
+        async (input) => {
+          const q = tagIdentity(input.tag);
+          if (!q) return [];
+
+          const rows = await ctx.db.tag.findMany({
+            where: {
+              siteId: input.siteId,
+              OR: [
+                { tag: { equals: q, mode: 'insensitive' } },
+                { tag: { startsWith: `${q}/`, mode: 'insensitive' } },
+              ],
+            },
+            distinct: ['blobId'],
+            select: {
+              blob: {
+                select: { appPath: true, permalink: true, metadata: true },
+              },
+            },
+          });
+
+          const pages = rows
+            .map(({ blob }) => {
+              const metadata = blob.metadata as Record<string, unknown> | null;
+              const href = blob.permalink ?? blob.appPath;
+              return {
+                href,
+                title: (metadata?.title as string | undefined) ?? undefined,
+                date: (metadata?.date as string | undefined) ?? undefined,
+                description:
+                  (metadata?.description as string | undefined) ?? undefined,
+              };
+            })
+            .filter((p): p is typeof p & { href: string } => p.href !== null);
+
+          pages.sort((a, b) => {
+            const da = a.date ? Date.parse(a.date) : NaN;
+            const db = b.date ? Date.parse(b.date) : NaN;
+            const aHas = !Number.isNaN(da);
+            const bHas = !Number.isNaN(db);
+            if (aHas && bHas && da !== db) return db - da; // date desc
+            if (aHas !== bHas) return aHas ? -1 : 1; // dated pages first
+            return (a.title ?? a.href).localeCompare(b.title ?? b.href);
+          });
+
+          return pages;
+        },
+        undefined,
+        {
+          revalidate: 60,
+          tags: [`${input.siteId}`],
         },
       )(input);
     }),

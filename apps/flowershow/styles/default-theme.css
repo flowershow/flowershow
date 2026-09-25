@@ -2052,6 +2052,88 @@
   }
 
   /* ────────────────────────────────────────────────────
+   Tags
+   ──────────────────────────────────────────────────── */
+  /* Frontmatter tag pill row in the page header. */
+  .page-header-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    text-transform: none;
+  }
+  /* A tag pill — used both in the header row and inline in prose. */
+  .tag-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    background-color: var(--color-foreground-100);
+    color: var(--color-foreground-600);
+    padding: 0.125rem 0.625rem;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-tight);
+    font-weight: var(--font-weight-normal);
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+  .tag-pill:hover {
+    background-color: var(--color-foreground-200);
+    color: var(--color-foreground-900);
+    text-decoration: none;
+  }
+  /* Generated tag navigation pages (/tags and /tags/{tag}) — their own markup,
+     not the Markdown content layout. */
+  .tags-page-header {
+    margin-bottom: 2rem;
+    border-bottom-width: 1px;
+    border-color: var(--color-foreground-200);
+    padding-bottom: 2rem;
+  }
+  .tags-page-title {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-none);
+    letter-spacing: -0.025em;
+    color: var(--color-foreground-900);
+  }
+  .tags-page-empty {
+    color: var(--color-foreground-500);
+  }
+  /* `/tags` index: pill grid with per-tag page counts. */
+  .tag-index {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    list-style: none;
+    padding: 0;
+  }
+  .tag-index-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  .tag-index-count {
+    color: var(--color-foreground-400);
+    font-size: var(--font-size-sm);
+  }
+  /* `/tags/{tag}` listing of pages carrying a tag. */
+  .tag-page-list {
+    list-style: none;
+    padding: 0;
+  }
+  .tag-page-list-item + .tag-page-list-item {
+    margin-top: 1rem;
+  }
+  .tag-page-list-description {
+    color: var(--color-foreground-500);
+    font-size: var(--font-size-sm);
+    margin-top: 0.25rem;
+  }
+
+  /* ────────────────────────────────────────────────────
    Sidebar
    ──────────────────────────────────────────────────── */
   /* .site-tree-container {

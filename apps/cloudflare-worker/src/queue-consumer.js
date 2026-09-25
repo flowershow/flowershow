@@ -1,6 +1,9 @@
 import {
   encodeSlug,
+  extractInlineTags,
   filePathToSlug,
+  frontmatterTags,
+  mergePageTags,
   PAGE_FILE_EXTENSIONS,
 } from '@flowershow/core';
 import matter from 'gray-matter';
@@ -190,7 +193,17 @@ async function processMarkdownFile({
       permalink,
     });
     await syncLinks(sql, siteId, blobId, markdown);
-    await indexInTypesense({ typesense, siteId, blobId, path, body, metadata });
+    const tags = extractTags(body, metadata);
+    await syncTags(sql, siteId, blobId, tags);
+    await indexInTypesense({
+      typesense,
+      siteId,
+      blobId,
+      path,
+      body,
+      metadata,
+      tags,
+    });
     await updatePublishFile(sql, publishId, path, 'success');
   } catch (e) {
     console.error('Error in processMarkdownFile:', {
@@ -381,7 +394,8 @@ export function extractLinks(markdown) {
     const target = m[1].trim().replace(/\\$/, '');
     if (!target) continue;
     const dotIndex = target.lastIndexOf('.');
-    const ext = dotIndex !== -1 ? target.slice(dotIndex + 1).toLowerCase() : null;
+    const ext =
+      dotIndex !== -1 ? target.slice(dotIndex + 1).toLowerCase() : null;
     if (ext && ext !== 'md') continue;
     links.push({ targetPath: target, linkType: 'embed' });
   }
@@ -452,6 +466,42 @@ async function syncLinks(sql, siteId, blobId, markdown) {
 }
 
 /**
+ * Computes a page's canonical tag set (frontmatter + inline body `#tags`), as a
+ * de-duplicated list of `{ tag, source }`. `body` is the frontmatter-stripped
+ * markdown; `metadata` carries the parsed frontmatter. All tag semantics live in
+ * the shared @flowershow/core module so extraction, rendering, Bases, and
+ * navigation can't drift.
+ */
+export function extractTags(body, metadata) {
+  return mergePageTags(frontmatterTags(metadata), extractInlineTags(body));
+}
+
+async function syncTags(sql, siteId, blobId, tags) {
+  const newTagSet = new Set(tags.map((t) => t.tag));
+
+  // Same constraint as syncLinks: fetch_types:false breaks sql.array(), so diff
+  // in JS — fetch existing rows, delete stale ones by scalar ID.
+  const existing = await sql`
+    SELECT id, tag FROM "Tag"
+    WHERE blob_id = ${blobId}
+  `;
+  for (const row of existing) {
+    if (!newTagSet.has(row.tag)) {
+      await sql`DELETE FROM "Tag" WHERE id = ${row.id}`;
+    }
+  }
+
+  for (const { tag, source } of tags) {
+    await sql`
+      INSERT INTO "Tag" (id, site_id, blob_id, tag, source)
+      VALUES (${generateId()}, ${siteId}, ${blobId}, ${tag}, ${source})
+      ON CONFLICT (blob_id, tag)
+      DO UPDATE SET source = EXCLUDED.source
+    `;
+  }
+}
+
+/**
  * Convert a user-controlled frontmatter `date` into a Unix timestamp (seconds),
  * or null when it isn't a parseable date. Frontmatter dates are often ranges
  * ("1964-1982") or free text, which would otherwise index as NaN.
@@ -469,6 +519,7 @@ async function indexInTypesense({
   path,
   body,
   metadata,
+  tags = [],
 }) {
   if (!typesense) return;
   try {
@@ -479,6 +530,7 @@ async function indexInTypesense({
       description: metadata.description,
       authors: metadata.authors,
       date: getUnixTimestamp(metadata.date),
+      tags: tags.map((t) => t.tag),
       id: `${blobId}`,
     };
     await typesense.collections(siteId).documents().upsert(document);

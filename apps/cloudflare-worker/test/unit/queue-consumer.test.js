@@ -2,6 +2,7 @@ import { expect, test } from 'vitest';
 import {
   extractImageDimensions,
   extractLinks,
+  extractTags,
   extractTitle,
   isSupportedImagePath,
   normalizePermalink,
@@ -326,4 +327,50 @@ test('extractLinks - returns all three link types from mixed content', () => {
     { targetPath: 'other-note', linkType: 'wikilink' },
     { targetPath: 'docs/page.md', linkType: 'commonmark' },
   ]);
+});
+
+// extractTags — merges frontmatter + inline body tags with source. Grammar edge
+// cases are covered exhaustively in @flowershow/core's tags.test.ts; these tests
+// pin the worker's extraction seam (frontmatter key handling + union + source).
+
+test('extractTags - frontmatter list tags are frontmatter-sourced', () => {
+  expect(extractTags('body with no tags', { tags: ['book', 'film'] })).toEqual([
+    { tag: 'book', source: 'frontmatter' },
+    { tag: 'film', source: 'frontmatter' },
+  ]);
+});
+
+test('extractTags - inline body tags are inline-sourced', () => {
+  expect(extractTags('I love #book and #film/noir', {})).toEqual([
+    { tag: 'book', source: 'inline' },
+    { tag: 'film/noir', source: 'inline' },
+  ]);
+});
+
+test('extractTags - unions frontmatter and inline, deduped by identity', () => {
+  const tags = extractTags('read #Book and #film', { tags: ['book'] });
+  expect(tags).toEqual([
+    { tag: 'book', source: 'frontmatter' },
+    { tag: 'film', source: 'inline' },
+  ]);
+});
+
+test('extractTags - accepts the singular `tag` frontmatter key', () => {
+  expect(extractTags('no body tags', { tag: 'solo' })).toEqual([
+    { tag: 'solo', source: 'frontmatter' },
+  ]);
+});
+
+test('extractTags - inline tags inside code are ignored', () => {
+  expect(extractTags('use `#book` then #real', {})).toEqual([
+    { tag: 'real', source: 'inline' },
+  ]);
+});
+
+test('extractTags - numeric-only inline tokens are not tags', () => {
+  expect(extractTags('issue #1 and #123', {})).toEqual([]);
+});
+
+test('extractTags - no tags returns empty array', () => {
+  expect(extractTags('plain body', {})).toEqual([]);
 });

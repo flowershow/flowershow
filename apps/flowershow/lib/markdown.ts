@@ -35,6 +35,7 @@ import remarkChangelog, {
 } from './remark-changelog';
 import remarkCommonMarkLink from './remark-commonmark-link';
 import remarkObsidianBases from './remark-obsidian-bases';
+import remarkTags from './remark-tags';
 import { resolveContentLink } from './resolve-link';
 
 interface MarkdownOptions {
@@ -100,6 +101,7 @@ export async function processMarkdown(
     .use(remarkMath)
     .use(remarkCallout)
     .use(remarkMark)
+    .use(remarkTags)
     // Last remark plugin: it restructures the whole tree
     .use(
       options.changelog ? remarkChangelog : () => undefined,
@@ -181,6 +183,7 @@ export const getMdxOptions = ({
         remarkCallout,
         [mdxMermaid, {}],
         remarkMark,
+        remarkTags,
         [remarkObsidianBases, { siteHostname, siteId, rootDir }],
         // Last remark plugin: it restructures the whole tree
         ...(changelog ? [[remarkChangelog, changelog] as Pluggable] : []),

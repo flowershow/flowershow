@@ -6,6 +6,11 @@ import {
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
+import {
+  extractInlineTags,
+  frontmatterTags,
+  mergePageTags,
+} from '@flowershow/core';
 import { LinkType, Plan, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { filePathToSlug } from './file-path-to-slug';
@@ -193,6 +198,7 @@ async function uploadFixturesForSite(
     let metadata: Record<string, unknown> = {};
     let permalink: string | null = null;
     let shouldPublish = true;
+    let body = '';
 
     if (['md', 'mdx'].includes(ext)) {
       const parsed = await parseMarkdown({
@@ -203,6 +209,7 @@ async function uploadFixturesForSite(
       metadata = parsed.metadata;
       permalink = parsed.permalink;
       shouldPublish = parsed.shouldPublish;
+      body = parsed.body;
     }
 
     if (!shouldPublish) {
@@ -223,7 +230,7 @@ async function uploadFixturesForSite(
     const sha = crypto.createHash('sha1').update(content).digest('hex');
     const dimensions = extractImageDimensions(filePath, content);
 
-    await db.blob.upsert({
+    const blob = await db.blob.upsert({
       where: {
         siteId_path: {
           siteId,
@@ -253,6 +260,27 @@ async function uploadFixturesForSite(
         height: dimensions.height,
       },
     });
+
+    // Seed Tag rows faithfully — the union of frontmatter + inline body #tags,
+    // exactly as the Cloudflare worker's syncTags does at publish time. This
+    // powers /tags navigation and the unified Bases tag reads.
+    if (['md', 'mdx'].includes(ext)) {
+      const tags = mergePageTags(
+        frontmatterTags(metadata),
+        extractInlineTags(body),
+      );
+      await db.tag.deleteMany({ where: { blobId: blob.id } });
+      if (tags.length > 0) {
+        await db.tag.createMany({
+          data: tags.map((t) => ({
+            siteId,
+            blobId: blob.id,
+            tag: t.tag,
+            source: t.source,
+          })),
+        });
+      }
+    }
   }
 
   console.log(`Seeded ${files.length} files for site ${siteId}`);
