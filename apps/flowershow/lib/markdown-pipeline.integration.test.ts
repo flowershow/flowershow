@@ -10,6 +10,7 @@ import { unified } from 'unified';
 import { describe, expect, it } from 'vitest';
 import rehypeJsonCanvas from './rehype-json-canvas';
 import remarkCommonMarkLink from './remark-commonmark-link';
+import remarkTags from './remark-tags';
 import { resolveContentLink } from './resolve-link';
 
 const SITE_HOSTNAME = 'test.flowershow.site';
@@ -118,3 +119,47 @@ for (const pipeline of PIPELINES) {
     });
   });
 }
+
+// Inline tag pill seam: `#tag` in body prose compiles to a pill link pointing
+// at its Tag Page, while `#` inside code and markdown headings is left alone.
+async function renderTags(md: string): Promise<string> {
+  const processor = unified()
+    .use(remarkParse)
+    .use(remarkTags)
+    .use(remarkRehype)
+    .use(rehypeStringify);
+  return String(await processor.process(md));
+}
+
+describe('remark-tags — inline tag pills', () => {
+  it('renders an inline #tag as a pill link to its tag page', async () => {
+    const html = await renderTags('I love #book here');
+    expect(html).toContain('<a');
+    expect(html).toContain('href="/tags/book"');
+    expect(html).toContain('class="tag-pill"');
+    expect(html).toContain('#book');
+  });
+
+  it('renders a nested #book/fiction tag as a nested tag-page link', async () => {
+    const html = await renderTags('#book/fiction');
+    expect(html).toContain('href="/tags/book/fiction"');
+    expect(html).toContain('#book/fiction');
+  });
+
+  it('does not turn a markdown heading into a tag', async () => {
+    const html = await renderTags('# Heading\n\ntext');
+    expect(html).toContain('<h1>');
+    expect(html).not.toContain('tag-pill');
+  });
+
+  it('leaves #tags inside inline code untouched', async () => {
+    const html = await renderTags('use `#book` in code');
+    expect(html).toContain('<code>#book</code>');
+    expect(html).not.toContain('tag-pill');
+  });
+
+  it('does not treat numeric-only #1 as a tag', async () => {
+    const html = await renderTags('see issue #1 please');
+    expect(html).not.toContain('tag-pill');
+  });
+});

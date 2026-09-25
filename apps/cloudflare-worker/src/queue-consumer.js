@@ -1,7 +1,11 @@
 import {
   encodeSlug,
+  extractInlineTags,
   filePathToSlug,
+  frontmatterTags,
+  mergePageTags,
   PAGE_FILE_EXTENSIONS,
+  tagIdentity,
 } from '@flowershow/core';
 import matter from 'gray-matter';
 import { imageSize, types as supportedImageTypes } from 'image-size';
@@ -190,7 +194,17 @@ async function processMarkdownFile({
       permalink,
     });
     await syncLinks(sql, siteId, blobId, markdown);
-    await indexInTypesense({ typesense, siteId, blobId, path, body, metadata });
+    const tags = extractTags(body, metadata);
+    await syncTags(sql, siteId, blobId, tags);
+    await indexInTypesense({
+      typesense,
+      siteId,
+      blobId,
+      path,
+      body,
+      metadata,
+      tags,
+    });
     await updatePublishFile(sql, publishId, path, 'success');
   } catch (e) {
     console.error('Error in processMarkdownFile:', {
@@ -381,7 +395,8 @@ export function extractLinks(markdown) {
     const target = m[1].trim().replace(/\\$/, '');
     if (!target) continue;
     const dotIndex = target.lastIndexOf('.');
-    const ext = dotIndex !== -1 ? target.slice(dotIndex + 1).toLowerCase() : null;
+    const ext =
+      dotIndex !== -1 ? target.slice(dotIndex + 1).toLowerCase() : null;
     if (ext && ext !== 'md') continue;
     links.push({ targetPath: target, linkType: 'embed' });
   }
@@ -452,6 +467,55 @@ async function syncLinks(sql, siteId, blobId, markdown) {
 }
 
 /**
+ * Computes a page's canonical tag set (frontmatter + inline body `#tags`), as a
+ * de-duplicated list of `{ tag, source }`. `body` is the frontmatter-stripped
+ * markdown; `metadata` carries the parsed frontmatter. All tag semantics live in
+ * the shared @flowershow/core module so extraction, rendering, Bases, and
+ * navigation can't drift.
+ */
+export function extractTags(body, metadata) {
+  return mergePageTags(frontmatterTags(metadata), extractInlineTags(body));
+}
+
+export async function syncTags(sql, siteId, blobId, tags) {
+  // Fold each tag to its case-insensitive identity: the DB's (blob_id, identity)
+  // unique key enforces that `#Book`/`#book` are one row per blob. `tags` is
+  // already deduped by identity upstream (mergePageTags), so identities here are
+  // distinct — `tag` carries the display casing.
+  const rows = tags.map((t) => ({
+    tag: t.tag,
+    source: t.source,
+    identity: tagIdentity(t.tag),
+  }));
+  const newIdentitySet = new Set(rows.map((r) => r.identity));
+
+  // Wrap the read-diff-write in a transaction so concurrent publishes of the
+  // same blob can't interleave and leave stale or duplicate rows. Same
+  // constraint as syncLinks: fetch_types:false breaks sql.array(), so diff in
+  // JS — fetch existing rows, delete stale ones by scalar ID.
+  await sql.begin(async (sql) => {
+    const existing = await sql`
+      SELECT id, identity FROM "Tag"
+      WHERE blob_id = ${blobId}
+    `;
+    for (const row of existing) {
+      if (!newIdentitySet.has(row.identity)) {
+        await sql`DELETE FROM "Tag" WHERE id = ${row.id}`;
+      }
+    }
+
+    for (const { tag, source, identity } of rows) {
+      await sql`
+        INSERT INTO "Tag" (id, site_id, blob_id, tag, identity, source)
+        VALUES (${generateId()}, ${siteId}, ${blobId}, ${tag}, ${identity}, ${source})
+        ON CONFLICT (blob_id, identity)
+        DO UPDATE SET tag = EXCLUDED.tag, source = EXCLUDED.source
+      `;
+    }
+  });
+}
+
+/**
  * Convert a user-controlled frontmatter `date` into a Unix timestamp (seconds),
  * or null when it isn't a parseable date. Frontmatter dates are often ranges
  * ("1964-1982") or free text, which would otherwise index as NaN.
@@ -469,6 +533,7 @@ async function indexInTypesense({
   path,
   body,
   metadata,
+  tags = [],
 }) {
   if (!typesense) return;
   try {
@@ -479,6 +544,7 @@ async function indexInTypesense({
       description: metadata.description,
       authors: metadata.authors,
       date: getUnixTimestamp(metadata.date),
+      tags: tags.map((t) => t.tag),
       id: `${blobId}`,
     };
     await typesense.collections(siteId).documents().upsert(document);

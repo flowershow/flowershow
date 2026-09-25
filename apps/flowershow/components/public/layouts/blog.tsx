@@ -1,3 +1,4 @@
+import { tagToHref } from '@flowershow/core';
 import { CalendarIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -15,6 +16,8 @@ interface Props extends React.PropsWithChildren {
     url: string | null;
     avatar?: string;
   }[];
+  /** Frontmatter tags, rendered as a pill row in the header. */
+  tags?: string[];
 }
 
 export const BlogLayout: React.FC<Props> = ({
@@ -24,6 +27,7 @@ export const BlogLayout: React.FC<Props> = ({
   showHero = false,
   date,
   authors,
+  tags,
 }) => {
   const parsedDate = safeDate(date);
 
@@ -104,6 +108,16 @@ export const BlogLayout: React.FC<Props> = ({
               </div>
             )}
           </div>
+
+          {tags && tags.length > 0 && (
+            <div className="page-header-tags">
+              {tags.map((tag) => (
+                <Link key={tag} href={tagToHref(tag)} className="tag-pill">
+                  #{tag}
+                </Link>
+              ))}
+            </div>
+          )}
         </header>
       )}
       <div className="page-body">{children}</div>

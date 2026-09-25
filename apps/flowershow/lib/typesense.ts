@@ -37,6 +37,8 @@ const siteCollectionSchema: Omit<TypesenseSchema, 'name'> = {
     { name: 'authors', type: 'string[]', facet: false, optional: true },
     // Date must be provided as Unix timestamp
     { name: 'date', type: 'int64', facet: false, optional: true },
+    // Faceted so a tag filter/facet can be enabled later without reindexing.
+    { name: 'tags', type: 'string[]', facet: true, optional: true },
   ],
 };
 

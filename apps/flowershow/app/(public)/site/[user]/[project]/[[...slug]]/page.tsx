@@ -1,3 +1,4 @@
+import { frontmatterTags, tagFromHref } from '@flowershow/core';
 import type { GiscusProps } from '@giscus/react';
 import clsx from 'clsx';
 import { CodeIcon, EditIcon } from 'lucide-react';
@@ -21,6 +22,10 @@ import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import { isEmoji } from '@/lib/is-emoji';
 import { ChangelogEntryPage } from '@/components/public/changelog/changelog-entry-page';
 import { ChangelogIndexPage } from '@/components/public/changelog/changelog-index-page';
+import {
+  TagIndexPage,
+  TagListingPage,
+} from '@/components/public/tags/tag-views';
 import { isChangelogDirName, parsePageParam } from '@/lib/changelog';
 import { resolveChangelogContext } from '@/lib/changelog-context';
 import { hasVersionSections } from '@/lib/changelog-file';
@@ -70,11 +75,17 @@ export async function generateMetadata(props: {
       if (isChangelogDirName(decodedSlug)) {
         return null;
       }
+      // Virtual tag pages have no Blob — let them render their own metadata.
+      if (decodedSlug === '/tags' || decodedSlug.startsWith('/tags/')) {
+        return null;
+      }
       notFound();
     });
 
   const metadata = blob?.metadata as PageMetadata | null;
   const isChangelogFallback = !blob && isChangelogDirName(decodedSlug);
+  const isTagIndexRoute = !blob && decodedSlug === '/tags';
+  const isTagListingRoute = !blob && decodedSlug.startsWith('/tags/');
 
   // workaround (?) to "not publish" files marked with `publish: false`
   // it's needed atm as Inngest sync function doesn't parse frontmatter, and so it uploads to R2
@@ -90,8 +101,16 @@ export async function generateMetadata(props: {
     .catch(() => null);
 
   const siteName = resolveSiteName(siteConfig, site.projectName);
+  const tagListingTitle = isTagListingRoute
+    ? `#${tagFromHref(decodedSlug.slice('/tags/'.length))}`
+    : undefined;
   const title = buildPageTitle(
-    metadata?.title ?? (isChangelogFallback ? 'Changelog' : undefined),
+    metadata?.title ??
+      (isChangelogFallback
+        ? 'Changelog'
+        : isTagIndexRoute
+          ? 'Tags'
+          : tagListingTitle),
     siteName,
   );
   const description = metadata?.description ?? siteConfig?.description;
@@ -246,6 +265,42 @@ export default async function SitePage(props: {
 
   // A changelog folder without a README/index still gets its timeline page
   if (!blob) {
+    // Tag pages are virtual fallbacks rendered only when no Blob exists at the
+    // path, so real user content at /tags or /tags/... always wins. Mirrors the
+    // changelog virtual-page pattern. See ADR-0012.
+    if (decodedSlug === '/tags') {
+      return (
+        <>
+          <UrlNormalizer />
+          <div className="layout-inner">
+            <div className="layout-inner-center">
+              <main className="page-main">
+                <TagIndexPage siteId={site.id} />
+              </main>
+            </div>
+          </div>
+        </>
+      );
+    }
+    if (decodedSlug.startsWith('/tags/')) {
+      // The slug stays percent-encoded here (see decodedSlug above), but tags are
+      // stored/matched by their decoded display value, so decode to round-trip
+      // with tagToHref's encodeURIComponent. Matches generateMetadata's decode.
+      const tag = tagFromHref(decodedSlug.slice('/tags/'.length));
+      return (
+        <>
+          <UrlNormalizer />
+          <div className="layout-inner">
+            <div className="layout-inner-center">
+              <main className="page-main">
+                <TagListingPage siteId={site.id} tag={tag} />
+              </main>
+            </div>
+          </div>
+        </>
+      );
+    }
+
     if (changelog?.kind !== 'index') notFound();
     return (
       <>
@@ -502,6 +557,9 @@ export default async function SitePage(props: {
                 date={metadata?.date}
                 showHero={heroConfig.showHero}
                 authors={authors}
+                tags={frontmatterTags(
+                  metadata as Record<string, unknown> | null,
+                )}
               >
                 <div className="rendered-mdx" id="mdxpage">
                   {compiledContent}

@@ -31,6 +31,7 @@ const passwordSite = {
   userId: 'owner-1',
   updatedAt: new Date(0),
   blobs: [],
+  _count: { tags: 0 },
 };
 
 beforeEach(() => {

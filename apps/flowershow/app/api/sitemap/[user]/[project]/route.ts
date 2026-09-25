@@ -43,6 +43,9 @@ export async function GET(
           permalink: true,
         },
       },
+      // Only the `/tags` index is included in the sitemap (not per-tag pages) —
+      // enough to make the tag overview indexable without flooding the sitemap.
+      _count: { select: { tags: true } },
     },
   });
 
@@ -71,12 +74,21 @@ export async function GET(
     </url>`;
   });
 
+  // The `/tags` index, only when the site actually has tags.
+  const tagsIndexItem =
+    site._count.tags > 0
+      ? `<url>
+      <loc>${siteUrl}/tags</loc>
+      <lastmod>${site.updatedAt.toISOString()}</lastmod>
+    </url>`
+      : '';
+
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
       <loc>${siteUrl}</loc>
       <lastmod>${site.updatedAt.toISOString()}</lastmod>
-    </url>${xmlItems.join('')}
+    </url>${xmlItems.join('')}${tagsIndexItem}
 </urlset>`;
 
   return new Response(xml, {

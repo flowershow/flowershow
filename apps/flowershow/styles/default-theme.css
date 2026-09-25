@@ -185,6 +185,14 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  /* Let the page body absorb the remaining vertical space so the footer stays at
+     the bottom of the viewport on short pages (e.g. /tags and /tags/{tag}, empty
+     states) instead of being pulled up under the content. */
+  .site-body {
+    flex: 1 0 auto;
   }
 
   /* ────────────────────────────────────────────────────
@@ -2049,6 +2057,125 @@
   .page-header-image {
     border-radius: var(--radius);
     object-fit: contain;
+  }
+
+  /* ────────────────────────────────────────────────────
+   Tags
+   ──────────────────────────────────────────────────── */
+  /* Frontmatter tag pill row in the page header. */
+  .page-header-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    text-transform: none;
+  }
+  /* A tag pill — used in the header row, inline in prose, and on the /tags pages.
+     Matches the dashboard's pink accent (Tailwind pink-600/pink-400): pink text
+     on a delicate translucent-pink background, in the heading font. */
+  .tag-pill {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 9999px;
+    background-color: rgb(219 39 119 / 0.1);
+    color: #db2777;
+    padding: 0.125rem 0.625rem;
+    font-family: var(--font-heading);
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-tight);
+    font-weight: var(--font-weight-medium);
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background-color 0.15s ease,
+      color 0.15s ease;
+  }
+  .tag-pill:hover {
+    background-color: rgb(219 39 119 / 0.16);
+    color: #be185d;
+    text-decoration: none;
+  }
+  :root[data-theme="dark"] .tag-pill {
+    background-color: rgb(244 114 182 / 0.12);
+    color: #f472b6;
+  }
+  :root[data-theme="dark"] .tag-pill:hover {
+    background-color: rgb(244 114 182 / 0.2);
+    color: #f9a8d4;
+  }
+  /* Inline tag pills sit inside rendered prose, whose `prose` anchor styles add
+     an underline and their own link color; override both (higher specificity than
+     the prose `a` rule) so pills stay pink and underline-free — they read as
+     pills, not links. */
+  .rendered-mdx a.tag-pill {
+    color: #db2777;
+    text-decoration: none;
+  }
+  .rendered-mdx a.tag-pill:hover {
+    color: #be185d;
+    text-decoration: none;
+  }
+  :root[data-theme="dark"] .rendered-mdx a.tag-pill {
+    color: #f472b6;
+  }
+  :root[data-theme="dark"] .rendered-mdx a.tag-pill:hover {
+    color: #f9a8d4;
+  }
+  /* Generated tag navigation pages (/tags and /tags/{tag}) — their own markup,
+     not the Markdown content layout. */
+  .tags-page-header {
+    margin-bottom: 2rem;
+    border-bottom-width: 1px;
+    border-color: var(--color-foreground-200);
+    padding-bottom: 2rem;
+  }
+  .tags-page-title {
+    font-family: var(--font-heading);
+    font-size: var(--font-size-4xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-none);
+    letter-spacing: -0.025em;
+    color: var(--color-foreground-900);
+  }
+  .tags-page-empty {
+    color: var(--color-foreground-500);
+  }
+  /* `/tags` index: pill grid with per-tag page counts. */
+  .tag-index {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    list-style: none;
+    padding: 0;
+  }
+  .tag-index-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+  .tag-index-count {
+    color: var(--color-foreground-400);
+    font-size: var(--font-size-sm);
+  }
+  /* `/tags/{tag}` listing of pages carrying a tag — a numbered (ordered) list. */
+  .tag-page-list {
+    list-style: decimal;
+    padding-left: 1.5rem;
+  }
+  .tag-page-list-item::marker {
+    color: var(--color-foreground-400);
+  }
+  .tag-page-list-item a {
+    color: var(--color-foreground-900);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .tag-page-list-item + .tag-page-list-item {
+    margin-top: 1rem;
+  }
+  .tag-page-list-description {
+    color: var(--color-foreground-500);
+    font-size: var(--font-size-sm);
+    margin-top: 0.25rem;
   }
 
   /* ────────────────────────────────────────────────────
