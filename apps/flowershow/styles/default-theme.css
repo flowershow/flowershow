@@ -185,6 +185,14 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+  /* Let the page body absorb the remaining vertical space so the footer stays at
+     the bottom of the viewport on short pages (e.g. /tags and /tags/{tag}, empty
+     states) instead of being pulled up under the content. */
+  .site-body {
+    flex: 1 0 auto;
   }
 
   /* ────────────────────────────────────────────────────
