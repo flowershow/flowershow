@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **263 styled class selectors**:
-**261 stable semantic hooks** and **2 non-contract
+and currently documents **275 styled class selectors**:
+**273 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -76,6 +76,7 @@ Top-level site grid, responsive rails, and shell variants.
 | <code>.layout-inner</code> | Hook |
 | <code>.layout-inner-left</code> | Hook |
 | <code>.layout-inner-right</code> | Hook |
+| <code>.site-body</code> | Hook |
 | <code>.site-layout</code> | Hook |
 
 ## Navbar and mobile navigation
@@ -211,6 +212,7 @@ main.page-main (structural wrapper)
 | <code>.page-header-image</code> | Hook |
 | <code>.page-header-image-container</code> | Hook |
 | <code>.page-header-metadata-container</code> | Hook |
+| <code>.page-header-tags</code> | Hook |
 | <code>.page-header-title</code> | Hook |
 | <code>.page-hero</code> | Hook |
 | <code>.page-hero-container</code> | Hook |
@@ -302,6 +304,39 @@ Collection/blog listing cards, loading placeholders, and pagination controls.
 | <code>.list-component-skeleton-media</code> | Hook |
 | <code>.list-component-skeleton-media-placeholder</code> | Hook |
 | <code>.list-component-skeleton-summary</code> | Hook |
+
+## Tag index and per-tag pages
+
+Generated navigation pages for the `/tags` index and each `/tags/{tag}` listing, plus the inline tag pill emitted in rendered content.
+
+**DOM shape**
+
+```text
+.tags-page (structural wrapper)
+├─ .tags-page-header
+│  └─ .tags-page-title
+├─ .tags-page-empty (empty state)
+├─ ul.tag-index (/tags index)
+│  └─ .tag-index-item
+│     ├─ .tag-pill
+│     └─ .tag-index-count
+└─ ol.tag-page-list (/tags/{tag})
+   └─ .tag-page-list-item
+      └─ .tag-page-list-description
+```
+
+| Class | Kind |
+| --- | --- |
+| <code>.tag-index</code> | Hook |
+| <code>.tag-index-count</code> | Hook |
+| <code>.tag-index-item</code> | Hook |
+| <code>.tag-page-list</code> | Hook |
+| <code>.tag-page-list-description</code> | Hook |
+| <code>.tag-page-list-item</code> | Hook |
+| <code>.tag-pill</code> | Hook |
+| <code>.tags-page-empty</code> | Hook |
+| <code>.tags-page-header</code> | Hook |
+| <code>.tags-page-title</code> | Hook |
 
 ## Changelog
 

@@ -42,6 +42,8 @@ test('classifyClassName assigns representative hooks to stable UI areas', () => 
   assert.equal(classifyClassName('page-header-title'), 'content');
   assert.equal(classifyClassName('page-toc-container'), 'toc');
   assert.equal(classifyClassName('list-component-item'), 'listings');
+  assert.equal(classifyClassName('tag-index-item'), 'tags');
+  assert.equal(classifyClassName('tags-page-title'), 'tags');
   assert.equal(classifyClassName('search-modal-input'), 'search');
   assert.equal(classifyClassName('site-footer-navigation-link'), 'footer');
   assert.equal(classifyClassName('page-backlinks-list'), 'page-actions');

@@ -45,6 +45,13 @@ const GROUPS = [
     dom: `.list-component\n├─ .list-component-item / .list-component-skeleton-item\n│  ├─ *-media\n│  └─ *-content\n└─ .list-component-pagination\n   ├─ .list-component-pagination-nav\n   └─ .list-component-pagination-pages`,
   },
   {
+    id: 'tags',
+    title: 'Tag index and per-tag pages',
+    description:
+      'Generated navigation pages for the `/tags` index and each `/tags/{tag}` listing, plus the inline tag pill emitted in rendered content.',
+    dom: `.tags-page (structural wrapper)\n├─ .tags-page-header\n│  └─ .tags-page-title\n├─ .tags-page-empty (empty state)\n├─ ul.tag-index (/tags index)\n│  └─ .tag-index-item\n│     ├─ .tag-pill\n│     └─ .tag-index-count\n└─ ol.tag-page-list (/tags/{tag})\n   └─ .tag-page-list-item\n      └─ .tag-page-list-description`,
+  },
+  {
     id: 'changelog',
     title: 'Changelog',
     description:
@@ -132,13 +139,14 @@ export function classifyClassName(name) {
   if (COMPATIBILITY_CLASSES.has(name)) return 'compatibility';
   if (name === 'image-full') return 'states';
   if (/^(is-|has-|no-nav$)/.test(name)) return 'states';
-  if (/^(site-layout|layout-)/.test(name)) return 'layout';
+  if (/^(site-layout|site-body|layout-)/.test(name)) return 'layout';
   if (/^(site-navbar|mobile-nav|theme-switch|visitor-logout)/.test(name))
     return 'navigation';
   if (/^(site-subnav|site-tree|site-sidebar|sidebar-drawer)/.test(name))
     return 'sidebar';
   if (/^(page-toc|toc(?:-|$))/.test(name)) return 'toc';
   if (/^list-component/.test(name)) return 'listings';
+  if (/^tags?-/.test(name)) return 'tags';
   if (/^changelog/.test(name)) return 'changelog';
   if (/^search/.test(name)) return 'search';
   if (/^site-footer/.test(name)) return 'footer';
