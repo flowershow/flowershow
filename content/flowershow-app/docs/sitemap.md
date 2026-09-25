@@ -78,6 +78,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Syntax Mode Configuration](/docs/reference/syntax-mode) — Configure whether your content is parsed as Markdown or MDX, globally or per page.
 - [Markdown syntax support](/docs/reference/syntax) — Overview of Markdown syntax supported by Flowershow, including CommonMark, GitHub Flavored Markdown, and Obsidian extensions.
 - [Table of contents](/docs/reference/table-of-contents) — Control visibility of the page table of contents
+- [Tags](/docs/reference/tags) — Organize your notes with Obsidian-style tags — declared in frontmatter or inline as #tag — and browse them through automatically generated tag pages.
 - [Semantic theme class reference](/docs/reference/theme-class-reference) — Stable Flowershow CSS hooks grouped by the UI areas that emit them.
 - [Themes](/docs/reference/themes) — Browse Flowershow themes and preview each one live before you apply it.
 
