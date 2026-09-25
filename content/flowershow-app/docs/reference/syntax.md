@@ -635,6 +635,28 @@ graph LR
 > [!note]
 > You can find more examples and syntax on the [Mermaid website](https://mermaid.js.org/).
 
+## Tags
+
+Flowershow supports **Obsidian-style tags**, declared in frontmatter or inline in the body. Both are combined into a page's tag set, and Flowershow generates browsable tag pages for your site.
+
+**Frontmatter** — a `tags` (or `tag`) field:
+
+```yaml
+---
+tags: [book, book/fiction]
+---
+```
+
+**Inline** — an Obsidian-style `#tag` anywhere in the body:
+
+```md
+Reading notes on my favourite #book and #book/fiction titles.
+```
+
+Inline tags render as clickable pills, and every tag links to its tag page. Visit `/tags` for an index of all tags on your site.
+
+👉 See the [[tags|Tags reference]] for the full grammar, nested tags, and how tag pages work.
+
 ## Obsidian Bases (Beta)
 
 Flowershow now supports **Obsidian Bases**, a powerful feature that allows you to create dynamic, queryable views of your notes directly in your published sites.
