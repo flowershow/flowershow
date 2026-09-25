@@ -2169,9 +2169,6 @@
     text-decoration: underline;
     text-underline-offset: 2px;
   }
-  .tag-page-list-item a:hover {
-    text-decoration-color: var(--color-accent);
-  }
   .tag-page-list-item + .tag-page-list-item {
     margin-top: 1rem;
   }
