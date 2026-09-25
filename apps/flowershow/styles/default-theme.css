@@ -2069,17 +2069,20 @@
     gap: 0.5rem;
     text-transform: none;
   }
-  /* A tag pill — used both in the header row and inline in prose. */
+  /* A tag pill — used in the header row, inline in prose, and on the /tags pages.
+     Matches the dashboard's pink accent (Tailwind pink-600/pink-400): pink text
+     on a delicate translucent-pink background, in the heading font. */
   .tag-pill {
     display: inline-flex;
     align-items: center;
     border-radius: 9999px;
-    background-color: var(--color-foreground-100);
-    color: var(--color-foreground-600);
+    background-color: rgb(219 39 119 / 0.1);
+    color: #db2777;
     padding: 0.125rem 0.625rem;
+    font-family: var(--font-heading);
     font-size: var(--font-size-sm);
     line-height: var(--line-height-tight);
-    font-weight: var(--font-weight-normal);
+    font-weight: var(--font-weight-medium);
     text-decoration: none;
     white-space: nowrap;
     transition:
@@ -2087,9 +2090,35 @@
       color 0.15s ease;
   }
   .tag-pill:hover {
-    background-color: var(--color-foreground-200);
-    color: var(--color-foreground-900);
+    background-color: rgb(219 39 119 / 0.16);
+    color: #be185d;
     text-decoration: none;
+  }
+  :root[data-theme="dark"] .tag-pill {
+    background-color: rgb(244 114 182 / 0.12);
+    color: #f472b6;
+  }
+  :root[data-theme="dark"] .tag-pill:hover {
+    background-color: rgb(244 114 182 / 0.2);
+    color: #f9a8d4;
+  }
+  /* Inline tag pills sit inside rendered prose, whose `prose` anchor styles add
+     an underline and their own link color; override both (higher specificity than
+     the prose `a` rule) so pills stay pink and underline-free — they read as
+     pills, not links. */
+  .rendered-mdx a.tag-pill {
+    color: #db2777;
+    text-decoration: none;
+  }
+  .rendered-mdx a.tag-pill:hover {
+    color: #be185d;
+    text-decoration: none;
+  }
+  :root[data-theme="dark"] .rendered-mdx a.tag-pill {
+    color: #f472b6;
+  }
+  :root[data-theme="dark"] .rendered-mdx a.tag-pill:hover {
+    color: #f9a8d4;
   }
   /* Generated tag navigation pages (/tags and /tags/{tag}) — their own markup,
      not the Markdown content layout. */
