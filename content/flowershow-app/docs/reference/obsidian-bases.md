@@ -27,11 +27,11 @@ description: Detailed reference for Obsidian Bases syntax, including filters, fo
 - 🚧 **File Properties** - Support for most file metadata:
   - `file.name`, `file.basename`, `file.path`, `file.folder`, `file.ext`, `file.size`
   - `file.ctime`, `file.mtime` - creation and last-modified times
-  - `file.tags` - frontmatter tags (matches nested tags, e.g. `book` matches `book/fiction`)
+  - `file.tags` - frontmatter and inline body tags (matches nested tags, e.g. `book` matches `book/fiction`)
   - `file.links`, `file.backlinks` - outgoing and incoming links
   - `file.hasProperty()`, `file.inFolder()`, `file.hasTag()`, `file.hasLink()`
 
-  > `file.ctime` / `file.mtime` reflect when the page was last published, not local file timestamps. Tags are read from frontmatter only (inline `#tags` in the body are not indexed).
+  > `file.ctime` / `file.mtime` reflect when the page was last published, not local file timestamps. `file.tags` and `file.hasTag()` cover both frontmatter tags and inline `#tags` from the body — see the [[tags|Tags reference]] for the full tag grammar.
 
 ### Operators
 
