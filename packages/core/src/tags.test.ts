@@ -6,6 +6,7 @@ import {
   mergePageTags,
   mergeTags,
   normalizeFrontmatterTags,
+  tagFromHref,
   tagIdentity,
   tagMatches,
   tagToHref,
@@ -228,4 +229,31 @@ describe('tagToHref', () => {
   test('encodes special characters per segment', () => {
     expect(tagToHref('café/résumé')).toBe('/tags/caf%C3%A9/r%C3%A9sum%C3%A9');
   });
+});
+
+describe('tagFromHref — inverse of tagToHref', () => {
+  test('decodes a percent-encoded segment', () => {
+    expect(tagFromHref('caf%C3%A9')).toBe('café');
+  });
+
+  test('leaves an unencoded segment untouched', () => {
+    expect(tagFromHref('book')).toBe('book');
+  });
+
+  test('preserves nested path separators', () => {
+    expect(tagFromHref('book/fiction')).toBe('book/fiction');
+  });
+
+  test('falls back to the raw segment on malformed encoding', () => {
+    expect(tagFromHref('%E0%A4%A')).toBe('%E0%A4%A');
+    expect(tagFromHref('100%')).toBe('100%');
+  });
+
+  test.each(['book', 'book/fiction', 'café', 'café/résumé', '2024-review'])(
+    'round-trips with tagToHref: %s',
+    (tag) => {
+      const segment = tagToHref(tag).slice('/tags/'.length);
+      expect(tagFromHref(segment)).toBe(tag);
+    },
+  );
 });

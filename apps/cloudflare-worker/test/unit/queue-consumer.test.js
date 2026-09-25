@@ -8,6 +8,7 @@ import {
   normalizePermalink,
   parseMarkdown,
   parseObjectKey,
+  syncTags,
 } from '../../src/queue-consumer.js';
 
 const TINY_PNG_BASE64 =
@@ -373,4 +374,113 @@ test('extractTags - numeric-only inline tokens are not tags', () => {
 
 test('extractTags - no tags returns empty array', () => {
   expect(extractTags('plain body', {})).toEqual([]);
+});
+
+// syncTags — reconciles the Tag table for one blob on (re)publish. Uses an
+// in-memory mock of the postgres.js tagged-template client that routes by the
+// leading SQL keyword and honours the (blob_id, identity) upsert semantics.
+
+function createMockTagSql(initial = []) {
+  let store = initial.map((r) => ({ ...r }));
+  const run = (strings, values) => {
+    const text = strings.join('?').replace(/\s+/g, ' ').trim();
+    if (text.startsWith('SELECT id, identity FROM "Tag"')) {
+      const blobId = values[0];
+      return store
+        .filter((r) => r.blob_id === blobId)
+        .map((r) => ({ id: r.id, identity: r.identity }));
+    }
+    if (text.startsWith('DELETE FROM "Tag"')) {
+      const id = values[0];
+      store = store.filter((r) => r.id !== id);
+      return [];
+    }
+    if (text.startsWith('INSERT INTO "Tag"')) {
+      const [id, site_id, blob_id, tag, identity, source] = values;
+      const existing = store.find(
+        (r) => r.blob_id === blob_id && r.identity === identity,
+      );
+      if (existing) {
+        existing.tag = tag;
+        existing.source = source;
+      } else {
+        store.push({ id, site_id, blob_id, tag, identity, source });
+      }
+      return [];
+    }
+    throw new Error(`unexpected SQL: ${text}`);
+  };
+  const sql = (strings, ...values) => Promise.resolve(run(strings, values));
+  sql.begin = async (fn) => fn(sql);
+  sql.rows = () => store;
+  return sql;
+}
+
+test('syncTags - inserts all tags for a blob with none, folding to identity', async () => {
+  const sql = createMockTagSql([]);
+  await syncTags(sql, 's1', 'b1', [
+    { tag: 'Book', source: 'frontmatter' },
+    { tag: 'film/noir', source: 'inline' },
+  ]);
+  expect(
+    sql
+      .rows()
+      .map((r) => [r.identity, r.tag, r.source])
+      .sort(),
+  ).toEqual([
+    ['book', 'Book', 'frontmatter'],
+    ['film/noir', 'film/noir', 'inline'],
+  ]);
+});
+
+test('syncTags - republish reconciles: adds new, removes stale, upserts casing/source', async () => {
+  const sql = createMockTagSql([
+    // deterministic ids in place of generateId() for the seed rows
+    { id: 'x1', site_id: 's1', blob_id: 'b1', tag: 'book', identity: 'book', source: 'frontmatter' },
+    { id: 'x2', site_id: 's1', blob_id: 'b1', tag: 'old', identity: 'old', source: 'inline' },
+  ]);
+  await syncTags(sql, 's1', 'b1', [
+    { tag: 'Book', source: 'inline' }, // same identity → upsert casing + source
+    { tag: 'film', source: 'inline' }, // brand new
+  ]);
+  const rows = sql.rows().filter((r) => r.blob_id === 'b1');
+  expect(rows.map((r) => r.identity).sort()).toEqual(['book', 'film']);
+  const book = rows.find((r) => r.identity === 'book');
+  expect(book.id).toBe('x1'); // upserted the existing row, not a duplicate
+  expect(book.tag).toBe('Book'); // display casing updated
+  expect(book.source).toBe('inline'); // source updated
+});
+
+test('syncTags - never touches another blob’s rows', async () => {
+  const sql = createMockTagSql([
+    { id: 'y1', site_id: 's1', blob_id: 'b2', tag: 'keep', identity: 'keep', source: 'frontmatter' },
+  ]);
+  await syncTags(sql, 's1', 'b1', [{ tag: 'new', source: 'inline' }]);
+  expect(sql.rows().find((r) => r.blob_id === 'b2')?.identity).toBe('keep');
+  expect(
+    sql
+      .rows()
+      .filter((r) => r.blob_id === 'b1')
+      .map((r) => r.identity),
+  ).toEqual(['new']);
+});
+
+test('syncTags - clearing all tags deletes the blob’s existing rows', async () => {
+  const sql = createMockTagSql([
+    { id: 'z1', site_id: 's1', blob_id: 'b1', tag: 'gone', identity: 'gone', source: 'inline' },
+  ]);
+  await syncTags(sql, 's1', 'b1', []);
+  expect(sql.rows().filter((r) => r.blob_id === 'b1')).toEqual([]);
+});
+
+test('syncTags - runs the diff inside a transaction', async () => {
+  const sql = createMockTagSql([]);
+  let began = false;
+  const inner = sql.begin;
+  sql.begin = (fn) => {
+    began = true;
+    return inner(fn);
+  };
+  await syncTags(sql, 's1', 'b1', [{ tag: 'book', source: 'inline' }]);
+  expect(began).toBe(true);
 });

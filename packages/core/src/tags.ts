@@ -169,3 +169,18 @@ export function tagToHref(tag: string): string {
     .map((s) => encodeURIComponent(s));
   return `/tags/${segments.join('/')}`;
 }
+
+/**
+ * Inverse of `tagToHref`'s encoding: turns the `{tag}` portion of a `/tags/{tag}`
+ * URL back into the tag's display value. `decodeURIComponent` reverses the
+ * per-segment encoding (path `/` separators are left untouched by both sides),
+ * so this round-trips with `tagToHref`. Falls back to the raw segment on
+ * malformed percent-encoding rather than throwing.
+ */
+export function tagFromHref(segment: string): string {
+  try {
+    return decodeURIComponent(segment);
+  } catch {
+    return segment;
+  }
+}

@@ -5,6 +5,7 @@ import {
   frontmatterTags,
   mergePageTags,
   PAGE_FILE_EXTENSIONS,
+  tagIdentity,
 } from '@flowershow/core';
 import matter from 'gray-matter';
 import { imageSize, types as supportedImageTypes } from 'image-size';
@@ -476,29 +477,42 @@ export function extractTags(body, metadata) {
   return mergePageTags(frontmatterTags(metadata), extractInlineTags(body));
 }
 
-async function syncTags(sql, siteId, blobId, tags) {
-  const newTagSet = new Set(tags.map((t) => t.tag));
+export async function syncTags(sql, siteId, blobId, tags) {
+  // Fold each tag to its case-insensitive identity: the DB's (blob_id, identity)
+  // unique key enforces that `#Book`/`#book` are one row per blob. `tags` is
+  // already deduped by identity upstream (mergePageTags), so identities here are
+  // distinct — `tag` carries the display casing.
+  const rows = tags.map((t) => ({
+    tag: t.tag,
+    source: t.source,
+    identity: tagIdentity(t.tag),
+  }));
+  const newIdentitySet = new Set(rows.map((r) => r.identity));
 
-  // Same constraint as syncLinks: fetch_types:false breaks sql.array(), so diff
-  // in JS — fetch existing rows, delete stale ones by scalar ID.
-  const existing = await sql`
-    SELECT id, tag FROM "Tag"
-    WHERE blob_id = ${blobId}
-  `;
-  for (const row of existing) {
-    if (!newTagSet.has(row.tag)) {
-      await sql`DELETE FROM "Tag" WHERE id = ${row.id}`;
-    }
-  }
-
-  for (const { tag, source } of tags) {
-    await sql`
-      INSERT INTO "Tag" (id, site_id, blob_id, tag, source)
-      VALUES (${generateId()}, ${siteId}, ${blobId}, ${tag}, ${source})
-      ON CONFLICT (blob_id, tag)
-      DO UPDATE SET source = EXCLUDED.source
+  // Wrap the read-diff-write in a transaction so concurrent publishes of the
+  // same blob can't interleave and leave stale or duplicate rows. Same
+  // constraint as syncLinks: fetch_types:false breaks sql.array(), so diff in
+  // JS — fetch existing rows, delete stale ones by scalar ID.
+  await sql.begin(async (sql) => {
+    const existing = await sql`
+      SELECT id, identity FROM "Tag"
+      WHERE blob_id = ${blobId}
     `;
-  }
+    for (const row of existing) {
+      if (!newIdentitySet.has(row.identity)) {
+        await sql`DELETE FROM "Tag" WHERE id = ${row.id}`;
+      }
+    }
+
+    for (const { tag, source, identity } of rows) {
+      await sql`
+        INSERT INTO "Tag" (id, site_id, blob_id, tag, identity, source)
+        VALUES (${generateId()}, ${siteId}, ${blobId}, ${tag}, ${identity}, ${source})
+        ON CONFLICT (blob_id, identity)
+        DO UPDATE SET tag = EXCLUDED.tag, source = EXCLUDED.source
+      `;
+    }
+  });
 }
 
 /**

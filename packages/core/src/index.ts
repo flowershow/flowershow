@@ -14,6 +14,7 @@ export {
   mergePageTags,
   mergeTags,
   normalizeFrontmatterTags,
+  tagFromHref,
   tagIdentity,
   tagMatches,
   tagToHref,

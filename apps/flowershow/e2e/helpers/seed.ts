@@ -10,6 +10,7 @@ import {
   extractInlineTags,
   frontmatterTags,
   mergePageTags,
+  tagIdentity,
 } from '@flowershow/core';
 import { LinkType, Plan, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
@@ -276,6 +277,7 @@ async function uploadFixturesForSite(
             siteId,
             blobId: blob.id,
             tag: t.tag,
+            identity: tagIdentity(t.tag),
             source: t.source,
           })),
         });

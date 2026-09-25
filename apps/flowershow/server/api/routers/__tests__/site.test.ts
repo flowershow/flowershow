@@ -43,6 +43,7 @@ vi.mock('@/lib/content-store', () => ({
 
 // ── Imports ───────────────────────────────────────────────────────
 
+import { tagIdentity } from '@flowershow/core';
 import { appRouter } from '@/server/api/root';
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -136,18 +137,41 @@ function makeLink(overrides: Partial<MockLink> = {}): MockLink {
   };
 }
 
+type MockTag = {
+  siteId: string;
+  blobId: string;
+  tag: string;
+  identity: string;
+  source: 'frontmatter' | 'inline';
+};
+
+/** Minimal tag factory; identity is folded from `tag` unless overridden. */
+function makeTag(overrides: Partial<MockTag> = {}): MockTag {
+  const tag = overrides.tag ?? 'book';
+  return {
+    siteId: 'site-1',
+    blobId: 'blob-1',
+    tag,
+    identity: tagIdentity(tag),
+    source: 'frontmatter',
+    ...overrides,
+  };
+}
+
 function createMockDb({
   blobs = [] as ReturnType<typeof makeBlob>[],
   site = makeSite(),
   publishes = [] as MockPublish[],
   publishFiles = [] as MockPublishFile[],
   links = [] as MockLink[],
+  tags = [] as MockTag[],
 }: {
   blobs?: ReturnType<typeof makeBlob>[];
   site?: ReturnType<typeof makeSite> | null;
   publishes?: MockPublish[];
   publishFiles?: MockPublishFile[];
   links?: MockLink[];
+  tags?: MockTag[];
 } = {}) {
   return {
     blob: {
@@ -299,6 +323,58 @@ function createMockDb({
           seen.add(key);
           return true;
         });
+      }),
+    },
+    tag: {
+      findMany: vi.fn(async (args: any) => {
+        const w = args?.where ?? {};
+        const sel = args?.select;
+
+        let results = tags.filter((t) => {
+          if (w.siteId && t.siteId !== w.siteId) return false;
+          // getPagesByTag: OR of exact identity + descendant prefix.
+          if (w.OR) {
+            return (w.OR as any[]).some((cond) => {
+              if (typeof cond.identity === 'string')
+                return t.identity === cond.identity;
+              if (cond.identity?.startsWith !== undefined)
+                return t.identity.startsWith(cond.identity.startsWith);
+              return false;
+            });
+          }
+          return true;
+        });
+
+        // Emulate distinct: ['blobId']
+        if ((args?.distinct as string[] | undefined)?.includes('blobId')) {
+          const seen = new Set<string>();
+          results = results.filter((t) => {
+            if (seen.has(t.blobId)) return false;
+            seen.add(t.blobId);
+            return true;
+          });
+        }
+
+        // getPagesByTag selects the joined blob; getTagIndex selects scalars.
+        if (sel?.blob) {
+          return results.map((t) => {
+            const b = blobs.find((bl) => bl.id === t.blobId);
+            return {
+              blob: b
+                ? {
+                    appPath: b.appPath,
+                    permalink: b.permalink,
+                    metadata: b.metadata,
+                  }
+                : null,
+            };
+          });
+        }
+        return results.map((t) => ({
+          tag: t.tag,
+          identity: t.identity,
+          blobId: t.blobId,
+        }));
       }),
     },
   };
@@ -1208,5 +1284,131 @@ describe('site.getChangelogEntries', () => {
     await expect(
       caller.site.getChangelogEntries({ siteId: 'nope', dir: 'changelog' }),
     ).rejects.toThrow();
+  });
+});
+
+describe('site.getTagIndex', () => {
+  it('folds case variants, counts distinct blobs, sorts by count then name', async () => {
+    const blobs = [
+      makeBlob({ id: 'b1' }),
+      makeBlob({ id: 'b2' }),
+      makeBlob({ id: 'b3' }),
+    ];
+    const tags = [
+      makeTag({ blobId: 'b1', tag: 'Book' }), // identity "book"
+      makeTag({ blobId: 'b2', tag: 'book' }), // identity "book" (folded)
+      makeTag({ blobId: 'b3', tag: 'film', source: 'inline' }),
+    ];
+    const caller = createCaller(createMockDb({ blobs, tags }));
+    const result = await caller.site.getTagIndex({ siteId: 'site-1' });
+    expect(result).toEqual([
+      { tag: 'Book', count: 2 }, // first-seen casing, two distinct blobs
+      { tag: 'film', count: 1 },
+    ]);
+  });
+
+  it('counts one blob once even if it carries the same identity twice', async () => {
+    const blobs = [makeBlob({ id: 'b1' })];
+    const tags = [
+      makeTag({ blobId: 'b1', tag: 'book' }),
+      makeTag({ blobId: 'b1', tag: 'Book' }), // same identity, same blob
+    ];
+    const caller = createCaller(createMockDb({ blobs, tags }));
+    const result = await caller.site.getTagIndex({ siteId: 'site-1' });
+    expect(result).toEqual([{ tag: 'book', count: 1 }]);
+  });
+
+  it('returns an empty array when the site has no tags', async () => {
+    const caller = createCaller(createMockDb({ tags: [] }));
+    expect(await caller.site.getTagIndex({ siteId: 'site-1' })).toEqual([]);
+  });
+});
+
+describe('site.getPagesByTag', () => {
+  it('matches case-insensitively and includes descendant tags', async () => {
+    const blobs = [
+      makeBlob({ id: 'b1', appPath: '/a', metadata: { title: 'A' } }),
+      makeBlob({ id: 'b2', appPath: '/b', metadata: { title: 'B' } }),
+      makeBlob({ id: 'b3', appPath: '/c', metadata: { title: 'C' } }),
+    ];
+    const tags = [
+      makeTag({ blobId: 'b1', tag: 'Book' }), // exact match (folded)
+      makeTag({ blobId: 'b2', tag: 'book/fiction' }), // descendant
+      makeTag({ blobId: 'b3', tag: 'film' }), // unrelated
+    ];
+    const caller = createCaller(createMockDb({ blobs, tags }));
+    const result = await caller.site.getPagesByTag({
+      siteId: 'site-1',
+      tag: 'book',
+    });
+    expect(result.map((p) => p.href).sort()).toEqual(['/a', '/b']);
+  });
+
+  it('sorts by date desc, dated pages first, then title asc', async () => {
+    const blobs = [
+      makeBlob({
+        id: 'b1',
+        appPath: '/old',
+        metadata: { title: 'Old', date: '2020-01-01' },
+      }),
+      makeBlob({
+        id: 'b2',
+        appPath: '/new',
+        metadata: { title: 'New', date: '2024-01-01' },
+      }),
+      makeBlob({ id: 'b3', appPath: '/zeta', metadata: { title: 'Zeta' } }),
+      makeBlob({ id: 'b4', appPath: '/alpha', metadata: { title: 'Alpha' } }),
+    ];
+    const tags = [
+      makeTag({ blobId: 'b1', tag: 'book' }),
+      makeTag({ blobId: 'b2', tag: 'book' }),
+      makeTag({ blobId: 'b3', tag: 'book' }),
+      makeTag({ blobId: 'b4', tag: 'book' }),
+    ];
+    const caller = createCaller(createMockDb({ blobs, tags }));
+    const result = await caller.site.getPagesByTag({
+      siteId: 'site-1',
+      tag: 'book',
+    });
+    expect(result.map((p) => p.title)).toEqual(['New', 'Old', 'Alpha', 'Zeta']);
+  });
+
+  it('prefers permalink over appPath for the href', async () => {
+    const blobs = [
+      makeBlob({ id: 'b1', appPath: '/app-path', permalink: '/perma' }),
+    ];
+    const tags = [makeTag({ blobId: 'b1', tag: 'book' })];
+    const caller = createCaller(createMockDb({ blobs, tags }));
+    const result = await caller.site.getPagesByTag({
+      siteId: 'site-1',
+      tag: 'book',
+    });
+    expect(result[0]!.href).toBe('/perma');
+  });
+
+  it('dedups a blob that matches both the exact tag and a descendant', async () => {
+    const blobs = [
+      makeBlob({ id: 'b1', appPath: '/a', metadata: { title: 'A' } }),
+    ];
+    const tags = [
+      makeTag({ blobId: 'b1', tag: 'book' }),
+      makeTag({ blobId: 'b1', tag: 'book/fiction' }),
+    ];
+    const caller = createCaller(createMockDb({ blobs, tags }));
+    const result = await caller.site.getPagesByTag({
+      siteId: 'site-1',
+      tag: 'book',
+    });
+    expect(result).toHaveLength(1);
+    expect(result[0]!.href).toBe('/a');
+  });
+
+  it('returns an empty array when no page carries the tag', async () => {
+    const caller = createCaller(
+      createMockDb({ blobs: [makeBlob({ id: 'b1' })], tags: [] }),
+    );
+    expect(
+      await caller.site.getPagesByTag({ siteId: 'site-1', tag: 'missing' }),
+    ).toEqual([]);
   });
 });

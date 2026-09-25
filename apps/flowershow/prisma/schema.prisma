@@ -209,19 +209,22 @@ enum TagSource {
 // Obsidian-style tags extracted at publish time (frontmatter + inline body
 // `#tags`), the canonical store for /tags navigation, counts, and Bases.
 // Mirrors the Link table (ADR-0010). See ADR-0012. `tag` holds the display
-// casing; identity/matching is case-folded in the shared @flowershow/core module.
+// casing; `identity` is the case-folded key (tagIdentity() in @flowershow/core)
+// so `#Book`/`#book` collapse to one row per blob and queries match by exact
+// equality on an indexed column instead of `ILIKE`.
 model Tag {
-  id     String    @id @default(cuid())
-  siteId String    @map("site_id")
-  blobId String    @map("blob_id")
-  tag    String
-  source TagSource
+  id       String    @id @default(cuid())
+  siteId   String    @map("site_id")
+  blobId   String    @map("blob_id")
+  tag      String
+  identity String
+  source   TagSource
 
   site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
   blob Blob @relation(fields: [blobId], references: [id], onDelete: Cascade)
 
-  @@unique([blobId, tag])
-  @@index([siteId, tag])
+  @@unique([blobId, identity])
+  @@index([siteId, identity])
   @@index([blobId])
 }
 

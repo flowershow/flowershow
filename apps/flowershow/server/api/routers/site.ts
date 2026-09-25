@@ -2561,13 +2561,13 @@ export const siteRouter = createTRPCRouter({
         async (input) => {
           const rows = await ctx.db.tag.findMany({
             where: { siteId: input.siteId },
-            select: { tag: true, blobId: true },
+            select: { tag: true, identity: true, blobId: true },
           });
 
           // Aggregate by identity so `#Book` and `#book` count as one tag.
           const byId = new Map<string, { tag: string; blobs: Set<string> }>();
           for (const row of rows) {
-            const id = tagIdentity(row.tag);
+            const id = row.identity;
             if (!id) continue;
             const entry = byId.get(id);
             if (entry) {
@@ -2614,10 +2614,10 @@ export const siteRouter = createTRPCRouter({
           const rows = await ctx.db.tag.findMany({
             where: {
               siteId: input.siteId,
-              OR: [
-                { tag: { equals: q, mode: 'insensitive' } },
-                { tag: { startsWith: `${q}/`, mode: 'insensitive' } },
-              ],
+              // `identity` is pre-folded (lowercased) and indexed, so match by
+              // exact equality + descendant prefix — both use the B-tree index,
+              // unlike the `mode:'insensitive'` ILIKE this replaced.
+              OR: [{ identity: q }, { identity: { startsWith: `${q}/` } }],
             },
             distinct: ['blobId'],
             select: {

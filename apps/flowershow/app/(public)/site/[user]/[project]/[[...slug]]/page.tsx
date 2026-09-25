@@ -1,4 +1,4 @@
-import { frontmatterTags } from '@flowershow/core';
+import { frontmatterTags, tagFromHref } from '@flowershow/core';
 import type { GiscusProps } from '@giscus/react';
 import clsx from 'clsx';
 import { CodeIcon, EditIcon } from 'lucide-react';
@@ -101,15 +101,16 @@ export async function generateMetadata(props: {
     .catch(() => null);
 
   const siteName = resolveSiteName(siteConfig, site.projectName);
+  const tagListingTitle = isTagListingRoute
+    ? `#${tagFromHref(decodedSlug.slice('/tags/'.length))}`
+    : undefined;
   const title = buildPageTitle(
     metadata?.title ??
       (isChangelogFallback
         ? 'Changelog'
         : isTagIndexRoute
           ? 'Tags'
-          : isTagListingRoute
-            ? `#${decodeURIComponent(decodedSlug.slice('/tags/'.length))}`
-            : undefined),
+          : tagListingTitle),
     siteName,
   );
   const description = metadata?.description ?? siteConfig?.description;
@@ -282,7 +283,10 @@ export default async function SitePage(props: {
       );
     }
     if (decodedSlug.startsWith('/tags/')) {
-      const tag = decodedSlug.slice('/tags/'.length);
+      // The slug stays percent-encoded here (see decodedSlug above), but tags are
+      // stored/matched by their decoded display value, so decode to round-trip
+      // with tagToHref's encodeURIComponent. Matches generateMetadata's decode.
+      const tag = tagFromHref(decodedSlug.slice('/tags/'.length));
       return (
         <>
           <UrlNormalizer />
