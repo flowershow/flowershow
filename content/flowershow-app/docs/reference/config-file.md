@@ -225,6 +225,19 @@ Show or hide the backlinks panel at the bottom of each page. [[backlinks|Learn m
 
 ---
 
+### `showTags`
+
+**Type:** `boolean`  
+**Default:** `true`
+
+Show or hide tags across your site — inline `#tag` pills, the frontmatter tag row, and the `/tags` pages. When `false`, inline `#tags` render as plain text and the tag pages 404. [[tags|Learn more →]]
+
+```json
+"showTags": false
+```
+
+---
+
 ### `contentInclude`
 
 **Type:** `string[]`  

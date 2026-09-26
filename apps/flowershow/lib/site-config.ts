@@ -16,6 +16,7 @@ export const SITE_CONFIG_DEFAULTS = {
   showSidebar: true,
   showComments: false,
   showBacklinks: true,
+  showTags: true,
   enableSearch: false,
   enableRss: false,
   showBuiltWithButton: true,

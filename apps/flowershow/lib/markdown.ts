@@ -51,6 +51,11 @@ interface MarkdownOptions {
   canvasNodeFiles?: Record<string, string>;
   /** Render the file as a single-file changelog timeline. */
   changelog?: RemarkChangelogOptions;
+  /**
+   * Turn inline body `#tags` into pill links. Defaults to on; pass `false`
+   * (the site's `showTags` config) to leave `#tags` as plain text.
+   */
+  showTags?: boolean;
 }
 
 // Private Use Area char used as a temporary alias divider so GFM table block-parsing
@@ -101,7 +106,8 @@ export async function processMarkdown(
     .use(remarkMath)
     .use(remarkCallout)
     .use(remarkMark)
-    .use(remarkTags)
+    // `showTags === false` disables inline `#tag` pills, leaving them as text.
+    .use(options.showTags === false ? () => undefined : remarkTags)
     // Last remark plugin: it restructures the whole tree
     .use(
       options.changelog ? remarkChangelog : () => undefined,
@@ -147,6 +153,7 @@ export const getMdxOptions = ({
   canvasFiles,
   canvasNodeFiles,
   changelog,
+  showTags,
 }: {
   filePath: string;
   files: string[];
@@ -158,6 +165,7 @@ export const getMdxOptions = ({
   canvasFiles?: Record<string, string>;
   canvasNodeFiles?: Record<string, string>;
   changelog?: RemarkChangelogOptions;
+  showTags?: boolean;
 }): EvaluateOptions => {
   return {
     parseFrontmatter,
@@ -183,7 +191,8 @@ export const getMdxOptions = ({
         remarkCallout,
         [mdxMermaid, {}],
         remarkMark,
-        remarkTags,
+        // `showTags === false` disables inline `#tag` pills, leaving them as text.
+        ...(showTags === false ? [] : [remarkTags]),
         [remarkObsidianBases, { siteHostname, siteId, rootDir }],
         // Last remark plugin: it restructures the whole tree
         ...(changelog ? [[remarkChangelog, changelog] as Pluggable] : []),

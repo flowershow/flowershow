@@ -74,9 +74,14 @@ export async function GET(
     </url>`;
   });
 
-  // The `/tags` index, only when the site actually has tags.
+  // The `/tags` index, only when the site actually has tags and the tags
+  // feature is enabled (showTags defaults to on). Uses DB config only — the
+  // /tags pages themselves also resolve file config, but the dashboard toggle
+  // is the primary control and keeps this route free of a blob fetch.
+  const showTags =
+    ((site.configJson ?? {}) as { showTags?: boolean }).showTags ?? true;
   const tagsIndexItem =
-    site._count.tags > 0
+    showTags && site._count.tags > 0
       ? `<url>
       <loc>${siteUrl}/tags</loc>
       <lastmod>${site.updatedAt.toISOString()}</lastmod>

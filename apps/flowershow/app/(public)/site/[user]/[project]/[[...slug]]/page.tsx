@@ -59,6 +59,13 @@ export async function generateMetadata(props: {
   const site = await getSite(userName, projectName);
   const siteUrl = getSiteUrl(site);
 
+  const siteConfig = await api.site.getConfig
+    .query({
+      siteId: site.id,
+    })
+    .catch(() => null);
+  const showTags = siteConfig?.showTags ?? true;
+
   // For anonymous sites, handle case where blob might not be ready yet
   const blob = await api.site.getBlob
     .query({
@@ -75,8 +82,12 @@ export async function generateMetadata(props: {
       if (isChangelogDirName(decodedSlug)) {
         return null;
       }
-      // Virtual tag pages have no Blob — let them render their own metadata.
-      if (decodedSlug === '/tags' || decodedSlug.startsWith('/tags/')) {
+      // Virtual tag pages have no Blob — let them render their own metadata,
+      // unless the site has tags disabled, in which case they 404.
+      if (
+        showTags &&
+        (decodedSlug === '/tags' || decodedSlug.startsWith('/tags/'))
+      ) {
         return null;
       }
       notFound();
@@ -84,8 +95,9 @@ export async function generateMetadata(props: {
 
   const metadata = blob?.metadata as PageMetadata | null;
   const isChangelogFallback = !blob && isChangelogDirName(decodedSlug);
-  const isTagIndexRoute = !blob && decodedSlug === '/tags';
-  const isTagListingRoute = !blob && decodedSlug.startsWith('/tags/');
+  const isTagIndexRoute = showTags && !blob && decodedSlug === '/tags';
+  const isTagListingRoute =
+    showTags && !blob && decodedSlug.startsWith('/tags/');
 
   // workaround (?) to "not publish" files marked with `publish: false`
   // it's needed atm as Inngest sync function doesn't parse frontmatter, and so it uploads to R2
@@ -93,12 +105,6 @@ export async function generateMetadata(props: {
   if (metadata?.publish === false) {
     notFound();
   }
-
-  const siteConfig = await api.site.getConfig
-    .query({
-      siteId: site.id,
-    })
-    .catch(() => null);
 
   const siteName = resolveSiteName(siteConfig, site.projectName);
   const tagListingTitle = isTagListingRoute
@@ -194,6 +200,10 @@ export default async function SitePage(props: {
     })
     .catch(() => null);
 
+  // When tags are disabled, inline `#tag` pills, the frontmatter tag row, and
+  // the virtual `/tags` pages are all suppressed. Defaults to on.
+  const showTags = siteConfig?.showTags ?? true;
+
   // Handle redirects if configured
   if (siteConfig?.redirects) {
     for (const r of siteConfig.redirects) {
@@ -267,8 +277,10 @@ export default async function SitePage(props: {
   if (!blob) {
     // Tag pages are virtual fallbacks rendered only when no Blob exists at the
     // path, so real user content at /tags or /tags/... always wins. Mirrors the
-    // changelog virtual-page pattern. See ADR-0012.
-    if (decodedSlug === '/tags') {
+    // changelog virtual-page pattern. See ADR-0012. Suppressed when the site has
+    // tags disabled (showTags: false), in which case these paths fall through to
+    // a 404 like any other missing page.
+    if (showTags && decodedSlug === '/tags') {
       return (
         <>
           <UrlNormalizer />
@@ -282,7 +294,7 @@ export default async function SitePage(props: {
         </>
       );
     }
-    if (decodedSlug.startsWith('/tags/')) {
+    if (showTags && decodedSlug.startsWith('/tags/')) {
       // The slug stays percent-encoded here (see decodedSlug above), but tags are
       // stored/matched by their decoded display value, so decode to round-trip
       // with tagToHref's encodeURIComponent. Matches generateMetadata's decode.
@@ -317,6 +329,7 @@ export default async function SitePage(props: {
                 siteHostname={siteHostname}
                 siteFilePaths={siteFilePaths}
                 permalinksMapping={permalinksMapping}
+                showTags={showTags}
                 imageDimensions={imageDimensions}
               />
             </main>
@@ -366,6 +379,7 @@ export default async function SitePage(props: {
     imageDimensions,
     changelog:
       changelog?.kind === 'file' ? { title: metadata?.title } : undefined,
+    showTags,
   });
 
   const scopedCss = await generateScopedCss(pageContent ?? '', '#mdxpage');
@@ -530,6 +544,7 @@ export default async function SitePage(props: {
                   siteFilePaths={siteFilePaths}
                   permalinksMapping={permalinksMapping}
                   imageDimensions={imageDimensions}
+                  showTags={showTags}
                 />
                 <CanvasEnhancer />
               </>
@@ -557,9 +572,13 @@ export default async function SitePage(props: {
                 date={metadata?.date}
                 showHero={heroConfig.showHero}
                 authors={authors}
-                tags={frontmatterTags(
-                  metadata as Record<string, unknown> | null,
-                )}
+                tags={
+                  showTags
+                    ? frontmatterTags(
+                        metadata as Record<string, unknown> | null,
+                      )
+                    : undefined
+                }
               >
                 <div className="rendered-mdx" id="mdxpage">
                   {compiledContent}

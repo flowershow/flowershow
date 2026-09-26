@@ -63,6 +63,7 @@ export default function Form({
     'showModeSwitch',
     'showBacklinks',
     'showKnowledgeGraph',
+    'showTags',
   ].includes(inputAttrs.name);
 
   // Controlled value for all non-toggle inputs (text, textarea, select)

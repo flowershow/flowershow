@@ -26,6 +26,8 @@ export type RenderPageContentOptions = {
   imageDimensions: ImageDimensionsMap;
   /** Render a single-file changelog (CHANGELOG.md) as a timeline. */
   changelog?: RemarkChangelogOptions;
+  /** Site `showTags` config; when `false`, inline `#tags` stay plain text. */
+  showTags?: boolean;
 };
 
 /**
@@ -42,6 +44,7 @@ export async function renderPageContent({
   permalinksMapping,
   imageDimensions,
   changelog,
+  showTags,
 }: RenderPageContentOptions): Promise<React.JSX.Element> {
   let compiledContent: React.JSX.Element;
 
@@ -110,6 +113,7 @@ export async function renderPageContent({
           canvasFiles,
           canvasNodeFiles,
           changelog,
+          showTags,
         });
         compiledContent = result;
       } else {
@@ -124,6 +128,7 @@ export async function renderPageContent({
           canvasFiles,
           canvasNodeFiles,
           changelog,
+          showTags,
         }) as any;
 
         const mdxSource = await serialize<PageMetadata>({

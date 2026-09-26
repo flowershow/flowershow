@@ -6,7 +6,7 @@ description: Organize your notes with Obsidian-style tags — declared in frontm
 Flowershow supports **Obsidian-style tags**. Tag any page — from frontmatter or inline in the body — and Flowershow builds browsable tag pages for your whole site, with no configuration required.
 
 > [!note]
-> Tags are enabled by default and are extracted from your content on every publish.
+> Tags are enabled by default and are extracted from your content on every publish. You can [turn tag display off](#turning-tags-off) if you use `#tags` purely for organizing your notes and don't want them on your published site.
 
 ## Declaring tags
 
@@ -64,6 +64,24 @@ Flowershow generates two kinds of tag pages for your site:
 - **`/tags/{tag}`** — a listing of every page carrying that tag, including nested descendants. For a nested tag, the URL mirrors the tag, e.g. `#book/fiction` lives at `/tags/book/fiction`.
 
 Tag pages are generated navigation pages, not Markdown content. They're served as a fallback, so if you publish your own page at `/tags` (or any `/tags/...` path), your content always takes precedence.
+
+## Turning tags off
+
+Tag display is optional. If you use `#tags` to organize your notes in Obsidian but don't want them surfaced on your published site, set `showTags` to `false` — in your site's dashboard settings ("Show Tags") or in `config.json`:
+
+```json
+{
+  "showTags": false
+}
+```
+
+When tags are off:
+
+- Inline `#tags` in the body render as **plain text** instead of pill links.
+- The **frontmatter tag row** in page headers is hidden.
+- The **`/tags` index and `/tags/{tag}` pages** return 404 (and are dropped from your sitemap).
+
+Tags are still extracted from your content, so `file.tags` and `file.hasTag()` in [[obsidian-bases|Obsidian Bases]] keep working — only the tag display is suppressed.
 
 ## Tags in Obsidian Bases
 

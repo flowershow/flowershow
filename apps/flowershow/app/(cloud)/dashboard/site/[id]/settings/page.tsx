@@ -914,6 +914,16 @@ export default async function SiteSettingsPage(props: {
             }}
             handleSubmit={updateDbConfig}
           />
+          <Form
+            title="Show Tags"
+            description="Render tags across your site: inline #tag pills in your notes, the tag row in page headers, and the /tags pages. Turn off to hide them all — inline #tags become plain text and the /tags pages return 404."
+            inputAttrs={{
+              name: 'showTags',
+              type: 'text',
+              defaultValue: (siteConfig?.showTags ?? true).toString(),
+            }}
+            handleSubmit={updateDbConfig}
+          />
         </section>
 
         <hr className="border-stone-200 dark:border-zinc-700" />

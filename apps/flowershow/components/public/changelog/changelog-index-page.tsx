@@ -21,6 +21,8 @@ interface Props {
   siteFilePaths: string[];
   permalinksMapping: Record<string, string>;
   imageDimensions: ImageDimensionsMap;
+  /** Site `showTags` config; forwarded to each entry's content render. */
+  showTags?: boolean;
 }
 
 /** Full-entry changelog timeline for a folder: fetches, compiles and renders one page of entries. */
@@ -63,6 +65,7 @@ export async function ChangelogIndexPage(props: Props) {
         siteFilePaths: props.siteFilePaths,
         permalinksMapping: props.permalinksMapping,
         imageDimensions: props.imageDimensions,
+        showTags: props.showTags,
       });
     }),
   );

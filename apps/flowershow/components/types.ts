@@ -89,6 +89,13 @@ export interface SiteConfig {
   showEditLink?: boolean;
   showComments?: boolean;
   showBacklinks?: boolean;
+  /**
+   * Controls the tags feature end-to-end: inline `#tag` pills in body content,
+   * the frontmatter tag row in page headers, and the virtual `/tags` index and
+   * `/tags/{tag}` listing pages. Defaults to `true`. When `false`, inline tags
+   * render as plain text and the tag pages 404.
+   */
+  showTags?: boolean;
   giscus?: Partial<GiscusProps>;
   redirects?: Array<{
     from: string;
