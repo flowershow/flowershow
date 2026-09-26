@@ -2627,16 +2627,30 @@ export const siteRouter = createTRPCRouter({
             },
           });
 
+          // Frontmatter is user-authored YAML: `title: 1984` parses as a
+          // number, `date`/`description` can be non-strings too. The DB column
+          // is `Json`, so these arrive untyped — coerce to `string | undefined`
+          // at runtime instead of trusting a cast, otherwise a numeric title
+          // reaches `.localeCompare` below and throws (500 on the tag page).
+          const asStr = (v: unknown): string | undefined =>
+            typeof v === 'string' ? v : undefined;
+          // Titles are display labels, so preserve numeric/boolean values
+          // (e.g. `title: 1984` → "1984") rather than dropping them.
+          const asLabel = (v: unknown): string | undefined =>
+            typeof v === 'string'
+              ? v
+              : typeof v === 'number' || typeof v === 'boolean'
+                ? String(v)
+                : undefined;
           const pages = rows
             .map(({ blob }) => {
               const metadata = blob.metadata as Record<string, unknown> | null;
               const href = blob.permalink ?? blob.appPath;
               return {
                 href,
-                title: (metadata?.title as string | undefined) ?? undefined,
-                date: (metadata?.date as string | undefined) ?? undefined,
-                description:
-                  (metadata?.description as string | undefined) ?? undefined,
+                title: asLabel(metadata?.title),
+                date: asStr(metadata?.date),
+                description: asStr(metadata?.description),
               };
             })
             .filter((p): p is typeof p & { href: string } => p.href !== null);

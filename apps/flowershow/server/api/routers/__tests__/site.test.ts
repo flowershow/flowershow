@@ -1373,6 +1373,36 @@ describe('site.getPagesByTag', () => {
     expect(result.map((p) => p.title)).toEqual(['New', 'Old', 'Alpha', 'Zeta']);
   });
 
+  it('does not throw when a title is a non-string (e.g. `title: 1984`)', async () => {
+    // Frontmatter YAML `title: 1984` parses as a number; the sort must not
+    // call `.localeCompare` on it. Numeric titles are stringified for display.
+    const blobs = [
+      makeBlob({
+        id: 'b1',
+        appPath: '/nineteen-eighty-four',
+        metadata: { title: 1984 },
+      }),
+      makeBlob({
+        id: 'b2',
+        appPath: '/brave',
+        metadata: { title: 'Brave New World' },
+      }),
+    ];
+    const tags = [
+      makeTag({ blobId: 'b1', tag: 'classics' }),
+      makeTag({ blobId: 'b2', tag: 'classics' }),
+    ];
+    const caller = createCaller(createMockDb({ blobs, tags }));
+    const result = await caller.site.getPagesByTag({
+      siteId: 'site-1',
+      tag: 'classics',
+    });
+    expect(result.map((p) => p.title).sort()).toEqual([
+      '1984',
+      'Brave New World',
+    ]);
+  });
+
   it('prefers permalink over appPath for the href', async () => {
     const blobs = [
       makeBlob({ id: 'b1', appPath: '/app-path', permalink: '/perma' }),
