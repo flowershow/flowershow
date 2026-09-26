@@ -128,12 +128,21 @@ export function resolveSiteName(
  * Builds a page's `<title>` from the page title and the resolved brand.
  */
 export function buildPageTitle(
-  pageTitle: string | null | undefined,
+  pageTitle: string | number | boolean | null | undefined,
   siteName: string,
 ): string {
-  if (!pageTitle) return siteName;
-  if (pageTitle.trim().toLowerCase() === siteName.trim().toLowerCase()) {
+  // Frontmatter is user-authored YAML: `title: 1984` parses as a number and
+  // `title: true` as a boolean. The DB column is `Json`, so the value arrives
+  // untyped — coerce numbers/booleans to their display string instead of
+  // trusting the `string` typing, otherwise `.trim()` below throws a TypeError
+  // and 500s the page's generateMetadata. Mirrors getPagesByTag's `asLabel`.
+  const title =
+    typeof pageTitle === 'number' || typeof pageTitle === 'boolean'
+      ? String(pageTitle)
+      : pageTitle;
+  if (!title) return siteName;
+  if (title.trim().toLowerCase() === siteName.trim().toLowerCase()) {
     return siteName;
   }
-  return `${pageTitle} | ${siteName}`;
+  return `${title} | ${siteName}`;
 }

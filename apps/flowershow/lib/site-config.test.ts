@@ -108,6 +108,13 @@ describe('buildPageTitle', () => {
     expect(buildPageTitle('My Site', 'My Site')).toBe('My Site');
     expect(buildPageTitle('  my site ', 'My Site')).toBe('My Site');
   });
+
+  it('coerces non-string frontmatter titles (e.g. `title: 1984`) instead of throwing', () => {
+    // YAML parses `title: 1984` as a number and `title: true` as a boolean;
+    // these must not reach `.trim()` and 500 generateMetadata.
+    expect(buildPageTitle(1984, 'My Site')).toBe('1984 | My Site');
+    expect(buildPageTitle(true, 'My Site')).toBe('true | My Site');
+  });
 });
 
 describe('validateConfigPatch', () => {
