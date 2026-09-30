@@ -218,16 +218,18 @@ If a path has no `.flowershow` file and its derived name (or `--name`) matches a
 `fl --anon <path>` publishes without logging in. It prints:
 
 ```
-✓ Published (no account): https://<random-name>.flowershow.me
-Claim it to keep it (expires 7 Oct 2026): https://cloud.flowershow.app/claim?siteId=...&token=...
+✓ Published (no account): https://<random-name>-anon.flowershow.me
+Claim it to keep it (expires 7 Oct 2026): https://flowershow.app/claim?siteId=...&token=...
 ```
 
-- The site expires after 7 days unless claimed. Opening the claim link while signed in to Flowershow moves the site into your account.
+- The site expires after 7 days unless claimed. Open the claim link, sign in, and confirm to move the site into your account.
 - Anonymous sites are limited to 200 files / 50 MB, and the number of anonymous sites per network is rate-limited.
 - For a folder, the site ID and claim token are saved in `.flowershow`, so re-running `fl --anon <folder>` updates the same site. Treat `.flowershow` as a secret while the site is unclaimed (it contains the claim token).
 - Single files and multiple paths aren't linked: each `fl --anon` run creates a new site.
-- If the saved site has expired or been claimed, `fl` says so, removes the anonymous link from `.flowershow` and exits 1. Run it again to create a new site, or log in.
-- Publishing a folder that was published with `--anon` while logged in (without `--anon`) creates a site in your account and prints the earlier site's claim link.
+- If the saved site has expired or been claimed (or its claim token is no longer accepted), `fl` says so, removes the anonymous link from `.flowershow` and exits 1. Run it again to create a new site, or log in.
+- If an upload fails, `fl` still prints the claim link, so the site isn't lost.
+- Publishing a folder that was published with `--anon` while logged in (without `--anon`): if you have claimed the site, `fl` relinks the folder to it and updates it; otherwise it creates a site in your account and prints the earlier site's claim link.
+- `fl sync` doesn't support anonymously published folders; use `fl --anon <folder>`.
 - `--anon` never uses your login, even if you are logged in.
 
 ### Site Management

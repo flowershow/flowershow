@@ -11,7 +11,7 @@ showToc: false
 You can now publish with `fl --anon ./folder` and no account. You get a live link straight away, and a claim link to keep the site. Handy for trying Flowershow, and for AI agents that can't log in for you. See [[cli#publish-without-an-account|Publish without an account]].
 
 - **Live in seconds:** the site gets a random `…-anon.flowershow.me` URL.
-- **Claim it to keep it:** anonymous sites expire after 7 days. Open the claim link, sign in or sign up, and the site moves into your account.
+- **Claim it to keep it:** anonymous sites expire after 7 days. Open the claim link, sign in or sign up, and confirm to move the site into your account. After that, publishing the folder while logged in updates your claimed site.
 - **Re-run to update:** running `fl --anon` on the same folder updates the same URL.
 - **Limits:** 200 files and 50 MB per site.
 
