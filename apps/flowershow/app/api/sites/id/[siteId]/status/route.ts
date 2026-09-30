@@ -4,16 +4,19 @@ import type {
   StatusResponse,
 } from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
+import { CLAIM_TOKEN_PREFIX } from '@/lib/anonymous-user';
 import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
 import PostHogClient from '@/lib/server-posthog';
+import { authorizeSiteRequest } from '@/lib/site-auth';
 import prisma from '@/server/db';
 
 /**
  * GET /api/sites/id/:siteId/status
  * Get processing status derived from the latest Publish record
  *
- * @returns {ErrorResponse} - 404/403/500 error responses
- * @returns {StatusResponse} - Detailed status when authenticated
+ * @returns {ErrorResponse} - 401/403/404/410/500 error responses
+ * @returns {StatusResponse} - Detailed status when authenticated (owner token,
+ *   or a site-scoped fs_claim_ token for an anonymous site)
  * @returns {PublicStatusResponse} - Simple ready/not-ready for public polling
  */
 export async function GET(
@@ -27,36 +30,49 @@ export async function GET(
 
     const { siteId } = await props.params;
 
-    // Check for authentication (optional)
-    const auth = await validateAccessToken(request);
-    const isAuthenticated = !!auth?.userId;
+    let isAuthenticated: boolean;
+    let sitePrivacyMode: string | undefined;
 
-    // Fetch once: ownership check (when authenticated) and privacyMode, which
-    // gates the public error branch below so PASSWORD sites don't leak file
-    // paths / error detail to anonymous callers.
-    const site = await prisma.site.findUnique({
-      where: { id: siteId },
-      select: { id: true, userId: true, privacyMode: true },
-    });
+    const authHeader = request.headers.get('authorization') ?? '';
+    if (authHeader.startsWith(`Bearer ${CLAIM_TOKEN_PREFIX}`)) {
+      // Site-scoped claim token (anonymous site): authorized for this site only
+      const access = await authorizeSiteRequest(request, siteId);
+      if (!access.ok) return access.response;
+      isAuthenticated = true;
+    } else {
+      // Check for authentication (optional)
+      const auth = await validateAccessToken(request);
+      isAuthenticated = !!auth?.userId;
 
-    // If authenticated, verify ownership
-    if (isAuthenticated) {
-      if (!site) {
-        return NextResponse.json(
-          { error: 'not_found', message: 'Site not found' },
-          { status: 404 },
-        );
+      // Fetch once: ownership check (when authenticated) and privacyMode, which
+      // gates the public error branch below so PASSWORD sites don't leak file
+      // paths / error detail to anonymous callers.
+      const site = await prisma.site.findUnique({
+        where: { id: siteId },
+        select: { id: true, userId: true, privacyMode: true },
+      });
+
+      // If authenticated, verify ownership
+      if (isAuthenticated) {
+        if (!site) {
+          return NextResponse.json(
+            { error: 'not_found', message: 'Site not found' },
+            { status: 404 },
+          );
+        }
+
+        if (site.userId !== auth?.userId) {
+          return NextResponse.json(
+            {
+              error: 'forbidden',
+              message: 'You do not have access to this site',
+            },
+            { status: 403 },
+          );
+        }
       }
 
-      if (site.userId !== auth.userId) {
-        return NextResponse.json(
-          {
-            error: 'forbidden',
-            message: 'You do not have access to this site',
-          },
-          { status: 403 },
-        );
-      }
+      sitePrivacyMode = site?.privacyMode;
     }
 
     // Get latest publish for this site
@@ -147,7 +163,7 @@ export async function GET(
     if (overallStatus === 'error') {
       // PASSWORD sites: return only the coarse status to anonymous callers —
       // never the failing file paths or error messages
-      if (site?.privacyMode === 'PASSWORD') {
+      if (sitePrivacyMode === 'PASSWORD') {
         return NextResponse.json({
           status: 'error',
         } satisfies PublicStatusResponse);

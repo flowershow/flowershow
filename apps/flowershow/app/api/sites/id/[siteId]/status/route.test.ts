@@ -25,6 +25,11 @@ vi.mock('@/lib/server-posthog', () => ({
   }),
 }));
 
+import {
+  ANONYMOUS_USER_ID,
+  generateSiteClaimToken,
+} from '@/lib/anonymous-user';
+import { validateAccessToken } from '@/lib/cli-auth';
 import prisma from '@/server/db';
 import { GET } from './route';
 
@@ -34,8 +39,10 @@ const publishFileFindMany = prisma.publishFile.findMany as ReturnType<
   typeof vi.fn
 >;
 
-function makeReq(): NextRequest {
-  return new NextRequest('http://localhost/api/sites/id/site-1/status');
+function makeReq(token?: string): NextRequest {
+  return new NextRequest('http://localhost/api/sites/id/site-1/status', {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
 }
 
 function makeParams() {
@@ -79,5 +86,70 @@ describe('GET /api/sites/id/:siteId/status — anonymous error branch', () => {
     const body = await res.json();
     expect(body.status).toBe('error');
     expect(body.errors).toEqual([{ path: 'secret/notes.md', error: 'boom' }]);
+  });
+});
+
+describe('GET /api/sites/id/:siteId/status — claim token', () => {
+  const ANON_OWNER = '3f1c2b7a-1d2e-4f3a-9b4c-5d6e7f8a9b0c';
+  const anonSite = {
+    id: 'site-1',
+    userId: ANONYMOUS_USER_ID,
+    anonymousOwnerId: ANON_OWNER,
+    expiresAt: new Date(Date.now() + 86400000),
+    privacyMode: 'PUBLIC',
+  };
+
+  it('returns the detailed status for its own anonymous site', async () => {
+    findUnique.mockResolvedValue(anonSite);
+
+    const res = await GET(
+      makeReq(generateSiteClaimToken('site-1', ANON_OWNER)),
+      makeParams(),
+    );
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.siteId).toBe('site-1');
+    expect(body.status).toBe('error');
+    expect(body.files).toEqual({ total: 1, pending: 0, success: 0, failed: 1 });
+    expect(body.blobs).toHaveLength(1);
+    expect(validateAccessToken).not.toHaveBeenCalled();
+  });
+
+  it('returns 403 for a claim token issued for a different site', async () => {
+    findUnique.mockResolvedValue(anonSite);
+
+    const res = await GET(
+      makeReq(generateSiteClaimToken('site-2', ANON_OWNER)),
+      makeParams(),
+    );
+
+    expect(res.status).toBe(403);
+    expect(publishFindFirst).not.toHaveBeenCalled();
+  });
+
+  it('returns 410 for an expired anonymous site', async () => {
+    findUnique.mockResolvedValue({
+      ...anonSite,
+      expiresAt: new Date(Date.now() - 1000),
+    });
+
+    const res = await GET(
+      makeReq(generateSiteClaimToken('site-1', ANON_OWNER)),
+      makeParams(),
+    );
+
+    expect(res.status).toBe(410);
+  });
+
+  it('keeps the public response when no token is sent', async () => {
+    findUnique.mockResolvedValue(anonSite);
+
+    const res = await GET(makeReq(), makeParams());
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).not.toHaveProperty('siteId');
+    expect(body.status).toBe('error');
   });
 });

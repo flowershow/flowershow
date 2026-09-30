@@ -68,3 +68,36 @@ export function validatePublishFiles(
 
   return null;
 }
+
+export const ANON_MAX_FILES = 200;
+export const ANON_MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
+
+/** Tighter limits for anonymous (claim-token) publishes; then the normal checks. */
+export function validateAnonPublishFiles(
+  files: FileMetadata[],
+): NextResponse | null {
+  if (files.length > ANON_MAX_FILES) {
+    return NextResponse.json(
+      {
+        error: 'payload_too_large',
+        message: `Anonymous sites are limited to ${ANON_MAX_FILES} files. Run \`fl login\` to publish more.`,
+      },
+      { status: 413 },
+    );
+  }
+  const total = files.reduce(
+    (sum, f) => sum + (typeof f.size === 'number' ? f.size : 0),
+    0,
+  );
+  if (total > ANON_MAX_TOTAL_SIZE) {
+    return NextResponse.json(
+      {
+        error: 'payload_too_large',
+        message:
+          'Anonymous sites are limited to 50 MB in total. Run `fl login` to publish more.',
+      },
+      { status: 413 },
+    );
+  }
+  return validatePublishFiles(files);
+}

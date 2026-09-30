@@ -222,7 +222,7 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
     operationId: 'syncSite',
     summary: 'Sync files to a site',
     description:
-      'Unified sync endpoint. Compares a local file manifest with the server state and returns presigned upload URLs for new/modified files.',
+      'Unified sync endpoint. Compares a local file manifest with the server state and returns presigned upload URLs for new/modified files. Accepts the site owner\'s CLI/PAT token, or a site-scoped claim token (`fs_claim_…`) for an anonymous site; claim-token publishes are limited to 200 files and 50 MB in total.',
     tags: ['Sites'],
     security: [{ bearerToken: [] }],
     request: {
@@ -256,8 +256,14 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         description: 'Resource not found',
         content: { 'application/json': { schema: ErrorResponse } },
       },
+      '410': {
+        description:
+          'Anonymous site has expired (claim-token requests only)',
+        content: { 'application/json': { schema: ErrorResponse } },
+      },
       '413': {
-        description: 'Payload too large',
+        description:
+          'Payload too large (claim-token publishes: max 200 files, 50 MB total)',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '500': {
@@ -378,7 +384,8 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
     path: '/api/sites/id/{siteId}/status',
     operationId: 'getSiteStatus',
     summary: 'Get file processing status',
-    description: 'Polling endpoint for file processing status.',
+    description:
+      'Polling endpoint for file processing status. Returns the detailed status to the site owner\'s CLI/PAT token or to a site-scoped claim token (`fs_claim_…`) for an anonymous site; unauthenticated callers get the public status.',
     tags: ['Sites'],
     security: [{ bearerToken: [] }, {}],
     request: {
@@ -393,12 +400,21 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
           },
         },
       },
+      '401': {
+        description: 'Invalid claim token',
+        content: { 'application/json': { schema: ErrorResponse } },
+      },
       '403': {
         description: 'Access denied',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '404': {
         description: 'Resource not found',
+        content: { 'application/json': { schema: ErrorResponse } },
+      },
+      '410': {
+        description:
+          'Anonymous site has expired (claim-token requests only)',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '500': {
