@@ -459,23 +459,24 @@ func runAnonPublish(saved *localconfig.Config, isFolderMode, canLink bool, folde
 	api.SetTokenOverride(created.ClaimToken)
 
 	// Link the folder straight away (not after upload), so a failed upload
-	// can be retried into the same site and the claim link isn't lost.
+	// can be retried into the same site.
 	if canLink {
-		_ = localconfig.Write(folderPath, &localconfig.Config{
+		if err := localconfig.Write(folderPath, &localconfig.Config{
 			Anon:       true,
 			SiteID:     created.SiteID,
 			ClaimToken: created.ClaimToken,
 			ExpiresAt:  created.ExpiresAt,
 			LiveURL:    created.LiveURL,
 			ClaimURL:   created.ClaimURL,
-		})
+		}); err != nil {
+			ui.PrintWarning(fmt.Sprintf("Couldn't write .flowershow (%s), so this folder can't update this site later. Keep the claim link below.", err))
+		}
 	}
 
 	site := api.Site{ID: created.SiteID, ProjectName: created.ProjectName, URL: created.LiveURL}
 	if err := uploadNewSite(site, discovered); err != nil {
-		if !canLink {
-			fmt.Printf("Claim link for this site: %s\n", created.ClaimURL)
-		}
+		// The site exists; never lose its claim link.
+		fmt.Printf("Claim link for this site: %s\n", created.ClaimURL)
 		return err
 	}
 	waitForProcessing(site.ID)

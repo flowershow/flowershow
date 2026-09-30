@@ -44,6 +44,7 @@ type fakeAPI struct {
 	anonCreateAuth  []string          // Authorization header of each anon create
 	syncAuth        []string          // Authorization header of each sync request
 	anonRateLimited bool              // POST /api/sites/anon returns 429
+	uploadFails     bool              // PUT /upload/... returns 500
 	siteStatus      map[string]int    // site ID -> forced HTTP status for sync/status (e.g. 410)
 	claimTokens     map[string]string // claim token -> the one site ID it authorises
 }
@@ -110,6 +111,13 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 
 	switch {
 	case strings.HasPrefix(path, "/upload/") && r.Method == "PUT":
+		f.mu.Lock()
+		failUpload := f.uploadFails
+		f.mu.Unlock()
+		if failUpload {
+			w.WriteHeader(500)
+			return
+		}
 		w.WriteHeader(200)
 		return
 	case path == "/api/sites/anon" && r.Method == "POST":

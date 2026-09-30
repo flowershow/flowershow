@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/flowershow/publish/internal/api"
 	"github.com/flowershow/publish/internal/localconfig"
@@ -302,6 +303,7 @@ func TestPublishNotLoggedInWithoutAnonFails(t *testing.T) {
 
 func TestPublishAnonFolder(t *testing.T) {
 	f := setupFakeAPI(t, false)
+	pinLocalTime(t, time.UTC) // the expiry date is shown in local time
 	dir := makeFolder(t, "notes", "")
 
 	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) })
@@ -334,6 +336,43 @@ func TestPublishAnonFolder(t *testing.T) {
 	}
 	if len(f.createdNames()) != 0 {
 		t.Fatal("anon publish must not create an account site")
+	}
+}
+
+// pinLocalTime sets the local time zone for the rest of the test.
+func pinLocalTime(t *testing.T, loc *time.Location) {
+	t.Helper()
+	orig := time.Local
+	time.Local = loc
+	t.Cleanup(func() { time.Local = orig })
+}
+
+func TestFormatExpiryUsesLocalTime(t *testing.T) {
+	pinLocalTime(t, time.UTC)
+	if got := formatExpiry(anonExpiresAt); got != "7 Oct 2026" {
+		t.Fatalf("UTC: got %q", got)
+	}
+	pinLocalTime(t, time.FixedZone("UTC+14", 14*3600))
+	if got := formatExpiry(anonExpiresAt); got != "8 Oct 2026" {
+		t.Fatalf("UTC+14: got %q", got)
+	}
+	if got := formatExpiry("not a date"); got != "not a date" {
+		t.Fatalf("unparseable: got %q", got)
+	}
+}
+
+func TestPublishAnonFolderUploadFailureStillPrintsClaimLink(t *testing.T) {
+	f := setupFakeAPI(t, false)
+	f.uploadFails = true
+	dir := makeFolder(t, "notes", "")
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) })
+
+	if err == nil {
+		t.Fatal("expected an error when uploads fail")
+	}
+	if !strings.Contains(out, anonClaimURL) {
+		t.Fatalf("the claim link must be printed even when the upload fails, got:\n%s", out)
 	}
 }
 
