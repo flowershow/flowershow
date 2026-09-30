@@ -58,6 +58,7 @@ const TRANSFER = {
   isTemporary: false,
   expiresAt: null,
   anonymousOwnerId: null,
+  anonCreatorIpHash: null,
 };
 
 beforeEach(() => {

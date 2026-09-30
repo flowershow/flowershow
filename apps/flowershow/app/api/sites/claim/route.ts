@@ -116,6 +116,8 @@ export async function POST(request: NextRequest) {
         isTemporary: false,
         expiresAt: null,
         anonymousOwnerId: null,
+        // No need to keep the creator's (hashed) IP once a user owns the site.
+        anonCreatorIpHash: null,
       },
     });
 
