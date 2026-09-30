@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -107,6 +108,24 @@ describe('POST /api/sites/claim', () => {
     const claimToken = generateSiteClaimToken('site-1', 'anon-1');
     const res = await POST(req({ siteId: 'site-1', claimToken }));
     expect(res.status).toBe(400);
+    expect(update).not.toHaveBeenCalled();
+  });
+
+  it('returns 410 for a claimToken whose temporary site has expired', async () => {
+    findUnique.mockResolvedValue(
+      anonSite({
+        isTemporary: true,
+        expiresAt: new Date(Date.now() - 1000),
+      }),
+    );
+    const claimToken = `fs_claim_${jwt.sign(
+      { type: 'site_claim', siteId: 'site-1', anonymousUserId: 'anon-1' },
+      'test-secret',
+      { expiresIn: -10 },
+    )}`;
+    const res = await POST(req({ siteId: 'site-1', claimToken }));
+    expect(res.status).toBe(410);
+    expect((await res.json()).error).toBe('This link has expired');
     expect(update).not.toHaveBeenCalled();
   });
 

@@ -77,6 +77,11 @@ export function generateSiteClaimToken(
   return `${CLAIM_TOKEN_PREFIX}${jwtToken}`;
 }
 
+/**
+ * Verify a site claim token's signature and shape. JWT expiry is deliberately
+ * ignored: the site's `expiresAt` in the database is the single source of
+ * truth, so callers can tell an expired site (410) from a bad token (401).
+ */
 export function verifySiteClaimToken(
   token: string,
 ): { siteId: string; anonymousUserId: string } | null {
@@ -85,6 +90,7 @@ export function verifySiteClaimToken(
     const decoded = jwt.verify(
       token.slice(CLAIM_TOKEN_PREFIX.length),
       ANONYMOUS_JWT_SECRET,
+      { ignoreExpiration: true },
     ) as {
       type?: string;
       siteId?: string;

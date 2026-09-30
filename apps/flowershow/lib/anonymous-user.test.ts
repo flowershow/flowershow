@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/env.mjs', () => ({
@@ -34,6 +35,18 @@ describe('site claim tokens', () => {
       verifySiteClaimToken(`${CLAIM_TOKEN_PREFIX}${ownership}`),
     ).toBeNull();
     expect(verifySiteClaimToken(ownership)).toBeNull();
+  });
+
+  it('still verifies a token whose JWT exp has passed (site expiresAt is the source of truth)', () => {
+    const expired = `${CLAIM_TOKEN_PREFIX}${jwt.sign(
+      { type: 'site_claim', siteId: 'site-1', anonymousUserId: ANON },
+      'test-secret',
+      { expiresIn: -10 },
+    )}`;
+    expect(verifySiteClaimToken(expired)).toEqual({
+      siteId: 'site-1',
+      anonymousUserId: ANON,
+    });
   });
 
   it('rejects a tampered token', () => {

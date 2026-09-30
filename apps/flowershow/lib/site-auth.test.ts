@@ -1,3 +1,4 @@
+import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -88,6 +89,26 @@ describe('authorizeSiteRequest', () => {
     });
     const r = await authorizeSiteRequest(
       req(generateSiteClaimToken('site-1', ANON)),
+      'site-1',
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.response.status).toBe(410);
+  });
+
+  it('returns 410 (not 401) when both the JWT and the site have expired', async () => {
+    findUnique.mockResolvedValue({
+      id: 'site-1',
+      userId: ANONYMOUS_USER_ID,
+      anonymousOwnerId: ANON,
+      expiresAt: new Date(Date.now() - 1000),
+    });
+    const expiredJwt = jwt.sign(
+      { type: 'site_claim', siteId: 'site-1', anonymousUserId: ANON },
+      'test-secret',
+      { expiresIn: -10 },
+    );
+    const r = await authorizeSiteRequest(
+      req(`fs_claim_${expiredJwt}`),
       'site-1',
     );
     expect(r.ok).toBe(false);

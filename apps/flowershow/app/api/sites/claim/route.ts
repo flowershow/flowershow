@@ -89,6 +89,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Claim links stop working once the anonymous site has expired (the DB
+    // expiresAt is the source of truth; the token's own JWT expiry is ignored).
+    if (
+      claimToken &&
+      site.isTemporary &&
+      site.expiresAt &&
+      site.expiresAt.getTime() <= Date.now()
+    ) {
+      return NextResponse.json(
+        { success: false, error: 'This link has expired' },
+        { status: 410 },
+      );
+    }
+
     // Get user's site count for analytics
     const userSitesCount = await prisma.site.count({
       where: { userId: session.user.id },
