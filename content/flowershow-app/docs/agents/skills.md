@@ -10,6 +10,7 @@ The Flowershow skill gives AI agents everything they need to help you publish co
 Once installed, your assistant can:
 
 - **If you use the `fl` CLI:** install and log in to `fl`, publish a folder or file, list, update, and delete sites
+- Publish without an account when you just want a link now (`fl --anon`), and hand you the claim link to keep the site
 - Publish HTML pages as-is, with their CSS, JavaScript and data files (see [Publishing HTML](/docs/agents/html))
 - Convert documents (docx, pptx, pdf and similar) to Markdown with pandoc or markitdown, then publish them
 - Configure your site with `config.json`

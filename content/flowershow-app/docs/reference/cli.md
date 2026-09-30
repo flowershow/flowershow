@@ -136,6 +136,7 @@ To publish an HTML page together with its CSS, JavaScript or images, put them in
 
 - `--name <siteName>`: Specify a custom name for your site. For folder mode, the name is saved to a `.flowershow` file in the folder and remembered automatically on future runs.
 - `--yes`: Skip the new-site name confirmation prompt (useful for scripts and CI). It never allows overwriting an existing site.
+- `--anon`: Publish without an account, to a temporary site. See [Publish without an account](#publish-without-an-account).
 - `--overwrite`: Publish a path that isn't linked to a site (no `.flowershow` file) into an existing site with the same name, replacing its content. See [Name collisions](#name-collisions).
 
 **Example with options:**
@@ -143,6 +144,40 @@ To publish an HTML page together with its CSS, JavaScript or images, put them in
 ```bash
 fl --name my-awesome-site ./my-notes
 ```
+
+## Publish without an account
+
+Use `--anon` to publish with no account and no login (requires `fl` 2.5.0 or later):
+
+```bash
+fl --anon ./my-report
+```
+
+`fl` creates a site at a random `https://<name>-anon.flowershow.me` URL and prints two lines:
+
+```
+✓ Published (no account): https://k3x9q2mf-anon.flowershow.me
+Claim it to keep it (expires 7 Oct 2026): https://flowershow.app/claim?siteId=…&token=fs_claim_…
+```
+
+- **It expires in 7 days** unless you claim it. Updating the site doesn't extend the expiry, and an expired site stops being served straight away.
+- **Claim it to keep it.** Open the claim link, sign in or sign up, and the site moves into your account.
+- **Re-running on the same folder updates the same URL.** The site ID and claim token are saved in the folder's `.flowershow` file. The claim token is a secret: anyone with the claim link can take the site, so don't commit `.flowershow` to a public repository.
+- Single files and multiple paths aren't linked, so each run creates a new site.
+- Limits: 200 files and 50 MB in total. HTML-only content is fine.
+- Anonymous sites aren't indexed by search engines.
+
+`fl` never publishes anonymously unless you pass `--anon`. Without a login and without `--anon` it exits with status 1 and suggests both `fl login` and `fl --anon <path>`.
+
+## Environment token
+
+Set `FLOWERSHOW_TOKEN` to authenticate without `fl login`, for CI and cloud or headless agents. Create a personal access token (`fs_pat_…`) at [cloud.flowershow.app/tokens](https://cloud.flowershow.app/tokens), then:
+
+```bash
+FLOWERSHOW_TOKEN=fs_pat_... fl ./my-notes
+```
+
+The variable takes precedence over the token saved by `fl login`. `fl whoami` notes when it is in use, and `fl logout` can't remove it. Keep the token out of your repository: use your CI's secret store.
 
 ## Updating a Site
 
@@ -219,6 +254,6 @@ fl settings --name <site-name>
 
 ## Troubleshooting
 
-- **"You must be authenticated..."**: Run `fl login`.
+- **"You must be authenticated..."**: Run `fl login`, set `FLOWERSHOW_TOKEN`, or publish without an account with `fl --anon <path>`.
 - **"A site named ... already exists"**: the path isn't linked to that site. Use `--name <new-name>` to publish a new site, or `--overwrite` to replace the existing one. See [Name collisions](#name-collisions).
 - **"Site not found" (during `fl sync`)**: Make sure you're using the correct site name (check with `fl list`), or just use `fl <path>` which handles this automatically.
