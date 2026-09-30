@@ -176,6 +176,13 @@ func runAuthLogout() error {
 		fmt.Printf("\n%s\n\n", ui.Yellow("You are not currently logged in."))
 		return nil
 	}
+	if auth.TokenFromEnv() {
+		// Remove any saved login too, but the env token stays in effect.
+		_ = auth.RemoveToken()
+		fmt.Printf("\n%s\n", ui.Yellow("You're authenticated via the FLOWERSHOW_TOKEN environment variable, which `fl logout` can't remove."))
+		fmt.Printf("%s\n\n", ui.Gray("Unset FLOWERSHOW_TOKEN to log out."))
+		return nil
+	}
 
 	if err := auth.RemoveToken(); err != nil {
 		logoutErr := fail(err.Error())
@@ -230,6 +237,9 @@ func runAuthStatus() error {
 
 	sp.Succeed("Authenticated")
 	fmt.Printf("%s\n", ui.Gray(fmt.Sprintf("Logged in as: %s", ui.Cyan(userInfo.DisplayName()))))
+	if auth.TokenFromEnv() {
+		fmt.Printf("%s\n", ui.Gray("Using the token from FLOWERSHOW_TOKEN."))
+	}
 
 	telemetry.Capture("command_succeeded", map[string]interface{}{
 		"command":     "auth_status",

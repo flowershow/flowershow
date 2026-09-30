@@ -49,7 +49,23 @@ func SaveToken(token, username string) error {
 	return os.WriteFile(tokenFile(), b, 0600)
 }
 
+// TokenEnvVar names the environment variable that supplies an API token
+// (e.g. a personal access token for CI or agents). It takes precedence over
+// the token saved by `fl login`.
+const TokenEnvVar = "FLOWERSHOW_TOKEN"
+
+// TokenFromEnv reports whether the active token comes from FLOWERSHOW_TOKEN.
+func TokenFromEnv() bool {
+	return os.Getenv(TokenEnvVar) != ""
+}
+
+// GetToken returns the token from FLOWERSHOW_TOKEN if set, otherwise the one
+// saved by `fl login` (nil if neither exists). An env token has no Username;
+// callers resolve the user via GetUserInfo.
 func GetToken() (*TokenData, error) {
+	if v := os.Getenv(TokenEnvVar); v != "" {
+		return &TokenData{Token: v}, nil
+	}
 	b, err := os.ReadFile(tokenFile())
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -80,7 +96,7 @@ type DeviceTokenResponse struct {
 
 func PollForToken(apiURL, deviceCode string, interval, expiresIn int) (string, error) {
 	deadline := time.Now().Add(time.Duration(expiresIn) * time.Second)
-	currentInterval := time.Duration(interval)*500*time.Millisecond
+	currentInterval := time.Duration(interval) * 500 * time.Millisecond
 
 	for time.Now().Before(deadline) {
 		time.Sleep(currentInterval)

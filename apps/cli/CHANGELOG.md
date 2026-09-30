@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2.5.0
+
+- New `--anon` flag: publish without an account (`fl --anon ./folder`). No login needed; the site gets a random name, expires in 7 days unless claimed, and `fl` prints the live URL and a claim link (`Claim it to keep it (expires <date>): <claimUrl>`). Opening the claim link while signed in moves the site into your account. Anonymous sites are limited to 200 files / 50 MB.
+- Re-running `fl --anon` on the same folder updates the same anonymous site: the site ID and claim token are saved in the folder's `.flowershow`. Single files and multiple paths aren't linked, so each anonymous publish of them creates a new site. If the saved site has expired or been claimed, `fl` says so, removes the anonymous link from `.flowershow` and exits 1; run it again to create a new one.
+- `fl` never publishes anonymously unless asked: without a login and without `--anon` it exits 1, suggesting `fl login` or `fl --anon <path>`.
+- New `FLOWERSHOW_TOKEN` environment variable: an API token (e.g. a personal access token) used instead of the one saved by `fl login`, for CI and agents. `fl whoami` notes when it is in use, and `fl logout` explains that it can't remove it.
+- A folder previously published with `--anon` is treated as unlinked when you publish it while logged in (it gets a site in your account), and `fl` prints the earlier site's claim link so you can still keep it. `fl sync` refuses anonymously published folders and points to `fl --anon <folder>`.
+
 ## 2.4.0
 
 - Fix: publishing a path that isn't linked to a site (no `.flowershow` file) no longer silently overwrites an existing site with the same name. Previously `fl ./notes` would sync into your existing `notes` site and delete any of its files missing locally, with no prompt, even without `--yes`. Now `fl` warns (naming the site and its URL) and asks whether to overwrite it or choose a new name. With `--yes` it refuses and exits non-zero; pass `--overwrite` to publish into the existing site on purpose. Linked folders are unchanged.

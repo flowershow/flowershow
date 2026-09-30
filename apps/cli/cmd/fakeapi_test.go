@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -17,6 +18,15 @@ import (
 const testUser = "alice"
 const testToken = "test-token"
 
+// Values returned by the fake POST /api/sites/anon.
+const (
+	anonSiteID     = "anon-site-1"
+	anonClaimToken = "fs_claim_test"
+	anonLiveURL    = "https://quiet-otter-anon.flowershow.me"
+	anonClaimURL   = "https://cloud.flowershow.app/claim?siteId=anon-site-1&token=fs_claim_test"
+	anonExpiresAt  = "2026-10-07T12:00:00.000Z"
+)
+
 // fakeAPI is an in-memory stand-in for the Flowershow API, so publish tests
 // never talk to production. It records every mutating call.
 type fakeAPI struct {
@@ -25,6 +35,25 @@ type fakeAPI struct {
 	syncCalls []string            // site IDs that received a sync request
 	created   []string            // project names created via POST /api/sites
 	server    *httptest.Server
+
+	anonCreates     int               // calls to POST /api/sites/anon
+	anonCreateAuth  []string          // Authorization header of each anon create
+	syncAuth        []string          // Authorization header of each sync request
+	anonRateLimited bool              // POST /api/sites/anon returns 429
+	siteStatus      map[string]int    // site ID -> forced HTTP status for sync/status (e.g. 410)
+	claimTokens     map[string]string // claim token -> the one site ID it authorises
+}
+
+func (f *fakeAPI) anonCreateCount() int {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.anonCreates
+}
+
+func (f *fakeAPI) syncIDs() []string {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return append([]string(nil), f.syncCalls...)
 }
 
 func (f *fakeAPI) syncedTo(siteID string) bool {
@@ -52,11 +81,51 @@ func writeJSON(w http.ResponseWriter, status int, v interface{}) {
 
 func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
-	authed := r.Header.Get("Authorization") == "Bearer "+testToken
+	authz := r.Header.Get("Authorization")
+	authed := authz == "Bearer "+testToken
+	// A claim token authorises sync/status for its one anonymous site only.
+	if strings.HasPrefix(authz, "Bearer fs_claim_") {
+		f.mu.Lock()
+		id, ok := f.claimTokens[strings.TrimPrefix(authz, "Bearer ")]
+		f.mu.Unlock()
+		if ok && strings.HasPrefix(path, "/api/sites/id/"+id+"/") {
+			authed = true
+		}
+	}
+	if strings.HasPrefix(path, "/api/sites/id/") {
+		rest := strings.TrimPrefix(path, "/api/sites/id/")
+		id := strings.SplitN(rest, "/", 2)[0]
+		f.mu.Lock()
+		status, forced := f.siteStatus[id]
+		f.mu.Unlock()
+		if forced {
+			writeJSON(w, status, map[string]string{"message": "This anonymous site has expired"})
+			return
+		}
+	}
 
 	switch {
 	case strings.HasPrefix(path, "/upload/") && r.Method == "PUT":
 		w.WriteHeader(200)
+		return
+	case path == "/api/sites/anon" && r.Method == "POST":
+		f.mu.Lock()
+		f.anonCreates++
+		f.anonCreateAuth = append(f.anonCreateAuth, authz)
+		limited := f.anonRateLimited
+		f.mu.Unlock()
+		if limited {
+			writeJSON(w, 429, map[string]string{"error": "rate_limited", "message": "Too many anonymous sites from this network. Try again later, or run `fl login`."})
+			return
+		}
+		writeJSON(w, 200, map[string]string{
+			"siteId":      anonSiteID,
+			"projectName": "quiet-otter",
+			"liveUrl":     anonLiveURL,
+			"claimToken":  anonClaimToken,
+			"claimUrl":    anonClaimURL,
+			"expiresAt":   anonExpiresAt,
+		})
 		return
 	case !authed:
 		writeJSON(w, 401, map[string]string{"message": "unauthorized"})
@@ -100,6 +169,7 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 		_ = json.NewDecoder(r.Body).Decode(&body)
 		f.mu.Lock()
 		f.syncCalls = append(f.syncCalls, id)
+		f.syncAuth = append(f.syncAuth, authz)
 		f.mu.Unlock()
 		var uploads []api.UploadURL
 		for _, file := range body.Files {
@@ -125,7 +195,11 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 // existing lists project names that already exist on the server.
 func setupFakeAPI(t *testing.T, loggedIn bool, existing ...string) *fakeAPI {
 	t.Helper()
-	f := &fakeAPI{sites: map[string]api.Site{}}
+	f := &fakeAPI{
+		sites:       map[string]api.Site{},
+		siteStatus:  map[string]int{},
+		claimTokens: map[string]string{anonClaimToken: anonSiteID},
+	}
 	for _, name := range existing {
 		f.sites[name] = api.Site{ID: "id-" + name, ProjectName: name, URL: "https://example.test/@" + testUser + "/" + name}
 	}
@@ -137,6 +211,9 @@ func setupFakeAPI(t *testing.T, loggedIn bool, existing ...string) *fakeAPI {
 	t.Setenv("API_URL", f.server.URL)
 	t.Setenv("FLOWERSHOW_TELEMETRY_DISABLED", "1")
 	t.Setenv("FLOWERSHOW_NO_UPDATE_CHECK", "1")
+	// Never let a developer's real env token leak into tests.
+	t.Setenv("FLOWERSHOW_TOKEN", "")
+	t.Cleanup(func() { api.SetTokenOverride("") })
 
 	if loggedIn {
 		dir := filepath.Join(home, ".flowershow")
@@ -168,4 +245,27 @@ func makeFolder(t *testing.T, name, linkedTo string) string {
 		}
 	}
 	return dir
+}
+
+// captureOutput runs fn with os.Stdout and os.Stderr redirected to a pipe and
+// returns everything written to either, plus fn's error.
+func captureOutput(t *testing.T, fn func() error) (string, error) {
+	t.Helper()
+	r, w, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	origOut, origErr := os.Stdout, os.Stderr
+	os.Stdout, os.Stderr = w, w
+	done := make(chan string)
+	go func() {
+		b, _ := io.ReadAll(r)
+		done <- string(b)
+	}()
+	runErr := fn()
+	os.Stdout, os.Stderr = origOut, origErr
+	w.Close()
+	out := <-done
+	r.Close()
+	return out, runErr
 }

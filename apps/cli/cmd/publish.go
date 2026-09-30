@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -21,25 +22,38 @@ import (
 var publishName string
 var publishYes bool
 var publishOverwrite bool
+var publishAnon bool
+
+// notLoggedInMsg is shown when publishing without a login and without --anon.
+// fl never publishes anonymously unless asked to.
+const notLoggedInMsg = "You're not logged in.\nRun `fl login` to publish to your account, or `fl --anon <path>` to publish without an account (expires in 7 days unless claimed)."
+
+// anonGoneMsg is shown when a saved anonymous site rejects its claim token.
+const anonGoneMsg = "This anonymous site has expired or been claimed. Run again without the saved config to create a new one, or log in."
+
+// anonSingleFilesNote is shown after an anonymous publish that can't be linked.
+const anonSingleFilesNote = "Single files can't be updated without an account. Publish a folder, or run `fl login`."
 
 func init() {
 	rootCmd.Args = cobra.ArbitraryArgs
 	rootCmd.Flags().StringVar(&publishName, "name", "", "Custom name for the site")
 	rootCmd.Flags().BoolVar(&publishYes, "yes", false, "Skip the new-site confirmation prompt (for scripts and CI)")
 	rootCmd.Flags().BoolVar(&publishOverwrite, "overwrite", false, "Allow publishing an unlinked path into an existing site with the same name, replacing its content")
+	rootCmd.Flags().BoolVar(&publishAnon, "anon", false, "Publish without an account. The site expires in 7 days unless claimed; prints a claim link.")
 	rootCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return cmd.Help()
 		}
 		ui.Header("Flowershow")
-		return runPublish(args, publishName, publishYes, publishOverwrite)
+		return runPublish(args, publishName, publishYes, publishOverwrite, publishAnon)
 	}
 }
 
 // runPublish publishes inputPaths. skipConfirm (--yes) only skips the
 // new-site name prompt; overwrite (--overwrite) is the explicit opt-in needed
 // to publish a path that isn't linked (no .flowershow) into an existing site.
-func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite bool) error {
+// anon (--anon) publishes without an account: no login is needed or used.
+func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, anon bool) error {
 	startTime := time.Now()
 	telemetry.Capture("command_started", map[string]interface{}{
 		"command":     "publish",
@@ -49,19 +63,22 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite boo
 
 	sp := ui.NewSpinner()
 
-	// Authenticate
-	sp.Start("Checking authentication...")
-	tokenData, err := auth.GetToken()
-	if err != nil || tokenData == nil {
-		sp.Fail("Not authenticated")
-		return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
+	// Authenticate (not for --anon, which never uses the user's account)
+	var userInfo *auth.UserInfo
+	if !anon {
+		sp.Start("Checking authentication...")
+		tokenData, err := auth.GetToken()
+		if err != nil || tokenData == nil {
+			sp.Fail("Not logged in")
+			return fail(notLoggedInMsg)
+		}
+		userInfo, err = auth.GetUserInfo(config.APIURL(), tokenData.Token)
+		if err != nil {
+			sp.Fail("Authentication failed")
+			return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
+		}
+		sp.Succeed(fmt.Sprintf("Logged in as: %s", userInfo.DisplayName()))
 	}
-	userInfo, err := auth.GetUserInfo(config.APIURL(), tokenData.Token)
-	if err != nil {
-		sp.Fail("Authentication failed")
-		return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
-	}
-	sp.Succeed(fmt.Sprintf("Logged in as: %s", userInfo.DisplayName()))
 
 	// Detect folder mode: single path that is a directory
 	isFolderMode := false
@@ -82,9 +99,31 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite boo
 		localCfg = localconfig.Read(folderPath)
 	}
 
+	// A link to an anonymous site is only used by --anon. For account
+	// publishing the folder counts as unlinked; point out the earlier
+	// anonymous site so it can still be claimed.
+	var anonCfg *localconfig.Config
+	if localCfg.IsAnon() {
+		anonCfg, localCfg = localCfg, nil
+		if !anon {
+			fmt.Printf("\n%s This folder was previously published without an account", ui.Yellow("Note:"))
+			if anonCfg.LiveURL != "" {
+				fmt.Printf(" (%s)", anonCfg.LiveURL)
+			}
+			fmt.Println(". Publishing it to your account now.")
+			if anonCfg.ClaimURL != "" {
+				fmt.Printf("To keep that earlier site, claim it:\n%s\n", anonCfg.ClaimURL)
+			}
+			fmt.Println()
+		}
+	}
+	if anon && nameFlag != "" {
+		ui.PrintWarning("--name is ignored with --anon: anonymous sites get a random name.")
+	}
+
 	// If --name is given and differs from the stored name, treat it as an
 	// explicit re-point request (e.g. after a server-side rename)
-	if localCfg != nil && nameFlag != "" && nameFlag != localCfg.SiteName {
+	if !anon && localCfg != nil && nameFlag != "" && nameFlag != localCfg.SiteName {
 		ui.PrintWarning(fmt.Sprintf(
 			"Re-pointing this folder from %q to %q (--name overrides .flowershow).",
 			localCfg.SiteName, nameFlag,
@@ -127,6 +166,11 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite boo
 		return fail(err.Error())
 	}
 	sp.Succeed(fmt.Sprintf("Found %d file(s)", len(discovered)))
+
+	if anon {
+		// A folder linked to an account site keeps its .flowershow as is.
+		return runAnonPublish(anonCfg, isFolderMode, isFolderMode && localCfg == nil, folderPath, discovered, sp, startTime)
+	}
 
 	// Resolve site name
 	var siteName string
@@ -268,7 +312,27 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite boo
 	site := siteData.Site
 	sp.Succeed("Site created")
 
-	// Upload all files via sync API
+	if err := uploadNewSite(site, discovered); err != nil {
+		return err
+	}
+	// Write config only after a fully successful upload in folder mode
+	if isFolderMode {
+		_ = localconfig.Write(folderPath, &localconfig.Config{SiteName: siteName})
+	}
+
+	waitForProcessing(site.ID)
+
+	telemetry.Capture("command_succeeded", map[string]interface{}{
+		"command":     "publish",
+		"cli_version": config.Version,
+		"duration_ms": time.Since(startTime).Milliseconds(),
+	})
+	ui.PrintPublishSuccess(site.URL)
+	return nil
+}
+
+// uploadNewSite uploads all discovered files to a freshly created site.
+func uploadNewSite(site api.Site, discovered []files.FileInfo) error {
 	var fileMetadata []api.FileMetadata
 	for _, f := range discovered {
 		fileMetadata = append(fileMetadata, api.FileMetadata{
@@ -279,7 +343,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite boo
 	}
 	syncPlan, err := api.SyncFiles(site.ID, fileMetadata, false)
 	if err != nil {
-		return fail(err.Error())
+		return failWith(err)
 	}
 
 	allToUpload := append(syncPlan.ToUpload, syncPlan.ToUpdate...)
@@ -310,16 +374,15 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite boo
 			fmt.Printf("  %s %s\n", ui.Yellow("-"), f)
 		}
 		return fail(fmt.Sprintf("%d file(s) failed to upload to %s. Re-run the same command to retry.", len(failedUploads), site.URL))
-	} else {
-		fmt.Printf("%s Uploaded %d file(s)\n", ui.Green("✓"), len(discovered))
-		// Write config only after a fully successful upload in folder mode
-		if isFolderMode {
-			_ = localconfig.Write(folderPath, &localconfig.Config{SiteName: siteName})
-		}
 	}
+	fmt.Printf("%s Uploaded %d file(s)\n", ui.Green("✓"), len(discovered))
+	return nil
+}
 
-	// Wait for processing
-	result := ui.WaitForSync(site.ID, 30)
+// waitForProcessing polls the site's status until files are processed (or
+// 30 seconds pass) and warns about slow or failed processing.
+func waitForProcessing(siteID string) {
+	result := ui.WaitForSync(siteID, 30)
 	if result.Timeout {
 		ui.PrintWarning("Some files are still processing after 30 seconds.\n" +
 			"Your site is available but some pages may not be ready yet.\n" +
@@ -327,14 +390,116 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite boo
 	} else if !result.Success && len(result.Errors) > 0 {
 		ui.PrintWarning("Some files had processing errors (see above).")
 	}
+}
+
+// runAnonPublish publishes discovered files without an account. If saved (a
+// folder's anonymous .flowershow link) has a claim token, it updates that
+// site; otherwise it creates a new anonymous site, linking it to folderPath
+// when canLink is true. Requests are authorised by the site's claim token,
+// never the user's token.
+func runAnonPublish(saved *localconfig.Config, isFolderMode, canLink bool, folderPath string, discovered []files.FileInfo, sp *ui.Spinner, startTime time.Time) error {
+	defer api.SetTokenOverride("")
+
+	if saved != nil && saved.ClaimToken != "" {
+		api.SetTokenOverride(saved.ClaimToken)
+		site := api.Site{ID: saved.SiteID, URL: saved.LiveURL}
+		if err := doSync(site, "anonymous site", discovered, sp, startTime); err != nil {
+			var httpErr *api.HTTPError
+			if errors.As(err, &httpErr) && (httpErr.StatusCode == 403 || httpErr.StatusCode == 410) {
+				clearAnonConfig(folderPath, saved)
+				return fail(anonGoneMsg)
+			}
+			return err
+		}
+		printAnonSuccess(saved.LiveURL, saved.ClaimURL, saved.ExpiresAt)
+		return nil
+	}
+
+	sp.Start("Creating site...")
+	created, err := api.CreateAnonSite()
+	if err != nil {
+		sp.Fail("Failed to create site")
+		telemetry.Capture("command_failed", map[string]interface{}{
+			"command":       "publish",
+			"cli_version":   config.Version,
+			"duration_ms":   time.Since(startTime).Milliseconds(),
+			"error_type":    fmt.Sprintf("%T", err),
+			"error_message": err.Error(),
+			"anon":          true,
+		})
+		return failWith(err)
+	}
+	sp.Succeed("Site created")
+	api.SetTokenOverride(created.ClaimToken)
+
+	// Link the folder straight away (not after upload), so a failed upload
+	// can be retried into the same site and the claim link isn't lost.
+	if canLink {
+		_ = localconfig.Write(folderPath, &localconfig.Config{
+			Anon:       true,
+			SiteID:     created.SiteID,
+			ClaimToken: created.ClaimToken,
+			ExpiresAt:  created.ExpiresAt,
+			LiveURL:    created.LiveURL,
+			ClaimURL:   created.ClaimURL,
+		})
+	}
+
+	site := api.Site{ID: created.SiteID, ProjectName: created.ProjectName, URL: created.LiveURL}
+	if err := uploadNewSite(site, discovered); err != nil {
+		if !canLink {
+			fmt.Printf("Claim link for this site: %s\n", created.ClaimURL)
+		}
+		return err
+	}
+	waitForProcessing(site.ID)
 
 	telemetry.Capture("command_succeeded", map[string]interface{}{
 		"command":     "publish",
 		"cli_version": config.Version,
 		"duration_ms": time.Since(startTime).Milliseconds(),
+		"anon":        true,
 	})
-	ui.PrintPublishSuccess(site.URL)
+	printAnonSuccess(created.LiveURL, created.ClaimURL, created.ExpiresAt)
+	switch {
+	case !isFolderMode:
+		fmt.Println(anonSingleFilesNote)
+	case !canLink:
+		fmt.Println("This folder's .flowershow links it to a site in your account, so it was left unchanged and this anonymous site can't be updated from here.")
+	}
 	return nil
+}
+
+// printAnonSuccess prints the live URL and the claim link, each in full on
+// its own line (agents relay the claim link to the user).
+func printAnonSuccess(liveURL, claimURL, expiresAt string) {
+	fmt.Printf("\n%s Published (no account): %s\n", ui.Green("✓"), liveURL)
+	fmt.Printf("Claim it to keep it (expires %s): %s\n\n", formatExpiry(expiresAt), claimURL)
+}
+
+// formatExpiry formats an ISO 8601 timestamp as e.g. "7 Oct 2026" in local
+// time, falling back to the raw value if it can't be parsed.
+func formatExpiry(iso string) string {
+	t, err := time.Parse(time.RFC3339, iso)
+	if err != nil {
+		return iso
+	}
+	return t.Local().Format("2 Jan 2006")
+}
+
+// clearAnonConfig removes the anonymous-site fields from folderPath's
+// .flowershow, deleting the file if nothing else is left.
+func clearAnonConfig(folderPath string, cfg *localconfig.Config) {
+	if folderPath == "" {
+		return
+	}
+	rest := *cfg
+	rest.Anon, rest.SiteID, rest.ClaimToken, rest.ExpiresAt, rest.LiveURL, rest.ClaimURL = false, "", "", "", "", ""
+	if rest == (localconfig.Config{}) {
+		localconfig.Delete(folderPath)
+		return
+	}
+	_ = localconfig.Write(folderPath, &rest)
 }
 
 // doSync performs a delta sync to an existing site with already-discovered files.
@@ -354,7 +519,7 @@ func doSync(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.
 	syncPlan, err := api.SyncFiles(site.ID, fileMetadata, false)
 	if err != nil {
 		sp.Fail("Failed to analyze changes")
-		return fail(err.Error())
+		return failWith(err)
 	}
 	sp.Stop()
 
@@ -411,15 +576,7 @@ func doSync(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.
 		fmt.Printf("%s Deleted %d file(s)\n", ui.Green("✓"), len(syncPlan.Deleted))
 	}
 
-	// Wait for processing
-	result := ui.WaitForSync(site.ID, 30)
-	if result.Timeout {
-		ui.PrintWarning("Some files are still processing after 30 seconds.\n" +
-			"Your site is available but some pages may not be ready yet.\n" +
-			"Check back in a moment.")
-	} else if !result.Success && len(result.Errors) > 0 {
-		ui.PrintWarning("Some files had processing errors (see above).")
-	}
+	waitForProcessing(site.ID)
 
 	telemetry.Capture("command_succeeded", map[string]interface{}{
 		"command":     "publish",

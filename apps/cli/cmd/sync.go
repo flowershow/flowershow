@@ -9,6 +9,7 @@ import (
 	"github.com/flowershow/publish/internal/auth"
 	"github.com/flowershow/publish/internal/config"
 	"github.com/flowershow/publish/internal/files"
+	"github.com/flowershow/publish/internal/localconfig"
 	"github.com/flowershow/publish/internal/siteconfig"
 	"github.com/flowershow/publish/internal/telemetry"
 	"github.com/flowershow/publish/internal/ui"
@@ -43,6 +44,21 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 		"cli_version": config.Version,
 	})
 	defer func() { telemetry.Flush() }()
+
+	// A folder published with --anon is linked to an anonymous site, which
+	// `fl sync` (account sites only) can't update.
+	if absPath, err := filepath.Abs(inputPath); err == nil {
+		if cfg := localconfig.Read(absPath); cfg.IsAnon() {
+			msg := fmt.Sprintf("This folder was published without an account, so `fl sync` can't update it.\n"+
+				"Run `fl --anon %s` to update it", shellQuoteAll([]string{inputPath}))
+			if cfg.ClaimURL != "" {
+				msg += fmt.Sprintf(", or claim it to keep it (%s) and then `fl login`", cfg.ClaimURL)
+			} else {
+				msg += ", or claim it and then `fl login`"
+			}
+			return fail(msg + ".")
+		}
+	}
 
 	sp := ui.NewSpinner()
 

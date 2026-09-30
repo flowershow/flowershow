@@ -10,15 +10,27 @@ import (
 
 // reportedError is returned by commands after a human-readable message has
 // already been printed. Execute exits non-zero for it without printing again.
-type reportedError struct{ msg string }
+type reportedError struct {
+	msg   string
+	cause error
+}
 
 func (e *reportedError) Error() string { return e.msg }
+
+// Unwrap exposes the underlying error (if any), e.g. an *api.HTTPError.
+func (e *reportedError) Unwrap() error { return e.cause }
 
 // fail prints msg as a formatted error and returns an error so the command
 // exits non-zero.
 func fail(msg string) error {
 	ui.PrintError(msg)
 	return &reportedError{msg: msg}
+}
+
+// failWith is fail(err.Error()) that keeps err inspectable via errors.As.
+func failWith(err error) error {
+	ui.PrintError(err.Error())
+	return &reportedError{msg: err.Error(), cause: err}
 }
 
 // failSilently returns an error for a failure whose message has already been
