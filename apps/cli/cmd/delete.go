@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/flowershow/publish/internal/api"
@@ -41,12 +40,10 @@ func runDelete(projectName string, skipConfirm bool) error {
 	// Authenticate
 	tokenData, err := auth.GetToken()
 	if err != nil || tokenData == nil {
-		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
-		return nil
+		return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 	}
 	if _, err := auth.GetUserInfo(config.APIURL(), tokenData.Token); err != nil {
-		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
-		return nil
+		return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 	}
 
 	sp := ui.NewSpinner()
@@ -55,8 +52,7 @@ func runDelete(projectName string, skipConfirm bool) error {
 	sitesData, err := api.GetSites()
 	if err != nil {
 		sp.Fail("Failed to fetch sites")
-		ui.PrintError(err.Error())
-		return nil
+		return fail(err.Error())
 	}
 
 	var siteToDelete *api.Site
@@ -69,8 +65,7 @@ func runDelete(projectName string, skipConfirm bool) error {
 
 	if siteToDelete == nil {
 		sp.Fail(fmt.Sprintf("Site '%s' not found", projectName))
-		ui.PrintError(fmt.Sprintf("Site '%s' not found.\nUse 'fl list' to see all sites.", projectName))
-		os.Exit(1)
+		return fail(fmt.Sprintf("Site '%s' not found.\nUse 'fl list' to see all sites.", projectName))
 	}
 
 	sp.Succeed(fmt.Sprintf("Found site: %s", projectName))
@@ -79,13 +74,12 @@ func runDelete(projectName string, skipConfirm bool) error {
 	// Block deletion of premium sites
 	if siteToDelete.Plan == "PREMIUM" {
 		dashboardURL := fmt.Sprintf("%s/site/%s/settings", config.APIURL(), siteToDelete.ID)
-		ui.PrintError(fmt.Sprintf(
+		return fail(fmt.Sprintf(
 			"This site has an active premium subscription.\n"+
 				"You must cancel the subscription before deleting the site.\n"+
 				"Please visit your dashboard to manage your subscription:\n\n%s",
 			dashboardURL,
 		))
-		os.Exit(1)
 	}
 
 	// Confirm deletion
@@ -94,7 +88,7 @@ func runDelete(projectName string, skipConfirm bool) error {
 		confirmed, err := ui.Confirm("Are you sure you want to delete this site?")
 		if err != nil || !confirmed {
 			fmt.Printf("%s\n", ui.Gray("Deletion cancelled."))
-			os.Exit(0)
+			return nil
 		}
 	}
 
@@ -102,7 +96,7 @@ func runDelete(projectName string, skipConfirm bool) error {
 	result, err := api.DeleteSite(siteToDelete.ID)
 	if err != nil {
 		sp.Fail("Failed to delete site")
-		ui.PrintError(err.Error())
+		deleteErr := fail(err.Error())
 		telemetry.Capture("command_failed", map[string]interface{}{
 			"command":       "delete",
 			"cli_version":   config.Version,
@@ -110,7 +104,7 @@ func runDelete(projectName string, skipConfirm bool) error {
 			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
-		return nil
+		return deleteErr
 	}
 
 	sp.Succeed(fmt.Sprintf("Successfully deleted site '%s'", projectName))

@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"time"
 
@@ -52,14 +51,12 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 	tokenData, err := auth.GetToken()
 	if err != nil || tokenData == nil {
 		sp.Fail("Not authenticated")
-		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
-		return nil
+		return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 	}
 	userInfo, err := auth.GetUserInfo(config.APIURL(), tokenData.Token)
 	if err != nil {
 		sp.Fail("Authentication failed")
-		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
-		return nil
+		return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 	}
 	sp.Succeed(fmt.Sprintf("Syncing as: %s", userInfo.DisplayName()))
 
@@ -68,8 +65,7 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 	absPath, err := filepath.Abs(inputPath)
 	if err != nil || !pathExists(absPath) {
 		sp.Fail("Path not found")
-		ui.PrintError(fmt.Sprintf("Path not found: %s", inputPath))
-		os.Exit(1)
+		return fail(fmt.Sprintf("Path not found: %s", inputPath))
 	}
 
 	discovered, err := files.DiscoverFiles([]string{absPath})
@@ -83,7 +79,7 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
-		return nil
+		return failSilently(err.Error())
 	}
 	// Apply config.json's contentInclude/contentExclude, matching the
 	// visibility rules the GitHub-sync build applies to the same config.json.
@@ -91,16 +87,14 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 
 	if err := files.ValidateFiles(discovered); err != nil {
 		sp.Fail("Validation failed")
-		ui.PrintError(err.Error())
-		return nil
+		return fail(err.Error())
 	}
 
 	projectName := siteName
 	if projectName == "" {
 		projectName, err = files.GetProjectName(discovered)
 		if err != nil {
-			ui.PrintError(err.Error())
-			return nil
+			return fail(err.Error())
 		}
 	}
 	sp.Succeed(fmt.Sprintf("Found %d file(s) in %s", len(discovered), inputPath))
@@ -108,17 +102,15 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 	// Check site exists
 	existingSite, err := api.GetSiteByName(userInfo.Username, projectName)
 	if err != nil {
-		ui.PrintError(err.Error())
-		return nil
+		return fail(err.Error())
 	}
 	if existingSite == nil {
-		ui.PrintError(fmt.Sprintf(
+		return fail(fmt.Sprintf(
 			"Site '%s' not found.\n"+
 				"It may have been renamed — check its current name in your dashboard\n"+
 				"(https://cloud.flowershow.app) and pass it with --name.",
 			projectName,
 		))
-		os.Exit(1)
 	}
 
 	// Get sync plan
@@ -134,8 +126,7 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 	syncPlan, err := api.SyncFiles(existingSite.Site.ID, fileMetadata, dryRun)
 	if err != nil {
 		sp.Fail("Failed to analyze changes")
-		ui.PrintError(err.Error())
-		return nil
+		return fail(err.Error())
 	}
 	sp.Stop()
 
@@ -184,6 +175,7 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 			for _, f := range failedUploads {
 				fmt.Printf("  - %s\n", f)
 			}
+			return fail(fmt.Sprintf("%d file(s) failed to upload. Re-run the same command to retry.", len(failedUploads)))
 		} else {
 			if syncPlan.Summary.ToUpload > 0 {
 				fmt.Printf("%s Uploaded %d new file(s)\n", ui.Green("✓"), syncPlan.Summary.ToUpload)

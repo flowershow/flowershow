@@ -92,7 +92,7 @@ func runAuthLogin() error {
 	data, err := requestDeviceCode(config.APIURL())
 	if err != nil {
 		sp.Fail("Failed to initiate authentication")
-		ui.PrintError(err.Error())
+		loginErr := fail(err.Error())
 		telemetry.Capture("command_failed", map[string]interface{}{
 			"command":       "auth_login",
 			"cli_version":   config.Version,
@@ -100,7 +100,7 @@ func runAuthLogin() error {
 			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
-		return nil
+		return loginErr
 	}
 	sp.Stop()
 
@@ -124,7 +124,7 @@ func runAuthLogin() error {
 	accessToken, err := auth.PollForToken(config.APIURL(), data.DeviceCode, data.Interval, data.ExpiresIn)
 	if err != nil {
 		sp.Fail("Authorization failed")
-		ui.PrintError(err.Error())
+		loginErr := fail(err.Error())
 		telemetry.Capture("command_failed", map[string]interface{}{
 			"command":       "auth_login",
 			"cli_version":   config.Version,
@@ -132,21 +132,19 @@ func runAuthLogin() error {
 			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
-		return nil
+		return loginErr
 	}
 
 	userInfo, err := auth.GetUserInfo(config.APIURL(), accessToken)
 	if err != nil {
 		sp.Fail("Failed to get user info")
-		ui.PrintError(err.Error())
-		return nil
+		return fail(err.Error())
 	}
 
 	displayName := userInfo.DisplayName()
 	if err := auth.SaveToken(accessToken, displayName); err != nil {
 		sp.Fail("Failed to save token")
-		ui.PrintError(err.Error())
-		return nil
+		return fail(err.Error())
 	}
 
 	sp.Succeed("Successfully authenticated!")
@@ -172,8 +170,7 @@ func runAuthLogout() error {
 
 	tokenData, err := auth.GetToken()
 	if err != nil {
-		ui.PrintError(err.Error())
-		return nil
+		return fail(err.Error())
 	}
 	if tokenData == nil {
 		fmt.Printf("\n%s\n\n", ui.Yellow("You are not currently logged in."))
@@ -181,7 +178,7 @@ func runAuthLogout() error {
 	}
 
 	if err := auth.RemoveToken(); err != nil {
-		ui.PrintError(err.Error())
+		logoutErr := fail(err.Error())
 		telemetry.Capture("command_failed", map[string]interface{}{
 			"command":       "auth_logout",
 			"cli_version":   config.Version,
@@ -189,7 +186,7 @@ func runAuthLogout() error {
 			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
-		return nil
+		return logoutErr
 	}
 
 	telemetry.Capture("command_succeeded", map[string]interface{}{
@@ -213,13 +210,12 @@ func runAuthStatus() error {
 
 	tokenData, err := auth.GetToken()
 	if err != nil {
-		ui.PrintError(err.Error())
-		return nil
+		return fail(err.Error())
 	}
 	if tokenData == nil {
 		fmt.Printf("\n%s Not authenticated\n\n", ui.Yellow("✗"))
 		fmt.Printf("%s\n", ui.Gray("Run `fl login` to authenticate."))
-		return nil
+		return failSilently("not authenticated")
 	}
 
 	sp := ui.NewSpinner()
@@ -229,7 +225,7 @@ func runAuthStatus() error {
 	if err != nil {
 		sp.Fail("Authentication token is invalid or expired")
 		fmt.Printf("%s\n", ui.Gray("Run `fl login` to re-authenticate."))
-		return nil
+		return failSilently("not authenticated: token is invalid or expired")
 	}
 
 	sp.Succeed("Authenticated")

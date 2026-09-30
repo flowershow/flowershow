@@ -126,12 +126,15 @@ fl logout
 
 #### `fl <path> [morePaths...] [options]`
 
-Publish files or folders to Flowershow. If the site already exists, `fl` automatically syncs changes instead of erroring — it creates or syncs in one idempotent command.
+Publish files or folders to Flowershow. If the path is linked to a site (a folder with a `.flowershow` file from an earlier publish), `fl` syncs changes to it — it creates or syncs in one idempotent command. If the path is not linked but a site with the same name already exists, `fl` will not sync into it implicitly: see `--overwrite` below.
 
 **Options:**
 
 - `--name <siteName>` - Custom name for the site (defaults to file/folder name). Only needed on the first publish; for folder mode, the name is saved to a local `.flowershow` file and remembered automatically.
-- `--yes` - Skip the site name confirmation prompt (useful for scripts and CI).
+- `--yes` - Skip the new-site name confirmation prompt (useful for scripts and CI). It does not allow overwriting an existing site.
+- `--overwrite` - Publish an unlinked path (no `.flowershow` file, e.g. a single file or a folder published for the first time) into an existing site with the same name, replacing its content and deleting its files that aren't in the path. Without it, `fl` asks interactively whether to overwrite or choose a new name, and with `--yes` it refuses and exits non-zero.
+
+All commands exit with a non-zero status on failure, and `fl whoami` exits 1 when you are not logged in.
 
 **Examples:**
 
@@ -150,6 +153,9 @@ fl --name my-custom-site ./my-notes
 
 # Skip confirmation prompt (for automation)
 fl --yes ./my-notes
+
+# Deliberately replace an existing site's content from an unlinked path
+fl --yes --overwrite ./my-notes
 ```
 
 **What happens (first publish):**
@@ -166,7 +172,11 @@ fl --yes ./my-notes
 
 **What happens (subsequent runs):**
 
-`fl` detects the existing site (via `.flowershow` config for folders, or by API lookup) and performs a delta sync — uploading only new or modified files and removing deleted ones.
+For folders, `fl` reads the site name from `.flowershow` and performs a delta sync — uploading only new or modified files and removing deleted ones. Single files (and multiple files) are never linked, so re-publishing them into their existing site needs `--overwrite` (or confirming the overwrite prompt).
+
+**Name collisions (unlinked path, existing site):**
+
+If a path has no `.flowershow` file and its derived name (or `--name`) matches a site you already have, `fl` warns with the site's name and URL, then asks whether to overwrite it or pick a new name. With `--yes` it exits non-zero and suggests `--name <new-name>` or `--overwrite`.
 
 **Single file behavior:**
 
@@ -277,9 +287,9 @@ Your token may have been revoked. Re-authenticate:
 fl login
 ```
 
-### Site already exists — `fl` auto-syncs it
+### "A site named ... already exists"
 
-If you run `fl` on a path whose site already exists on the server, it will automatically sync changes instead of erroring. You don't need to do anything special — just run `fl <path>` every time.
+The path isn't linked to that site (no `.flowershow` file), so `fl` won't replace its content implicitly. Choose a new name (`fl --name <new-name> <path>`), or if you really want to replace the existing site's content, confirm the prompt or pass `--overwrite`. Once a folder is linked, `fl <path>` syncs it with no extra flags.
 
 ### "Site not found" (when using sync)
 

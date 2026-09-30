@@ -99,7 +99,9 @@ fl --yes ./my-notes
 
 ### Running `fl` on an already-published folder
 
-`fl` is idempotent. If the site already exists, it syncs changes instead of erroring. Just run the same command every time — no special flags needed.
+`fl` is idempotent. Once a folder is published it's linked to its site (via `.flowershow`), and re-running `fl` syncs changes. Just run the same command every time — no special flags needed.
+
+If a folder that isn't linked yet has the same name as a site you already have, `fl` won't overwrite that site silently: it asks whether to overwrite or choose a new name, and with `--yes` it stops with an error. Use `--name <new-name>` for a new site, or `--overwrite` to replace the existing one on purpose. See [[cli#name-collisions|Name collisions]].
 
 ---
 

@@ -59,7 +59,7 @@ func showNoticeIfNeeded() {
 		return
 	}
 	fmt.Println("\nTelemetry Notice: Flowershow CLI collects anonymous usage data to improve the product.")
-	fmt.Println("To opt out, set the FLOWERSHOW_TELEMETRY_DISABLED=1 environment variable.\n")
+	fmt.Print("To opt out, set the FLOWERSHOW_TELEMETRY_DISABLED=1 environment variable.\n\n")
 	cfg.TelemetryNoticeShown = true
 	writeConfig(cfg)
 }

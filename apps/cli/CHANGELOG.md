@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 2.4.0
+
+- Fix: publishing a path that isn't linked to a site (no `.flowershow` file) no longer silently overwrites an existing site with the same name. Previously `fl ./notes` would sync into your existing `notes` site and delete any of its files missing locally, with no prompt, even without `--yes`. Now `fl` warns (naming the site and its URL) and asks whether to overwrite it or choose a new name. With `--yes` it refuses and exits non-zero; pass `--overwrite` to publish into the existing site on purpose. Linked folders are unchanged.
+- New `--overwrite` flag: the explicit opt-in for publishing an unlinked path into an existing site with the same name. `--yes` now only skips the new-site name prompt.
+- Fix: `fl` now exits with a non-zero status on every failure (not authenticated, path not found, validation errors, site not found, API errors, failed uploads), so scripts, CI and agents can detect failures. `fl whoami` exits 1 when not logged in or when the token is invalid.
+
 ## 2.3.0
 
 - Fix: `fl publish` now respects `contentExclude`/`contentInclude` in `config.json`, matching the visibility rules the GitHub-sync build already applies. Previously the CLI ignored `config.json` entirely, so excluded paths (e.g. drafts, internal notes) were published and served even though the GitHub-sync build correctly hid them for the same repo.

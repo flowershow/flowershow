@@ -37,12 +37,10 @@ func runList() error {
 	// Authenticate
 	tokenData, err := auth.GetToken()
 	if err != nil || tokenData == nil {
-		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
-		return nil
+		return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 	}
 	if _, err := auth.GetUserInfo(config.APIURL(), tokenData.Token); err != nil {
-		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
-		return nil
+		return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 	}
 
 	sp := ui.NewSpinner()
@@ -51,7 +49,7 @@ func runList() error {
 	sitesData, err := api.GetSites()
 	if err != nil {
 		sp.Fail("Failed to fetch sites")
-		ui.PrintError(err.Error())
+		listErr := fail(err.Error())
 		telemetry.Capture("command_failed", map[string]interface{}{
 			"command":       "list",
 			"cli_version":   config.Version,
@@ -59,7 +57,7 @@ func runList() error {
 			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
-		return nil
+		return listErr
 	}
 	sp.Stop()
 
