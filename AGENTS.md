@@ -95,30 +95,40 @@ Single-context repo — one `CONTEXT.md` + `docs/adr/` at root. See `docs/agents
 
 ## Changelog and Docs Pages
 
-For any user-facing change — new features, updated behavior, or bug fixes that affect what users can do — you MUST create a changelog entry. If the change introduces or meaningfully updates a feature that users need to understand or configure, also create or update a docs page.
+Every user-facing change must be recorded in the changelog, but **a change is not an entry**. The changelog is written for users: one entry per thing worth announcing. If the change introduces or meaningfully updates a feature users need to understand or configure, also create or update a docs page.
 
 ### Changelog entry
 
-Create a file in `content/flowershow-app/changelog/` named `YYYY-MM-DD-short-slug.md`:
+1. **Extend before you add.** Check `content/flowershow-app/changelog/` (and open PRs) for an entry from the last few days on the same theme. If one exists, add your change to it.
+2. **Fixes and small improvements are bullets, not entries.** Add them under a `**Fixes**` heading in the most related entry. A fix gets its own entry only if users must act or were seriously affected (data loss, security, breaking change).
+3. **New entries are for new capabilities.** Title them by what users can now do ("Publish without an account"), not by what changed in the code.
+4. **Every entry has a screenshot** of the feature in use (`image:`, a ~1440px `.webp` in `content/flowershow-app/assets/`). Take it from the live page or a throwaway `fl` preview site.
+
+Create `content/flowershow-app/changelog/YYYY-MM-DD-short-slug.md`:
 
 ```markdown
 ---
-title: Short title of the change
+title: What users can now do
 date: YYYY-MM-DD
 description: One-sentence summary shown in the changelog list.
 authors:
   - olayway
+image: "[[assets/changelog-short-slug.webp]]"
 showToc: false
 ---
 
-Keep it short — what changed and why it matters to users. If a docs page exists, link to it rather than repeating the details: [[docs-page-slug|Docs page title]].
+A short intro to what's new and why it matters, then bullets. Link to docs rather than repeating them: [[docs-page-slug|Docs page title]].
+
+**Fixes**
+
+- One line per fix.
 ```
 
 ### Docs page
 
 If the change introduces a feature users need to understand or configure, create `content/flowershow-app/docs/<feature-slug>.md`. Follow the style of existing pages in that directory: frontmatter with `title` and `description`, then concise prose with practical examples.
 
-**What counts as user-facing:**
+**What must be recorded:**
 - New configuration options or file conventions (e.g. `robots.txt`, `config.json` fields)
 - New or changed UI behavior
 - New CLI commands or flags

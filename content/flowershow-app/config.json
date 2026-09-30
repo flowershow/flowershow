@@ -539,18 +539,6 @@
     {
       "from": "/docs/umami",
       "to": "/docs/reference/analytics"
-    },
-    {
-      "from": "/changelog/2026-09-30-agent-docs-html",
-      "to": "/changelog/2026-09-30-publish-with-ai"
-    },
-    {
-      "from": "/changelog/2026-09-30-fl-safer-publish",
-      "to": "/changelog/2026-09-30-publish-with-ai"
-    },
-    {
-      "from": "/changelog/2026-09-30-fresh-assets-after-republish",
-      "to": "/changelog/2026-09-30-more-than-markdown"
     }
   ]
 }
