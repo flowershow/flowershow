@@ -46,7 +46,7 @@ In these cases, converting to Markdown feels wrong. You want the file exactly as
 Just use the dashboard, or our CLI:
 
 ```
-flowershow publish index.html
+fl ./index.html
 ```
 
 It serves the file as-is, preserving your exact look and feel.
@@ -55,5 +55,7 @@ If you have a simple page you want to share, you can do it right now.
 
 > [!note]
 > URLs currently require the file extension. For `index.html`, share the link as `.../index.html`.
+
+*Updated September 2026:* the CLI command is `fl` (see [[docs/reference/cli|CLI docs]]). For a page with separate CSS, JavaScript or data files, publish the whole folder: see [Publishing HTML](/docs/agents/html).
 
 Happy Publishing! 🌺

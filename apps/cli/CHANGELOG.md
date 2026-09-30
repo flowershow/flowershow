@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## Unreleased
+
+- `install.sh`: set `FL_INSTALL_DIR` to install without `sudo` (e.g. `FL_INSTALL_DIR="$HOME/.local/bin"`), for AI agents and CI. The script now also warns when the install directory isn't on your `PATH`.
+- The "couldn't find a site" warning now points to the dashboard at `https://cloud.flowershow.app` instead of the retired `https://my.flowershow.app`.
+
 ## 2.3.0
 
 - Fix: `fl publish` now respects `contentExclude`/`contentInclude` in `config.json`, matching the visibility rules the GitHub-sync build already applies. Previously the CLI ignored `config.json` entirely, so excluded paths (e.g. drafts, internal notes) were published and served even though the GitHub-sync build correctly hid them for the same repo.
