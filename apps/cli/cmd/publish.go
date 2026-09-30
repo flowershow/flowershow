@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/flowershow/publish/internal/api"
@@ -19,21 +20,26 @@ import (
 
 var publishName string
 var publishYes bool
+var publishOverwrite bool
 
 func init() {
 	rootCmd.Args = cobra.ArbitraryArgs
 	rootCmd.Flags().StringVar(&publishName, "name", "", "Custom name for the site")
-	rootCmd.Flags().BoolVar(&publishYes, "yes", false, "Skip confirmation prompt (for scripts and CI)")
+	rootCmd.Flags().BoolVar(&publishYes, "yes", false, "Skip the new-site confirmation prompt (for scripts and CI)")
+	rootCmd.Flags().BoolVar(&publishOverwrite, "overwrite", false, "Allow publishing an unlinked path into an existing site with the same name, replacing its content")
 	rootCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return cmd.Help()
 		}
 		ui.Header("Flowershow")
-		return runPublish(args, publishName, publishYes)
+		return runPublish(args, publishName, publishYes, publishOverwrite)
 	}
 }
 
-func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
+// runPublish publishes inputPaths. skipConfirm (--yes) only skips the
+// new-site name prompt; overwrite (--overwrite) is the explicit opt-in needed
+// to publish a path that isn't linked (no .flowershow) into an existing site.
+func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite bool) error {
 	startTime := time.Now()
 	telemetry.Capture("command_started", map[string]interface{}{
 		"command":     "publish",
@@ -48,14 +54,12 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 	tokenData, err := auth.GetToken()
 	if err != nil || tokenData == nil {
 		sp.Fail("Not authenticated")
-		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
-		return nil
+		return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 	}
 	userInfo, err := auth.GetUserInfo(config.APIURL(), tokenData.Token)
 	if err != nil {
 		sp.Fail("Authentication failed")
-		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
-		return nil
+		return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 	}
 	sp.Succeed(fmt.Sprintf("Logged in as: %s", userInfo.DisplayName()))
 
@@ -94,8 +98,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 		abs, err := filepath.Abs(p)
 		if err != nil || !pathExists(abs) {
 			sp.Fail("Path not found")
-			ui.PrintError(fmt.Sprintf("Path not found: %s", p))
-			os.Exit(1)
+			return fail(fmt.Sprintf("Path not found: %s", p))
 		}
 		absolutePaths = append(absolutePaths, abs)
 	}
@@ -111,7 +114,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
-		return nil
+		return failSilently(err.Error())
 	}
 	// Apply config.json's contentInclude/contentExclude, matching the
 	// visibility rules the GitHub-sync build applies to the same config.json.
@@ -121,8 +124,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 
 	if err := files.ValidateFiles(discovered); err != nil {
 		sp.Fail("Validation failed")
-		ui.PrintError(err.Error())
-		return nil
+		return fail(err.Error())
 	}
 	sp.Succeed(fmt.Sprintf("Found %d file(s)", len(discovered)))
 
@@ -136,16 +138,14 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 	default:
 		siteName, err = files.GetProjectName(discovered)
 		if err != nil {
-			ui.PrintError(err.Error())
-			return nil
+			return fail(err.Error())
 		}
 	}
 
 	// Look up existing site on the server
 	existingSite, err := api.GetSiteByName(userInfo.Username, siteName)
 	if err != nil {
-		ui.PrintError(err.Error())
-		return nil
+		return fail(err.Error())
 	}
 
 	// The stored name no longer resolves on the server. The most common cause
@@ -162,41 +162,50 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 		))
 
 		if skipConfirm {
-			ui.PrintError(fmt.Sprintf(
+			return fail(fmt.Sprintf(
 				"Re-point this folder by re-running with the current name:\n"+
 					"  fl --name \"<current site name>\" %s",
 				folderPath,
 			))
-			return nil
 		}
 
 		newName, err := ui.PromptText("Enter the current site name (or leave blank to cancel):")
 		if err != nil {
-			ui.PrintError("Failed to read input: " + err.Error())
-			return nil
+			return fail("Failed to read input: " + err.Error())
 		}
 		if newName == "" {
-			ui.PrintError("Cancelled. Your local .flowershow was left unchanged.")
-			return nil
+			return fail("Cancelled. Your local .flowershow was left unchanged.")
 		}
 
 		renamed, err := api.GetSiteByName(userInfo.Username, newName)
 		if err != nil {
-			ui.PrintError(err.Error())
-			return nil
+			return fail(err.Error())
 		}
 		if renamed == nil {
-			ui.PrintError(fmt.Sprintf(
+			return fail(fmt.Sprintf(
 				"No site named %q found either.\n"+
 					"Double-check the exact name in your dashboard and try again.",
 				newName,
 			))
-			return nil
 		}
 
 		_ = localconfig.Write(folderPath, &localconfig.Config{SiteName: newName})
 		fmt.Printf("%s\n", ui.Green(fmt.Sprintf("✓ Re-pointed .flowershow to %q", newName)))
 		return doSync(renamed.Site, newName, discovered, sp, startTime)
+	}
+
+	// The path isn't linked (no .flowershow) but its name matches an existing
+	// site. Syncing would replace that site's content and delete its files
+	// that aren't present locally, so never do it implicitly: require
+	// --overwrite, or ask the user to overwrite or choose another name.
+	// Linked paths (localCfg != nil) keep their behaviour.
+	askedName := false
+	if localCfg == nil && existingSite != nil && !overwrite {
+		siteName, existingSite, err = resolveExistingSiteConflict(userInfo.Username, siteName, existingSite, skipConfirm, inputPaths)
+		if err != nil {
+			return err
+		}
+		askedName = true
 	}
 
 	// Site already exists → delta sync
@@ -211,20 +220,26 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 
 	// No existing site → first publish
 	// Show confirmation prompt unless --yes or --name was provided
-	if !skipConfirm && nameFlag == "" {
+	if !skipConfirm && nameFlag == "" && !askedName {
 		fmt.Printf("\n%s\n\n", ui.Bold("Creating new site:"))
 		confirmed, err := ui.PromptSiteName(siteName)
 		if err != nil {
-			ui.PrintError("Failed to read input: " + err.Error())
-			return nil
+			return fail("Failed to read input: " + err.Error())
 		}
 		if confirmed != siteName {
 			siteName = confirmed
 			// Check if the new name already has a site
 			existingSite, err = api.GetSiteByName(userInfo.Username, siteName)
 			if err != nil {
-				ui.PrintError(err.Error())
-				return nil
+				return fail(err.Error())
+			}
+			// Same safeguard as above: typing an existing site's name here
+			// must not silently replace that site's content.
+			if existingSite != nil && localCfg == nil && !overwrite {
+				siteName, existingSite, err = resolveExistingSiteConflict(userInfo.Username, siteName, existingSite, skipConfirm, inputPaths)
+				if err != nil {
+					return err
+				}
 			}
 			if existingSite != nil {
 				if isFolderMode {
@@ -248,7 +263,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 			"error_type":    fmt.Sprintf("%T", err),
 			"error_message": err.Error(),
 		})
-		return nil
+		return failSilently(err.Error())
 	}
 	site := siteData.Site
 	sp.Succeed("Site created")
@@ -264,8 +279,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 	}
 	syncPlan, err := api.SyncFiles(site.ID, fileMetadata, false)
 	if err != nil {
-		ui.PrintError(err.Error())
-		return nil
+		return fail(err.Error())
 	}
 
 	allToUpload := append(syncPlan.ToUpload, syncPlan.ToUpdate...)
@@ -295,6 +309,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm bool) error {
 		for _, f := range failedUploads {
 			fmt.Printf("  %s %s\n", ui.Yellow("-"), f)
 		}
+		return fail(fmt.Sprintf("%d file(s) failed to upload to %s. Re-run the same command to retry.", len(failedUploads), site.URL))
 	} else {
 		fmt.Printf("%s Uploaded %d file(s)\n", ui.Green("✓"), len(discovered))
 		// Write config only after a fully successful upload in folder mode
@@ -339,8 +354,7 @@ func doSync(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.
 	syncPlan, err := api.SyncFiles(site.ID, fileMetadata, false)
 	if err != nil {
 		sp.Fail("Failed to analyze changes")
-		ui.PrintError(err.Error())
-		return nil
+		return fail(err.Error())
 	}
 	sp.Stop()
 
@@ -382,6 +396,7 @@ func doSync(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.
 			for _, f := range failedUploads {
 				fmt.Printf("  - %s\n", f)
 			}
+			return fail(fmt.Sprintf("%d file(s) failed to upload to %s. Re-run the same command to retry.", len(failedUploads), site.URL))
 		} else {
 			if syncPlan.Summary.ToUpload > 0 {
 				fmt.Printf("%s Uploaded %d new file(s)\n", ui.Green("✓"), syncPlan.Summary.ToUpload)
@@ -427,4 +442,63 @@ func doSync(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.
 func pathExists(p string) bool {
 	_, err := os.Stat(p)
 	return err == nil
+}
+
+// resolveExistingSiteConflict handles a path with no .flowershow link whose
+// site name matches an existing site. With skipConfirm (--yes) it refuses.
+// Otherwise it warns and asks the user to overwrite that site or choose a new
+// name, repeating if the new name is also taken. It returns the chosen name
+// and, if the user chose to overwrite, the existing site (nil for a new name).
+func resolveExistingSiteConflict(username, siteName string, existing *api.GetSiteResponse, skipConfirm bool, inputPaths []string) (string, *api.GetSiteResponse, error) {
+	paths := shellQuoteAll(inputPaths)
+	for {
+		ui.PrintWarning(fmt.Sprintf(
+			"A site named %q already exists: %s\n"+
+				"This path isn't linked to it (no .flowershow file). Publishing here would\n"+
+				"replace that site's content and delete its files that aren't in this path.",
+			siteName, existing.Site.URL,
+		))
+
+		if skipConfirm {
+			return "", nil, fail(fmt.Sprintf(
+				"Refusing to overwrite existing site %q (--yes does not imply overwrite).\n"+
+					"  To publish as a new site:      fl --name <new-name> %s\n"+
+					"  To replace the existing site:  fl --overwrite %s",
+				siteName, paths, paths,
+			))
+		}
+
+		ok, _ := ui.Confirm(fmt.Sprintf("Overwrite the existing site %q?", siteName))
+		if ok {
+			return siteName, existing, nil
+		}
+
+		newName, _ := ui.PromptText("Enter a new site name (or leave blank to cancel):")
+		if newName == "" {
+			return "", nil, fail("Cancelled. Nothing was published.")
+		}
+
+		next, err := api.GetSiteByName(username, newName)
+		if err != nil {
+			return "", nil, fail(err.Error())
+		}
+		if next == nil {
+			return newName, nil, nil
+		}
+		siteName, existing = newName, next
+	}
+}
+
+// shellQuoteAll joins paths for display in a copy-pasteable command,
+// quoting any that contain spaces or shell metacharacters.
+func shellQuoteAll(paths []string) string {
+	quoted := make([]string, len(paths))
+	for i, p := range paths {
+		if strings.ContainsAny(p, " \t'\"$`\\&;|<>()*?[]{}!#~") {
+			quoted[i] = "'" + strings.ReplaceAll(p, "'", `'\''`) + "'"
+		} else {
+			quoted[i] = p
+		}
+	}
+	return strings.Join(quoted, " ")
 }

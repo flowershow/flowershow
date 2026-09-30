@@ -42,12 +42,10 @@ func runSettings(nameFlag string) error {
 	// Authenticate
 	tokenData, err := auth.GetToken()
 	if err != nil || tokenData == nil {
-		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
-		return nil
+		return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 	}
 	if _, err := auth.GetUserInfo(config.APIURL(), tokenData.Token); err != nil {
-		ui.PrintError("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
-		return nil
+		return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
 	}
 
 	// Resolve site name
@@ -67,16 +65,14 @@ func runSettings(nameFlag string) error {
 	sitesData, err := api.GetSites()
 	if err != nil {
 		sp.Fail("Failed to fetch sites")
-		ui.PrintError(err.Error())
-		return nil
+		return fail(err.Error())
 	}
 	sp.Stop()
 
 	// If no name resolved yet, check if there's exactly one site
 	if siteName == "" {
 		if len(sitesData.Sites) == 0 {
-			ui.PrintError("You have no sites yet.\nRun `fl <path>` to publish your first site.")
-			return nil
+			return fail("You have no sites yet.\nRun `fl <path>` to publish your first site.")
 		}
 		if len(sitesData.Sites) > 1 {
 			fmt.Printf("\n%s\n\n", ui.Bold("Multiple sites found — specify one with --name:"))
@@ -84,7 +80,7 @@ func runSettings(nameFlag string) error {
 				fmt.Printf("  %s\n", ui.Cyan(s.ProjectName))
 			}
 			fmt.Println()
-			os.Exit(1)
+			return failSilently("multiple sites found; specify one with --name")
 		}
 		siteName = sitesData.Sites[0].ProjectName
 	}
@@ -99,8 +95,7 @@ func runSettings(nameFlag string) error {
 	}
 
 	if siteID == "" {
-		ui.PrintError(fmt.Sprintf("Site %q not found.\nUse `fl list` to see all sites.", siteName))
-		os.Exit(1)
+		return fail(fmt.Sprintf("Site %q not found.\nUse `fl list` to see all sites.", siteName))
 	}
 
 	// Fetch full site details
@@ -108,8 +103,7 @@ func runSettings(nameFlag string) error {
 	detail, err := api.GetSiteByID(siteID)
 	if err != nil {
 		sp.Fail("Failed to fetch site settings")
-		ui.PrintError(err.Error())
-		return nil
+		return fail(err.Error())
 	}
 	sp.Stop()
 

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/flowershow/publish/internal/config"
@@ -21,6 +20,13 @@ site is created; subsequent runs sync only the changed files.`,
   fl file1.md file2.md     publish specific files`,
 	Version: config.Version,
 	// Args and RunE are set in publish.go via init()
+	// Errors are printed by Execute (commands print their own friendly
+	// messages and return a reportedError), so cobra must not print them.
+	SilenceErrors: true,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		// Flag/arg parsing succeeded; runtime failures shouldn't dump usage.
+		cmd.SilenceUsage = true
+	},
 	PersistentPostRun: func(cmd *cobra.Command, args []string) {
 		updater.PrintIfAvailable(config.Version)
 	},
@@ -28,9 +34,8 @@ site is created; subsequent runs sync only the changed files.`,
 
 // Execute runs the root command.
 func Execute() {
-	if err := rootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+	if code := exitCode(rootCmd.Execute(), os.Stderr); code != 0 {
+		os.Exit(code)
 	}
 }
 
