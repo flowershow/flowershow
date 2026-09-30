@@ -283,6 +283,11 @@ export const generatePresignedUploadUrl = async (
     contentType?.startsWith('audio/');
   const maxAge = isMedia ? 300 : 0;
 
+  // NOTE: the presigner only signs `host` and hoisted/unhoistable x-amz-*
+  // headers. ContentType and CacheControl below are NOT signed or put in the
+  // URL, so they have no effect: the stored object gets whatever headers the
+  // client sends (the CLI sends only Content-Type). Stale CDN copies are
+  // avoided by the content-versioned redirect in /api/raw (flowershow-2c6).
   const command = new PutObjectCommand({
     Bucket: S3_BUCKET_NAME,
     Key: key,

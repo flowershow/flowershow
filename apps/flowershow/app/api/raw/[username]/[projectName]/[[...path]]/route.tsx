@@ -93,7 +93,21 @@ export async function GET(
     env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
     env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
   const protocol = isSecure ? 'https' : 'http';
-  const publicUrl = `${protocol}://${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${site.id}/main/raw/${encodedPath}`;
+  // Version the CDN URL by content sha. Objects uploaded via presigned PUT
+  // (CLI, dashboard, anonymous publish) carry no Cache-Control, so the storage
+  // CDN caches them with its default TTL; without a version the old bytes (or
+  // a deleted file) keep being served after a republish. Blob.sha is written
+  // by the worker from the bytes already in storage, so a `?v=` key never
+  // points at content that isn't there yet. No blob row → unversioned URL.
+  const blob = await prisma.blob.findUnique({
+    where: { siteId_path: { siteId: site.id, path: rawPath } },
+    select: { sha: true },
+  });
+  const version = blob?.sha ? `?v=${encodeURIComponent(blob.sha)}` : '';
+  const publicUrl = `${protocol}://${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${site.id}/main/raw/${encodedPath}${version}`;
 
-  return NextResponse.redirect(publicUrl, 302);
+  const res = NextResponse.redirect(publicUrl, 302);
+  // The redirect must never be cached, or the version key above goes stale.
+  res.headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
+  return res;
 }

@@ -4,7 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // Mocks must be declared before the imports they affect (vi.mock is hoisted)
 
 vi.mock('@/server/db', () => ({
-  default: { site: { findFirst: vi.fn() } },
+  default: {
+    site: { findFirst: vi.fn() },
+    blob: { findUnique: vi.fn().mockResolvedValue(null) },
+  },
 }));
 
 vi.mock('@/lib/content-store', () => ({
@@ -19,6 +22,7 @@ import prisma from '@/server/db';
 import { GET } from './route';
 
 const findFirst = prisma.site.findFirst as ReturnType<typeof vi.fn>;
+const findBlob = prisma.blob.findUnique as ReturnType<typeof vi.fn>;
 
 function makeReq(path: string): NextRequest {
   return new NextRequest(`http://localhost/api/raw/victim/notes/${path}`);
@@ -72,5 +76,68 @@ describe('GET /api/raw — password gate', () => {
 
     expect(res.status).toBe(302);
     expect(res.headers.get('location')).toContain('s3.test.com');
+  });
+});
+
+// flowershow-2c6: objects uploaded via presigned PUT URLs (CLI, dashboard,
+// anonymous publish) carry no Cache-Control, so the storage CDN keeps serving
+// old bytes (and deleted files) after a republish. The redirect is uncached,
+// so versioning its target by content sha gives every new version a fresh
+// CDN cache key, whatever headers the object was uploaded with.
+describe('GET /api/raw — public asset redirect is content-versioned', () => {
+  const publicSite = { ...passwordSite, privacyMode: 'PUBLIC' };
+
+  it('appends the blob sha so a republished asset gets a new CDN cache key', async () => {
+    findFirst.mockResolvedValue(publicSite);
+    findBlob.mockResolvedValue({ sha: 'abc123' });
+
+    const res = await GET(
+      makeReq('css/style.css'),
+      makeParams('css/style.css'),
+    );
+
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toBe(
+      'http://s3.test.com/site-1/main/raw/css/style.css?v=abc123',
+    );
+    expect(findBlob).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { siteId_path: { siteId: 'site-1', path: 'css/style.css' } },
+      }),
+    );
+  });
+
+  it('uses a different URL after the content changes', async () => {
+    findFirst.mockResolvedValue(publicSite);
+
+    findBlob.mockResolvedValueOnce({ sha: 'v1sha' });
+    const before = await GET(makeReq('app.js'), makeParams('app.js'));
+    findBlob.mockResolvedValueOnce({ sha: 'v2sha' });
+    const after = await GET(makeReq('app.js'), makeParams('app.js'));
+
+    expect(before.headers.get('location')).not.toBe(
+      after.headers.get('location'),
+    );
+  });
+
+  it('falls back to the unversioned URL when no blob row exists yet', async () => {
+    findFirst.mockResolvedValue(publicSite);
+    findBlob.mockResolvedValue(null);
+
+    const res = await GET(makeReq('new.png'), makeParams('new.png'));
+
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toBe(
+      'http://s3.test.com/site-1/main/raw/new.png',
+    );
+  });
+
+  it('marks the redirect itself as not cacheable', async () => {
+    findFirst.mockResolvedValue(publicSite);
+    findBlob.mockResolvedValue({ sha: 'abc123' });
+
+    const res = await GET(makeReq('style.css'), makeParams('style.css'));
+
+    expect(res.headers.get('cache-control')).toMatch(/no-cache|max-age=0/);
   });
 });
