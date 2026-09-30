@@ -331,7 +331,7 @@ showComments: false
       <div className="wrap">
         <div className="section-head reveal" style="margin-bottom:48px">
           <span className="eyebrow">Showcase</span>
-          <h2>Powering <span className="stat-hl">1,700+</span> sites and growing</h2>
+          <h2>Powering <span className="stat-hl">2,200+</span> sites and growing</h2>
         </div>
         <div className="show-grid">
           <div className="show-card sc-wiki reveal">
@@ -469,7 +469,7 @@ showComments: false
           <span className="petal p1" aria-hidden="true">💐</span>
           <span className="petal p2" aria-hidden="true">💐</span>
           <h2>Files to URL. Instantly. Free.</h2>
-          <p>Join the writers, researchers and teams behind 1,700+ sites.</p>
+          <p>Join the writers, researchers and teams behind 2,200+ sites.</p>
           <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
           <p className="fine">No credit card required · Free plan, forever</p>
         </div>
