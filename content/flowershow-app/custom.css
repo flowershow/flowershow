@@ -1211,9 +1211,9 @@
 }
 
 /* Two-up steps and concept cards (the kit defaults to three across) */
-.fs-root.lp-cli .cli-steps { grid-template-columns: repeat(2, 1fr); max-width: 760px; margin: 0 auto; }
+.fs-root.lp-cli .cli-steps { grid-template-columns: repeat(3, 1fr); max-width: 1040px; margin: 0 auto; }
 .fs-root.lp-cli .cli-steps .step { align-items: stretch; }
-.fs-root.lp-cli .cli-steps .cmd-line { margin-top: 16px; }
+.fs-root.lp-cli .cli-steps .cmd-line { margin-top: 16px; overflow-wrap: anywhere; }
 .fs-root.lp-cli .concept-grid { grid-template-columns: repeat(2, 1fr); }
 @media (max-width: 620px) {
   .fs-root.lp-cli .cli-steps, .fs-root.lp-cli .concept-grid { grid-template-columns: 1fr; }
