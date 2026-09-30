@@ -180,7 +180,7 @@ showComments: false
               Works with AI agents
             </dt>
             <dd className="ft-desc">The Flowershow skill lets agents publish, configure, and style your site — through your CLI, GitHub, or Obsidian workflow.</dd>
-            <a className="ft-learn" href="/docs/agents/skills"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            <a className="ft-learn" href="/publish-with-ai"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             <div className="ft-vis">
               <div className="panel vis-agent">
                 <div className="chat">
