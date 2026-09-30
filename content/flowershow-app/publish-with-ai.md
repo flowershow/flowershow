@@ -128,13 +128,13 @@ showEditLink: false
           </div>
           <div className="concept-card">
             <span className="ic">🌱</span>
-            <h3>Turn a folder of notes into a site</h3>
-            <p>A digital garden, a wiki or a knowledge base, with navigation, a sidebar and backlinks, from the files you already have.</p>
+            <h3>Publish your agent-maintained wiki</h3>
+            <p>Your agent keeps a wiki of what you're researching or building. Flowershow turns it into a real site, with wiki-links, backlinks and a sidebar, and it stays current every time the agent republishes.</p>
           </div>
           <div className="concept-card">
             <span className="ic">📚</span>
-            <h3>Docs your agent keeps up to date</h3>
-            <p>Your agent edits the Markdown and republishes with the same command. The site stays in sync with the work.</p>
+            <h3>One page today, a whole site tomorrow</h3>
+            <p>Start with a single page. Add docs, a blog or a changelog as you go: same folder, same command, same URL. Your files stay yours.</p>
           </div>
         </div>
       </div>
