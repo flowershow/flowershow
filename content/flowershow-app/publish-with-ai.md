@@ -31,10 +31,10 @@ showEditLink: false
                 <span className="step">✓ Uploaded 24 files · 3 HTML, 21 Markdown</span>
                 <span className="step">→ Live at <b>research.flowershow.me</b></span>
               </div>
-              <div className="msg user">Nice. Add our logo and use the "prose" theme.</div>
+              <div className="msg user">Nice. Add our logo and use the "letterpress" theme.</div>
               <div className="msg bot">
                 <span className="bot-head">💐 flowershow skill</span>
-                <span className="step">✓ Updated config.json · theme <b>prose</b></span>
+                <span className="step">✓ Updated config.json · theme <b>letterpress</b></span>
                 <span className="step">✓ Republished 2 changed files</span>
               </div>
             </div>
@@ -54,7 +54,7 @@ showEditLink: false
             <span className="step-num">1</span>
             <h3>Install the skill</h3>
             <div className="cmd-line">npx skills add flowershow/skills --global</div>
-            <p>One line, once. No Node.js? <a href="/docs/agents/skills">Add the skill manually →</a></p>
+            <p>One line, once, for Claude Code, Codex, Cursor and other coding agents. In ChatGPT or the Claude app, or no Node.js? <a href="/docs/agents/skills">Add the skill manually →</a></p>
           </div>
           <div className="step">
             <span className="step-num">2</span>
@@ -129,7 +129,7 @@ showEditLink: false
           <div className="concept-card">
             <span className="ic">🌱</span>
             <h3>Turn a folder of notes into a site</h3>
-            <p>A digital garden, a wiki or a knowledge base, with navigation, search and backlinks, from the files you already have.</p>
+            <p>A digital garden, a wiki or a knowledge base, with navigation, a sidebar and backlinks, from the files you already have.</p>
           </div>
           <div className="concept-card">
             <span className="ic">📚</span>
@@ -168,7 +168,7 @@ showEditLink: false
         <div className="faq-grid reveal">
           <div className="faq-item">
             <h3>Which AI agents does it work with?</h3>
-            <p>Any agent that supports skills, including Claude (Claude Code and the Claude apps), ChatGPT, Codex and Cursor. If your agent doesn't support skills, you can point it at the skill file directly. See the <a href="/docs/agents/skills">skill docs</a>.</p>
+            <p>Any agent that supports skills, including Claude (Claude Code and the Claude apps), ChatGPT, Codex and Cursor. Coding agents install it with one line; in ChatGPT and the Claude apps you add the skill file yourself. To publish, the agent needs to run the <code>fl</code> CLI with internet access; where it can't, it still configures your site and gives you the one command to run. See the <a href="/docs/agents/skills">skill docs</a>.</p>
           </div>
           <div className="faq-item">
             <h3>Do I need Node.js?</h3>
