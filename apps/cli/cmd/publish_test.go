@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/flowershow/publish/internal/api"
 	"github.com/flowershow/publish/internal/localconfig"
 	"github.com/flowershow/publish/internal/ui"
 )
@@ -453,9 +454,52 @@ func TestPublishAnonRateLimited(t *testing.T) {
 	}
 }
 
-func TestPublishLoggedInIgnoresAnonConfigAndShowsClaimLink(t *testing.T) {
+func TestPublishLoggedInAfterClaimUpdatesClaimedSite(t *testing.T) {
 	f := setupFakeAPI(t, true)
+	// The anonymous site was claimed: it is now in the user's account.
+	claimedURL := "https://quiet-otter.flowershow.me"
+	f.sites["quiet-otter"] = api.Site{ID: anonSiteID, ProjectName: "quiet-otter", URL: claimedURL}
 	dir := makeAnonFolder(t, "notes", anonSiteID, anonClaimToken)
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, false) })
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if got := f.createdNames(); len(got) != 0 {
+		t.Fatalf("must not create a duplicate site, created %v", got)
+	}
+	if ids := f.syncIDs(); len(ids) != 1 || ids[0] != anonSiteID {
+		t.Fatalf("expected a sync to the claimed site %s, got %v", anonSiteID, ids)
+	}
+	if f.syncAuth[0] != "Bearer "+testToken {
+		t.Fatalf("sync to the claimed site should use the user's token, got %q", f.syncAuth[0])
+	}
+	if !strings.Contains(out, "claimed into your account") || !strings.Contains(out, claimedURL) {
+		t.Fatalf("output should say the site was claimed and show its URL, got:\n%s", out)
+	}
+	if strings.Contains(out, anonClaimURL) {
+		t.Fatalf("should not ask to claim an already-claimed site, got:\n%s", out)
+	}
+	raw := readRawConfig(t, dir)
+	if cfg := localconfig.Read(dir); cfg == nil || cfg.SiteName != "quiet-otter" || cfg.IsAnon() || strings.Contains(raw, "claimToken") {
+		t.Fatalf("expected .flowershow relinked to 'quiet-otter' without anon fields, got:\n%s", raw)
+	}
+}
+
+func TestPublishLoggedInIgnoresAnonConfigAndShowsClaimLink(t *testing.T) {
+	for _, siteID := range []string{anonSiteID, "anon-deleted"} {
+		t.Run(siteID, func(t *testing.T) {
+			testPublishLoggedInIgnoresAnonConfig(t, siteID)
+		})
+	}
+}
+
+// testPublishLoggedInIgnoresAnonConfig: the anonymous site isn't the user's
+// (still anonymous: 403, or gone: 404), so a new account site is created.
+func testPublishLoggedInIgnoresAnonConfig(t *testing.T, siteID string) {
+	f := setupFakeAPI(t, true)
+	dir := makeAnonFolder(t, "notes", siteID, anonClaimToken)
 
 	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, false) })
 

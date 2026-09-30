@@ -165,6 +165,36 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeJSON(w, 200, map[string]interface{}{"site": site})
+	case strings.HasPrefix(path, "/api/sites/id/") && !strings.Contains(strings.TrimPrefix(path, "/api/sites/id/"), "/") && r.Method == "GET":
+		// Mirrors GET /api/sites/id/:id: 200 for the user's own site, 403 for
+		// someone else's (an anonymous site is owned by the anonymous user),
+		// 404 if it doesn't exist.
+		id := strings.TrimPrefix(path, "/api/sites/id/")
+		f.mu.Lock()
+		var found *api.Site
+		for _, site := range f.sites {
+			if site.ID == id {
+				site := site
+				found = &site
+			}
+		}
+		anonOwned := false
+		for _, siteID := range f.claimTokens {
+			if siteID == id {
+				anonOwned = true
+			}
+		}
+		f.mu.Unlock()
+		switch {
+		case found != nil:
+			writeJSON(w, 200, map[string]interface{}{"site": map[string]interface{}{
+				"id": found.ID, "projectName": found.ProjectName, "subdomain": found.ProjectName, "url": found.URL,
+			}})
+		case anonOwned:
+			writeJSON(w, 403, map[string]string{"error": "forbidden", "message": "You do not have access to this site"})
+		default:
+			writeJSON(w, 404, map[string]string{"error": "not_found", "message": "Site not found"})
+		}
 	case strings.HasPrefix(path, "/api/sites/id/") && strings.HasSuffix(path, "/sync") && r.Method == "POST":
 		id := strings.TrimSuffix(strings.TrimPrefix(path, "/api/sites/id/"), "/sync")
 		var body struct {

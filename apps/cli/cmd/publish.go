@@ -101,12 +101,18 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 	}
 
 	// A link to an anonymous site is only used by --anon. For account
-	// publishing the folder counts as unlinked; point out the earlier
-	// anonymous site so it can still be claimed.
+	// publishing: if the site has since been claimed into this account,
+	// relink the folder to it; otherwise the folder counts as unlinked, and
+	// we point out the earlier anonymous site so it can still be claimed.
 	var anonCfg *localconfig.Config
 	if localCfg.IsAnon() {
 		anonCfg, localCfg = localCfg, nil
-		if !anon {
+		if !anon && anonCfg.SiteID != "" {
+			if claimed, err := api.GetSiteByID(anonCfg.SiteID); err == nil {
+				localCfg = relinkClaimedSite(folderPath, anonCfg, claimed.Site)
+			}
+		}
+		if !anon && localCfg == nil {
 			fmt.Printf("\n%s This folder was previously published without an account", ui.Yellow("Note:"))
 			if anonCfg.LiveURL != "" {
 				fmt.Printf(" (%s)", anonCfg.LiveURL)
@@ -330,6 +336,21 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 	})
 	ui.PrintPublishSuccess(site.URL)
 	return nil
+}
+
+// relinkClaimedSite rewrites folderPath's .flowershow, which linked to an
+// anonymous site that has since been claimed into the user's account, to link
+// to that site by name (dropping the anonymous fields). It returns the new
+// local config.
+func relinkClaimedSite(folderPath string, anonCfg *localconfig.Config, site api.SiteDetail) *localconfig.Config {
+	cfg := *anonCfg
+	cfg.Anon, cfg.SiteID, cfg.ClaimToken, cfg.ExpiresAt, cfg.LiveURL, cfg.ClaimURL = false, "", "", "", "", ""
+	cfg.SiteName = site.ProjectName
+	if err := localconfig.Write(folderPath, &cfg); err != nil {
+		ui.PrintWarning(fmt.Sprintf("Couldn't update .flowershow: %s", err))
+	}
+	fmt.Printf("\n%s This folder's site was claimed into your account; updating %s\n\n", ui.Green("✓"), site.URL)
+	return &cfg
 }
 
 // uploadNewSite uploads all discovered files to a freshly created site.
