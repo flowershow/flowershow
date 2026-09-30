@@ -1,6 +1,6 @@
 ---
-title: Flowershow Publish
-description: Publish your files and folders directly from the terminal with the Flowershow CLI. No config, no UI, just publish.
+title: Flowershow CLI
+description: Publish Markdown and HTML files and folders directly from the terminal with fl, the Flowershow CLI. No config, no UI, just publish.
 layout: plain
 showToc: false
 showComments: false
@@ -12,11 +12,11 @@ showEditLink: false
     <section className="hero">
       <div className="wrap hero-grid">
         <div className="hero-copy reveal">
-          <a className="pill" href="/docs/agents/skills">🤖 New — publish with your AI agent <span className="arw">→</span></a>
+          <a className="pill" href="/publish-with-ai">🤖 New — publish with your AI agent <span className="arw">→</span></a>
           <h1>Publish Markdown directly from your terminal.</h1>
           <p className="lede">CLI to publish Markdown and HTML straight from the command line. Perfect for power users and AI agents — get a shareable URL in seconds.</p>
           <div className="cta-row">
-            <a className="btn btn-primary" href="https://flowershow.app/docs/cli">Install now <span className="arw">→</span></a>
+            <a className="btn btn-primary" href="/docs/reference/cli#installation">Install now <span className="arw">→</span></a>
             <a className="btn btn-secondary" href="#demo">Watch demo <span className="arw">→</span></a>
           </div>
           <p className="microcopy"><b>Free forever</b>, no credit card required</p>
@@ -31,7 +31,7 @@ showEditLink: false
               <div className="ln cmd">fl ./my-notes</div>
               <div className="ln muted">Scanning 12 files…</div>
               <div className="ln ok">✓ Uploaded 12 files in 3.2s</div>
-              <div className="ln">→ Live at <span className="url">my-notes.flowershow.me</span></div>
+              <div className="ln">→ Live at <span className="url">my-notes-yourname.flowershow.me</span></div>
             </div>
           </div>
         </div>
@@ -47,12 +47,18 @@ showEditLink: false
         <div className="steps cli-steps reveal">
           <div className="step">
             <span className="step-num">1</span>
+            <h3>Install</h3>
+            <div className="cmd-line">curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh</div>
+            <p>One binary, <code>fl</code>, for macOS and Linux. Then run <code>fl login</code>. On Windows, <a href="/docs/reference/cli#installation">download the zip</a>.</p>
+          </div>
+          <div className="step">
+            <span className="step-num">2</span>
             <h3>Publish</h3>
             <div className="cmd-line">fl ./my-folder</div>
             <p>Your site goes live instantly and you get a shareable URL. Works with a single file too.</p>
           </div>
           <div className="step">
-            <span className="step-num">2</span>
+            <span className="step-num">3</span>
             <h3>Republish</h3>
             <div className="cmd-line">fl ./my-folder</div>
             <p>The same command updates your site. We diff locally and upload only what changed.</p>
@@ -106,7 +112,7 @@ showEditLink: false
         <div className="final-card reveal">
           <h2>Markdown to URL. Straight from your shell.</h2>
           <p>Install the CLI and publish your first site in seconds — free, no credit card required.</p>
-          <a className="btn btn-primary" href="https://flowershow.app/docs/cli">Install now <span className="arw">→</span></a>
+          <a className="btn btn-primary" href="/docs/reference/cli#installation">Install now <span className="arw">→</span></a>
           <p className="fine">Open source · Free plan, forever</p>
         </div>
       </div>

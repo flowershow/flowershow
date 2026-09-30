@@ -7,26 +7,40 @@ The Flowershow CLI allows you to publish your Markdown files and folders to Flow
 
 ## Installation
 
+The CLI is a single binary called `fl` (the install script also adds a `flowershow` alias).
+
 **macOS / Linux** — run the install script:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh
 ```
 
-This automatically detects your OS and architecture, downloads the correct binary, and installs it to `/usr/local/bin/`.
+This detects your OS and architecture, downloads the latest binary, and installs it to `/usr/local/bin/` (using `sudo` if needed). To install without `sudo`, for example from an AI agent or in CI, choose another directory:
 
-**Windows** — download `fl_windows_amd64.zip` from the [GitHub Releases](https://github.com/flowershow/flowershow/releases) page and add the extracted binary to your `PATH`.
+```bash
+curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | FL_INSTALL_DIR="$HOME/.local/bin" sh
+```
+
+**Windows** — download `fl_windows_amd64.zip` (or `fl_windows_arm64.zip` for ARM) from the [latest release](https://github.com/flowershow/flowershow/releases/latest) and add the extracted `fl.exe` to your `PATH`.
+
+Check it worked:
+
+```bash
+fl --version
+```
 
 > [!WARNING]
-> **If you used the OLD (pre Feb 2026) npm CLI** please uninstall it and use `fl` instead:
+> **Not on npm.** The npm packages `flowershow` and `@flowershow/publish` are the old (pre Feb 2026) Node CLI and are deprecated. If you have one installed, remove it and use `fl` instead:
 >
 > ```bash
-> npm uninstall -g @flowershow/publish
+> npm uninstall -g @flowershow/publish flowershow
 > ```
->
-> Then follow the installation instructions above.
+
+**Using an AI agent?** Install the [Flowershow skill](/docs/agents/skills) and your agent can install and run `fl` for you. See [Supported agents](/docs/agents/supported-agents).
 
 ### Manual installation
+
+Download the archive for your platform from the [latest release](https://github.com/flowershow/flowershow/releases/latest) and put the `fl` binary on your `PATH`.
 
 **macOS (Apple Silicon)**
 
@@ -64,7 +78,7 @@ sudo mv fl /usr/local/bin/
 curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh
 ```
 
-**Windows** — download the latest `fl_windows_amd64.zip` from the [GitHub Releases](https://github.com/flowershow/flowershow/releases) page and replace your existing binary.
+**Windows** — download the latest `fl_windows_amd64.zip` (or `fl_windows_arm64.zip`) from the [latest release](https://github.com/flowershow/flowershow/releases/latest) and replace your existing binary.
 
 ## Authentication
 
@@ -74,7 +88,7 @@ Before you can publish, you need to authenticate with your Flowershow account.
 fl login
 ```
 
-This command will open your browser to complete the authentication process. Once finished, your authentication token will be stored locally.
+This prints a URL with a one-time code. Open it in your browser and approve, and the CLI finishes logging in (the code expires after 15 minutes). Your token is stored in `~/.flowershow/token.json`.
 
 To check who you're logged in as:
 
@@ -92,7 +106,7 @@ fl logout
 
 ## Publishing a Site
 
-The core command is `fl`. You can publish a single file or an entire folder.
+The core command is `fl`. You can publish a single file or an entire folder, of Markdown, HTML, or both. `.html` files are served as-is, with the CSS, JavaScript and other files they reference (see [Publishing HTML](/docs/agents/html)).
 
 ### Publish a Folder
 
@@ -102,15 +116,21 @@ To publish a folder of notes:
 fl ./my-notes
 ```
 
-This will create a new site (named after the folder) and upload all supported files within it.
+This will create a new site (named after the folder) and upload all supported files within it. The site URL (`https://<site-name>-<username>.flowershow.me`) is printed at the end.
+
+> [!WARNING]
+> If you already have a site with the same name, `fl` publishes to that site instead of creating a new one, and removes files from it that aren't in your folder. Check `fl list` first and use `--name` to choose a different name if needed.
 
 ### Publish a Single File
 
-To publish a single markdown file:
+To publish a single Markdown or HTML file:
 
 ```bash
 fl ./my-note.md
+fl ./report.html
 ```
+
+To publish an HTML page together with its CSS, JavaScript or images, put them in a folder and publish the folder, so relative paths keep working.
 
 ### Options
 
@@ -185,6 +205,16 @@ To delete a site and all its content:
 
 ```bash
 fl delete <site-name>
+fl delete --yes <site-name>   # skip the confirmation prompt
+```
+
+### Site settings
+
+To see a site's plan, privacy, comments, search, GitHub connection and custom domain:
+
+```bash
+fl settings                  # uses the .flowershow file in the current folder
+fl settings --name <site-name>
 ```
 
 ## Troubleshooting

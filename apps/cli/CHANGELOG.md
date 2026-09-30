@@ -5,6 +5,8 @@
 - Fix: publishing a path that isn't linked to a site (no `.flowershow` file) no longer silently overwrites an existing site with the same name. Previously `fl ./notes` would sync into your existing `notes` site and delete any of its files missing locally, with no prompt, even without `--yes`. Now `fl` warns (naming the site and its URL) and asks whether to overwrite it or choose a new name. With `--yes` it refuses and exits non-zero; pass `--overwrite` to publish into the existing site on purpose. Linked folders are unchanged.
 - New `--overwrite` flag: the explicit opt-in for publishing an unlinked path into an existing site with the same name. `--yes` now only skips the new-site name prompt.
 - Fix: `fl` now exits with a non-zero status on every failure (not authenticated, path not found, validation errors, site not found, API errors, failed uploads), so scripts, CI and agents can detect failures. `fl whoami` exits 1 when not logged in or when the token is invalid.
+- `install.sh`: set `FL_INSTALL_DIR` to install without `sudo` (e.g. `FL_INSTALL_DIR="$HOME/.local/bin"`), for AI agents and CI. The script now also warns when the install directory isn't on your `PATH`.
+- The "couldn't find a site" warning now points to the dashboard at `https://cloud.flowershow.app` instead of the retired `https://my.flowershow.app`.
 
 ## 2.3.0
 

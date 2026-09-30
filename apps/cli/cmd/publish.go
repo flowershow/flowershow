@@ -157,7 +157,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite boo
 		ui.PrintWarning(fmt.Sprintf(
 			"Couldn't find a site named %q.\n"+
 				"It may have been renamed — your content and URL are unchanged.\n"+
-				"Check its current name in your dashboard: https://my.flowershow.app",
+				"Check its current name in your dashboard: https://cloud.flowershow.app",
 			siteName,
 		))
 

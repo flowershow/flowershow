@@ -1211,9 +1211,9 @@
 }
 
 /* Two-up steps and concept cards (the kit defaults to three across) */
-.fs-root.lp-cli .cli-steps { grid-template-columns: repeat(2, 1fr); max-width: 760px; margin: 0 auto; }
+.fs-root.lp-cli .cli-steps { grid-template-columns: repeat(3, 1fr); max-width: 1040px; margin: 0 auto; }
 .fs-root.lp-cli .cli-steps .step { align-items: stretch; }
-.fs-root.lp-cli .cli-steps .cmd-line { margin-top: 16px; }
+.fs-root.lp-cli .cli-steps .cmd-line { margin-top: 16px; overflow-wrap: anywhere; }
 .fs-root.lp-cli .concept-grid { grid-template-columns: repeat(2, 1fr); }
 @media (max-width: 620px) {
   .fs-root.lp-cli .cli-steps, .fs-root.lp-cli .concept-grid { grid-template-columns: 1fr; }
@@ -1248,6 +1248,62 @@
   background: var(--surface-dark); border-radius: 10px; padding: 12px 15px;
 }
 .fs-root .cmd-line::before { content: "$ "; color: var(--berry); }
+
+/* ==========================================================================
+   AI landing — /publish-with-ai
+   --------------------------------------------------------------------------
+   Reuses the shared landing kit (.hero, .section, .steps, .concept-grid,
+   .faq-grid, .final-card) with the default berry accent, like /cli. Borrows
+   the home page's agent chat mockup (.vis-agent / .chat / .msg) as the hero
+   visual and the .cmd-line chip from /cli. Adds a .prompt-line chip (a chat
+   prompt, not a shell command) and the agent icon row.
+   ========================================================================== */
+
+/* Re-tint gardens-default-fern kit pieces to berry */
+.fs-root.lp-ai .pill { color: var(--berry-ink); background: var(--tint-berry); }
+.fs-root.lp-ai .step-num { color: var(--berry-ink); background: var(--tint-berry); }
+
+/* Inline code in prose — mono chip in the berry accent (same as /cli) */
+.fs-root.lp-ai .concept-card code, .fs-root.lp-ai .section-head code, .fs-root.lp-ai .faq-item code {
+  font-family: var(--mono); font-size: .88em; color: var(--berry-ink);
+  background: var(--surface-card); border-radius: 5px; padding: 1px 6px;
+}
+
+/* Hero visual — the agent chat mockup, sized up from its home-page tile */
+.fs-root .hero-media-agent { width: 100%; max-width: 520px; justify-self: center; }
+.fs-root.lp-ai .hero-media-agent .vis-agent { padding: 20px; box-shadow: 0 1px 2px rgba(17,13,15,.06), 0 30px 70px -28px rgba(17,13,15,.25); }
+.fs-root.lp-ai .hero-media-agent .msg { font-size: 14px; }
+.fs-root.lp-ai .hero-media-agent .msg.bot .step { font-size: 12.5px; overflow-wrap: anywhere; }
+
+/* Steps — three across, commands/prompts stretch full width */
+.fs-root.lp-ai .ai-steps { grid-template-columns: repeat(3, 1fr); }
+.fs-root.lp-ai .ai-steps .step { align-items: stretch; }
+.fs-root.lp-ai .ai-steps .cmd-line, .fs-root.lp-ai .ai-steps .prompt-line { margin-top: 16px; overflow-wrap: anywhere; }
+.fs-root.lp-ai .cmd-line.url-line::before { content: none; } /* a URL, not a shell command: no "$ " */
+
+/* Prompt chip — what you say to the agent (light, quoted) vs .cmd-line (dark, shell) */
+.fs-root .prompt-line {
+  font-size: 14px; color: var(--ink); background: var(--canvas);
+  border: 1px solid var(--hairline-strong); border-radius: 10px; padding: 12px 15px;
+}
+.fs-root .prompt-line::before { content: "› "; color: var(--berry); font-weight: 700; }
+
+/* Concept grids — two-up by default, three-up for use cases */
+.fs-root.lp-ai .concept-grid { grid-template-columns: repeat(2, 1fr); }
+.fs-root.lp-ai .concept-grid.ai-uses { grid-template-columns: repeat(3, 1fr); }
+
+/* Agent icon row */
+.fs-root.lp-ai .agent-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; }
+.fs-root.lp-ai .agent-row .pa-icons { display: inline-flex; align-items: center; gap: 14px; }
+.fs-root.lp-ai .agent-row .pa-icons svg { display: block; width: 32px; height: 32px; }
+.fs-root.lp-ai .agent-row .agent-names { color: var(--muted); font-size: 16px; text-align: center; }
+
+@media (max-width: 900px) {
+  .fs-root.lp-ai .ai-steps, .fs-root.lp-ai .concept-grid.ai-uses { grid-template-columns: 1fr; }
+}
+@media (max-width: 620px) {
+  .fs-root.lp-ai .concept-grid { grid-template-columns: 1fr; }
+}
 
 /* ==========================================================================
    Obsidian landing — /publish-obsidian
