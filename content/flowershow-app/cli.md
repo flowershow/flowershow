@@ -12,7 +12,7 @@ showEditLink: false
     <section className="hero">
       <div className="wrap hero-grid">
         <div className="hero-copy reveal">
-          <a className="pill" href="/docs/agents/skills">🤖 New — publish with your AI agent <span className="arw">→</span></a>
+          <a className="pill" href="/publish-with-ai">🤖 New — publish with your AI agent <span className="arw">→</span></a>
           <h1>Publish Markdown directly from your terminal.</h1>
           <p className="lede">CLI to publish Markdown and HTML straight from the command line. Perfect for power users and AI agents — get a shareable URL in seconds.</p>
           <div className="cta-row">
