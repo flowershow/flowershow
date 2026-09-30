@@ -3,7 +3,9 @@ set -e
 
 BASE_URL="https://github.com/flowershow/flowershow/releases/latest/download"
 BINARY="fl"
-INSTALL_DIR="/usr/local/bin"
+# Override with FL_INSTALL_DIR to install somewhere you can write without sudo,
+# e.g. FL_INSTALL_DIR="$HOME/.local/bin" (useful for AI agents and CI).
+INSTALL_DIR="${FL_INSTALL_DIR:-/usr/local/bin}"
 
 # Detect OS
 OS="$(uname -s)"
@@ -47,6 +49,10 @@ else
 fi
 
 # Install binary
+if [ -n "$FL_INSTALL_DIR" ]; then
+  mkdir -p "$INSTALL_DIR"
+fi
+
 if [ -w "$INSTALL_DIR" ]; then
   mv "$TMP_DIR/$BINARY" "$INSTALL_DIR/$BINARY"
 else
@@ -66,4 +72,8 @@ fi
 
 echo "fl installed successfully to $INSTALL_DIR/$BINARY"
 echo "Also available as '$ALIAS'."
+case ":$PATH:" in
+  *":$INSTALL_DIR:"*) ;;
+  *) echo "Note: $INSTALL_DIR is not on your PATH. Add it, e.g. export PATH=\"$INSTALL_DIR:\$PATH\"" ;;
+esac
 echo "Run 'fl login' to get started."

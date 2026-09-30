@@ -1,8 +1,10 @@
 # Flowershow CLI (`fl`)
 
-The CLI tool for publishing Markdown files with Flowershow.
+The CLI tool for publishing Markdown and HTML files and folders with Flowershow.
 
 ## Installation
+
+The CLI is a single Go binary called `fl` (the install script also adds a `flowershow` alias). There is one supported install path per platform:
 
 **macOS / Linux** — run the install script:
 
@@ -10,14 +12,21 @@ The CLI tool for publishing Markdown files with Flowershow.
 curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh
 ```
 
-This automatically detects your OS and architecture, downloads the correct binary, and installs it to `/usr/local/bin/`.
+This detects your OS and architecture, downloads the latest release binary, and installs it to `/usr/local/bin/` (using `sudo` if that directory isn't writable). To install without `sudo`, for example from an AI agent or CI, set `FL_INSTALL_DIR`:
 
-**Windows** — download `fl_windows_amd64.zip` from the [GitHub Releases](https://github.com/flowershow/flowershow/releases) page and add the extracted binary to your `PATH`.
+```bash
+curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | FL_INSTALL_DIR="$HOME/.local/bin" sh
+```
+
+**Windows** — download `fl_windows_amd64.zip` (or `fl_windows_arm64.zip`) from the [latest release](https://github.com/flowershow/flowershow/releases/latest) and add the extracted `fl.exe` to your `PATH`.
+
+> [!WARNING]
+> The npm packages `flowershow` and `@flowershow/publish` are the old, deprecated Node CLI. Don't install them. If you have one installed, remove it with `npm uninstall -g @flowershow/publish flowershow`.
 
 <details>
 <summary>Manual installation</summary>
 
-Download the archive for your platform from the [GitHub Releases](https://github.com/flowershow/flowershow/releases) page and place the binary on your `PATH`.
+Download the archive for your platform from the [latest release](https://github.com/flowershow/flowershow/releases/latest) and place the binary on your `PATH`.
 
 **macOS (Apple Silicon)**
 
@@ -64,7 +73,7 @@ fl ./my-notes
 curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh
 ```
 
-**Windows** — download the latest `fl_windows_amd64.zip` from the [GitHub Releases](https://github.com/flowershow/flowershow/releases) page and replace your existing binary.
+**Windows** — download the latest `fl_windows_amd64.zip` (or `fl_windows_arm64.zip`) from the [latest release](https://github.com/flowershow/flowershow/releases/latest) and replace your existing binary.
 
 ## Quick Start
 
@@ -139,6 +148,9 @@ Publish files or folders to Flowershow. If the site already exists, `fl` automat
 # Publish a single markdown file
 fl ./my-note.md
 
+# Publish a single HTML page (served as-is)
+fl ./report.html
+
 # Publish multiple files
 fl ./intro.md ./chapter1.md ./chapter2.md
 
@@ -172,17 +184,18 @@ fl --yes ./my-notes
 
 - Filename becomes the project name (e.g. `fl about.md` will create a site named `about`)
 - File keeps its original name
-- Site accessible at `/@{username}/{filename}` (e.g. `/@johndoe/about`)
+- Site accessible at `https://{filename}-{username}.flowershow.me` (e.g. `https://about-johndoe.flowershow.me`)
 
 **Multiple files behavior:**
 
 - First filename becomes the project name (e.g. `fl about.md team.md abc.md` will create a site named `about`)
-- Site accessible at `/@{username}/{first-filename}` (e.g. `/@johndoe/about`)
+- Site accessible at `https://{first-filename}-{username}.flowershow.me`
+- Paths are flattened to file names: `fl index.html css/style.css` publishes `/index.html` and `/style.css`. To keep a folder structure, publish the folder.
 
 **Folder behavior:**
 
 - Folder name becomes the project name (e.g. `fl my-digital-garden/blog` will create a site named `blog`)
-- Site accessible at `/@{username}/{foldername}` (e.g. `/@johndoe/blog`)
+- Site accessible at `https://{foldername}-{username}.flowershow.me` (e.g. `https://blog-johndoe.flowershow.me`)
 
 ### Site Management
 
@@ -233,7 +246,7 @@ If a `.gitignore` file is present in the published folder, the Flowershow CLI wi
 
 ## Using with AI agents
 
-The Flowershow CLI is designed to work with local AI coding agents (Claude Code, Cursor, Windsurf, and others). Install the Flowershow skill so your agent knows how to publish and manage your sites:
+The Flowershow CLI is designed to work with AI agents (Claude Code, Codex, Cursor, the Claude apps, ChatGPT and others). Install the Flowershow skill so your agent knows how to install `fl`, publish and manage your sites:
 
 **With Node.js:**
 
@@ -241,7 +254,12 @@ The Flowershow CLI is designed to work with local AI coding agents (Claude Code,
 npx skills add flowershow/skills --global
 ```
 
-**Without Node.js:** Refer to your agent's documentation for adding custom skills or instructions, then point it to the skill source at `https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md`.
+**Without Node.js:** download [`SKILL.md`](https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md) into your agent's skills folder. See [Supported agents](https://flowershow.app/docs/agents/supported-agents) for per-agent steps.
+
+Tips for agents and scripts:
+
+- `fl login` prints a verification URL, then waits up to 15 minutes for approval. Run it in the background and show the URL to the user.
+- `--yes` skips the new-site prompt. It does not protect against name clashes: if a site with the same name already exists, `fl` syncs to it (see [Name clashes](#name-clashes)).
 
 ## Telemetry
 
@@ -255,13 +273,13 @@ FLOWERSHOW_TELEMETRY_DISABLED=1
 
 ## Site URLs
 
-All CLI-published sites are accessible at:
+Sites are published at:
 
 ```
-https://my.flowershow.app/@{username}/{project-name}
+https://{site-name}-{username}.flowershow.me
 ```
 
-Where `{username}` is your authenticated username.
+The exact URL is printed at the end of each publish and shown by `fl list`. It is fixed when the site is created, so renaming a site doesn't change it.
 
 ## Troubleshooting
 
@@ -280,6 +298,10 @@ fl login
 ### Site already exists — `fl` auto-syncs it
 
 If you run `fl` on a path whose site already exists on the server, it will automatically sync changes instead of erroring. You don't need to do anything special — just run `fl <path>` every time.
+
+### Name clashes
+
+The site name defaults to the folder or file name. If you already have a site with that name, `fl` treats the path as that site and syncs to it, including deleting files that aren't in the folder you're publishing. Before publishing a new folder or file, check `fl list` and use `--name` to pick a unique name if needed.
 
 ### "Site not found" (when using sync)
 

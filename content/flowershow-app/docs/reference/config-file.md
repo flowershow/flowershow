@@ -423,12 +423,12 @@ Enable an RSS feed for your site. [[rss-feed|Learn more →]]
 ### `showBuiltWithButton` (⭐️ Premium feature)
 
 **Type:** `boolean`  
-**Default:** `true`
+**Default:** `false` on Premium sites (the button is hidden). Free sites always show it.
 
-Hide the "Built with Flowershow" button in the footer.
+Show the "Built with Flowershow" button in the footer of a Premium site.
 
 ```json
-"showBuiltWithButton": false
+"showBuiltWithButton": true
 ```
 
 ---
