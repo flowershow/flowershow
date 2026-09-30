@@ -76,7 +76,9 @@ export async function GET(
     // missing or invalid config.json — fall back to DB config only
   }
 
-  const siteConfig = resolveSiteConfig(dbConfig, fileConfig);
+  const siteConfig = resolveSiteConfig(dbConfig, fileConfig, {
+    siteId: site.id,
+  });
 
   if (!siteConfig.enableRss) {
     return new Response('Not found', { status: 404 });
