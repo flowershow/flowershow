@@ -4,7 +4,11 @@ import {
 } from '@flowershow/api-contract';
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { ANONYMOUS_USER_ID, verifyOwnershipToken } from '@/lib/anonymous-user';
+import {
+  ANONYMOUS_USER_ID,
+  verifyOwnershipToken,
+  verifySiteClaimToken,
+} from '@/lib/anonymous-user';
 import PostHogClient from '@/lib/server-posthog';
 import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
@@ -28,15 +32,29 @@ export async function POST(request: NextRequest) {
     const parsedBody = ClaimSiteRequestSchema.safeParse(await request.json());
     if (!parsedBody.success) {
       return NextResponse.json(
-        { success: false, error: 'siteId and ownershipToken are required' },
+        {
+          success: false,
+          error: 'siteId and either claimToken or ownershipToken are required',
+        },
         { status: 400 },
       );
     }
 
-    const { siteId, ownershipToken } = parsedBody.data;
+    const { siteId, ownershipToken, claimToken } = parsedBody.data;
 
-    // Verify ownership token - returns anonymousUserId if valid
-    const anonymousUserId = verifyOwnershipToken(ownershipToken);
+    let anonymousUserId: string | null = null;
+    if (claimToken) {
+      const claim = verifySiteClaimToken(claimToken);
+      if (!claim || claim.siteId !== siteId) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid claim link for this site' },
+          { status: 403 },
+        );
+      }
+      anonymousUserId = claim.anonymousUserId;
+    } else if (ownershipToken) {
+      anonymousUserId = verifyOwnershipToken(ownershipToken);
+    }
     if (!anonymousUserId) {
       return NextResponse.json(
         { success: false, error: 'Invalid ownership token' },
@@ -96,6 +114,7 @@ export async function POST(request: NextRequest) {
         site_id: siteId,
         sites_owned_count: userSitesCount + 1,
         auth_method: 'nextauth', // Could be refined based on provider
+        claim_method: claimToken ? 'link' : 'browser',
       },
     });
     await posthog.shutdown();

@@ -316,10 +316,15 @@ export const AnonPublishResponseSchema = z.object({
 });
 export type AnonPublishResponse = z.infer<typeof AnonPublishResponseSchema>;
 
-export const ClaimSiteRequestSchema = z.object({
-  siteId: z.string(),
-  ownershipToken: z.string(),
-});
+export const ClaimSiteRequestSchema = z
+  .object({
+    siteId: z.string(),
+    ownershipToken: z.string().optional(),
+    claimToken: z.string().optional(),
+  })
+  .refine((v) => !!v.ownershipToken || !!v.claimToken, {
+    message: 'ownershipToken or claimToken is required',
+  });
 export type ClaimSiteRequest = z.infer<typeof ClaimSiteRequestSchema>;
 
 export const ClaimSiteResponseSchema = z.object({

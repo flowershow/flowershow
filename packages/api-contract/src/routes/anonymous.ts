@@ -126,7 +126,7 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
     operationId: 'claimSite',
     summary: 'Claim an anonymous site',
     description:
-      'Transfer ownership of an anonymous site to the authenticated user.',
+      'Transfer ownership of an anonymous site to the authenticated user. Provide either `claimToken` (site-scoped token from a claim link) or `ownershipToken` (browser-wide token from drag-and-drop publishing).',
     tags: ['Anonymous Publishing'],
     security: [{ sessionCookie: [] }],
     request: {

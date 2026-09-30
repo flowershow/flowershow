@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { env } from '@/env.mjs';
 import { getAnonymousToken } from '@/lib/client-anonymous-user';
+import { buildClaimCallbackUrl, buildClaimLoginUrl } from './claim-url';
 
 const isSecure =
   env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
@@ -33,12 +34,18 @@ export default function ClaimPage() {
 
     if (status === 'unauthenticated') {
       // Redirect to login on cloud domain with callback back to home domain
-      const siteId = searchParams.get('siteId');
-      const callbackUrl = siteId
-        ? `${protocol}://${env.NEXT_PUBLIC_HOME_DOMAIN}/claim?siteId=${siteId}`
-        : '/claim';
+      const callbackUrl = buildClaimCallbackUrl({
+        protocol,
+        homeDomain: env.NEXT_PUBLIC_HOME_DOMAIN,
+        siteId: searchParams.get('siteId'),
+        token: searchParams.get('token'),
+      });
       router.push(
-        `${protocol}://${env.NEXT_PUBLIC_CLOUD_DOMAIN}/login?callbackUrl=${encodeURIComponent(callbackUrl)}`,
+        buildClaimLoginUrl({
+          protocol,
+          cloudDomain: env.NEXT_PUBLIC_CLOUD_DOMAIN,
+          callbackUrl,
+        }),
       );
       return;
     }
@@ -51,10 +58,11 @@ export default function ClaimPage() {
         // Get siteId from URL params
         const siteId = searchParams.get('siteId');
 
-        // Get reusable ownership token from localStorage (persistent across all anonymous sites)
-        const ownershipToken = getAnonymousToken();
+        // Site-scoped claim token from the link, else the reusable browser ownership token
+        const linkToken = searchParams.get('token');
+        const ownershipToken = linkToken ? null : getAnonymousToken();
 
-        if (!siteId || !ownershipToken) {
+        if (!siteId || (!linkToken && !ownershipToken)) {
           setError('Missing claim information. Please try publishing again.');
           setState('error');
           return;
@@ -66,10 +74,11 @@ export default function ClaimPage() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            siteId,
-            ownershipToken,
-          }),
+          body: JSON.stringify(
+            linkToken
+              ? { siteId, claimToken: linkToken }
+              : { siteId, ownershipToken },
+          ),
         });
 
         const result = await response.json();
