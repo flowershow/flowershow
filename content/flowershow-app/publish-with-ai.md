@@ -54,7 +54,7 @@ showEditLink: false
             <span className="step-num">1</span>
             <h3>Install the skill</h3>
             <div className="cmd-line">npx skills add flowershow/skills --global</div>
-            <p>One line, once, for Claude Code, Codex, Cursor and other coding agents. In ChatGPT or the Claude app, or no Node.js? <a href="/docs/agents/skills">Add the skill manually →</a></p>
+            <p>One line, once, for Claude Code, Codex, Cursor and other coding agents. In ChatGPT or the Claude app, or no Node.js? <a href="/docs/agents/supported-agents">Add the skill manually →</a></p>
           </div>
           <div className="step">
             <span className="step-num">2</span>
@@ -168,11 +168,11 @@ showEditLink: false
         <div className="faq-grid reveal">
           <div className="faq-item">
             <h3>Which AI agents does it work with?</h3>
-            <p>Any agent that supports skills, including Claude (Claude Code and the Claude apps), ChatGPT, Codex and Cursor. Coding agents install it with one line; in ChatGPT and the Claude apps you add the skill file yourself. To publish, the agent needs to run the <code>fl</code> CLI with internet access; where it can't, it still configures your site and gives you the one command to run. See the <a href="/docs/agents/skills">skill docs</a>.</p>
+            <p>Any agent that supports skills, including Claude (Claude Code and the Claude apps), ChatGPT, Codex and Cursor. Coding agents install it with one line; in ChatGPT and the Claude apps you add the skill file yourself. To publish, the agent needs to run the <code>fl</code> CLI with internet access; where it can't, it still configures your site and gives you the one command to run. See the <a href="/docs/agents/supported-agents">per-agent install steps</a>.</p>
           </div>
           <div className="faq-item">
             <h3>Do I need Node.js?</h3>
-            <p>Only for the one-line install. Without it, add the skill manually by following your agent's instructions for custom skills. The <a href="/docs/agents/skills">skill docs</a> explain how.</p>
+            <p>Only for the one-line install. Without it, add the skill manually by following your agent's instructions for custom skills. The <a href="/docs/agents/supported-agents">per-agent install steps</a> explain how.</p>
           </div>
           <div className="faq-item">
             <h3>Can I publish HTML, not just Markdown?</h3>
