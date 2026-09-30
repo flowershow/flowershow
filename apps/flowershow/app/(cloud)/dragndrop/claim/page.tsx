@@ -2,9 +2,10 @@
 
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { env } from '@/env.mjs';
 import { getAnonymousToken } from '@/lib/client-anonymous-user';
+import { decideClaimAction, scrubbedClaimPath } from './claim-flow';
 import { buildClaimCallbackUrl, buildClaimLoginUrl } from './claim-url';
 
 const isSecure =
@@ -12,7 +13,7 @@ const isSecure =
   env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
 const protocol = isSecure ? 'https' : 'http';
 
-type ClaimState = 'loading' | 'claiming' | 'success' | 'error';
+type ClaimState = 'loading' | 'confirm' | 'claiming' | 'success' | 'error';
 
 export default function ClaimPage() {
   const [state, setState] = useState<ClaimState>('loading');
@@ -24,61 +25,26 @@ export default function ClaimPage() {
 
   const searchParams = useSearchParams();
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { status } = useSession();
 
-  useEffect(() => {
-    // Wait for authentication to complete
-    if (status === 'loading') {
-      return;
-    }
+  // Read once: the token is scrubbed from the address bar after login, but
+  // kept here so the confirm button still works.
+  const [siteId] = useState(() => searchParams.get('siteId'));
+  const [linkToken] = useState(() => searchParams.get('token'));
+  const claimStarted = useRef(false);
 
-    if (status === 'unauthenticated') {
-      // Redirect to login on cloud domain with callback back to home domain
-      const callbackUrl = buildClaimCallbackUrl({
-        protocol,
-        homeDomain: env.NEXT_PUBLIC_HOME_DOMAIN,
-        siteId: searchParams.get('siteId'),
-        token: searchParams.get('token'),
-      });
-      router.push(
-        buildClaimLoginUrl({
-          protocol,
-          cloudDomain: env.NEXT_PUBLIC_CLOUD_DOMAIN,
-          callbackUrl,
-        }),
-      );
-      return;
-    }
-
-    // User is authenticated, proceed with claiming
-    const claimSite = async () => {
+  const claimSite = useCallback(
+    async (body: Record<string, string>) => {
+      if (claimStarted.current) return;
+      claimStarted.current = true;
       try {
         setState('claiming');
-
-        // Get siteId from URL params
-        const siteId = searchParams.get('siteId');
-
-        // Site-scoped claim token from the link, else the reusable browser ownership token
-        const linkToken = searchParams.get('token');
-        const ownershipToken = linkToken ? null : getAnonymousToken();
-
-        if (!siteId || (!linkToken && !ownershipToken)) {
-          setError('Missing claim information. Please try publishing again.');
-          setState('error');
-          return;
-        }
-
-        // Call claim API
         const response = await fetch('/api/sites/claim', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify(
-            linkToken
-              ? { siteId, claimToken: linkToken }
-              : { siteId, ownershipToken },
-          ),
+          body: JSON.stringify(body),
         });
 
         const result = await response.json();
@@ -100,10 +66,94 @@ export default function ClaimPage() {
         setError('An unexpected error occurred');
         setState('error');
       }
-    };
+    },
+    [router],
+  );
 
-    claimSite();
-  }, [status, searchParams, router]);
+  useEffect(() => {
+    const ownershipToken = linkToken ? null : getAnonymousToken();
+    const action = decideClaimAction({
+      status,
+      siteId,
+      linkToken,
+      hasOwnershipToken: !!ownershipToken,
+    });
+
+    switch (action) {
+      case 'wait':
+        return;
+      case 'login': {
+        // Redirect to login on cloud domain with callback back to home
+        // domain, keeping the token so the claim can continue after login.
+        const callbackUrl = buildClaimCallbackUrl({
+          protocol,
+          homeDomain: env.NEXT_PUBLIC_HOME_DOMAIN,
+          siteId,
+          token: linkToken,
+        });
+        router.push(
+          buildClaimLoginUrl({
+            protocol,
+            cloudDomain: env.NEXT_PUBLIC_CLOUD_DOMAIN,
+            callbackUrl,
+          }),
+        );
+        return;
+      }
+      case 'confirm':
+        // Logged in: drop the secret token from the address bar and history.
+        window.history.replaceState(
+          window.history.state,
+          '',
+          scrubbedClaimPath(window.location.pathname, siteId),
+        );
+        setState((s) => (s === 'loading' ? 'confirm' : s));
+        return;
+      case 'auto-claim':
+        if (siteId && ownershipToken) claimSite({ siteId, ownershipToken });
+        return;
+      case 'missing':
+        setError('Missing claim information. Please try publishing again.');
+        setState('error');
+        return;
+    }
+  }, [status, siteId, linkToken, router, claimSite]);
+
+  const dashboardUrl = `${protocol}://${env.NEXT_PUBLIC_CLOUD_DOMAIN}`;
+
+  if (state === 'confirm' && siteId && linkToken) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-gray-50 to-gray-100 dark:from-zinc-900 dark:to-zinc-800">
+        <div className="max-w-md w-full text-center px-4">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100 mb-4">
+            Add this site to your account?
+          </h1>
+          <p className="text-gray-600 dark:text-zinc-300 mb-2">
+            Site ID: <code className="break-all">{siteId}</code>
+          </p>
+          <p className="text-gray-600 dark:text-zinc-300 mb-6">
+            This site was published without an account. It will expire unless
+            you add it to your account.
+          </p>
+          <div className="flex flex-col items-center gap-3">
+            <button
+              type="button"
+              onClick={() => claimSite({ siteId, claimToken: linkToken })}
+              className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
+            >
+              Add to my account
+            </button>
+            <a
+              href={dashboardUrl}
+              className="text-sm text-gray-600 dark:text-zinc-300 underline"
+            >
+              Cancel
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (state === 'loading' || state === 'claiming') {
     return (
@@ -133,9 +183,7 @@ export default function ClaimPage() {
           </h1>
           <p className="text-gray-600 dark:text-zinc-300 mb-6">{error}</p>
           <button
-            onClick={() =>
-              router.push(`${protocol}://${env.NEXT_PUBLIC_CLOUD_DOMAIN}`)
-            }
+            onClick={() => router.push(dashboardUrl)}
             className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
           >
             Go to Dashboard
