@@ -29,7 +29,7 @@ showEditLink: false
                 <span className="bot-head">💐 flowershow skill</span>
                 <span className="step">$ fl --yes ./research</span>
                 <span className="step">✓ Uploaded 24 files · 3 HTML, 21 Markdown</span>
-                <span className="step">→ Live at <b>research.flowershow.me</b></span>
+                <span className="step">→ Live at <b>research-yourname.flowershow.me</b></span>
               </div>
               <div className="msg user">Nice. Add our logo and use the "letterpress" theme.</div>
               <div className="msg bot">
@@ -65,7 +65,7 @@ showEditLink: false
           <div className="step">
             <span className="step-num">3</span>
             <h3>Share the URL</h3>
-            <div className="cmd-line url-line">→ notes.flowershow.me</div>
+            <div className="cmd-line url-line">→ notes-yourname.flowershow.me</div>
             <p>Edit and ask again: only the changed files are re-uploaded.</p>
           </div>
         </div>
