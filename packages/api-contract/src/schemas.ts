@@ -288,6 +288,19 @@ export const AnonPublishRequestSchema = z.object({
 });
 export type AnonPublishRequest = z.infer<typeof AnonPublishRequestSchema>;
 
+// POST /api/sites/anon — create an empty anonymous site for agent/CLI publishing
+export const AnonCreateSiteResponseSchema = z.object({
+  siteId: z.string(),
+  projectName: z.string(),
+  liveUrl: z.string(),
+  claimToken: z.string(),
+  claimUrl: z.string(),
+  expiresAt: z.string(),
+});
+export type AnonCreateSiteResponse = z.infer<
+  typeof AnonCreateSiteResponseSchema
+>;
+
 export const AnonPublishResponseSchema = z.object({
   siteId: z.string(),
   projectName: z.string(),
