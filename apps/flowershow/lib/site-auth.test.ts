@@ -94,6 +94,21 @@ describe('authorizeSiteRequest', () => {
     if (!r.ok) expect(r.response.status).toBe(410);
   });
 
+  it('treats an anonymous site without an expiry as expired (410, fail closed)', async () => {
+    findUnique.mockResolvedValue({
+      id: 'site-1',
+      userId: ANONYMOUS_USER_ID,
+      anonymousOwnerId: ANON,
+      expiresAt: null,
+    });
+    const r = await authorizeSiteRequest(
+      req(generateSiteClaimToken('site-1', ANON)),
+      'site-1',
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.response.status).toBe(410);
+  });
+
   it('returns 401 with no token and 404 for a missing site', async () => {
     let r = await authorizeSiteRequest(req(), 'site-1');
     expect(!r.ok && r.response.status).toBe(401);

@@ -44,6 +44,17 @@ export function validatePublishFiles(
         { status: 400 },
       );
     }
+    // Declared sizes are the only total-size check: reject negative /
+    // non-finite values so they can't offset the total.
+    if (!Number.isFinite(file.size) || file.size < 0) {
+      return NextResponse.json(
+        {
+          error: 'invalid_request',
+          message: `File ${file.path} has an invalid size (must be a non-negative number)`,
+        },
+        { status: 400 },
+      );
+    }
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
         {
@@ -72,7 +83,7 @@ export function validatePublishFiles(
 export const ANON_MAX_FILES = 200;
 export const ANON_MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB
 
-/** Tighter limits for anonymous (claim-token) publishes; then the normal checks. */
+/** Tighter limits for anonymous (claim-token) publishes, on top of the normal checks. */
 export function validateAnonPublishFiles(
   files: FileMetadata[],
 ): NextResponse | null {
@@ -85,10 +96,11 @@ export function validateAnonPublishFiles(
       { status: 413 },
     );
   }
-  const total = files.reduce(
-    (sum, f) => sum + (typeof f.size === 'number' ? f.size : 0),
-    0,
-  );
+  // Per-file checks first (shape, finite non-negative sizes), so the anonymous
+  // total below can't be undercut by negative or non-finite sizes.
+  const baseError = validatePublishFiles(files);
+  if (baseError) return baseError;
+  const total = files.reduce((sum, f) => sum + f.size, 0);
   if (total > ANON_MAX_TOTAL_SIZE) {
     return NextResponse.json(
       {
@@ -99,5 +111,5 @@ export function validateAnonPublishFiles(
       { status: 413 },
     );
   }
-  return validatePublishFiles(files);
+  return null;
 }

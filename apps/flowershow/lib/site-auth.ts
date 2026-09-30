@@ -56,7 +56,9 @@ export async function authorizeSiteRequest(
         'This claim token is not valid for this site (it may already have been claimed)',
       );
     }
-    if (site.expiresAt && site.expiresAt.getTime() <= Date.now()) {
+    // Anonymous sites always have an expiry; treat a missing one as expired
+    // (fail closed on an invariant violation).
+    if (!site.expiresAt || site.expiresAt.getTime() <= Date.now()) {
       return deny(410, 'expired', 'This anonymous site has expired');
     }
     return { ok: true, kind: 'anon', siteId: site.id };
