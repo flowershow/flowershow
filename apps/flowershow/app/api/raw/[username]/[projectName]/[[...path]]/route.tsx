@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
+import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { hasSiteAccess, siteAccessSelect } from '@/lib/site-access';
 import prisma from '@/server/db';
+
+const rawSiteSelect = {
+  ...siteAccessSelect,
+  isTemporary: true,
+  expiresAt: true,
+} as const;
 
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp']);
 
@@ -27,16 +34,25 @@ export async function GET(
     username === '_domain'
       ? await prisma.site.findFirst({
           where: { customDomain: projectName },
-          select: siteAccessSelect,
+          select: rawSiteSelect,
         })
       : await prisma.site.findFirst({
           where: { projectName, user: { username } },
-          select: siteAccessSelect,
+          select: rawSiteSelect,
         });
 
   if (!site) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
+
+  // Expired anonymous sites stop being served before the cleanup cron runs.
+  if (site.isTemporary && site.expiresAt && site.expiresAt <= new Date()) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
+  // Anonymous sites are never indexed (pages and raw files).
+  const robotsHeaders: Record<string, string> =
+    site.userId === ANONYMOUS_USER_ID ? { 'X-Robots-Tag': 'noindex' } : {};
 
   const rawPath = path.join('/');
   const r2Key = `${site.id}/main/raw/${rawPath}`;
@@ -69,7 +85,10 @@ export async function GET(
       }
       return new NextResponse(content, {
         status: 200,
-        headers: { 'Content-Type': 'text/html; charset=utf-8' },
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          ...robotsHeaders,
+        },
       });
     } catch {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -81,7 +100,11 @@ export async function GET(
   // Non-images: cookie already verified above; presigned URL still limits URL sharing.
   if (site.privacyMode === 'PASSWORD') {
     const signedUrl = await generatePresignedGetUrl(r2Key, 300); // 5 minutes
-    return NextResponse.redirect(signedUrl, 302);
+    const signedRes = NextResponse.redirect(signedUrl, 302);
+    for (const [k, v] of Object.entries(robotsHeaders)) {
+      signedRes.headers.set(k, v);
+    }
+    return signedRes;
   }
 
   // Public sites: redirect to the R2 public domain (CDN-cached at edge).
@@ -109,5 +132,6 @@ export async function GET(
   const res = NextResponse.redirect(publicUrl, 302);
   // The redirect must never be cached, or the version key above goes stale.
   res.headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
+  for (const [k, v] of Object.entries(robotsHeaders)) res.headers.set(k, v);
   return res;
 }
