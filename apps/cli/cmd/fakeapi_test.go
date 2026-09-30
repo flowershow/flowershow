@@ -27,6 +27,10 @@ const (
 	anonExpiresAt  = "2026-10-07T12:00:00.000Z"
 )
 
+// fakeGoneServerMsg is the error message the fake returns for a forced
+// siteStatus.
+const fakeGoneServerMsg = "fake server: site unavailable"
+
 // fakeAPI is an in-memory stand-in for the Flowershow API, so publish tests
 // never talk to production. It records every mutating call.
 type fakeAPI struct {
@@ -99,7 +103,7 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 		status, forced := f.siteStatus[id]
 		f.mu.Unlock()
 		if forced {
-			writeJSON(w, status, map[string]string{"message": "This anonymous site has expired"})
+			writeJSON(w, status, map[string]string{"message": fakeGoneServerMsg})
 			return
 		}
 	}

@@ -28,8 +28,9 @@ var publishAnon bool
 // fl never publishes anonymously unless asked to.
 const notLoggedInMsg = "You're not logged in.\nRun `fl login` to publish to your account, or `fl --anon <path>` to publish without an account (expires in 7 days unless claimed)."
 
-// anonGoneMsg is shown when a saved anonymous site rejects its claim token.
-const anonGoneMsg = "This anonymous site has expired or been claimed. Run again without the saved config to create a new one, or log in."
+// anonGoneMsg is shown when a saved anonymous site rejects its claim token
+// (expired, claimed, deleted, or the token is no longer valid).
+const anonGoneMsg = "This anonymous site has expired or been claimed, so it can't be updated from here. Its link was removed from .flowershow: run the same command again to publish a new anonymous site, or run `fl login`."
 
 // anonSingleFilesNote is shown after an anonymous publish that can't be linked.
 const anonSingleFilesNote = "Single files can't be updated without an account. Publish a folder, or run `fl login`."
@@ -403,13 +404,17 @@ func runAnonPublish(saved *localconfig.Config, isFolderMode, canLink bool, folde
 	if saved != nil && saved.ClaimToken != "" {
 		api.SetTokenOverride(saved.ClaimToken)
 		site := api.Site{ID: saved.SiteID, URL: saved.LiveURL}
-		if err := doSync(site, "anonymous site", discovered, sp, startTime); err != nil {
+		if err := syncToSite(site, "anonymous site", discovered, sp, startTime, false); err != nil {
 			var httpErr *api.HTTPError
-			if errors.As(err, &httpErr) && (httpErr.StatusCode == 403 || httpErr.StatusCode == 410) {
+			if errors.As(err, &httpErr) && isAnonGoneStatus(httpErr.StatusCode) {
 				clearAnonConfig(folderPath, saved)
 				return fail(anonGoneMsg)
 			}
-			return err
+			var reported *reportedError
+			if errors.As(err, &reported) {
+				return err
+			}
+			return failWith(err)
 		}
 		printAnonSuccess(saved.LiveURL, saved.ClaimURL, saved.ExpiresAt)
 		return nil
@@ -502,8 +507,25 @@ func clearAnonConfig(folderPath string, cfg *localconfig.Config) {
 	_ = localconfig.Write(folderPath, &rest)
 }
 
+// isAnonGoneStatus reports whether an HTTP status from a claim-token request
+// means the saved anonymous site can no longer be updated: invalid token (401),
+// claimed or not this site (403), deleted (404) or expired (410).
+func isAnonGoneStatus(status int) bool {
+	switch status {
+	case 401, 403, 404, 410:
+		return true
+	}
+	return false
+}
+
 // doSync performs a delta sync to an existing site with already-discovered files.
 func doSync(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.Spinner, startTime time.Time) error {
+	return syncToSite(site, siteName, discovered, sp, startTime, true)
+}
+
+// syncToSite is doSync. If reportPlanErr is false, an error from the sync
+// request itself is returned unprinted, so the caller can explain it.
+func syncToSite(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.Spinner, startTime time.Time, reportPlanErr bool) error {
 	fmt.Printf("  Publishing to: %s\n", ui.Cyan(site.URL))
 
 	var fileMetadata []api.FileMetadata
@@ -519,6 +541,9 @@ func doSync(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.
 	syncPlan, err := api.SyncFiles(site.ID, fileMetadata, false)
 	if err != nil {
 		sp.Fail("Failed to analyze changes")
+		if !reportPlanErr {
+			return err
+		}
 		return failWith(err)
 	}
 	sp.Stop()

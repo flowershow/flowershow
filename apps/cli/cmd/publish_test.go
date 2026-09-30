@@ -407,7 +407,7 @@ func TestPublishAnonWhileLoggedInDoesNotSendUserToken(t *testing.T) {
 }
 
 func TestPublishAnonExpiredOrClaimedSiteClearsConfig(t *testing.T) {
-	for _, status := range []int{403, 410} {
+	for _, status := range []int{401, 403, 404, 410} {
 		t.Run(fmt.Sprint(status), func(t *testing.T) {
 			f := setupFakeAPI(t, false)
 			f.siteStatus["anon-gone"] = status
@@ -419,8 +419,11 @@ func TestPublishAnonExpiredOrClaimedSiteClearsConfig(t *testing.T) {
 			if err == nil {
 				t.Fatal("expected an error for an expired/claimed anonymous site")
 			}
-			if !strings.Contains(out, "This anonymous site has expired or been claimed. Run again without the saved config to create a new one, or log in.") {
-				t.Fatalf("expected expired/claimed message, got:\n%s", out)
+			if strings.Count(out, anonGoneMsg) != 1 {
+				t.Fatalf("expected the expired/claimed message exactly once, got:\n%s", out)
+			}
+			if strings.Contains(out, fakeGoneServerMsg) {
+				t.Fatalf("the raw server error should not be printed as well, got:\n%s", out)
 			}
 			if f.anonCreateCount() != 0 {
 				t.Fatal("must not silently create a new anonymous site")
