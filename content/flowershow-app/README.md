@@ -1,6 +1,6 @@
 ---
 title: Publish Markdown as a Website — Blogs, Docs & Knowledge Bases
-description: Turn markdown files into beautiful websites in seconds. Publish Obsidian vaults, blogs, docs, and knowledge bases — free, no coding required.
+description: Turn Markdown and HTML files into a real website in seconds. Publish Obsidian vaults, blogs, docs, knowledge bases and standalone HTML pages. Free, no coding required.
 layout: plain
 showToc: false
 showEditLink: false
@@ -12,8 +12,8 @@ showComments: false
     <section className="hero">
       <div className="wrap hero-grid">
         <div className="hero-copy reveal">
-          <h1>The simpler way to publish markdown as a website.</h1>
-          <p className="lede">Digital gardens, wikis, blogs, docs — publish them all as beautiful hosted sites, straight from your markdown. No code.</p>
+          <h1>The simpler way to publish Markdown and HTML as a website.</h1>
+          <p className="lede">Digital gardens, wikis, blogs, docs, an HTML report: publish them all as beautiful hosted sites, straight from your Markdown and HTML files. No build step.</p>
           <div className="cta-row">
             <a className="btn btn-primary" href="https://cloud.flowershow.app/login">Get started <span className="arw">→</span></a>
             <a className="btn btn-secondary btn-google" href="https://cloud.flowershow.app/login?provider=google">
@@ -41,7 +41,7 @@ showComments: false
       <div className="wrap">
         <div className="section-head reveal">
           <span className="eyebrow">Use cases</span>
-          <h2>One folder of Markdown, any kind of site.</h2>
+          <h2>One folder of Markdown and HTML, any kind of site.</h2>
           <p>Same files, same workflow, whatever you publish.</p>
         </div>
         <div className="uses-grid reveal">
@@ -71,6 +71,54 @@ showComments: false
         </div>
       </div>
     </section>
+    <section className="section" id="file-types">
+      <div className="wrap">
+        <div className="section-head reveal">
+          <span className="eyebrow">Not just Markdown</span>
+          <h2>Markdown, HTML and more, side by side.</h2>
+          <p>Put your notes, HTML pages, data and Obsidian files in one folder and publish it. You get a real website, not a file link.</p>
+        </div>
+        <div className="ftypes-grid reveal">
+          <div className="panel vis-tree ftypes-tree">
+            <ul>
+              <li className="dir">my-site/</li>
+              <li className="f l1">index.md</li>
+              <li className="f l1">notes.md</li>
+              <li className="f l1">roadmap.canvas</li>
+              <li className="dir l1">report/</li>
+              <li className="f l2">index.html</li>
+              <li className="f l2">style.css</li>
+              <li className="f l2">chart.js</li>
+              <li className="f l2">sales.csv</li>
+              <li className="dir l1">images/</li>
+              <li className="f l2">cover.png</li>
+            </ul>
+          </div>
+          <div className="feature-row ftypes-row">
+            <div className="feature-mini">
+              <h3>Markdown</h3>
+              <p><code>.md</code> and <code>.mdx</code> files become pages with your site's theme and navigation, plus wikilinks, Mermaid and math.</p>
+              <a className="fm-learn" href="/docs/reference/syntax"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            </div>
+            <div className="feature-mini">
+              <h3>HTML</h3>
+              <p><code>.html</code> files are served exactly as written. Scripts run, and relative links to CSS, JavaScript, data and images work.</p>
+              <a className="fm-learn" href="/docs/agents/html"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            </div>
+            <div className="feature-mini">
+              <h3>Data, images, PDFs</h3>
+              <p><code>.json</code>, <code>.csv</code>, images and PDFs are served as files at their own URLs, so your pages can load and link to them.</p>
+              <a className="fm-learn" href="/docs/reference/supported-file-types"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            </div>
+            <div className="feature-mini">
+              <h3>Obsidian Canvas &amp; Bases</h3>
+              <p><code>.canvas</code> files become diagram pages, and Bases render as tables, cards and lists.</p>
+              <a className="fm-learn" href="/docs/reference/obsidian-canvas"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
     <section className="section section-soft" id="features">
       <div className="wrap">
         <div className="section-head reveal">
@@ -81,10 +129,10 @@ showComments: false
           <div className="feature-tile">
             <dt className="ft-head">
               <span className="ft-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 16 4-4-4-4" /><path d="m6 8-4 4 4 4" /><path d="m14.5 4-5 16" /></svg></span>
-              Markdown-native
+              Markdown and HTML
             </dt>
-            <dd className="ft-desc">CommonMark, GFM, Obsidian wikilinks, Mermaid diagrams, and LaTeX math — it all just works.</dd>
-            <a className="ft-learn" href="/docs/reference/syntax"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            <dd className="ft-desc">CommonMark, GFM, Obsidian wikilinks, Mermaid and LaTeX math just work. Standalone HTML pages publish exactly as written.</dd>
+            <a className="ft-learn" href="/docs/reference/supported-file-types"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             <div className="ft-vis">
               <div className="panel vis-code">
                 <pre><span className="c"># Welcome</span><br /><br />This is my <span className="s">**site**</span>.<br /><br />- <span className="w">[[Wikilinks]]</span> just work<br />- GFM tables &amp; task lists<br />- <span className="l">$E = mc^2$</span> LaTeX math<br /><br /><span className="c">```mermaid</span><br />graph LR<br />  Idea --&gt; Note --&gt; Site<br /><span className="c">```</span></pre>
@@ -96,7 +144,7 @@ showComments: false
               <span className="ft-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M12 13v8" /></svg></span>
               Own your content
             </dt>
-            <dd className="ft-desc">Your files stay plain markdown — portable, Git-friendly, no lock-in. Flowershow is infrastructure, not a silo.</dd>
+            <dd className="ft-desc">Your files stay plain Markdown and HTML — portable, Git-friendly, no lock-in. Flowershow is infrastructure, not a silo.</dd>
             <a className="ft-learn" href="/docs"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             <div className="ft-vis">
               <div className="panel vis-tree">
@@ -378,12 +426,12 @@ showComments: false
             <p>Yes. The free plan lets you publish one site on a flowershow.app subdomain — no time limit, no credit card, just a small "Built with Flowershow" footer. Premium plans start at $5/month and unlock custom domains, full-text search, and more. <a className="textlink" href="/pricing"><span className="lm-txt">See pricing</span> <span className="arw">→</span></a></p>
           </div>
           <div className="faq-item reveal">
-            <h3>What markdown does it support?</h3>
-            <p>CommonMark, GitHub Flavored Markdown, Obsidian wikilinks, Mermaid diagrams, LaTeX math, and more. If you're already writing in Obsidian, Typora, or any markdown editor, your content works as-is.</p>
+            <h3>What can I publish?</h3>
+            <p>Markdown and MDX (CommonMark, GitHub Flavored Markdown, Obsidian wikilinks, Mermaid diagrams, LaTeX math) become pages with your site's theme and navigation. HTML files are published as-is, with the CSS, JavaScript, data and images they use. Obsidian Canvas and Bases work too, and you can mix all of these in one folder. <a className="textlink" href="/docs/reference/supported-file-types"><span className="lm-txt">See supported file types</span> <span className="arw">→</span></a></p>
           </div>
           <div className="faq-item reveal">
             <h3>What if I want to move away from Flowershow?</h3>
-            <p>Your content stays in plain markdown files — you own them completely. There's no proprietary format, no lock-in. Take your files anywhere, any time.</p>
+            <p>Your content stays in plain Markdown and HTML files — you own them completely. There's no proprietary format, no lock-in. Take your files anywhere, any time.</p>
           </div>
           <div className="faq-item reveal">
             <h3>Can I use my own domain?</h3>
@@ -421,7 +469,7 @@ showComments: false
         <div className="final-card reveal">
           <span className="petal p1" aria-hidden="true">💐</span>
           <span className="petal p2" aria-hidden="true">💐</span>
-          <h2>Markdown to URL. Instantly. Free.</h2>
+          <h2>Markdown and HTML to URL. Instantly. Free.</h2>
           <p>Join the writers, researchers, and teams behind 1,700+ sites already published with Flowershow.</p>
           <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
           <p className="fine">No credit card required · Free plan, forever</p>

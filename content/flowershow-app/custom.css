@@ -428,6 +428,22 @@
 .fs-root .vis-tree .f::before { content: "◦ "; color: var(--muted-soft); }
 .fs-root .vis-tree .l1 { padding-left: 18px; } .fs-root .vis-tree .l2 { padding-left: 36px; }
 
+/* ---------- File types ("Not just Markdown") — one mixed folder beside what each
+   file type becomes. Reuses the file-tree vis and the feature-mini cards; the
+   tree sits in normal flow here (not inside a masked .ft-vis). ---------- */
+.fs-root .ftypes-grid { display: grid; grid-template-columns: minmax(0, 0.7fr) minmax(0, 2fr);
+  gap: 16px; align-items: stretch; }
+.fs-root .ftypes-tree { font-size: 13px; padding: 24px; }
+.fs-root .ftypes-row { grid-template-columns: repeat(2, 1fr); margin: 0; }
+.fs-root .ftypes-row code { font-family: var(--mono); font-size: .85em; color: var(--ink);
+  background: var(--canvas); border-radius: 5px; padding: 1px 6px; }
+@media (max-width: 760px) {
+  .fs-root .ftypes-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .fs-root .ftypes-row { grid-template-columns: 1fr; }
+}
+
 /* Vis — theme swatches */
 .fs-root .vis-themes { background: var(--canvas); border: 1px solid var(--hairline-strong); border-radius: 12px; padding: 16px; }
 .fs-root .theme-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

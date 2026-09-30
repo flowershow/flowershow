@@ -75,6 +75,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [SEO and social media metadata](/docs/reference/seo-social-metadata) — Configure SEO titles, descriptions, and social media images for better search and sharing.
 - [Sidebar Configuration](/docs/reference/sidebar) — Enable sidebar navigation that displays your site's structure.
 - [Social links](/docs/reference/social-links) — Add social media icons to your site's navbar and footer.
+- [Supported file types](/docs/reference/supported-file-types) — Which files Flowershow renders as themed pages, which it serves as-is, the URL each one gets, and the limits on a publish.
 - [Syntax Mode Configuration](/docs/reference/syntax-mode) — Configure whether your content is parsed as Markdown or MDX, globally or per page.
 - [Markdown syntax support](/docs/reference/syntax) — Overview of Markdown syntax supported by Flowershow, including CommonMark, GitHub Flavored Markdown, and Obsidian extensions.
 - [Table of contents](/docs/reference/table-of-contents) — Control visibility of the page table of contents
