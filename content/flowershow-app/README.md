@@ -1,6 +1,6 @@
 ---
 title: Publish Markdown as a Website — Blogs, Docs & Knowledge Bases
-description: Turn Markdown and HTML files into a real website in seconds. Publish Obsidian vaults, blogs, docs, knowledge bases and standalone HTML pages. Free, no coding required.
+description: Turn Markdown and HTML files into a real website in seconds. Obsidian vaults, blogs, docs, knowledge bases or a single page. Free, no coding required.
 layout: plain
 showToc: false
 showEditLink: false
@@ -13,7 +13,7 @@ showComments: false
       <div className="wrap hero-grid">
         <div className="hero-copy reveal">
           <h1>The simpler way to publish Markdown and HTML as a website.</h1>
-          <p className="lede">Digital gardens, wikis, blogs, docs, an HTML report: publish them all as beautiful hosted sites, straight from your Markdown and HTML files. No build step.</p>
+          <p className="lede">Digital gardens, wikis, blogs, docs, a one-page report: turn your files into a beautiful hosted site. No build step.</p>
           <div className="cta-row">
             <a className="btn btn-primary" href="https://cloud.flowershow.app/login">Get started <span className="arw">→</span></a>
             <a className="btn btn-secondary btn-google" href="https://cloud.flowershow.app/login?provider=google">
@@ -41,8 +41,7 @@ showComments: false
       <div className="wrap">
         <div className="section-head reveal">
           <span className="eyebrow">Use cases</span>
-          <h2>One folder of Markdown and HTML, any kind of site.</h2>
-          <p>Same files, same workflow, whatever you publish.</p>
+          <h2>One folder, any kind of site.</h2>
         </div>
         <div className="uses-grid reveal">
           <div className="use-card use-garden">
@@ -74,9 +73,9 @@ showComments: false
     <section className="section" id="file-types">
       <div className="wrap">
         <div className="section-head reveal">
-          <span className="eyebrow">Not just Markdown</span>
+          <span className="eyebrow">File types</span>
           <h2>Markdown, HTML and more, side by side.</h2>
-          <p>Put your notes, HTML pages, data and Obsidian files in one folder and publish it. You get a real website, not a file link.</p>
+          <p>Mix them in one folder and publish. You get a real website, not a file link.</p>
         </div>
         <div className="ftypes-grid reveal">
           <div className="panel vis-tree ftypes-tree">
@@ -129,10 +128,10 @@ showComments: false
           <div className="feature-tile">
             <dt className="ft-head">
               <span className="ft-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 16 4-4-4-4" /><path d="m6 8-4 4 4 4" /><path d="m14.5 4-5 16" /></svg></span>
-              Markdown and HTML
+              Rich Markdown
             </dt>
-            <dd className="ft-desc">CommonMark, GFM, Obsidian wikilinks, Mermaid and LaTeX math just work. Standalone HTML pages publish exactly as written.</dd>
-            <a className="ft-learn" href="/docs/reference/supported-file-types"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            <dd className="ft-desc">CommonMark, GFM, Obsidian wikilinks, Mermaid and LaTeX math just work.</dd>
+            <a className="ft-learn" href="/docs/reference/syntax"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             <div className="ft-vis">
               <div className="panel vis-code">
                 <pre><span className="c"># Welcome</span><br /><br />This is my <span className="s">**site**</span>.<br /><br />- <span className="w">[[Wikilinks]]</span> just work<br />- GFM tables &amp; task lists<br />- <span className="l">$E = mc^2$</span> LaTeX math<br /><br /><span className="c">```mermaid</span><br />graph LR<br />  Idea --&gt; Note --&gt; Site<br /><span className="c">```</span></pre>
@@ -144,7 +143,7 @@ showComments: false
               <span className="ft-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 8l-9-5-9 5 9 5 9-5z" /><path d="M3 8v8l9 5 9-5V8" /><path d="M12 13v8" /></svg></span>
               Own your content
             </dt>
-            <dd className="ft-desc">Your files stay plain Markdown and HTML — portable, Git-friendly, no lock-in. Flowershow is infrastructure, not a silo.</dd>
+            <dd className="ft-desc">Your files stay plain text — portable, Git-friendly, no lock-in. Flowershow is infrastructure, not a silo.</dd>
             <a className="ft-learn" href="/docs"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             <div className="ft-vis">
               <div className="panel vis-tree">
@@ -275,7 +274,7 @@ showComments: false
       <div className="wrap publish-grid">
         <div className="publish-copy reveal">
           <span className="eyebrow">Ways to publish</span>
-          <h2>Pick the workflow that fits how you already work.</h2>
+          <h2>Publish the way you already work.</h2>
           <div className="publish-cta">
             <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
           </div>
@@ -288,7 +287,7 @@ showComments: false
               </span>
               Using an AI agent?
             </span>
-            <p className="pa-copy">The Flowershow skill publishes, configures, and styles your site — in whichever workflow you already use.</p>
+            <p className="pa-copy">Just ask it to publish. One page or a whole site.</p>
             <a className="textlink" href="/docs/agents/skills"><span className="lm-txt">Instructions for your agent</span> <span className="arw">→</span></a>
           </div>
         </div>
@@ -358,7 +357,7 @@ showComments: false
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/markdowndb.webp" alt="MarkdownDB documentation published with Flowershow" loading="lazy" decoding="async" /></div>
             <div className="show-body">
               <span className="show-badge">Docs</span>
-              <p><span className="nm">MarkdownDB</span> ships its developer documentation straight from markdown.</p>
+              <p><span className="nm">MarkdownDB</span> ships its developer documentation straight from Markdown.</p>
               <a className="show-link" href="https://markdowndb.com"><span className="lm-txt">markdowndb.com</span> <span className="arw">→</span></a>
             </div>
           </div>
@@ -394,7 +393,7 @@ showComments: false
           <span className="sn-badge" aria-hidden="true">💐</span>
           <div className="sn-copy">
             <h3>This very site runs on Flowershow.</h3>
-            <p>The whole landing page is just markdown + HTML blocks, a config file, and some CSS — check exactly how it's built.</p>
+            <p>The whole page is just Markdown with HTML blocks, a config file and some CSS. See exactly how it's built.</p>
           </div>
           <a className="btn btn-secondary sn-btn" href="https://github.com/flowershow/flowershow/tree/main/content/flowershow-app">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23a11.5 11.5 0 0 1 3.003-.404c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222 0 1.606-.014 2.898-.014 3.293 0 .322.216.694.825.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
@@ -407,7 +406,7 @@ showComments: false
       <div className="wrap">
         <div className="section-head reveal">
           <span className="eyebrow">Demo</span>
-          <h2>See it go from markdown to live site.</h2>
+          <h2>See it go from Markdown to live site.</h2>
         </div>
         <div className="demo-media reveal">
           <iframe src="https://www.youtube-nocookie.com/embed/E9mjeskpdf8?rel=0" title="Flowershow demo — publish markdown as a website" loading="lazy" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
@@ -427,15 +426,15 @@ showComments: false
           </div>
           <div className="faq-item reveal">
             <h3>What can I publish?</h3>
-            <p>Markdown and MDX (CommonMark, GitHub Flavored Markdown, Obsidian wikilinks, Mermaid diagrams, LaTeX math) become pages with your site's theme and navigation. HTML files are published as-is, with the CSS, JavaScript, data and images they use. Obsidian Canvas and Bases work too, and you can mix all of these in one folder. <a className="textlink" href="/docs/reference/supported-file-types"><span className="lm-txt">See supported file types</span> <span className="arw">→</span></a></p>
+            <p>Markdown and MDX become pages with your site's theme and navigation. HTML files are published as-is, with their CSS, JavaScript, data and images. Obsidian Canvas and Bases work too, all in one folder. <a className="textlink" href="/docs/reference/supported-file-types"><span className="lm-txt">See supported file types</span> <span className="arw">→</span></a></p>
           </div>
           <div className="faq-item reveal">
             <h3>What if I want to move away from Flowershow?</h3>
-            <p>Your content stays in plain Markdown and HTML files — you own them completely. There's no proprietary format, no lock-in. Take your files anywhere, any time.</p>
+            <p>Just take your files. They're plain Markdown and HTML, with no proprietary format and no lock-in.</p>
           </div>
           <div className="faq-item reveal">
             <h3>Can I use my own domain?</h3>
-            <p>Yes, on the Premium plan. Custom domains, custom favicons, and custom social images are all available. <a className="textlink" href="/pricing"><span className="lm-txt">See pricing</span> <span className="arw">→</span></a></p>
+            <p>Yes, on Premium, along with a custom favicon and social image. <a className="textlink" href="/pricing"><span className="lm-txt">See pricing</span> <span className="arw">→</span></a></p>
           </div>
         </div>
       </div>
@@ -469,8 +468,8 @@ showComments: false
         <div className="final-card reveal">
           <span className="petal p1" aria-hidden="true">💐</span>
           <span className="petal p2" aria-hidden="true">💐</span>
-          <h2>Markdown and HTML to URL. Instantly. Free.</h2>
-          <p>Join the writers, researchers, and teams behind 1,700+ sites already published with Flowershow.</p>
+          <h2>Files to URL. Instantly. Free.</h2>
+          <p>Join the writers, researchers and teams behind 1,700+ sites.</p>
           <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
           <p className="fine">No credit card required · Free plan, forever</p>
         </div>

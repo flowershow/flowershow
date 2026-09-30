@@ -14,7 +14,7 @@ showEditLink: false
         <div className="hero-copy reveal">
           <a className="pill" href="/publish-with-ai">🤖 New — publish with your AI agent <span className="arw">→</span></a>
           <h1>Publish Markdown and HTML from your terminal.</h1>
-          <p className="lede">CLI to publish Markdown and HTML straight from the command line. Perfect for power users and AI agents — get a shareable URL in seconds.</p>
+          <p className="lede">One command, a shareable URL in seconds. Built for power users and AI agents.</p>
           <div className="cta-row">
             <a className="btn btn-primary" href="/docs/reference/cli#installation">Install now <span className="arw">→</span></a>
             <a className="btn btn-secondary" href="#demo">Watch demo <span className="arw">→</span></a>
@@ -45,7 +45,7 @@ showEditLink: false
         <div className="section-head reveal">
           <span className="eyebrow">How it works</span>
           <h2>Publish in one command.</h2>
-          <p>No git repo, no build pipeline. Just run <code>fl</code> — you'll get a shareable URL in seconds.</p>
+          <p>No git repo, no build pipeline. Just run <code>fl</code>.</p>
         </div>
         <div className="steps cli-steps reveal">
           <div className="step">
@@ -58,7 +58,7 @@ showEditLink: false
             <span className="step-num">2</span>
             <h3>Publish</h3>
             <div className="cmd-line">fl ./my-folder</div>
-            <p>Your site goes live instantly and you get a shareable URL. Works with a single file too, like <code>fl ./report.html</code>.</p>
+            <p>Your site goes live at a shareable URL. Works with a single file too, like <code>fl ./report.html</code>.</p>
           </div>
           <div className="step">
             <span className="step-num">3</span>
@@ -90,17 +90,17 @@ showEditLink: false
           <div className="concept-card">
             <span className="ic">📄</span>
             <h3>No setup required</h3>
-            <p>No <code>git init</code>, no config files, no "setting up a project". If you have a folder of Markdown or an HTML file on your computer, you can publish it.</p>
+            <p>No <code>git init</code>, no config files, no project setup. If it's a file or folder on your computer, you can publish it.</p>
           </div>
           <div className="concept-card">
             <span className="ic">⚡</span>
             <h3>Instant</h3>
-            <p>No build pipelines and no waiting for a server to clone your repo. The CLI uploads fast, and on updates it diffs locally and sends only what changed.</p>
+            <p>No build queue and no server cloning your repo. Files upload straight from your machine.</p>
           </div>
           <div className="concept-card">
             <span className="ic">🤖</span>
             <h3>Automation ready</h3>
-            <p>Since it's just a command, it's perfect for scripts, cron jobs, or AI agents that need to publish content without a human clicking a UI.</p>
+            <p>It's just a command, so scripts, cron jobs and AI agents can publish without anyone clicking through a UI.</p>
           </div>
           <div className="concept-card">
             <span className="ic">🏃</span>
@@ -113,8 +113,8 @@ showEditLink: false
     <section className="final">
       <div className="wrap">
         <div className="final-card reveal">
-          <h2>Markdown and HTML to URL. Straight from your shell.</h2>
-          <p>Install the CLI and publish your first site in seconds — free, no credit card required.</p>
+          <h2>Files to URL. Straight from your shell.</h2>
+          <p>Install the CLI and publish your first site in seconds.</p>
           <a className="btn btn-primary" href="/docs/reference/cli#installation">Install now <span className="arw">→</span></a>
           <p className="fine">Open source · Free plan, forever</p>
         </div>
