@@ -49,6 +49,10 @@
             "name": "Publish from terminal (CLI)"
           },
           {
+            "href": "/publish-with-ai",
+            "name": "Publish with AI"
+          },
+          {
             "href": "/dragndrop",
             "name": "Quick drag & drop"
           }
@@ -335,6 +339,10 @@
     {
       "from": "/publish",
       "to": "/cli"
+    },
+    {
+      "from": "/ai",
+      "to": "/publish-with-ai"
     },
     {
       "from": "/uses/obsidian",
