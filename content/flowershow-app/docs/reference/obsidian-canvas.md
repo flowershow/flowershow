@@ -19,10 +19,12 @@ Canvas files (`.canvas`) are JSON files created by Obsidian's Canvas feature. Wh
 
 ## Standalone Canvas Pages
 
-Any `.canvas` file in your content is automatically rendered as its own page. The URL preserves the `.canvas` extension to avoid conflicts with markdown files of the same name:
+Any `.canvas` file in your content is automatically rendered as its own page, at the file's path without the extension, like a Markdown page:
 
-- `Roadmap.canvas` renders at `/@user/project/Roadmap.canvas`
-- `notes/architecture.canvas` renders at `/@user/project/notes/architecture.canvas`
+- `Roadmap.canvas` renders at `/Roadmap`
+- `notes/architecture.canvas` renders at `/notes/architecture`
+
+The URL with the `.canvas` extension returns the raw JSON file. Avoid giving a canvas the same name as a Markdown file in the same folder, since both would want the same URL.
 
 Canvas files also appear in the sidebar navigation alongside your markdown pages.
 

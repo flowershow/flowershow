@@ -91,3 +91,5 @@ If you have a full HTML document and want it inside the site layout:
 4. Save it as a `.md` file with frontmatter (`title`, and `layout: plain` if you want no typography styles).
 
 When in doubt, publish the `.html` file as-is. It's the most faithful option.
+
+For every file type Flowershow publishes, and the URL each one gets, see [Supported file types](/docs/reference/supported-file-types).
