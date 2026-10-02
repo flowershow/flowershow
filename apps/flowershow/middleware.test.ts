@@ -135,7 +135,6 @@ describe('rewriteRawIfNeeded — asset types (flowershow-tui)', () => {
     'clip.mov',
     'song.m4a',
     'data.tsv',
-    'app.js.map',
     'IMAGE.PNG',
   ])('serves %s as a raw file', (file) => {
     expect(rewriteTarget(raw(`/assets/${file}`)).pathname).toBe(
@@ -143,11 +142,21 @@ describe('rewriteRawIfNeeded — asset types (flowershow-tui)', () => {
     );
   });
 
-  it('serves every extension that has a known content type', () => {
+  it('serves every extension that has a known content type, except ones that look like page names', () => {
     for (const ext of CONTENT_TYPE_EXTENSIONS) {
+      if (ext === 'base' || ext === 'map') continue;
       expect(raw(`/f.${ext}`), ext).not.toBeNull();
     }
   });
+
+  // A note "Knowledge.base.md" gets the slug /Knowledge.base; treating that as
+  // a raw file would 404 the page (flowershow-tui review).
+  it.each(['/Knowledge.base', '/notes/Road.map'])(
+    'leaves page slug %s to the page renderer',
+    (p) => {
+      expect(raw(p)).toBeNull();
+    },
+  );
 
   it('still serves archives and legacy fonts', () => {
     for (const ext of ['zip', 'tar', 'gz', 'eot']) {
