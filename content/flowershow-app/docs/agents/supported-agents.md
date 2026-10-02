@@ -14,8 +14,8 @@ To publish, the agent also needs to run the [`fl` CLI](/docs/reference/cli), whi
 | Claude Code | `npx skills add` or copy to `~/.claude/skills/` | Yes (tested) |
 | Codex (CLI, IDE, app) | `npx skills add` or copy to `~/.agents/skills/` | Yes, if network access is allowed |
 | Cursor | `npx skills add` or copy to `~/.cursor/skills/` | Yes, from the agent's terminal |
-| Claude apps (claude.ai, desktop, mobile) | Upload a zip in the skills settings | Depends on code execution and network access (see below) |
-| ChatGPT | Add the skill in ChatGPT's skills settings | Depends on its sandbox's network access (see below) |
+| Claude apps (claude.ai, desktop, mobile) | Upload a zip in the skills settings | Use the [Flowershow connector](/docs/agents/mcp) to publish; running `fl` depends on code execution and network access (see below) |
+| ChatGPT | Add the skill in ChatGPT's skills settings | Use the [Flowershow connector](/docs/agents/mcp) to publish; ChatGPT's sandbox can't reach the internet to run `fl` |
 | Other skills-compatible agents | `npx skills add` (50+ agents) or copy `SKILL.md` | If the agent has a terminal and network |
 
 ## Install with Node.js (all local agents)

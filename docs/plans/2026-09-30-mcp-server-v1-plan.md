@@ -1,5 +1,7 @@
 # Flowershow MCP Server v1 Implementation Plan
 
+> **Amended 2026-10-02 (ADR 0014):** implemented inside the main app at `/api/mcp` (web-standard Streamable HTTP transport, sync/status called in-process) instead of reviving the Express app as a separate Vercel project at `mcp.flowershow.app`, so Task 5's Vercel project and DNS aren't needed. The ADR is 0014 (0006 was already taken). MCP-created anonymous sites share one global hourly bucket (`MCP_ANON_HOURLY_LIMIT`), since chat apps call from their own IPs. Code: `apps/flowershow/lib/mcp/`, `apps/flowershow/app/api/mcp/route.ts`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** A hosted, remote MCP server (`https://mcp.flowershow.app/mcp`) that lets chat apps with no shell (claude.ai / Claude Desktop connectors, ChatGPT apps/connectors) publish a page or small site to Flowershow **in one tool call, with no account**, returning a live URL and a claim link. Account holders can optionally pass a PAT to publish into their own sites.
