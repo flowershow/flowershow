@@ -45,10 +45,13 @@ describe('decideClaimAction', () => {
     ).toBe('auto-claim');
   });
 
-  it('reports missing information', () => {
+  it('asks to reopen the link when only the siteId survived (e.g. login finished in another browser)', () => {
     expect(decideClaimAction({ ...base, status: 'authenticated' })).toBe(
-      'missing',
+      'reopen-link',
     );
+  });
+
+  it('reports missing information', () => {
     expect(
       decideClaimAction({
         ...base,

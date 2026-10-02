@@ -177,9 +177,10 @@ describe('POST /api/sites/claim', () => {
       expect(update).not.toHaveBeenCalled();
     });
 
-    it('rejects a request with no Origin header with 403', async () => {
+    it('rejects a request with neither Origin nor Sec-Fetch-Site with 403', async () => {
       const r = req({ siteId: 'site-1', claimToken: claimToken() });
       r.headers.delete('origin');
+      r.headers.delete('sec-fetch-site');
       const res = await POST(r);
       expect(res.status).toBe(403);
       expect(update).not.toHaveBeenCalled();
@@ -205,6 +206,13 @@ describe('POST /api/sites/claim', () => {
       );
       expect(res.status).toBe(415);
       expect(update).not.toHaveBeenCalled();
+    });
+
+    it('accepts a request with no Origin when Sec-Fetch-Site is same-origin', async () => {
+      const r = req({ siteId: 'site-1', claimToken: claimToken() });
+      r.headers.delete('origin');
+      const res = await POST(r);
+      expect(res.status).toBe(200);
     });
 
     it('accepts a same-origin request without Sec-Fetch-Site (older browsers)', async () => {

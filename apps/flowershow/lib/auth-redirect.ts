@@ -14,6 +14,7 @@ export function resolveAuthRedirect({
 }): string {
   try {
     const redirectUrl = new URL(url, baseUrl);
+    if (!['https:', 'http:'].includes(redirectUrl.protocol)) return baseUrl;
     if (redirectUrl.origin === new URL(baseUrl).origin) {
       return redirectUrl.href;
     }

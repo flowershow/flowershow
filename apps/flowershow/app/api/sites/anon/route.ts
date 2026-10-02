@@ -24,8 +24,9 @@ const ANON_SITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
  * `Authorization: Bearer <claimToken>`. The site expires in 7 days unless claimed.
  */
 export async function POST(request: NextRequest) {
-  // Kill switch: set ANON_PUBLISH_DISABLED=true to stop new anonymous sites
-  // (e.g. during abuse) without a deploy. Existing sites keep working.
+  // Kill switch: set ANON_PUBLISH_DISABLED=true (then redeploy; no code change
+  // needed) to stop new anonymous sites, e.g. during abuse. Existing sites keep
+  // working. Drag-and-drop (/api/sites/publish-anon) is not covered.
   if (env.ANON_PUBLISH_DISABLED === 'true') {
     return NextResponse.json(
       {

@@ -21,6 +21,8 @@ export function parseClaimLink({
 type TokenStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>;
 
 const stashKey = (siteId: string) => `flowershow_claim_token:${siteId}`;
+// Long enough to finish signing up; the token itself lives until the site expires.
+const STASH_TTL_MS = 24 * 60 * 60 * 1000;
 
 /**
  * Keep the claim token in (same-origin) storage while the user logs in, so it
@@ -31,18 +33,27 @@ export function stashClaimToken(
   storage: TokenStorage | null,
   siteId: string,
   token: string,
+  now: number = Date.now(),
 ): void {
   try {
-    storage?.setItem(stashKey(siteId), token);
+    storage?.setItem(stashKey(siteId), JSON.stringify({ token, savedAt: now }));
   } catch {}
 }
 
 export function readStashedClaimToken(
   storage: TokenStorage | null,
   siteId: string,
+  now: number = Date.now(),
 ): string | null {
   try {
-    return storage?.getItem(stashKey(siteId)) ?? null;
+    const raw = storage?.getItem(stashKey(siteId));
+    if (!raw) return null;
+    const { token, savedAt } = JSON.parse(raw);
+    if (typeof token !== 'string' || !(now - savedAt < STASH_TTL_MS)) {
+      storage?.removeItem(stashKey(siteId));
+      return null;
+    }
+    return token;
   } catch {
     return null;
   }

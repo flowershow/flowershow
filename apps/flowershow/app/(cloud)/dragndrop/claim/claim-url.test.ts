@@ -10,6 +10,8 @@ import {
 
 const base = { protocol: 'https', homeDomain: 'flowershow.app' };
 
+const HOUR = 60 * 60 * 1000;
+
 function fakeStorage() {
   const m = new Map<string, string>();
   return {
@@ -67,6 +69,20 @@ describe('claim token stash (survives the login round-trip)', () => {
     expect(readStashedClaimToken(broken, 's1')).toBeNull();
     expect(() => clearStashedClaimToken(broken, 's1')).not.toThrow();
     expect(readStashedClaimToken(null, 's1')).toBeNull();
+  });
+
+  it('ignores and removes a stashed token older than a day', () => {
+    const s = fakeStorage();
+    stashClaimToken(s, 's1', 'fs_claim_x', 0);
+    expect(readStashedClaimToken(s, 's1', 23 * HOUR)).toBe('fs_claim_x');
+    expect(readStashedClaimToken(s, 's1', 25 * HOUR)).toBeNull();
+    expect(s.m.size).toBe(0);
+  });
+
+  it('ignores a malformed stash entry', () => {
+    const s = fakeStorage();
+    s.setItem('flowershow_claim_token:s1', 'not json');
+    expect(readStashedClaimToken(s, 's1')).toBeNull();
   });
 });
 

@@ -22,11 +22,17 @@ import prisma from '@/server/db';
 function rejectCrossSite(request: NextRequest): NextResponse | null {
   const host = request.headers.get('host') ?? request.nextUrl.host;
   const fetchSite = request.headers.get('sec-fetch-site');
+  const origin = request.headers.get('origin');
   let originHost: string | null = null;
   try {
-    originHost = new URL(request.headers.get('origin') ?? '').host;
+    originHost = origin ? new URL(origin).host : null;
   } catch {}
-  if (originHost !== host || (fetchSite && fetchSite !== 'same-origin')) {
+  // Browsers send Origin on POST; if something stripped it, Sec-Fetch-Site
+  // (which pages can't forge) must vouch for the request instead.
+  const sameOrigin = origin
+    ? originHost === host && (!fetchSite || fetchSite === 'same-origin')
+    : fetchSite === 'same-origin';
+  if (!sameOrigin) {
     return NextResponse.json(
       { success: false, error: 'Cross-origin requests are not allowed' },
       { status: 403 },

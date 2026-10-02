@@ -152,6 +152,12 @@ export default function ClaimPage() {
       case 'auto-claim':
         if (siteId && ownershipToken) claimSite({ siteId, ownershipToken });
         return;
+      case 'reopen-link':
+        setError(
+          'Open the claim link again in this browser to finish adding the site to your account.',
+        );
+        setState('error');
+        return;
       case 'missing':
         setError('Missing claim information. Please try publishing again.');
         setState('error');
@@ -185,6 +191,7 @@ export default function ClaimPage() {
             </button>
             <a
               href={dashboardUrl}
+              onClick={() => clearStashedClaimToken(safeLocalStorage(), siteId)}
               className="text-sm text-gray-600 dark:text-zinc-300 underline"
             >
               Cancel

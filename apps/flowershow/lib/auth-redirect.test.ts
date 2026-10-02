@@ -42,6 +42,10 @@ describe('resolveAuthRedirect', () => {
     expect(resolve('//evil.com/x')).toBe(baseUrl);
   });
 
+  it('rejects non-http(s) schemes on an allowed host', () => {
+    expect(resolve('javascript://flowershow.app/%0aalert(1)')).toBe(baseUrl);
+  });
+
   it('matches hosts including the port', () => {
     expect(
       resolveAuthRedirect({
