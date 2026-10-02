@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/flowershow/publish/internal/api"
+	"github.com/flowershow/publish/internal/auth"
 	"github.com/flowershow/publish/internal/localconfig"
 	"github.com/flowershow/publish/internal/ui"
 )
@@ -683,7 +684,48 @@ func TestLogoutWithEnvTokenExplains(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if !strings.Contains(out, "FLOWERSHOW_TOKEN") {
+	if !strings.Contains(out, "not a saved login") || !strings.Contains(out, "Unset FLOWERSHOW_TOKEN to log out") {
 		t.Fatalf("logout should explain the token comes from FLOWERSHOW_TOKEN, got:\n%s", out)
+	}
+	if strings.Contains(out, "Removed") {
+		t.Fatalf("logout must not claim it removed a login when none was saved, got:\n%s", out)
+	}
+}
+
+func TestLogoutWithEnvTokenRemovesSavedLogin(t *testing.T) {
+	setupFakeAPI(t, false)
+	if err := auth.SaveToken("saved-token", "bob"); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("FLOWERSHOW_TOKEN", testToken)
+
+	out, err := captureOutput(t, runAuthLogout)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "Removed your saved login (bob)") {
+		t.Fatalf("logout should say it removed the saved login, got:\n%s", out)
+	}
+	if !strings.Contains(out, "still authenticated as "+testUser+" via the FLOWERSHOW_TOKEN") {
+		t.Fatalf("logout should say the env token stays in effect, got:\n%s", out)
+	}
+	if saved, _ := auth.GetSavedToken(); saved != nil {
+		t.Fatalf("saved login should be removed, got %+v", saved)
+	}
+}
+
+func TestLoginRefusedWithEnvToken(t *testing.T) {
+	setupFakeAPI(t, false)
+	t.Setenv("FLOWERSHOW_TOKEN", testToken)
+
+	out, err := captureOutput(t, runAuthLogin)
+	if err == nil {
+		t.Fatalf("login should fail while FLOWERSHOW_TOKEN is set, got:\n%s", out)
+	}
+	if !strings.Contains(out, "FLOWERSHOW_TOKEN is set") {
+		t.Fatalf("login should explain FLOWERSHOW_TOKEN is in use, got:\n%s", out)
+	}
+	if saved, _ := auth.GetSavedToken(); saved != nil {
+		t.Fatalf("login must not save a token, got %+v", saved)
 	}
 }

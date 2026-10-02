@@ -181,7 +181,7 @@ Set `FLOWERSHOW_TOKEN` to authenticate without `fl login`, for CI and cloud or h
 FLOWERSHOW_TOKEN=fs_pat_... fl ./my-notes
 ```
 
-The variable takes precedence over the token saved by `fl login`. `fl whoami` notes when it is in use, and `fl logout` can't remove it. Keep the token out of your repository: use your CI's secret store.
+The variable takes precedence over the token saved by `fl login`. `fl whoami` notes when it is in use. While it's set, `fl login` refuses to run, because a saved login would be ignored. `fl logout` removes only the saved login and tells you you're still authenticated through the variable; unset it to log out completely. Keep the token out of your repository: use your CI's secret store.
 
 ## Updating a Site
 

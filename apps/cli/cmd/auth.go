@@ -86,6 +86,14 @@ func runAuthLogin() error {
 	})
 	defer func() { telemetry.Flush() }()
 
+	// A saved login is never used while FLOWERSHOW_TOKEN is set, so logging in
+	// (possibly as a different account) would have no effect.
+	if auth.TokenFromEnv() {
+		fmt.Printf("\n%s\n", ui.Yellow("FLOWERSHOW_TOKEN is set, so it will be used instead of any saved login."))
+		fmt.Printf("%s\n\n", ui.Gray("Unset FLOWERSHOW_TOKEN first if you want to log in with a different account."))
+		return failSilently("FLOWERSHOW_TOKEN is set")
+	}
+
 	sp := ui.NewSpinner()
 	sp.Start("Initiating authentication...")
 
@@ -177,11 +185,7 @@ func runAuthLogout() error {
 		return nil
 	}
 	if auth.TokenFromEnv() {
-		// Remove any saved login too, but the env token stays in effect.
-		_ = auth.RemoveToken()
-		fmt.Printf("\n%s\n", ui.Yellow("You're authenticated via the FLOWERSHOW_TOKEN environment variable, which `fl logout` can't remove."))
-		fmt.Printf("%s\n\n", ui.Gray("Unset FLOWERSHOW_TOKEN to log out."))
-		return nil
+		return logoutWithEnvToken(tokenData.Token, startTime)
 	}
 
 	if err := auth.RemoveToken(); err != nil {
@@ -204,6 +208,53 @@ func runAuthLogout() error {
 
 	fmt.Printf("\n%s Successfully logged out\n\n", ui.Green("✓"))
 	fmt.Printf("%s\n", ui.Gray("Your authentication token has been removed."))
+	return nil
+}
+
+// logoutWithEnvToken handles `fl logout` while FLOWERSHOW_TOKEN is set: it
+// removes the saved login (if any) and says which token stays in effect.
+func logoutWithEnvToken(envToken string, startTime time.Time) error {
+	saved, err := auth.GetSavedToken()
+	if err != nil {
+		return fail(err.Error())
+	}
+
+	if saved == nil {
+		fmt.Printf("\n%s\n", ui.Yellow("You're authenticated via the FLOWERSHOW_TOKEN environment variable, not a saved login."))
+		fmt.Printf("%s\n\n", ui.Gray("Unset FLOWERSHOW_TOKEN to log out."))
+		return nil
+	}
+
+	if err := auth.RemoveToken(); err != nil {
+		logoutErr := fail(err.Error())
+		telemetry.Capture("command_failed", map[string]interface{}{
+			"command":       "auth_logout",
+			"cli_version":   config.Version,
+			"duration_ms":   time.Since(startTime).Milliseconds(),
+			"error_type":    fmt.Sprintf("%T", err),
+			"error_message": err.Error(),
+		})
+		return logoutErr
+	}
+
+	telemetry.Capture("command_succeeded", map[string]interface{}{
+		"command":     "auth_logout",
+		"cli_version": config.Version,
+		"duration_ms": time.Since(startTime).Milliseconds(),
+	})
+
+	removed := "Removed your saved login."
+	if saved.Username != "" {
+		removed = fmt.Sprintf("Removed your saved login (%s).", saved.Username)
+	}
+	still := "You're still authenticated via the FLOWERSHOW_TOKEN environment variable."
+	if userInfo, err := auth.GetUserInfo(config.APIURL(), envToken); err == nil {
+		still = fmt.Sprintf("You're still authenticated as %s via the FLOWERSHOW_TOKEN environment variable.", userInfo.DisplayName())
+	}
+	fmt.Printf("\n%s Removed saved login\n\n", ui.Green("✓"))
+	fmt.Printf("%s\n", ui.Gray(removed))
+	fmt.Printf("%s\n", ui.Yellow(still))
+	fmt.Printf("%s\n\n", ui.Gray("Unset FLOWERSHOW_TOKEN to log out completely."))
 	return nil
 }
 

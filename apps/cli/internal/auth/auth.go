@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -54,18 +55,30 @@ func SaveToken(token, username string) error {
 // the token saved by `fl login`.
 const TokenEnvVar = "FLOWERSHOW_TOKEN"
 
+// envToken returns FLOWERSHOW_TOKEN with surrounding whitespace removed, so a
+// pasted secret with a trailing newline still works and a blank one is unset.
+func envToken() string {
+	return strings.TrimSpace(os.Getenv(TokenEnvVar))
+}
+
 // TokenFromEnv reports whether the active token comes from FLOWERSHOW_TOKEN.
 func TokenFromEnv() bool {
-	return os.Getenv(TokenEnvVar) != ""
+	return envToken() != ""
 }
 
 // GetToken returns the token from FLOWERSHOW_TOKEN if set, otherwise the one
 // saved by `fl login` (nil if neither exists). An env token has no Username;
 // callers resolve the user via GetUserInfo.
 func GetToken() (*TokenData, error) {
-	if v := os.Getenv(TokenEnvVar); v != "" {
+	if v := envToken(); v != "" {
 		return &TokenData{Token: v}, nil
 	}
+	return GetSavedToken()
+}
+
+// GetSavedToken returns the token saved by `fl login`, ignoring
+// FLOWERSHOW_TOKEN (nil if none is saved).
+func GetSavedToken() (*TokenData, error) {
 	b, err := os.ReadFile(tokenFile())
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {

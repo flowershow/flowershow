@@ -296,7 +296,7 @@ Tips for agents and scripts:
 
 - `fl login` prints a verification URL, then waits up to 15 minutes for approval. Run it in the background and show the URL to the user.
 - To publish without the user's account, use `fl --anon --yes <folder>` and give the user the claim link it prints (`Claim it to keep it ...`). The site expires in 7 days unless they claim it.
-- Set `FLOWERSHOW_TOKEN` to an API token to authenticate without `fl login` (e.g. in CI). It takes precedence over a saved login; `fl logout` can't remove it (unset the variable instead).
+- Set `FLOWERSHOW_TOKEN` to an API token to authenticate without `fl login` (e.g. in CI). It takes precedence over a saved login: while it's set, `fl login` refuses to run, and `fl logout` removes only the saved login and tells you the variable is still in effect (unset it to log out completely).
 - `--yes` skips the new-site prompt. On a name clash (an unlinked path whose name matches an existing site) it refuses and exits 1 rather than overwriting; pass `--overwrite` to replace that site on purpose, or `--name` to pick another (see [Name clashes](#name-clashes)).
 
 ## Telemetry
