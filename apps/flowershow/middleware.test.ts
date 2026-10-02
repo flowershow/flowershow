@@ -1,6 +1,6 @@
+import { CONTENT_TYPE_EXTENSIONS } from '@flowershow/core';
 import { NextRequest } from 'next/server';
 import { describe, expect, it } from 'vitest';
-
 import { rewriteRawIfNeeded } from './middleware';
 
 const API_BASE = '/api/raw/victim/notes';
@@ -118,5 +118,40 @@ describe('rewriteRawIfNeeded — query strings on raw files (#1345)', () => {
     );
 
     expect(res).toBeNull();
+  });
+});
+
+describe('rewriteRawIfNeeded — asset types (flowershow-tui)', () => {
+  const raw = (p: string) => rewriteRawIfNeeded(p, API_BASE, makeReq(p), null);
+
+  it.each([
+    'mod.mjs',
+    'lib.cjs',
+    'app.wasm',
+    'site.webmanifest',
+    'font.otf',
+    'font.woff2',
+    'old.htm',
+    'clip.mov',
+    'song.m4a',
+    'data.tsv',
+    'app.js.map',
+    'IMAGE.PNG',
+  ])('serves %s as a raw file', (file) => {
+    expect(rewriteTarget(raw(`/assets/${file}`)).pathname).toBe(
+      `/api/raw/victim/notes/assets/${file}`,
+    );
+  });
+
+  it('serves every extension that has a known content type', () => {
+    for (const ext of CONTENT_TYPE_EXTENSIONS) {
+      expect(raw(`/f.${ext}`), ext).not.toBeNull();
+    }
+  });
+
+  it('still serves archives and legacy fonts', () => {
+    for (const ext of ['zip', 'tar', 'gz', 'eot']) {
+      expect(raw(`/f.${ext}`), ext).not.toBeNull();
+    }
   });
 });

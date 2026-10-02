@@ -63,6 +63,11 @@ const CONTENT_TYPES = {
   wav: 'audio/wav',
 } as const;
 
+/** Every extension with a known content type (served as a raw file). */
+export const CONTENT_TYPE_EXTENSIONS: ReadonlySet<string> = new Set(
+  Object.keys(CONTENT_TYPES),
+);
+
 export type ContentType =
   | (typeof CONTENT_TYPES)[keyof typeof CONTENT_TYPES]
   | 'application/octet-stream';

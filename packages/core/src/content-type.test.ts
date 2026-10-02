@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getContentType } from './content-type';
+import { CONTENT_TYPE_EXTENSIONS, getContentType } from './content-type';
 
 describe('getContentType', () => {
   it('keeps the existing mappings', () => {
@@ -46,5 +46,15 @@ describe('getContentType', () => {
   it('falls back to a type browsers never render or execute', () => {
     expect(getContentType('docx')).toBe('application/octet-stream');
     expect(getContentType('')).toBe('application/octet-stream');
+  });
+});
+
+describe('CONTENT_TYPE_EXTENSIONS', () => {
+  it('lists exactly the extensions getContentType knows', () => {
+    expect(CONTENT_TYPE_EXTENSIONS.has('mjs')).toBe(true);
+    expect(CONTENT_TYPE_EXTENSIONS.has('docx')).toBe(false);
+    for (const ext of CONTENT_TYPE_EXTENSIONS) {
+      expect(getContentType(ext)).not.toBe('application/octet-stream');
+    }
   });
 });

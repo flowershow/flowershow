@@ -1,3 +1,4 @@
+import { CONTENT_TYPE_EXTENSIONS } from '@flowershow/core';
 import { jwtVerify } from 'jose';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
@@ -392,44 +393,13 @@ const IMAGE_FILE_EXTENSIONS = new Set([
   'webp',
 ]);
 
+// Every type in the shared content-type map (so assets HTML sites load, like
+// .mjs or .wasm, are served), plus downloads that have no specific type.
 const KNOWN_FILE_EXTENSIONS = new Set([
-  // Documents
-  'md',
-  'mdx',
-  'canvas',
-  'pdf',
-  'txt',
-  'html',
-  // Images
-  'png',
-  'jpg',
-  'jpeg',
-  'gif',
-  'svg',
-  'webp',
-  // Data
-  'csv',
-  'json',
-  'yaml',
-  'yml',
-  'xml',
-  // Media
-  'mp4',
-  'mp3',
-  'wav',
-  'ogg',
-  // Archives
+  ...CONTENT_TYPE_EXTENSIONS,
   'zip',
   'tar',
   'gz',
-  // Web assets
-  'css',
-  'js',
-  'ico',
-  // Fonts
-  'woff',
-  'woff2',
-  'ttf',
   'eot',
 ]);
 

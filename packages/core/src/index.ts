@@ -1,5 +1,5 @@
 export type { ContentType } from './content-type';
-export { getContentType } from './content-type';
+export { CONTENT_TYPE_EXTENSIONS, getContentType } from './content-type';
 export {
   encodeSlug,
   filePathToSlug,
