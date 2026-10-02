@@ -55,8 +55,11 @@ async function json<T>(res: Response): Promise<T> {
 export function realMcpDeps(): McpDeps {
   return {
     async createAnonSite() {
-      const limit =
-        Number(env.MCP_ANON_HOURLY_LIMIT) || DEFAULT_MCP_ANON_HOURLY_LIMIT;
+      // 0 disables anonymous publishing through MCP; unset or invalid uses the default.
+      const configured = Number.parseInt(env.MCP_ANON_HOURLY_LIMIT ?? '', 10);
+      const limit = Number.isNaN(configured)
+        ? DEFAULT_MCP_ANON_HOURLY_LIMIT
+        : configured;
       const result = await createAnonSite({
         bucket: hashIp(MCP_ANON_BUCKET),
         limit,
@@ -78,9 +81,14 @@ export function realMcpDeps(): McpDeps {
 
     async sync(siteId, files, bearer) {
       const res = await syncPOST(
-        internalRequest('POST', `/api/sites/id/${siteId}/sync`, bearer, {
-          files,
-        }),
+        internalRequest(
+          'POST',
+          `/api/sites/id/${encodeURIComponent(siteId)}/sync`,
+          bearer,
+          {
+            files,
+          },
+        ),
         { params: Promise.resolve({ siteId }) },
       );
       return json(res);
@@ -101,7 +109,11 @@ export function realMcpDeps(): McpDeps {
 
     async status(siteId, bearer) {
       const res = await statusGET(
-        internalRequest('GET', `/api/sites/id/${siteId}/status`, bearer),
+        internalRequest(
+          'GET',
+          `/api/sites/id/${encodeURIComponent(siteId)}/status`,
+          bearer,
+        ),
         { params: Promise.resolve({ siteId }) },
       );
       return json(res);

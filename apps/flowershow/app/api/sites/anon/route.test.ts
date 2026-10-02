@@ -11,9 +11,16 @@ const mockEnv = vi.hoisted(() => ({
   },
 }));
 vi.mock('@/env.mjs', () => mockEnv);
-vi.mock('@/server/db', () => ({
-  default: { site: { create: vi.fn(), count: vi.fn() } },
-}));
+vi.mock('@/server/db', () => {
+  const site = { create: vi.fn(), count: vi.fn() };
+  const tx = { site, $executeRaw: vi.fn() };
+  return {
+    default: {
+      site,
+      $transaction: vi.fn((fn: (t: typeof tx) => unknown) => fn(tx)),
+    },
+  };
+});
 vi.mock('@/lib/typesense', () => ({ createSiteCollection: vi.fn() }));
 vi.mock('@/lib/server-posthog', () => ({
   default: () => ({

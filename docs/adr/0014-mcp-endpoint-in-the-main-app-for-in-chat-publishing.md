@@ -24,11 +24,11 @@ ADR 0005 dropped the MCP server because our users' agents had shells and could r
 
 4. **One global rate-limit bucket for MCP-created anonymous sites** (`MCP_ANON_HOURLY_LIMIT`, default 100 an hour). Chat apps call from their own cloud IPs, so the CLI's per-IP limit (10 an hour) would make every Claude or ChatGPT user share one tiny bucket. The `ANON_PUBLISH_DISABLED` kill switch covers MCP too.
 
-5. **Per-call limits sized for chat**: 50 files and 5 MB of decoded content per `publish` call; larger sites are pointed to the CLI.
+5. **Per-call limits sized for chat**: 50 files and 3 MB of decoded content per `publish` call, within a 4 MB request (base64 adds a third; Vercel caps requests at 4.5 MB). Larger sites are pointed to the CLI. JSON-RPC batches are rejected, so one request runs at most one publish, and the anonymous-site count and insert run under a per-bucket advisory lock.
 
 ## Consequences
 
 - Anyone can publish an anonymous site through a public endpoint without an account, at a global rate. Before announcing MCP publicly, anonymous HTML needs abuse controls (`flowershow-ctv`: sandbox or banner, abuse reports, `flowershow.me` on the Public Suffix List).
 - Updates resend the whole site; there's no single-file edit tool yet.
 - The model must relay the claim link; the tool result tells it to, verbatim.
-- Claude custom connectors can't send a bearer header, so account publishing from claude.ai and ChatGPT needs OAuth (v2, `docs/plans/2026-02-20-mcp-oauth.md`). Account tokens work today from clients that let you set headers (Claude Code, Claude Desktop JSON config, the MCP Inspector).
+- Claude custom connectors can't send a bearer header, so account publishing from claude.ai and ChatGPT needs OAuth (v2, `docs/plans/2026-02-20-mcp-oauth.md`). Account tokens work today from clients that let you set headers (e.g. Claude Code's `.mcp.json`, the MCP Inspector).

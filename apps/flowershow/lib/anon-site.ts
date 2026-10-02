@@ -52,10 +52,33 @@ export async function createAnonSite({
       status: 503,
       error: 'anon_disabled',
       message:
-        'Publishing without an account is temporarily unavailable. Publish to a Flowershow account instead (`fl login`).',
+        'Publishing without an account is temporarily unavailable. Please try again later, or publish from a Flowershow account.',
     };
   }
-  if (!(await checkAnonCreateLimit(bucket, new Date(), limit))) {
+  const projectName = Math.random().toString(36).substring(2, 10);
+  const anonymousUserId = randomUUID();
+  const expiresAt = new Date(Date.now() + ANON_SITE_TTL_MS);
+  // Count and insert under a per-bucket lock, so concurrent requests can't
+  // all see the same count and overshoot the limit.
+  const site = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${bucket}))`;
+    if (!(await checkAnonCreateLimit(bucket, new Date(), limit, tx))) {
+      return null;
+    }
+    return tx.site.create({
+      data: {
+        projectName,
+        subdomain: buildSubdomain(projectName, 'anon'),
+        userId: ANONYMOUS_USER_ID,
+        anonymousOwnerId: anonymousUserId,
+        anonCreatorIpHash: bucket,
+        isTemporary: true,
+        expiresAt,
+        configJson: SITE_CONFIG_DEFAULTS,
+      },
+    });
+  });
+  if (!site) {
     return {
       ok: false,
       status: 429,
@@ -63,22 +86,6 @@ export async function createAnonSite({
       message: rateLimitedMessage,
     };
   }
-
-  const projectName = Math.random().toString(36).substring(2, 10);
-  const anonymousUserId = randomUUID();
-  const expiresAt = new Date(Date.now() + ANON_SITE_TTL_MS);
-  const site = await prisma.site.create({
-    data: {
-      projectName,
-      subdomain: buildSubdomain(projectName, 'anon'),
-      userId: ANONYMOUS_USER_ID,
-      anonymousOwnerId: anonymousUserId,
-      anonCreatorIpHash: bucket,
-      isTemporary: true,
-      expiresAt,
-      configJson: SITE_CONFIG_DEFAULTS,
-    },
-  });
   await createSiteCollection(site.id);
 
   const isSecure =

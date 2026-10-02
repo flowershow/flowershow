@@ -175,10 +175,16 @@ describe('publish (anonymous)', () => {
     deps = makeDeps({
       status: vi.fn().mockResolvedValue({ status: 'pending' }),
     });
-    const res = await publish({ files: [html] }, { kind: 'anon' }, deps, {
-      maxPollAttempts: 3,
+    let t = 0;
+    deps.sleep = vi.fn().mockImplementation(async (ms: number) => {
+      t += ms;
     });
-    expect(deps.status).toHaveBeenCalledTimes(3);
+    const res = await publish({ files: [html] }, { kind: 'anon' }, deps, {
+      pollIntervalMs: 1000,
+      pollDeadlineMs: 3000,
+      now: () => t,
+    });
+    expect(deps.status).toHaveBeenCalledTimes(4); // t = 0, 1, 2, 3 s
     expect(res.liveUrl).toBe(ANON.liveUrl);
     expect(res.message).toMatch(/still processing/i);
   });
@@ -198,15 +204,25 @@ describe('publish (anonymous)', () => {
 });
 
 describe('publish (input validation, before any API call)', () => {
-  it.each(['../x.md', '/abs.md', 'a/../../b.md', 'a\\..\\b.md', 'a\0b.md', ''])(
-    'rejects path %j',
-    async (path) => {
-      await expect(
-        publish({ files: [{ path, content: 'x' }] }, { kind: 'anon' }, deps),
-      ).rejects.toThrow(PublishError);
-      expect(deps.createAnonSite).not.toHaveBeenCalled();
-    },
-  );
+  it.each([
+    '../x.md',
+    '/abs.md',
+    'a/../../b.md',
+    'a\\..\\b.md',
+    'a\0b.md',
+    '',
+    './index.html',
+    'a/./b.md',
+    '.env',
+    '.git/config',
+    'a\nb.md',
+    `${'x'.repeat(600)}/${'y'.repeat(600)}.md`,
+  ])('rejects path %j', async (path) => {
+    await expect(
+      publish({ files: [{ path, content: 'x' }] }, { kind: 'anon' }, deps),
+    ).rejects.toThrow(PublishError);
+    expect(deps.createAnonSite).not.toHaveBeenCalled();
+  });
 
   it('rejects duplicate paths', async () => {
     await expect(
@@ -256,6 +272,106 @@ describe('publish (input validation, before any API call)', () => {
   });
 });
 
+describe('publish (base64)', () => {
+  it('accepts a data: URI and whitespace in base64', async () => {
+    const png = Buffer.from([137, 80, 78, 71]);
+    await publish(
+      {
+        files: [
+          {
+            path: 'a.png',
+            contentBase64: `data:image/png;base64,${png.toString('base64').slice(0, 4)}\n${png.toString('base64').slice(4)}`,
+          },
+        ],
+      },
+      { kind: 'anon' },
+      deps,
+    );
+    expect(deps.sync).toHaveBeenCalledWith(
+      'site-1',
+      [{ path: 'a.png', size: 4, sha: gitBlobSha(png) }],
+      'fs_claim_new',
+    );
+  });
+
+  it('rejects invalid base64 instead of publishing garbage', async () => {
+    await expect(
+      publish(
+        { files: [{ path: 'a.png', contentBase64: 'not base64!!' }] },
+        { kind: 'anon' },
+        deps,
+      ),
+    ).rejects.toThrow(/base64/);
+  });
+});
+
+describe('publish (failures after the site was created)', () => {
+  it('includes the claim link and update details when a later step fails', async () => {
+    deps = makeDeps({
+      upload: vi
+        .fn()
+        .mockRejectedValue(new ApiError(403, 'upload_failed', 'x')),
+    });
+    const err = await publish({ files: [html] }, { kind: 'anon' }, deps).catch(
+      (e) => e,
+    );
+    expect(err).toBeInstanceOf(PublishError);
+    expect(err.message).toMatch(/upload/i);
+    expect(err.message).toContain(ANON.claimUrl);
+    expect(err.message).toContain('site-1');
+    expect(err.message).toContain('fs_claim_new');
+  });
+
+  it('treats a status error after a successful upload as still processing', async () => {
+    deps = makeDeps({
+      status: vi.fn().mockRejectedValue(new ApiError(500, 'x', 'boom')),
+    });
+    const res = await publish({ files: [html] }, { kind: 'anon' }, deps, {
+      pollDeadlineMs: 0,
+    });
+    expect(res.claimUrl).toBe(ANON.claimUrl);
+    expect(res.message).toMatch(/still processing/i);
+  });
+
+  it('stops polling at the deadline', async () => {
+    let t = 0;
+    deps = makeDeps({
+      status: vi.fn().mockResolvedValue({ status: 'pending' }),
+      sleep: vi.fn().mockImplementation(async (ms: number) => {
+        t += ms;
+      }),
+    });
+    const res = await publish({ files: [html] }, { kind: 'anon' }, deps, {
+      pollIntervalMs: 2000,
+      pollDeadlineMs: 10_000,
+      now: () => t,
+    });
+    expect(t).toBeLessThanOrEqual(10_000);
+    expect(res.message).toMatch(/still processing/i);
+  });
+
+  it('uploads several files concurrently (bounded)', async () => {
+    let inFlight = 0;
+    let peak = 0;
+    deps = makeDeps({
+      upload: vi.fn().mockImplementation(async () => {
+        inFlight++;
+        peak = Math.max(peak, inFlight);
+        await new Promise((r) => setTimeout(r, 5));
+        inFlight--;
+      }),
+    });
+    const files = Array.from({ length: 20 }, (_, i) => ({
+      path: `p${i}.md`,
+      content: 'x',
+    }));
+    await publish({ files }, { kind: 'anon' }, deps);
+    expect(deps.upload).toHaveBeenCalledTimes(20);
+    expect(peak).toBeGreaterThan(1);
+    expect(peak).toBeLessThanOrEqual(6);
+  });
+});
+
 describe('publish (account token)', () => {
   it('publishes to the given site with the user token and no claim link', async () => {
     const res = await publish(
@@ -271,6 +387,19 @@ describe('publish (account token)', () => {
     );
     expect(res.liveUrl).toBe('https://notes-alice.flowershow.me');
     expect(res.claimUrl).toBeUndefined();
+  });
+
+  it('says the site is not theirs on 403 (not a claim-token message)', async () => {
+    deps = makeDeps({
+      sync: vi.fn().mockRejectedValue(new ApiError(403, 'forbidden', 'x')),
+    });
+    await expect(
+      publish(
+        { files: [html], siteId: 'other' },
+        { kind: 'user', token: 'fs_pat_x' },
+        deps,
+      ),
+    ).rejects.toThrow(/don't have access to this site/);
   });
 
   it('asks for a siteId (use list-sites) when none is given', async () => {

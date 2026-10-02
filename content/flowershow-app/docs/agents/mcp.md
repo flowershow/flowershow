@@ -39,7 +39,8 @@ Your AI replies with the live link and a claim link. To change the site in the s
 
 - **Markdown** (`.md`) pages, rendered with a theme and navigation, and **HTML** (`.html`) pages served as they are. See [Supported file types](/docs/reference/supported-file-types).
 - Supporting files such as CSS, JavaScript, JSON and images.
-- Up to 50 files and 5 MB per publish. For bigger sites, use the [`fl` CLI](/docs/reference/cli).
+- Up to 50 files and about 3 MB per publish. For bigger sites, use the [`fl` CLI](/docs/reference/cli).
+- Hidden files and folders (names starting with `.`) aren't published.
 
 ## Keep the site
 
@@ -47,7 +48,7 @@ Open the claim link the AI gave you, sign in or sign up, and choose **Add to my 
 
 ## Publish to your own account
 
-Chat-app connectors can't sign in to your account yet. From MCP clients that let you set request headers, such as Claude Code or Claude Desktop's config file, you can use a [personal access token](https://cloud.flowershow.app/tokens):
+Chat-app connectors can't sign in to your account yet. From MCP clients that let you set request headers, you can use a [personal access token](https://cloud.flowershow.app/tokens). For example, in Claude Code's `.mcp.json`:
 
 ```json
 {

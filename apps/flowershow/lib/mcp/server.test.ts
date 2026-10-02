@@ -64,7 +64,7 @@ describe('Flowershow MCP server', () => {
     const publish = tools[0];
     expect(publish?.description).toMatch(/publish this|put this online/i);
     expect(publish?.description).toMatch(/claim/i);
-    expect(publish?.annotations?.destructiveHint).toBe(false);
+    expect(publish?.annotations?.destructiveHint).toBe(true);
   });
 
   it('adds list-sites with an account token', async () => {

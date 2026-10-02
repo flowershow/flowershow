@@ -87,7 +87,8 @@ export function createFlowershowMcpServer(
       annotations: {
         title: 'Publish to Flowershow',
         readOnlyHint: false,
-        destructiveHint: false,
+        // Updating a site replaces its content (files left out are removed).
+        destructiveHint: true,
         idempotentHint: false,
         openWorldHint: true,
       },
