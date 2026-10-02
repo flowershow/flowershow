@@ -35,6 +35,15 @@ export async function authorizeSiteRequest(
   if (bearer.startsWith(CLAIM_TOKEN_PREFIX)) {
     const claim = verifySiteClaimToken(bearer);
     if (!claim) return deny(401, 'unauthorized', 'Invalid claim token');
+    // Check the signed siteId first so a token can't be used to probe which
+    // other site IDs exist.
+    if (claim.siteId !== siteId) {
+      return deny(
+        403,
+        'forbidden',
+        'This claim token is not valid for this site',
+      );
+    }
     const site = await prisma.site.findUnique({
       where: { id: siteId },
       select: {
@@ -45,15 +54,24 @@ export async function authorizeSiteRequest(
       },
     });
     if (!site) return deny(404, 'not_found', 'Site not found');
+    // A validly signed token for this very site whose site now belongs to an
+    // account: tell the holder it was claimed (not "expired"), so the CLI keeps
+    // its link and points them at `fl login` instead of publishing a new site.
+    if (site.userId !== ANONYMOUS_USER_ID && site.anonymousOwnerId === null) {
+      return deny(
+        409,
+        'claimed',
+        'This site has been added to a Flowershow account. Log in to that account to update it.',
+      );
+    }
     if (
-      claim.siteId !== site.id ||
       site.userId !== ANONYMOUS_USER_ID ||
       site.anonymousOwnerId !== claim.anonymousUserId
     ) {
       return deny(
         403,
         'forbidden',
-        'This claim token is not valid for this site (it may already have been claimed)',
+        'This claim token is not valid for this site',
       );
     }
     // Anonymous sites always have an expiry; treat a missing one as expired

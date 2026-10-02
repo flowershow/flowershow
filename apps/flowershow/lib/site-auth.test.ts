@@ -65,12 +65,40 @@ describe('authorizeSiteRequest', () => {
     if (!r.ok) expect(r.response.status).toBe(403);
   });
 
-  it('rejects a claim token once the site has been claimed (403)', async () => {
+  it('returns 409 claimed when the token’s own site has been claimed', async () => {
     findUnique.mockResolvedValue({
       id: 'site-1',
       userId: 'u1',
       anonymousOwnerId: null,
       expiresAt: null,
+    });
+    const r = await authorizeSiteRequest(
+      req(generateSiteClaimToken('site-1', ANON)),
+      'site-1',
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.response.status).toBe(409);
+      expect((await r.response.json()).error).toBe('claimed');
+    }
+  });
+
+  it('rejects a claim token for a different site without touching the DB (403)', async () => {
+    const r = await authorizeSiteRequest(
+      req(generateSiteClaimToken('site-1', ANON)),
+      'site-2',
+    );
+    expect(r.ok).toBe(false);
+    if (!r.ok) expect(r.response.status).toBe(403);
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it('rejects a claim token whose anonymous owner does not match (403)', async () => {
+    findUnique.mockResolvedValue({
+      id: 'site-1',
+      userId: ANONYMOUS_USER_ID,
+      anonymousOwnerId: 'someone-else',
+      expiresAt: future,
     });
     const r = await authorizeSiteRequest(
       req(generateSiteClaimToken('site-1', ANON)),

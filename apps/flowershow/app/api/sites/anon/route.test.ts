@@ -1,14 +1,16 @@
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/env.mjs', () => ({
+const mockEnv = vi.hoisted(() => ({
   env: {
     ANONYMOUS_JWT_SECRET: 'test-secret',
     NEXT_PUBLIC_HOME_DOMAIN: 'flowershow.app',
     NEXT_PUBLIC_SITE_DOMAIN: 'flowershow.me',
     NEXT_PUBLIC_VERCEL_ENV: 'production',
+    ANON_PUBLISH_DISABLED: undefined as string | undefined,
   },
 }));
+vi.mock('@/env.mjs', () => mockEnv);
 vi.mock('@/server/db', () => ({
   default: { site: { create: vi.fn(), count: vi.fn() } },
 }));
@@ -38,6 +40,7 @@ function req() {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  mockEnv.env.ANON_PUBLISH_DISABLED = undefined;
   count.mockResolvedValue(0);
   create.mockImplementation(async ({ data }) => ({ id: 'site-1', ...data }));
 });
@@ -56,7 +59,9 @@ describe('POST /api/sites/anon', () => {
       siteId: 'site-1',
       anonymousUserId: data.anonymousOwnerId,
     });
-    expect(body.claimUrl).toContain('/claim?siteId=site-1&token=fs_claim_');
+    expect(body.claimUrl).toBe(
+      `https://flowershow.app/claim?siteId=site-1#token=${body.claimToken}`,
+    );
     expect(new Date(body.expiresAt).getTime()).toBeGreaterThan(
       Date.now() + 6.9 * 24 * 3600 * 1000,
     );
@@ -67,5 +72,14 @@ describe('POST /api/sites/anon', () => {
     const res = await POST(req());
     expect(res.status).toBe(429);
     expect(create).not.toHaveBeenCalled();
+  });
+
+  it('returns 503 and creates nothing when anonymous publishing is disabled', async () => {
+    mockEnv.env.ANON_PUBLISH_DISABLED = 'true';
+    const res = await POST(req());
+    expect(res.status).toBe(503);
+    expect((await res.json()).error).toBe('anon_disabled');
+    expect(create).not.toHaveBeenCalled();
+    expect(count).not.toHaveBeenCalled();
   });
 });

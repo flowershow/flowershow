@@ -54,10 +54,10 @@ describe('site claim tokens', () => {
     expect(verifySiteClaimToken(token.slice(0, -2) + 'xx')).toBeNull();
   });
 
-  it('builds an https claim URL with the token encoded', () => {
+  it('builds an https claim URL with the token in the fragment (never sent to servers)', () => {
     const url = buildClaimUrl('site-1', 'fs_claim_a.b.c');
     expect(url).toBe(
-      'https://flowershow.app/claim?siteId=site-1&token=fs_claim_a.b.c',
+      'https://flowershow.app/claim?siteId=site-1#token=fs_claim_a.b.c',
     );
   });
 });

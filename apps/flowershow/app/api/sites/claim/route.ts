@@ -2,7 +2,7 @@ import {
   ClaimSiteRequestSchema,
   type ClaimSiteResponse,
 } from '@flowershow/api-contract';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import {
   ANONYMOUS_USER_ID,
@@ -14,10 +14,41 @@ import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
 
 /**
+ * Only our own claim page may call this route. The session cookie is
+ * SameSite=Lax, so it is sent on POSTs from sibling *.flowershow.app origins
+ * (same-site); require a same-origin Origin, and JSON so cross-origin callers
+ * can't send a no-preflight "simple" request.
+ */
+function rejectCrossSite(request: NextRequest): NextResponse | null {
+  const host = request.headers.get('host') ?? request.nextUrl.host;
+  const fetchSite = request.headers.get('sec-fetch-site');
+  let originHost: string | null = null;
+  try {
+    originHost = new URL(request.headers.get('origin') ?? '').host;
+  } catch {}
+  if (originHost !== host || (fetchSite && fetchSite !== 'same-origin')) {
+    return NextResponse.json(
+      { success: false, error: 'Cross-origin requests are not allowed' },
+      { status: 403 },
+    );
+  }
+  const contentType = request.headers.get('content-type') ?? '';
+  if (!/^application\/json\s*(;|$)/i.test(contentType)) {
+    return NextResponse.json(
+      { success: false, error: 'Content-Type must be application/json' },
+      { status: 415 },
+    );
+  }
+  return null;
+}
+
+/**
  * POST /api/sites/claim
  * Claim an anonymous site after authentication
  */
 export async function POST(request: NextRequest) {
+  const rejected = rejectCrossSite(request);
+  if (rejected) return rejected;
   try {
     // Check authentication
     const session = await getServerSession(authOptions);

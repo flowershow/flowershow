@@ -38,10 +38,16 @@ const count = prisma.site.count as ReturnType<typeof vi.fn>;
 const update = prisma.site.update as ReturnType<typeof vi.fn>;
 const session = getServerSession as ReturnType<typeof vi.fn>;
 
-function req(body: unknown) {
+function req(body: unknown, headers: Record<string, string> = {}) {
   return new NextRequest('http://localhost/api/sites/claim', {
     method: 'POST',
     body: JSON.stringify(body),
+    headers: {
+      origin: 'http://localhost',
+      'content-type': 'application/json',
+      'sec-fetch-site': 'same-origin',
+      ...headers,
+    },
   });
 }
 
@@ -152,5 +158,60 @@ describe('POST /api/sites/claim', () => {
     const res = await POST(req({ siteId: 'site-1', claimToken }));
     expect(res.status).toBe(401);
     expect(update).not.toHaveBeenCalled();
+  });
+
+  describe('cross-site request protection', () => {
+    const claimToken = () => generateSiteClaimToken('site-1', 'anon-1');
+
+    it('rejects a request from another origin (e.g. a sibling subdomain) with 403', async () => {
+      const res = await POST(
+        req(
+          { siteId: 'site-1', claimToken: claimToken() },
+          {
+            origin: 'https://r2.flowershow.app',
+            'sec-fetch-site': 'same-site',
+          },
+        ),
+      );
+      expect(res.status).toBe(403);
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('rejects a request with no Origin header with 403', async () => {
+      const r = req({ siteId: 'site-1', claimToken: claimToken() });
+      r.headers.delete('origin');
+      const res = await POST(r);
+      expect(res.status).toBe(403);
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('rejects a matching Origin when Sec-Fetch-Site says cross-site', async () => {
+      const res = await POST(
+        req(
+          { siteId: 'site-1', claimToken: claimToken() },
+          { 'sec-fetch-site': 'cross-site' },
+        ),
+      );
+      expect(res.status).toBe(403);
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('rejects a non-JSON content type (no-preflight simple request) with 415', async () => {
+      const res = await POST(
+        req(
+          { siteId: 'site-1', claimToken: claimToken() },
+          { 'content-type': 'text/plain;charset=UTF-8' },
+        ),
+      );
+      expect(res.status).toBe(415);
+      expect(update).not.toHaveBeenCalled();
+    });
+
+    it('accepts a same-origin request without Sec-Fetch-Site (older browsers)', async () => {
+      const r = req({ siteId: 'site-1', claimToken: claimToken() });
+      r.headers.delete('sec-fetch-site');
+      const res = await POST(r);
+      expect(res.status).toBe(200);
+    });
   });
 });

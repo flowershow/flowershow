@@ -113,6 +113,9 @@ export function buildClaimUrl(siteId: string, claimToken: string): string {
     env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
     env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
   const protocol = isSecure ? 'https' : 'http';
-  const params = new URLSearchParams({ siteId, token: claimToken });
-  return `${protocol}://${env.NEXT_PUBLIC_HOME_DOMAIN}/claim?${params.toString()}`;
+  // The token goes in the fragment so it never reaches server logs, proxies or
+  // the login callbackUrl; the claim page reads it client-side.
+  const query = new URLSearchParams({ siteId });
+  const fragment = new URLSearchParams({ token: claimToken });
+  return `${protocol}://${env.NEXT_PUBLIC_HOME_DOMAIN}/claim?${query}#${fragment}`;
 }

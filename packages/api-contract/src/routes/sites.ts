@@ -222,7 +222,7 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
     operationId: 'syncSite',
     summary: 'Sync files to a site',
     description:
-      'Unified sync endpoint. Compares a local file manifest with the server state and returns presigned upload URLs for new/modified files. Accepts the site owner\'s CLI/PAT token, or a site-scoped claim token (`fs_claim_…`) for an anonymous site; claim-token publishes are limited to 200 files and 50 MB in total.',
+      "Unified sync endpoint. Compares a local file manifest with the server state and returns presigned upload URLs for new/modified files. Accepts the site owner's CLI/PAT token, or a site-scoped claim token (`fs_claim_…`) for an anonymous site; claim-token publishes are limited to 200 files and 50 MB in total.",
     tags: ['Sites'],
     security: [{ bearerToken: [] }],
     request: {
@@ -256,9 +256,13 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         description: 'Resource not found',
         content: { 'application/json': { schema: ErrorResponse } },
       },
-      '410': {
+      '409': {
         description:
-          'Anonymous site has expired (claim-token requests only)',
+          'Anonymous site has been claimed into an account (claim-token requests only; error "claimed")',
+        content: { 'application/json': { schema: ErrorResponse } },
+      },
+      '410': {
+        description: 'Anonymous site has expired (claim-token requests only)',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '413': {
@@ -385,7 +389,7 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
     operationId: 'getSiteStatus',
     summary: 'Get file processing status',
     description:
-      'Polling endpoint for file processing status. Returns the detailed status to the site owner\'s CLI/PAT token or to a site-scoped claim token (`fs_claim_…`) for an anonymous site; unauthenticated callers get the public status.',
+      "Polling endpoint for file processing status. Returns the detailed status to the site owner's CLI/PAT token or to a site-scoped claim token (`fs_claim_…`) for an anonymous site; unauthenticated callers get the public status.",
     tags: ['Sites'],
     security: [{ bearerToken: [] }, {}],
     request: {
@@ -412,9 +416,13 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         description: 'Resource not found',
         content: { 'application/json': { schema: ErrorResponse } },
       },
-      '410': {
+      '409': {
         description:
-          'Anonymous site has expired (claim-token requests only)',
+          'Anonymous site has been claimed into an account (claim-token requests only; error "claimed")',
+        content: { 'application/json': { schema: ErrorResponse } },
+      },
+      '410': {
+        description: 'Anonymous site has expired (claim-token requests only)',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '500': {

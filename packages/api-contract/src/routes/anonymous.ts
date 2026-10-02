@@ -109,6 +109,15 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
           },
         },
       },
+      '503': {
+        description:
+          'Anonymous publishing is temporarily disabled (error "anon_disabled")',
+        content: {
+          'application/json': {
+            schema: z.object({ error: z.string(), message: z.string() }),
+          },
+        },
+      },
       '500': {
         description: 'Internal server error',
         content: {
@@ -160,7 +169,8 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
         },
       },
       '403': {
-        description: 'Invalid ownership token',
+        description:
+          'Invalid ownership token, or request not from a same-origin page',
         content: {
           'application/json': {
             schema: z.object({ success: z.literal(false), error: z.string() }),
@@ -169,6 +179,14 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
       },
       '404': {
         description: 'Site not found',
+        content: {
+          'application/json': {
+            schema: z.object({ success: z.literal(false), error: z.string() }),
+          },
+        },
+      },
+      '415': {
+        description: 'Content-Type must be application/json',
         content: {
           'application/json': {
             schema: z.object({ success: z.literal(false), error: z.string() }),

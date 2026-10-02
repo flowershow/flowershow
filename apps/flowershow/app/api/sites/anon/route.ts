@@ -1,5 +1,5 @@
-import type { AnonCreateSiteResponse } from '@flowershow/api-contract';
 import { randomUUID } from 'node:crypto';
+import type { AnonCreateSiteResponse } from '@flowershow/api-contract';
 import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { checkAnonCreateLimit, hashIp } from '@/lib/anon-rate-limit';
@@ -24,6 +24,18 @@ const ANON_SITE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
  * `Authorization: Bearer <claimToken>`. The site expires in 7 days unless claimed.
  */
 export async function POST(request: NextRequest) {
+  // Kill switch: set ANON_PUBLISH_DISABLED=true to stop new anonymous sites
+  // (e.g. during abuse) without a deploy. Existing sites keep working.
+  if (env.ANON_PUBLISH_DISABLED === 'true') {
+    return NextResponse.json(
+      {
+        error: 'anon_disabled',
+        message:
+          'Publishing without an account is temporarily unavailable. Run `fl login` to publish to your account.',
+      },
+      { status: 503 },
+    );
+  }
   const posthog = PostHogClient();
   try {
     const ipHash = hashIp(getClientIp(request.headers));

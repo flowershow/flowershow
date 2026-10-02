@@ -1,12 +1,27 @@
 'use client';
 
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { env } from '@/env.mjs';
 import { getAnonymousToken } from '@/lib/client-anonymous-user';
 import { decideClaimAction, scrubbedClaimPath } from './claim-flow';
-import { buildClaimCallbackUrl, buildClaimLoginUrl } from './claim-url';
+import {
+  buildClaimCallbackUrl,
+  buildClaimLoginUrl,
+  clearStashedClaimToken,
+  parseClaimLink,
+  readStashedClaimToken,
+  stashClaimToken,
+} from './claim-url';
+
+function safeLocalStorage(): Storage | null {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
 
 const isSecure =
   env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
@@ -23,18 +38,42 @@ export default function ClaimPage() {
     projectName: string;
   } | null>(null);
 
-  const searchParams = useSearchParams();
   const router = useRouter();
   const { status } = useSession();
 
-  // Read once: the token is scrubbed from the address bar after login, but
-  // kept here so the confirm button still works.
-  const [siteId] = useState(() => searchParams.get('siteId'));
-  const [linkToken] = useState(() => searchParams.get('token'));
+  // The link (siteId + secret token) is read once on mount, then the token is
+  // scrubbed from the address bar before anything else (e.g. PostHog's
+  // pageview, which initialises after child effects) can record it. The token
+  // is stashed in same-origin storage so it survives a login round-trip
+  // without riding in the login callbackUrl.
+  const [link, setLink] = useState<{
+    siteId: string | null;
+    linkToken: string | null;
+  } | null>(null);
+  const siteId = link?.siteId ?? null;
+  const linkToken = link?.linkToken ?? null;
   const claimStarted = useRef(false);
 
+  useEffect(() => {
+    const { siteId, token } = parseClaimLink(window.location);
+    const storage = safeLocalStorage();
+    if (siteId && token) stashClaimToken(storage, siteId, token);
+    if (token || window.location.hash) {
+      window.history.replaceState(
+        window.history.state,
+        '',
+        scrubbedClaimPath(window.location.pathname, siteId),
+      );
+    }
+    setLink({
+      siteId,
+      linkToken:
+        token ?? (siteId ? readStashedClaimToken(storage, siteId) : null),
+    });
+  }, []);
+
   const claimSite = useCallback(
-    async (body: Record<string, string>) => {
+    async (body: { siteId: string } & Record<string, string>) => {
       if (claimStarted.current) return;
       claimStarted.current = true;
       try {
@@ -50,12 +89,19 @@ export default function ClaimPage() {
         const result = await response.json();
 
         if (!response.ok || !result.success) {
+          // A link that can never work again (claimed, expired, invalid)
+          // shouldn't linger in storage; keep it for retryable errors.
+          if ([400, 403, 404, 410].includes(response.status)) {
+            clearStashedClaimToken(safeLocalStorage(), body.siteId);
+          }
           setError(result.error || 'Failed to claim site');
           setState('error');
           return;
         }
 
-        // Success! Token remains in localStorage for claiming other sites
+        // Success! The browser ownership token (drag-and-drop) remains in
+        // localStorage for claiming other sites; a link token is spent.
+        clearStashedClaimToken(safeLocalStorage(), body.siteId);
         setClaimedSite(result.site);
         setState('success');
         router.push(
@@ -71,6 +117,7 @@ export default function ClaimPage() {
   );
 
   useEffect(() => {
+    if (!link) return; // link not read yet
     const ownershipToken = linkToken ? null : getAnonymousToken();
     const action = decideClaimAction({
       status,
@@ -84,12 +131,11 @@ export default function ClaimPage() {
         return;
       case 'login': {
         // Redirect to login on cloud domain with callback back to home
-        // domain, keeping the token so the claim can continue after login.
+        // domain. The token stays in storage, not in the callbackUrl.
         const callbackUrl = buildClaimCallbackUrl({
           protocol,
           homeDomain: env.NEXT_PUBLIC_HOME_DOMAIN,
           siteId,
-          token: linkToken,
         });
         router.push(
           buildClaimLoginUrl({
@@ -101,12 +147,6 @@ export default function ClaimPage() {
         return;
       }
       case 'confirm':
-        // Logged in: drop the secret token from the address bar and history.
-        window.history.replaceState(
-          window.history.state,
-          '',
-          scrubbedClaimPath(window.location.pathname, siteId),
-        );
         setState((s) => (s === 'loading' ? 'confirm' : s));
         return;
       case 'auto-claim':
@@ -117,7 +157,7 @@ export default function ClaimPage() {
         setState('error');
         return;
     }
-  }, [status, siteId, linkToken, router, claimSite]);
+  }, [link, status, siteId, linkToken, router, claimSite]);
 
   const dashboardUrl = `${protocol}://${env.NEXT_PUBLIC_CLOUD_DOMAIN}`;
 
