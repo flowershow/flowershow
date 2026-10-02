@@ -148,6 +148,8 @@ export const siteRouter = createTRPCRouter({
         where: {
           projectName: input.projectName,
           userId: ANONYMOUS_USER_ID,
+          // Expired anonymous sites stop being served before the cleanup cron runs.
+          OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
         },
         select: fullSiteSelectWithTokenVersion,
       });

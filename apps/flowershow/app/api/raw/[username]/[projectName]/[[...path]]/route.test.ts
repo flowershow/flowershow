@@ -10,6 +10,10 @@ vi.mock('@/server/db', () => ({
   },
 }));
 
+vi.mock('@/lib/anonymous-user', () => ({
+  ANONYMOUS_USER_ID: 'anon-user-id',
+}));
+
 vi.mock('@/lib/content-store', () => ({
   fetchFile: vi.fn().mockResolvedValue(null),
   generatePresignedGetUrl: vi
@@ -17,7 +21,7 @@ vi.mock('@/lib/content-store', () => ({
     .mockResolvedValue('https://s3.example.com/presigned'),
 }));
 
-import { generatePresignedGetUrl } from '@/lib/content-store';
+import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
 import prisma from '@/server/db';
 import { GET } from './route';
 
@@ -139,5 +143,66 @@ describe('GET /api/raw — public asset redirect is content-versioned', () => {
     const res = await GET(makeReq('style.css'), makeParams('style.css'));
 
     expect(res.headers.get('cache-control')).toMatch(/no-cache|max-age=0/);
+  });
+});
+
+describe('GET /api/raw — anonymous sites', () => {
+  const anonSite = {
+    id: 'site-anon',
+    privacyMode: 'PUBLIC',
+    tokenVersion: 1,
+    userId: 'anon-user-id',
+    isTemporary: true,
+    expiresAt: null,
+  };
+
+  it('marks the public-file redirect noindex for an anonymous site', async () => {
+    findFirst.mockResolvedValue(anonSite);
+    const res = await GET(makeReq('page.md'), makeParams('page.md'));
+    expect(res.status).toBe(302);
+    expect(res.headers.get('x-robots-tag')).toBe('noindex');
+  });
+
+  it('marks proxied HTML noindex for an anonymous site', async () => {
+    findFirst.mockResolvedValue(anonSite);
+    (fetchFile as ReturnType<typeof vi.fn>).mockResolvedValueOnce('<p>hi</p>');
+    const res = await GET(makeReq('index.html'), makeParams('index.html'));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('x-robots-tag')).toBe('noindex');
+  });
+
+  it('marks the presigned redirect noindex for a password-protected anonymous site', async () => {
+    findFirst.mockResolvedValue({ ...anonSite, privacyMode: 'PASSWORD' });
+    const res = await GET(makeReq('cover.png'), makeParams('cover.png'));
+    expect(res.status).toBe(302);
+    expect(res.headers.get('x-robots-tag')).toBe('noindex');
+  });
+
+  it('does not set x-robots-tag for a normal site (redirect and HTML)', async () => {
+    findFirst.mockResolvedValue({ ...anonSite, userId: 'owner-1' });
+    const res = await GET(makeReq('page.md'), makeParams('page.md'));
+    expect(res.headers.get('x-robots-tag')).toBeNull();
+
+    (fetchFile as ReturnType<typeof vi.fn>).mockResolvedValueOnce('<p>hi</p>');
+    const html = await GET(makeReq('index.html'), makeParams('index.html'));
+    expect(html.headers.get('x-robots-tag')).toBeNull();
+  });
+
+  it('returns 404 for an expired anonymous site', async () => {
+    findFirst.mockResolvedValue({
+      ...anonSite,
+      expiresAt: new Date(Date.now() - 1000),
+    });
+    const res = await GET(makeReq('page.md'), makeParams('page.md'));
+    expect(res.status).toBe(404);
+  });
+
+  it('still serves an anonymous site that has not yet expired', async () => {
+    findFirst.mockResolvedValue({
+      ...anonSite,
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+    const res = await GET(makeReq('page.md'), makeParams('page.md'));
+    expect(res.status).toBe(302);
   });
 });

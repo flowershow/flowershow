@@ -30,9 +30,11 @@ vi.mock('@/lib/cloudflare-worker', () => ({
   terminatePublishFinalizerWorkflows: vi.fn().mockResolvedValue(undefined),
 }));
 
+const posthogCapture = vi.hoisted(() => vi.fn());
+
 vi.mock('@/lib/server-posthog', () => ({
   default: () => ({
-    capture: vi.fn(),
+    capture: posthogCapture,
     captureException: vi.fn(),
     shutdown: vi.fn().mockResolvedValue(undefined),
   }),
@@ -47,6 +49,10 @@ vi.mock('@/lib/otel-logger', () => ({
 import { validateAccessToken } from '@/lib/cli-auth';
 import { startPublishFinalizerWorkflow } from '@/lib/cloudflare-worker';
 import { deleteFile, generatePresignedUploadUrl } from '@/lib/content-store';
+import {
+  ANONYMOUS_USER_ID,
+  generateSiteClaimToken,
+} from '@/lib/anonymous-user';
 import prisma from '@/server/db';
 import { POST } from './route';
 
@@ -497,6 +503,102 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       );
 
       expect(prisma.publishFile.createMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('claim-token (anonymous) publishing', () => {
+    const ANON_OWNER = '3f1c2b7a-1d2e-4f3a-9b4c-5d6e7f8a9b0c';
+    const anonSite = {
+      id: SITE_ID,
+      userId: ANONYMOUS_USER_ID,
+      anonymousOwnerId: ANON_OWNER,
+      expiresAt: new Date(Date.now() + 86400000),
+    };
+    const claimHeaders = (siteId = SITE_ID) => ({
+      Authorization: `Bearer ${generateSiteClaimToken(siteId, ANON_OWNER)}`,
+    });
+    const htmlFiles = (n: number) =>
+      Array.from({ length: n }, (_, i) => ({
+        path: `page-${i}.html`,
+        size: 10,
+        sha: `sha-${i}`,
+      }));
+
+    it('returns 413 when an anonymous site uploads more than 200 files', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue(anonSite as any);
+
+      const res = await POST(
+        makeRequest({ files: htmlFiles(201) }, { headers: claimHeaders() }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(413);
+      expect((await res.json()).error).toBe('payload_too_large');
+      expect(validateAccessToken).not.toHaveBeenCalled();
+      expect(prisma.publish.create).not.toHaveBeenCalled();
+    });
+
+    it('returns upload URLs for a small HTML publish on an anonymous site', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue(anonSite as any);
+
+      const res = await POST(
+        makeRequest({ files: htmlFiles(2) }, { headers: claimHeaders() }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.toUpload).toHaveLength(2);
+      expect(body.toUpload[0].uploadUrl).toBe(
+        'https://s3.example.com/presigned',
+      );
+      expect(validateAccessToken).not.toHaveBeenCalled();
+      expect(prisma.site.findUnique).toHaveBeenCalledTimes(1);
+      expect(posthogCapture).toHaveBeenCalledWith(
+        expect.objectContaining({ distinctId: `anon:${SITE_ID}` }),
+      );
+    });
+
+    it('passes through a 403 when the claim token is for a different site', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue(anonSite as any);
+
+      const res = await POST(
+        makeRequest(
+          { files: htmlFiles(1) },
+          { headers: claimHeaders('some-other-site') },
+        ),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(403);
+      expect((await res.json()).error).toBe('forbidden');
+      expect(prisma.publish.create).not.toHaveBeenCalled();
+    });
+
+    it('returns 410 when the anonymous site has expired', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue({
+        ...anonSite,
+        expiresAt: new Date(Date.now() - 1000),
+      } as any);
+
+      const res = await POST(
+        makeRequest({ files: htmlFiles(1) }, { headers: claimHeaders() }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(410);
+    });
+
+    it('returns 401 for a tampered claim token', async () => {
+      const res = await POST(
+        makeRequest(
+          { files: htmlFiles(1) },
+          { headers: { Authorization: 'Bearer fs_claim_not-a-jwt' } },
+        ),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(401);
     });
   });
 });

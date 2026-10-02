@@ -3,11 +3,12 @@ import axios from 'axios';
 import { getServerSession, type NextAuthOptions } from 'next-auth';
 import type { Adapter } from 'next-auth/adapters';
 import EmailProvider from 'next-auth/providers/email';
-import GitHubProvider, { GithubProfile } from 'next-auth/providers/github';
+import GitHubProvider, { type GithubProfile } from 'next-auth/providers/github';
 import GoogleProvider from 'next-auth/providers/google';
-import { env } from '@/env.mjs';
 import { MagicLinkEmail } from '@/emails/magic-link';
 import { WelcomeEmail } from '@/emails/welcome';
+import { env } from '@/env.mjs';
+import { resolveAuthRedirect } from '@/lib/auth-redirect';
 import { sendEmail } from '@/lib/email';
 import { generateUsername } from '@/lib/generate-username';
 import PostHogClient from '@/lib/server-posthog';
@@ -217,41 +218,17 @@ export const authOptions: NextAuthOptions = {
     },
   },
   callbacks: {
-    redirect: async ({ url, baseUrl }) => {
-      // Allow redirects to trusted domains (for claim flow across subdomains)
-      try {
-        const redirectUrl = new URL(url, baseUrl);
-        const base = new URL(baseUrl);
-
-        // Allow same origin redirects
-        if (redirectUrl.origin === base.origin) {
-          return url;
-        }
-
-        // Extract base domain (e.g., "flowershow.local" from "cloud.flowershow.local:3000")
-        // NEXT_PUBLIC_HOME_DOMAIN includes port, so extract just the hostname
-        const homeDomain = env.NEXT_PUBLIC_HOME_DOMAIN.split(':')[0];
-
-        // Allow redirects to any subdomain of the home domain (or the home domain itself)
-        const targetHost = redirectUrl.hostname;
-        if (
-          targetHost === homeDomain ||
-          targetHost.endsWith(`.${homeDomain}`)
-        ) {
-          return redirectUrl.href;
-        }
-
-        // For relative URLs, use baseUrl
-        if (url.startsWith('/')) {
-          return `${baseUrl}${url}`;
-        }
-
-        // Default: return base URL for safety
-        return baseUrl;
-      } catch {
-        return baseUrl;
-      }
-    },
+    redirect: async ({ url, baseUrl }) =>
+      // The claim flow logs in on the cloud domain and returns to the apex.
+      resolveAuthRedirect({
+        url,
+        baseUrl,
+        allowedHosts: [
+          env.NEXT_PUBLIC_HOME_DOMAIN,
+          env.NEXT_PUBLIC_CLOUD_DOMAIN,
+          env.NEXT_PUBLIC_ROOT_DOMAIN,
+        ],
+      }),
     signIn: async ({ user, account, profile }) => {
       // console.log("signIn", { user, account, profile });
       // This is called only once

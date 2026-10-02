@@ -1,6 +1,7 @@
 import type { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
 import {
+  AnonCreateSiteResponseSchema,
   AnonPublishRequestSchema,
   AnonPublishResponseSchema,
   ClaimSiteRequestSchema,
@@ -11,6 +12,10 @@ import {
 } from '../schemas.js';
 
 export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
+  const AnonCreateSiteResponse = registry.register(
+    'AnonCreateSiteResponse',
+    AnonCreateSiteResponseSchema.openapi('AnonCreateSiteResponse'),
+  );
   const AnonPublishRequest = registry.register(
     'AnonPublishRequest',
     AnonPublishRequestSchema.openapi('AnonPublishRequest'),
@@ -84,11 +89,53 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
 
   registry.registerPath({
     method: 'post',
+    path: '/api/sites/anon',
+    operationId: 'createAnonSite',
+    summary: 'Create an anonymous site',
+    description:
+      'Create an empty temporary site (expires in 7 days unless claimed) and a site-scoped claim token. Upload files with POST /api/sites/id/{siteId}/sync using `Authorization: Bearer <claimToken>`.',
+    tags: ['Anonymous Publishing'],
+    security: [],
+    responses: {
+      '200': {
+        description: 'Anonymous site created with a claim token and claim URL',
+        content: { 'application/json': { schema: AnonCreateSiteResponse } },
+      },
+      '429': {
+        description: 'Rate limit exceeded',
+        content: {
+          'application/json': {
+            schema: z.object({ error: z.string(), message: z.string() }),
+          },
+        },
+      },
+      '503': {
+        description:
+          'Anonymous publishing is temporarily disabled (error "anon_disabled")',
+        content: {
+          'application/json': {
+            schema: z.object({ error: z.string(), message: z.string() }),
+          },
+        },
+      },
+      '500': {
+        description: 'Internal server error',
+        content: {
+          'application/json': {
+            schema: z.object({ error: z.string(), message: z.string() }),
+          },
+        },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'post',
     path: '/api/sites/claim',
     operationId: 'claimSite',
     summary: 'Claim an anonymous site',
     description:
-      'Transfer ownership of an anonymous site to the authenticated user.',
+      'Transfer ownership of an anonymous site to the authenticated user. Provide either `claimToken` (site-scoped token from a claim link) or `ownershipToken` (browser-wide token from drag-and-drop publishing).',
     tags: ['Anonymous Publishing'],
     security: [{ sessionCookie: [] }],
     request: {
@@ -122,7 +169,8 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
         },
       },
       '403': {
-        description: 'Invalid ownership token',
+        description:
+          'Invalid ownership token, or request not from a same-origin page',
         content: {
           'application/json': {
             schema: z.object({ success: z.literal(false), error: z.string() }),
@@ -131,6 +179,14 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
       },
       '404': {
         description: 'Site not found',
+        content: {
+          'application/json': {
+            schema: z.object({ success: z.literal(false), error: z.string() }),
+          },
+        },
+      },
+      '415': {
+        description: 'Content-Type must be application/json',
         content: {
           'application/json': {
             schema: z.object({ success: z.literal(false), error: z.string() }),

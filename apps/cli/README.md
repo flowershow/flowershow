@@ -142,6 +142,9 @@ Publish files or folders to Flowershow. If the path is linked to a site (a folde
 - `--name <siteName>` - Custom name for the site (defaults to file/folder name). Only needed on the first publish; for folder mode, the name is saved to a local `.flowershow` file and remembered automatically.
 - `--yes` - Skip the new-site name confirmation prompt (useful for scripts and CI). It does not allow overwriting an existing site.
 - `--overwrite` - Publish an unlinked path (no `.flowershow` file, e.g. a single file or a folder published for the first time) into an existing site with the same name, replacing its content and deleting its files that aren't in the path. Without it, `fl` asks interactively whether to overwrite or choose a new name, and with `--yes` it refuses and exits non-zero.
+- `--anon` - Publish without an account. The site gets a random name and expires in 7 days unless claimed; `fl` prints the live URL and a claim link. See [Publishing without an account](#publishing-without-an-account).
+
+If you are not logged in and don't pass `--anon`, `fl` exits 1 without publishing anything and suggests `fl login` or `fl --anon <path>`.
 
 All commands exit with a non-zero status on failure, and `fl whoami` exits 1 when you are not logged in.
 
@@ -168,6 +171,9 @@ fl --yes ./my-notes
 
 # Deliberately replace an existing site's content from an unlinked path
 fl --yes --overwrite ./my-notes
+
+# Publish without an account (prints a claim link)
+fl --anon ./my-notes
 ```
 
 **What happens (first publish):**
@@ -206,6 +212,26 @@ If a path has no `.flowershow` file and its derived name (or `--name`) matches a
 
 - Folder name becomes the project name (e.g. `fl my-digital-garden/blog` will create a site named `blog`)
 - Site accessible at `https://{foldername}-{username}.flowershow.me` (e.g. `https://blog-johndoe.flowershow.me`)
+
+#### Publishing without an account
+
+`fl --anon <path>` publishes without logging in. It prints:
+
+```
+✓ Published (no account): https://<random-name>-anon.flowershow.me
+Claim it to keep it (expires 7 Oct 2026): https://flowershow.app/claim?siteId=...#token=...
+```
+
+- The site expires after 7 days unless claimed. Open the claim link, sign in, and confirm to move the site into your account.
+- Anonymous sites are limited to 200 files / 50 MB, and the number of anonymous sites per network is rate-limited.
+- For a folder, the site ID and claim token are saved in `.flowershow`, so re-running `fl --anon <folder>` updates the same site. Treat `.flowershow` as a secret while the site is unclaimed: it contains the claim token, which lets anyone overwrite or claim the site.
+- Single files and multiple paths aren't linked: each `fl --anon` run creates a new site.
+- If the saved site has expired or been deleted (or its claim token is no longer accepted), `fl` says so, removes the anonymous link from `.flowershow` and exits 1. Run it again to create a new site, or log in.
+- If the saved site has been claimed, `fl --anon` exits 1 and keeps the link: run `fl login` with the account that claimed it, then publish the folder without `--anon` to update it.
+- If an upload fails, `fl` still prints the claim link, so the site isn't lost.
+- Publishing a folder that was published with `--anon` while logged in (without `--anon`): if you have claimed the site, `fl` relinks the folder to it and updates it; otherwise it creates a site in your account and prints the earlier site's claim link.
+- `fl sync` doesn't support anonymously published folders; use `fl --anon <folder>`.
+- `--anon` never uses your login, even if you are logged in.
 
 ### Site Management
 
@@ -269,7 +295,9 @@ npx skills add flowershow/skills --global
 Tips for agents and scripts:
 
 - `fl login` prints a verification URL, then waits up to 15 minutes for approval. Run it in the background and show the URL to the user.
-- `--yes` skips the new-site prompt. It does not protect against name clashes: if a site with the same name already exists, `fl` syncs to it (see [Name clashes](#name-clashes)).
+- To publish without the user's account, use `fl --anon --yes <folder>` and give the user the claim link it prints (`Claim it to keep it ...`). The site expires in 7 days unless they claim it.
+- Set `FLOWERSHOW_TOKEN` to an API token to authenticate without `fl login` (e.g. in CI). It takes precedence over a saved login: while it's set, `fl login` refuses to run, and `fl logout` removes only the saved login and tells you the variable is still in effect (unset it to log out completely).
+- `--yes` skips the new-site prompt. On a name clash (an unlinked path whose name matches an existing site) it refuses and exits 1 rather than overwriting; pass `--overwrite` to replace that site on purpose, or `--name` to pick another (see [Name clashes](#name-clashes)).
 
 ## Telemetry
 
@@ -292,6 +320,14 @@ https://{site-name}-{username}.flowershow.me
 The exact URL is printed at the end of each publish and shown by `fl list`. It is fixed when the site is created, so renaming a site doesn't change it.
 
 ## Troubleshooting
+
+### "You're not logged in"
+
+`fl <path>` needs a login. Run `fl login` to publish to your account, or `fl --anon <path>` to publish without an account (expires in 7 days unless claimed).
+
+### "This anonymous site has expired or been claimed"
+
+The site saved in the folder's `.flowershow` (from `fl --anon`) can no longer be updated with its claim token. `fl` has removed that link; run `fl --anon <folder>` again to create a new site, or log in and publish to your account.
 
 ### "You must be authenticated to use this command"
 

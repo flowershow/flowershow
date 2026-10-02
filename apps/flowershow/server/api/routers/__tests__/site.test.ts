@@ -1178,6 +1178,20 @@ describe('site anonymous-lookup field narrowing', () => {
 
       expectStripped(site);
     });
+
+    it('excludes expired sites: where has OR [expiresAt null, expiresAt > now]', async () => {
+      const db = createMockDb({ site: makeSite() });
+      const caller = createCaller(db);
+
+      await caller.site.getAnonymous({ projectName: 'my-site' });
+
+      const args = (db.site.findFirst as any).mock.calls[0][0];
+      expect(args.where.projectName).toBe('my-site');
+      expect(args.where.OR).toEqual([
+        { expiresAt: null },
+        { expiresAt: { gt: expect.any(Date) } },
+      ]);
+    });
   });
 
   describe('getMany', () => {

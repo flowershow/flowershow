@@ -288,6 +288,19 @@ export const AnonPublishRequestSchema = z.object({
 });
 export type AnonPublishRequest = z.infer<typeof AnonPublishRequestSchema>;
 
+// POST /api/sites/anon — create an empty anonymous site for agent/CLI publishing
+export const AnonCreateSiteResponseSchema = z.object({
+  siteId: z.string(),
+  projectName: z.string(),
+  liveUrl: z.string(),
+  claimToken: z.string(),
+  claimUrl: z.string(),
+  expiresAt: z.string(),
+});
+export type AnonCreateSiteResponse = z.infer<
+  typeof AnonCreateSiteResponseSchema
+>;
+
 export const AnonPublishResponseSchema = z.object({
   siteId: z.string(),
   projectName: z.string(),
@@ -303,10 +316,15 @@ export const AnonPublishResponseSchema = z.object({
 });
 export type AnonPublishResponse = z.infer<typeof AnonPublishResponseSchema>;
 
-export const ClaimSiteRequestSchema = z.object({
-  siteId: z.string(),
-  ownershipToken: z.string(),
-});
+export const ClaimSiteRequestSchema = z
+  .object({
+    siteId: z.string(),
+    ownershipToken: z.string().optional(),
+    claimToken: z.string().optional(),
+  })
+  .refine((v) => !!v.ownershipToken || !!v.claimToken, {
+    message: 'ownershipToken or claimToken is required',
+  });
 export type ClaimSiteRequest = z.infer<typeof ClaimSiteRequestSchema>;
 
 export const ClaimSiteResponseSchema = z.object({

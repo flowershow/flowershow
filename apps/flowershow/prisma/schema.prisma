@@ -141,6 +141,7 @@ model Site {
   isTemporary             Boolean       @default(false) @map("is_temporary")
   expiresAt               DateTime?     @map("expires_at")
   anonymousOwnerId        String?       @map("anonymous_owner_id")
+  anonCreatorIpHash       String?       @map("anon_creator_ip_hash")
 
   // Links to specific repo within the GitHub App installation
   installationRepositoryId String?                       @map("installation_repository_id")
@@ -151,6 +152,7 @@ model Site {
   @@index([installationRepositoryId])
   @@index([expiresAt])
   @@index([anonymousOwnerId])
+  @@index([anonCreatorIpHash, createdAt])
 }
 
 model Blob {

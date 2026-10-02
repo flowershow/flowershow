@@ -2,18 +2,59 @@ import {
   ClaimSiteRequestSchema,
   type ClaimSiteResponse,
 } from '@flowershow/api-contract';
-import { NextRequest, NextResponse } from 'next/server';
+import { type NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import { ANONYMOUS_USER_ID, verifyOwnershipToken } from '@/lib/anonymous-user';
+import {
+  ANONYMOUS_USER_ID,
+  verifyOwnershipToken,
+  verifySiteClaimToken,
+} from '@/lib/anonymous-user';
 import PostHogClient from '@/lib/server-posthog';
 import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
+
+/**
+ * Only our own claim page may call this route. The session cookie is
+ * SameSite=Lax, so it is sent on POSTs from sibling *.flowershow.app origins
+ * (same-site); require a same-origin Origin, and JSON so cross-origin callers
+ * can't send a no-preflight "simple" request.
+ */
+function rejectCrossSite(request: NextRequest): NextResponse | null {
+  const host = request.headers.get('host') ?? request.nextUrl.host;
+  const fetchSite = request.headers.get('sec-fetch-site');
+  const origin = request.headers.get('origin');
+  let originHost: string | null = null;
+  try {
+    originHost = origin ? new URL(origin).host : null;
+  } catch {}
+  // Browsers send Origin on POST; if something stripped it, Sec-Fetch-Site
+  // (which pages can't forge) must vouch for the request instead.
+  const sameOrigin = origin
+    ? originHost === host && (!fetchSite || fetchSite === 'same-origin')
+    : fetchSite === 'same-origin';
+  if (!sameOrigin) {
+    return NextResponse.json(
+      { success: false, error: 'Cross-origin requests are not allowed' },
+      { status: 403 },
+    );
+  }
+  const contentType = request.headers.get('content-type') ?? '';
+  if (!/^application\/json\s*(;|$)/i.test(contentType)) {
+    return NextResponse.json(
+      { success: false, error: 'Content-Type must be application/json' },
+      { status: 415 },
+    );
+  }
+  return null;
+}
 
 /**
  * POST /api/sites/claim
  * Claim an anonymous site after authentication
  */
 export async function POST(request: NextRequest) {
+  const rejected = rejectCrossSite(request);
+  if (rejected) return rejected;
   try {
     // Check authentication
     const session = await getServerSession(authOptions);
@@ -28,15 +69,29 @@ export async function POST(request: NextRequest) {
     const parsedBody = ClaimSiteRequestSchema.safeParse(await request.json());
     if (!parsedBody.success) {
       return NextResponse.json(
-        { success: false, error: 'siteId and ownershipToken are required' },
+        {
+          success: false,
+          error: 'siteId and either claimToken or ownershipToken are required',
+        },
         { status: 400 },
       );
     }
 
-    const { siteId, ownershipToken } = parsedBody.data;
+    const { siteId, ownershipToken, claimToken } = parsedBody.data;
 
-    // Verify ownership token - returns anonymousUserId if valid
-    const anonymousUserId = verifyOwnershipToken(ownershipToken);
+    let anonymousUserId: string | null = null;
+    if (claimToken) {
+      const claim = verifySiteClaimToken(claimToken);
+      if (!claim || claim.siteId !== siteId) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid claim link for this site' },
+          { status: 403 },
+        );
+      }
+      anonymousUserId = claim.anonymousUserId;
+    } else if (ownershipToken) {
+      anonymousUserId = verifyOwnershipToken(ownershipToken);
+    }
     if (!anonymousUserId) {
       return NextResponse.json(
         { success: false, error: 'Invalid ownership token' },
@@ -71,6 +126,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Claim links stop working once the anonymous site has expired (the DB
+    // expiresAt is the source of truth; the token's own JWT expiry is ignored).
+    if (
+      claimToken &&
+      site.isTemporary &&
+      site.expiresAt &&
+      site.expiresAt.getTime() <= Date.now()
+    ) {
+      return NextResponse.json(
+        { success: false, error: 'This link has expired' },
+        { status: 410 },
+      );
+    }
+
     // Get user's site count for analytics
     const userSitesCount = await prisma.site.count({
       where: { userId: session.user.id },
@@ -84,6 +153,8 @@ export async function POST(request: NextRequest) {
         isTemporary: false,
         expiresAt: null,
         anonymousOwnerId: null,
+        // No need to keep the creator's (hashed) IP once a user owns the site.
+        anonCreatorIpHash: null,
       },
     });
 
@@ -96,6 +167,7 @@ export async function POST(request: NextRequest) {
         site_id: siteId,
         sites_owned_count: userSitesCount + 1,
         auth_method: 'nextauth', // Could be refined based on provider
+        claim_method: claimToken ? 'link' : 'browser',
       },
     });
     await posthog.shutdown();

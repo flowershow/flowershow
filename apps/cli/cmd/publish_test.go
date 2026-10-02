@@ -1,9 +1,15 @@
 package cmd
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
+	"github.com/flowershow/publish/internal/api"
+	"github.com/flowershow/publish/internal/auth"
 	"github.com/flowershow/publish/internal/localconfig"
 	"github.com/flowershow/publish/internal/ui"
 )
@@ -14,7 +20,7 @@ func TestPublish_UnlinkedFolder_ExistingSite_Yes_RefusesToOverwrite(t *testing.T
 	f := setupFakeAPI(t, true, "notes")
 	dir := makeFolder(t, "notes", "")
 
-	err := runPublish([]string{dir}, "", true, false)
+	err := runPublish([]string{dir}, "", true, false, false)
 
 	if err == nil {
 		t.Fatal("expected an error when an unlinked folder targets an existing site with --yes")
@@ -31,7 +37,7 @@ func TestPublish_UnlinkedFolder_NameFlagMatchesExistingSite_Yes_RefusesToOverwri
 	f := setupFakeAPI(t, true, "blog")
 	dir := makeFolder(t, "drafts", "")
 
-	err := runPublish([]string{dir}, "blog", true, false)
+	err := runPublish([]string{dir}, "blog", true, false, false)
 
 	if err == nil {
 		t.Fatal("expected an error when --name points an unlinked folder at an existing site")
@@ -45,7 +51,7 @@ func TestPublish_UnlinkedFolder_NewSite_Yes_CreatesSite(t *testing.T) {
 	f := setupFakeAPI(t, true)
 	dir := makeFolder(t, "fresh", "")
 
-	if err := runPublish([]string{dir}, "", true, false); err != nil {
+	if err := runPublish([]string{dir}, "", true, false, false); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if got := f.createdNames(); len(got) != 1 || got[0] != "fresh" {
@@ -60,7 +66,7 @@ func TestPublish_LinkedFolder_ExistingSite_Yes_Syncs(t *testing.T) {
 	f := setupFakeAPI(t, true, "notes")
 	dir := makeFolder(t, "whatever", "notes")
 
-	if err := runPublish([]string{dir}, "", true, false); err != nil {
+	if err := runPublish([]string{dir}, "", true, false, false); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !f.syncedTo("id-notes") {
@@ -74,7 +80,7 @@ func TestPublish_NotAuthenticated_ReturnsError(t *testing.T) {
 	setupFakeAPI(t, false)
 	dir := makeFolder(t, "notes", "")
 
-	if err := runPublish([]string{dir}, "", true, false); err == nil {
+	if err := runPublish([]string{dir}, "", true, false, false); err == nil {
 		t.Fatal("expected an error when not authenticated")
 	}
 }
@@ -82,7 +88,7 @@ func TestPublish_NotAuthenticated_ReturnsError(t *testing.T) {
 func TestPublish_PathNotFound_ReturnsError(t *testing.T) {
 	setupFakeAPI(t, true)
 
-	if err := runPublish([]string{"/definitely/not/here/xyz"}, "", true, false); err == nil {
+	if err := runPublish([]string{"/definitely/not/here/xyz"}, "", true, false, false); err == nil {
 		t.Fatal("expected an error for a missing path")
 	}
 }
@@ -91,7 +97,7 @@ func TestPublish_LinkedSiteNotFound_Yes_ReturnsError(t *testing.T) {
 	setupFakeAPI(t, true)
 	dir := makeFolder(t, "notes", "renamed-away")
 
-	if err := runPublish([]string{dir}, "", true, false); err == nil {
+	if err := runPublish([]string{dir}, "", true, false, false); err == nil {
 		t.Fatal("expected an error when the linked site cannot be found")
 	}
 }
@@ -129,7 +135,7 @@ func TestPublish_UnlinkedFolder_ExistingSite_OverwriteFlag_Syncs(t *testing.T) {
 	f := setupFakeAPI(t, true, "notes")
 	dir := makeFolder(t, "notes", "")
 
-	if err := runPublish([]string{dir}, "", true, true); err != nil {
+	if err := runPublish([]string{dir}, "", true, true, false); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !f.syncedTo("id-notes") {
@@ -144,7 +150,7 @@ func TestPublish_OverwriteFlag_NewSite_Creates(t *testing.T) {
 	f := setupFakeAPI(t, true)
 	dir := makeFolder(t, "fresh", "")
 
-	if err := runPublish([]string{dir}, "", true, true); err != nil {
+	if err := runPublish([]string{dir}, "", true, true, false); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if got := f.createdNames(); len(got) != 1 || got[0] != "fresh" {
@@ -158,7 +164,7 @@ func TestPublish_Interactive_ExistingSite_ConfirmOverwrite_Syncs(t *testing.T) {
 	ui.SetInput(strings.NewReader("y\n"))
 	t.Cleanup(func() { ui.SetInput(nil) })
 
-	if err := runPublish([]string{dir}, "", false, false); err != nil {
+	if err := runPublish([]string{dir}, "", false, false, false); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if !f.syncedTo("id-notes") {
@@ -172,7 +178,7 @@ func TestPublish_Interactive_ExistingSite_ChooseNewName_CreatesNewSite(t *testin
 	ui.SetInput(strings.NewReader("n\nnotes-2\n"))
 	t.Cleanup(func() { ui.SetInput(nil) })
 
-	if err := runPublish([]string{dir}, "", false, false); err != nil {
+	if err := runPublish([]string{dir}, "", false, false, false); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if f.syncedTo("id-notes") {
@@ -192,7 +198,7 @@ func TestPublish_Interactive_NewNameAlsoExists_AsksAgain(t *testing.T) {
 	ui.SetInput(strings.NewReader("n\nblog\nn\nnotes-3\n"))
 	t.Cleanup(func() { ui.SetInput(nil) })
 
-	if err := runPublish([]string{dir}, "", false, false); err != nil {
+	if err := runPublish([]string{dir}, "", false, false, false); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if f.syncedTo("id-notes") || f.syncedTo("id-blog") {
@@ -209,7 +215,7 @@ func TestPublish_Interactive_ExistingSite_NoInput_Cancels(t *testing.T) {
 	ui.SetInput(strings.NewReader(""))
 	t.Cleanup(func() { ui.SetInput(nil) })
 
-	if err := runPublish([]string{dir}, "", false, false); err == nil {
+	if err := runPublish([]string{dir}, "", false, false, false); err == nil {
 		t.Fatal("expected a non-nil error when the user cancels")
 	}
 	if f.syncedTo("id-notes") {
@@ -227,7 +233,7 @@ func TestPublish_Interactive_RenameAtNewSitePromptToExistingSite_Warns(t *testin
 	ui.SetInput(strings.NewReader("blog\nn\n\n"))
 	t.Cleanup(func() { ui.SetInput(nil) })
 
-	if err := runPublish([]string{dir}, "", false, false); err == nil {
+	if err := runPublish([]string{dir}, "", false, false, false); err == nil {
 		t.Fatal("expected a non-nil error when the user cancels")
 	}
 	if f.syncedTo("id-blog") {
@@ -240,5 +246,486 @@ func TestShellQuoteAll(t *testing.T) {
 	want := `./notes 'my notes/a.md' 'it'\''s.md'`
 	if got != want {
 		t.Fatalf("shellQuoteAll = %s, want %s", got, want)
+	}
+}
+
+// --- flowershow-z4f: anonymous publishing (--anon) ---
+
+// readRawConfig returns the raw .flowershow contents in dir ("" if absent).
+func readRawConfig(t *testing.T, dir string) string {
+	t.Helper()
+	b, err := os.ReadFile(filepath.Join(dir, localconfig.FileName))
+	if err != nil {
+		if os.IsNotExist(err) {
+			return ""
+		}
+		t.Fatal(err)
+	}
+	return string(b)
+}
+
+// makeAnonFolder creates a folder linked to an anonymous site via .flowershow.
+func makeAnonFolder(t *testing.T, name, siteID, claimToken string) string {
+	t.Helper()
+	dir := makeFolder(t, name, "")
+	cfg := &localconfig.Config{
+		Anon:       true,
+		SiteID:     siteID,
+		ClaimToken: claimToken,
+		LiveURL:    anonLiveURL,
+		ClaimURL:   anonClaimURL,
+		ExpiresAt:  anonExpiresAt,
+	}
+	if err := localconfig.Write(dir, cfg); err != nil {
+		t.Fatal(err)
+	}
+	return dir
+}
+
+func TestPublishNotLoggedInWithoutAnonFails(t *testing.T) {
+	f := setupFakeAPI(t, false)
+	dir := makeFolder(t, "notes", "")
+
+	_, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, false) })
+
+	if err == nil {
+		t.Fatal("expected an error when not logged in and --anon not given")
+	}
+	if !strings.Contains(err.Error(), "fl login") || !strings.Contains(err.Error(), "--anon") {
+		t.Fatalf("message should suggest both `fl login` and `--anon`, got %q", err.Error())
+	}
+	if f.anonCreateCount() != 0 || len(f.createdNames()) != 0 || len(f.syncIDs()) != 0 {
+		t.Fatal("nothing should be created or synced without login or --anon")
+	}
+	if readRawConfig(t, dir) != "" {
+		t.Fatal("no .flowershow should be written")
+	}
+}
+
+func TestPublishAnonFolder(t *testing.T) {
+	f := setupFakeAPI(t, false)
+	pinLocalTime(t, time.UTC) // the expiry date is shown in local time
+	dir := makeFolder(t, "notes", "")
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) })
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if f.anonCreateCount() != 1 {
+		t.Fatalf("expected one anon create, got %d", f.anonCreateCount())
+	}
+	if f.anonCreateAuth[0] != "" {
+		t.Fatalf("anon create must be unauthenticated, got Authorization %q", f.anonCreateAuth[0])
+	}
+	if ids := f.syncIDs(); len(ids) != 1 || ids[0] != anonSiteID {
+		t.Fatalf("expected a sync to %s, got %v", anonSiteID, ids)
+	}
+	if f.syncAuth[0] != "Bearer "+anonClaimToken {
+		t.Fatalf("sync should use the claim token, got %q", f.syncAuth[0])
+	}
+	for _, want := range []string{anonLiveURL, anonClaimURL, "expires", "7 Oct 2026", "✓ Published (no account): " + anonLiveURL} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("output should contain %q, got:\n%s", want, out)
+		}
+	}
+	raw := readRawConfig(t, dir)
+	for _, want := range []string{`"anon": true`, `"siteId": "` + anonSiteID + `"`, `"claimToken": "` + anonClaimToken + `"`, `"claimUrl"`, `"liveUrl"`} {
+		if !strings.Contains(raw, want) {
+			t.Fatalf(".flowershow should contain %s, got:\n%s", want, raw)
+		}
+	}
+	if len(f.createdNames()) != 0 {
+		t.Fatal("anon publish must not create an account site")
+	}
+}
+
+// pinLocalTime sets the local time zone for the rest of the test.
+func pinLocalTime(t *testing.T, loc *time.Location) {
+	t.Helper()
+	orig := time.Local
+	time.Local = loc
+	t.Cleanup(func() { time.Local = orig })
+}
+
+func TestFormatExpiryUsesLocalTime(t *testing.T) {
+	pinLocalTime(t, time.UTC)
+	if got := formatExpiry(anonExpiresAt); got != "7 Oct 2026" {
+		t.Fatalf("UTC: got %q", got)
+	}
+	pinLocalTime(t, time.FixedZone("UTC+14", 14*3600))
+	if got := formatExpiry(anonExpiresAt); got != "8 Oct 2026" {
+		t.Fatalf("UTC+14: got %q", got)
+	}
+	if got := formatExpiry("not a date"); got != "not a date" {
+		t.Fatalf("unparseable: got %q", got)
+	}
+}
+
+func TestPublishAnonFolderUploadFailureStillPrintsClaimLink(t *testing.T) {
+	f := setupFakeAPI(t, false)
+	f.uploadFails = true
+	dir := makeFolder(t, "notes", "")
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) })
+
+	if err == nil {
+		t.Fatal("expected an error when uploads fail")
+	}
+	if !strings.Contains(out, anonClaimURL) {
+		t.Fatalf("the claim link must be printed even when the upload fails, got:\n%s", out)
+	}
+}
+
+func TestPublishAnonFolderRepublishUsesSameSite(t *testing.T) {
+	f := setupFakeAPI(t, false)
+	dir := makeFolder(t, "notes", "")
+
+	if _, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) }); err != nil {
+		t.Fatalf("first publish: %v", err)
+	}
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) })
+	if err != nil {
+		t.Fatalf("second publish: %v\n%s", err, out)
+	}
+	if f.anonCreateCount() != 1 {
+		t.Fatalf("republish must not create a new anon site, got %d creates", f.anonCreateCount())
+	}
+	if ids := f.syncIDs(); len(ids) != 2 || ids[1] != anonSiteID {
+		t.Fatalf("expected second sync to %s, got %v", anonSiteID, ids)
+	}
+	if f.syncAuth[1] != "Bearer "+anonClaimToken {
+		t.Fatalf("republish should use the saved claim token, got %q", f.syncAuth[1])
+	}
+	if !strings.Contains(out, anonLiveURL) || !strings.Contains(out, anonClaimURL) {
+		t.Fatalf("republish output should show live and claim URLs, got:\n%s", out)
+	}
+}
+
+func TestPublishAnonSingleFile(t *testing.T) {
+	f := setupFakeAPI(t, false)
+	dir := t.TempDir()
+	file := filepath.Join(dir, "report.html")
+	if err := os.WriteFile(file, []byte("<h1>Hi</h1>"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{file}, "", true, false, true) })
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if f.anonCreateCount() != 1 {
+		t.Fatalf("expected one anon create, got %d", f.anonCreateCount())
+	}
+	if readRawConfig(t, dir) != "" {
+		t.Fatal("single-file anon publish must not write .flowershow")
+	}
+	if !strings.Contains(out, "Single files can't be updated without an account. Publish a folder, or run `fl login`.") {
+		t.Fatalf("output should explain single files can't be updated, got:\n%s", out)
+	}
+	if !strings.Contains(out, anonClaimURL) {
+		t.Fatalf("output should include the claim URL, got:\n%s", out)
+	}
+}
+
+func TestPublishAnonWhileLoggedInDoesNotSendUserToken(t *testing.T) {
+	f := setupFakeAPI(t, true)
+	dir := makeFolder(t, "notes", "")
+
+	if _, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) }); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if f.anonCreateAuth[0] != "" {
+		t.Fatalf("anon create must not send the user's token, got %q", f.anonCreateAuth[0])
+	}
+	if f.syncAuth[0] != "Bearer "+anonClaimToken {
+		t.Fatalf("anon sync must use the claim token, got %q", f.syncAuth[0])
+	}
+	if len(f.createdNames()) != 0 {
+		t.Fatal("--anon must not create an account site")
+	}
+}
+
+func TestPublishAnonExpiredOrDeletedSiteClearsConfig(t *testing.T) {
+	for _, status := range []int{401, 404, 410} {
+		t.Run(fmt.Sprint(status), func(t *testing.T) {
+			f := setupFakeAPI(t, false)
+			f.siteStatus["anon-gone"] = status
+			f.claimTokens["fs_claim_gone"] = "anon-gone"
+			dir := makeAnonFolder(t, "notes", "anon-gone", "fs_claim_gone")
+
+			out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) })
+
+			if err == nil {
+				t.Fatal("expected an error for an expired/deleted anonymous site")
+			}
+			if strings.Count(out, anonGoneMsg) != 1 {
+				t.Fatalf("expected the expired message exactly once, got:\n%s", out)
+			}
+			if strings.Contains(out, fakeGoneServerMsg) {
+				t.Fatalf("the raw server error should not be printed as well, got:\n%s", out)
+			}
+			if f.anonCreateCount() != 0 {
+				t.Fatal("must not silently create a new anonymous site")
+			}
+			if raw := readRawConfig(t, dir); raw != "" {
+				t.Fatalf(".flowershow should be removed, got:\n%s", raw)
+			}
+		})
+	}
+}
+
+// A claimed site answers 409: keep the link so a logged-in `fl` can relink
+// to the claimed site, and don't suggest publishing a new anonymous site.
+func TestPublishAnonClaimedSiteKeepsLink(t *testing.T) {
+	f := setupFakeAPI(t, false)
+	f.siteStatus[anonSiteID] = 409
+	dir := makeAnonFolder(t, "notes", anonSiteID, anonClaimToken)
+	before := readRawConfig(t, dir)
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) })
+
+	if err == nil {
+		t.Fatal("expected an error for a claimed anonymous site")
+	}
+	if strings.Count(out, anonClaimedMsg) != 1 {
+		t.Fatalf("expected the claimed message exactly once, got:\n%s", out)
+	}
+	if strings.Contains(out, anonGoneMsg) || strings.Contains(out, "run the same command again") {
+		t.Fatalf("must not suggest publishing a new anonymous site, got:\n%s", out)
+	}
+	if f.anonCreateCount() != 0 {
+		t.Fatal("must not create a new anonymous site")
+	}
+	if raw := readRawConfig(t, dir); raw != before {
+		t.Fatalf(".flowershow should be unchanged, got:\n%s", raw)
+	}
+}
+
+// 403 (token not valid for this site) is not proof the site is gone: report
+// the server's message and keep the link.
+func TestPublishAnonForbiddenKeepsLink(t *testing.T) {
+	f := setupFakeAPI(t, false)
+	f.siteStatus[anonSiteID] = 403
+	dir := makeAnonFolder(t, "notes", anonSiteID, anonClaimToken)
+	before := readRawConfig(t, dir)
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) })
+
+	if err == nil {
+		t.Fatal("expected an error")
+	}
+	if !strings.Contains(out, fakeGoneServerMsg) {
+		t.Fatalf("server message should be surfaced, got:\n%s", out)
+	}
+	if f.anonCreateCount() != 0 || readRawConfig(t, dir) != before {
+		t.Fatal("must not create a new site or change .flowershow")
+	}
+}
+
+// The review's M2 flow: publish anonymously, the human claims the site, the
+// agent re-runs `fl --anon` (409, link kept), then a logged-in `fl` updates
+// the claimed site rather than creating a duplicate.
+func TestPublishClaimThenAnonThenLoggedInUpdatesClaimedSite(t *testing.T) {
+	f := setupFakeAPI(t, true)
+	dir := makeAnonFolder(t, "notes", anonSiteID, anonClaimToken)
+
+	f.siteStatus[anonSiteID] = 409
+	if _, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) }); err == nil {
+		t.Fatal("expected --anon on a claimed site to fail")
+	}
+
+	delete(f.siteStatus, anonSiteID)
+	f.sites["quiet-otter"] = api.Site{ID: anonSiteID, ProjectName: "quiet-otter", URL: "https://quiet-otter.flowershow.me"}
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, false) })
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if got := f.createdNames(); len(got) != 0 || f.anonCreateCount() != 0 {
+		t.Fatalf("must not create any new site, created %v (anon %d)", got, f.anonCreateCount())
+	}
+	if ids := f.syncIDs(); len(ids) == 0 || ids[len(ids)-1] != anonSiteID {
+		t.Fatalf("expected the last sync to go to the claimed site, got %v", ids)
+	}
+	if cfg := localconfig.Read(dir); cfg == nil || cfg.SiteName != "quiet-otter" {
+		t.Fatalf("expected .flowershow relinked to quiet-otter, got %+v", cfg)
+	}
+}
+
+func TestPublishAnonRateLimited(t *testing.T) {
+	f := setupFakeAPI(t, false)
+	f.anonRateLimited = true
+	dir := makeFolder(t, "notes", "")
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) })
+
+	if err == nil {
+		t.Fatal("expected an error when rate-limited")
+	}
+	if !strings.Contains(out, "Too many anonymous sites from this network") {
+		t.Fatalf("server message should be surfaced, got:\n%s", out)
+	}
+	if len(f.syncIDs()) != 0 || readRawConfig(t, dir) != "" {
+		t.Fatal("nothing should be synced or written when rate-limited")
+	}
+}
+
+func TestPublishLoggedInAfterClaimUpdatesClaimedSite(t *testing.T) {
+	f := setupFakeAPI(t, true)
+	// The anonymous site was claimed: it is now in the user's account.
+	claimedURL := "https://quiet-otter.flowershow.me"
+	f.sites["quiet-otter"] = api.Site{ID: anonSiteID, ProjectName: "quiet-otter", URL: claimedURL}
+	dir := makeAnonFolder(t, "notes", anonSiteID, anonClaimToken)
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, false) })
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if got := f.createdNames(); len(got) != 0 {
+		t.Fatalf("must not create a duplicate site, created %v", got)
+	}
+	if ids := f.syncIDs(); len(ids) != 1 || ids[0] != anonSiteID {
+		t.Fatalf("expected a sync to the claimed site %s, got %v", anonSiteID, ids)
+	}
+	if f.syncAuth[0] != "Bearer "+testToken {
+		t.Fatalf("sync to the claimed site should use the user's token, got %q", f.syncAuth[0])
+	}
+	if !strings.Contains(out, "claimed into your account") || !strings.Contains(out, claimedURL) {
+		t.Fatalf("output should say the site was claimed and show its URL, got:\n%s", out)
+	}
+	if strings.Contains(out, anonClaimURL) {
+		t.Fatalf("should not ask to claim an already-claimed site, got:\n%s", out)
+	}
+	raw := readRawConfig(t, dir)
+	if cfg := localconfig.Read(dir); cfg == nil || cfg.SiteName != "quiet-otter" || cfg.IsAnon() || strings.Contains(raw, "claimToken") {
+		t.Fatalf("expected .flowershow relinked to 'quiet-otter' without anon fields, got:\n%s", raw)
+	}
+}
+
+func TestPublishLoggedInIgnoresAnonConfigAndShowsClaimLink(t *testing.T) {
+	for _, siteID := range []string{anonSiteID, "anon-deleted"} {
+		t.Run(siteID, func(t *testing.T) {
+			testPublishLoggedInIgnoresAnonConfig(t, siteID)
+		})
+	}
+}
+
+// testPublishLoggedInIgnoresAnonConfig: the anonymous site isn't the user's
+// (still anonymous: 403, or gone: 404), so a new account site is created.
+func testPublishLoggedInIgnoresAnonConfig(t *testing.T, siteID string) {
+	f := setupFakeAPI(t, true)
+	dir := makeAnonFolder(t, "notes", siteID, anonClaimToken)
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, false) })
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if got := f.createdNames(); len(got) != 1 || got[0] != "notes" {
+		t.Fatalf("expected account site 'notes' to be created, got %v", got)
+	}
+	if f.syncedTo(anonSiteID) {
+		t.Fatal("logged-in publish must not sync to the anonymous site")
+	}
+	if !strings.Contains(out, "without an account") || !strings.Contains(out, anonClaimURL) {
+		t.Fatalf("output should note the earlier anonymous publish and its claim link, got:\n%s", out)
+	}
+	if cfg := localconfig.Read(dir); cfg == nil || cfg.SiteName != "notes" || cfg.Anon {
+		t.Fatalf("expected folder to be linked to account site 'notes', got %+v", cfg)
+	}
+}
+
+func TestPublishWithEnvToken(t *testing.T) {
+	f := setupFakeAPI(t, false)
+	t.Setenv("FLOWERSHOW_TOKEN", testToken)
+	dir := makeFolder(t, "fresh", "")
+
+	if _, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, false) }); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got := f.createdNames(); len(got) != 1 || got[0] != "fresh" {
+		t.Fatalf("expected site 'fresh' to be created with FLOWERSHOW_TOKEN, got %v", got)
+	}
+}
+
+func TestSyncOnAnonFolderFails(t *testing.T) {
+	f := setupFakeAPI(t, true)
+	dir := makeAnonFolder(t, "notes", anonSiteID, anonClaimToken)
+
+	_, err := captureOutput(t, func() error { return runSync(dir, "", false, false) })
+
+	if err == nil {
+		t.Fatal("expected fl sync to fail on an anonymously published folder")
+	}
+	if !strings.Contains(err.Error(), "fl --anon") {
+		t.Fatalf("message should point to `fl --anon`, got %q", err.Error())
+	}
+	if len(f.syncIDs()) != 0 {
+		t.Fatal("nothing should be synced")
+	}
+}
+
+func TestWhoamiWithEnvToken(t *testing.T) {
+	setupFakeAPI(t, false)
+	t.Setenv("FLOWERSHOW_TOKEN", testToken)
+
+	if err := runAuthStatus(); err != nil {
+		t.Fatalf("whoami should work with FLOWERSHOW_TOKEN: %v", err)
+	}
+}
+
+func TestLogoutWithEnvTokenExplains(t *testing.T) {
+	setupFakeAPI(t, false)
+	t.Setenv("FLOWERSHOW_TOKEN", testToken)
+
+	out, err := captureOutput(t, runAuthLogout)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "not a saved login") || !strings.Contains(out, "Unset FLOWERSHOW_TOKEN to log out") {
+		t.Fatalf("logout should explain the token comes from FLOWERSHOW_TOKEN, got:\n%s", out)
+	}
+	if strings.Contains(out, "Removed") {
+		t.Fatalf("logout must not claim it removed a login when none was saved, got:\n%s", out)
+	}
+}
+
+func TestLogoutWithEnvTokenRemovesSavedLogin(t *testing.T) {
+	setupFakeAPI(t, false)
+	if err := auth.SaveToken("saved-token", "bob"); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("FLOWERSHOW_TOKEN", testToken)
+
+	out, err := captureOutput(t, runAuthLogout)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "Removed your saved login (bob)") {
+		t.Fatalf("logout should say it removed the saved login, got:\n%s", out)
+	}
+	if !strings.Contains(out, "still authenticated as "+testUser+" via the FLOWERSHOW_TOKEN") {
+		t.Fatalf("logout should say the env token stays in effect, got:\n%s", out)
+	}
+	if saved, _ := auth.GetSavedToken(); saved != nil {
+		t.Fatalf("saved login should be removed, got %+v", saved)
+	}
+}
+
+func TestLoginRefusedWithEnvToken(t *testing.T) {
+	setupFakeAPI(t, false)
+	t.Setenv("FLOWERSHOW_TOKEN", testToken)
+
+	out, err := captureOutput(t, runAuthLogin)
+	if err == nil {
+		t.Fatalf("login should fail while FLOWERSHOW_TOKEN is set, got:\n%s", out)
+	}
+	if !strings.Contains(out, "FLOWERSHOW_TOKEN is set") {
+		t.Fatalf("login should explain FLOWERSHOW_TOKEN is in use, got:\n%s", out)
+	}
+	if saved, _ := auth.GetSavedToken(); saved != nil {
+		t.Fatalf("login must not save a token, got %+v", saved)
 	}
 }

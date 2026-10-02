@@ -6,14 +6,14 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/flowershow/publish/internal/config"
 	"github.com/google/uuid"
 	"github.com/posthog/posthog-go"
-	"github.com/flowershow/publish/internal/config"
 )
 
 type cliConfig struct {
-	DistinctID          string `json:"distinctId,omitempty"`
-	TelemetryNoticeShown bool  `json:"telemetryNoticeShown,omitempty"`
+	DistinctID           string `json:"distinctId,omitempty"`
+	TelemetryNoticeShown bool   `json:"telemetryNoticeShown,omitempty"`
 }
 
 func configDir() string {

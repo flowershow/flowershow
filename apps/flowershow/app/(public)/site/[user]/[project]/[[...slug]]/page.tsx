@@ -29,6 +29,7 @@ import {
 import { isChangelogDirName, parsePageParam } from '@/lib/changelog';
 import { resolveChangelogContext } from '@/lib/changelog-context';
 import { hasVersionSections } from '@/lib/changelog-file';
+import { anonRobots } from '@/lib/anonymous-site';
 import { renderPageContent } from '@/lib/render-page-content';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
@@ -177,6 +178,8 @@ export async function generateMetadata(props: {
       }),
     },
     // metadataBase: new URL(siteUrl),
+    // Last, so nothing can override it: anonymous sites are never indexed.
+    ...anonRobots(site),
   };
 }
 

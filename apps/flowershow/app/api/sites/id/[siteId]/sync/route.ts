@@ -4,7 +4,6 @@ import {
   checkCliVersion,
   getClientInfo,
   isLegacyPublishClient,
-  validateAccessToken,
 } from '@/lib/cli-auth';
 import { startPublishFinalizerWorkflow } from '@/lib/cloudflare-worker';
 import {
@@ -17,15 +16,18 @@ import {
   clientTypeToPublishSource,
   type FileMetadata,
   PRESIGNED_URL_TTL,
+  validateAnonPublishFiles,
   validatePublishFiles,
 } from '@/lib/publish-limits';
 import PostHogClient from '@/lib/server-posthog';
+import { authorizeSiteRequest } from '@/lib/site-auth';
 import prisma from '@/server/db';
 
 /**
  * POST /api/sites/id/:siteId/sync
  * Unified sync endpoint for direct publishing (CLI, Obsidian plugin, or other integrations)
- * Accepts both fs_cli_* and fs_pat_* tokens
+ * Accepts fs_cli_* and fs_pat_* tokens (site owner), or a site-scoped
+ * fs_claim_* token for an anonymous site (tighter upload limits apply)
  *
  * Compares local files with existing files in the database:
  * - Returns presigned URLs for new or modified files
@@ -48,33 +50,11 @@ export async function POST(
 
     const isLegacy = isLegacyPublishClient(request);
 
-    // Validate access token (CLI or PAT)
-    const auth = await validateAccessToken(request);
-    if (!auth?.userId) {
-      return NextResponse.json(
-        { error: 'unauthorized', message: 'Not authenticated' },
-        { status: 401 },
-      );
-    }
-
-    const site = await prisma.site.findUnique({
-      where: { id: siteId },
-      select: { id: true, userId: true },
-    });
-
-    if (!site) {
-      return NextResponse.json(
-        { error: 'not_found', message: 'Site not found' },
-        { status: 404 },
-      );
-    }
-
-    if (site.userId !== auth.userId) {
-      return NextResponse.json(
-        { error: 'forbidden', message: 'You do not have access to this site' },
-        { status: 403 },
-      );
-    }
+    // Owner CLI/PAT token, or a site-scoped claim token for an anonymous site
+    const access = await authorizeSiteRequest(request, siteId);
+    if (!access.ok) return access.response;
+    const distinctId =
+      access.kind === 'user' ? access.userId : `anon:${siteId}`;
 
     const dryRun = request.nextUrl.searchParams.get('dryRun') === 'true';
 
@@ -88,7 +68,10 @@ export async function POST(
       );
     }
 
-    const validationError = validatePublishFiles(files);
+    const validationError =
+      access.kind === 'anon'
+        ? validateAnonPublishFiles(files)
+        : validatePublishFiles(files);
     if (validationError) return validationError;
 
     const existingBlobs = await prisma.blob.findMany({
@@ -303,7 +286,7 @@ export async function POST(
       const publish_method =
         client_type === 'obsidian-plugin' ? 'obsidian_plugin' : client_type;
       posthog.capture({
-        distinctId: auth.userId,
+        distinctId,
         event: 'content_published',
         properties: { publish_method, site_id: siteId },
       });

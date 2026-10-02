@@ -81,6 +81,13 @@ ChatGPT supports skills. Add the Flowershow skill from the same `SKILL.md` in Ch
 
 If your agent doesn't support skills, add the contents of `SKILL.md` to its custom instructions, or tell it: "Read https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md and follow it."
 
+## Cloud and headless agents
+
+Agents that run in a cloud sandbox or without a browser can't easily complete `fl login`. Two options:
+
+- **Publish under your account:** create a personal access token at [cloud.flowershow.app/tokens](https://cloud.flowershow.app/tokens) and give it to the agent as `FLOWERSHOW_TOKEN`. See [Environment token](/docs/reference/cli#environment-token).
+- **Publish without an account:** the agent runs `fl --anon <folder>` and gives you the claim link it prints. The site lives for 7 days unless you claim it. See [Publish without an account](/docs/reference/cli#publish-without-an-account).
+
 ## Install the CLI
 
 The skill tells the agent how to install `fl` if it's missing. You can also install it yourself first, which avoids `sudo` prompts inside the agent:

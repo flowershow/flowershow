@@ -113,6 +113,22 @@ describe('GET /api/sites/:username/:projectname — exact name lookup', () => {
     expect(prisma.site.findFirst).not.toHaveBeenCalled();
   });
 
+  it('returns 404 for an expired anonymous site on the _subdomain lookup', async () => {
+    (prisma.site.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: 'site-anon',
+      subdomain: 'abc-anon',
+      projectName: 'abc',
+      isTemporary: true,
+      expiresAt: new Date(Date.now() - 1000),
+      user: { username: 'anon', id: 'anon-user-id' },
+    });
+    const res = await GET(
+      makeRequest('_subdomain', 'abc-anon'),
+      makeParams('_subdomain', 'abc-anon'),
+    );
+    expect(res.status).toBe(404);
+  });
+
   it('returns 404 when no site matches', async () => {
     const res = await GET(
       makeRequest('olayway', 'My Notes'),

@@ -2,7 +2,7 @@ package config
 
 import "os"
 
-var Version = "2.4.0"
+var Version = "2.5.0"
 
 func APIURL() string {
 	if v := os.Getenv("API_URL"); v != "" {

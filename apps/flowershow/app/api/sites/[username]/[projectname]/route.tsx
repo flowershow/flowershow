@@ -59,6 +59,12 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
+  // Expired anonymous sites stop being served before the cleanup cron runs.
+  // The middleware resolves *-anon subdomains through this lookup.
+  if (site.isTemporary && site.expiresAt && site.expiresAt <= new Date()) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+  }
+
   // If authenticated and user owns the site, return extended data for CLI usage
   if (auth?.userId && site.user.id === auth.userId) {
     const extendedSite = await prisma.site.findUnique({

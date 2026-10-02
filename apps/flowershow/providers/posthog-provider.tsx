@@ -5,6 +5,7 @@ import posthog from 'posthog-js';
 import { PostHogProvider as PHProvider } from 'posthog-js/react';
 import { useEffect } from 'react';
 import { env } from '@/env.mjs';
+import { redactClaimTokensInEvent } from '@/lib/redact-claim-token';
 
 export function PostHogProvider({ children }) {
   const { data: session, status } = useSession();
@@ -25,6 +26,8 @@ export function PostHogProvider({ children }) {
       disable_web_experiments: false, // https://posthog.com/docs/experiments/no-code-web-experiments
       bootstrap: bootstrapData,
       disable_session_recording: true, // TODO temporary patch https://github.com/flowershow/flowershow/issues/1131
+      // Claim links carry a bearer token; keep it out of $current_url etc.
+      before_send: redactClaimTokensInEvent,
       loaded: (ph) => {
         // Expose PostHog on window so the PostHog Toolbar and the no-code
         // web-experiments visual editor can attach. The posthog-js/react npm

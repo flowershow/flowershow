@@ -192,8 +192,33 @@ func stripANSI(s string) string {
 	return result.String()
 }
 
+// tokenOverride, when non-empty, replaces the user's token on every request
+// (used for anonymous sites, which are authorised by a site-scoped claim token).
+var tokenOverride string
+
+// SetTokenOverride makes Request send token instead of the user's token.
+// Pass "" to restore normal behaviour.
+func SetTokenOverride(token string) {
+	tokenOverride = token
+}
+
+// HTTPError is a non-2xx API response. Its message is the server's `message`
+// field, or "HTTP <status>" if there is none.
+type HTTPError struct {
+	StatusCode int
+	Message    string
+}
+
+func (e *HTTPError) Error() string { return e.Message }
+
 // Request makes an authenticated API request.
 func Request(method, endpoint string, body interface{}) (*http.Response, error) {
+	return doRequest(method, endpoint, body, true)
+}
+
+// doRequest makes an API request, sending the override or user token only if
+// authenticated is true.
+func doRequest(method, endpoint string, body interface{}, authenticated bool) (*http.Response, error) {
 	var reqBody io.Reader
 	if body != nil {
 		b, err := json.Marshal(body)
@@ -213,9 +238,12 @@ func Request(method, endpoint string, body interface{}) (*http.Response, error) 
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	tokenData, err := auth.GetToken()
-	if err == nil && tokenData != nil && tokenData.Token != "" {
-		req.Header.Set("Authorization", "Bearer "+tokenData.Token)
+	if authenticated {
+		if tokenOverride != "" {
+			req.Header.Set("Authorization", "Bearer "+tokenOverride)
+		} else if tokenData, err := auth.GetToken(); err == nil && tokenData != nil && tokenData.Token != "" {
+			req.Header.Set("Authorization", "Bearer "+tokenData.Token)
+		}
 	}
 
 	resp, err := http.DefaultClient.Do(req)
@@ -235,9 +263,37 @@ func apiError(resp *http.Response) error {
 		Message string `json:"message"`
 	}
 	if json.Unmarshal(body, &errResp) == nil && errResp.Message != "" {
-		return fmt.Errorf("%s", errResp.Message)
+		return &HTTPError{StatusCode: resp.StatusCode, Message: errResp.Message}
 	}
-	return fmt.Errorf("HTTP %s", resp.Status)
+	return &HTTPError{StatusCode: resp.StatusCode, Message: fmt.Sprintf("HTTP %s", resp.Status)}
+}
+
+// AnonCreateSiteResponse is returned by POST /api/sites/anon.
+type AnonCreateSiteResponse struct {
+	SiteID      string `json:"siteId"`
+	ProjectName string `json:"projectName"`
+	LiveURL     string `json:"liveUrl"`
+	ClaimToken  string `json:"claimToken"`
+	ClaimURL    string `json:"claimUrl"`
+	ExpiresAt   string `json:"expiresAt"`
+}
+
+// CreateAnonSite creates an empty anonymous site. It is unauthenticated: no
+// user token is sent, even if the user is logged in.
+func CreateAnonSite() (*AnonCreateSiteResponse, error) {
+	resp, err := doRequest("POST", "/api/sites/anon", nil, false)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create site: %w", err)
+	}
+	defer resp.Body.Close()
+	if !isOK(resp) {
+		return nil, fmt.Errorf("failed to create site: %w", apiError(resp))
+	}
+	var result AnonCreateSiteResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
 
 func CreateSite(projectName string, overwrite bool) (*CreateSiteResponse, error) {
