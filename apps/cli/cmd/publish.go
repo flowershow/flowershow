@@ -28,9 +28,13 @@ var publishAnon bool
 // fl never publishes anonymously unless asked to.
 const notLoggedInMsg = "You're not logged in.\nRun `fl login` to publish to your account, or `fl --anon <path>` to publish without an account (expires in 7 days unless claimed)."
 
-// anonGoneMsg is shown when a saved anonymous site rejects its claim token
-// (expired, claimed, deleted, or the token is no longer valid).
-const anonGoneMsg = "This anonymous site has expired or been claimed, so it can't be updated from here. Its link was removed from .flowershow: run the same command again to publish a new anonymous site, or run `fl login`."
+// anonGoneMsg is shown when a saved anonymous site can no longer be updated
+// (expired, deleted, or the token is no longer valid).
+const anonGoneMsg = "This anonymous site has expired or been deleted, so it can't be updated from here. Its link was removed from .flowershow: run the same command again to publish a new anonymous site, or run `fl login`."
+
+// anonClaimedMsg is shown when the saved anonymous site has been claimed into
+// an account. The link is kept so a logged-in `fl` can relink to that site.
+const anonClaimedMsg = "This site has been added to a Flowershow account, so it can't be updated with --anon. Run `fl login` with that account, then publish this folder without --anon to update it."
 
 // anonSingleFilesNote is shown after an anonymous publish that can't be linked.
 const anonSingleFilesNote = "Single files can't be updated without an account. Publish a folder, or run `fl login`."
@@ -427,9 +431,14 @@ func runAnonPublish(saved *localconfig.Config, isFolderMode, canLink bool, folde
 		site := api.Site{ID: saved.SiteID, URL: saved.LiveURL}
 		if err := syncToSite(site, "anonymous site", discovered, sp, startTime, false); err != nil {
 			var httpErr *api.HTTPError
-			if errors.As(err, &httpErr) && isAnonGoneStatus(httpErr.StatusCode) {
-				clearAnonConfig(folderPath, saved)
-				return fail(anonGoneMsg)
+			if errors.As(err, &httpErr) {
+				if httpErr.StatusCode == 409 {
+					return fail(anonClaimedMsg)
+				}
+				if isAnonGoneStatus(httpErr.StatusCode) {
+					clearAnonConfig(folderPath, saved)
+					return fail(anonGoneMsg)
+				}
 			}
 			var reported *reportedError
 			if errors.As(err, &reported) {
@@ -530,11 +539,12 @@ func clearAnonConfig(folderPath string, cfg *localconfig.Config) {
 }
 
 // isAnonGoneStatus reports whether an HTTP status from a claim-token request
-// means the saved anonymous site can no longer be updated: invalid token (401),
-// claimed or not this site (403), deleted (404) or expired (410).
+// means the saved anonymous site is gone for good: invalid token (401),
+// deleted (404) or expired (410). A claimed site (409) and a token for another
+// site (403) are not: the link is kept.
 func isAnonGoneStatus(status int) bool {
 	switch status {
-	case 401, 403, 404, 410:
+	case 401, 404, 410:
 		return true
 	}
 	return false

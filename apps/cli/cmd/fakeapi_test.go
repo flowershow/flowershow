@@ -23,7 +23,7 @@ const (
 	anonSiteID     = "anon-site-1"
 	anonClaimToken = "fs_claim_test"
 	anonLiveURL    = "https://quiet-otter-anon.flowershow.me"
-	anonClaimURL   = "https://cloud.flowershow.app/claim?siteId=anon-site-1&token=fs_claim_test"
+	anonClaimURL   = "https://cloud.flowershow.app/claim?siteId=anon-site-1#token=fs_claim_test"
 	anonExpiresAt  = "2026-10-07T12:00:00.000Z"
 )
 

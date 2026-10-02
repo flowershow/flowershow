@@ -157,18 +157,18 @@ fl --anon ./my-report
 
 ```
 ✓ Published (no account): https://k3x9q2mf-anon.flowershow.me
-Claim it to keep it (expires 7 Oct 2026): https://flowershow.app/claim?siteId=…&token=fs_claim_…
+Claim it to keep it (expires 7 Oct 2026): https://flowershow.app/claim?siteId=…#token=fs_claim_…
 ```
 
 - **It expires in 7 days** unless you claim it. Updating the site doesn't extend the expiry, and an expired site stops being served straight away.
 - **Claim it to keep it.** Open the claim link, sign in or sign up, and confirm with **Add to my account** to move the site into your account.
-- **Re-running on the same folder updates the same URL.** The site ID and claim token are saved in the folder's `.flowershow` file. The claim token is a secret: anyone with the claim link can take the site, so don't commit `.flowershow` to a public repository.
+- **Re-running on the same folder updates the same URL.** The site ID and claim token are saved in the folder's `.flowershow` file. The claim token is a secret: anyone with the claim link or the `.flowershow` file can overwrite the site or take it, so don't share them or commit `.flowershow` to a public repository.
 - Single files and multiple paths aren't linked, so each run creates a new site.
 - Limits: 200 files and 50 MB in total. HTML-only content is fine.
 - Anonymous sites aren't indexed by search engines.
 - `--anon` never uses your login, even if you're logged in.
-- If the saved anonymous site has expired or been claimed, `fl` says so, removes the link from `.flowershow` and exits with status 1. Re-run the command to create a new anonymous site.
-- After you claim a site, publishing the folder while logged in (`fl ./my-report`, without `--anon`) updates your claimed site.
+- If the saved anonymous site has expired or been deleted, `fl` says so, removes the link from `.flowershow` and exits with status 1. Re-run the command to create a new anonymous site.
+- If the site has been claimed, `fl --anon` exits with status 1 and keeps the link: run `fl login` with the account that claimed it, then publish the folder without `--anon` (`fl ./my-report`) to update the claimed site. This works on the machine that published the folder, since it keeps the link in `.flowershow`.
 - `fl sync` doesn't support anonymously published folders. Use `fl --anon <folder>` to update them.
 
 `fl` never publishes anonymously unless you pass `--anon`. Without a login and without `--anon` it exits with status 1 and suggests both `fl login` and `fl --anon <path>`.

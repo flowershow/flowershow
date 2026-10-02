@@ -446,8 +446,8 @@ func TestPublishAnonWhileLoggedInDoesNotSendUserToken(t *testing.T) {
 	}
 }
 
-func TestPublishAnonExpiredOrClaimedSiteClearsConfig(t *testing.T) {
-	for _, status := range []int{401, 403, 404, 410} {
+func TestPublishAnonExpiredOrDeletedSiteClearsConfig(t *testing.T) {
+	for _, status := range []int{401, 404, 410} {
 		t.Run(fmt.Sprint(status), func(t *testing.T) {
 			f := setupFakeAPI(t, false)
 			f.siteStatus["anon-gone"] = status
@@ -457,10 +457,10 @@ func TestPublishAnonExpiredOrClaimedSiteClearsConfig(t *testing.T) {
 			out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) })
 
 			if err == nil {
-				t.Fatal("expected an error for an expired/claimed anonymous site")
+				t.Fatal("expected an error for an expired/deleted anonymous site")
 			}
 			if strings.Count(out, anonGoneMsg) != 1 {
-				t.Fatalf("expected the expired/claimed message exactly once, got:\n%s", out)
+				t.Fatalf("expected the expired message exactly once, got:\n%s", out)
 			}
 			if strings.Contains(out, fakeGoneServerMsg) {
 				t.Fatalf("the raw server error should not be printed as well, got:\n%s", out)
@@ -472,6 +472,83 @@ func TestPublishAnonExpiredOrClaimedSiteClearsConfig(t *testing.T) {
 				t.Fatalf(".flowershow should be removed, got:\n%s", raw)
 			}
 		})
+	}
+}
+
+// A claimed site answers 409: keep the link so a logged-in `fl` can relink
+// to the claimed site, and don't suggest publishing a new anonymous site.
+func TestPublishAnonClaimedSiteKeepsLink(t *testing.T) {
+	f := setupFakeAPI(t, false)
+	f.siteStatus[anonSiteID] = 409
+	dir := makeAnonFolder(t, "notes", anonSiteID, anonClaimToken)
+	before := readRawConfig(t, dir)
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) })
+
+	if err == nil {
+		t.Fatal("expected an error for a claimed anonymous site")
+	}
+	if strings.Count(out, anonClaimedMsg) != 1 {
+		t.Fatalf("expected the claimed message exactly once, got:\n%s", out)
+	}
+	if strings.Contains(out, anonGoneMsg) || strings.Contains(out, "run the same command again") {
+		t.Fatalf("must not suggest publishing a new anonymous site, got:\n%s", out)
+	}
+	if f.anonCreateCount() != 0 {
+		t.Fatal("must not create a new anonymous site")
+	}
+	if raw := readRawConfig(t, dir); raw != before {
+		t.Fatalf(".flowershow should be unchanged, got:\n%s", raw)
+	}
+}
+
+// 403 (token not valid for this site) is not proof the site is gone: report
+// the server's message and keep the link.
+func TestPublishAnonForbiddenKeepsLink(t *testing.T) {
+	f := setupFakeAPI(t, false)
+	f.siteStatus[anonSiteID] = 403
+	dir := makeAnonFolder(t, "notes", anonSiteID, anonClaimToken)
+	before := readRawConfig(t, dir)
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) })
+
+	if err == nil {
+		t.Fatal("expected an error")
+	}
+	if !strings.Contains(out, fakeGoneServerMsg) {
+		t.Fatalf("server message should be surfaced, got:\n%s", out)
+	}
+	if f.anonCreateCount() != 0 || readRawConfig(t, dir) != before {
+		t.Fatal("must not create a new site or change .flowershow")
+	}
+}
+
+// The review's M2 flow: publish anonymously, the human claims the site, the
+// agent re-runs `fl --anon` (409, link kept), then a logged-in `fl` updates
+// the claimed site rather than creating a duplicate.
+func TestPublishClaimThenAnonThenLoggedInUpdatesClaimedSite(t *testing.T) {
+	f := setupFakeAPI(t, true)
+	dir := makeAnonFolder(t, "notes", anonSiteID, anonClaimToken)
+
+	f.siteStatus[anonSiteID] = 409
+	if _, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, true) }); err == nil {
+		t.Fatal("expected --anon on a claimed site to fail")
+	}
+
+	delete(f.siteStatus, anonSiteID)
+	f.sites["quiet-otter"] = api.Site{ID: anonSiteID, ProjectName: "quiet-otter", URL: "https://quiet-otter.flowershow.me"}
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, false) })
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if got := f.createdNames(); len(got) != 0 || f.anonCreateCount() != 0 {
+		t.Fatalf("must not create any new site, created %v (anon %d)", got, f.anonCreateCount())
+	}
+	if ids := f.syncIDs(); len(ids) == 0 || ids[len(ids)-1] != anonSiteID {
+		t.Fatalf("expected the last sync to go to the claimed site, got %v", ids)
+	}
+	if cfg := localconfig.Read(dir); cfg == nil || cfg.SiteName != "quiet-otter" {
+		t.Fatalf("expected .flowershow relinked to quiet-otter, got %+v", cfg)
 	}
 }
 
