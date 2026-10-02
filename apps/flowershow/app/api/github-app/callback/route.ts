@@ -110,51 +110,44 @@ export async function GET(request: Request) {
     const installation =
       (await installationResponse.json()) as GitHubInstallation;
 
-    // Check if user already has this installation linked
     // Note: GitHub already verified user has access to this installation during the app flow
-    let dbInstallation = await prisma.gitHubInstallation.findUnique({
-      where: {
-        installationId_userId: {
-          installationId: BigInt(installation.id),
-          userId: userId,
-        },
+    // The same installation can be linked to multiple Flowershow users.
+    // Upsert (not find-then-create): the `installation.created` webhook races
+    // this callback on fresh installs and upserts the same (installationId, userId) row.
+    const where = {
+      installationId_userId: {
+        installationId: BigInt(installation.id),
+        userId: userId,
+      },
+    };
+    const existing = await prisma.gitHubInstallation.findUnique({
+      where,
+      select: { id: true },
+    });
+    const metadata = {
+      accountType: installation.account.type,
+      accountLogin: installation.account.login,
+      accountId: BigInt(installation.account.id),
+      suspendedAt: installation.suspended_at
+        ? new Date(installation.suspended_at)
+        : null,
+      suspendedBy: installation.suspended_by,
+    };
+    const dbInstallation = await prisma.gitHubInstallation.upsert({
+      where,
+      update: { ...metadata, updatedAt: new Date() },
+      create: {
+        ...metadata,
+        installationId: BigInt(installation.id),
+        userId: userId,
       },
     });
 
-    if (dbInstallation) {
-      // User already has this installation linked - update metadata
-      dbInstallation = await prisma.gitHubInstallation.update({
-        where: { id: dbInstallation.id },
-        data: {
-          accountType: installation.account.type,
-          accountLogin: installation.account.login,
-          accountId: BigInt(installation.account.id),
-          suspendedAt: installation.suspended_at
-            ? new Date(installation.suspended_at)
-            : null,
-          suspendedBy: installation.suspended_by,
-          updatedAt: new Date(),
-        },
-      });
+    if (existing) {
       console.log(
         `Updated existing installation link: Installation ${installation.id} → User ${userId}`,
       );
     } else {
-      // New link - create it
-      // The same installation can now be linked to multiple Flowershow users
-      dbInstallation = await prisma.gitHubInstallation.create({
-        data: {
-          installationId: BigInt(installation.id),
-          accountType: installation.account.type,
-          accountLogin: installation.account.login,
-          accountId: BigInt(installation.account.id),
-          userId: userId,
-          suspendedAt: installation.suspended_at
-            ? new Date(installation.suspended_at)
-            : null,
-          suspendedBy: installation.suspended_by,
-        },
-      });
       console.log(
         `Created new installation link: Installation ${installation.id} → User ${userId}`,
       );
@@ -229,6 +222,8 @@ export async function GET(request: Request) {
           repositoryFullName: repo.full_name,
           isPrivate: repo.private,
         })),
+        // The installation webhook syncs the same repos concurrently
+        skipDuplicates: true,
       });
     }
 
