@@ -6,6 +6,7 @@ import {
   ListObjectsV2Command,
   PutObjectCommand,
 } from '@aws-sdk/client-s3';
+import { getContentType } from '@flowershow/core';
 
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
 
@@ -117,36 +118,4 @@ export async function deleteSiteStorage(storage, siteId) {
       cursor = listed.truncated ? listed.cursor : undefined;
     } while (cursor);
   }
-}
-
-function getContentType(extension) {
-  const types = {
-    md: 'text/markdown',
-    mdx: 'text/markdown',
-    html: 'text/html',
-    csv: 'text/csv',
-    geojson: 'application/geo+json',
-    json: 'application/json',
-    yaml: 'application/yaml',
-    yml: 'application/yaml',
-    canvas: 'application/json',
-    base: 'application/yaml',
-    css: 'text/css',
-    js: 'text/javascript',
-    jpeg: 'image/jpeg',
-    jpg: 'image/jpeg',
-    png: 'image/png',
-    gif: 'image/gif',
-    svg: 'image/svg+xml',
-    ico: 'image/x-icon',
-    webp: 'image/webp',
-    avif: 'image/avif',
-    pdf: 'application/pdf',
-    mp4: 'video/mp4',
-    webm: 'video/webm',
-    aac: 'audio/aac',
-    mp3: 'audio/mpeg',
-    opus: 'audio/opus',
-  };
-  return types[extension] || 'application/json';
 }

@@ -10,7 +10,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { env } from '@/env.mjs';
-import { GitHubAPIRepoTree } from './github';
+import type { GitHubAPIRepoTree } from './github';
 
 const {
   S3_ENDPOINT,
@@ -31,29 +31,9 @@ const s3Client = new S3Client({
   forcePathStyle: S3_FORCE_PATH_STYLE,
 });
 
-export type ContentType =
-  | 'text/markdown'
-  | 'text/csv'
-  | 'text/plain'
-  | 'text/html'
-  | 'application/geo+json'
-  | 'application/json'
-  | 'application/yaml'
-  | 'text/css'
-  | 'text/javascript'
-  | 'image/jpeg'
-  | 'image/png'
-  | 'image/gif'
-  | 'image/svg+xml'
-  | 'video/mp4'
-  | 'video/webm'
-  | 'audio/aac'
-  | 'audio/mpeg' // mp3
-  | 'audio/opus'
-  | 'image/x-icon'
-  | 'image/webp'
-  | 'image/avif'
-  | 'application/pdf';
+import { type ContentType, getContentType } from '@flowershow/core';
+
+export type { ContentType };
 
 const uploadS3Object = async ({
   key,
@@ -132,65 +112,7 @@ const emptyS3Directory = async (dir: string) => {
   if (listedObjects.IsTruncated) await emptyS3Directory(dir);
 };
 
-export const getContentType = (extension: string): ContentType => {
-  switch (extension) {
-    case 'md':
-    case 'mdx':
-      return 'text/markdown';
-    case 'html':
-      return 'text/html';
-    case 'csv':
-      return 'text/csv';
-    case 'geojson':
-      return 'application/geo+json';
-    case 'json':
-      return 'application/json';
-    case 'yaml':
-    case 'yml':
-    case 'base': // Obsidian Base files
-      return 'application/yaml';
-    case 'canvas': // Obsidian Canvas files
-      return 'application/json';
-    case 'css':
-      return 'text/css';
-    case 'js':
-      return 'text/javascript';
-    case 'jpeg':
-    case 'jpg':
-      return 'image/jpeg';
-    case 'png':
-      return 'image/png';
-    case 'gif':
-      return 'image/gif';
-    case 'svg':
-      return 'image/svg+xml';
-    case 'ico':
-      return 'image/x-icon';
-    case 'webp':
-      return 'image/webp';
-    case 'avif':
-      return 'image/avif';
-    case 'pdf':
-      return 'application/pdf';
-
-    // Video
-    case 'mp4':
-      return 'video/mp4';
-    case 'webm':
-      return 'video/webm';
-
-    // Audio
-    case 'aac':
-      return 'audio/aac';
-    case 'mp3':
-      return 'audio/mpeg';
-    case 'opus':
-      return 'audio/opus';
-
-    default:
-      return 'application/json'; // Fallback to JSON for any new extensions
-  }
-};
+export { getContentType };
 
 export const uploadFile = async ({
   projectId,
