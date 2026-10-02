@@ -171,6 +171,14 @@ describe('GET /api/raw — anonymous sites', () => {
     expect(res.headers.get('x-robots-tag')).toBe('noindex');
   });
 
+  it('proxies .htm like .html (rendered on the site, not redirected to storage)', async () => {
+    findFirst.mockResolvedValue(anonSite);
+    (fetchFile as ReturnType<typeof vi.fn>).mockResolvedValueOnce('<p>hi</p>');
+    const res = await GET(makeReq('old.HTM'), makeParams('old.HTM'));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/html');
+  });
+
   it('marks the presigned redirect noindex for a password-protected anonymous site', async () => {
     findFirst.mockResolvedValue({ ...anonSite, privacyMode: 'PASSWORD' });
     const res = await GET(makeReq('cover.png'), makeParams('cover.png'));

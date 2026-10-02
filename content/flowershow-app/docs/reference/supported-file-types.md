@@ -46,10 +46,15 @@ For a step-by-step guide, including how to put HTML inside a Markdown page inste
 
 These files are served as-is, with a content type that matches the extension, so browsers and scripts handle them normally:
 
-- **CSS and JavaScript** load in your HTML pages.
-- **JSON, CSV and YAML** can be fetched with `fetch()`. They're served with `Access-Control-Allow-Origin: *`, so pages on other sites can fetch them too.
-- **Images** can be used in Markdown and HTML pages, and each one has its own URL.
+- **CSS and JavaScript** (`.css`, `.js`, `.mjs`, `.cjs`) load in your HTML pages, including ES modules (`<script type="module">`).
+- **Fonts and other web assets** (`.woff`, `.woff2`, `.ttf`, `.otf`, `.wasm`, `.webmanifest`) load from your pages too.
+- **Data** (`.json`, `.geojson`, `.csv`, `.tsv`, `.yaml`, `.xml`, `.txt`) can be fetched with `fetch()`. Files are served with `Access-Control-Allow-Origin: *`, so pages on other sites can fetch them too.
+- **Images** (`.png`, `.jpg`, `.gif`, `.svg`, `.webp`, `.avif`, `.bmp`, `.ico`) can be used in Markdown and HTML pages, and each one has its own URL.
+- **Audio and video** (`.mp3`, `.m4a`, `.aac`, `.ogg`, `.opus`, `.wav`, `.mp4`, `.webm`, `.mov`) play in the browser.
 - **PDFs** open in the browser's PDF viewer.
+- **`.htm`** pages are served like `.html`.
+
+For security, opening an uploaded SVG or other file directly at its own URL never runs scripts in it. Scripts in your HTML pages work as normal.
 
 Changes to these files can take several minutes to show after you republish, because they're cached. If an update must show immediately, rename the file (for example `style.v2.css`) and update the reference.
 

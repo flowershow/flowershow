@@ -1,6 +1,6 @@
+import { CONTENT_TYPE_EXTENSIONS } from '@flowershow/core';
 import { NextRequest } from 'next/server';
 import { describe, expect, it } from 'vitest';
-
 import { rewriteRawIfNeeded } from './middleware';
 
 const API_BASE = '/api/raw/victim/notes';
@@ -118,5 +118,49 @@ describe('rewriteRawIfNeeded — query strings on raw files (#1345)', () => {
     );
 
     expect(res).toBeNull();
+  });
+});
+
+describe('rewriteRawIfNeeded — asset types (flowershow-tui)', () => {
+  const raw = (p: string) => rewriteRawIfNeeded(p, API_BASE, makeReq(p), null);
+
+  it.each([
+    'mod.mjs',
+    'lib.cjs',
+    'app.wasm',
+    'site.webmanifest',
+    'font.otf',
+    'font.woff2',
+    'old.htm',
+    'clip.mov',
+    'song.m4a',
+    'data.tsv',
+    'IMAGE.PNG',
+  ])('serves %s as a raw file', (file) => {
+    expect(rewriteTarget(raw(`/assets/${file}`)).pathname).toBe(
+      `/api/raw/victim/notes/assets/${file}`,
+    );
+  });
+
+  it('serves every extension that has a known content type, except ones that look like page names', () => {
+    for (const ext of CONTENT_TYPE_EXTENSIONS) {
+      if (ext === 'base' || ext === 'map') continue;
+      expect(raw(`/f.${ext}`), ext).not.toBeNull();
+    }
+  });
+
+  // A note "Knowledge.base.md" gets the slug /Knowledge.base; treating that as
+  // a raw file would 404 the page (flowershow-tui review).
+  it.each(['/Knowledge.base', '/notes/Road.map'])(
+    'leaves page slug %s to the page renderer',
+    (p) => {
+      expect(raw(p)).toBeNull();
+    },
+  );
+
+  it('still serves archives and legacy fonts', () => {
+    for (const ext of ['zip', 'tar', 'gz', 'eot']) {
+      expect(raw(`/f.${ext}`), ext).not.toBeNull();
+    }
   });
 });

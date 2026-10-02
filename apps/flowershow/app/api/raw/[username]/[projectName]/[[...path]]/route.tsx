@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { getContentType } from '@flowershow/core';
+import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
-import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
+import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
 import { hasSiteAccess, siteAccessSelect } from '@/lib/site-access';
 import prisma from '@/server/db';
 
@@ -59,7 +60,7 @@ export async function GET(
 
   const ext = rawPath.slice(rawPath.lastIndexOf('.') + 1).toLowerCase();
   const isImage = IMAGE_EXTENSIONS.has(ext);
-  const isHtml = ext === 'html';
+  const isHtml = getContentType(ext) === 'text/html'; // .html and .htm
 
   // Non-image files on password-protected sites require a valid access cookie.
   // Images are exempt so the Next.js image optimizer (server-side, no cookie) still works.

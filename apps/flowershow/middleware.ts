@@ -1,3 +1,4 @@
+import { CONTENT_TYPE_EXTENSIONS } from '@flowershow/core';
 import { jwtVerify } from 'jose';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
@@ -392,46 +393,18 @@ const IMAGE_FILE_EXTENSIONS = new Set([
   'webp',
 ]);
 
-const KNOWN_FILE_EXTENSIONS = new Set([
-  // Documents
-  'md',
-  'mdx',
-  'canvas',
-  'pdf',
-  'txt',
-  'html',
-  // Images
-  'png',
-  'jpg',
-  'jpeg',
-  'gif',
-  'svg',
-  'webp',
-  // Data
-  'csv',
-  'json',
-  'yaml',
-  'yml',
-  'xml',
-  // Media
-  'mp4',
-  'mp3',
-  'wav',
-  'ogg',
-  // Archives
-  'zip',
-  'tar',
-  'gz',
-  // Web assets
-  'css',
-  'js',
-  'ico',
-  // Fonts
-  'woff',
-  'woff2',
-  'ttf',
-  'eot',
-]);
+// Every type in the shared content-type map (so assets HTML sites load, like
+// .mjs or .wasm, are served), plus downloads that have no specific type.
+// Excluded: extensions that are plausible endings of note titles, whose page
+// slugs (e.g. "Knowledge.base.md" -> /Knowledge.base) would otherwise be
+// taken for raw files and 404. Source maps and Obsidian .base files aren't
+// needed at their own URL.
+const PAGE_LIKE_EXTENSIONS = new Set(['base', 'map']);
+const KNOWN_FILE_EXTENSIONS = new Set(
+  [...CONTENT_TYPE_EXTENSIONS, 'zip', 'tar', 'gz', 'eot'].filter(
+    (ext) => !PAGE_LIKE_EXTENSIONS.has(ext),
+  ),
+);
 
 /**
  * Determines if a path should be rewritten as a raw file request.
