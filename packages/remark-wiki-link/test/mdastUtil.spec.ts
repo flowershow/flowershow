@@ -388,7 +388,7 @@ describe('mdast-util-wiki-link', () => {
     });
 
     test('audio with various formats', () => {
-      const formats = ['mp3', 'wav', 'ogg', 'm4a', 'flac', '3gp'];
+      const formats = ['mp3', 'wav', 'ogg', 'm4a', 'flac', '3gp', 'aac', 'opus'];
 
       formats.forEach((format) => {
         const ast = fromMarkdown(`![[audio.${format}]]`, {
@@ -404,7 +404,7 @@ describe('mdast-util-wiki-link', () => {
     });
 
     test('video with various formats', () => {
-      const formats = ['mp4', 'webm', 'ogv', 'mov', 'mkv'];
+      const formats = ['mp4', 'webm', 'ogv', 'mov', 'mkv', 'm4v'];
 
       formats.forEach((format) => {
         const ast = fromMarkdown(`![[video.${format}]]`, {

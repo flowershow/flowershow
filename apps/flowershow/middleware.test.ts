@@ -158,8 +158,8 @@ describe('rewriteRawIfNeeded — asset types (flowershow-tui)', () => {
     },
   );
 
-  it('still serves archives and legacy fonts', () => {
-    for (const ext of ['zip', 'tar', 'gz', 'eot']) {
+  it('serves archives, documents, ebooks and data downloads', () => {
+    for (const ext of ['zip', 'tar', 'gz', 'eot', 'epub', 'docx', 'parquet']) {
       expect(raw(`/f.${ext}`), ext).not.toBeNull();
     }
   });
