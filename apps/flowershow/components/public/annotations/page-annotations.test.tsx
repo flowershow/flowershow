@@ -351,4 +351,47 @@ describe('PageAnnotations', () => {
       }),
     ).toHaveTextContent(/^1 note$/);
   });
+
+  it('offers Annotate again after a draft is closed, keeping the typed note and taking the new quote', async () => {
+    const root = mountContent();
+    vi.mocked(fetch)
+      .mockReturnValueOnce(jsonResponse({ annotations: [] }))
+      .mockReturnValueOnce(
+        jsonResponse(
+          { annotation: annotation({ id: 'a3', note: 'Half typed' }) },
+          201,
+        ),
+      );
+    renderOverlay();
+    await screen.findByRole('button', { name: /^Annotations on/ });
+    select(root);
+    fireEvent.click(await screen.findByRole('button', { name: 'Annotate' }));
+    fireEvent.change(screen.getByLabelText('Note'), {
+      target: { value: 'Half typed' },
+    });
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(
+      screen.queryByRole('complementary', { name: 'Annotations' }),
+    ).toBeNull();
+
+    select(root, 4, 9);
+    fireEvent.click(await screen.findByRole('button', { name: 'Annotate' }));
+    expect(screen.getByLabelText('Note')).toHaveValue('Half typed');
+    fireEvent.click(screen.getByRole('button', { name: 'Save annotation' }));
+    await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalledTimes(2));
+    const [, init] = vi.mocked(fetch).mock.calls[1]!;
+    expect(JSON.parse(init!.body as string).selector.exact).toBe('quick');
+  });
+
+  it('renders nothing when the page has no Markdown root to annotate', async () => {
+    vi.mocked(fetch).mockReturnValueOnce(
+      jsonResponse({ annotations: [annotation()] }),
+    );
+    renderOverlay();
+    await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalled());
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(
+      screen.queryByRole('button', { name: /^Annotations on/ }),
+    ).toBeNull();
+  });
 });

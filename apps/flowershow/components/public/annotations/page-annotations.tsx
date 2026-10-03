@@ -87,7 +87,8 @@ export default function PageAnnotations({
   manageUrl,
   rootId = 'mdxpage',
 }: PageAnnotationsProps) {
-  const [mounted, setMounted] = useState(false);
+  /** Mounted on a page that has the Markdown root to annotate (no root: render nothing). */
+  const [hasRoot, setHasRoot] = useState(false);
   const [isTouch, setIsTouch] = useState(false);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [placed, setPlaced] = useState<Placed[]>([]);
@@ -110,7 +111,7 @@ export default function PageAnnotations({
   const endpoint = `/api/sites/id/${encodeURIComponent(siteId)}/annotations`;
 
   useEffect(() => {
-    setMounted(true);
+    setHasRoot(document.getElementById(rootId) !== null);
     setIsTouch(
       typeof window.matchMedia === 'function' &&
         window.matchMedia('(pointer: coarse)').matches,
@@ -118,7 +119,7 @@ export default function PageAnnotations({
     const stored = readStoredName();
     setRememberedName(stored);
     setName(stored);
-  }, []);
+  }, [rootId]);
 
   // Load this page's annotations (the server records the page view).
   useEffect(() => {
@@ -324,7 +325,7 @@ export default function PageAnnotations({
     });
   };
 
-  if (!mounted) return null;
+  if (!hasRoot) return null;
 
   const count = openAnnotations.length;
   const noun = count === 1 ? 'note' : 'notes';
@@ -332,7 +333,8 @@ export default function PageAnnotations({
 
   return createPortal(
     <>
-      {selection && !draft && (
+      {/* A draft left in a closed panel must not block new selections: Annotate replaces its quote. */}
+      {selection && !(open && draft) && (
         <button
           type="button"
           className={
