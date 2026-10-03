@@ -147,6 +147,7 @@ export interface PageMetadata {
       };
   showEditLink?: boolean;
   showComments?: boolean;
+  annotations?: boolean;
   permalink?: string;
   cta?: Array<{
     href: string;

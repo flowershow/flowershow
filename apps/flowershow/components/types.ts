@@ -88,6 +88,12 @@ export interface SiteConfig {
   showKnowledgeGraph?: boolean;
   showEditLink?: boolean;
   showComments?: boolean;
+  /**
+   * Let anyone who can view a Markdown page select text and leave an
+   * annotation, with no account. Off by default. When off, it's off on every
+   * page; when on, a page can opt out with `annotations: false` in frontmatter.
+   */
+  annotations?: boolean;
   showBacklinks?: boolean;
   /**
    * Controls the tags feature end-to-end: inline `#tag` pills in body content,
