@@ -216,6 +216,7 @@ export async function publish(
 
   let target: Omit<PublishResult, 'message'>;
   let bearer: string;
+  let createdNow = false;
   if (mode.kind === 'user') {
     if (!input.siteId) {
       throw new PublishError(
@@ -244,6 +245,7 @@ export async function publish(
       throw new PublishError(explain(err, mode));
     }
     bearer = created.claimToken;
+    createdNow = true;
     target = {
       siteId: created.siteId,
       liveUrl: created.liveUrl,
@@ -285,7 +287,7 @@ export async function publish(
       step === 'upload'
         ? 'Uploading the files failed. Please try again.'
         : explain(err, mode);
-    throw new PublishError(withRetryHint(why, target, mode));
+    throw new PublishError(createdNow ? withRetryHint(why, target) : why);
   }
 
   // Uploads are done; processing errors here shouldn't fail the publish.
@@ -307,9 +309,10 @@ export async function publish(
 function withRetryHint(
   why: string,
   target: Omit<PublishResult, 'message'>,
-  mode: PublishMode,
 ): string {
-  if (mode.kind !== 'anon' || !target.claimToken) return why;
+  // Only for a site this call created: on an update the caller already has
+  // its siteId and claimToken, and the token may be the thing that failed.
+  if (!target.claimToken) return why;
   const lines = [
     why,
     `The site was created: retry by calling publish with siteId "${target.siteId}" and claimToken "${target.claimToken}" instead of creating a new site.`,
