@@ -1,6 +1,6 @@
 {
   "name": "@flowershow/remark-wiki-link",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "description": "Parse and render wiki-style links, especially Obsidian style links.",
   "scripts": {
     "build": "tsup src/index.ts --format esm,cjs --dts --clean --sourcemap",
