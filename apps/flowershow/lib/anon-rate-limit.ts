@@ -14,10 +14,12 @@ export function hashIp(ip: string): string {
 export async function checkAnonCreateLimit(
   ipHash: string,
   now: Date = new Date(),
+  limit: number = ANON_CREATE_LIMIT_PER_HOUR,
+  db: Pick<typeof prisma, 'site'> = prisma,
 ): Promise<boolean> {
   const since = new Date(now.getTime() - 60 * 60 * 1000);
-  const recent = await prisma.site.count({
+  const recent = await db.site.count({
     where: { anonCreatorIpHash: ipHash, createdAt: { gt: since } },
   });
-  return recent < ANON_CREATE_LIMIT_PER_HOUR;
+  return recent < limit;
 }

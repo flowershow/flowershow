@@ -1,5 +1,7 @@
 # CLI over MCP server for AI agent integration
 
+**Status**: Superseded by [ADR 0014](0014-mcp-endpoint-in-the-main-app-for-in-chat-publishing.md) for chat apps without a shell. The CLI remains the interface for local agents.
+
 The Flowershow MCP server (`apps/flowershow-mcp`) was removed in favour of extending the CLI (`apps/cli`) as the primary interface for AI agent integration. The MCP server only has value when agents run in cloud-hosted environments with no local shell access (e.g. Claude.ai). Our target users run local AI tools (Claude Code, Cursor, Windsurf) that have shell access and can invoke `fl` directly. The CLI already handles bulk publishing, delta sync, and file discovery — operations the MCP server cannot do end-to-end without access to the local filesystem. Maintaining a parallel API surface that duplicates CLI functionality for a user that does not exist yet is not worth the cost.
 
 ## Considered Options
