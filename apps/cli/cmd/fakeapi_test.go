@@ -47,6 +47,13 @@ type fakeAPI struct {
 	uploadFails     bool              // PUT /upload/... returns 500
 	siteStatus      map[string]int    // site ID -> forced HTTP status for sync/status (e.g. 410)
 	claimTokens     map[string]string // claim token -> the one site ID it authorises
+
+	annotations      []api.Annotation // returned by GET /api/sites/id/:id/annotations
+	annotationsQuery []string         // raw query of each annotations request
+	bulkRequests     []api.BulkAnnotationsRequest
+	annotationsOn    map[string]bool // site ID -> annotationsEnabled
+	openAnnotations  map[string]int  // site ID -> openAnnotations
+	syncAllUnchanged bool            // POST sync reports every file unchanged ("Already in sync")
 }
 
 func (f *fakeAPI) anonCreateCount() int {
@@ -142,6 +149,42 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 	case !authed:
 		writeJSON(w, 401, map[string]string{"message": "unauthorized"})
 		return
+	case strings.HasPrefix(path, "/api/sites/id/") && strings.HasSuffix(path, "/annotations") && r.Method == "GET":
+		f.mu.Lock()
+		f.annotationsQuery = append(f.annotationsQuery, r.URL.RawQuery)
+		list := []api.Annotation{}
+		for _, a := range f.annotations {
+			p, s := r.URL.Query().Get("path"), r.URL.Query().Get("status")
+			if (p == "" || a.Path == p) && (s == "" || a.Status == s) {
+				list = append(list, a)
+			}
+		}
+		f.mu.Unlock()
+		writeJSON(w, 200, map[string]interface{}{"annotations": list})
+	case strings.HasPrefix(path, "/api/sites/id/") && strings.HasSuffix(path, "/annotations/bulk") && r.Method == "POST":
+		var body api.BulkAnnotationsRequest
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		f.mu.Lock()
+		f.bulkRequests = append(f.bulkRequests, body)
+		count := len(body.IDs)
+		if body.All {
+			count = len(f.annotations)
+		}
+		f.mu.Unlock()
+		writeJSON(w, 200, map[string]int{"count": count})
+	case strings.HasPrefix(path, "/api/sites/id/") && strings.HasSuffix(path, "/annotations/settings"):
+		id := strings.TrimSuffix(strings.TrimPrefix(path, "/api/sites/id/"), "/annotations/settings")
+		f.mu.Lock()
+		if r.Method == "PATCH" {
+			var body struct {
+				Annotations bool `json:"annotations"`
+			}
+			_ = json.NewDecoder(r.Body).Decode(&body)
+			f.annotationsOn[id] = body.Annotations
+		}
+		resp := map[string]interface{}{"annotationsEnabled": f.annotationsOn[id], "openAnnotations": f.openAnnotations[id]}
+		f.mu.Unlock()
+		writeJSON(w, 200, resp)
 	case path == "/api/user" && r.Method == "GET":
 		writeJSON(w, 200, map[string]string{"username": testUser})
 	case path == "/api/sites" && r.Method == "GET":
@@ -186,6 +229,11 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 				found = &site
 			}
 		}
+		var annOn bool
+		var annOpen int
+		if found != nil {
+			annOn, annOpen = f.annotationsOn[found.ID], f.openAnnotations[found.ID]
+		}
 		anonOwned := false
 		for _, siteID := range f.claimTokens {
 			if siteID == id {
@@ -197,6 +245,7 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 		case found != nil:
 			writeJSON(w, 200, map[string]interface{}{"site": map[string]interface{}{
 				"id": found.ID, "projectName": found.ProjectName, "subdomain": found.ProjectName, "url": found.URL,
+				"annotationsEnabled": annOn, "openAnnotations": annOpen,
 			}})
 		case anonOwned:
 			writeJSON(w, 403, map[string]string{"error": "forbidden", "message": "You do not have access to this site"})
@@ -213,6 +262,20 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 		f.syncCalls = append(f.syncCalls, id)
 		f.syncAuth = append(f.syncAuth, authz)
 		f.mu.Unlock()
+		f.mu.Lock()
+		unchangedOnly := f.syncAllUnchanged
+		f.mu.Unlock()
+		if unchangedOnly {
+			unchanged := []string{}
+			for _, file := range body.Files {
+				unchanged = append(unchanged, file.Path)
+			}
+			writeJSON(w, 200, map[string]interface{}{
+				"toUpload": []api.UploadURL{}, "toUpdate": []api.UploadURL{}, "deleted": []string{}, "unchanged": unchanged,
+				"summary": map[string]int{"toUpload": 0, "toUpdate": 0, "deleted": 0, "unchanged": len(unchanged)},
+			})
+			return
+		}
 		var uploads []api.UploadURL
 		for _, file := range body.Files {
 			uploads = append(uploads, api.UploadURL{Path: file.Path, UploadURL: f.server.URL + "/upload/" + file.Path, ContentType: "text/markdown"})
@@ -238,9 +301,10 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 func setupFakeAPI(t *testing.T, loggedIn bool, existing ...string) *fakeAPI {
 	t.Helper()
 	f := &fakeAPI{
-		sites:       map[string]api.Site{},
-		siteStatus:  map[string]int{},
-		claimTokens: map[string]string{anonClaimToken: anonSiteID},
+		sites:         map[string]api.Site{},
+		siteStatus:    map[string]int{},
+		claimTokens:   map[string]string{anonClaimToken: anonSiteID},
+		annotationsOn: map[string]bool{}, openAnnotations: map[string]int{},
 	}
 	for _, name := range existing {
 		f.sites[name] = api.Site{ID: "id-" + name, ProjectName: name, URL: "https://example.test/@" + testUser + "/" + name}

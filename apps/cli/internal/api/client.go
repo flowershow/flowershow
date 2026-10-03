@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 
@@ -41,24 +42,26 @@ type GetSiteResponse struct {
 }
 
 type SiteDetail struct {
-	ID           string  `json:"id"`
-	ProjectName  string  `json:"projectName"`
-	GhRepository *string `json:"ghRepository"`
-	GhBranch     *string `json:"ghBranch"`
-	CustomDomain *string `json:"customDomain"`
-	Subdomain    string  `json:"subdomain"`
-	RootDir      *string `json:"rootDir"`
-	Plan         string  `json:"plan"`
-	PrivacyMode  string  `json:"privacyMode"`
-	ShowComments bool    `json:"showComments"`
-	EnableSearch bool    `json:"enableSearch"`
-	ShowSidebar  bool    `json:"showSidebar"`
-	SyntaxMode   string  `json:"syntaxMode"`
-	URL          string  `json:"url"`
-	FileCount    int     `json:"fileCount"`
-	TotalSize    int64   `json:"totalSize"`
-	UpdatedAt    string  `json:"updatedAt"`
-	CreatedAt    string  `json:"createdAt"`
+	ID                 string  `json:"id"`
+	ProjectName        string  `json:"projectName"`
+	GhRepository       *string `json:"ghRepository"`
+	GhBranch           *string `json:"ghBranch"`
+	CustomDomain       *string `json:"customDomain"`
+	Subdomain          string  `json:"subdomain"`
+	RootDir            *string `json:"rootDir"`
+	Plan               string  `json:"plan"`
+	PrivacyMode        string  `json:"privacyMode"`
+	ShowComments       bool    `json:"showComments"`
+	EnableSearch       bool    `json:"enableSearch"`
+	ShowSidebar        bool    `json:"showSidebar"`
+	SyntaxMode         string  `json:"syntaxMode"`
+	AnnotationsEnabled bool    `json:"annotationsEnabled"`
+	OpenAnnotations    int     `json:"openAnnotations"`
+	URL                string  `json:"url"`
+	FileCount          int     `json:"fileCount"`
+	TotalSize          int64   `json:"totalSize"`
+	UpdatedAt          string  `json:"updatedAt"`
+	CreatedAt          string  `json:"createdAt"`
 }
 
 type GetSiteDetailResponse struct {
@@ -442,4 +445,123 @@ func GetSiteStatus(siteID string) (*SiteStatusResponse, error) {
 
 func isOK(resp *http.Response) bool {
 	return resp.StatusCode >= 200 && resp.StatusCode < 300
+}
+
+// AnnotationSelector is a W3C TextQuote + TextPosition selector.
+type AnnotationSelector struct {
+	Exact  string `json:"exact"`
+	Prefix string `json:"prefix"`
+	Suffix string `json:"suffix"`
+	Start  int    `json:"start"`
+	End    int    `json:"end"`
+}
+
+// Annotation is a note a visitor left on a published page. PageEdited means
+// the page was edited or removed after the note was left.
+type Annotation struct {
+	ID         string             `json:"id"`
+	SiteID     string             `json:"siteId"`
+	Path       string             `json:"path"`
+	PageURL    *string            `json:"pageUrl"`
+	Selector   AnnotationSelector `json:"selector"`
+	Note       string             `json:"note"`
+	AuthorName *string            `json:"authorName"`
+	Status     string             `json:"status"`
+	PageEdited bool               `json:"pageEdited"`
+	CreatedAt  string             `json:"createdAt"`
+}
+
+type ListAnnotationsResponse struct {
+	Annotations []Annotation `json:"annotations"`
+}
+
+// BulkAnnotationsRequest resolves, reopens or deletes annotations: IDs or All.
+type BulkAnnotationsRequest struct {
+	Action string   `json:"action"`
+	IDs    []string `json:"ids,omitempty"`
+	All    bool     `json:"all,omitempty"`
+	Path   string   `json:"path,omitempty"`
+}
+
+// AnnotationSettings is the site-level setting and the open count.
+type AnnotationSettings struct {
+	AnnotationsEnabled bool `json:"annotationsEnabled"`
+	OpenAnnotations    int  `json:"openAnnotations"`
+}
+
+func annotationsEndpoint(siteID, suffix string) string {
+	return fmt.Sprintf("/api/sites/id/%s/annotations%s", url.PathEscape(siteID), suffix)
+}
+
+func decodeOK(resp *http.Response, what string, into interface{}) error {
+	defer resp.Body.Close()
+	if !isOK(resp) {
+		return fmt.Errorf("failed to %s: %w", what, apiError(resp))
+	}
+	return json.NewDecoder(resp.Body).Decode(into)
+}
+
+// GetAnnotations lists a site's annotations (open only unless includeResolved).
+func GetAnnotations(siteID, path string, includeResolved bool) (*ListAnnotationsResponse, error) {
+	q := url.Values{}
+	if path != "" {
+		q.Set("path", path)
+	}
+	if !includeResolved {
+		q.Set("status", "open")
+	}
+	suffix := ""
+	if len(q) > 0 {
+		suffix = "?" + q.Encode()
+	}
+	resp, err := Request("GET", annotationsEndpoint(siteID, suffix), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch annotations: %w", err)
+	}
+	var result ListAnnotationsResponse
+	if err := decodeOK(resp, "fetch annotations", &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// BulkAnnotations applies req to a site's annotations and returns how many changed.
+func BulkAnnotations(siteID string, req BulkAnnotationsRequest) (int, error) {
+	resp, err := Request("POST", annotationsEndpoint(siteID, "/bulk"), req)
+	if err != nil {
+		return 0, fmt.Errorf("failed to update annotations: %w", err)
+	}
+	var result struct {
+		Count int `json:"count"`
+	}
+	if err := decodeOK(resp, "update annotations", &result); err != nil {
+		return 0, err
+	}
+	return result.Count, nil
+}
+
+// GetAnnotationSettings returns the site's annotations setting and open count.
+func GetAnnotationSettings(siteID string) (*AnnotationSettings, error) {
+	resp, err := Request("GET", annotationsEndpoint(siteID, "/settings"), nil)
+	if err != nil {
+		return nil, err
+	}
+	var result AnnotationSettings
+	if err := decodeOK(resp, "fetch annotation settings", &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+// SetAnnotations turns the site-level annotations setting on or off.
+func SetAnnotations(siteID string, enabled bool) (*AnnotationSettings, error) {
+	resp, err := Request("PATCH", annotationsEndpoint(siteID, "/settings"), map[string]bool{"annotations": enabled})
+	if err != nil {
+		return nil, fmt.Errorf("failed to update annotations setting: %w", err)
+	}
+	var result AnnotationSettings
+	if err := decodeOK(resp, "update annotations setting", &result); err != nil {
+		return nil, err
+	}
+	return &result, nil
 }
