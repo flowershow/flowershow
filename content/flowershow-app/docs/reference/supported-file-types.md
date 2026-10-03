@@ -16,6 +16,7 @@ Flowershow publishes a folder of files as a website. Markdown is rendered with y
 | `.json`, `.csv`, `.yaml`, `.yml` | The file, for pages to fetch or readers to download | No | `/docs/example.json` |
 | `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.webp` | The image | No | `/docs/example.png` |
 | `.pdf` | The PDF, which opens in the browser | No | `/docs/example.pdf` |
+| `.epub`, `.docx`, `.xlsx`, `.pptx`, `.zip` and other downloads | The file, which readers download | No | `/docs/example.epub` |
 
 ## Markdown and MDX
 
@@ -42,16 +43,20 @@ A `.html` file is served byte-for-byte as you wrote it. Flowershow adds no theme
 
 For a step-by-step guide, including how to put HTML inside a Markdown page instead, see [Publishing HTML](/docs/agents/html).
 
-## CSS, JavaScript, data, images and PDFs
+## CSS, JavaScript, data, media, documents and downloads
 
 These files are served as-is, with a content type that matches the extension, so browsers and scripts handle them normally:
 
 - **CSS and JavaScript** (`.css`, `.js`, `.mjs`, `.cjs`) load in your HTML pages, including ES modules (`<script type="module">`).
-- **Fonts and other web assets** (`.woff`, `.woff2`, `.ttf`, `.otf`, `.wasm`, `.webmanifest`) load from your pages too.
-- **Data** (`.json`, `.geojson`, `.csv`, `.tsv`, `.yaml`, `.xml`, `.txt`) can be fetched with `fetch()`. Files are served with `Access-Control-Allow-Origin: *`, so pages on other sites can fetch them too.
+- **Fonts and other web assets** (`.woff`, `.woff2`, `.ttf`, `.otf`, `.eot`, `.wasm`, `.webmanifest`) load from your pages too.
+- **Data** (`.json`, `.jsonl`, `.ndjson`, `.geojson`, `.topojson`, `.csv`, `.tsv`, `.yaml`, `.toml`, `.xml`, `.txt`, `.parquet`, `.arrow`, `.sqlite`, `.db`, `.ipynb`) can be fetched with `fetch()` or downloaded. Files are served with `Access-Control-Allow-Origin: *`, so pages on other sites can fetch them too.
 - **Images** (`.png`, `.jpg`, `.gif`, `.svg`, `.webp`, `.avif`, `.bmp`, `.ico`) can be used in Markdown and HTML pages, and each one has its own URL.
-- **Audio and video** (`.mp3`, `.m4a`, `.aac`, `.ogg`, `.opus`, `.wav`, `.mp4`, `.webm`, `.mov`) play in the browser.
+- **Audio and video** (`.mp3`, `.m4a`, `.aac`, `.ogg`, `.opus`, `.wav`, `.flac`, `.mp4`, `.m4v`, `.webm`, `.ogv`, `.mov`, `.mkv`, `.3gp`) play in the browser, if the browser supports the format. Captions (`.vtt`) load in a video's `<track>`, and `.srt` files can be downloaded.
 - **PDFs** open in the browser's PDF viewer.
+- **Documents and ebooks** (`.epub`, `.docx`, `.xlsx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.rtf`, `.bib`, `.tex`) can be linked to and downloaded, for example `[Download the book](book.epub)`.
+- **Maps** (`.kml`, `.kmz`, `.gpx`) can be loaded by map libraries or downloaded.
+- **Calendars and contacts** (`.ics`, `.vcf`) can be downloaded and added to a calendar or address book, so you can offer an "add to calendar" link.
+- **Archives** (`.zip`, `.gz`, `.tgz`, `.tar`, `.7z`) can be downloaded.
 - **`.htm`** pages are served like `.html`.
 
 For security, opening an uploaded SVG or other file directly at its own URL never runs scripts in it. Scripts in your HTML pages work as normal.

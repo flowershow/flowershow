@@ -36,6 +36,28 @@ describe('getContentType', () => {
     expect(getContentType('ogg')).toBe('audio/ogg');
     expect(getContentType('mov')).toBe('video/quicktime');
     expect(getContentType('bmp')).toBe('image/bmp');
+    expect(getContentType('flac')).toBe('audio/flac');
+    expect(getContentType('ogv')).toBe('video/ogg');
+    expect(getContentType('vtt')).toBe('text/vtt');
+  });
+
+  it('maps documents, ebooks and archives', () => {
+    expect(getContentType('epub')).toBe('application/epub+zip');
+    expect(getContentType('docx')).toBe(
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    );
+    expect(getContentType('ics')).toBe('text/calendar');
+    expect(getContentType('zip')).toBe('application/zip');
+    expect(getContentType('7z')).toBe('application/x-7z-compressed');
+    expect(getContentType('eot')).toBe('application/vnd.ms-fontobject');
+  });
+
+  it('maps data and map formats', () => {
+    expect(getContentType('parquet')).toBe('application/vnd.apache.parquet');
+    expect(getContentType('jsonl')).toBe('application/x-ndjson');
+    expect(getContentType('sqlite')).toBe('application/vnd.sqlite3');
+    expect(getContentType('ipynb')).toBe('application/x-ipynb+json');
+    expect(getContentType('gpx')).toBe('application/gpx+xml');
   });
 
   it('is case-insensitive and tolerates a leading dot', () => {
@@ -44,7 +66,7 @@ describe('getContentType', () => {
   });
 
   it('falls back to a type browsers never render or execute', () => {
-    expect(getContentType('docx')).toBe('application/octet-stream');
+    expect(getContentType('exe')).toBe('application/octet-stream');
     expect(getContentType('')).toBe('application/octet-stream');
   });
 });
@@ -52,7 +74,7 @@ describe('getContentType', () => {
 describe('CONTENT_TYPE_EXTENSIONS', () => {
   it('lists exactly the extensions getContentType knows', () => {
     expect(CONTENT_TYPE_EXTENSIONS.has('mjs')).toBe(true);
-    expect(CONTENT_TYPE_EXTENSIONS.has('docx')).toBe(false);
+    expect(CONTENT_TYPE_EXTENSIONS.has('exe')).toBe(false);
     for (const ext of CONTENT_TYPE_EXTENSIONS) {
       expect(getContentType(ext)).not.toBe('application/octet-stream');
     }

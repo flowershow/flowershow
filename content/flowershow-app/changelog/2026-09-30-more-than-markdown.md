@@ -12,8 +12,10 @@ Put Markdown, HTML, data, images and Obsidian Canvas files in one folder and pub
 
 - **Supported file types:** what each file becomes, the URL it gets (`.html` URLs keep their extension) and publish limits. See [Supported file types](/docs/reference/supported-file-types).
 - **Publishing HTML guide:** standalone HTML sites, and HTML inside Markdown pages. See [Publishing HTML](/docs/agents/html).
+- **Host more kinds of files:** ebooks (`.epub`), Office and OpenDocument files, calendar invites (`.ics`), archives, data files (`.parquet`, `.jsonl`, `.sqlite`, Jupyter notebooks) and map files (`.gpx`, `.kml`) now have their own URL, so you can link to them for readers to download.
 
 **Fixes**
 
+- `.flac`, `.ogv`, `.mkv` and `.3gp` embeds (`![[clip.ogv]]`) now load, and so do video captions (`.vtt`).
 - Updated CSS, JavaScript and images now show up right after you republish, instead of being cached for several minutes. Deleted files stop loading too. Works with every publishing method, including older CLI versions.
 - The [Obsidian Canvas](/docs/reference/obsidian-canvas) docs now give the right URL for canvas pages (no `.canvas` extension).

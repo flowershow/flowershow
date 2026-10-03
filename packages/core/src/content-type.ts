@@ -24,7 +24,43 @@ const CONTENT_TYPES = {
   yml: 'application/yaml',
   base: 'application/yaml', // Obsidian Bases
   xml: 'application/xml',
+  jsonl: 'application/x-ndjson',
+  ndjson: 'application/x-ndjson',
+  topojson: 'application/json',
+  toml: 'application/toml',
+  parquet: 'application/vnd.apache.parquet',
+  arrow: 'application/vnd.apache.arrow.file',
+  sqlite: 'application/vnd.sqlite3',
+  sqlite3: 'application/vnd.sqlite3',
+  db: 'application/vnd.sqlite3',
+  ipynb: 'application/x-ipynb+json',
+
+  // Maps
+  kml: 'application/vnd.google-earth.kml+xml',
+  kmz: 'application/vnd.google-earth.kmz',
+  gpx: 'application/gpx+xml',
+
+  // Documents and ebooks
   pdf: 'application/pdf',
+  epub: 'application/epub+zip',
+  docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  odt: 'application/vnd.oasis.opendocument.text',
+  ods: 'application/vnd.oasis.opendocument.spreadsheet',
+  odp: 'application/vnd.oasis.opendocument.presentation',
+  rtf: 'application/rtf',
+  bib: 'text/x-bibtex',
+  tex: 'text/x-tex',
+  ics: 'text/calendar',
+  vcf: 'text/vcard',
+
+  // Archives
+  zip: 'application/zip',
+  gz: 'application/gzip',
+  tgz: 'application/gzip',
+  tar: 'application/x-tar',
+  '7z': 'application/x-7z-compressed',
 
   // Web assets
   css: 'text/css',
@@ -37,6 +73,7 @@ const CONTENT_TYPES = {
   woff2: 'font/woff2',
   ttf: 'font/ttf',
   otf: 'font/otf',
+  eot: 'application/vnd.ms-fontobject',
 
   // Images
   jpeg: 'image/jpeg',
@@ -53,6 +90,13 @@ const CONTENT_TYPES = {
   mp4: 'video/mp4',
   webm: 'video/webm',
   mov: 'video/quicktime',
+  m4v: 'video/mp4',
+  ogv: 'video/ogg',
+  mkv: 'video/x-matroska',
+  '3gp': 'video/3gpp',
+  // Captions for <track>
+  vtt: 'text/vtt',
+  srt: 'application/x-subrip',
 
   // Audio
   aac: 'audio/aac',
@@ -61,6 +105,7 @@ const CONTENT_TYPES = {
   opus: 'audio/opus',
   ogg: 'audio/ogg',
   wav: 'audio/wav',
+  flac: 'audio/flac',
 } as const;
 
 /** Every extension with a known content type (served as a raw file). */
