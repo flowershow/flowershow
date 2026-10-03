@@ -1,5 +1,11 @@
 # remark-wiki-link
 
+## 4.0.1
+
+### Patch Changes
+
+- bcf7868: Embed `.m4v` as video and `.aac`/`.opus` as audio.
+
 ## 4.0.0
 
 ### Major Changes
@@ -43,6 +49,7 @@
 - Add support for case-insensitive wiki-link resolution (enabled by default for Obsidian parity).
 
   ## New Features
+
   - Added `caseInsensitive` option to the plugin configuration (defaults to `true`)
   - Wiki-links now match files regardless of case by default (e.g., `[[wiki link]]` will match `Wiki Link.md`)
   - This behavior matches Obsidian's default wiki-link resolution
@@ -67,6 +74,7 @@
   WebM is a container format that can contain both audio and video streams. Since there's no way to determine from the file extension alone whether a `.webm` file contains audio or video content, and WebM is more commonly used for video, it has been removed from the audio file type list.
 
   **Impact:**
+
   - `![[file.webm]]` will now always render as a `<video>` tag
   - The `<video>` tag can still play audio-only WebM files correctly
   - For explicit audio-only WebM files, users should use dedicated audio formats like `.mp3`, `.ogg`, or `.wav`
@@ -80,6 +88,7 @@
   When dimensions are specified for images or videos using the wiki-link syntax, inline styles are now automatically added alongside the width/height attributes for better rendering control across different contexts.
 
   **Examples:**
+
   - `![[image.jpg|200x300]]` now generates `style="width: 200px; height: 300px"`
   - `![[video.mp4|640]]` now generates `style="width: 640px"` (height omitted to maintain aspect ratio)
 
@@ -92,17 +101,20 @@
   This release adds support for embedding video and audio files using wiki-link syntax:
 
   **Video Support:**
+
   - Supported formats: mp4, webm, ogv, mov, mkv
   - Syntax: `![[video.mp4]]` generates `<video>` tag with controls
   - Dimension support: `![[video.mp4|640x480]]` sets width and height
   - Width-only support: `![[video.mp4|640]]` sets width, allowing browser to maintain aspect ratio
 
   **Audio Support:**
+
   - Supported formats: mp3, wav, ogg, m4a, flac, 3gp
   - Syntax: `![[audio.mp3]]` generates `<audio>` tag with controls
   - Includes fallback text for browsers that don't support the media tags
 
   **Breaking Change:**
+
   - When specifying only width for images and videos (e.g., `![[image.jpg|200]]`), the height attribute is no longer automatically set to match the width. This allows browsers to maintain the original aspect ratio of the media.
 
 ## 3.0.1
@@ -120,6 +132,7 @@
   This release introduces a more robust wiki-link resolution approach.
 
   **🔧 Key Changes:**
+
   - `files` replaces `permalinks`
     - The plugin now accepts a list of `files` (file paths) instead of `permalinks` (published URLs) and applies `urlResolver` only after file path is matched
   - `urlResolver` API updated
@@ -137,6 +150,7 @@
       ```
 
   **Other changes:**
+
   - improved shortest path matching
 
 ## 2.1.0
