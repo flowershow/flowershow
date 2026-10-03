@@ -79,27 +79,16 @@ jobs:
         # can't drift when a new workspace dependency is added.
         run: pnpm turbo build --filter='@flowershow/app^...'
 
-      - name: Start MinIO
+      - name: Start S3 mock
         run: |
-          docker run -d --name minio \
-            -p 9000:9000 \
-            -e MINIO_ROOT_USER=minioadmin \
-            -e MINIO_ROOT_PASSWORD=minioadmin \
-            quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z server /data
-          # Wait for MinIO to be ready
-          timeout 30s bash -c 'until curl -sf http://localhost:9000/minio/health/live; do sleep 1; done'
-
-      - name: Set up MinIO bucket
-        run: |
-          # Run the MinIO client from its image (the standalone `mc` binary CDN
-          # at dl.min.io now 404/410s, and Docker Hub no longer hosts the image).
-          # The mc image's entrypoint is `mc`, so override it to run a shell.
-          docker run --rm --network host --entrypoint /bin/sh \
-            quay.io/minio/mc:RELEASE.2025-08-13T08-35-41Z -c "
-              mc alias set local http://localhost:9000 minioadmin minioadmin &&
-              mc mb --ignore-existing local/flowershow &&
-              mc anonymous set download local/flowershow
-            "
+          # MinIO's images now need a quay.io login (they 401 since ~2026-09-22),
+          # so use Adobe S3Mock: it serves the same port and path-style URLs,
+          # accepts any credentials and presigned URLs, and creates the bucket.
+          docker run -d --name s3mock \
+            -p 9000:9090 \
+            -e COM_ADOBE_TESTING_S3MOCK_STORE_INITIAL_BUCKETS=flowershow \
+            adobe/s3mock:5.2.3
+          timeout 60s bash -c 'until curl -sf http://localhost:9000/favicon.ico; do sleep 1; done'
 
       - name: Create .env file
         working-directory: apps/flowershow
