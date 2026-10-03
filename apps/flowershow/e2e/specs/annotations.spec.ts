@@ -56,6 +56,12 @@ test('A visitor annotates; another visitor sees it; the page is noindex', async 
     /noindex/,
   );
 
+  // Notes from other projects or retries may already be painted, so compare against this baseline.
+  const highlightCount = () =>
+    page.evaluate(() => CSS.highlights.get('fs-annotation')?.size ?? 0);
+  await page.waitForLoadState('networkidle');
+  const highlightsBefore = await highlightCount();
+
   await test.step('select text and save a note', async () => {
     await selectText(page, 'quick brown fox');
     await page.getByRole('button', { name: 'Annotate', exact: true }).click();
@@ -69,11 +75,7 @@ test('A visitor annotates; another visitor sees it; the page is noindex', async 
   });
 
   await test.step('the annotated text is highlighted', async () => {
-    await expect
-      .poll(() =>
-        page.evaluate(() => CSS.highlights.get('fs-annotation')?.size ?? 0),
-      )
-      .toBeGreaterThan(0);
+    await expect.poll(highlightCount).toBeGreaterThan(highlightsBefore);
   });
 
   await test.step('the name is remembered for the next note', async () => {
