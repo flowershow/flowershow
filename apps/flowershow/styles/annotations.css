@@ -1,11 +1,3 @@
-::highlight(fs-annotation) {
-  background-color: color-mix(
-    in srgb,
-    var(--color-accent, #fb923c) 30%,
-    transparent
-  );
-}
-
 .fs-annotations-pill,
 .fs-annotations-add {
   font: inherit;

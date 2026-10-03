@@ -15,7 +15,7 @@ import {
   it,
   vi,
 } from 'vitest';
-import PageAnnotations from './page-annotations';
+import PageAnnotations, { HIGHLIGHT_CSS } from './page-annotations';
 
 const annotation = (over: Record<string, unknown> = {}) => ({
   id: 'a1',
@@ -94,6 +94,19 @@ afterEach(() => {
 });
 
 describe('PageAnnotations', () => {
+  it('injects the ::highlight rule at runtime when the overlay mounts', async () => {
+    mountContent();
+    vi.mocked(fetch).mockReturnValueOnce(jsonResponse({ annotations: [] }));
+    renderOverlay();
+    await screen.findByRole('button', { name: /Annotations on/ });
+    const style = document.querySelector(
+      'style[data-fs-annotations-highlight]',
+    );
+    expect(style?.textContent).toBe(HIGHLIGHT_CSS);
+    expect(HIGHLIGHT_CSS).toContain('::highlight(fs-annotation)');
+    expect(HIGHLIGHT_CSS).toContain('var(--color-accent,#fb923c) 30%');
+  });
+
   it('shows a pill with the open count', async () => {
     mountContent();
     vi.mocked(fetch).mockReturnValueOnce(

@@ -22,6 +22,12 @@ import '@/styles/annotations.css';
 
 const NAME_STORAGE_KEY = 'fs-annotator-name';
 const HIGHLIGHT_NAME = 'fs-annotation';
+/**
+ * Injected at runtime, not kept in annotations.css: Turbopack's CSS parser (lightningcss) rejects
+ * `::highlight()` and would fail the whole page route to compile.
+ */
+export const HIGHLIGHT_CSS =
+  '::highlight(fs-annotation){background-color:color-mix(in srgb,var(--color-accent,#fb923c) 30%,transparent)}';
 /** How long "Annotate" survives a collapsed selection, so a tap that collapses it still lands. */
 const HIDE_DELAY_MS = 400;
 
@@ -333,6 +339,7 @@ export default function PageAnnotations({
 
   return createPortal(
     <>
+      <style data-fs-annotations-highlight="">{HIGHLIGHT_CSS}</style>
       {/* A draft left in a closed panel must not block new selections: Annotate replaces its quote. */}
       {selection && !(open && draft) && (
         <button
