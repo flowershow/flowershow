@@ -82,7 +82,8 @@ export async function GET(request: NextRequest, props: Props) {
   if (!site) return errorResponse(404, 'not_found', 'Site not found');
 
   let pages = new Map<string, PageInfo>();
-  const isOwnerRequest = request.headers.has('authorization');
+  const isOwnerRequest =
+    request.headers.get('authorization')?.startsWith('Bearer ') ?? false;
   if (isOwnerRequest) {
     const owner = await authorizeOwner(request, async () => site);
     if ('response' in owner) return owner.response;
@@ -124,6 +125,15 @@ export async function GET(request: NextRequest, props: Props) {
 /** POST /api/sites/id/:siteId/annotations: open to anyone who can view the page. See ADR 0015. */
 export async function POST(request: NextRequest, props: Props) {
   const { siteId } = await props.params;
+
+  // Reject text/plain and form posts, which cross-site pages can send without a preflight.
+  if (
+    !request.headers
+      .get('content-type')
+      ?.toLowerCase()
+      .startsWith('application/json')
+  )
+    return errorResponse(415, 'unsupported_media_type', 'Send JSON');
 
   const tooLarge = () =>
     errorResponse(413, 'payload_too_large', 'Annotation is too large');

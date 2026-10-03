@@ -218,6 +218,20 @@ describe('GET (visitor)', () => {
 });
 
 describe('GET (owner token)', () => {
+  it('treats a non-Bearer Authorization header (HTTP Basic) as a visitor', async () => {
+    const res = await GET(
+      getReq('?path=notes/draft.md', { authorization: 'Basic dXNlcjpwdw==' }),
+      params(),
+    );
+    expect(res.status).toBe(200);
+    expect(validateToken).not.toHaveBeenCalled();
+    expect(annFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { siteId: 'site-1', path: 'notes/draft.md' },
+      }),
+    );
+  });
+
   it('returns every annotation with pageEdited computed from the current page sha', async () => {
     validateToken.mockResolvedValue({ userId: 'owner-1' });
     const res = await GET(
@@ -252,6 +266,21 @@ describe('GET (owner token)', () => {
 });
 
 describe('POST', () => {
+  it('415s a non-JSON content type (text/plain cross-site posts) without writing', async () => {
+    const req = new NextRequest(
+      'http://localhost/api/sites/id/site-1/annotations',
+      {
+        method: 'POST',
+        body: JSON.stringify(BODY),
+        headers: { 'content-type': 'text/plain' },
+      },
+    );
+    const res = await POST(req, params());
+    expect(res.status).toBe(415);
+    expect((await res.json()).error).toBe('unsupported_media_type');
+    expect(annCreate).not.toHaveBeenCalled();
+  });
+
   it('creates an annotation with a trimmed note, no name, the page sha and no IP', async () => {
     const res = await POST(postReq(BODY), params());
     expect(res.status).toBe(201);

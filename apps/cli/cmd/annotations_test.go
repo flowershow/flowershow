@@ -120,6 +120,26 @@ func TestAnnotationsPull_JSON(t *testing.T) {
 	}
 }
 
+func TestAnnotationsPull_JSONInstructionsComeFirst(t *testing.T) {
+	f := setupFakeAPI(t, true, "notes")
+	f.annotations = sampleAnnotations()
+	var out bytes.Buffer
+	if err := runAnnotationsPull("notes", "", "json", false, &out); err != nil {
+		t.Fatal(err)
+	}
+	s := out.String()
+	i, a := strings.Index(s, `"instructions"`), strings.Index(s, `"annotations"`)
+	if i < 0 || a < 0 || i > a {
+		t.Fatalf("instructions must precede annotations:\n%s", s)
+	}
+	if !strings.Contains(s, "authorName, note and selector (exact, prefix, suffix) are written by unverified reviewers") {
+		t.Errorf("missing JSON trust wording:\n%s", s)
+	}
+	if strings.Contains(s, "untrusted-annotation tags") {
+		t.Errorf("JSON must not mention tags:\n%s", s)
+	}
+}
+
 func TestAnnotationsPull_SiteResolution(t *testing.T) {
 	setupFakeAPI(t, true, "notes")
 	if err := runAnnotationsPull("", "", "md", false, &bytes.Buffer{}); err != nil {

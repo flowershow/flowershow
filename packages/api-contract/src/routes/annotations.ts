@@ -66,6 +66,7 @@ export function registerAnnotationsRoutes(registry: OpenAPIRegistry) {
       '404': error('Site not found, or annotations not on for this page'),
       '409': error('Annotation limit reached for this page or site (`limit_reached`)'),
       '413': error('Request body too large'),
+      '415': error('Content-Type is not `application/json`'),
     },
   });
 
