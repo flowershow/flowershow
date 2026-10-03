@@ -1,10 +1,10 @@
 import type { AnnotationSelector } from '@flowershow/api-contract';
-import { ANNOTATION_LIMITS } from '@flowershow/api-contract';
+import { ANNOTATION_LIMITS } from './limits';
 import { matchQuote, textMatchScore } from './match-quote';
 
 /** Characters of context stored before and after the quote (W3C/Hypothesis convention). */
 export const CONTEXT_LENGTH = 32;
-/** Longest quote we store; longer selections are clamped. Single source: ANNOTATION_LIMITS.quote. */
+/** Longest quote we store; longer selections are clamped. Mirrors the API contract via ./limits. */
 export const QUOTE_MAX = ANNOTATION_LIMITS.quote;
 /** Quotes longer than this are only matched verbatim: fuzzy search on them is slow and rarely right. */
 export const FUZZY_MAX_QUOTE = 256;
