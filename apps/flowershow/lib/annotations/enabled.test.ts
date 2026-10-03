@@ -108,4 +108,15 @@ describe('isAnnotationsEnabled', () => {
       }),
     ).toBe(false);
   });
+
+  it('is off for a page marked publish: false, even with the site on', () => {
+    expect(
+      isAnnotationsEnabled({
+        site: claimedSite,
+        siteConfig: siteOn,
+        pageMetadata: { publish: false, annotations: true },
+        pagePath: md,
+      }),
+    ).toBe(false);
+  });
 });

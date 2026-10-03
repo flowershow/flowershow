@@ -5,7 +5,7 @@ const MARKDOWN_PAGE = /\.mdx?$/i;
 export type AnnotationGateInput = {
   site: { isTemporary?: boolean | null; anonymousOwnerId?: string | null };
   siteConfig: Pick<SiteConfig, 'annotations'> | null | undefined;
-  pageMetadata: { annotations?: unknown } | null | undefined;
+  pageMetadata: { annotations?: unknown; publish?: unknown } | null | undefined;
   /** Blob path of the page, e.g. `notes/draft.md`. */
   pagePath: string;
 };
@@ -26,5 +26,7 @@ export function isAnnotationsEnabled({
   // Unclaimed anonymous sites are excluded from Phase 0: nobody could moderate.
   if (site.isTemporary && site.anonymousOwnerId) return false;
   if (siteConfig?.annotations !== true) return false;
+  // Same condition the page renderer 404s on; never reveal a hidden draft.
+  if (pageMetadata?.publish === false) return false;
   return pageMetadata?.annotations !== false;
 }

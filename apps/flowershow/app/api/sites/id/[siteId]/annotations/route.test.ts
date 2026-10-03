@@ -366,4 +366,28 @@ describe('POST', () => {
     expect((await POST(postReq(BODY), params())).status).toBe(404);
     expect(annCreate).not.toHaveBeenCalled();
   });
+
+  it('404s on a publish: false page without creating anything', async () => {
+    blobFind.mockResolvedValueOnce({
+      metadata: { publish: false },
+      sha: 'sha-a',
+      appPath: '/notes/draft',
+    });
+    expect((await POST(postReq(BODY), params())).status).toBe(404);
+    expect(annCreate).not.toHaveBeenCalled();
+  });
+});
+
+describe('GET (visitor, unpublished page)', () => {
+  it('404s on a publish: false page without querying annotations', async () => {
+    blobFind.mockResolvedValueOnce({
+      metadata: { publish: false },
+      sha: 'sha-a',
+      appPath: '/notes/draft',
+    });
+    expect((await GET(getReq('?path=notes/draft.md'), params())).status).toBe(
+      404,
+    );
+    expect(annFindMany).not.toHaveBeenCalled();
+  });
 });
