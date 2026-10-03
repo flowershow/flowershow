@@ -1,5 +1,5 @@
 ---
-title: Publish from Claude and ChatGPT (MCP)
+title: Publish from Claude and ChatGPT (beta)
 description: Add Flowershow as a connector in Claude or ChatGPT, then ask it to publish what you've made. You get a live website link, with no account needed.
 ---
 
@@ -8,6 +8,15 @@ Flowershow has an [MCP](https://modelcontextprotocol.io/) server, so chat apps t
 **Connector URL:** `https://flowershow.app/api/mcp`
 
 No account or sign-in is needed. Each new site gets a random `…-anon.flowershow.me` address and a claim link. Open the claim link and sign in (or sign up) to keep the site; otherwise it expires after 7 days.
+
+> [!note] Beta
+> The connector is new. It publishes without an account, and can't yet sign in to yours. Tell us what works and what doesn't on [Discord](https://discord.gg/JChzM5VdFn) or [GitHub](https://github.com/flowershow/flowershow/issues).
+
+## What you can do
+
+- **Share what you just made.** A report, a one-pager, an HTML page: ask your AI to publish it and get a link you can send.
+- **Change it as you go.** Ask for edits in the same conversation and they go live at the same address.
+- **Keep it.** Claim the site and it's a normal Flowershow site: rename it, add a custom domain, or keep editing it with the [`fl` CLI](/docs/reference/cli) or GitHub.
 
 ## Add it to Claude
 
@@ -34,6 +43,8 @@ Ask in your own words, for example:
 > Publish this report as a website.
 
 Your AI replies with the live link and a claim link. To change the site in the same conversation, ask it to update the page: it republishes to the same address. Each update sends the whole site, so files it leaves out are removed.
+
+A new conversation creates a new site, and once you've claimed a site the connector can no longer update it. So make your changes first, then claim the site when you're happy with it.
 
 ## What you can publish
 
