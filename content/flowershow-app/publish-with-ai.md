@@ -16,7 +16,7 @@ showEditLink: false
           <h1>From your AI session to a live website.</h1>
           <p className="lede">Notes, docs, a report, an HTML page: whatever you're making with your AI, just ask it to publish. One page or a whole site, live and shareable in seconds.</p>
           <div className="cta-row">
-            <a className="btn btn-primary" href="#install">Install the skill <span className="arw">→</span></a>
+            <a className="btn btn-primary" href="#install">Get started <span className="arw">→</span></a>
             <a className="btn btn-secondary" href="#how">See how it works <span className="arw">→</span></a>
           </div>
           <p className="microcopy"><b>Free forever</b>, no credit card required</p>
@@ -47,20 +47,22 @@ showEditLink: false
         <div className="section-head reveal">
           <span className="eyebrow">How it works</span>
           <h2>Three steps. The agent does the rest.</h2>
-          <p>The Flowershow skill teaches your agent how to publish with the <code>fl</code> CLI, and how to configure and style your site from the Flowershow docs.</p>
+          <p>In the Claude and ChatGPT apps, add the Flowershow connector. In coding agents, install the Flowershow skill: it publishes with the <code>fl</code> CLI, and configures and styles your site from the Flowershow docs.</p>
         </div>
         <div className="steps ai-steps reveal">
           <div className="step" id="install">
             <span className="step-num">1</span>
-            <h3>Install the skill</h3>
+            <h3>Connect your AI</h3>
+            <p><b>Claude or ChatGPT app:</b> add this connector URL (beta). <a href="/docs/agents/mcp">How →</a></p>
+            <div className="cmd-line url-line">https://flowershow.app/api/mcp</div>
+            <p><b>Claude Code, Codex, Cursor:</b> install the skill. No Node.js? <a href="/docs/agents/supported-agents">Install it manually →</a></p>
             <div className="cmd-line">npx skills add flowershow/skills --global</div>
-            <p>One line, once, for Claude Code, Codex, Cursor and other coding agents. In ChatGPT or the Claude app, or no Node.js? <a href="/docs/agents/supported-agents">Add the skill manually →</a></p>
           </div>
           <div className="step">
             <span className="step-num">2</span>
             <h3>Ask your agent</h3>
             <div className="prompt-line">Publish my notes folder to Flowershow</div>
-            <p>First time? The agent walks you through a quick sign-in.</p>
+            <p>No account needed to try it: you get a live link, and claim the site to keep it.</p>
           </div>
           <div className="step">
             <span className="step-num">3</span>
@@ -168,11 +170,15 @@ showEditLink: false
         <div className="faq-grid reveal">
           <div className="faq-item">
             <h3>Which AI agents does it work with?</h3>
-            <p>Any agent that supports skills, including Claude (Claude Code and the Claude apps), ChatGPT, Codex and Cursor. To publish, the agent needs to run the <code>fl</code> CLI with internet access; where it can't, it still configures your site and gives you the one command to run. See the <a href="/docs/agents/supported-agents">per-agent install steps</a>.</p>
+            <p>In the Claude and ChatGPT apps, use the <a href="/docs/agents/mcp">Flowershow connector</a> (beta). In coding agents such as Claude Code, Codex and Cursor, and any agent that supports skills, use the skill, which publishes with the <code>fl</code> CLI. See the <a href="/docs/agents/supported-agents">per-agent install steps</a>.</p>
           </div>
           <div className="faq-item">
             <h3>Do I need Node.js?</h3>
-            <p>Only for the one-line install. Without it, add the skill manually: see the <a href="/docs/agents/supported-agents">per-agent install steps</a>.</p>
+            <p>No. The connector needs nothing installed, and Node.js is only for the skill's one-line install. Without it, add the skill manually: see the <a href="/docs/agents/supported-agents">per-agent install steps</a>.</p>
+          </div>
+          <div className="faq-item">
+            <h3>Do I need an account?</h3>
+            <p>Not to try it. Without an account your site gets a live link that lasts 7 days, plus a claim link: sign in or sign up from it to keep the site.</p>
           </div>
           <div className="faq-item">
             <h3>I publish from GitHub or Obsidian. Is this for me?</h3>
@@ -189,8 +195,8 @@ showEditLink: false
       <div className="wrap">
         <div className="final-card reveal">
           <h2>From your AI session to a live URL. In one ask.</h2>
-          <p>Install the skill and publish your first site in seconds.</p>
-          <a className="btn btn-primary" href="#install">Install the skill <span className="arw">→</span></a>
+          <p>Add the connector or install the skill, and publish your first site in seconds.</p>
+          <a className="btn btn-primary" href="#install">Get started <span className="arw">→</span></a>
           <p className="fine">Open source · Free plan, forever</p>
         </div>
       </div>
