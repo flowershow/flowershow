@@ -872,6 +872,25 @@ export default async function SiteSettingsPage(props: {
             </>
           )}
           <Form
+            title="Annotations"
+            description="Let anyone who can view your pages select text and leave a note, with no account. Off by default. When off, it's off on every page; when on, a page can opt out with annotations: false in its frontmatter. Pages with annotations on aren't indexed by search engines. Manage notes in the Annotations tab."
+            helpText={
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/annotations"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            }
+            inputAttrs={{
+              name: 'annotations',
+              type: 'text',
+              defaultValue: Boolean(siteConfig?.annotations).toString(),
+            }}
+            handleSubmit={updateDbConfig}
+          />
+          <Form
             title="Show Edit Link"
             description="Show a link at the bottom of each page for readers to edit the source on GitHub."
             disabled={!site.ghRepository}

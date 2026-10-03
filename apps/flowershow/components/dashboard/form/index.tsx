@@ -64,6 +64,7 @@ export default function Form({
     'showBacklinks',
     'showKnowledgeGraph',
     'showTags',
+    'annotations',
   ].includes(inputAttrs.name);
 
   // Controlled value for all non-toggle inputs (text, textarea, select)

@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import { CodeIcon, EditIcon } from 'lucide-react';
 import Link from 'next/link';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
+import PageAnnotations from '@/components/public/annotations/page-annotations';
 import CanvasEnhancer from '@/components/public/canvas-enhancer';
 import Comments from '@/components/public/comments';
 import Hero from '@/components/public/hero';
@@ -11,6 +12,7 @@ import { BlogLayout } from '@/components/public/layouts/blog';
 import { SidebarDesktop, SidebarMobileNav } from '@/components/public/sidebar';
 import TableOfContents from '@/components/public/table-of-contents';
 import { env } from '@/env.mjs';
+import { isAnnotationsEnabled } from '@/lib/annotations/enabled';
 import { getConfig } from '@/lib/app-config';
 import type { Node } from '@/lib/build-site-tree';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
@@ -95,6 +97,14 @@ export async function generateMetadata(props: {
     });
 
   const metadata = blob?.metadata as PageMetadata | null;
+  const annotationsOn = blob
+    ? isAnnotationsEnabled({
+        site,
+        siteConfig,
+        pageMetadata: metadata,
+        pagePath: blob.path,
+      })
+    : false;
   const isChangelogFallback = !blob && isChangelogDirName(decodedSlug);
   const isTagIndexRoute = showTags && !blob && decodedSlug === '/tags';
   const isTagListingRoute =
@@ -178,6 +188,8 @@ export async function generateMetadata(props: {
       }),
     },
     // metadataBase: new URL(siteUrl),
+    // Open review pages stay out of search results.
+    ...(annotationsOn ? { robots: { index: false, follow: false } } : {}),
     // Last, so nothing can override it: anonymous sites are never indexed.
     ...anonRobots(site),
   };
@@ -371,6 +383,26 @@ export default async function SitePage(props: {
     redirect(`/${blob.path}`);
   }
 
+  // Annotations: Markdown pages only (the rule also excludes .canvas/.html).
+  // Same rule as noindex and the API, so every eligible page gets the overlay.
+  const annotationsOverlay = isAnnotationsEnabled({
+    site,
+    siteConfig,
+    pageMetadata: metadata,
+    pagePath: blob.path,
+  }) ? (
+    <PageAnnotations
+      siteId={site.id}
+      pagePath={blob.path}
+      manageUrl={`${
+        env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+        env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
+          ? 'https'
+          : 'http'
+      }://${env.NEXT_PUBLIC_CLOUD_DOMAIN}/site/${site.id}/annotations`}
+    />
+  ) : null;
+
   const compiledContent = await renderPageContent({
     blob,
     site,
@@ -420,6 +452,7 @@ export default async function SitePage(props: {
           }}
         />
         <UrlNormalizer />
+        {annotationsOverlay}
         <div className="rendered-mdx is-plain" id="mdxpage">
           {compiledContent}
         </div>
@@ -501,6 +534,7 @@ export default async function SitePage(props: {
         }}
       />
       <UrlNormalizer />
+      {annotationsOverlay}
 
       {showSidebar && <SidebarMobileNav items={siteTree!} prefix={''} />}
 
