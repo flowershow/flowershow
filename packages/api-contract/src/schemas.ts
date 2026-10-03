@@ -39,6 +39,8 @@ export const SiteDetailSchema = z.object({
   enableSearch: z.boolean(),
   showSidebar: z.boolean(),
   syntaxMode: z.string(),
+  annotationsEnabled: z.boolean(),
+  openAnnotations: z.number(),
   url: z.string(),
   fileCount: z.number(),
   totalSize: z.number(),
@@ -472,3 +474,83 @@ export const UpgradeRequiredResponseSchema = z.object({
 export type UpgradeRequiredResponse = z.infer<
   typeof UpgradeRequiredResponseSchema
 >;
+
+// ---------------------------------------------------------------------------
+// Annotations
+// GET/POST  /api/sites/id/:siteId/annotations
+// POST      /api/sites/id/:siteId/annotations/bulk
+// GET/PATCH /api/sites/id/:siteId/annotations/settings
+// ---------------------------------------------------------------------------
+export const ANNOTATION_LIMITS = {
+  quote: 1000,
+  note: 2000,
+  name: 60,
+  context: 64,
+  perPage: 500,
+  perSite: 2000,
+  bodyBytes: 16384,
+} as const;
+
+export const AnnotationSelectorSchema = z.object({
+  exact: z.string().min(1).max(ANNOTATION_LIMITS.quote),
+  prefix: z.string().max(ANNOTATION_LIMITS.context),
+  suffix: z.string().max(ANNOTATION_LIMITS.context),
+  start: z.number().int().nonnegative(),
+  end: z.number().int().positive(),
+});
+export type AnnotationSelector = z.infer<typeof AnnotationSelectorSchema>;
+
+export const AnnotationStatusSchema = z.enum(['open', 'resolved']);
+export type AnnotationStatus = z.infer<typeof AnnotationStatusSchema>;
+
+export const AnnotationSchema = z.object({
+  id: z.string(),
+  siteId: z.string(),
+  path: z.string(),
+  /** Public URL of the page, or null if the page no longer exists. */
+  pageUrl: z.string().nullable(),
+  selector: AnnotationSelectorSchema,
+  note: z.string(),
+  authorName: z.string().nullable(),
+  status: AnnotationStatusSchema,
+  /** The page was edited or removed after the note was left. */
+  pageEdited: z.boolean(),
+  createdAt: z.string(),
+});
+export type Annotation = z.infer<typeof AnnotationSchema>;
+
+export const ListAnnotationsResponseSchema = z.object({ annotations: z.array(AnnotationSchema) });
+export type ListAnnotationsResponse = z.infer<typeof ListAnnotationsResponseSchema>;
+
+export const CreateAnnotationRequestSchema = z.object({
+  path: z.string().min(1).max(1024),
+  selector: AnnotationSelectorSchema,
+  note: z.string().trim().min(1).max(ANNOTATION_LIMITS.note),
+  authorName: z.string().trim().max(ANNOTATION_LIMITS.name).optional(),
+});
+export type CreateAnnotationRequest = z.infer<typeof CreateAnnotationRequestSchema>;
+
+export const CreateAnnotationResponseSchema = z.object({ annotation: AnnotationSchema });
+export type CreateAnnotationResponse = z.infer<typeof CreateAnnotationResponseSchema>;
+
+export const AnnotationsBulkRequestSchema = z.object({
+  action: z.enum(['resolve', 'reopen', 'delete']),
+  ids: z.array(z.string().min(1)).min(1).max(ANNOTATION_LIMITS.perSite).optional(),
+  all: z.literal(true).optional(),
+  path: z.string().min(1).max(1024).optional(),
+});
+export type AnnotationsBulkRequest = z.infer<typeof AnnotationsBulkRequestSchema>;
+
+export const AnnotationsBulkResponseSchema = z.object({ count: z.number() });
+export type AnnotationsBulkResponse = z.infer<typeof AnnotationsBulkResponseSchema>;
+
+export const AnnotationSettingsSchema = z.object({
+  /** Site-level setting (dashboard config merged with config.json). */
+  annotationsEnabled: z.boolean(),
+  /** Number of open (unresolved) annotations on the site. */
+  openAnnotations: z.number(),
+});
+export type AnnotationSettings = z.infer<typeof AnnotationSettingsSchema>;
+
+export const UpdateAnnotationSettingsRequestSchema = z.object({ annotations: z.boolean() });
+export type UpdateAnnotationSettingsRequest = z.infer<typeof UpdateAnnotationSettingsRequestSchema>;
