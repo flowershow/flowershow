@@ -14,9 +14,17 @@ export type ImageFile =
   | `svg`
   | `webp`;
 
-export type AudioFile = `flac` | `m4a` | `mp3` | `ogg` | `wav` | `3gp`;
+export type AudioFile =
+  | `aac`
+  | `flac`
+  | `m4a`
+  | `mp3`
+  | `ogg`
+  | `opus`
+  | `wav`
+  | `3gp`;
 
-export type VideoFile = `mkv` | `mov` | `mp4` | `ogv` | `webm`;
+export type VideoFile = `m4v` | `mkv` | `mov` | `mp4` | `ogv` | `webm`;
 
 export type PdfFile = `pdf`;
 
@@ -38,11 +46,11 @@ export function isImageFile(extension: string): extension is ImageFile {
 }
 
 export function isAudioFile(extension: string): extension is AudioFile {
-  return ['flac', 'm4a', 'mp3', 'ogg', 'wav', '3gp'].includes(extension);
+  return ['aac', 'flac', 'm4a', 'mp3', 'ogg', 'opus', 'wav', '3gp'].includes(extension);
 }
 
 export function isVideoFile(extension: string): extension is VideoFile {
-  return ['mkv', 'mov', 'mp4', 'ogv', 'webm'].includes(extension);
+  return ['m4v', 'mkv', 'mov', 'mp4', 'ogv', 'webm'].includes(extension);
 }
 
 export function isPdfFile(extension: string): extension is PdfFile {

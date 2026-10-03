@@ -16,6 +16,6 @@ Put Markdown, HTML, data, images and Obsidian Canvas files in one folder and pub
 
 **Fixes**
 
-- `.flac`, `.ogv`, `.mkv` and `.3gp` embeds (`![[clip.ogv]]`) now load, and so do video captions (`.vtt`).
+- `.flac`, `.ogv`, `.m4v`, `.aac` and `.opus` embeds (`![[clip.ogv]]`) now play.
 - Updated CSS, JavaScript and images now show up right after you republish, instead of being cached for several minutes. Deleted files stop loading too. Works with every publishing method, including older CLI versions.
 - The [Obsidian Canvas](/docs/reference/obsidian-canvas) docs now give the right URL for canvas pages (no `.canvas` extension).
