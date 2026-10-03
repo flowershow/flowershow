@@ -146,6 +146,22 @@ describe('publish (anonymous)', () => {
     ).rejects.toThrow(msg);
   });
 
+  it('does not tell the model to retry with a rejected claim token', async () => {
+    deps = makeDeps({
+      sync: vi
+        .fn()
+        .mockRejectedValue(new ApiError(401, 'x', 'Invalid claim token')),
+    });
+    const err = await publish(
+      { files: [html], siteId: 'site-9', claimToken: 'fs_claim_bogus' },
+      { kind: 'anon' },
+      deps,
+    ).catch((e: Error) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).not.toMatch(/site was created/);
+    expect((err as Error).message).not.toContain('fs_claim_bogus');
+  });
+
   it('does not retry when site creation is rate limited', async () => {
     deps = makeDeps({
       createAnonSite: vi
