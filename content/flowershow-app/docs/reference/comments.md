@@ -5,6 +5,9 @@ description: Enable comments on your site's pages. Powered by Giscus and GitHub 
 
 Configure comments from the **Flowershow dashboard** under **Site Settings → Features**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
 
+> [!tip]
+> Want feedback on a draft, attached to the exact words, without asking anyone for a GitHub account? See [[annotations|Annotations]].
+
 > [!note]
 > Comments require a public GitHub repository — but it doesn't have to be the one your site content lives in. See [Using a dedicated comments repository](#using-a-dedicated-comments-repository) if you publish without GitHub integration or your content repo is private.
 

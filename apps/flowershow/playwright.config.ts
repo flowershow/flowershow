@@ -61,6 +61,7 @@ export default defineConfig({
         '**/rss.spec.ts',
         // Custom head is a Premium feature: this is the seeded Premium site.
         '**/custom-head.spec.ts',
+        '**/annotations.spec.ts',
       ],
       dependencies: ['setup'],
     },

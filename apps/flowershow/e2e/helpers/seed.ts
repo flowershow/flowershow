@@ -382,7 +382,12 @@ async function revalidateCache(): Promise<void> {
       ...(secret ? { 'x-internal-secret': secret } : {}),
     },
     body: JSON.stringify({
-      tags: [FREE_SITE.id, PREMIUM_SITE.id, PASSWORD_CUSTOM_DOMAIN_SITE.id],
+      tags: [
+        FREE_SITE.id,
+        PREMIUM_SITE.id,
+        PASSWORD_SITE.id,
+        PASSWORD_CUSTOM_DOMAIN_SITE.id,
+      ],
     }),
   });
   if (!res.ok) {
@@ -425,11 +430,13 @@ export async function seed(): Promise<void> {
       subdomain: `${FREE_SITE.projectName}-${TEST_USER.username}`,
       userId: TEST_USER.id,
       enableRss: true,
+      configJson: { annotations: true },
     },
     update: {
       projectName: FREE_SITE.projectName,
       subdomain: `${FREE_SITE.projectName}-${TEST_USER.username}`,
       enableRss: true,
+      configJson: { annotations: true },
     },
   });
 
@@ -444,6 +451,7 @@ export async function seed(): Promise<void> {
       customDomain: PREMIUM_SITE.customDomain,
       plan: Plan.PREMIUM,
       enableRss: true,
+      configJson: { annotations: true },
     },
     update: {
       projectName: PREMIUM_SITE.projectName,
@@ -451,6 +459,7 @@ export async function seed(): Promise<void> {
       customDomain: PREMIUM_SITE.customDomain,
       plan: Plan.PREMIUM,
       enableRss: true,
+      configJson: { annotations: true },
     },
   });
 
@@ -466,6 +475,7 @@ export async function seed(): Promise<void> {
       privacyMode: 'PASSWORD',
       accessPasswordHash,
       tokenVersion: 1,
+      configJson: { annotations: true },
     },
     update: {
       projectName: PASSWORD_SITE.projectName,
@@ -473,6 +483,7 @@ export async function seed(): Promise<void> {
       privacyMode: 'PASSWORD',
       accessPasswordHash,
       tokenVersion: 1,
+      configJson: { annotations: true },
     },
   });
 

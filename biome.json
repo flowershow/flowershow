@@ -20,11 +20,21 @@
     "bracketSpacing": true,
     "expand": "auto",
     "useEditorconfig": true,
-    "includes": ["**", "!**/pnpm-lock.yaml", "!**/node_modules", "!**/.next"]
+    "includes": [
+      "**",
+      "!**/pnpm-lock.yaml",
+      "!**/node_modules",
+      "!**/.next",
+      "!apps/flowershow/lib/annotations/match-quote.ts"
+    ]
   },
   "linter": {
     "enabled": true,
-    "includes": ["packages/**", "apps/**"],
+    "includes": [
+      "packages/**",
+      "apps/**",
+      "!apps/flowershow/lib/annotations/match-quote.ts"
+    ],
     "rules": {
       "recommended": true,
       "suspicious": {
@@ -58,6 +68,7 @@
   },
   "assist": {
     "enabled": true,
+    "includes": ["**", "!apps/flowershow/lib/annotations/match-quote.ts"],
     "actions": {
       "source": {
         "organizeImports": "on"

@@ -6,6 +6,7 @@ import {
 import type { OpenAPIObject } from 'openapi3-ts/oas31';
 import { z } from 'zod';
 import {
+  registerAnnotationsRoutes,
   registerAnonymousRoutes,
   registerCliAuthRoutes,
   registerGitHubAppRoutes,
@@ -45,6 +46,7 @@ const TAGS = [
   },
   { name: 'User', description: 'User profile and token management' },
   { name: 'Sites', description: 'Site CRUD, file sync, and publishing' },
+  { name: 'Annotations', description: 'Notes visitors leave on published pages, no account needed' },
   {
     name: 'Anonymous Publishing',
     description:
@@ -101,6 +103,7 @@ export function generateOpenApiDocument(): OpenAPIObject {
   registerCliAuthRoutes(registry);
   registerUserRoutes(registry);
   registerSitesRoutes(registry);
+  registerAnnotationsRoutes(registry);
   registerAnonymousRoutes(registry);
   registerGitHubAppRoutes(registry);
   registerWebhooksRoutes(registry);

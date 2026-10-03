@@ -23,6 +23,7 @@ var publishName string
 var publishYes bool
 var publishOverwrite bool
 var publishAnon bool
+var publishAnnotations, publishAnnotationsSet bool
 
 // notLoggedInMsg is shown when publishing without a login and without --anon.
 // fl never publishes anonymously unless asked to.
@@ -45,10 +46,12 @@ func init() {
 	rootCmd.Flags().BoolVar(&publishYes, "yes", false, "Skip the new-site confirmation prompt (for scripts and CI)")
 	rootCmd.Flags().BoolVar(&publishOverwrite, "overwrite", false, "Allow publishing an unlinked path into an existing site with the same name, replacing its content")
 	rootCmd.Flags().BoolVar(&publishAnon, "anon", false, "Publish without an account. The site expires in 7 days unless claimed; prints a claim link.")
+	rootCmd.Flags().BoolVar(&publishAnnotations, "annotations", false, "Turn annotations on (or off with --annotations=false): anyone with the link can select text and leave a note")
 	rootCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return cmd.Help()
 		}
+		publishAnnotationsSet = cmd.Flags().Changed("annotations")
 		ui.Header("Flowershow")
 		return runPublish(args, publishName, publishYes, publishOverwrite, publishAnon)
 	}
@@ -65,6 +68,10 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 		"cli_version": config.Version,
 	})
 	defer func() { telemetry.Flush() }()
+
+	if anon && publishAnnotationsSet {
+		return fail("--annotations isn't available with --anon: annotations need a site in your account. Run `fl login`, then publish with --annotations.")
+	}
 
 	sp := ui.NewSpinner()
 
@@ -339,6 +346,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 		"duration_ms": time.Since(startTime).Milliseconds(),
 	})
 	ui.PrintPublishSuccess(site.URL)
+	reportAnnotations(site.ID)
 	return nil
 }
 
@@ -552,7 +560,11 @@ func isAnonGoneStatus(status int) bool {
 
 // doSync performs a delta sync to an existing site with already-discovered files.
 func doSync(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.Spinner, startTime time.Time) error {
-	return syncToSite(site, siteName, discovered, sp, startTime, true)
+	if err := syncToSite(site, siteName, discovered, sp, startTime, true); err != nil {
+		return err
+	}
+	reportAnnotations(site.ID)
+	return nil
 }
 
 // syncToSite is doSync. If reportPlanErr is false, an error from the sync

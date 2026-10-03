@@ -36,6 +36,15 @@ test.describe('Password-protected site', () => {
       const response = await page.request.get('/assets/image.jpg');
       expect(response.status()).toBe(200);
     });
+
+    test('annotations API returns 404 without the access cookie', async ({
+      page,
+    }) => {
+      const response = await page.request.get(
+        `/api/sites/id/${PASSWORD_SITE.id}/annotations?path=annotations-demo.md`,
+      );
+      expect(response.status()).toBe(404);
+    });
   });
 
   test.describe('authenticated', () => {
@@ -63,6 +72,14 @@ test.describe('Password-protected site', () => {
       const response = await page.goto('/docs/test.html');
       expect(page.url()).not.toContain('/_login');
       expect(response?.status()).toBe(200);
+    });
+
+    test('annotations API works after login', async ({ page }) => {
+      const response = await page.request.get(
+        `/api/sites/id/${PASSWORD_SITE.id}/annotations?path=annotations-demo.md`,
+      );
+      expect(response.status()).toBe(200);
+      expect(Array.isArray((await response.json()).annotations)).toBe(true);
     });
   });
 });

@@ -74,6 +74,12 @@ _Avoid_: Incoming link, reverse link
 The post-publish step (run in the PublishFinalizerWorkflow) that walks all unresolved Links for a site, matches `targetPath` against current Blob records, and fills in `targetBlobId`. Also cleans up Links whose source or target Blob was deleted.
 _Avoid_: Link indexing, link building
 
+### Annotations
+
+**Annotation**:
+A note a visitor leaves on a selected passage of a published Markdown page, with no account. Stored in the `Annotation` table against `(siteId, path)`, where `path` is the Page File's vault path, with a W3C TextQuote selector (the exact text plus up to 32 characters before and after), a TextPosition (start/end offsets in the rendered text of the page body), and the page's Blob sha at the time. Status is `open` or `resolved`. Turned on per site (`annotations` in site config); site-level off is final, and a page can opt out with `annotations: false` in frontmatter. Visible to everyone who can view the page; only the site owner can resolve or delete one. On the page, an annotation whose quote can't be found is **outdated** (still open, just labelled); elsewhere, "page edited since note" means the page's Blob sha changed after the note.
+_Avoid_: Comment (that is Giscus), highlight, review
+
 ### Tags
 
 **Tag**:

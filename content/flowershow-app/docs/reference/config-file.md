@@ -350,6 +350,19 @@ Enable or disable the comments section on pages. To fully set up comments, you m
 
 ---
 
+### `annotations`
+
+**Type:** `boolean`  
+**Default:** `false`
+
+Let anyone who can view a Markdown page select text and leave a note, with no account. When it's off, annotations are off on every page; when it's on, a page can opt out with `annotations: false` in frontmatter. Pages with annotations on aren't indexed by search engines. [[annotations|Learn more →]]
+
+```json
+"annotations": true
+```
+
+---
+
 ### `giscus`
 
 **Type:** `object`  

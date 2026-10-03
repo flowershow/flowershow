@@ -256,6 +256,24 @@ fl settings                  # uses the .flowershow file in the current folder
 fl settings --name <site-name>
 ```
 
+## Annotations
+
+With [[annotations|Annotations]] on, anyone with the link can select text on a page and leave a note.
+
+```bash
+fl --annotations ./my-draft         # publish and turn annotations on for the site
+fl --annotations=false ./my-draft   # publish and turn them off
+fl annotations pull                 # open notes, as Markdown for an AI agent
+fl annotations pull --name my-drafts --path notes/draft.md
+fl annotations pull --all --format json   # include resolved notes
+fl annotations resolve <id> [<id>...]
+fl annotations resolve --all --path notes/draft.md
+fl annotations delete <id> [<id>...]
+fl annotations delete --all --yes   # --yes is required without a terminal
+```
+
+`--site` works as an alias for `--name`. `fl` and `fl settings` print `Annotations: ON — anyone with this link can annotate` while they're on, and how many open annotations are waiting. A folder literally named `annotations` must be published as `fl ./annotations`.
+
 ## Troubleshooting
 
 - **"You must be authenticated..."**: Run `fl login`, set `FLOWERSHOW_TOKEN`, or publish without an account with `fl --anon <path>`.

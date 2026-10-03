@@ -3,6 +3,7 @@ import type {
   GetSiteResponse,
 } from '@flowershow/api-contract';
 import { type NextRequest, NextResponse } from 'next/server';
+import { annotationSettingsFor } from '@/lib/annotations/server';
 import type { SiteConfig } from '@/components/types';
 import {
   checkCliVersion,
@@ -89,6 +90,8 @@ export async function GET(
       );
     }
 
+    const annotationSettings = await annotationSettingsFor(prisma, site);
+
     // Calculate total size
     const totalSize = site.blobs.reduce((sum, blob) => sum + blob.size, 0);
 
@@ -115,6 +118,7 @@ export async function GET(
         enableSearch: siteConfigJson.enableSearch,
         showSidebar: siteConfigJson.showSidebar,
         syntaxMode: siteConfigJson.syntaxMode,
+        ...annotationSettings,
         url: siteUrl,
         fileCount: site._count.blobs,
         totalSize,

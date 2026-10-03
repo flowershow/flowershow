@@ -127,6 +127,7 @@ model Site {
   publishes               Publish[]
   links                   Link[]
   tags                    Tag[]
+  annotations             Annotation[]
   tree                    Json?         @db.JsonB // GitHub tree data
   privacyMode             PrivacyMode   @default(PUBLIC) @map("privacy_mode")
   accessPasswordHash      String?       @map("access_password_hash")
@@ -228,6 +229,38 @@ model Tag {
   @@unique([blobId, identity])
   @@index([siteId, identity])
   @@index([blobId])
+}
+
+enum AnnotationStatus {
+  open
+  resolved
+}
+
+/// A note a visitor left on a passage of a published Markdown page (no account, no IP stored).
+model Annotation {
+  id          String           @id @default(cuid())
+  siteId      String           @map("site_id")
+  /// Blob path of the page, relative to the site root, e.g. "notes/draft.md"
+  path        String
+  /// W3C TextQuoteSelector
+  exact       String
+  prefix      String           @default("")
+  suffix      String           @default("")
+  /// W3C TextPositionSelector over the text of the page body (#mdxpage)
+  startOffset Int              @map("start_offset")
+  endOffset   Int              @map("end_offset")
+  /// Blob.sha of the page when the note was left ("page edited since note" when it differs)
+  blobSha     String           @map("blob_sha")
+  status      AnnotationStatus @default(open)
+  resolvedAt  DateTime?        @map("resolved_at")
+  note        String
+  authorName  String?          @map("author_name")
+  createdAt   DateTime         @default(now()) @map("created_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([siteId, path])
+  @@index([siteId, status])
 }
 
 enum PublishSource {
