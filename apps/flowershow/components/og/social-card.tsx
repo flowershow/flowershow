@@ -50,7 +50,7 @@ function Monogram({ siteName }: { siteName: string }) {
 }
 
 export function SocialCard(p: SocialCardProps) {
-  const title = clampText(p.title, 110);
+  const title = clampText(p.title, 90);
   return (
     <div
       style={{
@@ -95,7 +95,15 @@ export function SocialCard(p: SocialCardProps) {
           )}
           <div style={{ display: 'flex' }}>{clampText(p.siteName, 50)}</div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 22,
+            overflow: 'hidden',
+            maxHeight: 400,
+          }}
+        >
           <div
             style={{
               display: 'flex',
@@ -117,7 +125,7 @@ export function SocialCard(p: SocialCardProps) {
                 color: '#4B5563',
               }}
             >
-              {clampText(p.description, 150)}
+              {clampText(p.description, 120)}
             </div>
           ) : null}
         </div>
