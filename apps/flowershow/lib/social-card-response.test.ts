@@ -9,6 +9,8 @@ const boom = () =>
   });
 const LONG = 'public, max-age=31536000, immutable';
 const SHORT = 'public, max-age=300';
+const CDN_LONG = 'max-age=31536000';
+const CDN_SHORT = 'max-age=300';
 
 describe('socialCardResponse (Review Focus 5)', () => {
   it('serves the page card with a long cache when v matches', async () => {
@@ -22,6 +24,7 @@ describe('socialCardResponse (Review Focus 5)', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toBe('image/png');
     expect(res.headers.get('cache-control')).toBe(LONG);
+    expect(res.headers.get('cdn-cache-control')).toBe(CDN_LONG);
   });
   it.each([
     ['stale', 'old'],
@@ -37,6 +40,7 @@ describe('socialCardResponse (Review Focus 5)', () => {
     });
     expect(res.status).toBe(200);
     expect(res.headers.get('cache-control')).toBe(SHORT);
+    expect(res.headers.get('cdn-cache-control')).toBe(CDN_SHORT);
   });
   it('renders the site card when there is no page', async () => {
     const renderSite = ok();
@@ -62,6 +66,7 @@ describe('socialCardResponse (Review Focus 5)', () => {
     expect(renderSite).toHaveBeenCalled();
     expect(res.status).toBe(200);
     expect(res.headers.get('cache-control')).toBe(SHORT);
+    expect(res.headers.get('cdn-cache-control')).toBe(CDN_SHORT);
   });
   it('redirects to the static thumbnail when both renders fail', async () => {
     const res = await socialCardResponse({

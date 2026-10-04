@@ -1,10 +1,19 @@
-const LONG = 'public, max-age=31536000, immutable';
-const SHORT = 'public, max-age=300';
+// Browsers get Cache-Control; the CDN in front of the app (Vercel)
+// honours CDN-Cache-Control, so cards are cached at the edge for as long.
+const LONG = {
+  browser: 'public, max-age=31536000, immutable',
+  cdn: 'max-age=31536000',
+};
+const SHORT = { browser: 'public, max-age=300', cdn: 'max-age=300' };
 
-const png = (body: ArrayBuffer, cacheControl: string) =>
+const png = (body: ArrayBuffer, cache: typeof LONG) =>
   new Response(body, {
     status: 200,
-    headers: { 'content-type': 'image/png', 'cache-control': cacheControl },
+    headers: {
+      'content-type': 'image/png',
+      'cache-control': cache.browser,
+      'cdn-cache-control': cache.cdn,
+    },
   });
 
 /**
