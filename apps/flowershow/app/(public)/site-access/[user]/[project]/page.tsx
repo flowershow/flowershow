@@ -6,6 +6,14 @@ import Image from 'next/image';
 import { notFound, redirect } from 'next/navigation';
 import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
+import { isSocialCardsEnabled } from '@/lib/feature-flags';
+import {
+  buildSocialMetadata,
+  socialCardUrl,
+  socialCardVersion,
+  toCardInputs,
+} from '@/lib/social-preview';
+import { loadProtectedCardSource } from '@/lib/protected-card-source';
 import { SITE_ACCESS_COOKIE_NAME } from '@/lib/const';
 import { internalGetSiteById } from '@/lib/db/internal';
 import { getSite } from '@/lib/get-site';
@@ -28,9 +36,39 @@ interface RouteParams {
   project: string;
 }
 
-export const metadata: Metadata = {
-  title: 'Site authentication',
-};
+export async function generateMetadata(props: {
+  params: Promise<RouteParams>;
+}): Promise<Metadata> {
+  const params = await props.params;
+  const site = await getSite(
+    decodeURIComponent(params.user),
+    decodeURIComponent(params.project),
+  );
+  // Mirrors the /_og route's protected path: DB config + plan, no blob.
+  const { plan, dbConfig } = await loadProtectedCardSource(site.id);
+  const inputs = toCardInputs({
+    site: { ...site, plan },
+    siteConfig: dbConfig,
+    blob: null,
+  });
+  const siteUrl = getSiteUrl(site);
+  const image = isSocialCardsEnabled()
+    ? {
+        url: socialCardUrl(siteUrl, '/', socialCardVersion(inputs)),
+        width: 1200,
+        height: 630,
+      }
+    : null;
+  return {
+    title: 'Site authentication',
+    ...buildSocialMetadata({
+      title: inputs.siteName,
+      description: inputs.siteDescription ?? undefined,
+      url: `${siteUrl}/`,
+      image,
+    }),
+  };
+}
 
 export default async function LoginPage(props: {
   params: Promise<RouteParams>;

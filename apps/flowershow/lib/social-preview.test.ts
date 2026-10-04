@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildSocialMetadata,
   displayUrl,
+  resolvePageSocialImage,
   resolveSocialImage,
   socialCardUrl,
   socialCardVersion,
@@ -217,5 +218,48 @@ describe('buildSocialMetadata', () => {
       image: { url: 'I' },
     });
     expect(m.openGraph.images).toEqual([{ url: 'I', alt: 'T' }]);
+  });
+});
+
+describe('resolvePageSocialImage', () => {
+  const base = {
+    cardsEnabled: true,
+    isPremium: false,
+    site,
+    siteConfig: { title: 'File Title' } as never,
+    dbConfig: { title: 'DB Title' } as never,
+    blob: blob({ title: 'Page' }),
+    siteUrl: 'https://x.test',
+    slug: '/a/b',
+    legacyThumbnail: 'https://x.test/t.png',
+  };
+
+  it('page card v equals the route v for the same inputs', () => {
+    const v = socialCardVersion(
+      toCardInputs({ site, siteConfig: base.siteConfig, blob: base.blob }),
+    );
+    expect(resolvePageSocialImage(base)?.url).toBe(
+      `https://x.test/_og/a/b?v=${v}`,
+    );
+  });
+
+  it('protected sites use the DB-config site card, never page data', () => {
+    const protectedSite = { ...site, privacyMode: 'PASSWORD' };
+    const v = socialCardVersion(
+      toCardInputs({
+        site: protectedSite,
+        siteConfig: base.dbConfig,
+        blob: null,
+      }),
+    );
+    expect(resolvePageSocialImage({ ...base, site: protectedSite })?.url).toBe(
+      `https://x.test/_og?v=${v}`,
+    );
+  });
+
+  it('falls back to the legacy thumbnail when cards are disabled', () => {
+    expect(resolvePageSocialImage({ ...base, cardsEnabled: false })?.url).toBe(
+      'https://x.test/t.png',
+    );
   });
 });

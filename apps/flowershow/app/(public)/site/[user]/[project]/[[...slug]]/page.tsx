@@ -15,7 +15,17 @@ import { env } from '@/env.mjs';
 import { isAnnotationsEnabled } from '@/lib/annotations/enabled';
 import { getConfig } from '@/lib/app-config';
 import type { Node } from '@/lib/build-site-tree';
-import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
+import {
+  Feature,
+  isFeatureEnabled,
+  isSocialCardsEnabled,
+} from '@/lib/feature-flags';
+import {
+  buildSocialMetadata,
+  resolvePageSocialImage,
+} from '@/lib/social-preview';
+import type { SiteConfig } from '@/components/types';
+import { loadProtectedCardSource } from '@/lib/protected-card-source';
 import { generateScopedCss } from '@/lib/generate-scoped-css';
 import { getSite } from '@/lib/get-site';
 import { getSiteUrl } from '@/lib/get-site-url';
@@ -134,52 +144,37 @@ export async function generateMetadata(props: {
   const description = metadata?.description ?? siteConfig?.description;
   const url = decodedSlug !== '/' ? `${siteUrl}${decodedSlug}` : `${siteUrl}/`;
 
-  let imageUrl: string | null = config.thumbnail;
   let faviconUrl: string = config.favicon;
-
-  if (isFeatureEnabled(Feature.NoBranding, site)) {
-    imageUrl = metadata?.image || siteConfig?.image || null;
-    if (siteConfig?.favicon) {
-      if (isEmoji(siteConfig.favicon)) {
-        faviconUrl = `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${siteConfig.favicon}</text></svg>`;
-      } else {
-        faviconUrl = siteConfig.favicon;
-      }
-    }
+  if (isFeatureEnabled(Feature.NoBranding, site) && siteConfig?.favicon) {
+    faviconUrl = isEmoji(siteConfig.favicon)
+      ? `data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>${siteConfig.favicon}</text></svg>`
+      : siteConfig.favicon;
   }
+
+  // Protected sites: the route builds the card from DB config + plan only
+  // (tRPC withholds plan without access), so read them the same way.
+  const protectedSource =
+    site.privacyMode === 'PASSWORD'
+      ? await loadProtectedCardSource(site.id)
+      : null;
+
+  const image = resolvePageSocialImage({
+    cardsEnabled: isSocialCardsEnabled(),
+    isPremium: isFeatureEnabled(Feature.NoBranding, site),
+    site: { ...site, plan: protectedSource?.plan ?? site.plan },
+    siteConfig,
+    dbConfig: protectedSource?.dbConfig ?? null,
+    blob,
+    siteUrl,
+    slug,
+    legacyThumbnail: config.thumbnail,
+  });
 
   return {
     title,
     description,
     icons: faviconUrl ? [{ url: faviconUrl }] : undefined,
-    openGraph: {
-      title,
-      description,
-      type: 'website',
-      url,
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: 'Thumbnail',
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title,
-      description,
-      images: [
-        {
-          url: imageUrl,
-          width: 1200,
-          height: 630,
-          alt: 'Thumbnail',
-        },
-      ],
-      creator: '@flowershowapp',
-    },
+    ...buildSocialMetadata({ title, description, url, image }),
     alternates: {
       canonical: url,
       ...(siteConfig?.enableRss && {

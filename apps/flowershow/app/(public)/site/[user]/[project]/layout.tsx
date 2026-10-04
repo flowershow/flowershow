@@ -13,7 +13,20 @@ import { SiteProvider } from '@/components/public/site-context';
 import { TemporarySiteBanner } from '@/components/public/temporary-site-banner';
 import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
-import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
+import {
+  Feature,
+  isFeatureEnabled,
+  isSocialCardsEnabled,
+} from '@/lib/feature-flags';
+import { getSiteUrl } from '@/lib/get-site-url';
+import {
+  buildSocialMetadata,
+  socialCardUrl,
+  socialCardVersion,
+  toCardInputs,
+} from '@/lib/social-preview';
+import type { SiteConfig } from '@/components/types';
+import { loadProtectedCardSource } from '@/lib/protected-card-source';
 import { getThemeUrl } from '@/lib/get-theme';
 import { resolveSiteName } from '@/lib/site-config';
 import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
@@ -28,41 +41,73 @@ import type { SiteLookupResult } from '@/server/api/types';
 import KatexStylesLoader from './_components/katex-loader';
 import SiteLogoutButton from './_components/site-logout-button';
 
-const { title, description, favicon, thumbnail } = getConfig();
+const { title: configTitle, description, favicon, thumbnail } = getConfig();
+const title = configTitle ?? 'Flowershow';
 
-export const metadata: Metadata = {
-  title,
-  description,
-  icons: [favicon],
-  openGraph: {
-    title,
-    description,
-    type: 'website',
-    url: `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}`,
-    images: [
-      {
-        url: thumbnail,
-        width: 1200,
-        height: 630,
-        alt: 'Thumbnail',
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title,
-    description,
-    images: [
-      {
-        url: thumbnail,
-        width: 1200,
-        height: 630,
-        alt: 'Thumbnail',
-      },
-    ],
-    creator: '@flowershowapp',
-  },
-};
+async function lookupSite(
+  username: string,
+  projectName: string,
+): Promise<SiteLookupResult | null> {
+  if (username === '_domain') {
+    return api.site.getByDomain.query({ domain: projectName });
+  }
+  if (username === 'anon') {
+    return api.site.getAnonymous.query({ projectName });
+  }
+  return api.site.get.query({ username, projectName });
+}
+
+export async function generateMetadata(props: {
+  params: Promise<RouteParams>;
+}): Promise<Metadata> {
+  const params = await props.params;
+  const base: Metadata = { title, description, icons: [favicon] };
+  const fallbackImage = { url: thumbnail, width: 1200, height: 630 };
+
+  const site = await lookupSite(
+    decodeURIComponent(params.user),
+    decodeURIComponent(params.project),
+  ).catch(() => null);
+  if (!site) {
+    return {
+      ...base,
+      ...buildSocialMetadata({
+        title,
+        description,
+        url: `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}`,
+        image: fallbackImage,
+      }),
+    };
+  }
+
+  const siteUrl = getSiteUrl(site);
+  let image = fallbackImage;
+  if (isSocialCardsEnabled()) {
+    // Same inputs as the /_og route: protected sites use DB config only
+    // (tRPC getConfig would throw without the visitor cookie).
+    let cardSite = site;
+    let siteConfig: SiteConfig | null;
+    if (site.privacyMode === 'PASSWORD') {
+      const { plan, dbConfig } = await loadProtectedCardSource(site.id);
+      cardSite = { ...site, plan: plan ?? undefined };
+      siteConfig = dbConfig;
+    } else {
+      siteConfig = await api.site.getConfig
+        .query({ siteId: site.id })
+        .catch(() => null);
+    }
+    const inputs = toCardInputs({ site: cardSite, siteConfig, blob: null });
+    image = {
+      url: socialCardUrl(siteUrl, '/', socialCardVersion(inputs)),
+      width: 1200,
+      height: 630,
+    };
+  }
+  return {
+    ...base,
+    ...buildSocialMetadata({ title, description, url: `${siteUrl}/`, image }),
+  };
+}
 
 interface RouteParams {
   user: string;

@@ -19,7 +19,7 @@ const asText = (v: unknown): string | null =>
   v == null || v === '' ? null : String(v);
 
 export function toCardInputs(a: {
-  site: { plan: Plan | null; privacyMode: string; projectName: string };
+  site: { plan?: Plan | null; privacyMode: string; projectName: string };
   siteConfig: SiteConfig | null;
   blob: { sha: string; metadata: unknown } | null;
 }): CardInputs {
@@ -115,4 +115,41 @@ export function buildSocialMetadata(a: {
       ...(images ? { images } : {}),
     },
   };
+}
+
+/**
+ * Image for a public page's metadata. Mirrors the /_og route's inputs so the
+ * `v` we emit equals the `v` the route expects: protected sites use the DB
+ * config only (`dbConfig`) and no blob; others use the file config and blob.
+ */
+export function resolvePageSocialImage(a: {
+  cardsEnabled: boolean;
+  isPremium: boolean;
+  site: { plan?: Plan | null; privacyMode: string; projectName: string };
+  siteConfig: SiteConfig | null;
+  dbConfig: SiteConfig | null;
+  blob: { sha: string; metadata: unknown } | null;
+  siteUrl: string;
+  slug: string;
+  legacyThumbnail: string;
+}): SocialImage | null {
+  const isProtected = a.site.privacyMode === 'PASSWORD';
+  const meta = (a.blob?.metadata ?? null) as { image?: string } | null;
+  const inputs = toCardInputs({
+    site: a.site,
+    siteConfig: isProtected ? a.dbConfig : a.siteConfig,
+    blob: isProtected ? null : a.blob,
+  });
+  const siteInputs = { ...inputs, page: null };
+  const cfg = isProtected ? a.dbConfig : a.siteConfig;
+  return resolveSocialImage({
+    cardsEnabled: a.cardsEnabled,
+    isPremium: a.isPremium,
+    isProtected,
+    pageImage: meta?.image || null,
+    siteImage: cfg?.image || null,
+    cardUrl: socialCardUrl(a.siteUrl, a.slug, socialCardVersion(inputs)),
+    siteCardUrl: socialCardUrl(a.siteUrl, '/', socialCardVersion(siteInputs)),
+    legacyThumbnail: a.legacyThumbnail,
+  });
 }
