@@ -4,7 +4,7 @@ Status: **Draft for review, 2026-10-04.** Nothing implemented yet. Paths, functi
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Every published Flowershow page gets its own generated 1200×630 social card (site identity, page title, description, URL; a small Flowershow mark on free sites). A missing `description` is computed at ingestion from the first paragraph. The broken metadata (`url: null`, hardcoded sizes and creator) is fixed.
+**Goal:** Every published Flowershow page gets its own generated 1200×630 social card (site identity, page title, description, URL; a small Flowershow mark on free sites). A missing `description` is computed at ingestion from the opening sentence (a subtitle, not a paragraph). The broken metadata (`url: null`, hardcoded sizes and creator) is fixed.
 
 **Architecture:**
 - **Description:** the description extractor lives in `@flowershow/core`. The Cloudflare worker uses it at ingestion and records `metadata.computed`, and a backfill script uses it for existing pages.
@@ -41,9 +41,9 @@ Status: **Draft for review, 2026-10-04.** Nothing implemented yet. Paths, functi
 - **Cache:** when the requested `v` equals the expected hash, `Cache-Control: public, max-age=31536000, immutable`. In every other case (a wrong or missing `v`, or a fallback after an error), `public, max-age=300`.
 - **Card URL:** `${siteUrl}/_og${slug === '/' ? '' : slug}?v=${v}`, where `v` is the first 10 hex characters of a SHA-1.
 - **Computed description:**
-  - First prose paragraph only, as plain text.
-  - At most 160 characters. When truncated, it is cut at a word boundary and ends with `…`.
-  - Never shown in the page header, the hero or the changelog entry body, because it would repeat the first paragraph. Shown everywhere else.
+  - A subtitle, not a paragraph: the opening sentence of the first prose paragraph, as plain text. If it is under 50 characters, following sentences are added while the total stays ≤ 140.
+  - At most 140 characters. A longer single sentence is cut at a word boundary and ends with `…`.
+  - Never shown in the page header, the hero or the changelog entry body, because it would repeat the opening sentence. Shown everywhere else.
 - **Feature flag:**
   - `SOCIAL_CARDS_ENABLED=true` turns cards on.
   - When it is unset, metadata behaves exactly as before for free and premium sites, except that the `url: null` image and the hardcoded `twitter:creator` are fixed regardless.
@@ -70,17 +70,39 @@ Status: **Draft for review, 2026-10-04.** Nothing implemented yet. Paths, functi
 - Modify: `packages/core/src/index.ts`
 
 **Interfaces:**
-- Produces: `extractDescription(body: string, maxLength?: number): string | null`. `body` is the markdown *after* frontmatter. `maxLength` defaults to 160.
+- Produces: `extractDescription(body: string, maxLength?: number): string | null`. `body` is the markdown *after* frontmatter. `maxLength` defaults to 140. Returns the subtitle-style description (spec §5).
 
 - [ ] **Step 1: Write the failing tests**
 
-```ts
+````ts
 // packages/core/src/description.test.ts
 import { describe, expect, test } from 'vitest';
 import { extractDescription } from './description';
 
 describe('extractDescription', () => {
-  test('returns the first paragraph as plain text', () => {
+  test('returns the opening sentence, not the whole paragraph', () => {
+    expect(
+      extractDescription('Flowershow turns your markdown notes into a website in seconds. It is free to start. More here.'),
+    ).toBe('Flowershow turns your markdown notes into a website in seconds.');
+  });
+
+  test('adds following sentences when the opening one is very short', () => {
+    expect(extractDescription('Hi there. This post explains how I publish my notes online. Then more detail follows here.')).toBe(
+      'Hi there. This post explains how I publish my notes online.',
+    );
+  });
+
+  test('does not split on common abbreviations', () => {
+    expect(
+      extractDescription('Use tools e.g. Obsidian or Logseq to write the notes for your digital garden. Then publish.'),
+    ).toBe('Use tools e.g. Obsidian or Logseq to write the notes for your digital garden.');
+  });
+
+  test('does not split on decimals or a sentence ending in a quote', () => {
+    expect(extractDescription('Version 2.5 ships "today." It is good.')).toBe('Version 2.5 ships "today." It is good.');
+  });
+
+  test('returns a one-sentence paragraph as plain text', () => {
     expect(
       extractDescription('This is a paragraph with **bold text**, _italic text_, and ~~strikethrough text~~.\n\nSecond.'),
     ).toBe('This is a paragraph with bold text, italic text, and strikethrough text.');
@@ -133,14 +155,14 @@ describe('extractDescription', () => {
   test('truncates at a word boundary with an ellipsis', () => {
     const body = `${'word '.repeat(60)}end.`;
     const out = extractDescription(body)!;
-    expect(out.length).toBeLessThanOrEqual(160);
+    expect(out.length).toBeLessThanOrEqual(140);
     expect(out.endsWith('…')).toBe(true);
     expect(out).not.toMatch(/\s…$/);
   });
 
   test('hard-cuts a single unbroken token', () => {
     const out = extractDescription('x'.repeat(400))!;
-    expect(out).toHaveLength(160);
+    expect(out).toHaveLength(140);
     expect(out.endsWith('…')).toBe(true);
   });
 
@@ -155,7 +177,7 @@ describe('extractDescription', () => {
     expect(extractDescription('# T\r\n\r\nHello there.\r\n')).toBe('Hello there.');
   });
 });
-```
+````
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
@@ -164,16 +186,18 @@ Expected: FAIL, with "Failed to resolve import './description'".
 
 - [ ] **Step 3: Implement**
 
-```ts
+````ts
 // packages/core/src/description.ts
 /**
- * Computes a page description from its markdown body (frontmatter already
- * removed): the first prose paragraph, as plain text, at most `maxLength`
- * characters. Used at ingestion when frontmatter has no `description`.
+ * Computes a subtitle-style page description from its markdown body
+ * (frontmatter already removed): the opening sentence of the first prose
+ * paragraph, as plain text, at most `maxLength` characters. A very short
+ * opener ("Hi there.") is extended with the next sentences while they fit.
+ * Used at ingestion when frontmatter has no `description`.
  */
 export function extractDescription(
   body: string,
-  maxLength = 160,
+  maxLength = 140,
 ): string | null {
   const cleaned = body
     .replace(/\r\n?/g, '\n')
@@ -186,7 +210,7 @@ export function extractDescription(
     const trimmed = block.trim();
     if (!trimmed || isNonProse(trimmed)) continue;
     const text = toPlainText(trimmed);
-    if (text) return truncate(text, maxLength);
+    if (text) return truncate(leadSentences(text, maxLength), maxLength);
   }
   return null;
 }
@@ -221,6 +245,37 @@ function toPlainText(block: string): string {
     .trim();
 }
 
+const ABBREVIATIONS = /(?:^|\s)(?:e\.g|i\.e|etc|vs|cf|Dr|Mr|Mrs|Ms|St|No)\.$/i;
+const MIN_SUBTITLE = 50;
+
+function splitSentences(text: string): string[] {
+  const sentences: string[] = [];
+  let start = 0;
+  // A sentence ends at . ! or ? (optionally followed by a closing quote or
+  // bracket), then whitespace, then an uppercase letter, digit or opening quote.
+  const re = /[.!?]["'”’)\]]*\s+(?=["'“‘(\[]?[A-Z0-9])/g;
+  for (let m = re.exec(text); m; m = re.exec(text)) {
+    const end = m.index + m[0].trimEnd().length;
+    if (ABBREVIATIONS.test(text.slice(start, end))) continue;
+    sentences.push(text.slice(start, end).trim());
+    start = m.index + m[0].length;
+  }
+  const rest = text.slice(start).trim();
+  if (rest) sentences.push(rest);
+  return sentences;
+}
+
+function leadSentences(text: string, maxLength: number): string {
+  const sentences = splitSentences(text);
+  let out = sentences[0] ?? text;
+  for (let i = 1; i < sentences.length && out.length < MIN_SUBTITLE; i++) {
+    const next = `${out} ${sentences[i]}`;
+    if (next.length > maxLength) break;
+    out = next;
+  }
+  return out;
+}
+
 function truncate(text: string, maxLength: number): string {
   if (text.length <= maxLength) return text;
   const cut = text.slice(0, maxLength - 1);
@@ -228,7 +283,7 @@ function truncate(text: string, maxLength: number): string {
   const base = lastSpace > maxLength / 2 ? cut.slice(0, lastSpace) : cut;
   return `${base.replace(/[\s.,;:!?-]+$/, '')}…`;
 }
-```
+````
 
 Add to `packages/core/src/index.ts`:
 
@@ -264,7 +319,7 @@ git commit -m "feat(core): extractDescription for computed page descriptions (fl
 - [ ] **Step 1: Write the failing tests** (append to `queue-consumer.test.js`)
 
 ```js
-test('parseMarkdown - computes description from the first paragraph and flags it', async () => {
+test('parseMarkdown - computes description from the opening sentence and flags it', async () => {
   const { metadata } = await parseMarkdown({
     markdown: '---\ntitle: T\n---\n# T\n\nFirst para here.\n\nSecond.',
     path: 'a.md',
@@ -433,7 +488,7 @@ import type { PageMetadata } from '@/server/api/types';
 
 /**
  * The description to show *on the page itself* (page header, hero, changelog
- * entry). A computed description is the page's own first paragraph, so showing
+ * entry). A computed description is the page's own opening sentence, so showing
  * it above the body would repeat it — those places get nothing instead.
  * Everywhere else (cards, meta tags, listings, RSS, search) uses
  * `metadata.description` directly.
@@ -1670,7 +1725,7 @@ The E2E target app must run with `SOCIAL_CARDS_ENABLED=true` and the backfill (o
 - Replace the "Default social image" premium note with:
   - **Free sites:** every page gets a generated preview card with its title, description and site name, plus a small Flowershow mark.
   - **Premium sites:** the same cards without the mark. If you set an `image` (page or site), that image is used instead.
-- Under "Description", add: "If a page has no `description`, Flowershow uses the first paragraph of the page (up to 160 characters) for search results and previews. It isn't shown in the page header, since the paragraph is right there."
+- Under "Description", add: "If a page has no `description`, Flowershow uses the opening sentence of the page as a short subtitle-style description (up to 140 characters) for search results and previews. It isn't shown in the page header, since the paragraph is right there."
 - Add a short "Social preview cards" section with the Editorial card screenshot.
 
 `reference/page-headers.md`: under Description, add the same one-sentence note about computed descriptions.

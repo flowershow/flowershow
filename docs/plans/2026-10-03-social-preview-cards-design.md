@@ -76,8 +76,11 @@ The title and description come from the page's `title` and `description`. In pha
 ### 4. Ingestion: computed `description`
 
 - `parseMarkdown` (`apps/cloudflare-worker/src/queue-consumer.js:326`) fills in `metadata.description` when frontmatter has none, the same way it already fills in `title`.
-  - It is built from the first prose paragraph after frontmatter and any leading H1, skipping callouts, embeds, code, tables, lists and HTML.
-  - The paragraph is converted to plain text (wikilinks and links become their text) and cut at a word boundary to 160 characters or fewer, with "…" added.
+  - It reads like a subtitle (an extended one-line summary, as on Substack), not a truncated paragraph. It is built from the **opening sentence** of the first prose paragraph after frontmatter and any leading H1, skipping callouts, embeds, code, tables, lists and HTML.
+  - If the opening sentence is under 50 characters ("Hi there."), the following sentences are added while the total stays within 140 characters.
+  - The text is plain (wikilinks and links become their text), at most 140 characters. A single sentence longer than that is cut at a word boundary with "…".
+  - Sentence splitting ignores common abbreviations (e.g., i.e., etc., vs., Dr., Mr., Mrs., Ms., St.).
+  - A possible later upgrade is an AI-written subtitle. It is out of scope for phase 1: it adds cost and is less predictable.
 - It records which fields were computed: `metadata.computed: ["title", "description"]`.
 - The page header doesn't show a computed description, because it would repeat the paragraph directly below. Everything else (card, meta description, listings, RSS, search) uses it like any other description.
 - **Backfill:** a one-off job runs the same function over existing blobs before launch.
