@@ -58,6 +58,16 @@ describe('toCardInputs', () => {
     ).toBe('true');
   });
 
+  it('coerces a non-string siteName from config.json', () => {
+    const c = toCardInputs({
+      site,
+      siteConfig: { siteName: 2024 } as never,
+      blob: blob({}),
+    });
+    expect(c.siteName).toBe('2024');
+    expect(c.page?.title).toBe('2024');
+  });
+
   it('uses the site name when the page has no title', () => {
     expect(
       toCardInputs({ site, siteConfig: null, blob: blob({}) }).page?.title,
