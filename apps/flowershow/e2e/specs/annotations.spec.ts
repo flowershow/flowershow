@@ -144,6 +144,11 @@ test.describe('on a phone', () => {
     await expect(
       page.getByRole('complementary', { name: 'Annotations' }),
     ).toHaveCount(0); // closes after save on touch
+    // The Next.js dev-only overlay badge sits over the pill's corner on a
+    // phone-sized viewport and swallows taps; it doesn't exist in production.
+    await page.evaluate(() => {
+      for (const el of document.querySelectorAll('nextjs-portal')) el.remove();
+    });
     await page.getByRole('button', { name: PILL }).tap();
     await expect(
       page.getByRole('complementary', { name: 'Annotations' }),
