@@ -4,10 +4,12 @@ import { expect, test } from '../helpers/fixtures';
 const PAGE = '/annotations-demo';
 const PILL = /^Annotations on · \d+ notes? · select text to add one$/;
 
+// The page body can stream in after #mdxpage first appears, so keep looking
+// until the text is there instead of searching once.
 async function selectText(page: Page, needle: string) {
-  await page.evaluate((text) => {
+  await page.waitForFunction((text) => {
     const root = document.getElementById('mdxpage');
-    if (!root) throw new Error('#mdxpage not found');
+    if (!root) return false;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
       const index = (node as Text).data.indexOf(text);
@@ -18,10 +20,10 @@ async function selectText(page: Page, needle: string) {
         const selection = document.getSelection();
         selection?.removeAllRanges();
         selection?.addRange(range);
-        return;
+        return true;
       }
     }
-    throw new Error(`text not found: ${text}`);
+    return false;
   }, needle);
 }
 
