@@ -39,6 +39,8 @@ interface RouteParams {
 export async function generateMetadata(props: {
   params: Promise<RouteParams>;
 }): Promise<Metadata> {
+  // Cards off: the pre-cards static metadata, no lookups.
+  if (!isSocialCardsEnabled()) return { title: 'Site authentication' };
   const params = await props.params;
   const site = await getSite(
     decodeURIComponent(params.user),
@@ -52,13 +54,11 @@ export async function generateMetadata(props: {
     blob: null,
   });
   const siteUrl = getSiteUrl(site);
-  const image = isSocialCardsEnabled()
-    ? {
-        url: socialCardUrl(siteUrl, '/', socialCardVersion(inputs)),
-        width: 1200,
-        height: 630,
-      }
-    : null;
+  const image = {
+    url: socialCardUrl(siteUrl, '/', socialCardVersion(inputs)),
+    width: 1200,
+    height: 630,
+  };
   return {
     title: 'Site authentication',
     ...buildSocialMetadata({

@@ -153,14 +153,16 @@ export async function generateMetadata(props: {
   }
 
   // Protected sites: the route builds the card from DB config + plan only
-  // (tRPC withholds plan without access), so read them the same way.
+  // (tRPC withholds plan without access), so read them the same way. With
+  // cards off there is no card to match, so skip the extra DB read.
+  const cardsEnabled = isSocialCardsEnabled();
   const protectedSource =
-    site.privacyMode === 'PASSWORD'
+    cardsEnabled && site.privacyMode === 'PASSWORD'
       ? await loadProtectedCardSource(site.id)
       : null;
 
   const image = resolvePageSocialImage({
-    cardsEnabled: isSocialCardsEnabled(),
+    cardsEnabled,
     isPremium: isFeatureEnabled(Feature.NoBranding, site),
     site: { ...site, plan: protectedSource?.plan ?? site.plan },
     siteConfig,
