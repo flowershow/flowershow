@@ -30,8 +30,14 @@ export async function GET(
   const parsed = OgImageParamsSchema.safeParse(await props.params);
   if (!parsed.success) return notFound();
 
-  const user = decodeURIComponent(parsed.data.user);
-  const project = decodeURIComponent(parsed.data.project);
+  let user: string;
+  let project: string;
+  try {
+    user = decodeURIComponent(parsed.data.user);
+    project = decodeURIComponent(parsed.data.project);
+  } catch {
+    return notFound(); // malformed percent-encoding (URIError)
+  }
   const slug = parsed.data.slug ? `/${parsed.data.slug.join('/')}` : '/';
   const decodedSlug = slug.replace(/%20/g, '+');
 
