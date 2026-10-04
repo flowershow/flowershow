@@ -7,6 +7,7 @@ import {
   resolveSocialImage,
   socialCardUrl,
   socialCardVersion,
+  socialText,
   toCardInputs,
 } from './social-preview';
 
@@ -261,5 +262,54 @@ describe('resolvePageSocialImage', () => {
     expect(resolvePageSocialImage({ ...base, cardsEnabled: false })?.url).toBe(
       'https://x.test/t.png',
     );
+  });
+});
+
+describe('socialText', () => {
+  const page = {
+    title: 'Secret Page - Garden',
+    description: 'Secret page description',
+    projectName: 'notes',
+  };
+
+  it('uses the page title and description on public sites', () => {
+    expect(
+      socialText({ ...page, isProtected: false, siteConfig: null }),
+    ).toEqual({
+      title: 'Secret Page - Garden',
+      description: 'Secret page description',
+    });
+  });
+
+  it('uses only the site name and site description on PASSWORD sites', () => {
+    const text = socialText({
+      ...page,
+      isProtected: true,
+      siteConfig: { siteName: 'Garden', description: 'My notes' } as never,
+    });
+    expect(text).toEqual({ title: 'Garden', description: 'My notes' });
+    expect(JSON.stringify(text)).not.toContain('Secret');
+  });
+
+  it('falls back to the project name and no description on PASSWORD sites', () => {
+    expect(
+      socialText({ ...page, isProtected: true, siteConfig: null }),
+    ).toEqual({ title: 'notes', description: undefined });
+  });
+
+  it('feeds the site name into og/twitter title and image alt', () => {
+    const m = buildSocialMetadata({
+      ...socialText({
+        ...page,
+        isProtected: true,
+        siteConfig: { title: 'Garden' } as never,
+      }),
+      url: 'U',
+      image: { url: 'I' },
+    });
+    expect(m.openGraph.title).toBe('Garden');
+    expect(m.twitter.title).toBe('Garden');
+    expect(m.openGraph.images).toEqual([{ url: 'I', alt: 'Garden' }]);
+    expect(JSON.stringify(m)).not.toContain('Secret');
   });
 });
