@@ -44,3 +44,8 @@ export function isFeatureEnabled(
 export function isValidFeature(feature: string): feature is Feature {
   return Object.values(Feature).includes(feature as Feature);
 }
+
+/** Generated social cards (flowershow-1o5). Off unless SOCIAL_CARDS_ENABLED=true. */
+export function isSocialCardsEnabled(): boolean {
+  return env.SOCIAL_CARDS_ENABLED === 'true';
+}
