@@ -14,7 +14,11 @@ export function extractDescription(
     .replace(/^(```|~~~)[^\n]*\n[\s\S]*?^\1[^\n]*$/gm, '')
     .replace(/^\$\$[\s\S]*?^\$\$\s*$/gm, '')
     .replace(/<!--[\s\S]*?-->/g, '')
-    .replace(/%%[\s\S]*?%%/g, '');
+    .replace(/%%[\s\S]*?%%/g, '')
+    // Opening html/jsx tags that span several lines (attributes on their own
+    // lines) are removed through their closing `>`; one-line tags are handled
+    // below as whole non-prose lines.
+    .replace(MULTILINE_OPENING_TAG, (tag) => (tag.includes('\n') ? '' : tag));
 
   for (const block of cleaned.split(/\n\s*\n/)) {
     let trimmed = block.trim();
@@ -29,22 +33,44 @@ export function extractDescription(
       continue;
     }
 
-    // Strip leading single-line non-prose content
+    // Strip leading non-prose lines
     const lines = trimmed.split('\n');
+    let inUnclosedTag = false;
     while (lines.length > 0) {
       const firstLine = lines[0].trim();
+      if (inUnclosedTag) {
+        // rest of an opening tag whose `>` was not found: drop through it
+        if (firstLine.includes('>')) inUnclosedTag = false;
+        lines.shift();
+        continue;
+      }
       if (!firstLine) {
         lines.shift(); // remove empty line
+        continue;
+      }
+      if (/^</.test(firstLine)) {
+        // html / jsx; a tag left open continues onto the next lines
+        if (!firstLine.includes('>')) inUnclosedTag = true;
+        lines.shift();
         continue;
       }
       if (
         /^#{1,6}\s/.test(firstLine) || // heading
         /^!\[/.test(firstLine) || // image / embed
         /^(import|export)\s/.test(firstLine) || // mdx
-        /^</.test(firstLine) || // html / jsx
-        /^([-*_])(\s*\1){2,}\s*$/.test(firstLine) // horizontal rule
+        /^([-*_])(\s*\1){2,}\s*$/.test(firstLine) || // horizontal rule
+        TAG_LINE.test(firstLine) || // obsidian tags only: #book #reading
+        INLINE_FIELD.test(firstLine) // dataview inline field: key:: value
       ) {
         lines.shift(); // remove non-prose line
+        continue;
+      }
+      // setext heading: text lines underlined with === or ---
+      const underline = lines.findIndex(
+        (line, i) => i > 0 && SETEXT_UNDERLINE.test(line),
+      );
+      if (underline > 0) {
+        lines.splice(0, underline + 1);
         continue;
       }
       break; // found first prose line
@@ -58,6 +84,12 @@ export function extractDescription(
   }
   return null;
 }
+
+const MULTILINE_OPENING_TAG =
+  /^[ \t]*<[A-Za-z][\w.:-]*(?:[^>"'{]|"[^"]*"|'[^']*'|\{(?:[^{}]|\{[^{}]*\})*\}){0,2000}>/gm;
+const TAG_LINE = /^#[^\s#]+(?:\s+#[^\s#]+)*$/;
+const INLINE_FIELD = /^[*_]*[\p{L}\p{N}_][\p{L}\p{N}_ -]*[*_]*::(?:\s|$)/u;
+const SETEXT_UNDERLINE = /^ {0,3}(?:=+|-{2,})\s*$/;
 
 function toPlainText(block: string): string {
   return block

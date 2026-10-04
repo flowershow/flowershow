@@ -122,4 +122,60 @@ describe('extractDescription', () => {
       'The guide says "publish your notes as a website today."',
     );
   });
+
+  describe('obsidian / markdown openings that are not prose', () => {
+    test.each([
+      ['tag-only line then blank line', '#book #reading\n\nReal text.'],
+      [
+        'tag-only line directly before prose',
+        '#book #reading/fiction\nReal text.',
+      ],
+      ['single tag line', '#draft\nReal text.'],
+      [
+        'dataview inline fields then blank line',
+        'rating:: 5\nauthor:: Jane Doe\n\nReal text.',
+      ],
+      [
+        'dataview inline field directly before prose',
+        'status:: in progress\nReal text.',
+      ],
+      ['setext H1 heading', 'Title\n=====\n\nReal text.'],
+      ['setext H2 heading', 'Title\n-----\n\nReal text.'],
+      ['setext heading directly before prose', 'My Title\n=====\nReal text.'],
+      [
+        'multi-line opening JSX tag',
+        '<Callout\n  type="info">\nReal text.\n</Callout>',
+      ],
+      [
+        'multi-line opening JSX tag with braces and >',
+        '<Box\n  style={{ a: 1 }}\n  title="a > b"\n>\n\nReal text.',
+      ],
+      [
+        'multi-line self-closing JSX tag',
+        '<Hero\n  image="/a.png"\n/>\n\nReal text.',
+      ],
+      ['unclosed multi-line tag', '<Callout\n  type="info"\n\nReal text.'],
+    ])('skips a leading %s', (_name, body) => {
+      expect(extractDescription(body)).toBe('Real text.');
+    });
+
+    test('a multi-line opening tag leaks no markup into the description', () => {
+      const out = extractDescription(
+        '<Callout\n  type="info"\n  title="Note">\nHi there. This is the callout body text for the page.\n</Callout>',
+      )!;
+      expect(out).toBe('Hi there. This is the callout body text for the page.');
+      expect(out).not.toMatch(/[<>="]/);
+    });
+
+    test('keeps prose that mentions a hashtag or a double colon', () => {
+      expect(
+        extractDescription('#1 priority is shipping the new release today.'),
+      ).toBe('#1 priority is shipping the new release today.');
+      expect(
+        extractDescription(
+          'Use std::vector for dynamic arrays in modern C++ code.',
+        ),
+      ).toBe('Use std::vector for dynamic arrays in modern C++ code.');
+    });
+  });
 });
