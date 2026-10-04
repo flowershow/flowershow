@@ -422,19 +422,6 @@ const KNOWN_FILE_EXTENSIONS = new Set(
 );
 
 /**
- * Determines if a path should be rewritten as a raw file request.
- * Uses a whitelist approach to identify valid file extensions, which handles
- * edge cases where filenames contain dots (e.g., "my.config.json", "file.v2.png").
- *
- * Only checks the extension in the filename (last path segment), not in folder names.
- *
- * @param inputPath - The request path (may include query parameters)
- * @param apiBase - The API base path to rewrite to
- * @param req - The Next.js request object
- * @param ph - The PostHog bootstrap cookie data
- * @returns NextResponse for rewrite, or null if not a raw file
- */
-/**
  * Social card images (/_og, /_og/<slug>) for link previews. Served before the
  * password gate because crawlers have no cookies; the handler itself never
  * reveals page content for protected sites (flowershow-1o5).
@@ -456,6 +443,19 @@ export function rewriteSocialCardIfNeeded(
   );
 }
 
+/**
+ * Determines if a path should be rewritten as a raw file request.
+ * Uses a whitelist approach to identify valid file extensions, which handles
+ * edge cases where filenames contain dots (e.g., "my.config.json", "file.v2.png").
+ *
+ * Only checks the extension in the filename (last path segment), not in folder names.
+ *
+ * @param inputPath - The request path (may include query parameters)
+ * @param apiBase - The API base path to rewrite to
+ * @param req - The Next.js request object
+ * @param ph - The PostHog bootstrap cookie data
+ * @returns NextResponse for rewrite, or null if not a raw file
+ */
 export function rewriteRawIfNeeded(
   inputPath: string,
   apiBase: string,
