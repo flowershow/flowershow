@@ -17,25 +17,46 @@ export function extractDescription(
     .replace(/%%[\s\S]*?%%/g, '');
 
   for (const block of cleaned.split(/\n\s*\n/)) {
-    const trimmed = block.trim();
-    if (!trimmed || isNonProse(trimmed)) continue;
+    let trimmed = block.trim();
+    if (!trimmed) continue;
+
+    // Skip multi-line non-prose structures entirely
+    if (
+      /^>/.test(trimmed) || // blockquote / callout
+      /^([-*+]|\d+[.)])\s/.test(trimmed) || // list
+      /^\|/.test(trimmed) // table
+    ) {
+      continue;
+    }
+
+    // Strip leading single-line non-prose content
+    const lines = trimmed.split('\n');
+    while (lines.length > 0) {
+      const firstLine = lines[0].trim();
+      if (!firstLine) {
+        lines.shift(); // remove empty line
+        continue;
+      }
+      if (
+        /^#{1,6}\s/.test(firstLine) || // heading
+        /^!\[/.test(firstLine) || // image / embed
+        /^(import|export)\s/.test(firstLine) || // mdx
+        /^</.test(firstLine) || // html / jsx
+        /^([-*_])(\s*\1){2,}\s*$/.test(firstLine) // horizontal rule
+      ) {
+        lines.shift(); // remove non-prose line
+        continue;
+      }
+      break; // found first prose line
+    }
+
+    trimmed = lines.join('\n').trim();
+    if (!trimmed) continue;
+
     const text = toPlainText(trimmed);
     if (text) return truncate(leadSentences(text, maxLength), maxLength);
   }
   return null;
-}
-
-function isNonProse(block: string): boolean {
-  return (
-    /^#{1,6}\s/.test(block) || // heading
-    /^>/.test(block) || // blockquote / callout
-    /^([-*+]|\d+[.)])\s/.test(block) || // list
-    /^\|/.test(block) || // table
-    /^</.test(block) || // html / jsx
-    /^!\[/.test(block) || // image / embed
-    /^(import|export)\s/.test(block) || // mdx
-    /^([-*_])(\s*\1){2,}\s*$/.test(block) // horizontal rule
-  );
 }
 
 function toPlainText(block: string): string {
@@ -63,7 +84,7 @@ function splitSentences(text: string): string[] {
   let start = 0;
   // A sentence ends at . ! or ? (optionally followed by a closing quote or
   // bracket), then whitespace, then an uppercase letter, digit or opening quote.
-  const re = /[.!?]["'"')\]]*\s+(?=["'"'(\[]?[A-Z0-9])/g;
+  const re = /[.!?][”’')\]]*\s+(?=[“‘'(\[]?[A-Z0-9])/g;
   for (let m = re.exec(text); m; m = re.exec(text)) {
     const end = m.index + m[0].trimEnd().length;
     if (ABBREVIATIONS.test(text.slice(start, end))) continue;

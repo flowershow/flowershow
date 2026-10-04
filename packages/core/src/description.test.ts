@@ -98,4 +98,22 @@ describe('extractDescription', () => {
   test('handles CRLF line endings', () => {
     expect(extractDescription('# T\r\n\r\nHello there.\r\n')).toBe('Hello there.');
   });
+
+  test('strips leading heading without blank line separator', () => {
+    expect(extractDescription('# Title\nFirst paragraph here.')).toBe('First paragraph here.');
+  });
+
+  test('strips leading image embed without blank line separator', () => {
+    expect(extractDescription('![[cover.png]]\nIntro text.')).toBe('Intro text.');
+  });
+
+  test('strips leading import statement without blank line separator', () => {
+    expect(extractDescription("import X from './x'\nIntro.")).toBe('Intro.');
+  });
+
+  test('handles curly quotes in sentence splitting', () => {
+    expect(extractDescription('He said “hi there to you all today and much more to say.” Then he left.')).toBe(
+      'He said “hi there to you all today and much more to say.”',
+    );
+  });
 });
