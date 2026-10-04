@@ -325,6 +325,17 @@ export function extractImageDimensions(path, content) {
   };
 }
 
+export function safeExtractDescription(body, extract = extractDescription) {
+  try {
+    return extract(body);
+  } catch (error) {
+    console.warn(
+      `[safeExtractDescription] Failed to extract description: ${error instanceof Error ? error.message : error}`,
+    );
+    return null;
+  }
+}
+
 export async function parseMarkdown({ markdown, path }) {
   let parsed;
 
@@ -347,15 +358,21 @@ export async function parseMarkdown({ markdown, path }) {
     }
 
     let description = frontmatter.description;
-    if (description == null || description === '') {
-      const extracted = extractDescription(body);
+    const isDescriptionMissing =
+      description == null ||
+      (typeof description === 'string' && description.trim() === '');
+    if (isDescriptionMissing) {
+      const extracted = safeExtractDescription(body);
       description = extracted ?? undefined;
       if (extracted) computed.push('description');
     }
 
+    // Remove ingestion-owned keys that might be in frontmatter
+    const { computed: _, ...frontmatterWithoutComputed } = frontmatter;
+
     parsed = {
       metadata: {
-        ...frontmatter,
+        ...frontmatterWithoutComputed,
         title,
         ...(description !== undefined ? { description } : {}),
         ...(computed.length ? { computed } : {}),

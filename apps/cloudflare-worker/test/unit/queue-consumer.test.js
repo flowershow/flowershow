@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import {
   extractImageDimensions,
   extractLinks,
@@ -8,6 +8,7 @@ import {
   normalizePermalink,
   parseMarkdown,
   parseObjectKey,
+  safeExtractDescription,
   syncTags,
 } from '../../src/queue-consumer.js';
 
@@ -524,6 +525,40 @@ test('parseMarkdown - no description when the body has no prose', async () => {
 test('parseMarkdown - treats an empty frontmatter description as missing', async () => {
   const { metadata } = await parseMarkdown({
     markdown: '---\ntitle: T\ndescription: ""\n---\nBody para.',
+    path: 'a.md',
+  });
+  expect(metadata.description).toBe('Body para.');
+  expect(metadata.computed).toEqual(['description']);
+});
+
+test('safeExtractDescription - returns null and logs when extract throws', () => {
+  const throwingExtract = vi.fn(() => {
+    throw new Error('extraction failed');
+  });
+  const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+  const result = safeExtractDescription('some body', throwingExtract);
+
+  expect(result).toBeNull();
+  expect(warnSpy).toHaveBeenCalledWith(
+    expect.stringContaining('Failed to extract description'),
+  );
+  warnSpy.mockRestore();
+});
+
+test('parseMarkdown - excludes frontmatter computed key from metadata', async () => {
+  const { metadata } = await parseMarkdown({
+    markdown:
+      '---\ntitle: T\ndescription: Mine\ncomputed: ["description"]\n---\nBody.',
+    path: 'a.md',
+  });
+  expect(metadata.description).toBe('Mine');
+  expect(metadata.computed).toBeUndefined();
+});
+
+test('parseMarkdown - treats whitespace-only description as missing', async () => {
+  const { metadata } = await parseMarkdown({
+    markdown: '---\ntitle: T\ndescription: "   "\n---\nBody para.',
     path: 'a.md',
   });
   expect(metadata.description).toBe('Body para.');
