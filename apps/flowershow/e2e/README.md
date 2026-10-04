@@ -6,6 +6,7 @@ End-to-end tests using [Playwright](https://playwright.dev/) against a running l
 
 - Local dev server running (`pnpm dev`)
 - Database and MinIO running (via Docker Compose)
+- The app must run with `SOCIAL_CARDS_ENABLED=true` for `social-preview.spec.ts` (generated social cards are off by default)
 - `/etc/hosts` entries for the custom-domain sites so they resolve locally:
 
   ```

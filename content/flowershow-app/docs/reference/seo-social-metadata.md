@@ -25,6 +25,16 @@ This is used in search results and social previews when a page has no `descripti
 
 Aim for 150–160 characters for optimal display in search results.
 
+## Social preview cards
+
+Every page gets a generated preview card for social sharing, showing the page title, description and your site name (with your logo, if you have one).
+
+![[changelog-social-preview-cards.webp]]
+
+- **Free sites:** every page gets a generated preview card with its title, description and site name, plus a small Flowershow mark.
+- **Premium sites:** the same cards without the mark. If you set an `image` (page or site), that image is used instead.
+- **Password-protected sites:** the card shows only the site name and tagline, never page titles.
+
 ## Default social image
 
 Go to **Settings → General → Social Image** and upload your default social sharing image.
@@ -32,9 +42,9 @@ Go to **Settings → General → Social Image** and upload your default social s
 > [!note] Premium Feature
 > Social media image configuration is a premium feature.
 >
-> **Free sites:** The default Flowershow thumbnail is always used for social sharing, regardless of your image settings.
+> **Free sites:** a generated preview card is used for social sharing, regardless of your image settings.
 >
-> **Premium sites:** Your custom images are used. The default Flowershow thumbnail is never used, even if you don't set your own.
+> **Premium sites:** your custom images are used. If you don't set one, the generated preview card is used.
 
 Recommended size: 1200×630 pixels (JPG or PNG, under 1MB).
 
