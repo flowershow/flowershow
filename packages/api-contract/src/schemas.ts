@@ -456,6 +456,14 @@ export const RssParamsSchema = z.object({
 });
 export type RssParams = z.infer<typeof RssParamsSchema>;
 
+// GET /api/og/:user/:project/:slug*
+export const OgImageParamsSchema = z.object({
+  user: z.string(),
+  project: z.string(),
+  slug: z.array(z.string()).optional(),
+});
+export type OgImageParams = z.infer<typeof OgImageParamsSchema>;
+
 export const RobotsParamsSchema = z.object({
   hostname: z.string(),
 });

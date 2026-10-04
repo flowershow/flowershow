@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   DomainVerificationSchema,
   ErrorSchema,
+  OgImageParamsSchema,
   RobotsParamsSchema,
   SitemapParamsSchema,
   StripeWebhookReceivedResponseSchema,
@@ -183,6 +184,36 @@ export function registerWebhooksRoutes(registry: OpenAPIRegistry) {
       },
       '404': {
         description: 'Site not found',
+        content: { 'text/plain': { schema: z.string() } },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/api/og/{user}/{project}/{slug}',
+    operationId: 'getSocialCardImage',
+    summary: 'Social preview card image',
+    description:
+      'Renders the 1200x630 PNG social preview card for a site or page. Public and unauthenticated: password-protected sites and unknown or unpublished pages get the site-level card, never page content. The `v` query parameter is a version hash; a matching `v` is cached immutably, anything else gets a short cache. Reached as `/_og/{slug}` on site hosts.',
+    tags: ['SEO'],
+    security: [],
+    request: {
+      params: OgImageParamsSchema,
+      query: z.object({ v: z.string().optional() }),
+    },
+    responses: {
+      '200': {
+        description: 'PNG card image',
+        content: {
+          'image/png': { schema: z.string().openapi({ format: 'binary' }) },
+        },
+      },
+      '302': {
+        description: 'Redirect to the static thumbnail when rendering fails',
+      },
+      '404': {
+        description: 'Site not found or social cards disabled',
         content: { 'text/plain': { schema: z.string() } },
       },
     },

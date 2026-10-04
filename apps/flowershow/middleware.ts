@@ -226,6 +226,14 @@ export default async function middleware(req: NextRequest) {
     );
     if (rawImage) return rawImage;
 
+    const socialCard = rewriteSocialCardIfNeeded(
+      path,
+      `/api/og/${username}/${projectname}`,
+      req,
+      phBootstrap,
+    );
+    if (socialCard) return socialCard;
+
     const guard = await ensureSiteAccess(req, site, phBootstrap);
     if (guard) return guard;
 
@@ -281,6 +289,15 @@ export default async function middleware(req: NextRequest) {
     IMAGE_FILE_EXTENSIONS,
   );
   if (rawImage) return rawImage;
+
+  // Social card images also bypass the gate (crawlers have no cookies).
+  const socialCard = rewriteSocialCardIfNeeded(
+    path,
+    `/api/og/_domain/${hostname}`,
+    req,
+    phBootstrap,
+  );
+  if (socialCard) return socialCard;
 
   // Password gate
   const guard = await ensureSiteAccess(req, site, phBootstrap);
@@ -417,6 +434,28 @@ const KNOWN_FILE_EXTENSIONS = new Set(
  * @param ph - The PostHog bootstrap cookie data
  * @returns NextResponse for rewrite, or null if not a raw file
  */
+/**
+ * Social card images (/_og, /_og/<slug>) for link previews. Served before the
+ * password gate because crawlers have no cookies; the handler itself never
+ * reveals page content for protected sites (flowershow-1o5).
+ */
+export function rewriteSocialCardIfNeeded(
+  inputPath: string,
+  apiBase: string,
+  req: NextRequest,
+  ph: PHBootstrap,
+) {
+  const q = inputPath.indexOf('?');
+  const pathPart = q === -1 ? inputPath : inputPath.slice(0, q);
+  const search = q === -1 ? '' : inputPath.slice(q);
+  if (pathPart !== '/_og' && !pathPart.startsWith('/_og/')) return null;
+  return rewrite(
+    `${apiBase}${pathPart.slice('/_og'.length)}${search}`,
+    req,
+    ph,
+  );
+}
+
 export function rewriteRawIfNeeded(
   inputPath: string,
   apiBase: string,

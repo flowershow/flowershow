@@ -1,7 +1,7 @@
 import { CONTENT_TYPE_EXTENSIONS } from '@flowershow/core';
 import { NextRequest } from 'next/server';
 import { describe, expect, it } from 'vitest';
-import { rewriteRawIfNeeded } from './middleware';
+import { rewriteRawIfNeeded, rewriteSocialCardIfNeeded } from './middleware';
 
 const API_BASE = '/api/raw/victim/notes';
 
@@ -162,5 +162,27 @@ describe('rewriteRawIfNeeded — asset types (flowershow-tui)', () => {
     for (const ext of ['zip', 'tar', 'gz', 'eot', 'epub', 'docx', 'parquet']) {
       expect(raw(`/f.${ext}`), ext).not.toBeNull();
     }
+  });
+});
+
+describe('rewriteSocialCardIfNeeded (flowershow-1o5)', () => {
+  const base = '/api/og/ana/notes';
+  const go = (p: string) =>
+    rewriteSocialCardIfNeeded(p, base, makeReq(p), null);
+
+  it('rewrites the home card', () => {
+    const t = rewriteTarget(go('/_og?v=abc'));
+    expect(t.pathname).toBe('/api/og/ana/notes');
+    expect(t.searchParams.get('v')).toBe('abc');
+  });
+  it('rewrites a nested page card', () => {
+    expect(rewriteTarget(go('/_og/blog/post?v=abc')).pathname).toBe(
+      '/api/og/ana/notes/blog/post',
+    );
+  });
+  it('ignores other paths, including look-alikes', () => {
+    expect(go('/blog/_og')).toBeNull();
+    expect(go('/_ogre')).toBeNull();
+    expect(go('/about')).toBeNull();
   });
 });
