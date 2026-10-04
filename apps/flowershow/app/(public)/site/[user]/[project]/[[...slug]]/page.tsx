@@ -23,6 +23,7 @@ import {
 import {
   buildSocialMetadata,
   resolvePageSocialImage,
+  socialText,
 } from '@/lib/social-preview';
 import type { SiteConfig } from '@/components/types';
 import { loadProtectedCardSource } from '@/lib/protected-card-source';
@@ -174,7 +175,19 @@ export async function generateMetadata(props: {
     title,
     description,
     icons: faviconUrl ? [{ url: faviconUrl }] : undefined,
-    ...buildSocialMetadata({ title, description, url, image }),
+    // PASSWORD sites: og/twitter text is the site name and DB-config site
+    // description only (the HTML title/description above stay as they are).
+    ...buildSocialMetadata({
+      ...socialText({
+        isProtected: site.privacyMode === 'PASSWORD',
+        title,
+        description,
+        siteConfig: protectedSource ? protectedSource.dbConfig : siteConfig,
+        projectName: site.projectName,
+      }),
+      url,
+      image,
+    }),
     alternates: {
       canonical: url,
       ...(siteConfig?.enableRss && {

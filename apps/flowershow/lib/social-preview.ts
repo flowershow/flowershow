@@ -93,6 +93,25 @@ export function resolveSocialImage(a: {
   return card(a.cardUrl);
 }
 
+/**
+ * og/twitter title and description. PASSWORD sites expose only the site name
+ * and site description (from DB config, as the /_og card does), never page
+ * data; the HTML <title> and meta description are not affected.
+ */
+export function socialText(a: {
+  isProtected: boolean;
+  title: string;
+  description?: string;
+  siteConfig: SiteConfig | null;
+  projectName: string;
+}): { title: string; description?: string } {
+  if (!a.isProtected) return { title: a.title, description: a.description };
+  return {
+    title: String(resolveSiteName(a.siteConfig, a.projectName)),
+    description: asText(a.siteConfig?.description) ?? undefined,
+  };
+}
+
 export function buildSocialMetadata(a: {
   title: string;
   description?: string;
