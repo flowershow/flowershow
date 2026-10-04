@@ -116,4 +116,10 @@ describe('extractDescription', () => {
       'He said “hi there to you all today and much more to say.”',
     );
   });
+
+  test('handles straight quotes in sentence splitting', () => {
+    expect(extractDescription('The guide says "publish your notes as a website today." Then it explains how.')).toBe(
+      'The guide says "publish your notes as a website today."',
+    );
+  });
 });

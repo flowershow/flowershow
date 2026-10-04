@@ -84,7 +84,7 @@ function splitSentences(text: string): string[] {
   let start = 0;
   // A sentence ends at . ! or ? (optionally followed by a closing quote or
   // bracket), then whitespace, then an uppercase letter, digit or opening quote.
-  const re = /[.!?][”’')\]]*\s+(?=[“‘'(\[]?[A-Z0-9])/g;
+  const re = /[.!?]["'\u201d\u2019)\]]*\s+(?=["'\u201c\u2018(\[]?[A-Z0-9])/g;
   for (let m = re.exec(text); m; m = re.exec(text)) {
     const end = m.index + m[0].trimEnd().length;
     if (ABBREVIATIONS.test(text.slice(start, end))) continue;
