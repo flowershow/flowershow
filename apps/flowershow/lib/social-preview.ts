@@ -23,7 +23,8 @@ export function toCardInputs(a: {
   siteConfig: SiteConfig | null;
   blob: { sha: string; metadata: unknown } | null;
 }): CardInputs {
-  const siteName = resolveSiteName(a.siteConfig, a.site.projectName);
+  // config.json may hold a non-string siteName (e.g. a number).
+  const siteName = String(resolveSiteName(a.siteConfig, a.site.projectName));
   const metadata = (a.blob?.metadata ?? null) as Record<string, unknown> | null;
   const hidePage =
     a.site.privacyMode === 'PASSWORD' ||
