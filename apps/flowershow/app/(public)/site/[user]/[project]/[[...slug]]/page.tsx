@@ -19,6 +19,7 @@ import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { generateScopedCss } from '@/lib/generate-scoped-css';
 import { getSite } from '@/lib/get-site';
 import { getSiteUrl } from '@/lib/get-site-url';
+import { displayDescription } from '@/lib/page-description';
 import { resolveHeroConfig } from '@/lib/hero-config';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import { isEmoji } from '@/lib/is-emoji';
@@ -505,7 +506,10 @@ export default async function SitePage(props: {
   const showKnowledgeGraph =
     metadata?.showKnowledgeGraph ?? siteConfig?.showKnowledgeGraph ?? false;
   const showRightColumn = showToc || showKnowledgeGraph;
-  const heroConfig = resolveHeroConfig(metadata, siteConfig);
+  const heroConfig = resolveHeroConfig(
+    metadata && { ...metadata, description: displayDescription(metadata) },
+    siteConfig,
+  );
   const showHero = heroConfig.showHero && !changelog;
 
   let siteTree: Node[] | undefined;
@@ -605,7 +609,7 @@ export default async function SitePage(props: {
             ) : (
               <BlogLayout
                 title={metadata?.title ?? ''}
-                description={metadata?.description ?? ''}
+                description={displayDescription(metadata) ?? ''}
                 date={metadata?.date}
                 showHero={heroConfig.showHero}
                 authors={authors}

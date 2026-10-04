@@ -1,3 +1,4 @@
+import { displayDescription } from '@/lib/page-description';
 import { ensureLeadingSlash, normalizeAuthors, safeDate } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
 
@@ -186,7 +187,9 @@ export function toChangelogEntries(
         title: resolveEntryTitle(m.title, r.path),
         date: resolveEntryDate(m.date, r.path),
         ...(m.version ? { version: String(m.version) } : {}),
-        ...(m.description ? { description: m.description } : {}),
+        ...(displayDescription(m)
+          ? { description: displayDescription(m) }
+          : {}),
         ...(m.image ? { image: m.image } : {}),
         authors: normalizeAuthors(m.authors),
       };
