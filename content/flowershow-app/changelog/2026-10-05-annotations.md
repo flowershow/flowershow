@@ -17,6 +17,8 @@ Send a colleague a link to your draft and get notes back on the exact words, wit
 
 ## Try it with colleagues
 
+Want to see it first? Open the [demo draft](https://annotations-demo-rufuspollock.flowershow.me), select any sentence and leave a note.
+
 **You (the author):**
 
 1. Publish your draft with annotations on: `fl --annotations ./draft` (needs `fl` 2.6.0 or later; on macOS or Linux, upgrade by re-running the [[cli|install script]]). Or switch on **Annotations** in Settings → Features for an existing site.
