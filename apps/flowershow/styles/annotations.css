@@ -1,0 +1,195 @@
+.fs-annotations-pill,
+.fs-annotations-add {
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+  border-radius: 9999px;
+  border: 1px solid var(--color-foreground-200, #d6d3d1);
+  background: var(--color-background, #fff);
+  color: var(--color-foreground, #525252);
+  padding: 0.4rem 0.9rem;
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.08);
+}
+
+.fs-annotations-pill {
+  position: fixed;
+  left: 1rem;
+  bottom: 1.5rem;
+  z-index: 100;
+  max-width: calc(100vw - 2rem);
+}
+
+.fs-annotations-add {
+  position: absolute;
+  z-index: 110;
+}
+
+/* Touch: a floating button above the bottom edge, clear of the native selection
+   menu and Android's Touch-to-Search bar. */
+.fs-annotations-add.is-touch {
+  position: fixed;
+  left: 1rem;
+  right: 1rem;
+  bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  padding: 0.9rem;
+  font-size: 1rem;
+  font-weight: 600;
+  background: var(--color-accent, #fb923c);
+  border-color: var(--color-accent, #fb923c);
+  color: #fff;
+}
+
+.fs-annotations-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 110;
+  width: min(24rem, 100vw);
+  overflow-y: auto;
+  padding: 1rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
+  background: var(--color-background, #fff);
+  color: var(--color-foreground, #525252);
+  border-left: 1px solid var(--color-foreground-200, #d6d3d1);
+  box-shadow: -8px 0 24px rgb(0 0 0 / 0.08);
+  font-size: 0.9rem;
+}
+
+.fs-annotations-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.fs-annotations-header h2 {
+  margin: 0.5rem 0;
+  font-weight: 600;
+}
+.fs-annotations-close {
+  font-size: 1.5rem;
+  line-height: 1;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.fs-annotations-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.fs-annotations-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 500;
+}
+.fs-annotations-form textarea,
+.fs-annotations-form input {
+  font: inherit;
+  font-size: 16px; /* stops iOS Safari zooming into the field */
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--color-foreground-200, #d6d3d1);
+  background: transparent;
+  color: inherit;
+}
+
+.fs-annotations-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+.fs-annotations-actions button {
+  font: inherit;
+  cursor: pointer;
+  padding: 0.5rem 0.9rem;
+  border-radius: 0.375rem;
+  border: 1px solid var(--color-foreground-200, #d6d3d1);
+  background: transparent;
+  color: inherit;
+}
+.fs-annotations-actions button[type="submit"] {
+  background: var(--color-accent, #fb923c);
+  border-color: var(--color-accent, #fb923c);
+  color: #fff;
+}
+
+.fs-annotations-link {
+  font: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.fs-annotations-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.fs-annotations-item.is-focused {
+  outline: 2px solid var(--color-accent, #fb923c);
+  outline-offset: 4px;
+  border-radius: 0.25rem;
+}
+.fs-annotations-resolved {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-foreground-200, #d6d3d1);
+  opacity: 0.75;
+}
+.fs-annotations-resolved summary {
+  cursor: pointer;
+}
+
+.fs-annotations-quote {
+  display: block;
+  text-align: left;
+  font: inherit;
+  font-style: italic;
+  background: none;
+  border: none;
+  border-left: 2px solid var(--color-accent, #fb923c);
+  margin: 0;
+  padding: 0 0 0 0.5rem;
+  color: inherit;
+  opacity: 0.8;
+}
+button.fs-annotations-quote {
+  cursor: pointer;
+}
+.is-outdated .fs-annotations-quote {
+  border-left-style: dashed;
+}
+
+.fs-annotations-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.25rem;
+  opacity: 0.7;
+}
+
+.fs-annotations-note {
+  white-space: pre-wrap;
+  margin: 0.25rem 0;
+  overflow-wrap: anywhere;
+}
+.fs-annotations-meta,
+.fs-annotations-empty,
+.fs-annotations-manage,
+.fs-annotations-notice {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+.fs-annotations-error {
+  color: var(--color-danger, #dc2626);
+}

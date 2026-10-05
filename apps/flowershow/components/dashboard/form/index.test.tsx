@@ -114,3 +114,34 @@ describe('Form — custom domain validation', () => {
     expect(toastError).not.toHaveBeenCalled();
   });
 });
+
+describe('Form — annotations toggle', () => {
+  afterEach(() => {
+    cleanup();
+    vi.clearAllMocks();
+  });
+
+  it('renders as a switch and saves true when switched on', async () => {
+    const handleSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <Form
+        title="Annotations"
+        description="Let anyone who can view a page leave annotations."
+        inputAttrs={{
+          name: 'annotations',
+          type: 'text',
+          defaultValue: 'false',
+        }}
+        handleSubmit={handleSubmit}
+      />,
+    );
+    fireEvent.click(screen.getByRole('switch'));
+    await waitFor(() =>
+      expect(handleSubmit).toHaveBeenCalledWith({
+        id: 'site-1',
+        key: 'annotations',
+        value: 'true',
+      }),
+    );
+  });
+});

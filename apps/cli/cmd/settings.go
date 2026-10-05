@@ -2,13 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/flowershow/publish/internal/api"
-	"github.com/flowershow/publish/internal/auth"
 	"github.com/flowershow/publish/internal/config"
-	"github.com/flowershow/publish/internal/localconfig"
 	"github.com/flowershow/publish/internal/telemetry"
 	"github.com/flowershow/publish/internal/ui"
 	"github.com/spf13/cobra"
@@ -39,64 +36,15 @@ func runSettings(nameFlag string) error {
 	})
 	defer func() { telemetry.Flush() }()
 
-	// Authenticate
-	tokenData, err := auth.GetToken()
-	if err != nil || tokenData == nil {
-		return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
+	if err := requireLogin(); err != nil {
+		return err
 	}
-	if _, err := auth.GetUserInfo(config.APIURL(), tokenData.Token); err != nil {
-		return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
-	}
-
-	// Resolve site name
-	siteName := nameFlag
-	if siteName == "" {
-		cwd, err := os.Getwd()
-		if err == nil {
-			if cfg := localconfig.Read(cwd); cfg != nil {
-				siteName = cfg.SiteName
-			}
-		}
-	}
-
-	sp := ui.NewSpinner()
-	sp.Start("Fetching sites...")
-
-	sitesData, err := api.GetSites()
+	site, err := resolveSite(nameFlag)
 	if err != nil {
-		sp.Fail("Failed to fetch sites")
-		return fail(err.Error())
+		return err
 	}
-	sp.Stop()
-
-	// If no name resolved yet, check if there's exactly one site
-	if siteName == "" {
-		if len(sitesData.Sites) == 0 {
-			return fail("You have no sites yet.\nRun `fl <path>` to publish your first site.")
-		}
-		if len(sitesData.Sites) > 1 {
-			fmt.Printf("\n%s\n\n", ui.Bold("Multiple sites found — specify one with --name:"))
-			for _, s := range sitesData.Sites {
-				fmt.Printf("  %s\n", ui.Cyan(s.ProjectName))
-			}
-			fmt.Println()
-			return failSilently("multiple sites found; specify one with --name")
-		}
-		siteName = sitesData.Sites[0].ProjectName
-	}
-
-	// Find the site ID
-	var siteID string
-	for _, s := range sitesData.Sites {
-		if s.ProjectName == siteName {
-			siteID = s.ID
-			break
-		}
-	}
-
-	if siteID == "" {
-		return fail(fmt.Sprintf("Site %q not found.\nUse `fl list` to see all sites.", siteName))
-	}
+	siteName, siteID := site.ProjectName, site.ID
+	sp := ui.NewSpinner()
 
 	// Fetch full site details
 	sp.Start(fmt.Sprintf("Fetching settings for %q...", siteName))
@@ -133,9 +81,15 @@ func runSettings(nameFlag string) error {
 	fmt.Printf("  %s %s\n", ui.Gray("Privacy:      "), privacyLabel)
 	fmt.Printf("  %s %s\n", ui.Gray("Comments:     "), boolLabel(s.ShowComments))
 	fmt.Printf("  %s %s\n", ui.Gray("Search:       "), boolLabel(s.EnableSearch))
+	if s.AnnotationsEnabled {
+		fmt.Printf("  %s\n", ui.Yellow(annotationsOnLine))
+	} else {
+		fmt.Printf("  %s %s\n", ui.Gray("Annotations:  "), "disabled")
+	}
 	fmt.Printf("  %s %s\n", ui.Gray("GitHub:       "), ghRepo)
 	fmt.Printf("  %s %s\n", ui.Gray("Custom domain:"), customDomain)
 	fmt.Printf("  %s %d files (%.1f KB)\n", ui.Gray("Size:         "), s.FileCount, float64(s.TotalSize)/1024)
+	printAnnotationStatus(false, s.OpenAnnotations, nil)
 	fmt.Println()
 
 	telemetry.Capture("command_succeeded", map[string]interface{}{

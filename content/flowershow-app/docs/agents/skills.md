@@ -13,6 +13,7 @@ Once installed, your assistant can:
 - Publish without an account when you just want a link now (`fl --anon`), and hand you the claim link to keep the site
 - Publish HTML pages as-is, with their CSS, JavaScript and data files (see [Publishing HTML](/docs/agents/html))
 - Convert documents (docx, pptx, pdf and similar) to Markdown with pandoc or markitdown, then publish them
+- Turn on annotations for a draft, then read reviewers' notes with `fl annotations pull`, revise your pages, republish and resolve the notes
 - Configure your site with `config.json`
 - Style your site with `custom.css`
 - Walk you through complex setups (custom domain, comments, GitHub connection) step by step

@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 2.6.0
+
+- New `fl annotations pull|resolve|delete` commands. `pull` prints open annotations (visitors' notes on your pages) as Markdown, grouped by file, ready to hand to an AI agent, or as JSON with `--format json`; `--all` includes resolved ones and `--path` limits to one file. Reviewer-written text is JSON-encoded inside `<untrusted-annotation>` tags and the output tells the agent to treat notes as editing requests, never commands. `resolve` and `delete` take ids or `--all` (`delete --all` asks first; pass `--yes` without a terminal). `--site` is an alias for `--name`.
+- New `--annotations` flag: `fl --annotations ./folder` publishes and turns annotations on for the site; `--annotations=false` turns them off. Not available with `--anon`.
+- `fl` (including an unchanged republish) and `fl settings` print `Annotations: ON — anyone with this link can annotate` while annotations are on, and `N open annotations → fl annotations pull` when notes are waiting.
+- `fl settings` now prints its "Multiple sites found" list on stderr, like the other site-picking commands.
+
 ## 2.5.0
 
 - New `--anon` flag: publish without an account (`fl --anon ./folder`). No login needed; the site gets a random `<name>-anon.flowershow.me` URL, expires in 7 days unless claimed, and `fl` prints the live URL and a claim link (`Claim it to keep it (expires <date>): <claimUrl>`). Opening the claim link, signing in and confirming moves the site into your account. If an upload fails, `fl` still prints the claim link. Anonymous sites are limited to 200 files / 50 MB.

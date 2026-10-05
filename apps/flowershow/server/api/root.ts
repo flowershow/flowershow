@@ -1,3 +1,4 @@
+import { annotationRouter } from '@/server/api/routers/annotation';
 import { githubRouter } from '@/server/api/routers/github';
 import { siteRouter } from '@/server/api/routers/site';
 import { stripeRouter } from '@/server/api/routers/stripe';
@@ -14,6 +15,7 @@ export const appRouter = createTRPCRouter({
   site: siteRouter,
   stripe: stripeRouter,
   github: githubRouter,
+  annotation: annotationRouter,
 });
 
 // export type definition of API
