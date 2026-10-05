@@ -51,9 +51,9 @@ After completing these steps you will be running {frontmatter.to_version}.
 ---
 title: Getting Started
 prerequisites:
-  - Node.js 18+
-  - A GitHub account
-  - pnpm or npm
+  - A Flowershow account
+  - A folder of Markdown notes
+  - Ten minutes
 ---
 
 Before you begin, make sure you have the following:

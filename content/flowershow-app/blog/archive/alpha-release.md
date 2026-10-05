@@ -5,6 +5,9 @@ date: 2022-11-07
 authors: [philippe-du-preez]
 ---
 
+> [!warning] Historical page: these install steps are out of date
+> This page describes an old version of Flowershow (a Node.js / Next.js template and the old `npx flowershow` CLI). None of that is needed today. To publish, install the single-binary CLI with `curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh` and run `fl ./my-folder`. See the [CLI reference](/docs/reference/cli) or [Publish with AI](/publish-with-ai).
+
 We've just released the first alpha of Flowershow for self-publishing 🙌
 
 Publish your markdown digital garden (obsidian-powered or otherwise) as fast as lighting ⚡

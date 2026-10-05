@@ -5,6 +5,9 @@ date: 2022-11-30
 authors: [philippe-du-preez]
 ---
 
+> [!warning] Historical page: these install steps are out of date
+> This page describes an old version of Flowershow (a Node.js / Next.js template and the old `npx flowershow` CLI). None of that is needed today. To publish, install the single-binary CLI with `curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh` and run `fl ./my-folder`. See the [CLI reference](/docs/reference/cli) or [Publish with AI](/publish-with-ai).
+
 Is your Wordpress site's speed comparable to a tortoise with cramping legs? 🐢 Server costs bleeding you dry? 🖥️ Lucky for you, migrating your content over to Flowershow has never been easier! Flowershow 🌷 is an **awesome** open source Next.js template that comes with batteries included 🔋
 
 In this tutorial we are covering how to convert your Wordpress site into a Flowershow site, where all the content will be converted to simple markdown compatible with flowershow.

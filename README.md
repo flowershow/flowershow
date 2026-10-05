@@ -6,6 +6,25 @@
 
 ### Try it out now and sign up at https://flowershow.app/
 
+## Install and publish
+
+No Node.js, npm or git needed. The CLI is a single binary called `fl`.
+
+```bash
+# Install (macOS / Linux)
+curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh
+
+# Log in and publish a folder or file
+fl login
+fl ./my-notes
+```
+
+Windows: download `fl_windows_amd64.zip` from the [latest release](https://github.com/flowershow/flowershow/releases/latest) and put `fl.exe` on your `PATH`. Full details: [CLI reference](https://flowershow.app/docs/reference/cli).
+
+Using an AI agent (Claude, ChatGPT, Codex, Cursor)? See https://flowershow.app/publish-with-ai.
+
+> The old npm packages `flowershow` and `@flowershow/publish` are deprecated. Don't install them.
+
 Want to see it in action? 🎉 https://flowershow.app itself is built and published with Flowershow 💐
 
 - 📝 Docs: https://flowershow.app/docs
@@ -20,9 +39,9 @@ Flowershow is a product of [Datopian](https://datopian.com) - dedicated to democ
 
 ---
 
-# For Developers
+# For Developers (contributing to Flowershow itself)
 
-The information below is for folks interesting in contributing to or using Flowershow from source.
+**You do not need anything below to use Flowershow.** To install and publish, see [Install and publish](#install-and-publish) above. This section is only for people developing the Flowershow platform from source.
 
 ## Monorepo Structure
 
@@ -40,9 +59,9 @@ content/
   flowershow-app/       # Marketing site content (Obsidian vault, not a workspace package)
 ```
 
-## Quick Start
+## Development setup
 
-**Prerequisites:** [Node.js 22+](https://nodejs.org/), [pnpm](https://pnpm.io/installation), and [Docker](https://docs.docker.com/get-docker/).
+**Prerequisites (for platform development only):** [Node.js 22+](https://nodejs.org/), [pnpm](https://pnpm.io/installation), and [Docker](https://docs.docker.com/get-docker/).
 
 ```bash
 # Clone (include the e2e test-site submodule)

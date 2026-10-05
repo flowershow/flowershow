@@ -1,9 +1,11 @@
 ---
 title: Supported agents
-description: Which AI agents can use the Flowershow skill, how to install it in each (with or without Node.js), and what each agent can do.
+description: Which AI agents can use the Flowershow skill, how to install it in each (one file, no Node.js needed), and what each agent can do.
 ---
 
-The Flowershow skill works with any agent that supports [Agent Skills](https://agentskills.io/): a folder with a `SKILL.md` file that the agent loads when it's relevant. The skill is a single file, so every install method below does the same thing: put `SKILL.md` where your agent looks for skills.
+The Flowershow skill works with any agent that supports [Agent Skills](https://agentskills.io/): a folder with a `SKILL.md` file that the agent loads when it's relevant. The skill is a single file, so installing it just means putting `SKILL.md` where your agent looks for skills. No Node.js or npm is needed.
+
+The quickest way is to ask your agent: "Install the Flowershow skill from https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md into your skills folder."
 
 To publish, the agent also needs to run the [`fl` CLI](/docs/reference/cli), which means it needs a terminal and network access. Agents without a terminal can still use the skill to write `config.json`, `custom.css` and content for you to publish.
 
@@ -11,28 +13,14 @@ To publish, the agent also needs to run the [`fl` CLI](/docs/reference/cli), whi
 
 | Agent | Install the skill | Can run `fl` and publish? |
 |---|---|---|
-| Claude Code | `npx skills add` or copy to `~/.claude/skills/` | Yes (tested) |
-| Codex (CLI, IDE, app) | `npx skills add` or copy to `~/.agents/skills/` | Yes, if network access is allowed |
-| Cursor | `npx skills add` or copy to `~/.cursor/skills/` | Yes, from the agent's terminal |
+| Claude Code | Copy `SKILL.md` to `~/.claude/skills/flowershow/` | Yes (tested) |
+| Codex (CLI, IDE, app) | Copy `SKILL.md` to `~/.agents/skills/flowershow/` | Yes, if network access is allowed |
+| Cursor | Copy `SKILL.md` to `~/.cursor/skills/flowershow/` | Yes, from the agent's terminal |
 | Claude apps (claude.ai, desktop, mobile) | Upload a zip in the skills settings | Use the [Flowershow connector](/docs/agents/mcp) to publish; running `fl` depends on code execution and network access (see below) |
 | ChatGPT | Add the skill in ChatGPT's skills settings | Use the [Flowershow connector](/docs/agents/mcp) to publish; ChatGPT's sandbox can't reach the internet to run `fl` |
-| Other skills-compatible agents | `npx skills add` (50+ agents) or copy `SKILL.md` | If the agent has a terminal and network |
+| Other skills-compatible agents | Copy `SKILL.md` to the agent's skills folder | If the agent has a terminal and network |
 
-## Install with Node.js (all local agents)
-
-```bash
-npx skills add flowershow/skills --global
-```
-
-This installs the skill for every agent it detects on your machine. To skip the prompts and pick agents explicitly:
-
-```bash
-npx skills add flowershow/skills --global -y -a claude-code -a codex -a cursor
-```
-
-Update later with `npx skills update`.
-
-## Install without Node.js
+## Install
 
 The skill is one file. Download it into your agent's skills folder.
 
@@ -80,6 +68,22 @@ ChatGPT supports skills. Add the Flowershow skill from the same `SKILL.md` in Ch
 ### Any other agent
 
 If your agent doesn't support skills, add the contents of `SKILL.md` to its custom instructions, or tell it: "Read https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md and follow it."
+
+### Optional: install for all local agents with Node.js
+
+If you already have Node.js, the `skills` tool installs the skill for every agent it detects on your machine:
+
+```bash
+npx skills add flowershow/skills --global
+```
+
+To skip the prompts and pick agents explicitly:
+
+```bash
+npx skills add flowershow/skills --global -y -a claude-code -a codex -a cursor
+```
+
+Update later with `npx skills update`.
 
 ## Cloud and headless agents
 

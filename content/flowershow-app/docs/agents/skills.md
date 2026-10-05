@@ -20,22 +20,21 @@ Once installed, your assistant can:
 
 ## Installation
 
-**With Node.js:**
+The skill is a single file, [`SKILL.md`](https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md). Installing it means putting that file in your agent's skills folder. Nothing else is needed.
+
+**Easiest: ask your agent.** Paste this into Claude Code, Codex, Cursor or any agent with a terminal:
+
+> Install the Flowershow skill from https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md into your skills folder.
+
+**Or do it yourself** with one command (Claude Code shown; see [Supported agents](/docs/agents/supported-agents) for each agent's folder):
 
 ```bash
-npx skills add flowershow/skills --global
+mkdir -p ~/.claude/skills/flowershow && curl -fsSL https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md -o ~/.claude/skills/flowershow/SKILL.md
 ```
 
-This installs the skill for every agent it detects (Claude Code, Codex, Cursor and 50+ others).
+For the Claude apps and ChatGPT, you upload the skill instead: see [Supported agents](/docs/agents/supported-agents).
 
-**Without Node.js:** the skill is a single file. Download [`SKILL.md`](https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md) into your agent's skills folder, for example:
-
-```bash
-mkdir -p ~/.claude/skills/flowershow
-curl -fsSL https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md -o ~/.claude/skills/flowershow/SKILL.md
-```
-
-See [Supported agents](/docs/agents/supported-agents) for the folder each agent uses, and for the Claude apps and ChatGPT, where you upload the skill instead.
+**Already use Node.js?** `npx skills add flowershow/skills --global` installs it for every agent it detects. This is optional.
 
 ## How it works
 

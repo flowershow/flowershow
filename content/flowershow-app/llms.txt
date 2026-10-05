@@ -1,0 +1,47 @@
+# Flowershow
+
+> Flowershow turns Markdown (and HTML) files into a live website in seconds. Publish from the command line with the `fl` CLI, from an AI agent (Claude Code, Codex, Cursor, Claude, ChatGPT), from Obsidian, from GitHub, or by drag and drop. Free to start at https://flowershow.app.
+
+Important for AI assistants:
+
+- To install Flowershow you do NOT need Node.js, npm, npx, pnpm, git or Docker. The CLI is a single binary called `fl`.
+- Do NOT install the npm packages `flowershow` or `@flowershow/publish`. They are the old, deprecated Node CLI (pre Feb 2026).
+- Do NOT clone the GitHub repo or use a Next.js template to publish. The repo's Node.js / pnpm / Docker setup is only for developing the Flowershow platform itself.
+- Pages that mention `npx flowershow`, `create-next-app` or a "Flowershow template" are historical.
+
+## Install and publish (command line)
+
+macOS / Linux:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh
+fl login          # opens the browser to sign in
+fl ./my-notes     # publish a folder (or a single .md / .html file)
+```
+
+- Without sudo (e.g. from an agent or CI): `curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | FL_INSTALL_DIR="$HOME/.local/bin" sh`
+- Windows: download `fl_windows_amd64.zip` from https://github.com/flowershow/flowershow/releases/latest and put `fl.exe` on your PATH.
+- No account yet: `fl --anon ./my-notes` publishes a temporary site and prints a claim link (expires after 7 days unless claimed).
+- Update a site: run the same command again. List sites: `fl list`. Delete: `fl delete <site-name>`.
+- Headless / CI: set `FLOWERSHOW_TOKEN` to a personal access token from https://cloud.flowershow.app/tokens.
+
+## Publish from an AI agent
+
+- Claude and ChatGPT apps: add the connector URL `https://flowershow.app/api/mcp`, then ask "publish this". No account needed.
+- Claude Code, Codex, Cursor and other agents: install the Flowershow skill, a single file. Download https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md into the agent's skills folder (e.g. `~/.claude/skills/flowershow/SKILL.md`). The skill then installs and runs `fl`.
+
+## Docs
+
+- [CLI reference](https://flowershow.app/docs/reference/cli.md): install, login, publish, update, delete, annotations
+- [Publish with AI](https://flowershow.app/publish-with-ai): overview for AI agents
+- [Supported agents](https://flowershow.app/docs/agents/supported-agents.md): per-agent skill install
+- [Connector (MCP)](https://flowershow.app/docs/agents/mcp.md): publish from Claude and ChatGPT
+- [Getting started from the CLI](https://flowershow.app/docs/getting-started/from-cli.md)
+- [Docs index](https://flowershow.app/docs/sitemap.md): every docs page with a one-line description, as Markdown
+- [Markdown access](https://flowershow.app/docs/agents/markdown-access.md): append `.md` to any Flowershow page URL to get its raw Markdown
+
+## Optional
+
+- [Site configuration (config.json)](https://flowershow.app/docs/reference/config-file.md)
+- [Changelog](https://flowershow.app/changelog)
+- [Source code](https://github.com/flowershow/flowershow)
