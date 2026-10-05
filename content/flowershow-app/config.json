@@ -185,6 +185,10 @@
   "showEditLink": true,
   "redirects": [
     {
+      "from": "/changelog/2026-10-04-social-preview-cards",
+      "to": "/changelog/2026-10-05-social-preview-cards"
+    },
+    {
       "from": "/markdown",
       "to": "https://wayofmarkdown.com"
     },
