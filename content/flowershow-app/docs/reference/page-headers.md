@@ -41,6 +41,8 @@ It's also used in:
 - Search engine result snippet
 - Social media preview description
 
+If a page has no `description`, Flowershow uses the opening sentence of the page as a short subtitle-style description (up to 140 characters) for search results and previews. It isn't shown in the page header, since the paragraph is right there.
+
 ### Authors
 
 The `authors` field lets you specify one or more authors for the page. Authors are displayed in page header.

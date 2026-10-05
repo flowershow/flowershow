@@ -264,7 +264,11 @@ The queue consumer extracts the following from markdown files:
 ### Description
 
 1. `description` field in frontmatter
-2. First 200 characters of content body as fallback
+2. If it is missing (absent, `null`, or an empty/whitespace-only string), a computed description: the opening sentence of the first prose paragraph as plain text, at most 140 characters, from `extractDescription` in `@flowershow/core` (headings, images, callouts, lists, code, tag-only lines, Dataview inline fields and similar non-prose openings are skipped; a very short opener is extended with the next sentences while they fit). If the body has no prose, no description is stored.
+
+### Computed fields
+
+`Blob.metadata.computed` lists the fields filled in at ingestion rather than written by the author: `'title'` when frontmatter has no `title`, `'description'` when a description was computed. The key is omitted when nothing was computed. A `computed` key in the page's own frontmatter is stripped, so authors can't set it. The app uses the flag, e.g. to avoid repeating a computed description above the page body.
 
 ### Other frontmatter fields
 

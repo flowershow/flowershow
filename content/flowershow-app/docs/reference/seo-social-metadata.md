@@ -65,6 +65,8 @@ description: Learn how to create, manage, and deploy Docker containers.
 ---
 ```
 
+If a page has no `description`, Flowershow uses the opening sentence of the page as a short subtitle-style description (up to 140 characters) for search results and previews. It isn't shown in the page header, since the paragraph is right there.
+
 ### Image
 
 Set `image` in frontmatter to use a custom social image for that page:

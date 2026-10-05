@@ -1,4 +1,4 @@
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import {
   extractImageDimensions,
   extractLinks,
@@ -8,6 +8,7 @@ import {
   normalizePermalink,
   parseMarkdown,
   parseObjectKey,
+  safeExtractDescription,
   syncTags,
 } from '../../src/queue-consumer.js';
 
@@ -483,4 +484,83 @@ test('syncTags - runs the diff inside a transaction', async () => {
   };
   await syncTags(sql, 's1', 'b1', [{ tag: 'book', source: 'inline' }]);
   expect(began).toBe(true);
+});
+
+test('parseMarkdown - computes description from the opening sentence and flags it', async () => {
+  const { metadata } = await parseMarkdown({
+    markdown: '---\ntitle: T\n---\n# T\n\nFirst para here.\n\nSecond.',
+    path: 'a.md',
+  });
+  expect(metadata.description).toBe('First para here.');
+  expect(metadata.computed).toEqual(['description']);
+});
+
+test('parseMarkdown - keeps an author description and does not flag it', async () => {
+  const { metadata } = await parseMarkdown({
+    markdown: '---\ntitle: T\ndescription: Mine\n---\nBody para.',
+    path: 'a.md',
+  });
+  expect(metadata.description).toBe('Mine');
+  expect(metadata.computed).toBeUndefined();
+});
+
+test('parseMarkdown - flags a computed title', async () => {
+  const { metadata } = await parseMarkdown({
+    markdown: '# From Heading\n\nBody.',
+    path: 'a.md',
+  });
+  expect(metadata.title).toBe('From Heading');
+  expect(metadata.computed).toEqual(['title', 'description']);
+});
+
+test('parseMarkdown - no description when the body has no prose', async () => {
+  const { metadata } = await parseMarkdown({
+    markdown: '---\ntitle: T\n---\n![[only.png]]',
+    path: 'a.md',
+  });
+  expect(metadata.description).toBeUndefined();
+  expect(metadata.computed).toBeUndefined();
+});
+
+test('parseMarkdown - treats an empty frontmatter description as missing', async () => {
+  const { metadata } = await parseMarkdown({
+    markdown: '---\ntitle: T\ndescription: ""\n---\nBody para.',
+    path: 'a.md',
+  });
+  expect(metadata.description).toBe('Body para.');
+  expect(metadata.computed).toEqual(['description']);
+});
+
+test('safeExtractDescription - returns null and logs when extract throws', () => {
+  const throwingExtract = vi.fn(() => {
+    throw new Error('extraction failed');
+  });
+  const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+  const result = safeExtractDescription('some body', throwingExtract);
+
+  expect(result).toBeNull();
+  expect(warnSpy).toHaveBeenCalledWith(
+    expect.stringContaining('Failed to extract description'),
+  );
+  warnSpy.mockRestore();
+});
+
+test('parseMarkdown - excludes frontmatter computed key from metadata', async () => {
+  const { metadata } = await parseMarkdown({
+    markdown:
+      '---\ntitle: T\ndescription: Mine\ncomputed: ["description"]\n---\nBody.',
+    path: 'a.md',
+  });
+  expect(metadata.description).toBe('Mine');
+  expect(metadata.computed).toBeUndefined();
+});
+
+test('parseMarkdown - treats whitespace-only description as missing', async () => {
+  const { metadata } = await parseMarkdown({
+    markdown: '---\ntitle: T\ndescription: "   "\n---\nBody para.',
+    path: 'a.md',
+  });
+  expect(metadata.description).toBe('Body para.');
+  expect(metadata.computed).toEqual(['description']);
 });

@@ -2,6 +2,7 @@
  * Copied from apps/cloudflare-worker/src/processing-utils.js
  * Keep in sync with the original when making changes.
  */
+import { extractDescription } from '@flowershow/core';
 import matter from 'gray-matter';
 import { imageSize, types as supportedImageTypes } from 'image-size';
 
@@ -89,19 +90,45 @@ export async function parseMarkdown({
   try {
     const { data: frontmatter, content: body } = matter(markdown, {});
 
-    const title =
-      frontmatter.title ||
-      (await extractTitle(body)) ||
-      filePath
-        .split('/')
-        .pop()
-        ?.replace(/\.(mdx|md)$/, '') ||
-      '';
+    // Mirrors parseMarkdown in apps/cloudflare-worker/src/queue-consumer.js
+    const computed: Array<'title' | 'description'> = [];
+
+    let title = frontmatter.title;
+    if (!title) {
+      title =
+        (await extractTitle(body)) ||
+        filePath
+          .split('/')
+          .pop()
+          ?.replace(/\.(mdx|md)$/, '') ||
+        '';
+      computed.push('title');
+    }
+
+    let description: unknown = frontmatter.description;
+    const isDescriptionMissing =
+      description == null ||
+      (typeof description === 'string' && description.trim() === '');
+    if (isDescriptionMissing) {
+      let extracted: string | null = null;
+      try {
+        extracted = extractDescription(body);
+      } catch {
+        extracted = null;
+      }
+      description = extracted ?? undefined;
+      if (extracted) computed.push('description');
+    }
+
+    // Remove ingestion-owned keys that might be in frontmatter
+    const { computed: _computed, ...frontmatterWithoutComputed } = frontmatter;
 
     parsed = {
       metadata: {
-        ...frontmatter,
+        ...frontmatterWithoutComputed,
         title,
+        ...(description !== undefined ? { description } : {}),
+        ...(computed.length ? { computed } : {}),
       },
       body,
     };

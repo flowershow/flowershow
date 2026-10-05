@@ -1,5 +1,6 @@
 import {
   encodeSlug,
+  extractDescription,
   extractInlineTags,
   filePathToSlug,
   frontmatterTags,
@@ -324,25 +325,57 @@ export function extractImageDimensions(path, content) {
   };
 }
 
+export function safeExtractDescription(body, extract = extractDescription) {
+  try {
+    return extract(body);
+  } catch (error) {
+    console.warn(
+      `[safeExtractDescription] Failed to extract description: ${error instanceof Error ? error.message : error}`,
+    );
+    return null;
+  }
+}
+
 export async function parseMarkdown({ markdown, path }) {
   let parsed;
 
   try {
     const { data: frontmatter, content: body } = matter(markdown, {});
 
-    const title =
-      frontmatter.title ||
-      (await extractTitle(body)) ||
-      path
-        .split('/')
-        .pop()
-        ?.replace(/\.(mdx|md)$/, '') ||
-      '';
+    /** @type {Array<'title' | 'description'>} */
+    const computed = [];
+
+    let title = frontmatter.title;
+    if (!title) {
+      title =
+        (await extractTitle(body)) ||
+        path
+          .split('/')
+          .pop()
+          ?.replace(/\.(mdx|md)$/, '') ||
+        '';
+      computed.push('title');
+    }
+
+    let description = frontmatter.description;
+    const isDescriptionMissing =
+      description == null ||
+      (typeof description === 'string' && description.trim() === '');
+    if (isDescriptionMissing) {
+      const extracted = safeExtractDescription(body);
+      description = extracted ?? undefined;
+      if (extracted) computed.push('description');
+    }
+
+    // Remove ingestion-owned keys that might be in frontmatter
+    const { computed: _, ...frontmatterWithoutComputed } = frontmatter;
 
     parsed = {
       metadata: {
-        ...frontmatter,
+        ...frontmatterWithoutComputed,
         title,
+        ...(description !== undefined ? { description } : {}),
+        ...(computed.length ? { computed } : {}),
       },
       body,
     };

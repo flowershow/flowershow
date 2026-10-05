@@ -123,6 +123,8 @@ export enum SiteUpdateKey {
 export interface PageMetadata {
   title: string;
   description?: string;
+  /** Fields filled in at ingestion rather than written by the author. */
+  computed?: Array<'title' | 'description'>;
   layout?: 'plain' | 'changelog' | (string & {});
   version?: string;
   image?: string;
