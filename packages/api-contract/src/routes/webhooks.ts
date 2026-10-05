@@ -3,6 +3,8 @@ import { z } from 'zod';
 import {
   DomainVerificationSchema,
   ErrorSchema,
+  OgImagePageParamsSchema,
+  OgImageSiteParamsSchema,
   RobotsParamsSchema,
   SitemapParamsSchema,
   StripeWebhookReceivedResponseSchema,
@@ -186,6 +188,54 @@ export function registerWebhooksRoutes(registry: OpenAPIRegistry) {
         content: { 'text/plain': { schema: z.string() } },
       },
     },
+  });
+
+  const ogImageDescription =
+    'Renders the 1200x630 PNG social preview card for a site or page. Public and unauthenticated: password-protected sites and unknown or unpublished pages get the site-level card, never page content. The `v` query parameter is a version hash; a matching `v` is cached immutably, anything else gets a short cache. Reached as `/_og/{slug}` on site hosts.';
+  const ogImageResponses = {
+    '200': {
+      description: 'PNG card image',
+      content: {
+        'image/png': { schema: z.string().openapi({ format: 'binary' }) },
+      },
+    },
+    '302': {
+      description: 'Redirect to the static thumbnail when rendering fails',
+    },
+    '404': {
+      description: 'Site not found or social cards disabled',
+      content: { 'text/plain': { schema: z.string() } },
+    },
+  };
+
+  registry.registerPath({
+    method: 'get',
+    path: '/api/og/{user}/{project}',
+    operationId: 'getSiteSocialCardImage',
+    summary: 'Social preview card image (site)',
+    description: ogImageDescription,
+    tags: ['SEO'],
+    security: [],
+    request: {
+      params: OgImageSiteParamsSchema,
+      query: z.object({ v: z.string().optional() }),
+    },
+    responses: ogImageResponses,
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/api/og/{user}/{project}/{slug}',
+    operationId: 'getSocialCardImage',
+    summary: 'Social preview card image (page)',
+    description: ogImageDescription,
+    tags: ['SEO'],
+    security: [],
+    request: {
+      params: OgImagePageParamsSchema,
+      query: z.object({ v: z.string().optional() }),
+    },
+    responses: ogImageResponses,
   });
 
   registry.registerPath({

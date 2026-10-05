@@ -107,6 +107,10 @@ jobs:
 
       - name: Start Next.js dev server
         working-directory: apps/flowershow
+        env:
+          # Generated social cards are behind a flag (off in .env.example);
+          # e2e/specs/social-preview.spec.ts needs them on.
+          SOCIAL_CARDS_ENABLED: "true"
         run: |
           nohup npx next dev --turbopack > /tmp/next-dev.log 2>&1 &
           echo $! > /tmp/next-dev.pid

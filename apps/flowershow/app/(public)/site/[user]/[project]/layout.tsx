@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import Script from 'next/script';
-import type { ReactNode } from 'react';
+import { cache, type ReactNode } from 'react';
 import BuiltWithFloatingButton from '@/components/public/built-with-floating-button';
 import { CustomHead } from '@/components/public/custom-head';
 import Footer from '@/components/public/footer';
@@ -13,7 +13,20 @@ import { SiteProvider } from '@/components/public/site-context';
 import { TemporarySiteBanner } from '@/components/public/temporary-site-banner';
 import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
-import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
+import {
+  Feature,
+  isFeatureEnabled,
+  isSocialCardsEnabled,
+} from '@/lib/feature-flags';
+import { getSiteUrl } from '@/lib/get-site-url';
+import {
+  buildSocialMetadata,
+  socialCardUrl,
+  socialCardVersion,
+  toCardInputs,
+} from '@/lib/social-preview';
+import type { SiteConfig } from '@/components/types';
+import { loadProtectedCardSource } from '@/lib/protected-card-source';
 import { getThemeUrl } from '@/lib/get-theme';
 import { resolveSiteName } from '@/lib/site-config';
 import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
@@ -28,9 +41,30 @@ import type { SiteLookupResult } from '@/server/api/types';
 import KatexStylesLoader from './_components/katex-loader';
 import SiteLogoutButton from './_components/site-logout-button';
 
-const { title, description, favicon, thumbnail } = getConfig();
+const { title: configTitle, description, favicon, thumbnail } = getConfig();
+const title = configTitle ?? 'Flowershow';
 
-export const metadata: Metadata = {
+/**
+ * Site lookup shared by generateMetadata and the layout body: React cache()
+ * dedupes it within a request, so the page costs one lookup, not two.
+ */
+const lookupSite = cache(
+  async (
+    username: string,
+    projectName: string,
+  ): Promise<SiteLookupResult | null> => {
+    if (username === '_domain') {
+      return api.site.getByDomain.query({ domain: projectName });
+    }
+    if (username === 'anon') {
+      return api.site.getAnonymous.query({ projectName });
+    }
+    return api.site.get.query({ username, projectName });
+  },
+);
+
+/** Pre-social-cards metadata, used when the flag is off (no lookups). */
+const staticMetadata: Metadata = {
   title,
   description,
   icons: [favicon],
@@ -39,30 +73,65 @@ export const metadata: Metadata = {
     description,
     type: 'website',
     url: `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}`,
-    images: [
-      {
-        url: thumbnail,
-        width: 1200,
-        height: 630,
-        alt: 'Thumbnail',
-      },
-    ],
+    images: [{ url: thumbnail, width: 1200, height: 630, alt: 'Thumbnail' }],
   },
   twitter: {
     card: 'summary_large_image',
     title,
     description,
-    images: [
-      {
-        url: thumbnail,
-        width: 1200,
-        height: 630,
-        alt: 'Thumbnail',
-      },
-    ],
-    creator: '@flowershowapp',
+    images: [{ url: thumbnail, width: 1200, height: 630, alt: 'Thumbnail' }],
   },
 };
+
+export async function generateMetadata(props: {
+  params: Promise<RouteParams>;
+}): Promise<Metadata> {
+  if (!isSocialCardsEnabled()) return staticMetadata;
+  const params = await props.params;
+  const base: Metadata = { title, description, icons: [favicon] };
+  const fallbackImage = { url: thumbnail, width: 1200, height: 630 };
+
+  const site = await lookupSite(
+    decodeURIComponent(params.user),
+    decodeURIComponent(params.project),
+  ).catch(() => null);
+  if (!site) {
+    return {
+      ...base,
+      ...buildSocialMetadata({
+        title,
+        description,
+        url: `https://${env.NEXT_PUBLIC_ROOT_DOMAIN}`,
+        image: fallbackImage,
+      }),
+    };
+  }
+
+  const siteUrl = getSiteUrl(site);
+  // Same inputs as the /_og route: protected sites use DB config only
+  // (tRPC getConfig would throw without the visitor cookie).
+  let cardSite = site;
+  let siteConfig: SiteConfig | null;
+  if (site.privacyMode === 'PASSWORD') {
+    const { plan, dbConfig } = await loadProtectedCardSource(site.id);
+    cardSite = { ...site, plan: plan ?? undefined };
+    siteConfig = dbConfig;
+  } else {
+    siteConfig = await api.site.getConfig
+      .query({ siteId: site.id })
+      .catch(() => null);
+  }
+  const inputs = toCardInputs({ site: cardSite, siteConfig, blob: null });
+  const image = {
+    url: socialCardUrl(siteUrl, '/', socialCardVersion(inputs)),
+    width: 1200,
+    height: 630,
+  };
+  return {
+    ...base,
+    ...buildSocialMetadata({ title, description, url: `${siteUrl}/`, image }),
+  };
+}
 
 interface RouteParams {
   user: string;
@@ -80,21 +149,7 @@ export default async function PublicLayout(props: {
   const username = decodeURIComponent(params.user); // user's github username or "_domain" if on custom domain (see middleware)
   const projectName = decodeURIComponent(params.project);
 
-  let site: SiteLookupResult | null;
-  if (username === '_domain') {
-    site = await api.site.getByDomain.query({
-      domain: projectName,
-    });
-  } else if (username === 'anon') {
-    site = await api.site.getAnonymous.query({
-      projectName,
-    });
-  } else {
-    site = await api.site.get.query({
-      username,
-      projectName,
-    });
-  }
+  const site = await lookupSite(username, projectName);
 
   if (!site) {
     notFound();

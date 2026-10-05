@@ -456,6 +456,29 @@ export const RssParamsSchema = z.object({
 });
 export type RssParams = z.infer<typeof RssParamsSchema>;
 
+// GET /api/og/:user/:project/:slug*
+export const OgImageParamsSchema = z.object({
+  user: z.string(),
+  project: z.string(),
+  slug: z.array(z.string()).optional(),
+});
+export type OgImageParams = z.infer<typeof OgImageParamsSchema>;
+
+// OpenAPI path params for the two documented forms of the route (an optional
+// array path param is not valid OpenAPI). The route validates with
+// OgImageParamsSchema, the Next.js catch-all shape.
+export const OgImageSiteParamsSchema = z.object({
+  user: z.string(),
+  project: z.string(),
+});
+export const OgImagePageParamsSchema = OgImageSiteParamsSchema.extend({
+  slug: z
+    .string()
+    .describe(
+      'Page path, slash-separated (e.g. `blog/my-post`); may contain `/`.',
+    ),
+});
+
 export const RobotsParamsSchema = z.object({
   hostname: z.string(),
 });

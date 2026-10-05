@@ -5,6 +5,12 @@ import { env } from './env.mjs';
  * @type {import('next').NextConfig}
  */
 const nextConfig = {
+  outputFileTracingIncludes: {
+    '/api/og/[user]/[project]/[[...slug]]': [
+      './components/og/fonts/*',
+      './components/og/flowershow-mark.png',
+    ],
+  },
   experimental: {
     globalNotFound: true,
     serverActions: {
