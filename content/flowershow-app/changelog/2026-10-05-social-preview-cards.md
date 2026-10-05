@@ -1,6 +1,6 @@
 ---
 title: Every page gets its own social preview
-date: 2026-10-04
+date: 2026-10-05
 description: Every page on your site now gets a generated social preview card with its title, description and site name, and a short description is computed when you haven't written one.
 authors:
   - rufuspollock
@@ -8,7 +8,7 @@ image: "[[assets/changelog-social-preview-cards.webp]]"
 showToc: false
 ---
 
-Share any page and it now unfurls with its own preview card instead of a generic thumbnail. This is rolling out gradually, so you may not see it on your site yet. See [[seo-social-metadata|SEO and social media metadata]].
+Share any page and it now unfurls with its own preview card instead of a generic thumbnail. See [[seo-social-metadata|SEO and social media metadata]].
 
 - **A card for every page:** a 1200×630 card with your logo (or a monogram), site name, page title, description and URL. Free sites include a small Flowershow mark; premium sites don't.
 - **Your own image still wins on premium:** if you set an `image` on a page or your site, that image is used instead.
