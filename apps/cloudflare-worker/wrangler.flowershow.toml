@@ -2,6 +2,9 @@ name = "flowershow-markdown-worker"
 main = "src/worker.js"
 compatibility_date = "2024-03-18"
 compatibility_flags = ["nodejs_compat", "rpc"]
+# Datopian Cloudflare account. Pinned so a deploy from a different wrangler
+# login fails instead of provisioning resources in the wrong account.
+account_id = "83025b28472d6aa2bf5ae59f3724aa78"
 
 [observability]
 enabled = true

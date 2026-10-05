@@ -198,6 +198,8 @@ npm run deploy:staging     # staging environment
 npm run deploy:production  # production environment
 ```
 
+The production account ID is pinned in `wrangler.flowershow.toml`. If you keep several wrangler logins (profiles), make sure the one in use can see the Datopian account. Older wrangler versions ignore profiles and read the default login. If a deploy says the account isn't accessible, run `npx wrangler@latest whoami` to check which login is active.
+
 Both commands pass `--keep-vars` so secrets set via the dashboard are not overwritten.
 
 ### Required secrets (set in Cloudflare dashboard → Worker settings → Variables)
