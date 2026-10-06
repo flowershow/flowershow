@@ -493,6 +493,16 @@ Or both width and height:
 
 ![[hiroshige.jpg|300x200]]
 
+### HTML image tags
+
+You can also use an HTML `<img>` tag, in both `.md` and `.mdx` files. Attributes such as `width`, `height`, `class` and `style` are kept as written:
+
+```html
+<img src="/assets/hiroshige.jpg" alt="Hiroshige art" width="300">
+```
+
+<img src="/assets/hiroshige.jpg" alt="Hiroshige art" width="300">
+
 ## Other media files
 
 Flowershow supports Obsidian’s media embeds using `![[...]]`.

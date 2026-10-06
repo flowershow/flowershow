@@ -4,8 +4,9 @@ import { ErrorBoundary } from 'react-error-boundary';
 import ErrorMessage from '@/components/public/error-message';
 import { env } from '@/env.mjs';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
+import { JSX_IMAGE_COMPONENT } from '@/lib/rehype-zoomable-jsx-images';
 import { resolveContentLink } from '@/lib/resolve-link';
-import { SiteLookupResult } from '@/server/api/types';
+import type { SiteLookupResult } from '@/server/api/types';
 import type { CustomHtmlProps } from './custom-html';
 import type { FlatUiTableProps } from './flatui-table';
 import FsImage from './fs-image';
@@ -40,7 +41,6 @@ export const mdxComponentsFactory = ({
 }) => {
   const components: MDXComponents = {
     img: (props: any) => {
-      console.log('Rendering image with props:', props);
       const resolvedFilePath = props?.['data-fs-resolved-file-path'];
       // Inject DB-intrinsic dimensions as data attributes so FsImage can
       // distinguish them from author-explicit width/height. DB dimensions
@@ -55,6 +55,9 @@ export const mdxComponentsFactory = ({
         : props;
       return <FsImage {...injectedProps} />;
     },
+    // Literal JSX <img> tags (see rehype-zoomable-jsx-images): rendered like
+    // HTML <img> in .md files.
+    [JSX_IMAGE_COMPONENT]: (props: any) => <FsImage {...props} />,
     pre: (props: any) => <Pre {...props} />,
     iframe: (props) => {
       const src = props.src ?? '';

@@ -181,6 +181,71 @@
 }
 
 @layer components {
+  /* Click-to-enlarge images (components/public/mdx/zoomable-image.tsx) */
+  .image-lightbox-trigger {
+    cursor: zoom-in;
+  }
+  .image-lightbox {
+    max-width: 100vw;
+    max-height: 100vh;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 1rem;
+    border: none;
+    background: transparent;
+    cursor: zoom-out;
+  }
+  .image-lightbox[open] {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .image-lightbox::backdrop {
+    background: #000;
+  }
+  .image-lightbox img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+  }
+  /* Delayed so cached images open without a flash. */
+  .image-lightbox-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2rem;
+    height: 2rem;
+    margin: -1rem 0 0 -1rem;
+    border: 3px solid rgb(255 255 255 / 0.25);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation:
+      image-lightbox-appear 0.2s 0.3s both,
+      image-lightbox-spin 0.8s linear infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .image-lightbox-spinner {
+      animation:
+        image-lightbox-appear 0.2s 0.3s both,
+        image-lightbox-spin 2.4s linear infinite;
+    }
+  }
+  @keyframes image-lightbox-appear {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes image-lightbox-spin {
+    to {
+      transform: rotate(1turn);
+    }
+  }
+  /* The page can't scroll behind an open lightbox. */
+  html:has(.image-lightbox[open]) {
+    overflow: hidden;
+    scrollbar-gutter: stable;
+  }
   .site-layout {
     display: flex;
     flex-direction: column;
@@ -2597,7 +2662,7 @@
       display: none;
     }
   }
-  
+
   .rendered-mdx.is-plain {
     font-family: var(--font-heading);
   }

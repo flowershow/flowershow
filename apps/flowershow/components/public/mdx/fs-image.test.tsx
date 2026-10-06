@@ -18,7 +18,7 @@ describe('FsImage', () => {
     it('renders as plain img element without next/image', () => {
       render(<FsImage src="/demo.png" alt="Demo" width={320} height={200} />);
 
-      expect(screen.getByRole('img')).toBeInTheDocument();
+      expect(screen.getByAltText('Demo')).toBeInTheDocument();
       expect(screen.queryByTestId('next-image')).not.toBeInTheDocument();
     });
 
@@ -33,8 +33,16 @@ describe('FsImage', () => {
         />,
       );
 
-      const img = screen.getByRole('img');
+      const img = screen.getByAltText('Demo');
       expect(img).toHaveClass('rounded-lg');
+    });
+
+    it('keeps author width and height on plain img', () => {
+      render(<FsImage src="/demo.png" alt="Demo" width="300" height="100" />);
+
+      const img = screen.getByAltText('Demo');
+      expect(img).toHaveAttribute('width', '300');
+      expect(img).toHaveAttribute('height', '100');
     });
   });
 

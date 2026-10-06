@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **275 styled class selectors**:
-**273 stable semantic hooks** and **2 non-contract
+and currently documents **278 styled class selectors**:
+**276 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -508,7 +508,7 @@ Blocks rendered after the main page content.
 | <code>.page-edit-button</code> | Hook |
 | <code>.page-edit-button-container</code> | Hook |
 
-## Graph, canvas, PDF, and media embeds
+## Graph, canvas, PDF, image lightbox, and media embeds
 
 Graph panels/modals and document/media rendering surfaces.
 
@@ -517,6 +517,8 @@ Graph panels/modals and document/media rendering surfaces.
 ```text
 .graph-mini-panel / .graph-modal
 .canvas-node-content
+.image-lightbox-trigger (zoomable image)
+.image-lightbox (dialog)
 .pdf-viewer
 ├─ .pdf-header
 └─ .pdf-scroll-area
@@ -542,6 +544,9 @@ Graph panels/modals and document/media rendering surfaces.
 | <code>.graph-modal__header</code> | Element |
 | <code>.graph-modal__inner</code> | Element |
 | <code>.graph-modal__title</code> | Element |
+| <code>.image-lightbox</code> | Hook |
+| <code>.image-lightbox-spinner</code> | Hook |
+| <code>.image-lightbox-trigger</code> | Hook |
 | <code>.pdf-error</code> | Hook |
 | <code>.pdf-filename</code> | Hook |
 | <code>.pdf-header</code> | Hook |

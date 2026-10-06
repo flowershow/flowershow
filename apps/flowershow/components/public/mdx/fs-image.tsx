@@ -1,5 +1,5 @@
-import Image from 'next/image';
 import React, { ImgHTMLAttributes } from 'react';
+import ZoomableImage from './zoomable-image';
 
 type FsImageProps = ImgHTMLAttributes<HTMLImageElement> & {
   /** Optional: choose how to fit when author provides WxH (e.g. 300x200). */
@@ -25,13 +25,16 @@ export default function FsImage(props: FsImageProps) {
   if (!src) return null;
 
   // Only use next/image optimization for images from wiki-link/common-mark syntax
-  // (remark-wiki-link adds "internal" class). HTML/JSX images get a plain <img>.
+  // (remark-wiki-link adds "internal" class). HTML/JSX images get a plain <img>
+  // with the author's width/height kept as written.
   const isInternal = className?.split(/\s+/).includes('internal');
   if (!isInternal) {
     return (
-      <img
+      <ZoomableImage
         src={src}
         alt={alt ?? ''}
+        width={_htmlWidth}
+        height={_htmlHeight}
         className={className}
         style={style}
         {...rest}
@@ -79,7 +82,8 @@ export default function FsImage(props: FsImageProps) {
           margin: '0 auto',
         }}
       >
-        <Image
+        <ZoomableImage
+          optimized
           {...commonImageProps}
           fill
           sizes={`(min-width: ${maxWidth}px) ${maxWidth}px, 100vw`}
@@ -109,7 +113,8 @@ export default function FsImage(props: FsImageProps) {
             margin: '0 auto',
           }}
         >
-          <Image
+          <ZoomableImage
+            optimized
             {...commonImageProps}
             fill
             sizes={`(min-width: ${maxWidth}px) ${maxWidth}px, 100vw`}
@@ -121,7 +126,8 @@ export default function FsImage(props: FsImageProps) {
 
     // With computed ratio, use width/height (best for next/image optimization)
     return (
-      <Image
+      <ZoomableImage
+        optimized
         {...commonImageProps}
         width={maxWidth}
         height={computedHeight}
@@ -139,7 +145,8 @@ export default function FsImage(props: FsImageProps) {
   // --- Case C: No author constraint; use DB intrinsic size for ratio + full-width responsive ---
   if (intrinsicWidth && intrinsicHeight) {
     return (
-      <Image
+      <ZoomableImage
+        optimized
         {...commonImageProps}
         width={intrinsicWidth}
         height={intrinsicHeight}
@@ -164,7 +171,8 @@ export default function FsImage(props: FsImageProps) {
         aspectRatio: fallbackAspectRatio,
       }}
     >
-      <Image
+      <ZoomableImage
+        optimized
         {...commonImageProps}
         fill
         sizes="100vw"

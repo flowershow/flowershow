@@ -30,6 +30,7 @@ import rehypeResolveExplicitJsxUrls from './rehype-resolve-explicit-jsx-urls';
 import rehypeResolveHtmlUrls from './rehype-resolve-html-urls';
 import rehypeToReact from './rehype-to-react';
 import rehypeUnwrapParagraphsAroundMedia from './rehype-unwrap-paragraph-around-media';
+import rehypeZoomableJsxImages from './rehype-zoomable-jsx-images';
 import remarkChangelog, {
   type RemarkChangelogOptions,
 } from './remark-changelog';
@@ -217,6 +218,8 @@ export const getMdxOptions = ({
         [rehypeKatex, { output: 'htmlAndMathml' }],
         // @ts-ignore
         [rehypePrismPlus, { ignoreMissing: true }],
+        // Last: earlier plugins match JSX images by the `img` name
+        rehypeZoomableJsxImages,
       ],
     },
   };

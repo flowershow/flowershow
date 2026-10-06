@@ -80,9 +80,9 @@ const GROUPS = [
   },
   {
     id: 'embeds',
-    title: 'Graph, canvas, PDF, and media embeds',
+    title: 'Graph, canvas, PDF, image lightbox, and media embeds',
     description: 'Graph panels/modals and document/media rendering surfaces.',
-    dom: `.graph-mini-panel / .graph-modal\n.canvas-node-content\n.pdf-viewer\n├─ .pdf-header\n└─ .pdf-scroll-area\n   └─ .pdf-page`,
+    dom: `.graph-mini-panel / .graph-modal\n.canvas-node-content\n.image-lightbox-trigger (zoomable image)\n.image-lightbox (dialog)\n.pdf-viewer\n├─ .pdf-header\n└─ .pdf-scroll-area\n   └─ .pdf-page`,
   },
   {
     id: 'errors',
@@ -151,7 +151,7 @@ export function classifyClassName(name) {
   if (/^search/.test(name)) return 'search';
   if (/^site-footer/.test(name)) return 'footer';
   if (/^page-(backlinks|comments|edit)/.test(name)) return 'page-actions';
-  if (/^(graph-|pdf-|canvas-)/.test(name)) return 'embeds';
+  if (/^(graph-|pdf-|canvas-|image-lightbox)/.test(name)) return 'embeds';
   if (/^(error-|not-found)/.test(name)) return 'errors';
   if (
     /^(page-(header|hero)|rendered-mdx|heading-link|pre-|contains-task-list)/.test(
