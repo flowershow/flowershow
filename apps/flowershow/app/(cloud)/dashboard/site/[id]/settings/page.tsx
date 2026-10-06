@@ -689,6 +689,25 @@ export default async function SiteSettingsPage(props: {
             handleSubmit={updateDbConfig}
           />
           <Form
+            title="Show Reading Time"
+            description="Show an estimated reading time (e.g. “8 min read”) in the page header. Individual pages can override this with showReadingTime in their frontmatter."
+            helpText={
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/page-headers#reading-time"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            }
+            inputAttrs={{
+              name: 'showReadingTime',
+              type: 'text',
+              defaultValue: Boolean(siteConfig?.showReadingTime).toString(),
+            }}
+            handleSubmit={updateDbConfig}
+          />
+          <Form
             title="Show Knowledge Graph"
             description="Show a knowledge graph on each page, visualising connections between notes."
             inputAttrs={{

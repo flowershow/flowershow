@@ -62,6 +62,25 @@ The `date` field sets the publication date for your page and is displayed in pag
 date: 2024-03-06 # YYYY-MM-DD format
 ```
 
+### Reading time
+
+Show an estimated reading time (e.g. "8 min read") in the page header, next to the authors and date. It's calculated from the page's word count at 200 words per minute, rounded up.
+
+Reading time is off by default. Turn it on for the whole site under **Settings → Content → Show Reading Time** in the dashboard, or in `config.json`:
+
+```json
+"showReadingTime": true
+```
+
+Override the site-wide setting on a single page with frontmatter:
+
+```yaml
+---
+title: A long guide
+showReadingTime: true # or false to hide it on this page
+---
+```
+
 ### Featured image
 
 The `image` field sets a featured image for your page.

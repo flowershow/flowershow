@@ -148,6 +148,7 @@ export interface PageMetadata {
         imagelayout?: 'right' | 'full';
       };
   showEditLink?: boolean;
+  showReadingTime?: boolean;
   showComments?: boolean;
   annotations?: boolean;
   permalink?: string;

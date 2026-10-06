@@ -44,6 +44,7 @@ import { isChangelogDirName, parsePageParam } from '@/lib/changelog';
 import { resolveChangelogContext } from '@/lib/changelog-context';
 import { hasVersionSections } from '@/lib/changelog-file';
 import { anonRobots } from '@/lib/anonymous-site';
+import { readingTime } from '@/lib/reading-time';
 import { renderPageContent } from '@/lib/render-page-content';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
@@ -484,6 +485,10 @@ export default async function SitePage(props: {
     : undefined;
 
   const showEditLink = metadata?.showEditLink ?? siteConfig?.showEditLink;
+  const pageReadingTime =
+    (metadata?.showReadingTime ?? siteConfig?.showReadingTime) === true
+      ? readingTime(pageContent ?? '')
+      : undefined;
   const showRawLink = siteConfig?.showRawLink;
   const normalizedRootDir = site?.rootDir
     ? `${site.rootDir.replace(/^(.?\/)+|\/+$/g, '')}/`
@@ -621,6 +626,7 @@ export default async function SitePage(props: {
                 title={metadata?.title ?? ''}
                 description={displayDescription(metadata) ?? ''}
                 date={metadata?.date}
+                readingTime={pageReadingTime}
                 showHero={heroConfig.showHero}
                 authors={authors}
                 tags={

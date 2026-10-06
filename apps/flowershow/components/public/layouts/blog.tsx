@@ -1,5 +1,5 @@
 import { tagToHref } from '@flowershow/core';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, ClockIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -10,6 +10,8 @@ interface Props extends React.PropsWithChildren {
   description?: string;
   showHero?: boolean;
   date?: string;
+  /** Pre-computed label, e.g. "8 min read". Omitted when reading time is off. */
+  readingTime?: string;
   authors?: {
     key: string;
     name: string;
@@ -26,6 +28,7 @@ export const BlogLayout: React.FC<Props> = ({
   description,
   showHero = false,
   date,
+  readingTime,
   authors,
   tags,
 }) => {
@@ -105,6 +108,13 @@ export const BlogLayout: React.FC<Props> = ({
                   // the raw frontmatter value rather than crashing the render.
                   <span>{date}</span>
                 )}
+              </div>
+            )}
+
+            {readingTime && (
+              <div className="page-header-reading-time">
+                <ClockIcon className="page-header-reading-time-icon" />
+                <span>{readingTime}</span>
               </div>
             )}
           </div>

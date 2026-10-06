@@ -22,6 +22,7 @@ export const SITE_CONFIG_DEFAULTS = {
   showBuiltWithButton: true,
   showRawLink: false,
   showEditLink: false,
+  showReadingTime: false,
   syntaxMode: 'auto' as const,
 } satisfies Partial<SiteConfig>;
 

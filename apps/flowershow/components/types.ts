@@ -87,6 +87,11 @@ export interface SiteConfig {
   showToc?: boolean;
   showKnowledgeGraph?: boolean;
   showEditLink?: boolean;
+  /**
+   * Show an estimated reading time ("8 min read") in the page header.
+   * Off by default; a page can override it with `showReadingTime` in frontmatter.
+   */
+  showReadingTime?: boolean;
   showComments?: boolean;
   /**
    * Let anyone who can view a Markdown page select text and leave an

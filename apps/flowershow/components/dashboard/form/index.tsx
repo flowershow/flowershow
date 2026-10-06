@@ -59,6 +59,7 @@ export default function Form({
     'showRawLink',
     'showSidebar',
     'showToc',
+    'showReadingTime',
     'showEditLink',
     'showModeSwitch',
     'showBacklinks',

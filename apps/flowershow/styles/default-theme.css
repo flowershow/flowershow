@@ -2080,6 +2080,16 @@
     width: 1rem;
     height: 1rem;
   }
+  .page-header-reading-time {
+    display: flex;
+    align-items: center;
+    color: var(--color-foreground-300);
+  }
+  .page-header-reading-time-icon {
+    margin-right: 0.25rem;
+    width: 1rem;
+    height: 1rem;
+  }
   .page-header-authors-container {
     display: flex;
     align-items: center;

@@ -407,6 +407,19 @@ Show an "Edit this page" link at the bottom of each page. [[edit-this-page|Learn
 
 ---
 
+### `showReadingTime`
+
+**Type:** `boolean`  
+**Default:** `false`
+
+Show an estimated reading time (e.g. "8 min read") in the page header. Pages can override it with `showReadingTime` in frontmatter. [[page-headers#reading-time|Learn more →]]
+
+```json
+"showReadingTime": true
+```
+
+---
+
 ### `enableSearch` (⭐️ Premium feature)
 
 **Type:** `boolean`  
