@@ -153,6 +153,9 @@ export interface PageMetadata {
   showNavbar?: boolean;
   /** `false` hides the site footer on this page (overrides site config). */
   showFooter?: boolean;
+  showBreadcrumbs?: boolean;
+  /** Breadcrumb label that replaces the folder-derived trail */
+  section?: string;
   showComments?: boolean;
   annotations?: boolean;
   /** Premium: JS files/URLs to load on this page (see `resolvePageScripts`). Untrusted. */

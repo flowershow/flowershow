@@ -708,6 +708,25 @@ export default async function SiteSettingsPage(props: {
             handleSubmit={updateDbConfig}
           />
           <Form
+            title="Show Breadcrumbs"
+            description="Show a breadcrumb trail (e.g. “Guides / Install”) above the page title. Individual pages can override this with showBreadcrumbs, or set section to group pages on flat sites."
+            helpText={
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/page-headers#breadcrumbs"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            }
+            inputAttrs={{
+              name: 'showBreadcrumbs',
+              type: 'text',
+              defaultValue: (siteConfig?.showBreadcrumbs ?? true).toString(),
+            }}
+            handleSubmit={updateDbConfig}
+          />
+          <Form
             title="Show Knowledge Graph"
             description="Show a knowledge graph on each page, visualising connections between notes."
             inputAttrs={{

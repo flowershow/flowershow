@@ -103,6 +103,12 @@ export interface SiteConfig {
    * `showFooter` in frontmatter.
    */
   showFooter?: boolean;
+  /**
+   * Show a breadcrumb trail above the page title. On by default; a page can
+   * override it with `showBreadcrumbs`, and set `section` to replace the
+   * folder-derived trail.
+   */
+  showBreadcrumbs?: boolean;
   showComments?: boolean;
   /**
    * Let anyone who can view a Markdown page select text and leave an

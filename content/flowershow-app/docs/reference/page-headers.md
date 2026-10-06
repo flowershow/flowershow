@@ -81,6 +81,42 @@ showReadingTime: true # or false to hide it on this page
 ---
 ```
 
+### Breadcrumbs
+
+Show a breadcrumb trail above the page title, e.g. **Guides › Advanced › Tuning**. The trail follows your site's folder structure, the same one the [[sidebar|sidebar]] uses. Folders link to their `index.md` or `README.md` page if they have one. The last crumb is the current page.
+
+Breadcrumbs are on by default. Turn them off for the whole site under **Settings → Content → Show Breadcrumbs** in the dashboard, or in `config.json`:
+
+```json
+"showBreadcrumbs": false
+```
+
+Breadcrumbs appear above the title on every screen size. Pages in the root folder have nothing above them, so they show no breadcrumbs.
+
+Override the site-wide setting on a single page with frontmatter:
+
+```yaml
+---
+title: Install
+showBreadcrumbs: false # or true to show them when the site has them off
+---
+```
+
+#### Group pages on a flat site with `section`
+
+If your pages sit side by side in one folder, the folder tree can't express grouping. Set `section` in a page's frontmatter to replace the folder trail with your own label:
+
+```yaml
+---
+title: Guide
+section: Use it
+---
+```
+
+This page's breadcrumbs read **Use it › Guide**. The section label isn't a link.
+
+Style the trail with the `.page-header-breadcrumbs` class. See the [[theme-class-reference|theme class reference]] for the other breadcrumb classes.
+
 ### Featured image
 
 The `image` field sets a featured image for your page.

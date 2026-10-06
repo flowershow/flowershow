@@ -23,6 +23,7 @@ export const SITE_CONFIG_DEFAULTS = {
   showRawLink: false,
   showEditLink: false,
   showReadingTime: false,
+  showBreadcrumbs: true,
   syntaxMode: 'auto' as const,
 } satisfies Partial<SiteConfig>;
 

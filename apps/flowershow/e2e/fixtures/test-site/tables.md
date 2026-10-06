@@ -1,5 +1,6 @@
 ---
 title: Tables Test
+section: Use it
 ---
 
 # Tables
