@@ -25,6 +25,20 @@ Set the type at creation time with `--type "Bug"` / `--type "Feature"` / `--type
 
 Infer the repo from `git remote -v` — `gh` does this automatically when run inside a clone.
 
+## Claiming an issue
+
+As soon as you start working on an issue, claim it: assign it to the user running the session, and set its Status to **🏗 In progress** on the "Flowershow Backlog" project (#1). Do this before writing any code.
+
+```bash
+N=<issue-number>
+gh issue edit "$N" --add-assignee @me
+ITEM=$(gh project item-add 1 --owner flowershow --url "https://github.com/flowershow/flowershow/issues/$N" --format json --jq .id)
+gh project item-edit --id "$ITEM" --project-id PVT_kwDOBlO6L84ADb7F \
+  --field-id PVTSSF_lADOBlO6L84ADb7FzgB-iyU --single-select-option-id 5668eb0e
+```
+
+`item-add` is idempotent: it returns the existing item if the issue is already on the board. The project commands need the `project` scope; if they fail, run `gh auth refresh -s project`.
+
 ## When a skill says "publish to the issue tracker"
 
 Create a GitHub issue.

@@ -83,6 +83,8 @@ This applies to any user-visible change: adding/removing tools, renaming command
 
 GitHub Issues is the issue tracker. See `docs/agents/issue-tracker.md`.
 
+**When you start work on an issue, claim it first:** assign it to `@me` and set its project Status to "🏗 In progress". Commands are in `docs/agents/issue-tracker.md#claiming-an-issue`.
+
 ### Triage categories and labels
 
 **Category** is set via GitHub **issue types**, not labels: `Bug` and `Enhancement` are issue types. Do not create or apply labels of the same names.
