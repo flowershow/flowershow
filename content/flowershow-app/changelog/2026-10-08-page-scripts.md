@@ -17,6 +17,8 @@ scripts:
 ---
 ```
 
+> ⭐️ **Page scripts are a Premium feature.** Premium is $5/month or $50/year per site. [See pricing](/pricing)
+
 - **Runs on every visit:** on a full page load, when readers navigate to the page from elsewhere on your site, and when they come back to it.
 - **Your files or a CDN:** use paths from your site root or relative to the page, or `https://` URLs. Up to 10 scripts per page, run in order.
 - **Works in `.md` and `.mdx` pages.**
