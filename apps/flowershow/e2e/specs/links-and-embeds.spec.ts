@@ -227,8 +227,8 @@ test('Links', async ({ page, basePath }) => {
 
   const cmEmbeds = content.getByTestId('commonmark-embeds');
   await cmEmbeds.scrollIntoViewIfNeeded();
-  // Use locator('img') instead of getByRole('img') because resized images
-  // have alt="" which ARIA treats as presentational, hiding them from role queries.
+  // Use locator('img') instead of getByRole('img'): resized images have alt=""
+  // (presentational to ARIA), and click-to-enlarge images carry role="button".
   await expect(cmEmbeds.locator('img')).toHaveCount(5);
 
   await test.step('CM embed: image renders with alt text', async () => {
@@ -274,17 +274,21 @@ test('Links', async ({ page, basePath }) => {
 
   const obsidianEmbeds = content.getByTestId('obsidian-embeds');
   await obsidianEmbeds.scrollIntoViewIfNeeded();
+  // locator('img'), not getByRole('img'): zoomable images have role="button".
+  await expect(obsidianEmbeds.locator('img')).toHaveCount(4);
 
   await test.step('wiki embed: image renders', async () => {
-    const img = obsidianEmbeds.getByRole('img').first();
+    const img = obsidianEmbeds.locator('img').first();
     await expect(img).toBeVisible();
+    // Click-to-enlarge: the image itself is the lightbox trigger.
+    await expect(img).toHaveAttribute('role', 'button');
     await expectResolvedImage(img);
     await expect(img).not.toHaveAttribute('data-fs-width', /.+/);
     await expect(img).not.toHaveAttribute('data-fs-height', /.+/);
   });
 
   await test.step('wiki embed: image with width has data-fs-width', async () => {
-    const img = obsidianEmbeds.getByRole('img').nth(1);
+    const img = obsidianEmbeds.locator('img').nth(1);
     await expect(img).toBeVisible();
     await expect(img).toHaveAttribute('data-fs-width', '300');
     await expect(img).not.toHaveAttribute('data-fs-height', '300');
@@ -292,7 +296,7 @@ test('Links', async ({ page, basePath }) => {
   });
 
   await test.step('wiki embed: small image is not stretched beyond intrinsic width', async () => {
-    const img = obsidianEmbeds.getByRole('img').nth(3);
+    const img = obsidianEmbeds.locator('img').nth(3);
     await expect(img).toBeVisible();
     await expectResolvedImage(img);
     const intrinsicWidth = await img.getAttribute('data-fs-intrinsic-width');
@@ -300,7 +304,7 @@ test('Links', async ({ page, basePath }) => {
   });
 
   await test.step('wiki embed: image with dimensions has both data attributes', async () => {
-    const img = obsidianEmbeds.getByRole('img').nth(2);
+    const img = obsidianEmbeds.locator('img').nth(2);
     await expect(img).toBeVisible();
     await expectResolvedImage(img);
     await expect(img).toHaveAttribute('data-fs-width', '300');
