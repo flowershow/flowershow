@@ -68,28 +68,20 @@ describe('isSiteOwnHost', () => {
     expect(isSiteOwnHost(host, site)).toBe(false);
   });
 
-  it('rejects a custom domain equal to an app host', () => {
-    const s = {
-      subdomain: 'notes-alice',
-      customDomain: 'cloud.test.localhost',
-    };
-    expect(isSiteOwnHost('cloud.test.localhost', s)).toBe(false);
-  });
-
-  it('ignores a custom domain that is on a reserved Flowershow domain', () => {
-    const s = {
-      subdomain: 'notes-alice',
-      customDomain: 'notes-bob.test.localhost',
-    };
-    expect(isSiteOwnHost('notes-bob.test.localhost', s)).toBe(false);
-    // The site's own subdomain host still works.
-    expect(isSiteOwnHost('notes-alice.test.localhost', s)).toBe(true);
-  });
-
-  it('ignores a custom domain under the home domain', () => {
+  it('accepts a Flowershow-owned site on the home domain', () => {
     mutableEnv.NEXT_PUBLIC_HOME_DOMAIN = 'flowershow.app';
-    const s = { subdomain: 'notes-alice', customDomain: 'foo.flowershow.app' };
-    expect(isSiteOwnHost('foo.flowershow.app', s)).toBe(false);
+    const s = {
+      subdomain: 'flowershow-app-olayway',
+      customDomain: 'flowershow.app',
+    };
+    expect(isSiteOwnHost('flowershow.app', s)).toBe(true);
+    expect(isSiteOwnHost('product.flowershow.app', s)).toBe(false);
+    expect(isSiteOwnHost('cloud.flowershow.app', s)).toBe(false);
+  });
+
+  it('rejects an app host for a site that does not own it', () => {
+    const s = { subdomain: 'notes-alice', customDomain: 'docs.example.com' };
+    expect(isSiteOwnHost('cloud.test.localhost', s)).toBe(false);
   });
 
   it('rejects any host when the subdomain is empty and there is no custom domain', () => {
@@ -130,10 +122,10 @@ describe('getSiteOwnOrigin', () => {
     );
   });
 
-  it('skips a reserved custom domain', () => {
+  it('uses a custom domain on a Flowershow domain (own sites)', () => {
     expect(
-      getSiteOwnOrigin({ ...site, customDomain: 'notes-bob.test.localhost' }),
-    ).toBe('http://notes-alice.test.localhost');
+      getSiteOwnOrigin({ ...site, customDomain: 'product.test.localhost' }),
+    ).toBe('http://product.test.localhost');
   });
 
   it('uses https in production', () => {
