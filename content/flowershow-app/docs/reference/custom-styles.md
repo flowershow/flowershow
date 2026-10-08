@@ -9,7 +9,7 @@ description: Customize the appearance of your site with CSS.
 2. Add your CSS rules to customize colors, fonts, layouts, and more
 3. Publish it along with your content.
 
-Flowershow uses CSS cascade layers, so any rule you write in `custom.css` wins over the default theme without needing `!important`.
+`custom.css` loads after the default theme, so a rule in `custom.css` wins over the theme when its selector is equally or more specific, without needing `!important`. Overriding the variables in `:root` is the most reliable way to restyle the site.
 
 Start with the theme variables below for broad visual changes. When you need to
 target a particular component or state, use the
@@ -105,6 +105,15 @@ The navbar call-to-action button is unstyled by default (inherits foreground ton
   --font-body: "Inter", sans-serif;
 }
 ```
+
+#### Fonts and other files referenced from custom.css
+
+- **Use paths that start with `/`.** `custom.css` is inlined into every page, so `url()` paths resolve against the page's URL. `url('/fonts/Brand.woff2')` works on every page. `url('fonts/Brand.woff2')` breaks on pages in subfolders.
+- **Put `@import` at the very top.** Only comments may come before it. An `@import` after any other rule is silently ignored. Don't add `layer(...)`: rules inside a cascade layer lose to the default theme.
+- **Publish the files.** Fonts (`.woff2`, `.woff`, `.ttf`, `.otf`) are served like any other site file. If you use `contentInclude`, include the folder that holds them.
+- **Don't embed fonts as base64 `data:` URLs.** They make `custom.css`, and so every page, much larger.
+
+See the [Custom fonts guide](/docs/guides/custom-fonts) for a full example.
 
 #### Font sizes
 

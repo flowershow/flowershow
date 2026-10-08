@@ -1,12 +1,14 @@
 /* ----------------------------------------------------------------------
    Default Flowershow Theme
    ----------------------------------------------------------------------
-   ▸ Because rules in this file are structured using cascade layers, no
-     `!important` flags are necessary to override them in custom css files and themes
-     – the selectors will win on cascade order.
-   ▸ Theme authors can override any rule simply by defining the same
-     selector in their own CSS (loaded later) or by tweaking the CSS
-     Custom Properties in `:root`.
+   ▸ This file is compiled by Tailwind v3, which consumes the
+     `@layer base|components|utilities { … }` blocks below and emits their
+     rules unlayered. The built CSS keeps only the bare `@layer …;`
+     statement, so these rules are NOT in real cascade layers.
+   ▸ Site `custom.css` and themes load after this file, so they win on
+     source order when their selectors are equally or more specific. A
+     more specific selector here still wins. Overriding the CSS Custom
+     Properties in `:root` is the most reliable way to restyle.
 ------------------------------------------------------------------------ */
 
 @tailwind base;

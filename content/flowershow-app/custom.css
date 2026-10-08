@@ -1,8 +1,8 @@
 /* ==========================================================================
    Flowershow landing pages — shared styles
    --------------------------------------------------------------------------
-   Flowershow auto-loads this file from the content root and layers it above
-   the default theme (CSS cascade layers), so no !important is needed.
+   Flowershow auto-loads this file from the content root after the default
+   theme, so rules with equal or higher specificity win without !important.
 
    Everything here is scoped under `.fs-root` so it applies ONLY to landing
    pages that wrap their body in `<div className="fs-root"> … </div>` and never
