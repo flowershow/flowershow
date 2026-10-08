@@ -27,3 +27,4 @@ See [[footer|Footer configuration]] and [[navbar|Navbar configuration]] for deta
 **Fixes**
 
 - The custom styles docs said Flowershow uses CSS cascade layers so `custom.css` always wins. It doesn't: `custom.css` loads after the theme, so a rule with equal or higher specificity wins. The docs now say so.
+- A `_footer.md` published before custom footers launched no longer shows up as a broken page link in your sitemap, RSS feed, sidebar, search, graph, backlinks or tag pages.
