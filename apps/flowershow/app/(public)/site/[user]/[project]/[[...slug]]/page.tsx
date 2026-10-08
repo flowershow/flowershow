@@ -603,7 +603,14 @@ export default async function SitePage(props: {
                   title={metadata?.title || 'Changelog'}
                   intro={
                     pageContent?.trim() ? (
-                      <div id="mdxpage">{compiledContent}</div>
+                      // Keyed by page number so `?page=` navigation remounts
+                      // the intro and re-runs its page scripts.
+                      <div
+                        id="mdxpage"
+                        key={`${blob.path}?page=${changelogPage}`}
+                      >
+                        {compiledContent}
+                      </div>
                     ) : undefined
                   }
                   renderMode={renderMode}
@@ -614,9 +621,13 @@ export default async function SitePage(props: {
                   showTags={showTags}
                 />
                 {/* No intro (empty body), so compiledContent with its page
-                    scripts isn't rendered: load the scripts here instead. */}
+                    scripts isn't rendered: load the scripts here instead.
+                    Keyed by page number so `?page=` navigation re-runs them. */}
                 {!pageContent?.trim() && pageScripts.length > 0 && (
-                  <PageScripts key={blob.path} srcs={pageScripts} />
+                  <PageScripts
+                    key={`${blob.path}?page=${changelogPage}`}
+                    srcs={pageScripts}
+                  />
                 )}
                 <CanvasEnhancer />
               </>

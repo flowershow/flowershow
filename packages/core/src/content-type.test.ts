@@ -13,6 +13,12 @@ describe('getContentType', () => {
     expect(getContentType('pdf')).toBe('application/pdf');
   });
 
+  // Page scripts accept `.JS`, so upload must not fall back to octet-stream.
+  it('is case-insensitive and accepts a leading dot', () => {
+    expect(getContentType('JS')).toBe('text/javascript');
+    expect(getContentType('.Js')).toBe('text/javascript');
+  });
+
   // Served with X-Content-Type-Options: nosniff, a script or stylesheet with
   // the wrong type is blocked, so web assets must map correctly.
   it('maps web assets used by HTML sites', () => {

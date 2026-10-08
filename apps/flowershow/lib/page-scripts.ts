@@ -3,10 +3,20 @@ import * as path from 'path';
 /** Maximum number of scripts a page can load via `scripts` frontmatter. */
 export const MAX_PAGE_SCRIPTS = 10;
 
+/**
+ * Maximum number of `scripts` entries examined per page. Bounds server work
+ * (this runs on every uncached render) when a page lists a huge array.
+ */
+export const MAX_PAGE_SCRIPT_ENTRIES = 100;
+
 // Control characters (incl. tab/newline, which URL parsers silently strip) and
 // backslashes (which browsers treat as `/`, so `/\host` becomes `//host`).
 const UNSAFE_CHARS = /[\u0000-\u001F\u007F\\]/u;
-const HAS_SCHEME = /^[a-z][a-z0-9+.-]*:/iu;
+// Prefixes treated as a URL scheme. Anything else, including a relative path
+// whose first segment contains `:` (`v1:app.js`), is treated as a site path,
+// which can only ever resolve to a published, percent-encoded same-origin path.
+const URL_SCHEME =
+  /^(?:https?|javascript|vbscript|data|blob|file|filesystem|ftp|wss?|about|mailto|view-source):/iu;
 const PROBE_ORIGIN = 'https://site.invalid';
 
 /**
@@ -22,7 +32,9 @@ const PROBE_ORIGIN = 'https://site.invalid';
  *
  * Anything else (other schemes, protocol-relative URLs, backslashes, control
  * characters, non-`.js` site files, unpublished files) is dropped. Duplicates
- * are removed and at most {@link MAX_PAGE_SCRIPTS} are kept, in order.
+ * are removed and at most {@link MAX_PAGE_SCRIPTS} are kept, in order. Only
+ * the first {@link MAX_PAGE_SCRIPT_ENTRIES} entries are examined, and at most
+ * one warning is logged per call.
  *
  * Frontmatter is untrusted input: the output is re-checked so that a site path
  * can never resolve to another origin.
@@ -35,35 +47,60 @@ export function resolvePageScripts(
   if (!Array.isArray(entries)) return [];
 
   const published = new Set(siteFilePaths);
-  const out: string[] = [];
+  const out = new Set<string>();
+  const unpublished: string[] = [];
+  let capped = false;
 
-  for (const entry of entries) {
+  const limit = Math.min(entries.length, MAX_PAGE_SCRIPT_ENTRIES);
+  for (let i = 0; i < limit; i++) {
+    const entry: unknown = entries[i];
     if (typeof entry !== 'string') continue;
-    const resolved = resolveEntry(entry, pagePath, published);
-    if (resolved && !out.includes(resolved)) out.push(resolved);
+    const resolved = resolveEntry(entry, pagePath, published, unpublished);
+    if (!resolved) continue;
+    out.add(resolved);
+    if (out.size === MAX_PAGE_SCRIPTS) {
+      capped = i < entries.length - 1;
+      break;
+    }
   }
 
-  if (out.length > MAX_PAGE_SCRIPTS) {
-    console.warn(
-      `[page-scripts] ${pagePath}: only the first ${MAX_PAGE_SCRIPTS} scripts are loaded`,
-    );
-    return out.slice(0, MAX_PAGE_SCRIPTS);
+  const problems: string[] = [];
+  if (unpublished.length > 0) {
+    const shown = unpublished
+      .slice(0, 3)
+      .map((v) => `"${v}"`)
+      .join(', ');
+    const more =
+      unpublished.length > 3 ? ` and ${unpublished.length - 3} more` : '';
+    problems.push(`not published, skipped: ${shown}${more}`);
   }
-  return out;
+  if (capped) {
+    problems.push(`only the first ${MAX_PAGE_SCRIPTS} scripts are loaded`);
+  } else if (entries.length > MAX_PAGE_SCRIPT_ENTRIES) {
+    problems.push(
+      `only the first ${MAX_PAGE_SCRIPT_ENTRIES} entries are examined`,
+    );
+  }
+  if (problems.length > 0) {
+    console.warn(`[page-scripts] ${pagePath}: ${problems.join('; ')}`);
+  }
+
+  return [...out];
 }
 
 function resolveEntry(
   entry: string,
   pagePath: string,
   published: Set<string>,
+  unpublished: string[],
 ): string | null {
   const value = entry.trim();
   if (!value || UNSAFE_CHARS.test(value)) return null;
 
-  if (HAS_SCHEME.test(value)) return resolveExternal(value);
+  if (URL_SCHEME.test(value)) return resolveExternal(value);
   if (value.startsWith('//')) return null;
 
-  return resolveSitePath(value, pagePath, published);
+  return resolveSitePath(value, pagePath, published, unpublished);
 }
 
 function resolveExternal(value: string): string | null {
@@ -82,6 +119,7 @@ function resolveSitePath(
   value: string,
   pagePath: string,
   published: Set<string>,
+  unpublished: string[],
 ): string | null {
   // Query strings and hashes are not supported on site paths (served files
   // are already cache-busted by content); drop them.
@@ -110,9 +148,7 @@ function resolveSitePath(
   if (path.posix.extname(resolved).toLowerCase() !== '.js') return null;
 
   if (!published.has(resolved)) {
-    console.warn(
-      `[page-scripts] ${pagePath}: script "${value}" is not a published file, skipping`,
-    );
+    unpublished.push(value);
     return null;
   }
 

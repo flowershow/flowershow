@@ -26,4 +26,4 @@ See [[page-scripts|Page scripts]] for path rules and a script template that is s
 
 **Fixes**
 
-- The [Publishing HTML](/docs/agents/html) docs said `<script>` tags in Markdown pages don't run. They do run on a full page load, but not when readers reach the page by clicking a link within the site. The docs now say so and point to page scripts.
+- The [Publishing HTML](/docs/agents/html) docs said `<script>` tags in Markdown pages don't run. Inline scripts in `.md` pages do run on a full page load, but not when readers reach the page by clicking a link within the site. The docs now say so and point to page scripts.

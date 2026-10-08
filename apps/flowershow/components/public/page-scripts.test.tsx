@@ -6,6 +6,15 @@ import { PAGE_LEAVE_EVENT, PageScripts } from './page-scripts';
 const SELECTOR = 'script[data-flowershow-page-script]';
 const inserted = () =>
   Array.from(document.body.querySelectorAll<HTMLScriptElement>(SELECTOR));
+const srcsOf = () => inserted().map((el) => el.getAttribute('src'));
+const fire = (el: HTMLScriptElement, type: 'load' | 'error') =>
+  act(() => {
+    el.dispatchEvent(new Event(type));
+  });
+const flush = () =>
+  act(() => {
+    vi.runAllTimers();
+  });
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -18,35 +27,66 @@ afterEach(() => {
 });
 
 describe('PageScripts', () => {
-  it('inserts one classic, ordered <script> per src after mount', () => {
+  it('inserts classic <script> elements one at a time, in order', () => {
     render(<PageScripts srcs={['/a.js', 'https://cdn.example.com/b.js']} />);
     // Insertion is deferred to the next task.
     expect(inserted()).toHaveLength(0);
-    act(() => {
-      vi.runAllTimers();
-    });
+    flush();
 
-    const scripts = inserted();
-    expect(scripts).toHaveLength(2);
-    expect(scripts[0]!.getAttribute('src')).toBe('/a.js');
-    expect(scripts[1]!.getAttribute('src')).toBe(
-      'https://cdn.example.com/b.js',
-    );
-    for (const s of scripts) {
-      expect(s.async).toBe(false);
-      expect(s.type).toBe('');
-      expect(s.parentElement).toBe(document.body);
-    }
+    // Only the first script until it has loaded.
+    expect(srcsOf()).toEqual(['/a.js']);
+    const [first] = inserted();
+    expect(first!.async).toBe(true);
+    expect(first!.type).toBe('');
+    expect(first!.parentElement).toBe(document.body);
+
+    fire(first!, 'load');
+    expect(srcsOf()).toEqual(['/a.js', 'https://cdn.example.com/b.js']);
+  });
+
+  it('continues with the next script when one fails to load', () => {
+    render(<PageScripts srcs={['/a.js', '/b.js', '/c.js']} />);
+    flush();
+    fire(inserted()[0]!, 'error');
+    expect(srcsOf()).toEqual(['/a.js', '/b.js']);
+    fire(inserted()[1]!, 'load');
+    expect(srcsOf()).toEqual(['/a.js', '/b.js', '/c.js']);
   });
 
   it('removes its scripts on unmount', () => {
     const { unmount } = render(<PageScripts srcs={['/a.js', '/b.js']} />);
-    act(() => {
-      vi.runAllTimers();
-    });
+    flush();
+    fire(inserted()[0]!, 'load');
     expect(inserted()).toHaveLength(2);
     unmount();
     expect(inserted()).toHaveLength(0);
+  });
+
+  it('stops the chain when the page is left while a script is pending', () => {
+    const { unmount } = render(<PageScripts srcs={['/a.js', '/b.js']} />);
+    flush();
+    const pending = inserted()[0]!;
+    unmount();
+    // The removed script finishes loading after the reader left.
+    fire(pending, 'load');
+    expect(inserted()).toHaveLength(0);
+  });
+
+  it('does not duplicate scripts on a fast A→B→A while one is pending', () => {
+    const first = render(<PageScripts srcs={['/a.js', '/b.js']} />);
+    flush();
+    const stale = inserted()[0]!;
+    first.unmount();
+
+    render(<PageScripts srcs={['/a.js', '/b.js']} />);
+    flush();
+    expect(srcsOf()).toEqual(['/a.js']);
+    // The first visit's in-flight script settles: it must not advance either
+    // the old chain or the new one.
+    fire(stale, 'load');
+    expect(srcsOf()).toEqual(['/a.js']);
+    fire(inserted()[0]!, 'load');
+    expect(srcsOf()).toEqual(['/a.js', '/b.js']);
   });
 
   it('dispatches a page-leave event on document when leaving the page', () => {

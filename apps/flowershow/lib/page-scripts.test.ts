@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { MAX_PAGE_SCRIPTS, resolvePageScripts } from './page-scripts';
+import {
+  MAX_PAGE_SCRIPT_ENTRIES,
+  MAX_PAGE_SCRIPTS,
+  resolvePageScripts,
+} from './page-scripts';
 
 const siteFilePaths = [
   '/js/a.js',
@@ -8,6 +12,7 @@ const siteFilePaths = [
   '/js/café.js',
   '/blog/a.js',
   '/blog/widgets/toggle.js',
+  '/blog/v1:app.js',
   '/x/a.js',
   '/a.js',
   '/A.JS',
@@ -128,7 +133,21 @@ describe('resolvePageScripts', () => {
   it('drops site paths that are not published, with a warning', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     expect(resolve(['/js/missing.js', '/js/a.js'])).toEqual(['/js/a.js']);
-    expect(warn).toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]![0]).toContain('/js/missing.js');
+  });
+
+  it('logs one aggregated warning for many unpublished paths', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const missing = Array.from({ length: 50 }, (_, i) => `/js/m${i}.js`);
+    expect(resolve(missing)).toEqual([]);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]![0]).toContain('and 47 more');
+  });
+
+  it('treats a relative path with a colon in its first segment as a site path', () => {
+    expect(resolve(['v1:app.js'])).toEqual(['/blog/v1%3Aapp.js']);
+    expect(resolve(['./v1:app.js'])).toEqual(['/blog/v1%3Aapp.js']);
   });
 
   it('removes duplicates and keeps order', () => {
@@ -147,6 +166,46 @@ describe('resolvePageScripts', () => {
     expect(out).toHaveLength(MAX_PAGE_SCRIPTS);
     expect(out[0]).toBe('https://cdn.example.com/0.js');
     expect(out[9]).toBe('https://cdn.example.com/9.js');
+  });
+
+  it('stops at the cap and stays fast for huge lists, warning once', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const many = Array.from(
+      { length: 50_000 },
+      (_, i) => `https://cdn.example.com/${i}.js`,
+    );
+    const started = performance.now();
+    const out = resolve(many);
+    expect(performance.now() - started).toBeLessThan(100);
+    expect(out).toHaveLength(MAX_PAGE_SCRIPTS);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]![0]).toContain(
+      `only the first ${MAX_PAGE_SCRIPTS} scripts`,
+    );
+  });
+
+  it(`examines at most ${MAX_PAGE_SCRIPT_ENTRIES} entries`, () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const junk = Array.from({ length: 50_000 }, () => 'http://x/a.js');
+    // A valid entry past the examined window is never reached.
+    const started = performance.now();
+    expect(resolve([...junk, '/js/a.js'])).toEqual([]);
+    expect(performance.now() - started).toBeLessThan(100);
+    expect(resolve([...junk.slice(0, 99), '/js/a.js'])).toEqual(['/js/a.js']);
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]![0]).toContain(
+      `first ${MAX_PAGE_SCRIPT_ENTRIES} entries`,
+    );
+  });
+
+  it('does not warn about the cap when the list is exactly full', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const exact = Array.from(
+      { length: MAX_PAGE_SCRIPTS },
+      (_, i) => `https://cdn.example.com/${i}.js`,
+    );
+    expect(resolve(exact)).toHaveLength(MAX_PAGE_SCRIPTS);
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('only ever outputs same-origin root-relative paths or https URLs', () => {
