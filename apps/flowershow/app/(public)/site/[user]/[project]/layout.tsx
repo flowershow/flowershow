@@ -30,7 +30,7 @@ import type { SiteConfig } from '@/components/types';
 import { loadProtectedCardSource } from '@/lib/protected-card-source';
 import { getThemeUrl } from '@/lib/get-theme';
 import { resolveSiteName } from '@/lib/site-config';
-import { loadCustomFooter } from '@/lib/site-footer';
+import { loadCustomFooter } from '@/lib/site-chrome';
 import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
 import { TRPCReactProvider } from '@/trpc/react';
 import { api } from '@/trpc/server';

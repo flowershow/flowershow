@@ -2,7 +2,6 @@ import {
   isSiteChromeFile,
   matchLinkTarget,
   SITE_CHROME_FILES,
-  SITE_FOOTER_PATH,
   tagIdentity,
 } from '@flowershow/core';
 import { Blob, Prisma, PrismaClient } from '@prisma/client';
@@ -971,13 +970,15 @@ export const siteRouter = createTRPCRouter({
     }),
 
   /**
-   * Raw HTML of the site's custom footer (`_footer.html` at the site root),
-   * or null if there is none. Plan gating happens in the layout.
+   * Raw HTML of one of the site's reserved site-chrome files (e.g. the custom
+   * footer, `_footer.html` at the site root), or null if there is none. Plan
+   * gating happens in the layout.
    */
-  getSiteFooter: publicProcedure
+  getSiteChromeFile: publicProcedure
     .input(
       z.object({
         siteId: z.string().min(1),
+        path: z.enum(SITE_CHROME_FILES),
       }),
     )
     .query(async ({ ctx, input }) => {
@@ -998,17 +999,18 @@ export const siteRouter = createTRPCRouter({
       await assertSiteAccess(site, input.siteId, ctx);
 
       return await unstable_cache(
-        async (_input) => {
+        async (input) => {
           try {
             return await fetchFile({
               projectId: site.id,
-              path: SITE_FOOTER_PATH,
+              path: input.path,
             });
           } catch {
             return null;
           }
         },
-        ['site-footer-html'],
+        // `path` is part of the cached input, so each file has its own entry.
+        ['site-chrome-file-html'],
         {
           revalidate: 60, // 1 minute
           tags: [`${input.siteId}`],

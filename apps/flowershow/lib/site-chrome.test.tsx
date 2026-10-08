@@ -7,14 +7,16 @@ vi.mock('@/env.mjs', () => ({
 }));
 
 const { query, processHtmlFragment, generateScopedCss } = vi.hoisted(() => ({
-  query: { getSiteFooter: vi.fn() },
+  query: { getSiteChromeFile: vi.fn() },
   processHtmlFragment: vi.fn(),
   generateScopedCss: vi.fn(),
 }));
 vi.mock('@/trpc/server', () => ({
   api: {
     site: {
-      getSiteFooter: { query: (...a: unknown[]) => query.getSiteFooter(...a) },
+      getSiteChromeFile: {
+        query: (...a: unknown[]) => query.getSiteChromeFile(...a),
+      },
     },
   },
 }));
@@ -33,7 +35,7 @@ vi.mock('@/lib/generate-scoped-css', async (importOriginal) => {
   return { generateScopedCss };
 });
 
-import { loadCustomFooter } from './site-footer';
+import { loadCustomFooter } from './site-chrome';
 
 const premiumSite = {
   id: 'site-1',
@@ -43,7 +45,7 @@ const premiumSite = {
 } as any;
 
 async function renderFooter(html: string) {
-  query.getSiteFooter.mockResolvedValue(html);
+  query.getSiteChromeFile.mockResolvedValue(html);
   const result = await loadCustomFooter({ site: premiumSite });
   expect(result).not.toBeNull();
   return renderToStaticMarkup(result as ReactElement);
@@ -59,7 +61,7 @@ describe('loadCustomFooter', () => {
     vi.clearAllMocks();
     processHtmlFragment.mockImplementation(actualProcess);
     generateScopedCss.mockImplementation(actualCss);
-    query.getSiteFooter.mockResolvedValue('<p>Made by Acme</p>');
+    query.getSiteChromeFile.mockResolvedValue('<p>Made by Acme</p>');
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
@@ -68,7 +70,7 @@ describe('loadCustomFooter', () => {
       site: { ...premiumSite, plan: 'FREE' },
     });
     expect(result).toBeNull();
-    expect(query.getSiteFooter).not.toHaveBeenCalled();
+    expect(query.getSiteChromeFile).not.toHaveBeenCalled();
   });
 
   it('renders the file as HTML, not markdown', async () => {
@@ -165,19 +167,19 @@ describe('loadCustomFooter', () => {
   });
 
   it('returns null (default footer) for HTML React cannot render, e.g. an invalid style', async () => {
-    query.getSiteFooter.mockResolvedValue('<div style="color">x</div>');
+    query.getSiteChromeFile.mockResolvedValue('<div style="color">x</div>');
     expect(await loadCustomFooter({ site: premiumSite })).toBeNull();
   });
 
   it('returns null when the file is missing', async () => {
-    query.getSiteFooter.mockResolvedValue(null);
+    query.getSiteChromeFile.mockResolvedValue(null);
     expect(await loadCustomFooter({ site: premiumSite })).toBeNull();
   });
 
   it.each(['', '  \n\t', '<!-- todo: footer -->\n'])(
     'returns null for an empty file (%j) and keeps the default footer',
     async (content) => {
-      query.getSiteFooter.mockResolvedValue(content);
+      query.getSiteChromeFile.mockResolvedValue(content);
       expect(await loadCustomFooter({ site: premiumSite })).toBeNull();
       expect(processHtmlFragment).not.toHaveBeenCalled();
     },
@@ -194,7 +196,7 @@ describe('loadCustomFooter', () => {
   });
 
   it('returns null when the footer fetch fails', async () => {
-    query.getSiteFooter.mockRejectedValue(new Error('s3 down'));
+    query.getSiteChromeFile.mockRejectedValue(new Error('s3 down'));
     expect(await loadCustomFooter({ site: premiumSite })).toBeNull();
   });
 });

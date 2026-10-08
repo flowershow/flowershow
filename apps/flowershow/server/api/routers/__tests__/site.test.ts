@@ -1159,12 +1159,12 @@ describe('site read-path authorization', () => {
     ).rejects.toThrow('Site access required');
   });
 
-  it('getSiteFooter throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
+  it('getSiteChromeFile throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
     const db = createMockDb({ site: passwordSite(), blobs: blobs() });
     const caller = createCaller(db);
 
     await expect(
-      caller.site.getSiteFooter({ siteId: 'site-1' }),
+      caller.site.getSiteChromeFile({ siteId: 'site-1', path: '_footer.html' }),
     ).rejects.toThrow('Site access required');
   });
 
@@ -1684,7 +1684,7 @@ describe('site.getCustomStylesheet', () => {
   });
 });
 
-describe('site.getSiteFooter', () => {
+describe('site.getSiteChromeFile', () => {
   beforeEach(() => {
     vi.mocked(fetchFile).mockReset();
   });
@@ -1693,9 +1693,9 @@ describe('site.getSiteFooter', () => {
     vi.mocked(fetchFile).mockResolvedValue('<p>Footer <b>text</b></p>');
     const caller = createCaller(createMockDb({}));
 
-    await expect(caller.site.getSiteFooter({ siteId: 'site-1' })).resolves.toBe(
-      '<p>Footer <b>text</b></p>',
-    );
+    await expect(
+      caller.site.getSiteChromeFile({ siteId: 'site-1', path: '_footer.html' }),
+    ).resolves.toBe('<p>Footer <b>text</b></p>');
     expect(fetchFile).toHaveBeenCalledWith({
       projectId: 'site-1',
       path: '_footer.html',
@@ -1707,7 +1707,7 @@ describe('site.getSiteFooter', () => {
     const caller = createCaller(createMockDb({}));
 
     await expect(
-      caller.site.getSiteFooter({ siteId: 'site-1' }),
+      caller.site.getSiteChromeFile({ siteId: 'site-1', path: '_footer.html' }),
     ).resolves.toBeNull();
   });
 
@@ -1716,7 +1716,7 @@ describe('site.getSiteFooter', () => {
     const caller = createCaller(createMockDb({}));
 
     await expect(
-      caller.site.getSiteFooter({ siteId: 'site-1' }),
+      caller.site.getSiteChromeFile({ siteId: 'site-1', path: '_footer.html' }),
     ).resolves.toBeNull();
   });
 });

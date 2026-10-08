@@ -6,7 +6,7 @@ import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 import { h } from 'hastscript';
 import mdxMermaid from 'mdx-mermaid';
 import type { EvaluateOptions } from 'next-mdx-remote-client/rsc';
-import { ReactElement } from 'react';
+import type { ElementType, ReactElement } from 'react';
 import * as runtime from 'react/jsx-runtime';
 import rehypeAutolinkHeadings, {
   type Options as RehypeAutolinkHeadingsOptions,
@@ -221,9 +221,12 @@ export function parseHtmlFragment(html: string) {
  */
 export async function processHtmlFragment(
   html: string,
-  options: Pick<MarkdownOptions, 'filePath' | 'siteHostname'>,
+  options: Pick<MarkdownOptions, 'filePath' | 'siteHostname'> & {
+    /** Extra element overrides, e.g. `{ a: NavbarAnchor }` for the navbar. */
+    components?: Record<string, ElementType>;
+  },
 ) {
-  const { filePath, siteHostname } = options;
+  const { filePath, siteHostname, components } = options;
 
   const processor = unified()
     .use(rehypeResolveHtmlUrls, { filePath, siteHostname })
@@ -235,7 +238,7 @@ export async function processHtmlFragment(
     Fragment: runtime.Fragment,
     jsx: runtime.jsx,
     jsxs: runtime.jsxs,
-    components: { img: FsImage },
+    components: { img: FsImage, ...components },
   }) as ReactElement;
 }
 
