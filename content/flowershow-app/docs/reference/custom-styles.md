@@ -95,6 +95,48 @@ The navbar call-to-action button is unstyled by default (inherits foreground ton
 }
 ```
 
+#### Tag pill colors
+
+Tag pills (the frontmatter tag row in page headers, inline `#tags` in your content, and the `/tags` pages) take their colors from four variables. The defaults are pink:
+
+| Variable                      | Light default            | Dark default              |
+| ----------------------------- | ------------------------ | ------------------------- |
+| `--color-tag-pill-text`       | `#db2777`                | `#f472b6`                 |
+| `--color-tag-pill-bg`         | `rgb(219 39 119 / 0.1)`  | `rgb(244 114 182 / 0.12)` |
+| `--color-tag-pill-text-hover` | `#be185d`                | `#f9a8d4`                 |
+| `--color-tag-pill-bg-hover`   | `rgb(219 39 119 / 0.16)` | `rgb(244 114 182 / 0.2)`  |
+
+Unlike the `--color-l-*` / `--color-d-*` pairs, there is one set of tag variables. Values you set on `:root` apply in both light and dark mode. To use different colors in dark mode, also set them on `:root[data-theme="dark"]`:
+
+```css
+:root {
+  --color-tag-pill-text: #0369a1;
+  --color-tag-pill-bg: #e0f2fe;
+  --color-tag-pill-text-hover: #075985;
+  --color-tag-pill-bg-hover: #bae6fd;
+}
+
+:root[data-theme="dark"] {
+  --color-tag-pill-text: #7dd3fc;
+  --color-tag-pill-bg: rgb(125 211 252 / 0.12);
+  --color-tag-pill-text-hover: #bae6fd;
+  --color-tag-pill-bg-hover: rgb(125 211 252 / 0.2);
+}
+```
+
+To match tag pills to your accent color in both modes:
+
+```css
+:root {
+  --color-tag-pill-text: var(--color-accent-darker);
+  --color-tag-pill-bg: color-mix(in oklab, var(--color-accent) 12%, transparent);
+  --color-tag-pill-text-hover: var(--color-accent);
+  --color-tag-pill-bg-hover: color-mix(in oklab, var(--color-accent) 20%, transparent);
+}
+```
+
+Shape, padding and font are not variables. Style them with the `.tag-pill` class, for example `.tag-pill { border-radius: var(--radius); }`.
+
 ### Typography
 
 #### Font families
@@ -207,6 +249,38 @@ Callout type → color token mapping:
 | `--callout-danger-color`  | `danger`, `error`, `bug`, `failure`, `fail`, `missing`       |
 | `--callout-example-color` | `example`                                                    |
 | `--callout-quote-color`   | `quote`, `cite`                                              |
+
+## Full-width sections
+
+On a page with `layout: plain` in its frontmatter, your content is not constrained: Flowershow adds no max-width, padding or margin around it, so every block already spans the full width between the navbar and the footer. You own the layout.
+
+That means you don't need a `width: 100vw` breakout to make a band reach the edges. Don't add one: `100vw` includes the width of the vertical scrollbar, so on browsers that draw a classic scrollbar (Windows, and macOS or Linux with "always show scrollbars") it makes the page a few pixels wider than the window and adds a horizontal scrollbar.
+
+Instead, build the page from full-width bands, each with a centred inner container for its text:
+
+```html
+<section class="band">
+  <div class="band-inner">
+    <h2>Our mission</h2>
+    <p>Full-width background, readable text column.</p>
+  </div>
+</section>
+```
+
+```css
+.band {
+  padding: 4rem 1.5rem;
+  background-color: var(--color-accent);
+}
+.band-inner {
+  max-width: 48rem;
+  margin-inline: auto;
+}
+```
+
+If you want most of the page in a narrow column with a few bands between, close the column, add the band, and open a new column, rather than wrapping the whole page in one narrow container.
+
+On the default layout, content sits in a readable column next to the sidebar and table of contents, and full-width sections are not supported. Use `layout: plain` for landing-page-style pages.
 
 ## Practical examples
 

@@ -77,5 +77,39 @@ The List component:
 - Is recursive (includes files in subdirectories)
 - Sorts by date if available, otherwise by title
 
+## Styling
+
+The List component renders stable CSS classes you can target from `custom.css` or a theme:
+
+| Class | Element |
+| --- | --- |
+| `.list-component` | The whole list |
+| `.list-component-item` | One card |
+| `.list-component-item-media` | The image area (`media` slot) |
+| `.list-component-item-media-link` | The link around the image |
+| `.list-component-item-content` | The text column |
+| `.list-component-item-eyebrow` | The `eyebrow` slot |
+| `.list-component-item-headline` | The `headline` slot (an `h3`) |
+| `.list-component-item-headline-link` | The link inside the headline |
+| `.list-component-item-summary` | The `summary` slot |
+| `.list-component-item-footnote` | The `footnote` slot |
+| `.list-component-pagination` | Page controls (when `pageSize` is set) |
+| `.list-component-empty` | The "No items found" message |
+| `.list-component-error` | The message shown when items fail to load |
+
+For example, to make the whole card clickable rather than only the headline:
+
+```css
+.list-component-item-headline-link::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
+```
+
+This works because each `.list-component-item` is already `position: relative`.
+
+The full list, including loading skeleton and pagination classes, is in the [[theme-class-reference#lists-cards-skeletons-and-pagination|theme class reference]].
+
 > [!info]
 > For a detailed guide including examples and step-by-step instructions, check out [[how-to-create-content-catalogs|this blog post]].
