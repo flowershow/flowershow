@@ -51,6 +51,7 @@ import { isChangelogDirName, parsePageParam } from '@/lib/changelog';
 import { resolveChangelogContext } from '@/lib/changelog-context';
 import { hasVersionSections } from '@/lib/changelog-file';
 import { anonRobots } from '@/lib/anonymous-site';
+import { pageHeaderBreadcrumbs } from '@/lib/breadcrumbs';
 import { readingTime } from '@/lib/reading-time';
 import { resolvePageScripts } from '@/lib/page-scripts';
 import { renderPageContent } from '@/lib/render-page-content';
@@ -566,21 +567,39 @@ export default async function SitePage(props: {
   );
   const showHero = heroConfig.showHero && !changelog;
 
+  const showBreadcrumbs =
+    (metadata?.showBreadcrumbs ?? siteConfig?.showBreadcrumbs) !== false;
+  const hasSection =
+    typeof metadata?.section === 'string' && metadata.section.trim() !== '';
+
   let siteTree: Node[] | undefined;
 
   // TODO this should be part off the project layout so that it's not computed for each page
-  if (showSidebar) {
+  // Breadcrumbs reuse the sidebar's tree so both trails match. Off the
+  // sidebar's paths, they use the whole (still contentHide-filtered) tree.
+  if (showSidebar || (showBreadcrumbs && !hasSection)) {
     siteTree = await api.site.getSiteTree
       .query({
         siteId: site.id,
         orderBy: siteConfig?.sidebar?.orderBy,
-        paths: activeSidebarPath
-          ? [activeSidebarPath]
-          : siteConfig?.sidebar?.paths,
+        paths: !showSidebar
+          ? undefined
+          : activeSidebarPath
+            ? [activeSidebarPath]
+            : siteConfig?.sidebar?.paths,
         contentHide: siteConfig?.contentHide,
       })
       .catch(() => []);
   }
+
+  const breadcrumbs = showBreadcrumbs
+    ? pageHeaderBreadcrumbs({
+        tree: siteTree ?? [],
+        pagePath: blob.path,
+        title: metadata?.title,
+        section: metadata?.section,
+      })
+    : undefined;
 
   return (
     <>
@@ -683,6 +702,7 @@ export default async function SitePage(props: {
                 description={displayDescription(metadata) ?? ''}
                 date={metadata?.date}
                 readingTime={pageReadingTime}
+                breadcrumbs={breadcrumbs}
                 showHero={heroConfig.showHero}
                 authors={authors}
                 tags={

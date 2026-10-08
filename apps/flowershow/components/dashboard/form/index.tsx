@@ -60,6 +60,7 @@ export default function Form({
     'showSidebar',
     'showToc',
     'showReadingTime',
+    'showBreadcrumbs',
     'showEditLink',
     'showModeSwitch',
     'showBacklinks',

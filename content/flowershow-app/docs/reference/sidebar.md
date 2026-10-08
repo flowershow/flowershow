@@ -47,9 +47,9 @@ To hide specific subfolders from the sidebar tree, use the **Content Hide** sett
 
 See [[content-filtering|Content Filtering]] for details.
 
-## Mobile breadcrumbs
+## Mobile sidebar
 
-On mobile, the sidebar is replaced by a slide-out drawer with a breadcrumb bar showing your current location in the site tree. Folder names in the breadcrumbs are clickable links if the folder has an index page (e.g. `README.md` or `index.md`). Folders without an index page are shown as plain text.
+On mobile, the sidebar is replaced by a slide-out drawer, opened from the bar at the top of the page. Your current location in the site tree is shown as [[page-headers#breadcrumbs|breadcrumbs]] above the page title.
 
 ## Using config.json
 

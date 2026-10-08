@@ -1,8 +1,9 @@
 import { tagToHref } from '@flowershow/core';
-import { CalendarIcon, ClockIcon } from 'lucide-react';
+import { CalendarIcon, ChevronRightIcon, ClockIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import type { Breadcrumb } from '@/lib/breadcrumbs';
 import { safeDate } from '@/lib/utils';
 
 interface Props extends React.PropsWithChildren {
@@ -12,6 +13,8 @@ interface Props extends React.PropsWithChildren {
   date?: string;
   /** Pre-computed label, e.g. "8 min read". Omitted when reading time is off. */
   readingTime?: string;
+  /** Trail shown above the title; the last crumb is the current page. */
+  breadcrumbs?: Breadcrumb[];
   authors?: {
     key: string;
     name: string;
@@ -29,6 +32,7 @@ export const BlogLayout: React.FC<Props> = ({
   showHero = false,
   date,
   readingTime,
+  breadcrumbs,
   authors,
   tags,
 }) => {
@@ -38,6 +42,40 @@ export const BlogLayout: React.FC<Props> = ({
     <>
       {!showHero && (
         <header className="page-header">
+          {breadcrumbs && breadcrumbs.length > 0 && (
+            <nav aria-label="Breadcrumb" className="page-header-breadcrumbs">
+              <ol className="page-header-breadcrumbs-list">
+                {breadcrumbs.map((crumb, i) => {
+                  const isCurrent = i === breadcrumbs.length - 1;
+                  return (
+                    <li
+                      key={`${i}-${crumb.label}`}
+                      className="page-header-breadcrumb-item"
+                      aria-current={isCurrent ? 'page' : undefined}
+                    >
+                      {i > 0 && (
+                        <ChevronRightIcon
+                          className="page-header-breadcrumb-separator"
+                          aria-hidden="true"
+                        />
+                      )}
+                      {crumb.href && !isCurrent ? (
+                        <Link
+                          href={crumb.href}
+                          className="page-header-breadcrumb-link"
+                        >
+                          {crumb.label}
+                        </Link>
+                      ) : (
+                        <span>{crumb.label}</span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </nav>
+          )}
+
           {title && <h1 className="page-header-title">{title}</h1>}
 
           {description && (

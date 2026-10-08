@@ -446,6 +446,19 @@ Set to `false` to hide the site footer on every page. Pages can override it with
 
 ---
 
+### `showBreadcrumbs`
+
+**Type:** `boolean`  
+**Default:** `true`
+
+Show a breadcrumb trail above the page title. Pages can override it with `showBreadcrumbs` in frontmatter, and set `section` to group pages on flat sites. [[page-headers#breadcrumbs|Learn more →]]
+
+```json
+"showBreadcrumbs": false
+```
+
+---
+
 ### `enableSearch` (⭐️ Premium feature)
 
 **Type:** `boolean`  

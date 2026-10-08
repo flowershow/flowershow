@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **285 styled class selectors**:
-**283 stable semantic hooks** and **2 non-contract
+and currently documents **286 styled class selectors**:
+**284 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -165,12 +165,8 @@ body (dialog portal)
 | <code>.sidebar-drawer-panel</code> | Hook |
 | <code>.site-sidebar</code> | Hook |
 | <code>.site-subnav</code> | Hook |
-| <code>.site-subnav-breadcrumb-item</code> | Hook |
-| <code>.site-subnav-breadcrumb-link</code> | Hook |
-| <code>.site-subnav-breadcrumbs</code> | Hook |
 | <code>.site-subnav-menu-button</code> | Hook |
 | <code>.site-subnav-menu-icon</code> | Hook |
-| <code>.site-subnav-separator</code> | Hook |
 | <code>.site-tree</code> | Hook |
 | <code>.site-tree-disclosure-panel</code> | Hook |
 | <code>.site-tree-item</code> | Hook |
@@ -206,6 +202,11 @@ main.page-main (structural wrapper)
 | <code>.page-header-author-name</code> | Hook |
 | <code>.page-header-authors-avatars-container</code> | Hook |
 | <code>.page-header-authors-container</code> | Hook |
+| <code>.page-header-breadcrumb-item</code> | Hook |
+| <code>.page-header-breadcrumb-link</code> | Hook |
+| <code>.page-header-breadcrumb-separator</code> | Hook |
+| <code>.page-header-breadcrumbs</code> | Hook |
+| <code>.page-header-breadcrumbs-list</code> | Hook |
 | <code>.page-header-date</code> | Hook |
 | <code>.page-header-date-icon</code> | Hook |
 | <code>.page-header-description</code> | Hook |
