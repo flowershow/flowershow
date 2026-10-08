@@ -110,6 +110,23 @@ If you want to version-control your configuration, or have your editor's AI agen
 - `nav.title`: Text displayed as your site title
 - `nav.links`: Array of navigation link objects (same format as the dashboard JSON editor)
 
+## Hide the navbar on a page
+
+Set `showNavbar: false` in a page's frontmatter to hide the site navbar on that page. This works on all plans. Combine it with `showFooter: false` and `layout: plain` for a fully bespoke landing page that draws its own header:
+
+```yaml
+---
+title: Welcome
+layout: plain
+showNavbar: false
+showFooter: false
+---
+```
+
+With the navbar hidden, the sidebar, table of contents and other sticky elements move up to the top of the page.
+
+To hide the navbar on every page, set `"showNavbar": false` in `config.json`. A page can then bring it back with `showNavbar: true`.
+
 ## Troubleshooting
 
 Common issues and solutions:

@@ -169,6 +169,16 @@ With `layout: plain`:
 - You’re free to build the entire page in JSX (hero, grids, pricing, testimonials) with your own Tailwind classes.
 - Perfect for **bespoke landing pages** that need full visual control.
 
+For a fully bespoke landing page, add `showNavbar: false` and `showFooter: false` too. They hide the site navbar and footer on that page, so your own header and footer are the only ones shown:
+
+```
+---
+layout: plain
+showNavbar: false
+showFooter: false
+---
+```
+
 When to stick with `not-prose`:
 - You’re building a regular content page (blog post, docs) but want one or two custom sections (e.g., a CTA card or feature grid) to ignore prose styles.
 - You still like the default typography everywhere else.
