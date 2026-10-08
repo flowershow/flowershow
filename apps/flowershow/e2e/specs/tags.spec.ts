@@ -164,6 +164,28 @@ test('Tag pill colours default to pink and follow --color-tag-pill-* overrides',
     await expect(inlinePill).toHaveCSS('background-color', 'rgb(4, 5, 6)');
   });
 
+  await test.step('hover uses the hover tokens', async () => {
+    await page.addStyleTag({
+      content:
+        ':root { --color-tag-pill-text-hover: rgb(7, 8, 9); --color-tag-pill-bg-hover: rgb(10, 11, 12); }',
+    });
+    await inlinePill.hover();
+    await expect(inlinePill).toHaveCSS('color', 'rgb(7, 8, 9)');
+    await expect(inlinePill).toHaveCSS('background-color', 'rgb(10, 11, 12)');
+    await page.mouse.move(0, 0);
+  });
+
+  await test.step('a :root[data-theme="dark"] override applies to dark only', async () => {
+    await page.addStyleTag({
+      content:
+        ':root[data-theme="dark"] { --color-tag-pill-text: rgb(13, 14, 15); }',
+    });
+    await setTheme('dark');
+    await expect(inlinePill).toHaveCSS('color', 'rgb(13, 14, 15)');
+    await setTheme('light');
+    await expect(inlinePill).toHaveCSS('color', 'rgb(1, 2, 3)');
+  });
+
   await test.step('frontmatter header pills use the same tokens', async () => {
     await page.goto(`${basePath}/tags-alpha`);
     await page.addStyleTag({

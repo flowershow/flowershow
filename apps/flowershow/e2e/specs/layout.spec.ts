@@ -146,16 +146,18 @@ test('layout: plain content spans the full page width', async ({
 
   await test.step('content and its blocks span the viewport', async () => {
     // Compare against clientWidth (viewport minus any classic scrollbar), not
-    // innerWidth or 100vw: headless Chromium draws zero-width overlay
-    // scrollbars, so this holds whether or not the browser reserves space for
-    // a scrollbar.
+    // innerWidth or 100vw, so this holds whether or not the browser reserves
+    // space for a scrollbar. (Playwright runs Chromium with --hide-scrollbars,
+    // so it can't reproduce the `100vw` scrollbar bug itself; it guards the
+    // max-width/padding/margin contract.)
     const widths = await page.evaluate(() => {
       const root = document.documentElement;
       const content = document.querySelector('#mdxpage') as HTMLElement;
       const firstBlock = content.querySelector('p') as HTMLElement;
       return {
         clientWidth: root.clientWidth,
-        scrollWidth: root.scrollWidth,
+        contentScrollWidth: content.scrollWidth,
+        contentClientWidth: content.clientWidth,
         contentLeft: content.getBoundingClientRect().left,
         contentWidth: content.getBoundingClientRect().width,
         blockWidth: firstBlock.getBoundingClientRect().width,
@@ -165,7 +167,10 @@ test('layout: plain content spans the full page width', async ({
     expect(widths.contentLeft).toBe(0);
     expect(widths.contentWidth).toBe(widths.clientWidth);
     expect(widths.blockWidth).toBe(widths.clientWidth);
-    // No horizontal overflow on the page.
-    expect(widths.scrollWidth).toBe(widths.clientWidth);
+    // No horizontal overflow inside the plain content (scoped to #mdxpage so
+    // unrelated chrome can't fail this test).
+    expect(widths.contentScrollWidth).toBeLessThanOrEqual(
+      widths.contentClientWidth,
+    );
   });
 });

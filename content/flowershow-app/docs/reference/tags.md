@@ -67,7 +67,7 @@ Tag pages are generated navigation pages, not Markdown content. They're served a
 
 ## Styling tags
 
-Every tag pill (frontmatter row, inline `#tags`, and the `/tags` pages) uses the `.tag-pill` class and takes its colors from the `--color-tag-pill-*` variables. To recolor all pills, set the variables in your `custom.css`; no `!important` needed:
+Every tag pill (frontmatter row, inline `#tags`, and the `/tags` pages) uses the `.tag-pill` class and takes its colors from the `--color-tag-pill-*` variables. To recolor them, set the variables in your `custom.css`; no `!important` needed:
 
 ```css
 :root {
@@ -77,6 +77,9 @@ Every tag pill (frontmatter row, inline `#tags`, and the `/tags` pages) uses the
 ```
 
 See [Tag pill colors](/docs/reference/custom-styles#tag-pill-colors) for the full list, dark-mode overrides and a recipe that matches your accent color. Use the `.tag-pill` and `.page-header-tags` classes for shape and spacing; all tag classes are listed in the [[theme-class-reference|theme class reference]].
+
+> [!note]
+> On the monospace and material-draft themes, inline `#tags` in your content currently follow the theme's link style rather than these variables. Frontmatter header pills and the `/tags` pages still use them.
 
 ## Turning tags off
 

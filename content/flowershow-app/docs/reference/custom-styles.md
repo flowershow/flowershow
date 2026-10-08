@@ -137,6 +137,9 @@ To match tag pills to your accent color in both modes:
 
 Shape, padding and font are not variables. Style them with the `.tag-pill` class, for example `.tag-pill { border-radius: var(--radius); }`.
 
+> [!note]
+> On the monospace and material-draft themes, inline `#tags` in your content currently follow the theme's link style rather than these variables. Frontmatter header pills and the `/tags` pages still use them.
+
 ### Typography
 
 #### Font families
@@ -279,6 +282,8 @@ Instead, build the page from full-width bands, each with a centred inner contain
 ```
 
 If you want most of the page in a narrow column with a few bands between, close the column, add the band, and open a new column, rather than wrapping the whole page in one narrow container.
+
+Plain pages also drop the default Markdown typography: headings, lists, links and paragraph spacing get no prose styling, so style them yourself in `custom.css`.
 
 On the default layout, content sits in a readable column next to the sidebar and table of contents, and full-width sections are not supported. Use `layout: plain` for landing-page-style pages.
 
