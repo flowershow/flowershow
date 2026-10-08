@@ -11,6 +11,7 @@ import { createHash } from 'node:crypto';
 export const CUSTOM_CSS_PATH = 'custom.css';
 
 const ONE_YEAR_SECONDS = 31_536_000;
+const ONE_DAY_SECONDS = 86_400;
 
 /** Short content hash used as the `?v=` cache key and the ETag. */
 export function customCssVersion(content: string): string {
@@ -58,6 +59,29 @@ export function customCssCacheControl({
   return maxAge > 0
     ? `${scope}, max-age=${maxAge}, immutable`
     : `${scope}, max-age=0, must-revalidate`;
+}
+
+/**
+ * CDN-Cache-Control for the proxied stylesheet (honoured by Vercel's edge
+ * cache, whose key includes the host and query string; the rewritten target
+ * path also names the site). Only a matching `v` on a public, non-temporary
+ * site is cached at the edge, and only for a day, so a deleted or
+ * re-protected site drops out of the edge cache within a day even on a direct
+ * `/api/raw/...` URL (middleware runs before the edge cache, so the friendly
+ * `/custom.css` URL is gated immediately). Password and anonymous sites, and
+ * stale or missing `v`, return null: browser cache only.
+ */
+export function customCssCdnCacheControl({
+  versionMatches,
+  isPrivate,
+  isTemporary,
+}: {
+  versionMatches: boolean;
+  isPrivate: boolean;
+  isTemporary: boolean;
+}): string | null {
+  if (!versionMatches || isPrivate || isTemporary) return null;
+  return `public, max-age=${ONE_DAY_SECONDS}`;
 }
 
 /** Whether an `If-None-Match` header matches the (strong) ETag `"<etag>"`. */

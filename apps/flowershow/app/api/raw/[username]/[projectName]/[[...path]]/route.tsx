@@ -6,6 +6,7 @@ import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
 import {
   CUSTOM_CSS_PATH,
   customCssCacheControl,
+  customCssCdnCacheControl,
   customCssVersion,
   etagMatches,
 } from '@/lib/custom-css';
@@ -184,31 +185,44 @@ async function serveCustomCss({
   req: NextRequest;
   site: {
     id: string;
+    userId: string;
     privacyMode: string;
     isTemporary: boolean;
     expiresAt: Date | null;
   };
   headers: Record<string, string>;
 }) {
+  // Neither error response may be cached: a missing file can be published
+  // later, and a storage error is transient (503, not "file deleted").
+  const noStore = { 'Cache-Control': 'no-store' };
   let content: string | null;
   try {
     content = await fetchFile({ projectId: site.id, path: CUSTOM_CSS_PATH });
-  } catch {
-    content = null;
+  } catch (err) {
+    console.error('Failed to fetch custom.css', { siteId: site.id, err });
+    return NextResponse.json(
+      { error: 'Storage unavailable' },
+      { status: 503, headers: { ...noStore, ...extraHeaders } },
+    );
   }
   if (!content) {
-    return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    return NextResponse.json(
+      { error: 'Not found' },
+      { status: 404, headers: { ...noStore, ...extraHeaders } },
+    );
   }
 
   // The ETag and the immutable decision both come from the bytes served, never
   // from the requested `v`, so content is never cached under a key that does
   // not describe it (e.g. a request racing a republish).
   const version = customCssVersion(content);
+  const versionMatches = req.nextUrl.searchParams.get('v') === version;
+  // Password sites: browser cache only, never a shared cache.
+  const isPrivate = site.privacyMode === 'PASSWORD';
   const headers: Record<string, string> = {
     'Cache-Control': customCssCacheControl({
-      versionMatches: req.nextUrl.searchParams.get('v') === version,
-      // Password sites: browser cache only, never a shared cache.
-      isPrivate: site.privacyMode === 'PASSWORD',
+      versionMatches,
+      isPrivate,
       // Anonymous sites: never cached past their expiry.
       expiresAt: site.isTemporary ? site.expiresAt : null,
     }),
@@ -220,10 +234,19 @@ async function serveCustomCss({
     return new NextResponse(null, { status: 304, headers });
   }
 
+  // Edge caching only on the 200 (a 304 is per-client and never edge-cached).
+  const cdnCacheControl = customCssCdnCacheControl({
+    versionMatches,
+    isPrivate,
+    // Anonymous (temporary) sites expire: never edge-cached.
+    isTemporary: site.isTemporary || site.userId === ANONYMOUS_USER_ID,
+  });
+
   return new NextResponse(content, {
     status: 200,
     headers: {
       ...headers,
+      ...(cdnCacheControl ? { 'CDN-Cache-Control': cdnCacheControl } : {}),
       'Content-Type': 'text/css; charset=utf-8',
       'X-Content-Type-Options': 'nosniff',
     },

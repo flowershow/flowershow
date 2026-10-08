@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CUSTOM_CSS_PATH,
   customCssCacheControl,
+  customCssCdnCacheControl,
   customCssHref,
   customCssVersion,
   etagMatches,
@@ -113,5 +114,21 @@ describe('etagMatches', () => {
     expect(etagMatches('"abd"', 'abc')).toBe(false);
     expect(etagMatches(null, 'abc')).toBe(false);
     expect(etagMatches('', 'abc')).toBe(false);
+  });
+});
+
+describe('customCssCdnCacheControl', () => {
+  const base = { versionMatches: true, isPrivate: false, isTemporary: false };
+
+  it('edge-caches a matching v on a public, non-temporary site for a day', () => {
+    expect(customCssCdnCacheControl(base)).toBe('public, max-age=86400');
+  });
+
+  it.each([
+    ['a stale or missing v', { versionMatches: false }],
+    ['a password site', { isPrivate: true }],
+    ['an anonymous / temporary site', { isTemporary: true }],
+  ])('never edge-caches %s', (_label, override) => {
+    expect(customCssCdnCacheControl({ ...base, ...override })).toBeNull();
   });
 });

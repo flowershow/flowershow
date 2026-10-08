@@ -26,6 +26,6 @@ See [[footer|Footer configuration]] and [[navbar|Navbar configuration]] for deta
 
 **Fixes**
 
-- `custom.css` now loads as a stylesheet the browser caches, instead of being copied into every page, so pages are smaller and repeat visits are faster. Relative `url()` paths in `custom.css` (like `url('fonts/Brand.woff2')`) now work on pages in subfolders too.
+- `custom.css` now loads as a stylesheet the browser caches, instead of being copied into every page, so pages are smaller and repeat visits are faster. Relative `url()` paths in `custom.css` (like `url('fonts/Brand.woff2')`) now resolve from your site root; previously they resolved against each page's URL and broke on nested pages.
 - The custom styles docs said Flowershow uses CSS cascade layers so `custom.css` always wins. It doesn't: `custom.css` loads after the theme, so a rule with equal or higher specificity wins. The docs now say so.
 - Setting `--navbar-height` in your CSS now actually changes the navbar's height, and heading anchor links and the changelog's sticky date follow it too. Before, only the sidebar and table of contents moved.

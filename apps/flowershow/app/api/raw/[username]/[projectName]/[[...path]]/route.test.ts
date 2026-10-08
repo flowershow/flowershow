@@ -522,8 +522,8 @@ describe('GET /api/raw — custom.css is proxied as a cached stylesheet', () => 
       projectId: 'site-1',
       path: 'custom.css',
     });
-    // No CDN caching in v1: browser cache only.
-    expect(res.headers.get('cdn-cache-control')).toBeNull();
+    // Public, non-temporary site with a matching v: edge-cached for a day.
+    expect(res.headers.get('cdn-cache-control')).toBe('public, max-age=86400');
     expect(res.headers.get('location')).toBeNull();
   });
 
@@ -540,6 +540,7 @@ describe('GET /api/raw — custom.css is proxied as a cached stylesheet', () => 
       'public, max-age=0, must-revalidate',
     );
     expect(res.headers.get('etag')).toBe(`"${V}"`);
+    expect(res.headers.get('cdn-cache-control')).toBeNull();
   });
 
   it('must revalidate when requested without v', async () => {
@@ -548,6 +549,7 @@ describe('GET /api/raw — custom.css is proxied as a cached stylesheet', () => 
     expect(res.headers.get('cache-control')).toBe(
       'public, max-age=0, must-revalidate',
     );
+    expect(res.headers.get('cdn-cache-control')).toBeNull();
   });
 
   it.each([
@@ -561,6 +563,21 @@ describe('GET /api/raw — custom.css is proxied as a cached stylesheet', () => 
     expect(res.status).toBe(304);
     expect(res.headers.get('etag')).toBe(`"${V}"`);
     expect(await res.text()).toBe('');
+    // A 304 is per-client: never edge-cached.
+    expect(res.headers.get('cdn-cache-control')).toBeNull();
+  });
+
+  it('answers If-None-Match on a password site with a private 304', async () => {
+    findFirst.mockResolvedValue({ ...publicSite, privacyMode: 'PASSWORD' });
+    vi.mocked(hasSiteAccess).mockResolvedValueOnce(true);
+    const res = await cssReq(`?v=${V}`, SITE_HOST, {
+      'if-none-match': `"${V}"`,
+    });
+    expect(res.status).toBe(304);
+    expect(res.headers.get('cache-control')).toBe(
+      'private, max-age=31536000, immutable',
+    );
+    expect(res.headers.get('cdn-cache-control')).toBeNull();
   });
 
   it('does not 304 for an ETag of other content', async () => {
@@ -570,10 +587,22 @@ describe('GET /api/raw — custom.css is proxied as a cached stylesheet', () => 
     expect(res.status).toBe(200);
   });
 
-  it('returns 404 when the site has no custom.css', async () => {
+  it('returns an uncacheable 404 when the site has no custom.css', async () => {
     fetchFileMock.mockResolvedValue(null);
     const res = await cssReq(`?v=${V}`);
     expect(res.status).toBe(404);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    expect(res.headers.get('cdn-cache-control')).toBeNull();
+  });
+
+  it('returns an uncacheable 503 (not 404) when storage fails', async () => {
+    const err = vi.spyOn(console, 'error').mockImplementation(() => {});
+    fetchFileMock.mockRejectedValue(new Error('R2 down'));
+    const res = await cssReq(`?v=${V}`);
+    expect(res.status).toBe(503);
+    expect(res.headers.get('cache-control')).toBe('no-store');
+    expect(res.headers.get('cdn-cache-control')).toBeNull();
+    err.mockRestore();
   });
 
   it('blocks a password site without an access cookie (401)', async () => {
@@ -591,6 +620,7 @@ describe('GET /api/raw — custom.css is proxied as a cached stylesheet', () => 
     expect(res.headers.get('cache-control')).toBe(
       'private, max-age=31536000, immutable',
     );
+    expect(res.headers.get('cdn-cache-control')).toBeNull();
     expect(generatePresignedGetUrl).not.toHaveBeenCalled();
   });
 
@@ -609,6 +639,19 @@ describe('GET /api/raw — custom.css is proxied as a cached stylesheet', () => 
     );
     expect(maxAge).toBeGreaterThan(100);
     expect(maxAge).toBeLessThanOrEqual(120);
+    expect(res.headers.get('cdn-cache-control')).toBeNull();
+  });
+
+  it('never edge-caches an anonymous site even without an expiry', async () => {
+    findFirst.mockResolvedValue({
+      ...publicSite,
+      userId: 'anon-user-id',
+      isTemporary: false,
+      expiresAt: null,
+    });
+    const res = await cssReq(`?v=${V}`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('cdn-cache-control')).toBeNull();
   });
 
   it('keeps the storage redirect on hosts that are not the site own host', async () => {
