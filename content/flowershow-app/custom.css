@@ -1468,8 +1468,9 @@
    The footer is theme chrome, rendered from config.json on EVERY page of this
    site (home, docs, blog, changelog…). So — unlike the landing styles above —
    these rules are intentionally NOT scoped under `.fs-root`: they apply
-   site-wide for one consistent dark footer. custom.css layers above the theme,
-   so the overrides win without !important.
+   site-wide for one consistent dark footer. custom.css loads after the theme,
+   so these rules win without !important wherever their selectors are as
+   specific as the theme's, or more.
    Target DOM: apps/flowershow/components/public/footer.tsx
    ========================================================================== */
 
@@ -1517,8 +1518,8 @@
    `.fs-root`: it sets the default body/UI font for the ordinary content pages
    (docs, blog, changelog, …). The `.fs-root` landing pages keep their own
    Urbanist font (they set `font-family: var(--sans)` directly), so nothing
-   here leaks into them. custom.css layers above the default theme, so this
-   wins without !important.
+   here leaks into them. custom.css loads after the default theme, so
+   equal-or-higher specificity wins without !important.
 
    Reuses the Inter instance the app already loads via next/font (exposed as
    --next-font-heading), so there's no extra web-font request. Headings already

@@ -52,7 +52,7 @@ Paste the `@import` line at the **very top** of `custom.css`:
 
 ### Step 3: Apply the fonts
 
-Below the import, set the font variables. Every heading and all body text on the site use them:
+Below the import, set the font variables:
 
 ```css
 :root {
@@ -63,7 +63,23 @@ Below the import, set the font variables. Every heading and all body text on the
 
 The fonts after the first one are fallbacks. The browser uses them while your font loads, or if it can't load.
 
-![[custom-fonts-3.png]]
+In the default theme, the two variables cover more than headings and paragraphs:
+
+- `--font-heading` is the font for headings **and the site's interface**: the navigation bar, sidebar, table of contents, page header (title, date, authors, description), footer, tags and lists of pages.
+- `--font-body` is the font for running text: paragraphs, lists and the rest of your page content.
+
+So a display font such as Playfair Display in `--font-heading` also shows up in your navigation and sidebar. To change only the headings, leave `:root` alone and set the variable on the heading elements instead:
+
+```css
+h1, h2, h3, h4, h5, h6 {
+  --font-heading: 'Playfair Display', Georgia, serif;
+}
+```
+
+This works however the theme styles headings, because every theme rule that uses `var(--font-heading)` on a heading now gets your font.
+
+> [!note] Other themes
+> Some [themes](/docs/reference/themes) use extra font variables of their own for parts of the interface, so setting these two may not change everything. Check the theme's CSS for other `--font-…` variables and set them in `:root` too.
 
 ## Option B: Your own font files
 
@@ -83,6 +99,9 @@ fonts/
   Brand-Bold.woff2
   Brand-Italic.woff2
 ```
+
+> [!tip] Obsidian users
+> Obsidian's file explorer hides `.woff2` files unless **Settings → Files and links → Detect all file extensions** is on. The folder may look empty in Obsidian, but the Flowershow plugin still publishes the fonts in it.
 
 Publish the folder with the rest of your site. If you use [`contentInclude`](/docs/reference/content-filtering) to publish only some folders, add `fonts` to the list.
 
@@ -129,10 +148,17 @@ Use the same `font-family` name in every `@font-face` rule and in the variables.
 > [!important] Start font paths with `/`
 > Write `url('/fonts/Brand-Regular.woff2')`, not `url('fonts/Brand-Regular.woff2')`. `custom.css` applies to every page, and a path without the leading `/` is looked up relative to the current page. It works on your home page but breaks on pages in subfolders, such as `/blog/my-post`. Paths starting with `/` work on every page, on Flowershow subdomains and custom domains.
 
+> [!note] Password-protected sites
+> Self-hosted fonts haven't been tested on password-protected sites yet. If your font doesn't load there, use a Google Font instead, or [let us know](https://github.com/flowershow/flowershow/issues).
+
 > [!tip] Preload your main font (Premium)
-> With the [`head` option in `config.json`](/docs/reference/config-file) you can ask the browser to fetch your main font earlier, which reduces the flash of fallback text:
+> With [custom head code](/docs/reference/custom-head) you can ask the browser to fetch your main font earlier, which reduces the flash of fallback text. The easiest way is to paste this line into **Custom Head Code** in your site's dashboard **Settings**:
 > ```html
 > <link rel="preload" href="/fonts/Brand-Regular.woff2" as="font" type="font/woff2" crossorigin>
+> ```
+> If you set it in `config.json` instead, the value is a JSON string, so the quotes inside it need a backslash:
+> ```json
+> "head": "<link rel=\"preload\" href=\"/fonts/Brand-Regular.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>"
 > ```
 
 ## Styling specific elements

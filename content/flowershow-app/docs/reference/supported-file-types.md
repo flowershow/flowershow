@@ -61,7 +61,7 @@ These files are served as-is, with a content type that matches the extension, so
 
 For security, opening an uploaded SVG or other file directly at its own URL never runs scripts in it. Scripts in your HTML pages work as normal.
 
-Changes to these files can take several minutes to show after you republish, because they're cached. If an update must show immediately, rename the file (for example `style.v2.css`) and update the reference.
+Once a republish has finished processing, a reload shows the new version of these files. Each file is served from a URL that changes whenever its content changes, so you don't need to rename files to get past caches.
 
 ## Limits
 
