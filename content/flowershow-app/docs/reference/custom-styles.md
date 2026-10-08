@@ -137,9 +137,6 @@ To match tag pills to your accent color in both modes:
 
 Shape, padding and font are not variables. Style them with the `.tag-pill` class, for example `.tag-pill { border-radius: var(--radius); }`.
 
-> [!note]
-> On the monospace and material-draft themes, inline `#tags` in your content currently follow the theme's link style rather than these variables. Frontmatter header pills and the `/tags` pages still use them.
-
 ### Typography
 
 #### Font families
