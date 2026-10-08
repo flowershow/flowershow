@@ -5,13 +5,11 @@ test('Page header breadcrumbs', async ({ page, basePath }) => {
     await page.goto(`${basePath}/subfolder/nested-page`);
     const crumbs = page.locator('.page-header-breadcrumbs');
     await expect(crumbs).toBeVisible();
-    await expect(crumbs.locator('li')).toHaveText([
-      'Subfolder Index',
-      'Nested Page',
-    ]);
+    // Folder crumbs use the folder's sidebar label, not its README title
+    await expect(crumbs.locator('li')).toHaveText(['Subfolder', 'Nested Page']);
     // Folder with a README links to it; the current page is not a link
     await expect(
-      crumbs.getByRole('link', { name: 'Subfolder Index' }),
+      crumbs.getByRole('link', { name: 'Subfolder' }),
     ).toHaveAttribute('href', `${basePath}/subfolder`);
     await expect(crumbs.locator('li[aria-current="page"]')).toHaveText(
       'Nested Page',
