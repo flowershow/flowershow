@@ -211,6 +211,10 @@ describe('List Component - Pagination Tests', () => {
 
       // Should display "No items found" message
       expect(screen.getByText('No items found')).toBeInTheDocument();
+      // Stable theme hook for the empty state
+      expect(screen.getByText('No items found')).toHaveClass(
+        'list-component-empty',
+      );
     });
 
     it('should handle page number beyond available pages', () => {
@@ -241,6 +245,49 @@ describe('List Component - Pagination Tests', () => {
       expect(
         screen.getByText('Error loading items: Failed to load items'),
       ).toBeInTheDocument();
+      // Stable theme hook for the error state
+      expect(
+        screen.getByText('Error loading items: Failed to load items'),
+      ).toHaveClass('list-component-error');
+    });
+  });
+
+  describe('Theme hooks', () => {
+    it('should expose stable classes on the headline and media links', () => {
+      vi.mocked(api.site.getListComponentItems.useQuery).mockReturnValue({
+        data: {
+          items: [
+            {
+              url: '/item-1',
+              metadata: {
+                title: 'Item 1',
+                image: '/cover.png',
+                publish: true,
+                syntaxMode: 'md' as const,
+              },
+            },
+          ],
+        },
+        isLoading: false,
+        error: null,
+      } as any);
+
+      const { container } = render(
+        <List
+          siteId={mockSiteId}
+          slots={{ headline: 'title', media: 'image' }}
+        />,
+      );
+
+      const headlineLink = container.querySelector(
+        '.list-component-item-headline > a.list-component-item-headline-link',
+      );
+      expect(headlineLink).toHaveAttribute('href', '/item-1');
+
+      const mediaLink = container.querySelector(
+        '.list-component-item-media > a.list-component-item-media-link',
+      );
+      expect(mediaLink).toHaveAttribute('href', '/item-1');
     });
   });
 });

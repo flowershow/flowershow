@@ -117,11 +117,15 @@ export default function List({
   }
 
   if (error) {
-    return <div>Error loading items: {error.message}</div>;
+    return (
+      <div className="list-component-error">
+        Error loading items: {error.message}
+      </div>
+    );
   }
 
   if (!data?.items?.length) {
-    return <div>No items found</div>;
+    return <div className="list-component-empty">No items found</div>;
   }
 
   // Only paginate if pageSize is provided
@@ -139,7 +143,10 @@ export default function List({
         <article key={url} className="list-component-item">
           {slotsMap.media && (
             <div className="list-component-item-media">
-              <a href={url ?? undefined}>
+              <a
+                href={url ?? undefined}
+                className="list-component-item-media-link"
+              >
                 <Image
                   alt="Image"
                   src={
@@ -162,7 +169,9 @@ export default function List({
             )}
             {slotsMap.headline && getValue('headline', metadata, slotsMap) && (
               <h3 className="list-component-item-headline">
-                <a href={url!}>{fmt('headline', metadata, slotsMap)}</a>
+                <a href={url!} className="list-component-item-headline-link">
+                  {fmt('headline', metadata, slotsMap)}
+                </a>
               </h3>
             )}
             {slotsMap.summary && getValue('summary', metadata, slotsMap) && (

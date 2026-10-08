@@ -188,6 +188,9 @@ Then style it in `custom.css`:
 }
 ```
 
+> [!tip]
+> To make a section like this reach the edges of the window, put the page on `layout: plain`: plain-layout content already spans the full width, so you don't need a `width: 100vw` hack (which can add a horizontal scrollbar). See [Full-width sections](/docs/reference/custom-styles#full-width-sections).
+
 ---
 
 ## Troubleshooting

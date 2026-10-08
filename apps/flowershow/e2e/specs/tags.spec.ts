@@ -109,3 +109,90 @@ test('Inline body #tags render as pills in the prose', async ({
     body.locator('a.tag-pill', { hasText: '#project/beta' }),
   ).toHaveAttribute('href', `${basePath}/tags/project/beta`);
 });
+
+test('Tag pill colours default to pink and follow --color-tag-pill-* overrides', async ({
+  page,
+  basePath,
+}) => {
+  const setTheme = (mode: 'light' | 'dark') =>
+    page.evaluate(
+      (m) => document.documentElement.setAttribute('data-theme', m),
+      mode,
+    );
+
+  await page.goto(`${basePath}/tags-beta`);
+  // Inline pill inside rendered prose (exercises the `.rendered-mdx a.tag-pill`
+  // override path).
+  const inlinePill = page
+    .locator('#mdxpage a.tag-pill', { hasText: '#film' })
+    .first();
+
+  await test.step('defaults are unchanged (light)', async () => {
+    await setTheme('light');
+    await expect(inlinePill).toHaveCSS('color', 'rgb(219, 39, 119)');
+    await expect(inlinePill).toHaveCSS(
+      'background-color',
+      'rgba(219, 39, 119, 0.1)',
+    );
+  });
+
+  await test.step('defaults are unchanged (dark)', async () => {
+    await setTheme('dark');
+    await expect(inlinePill).toHaveCSS('color', 'rgb(244, 114, 182)');
+    await expect(inlinePill).toHaveCSS(
+      'background-color',
+      'rgba(244, 114, 182, 0.12)',
+    );
+  });
+
+  // A site's custom.css is plain, unlayered CSS: a bare `:root` override must
+  // beat the defaults in both modes without !important.
+  await page.addStyleTag({
+    content:
+      ':root { --color-tag-pill-text: rgb(1, 2, 3); --color-tag-pill-bg: rgb(4, 5, 6); }',
+  });
+
+  await test.step('a :root override wins in dark mode', async () => {
+    await setTheme('dark');
+    await expect(inlinePill).toHaveCSS('color', 'rgb(1, 2, 3)');
+    await expect(inlinePill).toHaveCSS('background-color', 'rgb(4, 5, 6)');
+  });
+
+  await test.step('a :root override wins in light mode', async () => {
+    await setTheme('light');
+    await expect(inlinePill).toHaveCSS('color', 'rgb(1, 2, 3)');
+    await expect(inlinePill).toHaveCSS('background-color', 'rgb(4, 5, 6)');
+  });
+
+  await test.step('hover uses the hover tokens', async () => {
+    await page.addStyleTag({
+      content:
+        ':root { --color-tag-pill-text-hover: rgb(7, 8, 9); --color-tag-pill-bg-hover: rgb(10, 11, 12); }',
+    });
+    await inlinePill.hover();
+    await expect(inlinePill).toHaveCSS('color', 'rgb(7, 8, 9)');
+    await expect(inlinePill).toHaveCSS('background-color', 'rgb(10, 11, 12)');
+    await page.mouse.move(0, 0);
+  });
+
+  await test.step('a :root[data-theme="dark"] override applies to dark only', async () => {
+    await page.addStyleTag({
+      content:
+        ':root[data-theme="dark"] { --color-tag-pill-text: rgb(13, 14, 15); }',
+    });
+    await setTheme('dark');
+    await expect(inlinePill).toHaveCSS('color', 'rgb(13, 14, 15)');
+    await setTheme('light');
+    await expect(inlinePill).toHaveCSS('color', 'rgb(1, 2, 3)');
+  });
+
+  await test.step('frontmatter header pills use the same tokens', async () => {
+    await page.goto(`${basePath}/tags-alpha`);
+    await page.addStyleTag({
+      content: ':root { --color-tag-pill-text: rgb(1, 2, 3); }',
+    });
+    await expect(
+      page.locator('.page-header-tags a.tag-pill').first(),
+    ).toHaveCSS('color', 'rgb(1, 2, 3)');
+  });
+});

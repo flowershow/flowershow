@@ -123,3 +123,54 @@ test('Sidebar', async ({ page, basePath }) => {
     await expect(subnav).not.toBeVisible();
   });
 });
+
+test('layout: plain content spans the full page width', async ({
+  page,
+  basePath,
+}) => {
+  // Regression guard for the documented contract: plain-layout content has no
+  // max-width, padding or margin, so authors never need a `100vw` breakout.
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto(`${basePath}/plain-full-width`);
+
+  const plain = page.locator('#mdxpage.rendered-mdx.is-plain');
+  await expect(plain).toBeVisible();
+
+  await test.step('no width constraint, padding or margin on the content wrapper', async () => {
+    await expect(plain).toHaveCSS('max-width', 'none');
+    await expect(plain).toHaveCSS('padding-left', '0px');
+    await expect(plain).toHaveCSS('padding-right', '0px');
+    await expect(plain).toHaveCSS('margin-left', '0px');
+    await expect(plain).toHaveCSS('margin-right', '0px');
+  });
+
+  await test.step('content and its blocks span the viewport', async () => {
+    // Compare against clientWidth (viewport minus any classic scrollbar), not
+    // innerWidth or 100vw, so this holds whether or not the browser reserves
+    // space for a scrollbar. (Playwright runs Chromium with --hide-scrollbars,
+    // so it can't reproduce the `100vw` scrollbar bug itself; it guards the
+    // max-width/padding/margin contract.)
+    const widths = await page.evaluate(() => {
+      const root = document.documentElement;
+      const content = document.querySelector('#mdxpage') as HTMLElement;
+      const firstBlock = content.querySelector('p') as HTMLElement;
+      return {
+        clientWidth: root.clientWidth,
+        contentScrollWidth: content.scrollWidth,
+        contentClientWidth: content.clientWidth,
+        contentLeft: content.getBoundingClientRect().left,
+        contentWidth: content.getBoundingClientRect().width,
+        blockWidth: firstBlock.getBoundingClientRect().width,
+      };
+    });
+
+    expect(widths.contentLeft).toBe(0);
+    expect(widths.contentWidth).toBe(widths.clientWidth);
+    expect(widths.blockWidth).toBe(widths.clientWidth);
+    // No horizontal overflow inside the plain content (scoped to #mdxpage so
+    // unrelated chrome can't fail this test).
+    expect(widths.contentScrollWidth).toBeLessThanOrEqual(
+      widths.contentClientWidth,
+    );
+  });
+});

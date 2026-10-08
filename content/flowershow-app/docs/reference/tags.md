@@ -65,6 +65,22 @@ Flowershow generates two kinds of tag pages for your site:
 
 Tag pages are generated navigation pages, not Markdown content. They're served as a fallback, so if you publish your own page at `/tags` (or any `/tags/...` path), your content always takes precedence.
 
+## Styling tags
+
+Every tag pill (frontmatter row, inline `#tags`, and the `/tags` pages) uses the `.tag-pill` class and takes its colors from the `--color-tag-pill-*` variables. To recolor them, set the variables in your `custom.css`; no `!important` needed:
+
+```css
+:root {
+  --color-tag-pill-text: #0369a1;
+  --color-tag-pill-bg: #e0f2fe;
+}
+```
+
+See [Tag pill colors](/docs/reference/custom-styles#tag-pill-colors) for the full list, dark-mode overrides and a recipe that matches your accent color. Use the `.tag-pill` and `.page-header-tags` classes for shape and spacing; all tag classes are listed in the [[theme-class-reference|theme class reference]].
+
+> [!note]
+> On the monospace and material-draft themes, inline `#tags` in your content currently follow the theme's link style rather than these variables. Frontmatter header pills and the `/tags` pages still use them.
+
 ## Turning tags off
 
 Tag display is optional. If you use `#tags` to organize your notes in Obsidian but don't want them surfaced on your published site, set `showTags` to `false` — in your site's dashboard settings ("Show Tags") or in `config.json`:
