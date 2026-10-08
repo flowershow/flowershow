@@ -135,8 +135,10 @@ test.describe('Custom navbar on Premium', () => {
       await expect(link).toBeVisible();
       const navBox = await nav.boundingBox();
       const panelBox = await menu.locator('ul').boundingBox();
-      expect(panelBox!.y).toBeGreaterThanOrEqual(
-        navBox!.y + navBox!.height - 8,
+      // The panel drops out of the bar: it extends below it, so the shell's
+      // overflow-x: clip doesn't clip it vertically.
+      expect(panelBox!.y + panelBox!.height).toBeGreaterThan(
+        navBox!.y + navBox!.height,
       );
       expect(panelBox!.x).toBeGreaterThanOrEqual(0);
       expect(panelBox!.x + panelBox!.width).toBeLessThanOrEqual(390);
