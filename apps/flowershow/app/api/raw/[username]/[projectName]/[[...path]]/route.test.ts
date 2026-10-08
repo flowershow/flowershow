@@ -28,8 +28,17 @@ import { GET } from './route';
 const findFirst = prisma.site.findFirst as ReturnType<typeof vi.fn>;
 const findBlob = prisma.blob.findUnique as ReturnType<typeof vi.fn>;
 
-function makeReq(path: string): NextRequest {
-  return new NextRequest(`http://localhost/api/raw/victim/notes/${path}`);
+// The site's own host in the test env (NEXT_PUBLIC_SITE_DOMAIN=test.localhost).
+const SITE_HOST = 'notes-victim.test.localhost';
+
+function makeReq(
+  path: string,
+  host = SITE_HOST,
+  headers: Record<string, string> = {},
+): NextRequest {
+  return new NextRequest(`http://${host}/api/raw/victim/notes/${path}`, {
+    headers: { host, ...headers },
+  });
 }
 
 function makeParams(path: string) {
@@ -47,6 +56,8 @@ const passwordSite = {
   privacyMode: 'PASSWORD',
   tokenVersion: 1,
   userId: 'owner-1',
+  subdomain: 'notes-victim',
+  customDomain: null,
 };
 
 beforeEach(() => {
@@ -154,6 +165,8 @@ describe('GET /api/raw — anonymous sites', () => {
     userId: 'anon-user-id',
     isTemporary: true,
     expiresAt: null,
+    subdomain: 'notes-victim',
+    customDomain: null,
   };
 
   it('marks the public-file redirect noindex for an anonymous site', async () => {
@@ -212,5 +225,133 @@ describe('GET /api/raw — anonymous sites', () => {
     });
     const res = await GET(makeReq('page.md'), makeParams('page.md'));
     expect(res.status).toBe(302);
+  });
+});
+
+// /api/* skips the middleware's host routing, so the raw handler itself must
+// make sure a site's HTML only ever runs on that site's own origin. Otherwise
+// cloud.<domain>/api/raw/<attacker>/<project>/x.html runs attacker script on
+// the dashboard origin, and <victim-site>/api/raw/<attacker>/... runs it on
+// the victim site's origin.
+describe('GET /api/raw — HTML is bound to the site own host', () => {
+  const publicSite = {
+    id: 'site-1',
+    privacyMode: 'PUBLIC',
+    tokenVersion: 1,
+    userId: 'owner-1',
+    subdomain: 'notes-victim',
+    customDomain: 'docs.example.com',
+  };
+  const fetchFileMock = fetchFile as ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    findFirst.mockResolvedValue(publicSite);
+    fetchFileMock.mockResolvedValue('<script>alert(1)</script>');
+  });
+
+  it('serves HTML on the site subdomain host', async () => {
+    const res = await GET(makeReq('x.html'), makeParams('x.html'));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/html');
+  });
+
+  it('serves HTML on the site custom domain (case-insensitive host)', async () => {
+    const res = await GET(
+      makeReq('x.html', 'Docs.Example.com'),
+      makeParams('x.html'),
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it("rejects HTML requested on another site's subdomain", async () => {
+    const res = await GET(
+      makeReq('x.html', 'other-someone.test.localhost'),
+      makeParams('x.html'),
+    );
+    expect(res.status).toBe(404);
+    expect(fetchFileMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects HTML requested on another site's custom domain", async () => {
+    const res = await GET(
+      makeReq('x.html', 'customer.example.org'),
+      makeParams('x.html'),
+    );
+    expect(res.status).toBe(404);
+    expect(fetchFileMock).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['cloud (dashboard) domain', 'cloud.test.localhost'],
+    ['root / home / site domain', 'test.localhost'],
+    ['a Vercel deployment host', 'flowershow-abc.vercel.app'],
+  ])('rejects HTML (and .htm) on the %s', async (_label, host) => {
+    for (const file of ['x.html', 'x.HTM']) {
+      const res = await GET(makeReq(file, host), makeParams(file));
+      expect(res.status).toBe(404);
+      expect(res.headers.get('content-type')).not.toContain('text/html');
+    }
+    expect(fetchFileMock).not.toHaveBeenCalled();
+  });
+
+  it('never serves HTML on an app domain, even if a subdomain collides with it', async () => {
+    // In the test env cloud.test.localhost is also <"cloud">.<site domain>.
+    findFirst.mockResolvedValue({ ...publicSite, subdomain: 'cloud' });
+    const res = await GET(
+      makeReq('x.html', 'cloud.test.localhost'),
+      makeParams('x.html'),
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it('ignores forged forwarded-host / marker headers', async () => {
+    const res = await GET(
+      makeReq('x.html', 'cloud.test.localhost', {
+        'x-forwarded-host': SITE_HOST,
+        'x-original-host': SITE_HOST,
+        'x-middleware-rewrite': `http://${SITE_HOST}/api/raw/victim/notes/x.html`,
+      }),
+      makeParams('x.html'),
+    );
+    expect(res.status).toBe(404);
+    expect(fetchFileMock).not.toHaveBeenCalled();
+  });
+
+  it('rejects HTML when the Host header is missing', async () => {
+    const req = new NextRequest('http://localhost/api/raw/victim/notes/x.html');
+    req.headers.delete('host');
+    const res = await GET(req, makeParams('x.html'));
+    expect(res.status).toBe(404);
+  });
+
+  it('still serves images on any host so the image optimizer keeps working', async () => {
+    for (const host of ['cloud.test.localhost', 'test.localhost', SITE_HOST]) {
+      const res = await GET(
+        makeReq('cover.png', host),
+        makeParams('cover.png'),
+      );
+      expect(res.status).toBe(302);
+      expect(res.headers.get('location')).toContain('s3.test.com');
+    }
+  });
+
+  it('still serves password-site images via presigned URL from a non-site host', async () => {
+    findFirst.mockResolvedValue({ ...publicSite, privacyMode: 'PASSWORD' });
+    const res = await GET(
+      makeReq('cover.png', 'test.localhost'),
+      makeParams('cover.png'),
+    );
+    expect(res.status).toBe(302);
+    expect(generatePresignedGetUrl).toHaveBeenCalled();
+  });
+
+  it('non-HTML files on a non-site host only redirect to storage (never proxied)', async () => {
+    const res = await GET(
+      makeReq('page.md', 'cloud.test.localhost'),
+      makeParams('page.md'),
+    );
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toContain('s3.test.com');
+    expect(fetchFileMock).not.toHaveBeenCalled();
   });
 });

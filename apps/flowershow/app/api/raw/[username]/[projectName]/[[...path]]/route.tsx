@@ -4,12 +4,15 @@ import { env } from '@/env.mjs';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
 import { hasSiteAccess, siteAccessSelect } from '@/lib/site-access';
+import { isSiteOwnHost } from '@/lib/site-host';
 import prisma from '@/server/db';
 
 const rawSiteSelect = {
   ...siteAccessSelect,
   isTemporary: true,
   expiresAt: true,
+  subdomain: true,
+  customDomain: true,
 } as const;
 
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp']);
@@ -76,6 +79,16 @@ export async function GET(
 
   // HTML files: proxy content so the browser renders rather than downloads.
   if (isHtml) {
+    // The proxied HTML runs as an active document on whatever origin served
+    // it, so only serve it on the site's own host (its subdomain or custom
+    // domain). /api/* skips the middleware's host routing, so without this
+    // check any site's HTML could be loaded on the dashboard, the root/home
+    // domain, or another site's host (and read that origin's cookies/content).
+    // The Host header is set by the browser from the URL and can't be chosen
+    // by a third-party page; forwarded-host style headers are not trusted.
+    if (!isSiteOwnHost(req.headers.get('host'), site)) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
     try {
       const content = await fetchFile({
         projectId: site.id,
