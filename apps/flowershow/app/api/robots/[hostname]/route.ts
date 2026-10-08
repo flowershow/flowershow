@@ -44,7 +44,10 @@ export async function GET(
       });
       if (content) {
         return new Response(content, {
-          headers: { 'Content-Type': 'text/plain' },
+          headers: {
+            'Content-Type': 'text/plain',
+            'X-Content-Type-Options': 'nosniff',
+          },
         });
       }
     } catch {
@@ -68,6 +71,7 @@ Sitemap: ${protocol}://${hostname}/sitemap.xml
   return new Response(robotsTxt, {
     headers: {
       'Content-Type': 'text/plain',
+      'X-Content-Type-Options': 'nosniff',
     },
   });
 }

@@ -28,8 +28,17 @@ import { GET } from './route';
 const findFirst = prisma.site.findFirst as ReturnType<typeof vi.fn>;
 const findBlob = prisma.blob.findUnique as ReturnType<typeof vi.fn>;
 
-function makeReq(path: string): NextRequest {
-  return new NextRequest(`http://localhost/api/raw/victim/notes/${path}`);
+// The site's own host in the test env (NEXT_PUBLIC_SITE_DOMAIN=test.localhost).
+const SITE_HOST = 'notes-victim.test.localhost';
+
+function makeReq(
+  path: string,
+  host = SITE_HOST,
+  headers: Record<string, string> = {},
+): NextRequest {
+  return new NextRequest(`http://${host}/api/raw/victim/notes/${path}`, {
+    headers: { host, ...headers },
+  });
 }
 
 function makeParams(path: string) {
@@ -47,6 +56,8 @@ const passwordSite = {
   privacyMode: 'PASSWORD',
   tokenVersion: 1,
   userId: 'owner-1',
+  subdomain: 'notes-victim',
+  customDomain: null,
 };
 
 beforeEach(() => {
@@ -154,6 +165,8 @@ describe('GET /api/raw — anonymous sites', () => {
     userId: 'anon-user-id',
     isTemporary: true,
     expiresAt: null,
+    subdomain: 'notes-victim',
+    customDomain: null,
   };
 
   it('marks the public-file redirect noindex for an anonymous site', async () => {
@@ -212,5 +225,246 @@ describe('GET /api/raw — anonymous sites', () => {
     });
     const res = await GET(makeReq('page.md'), makeParams('page.md'));
     expect(res.status).toBe(302);
+  });
+});
+
+// HTML from /api/raw is only served on the site's own host(s); other hosts get
+// a redirect to the same file on the site's own host.
+describe('GET /api/raw — HTML is bound to the site own host', () => {
+  const publicSite = {
+    id: 'site-1',
+    privacyMode: 'PUBLIC',
+    tokenVersion: 1,
+    userId: 'owner-1',
+    subdomain: 'notes-victim',
+    customDomain: 'docs.example.com',
+  };
+  const fetchFileMock = fetchFile as ReturnType<typeof vi.fn>;
+
+  function expectRedirectToOwnHost(res: Response, pathAndQuery: string) {
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toBe(
+      `http://docs.example.com${pathAndQuery}`,
+    );
+    expect(res.headers.get('content-type') ?? '').not.toContain('text/html');
+    expect(fetchFileMock).not.toHaveBeenCalled();
+  }
+
+  beforeEach(() => {
+    findFirst.mockResolvedValue(publicSite);
+    fetchFileMock.mockResolvedValue('<p>page</p>');
+  });
+
+  it('serves HTML on the site subdomain host', async () => {
+    const res = await GET(makeReq('x.html'), makeParams('x.html'));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toContain('text/html');
+    expect(res.headers.get('x-content-type-options')).toBe('nosniff');
+  });
+
+  it('serves HTML on the site custom domain (case-insensitive host)', async () => {
+    const res = await GET(
+      makeReq('x.html', 'Docs.Example.com'),
+      makeParams('x.html'),
+    );
+    expect(res.status).toBe(200);
+  });
+
+  it("redirects HTML requested on another site's subdomain to the own host", async () => {
+    const res = await GET(
+      makeReq('x.html', 'other-someone.test.localhost'),
+      makeParams('x.html'),
+    );
+    expectRedirectToOwnHost(res, '/x.html');
+  });
+
+  it("redirects HTML requested on another site's custom domain to the own host", async () => {
+    const res = await GET(
+      makeReq('x.html', 'customer.example.org'),
+      makeParams('x.html'),
+    );
+    expectRedirectToOwnHost(res, '/x.html');
+  });
+
+  it.each([
+    ['cloud (dashboard) domain', 'cloud.test.localhost'],
+    ['root / home / site domain', 'test.localhost'],
+    ['a Vercel deployment host', 'flowershow-abc.vercel.app'],
+  ])(
+    'redirects HTML (and .htm) on the %s to the own host',
+    async (_label, host) => {
+      for (const file of ['x.html', 'x.HTM']) {
+        const res = await GET(makeReq(file, host), makeParams(file));
+        expectRedirectToOwnHost(res, `/${file}`);
+      }
+    },
+  );
+
+  it('keeps the encoded path and query string in the redirect', async () => {
+    const req = new NextRequest(
+      'http://cloud.test.localhost/api/raw/victim/notes/a%20b/c.html?x=1',
+      { headers: { host: 'cloud.test.localhost' } },
+    );
+    const res = await GET(req, {
+      params: Promise.resolve({
+        username: 'victim',
+        projectName: 'notes',
+        path: ['a b', 'c.html'],
+      }),
+    });
+    expectRedirectToOwnHost(res, '/a%20b/c.html?x=1');
+  });
+
+  it('redirects to the subdomain host when the site has no custom domain', async () => {
+    findFirst.mockResolvedValue({ ...publicSite, customDomain: null });
+    const res = await GET(
+      makeReq('x.html', 'cloud.test.localhost'),
+      makeParams('x.html'),
+    );
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toBe(`http://${SITE_HOST}/x.html`);
+  });
+
+  it('redirects a password site to its own host before the access check', async () => {
+    findFirst.mockResolvedValue({ ...publicSite, privacyMode: 'PASSWORD' });
+    const res = await GET(
+      makeReq('x.html', 'cloud.test.localhost'),
+      makeParams('x.html'),
+    );
+    expectRedirectToOwnHost(res, '/x.html');
+  });
+
+  it('never serves HTML on an app domain, even if a subdomain collides with it', async () => {
+    // In the test env cloud.test.localhost is also <"cloud">.<site domain>.
+    findFirst.mockResolvedValue({
+      ...publicSite,
+      subdomain: 'cloud',
+      customDomain: null,
+    });
+    const res = await GET(
+      makeReq('x.html', 'cloud.test.localhost'),
+      makeParams('x.html'),
+    );
+    expect(res.status).toBe(404);
+    expect(fetchFileMock).not.toHaveBeenCalled();
+  });
+
+  it('ignores a custom domain on a reserved Flowershow domain', async () => {
+    findFirst.mockResolvedValue({
+      ...publicSite,
+      customDomain: 'someone-else.test.localhost',
+    });
+    const res = await GET(
+      makeReq('x.html', 'someone-else.test.localhost'),
+      makeParams('x.html'),
+    );
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toBe(`http://${SITE_HOST}/x.html`);
+    expect(fetchFileMock).not.toHaveBeenCalled();
+  });
+
+  it('only trusts the Host header', async () => {
+    const res = await GET(
+      makeReq('x.html', 'cloud.test.localhost', {
+        'x-forwarded-host': SITE_HOST,
+        'x-original-host': SITE_HOST,
+        'x-middleware-rewrite': `http://${SITE_HOST}/api/raw/victim/notes/x.html`,
+      }),
+      makeParams('x.html'),
+    );
+    expectRedirectToOwnHost(res, '/x.html');
+  });
+
+  it('does not serve HTML when the Host header is missing', async () => {
+    const req = new NextRequest('http://localhost/api/raw/victim/notes/x.html');
+    req.headers.delete('host');
+    const res = await GET(req, makeParams('x.html'));
+    expectRedirectToOwnHost(res, '/x.html');
+  });
+
+  it('still serves images on any host so the image optimizer keeps working', async () => {
+    for (const host of ['cloud.test.localhost', 'test.localhost', SITE_HOST]) {
+      const res = await GET(
+        makeReq('cover.png', host),
+        makeParams('cover.png'),
+      );
+      expect(res.status).toBe(302);
+      expect(res.headers.get('location')).toContain('s3.test.com');
+    }
+  });
+
+  it('still serves password-site images via presigned URL from a non-site host', async () => {
+    findFirst.mockResolvedValue({ ...publicSite, privacyMode: 'PASSWORD' });
+    const res = await GET(
+      makeReq('cover.png', 'test.localhost'),
+      makeParams('cover.png'),
+    );
+    expect(res.status).toBe(302);
+    expect(generatePresignedGetUrl).toHaveBeenCalled();
+  });
+
+  it('non-HTML files on a non-site host only redirect to storage (never proxied)', async () => {
+    const res = await GET(
+      makeReq('page.md', 'cloud.test.localhost'),
+      makeParams('page.md'),
+    );
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toContain('s3.test.com');
+    expect(fetchFileMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('GET /api/raw/_domain — HTML is bound to the site own host', () => {
+  const otherSite = {
+    id: 'site-2',
+    privacyMode: 'PUBLIC',
+    tokenVersion: 1,
+    userId: 'owner-2',
+    subdomain: 'blog-other',
+    customDomain: 'other.example.net',
+  };
+  const fetchFileMock = fetchFile as ReturnType<typeof vi.fn>;
+
+  function domainReq(host: string, domain: string) {
+    return {
+      req: new NextRequest(`http://${host}/api/raw/_domain/${domain}/x.html`, {
+        headers: { host },
+      }),
+      params: {
+        params: Promise.resolve({
+          username: '_domain',
+          projectName: domain,
+          path: ['x.html'],
+        }),
+      },
+    };
+  }
+
+  beforeEach(() => {
+    findFirst.mockResolvedValue(otherSite);
+    fetchFileMock.mockResolvedValue('<p>page</p>');
+  });
+
+  it("does not serve a site's HTML on another site's host", async () => {
+    for (const host of [SITE_HOST, 'docs.example.com']) {
+      const { req, params } = domainReq(host, 'other.example.net');
+      const res = await GET(req, params);
+      expect(res.status).toBe(302);
+      expect(res.headers.get('location')).toBe(
+        'http://other.example.net/x.html',
+      );
+    }
+    expect(fetchFileMock).not.toHaveBeenCalled();
+  });
+
+  it('serves the HTML on its own custom domain', async () => {
+    const { req, params } = domainReq('other.example.net', 'other.example.net');
+    const res = await GET(req, params);
+    expect(res.status).toBe(200);
+    expect(findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { customDomain: 'other.example.net' },
+      }),
+    );
   });
 });

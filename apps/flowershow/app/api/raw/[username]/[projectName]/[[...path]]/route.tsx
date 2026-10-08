@@ -4,12 +4,15 @@ import { env } from '@/env.mjs';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
 import { hasSiteAccess, siteAccessSelect } from '@/lib/site-access';
+import { isSiteOwnHost, redirectToSiteOwnHost } from '@/lib/site-host';
 import prisma from '@/server/db';
 
 const rawSiteSelect = {
   ...siteAccessSelect,
   isTemporary: true,
   expiresAt: true,
+  subdomain: true,
+  customDomain: true,
 } as const;
 
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp']);
@@ -62,6 +65,19 @@ export async function GET(
   const isImage = IMAGE_EXTENSIONS.has(ext);
   const isHtml = getContentType(ext) === 'text/html'; // .html and .htm
 
+  const encodedPath = path
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+
+  // Proxied HTML is served as an active document, so only serve it on the
+  // site's own host(s) (subdomain or custom domain). /api/* is not host-routed
+  // by middleware, so this handler enforces it. Only the Host header is
+  // trusted; forwarded-host headers are ignored. Other hosts get a redirect to
+  // the same file on the site's own host.
+  if (isHtml && !isSiteOwnHost(req.headers.get('host'), site)) {
+    return redirectToSiteOwnHost(site, `/${encodedPath}${req.nextUrl.search}`);
+  }
+
   // Non-image files on password-protected sites require a valid access cookie.
   // Images are exempt so the Next.js image optimizer (server-side, no cookie) still works.
   if (site.privacyMode === 'PASSWORD' && !isImage) {
@@ -88,6 +104,7 @@ export async function GET(
         status: 200,
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
+          'X-Content-Type-Options': 'nosniff',
           ...robotsHeaders,
         },
       });
@@ -109,9 +126,6 @@ export async function GET(
   }
 
   // Public sites: redirect to the R2 public domain (CDN-cached at edge).
-  const encodedPath = path
-    .map((segment) => encodeURIComponent(segment))
-    .join('/');
 
   const isSecure =
     env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
