@@ -32,7 +32,7 @@ export function filterRssBlobs(blobs: RssBlob[]): RssBlob[] {
 export function buildRssItem(blob: RssBlob, siteUrl: string): string {
   const metadata = blob.metadata as Record<string, unknown>;
   const permalink = (blob.permalink ?? blob.appPath)?.replace(/^\//, '');
-  const link = `${siteUrl}/${permalink}`;
+  const link = escapeXml(`${siteUrl}/${permalink}`);
   const title = escapeXml(
     (metadata.title as string) || permalink || 'Untitled',
   );
@@ -65,13 +65,14 @@ export function buildRssFeed(
     })
     .slice(0, maxItems);
   const items = filtered.map((blob) => buildRssItem(blob, channel.siteUrl));
-  const rssUrl = `${channel.siteUrl}/rss.xml`;
+  const siteUrl = escapeXml(channel.siteUrl);
+  const rssUrl = escapeXml(`${channel.siteUrl}/rss.xml`);
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>${escapeXml(channel.title)}</title>
-    <link>${channel.siteUrl}</link>
+    <link>${siteUrl}</link>
     <description>${escapeXml(channel.description)}</description>
     <language>en</language>
     <lastBuildDate>${buildDate.toUTCString()}</lastBuildDate>

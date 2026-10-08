@@ -5,6 +5,7 @@ import { fetchFile } from '@/lib/content-store';
 import { getSiteUrl } from '@/lib/get-site-url';
 import { buildRssFeed } from '@/lib/rss';
 import { hasSiteAccess } from '@/lib/site-access';
+import { isSiteOwnHost, redirectToSiteOwnHost } from '@/lib/site-host';
 import { resolveSiteConfig, resolveSiteName } from '@/lib/site-config';
 import prisma from '@/server/db';
 import { Prisma } from '@prisma/client';
@@ -57,6 +58,12 @@ export async function GET(
     return new Response('Not found', { status: 404 });
   }
 
+  // Serve the feed only on the site's own host(s). Middleware rewrites
+  // /rss.xml here from the site's own host; other hosts are redirected.
+  if (!isSiteOwnHost(request.headers.get('host'), site)) {
+    return redirectToSiteOwnHost(site, '/rss.xml');
+  }
+
   if (
     !(await hasSiteAccess(site, site.id, {
       session: null,
@@ -98,6 +105,7 @@ export async function GET(
   return new Response(xml, {
     headers: {
       'Content-Type': 'application/rss+xml; charset=utf-8',
+      'X-Content-Type-Options': 'nosniff',
     },
   });
 }

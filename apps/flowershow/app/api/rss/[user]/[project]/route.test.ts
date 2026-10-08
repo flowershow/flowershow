@@ -33,8 +33,13 @@ import { GET } from './route';
 
 const findFirst = prisma.site.findFirst as ReturnType<typeof vi.fn>;
 
-function makeReq(): NextRequest {
-  return new NextRequest('http://localhost/api/rss/victim/notes');
+// The site's own host in the test env (NEXT_PUBLIC_SITE_DOMAIN=test.localhost).
+const SITE_HOST = 'notes-victim.test.localhost';
+
+function makeReq(host = SITE_HOST): NextRequest {
+  return new NextRequest(`http://${host}/api/rss/victim/notes`, {
+    headers: { host },
+  });
 }
 
 function makeParams() {
@@ -47,6 +52,8 @@ const passwordSite = {
   tokenVersion: 1,
   userId: 'owner-1',
   projectName: 'notes',
+  subdomain: 'notes-victim',
+  customDomain: null,
   configJson: null,
   blobs: [],
 };
@@ -71,5 +78,29 @@ describe('GET /api/rss — password gate', () => {
 
     expect(res.status).toBe(200);
     expect(await res.text()).toBe('<rss/>');
+  });
+});
+
+describe('GET /api/rss — bound to the site own host', () => {
+  const publicSite = { ...passwordSite, privacyMode: 'PUBLIC' };
+
+  it.each([
+    ['dashboard host', 'cloud.test.localhost'],
+    ['bare site domain', 'test.localhost'],
+    ["another site's subdomain", 'other-someone.test.localhost'],
+    ['another custom domain', 'customer.example.org'],
+  ])('redirects a request on the %s to the own host', async (_l, host) => {
+    findFirst.mockResolvedValue(publicSite);
+    const res = await GET(makeReq(host), makeParams());
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toBe(`http://${SITE_HOST}/rss.xml`);
+    expect(await res.text()).not.toContain('<rss');
+  });
+
+  it('sets nosniff on the feed', async () => {
+    findFirst.mockResolvedValue(publicSite);
+    const res = await GET(makeReq(), makeParams());
+    expect(res.status).toBe(200);
+    expect(res.headers.get('x-content-type-options')).toBe('nosniff');
   });
 });

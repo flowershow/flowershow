@@ -2,7 +2,9 @@ import { SitemapParamsSchema } from '@flowershow/api-contract';
 import { Prisma } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { getSiteUrl } from '@/lib/get-site-url';
+import { escapeXml } from '@/lib/rss';
 import { hasSiteAccess } from '@/lib/site-access';
+import { isSiteOwnHost, redirectToSiteOwnHost } from '@/lib/site-host';
 import prisma from '@/server/db';
 
 export async function GET(
@@ -53,6 +55,12 @@ export async function GET(
     return new Response('Not found', { status: 404 });
   }
 
+  // Serve the sitemap only on the site's own host(s). Middleware rewrites
+  // /sitemap.xml here from the site's own host; other hosts are redirected.
+  if (!isSiteOwnHost(request.headers.get('host'), site)) {
+    return redirectToSiteOwnHost(site, '/sitemap.xml');
+  }
+
   if (
     !(await hasSiteAccess(site, site.id, {
       session: null,
@@ -63,13 +71,14 @@ export async function GET(
   }
 
   const siteUrl = getSiteUrl(site);
+  const loc = (url: string) => `<loc>${escapeXml(url)}</loc>`;
 
   // Create XML sitemap
   const xmlItems = site.blobs.map((blob) => {
     if (blob.appPath === '/') return '';
     const permalink = (blob.permalink ?? blob.appPath)?.replace(/^\//, '');
     return `<url>
-      <loc>${siteUrl}/${permalink}</loc>
+      ${loc(`${siteUrl}/${permalink}`)}
       <lastmod>${blob.updatedAt.toISOString()}</lastmod>
     </url>`;
   });
@@ -83,7 +92,7 @@ export async function GET(
   const tagsIndexItem =
     showTags && site._count.tags > 0
       ? `<url>
-      <loc>${siteUrl}/tags</loc>
+      ${loc(`${siteUrl}/tags`)}
       <lastmod>${site.updatedAt.toISOString()}</lastmod>
     </url>`
       : '';
@@ -91,7 +100,7 @@ export async function GET(
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-      <loc>${siteUrl}</loc>
+      ${loc(siteUrl)}
       <lastmod>${site.updatedAt.toISOString()}</lastmod>
     </url>${xmlItems.join('')}${tagsIndexItem}
 </urlset>`;
@@ -99,6 +108,7 @@ export async function GET(
   return new Response(xml, {
     headers: {
       'Content-Type': 'application/xml',
+      'X-Content-Type-Options': 'nosniff',
     },
   });
 }

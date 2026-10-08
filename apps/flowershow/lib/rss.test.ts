@@ -383,3 +383,53 @@ describe('buildRssFeed', () => {
     expect(itemCount).toBe(3);
   });
 });
+
+describe('RSS output escaping', () => {
+  const evil =
+    'a</link><x:script xmlns:x="http://www.w3.org/1999/xhtml">alert(1)</x:script><link>b&c';
+
+  it('escapes a malicious permalink in link and guid', () => {
+    const item = buildRssItem(
+      {
+        appPath: '/a',
+        updatedAt: new Date('2025-01-01'),
+        permalink: evil,
+        metadata: { date: '2025-01-01' },
+      },
+      'https://example.com',
+    );
+    expect(item).not.toContain('<x:script');
+    expect(item).toContain(
+      '<link>https://example.com/a&lt;/link&gt;&lt;x:script',
+    );
+    expect(item.match(/<link>/g)).toHaveLength(1);
+    expect(item.match(/<guid>/g)).toHaveLength(1);
+  });
+
+  it('escapes malicious title, description, authors and site URL in the feed', () => {
+    const feed = buildRssFeed(
+      {
+        siteUrl: 'https://example.com/"><x:script>',
+        title: '<x:script>t</x:script>',
+        description: '<x:script>d</x:script>',
+      },
+      [
+        {
+          appPath: '/p',
+          updatedAt: new Date('2025-01-01'),
+          permalink: evil,
+          metadata: {
+            title: '</title><x:script>',
+            description: '<x:script>',
+            authors: ['<x:script>'],
+            date: '2025-01-01',
+          },
+        },
+      ],
+      new Date('2025-01-02'),
+    );
+    expect(feed).not.toContain('<x:script');
+    expect(feed).not.toMatch(/href="[^"]*"[^ ]*"/);
+    expect(feed.match(/<item>/g)).toHaveLength(1);
+  });
+});
