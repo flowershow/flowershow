@@ -8,6 +8,7 @@ export {
 } from './file-path-to-slug';
 export type { LinkMatchFormat } from './match-link-target';
 export { matchLinkTarget } from './match-link-target';
+export { isSiteChromeFile, SITE_FOOTER_PATH } from './site-files';
 export type { InlineTagMatch, TagSource, TagWithSource } from './tags';
 export {
   extractInlineTags,

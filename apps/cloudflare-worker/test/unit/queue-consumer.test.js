@@ -1,6 +1,8 @@
 import { expect, test, vi } from 'vitest';
 import {
+  computeAppPath,
   extractImageDimensions,
+  isMarkdownPage,
   extractLinks,
   extractTags,
   extractTitle,
@@ -563,4 +565,27 @@ test('parseMarkdown - treats whitespace-only description as missing', async () =
   });
   expect(metadata.description).toBe('Body para.');
   expect(metadata.computed).toEqual(['description']);
+});
+
+test('computeAppPath - reserved root _footer.md has no app path', () => {
+  expect(computeAppPath('_footer.md')).toBeNull();
+});
+
+test('computeAppPath - _footer.md in a subfolder is a normal page', () => {
+  expect(computeAppPath('notes/_footer.md')).toBe('/notes/_footer');
+});
+
+test('computeAppPath - pages and assets are unchanged', () => {
+  expect(computeAppPath('blog/my post.md')).toBe('/blog/my+post');
+  expect(computeAppPath('README.md')).toBe('/');
+  expect(computeAppPath('board.canvas')).toBe('/board');
+  expect(computeAppPath('images/a.png')).toBeNull();
+});
+
+test('isMarkdownPage - markdown is processed as a page, reserved chrome files and assets are not', () => {
+  expect(isMarkdownPage('a.md')).toBe(true);
+  expect(isMarkdownPage('a.MDX')).toBe(true);
+  expect(isMarkdownPage('notes/_footer.md')).toBe(true);
+  expect(isMarkdownPage('_footer.md')).toBe(false);
+  expect(isMarkdownPage('custom.css')).toBe(false);
 });
