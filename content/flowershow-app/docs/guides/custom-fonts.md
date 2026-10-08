@@ -86,7 +86,7 @@ This works however the theme styles headings, because every theme rule that uses
 Use this for brand fonts, or any font you're licensed to self-host. You publish the font files with your site, like images.
 
 > [!tip] Don't paste fonts into `custom.css`
-> Some font tools export fonts as long base64 `data:` URLs inside `@font-face` rules. Don't use those. `custom.css` is included in the HTML of every page, so a 190KB `custom.css` makes every page slower to load, and the browser can't cache it. Font files are downloaded once and cached.
+> Some font tools export fonts as long base64 `data:` URLs inside `@font-face` rules. Don't use those. Every page needs `custom.css` before it can show anything, so a 190KB `custom.css` makes the first visit to your site slower to load. Separate font files are downloaded only when needed and cached.
 
 ### Step 1: Add the font files
 
@@ -145,8 +145,8 @@ Add one `@font-face` rule per file, then set the font variables:
 
 Use the same `font-family` name in every `@font-face` rule and in the variables. The `font-weight` and `font-style` values tell the browser which file to use for bold and italic text.
 
-> [!important] Start font paths with `/`
-> Write `url('/fonts/Brand-Regular.woff2')`, not `url('fonts/Brand-Regular.woff2')`. `custom.css` applies to every page, and a path without the leading `/` is looked up relative to the current page. It works on your home page but breaks on pages in subfolders, such as `/blog/my-post`. Paths starting with `/` work on every page, on Flowershow subdomains and custom domains.
+> [!tip] Font paths resolve from your site root
+> Your pages load `custom.css` from your site root (`/custom.css`), so font paths are looked up from there, whatever page the visitor is on, including pages in subfolders such as `/blog/my-post`. `url('/fonts/Brand-Regular.woff2')` and `url('fonts/Brand-Regular.woff2')` both work, on Flowershow subdomains and custom domains. We recommend starting paths with `/` because it's clearer.
 
 > [!note] Password-protected sites
 > Self-hosted fonts haven't been tested on password-protected sites yet. If your font doesn't load there, use a Google Font instead, or [let us know](https://github.com/flowershow/flowershow/issues).
