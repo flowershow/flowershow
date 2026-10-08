@@ -76,7 +76,8 @@
     --radius-lg: calc(var(--radius) * 2);
     --radius-xl: calc(var(--radius) * 2.67);
 
-    /* LAYOUT HEIGHTS — override these to change sticky positioning throughout */
+    /* LAYOUT HEIGHTS — --navbar-height sets the navbar's own height and every
+       sticky offset / anchor scroll offset that clears it */
     --navbar-height: 4rem;
     --subnav-height: 3rem;
 
@@ -298,7 +299,7 @@
     }
   }
   .site-navbar-inner {
-    height: 4rem;
+    height: var(--navbar-height);
     margin: 0 auto;
     padding: 0 1rem;
     display: flex;
@@ -1846,7 +1847,7 @@
      --changelog-meta-direction column   (row to lay date/authors out inline)
      --changelog-meta-spacing   0        space below the date/authors on wide
                                 screens (set it when stacking, e.g. 0.75rem)
-     --changelog-sticky-top     5rem
+     --changelog-sticky-top     calc(var(--navbar-height) + 1rem)
    ──────────────────────────────────────────────────── */
   .changelog {
     max-width: var(--changelog-max-width, 60rem);
@@ -1895,7 +1896,10 @@
     padding-block: var(--changelog-entry-spacing, 3rem);
     border-top: 1px solid
       var(--changelog-rule-color, var(--color-foreground-100));
-    scroll-margin-top: var(--changelog-sticky-top, 5rem);
+    scroll-margin-top: var(
+      --changelog-sticky-top,
+      calc(var(--navbar-height) + 1rem)
+    );
 
     &:first-child {
       border-top: 0;
@@ -1916,7 +1920,7 @@
 
     @media (min-width: 768px) {
       position: var(--changelog-meta-position, sticky);
-      top: var(--changelog-sticky-top, 5rem);
+      top: var(--changelog-sticky-top, calc(var(--navbar-height) + 1rem));
       flex-direction: var(--changelog-meta-direction, column);
       align-items: flex-start;
       margin-bottom: var(--changelog-meta-spacing, 0);
@@ -2780,7 +2784,7 @@
   .rendered-mdx :is(h1, h2, h3, h4, h5, h6) {
     margin-left: -2rem !important;
     padding-left: 2rem !important;
-    scroll-margin-top: 4.5rem;
+    scroll-margin-top: calc(var(--navbar-height) + 0.5rem);
     position: relative;
     &:hover .heading-link {
       opacity: 100;

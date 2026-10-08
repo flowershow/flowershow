@@ -94,7 +94,7 @@ Flowershow provides the changelog's structure, and your theme or [[custom-styles
 | `--changelog-meta-position` | `sticky` | `static` stops the date following you as you scroll |
 | `--changelog-meta-direction` | `column` | `row` puts the date and authors on one line |
 | `--changelog-meta-spacing` | `0` | Space below the date and authors on wide screens (useful when stacking) |
-| `--changelog-sticky-top` | `5rem` | How far from the top the sticky date sits |
+| `--changelog-sticky-top` | `calc(var(--navbar-height) + 1rem)` | How far from the top the sticky date sits |
 
 A few examples:
 
