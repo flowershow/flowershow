@@ -1008,7 +1008,7 @@ export const siteRouter = createTRPCRouter({
             return null;
           }
         },
-        ['site-footer'],
+        ['site-footer-html'],
         {
           revalidate: 60, // 1 minute
           tags: [`${input.siteId}`],
