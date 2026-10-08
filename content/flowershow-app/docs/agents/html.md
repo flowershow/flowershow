@@ -8,7 +8,7 @@ Much of what AI agents produce is a standalone HTML page: a report, a dashboard,
 | You want | Use | Site navbar, theme, `custom.css` | JavaScript |
 |---|---|---|---|
 | The page exactly as written | A standalone `.html` file | No | Runs |
-| HTML sections inside a normal site page | HTML inside a `.md` file | Yes | `<script>` tags don't run |
+| HTML sections inside a normal site page | HTML inside a `.md` file | Yes | Inline `<script>` runs only on a full page load. Use [page scripts](/docs/reference/page-scripts) (Premium) |
 
 ## Standalone HTML files
 
@@ -77,7 +77,7 @@ Rules that avoid most breakage:
 - **No blank lines inside an HTML block.** A blank line ends the block, and anything after it is parsed as Markdown.
 - **Don't indent HTML by 4 or more spaces** after a blank line. Markdown treats it as a code block and shows your tags as text. Two-space indents inside an unbroken block are fine.
 - **`<style>` blocks work.** Scope your selectors with a class so they don't affect the rest of the page.
-- **`<script>` tags don't run** in Markdown pages. For anything interactive, use a standalone `.html` file, or add site-wide scripts with [custom head code](/docs/reference/custom-head) (Premium).
+- **Inline `<script>` tags run only on a full page load** (first visit or refresh), not when readers reach the page by clicking a link within the site, so don't rely on them. For page-specific JavaScript, list `.js` files in the page's [`scripts` frontmatter](/docs/reference/page-scripts) (Premium), which runs on every visit. For site-wide scripts use [custom head code](/docs/reference/custom-head) (Premium), or use a standalone `.html` file for a fully interactive page.
 - **`layout: plain`** in frontmatter removes the default typography styles, which is usually what you want for landing-page-style HTML. See [Enhancing Markdown with styled JSX blocks](/docs/guides/enhance-markdown-with-styled-jsx-blocks).
 - **`class` or `className`.** Plain `class=` works in `.md` files. MDX pages (`.mdx`, or `syntaxMode: mdx`) expect JSX, so prefer `className=` there; see [Syntax mode](/docs/reference/syntax-mode). For Tailwind utility classes, see the styled JSX blocks guide above.
 
@@ -87,7 +87,7 @@ If you have a full HTML document and want it inside the site layout:
 
 1. Keep only what's inside `<body>…</body>`. Move any `<style>` from `<head>` into the body.
 2. Remove blank lines inside the HTML and keep indentation under 4 spaces.
-3. Drop `<script>` tags, or keep the page as a standalone `.html` file instead.
+3. Move inline `<script>` code into a `.js` file and load it with [`scripts` frontmatter](/docs/reference/page-scripts) (Premium), or keep the page as a standalone `.html` file instead. Inline `<script>` tags left in the page run only on a full page load.
 4. Save it as a `.md` file with frontmatter (`title`, and `layout: plain` if you want no typography styles).
 
 When in doubt, publish the `.html` file as-is. It's the most faithful option.
