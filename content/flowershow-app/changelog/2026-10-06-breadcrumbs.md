@@ -5,6 +5,7 @@ description: Pages now show a breadcrumb trail like "Guides › Install" above t
 authors:
   - olayway
 showToc: false
+image: "[[assets/changelog-breadcrumbs.webp]]"
 ---
 
 Readers can now see where a page sits in your site and jump back up a level. The page header now shows a trail like **Guides › Advanced › Tuning** above the title. Until now breadcrumbs were only shown on mobile, in the sidebar bar; they now sit above the title on every screen size.
