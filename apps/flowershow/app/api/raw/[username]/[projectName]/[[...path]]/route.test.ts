@@ -679,3 +679,41 @@ describe('GET /api/raw — custom.css is proxied as a cached stylesheet', () => 
     },
   );
 });
+
+// The reserved root `_footer.html` (custom footer) is rendered into the site
+// layout and must never be served at its own URL.
+describe('GET /api/raw — reserved site-chrome files', () => {
+  const publicSite = { ...passwordSite, privacyMode: 'PUBLIC' };
+  const fetchFileMock = fetchFile as ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    findFirst.mockResolvedValue(publicSite);
+    fetchFileMock.mockResolvedValue('<p>footer</p>');
+  });
+
+  it('404s the root _footer.html without fetching it', async () => {
+    const res = await GET(makeReq('_footer.html'), makeParams('_footer.html'));
+    expect(res.status).toBe(404);
+    expect(fetchFileMock).not.toHaveBeenCalled();
+  });
+
+  it('404s the root _footer.html on a password site too', async () => {
+    findFirst.mockResolvedValue(passwordSite);
+    const res = await GET(makeReq('_footer.html'), makeParams('_footer.html'));
+    expect(res.status).toBe(404);
+  });
+
+  it('still serves a nested notes/_footer.html', async () => {
+    const res = await GET(
+      makeReq('notes/_footer.html'),
+      makeParams('notes/_footer.html'),
+    );
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe('<p>footer</p>');
+  });
+
+  it('serves a root _footer.md as an ordinary raw file', async () => {
+    const res = await GET(makeReq('_footer.md'), makeParams('_footer.md'));
+    expect(res.status).toBe(302);
+  });
+});

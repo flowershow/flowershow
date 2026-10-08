@@ -191,6 +191,8 @@ function createMockDb({
               b.path === w.path.not
             )
               return false;
+            if (w.path?.notIn && (w.path.notIn as string[]).includes(b.path))
+              return false;
             if (w.appPath !== undefined) {
               const ap = w.appPath;
               if (ap !== null && typeof ap === 'object' && 'not' in ap) {
@@ -219,6 +221,8 @@ function createMockDb({
             w.path?.startsWith !== undefined &&
             !b.path.startsWith(w.path.startsWith)
           )
+            return false;
+          if (w.path?.notIn && (w.path.notIn as string[]).includes(b.path))
             return false;
           if (w.extension?.in && !w.extension.in.includes(b.extension))
             return false;
@@ -539,29 +543,25 @@ describe('site.getBlob', () => {
       expect(result.id).toBe('fallback-blob');
     });
 
-    it('skips the reserved _footer.md (even a legacy row with an appPath) and falls through to html', async () => {
+    it('skips the reserved _footer.html in the first-html fallback', async () => {
+      // `_footer.html` sorts before lowercase names, so it is listed first.
       const blobs = [
         makeBlob({
-          id: 'footer-new',
-          path: '_footer.md',
+          id: 'footer',
+          path: '_footer.html',
           appPath: null,
           metadata: null,
-        }),
-        makeBlob({
-          id: 'footer-legacy',
-          path: '_footer.md',
-          appPath: '/_footer',
-          metadata: {},
+          extension: 'html',
         }),
         makeBlob({
           id: 'html-blob',
           path: 'page.html',
           appPath: null,
+          metadata: null,
           extension: 'html',
         }),
       ];
-      const db = createMockDb({ blobs });
-      const caller = createCaller(db);
+      const caller = createCaller(createMockDb({ blobs }));
 
       const result = await caller.site.getBlob({
         siteId: 'site-1',
@@ -569,6 +569,37 @@ describe('site.getBlob', () => {
       });
 
       expect(result.id).toBe('html-blob');
+    });
+
+    it('404s the home page when _footer.html is the only html file', async () => {
+      const blobs = [
+        makeBlob({
+          id: 'footer',
+          path: '_footer.html',
+          appPath: null,
+          metadata: null,
+          extension: 'html',
+        }),
+      ];
+      const caller = createCaller(createMockDb({ blobs }));
+
+      await expect(
+        caller.site.getBlob({ siteId: 'site-1', slug: '/' }),
+      ).rejects.toThrow('Page not found');
+    });
+
+    it('a root _footer.md is an ordinary page and can be the md fallback', async () => {
+      const blobs = [
+        makeBlob({ id: 'footer-md', path: '_footer.md', appPath: '/_footer' }),
+      ];
+      const caller = createCaller(createMockDb({ blobs }));
+
+      const result = await caller.site.getBlob({
+        siteId: 'site-1',
+        slug: '/',
+      });
+
+      expect(result.id).toBe('footer-md');
     });
 
     it('throws NOT_FOUND when no blobs exist at all', async () => {
@@ -582,39 +613,17 @@ describe('site.getBlob', () => {
   });
 
   describe('reserved site-chrome files', () => {
-    it('404s a legacy _footer.md row that still has appPath /_footer', async () => {
+    it('serves a root _footer.md as a normal page at /_footer', async () => {
       const blobs = [
-        makeBlob({
-          id: 'footer-legacy',
-          path: '_footer.md',
-          appPath: '/_footer',
-          metadata: {},
-        }),
+        makeBlob({ id: 'footer-md', path: '_footer.md', appPath: '/_footer' }),
       ];
-      const db = createMockDb({ blobs });
-      const caller = createCaller(db);
-
-      await expect(
-        caller.site.getBlob({ siteId: 'site-1', slug: '/_footer' }),
-      ).rejects.toThrow('Page not found');
-    });
-
-    it('still serves notes/_footer.md as a normal page', async () => {
-      const blobs = [
-        makeBlob({
-          id: 'nested-footer',
-          path: 'notes/_footer.md',
-          appPath: '/notes/_footer',
-        }),
-      ];
-      const db = createMockDb({ blobs });
-      const caller = createCaller(db);
+      const caller = createCaller(createMockDb({ blobs }));
 
       const result = await caller.site.getBlob({
         siteId: 'site-1',
-        slug: '/notes/_footer',
+        slug: '/_footer',
       });
-      expect(result.id).toBe('nested-footer');
+      expect(result.id).toBe('footer-md');
     });
   });
 
@@ -724,7 +733,7 @@ describe('site.getBlob', () => {
 });
 
 describe('site.getListComponentItems', () => {
-  it('excludes non-page markdown (null app_path, reserved _footer.md) from the query', async () => {
+  it('excludes non-page markdown (null app_path) but not a root _footer.md', async () => {
     const db = createMockDb({ blobs: [] }) as ReturnType<
       typeof createMockDb
     > & { $queryRaw: ReturnType<typeof vi.fn> };
@@ -751,8 +760,7 @@ describe('site.getListComponentItems', () => {
     ];
     const text = strings.join('?').replace(/\s+/g, ' ');
     expect(text).toContain('"app_path" IS NOT NULL');
-    expect(text).toContain('"path" <> ?');
-    expect(values).toContain('_footer.md');
+    expect(values).not.toContain('_footer.md');
   });
 });
 
@@ -1042,6 +1050,42 @@ describe('site.getSiteTree', () => {
     const names = tree.map((n) => n.name);
     expect(names).toContain('docs');
     expect(names).toContain('blog');
+  });
+
+  it('omits the reserved root _footer.html but keeps other html and _footer.md', async () => {
+    const blobs = [
+      makeBlob({
+        id: 'footer',
+        path: '_footer.html',
+        appPath: null,
+        metadata: null,
+        extension: 'html',
+      }),
+      makeBlob({
+        id: 'nested-footer',
+        path: 'notes/_footer.html',
+        appPath: null,
+        metadata: null,
+        extension: 'html',
+      }),
+      makeBlob({
+        id: 'landing',
+        path: 'landing.html',
+        appPath: null,
+        metadata: null,
+        extension: 'html',
+      }),
+      makeBlob({ id: 'footer-md', path: '_footer.md', appPath: '/_footer' }),
+    ];
+    const caller = createCaller(createMockDb({ blobs }));
+
+    const tree = await caller.site.getSiteTree({ siteId: 'site-1' });
+    const serialized = JSON.stringify(tree);
+
+    expect(serialized).not.toContain('"path":"_footer.html"');
+    expect(serialized).toContain('"path":"notes/_footer.html"');
+    expect(serialized).toContain('"path":"landing.html"');
+    expect(serialized).toContain('"path":"_footer.md"');
   });
 });
 
@@ -1645,20 +1689,20 @@ describe('site.getSiteFooter', () => {
     vi.mocked(fetchFile).mockReset();
   });
 
-  it('returns the content of the root _footer.md', async () => {
-    vi.mocked(fetchFile).mockResolvedValue('Footer **text**');
+  it('returns the content of the root _footer.html', async () => {
+    vi.mocked(fetchFile).mockResolvedValue('<p>Footer <b>text</b></p>');
     const caller = createCaller(createMockDb({}));
 
     await expect(caller.site.getSiteFooter({ siteId: 'site-1' })).resolves.toBe(
-      'Footer **text**',
+      '<p>Footer <b>text</b></p>',
     );
     expect(fetchFile).toHaveBeenCalledWith({
       projectId: 'site-1',
-      path: '_footer.md',
+      path: '_footer.html',
     });
   });
 
-  it('returns null when the site has no _footer.md', async () => {
+  it('returns null when the site has no _footer.html', async () => {
     vi.mocked(fetchFile).mockResolvedValue(null);
     const caller = createCaller(createMockDb({}));
 

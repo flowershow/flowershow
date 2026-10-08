@@ -10,7 +10,7 @@ interface FooterProps {
   navigation?: FooterNavigationGroup[];
   social?: SocialLink[];
   /**
-   * Rendered `_footer.md` (Premium). When set, it replaces the whole default
+   * Rendered `_footer.html` (Premium). When set, it replaces the whole default
    * footer body: site name, copyright, social links and footer navigation.
    */
   customContent?: ReactNode;

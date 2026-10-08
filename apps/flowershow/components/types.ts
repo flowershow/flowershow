@@ -57,7 +57,7 @@ export interface FooterNavigationGroup {
   links: NavLink[];
 }
 
-/** Footer settings. A Premium site can replace the whole footer with `_footer.md`. */
+/** Footer settings. A Premium site can replace the whole footer with `_footer.html`. */
 export interface FooterConfig {
   navigation?: FooterNavigationGroup[];
 }

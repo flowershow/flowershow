@@ -1,6 +1,6 @@
 ---
 title: Footer configuration
-description: Customize your site footer with navigation links and social icons, replace it with your own Markdown, or hide it on a page.
+description: Customize your site footer with navigation links and social icons, replace it with your own HTML, or hide it on a page.
 ---
 
 Configure your site footer from the **Flowershow dashboard** under **Site Settings → Navigation**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
@@ -88,33 +88,45 @@ If you want to version-control your configuration, or have your editor's AI agen
 > [!note]
 > The custom footer is a ⭐️ Premium feature.
 
-To replace the default footer with your own content, add a file called `_footer.md` at the root of your site (next to `config.json` and `custom.css`). Write it like any other Markdown page: links, wiki links, images and HTML with Tailwind classes all work.
+To replace the default footer with your own content, add a file called `_footer.html` at the root of your site (next to `config.json` and `custom.css`). It holds an HTML fragment: just the footer's content, with no `<html>`, `<head>` or `<body>`. Tailwind classes work, and links and images resolve the same way as HTML in a page.
 
-```md
-<div class="flex flex-wrap items-center justify-between gap-4">
-  <span>© 2026 Acme Inc.</span>
-  <span>[Privacy](/privacy) · [Contact](/contact) · [[about|About us]]</span>
+```html
+<div class="flex flex-col gap-6 py-4 md:flex-row md:items-start md:justify-between">
+  <div class="flex items-center gap-3">
+    <img src="/assets/logo.svg" alt="Acme" width="32" height="32">
+    <div>
+      <strong>Acme Inc.</strong>
+      <p class="m-0">Tools for thoughtful teams.</p>
+    </div>
+  </div>
+  <nav class="flex flex-wrap gap-x-6 gap-y-2" aria-label="Footer">
+    <a href="/about">About</a>
+    <a href="/blog">Blog</a>
+    <a href="/privacy">Privacy</a>
+    <a href="mailto:hello@acme.example">Contact</a>
+  </nav>
 </div>
+<p class="mt-6 text-xs">© 2026 Acme Inc. All rights reserved.</p>
 ```
 
 How it works:
 
-- **It replaces the whole default footer.** The site name, copyright line, social icons and footer navigation are no longer shown. Put anything you want to keep in `_footer.md`.
-- **It is not a page.** `_footer.md` is not published at `/_footer`, and it doesn't appear in the sidebar, search, sitemap, RSS feed, tag pages or `<List />`. The raw file is still served at `/_footer.md`, like `custom.css`, so don't put anything private in it.
-- **Frontmatter is ignored.** A frontmatter block is allowed but has no effect; `publish: false` does not hide the footer (delete or rename the file instead). A file with only frontmatter and no content keeps the default footer.
-- **If it fails to render**, the default footer is shown instead, so a broken `_footer.md` never takes down your pages.
-- **Only the root file counts.** The name is exact and case-sensitive: `_Footer.md` or `notes/_footer.md` are ordinary pages.
-- **It is always rendered as Markdown**, even if your site uses `syntaxMode: mdx`, so the footer is part of the server-rendered HTML on every page. Use HTML with `class="..."` for layout; JSX components are not supported.
-- **It follows your content filters.** If you use `contentInclude`, add `_footer.md` to it. If `_footer.md` matches `contentExclude`, it isn't published and the default footer is shown.
-- **Free plan:** `_footer.md` is ignored and the default footer is shown. It is still never published as a page.
+- **It replaces the whole default footer.** The site name, copyright line, social icons and footer navigation are no longer shown. Put anything you want to keep in `_footer.html`.
+- **It is HTML, not Markdown.** Markdown syntax (`**bold**`, `[link](/about)`, `[[wiki links]]`) is shown as plain text. Use `<strong>`, `<a href="...">` and so on.
+- **Links and images resolve from the site root**, on every page. `href="about"`, `href="/about"` and `href="about.md"` all point at `/about`, even on a page deep in a folder, and `src="assets/logo.png"` or `src="/assets/logo.png"` load the image you published at `assets/logo.png`. External links open in a new tab, as on pages.
+- **Tailwind classes work.** Utility classes used in the file (`flex`, `gap-4`, `text-sm`, `md:flex-row`, ...) are compiled for the footer only.
+- **It is not a page.** `_footer.html` is not served at `/_footer.html` and doesn't appear in the sidebar or as your home page. Its content is shown on every page, so don't put anything private in it.
+- **HTML is handled as in pages.** `<style>` blocks work (scope them under `.site-footer-custom`). Inline `<script>` tags behave as they do in a page and run only on a full page load; for site-wide scripts use [[custom-head|custom head code]].
+- **An empty file keeps the default footer.** So does a file with only whitespace or HTML comments.
+- **If it fails to render**, the default footer is shown instead, so a broken `_footer.html` never takes down your pages.
+- **Only the root file counts.** The name is exact and case-sensitive: `_Footer.html` or `notes/_footer.html` are ordinary HTML files. A `_footer.md` is an ordinary Markdown page.
+- **It follows your content filters.** If you use `contentInclude`, add `_footer.html` to it. If `_footer.html` matches `contentExclude`, it isn't published and the default footer is shown.
+- **Free plan:** `_footer.html` is ignored and the default footer is shown. It is still never served as a page.
 - The "Built with Flowershow" badge is separate from the footer. Premium sites can turn it off with `showBuiltWithButton` in [[config-file|config.json]].
-
-> [!tip]
-> Avoid headings in `_footer.md`. Heading IDs are generated the same way as on pages, so a footer heading can clash with a heading of the same name on the page and break its anchor link. Use bold text instead.
 
 ### Styling the custom footer
 
-The footer keeps its usual wrapper, so the content sits inside `footer.site-footer.site-footer--custom` and `.site-footer-custom`. Only light defaults are applied (small text, underlined links). Add your own styles with Tailwind classes in `_footer.md`, or in `custom.css`:
+The footer keeps its usual wrapper, so the content sits inside `footer.site-footer.site-footer--custom` and `.site-footer-custom`. Only light defaults are applied (small text, underlined links). Add your own styles with Tailwind classes in `_footer.html`, or in `custom.css`:
 
 ```css
 .site-footer-custom {
@@ -160,10 +172,10 @@ To hide the footer on every page, set `"showFooter": false` in `config.json`. A 
    - Confirm `navigation` is inside the `footer` object
    - Each group must have at least one link
    - Verify all required properties are present
-   - If you have a `_footer.md`, it replaces the footer navigation on Premium sites
+   - If you have a `_footer.html`, it replaces the footer navigation on Premium sites
 
-5. **Custom footer (`_footer.md`) not showing**
+5. **Custom footer (`_footer.html`) not showing**
    - Check the site is on the Premium plan
-   - Make sure the file is at the root of your site (inside your root directory, if you set one) and named exactly `_footer.md`
-   - If you use `contentInclude`, add `_footer.md` to it
+   - Make sure the file is at the root of your site (inside your root directory, if you set one) and named exactly `_footer.html` (not `_footer.md`)
+   - If you use `contentInclude`, add `_footer.html` to it
    - Republish after editing; changes can take up to a minute to appear

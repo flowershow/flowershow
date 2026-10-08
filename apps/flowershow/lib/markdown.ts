@@ -1,6 +1,7 @@
 import { remarkWikiLink } from '@flowershow/remark-wiki-link';
 import remarkCallout from '@r4ai/remark-callout';
 import matter from 'gray-matter';
+import { fromHtml } from 'hast-util-from-html';
 import { h } from 'hastscript';
 import mdxMermaid from 'mdx-mermaid';
 import type { EvaluateOptions } from 'next-mdx-remote-client/rsc';
@@ -140,6 +141,38 @@ export async function processMarkdown(
     });
 
   return (await processor.process(content)).result as ReactElement;
+}
+
+/**
+ * Render an HTML fragment (e.g. the custom footer, `_footer.html`) to React
+ * with the rehype steps raw HTML in markdown pages goes through after
+ * `rehypeRaw`: no markdown parsing, URL resolution relative to `filePath`
+ * (root-relative and relative `href`/`src` resolve exactly as in pages),
+ * external-link and table enhancements, and `FsImage` for `<img>`. The trust
+ * level is the same as raw HTML in a page: nothing extra is stripped or
+ * allowed. Heading slugs/anchors are not added, so footer headings can't
+ * collide with page heading ids.
+ */
+export async function processHtmlFragment(
+  html: string,
+  options: Pick<MarkdownOptions, 'filePath' | 'siteHostname'>,
+) {
+  const { filePath, siteHostname } = options;
+
+  const processor = unified()
+    .use(function rehypeParseFragment(this: any) {
+      // Same HTML5 parser (parse5) that rehypeRaw uses for raw HTML in pages.
+      this.parser = (doc: string) => fromHtml(doc, { fragment: true });
+    })
+    .use(rehypeResolveHtmlUrls, { filePath, siteHostname })
+    .use(rehypeHtmlEnhancements, {})
+    .use(rehypeToReact, {
+      components: {
+        img: FsImage,
+      },
+    });
+
+  return (await processor.process(html)).result as ReactElement;
 }
 
 // Get MDX options

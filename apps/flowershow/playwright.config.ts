@@ -66,7 +66,7 @@ export default defineConfig({
         '**/custom-head.spec.ts',
         // Page scripts (`scripts` frontmatter) are a Premium feature too.
         '**/page-scripts.spec.ts',
-        // Custom footer (`_footer.md`) is also Premium-only.
+        // Custom footer (`_footer.html`) is also Premium-only.
         '**/custom-footer.spec.ts',
         '**/annotations.spec.ts',
         // Self-hosted fonts must resolve on custom domains too.

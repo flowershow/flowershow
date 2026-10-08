@@ -1199,7 +1199,7 @@
     }
   }
 
-  /* Custom footer: rendered `_footer.md` (Premium). Deliberately not
+  /* Custom footer: rendered `_footer.html` (Premium). Deliberately not
      `.rendered-mdx`/prose, so only light defaults; style the rest in
      custom.css. */
   .site-footer-custom {
