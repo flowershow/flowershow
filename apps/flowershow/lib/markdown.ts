@@ -2,10 +2,12 @@ import { remarkWikiLink } from '@flowershow/remark-wiki-link';
 import remarkCallout from '@r4ai/remark-callout';
 import matter from 'gray-matter';
 import { fromHtml } from 'hast-util-from-html';
+import { toJsxRuntime } from 'hast-util-to-jsx-runtime';
 import { h } from 'hastscript';
 import mdxMermaid from 'mdx-mermaid';
 import type { EvaluateOptions } from 'next-mdx-remote-client/rsc';
 import { ReactElement } from 'react';
+import * as runtime from 'react/jsx-runtime';
 import rehypeAutolinkHeadings, {
   type Options as RehypeAutolinkHeadingsOptions,
 } from 'rehype-autolink-headings';
@@ -143,15 +145,79 @@ export async function processMarkdown(
   return (await processor.process(content)).result as ReactElement;
 }
 
+// Elements that only make sense in a document `<head>`. React 19 hoists
+// `<title>`/`<meta>`/`<link>` rendered anywhere into the page head, and the
+// first `<base>` in tree order applies document-wide, so in a fragment that is
+// rendered on every page (the footer) they would silently change every page's
+// title, description or URL resolution. `<link rel="stylesheet">` and
+// `<style>` are kept: they're a legitimate way to style the fragment.
+function isHeadOnlyElement(node: any) {
+  if (node.type !== 'element') return false;
+  if (['title', 'meta', 'base'].includes(node.tagName)) return true;
+  if (node.tagName === 'link') {
+    const rel = node.properties?.rel;
+    const rels = Array.isArray(rel) ? rel : String(rel ?? '').split(/\s+/);
+    return !rels.some((r: unknown) => String(r).toLowerCase() === 'stylesheet');
+  }
+  return false;
+}
+
+function stripHeadOnlyElements<T extends { children?: any[] }>(node: T): T {
+  if (node.children) {
+    node.children = node.children
+      .filter((child) => !isHeadOnlyElement(child))
+      .map((child) => stripHeadOnlyElements(child));
+  }
+  return node;
+}
+
+const FULL_DOCUMENT_RE =
+  /^\s*(?:<!--[\s\S]*?-->\s*)*<(?:!doctype|html|head|body)[\s>]/i;
+
+/**
+ * Parse an HTML fragment to hast. If the input is a full document
+ * (`<!doctype>`/`<html>`/`<head>`/`<body>`), only the `<body>` contents are
+ * kept, plus any `<style>`/`<link rel="stylesheet">`/`<script>` from `<head>`.
+ * Head-only elements (`<title>`, `<meta>`, `<base>`, non-stylesheet `<link>`)
+ * are stripped wherever they appear.
+ */
+export function parseHtmlFragment(html: string) {
+  let tree: any;
+  if (FULL_DOCUMENT_RE.test(html)) {
+    const doc: any = fromHtml(html);
+    const htmlEl = doc.children.find(
+      (n: any) => n.type === 'element' && n.tagName === 'html',
+    );
+    const part = (tagName: string) =>
+      htmlEl?.children.find(
+        (n: any) => n.type === 'element' && n.tagName === tagName,
+      )?.children ?? [];
+    tree = {
+      type: 'root',
+      children: [...part('head'), ...part('body')],
+    };
+  } else {
+    // Same HTML5 parser (parse5) that rehypeRaw uses for raw HTML in pages.
+    tree = fromHtml(html, { fragment: true });
+  }
+  return stripHeadOnlyElements(tree);
+}
+
 /**
  * Render an HTML fragment (e.g. the custom footer, `_footer.html`) to React
  * with the rehype steps raw HTML in markdown pages goes through after
  * `rehypeRaw`: no markdown parsing, URL resolution relative to `filePath`
- * (root-relative and relative `href`/`src` resolve exactly as in pages),
- * external-link and table enhancements, and `FsImage` for `<img>`. The trust
- * level is the same as raw HTML in a page: nothing extra is stripped or
- * allowed. Heading slugs/anchors are not added, so footer headings can't
- * collide with page heading ids.
+ * (relative and root-relative `href`/`src` resolve against `filePath`'s
+ * folder), external-link and table enhancements, and `FsImage` for `<img>`.
+ * The trust level is the same as raw HTML in a page, except that head-only
+ * elements are stripped and a full document is reduced to its body (see
+ * `parseHtmlFragment`). Heading slugs/anchors are not added, so footer
+ * headings can't collide with page heading ids.
+ *
+ * Unlike `processMarkdown`, a render error (e.g. an invalid inline `style`)
+ * is thrown rather than turned into an error card, so callers can fall back.
+ * The React conversion runs outside unified on purpose: a throw inside a
+ * unified compiler detaches and leaves `process()` hanging.
  */
 export async function processHtmlFragment(
   html: string,
@@ -160,19 +226,17 @@ export async function processHtmlFragment(
   const { filePath, siteHostname } = options;
 
   const processor = unified()
-    .use(function rehypeParseFragment(this: any) {
-      // Same HTML5 parser (parse5) that rehypeRaw uses for raw HTML in pages.
-      this.parser = (doc: string) => fromHtml(doc, { fragment: true });
-    })
     .use(rehypeResolveHtmlUrls, { filePath, siteHostname })
-    .use(rehypeHtmlEnhancements, {})
-    .use(rehypeToReact, {
-      components: {
-        img: FsImage,
-      },
-    });
+    .use(rehypeHtmlEnhancements, {});
 
-  return (await processor.process(html)).result as ReactElement;
+  const tree = await processor.run(parseHtmlFragment(html));
+
+  return toJsxRuntime(tree as any, {
+    Fragment: runtime.Fragment,
+    jsx: runtime.jsx,
+    jsxs: runtime.jsxs,
+    components: { img: FsImage },
+  }) as ReactElement;
 }
 
 // Get MDX options

@@ -12,7 +12,7 @@ Your site can now look even more like the rest of your brand. Add a `_footer.htm
 
 > ⭐️ **Custom footers are a Premium feature.** Premium is $5/month or $50/year per site. [See pricing](/pricing)
 
-- **Custom footer (Premium):** write `_footer.html` as an HTML fragment, with links, images and Tailwind classes. Links and images resolve from your site root, as in pages. It replaces the whole default footer, and it's never served as a page of its own.
+- **Custom footer (Premium):** write `_footer.html` as an HTML fragment, with links, images and Tailwind classes. Relative `href` and `src` paths resolve from your site root on every page (in pages they resolve from the page's own folder). It replaces the whole default footer, and it's never served as a page of its own.
 - **Hide the navbar or footer on a page (all plans):** set `showNavbar: false` and/or `showFooter: false` in a page's frontmatter. Pair them with `layout: plain` for a fully bespoke landing page. You can also set them in `config.json` to hide the navbar or footer site-wide.
 
 See [[footer|Footer configuration]] and [[navbar|Navbar configuration]] for details.

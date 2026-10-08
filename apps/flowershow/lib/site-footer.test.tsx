@@ -125,6 +125,50 @@ describe('loadCustomFooter', () => {
     expect(html).toContain('data-x="1"');
   });
 
+  it('reduces a pasted full document to its body and strips head-only elements', async () => {
+    const html = await renderFooter(
+      [
+        '<!doctype html>',
+        '<html lang="en"><head>',
+        '<meta charset="utf-8">',
+        '<title>Evil Title</title>',
+        '<meta name="description" content="hijack">',
+        '<base href="https://evil.example/">',
+        '<link rel="icon" href="/favicon.ico">',
+        '<link rel="stylesheet" href="https://cdn.example/footer.css">',
+        '<style>.x{color:red}</style>',
+        '</head><body class="page"><p>hi</p></body></html>',
+      ].join('\n'),
+    );
+    expect(html).toContain('<p>hi</p>');
+    expect(html).not.toMatch(/<title|<meta|<base|rel="icon"/);
+    expect(html).not.toContain('Evil Title');
+    expect(html).not.toMatch(/<html|<head|<body/);
+    expect(html).toContain('href="https://cdn.example/footer.css"');
+    expect(html).toContain('<style>.x{color:red}</style>');
+  });
+
+  it('strips head-only elements from a plain fragment too', async () => {
+    const html = await renderFooter(
+      '<title>T</title><meta name="description" content="d"><p>ok</p>',
+    );
+    expect(html).toContain('<p>ok</p>');
+    expect(html).not.toMatch(/<title|<meta/);
+  });
+
+  it('passes <script> and <style> through as-is, like pages', async () => {
+    const html = await renderFooter(
+      '<style>.foot{color:red}</style><p class="foot">x</p><script>window.__f = 1;</script>',
+    );
+    expect(html).toContain('<style>.foot{color:red}</style>');
+    expect(html).toContain('<script>window.__f = 1;</script>');
+  });
+
+  it('returns null (default footer) for HTML React cannot render, e.g. an invalid style', async () => {
+    query.getSiteFooter.mockResolvedValue('<div style="color">x</div>');
+    expect(await loadCustomFooter({ site: premiumSite })).toBeNull();
+  });
+
   it('returns null when the file is missing', async () => {
     query.getSiteFooter.mockResolvedValue(null);
     expect(await loadCustomFooter({ site: premiumSite })).toBeNull();

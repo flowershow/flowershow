@@ -88,7 +88,7 @@ If you want to version-control your configuration, or have your editor's AI agen
 > [!note]
 > The custom footer is a ⭐️ Premium feature.
 
-To replace the default footer with your own content, add a file called `_footer.html` at the root of your site (next to `config.json` and `custom.css`). It holds an HTML fragment: just the footer's content, with no `<html>`, `<head>` or `<body>`. Tailwind classes work, and links and images resolve the same way as HTML in a page.
+To replace the default footer with your own content, add a file called `_footer.html` at the root of your site (next to `config.json` and `custom.css`). It holds an HTML fragment: just the footer's content, with no `<html>`, `<head>` or `<body>`. If you paste a full HTML document anyway, only what's inside `<body>` is used (plus any `<style>` and `<link rel="stylesheet">`), and `<title>`, `<meta>` and `<base>` are dropped so they can't change your pages. Tailwind classes work, and relative links and images resolve from your site root.
 
 ```html
 <div class="flex flex-col gap-6 py-4 md:flex-row md:items-start md:justify-between">
@@ -113,7 +113,7 @@ How it works:
 
 - **It replaces the whole default footer.** The site name, copyright line, social icons and footer navigation are no longer shown. Put anything you want to keep in `_footer.html`.
 - **It is HTML, not Markdown.** Markdown syntax (`**bold**`, `[link](/about)`, `[[wiki links]]`) is shown as plain text. Use `<strong>`, `<a href="...">` and so on.
-- **Links and images resolve from the site root**, on every page. `href="about"`, `href="/about"` and `href="about.md"` all point at `/about`, even on a page deep in a folder, and `src="assets/logo.png"` or `src="/assets/logo.png"` load the image you published at `assets/logo.png`. External links open in a new tab, as on pages.
+- **Relative `href` and `src` paths resolve from the site root**, on every page. This differs from pages, where relative links resolve from the page's own folder. `href="about"`, `href="/about"` and `href="about.md"` all point at `/about`, even on a page deep in a folder, and `src="assets/logo.png"` or `src="/assets/logo.png"` load the image you published at `assets/logo.png`. Only `href` and `src` are rewritten: `srcset`, `poster` and CSS `url()` are left as written, so use root-relative paths there (`srcset="/assets/logo@2x.png 2x"`). External links open in a new tab, as on pages.
 - **Tailwind classes work.** Utility classes used in the file (`flex`, `gap-4`, `text-sm`, `md:flex-row`, ...) are compiled for the footer only.
 - **It is not a page.** `_footer.html` is not served at `/_footer.html` and doesn't appear in the sidebar or as your home page. Its content is shown on every page, so don't put anything private in it.
 - **HTML is handled as in pages.** `<style>` blocks work (scope them under `.site-footer-custom`). Inline `<script>` tags behave as they do in a page and run only on a full page load; for site-wide scripts use [[custom-head|custom head code]].
