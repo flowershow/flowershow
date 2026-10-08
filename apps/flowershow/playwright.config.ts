@@ -59,6 +59,9 @@ export default defineConfig({
       testMatch: [
         '**/links-and-embeds.spec.ts',
         '**/rss.spec.ts',
+        // Raw HTML is served only on the site's own host: exercise it on a
+        // custom domain too (middleware rewrite + host check end to end).
+        '**/html-page.spec.ts',
         // Custom head is a Premium feature: this is the seeded Premium site.
         '**/custom-head.spec.ts',
         '**/annotations.spec.ts',
