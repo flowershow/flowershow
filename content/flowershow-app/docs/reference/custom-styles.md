@@ -222,7 +222,7 @@ Set `--radius` to `0` for sharp corners everywhere, or to a larger value for rou
 
 ### Layout heights
 
-Used for sticky positioning of the navbar, sidebar, and TOC. Override if you change the navbar height or add a banner above it.
+`--navbar-height` sets the height of the navbar itself, and everything that has to clear it follows: the sticky sidebar, table of contents and mobile breadcrumb bar, the anchor scroll offset for headings (`--navbar-height + 0.5rem`) and the changelog's sticky date (`--navbar-height + 1rem`). Change it in one place to resize the navbar, e.g. `--navbar-height: 3rem` for a 48px header. When a page or site hides the navbar (`showNavbar: false`) it is set to `0px` automatically.
 
 ```css
 :root {
