@@ -23,6 +23,11 @@ import {
   generatePresignedUploadUrl,
 } from '@/lib/content-store';
 import {
+  CUSTOM_CSS_PATH,
+  customCssVersion,
+  usesGoogleFonts,
+} from '@/lib/custom-css';
+import {
   addDomainToVercel,
   getDomainVariant,
   isReservedDomain,
@@ -914,7 +919,14 @@ export const siteRouter = createTRPCRouter({
       });
     }),
 
-  getCustomStyles: publicProcedure
+  /**
+   * Metadata for linking the site's root `custom.css` as a cached stylesheet
+   * (`/custom.css?v=<version>`): a hash of its content and whether it loads
+   * Google Fonts. Only this small value is cached, never the CSS itself.
+   * `null` when the site has no (or an empty) custom.css. Storage errors throw
+   * so they are not cached as "no CSS".
+   */
+  getCustomStylesheet: publicProcedure
     .input(
       z.object({
         siteId: z.string().min(1),
@@ -938,17 +950,18 @@ export const siteRouter = createTRPCRouter({
       await assertSiteAccess(site, input.siteId, ctx);
 
       return await unstable_cache(
-        async (input) => {
-          try {
-            return await fetchFile({
-              projectId: site.id,
-              path: 'custom.css',
-            });
-          } catch {
-            return null;
-          }
+        async (_input) => {
+          const content = await fetchFile({
+            projectId: site.id,
+            path: CUSTOM_CSS_PATH,
+          });
+          if (!content?.trim()) return null;
+          return {
+            version: customCssVersion(content),
+            usesGoogleFonts: usesGoogleFonts(content),
+          };
         },
-        undefined,
+        ['custom-stylesheet'],
         {
           revalidate: 60, // 1 minute
           tags: [`${input.siteId}`, `${input.siteId}-css`],

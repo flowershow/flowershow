@@ -71,6 +71,8 @@ export default defineConfig({
         '**/annotations.spec.ts',
         // Self-hosted fonts must resolve on custom domains too.
         '**/custom-fonts.spec.ts',
+        // custom.css is a same-origin stylesheet on custom domains too.
+        '**/custom-styles.spec.ts',
       ],
       dependencies: ['setup'],
     },

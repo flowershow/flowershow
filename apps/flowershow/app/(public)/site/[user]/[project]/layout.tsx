@@ -13,6 +13,7 @@ import { SiteProvider } from '@/components/public/site-context';
 import { TemporarySiteBanner } from '@/components/public/temporary-site-banner';
 import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
+import { customCssHref } from '@/lib/custom-css';
 import {
   Feature,
   isFeatureEnabled,
@@ -170,20 +171,21 @@ export default async function PublicLayout(props: {
     })
     .catch(() => null);
 
-  const [siteConfig, customCss, customFooter] = await Promise.all([
+  const [siteConfig, customStylesheet, customFooter] = await Promise.all([
     siteConfigPromise,
-    api.site.getCustomStyles
+    // custom.css is linked as a cached same-origin stylesheet, not inlined.
+    // If its metadata can't be loaded, still link it (unversioned, served
+    // must-revalidate) rather than drop the site's styling.
+    api.site.getCustomStylesheet
       .query({
         siteId: site.id,
       })
-      .catch(() => null),
+      .catch(() => ({ version: null, usesGoogleFonts: false })),
     // Premium: `_footer.md` replaces the default footer body (null otherwise).
     loadCustomFooter({ site, siteConfig: siteConfigPromise }),
   ]);
 
-  const usesGoogleFonts = customCss
-    ? /fonts\.googleapis\.com/i.test(customCss)
-    : false;
+  const usesGoogleFonts = customStylesheet?.usesGoogleFonts ?? false;
 
   // Theme from official Flowershow Themes collection
   const themeName =
@@ -244,7 +246,13 @@ export default async function PublicLayout(props: {
           </>
         )}
         {themeUrl && <link rel="stylesheet" href={themeUrl} />}
-        {customCss && <style dangerouslySetInnerHTML={{ __html: customCss }} />}
+        {/* Plain (non-precedence) link so it keeps its place after the theme. */}
+        {customStylesheet && (
+          <link
+            rel="stylesheet"
+            href={customCssHref(customStylesheet.version)}
+          />
+        )}
         {showThemeModeSwitch && (
           <script
             dangerouslySetInnerHTML={{

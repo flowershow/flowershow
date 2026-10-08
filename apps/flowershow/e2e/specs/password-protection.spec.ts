@@ -1,3 +1,4 @@
+import { expectCustomCssLinked } from '../helpers/custom-css';
 import { expect, test } from '../helpers/fixtures';
 import {
   PASSWORD_SITE,
@@ -19,6 +20,11 @@ test.describe('Password-protected site', () => {
 
     test('html raw file redirects to login', async ({ page }) => {
       await page.goto('/docs/test.html');
+      expect(page.url()).toContain('/_login');
+    });
+
+    test('custom.css redirects to login', async ({ page }) => {
+      await page.goto('/custom.css');
       expect(page.url()).toContain('/_login');
     });
 
@@ -72,6 +78,14 @@ test.describe('Password-protected site', () => {
       const response = await page.goto('/docs/test.html');
       expect(page.url()).not.toContain('/_login');
       expect(response?.status()).toBe(200);
+    });
+
+    test('custom.css is a privately cached same-origin stylesheet', async ({
+      page,
+    }) => {
+      await expectCustomCssLinked(page, '/subfolder/nested-page', {
+        cacheScope: 'private',
+      });
     });
 
     test('annotations API works after login', async ({ page }) => {

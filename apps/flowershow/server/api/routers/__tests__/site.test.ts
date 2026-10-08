@@ -45,6 +45,7 @@ vi.mock('@/lib/content-store', () => ({
 
 import { tagIdentity } from '@flowershow/core';
 import { fetchFile } from '@/lib/content-store';
+import { customCssVersion } from '@/lib/custom-css';
 import { appRouter } from '@/server/api/root';
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -1105,12 +1106,12 @@ describe('site read-path authorization', () => {
     );
   });
 
-  it('getCustomStyles throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
+  it('getCustomStylesheet throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
     const db = createMockDb({ site: passwordSite(), blobs: blobs() });
     const caller = createCaller(db);
 
     await expect(
-      caller.site.getCustomStyles({ siteId: 'site-1' }),
+      caller.site.getCustomStylesheet({ siteId: 'site-1' }),
     ).rejects.toThrow('Site access required');
   });
 
@@ -1580,6 +1581,62 @@ describe('site.getPagesByTag', () => {
     expect(
       await caller.site.getPagesByTag({ siteId: 'site-1', tag: 'missing' }),
     ).toEqual([]);
+  });
+});
+
+describe('site.getCustomStylesheet', () => {
+  beforeEach(() => {
+    vi.mocked(fetchFile).mockReset();
+  });
+
+  it('returns the content version and Google Fonts flag, not the CSS', async () => {
+    const css =
+      "@import url('https://fonts.googleapis.com/css2?family=Inter');\nbody{}";
+    vi.mocked(fetchFile).mockResolvedValue(css);
+    const caller = createCaller(createMockDb({}));
+
+    await expect(
+      caller.site.getCustomStylesheet({ siteId: 'site-1' }),
+    ).resolves.toEqual({
+      version: customCssVersion(css),
+      usesGoogleFonts: true,
+    });
+    expect(fetchFile).toHaveBeenCalledWith({
+      projectId: 'site-1',
+      path: 'custom.css',
+    });
+  });
+
+  it('changes version when the content changes', async () => {
+    const caller = createCaller(createMockDb({}));
+    vi.mocked(fetchFile).mockResolvedValueOnce('a { color: red }');
+    const before = await caller.site.getCustomStylesheet({ siteId: 'site-1' });
+    vi.mocked(fetchFile).mockResolvedValueOnce('a { color: blue }');
+    const after = await caller.site.getCustomStylesheet({ siteId: 'site-1' });
+
+    expect(before?.version).not.toBe(after?.version);
+    expect(before?.usesGoogleFonts).toBe(false);
+  });
+
+  it.each([
+    ['missing', null],
+    ['whitespace-only', '  \n\t '],
+  ])('returns null when custom.css is %s', async (_label, content) => {
+    vi.mocked(fetchFile).mockResolvedValue(content);
+    const caller = createCaller(createMockDb({}));
+
+    await expect(
+      caller.site.getCustomStylesheet({ siteId: 'site-1' }),
+    ).resolves.toBeNull();
+  });
+
+  it('lets storage errors throw (so they are not cached as "no CSS")', async () => {
+    vi.mocked(fetchFile).mockRejectedValue(new Error('S3 down'));
+    const caller = createCaller(createMockDb({}));
+
+    await expect(
+      caller.site.getCustomStylesheet({ siteId: 'site-1' }),
+    ).rejects.toThrow();
   });
 });
 

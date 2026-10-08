@@ -165,6 +165,25 @@ describe('rewriteRawIfNeeded — asset types (flowershow-tui)', () => {
   });
 });
 
+// flowershow-isx: pages link /custom.css?v=<hash>; the raw route needs the
+// version to decide whether the response may be cached as immutable.
+describe('rewriteRawIfNeeded — custom.css stylesheet link', () => {
+  it.each([
+    ['subdomain', API_BASE],
+    ['custom domain', '/api/raw/_domain/docs.example.com'],
+  ])(
+    'rewrites /custom.css?v= to the raw route with the version kept (%s)',
+    (_label, base) => {
+      const p = '/custom.css?v=0123456789abcdef';
+      const target = rewriteTarget(
+        rewriteRawIfNeeded(p, base, makeReq(p), null),
+      );
+      expect(target.pathname).toBe(`${base}/custom.css`);
+      expect(target.search).toBe('?v=0123456789abcdef');
+    },
+  );
+});
+
 describe('rewriteSocialCardIfNeeded (flowershow-1o5)', () => {
   const base = '/api/og/ana/notes';
   const go = (p: string) =>

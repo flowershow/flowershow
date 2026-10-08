@@ -21,7 +21,15 @@ vi.mock('@/lib/content-store', () => ({
     .mockResolvedValue('https://s3.example.com/presigned'),
 }));
 
+// Real access check by default; individual tests can grant access.
+vi.mock('@/lib/site-access', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/site-access')>();
+  return { ...actual, hasSiteAccess: vi.fn(actual.hasSiteAccess) };
+});
+
 import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
+import { customCssVersion } from '@/lib/custom-css';
+import { hasSiteAccess } from '@/lib/site-access';
 import prisma from '@/server/db';
 import { GET } from './route';
 
@@ -466,4 +474,165 @@ describe('GET /api/raw/_domain — HTML is bound to the site own host', () => {
       }),
     );
   });
+});
+
+// flowershow-isx: the root custom.css is linked from every page as
+// /custom.css?v=<content hash> and proxied same-origin with a 200, so url()
+// paths in it resolve against the site root and browsers can cache it.
+describe('GET /api/raw — custom.css is proxied as a cached stylesheet', () => {
+  const CSS = '.marker { color: rgb(1, 2, 3) }';
+  const V = customCssVersion(CSS);
+  const publicSite = {
+    id: 'site-1',
+    privacyMode: 'PUBLIC',
+    tokenVersion: 1,
+    userId: 'owner-1',
+    isTemporary: false,
+    expiresAt: null,
+    subdomain: 'notes-victim',
+    customDomain: 'docs.example.com',
+  };
+  const fetchFileMock = fetchFile as ReturnType<typeof vi.fn>;
+
+  function cssReq(
+    query = '',
+    host = SITE_HOST,
+    headers: Record<string, string> = {},
+    path = 'custom.css',
+  ) {
+    return GET(makeReq(`${path}${query}`, host, headers), makeParams(path));
+  }
+
+  beforeEach(() => {
+    findFirst.mockResolvedValue(publicSite);
+    fetchFileMock.mockResolvedValue(CSS);
+  });
+
+  it('serves the CSS with a 200 as text/css + nosniff, immutable when v matches', async () => {
+    const res = await cssReq(`?v=${V}`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-type')).toBe('text/css; charset=utf-8');
+    expect(res.headers.get('x-content-type-options')).toBe('nosniff');
+    expect(res.headers.get('cache-control')).toBe(
+      'public, max-age=31536000, immutable',
+    );
+    expect(res.headers.get('etag')).toBe(`"${V}"`);
+    expect(await res.text()).toBe(CSS);
+    expect(fetchFileMock).toHaveBeenCalledWith({
+      projectId: 'site-1',
+      path: 'custom.css',
+    });
+    // No CDN caching in v1: browser cache only.
+    expect(res.headers.get('cdn-cache-control')).toBeNull();
+    expect(res.headers.get('location')).toBeNull();
+  });
+
+  it('serves the CSS on the site custom domain too', async () => {
+    const res = await cssReq(`?v=${V}`, 'docs.example.com');
+    expect(res.status).toBe(200);
+  });
+
+  it('does not cache a stale v as immutable, and sends the real ETag', async () => {
+    const res = await cssReq('?v=0000000000000000');
+    expect(res.status).toBe(200);
+    expect(await res.text()).toBe(CSS);
+    expect(res.headers.get('cache-control')).toBe(
+      'public, max-age=0, must-revalidate',
+    );
+    expect(res.headers.get('etag')).toBe(`"${V}"`);
+  });
+
+  it('must revalidate when requested without v', async () => {
+    const res = await cssReq();
+    expect(res.status).toBe(200);
+    expect(res.headers.get('cache-control')).toBe(
+      'public, max-age=0, must-revalidate',
+    );
+  });
+
+  it.each([
+    ['matching v', `?v=${V}`],
+    ['stale v', '?v=0000000000000000'],
+    ['no v', ''],
+  ])('answers If-None-Match with a 304 (%s)', async (_label, query) => {
+    const res = await cssReq(query, SITE_HOST, {
+      'if-none-match': `"${V}"`,
+    });
+    expect(res.status).toBe(304);
+    expect(res.headers.get('etag')).toBe(`"${V}"`);
+    expect(await res.text()).toBe('');
+  });
+
+  it('does not 304 for an ETag of other content', async () => {
+    const res = await cssReq(`?v=${V}`, SITE_HOST, {
+      'if-none-match': '"0000000000000000"',
+    });
+    expect(res.status).toBe(200);
+  });
+
+  it('returns 404 when the site has no custom.css', async () => {
+    fetchFileMock.mockResolvedValue(null);
+    const res = await cssReq(`?v=${V}`);
+    expect(res.status).toBe(404);
+  });
+
+  it('blocks a password site without an access cookie (401)', async () => {
+    findFirst.mockResolvedValue({ ...publicSite, privacyMode: 'PASSWORD' });
+    const res = await cssReq(`?v=${V}`);
+    expect(res.status).toBe(401);
+    expect(fetchFileMock).not.toHaveBeenCalled();
+  });
+
+  it('serves a password site with access, cached privately only', async () => {
+    findFirst.mockResolvedValue({ ...publicSite, privacyMode: 'PASSWORD' });
+    vi.mocked(hasSiteAccess).mockResolvedValueOnce(true);
+    const res = await cssReq(`?v=${V}`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('cache-control')).toBe(
+      'private, max-age=31536000, immutable',
+    );
+    expect(generatePresignedGetUrl).not.toHaveBeenCalled();
+  });
+
+  it('marks an anonymous site noindex and caps caching at its expiry', async () => {
+    findFirst.mockResolvedValue({
+      ...publicSite,
+      userId: 'anon-user-id',
+      isTemporary: true,
+      expiresAt: new Date(Date.now() + 120_000),
+    });
+    const res = await cssReq(`?v=${V}`);
+    expect(res.status).toBe(200);
+    expect(res.headers.get('x-robots-tag')).toBe('noindex');
+    const maxAge = Number(
+      /max-age=(\d+)/.exec(res.headers.get('cache-control') ?? '')?.[1],
+    );
+    expect(maxAge).toBeGreaterThan(100);
+    expect(maxAge).toBeLessThanOrEqual(120);
+  });
+
+  it('keeps the storage redirect on hosts that are not the site own host', async () => {
+    findBlob.mockResolvedValue({ sha: 'abc123' });
+    for (const host of [
+      'cloud.test.localhost',
+      'test.localhost',
+      'other-someone.test.localhost',
+    ]) {
+      const res = await cssReq(`?v=${V}`, host);
+      expect(res.status).toBe(302);
+      expect(res.headers.get('location')).toBe(
+        'http://s3.test.com/site-1/main/raw/custom.css?v=abc123',
+      );
+    }
+    expect(fetchFileMock).not.toHaveBeenCalled();
+  });
+
+  it.each(['notes/custom.css', 'Custom.css', 'custom.CSS'])(
+    'only proxies the root custom.css exactly (%s still redirects)',
+    async (path) => {
+      const res = await cssReq('', SITE_HOST, {}, path);
+      expect(res.status).toBe(302);
+      expect(fetchFileMock).not.toHaveBeenCalled();
+    },
+  );
 });
